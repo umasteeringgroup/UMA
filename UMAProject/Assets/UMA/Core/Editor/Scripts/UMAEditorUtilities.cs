@@ -80,7 +80,10 @@ namespace UMA
 			}
 		}
 
-#if UNITY_2018_3_OR_NEWER
+
+
+
+
 		private class MyPrefSettingsProvider : SettingsProvider
 		{
 			public MyPrefSettingsProvider(string path, SettingsScope scopes = SettingsScope.User)
@@ -98,9 +101,7 @@ namespace UMA
 		{
 			return new MyPrefSettingsProvider("Preferences/UMA");
 		}
-#else
-		[PreferenceItem("UMA")]
-#endif
+ 
 		public static void PreferencesGUI()
         {
             // Preferences GUI

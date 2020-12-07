@@ -117,6 +117,8 @@ namespace UMA.CharacterSystem
         public bool cacheCurrentState = true;
         [Tooltip("If true the existing skeleton is cleared and then rebuilt when the race is changed. Turn this off if you experience animation issues.")]
         public bool rebuildSkeleton = false;
+        [Tooltip("Always rebuild the skeleton. This will clear out additional animated bones from slots.")]
+        public bool alwaysRebuildSkeleton = false;
 
         //the dictionary of active recipes this character is using to create itself
         private Dictionary<string, UMATextRecipe> _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
@@ -168,6 +170,7 @@ namespace UMA.CharacterSystem
         public SaveOptions defaultSaveOptions = SaveOptions.saveDNA | SaveOptions.saveWardrobe | SaveOptions.saveColors | SaveOptions.saveAnimator;
         //
         public Vector3 BoundsOffset;
+
 
 #if UNITY_EDITOR
 
@@ -465,6 +468,7 @@ namespace UMA.CharacterSystem
                     if (BuildUsingComponentSettings)
                     {
                         _isFirstSettingsBuild = false;
+                        if (activeRace.racedata)
                         BuildFromComponentSettings();
                     }
                     else //we have an umaRecipe set or a text string set or a file defined to load
@@ -677,7 +681,8 @@ namespace UMA.CharacterSystem
 
         void BuildFromComponentSettings()
         {
-            SetActiveRace();
+            if (!SetActiveRace())
+                return;
             if (WardrobeRecipes.Count == 0)
                 LoadDefaultWardrobe();
             SetExpressionSet();
@@ -933,44 +938,52 @@ namespace UMA.CharacterSystem
                 LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors);
             }
         }
-#endregion
+        #endregion
 
-#region SETTINGS MODIFICATION (RACE RELATED)
+        #region SETTINGS MODIFICATION (RACE RELATED)
 
         /// <summary>
         /// Sets the starting race of the avatar based on the value of the 'activeRace'. 
         /// </summary>
-        void SetActiveRace()
+        bool SetActiveRace()
         {
-                if (activeRace.name == "" || activeRace.name == "None Set")
+            if (activeRace.name == "" || activeRace.name == "None Set")
+            {
+                activeRace.data = null;
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("No activeRace set. Aborting build");
+                return false;
+            }
+            //ImportSettingsCO might have changed the activeRace.name so we may still need to change the actual racedata if activeRace.racedata.raceName is different
+            if (activeRace.data != null && activeRace.name == activeRace.racedata.raceName)
+            {
+                activeRace.name = activeRace.racedata.raceName;
+                umaRecipe = activeRace.racedata.baseRaceRecipe;
+            }
+            //otherwise...
+            else if (activeRace.name != "")
+            {
+                activeRace.data = context.GetRace(activeRace.name);
+                if (activeRace.racedata != null)
                 {
-                    activeRace.data = null;
-                    if (Debug.isDebugBuild)
-                        Debug.LogWarning("No activeRace set. Aborting build");
-                    return;
-                }
-                //ImportSettingsCO might have changed the activeRace.name so we may still need to change the actual racedata if activeRace.racedata.raceName is different
-                if (activeRace.data != null && activeRace.name == activeRace.racedata.raceName)
-                {
-                    activeRace.name = activeRace.racedata.raceName;
                     umaRecipe = activeRace.racedata.baseRaceRecipe;
                 }
-                //otherwise...
-                else if (activeRace.name != "")
-                {
-                    activeRace.data = context.GetRace(activeRace.name);
-                    if (activeRace.racedata != null)
-                    {
-                        umaRecipe = activeRace.racedata.baseRaceRecipe;
-                    }
-                }
-                //if we are loading an old UMARecipe from the recipe field and the old race is not in resources the race will be null but the recipe wont be 
-                if (umaRecipe == null)
-                {
-                    if (Debug.isDebugBuild)
-                        Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
             }
+            //if we are loading an old UMARecipe from the recipe field and the old race is not in resources the race will be null but the recipe wont be 
+            if (umaRecipe == null)
+            {
+                if (Debug.isDebugBuild)
+                    Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
+                return false; 
+            }
+            return true;
         }
+
+        public void ChangeRace(string racename, bool force)
+        {
+            ChangeRace(racename, ChangeRaceOptions.useDefaults, force);
+        }
+
         /// <summary>
         /// Change the race of the Avatar, optionally overriding the 'onChangeRace' settings in the avatar component itself
         /// </summary>
@@ -979,7 +992,7 @@ namespace UMA.CharacterSystem
         public bool ChangeRace(string racename, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults,bool ForceChange = false)
         {
             // never been built, just use the race preset.
-            if (activeRace.racedata == null)
+            if (activeRace.racedata == null && ForceChange == false)
             {
                 RacePreset = racename;
                 return true;
@@ -3412,6 +3425,9 @@ namespace UMA.CharacterSystem
                 umaData.RebuildSkeleton = false;
                 UpdateSameRace();
             }
+
+            if (alwaysRebuildSkeleton)
+                umaData.RebuildSkeleton = true;
 
             ApplyPredefinedDNA();
 			umaData.KeepAvatar = keepAvatar;

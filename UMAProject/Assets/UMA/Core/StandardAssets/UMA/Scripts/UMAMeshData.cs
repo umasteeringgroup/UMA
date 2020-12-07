@@ -620,19 +620,26 @@ namespace UMA
 				ApplySharedBuffers(mesh);
 			}
 			else
-			{
-				mesh.vertices = vertices;
-				mesh.SetBoneWeights(unityBonesPerVertex,unityBoneWeights);
-				//mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
-				mesh.normals = normals;
-				mesh.tangents = tangents;
-				mesh.uv = uv;
-				mesh.uv2 = uv2;
-				mesh.uv3 = uv3;
-				mesh.uv4 = uv4;
-				mesh.colors32 = colors32;
-			}
-			mesh.bindposes = bindPoses;
+            {
+                mesh.vertices = vertices;
+#if true
+                ValidateNativeBuffers();
+#endif
+
+				if (unityBoneWeights != null)
+				{
+					mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);
+				}
+                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
+                mesh.normals = normals;
+                mesh.tangents = tangents;
+                mesh.uv = uv;
+                mesh.uv2 = uv2;
+                mesh.uv3 = uv3;
+                mesh.uv4 = uv4;
+                mesh.colors32 = colors32;
+            }
+            mesh.bindposes = bindPoses;
 
 			var subMeshCount = submeshes.Length;
 			mesh.subMeshCount = subMeshCount;
@@ -716,11 +723,45 @@ namespace UMA
 			}
 		}
 
-		/// <summary>
-		/// Applies the data to a Unity mesh.
-		/// </summary>
-		/// <param name="renderer">Target renderer.</param>
-		public void CopyDataToUnityMesh(SkinnedMeshRenderer renderer)
+        private void ValidateNativeBuffers()
+        {
+            if (unityBonesPerVertex == null)
+            {
+                Debug.LogError("Invalid bones per vertex! (null)");
+                return;
+            }
+            if (unityBoneWeights == null)
+            {
+                Debug.LogError("Invalid bone weights! (null)");
+                return;
+            }
+            if (!unityBonesPerVertex.IsCreated)
+            {
+                Debug.LogError("Unity bones per vertex not created!!");
+                return;
+            }
+            if (!unityBoneWeights.IsCreated)
+            {
+                Debug.LogError("Unity bone weights not created!!");
+                return;
+            }
+            if (unityBonesPerVertex.Length < 1)
+            {
+                Debug.LogError("Unity bones per vertex is empty!!");
+                return;
+            }
+            if (unityBoneWeights.Length < 1)
+            {
+                Debug.LogError("Unity boneweights is empty!!");
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Applies the data to a Unity mesh.
+        /// </summary>
+        /// <param name="renderer">Target renderer.</param>
+        public void CopyDataToUnityMesh(SkinnedMeshRenderer renderer)
 		{
 			Mesh mesh = renderer.sharedMesh;
 			mesh.subMeshCount = 1;
@@ -841,6 +882,9 @@ namespace UMA
 
 			if (unityBoneWeights != null)
 			{
+#if true
+				ValidateNativeBuffers();
+#endif
 				mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);				//mesh.boneWeights = unityBoneWeights;
 			}
  

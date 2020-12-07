@@ -78,7 +78,7 @@ namespace UMA
 				if (KillBones.Contains(t.gameObject.name))
 				{
 					RecursivelyRemoveChildBones(t,Exceptions);
-					GameObject.Destroy(t.gameObject);
+					GameObject.DestroyImmediate(t.gameObject);
 				}
 				else
 				{

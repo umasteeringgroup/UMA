@@ -402,13 +402,14 @@ namespace UMA.CharacterSystem.Examples
 
         public void ChangeSex()
         {
-            if (Avatar.activeRace.name == "HumanMale")
+            if (Avatar.activeRace.name == "HumanMale") 
             {
-                Avatar.ChangeRace("HumanFemale");
+                // if you do not pass true, then it might not change if you had never had a race set on this before. 
+                Avatar.ChangeRace("HumanFemale", true);
             }
             else
             {
-                Avatar.ChangeRace("HumanMale");
+                Avatar.ChangeRace("HumanMale", true);
             }
         }
 

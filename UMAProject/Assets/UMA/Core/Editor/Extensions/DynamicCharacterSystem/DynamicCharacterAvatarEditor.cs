@@ -120,7 +120,7 @@ namespace UMA.CharacterSystem.Editors
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController", "defaultRendererAsset",
 				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored","WardrobeAdded","WardrobeRemoved",
-				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA"});
+				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA","alwaysRebuildSkeleton"});
 
 			//The base DynamicAvatar properties- get these early because changing the race changes someof them
 			SerializedProperty context = serializedObject.FindProperty("context");
@@ -590,6 +590,7 @@ namespace UMA.CharacterSystem.Editors
 			if (context.isExpanded)
 			{
 				EditorGUI.BeginChangeCheck();
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("alwaysRebuildSkeleton"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("DelayUnload"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("BundleCheck"));
