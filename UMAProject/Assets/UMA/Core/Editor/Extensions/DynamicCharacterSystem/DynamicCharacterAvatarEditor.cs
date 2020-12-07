@@ -23,7 +23,10 @@ namespace UMA.CharacterSystem.Editors
 		public static bool showWardrobe = false;
 		public static bool showEditorCustomization = false;
 		public static bool showPrefinedDNA = false;
-		
+
+		public static int currentcolorfilter=0;
+		public string[] colorfilters = { "Base", "All", "Hide ColorDNA" };
+		public List<string> baseColorNames = new List<string>();
 		public int currentDNA = 0;
 		private string cachedRace = "";
 		private string[] cachedRaceDNA = { };
@@ -36,6 +39,8 @@ namespace UMA.CharacterSystem.Editors
 
 		public void OnEnable()
 		{
+			baseColorNames.Clear();
+			baseColorNames.AddRange(new string[] { "skin","hair","eyes"});
 			thisDCA = target as DynamicCharacterAvatar;
 			if (thisDCA.context == null)
 			{
@@ -265,6 +270,8 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUI.BeginChangeCheck();
 				if (newCharacterColors.isExpanded)
 				{
+					currentcolorfilter = EditorGUILayout.Popup("Filter Colors", currentcolorfilter, colorfilters);
+
 					n_newArraySize = EditorGUILayout.DelayedIntField(new GUIContent("Size"), n_origArraySize);
 					EditorGUILayout.Space();
 					EditorGUI.indentLevel++;
@@ -272,6 +279,9 @@ namespace UMA.CharacterSystem.Editors
 					{
 						for (int i = 0; i < n_origArraySize; i++)
 						{
+							SerializedProperty currentColor = newCharacterColors.GetArrayElementAtIndex(i);
+							if (currentcolorfilter == 0 && !baseColorNames.Contains(currentColor.displayName.ToLower())) continue;
+							if (currentcolorfilter == 2 && currentColor.displayName.ToLower().Contains("colordna")) continue;
 							EditorGUILayout.PropertyField(newCharacterColors.GetArrayElementAtIndex(i));
 						}
 					}
