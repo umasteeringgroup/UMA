@@ -405,8 +405,8 @@ namespace UMA.CharacterSystem
                {
                    DestroyImmediate(go);
                }
+               ud.umaRoot = null;
            }
-           ud.umaRoot = null;
 #endif
 
 #if UMA_ADDRESSABLES
@@ -426,6 +426,7 @@ namespace UMA.CharacterSystem
                 EditorApplication.update += CheckEditorContextNeeded;
             }
 #endif
+            cacheStates = new Dictionary<string, string>();
             this.context = UMAContextBase.Instance;
         }
         // Use this for initialization
@@ -468,7 +469,6 @@ namespace UMA.CharacterSystem
                     if (BuildUsingComponentSettings)
                     {
                         _isFirstSettingsBuild = false;
-                        if (activeRace.racedata)
                         BuildFromComponentSettings();
                     }
                     else //we have an umaRecipe set or a text string set or a file defined to load
@@ -3720,6 +3720,8 @@ namespace UMA.CharacterSystem
         /// <param name="cacheStateName"></param>
         void AddCharacterStateCache(string cacheStateName = "")
         {
+            if (!Application.isPlaying)
+                return;
             if (cacheStateName == "NULL")//we are caching the state before the Avatar is loaded- which is basically just the colors
             {
                 var thisModel = new UMATextRecipe.DCSPackRecipe();
