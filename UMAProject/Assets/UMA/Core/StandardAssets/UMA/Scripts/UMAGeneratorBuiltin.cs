@@ -512,6 +512,7 @@ namespace UMA
 		{
 			if (umaData)
 			{
+				umaData.FirePreUpdateUMABody();
 				umaData.skeleton.ResetAll();
 				// Put the skeleton into TPose so rotations will be valid for generating avatar
 				umaData.GotoTPose();

@@ -223,6 +223,7 @@ namespace UMA
 		public UMADataEvent CharacterBegun;
 		public UMADataEvent AnimatorStateSaved;
 		public UMADataEvent AnimatorStateRestored;
+		public UMADataEvent PreUpdateUMABody;
 
 		public GameObject umaRoot;
 
@@ -1359,6 +1360,19 @@ namespace UMA
 			public Vector3 originalBonePosition;
 			public Quaternion originalBoneRotation;
 		}
+
+		/// <summary>
+		/// Fire the Animator State Saved event.
+		/// This happens before the Animator State is saved.
+		/// </summary>
+		public void FirePreUpdateUMABody()
+		{
+			if (PreUpdateUMABody != null)
+			{
+				PreUpdateUMABody.Invoke(this);
+			}
+		}
+
 
 		/// <summary>
 		/// Fire the Animator State Saved event.
