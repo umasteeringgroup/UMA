@@ -179,11 +179,6 @@ namespace UMA
 			{
 				//Move umaMesh creation to with in the renderer loops
 				//May want to make sure to set all it's buffers to null instead of creating a new UMAMeshData
-				UMAMeshData umaMesh = new UMAMeshData();
-				umaMesh.ClaimSharedBuffers();
-
-				umaMesh.subMeshCount = 0;
-				umaMesh.vertexCount = 0;
 
 				combinedMeshList.Clear();
 				combinedMaterialList.Clear();
@@ -199,6 +194,12 @@ namespace UMA
 				}
 				else
 				{
+					UMAMeshData umaMesh = new UMAMeshData();
+					umaMesh.ClaimSharedBuffers();
+
+					umaMesh.subMeshCount = 0;
+					umaMesh.vertexCount = 0;
+
 					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings );
 
 					if (updatedAtlas)
@@ -207,6 +208,7 @@ namespace UMA
 					}
 
 					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton);
+					umaMesh.ReleaseSharedBuffers();
 				}
 				var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
 				if (clothProperties != null)
@@ -228,7 +230,6 @@ namespace UMA
 					combinedMaterialList[i].skinnedMeshRenderer = renderers[currentRendererIndex];
 				}
 				renderers[currentRendererIndex].sharedMaterials = materials;
-				umaMesh.ReleaseSharedBuffers();
 			}
 
 			umaData.umaRecipe.ClearDNAConverters();

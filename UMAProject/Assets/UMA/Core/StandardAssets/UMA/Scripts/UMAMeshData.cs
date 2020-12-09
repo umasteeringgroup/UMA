@@ -593,19 +593,12 @@ namespace UMA
 
 			Mesh mesh = renderer.sharedMesh;
 #if UNITY_EDITOR
-#if UNITY_2018_3_OR_NEWER
 			if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogError("Cannot apply changes to prefab!");
 			}
-#else
-			if (UnityEditor.PrefabUtility.IsComponentAddedToPrefabInstance(renderer))
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Cannot apply changes to prefab!");
-			}
-#endif
+
 			if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
 			{
 				if (Debug.isDebugBuild)

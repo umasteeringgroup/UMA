@@ -494,7 +494,7 @@ namespace UMA
 				umaData.Show();
 				umaData.FireUpdatedEvent(false);
 				umaData.FireCharacterCompletedEvents();
-				if (umaData.skeleton.boneCount > 300)
+				if (umaData.skeleton.boneCount > 500)
 				{
 					if (Debug.isDebugBuild)
 						Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
