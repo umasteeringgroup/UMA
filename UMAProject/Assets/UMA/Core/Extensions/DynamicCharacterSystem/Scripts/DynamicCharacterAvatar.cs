@@ -394,6 +394,7 @@ namespace UMA.CharacterSystem
                     ud.umaRoot = null;
                 }
             }
+
 #else
            UMAData ud = GetComponent<UMAData>();
 
@@ -429,6 +430,21 @@ namespace UMA.CharacterSystem
             cacheStates = new Dictionary<string, string>();
             this.context = UMAContextBase.Instance;
         }
+
+#if UNITY_EDITOR
+        [UnityEditor.Callbacks.DidReloadScripts]
+        private static void OnScriptsReloaded()
+        {
+            DynamicCharacterAvatar[] dcas = GameObject.FindObjectsOfType<DynamicCharacterAvatar>();
+            foreach (var dca in dcas)
+            {
+                if (dca.editorTimeGeneration)
+                {
+                    dca.GenerateSingleUMA();
+                }
+            }
+        }
+#endif
         // Use this for initialization
         public override void Start()
         {

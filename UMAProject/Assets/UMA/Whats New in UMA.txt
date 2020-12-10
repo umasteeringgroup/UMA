@@ -54,6 +54,20 @@ Alpha 4
   Added ability Property Blocks to Overlay Colors (shared colors). Now you can set floats, vectors, ints, colors, matrixes, etc.
   Made it possible to have Overlays with no texture channels (these overlays can be modified with material property blocks).
   Reworked the bone cleaner to make it more robust
+  Added filters to colors in DCA customizer section
+  Added "Always Rebuild Skeleton" option in the advanced settings. This will help you keep your rig clean and tidy, for a slight performance cost.
+
+Alpha 4.1
+  Added dialog when importing the new version. Allows you to rebuild or restore the index from backup.
+  Added option to "always rebuild skeleton" on DynamicCharacterAvatar.
+  Fixed bug in Bone Cleaner
+  Fixed bug in build when UMAData was null
+  Additional null checking in UMAMeshData
+  Added new version of RaceChange() on DynamicCharacter avatar that lets you force a rebuild.
+  Added flipping, highlighting to bone pose editor
+  Added "find UMA" to bone pose editor, so you don't have to select it
+  Bone Pose Editor will now remember the selected UMA when possible
+  Bone Pose Editor will now allow mirroring on X,Y,Z axis. Default UMA (blender export) is on Y axis.  
 
 What's new in 2.10.1
 

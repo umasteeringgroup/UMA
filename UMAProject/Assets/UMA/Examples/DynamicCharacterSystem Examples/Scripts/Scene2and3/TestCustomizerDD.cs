@@ -55,7 +55,7 @@ namespace UMA.CharacterSystem.Examples
 		[Tooltip("If set, this prevents the SPECIFIED controls from being generated. TIP: you can limit this restriction to a race by prefixing the racename to the wardrobe slot name eg ToonFemale:Face")]
 		public List<string> hideWardrobeOptions = new List<string>();
 
-		public MouseOrbitImproved Orbitor;
+		public UMAMouseOrbitImproved Orbitor;
 		//Loading options when loading a recipe from a text file
 		public bool _loadRace = true;
 		public bool _loadDNA = true;
@@ -878,7 +878,7 @@ namespace UMA.CharacterSystem.Examples
 			if (Orbitor != null)
 			{
 				Orbitor.distance = 1.4f;
-				Orbitor.TargetBone = MouseOrbitImproved.targetOpts.Chest;
+				Orbitor.TargetBone = UMAMouseOrbitImproved.targetOpts.Chest;
 			}
 		}
 
@@ -890,7 +890,7 @@ namespace UMA.CharacterSystem.Examples
 			if (Orbitor != null)
 			{
 				Orbitor.distance = 0.5f;
-				Orbitor.TargetBone = MouseOrbitImproved.targetOpts.Head;
+				Orbitor.TargetBone = UMAMouseOrbitImproved.targetOpts.Head;
 			}
 		}
 

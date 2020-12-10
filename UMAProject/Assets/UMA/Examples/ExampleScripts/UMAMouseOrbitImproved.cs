@@ -10,7 +10,7 @@ namespace UMA.Examples
     //not sure how to do that though...
     //TODO if the user changes the size of the head to be really big we end up inside. We need this to calculate its minimum distance based on the size of thecapsule collider (assuming this is correct
     [AddComponentMenu("Camera-Control/Mouse Orbit with zoom")]
-    public class MouseOrbitImproved : MonoBehaviour
+    public class UMAMouseOrbitImproved : MonoBehaviour
     {
 
         //DOS Modified added an option to choose which mose button to use (for touch you dont have a right button option)

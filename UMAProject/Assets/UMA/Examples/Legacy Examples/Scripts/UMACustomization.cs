@@ -14,7 +14,7 @@ namespace UMA.Examples
         public UMAData umaData;
         public UMADynamicAvatar umaDynamicAvatar;
         public CameraTrack cameraTrack;
-        public MouseOrbitImproved orbitor;
+        public UMAMouseOrbitImproved orbitor;
 
         private UMADnaHumanoid umaDna;
         private UMADnaTutorial umaTutorialDna;
