@@ -17,6 +17,7 @@ namespace UMA.Editors
 		SerializedProperty EditorInitialScaleFactor;
 		SerializedProperty editorAtlasResolution;
 
+
 #pragma warning disable 0108
 		public override void OnEnable()
 		{

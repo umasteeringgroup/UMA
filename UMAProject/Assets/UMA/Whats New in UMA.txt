@@ -69,6 +69,14 @@ Alpha 4.1
   Bone Pose Editor will now remember the selected UMA when possible
   Bone Pose Editor will now allow mirroring on X,Y,Z axis. Default UMA (blender export) is on Y axis.  
 
+Alpha 5
+  New texture atlas fitting methods:  
+     Reduce (with a variable reduction amount)
+     Best Fit Square (Expands the texture to the best fit square, and then reduces them to fit the atlas). This takes a bit more work, but wastes the least space.
+  Broke out fit methods on generator
+  Added property to sharpen reduced textures by forcing it to use a higher mip. Produces significantly more detailed output on textures that are fit.
+  Set proportions on default female race to a bit less heroic.
+
 What's new in 2.10.1
 
 This is a bugfix update, with only a few new features.

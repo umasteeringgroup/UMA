@@ -191,17 +191,27 @@ namespace UMA
 			var rt = data.GetFirstRenderTexture();
 			if (rt != null && !rt.IsCreated())
 			{
-				umaData = data;
-				TextureProcessBaseCoroutine textureProcessCoroutine;
-				textureProcessCoroutine = new TextureProcessPROCoroutine();
-				textureProcessCoroutine.Prepare(data, this);
+				if (NoCoroutines)
+				{
+					UMAGeneratorPro ugp = new UMAGeneratorPro();
+					ugp.ProcessTexture(this, umaData, true, InitialScaleFactor);
+					TextureChanged++;
+                }
+                else
+				{
+					umaData = data;
+					TextureProcessBaseCoroutine textureProcessCoroutine;
+					textureProcessCoroutine = new TextureProcessPROCoroutine();
+					textureProcessCoroutine.Prepare(data, this);
 
-				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
-				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true, InitialScaleFactor);
+					activeGeneratorCoroutine = new UMAGeneratorCoroutine();
+					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true, InitialScaleFactor);
 
-				while (!activeGeneratorCoroutine.Work()) ;
+					while (!activeGeneratorCoroutine.Work()) ;
 
-				activeGeneratorCoroutine = null;
+					activeGeneratorCoroutine = null;
+				}
+
 				TextureChanged++;
 			}
 		}

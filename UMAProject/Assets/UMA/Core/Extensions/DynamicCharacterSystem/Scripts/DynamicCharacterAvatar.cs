@@ -2263,8 +2263,12 @@ namespace UMA.CharacterSystem
         /// </summary>
         public void SetAnimatorController(bool addAnimator = false)
         {
+            // Somehow we can get here while Unity Addressables is instantiating an object, before it is constructed.
+            if (this == null)
+                return;
             if (KeepAnimatorController == true && animationController != null)
                 return;
+            if (activeRace == null) return;
 
             RuntimeAnimatorController controllerToUse = raceAnimationControllers.GetAnimatorForRace(activeRace.name);
 

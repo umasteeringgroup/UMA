@@ -10,6 +10,8 @@ namespace UMA
 	/// </summary>
 	public abstract class UMAGeneratorBase : MonoBehaviour
 	{
+		public enum FitMethod {DecreaseResolution, BestFitSquare };
+
 		public bool fitAtlas;
 		[HideInInspector]
 		public TextureMerge textureMerge;
@@ -21,6 +23,17 @@ namespace UMA
 		public int atlasResolution;
 		[Tooltip("In Editor Initial size of the texture atlas (square)")]
 		public int editorAtlasResolution = 1024;
+
+		[Tooltip("How the textures are fit in the atlas if they are too large to fit normally")]
+		public FitMethod AtlasOverflowFitMethod = FitMethod.DecreaseResolution;
+
+		[Tooltip("The percentage to shrink the textures if using DecreaseResolution fit method")]
+		[Range(0.1f,0.9f)]
+		public float FitPercentageDecrease = 0.5f;
+
+		[Tooltip("When true, the rescaled textures will use a higher mipmap when being downsampled. This will result in a more detailed texture.")]
+		public bool SharperFitTextures = true;
+
 		[Tooltip("The default overlay to display if a slot has meshData and no overlays assigned")]
 		public OverlayDataAsset defaultOverlayAsset;
 		[Tooltip("UMA will ignore items with this tag when rebuilding the skeleton.")]

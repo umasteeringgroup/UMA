@@ -450,7 +450,7 @@ namespace UMA
 			public List<MaterialFragment> materialFragments = new List<MaterialFragment>();
 			public Texture[] resultingAtlasList;
 			public Vector2 cropResolution;
-			public float resolutionScale;
+			public Vector2 resolutionScale;
 			public string[] textureNameList;
 			public UMARendererAsset rendererAsset;
 			public SkinnedMeshRenderer skinnedMeshRenderer;

@@ -334,8 +334,8 @@ namespace UMA
 						if (null != foundRect && foundRect.rect != Rect.zero)
 						{
 							var size = foundRect.rect.size * generatedMaterial.resolutionScale;
-							var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale;
-							var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale;
+							var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale.x;
+							var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale.x;
 
 							atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
 							atlasXRange = size.x / generatedMaterial.cropResolution.x;

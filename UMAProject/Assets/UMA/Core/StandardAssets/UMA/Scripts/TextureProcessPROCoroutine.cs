@@ -130,7 +130,7 @@ namespace UMA
                             }
 
 
-                            textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor);
+                            textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor, umaGenerator.SharperFitTextures);
                             
                             //PostProcess
                             textureMerge.PostProcess(destinationTexture, slotData.asset.material.channels[textureType].channelType);
