@@ -90,7 +90,7 @@ Alpha 5.1
   Fix error where an UMA could rebuild twice at startup if it had edit-time generation.
   Cleaned up places where BundleCheck was being ignored.
   Provided sane colors for additive channel when an overlay did not have all channel colors defined (issue with core samples)
-
+  Tightened up avatars, and made the new avatars the default
 
 
 
