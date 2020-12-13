@@ -161,12 +161,31 @@ namespace UMA
 
 				//Keep a running list of unique RendererHashes from our slots
 				//Null rendererAsset gets added, which is good, it is the default renderer.
+#if UMA_ADDRESSABLES
+				bool found = false;
+				foreach (var renderer in uniqueRenderers)
+				{
+					if (renderer == null && slot.rendererAsset == null)
+                    {
+						found = true;
+						break;
+                    }
+					if (renderer != null && slot.rendererAsset != null && renderer.name == slot.rendererAsset.name)
+                    {
+						slot.rendererAsset = renderer;
+						found = true;
+						break;
+                    }
+				}
+				if (!found)
+					uniqueRenderers.Add(slot.rendererAsset);
+#else
 				if (!uniqueRenderers.Contains(slot.rendererAsset))
 					uniqueRenderers.Add(slot.rendererAsset);
-
-				// Let's only add the default overlay if the slot has meshData and NO overlays
-				// This should be able to be removed if default overlay/textures are ever added to uma materials...
-				if ((slot.asset.meshData != null) && (slot.OverlayCount == 0))
+#endif
+					// Let's only add the default overlay if the slot has meshData and NO overlays
+					// This should be able to be removed if default overlay/textures are ever added to uma materials...
+					if ((slot.asset.meshData != null) && (slot.OverlayCount == 0))
 				{
                     if (umaGenerator.defaultOverlaydata != null)
                         slot.AddOverlay(umaGenerator.defaultOverlaydata);

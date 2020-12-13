@@ -174,8 +174,12 @@ namespace UMA
 	{
 		public Matrix4x4[] bindPoses;
 		public UMABoneWeight[] boneWeights;
+#if USE_NATIVE_ARRAYS
+		[NonSerialized]
 		public NativeArray<BoneWeight1> unityBoneWeights;
-		public NativeArray<byte> unityBonesPerVertex;
+		[NonSerialized]
+		public NativeArray<byte> unityBonesPerVertex);
+#endif
 		public Vector3[] vertices;
 		public Vector3[] normals;
 		public Vector4[] tangents;
@@ -248,7 +252,17 @@ namespace UMA
 			new List<int>(MAX_VERTEX_COUNT * 4),
 		};
 		static int[][] gSubmeshTriArrays;
-		static int[] gSubmeshTriIndices;
+		static int[] gSubmeshTriIndices =
+		{
+			UNUSED_SUBMESH,
+			UNUSED_SUBMESH,
+			UNUSED_SUBMESH,
+			UNUSED_SUBMESH,
+			UNUSED_SUBMESH,
+			UNUSED_SUBMESH,
+			UNUSED_SUBMESH,
+			UNUSED_SUBMESH
+		};
 
 		// They forgot the List<> method for bone weights.
 #if USE_UNSAFE_CODE
@@ -389,6 +403,7 @@ namespace UMA
 
 				bufferLockOwner = null;
 			}
+			FreeBoneWeights();
 		}
 
 		public void PrepareVertexBuffers(int size)
@@ -424,10 +439,23 @@ namespace UMA
 		public void RetrieveDataFromUnityMesh(Mesh sharedMesh)
 		{
 			bindPoses = sharedMesh.bindposes;
+#if USE_NATIVE_ARRAYS
 			unityBonesPerVertex = sharedMesh.GetBonesPerVertex();
 			unityBoneWeights = sharedMesh.GetAllBoneWeights();
 			SerializedBoneWeights = unityBoneWeights.ToArray();
 			SerializedBonesPerVertex = unityBonesPerVertex.ToArray();
+
+#else
+			var unityBonesPerVertex = sharedMesh.GetBonesPerVertex();
+			var unityBoneWeights = sharedMesh.GetAllBoneWeights();
+			SerializedBoneWeights = unityBoneWeights.ToArray();
+			SerializedBonesPerVertex = unityBonesPerVertex.ToArray();
+			if (unityBonesPerVertex.IsCreated)
+				unityBonesPerVertex.Dispose();
+			if (unityBoneWeights.IsCreated)
+				unityBoneWeights.Dispose();
+#endif
+
 			vertices = sharedMesh.vertices;
 			vertexCount = vertices.Length;
 			normals = sharedMesh.normals;
@@ -615,15 +643,10 @@ namespace UMA
 			else
             {
                 mesh.vertices = vertices;
-#if true
+#if false
                 ValidateNativeBuffers();
 #endif
-
-				if (unityBoneWeights != null)
-				{
-					mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);
-				}
-                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
+                SetBoneWeightsFromMeshData(mesh);                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
                 mesh.normals = normals;
                 mesh.tangents = tangents;
                 mesh.uv = uv;
@@ -641,6 +664,9 @@ namespace UMA
 				bool sharedBuffer = false;
 				for (int j = 0; j < gSubmeshTris.Length; j++)
 				{
+					// JRRM - Test Only
+					if (gSubmeshTriIndices == null)
+						Debug.Break();
 					if (gSubmeshTriIndices[j] == i)
 					{
 						sharedBuffer = true;
@@ -716,8 +742,30 @@ namespace UMA
 			}
 		}
 
+        private void SetBoneWeightsFromMeshData(Mesh mesh)
+        {
+#if USE_NATIVE_ARRAYS
+				if (unityBoneWeights != null)
+				{
+					mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);
+				}
+#else
+            if (SerializedBoneWeights != null)
+            {
+                // It seems like a no-brainer here to use Allocator.Temp. But that data is actually not freed
+                // until the end of the frame. 
+                var unityBonesPerVertex = new NativeArray<byte>(SerializedBonesPerVertex, Allocator.Persistent);
+                var unityBoneWeights = new NativeArray<BoneWeight1>(SerializedBoneWeights, Allocator.Persistent);
+                mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);
+                unityBonesPerVertex.Dispose();
+                unityBoneWeights.Dispose();
+            }
+#endif
+        }
+
         private void ValidateNativeBuffers()
         {
+#if USE_NATIVE_ARRAYS
             if (unityBonesPerVertex == null)
             {
                 Debug.LogError("Invalid bones per vertex! (null)");
@@ -748,6 +796,7 @@ namespace UMA
                 Debug.LogError("Unity boneweights is empty!!");
                 return;
             }
+#endif
         }
 
         /// <summary>
@@ -760,7 +809,9 @@ namespace UMA
 			mesh.subMeshCount = 1;
 			mesh.triangles = new int[0];
 			mesh.vertices = vertices;
-			mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);
+
+			SetBoneWeightsFromMeshData(mesh);
+
 			mesh.normals = normals;
 			mesh.tangents = tangents;
 			mesh.uv = uv;
@@ -831,22 +882,32 @@ namespace UMA
 				}
 				oldBonesPerVertex.Add(BonesPerVertex);
 			}
+#if USE_NATIVE_ARRAYS
+			FreeBoneWeights();
 			unityBonesPerVertex = new NativeArray<byte>(oldBonesPerVertex.ToArray(), Allocator.Persistent);
 			unityBoneWeights = new NativeArray<BoneWeight1>(oldWeights.ToArray(), Allocator.Persistent);
 			NativeArray<BoneWeight1>.Copy(oldWeights.ToArray(), unityBoneWeights);
 			NativeArray<byte>.Copy(oldBonesPerVertex.ToArray(), unityBonesPerVertex);
+#else
+			SerializedBoneWeights = oldWeights.ToArray();
+			SerializedBonesPerVertex = oldBonesPerVertex.ToArray();
+#endif
 			LoadedBoneweights = true;
 		}
 
 		public void LoadVariableBoneWeights()
         {
+#if USE_NATIVE_ARRAYS
+			FreeBoneWeights();
 			unityBonesPerVertex = new NativeArray<byte>(SerializedBonesPerVertex, Allocator.Persistent);
 			unityBoneWeights = new NativeArray<BoneWeight1>(SerializedBoneWeights, Allocator.Persistent);
 			LoadedBoneweights = true;
+#endif
         }
 
 		public void FreeBoneWeights()
         {
+#if USE_NATIVE_ARRAYS
 			if (LoadedBoneweights)
 			{
 				if (unityBoneWeights != null && unityBoneWeights.IsCreated)
@@ -855,6 +916,7 @@ namespace UMA
 					unityBonesPerVertex.Dispose();
 				LoadedBoneweights = false;
 			}
+#endif
         }
 
 		private void CreateTransforms(UMASkeleton skeleton)
@@ -873,13 +935,7 @@ namespace UMA
 			gVertices.SetActiveSize(vertexCount);
 			mesh.SetVertices(gVertices);
 
-			if (unityBoneWeights != null)
-			{
-#if true
-				ValidateNativeBuffers();
-#endif
-				mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);				//mesh.boneWeights = unityBoneWeights;
-			}
+			SetBoneWeightsFromMeshData(mesh);
  
 			if (normals != null)
 			{
@@ -993,12 +1049,6 @@ namespace UMA
 			{
 				newMeshData.bindPoses = new Matrix4x4[bindPoses.Length];
 				Array.Copy(bindPoses, newMeshData.bindPoses, bindPoses.Length);
-			}
-
-			if (unityBoneWeights != null)
-			{
-				newMeshData.unityBoneWeights = new NativeArray<BoneWeight1>();
-				unityBoneWeights.CopyFrom(newMeshData.unityBoneWeights);
 			}
 
 			if (vertices != null)

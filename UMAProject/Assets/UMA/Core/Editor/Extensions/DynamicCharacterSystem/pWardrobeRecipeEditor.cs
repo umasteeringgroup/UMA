@@ -785,10 +785,11 @@ namespace UMA.Editors
 				ReplacesSlots.Insert(0, "Nothing");
 				int selectedIndex = ReplacesSlots.IndexOf(replaces);
 				if (selectedIndex < 0) selectedIndex = 0; // not found, point at "nothing"
-
 				selectedIndex = EditorGUILayout.Popup("Replaces", selectedIndex, ReplacesSlots.ToArray());
 
 				ReplacesField.SetValue(target, ReplacesSlots[selectedIndex]);
+				if (ReplacesSlots[selectedIndex] != replaces)
+					doUpdate = true;
 			}
 
 			if (ShowHelp)

@@ -47,6 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   context: {fileID: 0}
   umaData: {fileID: 0}
+  defaultRendererAsset: {fileID: 0}
   umaRecipe: {fileID: 0}
   umaAdditionalRecipes:
   - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
@@ -78,10 +79,22 @@ MonoBehaviour:
   CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecipeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  WardrobeAdded:
+    m_PersistentCalls:
+      m_Calls: []
+  WardrobeRemoved:
     m_PersistentCalls:
       m_Calls: []
   hide: 0
@@ -92,6 +105,7 @@ MonoBehaviour:
   defaultChangeRaceOptions: 8
   cacheCurrentState: 1
   rebuildSkeleton: 0
+  alwaysRebuildSkeleton: 0
   preloadWardrobeRecipes:
     loadDefaultRecipes: 1
     recipes:
@@ -129,6 +143,8 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        serializedProperties: []
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -143,6 +159,8 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        serializedProperties: []
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -157,6 +175,8 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        serializedProperties: []
       _name: 
       _color: {r: 0.9632353, g: 0.82158303, b: 0.82158303, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -171,6 +191,8 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        serializedProperties: []
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -194,6 +216,7 @@ MonoBehaviour:
   ensureSharedColors: 0
   defaultSaveOptions: 15
   BoundsOffset: {x: 0, y: 0, z: 0}
+  editorTimeGeneration: 1
   showPlaceholder: 1
   previewModel: 0
   customModel: {fileID: 0}
@@ -209,7 +232,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 153068}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1862395651, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
+  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Delegates:
@@ -272,7 +295,6 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 1
           m_CallState: 2
-  delegates: []
 --- !u!114 &114169318936026688
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -285,7 +307,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53b5d39ea58489b42985b76682b492f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lodDistance: 5
+  lodDistance: 10
   swapSlots: 0
   lodOffset: 0
   maxLOD: 5

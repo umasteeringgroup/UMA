@@ -90,7 +90,7 @@ namespace UMA
 				}
 			}
 			Randomize(RandomAvatar);
-			RandomAvatar.BuildCharacter();
+			RandomAvatar.BuildCharacter(!RandomAvatar.BundleCheck);
 		}
 
 		public RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots)

@@ -113,7 +113,7 @@ namespace UMA.Controls
 			window.SetupMenus();
 
 			Texture icon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/UMA/InternalDataStore/UMA32.png");
-			window.titleContent = new GUIContent("UMA 2.10 Global Library", icon);
+			window.titleContent = new GUIContent(UmaAboutWindow.umaVersion+" Global Library", icon);
 			window.Focus();
 			window.Repaint();
 			return window;

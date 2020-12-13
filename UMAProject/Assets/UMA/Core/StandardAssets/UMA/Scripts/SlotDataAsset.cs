@@ -204,7 +204,12 @@ namespace UMA
 			meshData.FreeBoneWeights();
         }
 
-        public int GetTextureChannelCount(UMAGeneratorBase generator)
+		public void OnDisable()
+		{
+			meshData.FreeBoneWeights();
+		}
+
+		public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
 			return material.channels.Length;
 		}
@@ -253,11 +258,6 @@ namespace UMA
 				meshData.LoadBoneWeights();
 			}
 		}
-
-        public void OnDisable()
-        {
-			meshData.FreeBoneWeights();
-        }
 
         public void UpdateMeshData()
 		{

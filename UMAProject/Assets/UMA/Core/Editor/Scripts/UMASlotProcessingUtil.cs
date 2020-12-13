@@ -368,8 +368,6 @@ namespace UMA.Editors
 				{
 					usedBones.Add(boneWeight.boneIndex, usedBones.Count);
 				}
-
-
 			}
 			return usedBones;
 		}

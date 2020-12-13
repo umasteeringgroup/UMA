@@ -147,7 +147,6 @@ namespace UMA.CharacterSystem
         public bool loadFileOnStart;
 
 #if UMA_ADDRESSABLES
-        private bool isCaching = false;
 		private bool isAddressableSystem;
         private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
 #endif
@@ -435,12 +434,15 @@ namespace UMA.CharacterSystem
         [UnityEditor.Callbacks.DidReloadScripts]
         private static void OnScriptsReloaded()
         {
-            DynamicCharacterAvatar[] dcas = GameObject.FindObjectsOfType<DynamicCharacterAvatar>();
-            foreach (var dca in dcas)
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                if (dca.editorTimeGeneration)
+                DynamicCharacterAvatar[] dcas = GameObject.FindObjectsOfType<DynamicCharacterAvatar>();
+                foreach (var dca in dcas)
                 {
-                    dca.GenerateSingleUMA();
+                    if (dca.editorTimeGeneration)
+                    {
+                        dca.GenerateSingleUMA();
+                    }
                 }
             }
         }
@@ -3033,7 +3035,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <returns>Can also be used to return an array of additional slots if this avatars flagForReload field is set to true before calling</returns>
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
-        public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false)
+        public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
 #if SUPER_LOGGING
 			Debug.Log("Building DynamicCharacterAvatar: " + gameObject.name);
@@ -3194,7 +3196,23 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
-            LoadCharacter(umaRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, !BundleCheck);
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                skipBundleCheck = true;
+            }
+            else
+            {
+                if (useBundleParameter)
+                    skipBundleCheck = !BundleCheck; 
+            }
+
+#else
+                if (useBundleParameter)
+                    skipBundleCheck = !BundleCheck;
+#endif
+            LoadCharacter(umaRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, skipBundleCheck);
         }
 
 #if UMA_ADDRESSABLES

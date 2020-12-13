@@ -18284,7 +18284,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: atlasResolution
-      value: 2048
+      value: 1024
       objectReference: {fileID: 0}
     - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: InitialScaleFactor
@@ -18296,10 +18296,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: processAllPending
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: NoCoroutines
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: IterationCount
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: AtlasOverflowFitMethod
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11482786, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
@@ -20719,7 +20727,7 @@ MonoBehaviour:
   generateLotsUMA: 1
   hideWhileGeneratingLots: 1
   stressTest: 0
-  umaCrowdSize: {x: 10, y: 5}
+  umaCrowdSize: {x: 8, y: 10}
   randomDna: 1
   allAtOnce: 1
   additionalRecipes:

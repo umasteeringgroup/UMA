@@ -26,6 +26,7 @@ namespace UMA
 
         private static void CleanupNativeArrays()
         {
+			//Debug.Log("Cleaned up SkinnedMesh Arrays in mesh combiner");
             if (nativeBoneWeights.IsCreated) nativeBoneWeights.Dispose();
             if (nativeBonesPerVertex.IsCreated) nativeBonesPerVertex.Dispose();
         }
@@ -122,6 +123,7 @@ namespace UMA
 			{
 				CleanupNativeArrays();
 
+				//Debug.Log("Creating native arrays in mesh combiner");
 				nativeBoneWeights = new NativeArray<BoneWeight1>(boneWeightCount, Allocator.Persistent);
 				nativeBonesPerVertex = new NativeArray<byte>(vertexCount, Allocator.Persistent);
 			}
@@ -368,7 +370,11 @@ namespace UMA
 				}
 
 				vertexIndex += sourceVertexCount;
+#if USE_NATIVE_ARRAYS
 				boneWeightIndex += source.meshData.unityBoneWeights.Length;
+#else
+				boneWeightIndex += source.meshData.SerializedBoneWeights.Length;
+#endif
 			}
 
 			if (vertexCount != vertexIndex)
@@ -380,9 +386,13 @@ namespace UMA
 			// fill in new values.
 			target.vertexCount = vertexCount;
 			target.vertices = vertices;
+#if USE_NATIVE_ARRAYS
 			target.unityBoneWeights = nativeBoneWeights.GetSubArray(0, boneWeightIndex);
 			target.unityBonesPerVertex = nativeBonesPerVertex.GetSubArray(0, vertexCount);
-
+#else
+			target.SerializedBoneWeights = nativeBoneWeights.GetSubArray(0, boneWeightIndex).ToArray();
+			target.SerializedBonesPerVertex = nativeBonesPerVertex.GetSubArray(0, vertexCount).ToArray();
+#endif
 			target.bindPoses = bindPoses.ToArray();
 			target.normals = normals;
 			target.tangents = tangents;
@@ -417,8 +427,10 @@ namespace UMA
 			var target = new UMAMeshData();
 			target.bindPoses = source.bindPoses;
 			target.boneNameHashes = source.boneNameHashes;
+#if USE_NATIVE_ARRAYS
 			target.unityBoneWeights = source.unityBoneWeights;
 			target.unityBonesPerVertex = source.unityBonesPerVertex;
+#endif
 			target.colors32 = source.colors32;
 			target.normals = source.normals;
 			target.rootBoneHash = source.rootBoneHash;
@@ -744,7 +756,11 @@ namespace UMA
 
 			foreach (var source in sources)
 			{
+#if USE_NATIVE_ARRAYS
 				boneweightcount += source.meshData.unityBoneWeights.Length;
+#else
+				boneweightcount += source.meshData.SerializedBoneWeights.Length;
+#endif
 				vertexCount += source.meshData.vertices.Length;
 				bindPoseCount += source.meshData.bindPoses.Length;
 				transformHierarchyCount += source.meshData.umaBones.Length;
@@ -809,8 +825,6 @@ namespace UMA
 
 		private static void BuildBoneWeights(UMAMeshData data, NativeArray<BoneWeight1> dest, NativeArray<byte> destBonesPerVertex, int destIndex, int destBoneweightIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
 		{
-			NativeArray<byte> sourceBonesPerIndex = data.unityBonesPerVertex;
-
 			int[] boneMapping = new int[bones.Length];
 
 			for (int i = 0; i < boneMapping.Length; i++)
@@ -818,6 +832,8 @@ namespace UMA
 				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
 			}
 
+#if USE_NATIVE_ARRAYS
+			NativeArray<byte> sourceBonesPerIndex = data.unityBonesPerVertex;
 			int sourcecount = sourceBonesPerIndex.Length;
 			int destcount = destBonesPerVertex.Length; // should be 0.
 
@@ -831,70 +847,20 @@ namespace UMA
 
 				dest[i + destBoneweightIndex] = b;
 			}
-		}
+#else
+			NativeArray<byte>.Copy(data.SerializedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.SerializedBonesPerVertex.Length);
+			NativeArray<BoneWeight1>.Copy(data.SerializedBoneWeights, 0, dest, destBoneweightIndex, data.SerializedBoneWeights.Length);
 
-#if UNITY_2019_3_OR_NEWER
-		/* private struct BoneWeightProxy
-		{
-			public float m_Weight0;
-			public float m_Weight1;
-			public float m_Weight2;
-			public float m_Weight3;
-			public int m_BoneIndex0;
-			public int m_BoneIndex1;
-			public int m_BoneIndex2;
-			public int m_BoneIndex3;
-
-			public BoneWeightProxy(ref UMABoneWeight source)
+			BoneWeight1 b = new BoneWeight1();
+			for (int i = 0; i < data.SerializedBoneWeights.Length; i++)
 			{
-				m_Weight0 = source.weight0;
-				m_Weight1 = source.weight1;
-				m_Weight2 = source.weight2;
-				m_Weight3 = source.weight3;
-
-				m_BoneIndex0 = boneMap[source.boneIndex0];
-				m_BoneIndex1 = boneMap[source.boneIndex1];
-				m_BoneIndex2 = boneMap[source.boneIndex2];
-				m_BoneIndex3 = boneMap[source.boneIndex3];
+				b.boneIndex = boneMapping[data.SerializedBoneWeights[i].boneIndex];
+				b.weight = data.SerializedBoneWeights[i].weight;
+				dest[i + destBoneweightIndex] = b;
 			}
 
-			public void SetData(ref UMABoneWeight source)
-			{
-				m_Weight0 = source.weight0;
-				m_Weight1 = source.weight1;
-				m_Weight2 = source.weight2;
-				m_Weight3 = source.weight3;
-
-				m_BoneIndex0 = boneMap[source.boneIndex0];
-				m_BoneIndex1 = boneMap[source.boneIndex1];
-				m_BoneIndex2 = boneMap[source.boneIndex2];
-				m_BoneIndex3 = boneMap[source.boneIndex3];
-			}
-		}
-
-		static int[] boneMap = new int[128];
-		private static void BuildBoneWeights(UMABoneWeight[] source, int sourceIndex, NativeArray<BoneWeight> dest, int destIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
-		{
-			if (boneMap.Length < bones.Length)
-			{
-				boneMap = new int[bones.Length];
-			}
-
-			for (int i = 0; i < bones.Length; i++)
-			{
-				boneMap[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
-			}
-
-			BoneWeightProxy weightProxy = new BoneWeightProxy();
-			NativeArray<BoneWeightProxy> proxyDest = dest.Reinterpret<BoneWeightProxy>();
-			while (count-- > 0)
-			{
-				weightProxy.SetData(ref source[sourceIndex++]);
-				proxyDest[destIndex++] = weightProxy;
-			}
-		} */
 #endif
-
+		}
 
 		private struct BoneIndexEntry
 		{

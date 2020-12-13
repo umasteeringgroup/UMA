@@ -76,6 +76,23 @@ Alpha 5
   Broke out fit methods on generator
   Added property to sharpen reduced textures by forcing it to use a higher mip. Produces significantly more detailed output on textures that are fit.
   Set proportions on default female race to a bit less heroic.
+  Cleanup of RenderTexture.Active in a few places
+  Scene Cleanup
+  Misc bug fixes
+
+Alpha 5.1
+  Fixed bug with "replaces" not saving.
+  Fixed addressables issues:
+    Duplicating renderer assets when shared across slots no longer results in extra renderers
+    Added additional checking for labels that can be turned on if needed
+  Fixed bug where single submesh could blow up if it were the first one built
+  Fixed issue where Native Boneweights were reported as "not freed" when using Addressables, even though they were freed.
+  Fix error where an UMA could rebuild twice at startup if it had edit-time generation.
+  Cleaned up places where BundleCheck was being ignored.
+  Provided sane colors for additive channel when an overlay did not have all channel colors defined (issue with core samples)
+
+
+
 
 What's new in 2.10.1
 

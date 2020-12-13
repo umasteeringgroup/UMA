@@ -298,10 +298,10 @@ namespace UMA
 				System.Array.Resize(ref colorData.channelMask, targetMaterial.channels.Length);
 				System.Array.Resize(ref colorData.channelAdditiveMask, targetMaterial.channels.Length);
 
-				for (int i = oldsize; i > targetMaterial.channels.Length; i++)
+				for (int i = oldsize; i < targetMaterial.channels.Length; i++)
 				{
 					colorData.channelMask[i] = Color.white;
-					colorData.channelAdditiveMask[i] = Color.black;
+					colorData.channelAdditiveMask[i] = new Color32(0, 0, 0, 0);
 				}
 
 				if (Debug.isDebugBuild)
