@@ -92,7 +92,10 @@ Alpha 5.1
   Provided sane colors for additive channel when an overlay did not have all channel colors defined (issue with core samples)
   Tightened up avatars, and made the new avatars the default
 
-
+Alpha 5.2
+  Could not build slots error. Fixed.
+  Added several hand expressions (point, grasp, peace, rude) for each hand.
+  Renamed bone fields
 
 What's new in 2.10.1
 
