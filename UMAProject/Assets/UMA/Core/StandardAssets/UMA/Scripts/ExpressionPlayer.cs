@@ -64,6 +64,7 @@ namespace UMA.PoseTools
 		public bool overrideMecanimJaw = true;
 		public bool overrideMecanimNeck = false;
 		public bool overrideMecanimHead = false;
+		public bool overrideMecanimHands = false;
 
 		public enum GazeMode : int
 		{
@@ -88,7 +89,7 @@ namespace UMA.PoseTools
 	
 		public List<Expression> Expressions;
 
-		public const int PoseCount = 36;
+		public const int PoseCount = 44;
 		/// <summary>
 		/// Poses names as they appear for animations.
 		/// </summary>
@@ -129,7 +130,15 @@ namespace UMA.PoseTools
 			"browsIn",
 			"leftBrowUp_Down",
 			"rightBrowUp_Down",
-			"midBrowUp_Down"
+			"midBrowUp_Down",
+			"leftGrasp",
+			"rightGrasp",
+			"leftPeace",
+			"rightPeace",
+			"leftRude",
+			"rightRude",
+			"leftPoint",
+			"rightPoint"
 		};
 
 		public enum MecanimJoint : int
@@ -139,6 +148,7 @@ namespace UMA.PoseTools
 			Neck = 2,
 			Jaw = 4,
 			Eye = 8,
+			Hands = 16
 		};
 
 		/// <summary>
@@ -182,6 +192,14 @@ namespace UMA.PoseTools
 			MecanimJoint.None, // leftBrowUp_Down
 			MecanimJoint.None, // rightBrowUp_Down
 			MecanimJoint.None, // midBrowUp_Down"
+			MecanimJoint.Hands,
+			MecanimJoint.Hands,
+			MecanimJoint.Hands,
+			MecanimJoint.Hands,
+			MecanimJoint.Hands,
+			MecanimJoint.Hands,
+			MecanimJoint.Hands,
+			MecanimJoint.Hands
 		};
 
 		// Pose values
@@ -258,6 +276,24 @@ namespace UMA.PoseTools
 		[Range(-1f, 1f)]
 		public float midBrowUp_Down = 0f;
 
+		[Range(0f, 1f)]
+		public float leftGrasp = 0f;
+		[Range(0f, 1f)]
+		public float rightGrasp = 0f;
+		[Range(0f, 1f)]
+		public float leftPeace = 0f;
+		[Range(0f, 1f)]
+		public float rightPeace = 0f;
+		[Range(0f, 1f)]
+		public float leftRude = 0f;
+		[Range(0f, 1f)]
+		public float rightRude = 0f;
+		[Range(0f, 1f)]
+		public float leftPoint = 0f;
+		[Range(0f, 1f)]
+		public float rightPoint = 0f;
+
+
 		private float[] valueArray = new float[PoseCount];
 		public float[] Values
 		{
@@ -299,6 +335,15 @@ namespace UMA.PoseTools
 				valueArray[33] = leftBrowUp_Down;
 				valueArray[34] = rightBrowUp_Down;
 				valueArray[35] = midBrowUp_Down;
+
+				valueArray[36] = leftGrasp;
+				valueArray[37] = rightGrasp;
+				valueArray[38] = leftPeace;
+				valueArray[39] = rightPeace;
+				valueArray[40] = leftRude;
+				valueArray[41] = rightRude;
+				valueArray[42] = leftPoint;
+				valueArray[43] = rightPoint;
 
 				return valueArray;
 			}
@@ -343,6 +388,15 @@ namespace UMA.PoseTools
 				leftBrowUp_Down = value[i++];
 				rightBrowUp_Down = value[i++];
 				midBrowUp_Down = value[i++];
+
+				leftGrasp = valueArray[36];
+				rightGrasp = valueArray[37];
+				leftPeace = valueArray[38];
+				rightPeace = valueArray[39];
+				leftRude = valueArray[40];
+				rightRude = valueArray[41];
+				leftPoint = valueArray[42];
+				rightPoint = valueArray[43];
 			}
 		}
 

@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: RightPoint
+  m_EditorClassIdentifier: 
+  poses:
+  - bone: RightHand
+    hash: 1979272496
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: -0, z: 0, w: -1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger04_01
+    hash: 62444779
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger04_02
+    hash: -1699642031
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: -0, z: 0, w: -1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger04_03
+    hash: -306793017
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: -0, z: 0, w: -1}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger01_01
+    hash: 879109337
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.023530547, y: 0.52939665, z: -0.03765675, w: -0.8472116}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger01_02
+    hash: -1385204381
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: -0.70710677, z: 0, w: 0.70710677}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger01_03
+    hash: -630700555
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.001604383, y: -0.707105, z: -0.001604383, w: 0.707105}
+    scale: {x: 0.76, y: 1, z: 1}
+  - bone: RightHandFinger02_01
+    hash: 651397943
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: -0.52249867, z: 0, w: 0.8526401}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger02_02
+    hash: -1076176243
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: -0.70710677, z: 0, w: 0.70710677}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger02_03
+    hash: -924980709
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: -0.64278764, z: 0, w: 0.76604444}
+    scale: {x: 0.6, y: 1, z: 1}
+  - bone: RightHandFinger03_01
+    hash: -1636832174
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.006083655, y: 0.5713977, z: -0.008736877, w: -0.82060426}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger03_02
+    hash: 124173800
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.03381419, y: 0.71306086, z: -0.03317113, w: -0.69950026}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger03_03
+    hash: 1885441406
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.00044946154, y: 0.51503783, z: -0.0007480158, w: -0.857167}
+    scale: {x: 0.85, y: 1, z: 1}
+  - bone: RightHandFinger05_01
+    hash: -1157319794
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.13798624, y: 0.4601161, z: 0.21635035, w: -0.84996784}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger05_02
+    hash: 571335220
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.0034312136, y: 0.08186664, z: 0.041734733, w: 0.9957632}
+    scale: {x: 1, y: 1, z: 1}
+  - bone: RightHandFinger05_03
+    hash: 1426772642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0.52903104, z: 0, w: -0.8486025}
+    scale: {x: 1, y: 1, z: 1}
+  tweenPoses: []
+  tweenWeights: []

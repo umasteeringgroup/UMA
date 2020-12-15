@@ -373,7 +373,7 @@ namespace UMA
 #if USE_NATIVE_ARRAYS
 				boneWeightIndex += source.meshData.unityBoneWeights.Length;
 #else
-				boneWeightIndex += source.meshData.SerializedBoneWeights.Length;
+				boneWeightIndex += source.meshData.ManagedBoneWeights.Length;
 #endif
 			}
 
@@ -390,8 +390,8 @@ namespace UMA
 			target.unityBoneWeights = nativeBoneWeights.GetSubArray(0, boneWeightIndex);
 			target.unityBonesPerVertex = nativeBonesPerVertex.GetSubArray(0, vertexCount);
 #else
-			target.SerializedBoneWeights = nativeBoneWeights.GetSubArray(0, boneWeightIndex).ToArray();
-			target.SerializedBonesPerVertex = nativeBonesPerVertex.GetSubArray(0, vertexCount).ToArray();
+			target.ManagedBoneWeights = nativeBoneWeights.GetSubArray(0, boneWeightIndex).ToArray();
+			target.ManagedBonesPerVertex = nativeBonesPerVertex.GetSubArray(0, vertexCount).ToArray();
 #endif
 			target.bindPoses = bindPoses.ToArray();
 			target.normals = normals;
@@ -446,8 +446,8 @@ namespace UMA
 			target.vertices = source.vertices;
 			target.blendShapes = source.blendShapes;
 			target.SlotName = source.SlotName + " (shallow copy)";
-			target.SerializedBonesPerVertex = source.SerializedBonesPerVertex;
-			target.SerializedBoneWeights = source.SerializedBoneWeights;
+			target.ManagedBonesPerVertex = source.ManagedBonesPerVertex;
+			target.ManagedBoneWeights = source.ManagedBoneWeights;
 
 			if (triangleMask != null)
 			{
@@ -759,7 +759,7 @@ namespace UMA
 #if USE_NATIVE_ARRAYS
 				boneweightcount += source.meshData.unityBoneWeights.Length;
 #else
-				boneweightcount += source.meshData.SerializedBoneWeights.Length;
+				boneweightcount += source.meshData.ManagedBoneWeights.Length;
 #endif
 				vertexCount += source.meshData.vertices.Length;
 				bindPoseCount += source.meshData.bindPoses.Length;
@@ -848,14 +848,14 @@ namespace UMA
 				dest[i + destBoneweightIndex] = b;
 			}
 #else
-			NativeArray<byte>.Copy(data.SerializedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.SerializedBonesPerVertex.Length);
-			NativeArray<BoneWeight1>.Copy(data.SerializedBoneWeights, 0, dest, destBoneweightIndex, data.SerializedBoneWeights.Length);
+			NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
+			NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneweightIndex, data.ManagedBoneWeights.Length);
 
 			BoneWeight1 b = new BoneWeight1();
-			for (int i = 0; i < data.SerializedBoneWeights.Length; i++)
+			for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
 			{
-				b.boneIndex = boneMapping[data.SerializedBoneWeights[i].boneIndex];
-				b.weight = data.SerializedBoneWeights[i].weight;
+				b.boneIndex = boneMapping[data.ManagedBoneWeights[i].boneIndex];
+				b.weight = data.ManagedBoneWeights[i].weight;
 				dest[i + destBoneweightIndex] = b;
 			}
 

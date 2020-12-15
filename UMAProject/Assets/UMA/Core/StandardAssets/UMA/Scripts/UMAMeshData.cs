@@ -204,8 +204,8 @@ namespace UMA
 		public int vertexCount;
 		//public int boneWeightCount;
         public string RootBoneName = "Global";
-		public BoneWeight1[] SerializedBoneWeights;
-		public byte[] SerializedBonesPerVertex;
+		public BoneWeight1[] ManagedBoneWeights;
+		public byte[] ManagedBonesPerVertex;
 		[System.NonSerialized]
 		public bool LoadedBoneweights;
 		public string SlotName; // the slotname. used for debugging.
@@ -448,12 +448,12 @@ namespace UMA
 #else
 			var unityBonesPerVertex = sharedMesh.GetBonesPerVertex();
 			var unityBoneWeights = sharedMesh.GetAllBoneWeights();
-			SerializedBoneWeights = unityBoneWeights.ToArray();
-			SerializedBonesPerVertex = unityBonesPerVertex.ToArray();
-			if (unityBonesPerVertex.IsCreated)
-				unityBonesPerVertex.Dispose();
-			if (unityBoneWeights.IsCreated)
-				unityBoneWeights.Dispose();
+			ManagedBoneWeights = unityBoneWeights.ToArray();
+			ManagedBonesPerVertex = unityBonesPerVertex.ToArray();
+			//if (unityBonesPerVertex.IsCreated)
+			//	unityBonesPerVertex.Dispose();
+			//if (unityBoneWeights.IsCreated)
+			//	unityBoneWeights.Dispose();
 #endif
 
 			vertices = sharedMesh.vertices;
@@ -750,12 +750,12 @@ namespace UMA
 					mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);
 				}
 #else
-            if (SerializedBoneWeights != null)
+            if (ManagedBoneWeights != null)
             {
                 // It seems like a no-brainer here to use Allocator.Temp. But that data is actually not freed
                 // until the end of the frame. 
-                var unityBonesPerVertex = new NativeArray<byte>(SerializedBonesPerVertex, Allocator.Persistent);
-                var unityBoneWeights = new NativeArray<BoneWeight1>(SerializedBoneWeights, Allocator.Persistent);
+                var unityBonesPerVertex = new NativeArray<byte>(ManagedBonesPerVertex, Allocator.Persistent);
+                var unityBoneWeights = new NativeArray<BoneWeight1>(ManagedBoneWeights, Allocator.Persistent);
                 mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);
                 unityBonesPerVertex.Dispose();
                 unityBoneWeights.Dispose();
@@ -889,8 +889,8 @@ namespace UMA
 			NativeArray<BoneWeight1>.Copy(oldWeights.ToArray(), unityBoneWeights);
 			NativeArray<byte>.Copy(oldBonesPerVertex.ToArray(), unityBonesPerVertex);
 #else
-			SerializedBoneWeights = oldWeights.ToArray();
-			SerializedBonesPerVertex = oldBonesPerVertex.ToArray();
+			ManagedBoneWeights = oldWeights.ToArray();
+			ManagedBonesPerVertex = oldBonesPerVertex.ToArray();
 #endif
 			LoadedBoneweights = true;
 		}
@@ -1044,6 +1044,18 @@ namespace UMA
 		public UMAMeshData DeepCopy()
 		{
 			UMAMeshData newMeshData = new UMAMeshData();
+
+			if (ManagedBonesPerVertex != null)
+            {
+				newMeshData.ManagedBonesPerVertex = new byte[ManagedBonesPerVertex.Length];
+				Array.Copy(ManagedBonesPerVertex, newMeshData.ManagedBonesPerVertex, ManagedBonesPerVertex.Length);
+            }
+
+			if (ManagedBoneWeights != null)
+			{
+				newMeshData.ManagedBoneWeights = new BoneWeight1[ManagedBoneWeights.Length];
+				Array.Copy(ManagedBoneWeights, newMeshData.ManagedBoneWeights, ManagedBoneWeights.Length);
+			}
 
 			if (bindPoses != null)
 			{

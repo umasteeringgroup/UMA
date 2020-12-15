@@ -249,7 +249,7 @@ namespace UMA
 				// already loaded. just return.
 				return;
             }
-			if (meshData.SerializedBoneWeights != null && meshData.SerializedBoneWeights.Length > 0)
+			if (meshData.ManagedBoneWeights != null && meshData.ManagedBoneWeights.Length > 0)
             {
 				meshData.LoadVariableBoneWeights();
             }

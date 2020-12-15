@@ -216,6 +216,9 @@ namespace UMA.PoseTools
 				mecanimMask |= MecanimJoint.Jaw;
 			if (!overrideMecanimEyes)
 				mecanimMask |= MecanimJoint.Eye;
+			if (!overrideMecanimHands)
+				mecanimMask |= MecanimJoint.Hands;
+
 			if (overrideMecanimJaw)
 			{
 				umaData.skeleton.Restore(jawHash);

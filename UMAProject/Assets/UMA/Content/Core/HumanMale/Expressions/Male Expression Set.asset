@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -84,3 +85,19 @@ MonoBehaviour:
     inverse: {fileID: 11400000, guid: 7dfab864b147540d5a5536fdcd2b15ee, type: 2}
   - primary: {fileID: 11400000, guid: 7e9e270a35e674a428a89016cbb327d2, type: 2}
     inverse: {fileID: 11400000, guid: b5a55fcad31d447b9b0cb045505730c9, type: 2}
+  - primary: {fileID: 11400000, guid: 4c3d45ae137a43943a8964a60f5aef32, type: 2}
+    inverse: {fileID: 0}
+  - primary: {fileID: 11400000, guid: 75c644aea29a64b45b586e1948e90235, type: 2}
+    inverse: {fileID: 0}
+  - primary: {fileID: 11400000, guid: 7e44cf23a778a7e4894bacc826e6751d, type: 2}
+    inverse: {fileID: 0}
+  - primary: {fileID: 11400000, guid: f0735aef7e73f704484c1d163383e9bf, type: 2}
+    inverse: {fileID: 0}
+  - primary: {fileID: 11400000, guid: 519eaf2f47065b440aa42e1e901237c1, type: 2}
+    inverse: {fileID: 0}
+  - primary: {fileID: 11400000, guid: ec48e99f1976244418cb3332857505e7, type: 2}
+    inverse: {fileID: 0}
+  - primary: {fileID: 11400000, guid: a41cab8fcbaa08e448b8885e44d47358, type: 2}
+    inverse: {fileID: 0}
+  - primary: {fileID: 11400000, guid: a52973f065fa68049b1de9549a8391d3, type: 2}
+    inverse: {fileID: 0}
