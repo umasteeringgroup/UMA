@@ -1449,15 +1449,21 @@ namespace UMA
 #endif
                 if (!string.IsNullOrEmpty(ai._Guid))
                 {
-                    if (GuidTypes.ContainsKey(ai._Guid))
+                    if (!GuidTypes.ContainsKey(ai._Guid))
                     {
-                        return false;
+                        GuidTypes.Add(ai._Guid, ai);
                     }
-                    GuidTypes.Add(ai._Guid, ai);
                 }
 #endif
 
-                TypeDic.Add(ai._Name, ai);
+                if (!TypeDic.ContainsKey(ai._Name))
+                {
+                    TypeDic.Add(ai._Name, ai);
+                }
+                else
+                {
+                    // warning?
+                }
             }
             catch (System.Exception ex)
             {
@@ -1567,7 +1573,7 @@ namespace UMA
             {
 				AssetItem ai = TypeDic[Name];
 				TypeDic.Remove(Name);
-                GuidTypes.Remove(Name);
+                GuidTypes.Remove(ai._Guid);
 				if (theType == typeof(UMAWardrobeRecipe))
 				{
 					// remove it from the race lookup.
