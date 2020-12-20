@@ -41,10 +41,6 @@ namespace UMA.PoseTools
                 {
                     if (pair.primary != null)
                     {
-                        if (pair.primary.name.ToLower().Contains("rightpoint"))
-                        {
-                            Debug.Log(pair.primary.name);
-                        }
                         foreach (UMABonePose.PoseBone bone in pair.primary.poses)
                         {
                             if (!boneHashList.Contains(bone.hash))
