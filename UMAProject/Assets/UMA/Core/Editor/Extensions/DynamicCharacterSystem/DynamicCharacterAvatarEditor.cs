@@ -727,10 +727,9 @@ namespace UMA.CharacterSystem.Editors
 
 				// Debug.Log("prefab instance asset type: " + PrefabUtility.GetPrefabInstanceStatus(thisDCA.gameObject) + ", asset type: " + PrefabUtility.GetPrefabAssetType(thisDCA.gameObject));
 
-				// Don't generate UMAs from project prefabs.
+				// Don't generate UMAs from project prefabs or if the gameObject is not active.
 				if (!thisDCA.gameObject.activeInHierarchy)//PrefabUtility.GetPrefabInstanceStatus(thisDCA.gameObject) == PrefabInstanceStatus.NotAPrefab && PrefabUtility.GetPrefabAssetType(thisDCA.gameObject) != PrefabAssetType.NotAPrefab)
 				{
-					Debug.Log("This is a game object in the project view.");
 					return;
 				}
 

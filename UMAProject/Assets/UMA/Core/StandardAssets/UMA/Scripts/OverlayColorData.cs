@@ -18,6 +18,7 @@ namespace UMA
 
 		public const string UNSHARED = "-";
 		public string name;
+		[ColorUsage(true, true)]
 		public Color[] channelMask = new Color[0];
 		public Color[] channelAdditiveMask = new Color[0];
 		public UMAMaterialPropertyBlock PropertyBlock; // may be null.

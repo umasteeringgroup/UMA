@@ -18,14 +18,14 @@ namespace UMA.CharacterSystem.Editors
 
 		public void SetRaceLists(RaceData[] raceDataArray = null)
 		{
-			if (raceDataArray == null)
-			{
-				raceDataArray = UMAContext.Instance.GetAllRaces();
-			}
 			foundRaces.Clear();
 			foundRaceNames.Clear();
 			foundRaces.Add(null);
 			foundRaceNames.Add("None Set");
+			if (raceDataArray == null)
+            {
+				return;
+            }
 			foreach (RaceData race in raceDataArray)
 			{
 				if (race != null && race.raceName != "RaceDataPlaceholder")
@@ -37,6 +37,12 @@ namespace UMA.CharacterSystem.Editors
 		}
 		private void CheckRaceDataLists()
 		{
+			if (UMAContext.Instance == null)
+            {
+				var raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
+				SetRaceLists(raceDatas.ToArray());
+				return;
+            }
 			if (Application.isPlaying)
 			{
 				//Start will have cleared any EditorAdded Assets and we only *need* the ones in the library

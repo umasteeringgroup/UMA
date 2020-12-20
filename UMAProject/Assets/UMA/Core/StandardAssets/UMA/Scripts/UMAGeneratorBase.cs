@@ -122,6 +122,9 @@ namespace UMA
 			{
 				umaData.FireAnimatorStateSavedEvent();
 
+				if (animator.runtimeAnimatorController == null)
+					return;
+
 				int layerCount = 0;
 				if (animator.isInitialized)
 				{
@@ -129,7 +132,8 @@ namespace UMA
 				}
 				stateHashes = new int[layerCount];
 				stateTimes = new float[layerCount];
-				parameters = new AnimatorControllerParameter[animator.parameterCount];
+				if (animator.isInitialized)
+					parameters = new AnimatorControllerParameter[animator.parameterCount];
 				layerWeights.Clear();
 
 				for (int i = 0; i < layerCount; i++)
@@ -171,19 +175,19 @@ namespace UMA
 
 			public void RestoreAnimatorState(Animator animator, UMAData umaData)
 			{
-
-					if (animator.layerCount == stateHashes.Length)
+				if (animator.layerCount == stateHashes.Length)
+				{
+					for (int i = 0; i < animator.layerCount; i++)
 					{
-						for (int i = 0; i < animator.layerCount; i++)
+						animator.Play(stateHashes[i], i, stateTimes[i]);
+						if (i < layerWeights.Count)
 						{
-							animator.Play(stateHashes[i], i, stateTimes[i]);
-							if (i < layerWeights.Count)
-							{
-								animator.SetLayerWeight(i, layerWeights[i]);
-							}
+							animator.SetLayerWeight(i, layerWeights[i]);
 						}
 					}
-
+				}
+				if (parameters != null)
+				{
 					foreach (AnimatorControllerParameter param in parameters)
 					{
 						if (!animator.IsParameterControlledByCurve(param.nameHash))
@@ -202,8 +206,11 @@ namespace UMA
 							}
 						}
 					}
-
+				}
+ 
 					umaData.FireAnimatorStateRestoredEvent();
+				if (animator.isInitialized)
+				{
 #if UNITY_EDITOR
 					if (FreezeTime || animator.enabled == false)
 					{
@@ -215,12 +222,12 @@ namespace UMA
 					}
 
 #else
-				if (animator.enabled == true)
-				    animator.Update(Time.deltaTime);
-				else
-				    animator.Update(0);
-
+					if (animator.enabled == true)
+						animator.Update(Time.deltaTime);
+					else
+						animator.Update(0);
 #endif
+				}
 			}
 		}
 

@@ -537,11 +537,20 @@ namespace UMA
 
 			foreach (var slot in Slots)
 			{
+                // We are getting extra blank slots. That's weird. 
+
+                if (string.IsNullOrWhiteSpace(slot.id)) continue;
+
 				AssetItem s = GetAssetItem<SlotDataAsset>(slot.id);
 				if (s != null)
 				{
                     returnval.Add(s);
                     string LodIndicator = slot.id.Trim() + "_LOD";
+                    if (slot.id.Contains("_LOD"))
+                    {
+                        // LOD is directly in the base recipe. 
+                        LodIndicator = slot.id.Substring(0, slot.id.Length-1);
+                    }
 
                     if (slot.overlays != null)
                     {
