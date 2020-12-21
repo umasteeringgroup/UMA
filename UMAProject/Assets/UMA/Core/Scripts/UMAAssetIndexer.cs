@@ -1439,6 +1439,10 @@ namespace UMA
 
 
 #if UNITY_EDITOR
+                if (string.IsNullOrWhiteSpace(ai._Name))
+                {
+                    throw new Exception("Invalid name on Asset type "+ai._Type.ToString());
+                }
                 if (ai.IsAddressable)
                 {
                     ai._SerializedItem = null;
