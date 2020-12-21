@@ -99,9 +99,34 @@ namespace UMA.Controls
 		/// <returns></returns>
 		public static List<Type> GetAddressablePlugins()
 		{
-			return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+			List<Type> theTypes = new List<Type>();
+
+			var Assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+		    foreach(var asm in Assemblies)
+            {
+
+				try
+                {
+					var Types = asm.GetTypes();
+					foreach(var t in Types)
+                    {
+						if (typeof(IUMAAddressablePlugin).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                        {
+							theTypes.Add(t);
+                        }
+                    }
+                }
+				catch(Exception ex)
+                {
+					// This apparently blows up on some assemblies. 
+                }
+            }
+
+			return theTypes;
+/*			return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
 				 .Where(x => typeof(IUMAAddressablePlugin).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-				 .Select(x => x).ToList();
+				 .Select(x => x).ToList();*/
 		}
 
 		[MenuItem("UMA/Global Library", priority = 99)]
