@@ -131,7 +131,7 @@ namespace UMA
 		/// Be very careful! improper use could result in overflowing the texture on the atlas!
 		/// </summary>
 		public bool instanceTransformed;
-		public Vector3 Scale;
+		public Vector3 Scale = Vector3.one;
 		[Range(0.0f,360.0f)]
 		public float Rotation;
 

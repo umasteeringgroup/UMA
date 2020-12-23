@@ -117,7 +117,7 @@ namespace UMA.Controls
                         }
                     }
                 }
-				catch(Exception ex)
+				catch (Exception)
                 {
 					// This apparently blows up on some assemblies. 
                 }

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using UMA.Examples;
+using System.Runtime;
 #if UMA_ADDRESSABLES
 using UnityEngine.AddressableAssets;
 #endif
@@ -164,7 +165,9 @@ namespace UMA.CharacterSystem.Examples
 			UMAAssetIndexer.Instance.UnloadAll(force);
 #endif
             Resources.UnloadUnusedAssets();
-		}
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            System.GC.Collect();
+        }
 
 		/// <summary>
 		/// Remove any controls from the panels
