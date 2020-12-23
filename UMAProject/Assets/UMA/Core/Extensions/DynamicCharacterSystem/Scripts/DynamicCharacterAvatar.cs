@@ -579,6 +579,17 @@ namespace UMA.CharacterSystem
         {
             if (umaData != null)
             {
+#if UNITY_EDITOR
+                if (editorTimeGeneration && Application.isPlaying == false)
+                {
+                    var r = umaData.GetRenderers();
+                    if (r != null)
+                    {
+                        if (r.Length > 0 && r[0].sharedMesh == null)
+                            GenerateSingleUMA();
+                    }
+                }
+#endif
                 umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 
                 if (umaData.rendererCount > 0 && lastHide != hide)
@@ -956,9 +967,9 @@ namespace UMA.CharacterSystem
                 LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors);
             }
         }
-        #endregion
+#endregion
 
-        #region SETTINGS MODIFICATION (RACE RELATED)
+#region SETTINGS MODIFICATION (RACE RELATED)
 
         /// <summary>
         /// Sets the starting race of the avatar based on the value of the 'activeRace'. 

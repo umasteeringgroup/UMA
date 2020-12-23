@@ -111,6 +111,7 @@ namespace UMA
 		/// </summary>
 		public class AnimatorState
 		{
+			public bool wasCopied = false;
 			public bool FreezeTime;
 			private bool wasInitialized;
 			private int[] stateHashes = new int[0];
@@ -120,6 +121,11 @@ namespace UMA
 
 			public void SaveAnimatorState(Animator animator, UMAData umaData)
 			{
+				if (animator == null)
+                {
+					wasCopied = false;
+					return;
+                }
 				umaData.FireAnimatorStateSavedEvent();
 
 				if (animator.runtimeAnimatorController == null)
@@ -133,7 +139,26 @@ namespace UMA
 				stateHashes = new int[layerCount];
 				stateTimes = new float[layerCount];
 				if (animator.isInitialized)
+				{
 					parameters = new AnimatorControllerParameter[animator.parameterCount];
+					Array.Copy(animator.parameters, parameters, animator.parameterCount);
+
+					foreach (AnimatorControllerParameter param in parameters)
+					{
+						switch (param.type)
+						{
+							case AnimatorControllerParameterType.Bool:
+								param.defaultBool = animator.GetBool(param.nameHash);
+								break;
+							case AnimatorControllerParameterType.Float:
+								param.defaultFloat = animator.GetFloat(param.nameHash);
+								break;
+							case AnimatorControllerParameterType.Int:
+								param.defaultInt = animator.GetInteger(param.nameHash);
+								break;
+						}
+					}
+				}
 				layerWeights.Clear();
 
 				for (int i = 0; i < layerCount; i++)
@@ -154,27 +179,16 @@ namespace UMA
 					layerWeights.Add(i, animator.GetLayerWeight(i));
 				}
 
-				Array.Copy(animator.parameters, parameters, animator.parameterCount);
-
-				foreach (AnimatorControllerParameter param in parameters)
-				{
-					switch (param.type)
-					{
-						case AnimatorControllerParameterType.Bool:
-							param.defaultBool = animator.GetBool(param.nameHash);
-							break;
-						case AnimatorControllerParameterType.Float:
-							param.defaultFloat = animator.GetFloat(param.nameHash);
-							break;
-						case AnimatorControllerParameterType.Int:
-							param.defaultInt = animator.GetInteger(param.nameHash);
-							break;
-					}
-				}
+				wasCopied = true;
 			}
 
 			public void RestoreAnimatorState(Animator animator, UMAData umaData)
 			{
+				if (wasCopied == false)
+					return;
+				if (animator == false)
+					return;
+
 				if (animator.layerCount == stateHashes.Length)
 				{
 					for (int i = 0; i < animator.layerCount; i++)

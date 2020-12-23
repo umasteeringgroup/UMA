@@ -8,6 +8,7 @@ using UnityEngine;
 using UMA.Dynamics;
 using UnityEngine.Profiling;
 using Unity.Collections;
+using UnityEngine.Serialization;
 
 namespace UMA
 {
@@ -204,7 +205,9 @@ namespace UMA
 		public int vertexCount;
 		//public int boneWeightCount;
         public string RootBoneName = "Global";
+		[FormerlySerializedAs("SerializedBoneWeights")]
 		public BoneWeight1[] ManagedBoneWeights;
+		[FormerlySerializedAs("SerializedBonesPerVertex")]
 		public byte[] ManagedBonesPerVertex;
 		[System.NonSerialized]
 		public bool LoadedBoneweights;
@@ -626,11 +629,13 @@ namespace UMA
 				if (Debug.isDebugBuild)
 					Debug.LogError("Cannot apply changes to prefab!");
 			}
-
-			if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
+			if (mesh != null)
 			{
-				if (Debug.isDebugBuild)
-					Debug.LogError("Cannot apply changes to asset mesh!");
+				if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
+				{
+					if (Debug.isDebugBuild)
+						Debug.LogError("Cannot apply changes to asset mesh!");
+				}
 			}
 #endif
 			mesh.subMeshCount = 1;
