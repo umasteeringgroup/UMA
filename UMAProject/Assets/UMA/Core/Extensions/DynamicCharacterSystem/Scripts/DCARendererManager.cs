@@ -45,6 +45,8 @@ namespace UMA.CharacterSystem
         {
             if (RenderersEnabled != lastState)
             {
+				if (avatar.hide)
+					return;
                 lastState = RenderersEnabled;
                 avatar.BuildCharacter();
             }
