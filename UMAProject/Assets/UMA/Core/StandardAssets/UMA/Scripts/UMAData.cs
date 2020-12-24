@@ -1546,6 +1546,12 @@ namespace UMA
 				}
 				if (destroyRenderer)
 				{
+					// need to kill cloth first if it exists.
+					var cloth = renderer.gameObject.GetComponent<Cloth>();
+					if (cloth != null)
+                    {
+						UMAUtils.DestroySceneObject(cloth);
+					}
 					UMAUtils.DestroySceneObject(renderer.sharedMesh);
 					UMAUtils.DestroySceneObject(renderer);
 				}
