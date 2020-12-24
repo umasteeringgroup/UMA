@@ -20,6 +20,10 @@ public class UMAMountedItem : MonoBehaviour
     [Tooltip("If true the object will scale to bone DNA")]
     public bool setScale = true;
 
+    [Tooltip("Mount this item in startup. Useful when instantiating prefabs.")]
+    public bool MountOnStart;
+
+
     private int BoneHash;
     private DynamicCharacterAvatar avatar;
     private Transform MountPoint;  // This is the mount point we create/update.
@@ -37,21 +41,24 @@ public class UMAMountedItem : MonoBehaviour
         avatar = GetComponentInParent<DynamicCharacterAvatar>();
         if (avatar == null)
         {
-            if (Debug.isDebugBuild)
-            {
-                Debug.LogError("Unable to find parent for mounted item on bone: " + BoneName);
-            }
             return false;
         }
         avatar.CharacterUpdated.AddListener(new UnityAction<UMAData>(CharacterUpdated));
 #if UNITY_EDITOR
-        if (!Application.isPlaying)
+        if (!Application.isPlaying || MountOnStart)
         {
             MountPoint = FindOrCreateMountpoint();
             SetMountTransform();
         }
 #endif
         return true;
+    }
+
+    // Used when mounting manually.
+    public void MountItem()
+    {
+        MountPoint = FindOrCreateMountpoint();
+        SetMountTransform();
     }
 
 #if UNITY_EDITOR
