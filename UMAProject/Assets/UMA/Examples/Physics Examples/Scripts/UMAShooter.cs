@@ -8,10 +8,17 @@ namespace UMA.Dynamics.Examples
 	{
 		//Declare a member variables for distributing the impacts over several frames
 		float impactEndTime=0;
+		int hits = 0;
 		Rigidbody impactTarget=null;
 		Vector3 impact;
 		public Camera currentCamera;
 		public LayerMask layers;
+		public AudioClip Bang;
+		public float announcerDelay = 0.5f;
+
+		public AudioClip KillingSpree;
+		public AudioClip HeadShot;
+		public AudioClip HadToHurt;
 
 
 		// Update is called once per frame
@@ -19,8 +26,14 @@ namespace UMA.Dynamics.Examples
 			//if left mouse button clicked
 			if (Input.GetMouseButtonDown(0))
 			{
+				AudioSource src = gameObject.GetComponent<AudioSource>();
+				if (src != null)
+                {
+					src.PlayOneShot(Bang);
+                }
 				//Get a ray going from the camera through the mouse cursor
 				Ray ray = currentCamera.ScreenPointToRay (new Vector3(Screen.width/2,Screen.height/2,0));
+
 				
 				//check if the ray hits a physic collider
 				RaycastHit hit; //a local variable that will receive the hit info from the Raycast call below
@@ -36,15 +49,24 @@ namespace UMA.Dynamics.Examples
 						//if(player == null)
 						//	player = avatar.GetComponentInChildren<RagdollPlayer>();
 						if(player)
-						{
-							
-							player.ragdolled=true;
-		
-							
-						}
-						
-						//set the impact target to whatever the ray hit
-						impactTarget = hit.rigidbody;
+                        {
+							if (!player.ragdolled)
+                            {
+								hits++;
+								if (hits == 5)
+								{
+									StartCoroutine(PlayHit(KillingSpree));
+								}
+								else
+								{
+									AnnounceHit(hit);
+								}
+							}
+							player.ragdolled = true;
+                        }
+
+                        //set the impact target to whatever the ray hit
+                        impactTarget = hit.rigidbody;
 						
 						//impact direction also according to the ray
 						impact = ray.direction * 2.0f;
@@ -97,7 +119,6 @@ namespace UMA.Dynamics.Examples
 					//check if the raycast target has a rigid body (belongs to the ragdoll)
 					if (hit.rigidbody!=null)
 					{
-						
 						Transform avatar = hit.rigidbody.transform.root; // this need to search more intelligently, only works 
 						//find the RagdollHelper component and activate ragdolling
 						UMAPhysicsAvatar player = avatar.GetComponent<UMAPhysicsAvatar>();
@@ -130,7 +151,34 @@ namespace UMA.Dynamics.Examples
 				impactTarget.AddForce(impact,ForceMode.VelocityChange);
 			}
 		}
-		
+
+        private RaycastHit AnnounceHit(RaycastHit hit)
+        {
+            if (hit.rigidbody != null)
+            {
+                if (hit.rigidbody.gameObject.name.ToLower() == "head")
+                {
+					StartCoroutine(PlayHit(HeadShot));
+                }
+				if (hit.rigidbody.gameObject.name.ToLower() == "hips")
+				{
+					StartCoroutine(PlayHit(HadToHurt));
+				}
+			}
+			return hit;
+        }
+
+		IEnumerator PlayHit(AudioClip clip)
+        {
+			yield return new WaitForSeconds(announcerDelay);
+			AudioSource src = gameObject.GetComponent<AudioSource>();
+			if (src != null)
+			{
+				src.PlayOneShot(clip);
+			}
+		}
+
+
 		IEnumerator TimedRagdoll(RaycastHit hit)
 		{
 			Transform avatar = hit.rigidbody.transform.root; 			
