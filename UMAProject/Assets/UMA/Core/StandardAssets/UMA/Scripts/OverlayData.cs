@@ -303,9 +303,6 @@ namespace UMA
 					colorData.channelMask[i] = Color.white;
 					colorData.channelAdditiveMask[i] = new Color32(0, 0, 0, 0);
 				}
-
-				if (Debug.isDebugBuild)
-					Debug.LogWarning(string.Format("Overlay '{0}' missing required color data. Resizing and adding defaults", asset.overlayName));
 			}
 
 			return valid;

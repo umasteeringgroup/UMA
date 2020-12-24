@@ -20,6 +20,11 @@ Generation
   Broke out fit methods on generator
   Added property to sharpen reduced textures by forcing it to use a higher mip. Produces significantly more detailed output on textures that are fit.
 
+Scenes
+  Updated many scenes to use better lighting.
+  Updated Mounting Objects example scene to show how to use UMAMountedItem.
+  Updated Ragdoll scene to show how to detect what part of the body is hit.
+
 Recipes
   Added ability to transform (scale and rotate) an overlay in a recipe (Not on first overlay - only additional overlays)
   Added ability to change color channel length on shared colors in recipe editor.

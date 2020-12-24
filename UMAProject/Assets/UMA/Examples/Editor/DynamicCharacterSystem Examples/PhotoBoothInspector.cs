@@ -21,6 +21,10 @@ namespace UMA.CharacterSystem.Examples
 		public override void OnInspectorGUI()
 		{
 			//DrawDefaultInspector ();
+			if (!Application.isPlaying)
+            {
+				EditorGUILayout.HelpBox("To take photos you must be in play mode. Select the destination folder, choose 'auto photo' mode, and press 'Take Photo'", MessageType.Info);
+			}
 			Editor.DrawPropertiesExcluding(serializedObject, new string[] {"doingTakePhoto","animationFreezeFrame", "autoPhotosEnabled", "textureToPhoto","dimAllButTarget","dimToColor", "dimToMetallic", "neutralizeTargetColors","neutralizeToColor", "neutralizeToMetallic", "addUnderwearToBasePhoto","overwriteExistingPhotos","destinationFolder","photoName" });
 			serializedObject.ApplyModifiedProperties();
 			bool freezeAnimation = serializedObject.FindProperty("freezeAnimation").boolValue;
@@ -53,10 +57,14 @@ namespace UMA.CharacterSystem.Examples
 			{
 				//EditorGUILayout.PropertyField(serializedObject.FindProperty("addUnderwearToBasePhoto"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("overwriteExistingPhotos"));
+				if (Application.isPlaying)
+					EditorGUILayout.HelpBox("Auto photos is enabled. A photo for each wardrobe item will be generated. Select the destination folder, and press 'Take Photo'", MessageType.Info);
 			}
 			else
 			{
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("textureToPhoto"));
+				if (Application.isPlaying)
+					EditorGUILayout.HelpBox("Auto photos is disabled. Select the destination folder, add the wardrobe item, and select the texture you want to take. The press 'Take Photo'.", MessageType.Info);
 			}
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("photoName"));
 			
@@ -76,6 +84,8 @@ namespace UMA.CharacterSystem.Examples
 					}
 				}
 				EditorGUILayout.Space();
+
+
 				if (doingTakePhoto)
 				{
 					EditorGUI.BeginDisabledGroup(true);

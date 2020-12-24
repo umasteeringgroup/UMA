@@ -34,7 +34,7 @@ namespace UMA.CharacterSystem.Examples
 		public string destinationFolder;//non-serialized?
 		[Tooltip("If true will automatically take all possible wardrobe photos for the current character. Otherwise photographs character in its current state.")]
 		public bool autoPhotosEnabled = true;
-		[Tooltip("In mnual mode use this to select the RenderTexture you wish to Photo")]
+		[Tooltip("In manual mode use this to select the RenderTexture you wish to Photo")]
 		public renderTextureOpts textureToPhoto = renderTextureOpts.BodyRenderTexture;
 		[Tooltip("If true will dim everything but the target wardrobe recipe (AutoPhotosEnabled only)")]
 		public bool dimAllButTarget = false;
