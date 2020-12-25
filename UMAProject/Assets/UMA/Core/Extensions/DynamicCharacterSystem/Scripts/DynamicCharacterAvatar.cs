@@ -519,6 +519,19 @@ namespace UMA.CharacterSystem
             return objs;
         }
 
+        public void InitializeFromPreset(UMAPreset preset)
+        {
+            preloadWardrobeRecipes = preset.DefaultWardrobe;
+            predefinedDNA = preset.PredefinedDNA;
+            characterColors = preset.DefaultColors;
+        }
+
+        public void InitializeFromPreset(string presetstring)
+        {
+            UMAPreset prs = JsonUtility.FromJson<UMAPreset>(presetstring);
+            InitializeFromPreset(prs);
+        }
+
 #if UNITY_EDITOR
         public void GenerateSingleUMA()
         {

@@ -10,15 +10,7 @@ namespace UMA.CharacterSystem.Editors
 {
 	[CustomEditor(typeof(DynamicCharacterAvatar), true)]
 	public partial class DynamicCharacterAvatarEditor : Editor
-	{
-		[Serializable]
-		public class UMAPreset
-        {
-			public UMAPredefinedDNA PredefinedDNA;
-			public DynamicCharacterAvatar.WardrobeRecipeList DefaultWardrobe;
-			public DynamicCharacterAvatar.ColorValueList DefaultColors;
-		}
-		
+	{		
 		public static bool showHelp = false;
 		public static bool showWardrobe = false;
 		public static bool showEditorCustomization = false;
@@ -207,10 +199,7 @@ namespace UMA.CharacterSystem.Editors
 						try
                         {
 							string presetstring = System.IO.File.ReadAllText(fileName);
-							UMAPreset prs = JsonUtility.FromJson<UMAPreset>(presetstring);
-							thisDCA.preloadWardrobeRecipes = prs.DefaultWardrobe;
-							thisDCA.predefinedDNA = prs.PredefinedDNA;
-							thisDCA.characterColors = prs.DefaultColors;
+							thisDCA.InitializeFromPreset(presetstring);
 							UpdateCharacter();
                         }
 						catch(Exception ex)
