@@ -24,6 +24,17 @@ namespace UMA.Dynamics.Examples
 		// Update is called once per frame
 		void Update () {
 			//if left mouse button clicked
+			if (Input.GetKeyDown(KeyCode.Escape))
+            {
+				UMAPhysicsAvatar[] components = GameObject.FindObjectsOfType<UMAPhysicsAvatar>();
+				foreach(var player in components)
+                {
+					if (player.ragdolled)
+                    {
+						player.ragdolled = false;
+					}
+                }
+			}
 			if (Input.GetMouseButtonDown(0))
 			{
 				AudioSource src = gameObject.GetComponent<AudioSource>();
