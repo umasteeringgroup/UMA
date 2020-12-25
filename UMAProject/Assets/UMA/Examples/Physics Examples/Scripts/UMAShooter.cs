@@ -19,6 +19,7 @@ namespace UMA.Dynamics.Examples
 		public AudioClip KillingSpree;
 		public AudioClip HeadShot;
 		public AudioClip HadToHurt;
+		public GameObject Blood;
 
 
 		// Update is called once per frame
@@ -61,6 +62,10 @@ namespace UMA.Dynamics.Examples
 						//	player = avatar.GetComponentInChildren<RagdollPlayer>();
 						if(player)
                         {
+							if (Blood != null)
+							{
+								GameObject bloodEmitter = GameObject.Instantiate(Blood, hit.point, Quaternion.identity);
+							}
 							if (!player.ragdolled)
                             {
 								hits++;
