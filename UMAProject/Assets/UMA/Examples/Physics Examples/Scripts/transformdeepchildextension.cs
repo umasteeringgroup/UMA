@@ -6,6 +6,8 @@ using System.Collections;
      //Breadth-first search
 	 public static Transform FindDeepChild(this Transform aParent, string aName)
 	 {
+		if (aParent == null) return null;
+
 		 var result = aParent.Find(aName);
 		 if (result != null)
 			 return result;
