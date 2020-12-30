@@ -1,335 +1,977 @@
 fileFormatVersion: 2
 guid: ceaacdab23cd57848a35ef0140ff5bd5
-timeCreated: 1507868606
-licenseType: Free
 ModelImporter:
-  serializedVersion: 21
-  fileIDToRecycleName:
-    100000: //RootNode
-    100002: Global
-    100004: Head
-    100006: HeadAdjust
-    100008: Hips
-    100010: LeftArm
-    100012: LeftArmAdjust
-    100014: LeftCheek
-    100016: LeftCheekAdjust
-    100018: LeftEar
-    100020: LeftEarAdjust
-    100022: LeftEye
-    100024: LeftEyeAdjust
-    100026: LeftEyebrowLow
-    100028: LeftEyebrowLowAdjust
-    100030: LeftEyebrowMiddle
-    100032: LeftEyebrowMiddleAdjust
-    100034: LeftEyebrowUp
-    100036: LeftEyebrowUpAdjust
-    100038: LeftEyeGlobe
-    100040: LeftFoot
-    100042: LeftForeArm
-    100044: LeftForeArmAdjust
-    100046: LeftForeArmTwist
-    100048: LeftForeArmTwistAdjust
-    100050: LeftGluteus
-    100052: LeftHand
-    100054: LeftHandFinger01_01
-    100056: LeftHandFinger01_02
-    100058: LeftHandFinger01_03
-    100060: LeftHandFinger02_01
-    100062: LeftHandFinger02_02
-    100064: LeftHandFinger02_03
-    100066: LeftHandFinger03_01
-    100068: LeftHandFinger03_02
-    100070: LeftHandFinger03_03
-    100072: LeftHandFinger04_01
-    100074: LeftHandFinger04_02
-    100076: LeftHandFinger04_03
-    100078: LeftHandFinger05_01
-    100080: LeftHandFinger05_02
-    100082: LeftHandFinger05_03
-    100084: LeftInnerBreast
-    100086: LeftLeg
-    100088: LeftLegAdjust
-    100090: LeftLips
-    100092: LeftLipsAdjust
-    100094: LeftLipsInferior
-    100096: LeftLipsInferiorAdjust
-    100098: LeftLipsSuperiorMiddle
-    100100: LeftLipsSuperiorMiddleAdjust
-    100102: LeftLowCheek
-    100104: LeftLowCheekAdjust
-    100106: LeftLowerLid
-    100108: LeftLowerLidAdjust
-    100110: LeftLowMaxilar
-    100112: LeftLowMaxilarAdjust
-    100114: LeftNose
-    100116: LeftNoseAdjust
-    100118: LeftOuterBreast
-    100120: LeftShoulder
-    100122: LeftShoulderAdjust
-    100124: LeftToeBase
-    100126: LeftTrapezius
-    100128: LeftUpLeg
-    100130: LeftUpLegAdjust
-    100132: LeftUpperLid
-    100134: LeftUpperLidAdjust
-    100136: LipsInferior
-    100138: LipsInferiorAdjust
-    100140: LipsSuperior
-    100142: LipsSuperiorAdjust
-    100144: LowerBack
-    100146: LowerBackAdjust
-    100148: LowerBackBelly
-    100150: Mandible
-    100152: MandibleAdjust
-    100154: Neck
-    100156: NeckAdjust
-    100158: NoseBase
-    100160: NoseBaseAdjust
-    100162: NoseMiddle
-    100164: NoseMiddleAdjust
-    100166: NoseTop
-    100168: NoseTopAdjust
-    100170: Position
-    100172: RightArm
-    100174: RightArmAdjust
-    100176: RightCheek
-    100178: RightCheekAdjust
-    100180: RightEar
-    100182: RightEarAdjust
-    100184: RightEye
-    100186: RightEyeAdjust
-    100188: RightEyebrowLow
-    100190: RightEyebrowLowAdjust
-    100192: RightEyebrowMiddle
-    100194: RightEyebrowMiddleAdjust
-    100196: RightEyebrowUp
-    100198: RightEyebrowUpAdjust
-    100200: RightEyeGlobe
-    100202: RightFoot
-    100204: RightForeArm
-    100206: RightForeArmAdjust
-    100208: RightForeArmTwist
-    100210: RightForeArmTwistAdjust
-    100212: RightGluteus
-    100214: RightHand
-    100216: RightHandFinger01_01
-    100218: RightHandFinger01_02
-    100220: RightHandFinger01_03
-    100222: RightHandFinger02_01
-    100224: RightHandFinger02_02
-    100226: RightHandFinger02_03
-    100228: RightHandFinger03_01
-    100230: RightHandFinger03_02
-    100232: RightHandFinger03_03
-    100234: RightHandFinger04_01
-    100236: RightHandFinger04_02
-    100238: RightHandFinger04_03
-    100240: RightHandFinger05_01
-    100242: RightHandFinger05_02
-    100244: RightHandFinger05_03
-    100246: RightInnerBreast
-    100248: RightLeg
-    100250: RightLegAdjust
-    100252: RightLips
-    100254: RightLipsAdjust
-    100256: RightLipsInferior
-    100258: RightLipsInferiorAdjust
-    100260: RightLipsSuperiorMiddle
-    100262: RightLipsSuperiorMiddleAdjust
-    100264: RightLowCheek
-    100266: RightLowCheekAdjust
-    100268: RightLowerLid
-    100270: RightLowerLidAdjust
-    100272: RightLowMaxilar
-    100274: RightLowMaxilarAdjust
-    100276: RightNose
-    100278: RightNoseAdjust
-    100280: RightOuterBreast
-    100282: RightShoulder
-    100284: RightShoulderAdjust
-    100286: RightToeBase
-    100288: RightTrapezius
-    100290: RightUpLeg
-    100292: RightUpLegAdjust
-    100294: RightUpperLid
-    100296: RightUpperLidAdjust
-    100298: Spine
-    100300: Spine1
-    100302: Spine1Adjust
-    100304: SpineAdjust
-    100306: Tongue01
-    100308: Tongue02
-    100310: UMA_Female_Rig
-    100312: UMA_Human_Female
-    100314: UpperLips
-    100316: UpperLipsAdjust
-    400000: //RootNode
-    400002: Global
-    400004: Head
-    400006: HeadAdjust
-    400008: Hips
-    400010: LeftArm
-    400012: LeftArmAdjust
-    400014: LeftCheek
-    400016: LeftCheekAdjust
-    400018: LeftEar
-    400020: LeftEarAdjust
-    400022: LeftEye
-    400024: LeftEyeAdjust
-    400026: LeftEyebrowLow
-    400028: LeftEyebrowLowAdjust
-    400030: LeftEyebrowMiddle
-    400032: LeftEyebrowMiddleAdjust
-    400034: LeftEyebrowUp
-    400036: LeftEyebrowUpAdjust
-    400038: LeftEyeGlobe
-    400040: LeftFoot
-    400042: LeftForeArm
-    400044: LeftForeArmAdjust
-    400046: LeftForeArmTwist
-    400048: LeftForeArmTwistAdjust
-    400050: LeftGluteus
-    400052: LeftHand
-    400054: LeftHandFinger01_01
-    400056: LeftHandFinger01_02
-    400058: LeftHandFinger01_03
-    400060: LeftHandFinger02_01
-    400062: LeftHandFinger02_02
-    400064: LeftHandFinger02_03
-    400066: LeftHandFinger03_01
-    400068: LeftHandFinger03_02
-    400070: LeftHandFinger03_03
-    400072: LeftHandFinger04_01
-    400074: LeftHandFinger04_02
-    400076: LeftHandFinger04_03
-    400078: LeftHandFinger05_01
-    400080: LeftHandFinger05_02
-    400082: LeftHandFinger05_03
-    400084: LeftInnerBreast
-    400086: LeftLeg
-    400088: LeftLegAdjust
-    400090: LeftLips
-    400092: LeftLipsAdjust
-    400094: LeftLipsInferior
-    400096: LeftLipsInferiorAdjust
-    400098: LeftLipsSuperiorMiddle
-    400100: LeftLipsSuperiorMiddleAdjust
-    400102: LeftLowCheek
-    400104: LeftLowCheekAdjust
-    400106: LeftLowerLid
-    400108: LeftLowerLidAdjust
-    400110: LeftLowMaxilar
-    400112: LeftLowMaxilarAdjust
-    400114: LeftNose
-    400116: LeftNoseAdjust
-    400118: LeftOuterBreast
-    400120: LeftShoulder
-    400122: LeftShoulderAdjust
-    400124: LeftToeBase
-    400126: LeftTrapezius
-    400128: LeftUpLeg
-    400130: LeftUpLegAdjust
-    400132: LeftUpperLid
-    400134: LeftUpperLidAdjust
-    400136: LipsInferior
-    400138: LipsInferiorAdjust
-    400140: LipsSuperior
-    400142: LipsSuperiorAdjust
-    400144: LowerBack
-    400146: LowerBackAdjust
-    400148: LowerBackBelly
-    400150: Mandible
-    400152: MandibleAdjust
-    400154: Neck
-    400156: NeckAdjust
-    400158: NoseBase
-    400160: NoseBaseAdjust
-    400162: NoseMiddle
-    400164: NoseMiddleAdjust
-    400166: NoseTop
-    400168: NoseTopAdjust
-    400170: Position
-    400172: RightArm
-    400174: RightArmAdjust
-    400176: RightCheek
-    400178: RightCheekAdjust
-    400180: RightEar
-    400182: RightEarAdjust
-    400184: RightEye
-    400186: RightEyeAdjust
-    400188: RightEyebrowLow
-    400190: RightEyebrowLowAdjust
-    400192: RightEyebrowMiddle
-    400194: RightEyebrowMiddleAdjust
-    400196: RightEyebrowUp
-    400198: RightEyebrowUpAdjust
-    400200: RightEyeGlobe
-    400202: RightFoot
-    400204: RightForeArm
-    400206: RightForeArmAdjust
-    400208: RightForeArmTwist
-    400210: RightForeArmTwistAdjust
-    400212: RightGluteus
-    400214: RightHand
-    400216: RightHandFinger01_01
-    400218: RightHandFinger01_02
-    400220: RightHandFinger01_03
-    400222: RightHandFinger02_01
-    400224: RightHandFinger02_02
-    400226: RightHandFinger02_03
-    400228: RightHandFinger03_01
-    400230: RightHandFinger03_02
-    400232: RightHandFinger03_03
-    400234: RightHandFinger04_01
-    400236: RightHandFinger04_02
-    400238: RightHandFinger04_03
-    400240: RightHandFinger05_01
-    400242: RightHandFinger05_02
-    400244: RightHandFinger05_03
-    400246: RightInnerBreast
-    400248: RightLeg
-    400250: RightLegAdjust
-    400252: RightLips
-    400254: RightLipsAdjust
-    400256: RightLipsInferior
-    400258: RightLipsInferiorAdjust
-    400260: RightLipsSuperiorMiddle
-    400262: RightLipsSuperiorMiddleAdjust
-    400264: RightLowCheek
-    400266: RightLowCheekAdjust
-    400268: RightLowerLid
-    400270: RightLowerLidAdjust
-    400272: RightLowMaxilar
-    400274: RightLowMaxilarAdjust
-    400276: RightNose
-    400278: RightNoseAdjust
-    400280: RightOuterBreast
-    400282: RightShoulder
-    400284: RightShoulderAdjust
-    400286: RightToeBase
-    400288: RightTrapezius
-    400290: RightUpLeg
-    400292: RightUpLegAdjust
-    400294: RightUpperLid
-    400296: RightUpperLidAdjust
-    400298: Spine
-    400300: Spine1
-    400302: Spine1Adjust
-    400304: SpineAdjust
-    400306: Tongue01
-    400308: Tongue02
-    400310: UMA_Female_Rig
-    400312: UMA_Human_Female
-    400314: UpperLips
-    400316: UpperLipsAdjust
-    4300000: UMA_Human_Female
-    9500000: //RootNode
-    13700000: UMA_Human_Female
+  serializedVersion: 19301
+  internalIDToNameTable:
+  - first:
+      1: 100000
+    second: //RootNode
+  - first:
+      1: 100002
+    second: Global
+  - first:
+      1: 100004
+    second: Head
+  - first:
+      1: 100006
+    second: HeadAdjust
+  - first:
+      1: 100008
+    second: Hips
+  - first:
+      1: 100010
+    second: LeftArm
+  - first:
+      1: 100012
+    second: LeftArmAdjust
+  - first:
+      1: 100014
+    second: LeftCheek
+  - first:
+      1: 100016
+    second: LeftCheekAdjust
+  - first:
+      1: 100018
+    second: LeftEar
+  - first:
+      1: 100020
+    second: LeftEarAdjust
+  - first:
+      1: 100022
+    second: LeftEye
+  - first:
+      1: 100024
+    second: LeftEyeAdjust
+  - first:
+      1: 100026
+    second: LeftEyebrowLow
+  - first:
+      1: 100028
+    second: LeftEyebrowLowAdjust
+  - first:
+      1: 100030
+    second: LeftEyebrowMiddle
+  - first:
+      1: 100032
+    second: LeftEyebrowMiddleAdjust
+  - first:
+      1: 100034
+    second: LeftEyebrowUp
+  - first:
+      1: 100036
+    second: LeftEyebrowUpAdjust
+  - first:
+      1: 100038
+    second: LeftEyeGlobe
+  - first:
+      1: 100040
+    second: LeftFoot
+  - first:
+      1: 100042
+    second: LeftForeArm
+  - first:
+      1: 100044
+    second: LeftForeArmAdjust
+  - first:
+      1: 100046
+    second: LeftForeArmTwist
+  - first:
+      1: 100048
+    second: LeftForeArmTwistAdjust
+  - first:
+      1: 100050
+    second: LeftGluteus
+  - first:
+      1: 100052
+    second: LeftHand
+  - first:
+      1: 100054
+    second: LeftHandFinger01_01
+  - first:
+      1: 100056
+    second: LeftHandFinger01_02
+  - first:
+      1: 100058
+    second: LeftHandFinger01_03
+  - first:
+      1: 100060
+    second: LeftHandFinger02_01
+  - first:
+      1: 100062
+    second: LeftHandFinger02_02
+  - first:
+      1: 100064
+    second: LeftHandFinger02_03
+  - first:
+      1: 100066
+    second: LeftHandFinger03_01
+  - first:
+      1: 100068
+    second: LeftHandFinger03_02
+  - first:
+      1: 100070
+    second: LeftHandFinger03_03
+  - first:
+      1: 100072
+    second: LeftHandFinger04_01
+  - first:
+      1: 100074
+    second: LeftHandFinger04_02
+  - first:
+      1: 100076
+    second: LeftHandFinger04_03
+  - first:
+      1: 100078
+    second: LeftHandFinger05_01
+  - first:
+      1: 100080
+    second: LeftHandFinger05_02
+  - first:
+      1: 100082
+    second: LeftHandFinger05_03
+  - first:
+      1: 100084
+    second: LeftInnerBreast
+  - first:
+      1: 100086
+    second: LeftLeg
+  - first:
+      1: 100088
+    second: LeftLegAdjust
+  - first:
+      1: 100090
+    second: LeftLips
+  - first:
+      1: 100092
+    second: LeftLipsAdjust
+  - first:
+      1: 100094
+    second: LeftLipsInferior
+  - first:
+      1: 100096
+    second: LeftLipsInferiorAdjust
+  - first:
+      1: 100098
+    second: LeftLipsSuperiorMiddle
+  - first:
+      1: 100100
+    second: LeftLipsSuperiorMiddleAdjust
+  - first:
+      1: 100102
+    second: LeftLowCheek
+  - first:
+      1: 100104
+    second: LeftLowCheekAdjust
+  - first:
+      1: 100106
+    second: LeftLowerLid
+  - first:
+      1: 100108
+    second: LeftLowerLidAdjust
+  - first:
+      1: 100110
+    second: LeftLowMaxilar
+  - first:
+      1: 100112
+    second: LeftLowMaxilarAdjust
+  - first:
+      1: 100114
+    second: LeftNose
+  - first:
+      1: 100116
+    second: LeftNoseAdjust
+  - first:
+      1: 100118
+    second: LeftOuterBreast
+  - first:
+      1: 100120
+    second: LeftShoulder
+  - first:
+      1: 100122
+    second: LeftShoulderAdjust
+  - first:
+      1: 100124
+    second: LeftToeBase
+  - first:
+      1: 100126
+    second: LeftTrapezius
+  - first:
+      1: 100128
+    second: LeftUpLeg
+  - first:
+      1: 100130
+    second: LeftUpLegAdjust
+  - first:
+      1: 100132
+    second: LeftUpperLid
+  - first:
+      1: 100134
+    second: LeftUpperLidAdjust
+  - first:
+      1: 100136
+    second: LipsInferior
+  - first:
+      1: 100138
+    second: LipsInferiorAdjust
+  - first:
+      1: 100140
+    second: LipsSuperior
+  - first:
+      1: 100142
+    second: LipsSuperiorAdjust
+  - first:
+      1: 100144
+    second: LowerBack
+  - first:
+      1: 100146
+    second: LowerBackAdjust
+  - first:
+      1: 100148
+    second: LowerBackBelly
+  - first:
+      1: 100150
+    second: Mandible
+  - first:
+      1: 100152
+    second: MandibleAdjust
+  - first:
+      1: 100154
+    second: Neck
+  - first:
+      1: 100156
+    second: NeckAdjust
+  - first:
+      1: 100158
+    second: NoseBase
+  - first:
+      1: 100160
+    second: NoseBaseAdjust
+  - first:
+      1: 100162
+    second: NoseMiddle
+  - first:
+      1: 100164
+    second: NoseMiddleAdjust
+  - first:
+      1: 100166
+    second: NoseTop
+  - first:
+      1: 100168
+    second: NoseTopAdjust
+  - first:
+      1: 100170
+    second: Position
+  - first:
+      1: 100172
+    second: RightArm
+  - first:
+      1: 100174
+    second: RightArmAdjust
+  - first:
+      1: 100176
+    second: RightCheek
+  - first:
+      1: 100178
+    second: RightCheekAdjust
+  - first:
+      1: 100180
+    second: RightEar
+  - first:
+      1: 100182
+    second: RightEarAdjust
+  - first:
+      1: 100184
+    second: RightEye
+  - first:
+      1: 100186
+    second: RightEyeAdjust
+  - first:
+      1: 100188
+    second: RightEyebrowLow
+  - first:
+      1: 100190
+    second: RightEyebrowLowAdjust
+  - first:
+      1: 100192
+    second: RightEyebrowMiddle
+  - first:
+      1: 100194
+    second: RightEyebrowMiddleAdjust
+  - first:
+      1: 100196
+    second: RightEyebrowUp
+  - first:
+      1: 100198
+    second: RightEyebrowUpAdjust
+  - first:
+      1: 100200
+    second: RightEyeGlobe
+  - first:
+      1: 100202
+    second: RightFoot
+  - first:
+      1: 100204
+    second: RightForeArm
+  - first:
+      1: 100206
+    second: RightForeArmAdjust
+  - first:
+      1: 100208
+    second: RightForeArmTwist
+  - first:
+      1: 100210
+    second: RightForeArmTwistAdjust
+  - first:
+      1: 100212
+    second: RightGluteus
+  - first:
+      1: 100214
+    second: RightHand
+  - first:
+      1: 100216
+    second: RightHandFinger01_01
+  - first:
+      1: 100218
+    second: RightHandFinger01_02
+  - first:
+      1: 100220
+    second: RightHandFinger01_03
+  - first:
+      1: 100222
+    second: RightHandFinger02_01
+  - first:
+      1: 100224
+    second: RightHandFinger02_02
+  - first:
+      1: 100226
+    second: RightHandFinger02_03
+  - first:
+      1: 100228
+    second: RightHandFinger03_01
+  - first:
+      1: 100230
+    second: RightHandFinger03_02
+  - first:
+      1: 100232
+    second: RightHandFinger03_03
+  - first:
+      1: 100234
+    second: RightHandFinger04_01
+  - first:
+      1: 100236
+    second: RightHandFinger04_02
+  - first:
+      1: 100238
+    second: RightHandFinger04_03
+  - first:
+      1: 100240
+    second: RightHandFinger05_01
+  - first:
+      1: 100242
+    second: RightHandFinger05_02
+  - first:
+      1: 100244
+    second: RightHandFinger05_03
+  - first:
+      1: 100246
+    second: RightInnerBreast
+  - first:
+      1: 100248
+    second: RightLeg
+  - first:
+      1: 100250
+    second: RightLegAdjust
+  - first:
+      1: 100252
+    second: RightLips
+  - first:
+      1: 100254
+    second: RightLipsAdjust
+  - first:
+      1: 100256
+    second: RightLipsInferior
+  - first:
+      1: 100258
+    second: RightLipsInferiorAdjust
+  - first:
+      1: 100260
+    second: RightLipsSuperiorMiddle
+  - first:
+      1: 100262
+    second: RightLipsSuperiorMiddleAdjust
+  - first:
+      1: 100264
+    second: RightLowCheek
+  - first:
+      1: 100266
+    second: RightLowCheekAdjust
+  - first:
+      1: 100268
+    second: RightLowerLid
+  - first:
+      1: 100270
+    second: RightLowerLidAdjust
+  - first:
+      1: 100272
+    second: RightLowMaxilar
+  - first:
+      1: 100274
+    second: RightLowMaxilarAdjust
+  - first:
+      1: 100276
+    second: RightNose
+  - first:
+      1: 100278
+    second: RightNoseAdjust
+  - first:
+      1: 100280
+    second: RightOuterBreast
+  - first:
+      1: 100282
+    second: RightShoulder
+  - first:
+      1: 100284
+    second: RightShoulderAdjust
+  - first:
+      1: 100286
+    second: RightToeBase
+  - first:
+      1: 100288
+    second: RightTrapezius
+  - first:
+      1: 100290
+    second: RightUpLeg
+  - first:
+      1: 100292
+    second: RightUpLegAdjust
+  - first:
+      1: 100294
+    second: RightUpperLid
+  - first:
+      1: 100296
+    second: RightUpperLidAdjust
+  - first:
+      1: 100298
+    second: Spine
+  - first:
+      1: 100300
+    second: Spine1
+  - first:
+      1: 100302
+    second: Spine1Adjust
+  - first:
+      1: 100304
+    second: SpineAdjust
+  - first:
+      1: 100306
+    second: Tongue01
+  - first:
+      1: 100308
+    second: Tongue02
+  - first:
+      1: 100310
+    second: UMA_Female_Rig
+  - first:
+      1: 100312
+    second: UMA_Human_Female
+  - first:
+      1: 100314
+    second: UpperLips
+  - first:
+      1: 100316
+    second: UpperLipsAdjust
+  - first:
+      4: 400000
+    second: //RootNode
+  - first:
+      4: 400002
+    second: Global
+  - first:
+      4: 400004
+    second: Head
+  - first:
+      4: 400006
+    second: HeadAdjust
+  - first:
+      4: 400008
+    second: Hips
+  - first:
+      4: 400010
+    second: LeftArm
+  - first:
+      4: 400012
+    second: LeftArmAdjust
+  - first:
+      4: 400014
+    second: LeftCheek
+  - first:
+      4: 400016
+    second: LeftCheekAdjust
+  - first:
+      4: 400018
+    second: LeftEar
+  - first:
+      4: 400020
+    second: LeftEarAdjust
+  - first:
+      4: 400022
+    second: LeftEye
+  - first:
+      4: 400024
+    second: LeftEyeAdjust
+  - first:
+      4: 400026
+    second: LeftEyebrowLow
+  - first:
+      4: 400028
+    second: LeftEyebrowLowAdjust
+  - first:
+      4: 400030
+    second: LeftEyebrowMiddle
+  - first:
+      4: 400032
+    second: LeftEyebrowMiddleAdjust
+  - first:
+      4: 400034
+    second: LeftEyebrowUp
+  - first:
+      4: 400036
+    second: LeftEyebrowUpAdjust
+  - first:
+      4: 400038
+    second: LeftEyeGlobe
+  - first:
+      4: 400040
+    second: LeftFoot
+  - first:
+      4: 400042
+    second: LeftForeArm
+  - first:
+      4: 400044
+    second: LeftForeArmAdjust
+  - first:
+      4: 400046
+    second: LeftForeArmTwist
+  - first:
+      4: 400048
+    second: LeftForeArmTwistAdjust
+  - first:
+      4: 400050
+    second: LeftGluteus
+  - first:
+      4: 400052
+    second: LeftHand
+  - first:
+      4: 400054
+    second: LeftHandFinger01_01
+  - first:
+      4: 400056
+    second: LeftHandFinger01_02
+  - first:
+      4: 400058
+    second: LeftHandFinger01_03
+  - first:
+      4: 400060
+    second: LeftHandFinger02_01
+  - first:
+      4: 400062
+    second: LeftHandFinger02_02
+  - first:
+      4: 400064
+    second: LeftHandFinger02_03
+  - first:
+      4: 400066
+    second: LeftHandFinger03_01
+  - first:
+      4: 400068
+    second: LeftHandFinger03_02
+  - first:
+      4: 400070
+    second: LeftHandFinger03_03
+  - first:
+      4: 400072
+    second: LeftHandFinger04_01
+  - first:
+      4: 400074
+    second: LeftHandFinger04_02
+  - first:
+      4: 400076
+    second: LeftHandFinger04_03
+  - first:
+      4: 400078
+    second: LeftHandFinger05_01
+  - first:
+      4: 400080
+    second: LeftHandFinger05_02
+  - first:
+      4: 400082
+    second: LeftHandFinger05_03
+  - first:
+      4: 400084
+    second: LeftInnerBreast
+  - first:
+      4: 400086
+    second: LeftLeg
+  - first:
+      4: 400088
+    second: LeftLegAdjust
+  - first:
+      4: 400090
+    second: LeftLips
+  - first:
+      4: 400092
+    second: LeftLipsAdjust
+  - first:
+      4: 400094
+    second: LeftLipsInferior
+  - first:
+      4: 400096
+    second: LeftLipsInferiorAdjust
+  - first:
+      4: 400098
+    second: LeftLipsSuperiorMiddle
+  - first:
+      4: 400100
+    second: LeftLipsSuperiorMiddleAdjust
+  - first:
+      4: 400102
+    second: LeftLowCheek
+  - first:
+      4: 400104
+    second: LeftLowCheekAdjust
+  - first:
+      4: 400106
+    second: LeftLowerLid
+  - first:
+      4: 400108
+    second: LeftLowerLidAdjust
+  - first:
+      4: 400110
+    second: LeftLowMaxilar
+  - first:
+      4: 400112
+    second: LeftLowMaxilarAdjust
+  - first:
+      4: 400114
+    second: LeftNose
+  - first:
+      4: 400116
+    second: LeftNoseAdjust
+  - first:
+      4: 400118
+    second: LeftOuterBreast
+  - first:
+      4: 400120
+    second: LeftShoulder
+  - first:
+      4: 400122
+    second: LeftShoulderAdjust
+  - first:
+      4: 400124
+    second: LeftToeBase
+  - first:
+      4: 400126
+    second: LeftTrapezius
+  - first:
+      4: 400128
+    second: LeftUpLeg
+  - first:
+      4: 400130
+    second: LeftUpLegAdjust
+  - first:
+      4: 400132
+    second: LeftUpperLid
+  - first:
+      4: 400134
+    second: LeftUpperLidAdjust
+  - first:
+      4: 400136
+    second: LipsInferior
+  - first:
+      4: 400138
+    second: LipsInferiorAdjust
+  - first:
+      4: 400140
+    second: LipsSuperior
+  - first:
+      4: 400142
+    second: LipsSuperiorAdjust
+  - first:
+      4: 400144
+    second: LowerBack
+  - first:
+      4: 400146
+    second: LowerBackAdjust
+  - first:
+      4: 400148
+    second: LowerBackBelly
+  - first:
+      4: 400150
+    second: Mandible
+  - first:
+      4: 400152
+    second: MandibleAdjust
+  - first:
+      4: 400154
+    second: Neck
+  - first:
+      4: 400156
+    second: NeckAdjust
+  - first:
+      4: 400158
+    second: NoseBase
+  - first:
+      4: 400160
+    second: NoseBaseAdjust
+  - first:
+      4: 400162
+    second: NoseMiddle
+  - first:
+      4: 400164
+    second: NoseMiddleAdjust
+  - first:
+      4: 400166
+    second: NoseTop
+  - first:
+      4: 400168
+    second: NoseTopAdjust
+  - first:
+      4: 400170
+    second: Position
+  - first:
+      4: 400172
+    second: RightArm
+  - first:
+      4: 400174
+    second: RightArmAdjust
+  - first:
+      4: 400176
+    second: RightCheek
+  - first:
+      4: 400178
+    second: RightCheekAdjust
+  - first:
+      4: 400180
+    second: RightEar
+  - first:
+      4: 400182
+    second: RightEarAdjust
+  - first:
+      4: 400184
+    second: RightEye
+  - first:
+      4: 400186
+    second: RightEyeAdjust
+  - first:
+      4: 400188
+    second: RightEyebrowLow
+  - first:
+      4: 400190
+    second: RightEyebrowLowAdjust
+  - first:
+      4: 400192
+    second: RightEyebrowMiddle
+  - first:
+      4: 400194
+    second: RightEyebrowMiddleAdjust
+  - first:
+      4: 400196
+    second: RightEyebrowUp
+  - first:
+      4: 400198
+    second: RightEyebrowUpAdjust
+  - first:
+      4: 400200
+    second: RightEyeGlobe
+  - first:
+      4: 400202
+    second: RightFoot
+  - first:
+      4: 400204
+    second: RightForeArm
+  - first:
+      4: 400206
+    second: RightForeArmAdjust
+  - first:
+      4: 400208
+    second: RightForeArmTwist
+  - first:
+      4: 400210
+    second: RightForeArmTwistAdjust
+  - first:
+      4: 400212
+    second: RightGluteus
+  - first:
+      4: 400214
+    second: RightHand
+  - first:
+      4: 400216
+    second: RightHandFinger01_01
+  - first:
+      4: 400218
+    second: RightHandFinger01_02
+  - first:
+      4: 400220
+    second: RightHandFinger01_03
+  - first:
+      4: 400222
+    second: RightHandFinger02_01
+  - first:
+      4: 400224
+    second: RightHandFinger02_02
+  - first:
+      4: 400226
+    second: RightHandFinger02_03
+  - first:
+      4: 400228
+    second: RightHandFinger03_01
+  - first:
+      4: 400230
+    second: RightHandFinger03_02
+  - first:
+      4: 400232
+    second: RightHandFinger03_03
+  - first:
+      4: 400234
+    second: RightHandFinger04_01
+  - first:
+      4: 400236
+    second: RightHandFinger04_02
+  - first:
+      4: 400238
+    second: RightHandFinger04_03
+  - first:
+      4: 400240
+    second: RightHandFinger05_01
+  - first:
+      4: 400242
+    second: RightHandFinger05_02
+  - first:
+      4: 400244
+    second: RightHandFinger05_03
+  - first:
+      4: 400246
+    second: RightInnerBreast
+  - first:
+      4: 400248
+    second: RightLeg
+  - first:
+      4: 400250
+    second: RightLegAdjust
+  - first:
+      4: 400252
+    second: RightLips
+  - first:
+      4: 400254
+    second: RightLipsAdjust
+  - first:
+      4: 400256
+    second: RightLipsInferior
+  - first:
+      4: 400258
+    second: RightLipsInferiorAdjust
+  - first:
+      4: 400260
+    second: RightLipsSuperiorMiddle
+  - first:
+      4: 400262
+    second: RightLipsSuperiorMiddleAdjust
+  - first:
+      4: 400264
+    second: RightLowCheek
+  - first:
+      4: 400266
+    second: RightLowCheekAdjust
+  - first:
+      4: 400268
+    second: RightLowerLid
+  - first:
+      4: 400270
+    second: RightLowerLidAdjust
+  - first:
+      4: 400272
+    second: RightLowMaxilar
+  - first:
+      4: 400274
+    second: RightLowMaxilarAdjust
+  - first:
+      4: 400276
+    second: RightNose
+  - first:
+      4: 400278
+    second: RightNoseAdjust
+  - first:
+      4: 400280
+    second: RightOuterBreast
+  - first:
+      4: 400282
+    second: RightShoulder
+  - first:
+      4: 400284
+    second: RightShoulderAdjust
+  - first:
+      4: 400286
+    second: RightToeBase
+  - first:
+      4: 400288
+    second: RightTrapezius
+  - first:
+      4: 400290
+    second: RightUpLeg
+  - first:
+      4: 400292
+    second: RightUpLegAdjust
+  - first:
+      4: 400294
+    second: RightUpperLid
+  - first:
+      4: 400296
+    second: RightUpperLidAdjust
+  - first:
+      4: 400298
+    second: Spine
+  - first:
+      4: 400300
+    second: Spine1
+  - first:
+      4: 400302
+    second: Spine1Adjust
+  - first:
+      4: 400304
+    second: SpineAdjust
+  - first:
+      4: 400306
+    second: Tongue01
+  - first:
+      4: 400308
+    second: Tongue02
+  - first:
+      4: 400310
+    second: UMA_Female_Rig
+  - first:
+      4: 400312
+    second: UMA_Human_Female
+  - first:
+      4: 400314
+    second: UpperLips
+  - first:
+      4: 400316
+    second: UpperLipsAdjust
+  - first:
+      43: 4300000
+    second: UMA_Human_Female
+  - first:
+      95: 9500000
+    second: //RootNode
+  - first:
+      137: 13700000
+    second: UMA_Human_Female
+  externalObjects: {}
   materials:
-    importMaterials: 0
+    materialImportMode: 0
     materialName: 0
     materialSearch: 1
+    materialLocation: 0
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
@@ -342,6 +984,8 @@ ModelImporter:
     animationImportWarnings: 
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
     animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5
@@ -356,16 +1000,24 @@ ModelImporter:
     globalScale: 100
     meshCompression: 0
     addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
     importVisibility: 0
     importBlendShapes: 1
     importCameras: 0
     importLights: 0
+    fileIdsGeneration: 1
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
-    optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    meshOptimizationFlags: -1
+    indexFormat: 1
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
@@ -376,10 +1028,13 @@ ModelImporter:
     normalImportMode: 0
     tangentImportMode: 3
     normalCalculationMode: 0
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 1
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
   importAnimation: 0
-  copyAvatar: 0
   humanDescription:
-    serializedVersion: 2
+    serializedVersion: 3
     human:
     - boneName: Hips
       humanName: Hips
@@ -834,7 +1489,7 @@ ModelImporter:
       scale: {x: 1, y: 1, z: 1}
     - name: Global
       parentName: UMA_Female_Rig
-      position: {x: 6.15551e-10, y: 0.01051005, z: -0.011465508}
+      position: {x: 0, y: 0.01051005, z: 0.044}
       rotation: {x: 0.5000003, y: 0.4999997, z: -0.50000006, w: 0.4999999}
       scale: {x: 1, y: 0.99999994, z: 1}
     - name: Position
@@ -850,7 +1505,7 @@ ModelImporter:
     - name: LeftUpLeg
       parentName: Hips
       position: {x: 0.016969787, y: -0.110785976, z: 0.0019864584}
-      rotation: {x: 0.058660608, y: 0.083582185, z: -0.9942452, w: 0.032396507}
+      rotation: {x: 0.05916605, y: 0.08322516, z: -0.99403054, w: 0.038421705}
       scale: {x: 1.0000001, y: 1.0000005, z: 1}
     - name: LeftGluteus
       parentName: LeftUpLeg
@@ -865,12 +1520,12 @@ ModelImporter:
     - name: LeftFoot
       parentName: LeftLeg
       position: {x: -0.5189265, y: 0.0000011804509, z: 0.000001033419}
-      rotation: {x: 0.8542695, y: -0.0054564956, z: -0.51272553, w: -0.08547802}
+      rotation: {x: 0.93350196, y: -0.020966273, z: -0.34819224, w: -0.08304623}
       scale: {x: 1.0000001, y: 1, z: 1.0000002}
     - name: LeftToeBase
       parentName: LeftFoot
       position: {x: -0.17674579, y: -0.000000018626451, z: -0.000000001862645}
-      rotation: {x: -0.062466815, y: -0.2067468, z: -0.023633087, w: 0.9761123}
+      rotation: {x: -0.066236965, y: -0.42668512, z: -0.00856053, w: 0.9019308}
       scale: {x: 1.0000002, y: 1.0000001, z: 1.0000004}
     - name: LeftLegAdjust
       parentName: LeftLeg
@@ -926,7 +1581,7 @@ ModelImporter:
     - name: LeftArm
       parentName: LeftShoulder
       position: {x: -0.122666925, y: 0.00007933215, z: 0.000026889145}
-      rotation: {x: 0.005701833, y: 0.036513854, z: -0.13108672, w: 0.9906819}
+      rotation: {x: 0.005468638, y: 0.036549505, z: -0.13741024, w: 0.9898246}
       scale: {x: 1.0000002, y: 1, z: 1}
     - name: LeftArmAdjust
       parentName: LeftArm
@@ -1047,7 +1702,7 @@ ModelImporter:
     - name: Neck
       parentName: Spine1
       position: {x: -0.19101276, y: 0.00000001442104, z: -0.000000007243586}
-      rotation: {x: -0.00000030364606, y: 0.09072293, z: -0.000000010415356, w: 0.9958762}
+      rotation: {x: -0.0000003164765, y: 0.08166772, z: 0.00000004882466, w: 0.9966597}
       scale: {x: 1.0000005, y: 1.0000002, z: 0.99999976}
     - name: Head
       parentName: Neck
@@ -1115,7 +1770,7 @@ ModelImporter:
     - name: LeftUpperLidAdjust
       parentName: LeftUpperLid
       position: {x: -0.000000050807103, y: -9.49967e-10, z: 0.000000047202775}
-      rotation: {x: -0.0012504689, y: -0.00009144842, z: -0.00019006379, w: 0.9999993}
+      rotation: {x: -0.0012504685, y: -0.00009144842, z: -0.0001900637, w: 0.9999993}
       scale: {x: 1.0000008, y: 1.0000005, z: 1.0000006}
     - name: LeftEyebrowLow
       parentName: Head
@@ -1125,7 +1780,7 @@ ModelImporter:
     - name: LeftEyebrowLowAdjust
       parentName: LeftEyebrowLow
       position: {x: -0.000000006773155, y: 3.26963e-10, z: 0.000000025243935}
-      rotation: {x: -0.0012044202, y: -0.00020100639, z: -0.000778863, w: 0.99999905}
+      rotation: {x: -0.0012044199, y: -0.00020100639, z: -0.0007788626, w: 0.99999905}
       scale: {x: 1.0000005, y: 1.0000002, z: 1.0000004}
     - name: LeftEyebrowMiddle
       parentName: Head
@@ -1394,7 +2049,7 @@ ModelImporter:
     - name: RightEyebrowUp
       parentName: Head
       position: {x: -0.10819455, y: 0.0484242, z: 0.06866191}
-      rotation: {x: 0.7453254, y: 0.00039545452, z: -0.6667006, w: 0.00044232034}
+      rotation: {x: 0.7453254, y: 0.0003954546, z: -0.6667006, w: 0.00044232042}
       scale: {x: 0.9999997, y: 1, z: 1.0000001}
     - name: RightEyebrowUpAdjust
       parentName: RightEyebrowUp
@@ -1466,7 +2121,7 @@ ModelImporter:
     - name: RightArm
       parentName: RightShoulder
       position: {x: -0.12266695, y: -0.0000792963, z: 0.000026904047}
-      rotation: {x: -0.00570165, y: 0.036513723, z: 0.1310863, w: 0.99068195}
+      rotation: {x: -0.005232534, y: 0.0365839, z: 0.1437908, w: 0.9889178}
       scale: {x: 1, y: 0.9999999, z: 0.9999999}
     - name: RightArmAdjust
       parentName: RightArm
@@ -1558,7 +2213,7 @@ ModelImporter:
     - name: RightHandFinger04_03
       parentName: RightHandFinger04_02
       position: {x: -0.031541508, y: -0.000000026077032, z: -0.00000005401671}
-      rotation: {x: -0.0071691973, y: -0.06974572, z: 0.007764237, w: 0.9975088}
+      rotation: {x: -0.0071691987, y: -0.06974572, z: 0.0077642384, w: 0.9975088}
       scale: {x: 1.0000005, y: 1.0000002, z: 1.0000004}
     - name: RightHandFinger05_01
       parentName: RightHand
@@ -1600,7 +2255,7 @@ ModelImporter:
     - name: RightUpLeg
       parentName: Hips
       position: {x: 0.01697234, y: 0.11078513, z: 0.0019854417}
-      rotation: {x: -0.05866498, y: 0.08358416, z: 0.9942447, w: 0.032396823}
+      rotation: {x: -0.05917695, y: 0.0832225, z: 0.99402714, w: 0.038498454}
       scale: {x: 1.0000008, y: 1.0000006, z: 1}
     - name: RightGluteus
       parentName: RightUpLeg
@@ -1615,12 +2270,12 @@ ModelImporter:
     - name: RightFoot
       parentName: RightLeg
       position: {x: -0.5189222, y: 0.000000037252903, z: -0.000000006752089}
-      rotation: {x: -0.8542716, y: -0.0054590967, z: 0.5127221, w: -0.08547757}
+      rotation: {x: -0.9320596, y: -0.020626072, z: 0.3520351, w: -0.0831311}
       scale: {x: 1.000001, y: 1.0000007, z: 1.0000007}
     - name: RightToeBase
       parentName: RightFoot
       position: {x: -0.17674579, y: 0.00000001816079, z: 0.000000007450581}
-      rotation: {x: 0.06246707, y: -0.20674692, z: 0.023632826, w: 0.9761123}
+      rotation: {x: 0.0661704, y: -0.41983753, z: 0.009061991, w: 0.9051386}
       scale: {x: 1.0000006, y: 1.0000002, z: 0.9999995}
     - name: RightLegAdjust
       parentName: RightLeg
@@ -1644,14 +2299,16 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
+    globalScale: 100
     rootMotionBoneName: 
-    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
     hasExtraRoot: 1
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1
+  avatarSetup: 1
   additionalBone: 0
   userData: 
   assetBundleName: 

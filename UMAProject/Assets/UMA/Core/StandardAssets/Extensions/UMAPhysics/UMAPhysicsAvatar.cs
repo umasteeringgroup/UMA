@@ -417,7 +417,10 @@ namespace UMA.Dynamics
 		{
 			foreach (Rigidbody rigidbody in _rigidbodies)
 			{
-				rigidbody.isKinematic = flag;
+				if (rigidbody != null)
+				{
+					rigidbody.isKinematic = flag;
+				}
 				//rigidbody.detectCollisions = !flag;
 			}
 		}

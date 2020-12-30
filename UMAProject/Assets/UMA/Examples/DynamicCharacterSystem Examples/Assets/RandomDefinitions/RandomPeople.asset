@@ -348,10 +348,10 @@ MonoBehaviour:
       MaxValue: 0.6041666
       Delete: 0
     raceData: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
-    GuiFoldout: 0
-    ColorsFoldout: 0
-    WardrobeFoldout: 0
-    DnaFoldout: 1
+    GuiFoldout: 1
+    ColorsFoldout: 1
+    WardrobeFoldout: 1
+    DnaFoldout: 0
     Delete: 0
     AddColorTable: 0
     DnaChanged: 1
@@ -751,7 +751,7 @@ MonoBehaviour:
       MaxValue: 0.6216216
       Delete: 0
     raceData: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
-    GuiFoldout: 1
+    GuiFoldout: 0
     ColorsFoldout: 1
     WardrobeFoldout: 1
     DnaFoldout: 1

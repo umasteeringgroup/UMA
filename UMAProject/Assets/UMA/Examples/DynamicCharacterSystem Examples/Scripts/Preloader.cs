@@ -9,7 +9,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 public class Preloader : MonoBehaviour
 {
-    public string[] Labels;
+    public List<string> Labels;
     public Slider LoadingSlider;
 #if UMA_ADDRESSABLES
     private AsyncOperationHandle op;

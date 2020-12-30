@@ -88,10 +88,30 @@ namespace UMA.Editors
 			}
 		}
 
-		public static void BeginVerticalPadded(float padding, Color backgroundColor)
+		public static void BeginVerticalPadded()
 		{
+			if (EditorGUIUtility.isProSkin)
+			{
+				GUIHelper.BeginVerticalPadded(10, new Color(1.3f, 1.4f, 1.5f));
+			}
+			else
+			{
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+			}
+		}
+
+		public static void EndVerticalPadded()
+		{
+			GUIHelper.EndVerticalPadded(10);
+		}
+
+		public static void BeginVerticalPadded(float padding, Color backgroundColor, GUIStyle theStyle = null)
+		{
+			if (theStyle == null)
+				theStyle = EditorStyles.textField;
+
 			GUI.color = backgroundColor;
-			GUILayout.BeginHorizontal(EditorStyles.textField);
+			GUILayout.BeginHorizontal(theStyle);
 			GUI.color = Color.white;
 
 			GUILayout.Space(padding);
@@ -244,6 +264,7 @@ namespace UMA.Editors
 			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 		}
+
 
 		public static void FoldoutBarButton(ref bool foldout, string content, string button, out bool pressed, out int move, out bool delete)
 		{

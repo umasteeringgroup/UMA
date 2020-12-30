@@ -102,7 +102,9 @@ namespace UMA.PoseTools
 		//The property drawer makes sure there is only ever one of these open at any one time, so you know if you change
 		//any fields on the editor defined here you are changing them for that instance of the editor
 		private static UMABonePoseEditor _livePopupEditor = null;
-
+		public static int MirrorAxis = 1;
+		public static string[] MirrorAxises = {"X Axis (raw)","Y Axis (UMA Internal)", "Z Axis" };
+		public static UMAData saveUMAData;
 		// HACK for testing
 		public UMAData sourceUMA;
 		TreeViewState treeState;
@@ -147,6 +149,7 @@ namespace UMA.PoseTools
 		private string filter = "";
 		private string lastFilter = "";
 		private bool filtered = false;
+		private string highlight = "";
 
 
 		private static Texture warningIcon;
@@ -194,6 +197,9 @@ namespace UMA.PoseTools
 
 		public void OnEnable()
 		{
+			if (saveUMAData != null)
+				sourceUMA = saveUMAData;
+
 			if (treeState == null)
 				treeState = new TreeViewState();
 
@@ -203,7 +209,11 @@ namespace UMA.PoseTools
 //			inspectorLocked = ActiveEditorTracker.sharedTracker.isLocked;
 //			ActiveEditorTracker.sharedTracker.isLocked = true;
 			EditorApplication.update += this.OnUpdate;
+#if UNITY_2019_1_OR_NEWER
+			SceneView.duringSceneGui += this.OnSceneGUI;
+#else
 			SceneView.onSceneGUIDelegate += this.OnSceneGUI;
+#endif
 
 			if (warningIcon == null)
 			{
@@ -217,8 +227,11 @@ namespace UMA.PoseTools
 
 		public void OnDisable()
 		{
-			SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
+#if UNITY_2019_1_OR_NEWER
+			SceneView.duringSceneGui -= this.OnSceneGUI;
+#else
 			EditorApplication.update -= this.OnUpdate;
+#endif
 //			ActiveEditorTracker.sharedTracker.isLocked = inspectorLocked;
 		}
 
@@ -325,7 +338,7 @@ namespace UMA.PoseTools
 						var Hips = Position.Find("Hips");
 						if (Hips != null)
 						{
-							DrawSkeletonBonesRecursive(Hips);
+							DrawSkeletonBonesRecursive(Hips,Color.white);
 						}
 					}
 				}
@@ -333,14 +346,31 @@ namespace UMA.PoseTools
 			Handles.color = prevHandlesColor;
 		}
 
-		private void DrawSkeletonBonesRecursive(Transform parentBone)
+		private void DrawSkeletonBonesRecursive(Transform parentBone, Color col)
 		{
+			float leaflen = 0.01f;
+			
 			for (int i = 0; i < parentBone.childCount; i++)
 			{
-				Handles.color = parentBone.GetChild(i) == context.activeTransform ? Color.green : (parentBone.GetChild(i) == context.mirrorTransform ? new Color(0,0.5f,1) : Color.white);
+				Transform child = parentBone.GetChild(i);
+				Color NextColor = child == context.activeTransform ? Color.green : (parentBone.GetChild(i) == context.mirrorTransform ? new Color(0, 0.5f, 1) : Color.white);
+
+				Handles.color = col;
 				Handles.DrawLine(parentBone.position, parentBone.GetChild(i).position);
 				if (parentBone.GetChild(i).childCount > 0)
-					DrawSkeletonBonesRecursive(parentBone.GetChild(i));
+				{
+					DrawSkeletonBonesRecursive(parentBone.GetChild(i),NextColor);
+				}
+				else
+                {
+					if (!child.gameObject.name.Contains("Adjust"))
+					{
+						Vector3 leafpos = child.rotation * (Vector3.one * leaflen);
+						Vector3 ends = child.position + leafpos;
+						// draw terminator bone
+						//Handles.DrawLine(child.position, ends); ?? Not working
+					}
+				}
 			}
 		}
 
@@ -519,22 +549,6 @@ namespace UMA.PoseTools
 					AddABone(poses,addBoneName);
 				}
 
-				/*
-				int addedIndex = poses.arraySize;
-				poses.InsertArrayElementAtIndex(addedIndex);
-				var pose = poses.GetArrayElementAtIndex(addedIndex);
-				SerializedProperty bone = pose.FindPropertyRelative("bone");
-				bone.stringValue = addBoneName;
-				SerializedProperty hash = pose.FindPropertyRelative("hash");
-				hash.intValue = UMASkeleton.StringToHash(addBoneName);
-				SerializedProperty position = pose.FindPropertyRelative("position");
-				position.vector3Value = Vector3.zero;
-				SerializedProperty rotation = pose.FindPropertyRelative("rotation");
-				rotation.quaternionValue = Quaternion.identity;
-				SerializedProperty scale = pose.FindPropertyRelative("scale");
-				scale.vector3Value = Vector3.one; 
-				*/
-
 				activeBoneIndex = BAD_INDEX;
 				editBoneIndex = BAD_INDEX;
 				mirrorBoneIndex = BAD_INDEX;
@@ -557,8 +571,9 @@ namespace UMA.PoseTools
 			// HACK
 			if (!dynamicDNAConverterMode)
 			{
-				EditorGUILayout.HelpBox("Select a UMA at runtime (DynamicCharacterAvatar, DynamicAvatar, UMAData) to enable editing and addition of new bones.", MessageType.Info);
+				EditorGUILayout.HelpBox("Select a built UMA (DynamicCharacterAvatar, DynamicAvatar, UMAData) to enable editing and addition of new bones.", MessageType.Info);
 				sourceUMA = EditorGUILayout.ObjectField("Source UMA", sourceUMA, typeof(UMAData), true) as UMAData;
+				saveUMAData = sourceUMA;
 			}
 			else
 			{
@@ -596,6 +611,49 @@ namespace UMA.PoseTools
 
 			GUILayout.Space(EditorGUIUtility.singleLineHeight / 2f);
 
+			// Toolbar
+			GUIHelper.BeginVerticalPadded();
+			MirrorAxis = EditorGUILayout.Popup("Mirror Axis",MirrorAxis, MirrorAxises);
+			GUILayout.BeginHorizontal();
+
+			if (GUILayout.Button("Find UMA in scene"))
+            {
+				UMAData data = GameObject.FindObjectOfType<UMAData>();
+				if (data != null)
+                {
+					sourceUMA = data;
+					saveUMAData = data;
+
+					var active = Selection.activeObject;
+
+					Selection.activeGameObject = data.gameObject;
+					SceneView.FrameLastActiveSceneView();
+
+					Selection.activeObject = active;
+				}
+            }
+
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Convert all Left/Right"))
+            {
+				for (int i = 0; i < poses.arraySize; i++)
+                {
+                    FlipBone(poses, i);
+                }
+            }
+			if (GUILayout.Button("Mirror to opposite"))
+            {
+				// find the opposite bone. 
+				// Copy the parms
+				// flip it with FlipBone
+            }
+			GUILayout.EndHorizontal();
+			highlight = EditorGUILayout.TextField("Highlight bones containing: ", highlight);
+
+			GUIHelper.EndVerticalPadded();
+
 //			string controlName = GUI.GetNameOfFocusedControl();
 //			if ((controlName != null) && (controlName.Length > 0))
 //				Debug.Log(controlName);
@@ -618,6 +676,24 @@ namespace UMA.PoseTools
 				}
 
 				addBoneOptions = addList.ToArray();
+			}
+
+			if (editBoneIndex != BAD_INDEX)
+			{
+				SerializedProperty editBone = poses.GetArrayElementAtIndex(editBoneIndex);
+				SerializedProperty bone = editBone.FindPropertyRelative("bone");
+				string boneName = bone.stringValue;
+				string mirrorBoneName = "";
+				if (boneName.StartsWith("Left"))
+                {
+					mirrorBoneName = boneName.Replace("Left", "Right");
+					//mirrorBoneIndex = FindMirrorBone(mirrorName);
+                }
+				if (boneName.StartsWith("Right"))
+                {
+					mirrorBoneName = boneName.Replace("Right", "Left");
+					//mirrorBoneIndex = FindMirrorBone(mirrorName);
+				}
 			}
 
 			// List of existing bones
@@ -749,7 +825,57 @@ namespace UMA.PoseTools
             serializedObject.ApplyModifiedProperties();
         }
 
-		private void ReloadFilteredTree()
+        private static void FlipBone(SerializedProperty poses, int i)
+        {
+            SerializedProperty pose = poses.GetArrayElementAtIndex(i);
+            SerializedProperty bone = pose.FindPropertyRelative("bone");
+            SerializedProperty position = pose.FindPropertyRelative("position");
+            SerializedProperty rotation = pose.FindPropertyRelative("rotation");
+            SerializedProperty scale = pose.FindPropertyRelative("scale");
+            SerializedProperty hash = pose.FindPropertyRelative("hash");
+            if (bone.stringValue.Contains("Left"))
+            {
+                bone.stringValue = bone.stringValue.Replace("Left", "Right");
+                hash.intValue = UMASkeleton.StringToHash(bone.stringValue);
+                FlipSingleBone(position, rotation);
+            }
+            else if (bone.stringValue.Contains("Right"))
+            {
+                bone.stringValue = bone.stringValue.Replace("Right", "Left");
+                hash.intValue = UMASkeleton.StringToHash(bone.stringValue);
+				FlipSingleBone(position, rotation);
+            }
+        }
+
+        private static void FlipSingleBone(SerializedProperty position, SerializedProperty rotation)
+        {
+            Quaternion localRot = rotation.quaternionValue;
+			Vector3 localPos = position.vector3Value;
+
+			switch (MirrorAxis)
+            {
+				case 0: // X (all others)
+					localRot.x *= -1;
+					localRot.w *= -1;
+					localPos.x *= -1;
+					break;
+				case 1: // Y (UMA/Blender models)
+					localRot.y *= -1;
+					localRot.w *= -1;
+					localPos.y *= -1;
+					break;
+				case 2: // Z - Who knows
+					localRot.z *= -1;
+					localRot.w *= -1;
+					localPos.z *= -1;
+					break;
+            }
+
+			rotation.quaternionValue = localRot;
+			position.vector3Value = localPos;
+        }
+
+        private void ReloadFilteredTree()
 		{
 			filtered = true;
 			lastFilter = filter;
@@ -831,6 +957,13 @@ namespace UMA.PoseTools
 			EditorGUILayout.BeginHorizontal();
 			bone.isExpanded = EditorGUILayout.Foldout(bone.isExpanded, boneGUIContent);
 			Color currentColor = GUI.color;
+			if (!string.IsNullOrWhiteSpace(highlight))
+            {
+				if (bone.stringValue.ToLower().Contains(highlight.ToLower()))
+                {
+					GUI.color = Color.yellow * 0.7f ;
+                }
+            }
 			if (drawBoneIndex == editBoneIndex)
 			{
 				GUI.color = Color.green;

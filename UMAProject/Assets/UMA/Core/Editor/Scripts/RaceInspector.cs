@@ -82,7 +82,8 @@ namespace UMA.Editors
 			race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
 			race.TPose = EditorGUILayout.ObjectField(new GUIContent("T-Pose", "The UMA T-Pose asset can be created by selecting the race fbx and choosing the Extract T-Pose dropdown. Only needs to be done once per race."), race.TPose, typeof(UmaTPose), false) as UmaTPose;
 			race.expressionSet = EditorGUILayout.ObjectField(new GUIContent("Expression Set", "The Expression Set asset is used by the Expression player."), race.expressionSet, typeof(UMA.PoseTools.UMAExpressionSet), false) as UMA.PoseTools.UMAExpressionSet;
-
+			EditorGUILayout.HelpBox("Fixup Rotations should be true for Blender FBX slots", MessageType.Info);
+			race.FixupRotations = EditorGUILayout.Toggle("Fixup Rotations",race.FixupRotations);
 			EditorGUILayout.Space();
 
 			SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");

@@ -26,7 +26,7 @@ namespace UMA.CharacterSystem.Examples
         public GameObject DnaHelpText;
         public GameObject AvatarPrefab;
 		public GameObject NoBuildPrefab;
-		public MouseOrbitImproved Orbiter;
+		public UMAMouseOrbitImproved Orbiter;
         public SharedColorTable HairColor;
         public SharedColorTable SkinColor;
         public SharedColorTable EyesColor;

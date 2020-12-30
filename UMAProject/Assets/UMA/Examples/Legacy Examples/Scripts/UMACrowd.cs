@@ -19,6 +19,7 @@ namespace UMA.Examples
 		public bool stressTest;
 		public Vector2 umaCrowdSize;
 		public bool randomDna;
+		public bool allAtOnce;
 		public UMARecipeBase[] additionalRecipes;
 
 		public float space = 1;
@@ -49,6 +50,7 @@ namespace UMA.Examples
 				umaCrowdSize = Vector2.one;
 				int randomResult = Random.Range(0, 2);
 				GenerateOneUMA(randomResult);
+
 				generateUMA = false;
 				generateLotsUMA = false;
 			}
@@ -57,8 +59,21 @@ namespace UMA.Examples
 			{
 				if (generator.IsIdle())
 				{
-					int randomResult = Random.Range(0, 2);
-					GenerateOneUMA(randomResult);
+					if (allAtOnce)
+                    {
+						for (int i = 0; i < umaCrowdSize.x * umaCrowdSize.y; i++)
+						{
+							int randomResult = Random.Range(0, 2);
+							GenerateOneUMA(randomResult);
+							generateUMA = false;
+							generateLotsUMA = false;
+						}
+					}
+					else
+                    {
+						int randomResult = Random.Range(0, 2);
+						GenerateOneUMA(randomResult);
+					}
 				}
 			}
 

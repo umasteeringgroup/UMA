@@ -152,6 +152,7 @@ namespace UMA
 			{
 				umaData.animationController = animationController;
 			}
+
 			umaData.umaGenerator = umaGenerator;
 
 			umaData.Dirty(true, true, true);
@@ -160,19 +161,22 @@ namespace UMA
 		/// <summary>
 		/// Hide the avatar and clean up its components.
 		/// </summary>
-		public virtual void Hide()
+		public virtual void Hide(bool DestroyRoot = true)
 		{
 			if (umaData != null)
 			{
 				umaData.CleanTextures();
 				umaData.CleanMesh(true);
 				umaData.CleanAvatar();
+				if (DestroyRoot)
+				{
 				UMAUtils.DestroySceneObject(umaData.umaRoot);
 				umaData.umaRoot = null;
+					umaData.skeleton = null;
+				}
 				umaData.SetRenderers(null);
 				umaData.animator = null;
 				umaData.firstBake = true;
-				umaData.skeleton = null;
 			}
 			umaRace = null;
 		}

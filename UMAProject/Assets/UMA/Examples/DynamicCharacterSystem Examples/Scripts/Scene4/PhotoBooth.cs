@@ -34,7 +34,7 @@ namespace UMA.CharacterSystem.Examples
 		public string destinationFolder;//non-serialized?
 		[Tooltip("If true will automatically take all possible wardrobe photos for the current character. Otherwise photographs character in its current state.")]
 		public bool autoPhotosEnabled = true;
-		[Tooltip("In mnual mode use this to select the RenderTexture you wish to Photo")]
+		[Tooltip("In manual mode use this to select the RenderTexture you wish to Photo")]
 		public renderTextureOpts textureToPhoto = renderTextureOpts.BodyRenderTexture;
 		[Tooltip("If true will dim everything but the target wardrobe recipe (AutoPhotosEnabled only)")]
 		public bool dimAllButTarget = false;
@@ -353,7 +353,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			else
 			{
-				Texture2D texToSave = new Texture2D(renderTextureToUse.width, renderTextureToUse.height);
+				Texture2D texToSave = new Texture2D(renderTextureToUse.width, renderTextureToUse.height,TextureFormat.ARGB32,false,false);
 				RenderTexture prev = RenderTexture.active;
 				RenderTexture.active = renderTextureToUse;
 				texToSave.ReadPixels(new Rect(0, 0, renderTextureToUse.width, renderTextureToUse.height), 0, 0, true);

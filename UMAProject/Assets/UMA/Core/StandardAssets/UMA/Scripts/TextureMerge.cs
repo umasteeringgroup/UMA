@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+
 namespace UMA
 {
 	/// <summary>
@@ -17,6 +18,7 @@ namespace UMA
 		public Shader dataShader;
 		public Shader cutoutShader;
 		public Shader detailNormalShader;
+		private Vector2 pivotPoint = new Vector2();
 
 		[System.NonSerialized] 
 		public Color camBackgroundColor = new Color(0, 0, 0, 0);
@@ -35,6 +37,10 @@ namespace UMA
 			public Material mat;
 			public Texture tex;
 			public Rect rect;
+			public bool transform;
+			public float rotation;
+			public Vector3 scale;
+			public Vector3 position;
 		}
 
 		public void RefreshMaterials()
@@ -49,12 +55,13 @@ namespace UMA
 			}
 		}
 
-			public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color))
+			public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color), bool sharperFitTextures=true)
 		{
 			if (textureMergeRects != null)
 			{
 				RenderTexture backup = RenderTexture.active;
 				RenderTexture.active = target;
+
 				GL.Clear(true, true, background);
 				GL.PushMatrix();
 				//the matrix needs to be in the original atlas dimensions because the textureMergeRects are in that space.
@@ -62,7 +69,7 @@ namespace UMA
 
 				for (int i = 0; i < textureMergeRectCount; i++)
 				{
-					DrawRect(ref textureMergeRects[i]);
+					DrawRect(ref textureMergeRects[i], sharperFitTextures);
 				}
 
 				GL.PopMatrix();
@@ -70,10 +77,40 @@ namespace UMA
 			}
 		}
 
-		private void DrawRect(ref TextureMergeRect textureMergeRect)
+		public static void RotateAroundPivot(float angle, Vector2 pivotPoint)
 		{
-			//TODO JRRM: add an event here and let the end user modify the textureMertRect.tex if needed.
-			Graphics.DrawTexture(textureMergeRect.rect, textureMergeRect.tex, textureMergeRect.mat);
+			Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, angle), Vector3.one) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
+			GL.MultMatrix(newMat);
+		}
+
+		private void DrawRect(ref TextureMergeRect tr,bool sharperFitTextures)
+		{
+			if (tr.transform)
+			{
+				// rotate texture here?
+				GL.PushMatrix();
+
+				// rotate around the pivot
+				pivotPoint.Set(tr.rect.x + (tr.rect.width/2.0f), tr.rect.y + (tr.rect.height / 2.0f));
+				Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);		
+
+				GL.MultMatrix(newMat);
+			}
+
+			if (sharperFitTextures)
+			{
+				tr.tex.mipMapBias = -1.0f;
+			}
+			else
+            {
+				tr.tex.mipMapBias = 0f;
+			}
+
+			Graphics.DrawTexture(tr.rect, tr.tex, tr.mat);
+			if (tr.transform)
+			{
+				GL.PopMatrix();
+			}
 		}
 
 		public void PostProcess(RenderTexture destination, UMAMaterial.ChannelType channelType)
@@ -111,6 +148,7 @@ namespace UMA
 					}
 					break;
 			}
+			RenderTexture.active = null;
 			RenderTexture.ReleaseTemporary(source);
 		}
 
@@ -145,6 +183,8 @@ namespace UMA
 
 		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType)
 		{
+			if (source.isNoTextures)
+				return;
 			camBackgroundColor = source.GetMultiplier(0, textureType);
 			camBackgroundColor.a = 0.0f;
 
@@ -173,15 +213,18 @@ namespace UMA
 
 		public void SetupModule(UMAData.MaterialFragment source, int textureType)
 		{
-			textureMergeRects[textureMergeRectCount].rect = source.atlasRegion;
-			textureMergeRects[textureMergeRectCount].rect.y = height - textureMergeRects[textureMergeRectCount].rect.y - textureMergeRects[textureMergeRectCount].rect.height;
-			atlasRect = textureMergeRects[textureMergeRectCount].rect;
-			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, textureType);
+			if (!source.isNoTextures)
+			{
+				textureMergeRects[textureMergeRectCount].rect = source.atlasRegion;
+				textureMergeRects[textureMergeRectCount].rect.y = height - textureMergeRects[textureMergeRectCount].rect.y - textureMergeRects[textureMergeRectCount].rect.height;
+				atlasRect = textureMergeRects[textureMergeRectCount].rect;
+				SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, textureType);
+			}
 			textureMergeRectCount++;
 		}
 
 		Rect atlasRect;
-		float resolutionScale;
+		Vector2 resolutionScale;
 		int height;
 		public void SetupModule(UMAData.GeneratedMaterial atlas, int idx, int textureType)
 		{
@@ -198,23 +241,38 @@ namespace UMA
 			}
 		}
 
-		private void SetupOverlay(UMAData.MaterialFragment source, int i2, int textureType)
+		private void SetupOverlay(UMAData.MaterialFragment source, int OverlayIndex, int textureType)
 		{
-			if (source.overlays[i2] == null) return;
-			if (source.overlays[i2].textureList[textureType] == null) return;
+			if (source.overlays[OverlayIndex] == null) return;
+			if (source.overlays[OverlayIndex].textureList[textureType] == null) return;
+			if (source.isNoTextures) return;
 
 			Rect overlayRect;
 
-            if (source.rects[i2].width != 0)
+            if (source.rects[OverlayIndex].width != 0)
 			{
-				overlayRect = new Rect(atlasRect.xMin + source.rects[i2].x * resolutionScale, atlasRect.yMax - source.rects[i2].y * resolutionScale - source.rects[i2].height * resolutionScale, source.rects[i2].width * resolutionScale, source.rects[i2].height * resolutionScale);
+				overlayRect = new Rect(atlasRect.xMin + source.rects[OverlayIndex].x * resolutionScale.x, atlasRect.yMax - source.rects[OverlayIndex].y * resolutionScale.y - source.rects[OverlayIndex].height * resolutionScale.y, source.rects[OverlayIndex].width * resolutionScale.x, source.rects[OverlayIndex].height * resolutionScale.y);
             }
             else
             {
 				overlayRect = atlasRect;
             }
 
-			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, i2, ref overlayRect, textureType);
+			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, OverlayIndex, ref overlayRect, textureType);
+
+			// for some reason, the overlayData is stored on the next textureMergeRect.
+			// Check the generator. There must be a reason, but I just can't fathom it.
+			if (source.overlayData[OverlayIndex+1].instanceTransformed)
+            {
+				OverlayData od = source.overlayData[OverlayIndex+1];
+				textureMergeRects[textureMergeRectCount].transform = true;
+				textureMergeRects[textureMergeRectCount].rotation = od.Rotation;
+				textureMergeRects[textureMergeRectCount].scale = od.Scale;
+			}
+			else
+            {
+				textureMergeRects[textureMergeRectCount].transform = false;
+			}
 			textureMergeRectCount++;
 		}
 

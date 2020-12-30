@@ -43,12 +43,19 @@ namespace UMA
 		{
 			float sqrthreshold = threshold * threshold;
 			int matchCount = 0;
-			
+			bool calcTangents = false;
+
 			Vector3[] referenceVertices = referenceMesh.sharedMesh.vertices;
 			Vector3[] referencenormals = referenceMesh.sharedMesh.normals;
+			Vector4[] referencetangents = referenceMesh.sharedMesh.tangents;
 
 			Vector3[] normals = originalMesh.sharedMesh.normals;
 			Vector3[] meshIndexVertices = originalMesh.sharedMesh.vertices;
+			Vector4[] tangents = originalMesh.sharedMesh.tangents;
+
+			if (tangents == null || tangents.Length == 0 || referencetangents == null || referencetangents.Length == 0)
+				calcTangents = true;
+
 
 			for (int vertexIndex = 0; vertexIndex < meshIndexVertices.Length; vertexIndex++)
 			{
@@ -58,6 +65,8 @@ namespace UMA
 					{
 						matchCount++;
 						normals[vertexIndex] = referencenormals[othervertexIndex];
+						if (!calcTangents)
+							tangents[vertexIndex] = referencetangents[othervertexIndex];
 					}
 				}
 			}
@@ -68,7 +77,8 @@ namespace UMA
 			tempMesh.name = originalMesh.gameObject.name;
 			tempMesh.normals = normals;
 			
-			calculateMeshTangents(tempMesh);
+			if (calcTangents)
+				calculateMeshTangents(tempMesh);
 			
 			return tempMesh;
 		}

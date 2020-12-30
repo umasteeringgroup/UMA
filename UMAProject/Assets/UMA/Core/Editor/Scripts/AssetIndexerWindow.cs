@@ -99,9 +99,34 @@ namespace UMA.Controls
 		/// <returns></returns>
 		public static List<Type> GetAddressablePlugins()
 		{
-			return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+			List<Type> theTypes = new List<Type>();
+
+			var Assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+		    foreach(var asm in Assemblies)
+            {
+
+				try
+                {
+					var Types = asm.GetTypes();
+					foreach(var t in Types)
+                    {
+						if (typeof(IUMAAddressablePlugin).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                        {
+							theTypes.Add(t);
+                        }
+                    }
+                }
+				catch (Exception)
+                {
+					// This apparently blows up on some assemblies. 
+                }
+            }
+
+			return theTypes;
+/*			return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
 				 .Where(x => typeof(IUMAAddressablePlugin).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-				 .Select(x => x).ToList();
+				 .Select(x => x).ToList();*/
 		}
 
 		[MenuItem("UMA/Global Library", priority = 99)]
@@ -113,7 +138,7 @@ namespace UMA.Controls
 			window.SetupMenus();
 
 			Texture icon = AssetDatabase.LoadAssetAtPath<Texture>("Assets/UMA/InternalDataStore/UMA32.png");
-			window.titleContent = new GUIContent("UMA 2.10 Global Library", icon);
+			window.titleContent = new GUIContent(UmaAboutWindow.umaVersion+" Global Library", icon);
 			window.Focus();
 			window.Repaint();
 			return window;
@@ -145,7 +170,7 @@ namespace UMA.Controls
 			// the menu item is marked as selected if it matches the current value of m_Color
 			menu.AddItem(new GUIContent(menuPath), false, function, o);
 		}
-
+ 
 		private void SetupMenus()
 		{
 
@@ -161,6 +186,7 @@ namespace UMA.Controls
 			AddMenuItemWithCallback(FileMenu, "Rebuild From Project", () => 
 			{
 				UAI.Clear();
+				UAI.BuildStringTypes();
 				UAI.AddEverything(false);
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
@@ -170,6 +196,7 @@ namespace UMA.Controls
 			AddMenuItemWithCallback(FileMenu, "Rebuild From Project (include text assets)", () =>
 			{
 				UAI.Clear();
+				UAI.BuildStringTypes();
 				UAI.AddEverything(true);
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
@@ -186,6 +213,7 @@ namespace UMA.Controls
 
 			AddMenuItemWithCallback(FileMenu, "Repair and remove invalid items", () => 
 			{
+				UAI.BuildStringTypes();
 				UAI.RepairAndCleanup();
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
@@ -221,6 +249,53 @@ namespace UMA.Controls
 				Repaint();
 			});
 
+
+			AddMenuItemWithCallback(FileMenu, "Backup Index", () =>
+			{
+				// string index = UAI.Backup();
+				string filename = EditorUtility.SaveFilePanel("Backup Index", "", "librarybackup", "bak");
+				if (!string.IsNullOrEmpty(filename))
+				{
+					try
+					{
+						string backup = UAI.Backup();
+						System.IO.File.WriteAllText(filename, backup);
+						backup = "";
+					}
+					catch (Exception ex)
+                    {
+						Debug.LogException(ex);
+						EditorUtility.DisplayDialog("Error", "Error writing backup: " + ex.Message,"OK");
+                    }
+				}
+			});
+
+			AddMenuItemWithCallback(FileMenu, "Restore Index", () =>
+			{
+				string filename = EditorUtility.OpenFilePanel("Restore", "", "bak");
+				if (!string.IsNullOrEmpty(filename))
+				{
+					try
+					{
+						string backup = System.IO.File.ReadAllText(filename);
+						EditorUtility.DisplayProgressBar("Restore", "Restoring index", 0);
+						if (!UAI.Restore(backup))
+						{
+							EditorUtility.DisplayDialog("Error", "Unable to restore index. Please review the console for more information.", "OK");
+						}
+						backup = "";
+					}
+					catch (Exception ex)
+					{
+						Debug.LogException(ex);
+						EditorUtility.DisplayDialog("Error", "Error writing backup: " + ex.Message, "OK");
+					}
+					EditorUtility.ClearProgressBar();
+					m_Initialized = false;
+					Repaint();
+				}
+			});
+
 #if UMA_ADDRESSABLES
 
 			foreach(IUMAAddressablePlugin plugin in addressablePlugins)
@@ -246,6 +321,23 @@ namespace UMA.Controls
 				UMAAddressablesSupport.Instance.GenerateAddressables();
 				Resources.UnloadUnusedAssets();
 				m_Initialized = false;
+				Repaint();
+			});
+
+			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Single Group (Final Build)", () =>
+			{
+				UMAAddressablesSupport.Instance.CleanupAddressables();
+				SingleGroupGenerator sgs = new SingleGroupGenerator();
+				sgs.ClearMaterials = true;
+				UMAAddressablesSupport.Instance.GenerateAddressables(sgs);
+				Resources.UnloadUnusedAssets();
+				m_Initialized = false;
+				Repaint();
+			});
+
+			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Postbuild Material Fixup", () =>
+			{
+				UMAAssetIndexer.Instance.PostBuildMaterialFixup();
 				Repaint();
 			});
 
@@ -934,8 +1026,6 @@ namespace UMA.Controls
 			}
 		}
 #endregion
-
-		float lastFrameTime = 0;
 
 		private string dots = "";
 		void OnGUI ()

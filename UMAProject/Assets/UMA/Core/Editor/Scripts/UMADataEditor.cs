@@ -23,7 +23,7 @@ namespace UMA.Editors
             _recipe = _umaData.umaRecipe;
 			if (_recipe == null || _recipe.raceData == null)
             {				
-                _errorMessage = "UMA Data not loaded.";
+                _errorMessage = "Recipe data has not been generated.";
             } 
             else
             {
@@ -50,6 +50,10 @@ namespace UMA.Editors
 		private bool CheckCurrentDNATypeHashes()
 		{
 			var currentRecipe = (target as UMAData).umaRecipe;
+			if (_currentDnaTypeHashes == null)
+            {
+				SetCurrentDnaTypeHashes();
+            }
 			if (_currentDnaTypeHashes.Length == 0 || currentRecipe == null || currentRecipe.raceData == null)
 				return false;
 			UMADnaBase[] allDna = currentRecipe.GetAllDna();

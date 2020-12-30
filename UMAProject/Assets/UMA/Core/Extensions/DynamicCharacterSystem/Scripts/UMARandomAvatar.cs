@@ -17,6 +17,7 @@ namespace UMA
 		public float RandomOffset = 0.0f;
 		public bool RandomRotation;
 		public string NameBase = "Pat";
+		public UMARandomAvatarEvent RandomAvatarGenerated;
 
 		private DynamicCharacterAvatar RandomAvatar;
 		private GameObject character;
@@ -82,9 +83,14 @@ namespace UMA
 				}
 				RandomAvatar = go.GetComponent<DynamicCharacterAvatar>();
 				go.name = Name;
+				// Event for possible networking here
+				if (RandomAvatarGenerated != null)
+				{
+					RandomAvatarGenerated.Invoke(gameObject, go);
+				}
 			}
 			Randomize(RandomAvatar);
-			RandomAvatar.BuildCharacter();
+			RandomAvatar.BuildCharacter(!RandomAvatar.BundleCheck);
 		}
 
 		public RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots)

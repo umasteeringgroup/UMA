@@ -337,10 +337,13 @@ namespace UMA
 					newSize.y = (newBounds.center.y * 2) - underAmount;
 					newCenter.y = newSize.y / 2;
 				}
-				newCenter.x = umaData.umaRoot.transform.position.x;
-				newCenter.z = umaData.umaRoot.transform.position.z;
-				Bounds modifiedBounds = new Bounds(newCenter, newSize);
-				newBounds = modifiedBounds;
+				if (umaData.umaRoot != null)
+				{
+					newCenter.x = umaData.umaRoot.transform.position.x;
+					newCenter.z = umaData.umaRoot.transform.position.z;
+					Bounds modifiedBounds = new Bounds(newCenter, newSize);
+					newBounds = modifiedBounds;
+				}
 			}
 
 			//the user has tools for expanding the bounds aswell so do those here too if they havent been done already (to this race?)

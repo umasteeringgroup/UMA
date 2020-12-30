@@ -14,6 +14,9 @@ namespace UMA.Editors
         SerializedProperty convertMipMaps;
         SerializedProperty atlasResolution;
         SerializedProperty defaultOverlayAsset;
+        SerializedProperty AtlasOverflowFitMethod;
+        SerializedProperty FitPercentageDecrease;
+        SerializedProperty SharperFitTextures;
 
         GUIContent[] atlasLabels = new GUIContent[] { new GUIContent("512"), new GUIContent("1024"), new GUIContent("2048"), new GUIContent("4096"), new GUIContent("8192") };
         int[] atlasValues = new int[] { 512, 1024, 2048, 4096, 8192 };
@@ -27,6 +30,9 @@ namespace UMA.Editors
             convertMipMaps = serializedObject.FindProperty("convertMipMaps");
             atlasResolution = serializedObject.FindProperty("atlasResolution");
             defaultOverlayAsset = serializedObject.FindProperty("defaultOverlayAsset");
+            AtlasOverflowFitMethod = serializedObject.FindProperty("AtlasOverflowFitMethod");
+            FitPercentageDecrease = serializedObject.FindProperty("FitPercentageDecrease");
+            SharperFitTextures = serializedObject.FindProperty("SharperFitTextures");
         }
 
         public override void OnInspectorGUI()
@@ -36,10 +42,14 @@ namespace UMA.Editors
             centeredLabel.alignment = TextAnchor.MiddleCenter;
 
             serializedObject.Update();
-            //DrawDefaultInspector();
 
             EditorGUILayout.LabelField("Basic Configuration", centeredLabel);
+            GUIHelper.BeginVerticalPadded();
             EditorGUILayout.PropertyField(fitAtlas);
+            EditorGUILayout.PropertyField(SharperFitTextures);
+            EditorGUILayout.PropertyField(AtlasOverflowFitMethod);
+            EditorGUILayout.PropertyField(FitPercentageDecrease);
+            GUIHelper.EndVerticalPadded();
             EditorGUILayout.PropertyField(convertRenderTexture);
             EditorGUILayout.PropertyField(convertMipMaps);
             EditorGUILayout.IntPopup(atlasResolution, atlasLabels, atlasValues );

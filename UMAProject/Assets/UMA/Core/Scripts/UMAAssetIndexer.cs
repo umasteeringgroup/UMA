@@ -71,8 +71,6 @@ namespace UMA
         public static Dictionary<string, AssetItem> GuidTypes = new Dictionary<string, AssetItem>();
 #endregion
 #region Fields
-        public bool AutoUpdate;
-
         protected Dictionary<System.Type, System.Type> TypeToLookup = new Dictionary<System.Type, System.Type>()
         {
         { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
@@ -87,7 +85,8 @@ namespace UMA
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
         {  typeof(TextAsset), typeof(TextAsset) },
-        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) }
+        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
+        {(typeof(UMAMaterial)), (typeof(UMAMaterial)) }
         };
 
 
@@ -112,7 +111,8 @@ namespace UMA
         (typeof(AnimatorController)),
 #endif
         (typeof(DynamicUMADnaAsset)),
-        (typeof(TextAsset))
+        (typeof(TextAsset)),
+        (typeof(UMAMaterial))
     };
 
 
@@ -120,10 +120,10 @@ namespace UMA
 #region Static Fields
         static UMAAssetIndexer theIndexer = null;
 
-		
-#endregion
 
-		public static System.Diagnostics.Stopwatch StartTimer()
+        #endregion
+
+        public static System.Diagnostics.Stopwatch StartTimer()
         {
 #if TIMEINDEXER
             if(Debug.isDebugBuild)
@@ -164,10 +164,74 @@ namespace UMA
                 return theIndexer;
             }
         }
-  
+
+#if UNITY_EDITOR
+        public struct IndexBackup
+        {
+            public DateTime BackupTime;
+            public AssetItem[] Items;
+        }
+
+        public string Backup()
+        {
+            try
+            {
+                RepairAndCleanup();
+
+                IndexBackup backup = new IndexBackup();
+                backup.BackupTime = DateTime.Now;
+                backup.Items = UpdateSerializedList().ToArray();
+
+                return JsonUtility.ToJson(backup);
+            }
+            catch(Exception ex)
+            {
+                Debug.LogException(ex);
+                return "";
+            }
+        }
+
+        public bool Restore(string s, bool quiet=false)
+        {
+            try
+            {
+                IndexBackup restore = JsonUtility.FromJson<IndexBackup>(s);
+                SerializedItems.Clear();
+                SerializedItems.AddRange(restore.Items);
+                if (!quiet) EditorUtility.DisplayProgressBar("Restore", "Restoring index", 0.33f);
+                UpdateSerializedDictionaryItems();
+                if (!quiet) EditorUtility.DisplayProgressBar("Restore", "Restoring index", 0.66f);
+                RepairAndCleanup();
+                if (!quiet) EditorUtility.DisplayProgressBar("Restore", "Restoring index", 1.0f);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return false;
+            }
+        }
+#endif
+
         public Type GetRuntimeType(Type type)
         {
             return TypeToLookup[type];
+        }
+
+        public string SaveIndexItems()
+        {
+            string theJson = "";
+            // Flatten asset items.
+            // save to json string?
+            return theJson;
+        }
+
+        public bool RestoreIndexItems(string json)
+        {
+            // clear index items
+            // load flattened array from json string
+            // rebuild
+            return true;
         }
 
 #if UMA_ADDRESSABLES
@@ -196,10 +260,6 @@ namespace UMA
 #if UNITY_EDITOR
         public void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            if (!AutoUpdate)
-            {
-                return;
-            }
             bool changed = false;
 
             // Build a dictionary of the items by path.
@@ -474,11 +534,20 @@ namespace UMA
 
 			foreach (var slot in Slots)
 			{
+                // We are getting extra blank slots. That's weird. 
+
+                if (string.IsNullOrWhiteSpace(slot.id)) continue;
+
 				AssetItem s = GetAssetItem<SlotDataAsset>(slot.id);
 				if (s != null)
 				{
                     returnval.Add(s);
                     string LodIndicator = slot.id.Trim() + "_LOD";
+                    if (slot.id.Contains("_LOD"))
+                    {
+                        // LOD is directly in the base recipe. 
+                        LodIndicator = slot.id.Substring(0, slot.id.Length-1);
+                    }
 
                     if (slot.overlays != null)
                     {
@@ -985,45 +1054,57 @@ namespace UMA
 
 			return LoadLabelList(Keys,keepLoaded);
 		}
+#if UNITY_EDITOR
+        async void ValidateSingleKey(string s) 
+        {
+            var result = await Addressables.LoadResourceLocationsAsync(s).Task;
 
-		public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
-		{
+            string info = "Label "+s+" has "+result.Count + " Resource Locations.";
+
+            Debug.Log(info);
+        }
+#endif
+
+        static List<UnityEngine.Object> ProcessedItems = new List<UnityEngine.Object>();
+
+        public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
+        {
 #if SUPER_LOGGING
             string labels = "";
 #endif
             foreach (string label in Keys)
-			{
-				if (!Preloads.ContainsKey(label))
-				{
-					Preloads[label] = keepLoaded;
-				}
-				else
-				{
-					if (keepLoaded) // only overwrite if keepLoaded = true. All "keepLoaded" take precedence.
-						Preloads[label] = keepLoaded;
-				}
+            {
+                if (!Preloads.ContainsKey(label))
+                {
+                    Preloads[label] = keepLoaded;
+                }
+                else
+                {
+                    if (keepLoaded) // only overwrite if keepLoaded = true. All "keepLoaded" take precedence.
+                        Preloads[label] = keepLoaded;
+                }
 #if SUPER_LOGGING
                 labels += "'" + label + "';";
 #endif
-			}
+            }
 
 #if SUPER_LOGGING
             Debug.Log("Loading Labels: " + labels);
 #endif
-			var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys.ToArray(), result =>
+            var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys, result =>
             {
+                ProcessedItems.Add(result);
                 ProcessNewItem(result, true, keepLoaded);
-            }, Addressables.MergeMode.Union);
-
-			if (!keepLoaded)
-			{
+            }, Addressables.MergeMode.Union, true);
+            if (!keepLoaded)
+            {
                 string info = "";
                 foreach (string s in Keys)
                     info += Keys + "; ";
-				LoadedItems.Add(new CachedOp(op,info));
-			}
-			return op;
-		}
+                LoadedItems.Add(new CachedOp(op, info));
+            }
+            return op;
+        }
 #endif
 
         public void ProcessNewItem(UnityEngine.Object result, bool isAddressable, bool keepLoaded)
@@ -1051,8 +1132,77 @@ namespace UMA
             {
                 AddRaceRecipe(result as UMAWardrobeRecipe);
             }
+            else if (result is SlotDataAsset)
+            {
+                SlotDataAsset sd = result as SlotDataAsset;
+                if (sd.material == null)
+                {
+                    if (!string.IsNullOrEmpty(sd.materialName))
+                    {
+                        sd.material = Instance.GetAsset<UMAMaterial>(sd.materialName);
+                    }
+                }
+            }
+            else if (result is OverlayDataAsset)
+            {
+                OverlayDataAsset od = result as OverlayDataAsset;
+                if (od.material == null)
+                {
+                    if (!string.IsNullOrEmpty(od.materialName))
+                    {
+                        od.material = Instance.GetAsset<UMAMaterial>(od.materialName);
+                    }
+                }
+            }
         }
 
+        public void PostBuildMaterialFixup()
+        {
+#if UNITY_EDITOR
+            var slots = GetAllAssets<SlotDataAsset>();
+            var overlays = GetAllAssets<OverlayDataAsset>();
+            foreach(SlotDataAsset sd in slots)
+            {
+                if (sd.material == null)
+                {
+                    if (!string.IsNullOrEmpty(sd.materialName))
+                    {
+                        sd.material = Instance.GetAsset<UMAMaterial>(sd.materialName);
+
+                        if (sd.material == null)
+                        {
+                            Debug.LogWarning("Unable to find material '" + sd.materialName + "' for slot: " + sd.name);
+                        }
+                        EditorUtility.SetDirty(sd);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Material name is null on slot: " + sd.name);
+                    }
+                }
+            }
+            foreach (OverlayDataAsset od in overlays)
+            {
+                if (od.material == null)
+                {
+                    if (!string.IsNullOrEmpty(od.materialName))
+                    {
+                        od.material = Instance.GetAsset<UMAMaterial>(od.materialName);
+                        if (od.material == null)
+                        {
+                            Debug.LogWarning("Unable to find material '" + od.materialName + "' for overlay: " + od.name);
+                        }
+                        EditorUtility.SetDirty(od);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Material name is null on overlay: " + od.name);
+                    }
+                }
+            }
+            ForceSave();
+#endif
+        }
 #if UMA_ADDRESSABLES
         public void Unload(AsyncOperationHandle<IList<UnityEngine.Object>> AssetOperation)
         {
@@ -1254,6 +1404,10 @@ namespace UMA
 
 
 #if UNITY_EDITOR
+                if (string.IsNullOrWhiteSpace(ai._Name))
+                {
+                    throw new Exception("Invalid name on Asset type "+ai._Type.ToString()+" - asset is: "+ai.Item.name);
+                }
                 if (ai.IsAddressable)
                 {
                     ai._SerializedItem = null;
@@ -1273,15 +1427,21 @@ namespace UMA
 #endif
                 if (!string.IsNullOrEmpty(ai._Guid))
                 {
-                    if (GuidTypes.ContainsKey(ai._Guid))
+                    if (!GuidTypes.ContainsKey(ai._Guid))
                     {
-                        return false;
+                        GuidTypes.Add(ai._Guid, ai);
                     }
-                    GuidTypes.Add(ai._Guid, ai);
                 }
 #endif
 
-                TypeDic.Add(ai._Name, ai);
+                if (!TypeDic.ContainsKey(ai._Name))
+                {
+                    TypeDic.Add(ai._Name, ai);
+                }
+                else
+                {
+                    // warning?
+                }
             }
             catch (System.Exception ex)
             {
@@ -1391,7 +1551,7 @@ namespace UMA
             {
 				AssetItem ai = TypeDic[Name];
 				TypeDic.Remove(Name);
-                GuidTypes.Remove(Name);
+                GuidTypes.Remove(ai._Guid);
 				if (theType == typeof(UMAWardrobeRecipe))
 				{
 					// remove it from the race lookup.
@@ -1538,14 +1698,17 @@ namespace UMA
 				if (type == TypeToLookup[type])
 				{
                 	Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
-                	foreach (AssetItem ai in TypeDic.Values)
-                	{
-                        if (ai.IsAddressable)
+                    if (TypeDic != null)
+                    {
+                        foreach (AssetItem ai in TypeDic.Values)
                         {
-                            ai._SerializedItem = null;
+                            if (ai.IsAddressable)
+                            {
+                                ai._SerializedItem = null;
+                            }
+                            SerializedItems.Add(ai);
                         }
-                      	SerializedItems.Add(ai);
-                	}
+                    }
 				}
             }
             return SerializedItems;
@@ -1554,7 +1717,7 @@ namespace UMA
         /// <summary>
         /// Builds a list of types and a string to look them up.
         /// </summary>
-		private void BuildStringTypes()
+		public void BuildStringTypes()
 		{
 			TypeFromString.Clear();
 			foreach (System.Type st in Types)
@@ -1819,7 +1982,8 @@ namespace UMA
         (typeof(AnimatorController)),
 #endif
         (typeof(DynamicUMADnaAsset)),
-        (typeof(TextAsset))
+        (typeof(TextAsset)),
+        (typeof(UMAMaterial))
         };
 
             TypeToLookup = new Dictionary<System.Type, System.Type>()
@@ -1836,7 +2000,8 @@ namespace UMA
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
         {  typeof(TextAsset), typeof(TextAsset) },
-        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) }
+        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
+        { (typeof(UMAMaterial)),(typeof(UMAMaterial)) }
         };
 
             List<string> invalidTypeNames = new List<string>();

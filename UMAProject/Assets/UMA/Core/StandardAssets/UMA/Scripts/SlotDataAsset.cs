@@ -38,7 +38,14 @@ namespace UMA
         /// and colors to the various material properties.
         /// </remarks>
         [UMAAssetFieldVisible]
+		[SerializeField]
 		public UMAMaterial material;
+
+		/// <summary>
+		/// materialName is used to save the name of the material, but ONLY if we have cleared the material when building bundles.
+		/// You can't count on this field to contain a value unless it was set during the cleanup phase by the indexer!
+		/// </summary>
+		public string materialName;
 
 		/// <summary>
 		/// This SlotDataAsset will not be included after this LOD level.
@@ -92,6 +99,9 @@ namespace UMA
 		[Tooltip("Optional DNA converter specific to the slot. Accepts a DNAConverterController asset or a legacy DNAConverterBehaviour prefab.")]
 		private DNAConverterField _slotDNA = new DNAConverterField();
 
+		[Tooltip("If isWildCardSlot = true, then the overlays on this slot are applied to any slot or overlay with a matching tag when the recipe is built. This is used in Wardrobe Recipes to apply overlays to other slots.")]
+		public bool isWildCardSlot;
+
 		//UMA 2.8 FixDNAPrefabs: I'm putting the required property for this here because theres no properties anywhere else!
 		public IDNAConverter slotDNA
 		{
@@ -114,6 +124,11 @@ namespace UMA
 				return false;
 			}
 		}
+
+		public void LoadFromIndex()
+        {
+			material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(materialName);
+        }
 
 		//UMA 2.8 FixDNAPrefabs: Swaps the legacy converter (DnaConverterBehaviour Prefab) for the new DNAConverterController
 		/// <summary>
@@ -151,6 +166,9 @@ namespace UMA
 		/// </summary>
 		public string[] tags;
 
+		// Wildcard slot race matches
+		public string[] Races;
+
 		/// <summary>
 		/// Callback event when character update begins.
 		/// </summary>
@@ -181,6 +199,16 @@ namespace UMA
             
 		}
 
+        public void OnDestroy()
+        {
+			meshData.FreeBoneWeights();
+        }
+
+		public void OnDisable()
+		{
+			meshData.FreeBoneWeights();
+		}
+
 		public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
 			return material.channels.Length;
@@ -209,12 +237,32 @@ namespace UMA
 			UnityEditor.EditorUtility.SetDirty(this);
 #endif
 		}
-#if UNITY_EDITOR
-		
-		public void UpdateMeshData()
+
+
+        public void OnEnable()
+        {
+			if (meshData == null)
+				return;
+
+			if (meshData.LoadedBoneweights)
+            {
+				// already loaded. just return.
+				return;
+            }
+			if (meshData.ManagedBoneWeights != null && meshData.ManagedBoneWeights.Length > 0)
+            {
+				meshData.LoadVariableBoneWeights();
+            }
+			else if (meshData.boneWeights != null && meshData.boneWeights.Length > 0)
+			{
+				meshData.LoadBoneWeights();
+			}
+		}
+
+        public void UpdateMeshData()
 		{
 		}
-#endif
+
 		public void OnAfterDeserialize()
 		{
 			nameHash = UMAUtils.StringToHash(slotName);
@@ -226,7 +274,11 @@ namespace UMA
 				//Clear the legacy field?
 			}
 		}
-		public void OnBeforeSerialize() { }
+
+		public void OnBeforeSerialize() 
+		{ 
+
+		}
 
 		public void Assign(SlotDataAsset source)
 		{
@@ -240,6 +292,7 @@ namespace UMA
 			subMeshIndex = source.subMeshIndex;
 			slotGroup = source.slotGroup;
 			tags = source.tags;
+			Races = source.Races;
 		}
 	}
 }

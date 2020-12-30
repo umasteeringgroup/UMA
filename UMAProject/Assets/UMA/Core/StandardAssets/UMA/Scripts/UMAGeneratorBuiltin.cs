@@ -19,11 +19,16 @@ namespace UMA
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public UMAMeshCombiner meshCombiner;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        [Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
+		/// <summary>
+		/// 
+		/// </summary>
+		[Range(1.0f, 16.0f)]
+		[Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
         public int InitialScaleFactor = 1;
+
+		[Range(1.0f,16.0f)]
+		[Tooltip("Scale factor for edit-time builds. Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
+		public int editorInitialScaleFactor = 4;
 
 		[Tooltip("Number of iterations to process each frame")]
 		public int IterationCount = 1;
@@ -42,8 +47,12 @@ namespace UMA
         /// Number of character updates before triggering System garbage collect.
         /// </summary>
         [Tooltip("Number of character updates before triggering garbage collection.")]
-        public int garbageCollectionRate = 8;
+		[Range(0.0f, 128.0f)]
+		public int garbageCollectionRate = 8;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
+
+		[Tooltip("Generates a single UMA immediately with no coroutines. This is the fastest possible path.")]
+		public bool NoCoroutines=true;
 
 		[NonSerialized]
 		public long ElapsedTicks;
@@ -85,7 +94,7 @@ namespace UMA
 			}
 		}
 
-		public virtual void Update()
+		public virtual void LateUpdate()
 		{
 			if (CheckRenderTextures())
 				return; // if render textures needs rebuild we'll not do anything else
@@ -129,6 +138,7 @@ namespace UMA
 
 		public override void Work()
 		{
+			UMAContextBase.IgnoreTag = ignoreTag;
 			if (!IsIdle())
 			{
 				stopWatch.Reset();
@@ -181,23 +191,109 @@ namespace UMA
 			var rt = data.GetFirstRenderTexture();
 			if (rt != null && !rt.IsCreated())
 			{
-				umaData = data;
-				TextureProcessBaseCoroutine textureProcessCoroutine;
-				textureProcessCoroutine = new TextureProcessPROCoroutine();
-				textureProcessCoroutine.Prepare(data, this);
+				if (NoCoroutines)
+				{
+					UMAGeneratorPro ugp = new UMAGeneratorPro();
+					ugp.ProcessTexture(this, umaData, true, InitialScaleFactor);
+					TextureChanged++;
+                }
+                else
+				{
+					umaData = data;
+					TextureProcessBaseCoroutine textureProcessCoroutine;
+					textureProcessCoroutine = new TextureProcessPROCoroutine();
+					textureProcessCoroutine.Prepare(data, this);
 
-				activeGeneratorCoroutine = new UMAGeneratorCoroutine();
-				activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true, InitialScaleFactor);
+					activeGeneratorCoroutine = new UMAGeneratorCoroutine();
+					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true, InitialScaleFactor);
 
-				while (!activeGeneratorCoroutine.Work()) ;
+					while (!activeGeneratorCoroutine.Work()) ;
 
-				activeGeneratorCoroutine = null;
+					activeGeneratorCoroutine = null;
+				}
+
 				TextureChanged++;
 			}
 		}
 
+
+		public bool GenerateSingleUMA(UMAData data, bool fireEvents)
+		{
+			UMAContextBase.IgnoreTag = ignoreTag;
+			if (data == null)
+				return true;
+
+			data.umaGenerator = this;
+			FreezeTime = true;
+			umaData = data;
+
+			if (umaData.RebuildSkeleton)
+			{
+				DestroyImmediate(umaData.umaRoot, false);
+				umaData.umaRoot = null;
+				umaData.RebuildSkeleton = false;
+				umaData.isShapeDirty = true;
+			}
+
+			if (!umaData.Validate())
+				return true;
+
+			if (meshCombiner != null)
+			{
+				meshCombiner.Preprocess(umaData);
+			}
+			umaData.FireCharacterBegunEvents();
+			PreApply(umaData);
+
+			if (umaData.isTextureDirty)
+			{
+				UMAGeneratorPro ugp = new UMAGeneratorPro();
+				ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
+				umaData.isTextureDirty = false;
+				umaData.isAtlasDirty |= umaData.isMeshDirty;
+				TextureChanged++;
+			}
+
+			if (umaData.isMeshDirty)
+			{
+				UpdateUMAMesh(umaData.isAtlasDirty);
+				umaData.isAtlasDirty = false;
+				umaData.isMeshDirty = false;
+				SlotsChanged++;
+				forceGarbageCollect++;
+			}
+
+			if (umaData.isShapeDirty)
+			{
+				if (!umaData.skeleton.isUpdating)
+				{
+					umaData.skeleton.BeginSkeletonUpdate();
+				}
+				UpdateUMABody(umaData);
+				umaData.isShapeDirty = false;
+				DnaChanged++;
+			}
+			else if (umaData.skeleton.isUpdating)
+			{
+				umaData.skeleton.EndSkeletonUpdate();
+			}
+
+			umaData.dirty = false;
+			if (fireEvents)
+            {
+				UMAReady();
+			}
+			else
+            {
+				umaData.Show();
+            }
+			FreezeTime = false;
+			return true;
+		}
+
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{
+			UMAContextBase.IgnoreTag = ignoreTag;
 			if (data == null)
 				return true;
 
@@ -214,6 +310,13 @@ namespace UMA
 				}
 				umaData.FireCharacterBegunEvents();
 				PreApply(umaData);
+			}
+			if (umaData.RebuildSkeleton)
+			{
+				DestroyImmediate(umaData.umaRoot, false);
+				umaData.umaRoot = null;
+				umaData.RebuildSkeleton = false;
+				umaData.isShapeDirty = true;
 			}
 
 
@@ -247,6 +350,7 @@ namespace UMA
 				}
 			}
 
+
 			if (umaData.isMeshDirty)
 			{
 				UpdateUMAMesh(umaData.isAtlasDirty);
@@ -259,7 +363,7 @@ namespace UMA
 					return false;
 			}
 
-			if (umaData.isShapeDirty) 
+			if (umaData.isShapeDirty)
 			{
 				if (!umaData.skeleton.isUpdating)
 				{
@@ -268,7 +372,7 @@ namespace UMA
 				UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
 				DnaChanged++;
-			} 
+			}
 			else if (umaData.skeleton.isUpdating)
 			{
 				umaData.skeleton.EndSkeletonUpdate();
@@ -282,6 +386,22 @@ namespace UMA
 		{
 			try
 			{
+				if (NoCoroutines)
+                {
+					UMAData umaData = umaDirtyList[0];
+					if (umaData.RebuildSkeleton)
+                    {
+						DestroyImmediate(umaData.umaRoot, false);
+						umaData.umaRoot = null;
+						umaData.RebuildSkeleton = false;
+						umaData.isShapeDirty = true;
+					}
+					GenerateSingleUMA(umaDirtyList[0],true);
+					umaDirtyList.RemoveAt(0);
+					umaData.MoveToList(cleanUmas);
+					umaData = null;
+					return;
+                }
 				if (HandleDirtyUpdate(umaDirtyList[0]))
 				{
 					umaDirtyList.RemoveAt(0);
@@ -300,12 +420,6 @@ namespace UMA
 				if (Debug.isDebugBuild)
 					UnityEngine.Debug.LogException(ex);
 			}
-			//anything more than 166,000 is too long (166,000 is 1 frame @ 60fps)
-			//the demo alien is about 65,000 on average- this is a big chunk of the available time though and my machine is fast
-			//Human Male DCS using pre plugins dna is about 45,000 on average but then its only doing 'skeletonModifiers' and 1 bonepose
-			//where as elfOrAlien demo is doing SkeletonModifiers + 3 BonePoses + 2 Blendshapes + 7 ColorDNAs
-			//if(charName != "")
-			//Debug.Log(charName + " DirtyUpdate took " + DirtyStopwatch.ElapsedTicks);
 		}
 
 		private void UpdateUMAMesh(bool updatedAtlas)
@@ -366,6 +480,11 @@ namespace UMA
 			}
 		}
 
+		public void Clear()
+        {
+			umaDirtyList.Clear();
+        }
+
 		/// <inheritdoc/>
 		public override bool IsIdle()
 		{
@@ -385,7 +504,7 @@ namespace UMA
 				umaData.Show();
 				umaData.FireUpdatedEvent(false);
 				umaData.FireCharacterCompletedEvents();
-				if (umaData.skeleton.boneCount > 300)
+				if (umaData.skeleton.boneCount > 500)
 				{
 					if (Debug.isDebugBuild)
 						Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
@@ -403,6 +522,7 @@ namespace UMA
 		{
 			if (umaData)
 			{
+				umaData.FirePreUpdateUMABody();
 				umaData.skeleton.ResetAll();
 				// Put the skeleton into TPose so rotations will be valid for generating avatar
 				umaData.GotoTPose();

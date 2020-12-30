@@ -28,13 +28,12 @@ MonoBehaviour:
     thumb: {fileID: 0}
   wardrobeSlot: Legs
   Hides: []
-  HideTags:
-  - Legs
+  HideTags: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets:
   - {fileID: 11400000, guid: 5aba47958b5bd2f43be3f6e55f1560af, type: 2}
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"MaleSweatPants","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleSweatPants_Overlay","colorIdx":0,"rect":[0.0,0.0,0.0,0.0]}]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[{"name":"Pants","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"","packedDna":[]}'
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"MaleSweatPants","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleSweatPants_Overlay","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":0.0,"y":0.0,"z":0.0},"rotation":0.0}],"Tags":[],"Races":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[]}],"colors":[],"fColors":[{"name":"Pants","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[]},{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[]}],"sharedColorCount":2,"race":"","packedDna":[]}'
   IncompatibleRecipes: []
   UserField: '    '
   replaces: Nothing

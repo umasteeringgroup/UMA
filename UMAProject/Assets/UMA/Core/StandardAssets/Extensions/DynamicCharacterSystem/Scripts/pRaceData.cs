@@ -10,6 +10,9 @@ namespace UMA
 {
     public partial class RaceData
     {
+		[Tooltip("This should be set to true for Blender FBX models")]
+		public bool FixupRotations = true;
+
 		[Tooltip("UMA Text recipe that holds the slots and overlays that are the default set up for this race.")]
 		public UMARecipeBase baseRaceRecipe;
 		[Tooltip("Wardobe slots that wardrobe recipes can be assigned to.")]
@@ -31,6 +34,12 @@ namespace UMA
             "Feet"
         };
 
+		private UMAPackedRecipeBase.UMAPackRecipe packedRecipe;
+
+		private UMAData.UMARecipe unPackedRecipe;
+		private Dictionary<string, float> RaceDNAValues = new Dictionary<string, float>();
+		private List<OverlayColorData> RaceColorValues = new List<OverlayColorData>();
+
 		//UMA26 we want to depricate this- how much do we need to worry about the fact that users could do backwardsCompatibleWith.Add/Remove via scripting before?
 		[Obsolete("[RaceData backwardsCompatibleWith is deprecated and will be removed in a future version. Please use RaceData.CrossCompatibleRaces instead.")]
 		public List<string> backwardsCompatibleWith = new List<string>();
@@ -43,6 +52,56 @@ namespace UMA
 		private CrossCompatibilitySettingsList _crossCompatibilitySettings = new CrossCompatibilitySettingsList();
 
 		public RaceThumbnails raceThumbnails;
+
+
+		public List<OverlayColorData> GetDefaultColors()
+        {
+			if (RaceColorValues.Count > 0)
+            {
+				return RaceColorValues;
+            }
+			if (GetPackedRecipe() == null)
+			{
+				return RaceColorValues;
+			}
+
+			OverlayColorData[] colors = UMAPackedRecipeBase.UnpackColors(packedRecipe);
+			RaceColorValues.AddRange(colors);
+			return RaceColorValues;
+        }
+
+		public UMAPackedRecipeBase.UMAPackRecipe GetPackedRecipe()
+        {
+			if (packedRecipe != null)
+				return packedRecipe;
+			packedRecipe = (baseRaceRecipe as UMATextRecipe).PackedLoad(UMAContextBase.Instance);
+
+			return packedRecipe;
+		}
+
+		public Dictionary<string, float> GetDefaultDNA()
+        {
+            if (GetPackedRecipe() == null)
+            {
+				return RaceDNAValues;
+			}
+			if (RaceDNAValues.Count == 0)
+            {
+				List<UMADnaBase> dna = UMAPackedRecipeBase.UnPackDNA(packedRecipe.packedDna);
+				foreach(UMADnaBase udb in dna)
+                {
+					for (int i=0;i < udb.Names.Length;i++)
+                    {
+						if (RaceDNAValues.ContainsKey(udb.Names[i]) == false)
+						{
+							RaceDNAValues.Add(udb.Names[i], udb.Values[i]);
+						}
+					}
+                }
+			}
+			return RaceDNAValues;
+        }
+
 
         //Not sure if this is needed I think I could just set the wardrobe slots property to be this by default?
         public void AddDefaultWardrobeSlots(bool forceOverride = false)

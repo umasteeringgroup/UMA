@@ -1,17 +1,52 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using UMA.CharacterSystem;
+using UnityEditorInternal;
 
 namespace UMA.Editors
 {
 	public class UmaSlotBuilderWindow : EditorWindow 
 	{
+		/// <summary>
+		/// This class is pretty dumb. It exists solely because "string" has no default constructor, so can't be created using reflection.
+		/// </summary>
+		public class BoneName : Object
+		{
+			public string strValue;
+			public static implicit operator BoneName(string value)
+			{
+				return new BoneName(value);
+			}
+
+			public static BoneName operator +(BoneName first, BoneName second)
+			{
+				return new BoneName(first.strValue + second.strValue);
+			}
+
+			public BoneName()
+            {
+				strValue = "";
+            }
+
+            public override string ToString()
+            {
+                return strValue;
+            }
+
+            public BoneName(string val)
+            {
+				strValue = val;
+            }
+		}
+
 		public string slotName;
 		public string RootBone = "Global";
 		public UnityEngine.Object slotFolder;
 		public UnityEngine.Object relativeFolder;
 		public SkinnedMeshRenderer normalReferenceMesh;
 		public SkinnedMeshRenderer slotMesh;
+		public GameObject AllSlots;
 		public UMAMaterial slotMaterial;
 		public bool createOverlay;
 		public bool createRecipe;
@@ -20,6 +55,10 @@ namespace UMA.Editors
 		public string errmsg = "";
 		public List<string> Tags = new List<string>();
 		public bool showTags;
+		public bool nameAfterMaterial=true;
+		public List<BoneName> KeepBones = new List<BoneName>();
+		private ReorderableList boneList;
+		private bool boneListInitialized;
 
 		string GetAssetFolder()
 		{
@@ -33,6 +72,20 @@ namespace UMA.Editors
 
 		string GetAssetName()
 		{
+			int index = slotName.LastIndexOf('/');
+			if (index > 0)
+			{
+				return slotName.Substring(index + 1);
+			}
+			return slotName;
+		}
+
+		string GetSlotName(SkinnedMeshRenderer smr)
+		{
+			if (nameAfterMaterial)
+			{
+				return smr.sharedMaterial.name.ToTitleCase();
+			}
 			int index = slotName.LastIndexOf('/');
 			if (index > 0)
 			{
@@ -58,11 +111,59 @@ namespace UMA.Editors
 			}
 		}
 
-		void OnGUI()
+		private void InitBoneList()
 		{
-			GUILayout.Label("UMA Slot Builder");
-			GUILayout.Space(20);
+			boneList = new ReorderableList(KeepBones,typeof(BoneName), true, true, true, true);
+			boneList.drawHeaderCallback = (Rect rect) => {
+				EditorGUI.LabelField(rect, "Keep Bones Containing");
+			};
+			boneList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => {
+				rect.y += 2;
+				KeepBones[index].strValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), KeepBones[index].strValue);
+			};
+			boneListInitialized = true;
+		}
+
+		void OnGUI()
+        {
+			if (!boneListInitialized || boneList == null)
+			{
+				InitBoneList();
+			}
+			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
+			GUILayout.Label("Common Parameters", EditorStyles.boldLabel);
 			normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+
+            slotMaterial = EditorGUILayout.ObjectField("UMAMaterial	 ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
+            slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
+
+			//EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+			EditorGUILayout.BeginHorizontal();
+			createOverlay = EditorGUILayout.Toggle("Create Overlay", createOverlay);
+			createRecipe = EditorGUILayout.Toggle("Create Wardrobe Recipe ", createRecipe);
+			EditorGUILayout.EndHorizontal();
+			//EditorGUILayout.LabelField(slotName + "_Overlay");
+			//EditorGUILayout.EndHorizontal();
+			//EditorGUILayout.BeginHorizontal();
+			//EditorGUILayout.LabelField(slotName + "_Recipe");
+			//EditorGUILayout.EndHorizontal();
+			EditorGUILayout.BeginHorizontal();
+			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
+			addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
+			EditorGUILayout.EndHorizontal();
+			boneList.DoLayoutList();
+			GUIHelper.EndVerticalPadded(10);
+			DoDragDrop();
+
+			EnforceFolder(ref slotFolder);
+			//
+			// For now, we will disable this option.
+			// It doesn't work in most cases.
+			// RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
+			// 
+			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f),EditorStyles.helpBox);
+			GUILayout.Label("Single Slot Processing", EditorStyles.boldLabel);
+
 			var newslotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 			if (newslotMesh != slotMesh)
 			{
@@ -70,74 +171,9 @@ namespace UMA.Editors
 				slotMesh = newslotMesh;
 			}
 
-
-			slotMaterial = EditorGUILayout.ObjectField("UMAMaterial	 ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
-			slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder"	, slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
-			EnforceFolder(ref slotFolder);
-			//
-			// For now, we will disable this option.
-			// It doesn't work in most cases.
-			// RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
-			// 
 			slotName = EditorGUILayout.TextField("Slot Name", slotName);
-			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
 
-			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
-			GUILayout.Space(10);
-			showTags = EditorGUILayout.Foldout(showTags, "Tags");
-			GUILayout.EndHorizontal();
-			if (showTags)
-			{
-				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-				// Draw the button area
-				GUILayout.BeginHorizontal();
-				if (GUILayout.Button("Add Tag", GUILayout.Width(80)))
-				{
-					Tags.Add("");
-					Repaint();
-				}
-				 
-				GUILayout.Label(Tags.Count + " Tags defined");
-				GUILayout.EndHorizontal();
 
-				if (Tags.Count == 0)
-				{
-					GUILayout.Label("No tags defined", EditorStyles.helpBox);
-				}
-				else
-				{
-					int del = -1;
-
-					for (int i = 0; i < Tags.Count; i++)
-					{
-						GUILayout.BeginHorizontal();
-						Tags[i] = GUILayout.TextField(Tags[i]);
-						if(GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
-						{
-							del = i;
-						}
-						GUILayout.EndHorizontal();
-					}
-					if (del >= 0)
-					{
-						Tags.RemoveAt(del);
-						Repaint();
-					}
-				}
-				// Draw the tags (or "No tags defined");
-				GUIHelper.EndVerticalPadded(10);
-			}
-
-			EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-			EditorGUILayout.BeginHorizontal();
-			createOverlay = EditorGUILayout.Toggle("Create Overlay", createOverlay);
-			EditorGUILayout.LabelField(slotName + "_Overlay");
-			EditorGUILayout.EndHorizontal();
-			EditorGUILayout.BeginHorizontal();
-			createRecipe = EditorGUILayout.Toggle("Create Wardrobe Recipe ", createRecipe);
-			EditorGUILayout.LabelField(slotName + "_Recipe");
-			EditorGUILayout.EndHorizontal();
-			addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
 
 			if (GUILayout.Button("Verify Slot"))
 			{
@@ -148,7 +184,7 @@ namespace UMA.Editors
 				else
 				{
 					Vector2[] uv = slotMesh.sharedMesh.uv;
-					foreach(Vector2 v in uv)
+					foreach (Vector2 v in uv)
 					{
 						if (v.x > 1.0f || v.x < 0.0f || v.y > 1.0f || v.y < 0.0f)
 						{
@@ -192,14 +228,62 @@ namespace UMA.Editors
 				}
 			}
 
+			GUIHelper.EndVerticalPadded(10);
 
-			if (slotMesh != null )
-			{   
-				if( slotMesh.localBounds.size.x > 10.0f || slotMesh.localBounds.size.y > 10.0f || slotMesh.localBounds.size.z > 10.0f)
-					EditorGUILayout.HelpBox ("This slot's size is very large. It's import scale may be incorrect!", MessageType.Warning);
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            GUILayout.Space(10);
+            showTags = EditorGUILayout.Foldout(showTags, "Tags");
+			GUILayout.EndHorizontal();
+            if (showTags)
+            {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f),EditorStyles.helpBox);
+                // Draw the button area
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Add Tag", GUILayout.Width(80)))
+                {
+                    Tags.Add("");
+                    Repaint();
+                }
 
-				if( slotMesh.localBounds.size.x < 0.01f || slotMesh.localBounds.size.y < 0.01f || slotMesh.localBounds.size.z < 0.01f)
-					EditorGUILayout.HelpBox ("This slot's size is very small. It's import scale may be incorrect!", MessageType.Warning);
+                GUILayout.Label(Tags.Count + " Tags defined");
+                GUILayout.EndHorizontal();
+
+                if (Tags.Count == 0)
+                {
+                    GUILayout.Label("No tags defined", EditorStyles.helpBox);
+                }
+                else
+                {
+                    int del = -1;
+
+                    for (int i = 0; i < Tags.Count; i++)
+                    {
+                        GUILayout.BeginHorizontal();
+                        Tags[i] = GUILayout.TextField(Tags[i]);
+                        if (GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+                        {
+                            del = i;
+                        }
+                        GUILayout.EndHorizontal();
+                    }
+                    if (del >= 0)
+                    {
+                        Tags.RemoveAt(del);
+                        Repaint();
+                    }
+                }
+                // Draw the tags (or "No tags defined");
+                GUIHelper.EndVerticalPadded(10);
+            }
+
+
+            if (slotMesh != null)
+            {
+                if (slotMesh.localBounds.size.x > 10.0f || slotMesh.localBounds.size.y > 10.0f || slotMesh.localBounds.size.z > 10.0f)
+                    EditorGUILayout.HelpBox("This slot's size is very large. It's import scale may be incorrect!", MessageType.Warning);
+
+                if (slotMesh.localBounds.size.x < 0.01f || slotMesh.localBounds.size.y < 0.01f || slotMesh.localBounds.size.z < 0.01f)
+                    EditorGUILayout.HelpBox("This slot's size is very small. It's import scale may be incorrect!", MessageType.Warning);
 
                 if (slotName == null || slotName == "")
                 {
@@ -210,18 +294,27 @@ namespace UMA.Editors
                     RootBone = "Global";
                 }
             }
-		  
-			GUILayout.Label("", EditorStyles.boldLabel);
-			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-			GUI.Box(dropArea, "Drag meshes here");
+
+        }
+
+        private void DoDragDrop()
+        {
+			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
 			GUILayout.Label("Automatic Drag and Drop processing", EditorStyles.boldLabel);
-			relativeFolder = EditorGUILayout.ObjectField("Relative Folder", relativeFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
-			EnforceFolder(ref relativeFolder);
+			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+			nameAfterMaterial = GUILayout.Toggle(nameAfterMaterial, "Name slot by material");
+			Color save = GUI.color;
+			GUI.color = Color.white;
+            GUI.Box(dropArea, "Drag FBX GameObject or meshes here to generate all slots and overlays for the GameObject");
+            relativeFolder = EditorGUILayout.ObjectField("Relative Folder", relativeFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
+            EnforceFolder(ref relativeFolder);
 
-			DropAreaGUI(dropArea);
-		}
+            DropAreaGUI(dropArea);			
+			GUI.color = save;
+			GUIHelper.EndVerticalPadded(10);
+        }
 
-		private SlotDataAsset CreateSlot()
+        private SlotDataAsset CreateSlot()
 		{
 			if(slotName == null || slotName == ""){
 				Debug.LogError("slotName must be specified.");
@@ -279,8 +372,14 @@ namespace UMA.Editors
 				return null;
 			}
 
+			List<string> KeepList = new List<string>();
+			foreach(BoneName b in KeepBones)
+            {
+				KeepList.Add(b.strValue);
+            }
+
 			Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(), slotMesh, material, normalReferenceMesh,RootBone, binarySerialization);
+			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(),GetSlotName(slotMesh),nameAfterMaterial, slotMesh, material, normalReferenceMesh,KeepList, RootBone, binarySerialization);
 			slot.tags = Tags.ToArray();
 			return slot;
 		}
@@ -339,7 +438,12 @@ namespace UMA.Editors
 			}
 		}
 
-		private void RecurseObject(Object obj, HashSet<SkinnedMeshRenderer> meshes)
+        private string AsciiName(string name)
+        {
+			return name.ToTitleCase();
+        }
+
+        private void RecurseObject(Object obj, HashSet<SkinnedMeshRenderer> meshes)
 		{
 			GameObject go = obj as GameObject;
 			if (go != null)

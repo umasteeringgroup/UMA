@@ -70,7 +70,7 @@ namespace UMA.Timeline
 
             if (dcaUpdated && rebuildImmediately)
             {
-                avatar.BuildCharacter();
+                avatar.BuildCharacter(true,!avatar.BundleCheck);
             }
         }
     }

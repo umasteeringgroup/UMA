@@ -24,8 +24,9 @@ namespace UMA
 	public class UMAData : MonoBehaviour
 	{
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
+		[SerializeField]
 		private SkinnedMeshRenderer[] renderers;
-		private UMARendererAsset[] rendererAssets;
+		private UMARendererAsset[] rendererAssets = new UMARendererAsset[0];
 		public UMARendererAsset defaultRendererAsset { get; set; }
 
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
@@ -33,7 +34,9 @@ namespace UMA
 		//TODO Change these get functions to getter properties?
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
-			return renderers[idx];
+			if (renderers != null && idx < renderers.Length)
+				return renderers[idx];
+			return null;
 		}
 
 		public int GetRendererIndex(SkinnedMeshRenderer renderer)
@@ -77,6 +80,10 @@ namespace UMA
 			if (renderers.Length != rendererList.Count)
 				return false;
 
+			if (rendererAssets == null)
+            {
+				return false;
+            }
 			for(int i = 0; i < rendererAssets.Length; i++)
 			{
 				if (rendererAssets[i] != rendererList[i])
@@ -95,6 +102,9 @@ namespace UMA
 
 		[NonSerialized]
 		public bool firstBake;
+
+		[NonSerialized]
+		public bool RebuildSkeleton;
 
 		public UMAGeneratorBase umaGenerator;
 
@@ -213,6 +223,7 @@ namespace UMA
 		public UMADataEvent CharacterBegun;
 		public UMADataEvent AnimatorStateSaved;
 		public UMADataEvent AnimatorStateRestored;
+		public UMADataEvent PreUpdateUMABody;
 
 		public GameObject umaRoot;
 
@@ -265,6 +276,11 @@ namespace UMA
 
 		void Awake()
 		{
+			if (!umaGenerator)
+            {
+				if (UMAContextBase.Instance != null)
+				umaGenerator = UMAContextBase.Instance.gameObject.GetComponent<UMAGeneratorBase>();
+            }
 			if (!umaGenerator)
 			{
 				var generatorGO = GameObject.Find("UMAGenerator");
@@ -434,9 +450,11 @@ namespace UMA
 			public List<MaterialFragment> materialFragments = new List<MaterialFragment>();
 			public Texture[] resultingAtlasList;
 			public Vector2 cropResolution;
-			public float resolutionScale;
+			public Vector2 resolutionScale;
 			public string[] textureNameList;
 			public UMARendererAsset rendererAsset;
+			public SkinnedMeshRenderer skinnedMeshRenderer;
+			public int materialIndex;
 		}
 
 		[System.Serializable]
@@ -454,6 +472,7 @@ namespace UMA
 			public OverlayData[] overlayData;
 			public Rect atlasRegion;
 			public bool isRectShared;
+			public bool isNoTextures;
 			public List<OverlayData> overlayList;
 			public MaterialFragment rectFragment;
 			public textureData baseOverlay;
@@ -1077,6 +1096,7 @@ namespace UMA
 				}
 			}
 
+
 			/// <summary>
 			/// Applies each DNA converter to the UMA data and skeleton.
 			/// </summary>
@@ -1345,6 +1365,19 @@ namespace UMA
 		/// Fire the Animator State Saved event.
 		/// This happens before the Animator State is saved.
 		/// </summary>
+		public void FirePreUpdateUMABody()
+		{
+			if (PreUpdateUMABody != null)
+			{
+				PreUpdateUMABody.Invoke(this);
+			}
+		}
+
+
+		/// <summary>
+		/// Fire the Animator State Saved event.
+		/// This happens before the Animator State is saved.
+		/// </summary>
 		public void FireAnimatorStateSavedEvent()
 		{
 			if (AnimatorStateSaved != null)
@@ -1425,12 +1458,16 @@ namespace UMA
 				}
 				isOfficiallyCreated = false;
 			}
+			CleanTextures();
+			CleanMesh(true);
+			CleanAvatar();
 			if (umaRoot != null)
 			{
-				CleanTextures();
-				CleanMesh(true);
-				CleanAvatar();
-				UMAUtils.DestroySceneObject(umaRoot);
+				// Edit time UMAs
+				if (Application.isPlaying)
+				{
+					UMAUtils.DestroySceneObject(umaRoot);
+				}
 			}
 		}
 
@@ -1444,7 +1481,11 @@ namespace UMA
 			{
 				if (!KeepAvatar)
 				{
-					if (animator.avatar) UMAUtils.DestroyAvatar(animator.avatar);
+					if (animator.avatar)
+					{
+						UMAUtils.DestroyAvatar(animator.avatar);
+						animator.avatar = null;
+					}
 				}
 			}
 		}
@@ -1466,6 +1507,10 @@ namespace UMA
 							if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
+								if (RenderTexture.active == tempRenderTexture)
+                                {
+									Debug.Log("RenderTexture is ACTIVE!!!! Name = " + tempRenderTexture.name);
+                                }
 								tempRenderTexture.Release();
 								UMAUtils.DestroySceneObject(tempRenderTexture);
 							}
@@ -1489,6 +1534,8 @@ namespace UMA
 			for(int j = 0; j < rendererCount; j++)
 			{
 				var renderer = GetRenderer(j);
+				if (renderer == null)
+					continue;
 				var mats = renderer.sharedMaterials;
 				for (int i = 0; i < mats.Length; i++)
 				{
@@ -1499,6 +1546,12 @@ namespace UMA
 				}
 				if (destroyRenderer)
 				{
+					// need to kill cloth first if it exists.
+					var cloth = renderer.gameObject.GetComponent<Cloth>();
+					if (cloth != null)
+                    {
+						UMAUtils.DestroySceneObject(cloth);
+					}
 					UMAUtils.DestroySceneObject(renderer.sharedMesh);
 					UMAUtils.DestroySceneObject(renderer);
 				}
@@ -1767,8 +1820,11 @@ namespace UMA
 			{
 				foreach (var umaAdditionalRecipe in umaAdditionalRecipes)
 				{
-					UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
-					umaRecipe.Merge(cachedRecipe, true, mergeMatchingOverlays);
+					if (umaAdditionalRecipe != null)
+					{
+						UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
+						umaRecipe.Merge(cachedRecipe, true, mergeMatchingOverlays);
+					}
 				}
 			}
 		}

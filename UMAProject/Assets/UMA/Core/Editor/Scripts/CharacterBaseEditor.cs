@@ -333,15 +333,15 @@ namespace UMA.Editors
 	{
 		static bool _foldout = true;
 		static int selectedChannelCount = 3;//DOS MODIFIED made this three so colors by default have the channels for Gloss/Metallic
-		String[] names = new string[4] { "1", "2", "3", "4" };
-		int[] channels = new int[4] { 1, 2, 3, 4 };
+		String[] names = new string[16] { "1", "2", "3", "4","5","6","7","8","9","10","11","12","13","14","15","16" };
+		int[] channels = new int[16] { 1, 2, 3, 4,5,6,7,8,9,10,11,12,13,14,15,16 };
 		static bool[] _ColorFoldouts = new bool[0];
 
 		public bool OnGUI(UMAData.UMARecipe _recipe)
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			_foldout = EditorGUILayout.Foldout(_foldout, "Shared Colors");
+			_foldout = EditorGUILayout.Foldout(_foldout, "Shared Colors & Properties");
 			GUILayout.EndHorizontal();
 
 			if (_foldout)
@@ -375,13 +375,21 @@ namespace UMA.Editors
 					changed = true;
 				}
 
+				if (GUILayout.Button("Add Shared Color Parms"))
+                {
+					List<OverlayColorData> sharedColors = new List<OverlayColorData>();
+					sharedColors.AddRange(_recipe.sharedColors);
+					sharedColors.Add(new OverlayColorData(0));
+					sharedColors[sharedColors.Count - 1].name = "Shared Color " + sharedColors.Count;
+					_recipe.sharedColors = sharedColors.ToArray();
+					changed = true;
+				}
+				EditorGUILayout.EndHorizontal();
+
 				if (GUILayout.Button("Save Collection"))
 				{
 					changed = true;
 				}
-
-				EditorGUILayout.EndHorizontal();
-
 
 				if (_ColorFoldouts.Length != _recipe.sharedColors.Length)
 				{
@@ -412,7 +420,6 @@ namespace UMA.Editors
 						if (ocd.name == null)
 							ocd.name = "";
 
-
 						string NewName = EditorGUILayout.DelayedTextField("Name", ocd.name);
 						if (NewName != ocd.name)
 						{
@@ -420,36 +427,68 @@ namespace UMA.Editors
 							changed = true;
 						}
 
-						Color NewChannelMask = EditorGUILayout.ColorField("Color Multiplier", ocd.channelMask[0]);
-						if (ocd.channelMask[0] != NewChannelMask)
+						EditorGUILayout.BeginHorizontal();
+						int oldChannelCount = ocd.channelCount;
+						int newChannelCount = EditorGUILayout.IntPopup("Channels", ocd.channelCount, names, channels);
+
+						if (oldChannelCount != newChannelCount)
 						{
-							ocd.channelMask[0] = NewChannelMask;
+							ocd.SetChannels(newChannelCount);
 							changed = true;
 						}
+						EditorGUILayout.EndHorizontal();
 
-						Color NewChannelAdditiveMask = EditorGUILayout.ColorField("Color Additive", ocd.channelAdditiveMask[0]);
-						if (ocd.channelAdditiveMask[0] != NewChannelAdditiveMask)
+						if (ocd.HasColors)
 						{
-							ocd.channelAdditiveMask[0] = NewChannelAdditiveMask;
-							changed = true;
-						}
-
-						for (int j = 1; j < ocd.channelMask.Length; j++)
-						{
-							NewChannelMask = EditorGUILayout.ColorField("Texture " + j + "multiplier", ocd.channelMask[j]);
-							if (ocd.channelMask[j] != NewChannelMask)
+							Color NewChannelMask = EditorGUILayout.ColorField("Color Multiplier", ocd.channelMask[0]);
+							if (ocd.channelMask[0] != NewChannelMask)
 							{
-								ocd.channelMask[j] = NewChannelMask;
+								ocd.channelMask[0] = NewChannelMask;
 								changed = true;
 							}
 
-							NewChannelAdditiveMask = EditorGUILayout.ColorField("Texture " + j + " additive", ocd.channelAdditiveMask[j]);
-							if (ocd.channelAdditiveMask[j] != NewChannelAdditiveMask)
+							Color NewChannelAdditiveMask = EditorGUILayout.ColorField("Color Additive", ocd.channelAdditiveMask[0]);
+							if (ocd.channelAdditiveMask[0] != NewChannelAdditiveMask)
 							{
-								ocd.channelAdditiveMask[j] = NewChannelAdditiveMask;
+								ocd.channelAdditiveMask[0] = NewChannelAdditiveMask;
 								changed = true;
 							}
+
+							for (int j = 1; j < ocd.channelMask.Length; j++)
+							{
+								NewChannelMask = EditorGUILayout.ColorField("Texture " + j + " multiplier", ocd.channelMask[j]);
+								if (ocd.channelMask[j] != NewChannelMask)
+								{
+									ocd.channelMask[j] = NewChannelMask;
+									changed = true;
+								}
+
+								NewChannelAdditiveMask = EditorGUILayout.ColorField("Texture " + j + " additive", ocd.channelAdditiveMask[j]);
+								if (ocd.channelAdditiveMask[j] != NewChannelAdditiveMask)
+								{
+									ocd.channelAdditiveMask[j] = NewChannelAdditiveMask;
+									changed = true;
+								}
+							}
+							if (ocd.PropertyBlock == null)
+                            {
+								if (GUILayout.Button("Add Shader Property Block"))
+                                {
+									ocd.PropertyBlock = new UMAMaterialPropertyBlock();
+                                }
+                            }
 						}
+						if (ocd.PropertyBlock != null)
+                        {
+							if (GUILayout.Button("Remove Shader Property Block"))
+							{
+								ocd.PropertyBlock = null;
+							}
+							else
+							{
+								changed |= UMAMaterialPropertyBlockDrawer.OnGUI(ocd.PropertyBlock);
+							}
+                        }
 					}
 				}
 				GUIHelper.EndVerticalPadded(3);
@@ -459,6 +498,119 @@ namespace UMA.Editors
 		}
 	}
 
+	public static class TagsEditor
+	{
+		public static string[] RaceNames = null;
+
+		const string focusctrl = "TheButtonThatNeedsToFocusSoTheTextInTheTextBoxDisappears";
+		public static string DoTagsGUI(ref bool Changed, string TempTag, SlotData slotData)
+        {
+			GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+			if (slotData.asset.isWildCardSlot)
+			{
+				GUILayout.Label("Match Tags:");
+			}
+			else
+			{
+				GUILayout.Label("Tags");
+			}
+			//EditorGUILayout.HelpBox("Tags GUI here...", MessageType.Info);
+			if (slotData.tags == null)
+            {
+				slotData.tags = new string[0];
+            }
+			if (slotData.Races == null)
+            {
+				slotData.Races = new string[0];
+            }
+			GUILayout.BeginHorizontal();
+			TempTag = EditorGUILayout.TextField(TempTag, GUILayout.ExpandWidth(true));
+			GUI.SetNextControlName(focusctrl);
+			if (GUILayout.Button("X",GUILayout.Width(16)))
+            {
+				TempTag = "";
+				GUI.FocusControl(focusctrl);
+            }
+			if (GUILayout.Button("Add Tag"))
+            {
+				if (!string.IsNullOrWhiteSpace(TempTag))
+				{
+					var tagList = new List<string>(slotData.tags);
+					if (!tagList.Contains(TempTag))
+					{
+						tagList.Add(TempTag);
+						slotData.tags = tagList.ToArray();
+						Changed = true;
+					}
+				}
+			}
+			GUILayout.EndHorizontal();
+
+			DoTagsDisplay(ref slotData.tags, ref Changed);
+			if (slotData.asset.isWildCardSlot)
+            {
+				GUILayout.Space(10);
+				GUILayout.Label("Match Races:");
+				// do the race matches here.
+				if (RaceNames == null)
+                {
+					List<string> theRaceNames = new List<string>();
+					RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+					foreach(RaceData race in races)
+                    {
+						theRaceNames.Add(race.raceName);
+                    }
+					RaceNames = theRaceNames.ToArray();
+                }
+				GUILayout.BeginHorizontal();
+				if (!SlotEditor.SelectedRace.ContainsKey(slotData.slotName))
+					SlotEditor.SelectedRace.Add(slotData.slotName, 0);
+
+				SlotEditor.SelectedRace[slotData.slotName]=EditorGUILayout.Popup(SlotEditor.SelectedRace[slotData.slotName], RaceNames, GUILayout.ExpandWidth(true));
+				if (GUILayout.Button("Add Race"))
+                {
+					// Add the selected race name if it's not already there.
+					string theRace = RaceNames[SlotEditor.SelectedRace[slotData.slotName]];
+					List<string> Races = new List<string>(slotData.Races);
+					if (!Races.Contains(theRace))
+                    {
+						Races.Add(theRace);
+						slotData.Races = Races.ToArray();
+						Changed = true;
+                    }
+                }
+				GUILayout.EndHorizontal();
+
+				DoTagsDisplay(ref slotData.Races, ref Changed);
+			}
+			GUIHelper.EndVerticalPadded(10);
+			return TempTag;
+		}
+
+		public static int DoTagsDisplay(ref string[] tags, ref bool changed)
+        {
+			int deleted = -1;
+
+			for (int i=0;i < tags.Length; i++)
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label(tags[i], EditorStyles.textField, GUILayout.ExpandWidth(true));
+				if (GUILayout.Button("X", GUILayout.Width(16)))
+                {
+					deleted = i;
+                }
+				GUILayout.EndHorizontal();
+			}
+			if (deleted > -1)
+            {
+				var tagList = new List<string>(tags);
+				tagList.RemoveAt(deleted);
+				tags = tagList.ToArray();
+				changed = true;
+			}
+			return -1;
+        }
+	}
 
 	public class SlotMasterEditor
 	{
@@ -980,8 +1132,12 @@ namespace UMA.Editors
 		}
 	}
 
+
 	public class SlotEditor
 	{
+		public static Dictionary<string, string> TemporarySlotTags = new Dictionary<string, string>();
+		public static Dictionary<string, int> SelectedRace = new Dictionary<string, int>();
+
 		private readonly UMAData.UMARecipe _recipe;
 		private readonly SlotData _slotData;
 		private readonly List<OverlayData> _overlayData = new List<OverlayData>();
@@ -1094,6 +1250,14 @@ namespace UMA.Editors
 				}
 				GUILayout.EndHorizontal();
 			}
+
+			#region TAGS EDITOR
+			if (!TemporarySlotTags.ContainsKey(_slotData.slotName))
+			{
+				TemporarySlotTags.Add(_slotData.slotName, "");
+			}
+			TemporarySlotTags[_slotData.slotName] = TagsEditor.DoTagsGUI(ref changed, TemporarySlotTags[_slotData.slotName],_slotData);
+			#endregion
 
 			if (sharedOverlays)
 			{
@@ -1322,6 +1486,11 @@ namespace UMA.Editors
 
 		private void BuildColorEditors()
 		{
+			_overlayData.Validate();
+
+			if (_overlayData.colorData == null || _overlayData.colorData.channelMask == null)
+				return;
+
 			_colors = new ColorEditor[_overlayData.colorData.channelMask.Length * 2];
 
 			for (int i = 0; i < _overlayData.colorData.channelMask.Length; i++)
@@ -1405,39 +1574,65 @@ namespace UMA.Editors
 				GUILayout.EndHorizontal();
 			}
 
-			if ((_overlayData.asset.material.name != _slotData.asset.material.name))
-			{
-				if (_overlayData.asset.material.channels.Length == _slotData.asset.material.channels.Length)
-				{
-					EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name, MessageType.Error);
-					if (GUILayout.Button("Copy Slot Material to Overlay"))
-					{
-						_overlayData.asset.material = _slotData.asset.material;
-						EditorUtility.SetDirty(_overlayData.asset);
-						AssetDatabase.SaveAssets();
-					}
-				}
-				else
-				{
-					EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name + " and Channel count is not the same. Overlay must be removed or fixed manually", MessageType.Error);
-				}
-				if (GUILayout.Button("Select Slot in Project"))
-				{
-					// find the asset.
-					// select it in the project.
-					Selection.activeObject = _slotData.asset;
-				}
+			_overlayData.Validate();
 
-				if (GUILayout.Button("Select Overlay in Project"))
+			if (_slotData.asset.material != null)
+			{
+				if ((_overlayData.asset.material.name != _slotData.asset.material.name))
 				{
-					// find the asset.
-					// select it in the project.
-					Selection.activeObject = _overlayData.asset;
+					if (_overlayData.asset.material.channels.Length == _slotData.asset.material.channels.Length)
+					{
+						EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name, MessageType.Error);
+						if (GUILayout.Button("Copy Slot Material to Overlay"))
+						{
+							_overlayData.asset.material = _slotData.asset.material;
+							EditorUtility.SetDirty(_overlayData.asset);
+							AssetDatabase.SaveAssets();
+						}
+					}
+					else
+					{
+						EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name + " and Channel count is not the same. Overlay must be removed or fixed manually", MessageType.Error);
+					}
+					if (GUILayout.Button("Select Slot in Project"))
+					{
+						// find the asset.
+						// select it in the project.
+						Selection.activeObject = _slotData.asset;
+					}
+
+					if (GUILayout.Button("Select Overlay in Project"))
+					{
+						// find the asset.
+						// select it in the project.
+						Selection.activeObject = _overlayData.asset;
+					}
 				}
 			}
 
 			// Edit the colors
 			bool changed = OnColorGUI();
+
+
+			// Edit the transformations
+			bool originalInstanceTransformed = _overlayData.instanceTransformed;
+			float originalRotation = _overlayData.Rotation;
+			Vector3 originalScale = _overlayData.Scale;
+
+			_overlayData.instanceTransformed = GUILayout.Toggle(_overlayData.instanceTransformed, "Transform");
+			if (_overlayData.instanceTransformed)
+			{
+				GUIHelper.BeginVerticalPadded(5, new Color(1, 1, 1, 1));
+				EditorGUILayout.HelpBox("Warning: scaling and/rotation could result in writing outside the bounds of the texture on the atlas. Be sure to use only in safe areas.", MessageType.Info);
+				_overlayData.Rotation = EditorGUILayout.FloatField("Rotation", _overlayData.Rotation);
+				_overlayData.Scale = EditorGUILayout.Vector3Field("Scale", _overlayData.Scale);
+				GUIHelper.EndVerticalPadded(5);
+			}
+
+			if (_overlayData.instanceTransformed != originalInstanceTransformed) changed = true;
+			if (_overlayData.Rotation != originalRotation) changed = true;
+			if (_overlayData.Scale != originalScale) changed = true;
+
 
 			// Edit the rect
 			GUILayout.BeginHorizontal();
@@ -1454,6 +1649,7 @@ namespace UMA.Editors
 				}
 			}
 			GUILayout.EndHorizontal();
+
 
 			Rect Save = _overlayData.rect;
 			if (!isUV)
@@ -1479,6 +1675,8 @@ namespace UMA.Editors
 			{
 				changed = true;
 			}
+
+
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			// Edit the procedural properties
@@ -1573,12 +1771,73 @@ namespace UMA.Editors
 		{
 			bool changed = false;
 			int currentsharedcol = 0;
+			List<string> propertyNames = new List<string>();
+			Dictionary<int,int> PropertyPosition = new Dictionary<int, int>();
 			string[] sharednames = new string[_recipe.sharedColors.Length];
+			
+
+			if (_overlayData.isEmpty)
+            {
+				int foundProperty = -1;
+
+				for (int i = 0; i < _recipe.sharedColors.Length; i++)
+				{
+					if (_recipe.sharedColors[i].channelCount == 0)
+                    {
+						int currentPropertyIndex = propertyNames.Count;
+
+						if (foundProperty == -1)
+						{
+							foundProperty = currentPropertyIndex;
+							//changed = true;
+						}
+
+						propertyNames.Add(_recipe.sharedColors[i].name);
+						PropertyPosition.Add(currentPropertyIndex, i);
+						if (_overlayData.colorData.GetHashCode() == _recipe.sharedColors[i].GetHashCode())
+						{
+							foundProperty = currentPropertyIndex;
+						}
+					}
+				}
+
+
+				if (propertyNames.Count > 0)
+				{
+					if (foundProperty == -1)
+                    {
+						foundProperty = 0;
+						changed = true;
+                    }
+					GUIHelper.BeginVerticalPadded(2f, new Color(0.75f, 0.875f, 1f));
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Select property name");
+					int prevcol = foundProperty;
+					int newprop = EditorGUILayout.Popup(foundProperty, propertyNames.ToArray());
+
+					GUILayout.EndHorizontal();
+					GUIHelper.EndVerticalPadded(2f);
+					GUILayout.Space(2f);
+					if (newprop != foundProperty || changed == true)
+					{
+						changed = true;
+						int proppos = PropertyPosition[newprop];
+						_overlayData.colorData = _recipe.sharedColors[proppos];
+					}
+				}
+				else
+                {
+					EditorGUILayout.HelpBox("Add a property above to be able to associate a name with this overlay and assign properties at runtime",MessageType.Info);	
+                }
+				return changed;
+            }
 
 			//DOS 13012016 if we also check here that _recipe.sharedColors still contains 
 			//the desired ocd then we can save the collection when colors are deleted
 			if (_overlayData.colorData.IsASharedColor && _recipe.HasSharedColor(_overlayData.colorData))
 			{
+
+				bool found = false;
 				GUIHelper.BeginVerticalPadded(2f, new Color(0.75f, 0.875f, 1f));
 				GUILayout.BeginHorizontal();
 
@@ -1596,11 +1855,12 @@ namespace UMA.Editors
 					if (_overlayData.colorData.GetHashCode() == _recipe.sharedColors[i].GetHashCode())
 					{
 						currentsharedcol = i;
+						found = true;
 					}
 				}
 
 				int newcol = EditorGUILayout.Popup(currentsharedcol, sharednames);
-				if (newcol != currentsharedcol)
+				if (newcol != currentsharedcol || !found)
 				{
 					changed = true;
 					_overlayData.colorData = _recipe.sharedColors[newcol];
@@ -1863,6 +2123,7 @@ namespace UMA.Editors
 		//DOS made protected so childs can override
 		protected static int _LastToolBar = 0;
 		protected int _toolbarIndex = _LastToolBar;
+		//protected float _lastScrollMax = 3000;
 		protected DNAMasterEditor dnaEditor;
 		protected SlotMasterEditor slotEditor;
 		protected bool InitialResourcesOnlyFlag;
@@ -1870,6 +2131,8 @@ namespace UMA.Editors
 		protected bool NeedsReenable()
 		{
 			if (dnaEditor == null || dnaEditor.NeedsReenable())
+				return true;
+			if (dnaEditor.IsValid == false)
 				return true;
 			if (_oldTarget == target)
 				return false;
@@ -1931,7 +2194,7 @@ namespace UMA.Editors
 			}
 
 
-			scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none, GUILayout.MinHeight(600), GUILayout.MaxHeight(3000));
+			//scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none, GUILayout.MinHeight(600), GUILayout.MaxHeight(_lastScrollMax));
 
 			if (target as UMATextRecipe != null)
 			{
@@ -2036,7 +2299,15 @@ namespace UMA.Editors
 			}
 			//end the busted Recipe disabled group if we had it
 			EditorGUI.EndDisabledGroup();
-			GUILayout.EndScrollView();
+			GUILayout.Label("** end of recipe **");
+			//Rect last = GUILayoutUtility.GetLastRect();
+			//float _lastMax = last.y + last.height;
+			//if (_lastMax != _lastScrollMax && _lastMax > 256.0f)
+           // {
+			//	_lastScrollMax = _lastMax;
+			//	Repaint();
+            //}
+			//GUILayout.EndScrollView();
 		}
 
 #if UMA_ADDRESSABLES

@@ -1,7 +1,11 @@
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using UMA;
 using UMA.CharacterSystem;
+using System.Text.RegularExpressions;
+using System.Reflection;
+using System.Collections;
 
 namespace UMA.Editors
 {
@@ -13,12 +17,27 @@ namespace UMA.Editors
 		GUIContent Additive = new GUIContent("Additive");
 		GUIContent Channels = new GUIContent("Channel Count");
 
+
+		public static object GetDeepPropertyValue(object src, string propName)
+		{
+			if (propName.Contains('.'))
+			{
+				string[] Split = propName.Split('.');
+				string RemainingProperty = propName.Substring(propName.IndexOf('.') + 1);
+				return GetDeepPropertyValue(src.GetType().GetProperty(Split[0]).GetValue(src, null), RemainingProperty);
+			}
+			else
+				return src.GetType().GetProperty(propName).GetValue(src, null);
+		}
+
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			OverlayColorData ocd = null;
 			DynamicCharacterAvatar dca = property.serializedObject.targetObject as DynamicCharacterAvatar;
 
-			if (dca != null)
+
+            ocd = property.GetValue<OverlayColorData>();
+			if (ocd == null && dca != null)
 			{
 				string Name = property.FindPropertyRelative("name").stringValue;
 				foreach( OverlayColorData o in dca.characterColors._colors)
@@ -34,6 +53,7 @@ namespace UMA.Editors
 			var name = property.FindPropertyRelative("name");
 			var mask = property.FindPropertyRelative("channelMask");
 			var additive = property.FindPropertyRelative("channelAdditiveMask");
+			var propblock = property.FindPropertyRelative("propertyBlock");
 			EditorGUILayout.BeginHorizontal();
 			name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
 			if (!name.isExpanded)
@@ -46,7 +66,7 @@ namespace UMA.Editors
 				if (ocd != null)
 				{
 					string Name = property.FindPropertyRelative("name").stringValue;
-					int ChannelCount = EditorGUILayout.IntSlider(Channels,ocd.channelCount, 1, 8);
+					int ChannelCount = EditorGUILayout.IntSlider(Channels, ocd.channelCount, 0, 16);
 					if (ChannelCount != ocd.channelCount)
 					{
 						ocd.SetChannels(ChannelCount);
@@ -80,27 +100,51 @@ namespace UMA.Editors
 					}
 					else
 					{
-						Modulate.text = "Multiplier ("+i+")";
-						EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(i),Modulate);
+						Modulate.text = "Multiplier (" + i + ")";
+						EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(i), Modulate);
 						Additive.text = "Additive (" + i + ")";
 						EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(i), Additive);
 					}
-
-
-
-
 					GUILayout.Space(5);
+				}
+				if (ocd != null)
+                {
+					if (ocd.PropertyBlock != null)
+                    {
+						if (UMAMaterialPropertyBlockDrawer.OnGUI(ocd.PropertyBlock))
+                        {
+							EditorUtility.SetDirty(dca);
+							AssetDatabase.SaveAssets();
+                        }
+					}
+					else
+                    {
+						if (GUILayout.Button("Add Properties Block"))
+                        {
+							ocd.PropertyBlock = new UMAMaterialPropertyBlock();
+							EditorUtility.SetDirty(dca);
+							AssetDatabase.SaveAssets();
+							property.serializedObject.Update();
+						}
+					}
 				}
 			}
 			else
 			{
-				EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0),new GUIContent("BaseColor"));
-				if(additive.arraySize >= 3)
-					EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(2),new GUIContent("Metallic/Gloss", "Color is metallicness (Black is not metallic), Alpha is glossiness (Black is not glossy)"));
-				else
-				{
-					//color didn't have a metallic gloss channel so show button to add one?
-				}
+					if (mask.arraySize > 0)
+					{
+						EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0), new GUIContent("BaseColor"));
+						if (additive.arraySize >= 3)
+							EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(2), new GUIContent("Metallic/Gloss", "Color is metallicness (Black is not metallic), Alpha is glossiness (Black is not glossy)"));
+						else
+						{
+							//color didn't have a metallic gloss channel so show button to add one?
+						}
+					}
+				//	if (ocd.HasProperties)
+				//	{
+				//		EditorGUILayout.LabelField("Has Properties");
+				//	}
 			}
 			EditorGUILayout.Space();
 			EditorGUI.EndProperty();

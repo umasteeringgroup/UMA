@@ -40,6 +40,10 @@ namespace UMA
 			PreloadValues.RemoveAll(x => x.Name == Name);
 		}
 
+		public bool ContainsName(string Name)
+        {
+			return PreloadValues.Count(x => x.Name == Name) > 0;
+        }
 		public void AddRange(UMAPredefinedDNA newDNA)
 		{
 			PreloadValues.AddRange(newDNA.PreloadValues);
@@ -49,5 +53,19 @@ namespace UMA
 		{
 			PreloadValues.Add(new DnaValue(Name, Value));
 		}
+		public void Clear()
+        {
+			PreloadValues.Clear();
+        }
+
+		public UMAPredefinedDNA Clone()
+        {
+			UMAPredefinedDNA newdna = new UMAPredefinedDNA();
+			foreach(DnaValue d in PreloadValues)
+            {
+				newdna.AddDNA(d.Name, d.Value);
+            }
+			return newdna;
+        }
 	}
 }

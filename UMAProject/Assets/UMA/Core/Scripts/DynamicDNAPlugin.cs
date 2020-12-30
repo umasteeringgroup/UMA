@@ -170,6 +170,10 @@ namespace UMA
 
 		#region VIRTUAL METHODS
 
+		public virtual void Reset()
+        {
+
+        }
 		//these all show when anything else gets a DynamicDNAPlugin - I'd prefer them to be protaected but also available to the pluginDrawer..How??
 
 #if UNITY_EDITOR

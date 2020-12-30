@@ -112,7 +112,7 @@ namespace UMA.Editors
 					GUIHelper.EndVerticalPadded(10);
 				}
 
-				if (_textureList.arraySize <= 0 || _textureList.arraySize != textureChannelCount)
+				if ( _textureList.arraySize != textureChannelCount)
 				{
 					EditorGUILayout.HelpBox("Overlay Texture count and UMA Material channel count don't match!", MessageType.Error);
 				}
@@ -126,7 +126,7 @@ namespace UMA.Editors
 							allValid = false;
 					}
 					if (!allValid)
-						EditorGUILayout.HelpBox("Not all textures in Texture List set!", MessageType.Error);
+						EditorGUILayout.HelpBox("Not all textures in Texture List set. This overlay will only work as an additional overlay in a recipe", MessageType.Warning);
 				}
 			}
 			else

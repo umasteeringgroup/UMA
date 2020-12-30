@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
+using UMA.CharacterSystem;
 
 namespace UMA
 {
@@ -19,6 +20,7 @@ namespace UMA
 	public partial class RaceData : ScriptableObject, INameProvider, ISerializationCallbackReceiver
 	{
 	    public string raceName;
+		public List<string> KeepBoneNames = new List<string>();
 
         #region INameProvider
         public string GetAssetName()
@@ -82,6 +84,37 @@ namespace UMA
 		[Tooltip("The list of DNA Converters that this race uses. These are usually DynamicDNAConverterController assets.")]
 		private DNAConverterList _dnaConverterList = new DNAConverterList();
 
+
+		public List<string> GetDNANames()
+		{
+			List<string> Names = new List<string>();
+
+			foreach(IDNAConverter converter in dnaConverterList)
+            {
+				if (converter is IDynamicDNAConverter)
+				{
+					var asset = ((IDynamicDNAConverter)converter).dnaAsset;
+					Names.AddRange(asset.Names);
+				}
+			}
+			return Names;
+		}
+
+		public void ResetDNA()
+		{
+			foreach (IDNAConverter converter in dnaConverterList)
+			{
+				if (converter is DynamicDNAConverterController)
+				{
+					var c = converter as DynamicDNAConverterController;
+					for (int i=0;i<c.PluginCount;i++)
+                    {
+						DynamicDNAPlugin ddp = c.GetPlugin(i);
+						ddp.Reset();
+                    }
+				}
+			}
+		}
 
 		/// <summary>
 		/// Returns the list of DNA Converters that this race uses. These are usually DynamicDNAConverterController assets

@@ -1,3 +1,87 @@
+Whats new in 2.11
+
+Highlights
+  UMA avatars are now visible at edit time, and can be modified directly in the editor.
+  Significantly faster UMA builds in built applications
+  More than 4 bone weights per vertex
+  Better usage of texture atlas using new fit methods
+  Transform (scale and rotate) overlays in recipes
+  Backup/Restore of global library
+  Numerous bug fixes
+
+Generation
+  Added support for more than 4 boneweights. Can now use as many boneweights as you like. 
+  Reworked the SkinnedMeshCombiner to use the new boneweights.
+  New "no coroutines" method of generation results in faster build
+  Skeleton removal during build is now done in build process to fix issues where skeleton is not available during some frames.
+  New texture atlas fitting methods:  
+     Reduce (with a variable reduction amount)
+     Best Fit Square (Expands the texture to the best fit square, and then reduces them to fit the atlas). This takes a bit more work, but wastes the least space.
+  Broke out fit methods on generator
+  Added property to sharpen reduced textures by forcing it to use a higher mip. Produces significantly more detailed output on textures that are fit.
+
+Scenes
+  Updated many scenes to use better lighting.
+  Updated Mounting Objects example scene to show how to use UMAMountedItem.
+  Updated Ragdoll scene to show how to detect what part of the body is hit.
+
+Recipes
+  Added ability to transform (scale and rotate) an overlay in a recipe (Not on first overlay - only additional overlays)
+  Added ability to change color channel length on shared colors in recipe editor.
+  Added Property Blocks to Overlay Colors (shared colors). Now you can set floats, vectors, ints, colors, matrixes, etc. on the materials.
+
+ExpressionPlayer
+  Added Pointing, Peace Sign, Rude sign, and grasp to Expression Player. Note: the arms/hands must be procedurally driven for this to look right (VR, etc).
+  Fixed some errors where the Expression Player could generate errors during startup
+
+DynamicCharacterAvatar
+  UMA characters are now visible at edit time (can be disabled)
+  Made an edit time DNA editor, combined with colors and wardrobe under "customization".
+  Added filters to colors in DCA customizer section
+  Added UpdateBounds() function.
+  Added load/save preset in the editor.
+  Default colors are now white/black for the various colors on the race.
+  New events: WardrobeAdded and WardrobeRemoved. 
+  Added "Always Rebuild Skeleton" option in the advanced settings. This will help you keep your rig clean and tidy, for a slight performance cost.
+
+UMAMountedItem
+  New object to make mounting simpler. Add this to an object you want to make mountable. Specify the bone you want to attach it to, and any offset/rotation. Will automatically attach and process, and survive rebuilds.
+
+OverlayData
+  Made it possible to have Overlays with no texture channels (these overlays can be modified with material property blocks).
+
+SlotData
+  New: Wildcard slots. This is a type of utility slots that can be added to recipes, which allows you to place overlays onto slots (or other overlays) based on tag. So you can place an 
+       overlay onto a "Torso" without knowing the actual slot ID, just the tag. This allows you to reuse recipes for slots that have the same UV coordinates.
+Slotbuilder
+  Made blender slot rotation fixup optional.
+  Can now specify bones to keep when building slots. (for mount points, etc)
+
+Global Library
+  Functions (and menu items) to backup and restore the Global Library.
+  Made the Build Preprocessor optional (off by default)
+
+Misc
+  Set proportions on default female race to a bit less heroic.
+  Fixed some possible warnings during overlay generation.
+  Fixed race loading in editor so it does not need to instantiate the race to get slots
+  Lot of minor issues where assumptions were made in code that occasionally weren't true.
+  URP conversion option will convert hair to use Speedtree8 shader
+  Forearm Twist slot script will now let you set the names of the bones
+  Reworked the bone cleaner to make it more robust
+  Added flipping, highlighting to bone pose editor
+  Added "find UMA" to bone pose editor, so you don't have to select it
+  Bone Pose Editor will now remember the selected UMA when possible
+  Bone Pose Editor will now allow mirroring on X,Y,Z axis. Default UMA (blender export) is on Y axis.  
+  Provided sane colors for additive channel when an overlay did not have all channel colors defined (issue with core samples)
+  Tightened up avatars, and made the new avatars the default
+  Numerous bug fixes on edge cases
+  Better resource cleanup
+
+DCARendererManager
+  Added option EnableRenderers to turn on/off the renderer manager for toggling between first and third person.
+  
+
 What's new in 2.10.1
 
 This is a bugfix update, with only a few new features.
