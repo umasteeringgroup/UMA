@@ -703,16 +703,8 @@ namespace UMA
 		/// <param name="umaTransform">UMA transform.</param>
 		public virtual void EnsureBone(UMATransform umaTransform)
 		{
-			BoneData res;
-			if (boneHashData.TryGetValue(umaTransform.hash, out res))
-			{
-				// res.accessedFrame = -1;  
-				// res.umaTransform.Assign(umaTransform); 
-			}
-			else
-			{
+			if (boneHashData.ContainsKey(umaTransform.hash) == false)
 				AddBone(umaTransform);
-			}
 		}
 
 		/// <summary>

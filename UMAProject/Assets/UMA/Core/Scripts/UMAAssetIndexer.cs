@@ -18,9 +18,6 @@ using System.Text;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
-#if UMA_ADDRESSABLES
-using UnityEditor.AddressableAssets.Settings;
-#endif
 #endif
 
 namespace UMA
@@ -1058,20 +1055,6 @@ namespace UMA
 			return LoadLabelList(Keys,keepLoaded);
 		}
 #if UNITY_EDITOR
-        public bool DoesAddressExist(string label)
-        {
-            List<AddressableAssetEntry> allEntries = new List<AddressableAssetEntry>();
-            AddressableUtility.AddressableSettings.GetAllAssets(allEntries,false);
-
-            foreach (AddressableAssetEntry entry in allEntries)
-            {
-                if (entry.labels.Contains(label))
-                    return true;
-            }
-
-            return false;
-        }
-
         async void ValidateSingleKey(string s) 
         {
             var result = await Addressables.LoadResourceLocationsAsync(s).Task;
@@ -1108,37 +1091,19 @@ namespace UMA
 #if SUPER_LOGGING
             Debug.Log("Loading Labels: " + labels);
 #endif
-           // try
-           // {
-                var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys, result =>
-                {
-                    ProcessedItems.Add(result);
-                    ProcessNewItem(result, true, keepLoaded);
-                }, Addressables.MergeMode.Union, true);
-                if (!keepLoaded)
-                {
-                    string info = "";
-                    foreach (string s in Keys)
-                        info += Keys + "; ";
-                    LoadedItems.Add(new CachedOp(op, info));
-                }
-                return op;
-//          //  }
-//          //  catch (Exception ex)
-//           // {
-//#if UNITY_EDITOR
-//            //    foreach (string s in Keys)
-//           //     {
-//                    // see if it is there, if not, drop an error
-//          //          if (!DoesAddressExist(s))
-//          //          {
-//          //              Debug.LogError("Error: label " + s + " not found!");
-//          //          }
-//           //         ValidateSingleKey(s);
-//           //     }
-//#endif
-//              //  throw (ex);
-//            //}
+            var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys, result =>
+            {
+                ProcessedItems.Add(result);
+                ProcessNewItem(result, true, keepLoaded);
+            }, Addressables.MergeMode.Union, true);
+            if (!keepLoaded)
+            {
+                string info = "";
+                foreach (string s in Keys)
+                    info += Keys + "; ";
+                LoadedItems.Add(new CachedOp(op, info));
+            }
+            return op;
         }
 #endif
 
@@ -1441,7 +1406,7 @@ namespace UMA
 #if UNITY_EDITOR
                 if (string.IsNullOrWhiteSpace(ai._Name))
                 {
-                    throw new Exception("Invalid name on Asset type "+ai._Type.ToString());
+                    throw new Exception("Invalid name on Asset type "+ai._Type.ToString()+" - asset is: "+ai.Item.name);
                 }
                 if (ai.IsAddressable)
                 {

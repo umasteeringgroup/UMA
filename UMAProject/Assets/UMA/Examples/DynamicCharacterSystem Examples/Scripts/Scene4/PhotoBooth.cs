@@ -353,7 +353,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			else
 			{
-				Texture2D texToSave = new Texture2D(renderTextureToUse.width, renderTextureToUse.height);
+				Texture2D texToSave = new Texture2D(renderTextureToUse.width, renderTextureToUse.height,TextureFormat.ARGB32,false,false);
 				RenderTexture prev = RenderTexture.active;
 				RenderTexture.active = renderTextureToUse;
 				texToSave.ReadPixels(new Rect(0, 0, renderTextureToUse.width, renderTextureToUse.height), 0, 0, true);

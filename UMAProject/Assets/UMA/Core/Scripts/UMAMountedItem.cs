@@ -47,7 +47,7 @@ public class UMAMountedItem : MonoBehaviour
 #if UNITY_EDITOR
         if (!Application.isPlaying || MountOnStart)
         {
-            MountPoint = FindOrCreateMountpoint();
+            MountPoint = EditorFindOrCreateMountpoint();
             SetMountTransform();
         }
 #endif
@@ -57,12 +57,12 @@ public class UMAMountedItem : MonoBehaviour
     // Used when mounting manually.
     public void MountItem()
     {
-        MountPoint = FindOrCreateMountpoint();
+        MountPoint = FindOrCreateMountpoint(avatar.umaData);
         SetMountTransform();
     }
 
 #if UNITY_EDITOR
-    public Transform FindOrCreateMountpoint()
+    public Transform EditorFindOrCreateMountpoint()
     {
         Transform BoneTransform = SkeletonTools.RecursiveFindBone(avatar.gameObject.transform, BoneName);
         if (BoneTransform == null)

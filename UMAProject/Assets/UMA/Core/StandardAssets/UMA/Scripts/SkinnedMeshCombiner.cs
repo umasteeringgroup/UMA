@@ -165,11 +165,8 @@ namespace UMA
 			else
 				bonesList.Clear();
 
-			target.SlotName = "Combined: ";
 			foreach (var source in sources)
 			{
-				// JRRM - this must go 
-				target.SlotName += source.meshData.SlotName + ", ";
 				int sourceVertexCount = source.meshData.vertices.Length;
 				BuildBoneWeights(source.meshData, nativeBoneWeights, nativeBonesPerVertex, vertexIndex, boneWeightIndex, sourceVertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
 				Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, sourceVertexCount);

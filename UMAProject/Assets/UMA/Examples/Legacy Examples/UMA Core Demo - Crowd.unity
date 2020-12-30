@@ -18251,6 +18251,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 403108, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: m_RootOrder
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 403108, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -18261,6 +18265,10 @@ PrefabInstance:
     - target: {fileID: 403108, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 403108, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 403108, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: m_LocalRotation.x
@@ -18274,29 +18282,9 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 403108, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 403108, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
-      propertyPath: m_RootOrder
-      value: 7
-      objectReference: {fileID: 0}
-    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
-      propertyPath: atlasResolution
-      value: 1024
-      objectReference: {fileID: 0}
-    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
-      propertyPath: InitialScaleFactor
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: fastMesh
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
-      propertyPath: processAllPending
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: NoCoroutines
@@ -18307,8 +18295,24 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
-      propertyPath: AtlasOverflowFitMethod
+      propertyPath: atlasResolution
+      value: 1024
+      objectReference: {fileID: 0}
+    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: processAllPending
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: InitialScaleFactor
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: SharperFitTextures
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11422736, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
+      propertyPath: AtlasOverflowFitMethod
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 11482786, guid: 440aba8ed985a409db71f0649af3ce11, type: 3}
       propertyPath: slotElementList.Array.data[47]
@@ -20727,7 +20731,7 @@ MonoBehaviour:
   generateLotsUMA: 1
   hideWhileGeneratingLots: 1
   stressTest: 0
-  umaCrowdSize: {x: 8, y: 10}
+  umaCrowdSize: {x: 20, y: 10}
   randomDna: 1
   allAtOnce: 1
   additionalRecipes:

@@ -20,3 +20,12 @@ The following packages were removed:
   com.unity.memoryprofiler@0.2.1-preview.2
   com.unity.package-manager-ui@2.0.8
   com.unity.purchasing@2.0.3
+
+=== Sat Dec 26 14:51:05 2020
+
+Packages were changed.
+Update Mode: updateDependencies
+
+The following packages were updated:
+  com.unity.ide.vscode from version 1.2.2 to 1.2.3
+  com.unity.test-framework from version 1.1.18 to 1.1.19

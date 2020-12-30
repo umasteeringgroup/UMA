@@ -112,7 +112,7 @@ namespace UMA.CharacterSystem.Editors
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController", "defaultRendererAsset",
 				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored","WardrobeAdded","WardrobeRemoved",
-				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA","alwaysRebuildSkeleton"});
+				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA","alwaysRebuildSkeleton", "umaRecipe"});
 
 			//The base DynamicAvatar properties- get these early because changing the race changes someof them
 			SerializedProperty context = serializedObject.FindProperty("context");
@@ -209,6 +209,23 @@ namespace UMA.CharacterSystem.Editors
 						}
 					}
                 }
+				if (GUILayout.Button("Save Legacy File"))
+				{
+					string fileName = EditorUtility.SaveFilePanel("Save Legacy File", "", "", "crs");
+					if (!string.IsNullOrEmpty(fileName))
+					{
+						try
+						{
+							string charstr = thisDCA.GetCurrentRecipe(false);
+							System.IO.File.WriteAllText(fileName, charstr);
+						}
+						catch (Exception ex)
+						{
+							Debug.LogException(ex);
+							EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message, "OK");
+						}
+					}
+				}
 				EditorGUILayout.EndHorizontal();
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
@@ -616,7 +633,7 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.PropertyField(umaData);
 				EditorGUILayout.PropertyField(umaGenerator);
 				EditorGUILayout.Space();
-				EditorGUILayout.PropertyField(umaRecipe);
+//				EditorGUILayout.PropertyField(umaRecipe);
 				EditorGUILayout.PropertyField(animationController);
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("BoundsOffset"));
 			}

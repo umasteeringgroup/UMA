@@ -669,9 +669,6 @@ namespace UMA
 				bool sharedBuffer = false;
 				for (int j = 0; j < gSubmeshTris.Length; j++)
 				{
-					// JRRM - Test Only
-					if (gSubmeshTriIndices == null)
-						Debug.Break();
 					if (gSubmeshTriIndices[j] == i)
 					{
 						sharedBuffer = true;
