@@ -884,10 +884,27 @@ namespace UMA
             }
         }
 
-		/// <summary>
-		/// Checks if the given asset path resides in one of the given folder paths. Returns true if foldersToSearch is null or empty and no check is required
-		/// </summary>
-		private bool AssetFolderCheck(AssetItem itemToCheck, string[] foldersToSearch = null)
+        /// <summary>
+        /// Load all items from the asset bundle into the index.
+        /// </summary>
+        /// <param name="ab"></param>
+        public void UnloadBundle(AssetBundle ab)
+        {
+            foreach (Type t in Types)
+            {
+                var objs = ab.LoadAllAssets(t);
+
+                foreach (UnityEngine.Object o in objs)
+                {
+                    RemoveItem(o);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if the given asset path resides in one of the given folder paths. Returns true if foldersToSearch is null or empty and no check is required
+        /// </summary>
+        private bool AssetFolderCheck(AssetItem itemToCheck, string[] foldersToSearch = null)
         {
             if (foldersToSearch == null)
                 return true;
@@ -1106,6 +1123,26 @@ namespace UMA
             return op;
         }
 #endif
+
+        private void RemoveItem(UnityEngine.Object ob)
+        {
+            if (!IsIndexedType(ob.GetType()))
+                return;
+            System.Type ot = ob.GetType();
+            System.Type theType = TypeToLookup[ot];
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+
+            string Name = AssetItem.GetEvilName(ob);
+
+            if (TypeDic.ContainsKey(Name))
+            {
+                TypeDic.Remove(Name);
+            }
+            if (GuidTypes.ContainsKey(Name))
+            {
+                GuidTypes.Remove(Name);
+            }
+        }
 
         public void ProcessNewItem(UnityEngine.Object result, bool isAddressable, bool keepLoaded)
         {

@@ -146,6 +146,9 @@ namespace UMA.CharacterSystem
         public string loadString;
         public bool loadFileOnStart;
 
+        [Tooltip("This will make the slot use the UMAMaterial of the first overlay")]
+        public bool ForceSlotMaterials;
+
 #if UMA_ADDRESSABLES
 		private bool isAddressableSystem;
         private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
@@ -541,7 +544,8 @@ namespace UMA.CharacterSystem
                 if (UnityEditor.PrefabUtility.IsPartOfPrefabInstance(gameObject.transform))
                 {
                     // Unfortunately we must unpack the prefab or it will blow up.
-                    UnityEditor.PrefabUtility.UnpackPrefabInstance(gameObject, UnityEditor.PrefabUnpackMode.Completely, UnityEditor.InteractionMode.AutomatedAction);
+                    GameObject go = PrefabUtility.GetOutermostPrefabInstanceRoot(this.gameObject);
+                    UnityEditor.PrefabUtility.UnpackPrefabInstance(go, UnityEditor.PrefabUnpackMode.Completely, UnityEditor.InteractionMode.AutomatedAction);
                 }
                 CleanupGeneratedData();
                 activeRace.SetRaceData();
@@ -3452,6 +3456,7 @@ namespace UMA.CharacterSystem
                             SortedOverlays.Add(od);
                         }
                     }
+                    sd.altMaterial = SortedOverlays[0].asset.material;
                     sd.UpdateOverlayList(SortedOverlays);
                 }
             }

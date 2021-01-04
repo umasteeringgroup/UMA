@@ -1578,11 +1578,11 @@ namespace UMA.Editors
 
 			if (_slotData.asset.material != null)
 			{
-				if ((_overlayData.asset.material.name != _slotData.asset.material.name))
+				if ((_overlayData.asset.material.name != _slotData.material.name))
 				{
-					if (_overlayData.asset.material.channels.Length == _slotData.asset.material.channels.Length)
+					if (_overlayData.asset.material.channels.Length == _slotData.material.channels.Length)
 					{
-						EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name, MessageType.Error);
+						EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.material.name, MessageType.Error);
 						if (GUILayout.Button("Copy Slot Material to Overlay"))
 						{
 							_overlayData.asset.material = _slotData.asset.material;
@@ -1848,22 +1848,24 @@ namespace UMA.Editors
 					_overlayData.colorData.name = OverlayColorData.UNSHARED;
 					changed = true;
 				}
-
-				for (int i = 0; i < _recipe.sharedColors.Length; i++)
+				else
 				{
-					sharednames[i] = i + ": " + _recipe.sharedColors[i].name;
-					if (_overlayData.colorData.GetHashCode() == _recipe.sharedColors[i].GetHashCode())
+					for (int i = 0; i < _recipe.sharedColors.Length; i++)
 					{
-						currentsharedcol = i;
-						found = true;
+						sharednames[i] = i + ": " + _recipe.sharedColors[i].name;
+						if (_overlayData.colorData.GetHashCode() == _recipe.sharedColors[i].GetHashCode())
+						{
+							currentsharedcol = i;
+							found = true;
+						}
 					}
-				}
 
-				int newcol = EditorGUILayout.Popup(currentsharedcol, sharednames);
-				if (newcol != currentsharedcol || !found)
-				{
-					changed = true;
-					_overlayData.colorData = _recipe.sharedColors[newcol];
+					int newcol = EditorGUILayout.Popup(currentsharedcol, sharednames);
+					if (newcol != currentsharedcol || !found)
+					{
+						changed = true;
+						_overlayData.colorData = _recipe.sharedColors[newcol];
+					}
 				}
 				GUILayout.EndHorizontal();
 				GUIHelper.EndVerticalPadded(2f);

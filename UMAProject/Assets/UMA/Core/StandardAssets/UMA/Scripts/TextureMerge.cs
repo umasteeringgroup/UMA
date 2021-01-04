@@ -85,6 +85,8 @@ namespace UMA
 
 		private void DrawRect(ref TextureMergeRect tr,bool sharperFitTextures)
 		{
+			if (tr.tex == null)
+				return;
 			if (tr.transform)
 			{
 				// rotate texture here?
@@ -190,7 +192,7 @@ namespace UMA
 
 			textureMergeRect.tex = source.baseOverlay.textureList[textureType];
 
-			switch (source.slotData.asset.material.channels[textureType].channelType)
+			switch (source.slotData.material.channels[textureType].channelType)
 			{
 				case UMAMaterial.ChannelType.NormalMap:
 					textureMergeRect.mat.shader = normalShader;
@@ -234,6 +236,9 @@ namespace UMA
 			height = Mathf.FloorToInt(atlas.cropResolution.y);
 			SetupModule(atlasElement, textureType);
 			resolutionScale = atlas.resolutionScale * atlasElement.slotData.overlayScale;
+
+			if (atlasElement.overlays == null)
+				return;
 
 			for (int i2 = 0; i2 < atlasElement.overlays.Length; i2++)
 			{
@@ -283,7 +288,7 @@ namespace UMA
 
 			if (source.overlays[i2].overlayType == OverlayDataAsset.OverlayType.Normal)
 			{
-				switch (source.slotData.asset.material.channels[textureType].channelType)
+				switch (source.slotData.material.channels[textureType].channelType)
 				{
 					case UMAMaterial.ChannelType.NormalMap:
 						textureMergeRect.mat.shader = normalShader;

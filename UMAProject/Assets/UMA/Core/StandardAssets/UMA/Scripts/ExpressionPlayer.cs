@@ -294,7 +294,7 @@ namespace UMA.PoseTools
 		public float rightPoint = 0f;
 
 
-		private float[] valueArray = new float[PoseCount];
+		protected float[] valueArray = new float[PoseCount];
 		public float[] Values
 		{
 			get
