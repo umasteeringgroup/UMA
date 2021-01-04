@@ -480,14 +480,26 @@ namespace UMA
 			public Color GetMultiplier(int overlay, int textureType)
 			{
 				var c = Color.white;
+				if (overlay >= overlayData.Length) 
+					return c;
 
 				if (channelMask[overlay] != null && channelMask[overlay].Length > 0)
 				{
-					c = channelMask[overlay][textureType];
-					c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
-					c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
-					c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
-					c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+					if (textureType < channelMask[overlay].Length)
+					{
+						try
+						{
+							c = channelMask[overlay][textureType];
+							c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+							c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+							c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+							c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
+						}
+						catch(Exception ex)
+                        {
+							Debug.Log("overlay = " + overlay + "; textureType = " + textureType);
+                        }
+					}
 					return c;
 				}
 				else
@@ -522,20 +534,19 @@ namespace UMA
 			}
 			public Color32 GetAdditive(int overlay, int textureType)
 			{
-				if (channelAdditiveMask[overlay] != null && channelAdditiveMask[overlay].Length > 0)
+				if (channelAdditiveMask[overlay] != null && channelAdditiveMask[overlay].Length > 0 && channelAdditiveMask.Length >= overlay)
 				{
-					var c = channelAdditiveMask[overlay][textureType];
-					c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0, true)), 0, 1);
-					c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1, true)), 0, 1);
-					c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2, true)), 0, 1);
-					c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3, true)), 0, 1);
-					//return channelAdditiveMask[overlay][textureType];
-					return c;
+					if (textureType < channelAdditiveMask[overlay].Length)
+					{
+						var c = channelAdditiveMask[overlay][textureType];
+						c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0, true)), 0, 1);
+						c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1, true)), 0, 1);
+						c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2, true)), 0, 1);
+						c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3, true)), 0, 1);
+						return c;
+					}
 				}
-				else
-				{
-					return new Color32(0, 0, 0, 0);
-				}
+				return new Color32(0, 0, 0, 0);
 			}
 		}
 
