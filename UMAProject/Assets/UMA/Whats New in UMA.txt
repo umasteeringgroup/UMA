@@ -6,8 +6,6 @@ Fixes for overlays with no textures
 Fixes for mismatched overlys/slots
 Fixes for asmdef and addressables
 
-
-
 Whats new in 2.11
 
 Highlights
