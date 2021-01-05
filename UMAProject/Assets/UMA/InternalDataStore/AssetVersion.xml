@@ -1,7 +1,7 @@
 <asset>
     <name>UMA 2</name>
     <author>UMA Steering Group</author>
-    <version>2.11.A4</version>
+    <version>2.11.3</version>
     <notes>
 	-Update bone builder
 	-URP, HDRP Compatibility
