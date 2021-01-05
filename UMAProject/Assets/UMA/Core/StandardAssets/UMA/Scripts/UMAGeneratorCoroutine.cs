@@ -148,7 +148,7 @@ namespace UMA
 				}
 
                 OverlayData overlay0 = slot.GetOverlay(0);
-				if ((slot.asset.material != null) && (overlay0 != null))
+				if ((slot.material != null) && (overlay0 != null))
 				{
 					GeneratedMaterialLookupKey lookupKey = new GeneratedMaterialLookupKey
 					{
@@ -159,7 +159,7 @@ namespace UMA
 					UMAData.GeneratedMaterial generatedMaterial;
 					if (!generatedMaterialLookup.TryGetValue(lookupKey, out generatedMaterial))
 					{
-						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, slot.rendererAsset);
+						generatedMaterial = FindOrCreateGeneratedMaterial(slot.material, slot.rendererAsset);
 						generatedMaterialLookup.Add(lookupKey, generatedMaterial);
 					}
 
@@ -183,7 +183,7 @@ namespace UMA
 					tempMaterialDefinition.baseOverlay.alphaTexture = overlay0.alphaMask;
 					tempMaterialDefinition.baseOverlay.overlayType = overlay0.overlayType;
 
-					tempMaterialDefinition.umaMaterial = slot.asset.material;
+					tempMaterialDefinition.umaMaterial = slot.material;
 					if (overlay0.isEmpty)
                     {
 						tempMaterialDefinition.isNoTextures = true;

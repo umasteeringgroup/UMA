@@ -25,7 +25,7 @@ namespace UMA
 		private const string umaLocation = "RelativeUMA";
 		private const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
 		private const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
-		private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
+		//private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
 		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
 		public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
 
@@ -147,7 +147,7 @@ namespace UMA
 			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
 			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables.");
 
-			bool prevuseAsmDef = IsAsmdef(defineSymbols, DefineSymbol_AsmDef);
+			/* bool prevuseAsmDef = IsAsmdef(defineSymbols, DefineSymbol_AsmDef);
 			bool useAsmDef = DefineSymbolToggle(defineSymbols, DefineSymbol_AsmDef, "Use Asmdef", "This activates the internal ASMDEF for UMA.");
 			if (prevuseAsmDef != useAsmDef)
 			{
@@ -159,7 +159,7 @@ namespace UMA
 				{
 					DisableAsmDef();
 				}
-			}
+			}*/
 
 
 

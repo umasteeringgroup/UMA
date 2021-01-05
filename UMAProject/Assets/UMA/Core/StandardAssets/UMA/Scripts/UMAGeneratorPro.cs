@@ -192,7 +192,7 @@ namespace UMA
 				}
 
                 OverlayData overlay0 = slot.GetOverlay(0);
-				if ((slot.asset.material != null) && (overlay0 != null))
+				if ((slot.material != null) && (overlay0 != null))
 				{
 					GeneratedMaterialLookupKey lookupKey = new GeneratedMaterialLookupKey
 					{
@@ -203,7 +203,7 @@ namespace UMA
 					UMAData.GeneratedMaterial generatedMaterial;
 					if (!generatedMaterialLookup.TryGetValue(lookupKey, out generatedMaterial))
 					{
-						generatedMaterial = FindOrCreateGeneratedMaterial(slot.asset.material, slot.rendererAsset);
+						generatedMaterial = FindOrCreateGeneratedMaterial(slot.material, slot.rendererAsset);
 						generatedMaterialLookup.Add(lookupKey, generatedMaterial);
 					}
 
@@ -223,7 +223,7 @@ namespace UMA
 					UMAData.MaterialFragment tempMaterialDefinition = new UMAData.MaterialFragment();
 					tempMaterialDefinition.baseOverlay = new UMAData.textureData();
 
-					tempMaterialDefinition.umaMaterial = slot.asset.material;
+					tempMaterialDefinition.umaMaterial = slot.material;
 					if (overlay0.isEmpty)
 					{
 						tempMaterialDefinition.isNoTextures = true;
@@ -439,10 +439,14 @@ namespace UMA
 
 			for (int i = 0; i < atlassedMaterials.Count; i++)
 			{
+				var generatedMaterial = atlassedMaterials[i];
+				if (generatedMaterial.umaMaterial.channels == null || generatedMaterial.umaMaterial.channels.Length == 0)
+					continue;
+				
+				
 				area.Width = umaGenerator.atlasResolution;
 				area.Height = umaGenerator.atlasResolution;
 
-				var generatedMaterial = atlassedMaterials[i];
 				generatedMaterial.materialFragments.Sort(comparer);
 				generatedMaterial.resolutionScale = StartScale;
 				generatedMaterial.cropResolution = new Vector2(atlasRes, atlasRes);
@@ -475,7 +479,10 @@ namespace UMA
         {
             while (true)
             {
-                PackSize lastRect = CalculateRects(generatedMaterial, area);
+                PackSize lastRect = 
+					
+					
+					CalculateRects(generatedMaterial, area);
                 if (lastRect.success)
                 {
                     if (area.Width != umaGenerator.atlasResolution || area.Height != umaGenerator.atlasResolution)
@@ -568,6 +575,8 @@ namespace UMA
 				var tempMaterialDef = material.materialFragments[atlasElementIndex];
 				if (tempMaterialDef.isRectShared)
 					continue;
+				if (tempMaterialDef.isNoTextures)
+					continue;
 
 				int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale);
 				int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale);
@@ -659,6 +668,10 @@ namespace UMA
 			for (int atlasIndex = 0; atlasIndex < atlassedMaterials.Count; atlasIndex++)
 			{
 				var material = atlassedMaterials[atlasIndex];
+				if (material.umaMaterial.IsEmpty)
+                {
+					continue;
+                }
 				Vector2 usedArea = new Vector2(0, 0);
 				for (int atlasElementIndex = 0; atlasElementIndex < material.materialFragments.Count; atlasElementIndex++)
 				{

@@ -103,6 +103,15 @@ namespace UMA
 			return false;
 		}
 
+        public bool IsEmpty
+        {
+            get
+            {
+                if (channels == null) return true;
+                return channels.Length == 0;
+            }
+        }
+
         /// <summary>
         /// Checks if UMAMaterials are effectively equal.
 		/// Useful when comparing materials from asset bundles, that would otherwise say they are different to ones in the binary

@@ -87,6 +87,23 @@ namespace UMA
 		}
 	}
 
+	[Serializable]
+	public class UMAExpressionEvent: UnityEvent<UMAData, string, float>
+    {
+		public UMAExpressionEvent()
+		{
+		}
+		public UMAExpressionEvent(UMAExpressionEvent source)
+		{
+			for (int i = 0; i < source.GetPersistentEventCount(); i++)
+			{
+				var target = source.GetPersistentTarget(i);
+				AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(UMAData), typeof(string), typeof(float) }));
+			}
+		}
+	}
+
+	[Serializable]
 	public class UMARandomAvatarEvent: UnityEvent<GameObject, GameObject>
     {
 		public UMARandomAvatarEvent()

@@ -51,17 +51,17 @@ namespace UMA
 			}
 		}
 
-		/*
+		public UMAMaterial altMaterial;
 		public UMAMaterial material
         {
 			get
             {
-				if (asset.material != null)
-					return asset.material;
-				
+				if (altMaterial != null)
+					return altMaterial;
 
-            }
-        }*/
+				return asset.material;
+	        }
+        }
 
 		public bool Suppressed; 
 
@@ -400,7 +400,7 @@ namespace UMA
 					asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
                 }
 
-				if (asset.material == null)
+				if (material == null)
 				{
 					if (Debug.isDebugBuild)
 						Debug.LogError(string.Format("Slot '{0}' has a mesh but no material.", asset.slotName), asset);
@@ -408,7 +408,7 @@ namespace UMA
 				}
 				else
 				{
-					if (asset.material.material == null)
+					if (material.material == null)
 					{
 						if (Debug.isDebugBuild)
 							Debug.LogError(string.Format("Slot '{0}' has an umaMaterial without a material assigned.", asset.slotName), asset);
@@ -416,10 +416,10 @@ namespace UMA
 					}
 					else
 					{
-						for (int i = 0; i < asset.material.channels.Length; i++)
+						for (int i = 0; i < material.channels.Length; i++)
 						{
-							var channel = asset.material.channels[i];
-							if (!channel.NonShaderTexture && !asset.material.material.HasProperty(channel.materialPropertyName))
+							var channel = material.channels[i];
+							if (!channel.NonShaderTexture && !material.material.HasProperty(channel.materialPropertyName))
 							{
 								if (Debug.isDebugBuild)
 									Debug.LogError(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);
@@ -431,25 +431,27 @@ namespace UMA
 				for (int i = 0; i < overlayList.Count; i++)
 				{
 					var overlayData = overlayList[i];
+#if false
 					if (overlayData != null)
 					{
-						if (!overlayData.Validate(asset.material, (i == 0)))
+						if (!overlayData.Validate(material, (i == 0)))
 						{
 							valid = false;
 							if (Debug.isDebugBuild)
 								Debug.LogError(string.Format("Invalid Overlay '{0}' on Slot '{1}'.", overlayData.overlayName, asset.slotName));
 						}
 					}
+#endif
 				}
 			}
 			else
 			{
-				if (asset.material != null)
+				if (material != null)
 				{
-					for (int i = 0; i < asset.material.channels.Length; i++)
+					for (int i = 0; i < material.channels.Length; i++)
 					{
-						var channel = asset.material.channels[i];
-						if (!channel.NonShaderTexture && !asset.material.material.HasProperty(channel.materialPropertyName))
+						var channel = material.channels[i];
+						if (!channel.NonShaderTexture && !material.material.HasProperty(channel.materialPropertyName))
 						{
 							if (Debug.isDebugBuild)
 								Debug.LogError(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);
@@ -467,7 +469,7 @@ namespace UMA
 			return "SlotData: " + asset.slotName;
 		}
 
-		#region operator ==, != and similar HACKS, seriously.....
+#region operator ==, != and similar HACKS, seriously.....
 
 		public static implicit operator bool(SlotData obj)
 		{
@@ -511,9 +513,9 @@ namespace UMA
 		{
 			return base.GetHashCode();
 		}
-		#endregion
+#endregion
 
-		#region ISerializationCallbackReceiver Members
+#region ISerializationCallbackReceiver Members
 
 		public void OnAfterDeserialize()
 		{
@@ -525,6 +527,6 @@ namespace UMA
 		{
 		}
 
-		#endregion
+#endregion
 	}
 }

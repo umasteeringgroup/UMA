@@ -80,10 +80,10 @@ namespace UMA
                 textureMerge.EnsureCapacity(moduleCount);
 
                 var slotData = generatedMaterial.materialFragments[0].slotData;
-                resultingTextures = new Texture[slotData.asset.material.channels.Length];
-                for (int textureType = slotData.asset.material.channels.Length - 1; textureType >= 0; textureType--)
+                resultingTextures = new Texture[slotData.material.channels.Length];
+                for (int textureType = slotData.material.channels.Length - 1; textureType >= 0; textureType--)
                 {
-                    switch (slotData.asset.material.channels[textureType].channelType)
+                    switch (slotData.material.channels[textureType].channelType)
                     {
                         case UMAMaterial.ChannelType.Texture:
                         case UMAMaterial.ChannelType.DiffuseTexture:
@@ -108,34 +108,34 @@ namespace UMA
                             }
 
                             //this should be restricted to >= 1 but 0 was allowed before and projects may have the umaMaterial value serialized to 0.
-                            float downSample = (slotData.asset.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.asset.material.channels[textureType].DownSample);
+                            float downSample = (slotData.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.material.channels[textureType].DownSample);
 
-                            destinationTexture = new RenderTexture(Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.asset.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
+                            destinationTexture = new RenderTexture(Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
                             destinationTexture.filterMode = FilterMode.Point;
                             destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
-                            destinationTexture.name = slotData.asset.material.name + " Chan " + textureType + " frame: " + Time.frameCount;
+                            destinationTexture.name = slotData.material.name + " Chan " + textureType + " frame: " + Time.frameCount;
                             
                             //Draw all the Rects here
 
                             Color backgroundColor;
-                            UMAMaterial.ChannelType channelType = slotData.asset.material.channels[textureType].channelType;
+                            UMAMaterial.ChannelType channelType = slotData.material.channels[textureType].channelType;
 
-                            if (slotData.asset.material.MaskWithCurrentColor && (channelType == UMAMaterial.ChannelType.DiffuseTexture || channelType == UMAMaterial.ChannelType.Texture || channelType == UMAMaterial.ChannelType.TintedTexture))
+                            if (slotData.material.MaskWithCurrentColor && (channelType == UMAMaterial.ChannelType.DiffuseTexture || channelType == UMAMaterial.ChannelType.Texture || channelType == UMAMaterial.ChannelType.TintedTexture))
                             {
-                                backgroundColor = slotData.asset.material.maskMultiplier * textureMerge.camBackgroundColor;
+                                backgroundColor = slotData.material.maskMultiplier * textureMerge.camBackgroundColor;
                             }
                             else
                             {
-                                backgroundColor = UMAMaterial.GetBackgroundColor(slotData.asset.material.channels[textureType].channelType);
+                                backgroundColor = UMAMaterial.GetBackgroundColor(slotData.material.channels[textureType].channelType);
                             }
 
 
                             textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor, umaGenerator.SharperFitTextures);
                             
                             //PostProcess
-                            textureMerge.PostProcess(destinationTexture, slotData.asset.material.channels[textureType].channelType);
+                            textureMerge.PostProcess(destinationTexture, slotData.material.channels[textureType].channelType);
 
-                            if (umaGenerator.convertRenderTexture || slotData.asset.material.channels[textureType].ConvertRenderTexture)
+                            if (umaGenerator.convertRenderTexture || slotData.material.channels[textureType].ConvertRenderTexture)
                             {
                                 #region Convert Render Textures
                                 if (!fastPath) yield return 25;
@@ -200,30 +200,30 @@ namespace UMA
                                 tempTexture = resultingTextures[textureType] as Texture2D;
                                 tempTexture.Apply();
                                 tempTexture.wrapMode = TextureWrapMode.Repeat;
-                                tempTexture.anisoLevel = slotData.asset.material.AnisoLevel;
-                                tempTexture.mipMapBias = slotData.asset.material.MipMapBias;
-                                tempTexture.filterMode = slotData.asset.material.MatFilterMode;
-                                if (slotData.asset.material.channels[textureType].Compression != UMAMaterial.CompressionSettings.None)
+                                tempTexture.anisoLevel = slotData.material.AnisoLevel;
+                                tempTexture.mipMapBias = slotData.material.MipMapBias;
+                                tempTexture.filterMode = slotData.material.MatFilterMode;
+                                if (slotData.material.channels[textureType].Compression != UMAMaterial.CompressionSettings.None)
                                 {
-                                    tempTexture.Compress(slotData.asset.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
+                                    tempTexture.Compress(slotData.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
                                 }
                                 resultingTextures[textureType] = tempTexture;
-                                if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+                                if (!slotData.material.channels[textureType].NonShaderTexture)
                                 {
-                                    generatedMaterial.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, tempTexture);
+                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
                                 }
                                 #endregion
                             }
                             else
                             {
-                                destinationTexture.anisoLevel = slotData.asset.material.AnisoLevel;
-                                destinationTexture.mipMapBias = slotData.asset.material.MipMapBias;
-                                destinationTexture.filterMode = slotData.asset.material.MatFilterMode;
+                                destinationTexture.anisoLevel = slotData.material.AnisoLevel;
+                                destinationTexture.mipMapBias = slotData.material.MipMapBias;
+                                destinationTexture.filterMode = slotData.material.MatFilterMode;
                                 destinationTexture.wrapMode = TextureWrapMode.Repeat;
                                 resultingTextures[textureType] = destinationTexture;
-                                if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+                                if (!slotData.material.channels[textureType].NonShaderTexture)
                                 {
-                                    generatedMaterial.material.SetTexture(slotData.asset.material.channels[textureType].materialPropertyName, destinationTexture);
+                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
                                 }
                             }
 
@@ -231,8 +231,8 @@ namespace UMA
                         }
                         case UMAMaterial.ChannelType.MaterialColor:
                         {
-                            if (slotData.asset.material.channels[textureType].NonShaderTexture) break;
-                            generatedMaterial.material.SetColor(slotData.asset.material.channels[textureType].materialPropertyName, generatedMaterial.materialFragments[0].baseColor);
+                            if (slotData.material.channels[textureType].NonShaderTexture) break;
+                            generatedMaterial.material.SetColor(slotData.material.channels[textureType].materialPropertyName, generatedMaterial.materialFragments[0].baseColor);
                             break;
                         }
                         case UMAMaterial.ChannelType.TintedTexture:
@@ -245,9 +245,9 @@ namespace UMA
                                 {
                                     if (fragment.baseOverlay.textureList[j] != null)
                                     {
-                                        if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+                                        if (!slotData.material.channels[textureType].NonShaderTexture)
                                         {
-                                            generatedMaterial.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+                                            generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
                                         }
                                         if (j == 0)
                                         {
@@ -262,9 +262,9 @@ namespace UMA
                                     {
                                         if (overlay.textureList[j] != null)
                                         {
-                                            if (!slotData.asset.material.channels[textureType].NonShaderTexture)
+                                            if (!slotData.material.channels[textureType].NonShaderTexture)
                                             {
-                                                generatedMaterial.material.SetTexture(slotData.asset.material.channels[j].materialPropertyName, overlay.textureList[j]);
+                                                generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, overlay.textureList[j]);
                                             }
                                         }
                                     }

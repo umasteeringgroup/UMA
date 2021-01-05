@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEditor;
 #if UMA_ADDRESSABLES
-#if UMA_ASMDEF
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEditor.VersionControl;
@@ -130,5 +129,4 @@ namespace UMA
         }
     }
 }
-#endif
 #endif

@@ -613,7 +613,7 @@ namespace UMA
 		/// <param name="skeleton">Skeleton.</param>
 		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton)
 		{
-			if(renderer == null)
+			if (renderer == null)
 			{
 				if (Debug.isDebugBuild)
 					Debug.LogError("Renderer is null!");
@@ -622,7 +622,7 @@ namespace UMA
 
 			CreateTransforms(skeleton);
 
-			Mesh mesh = renderer.sharedMesh;
+			Mesh mesh = new Mesh();//renderer.sharedMesh;
 #if UNITY_EDITOR
 			if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
 			{
@@ -646,21 +646,22 @@ namespace UMA
 				ApplySharedBuffers(mesh);
 			}
 			else
-            {
-                mesh.vertices = vertices;
+			{
+				NativeArray<Vector3> verts = new NativeArray<Vector3>(vertices, Allocator.Temp);
+				mesh.SetVertices(verts);
 #if false
                 ValidateNativeBuffers();
 #endif
-                SetBoneWeightsFromMeshData(mesh);                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
-                mesh.normals = normals;
-                mesh.tangents = tangents;
-                mesh.uv = uv;
-                mesh.uv2 = uv2;
-                mesh.uv3 = uv3;
-                mesh.uv4 = uv4;
-                mesh.colors32 = colors32;
-            }
-            mesh.bindposes = bindPoses;
+				SetBoneWeightsFromMeshData(mesh);                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
+				mesh.normals = normals;
+				mesh.tangents = tangents;
+				mesh.uv = uv;
+				mesh.uv2 = uv2;
+				mesh.uv3 = uv3;
+				mesh.uv4 = uv4;
+				mesh.colors32 = colors32;
+			}
+			mesh.bindposes = bindPoses;
 
 			var subMeshCount = submeshes.Length;
 			mesh.subMeshCount = subMeshCount;
@@ -683,20 +684,20 @@ namespace UMA
 			}
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
-#region Blendshape
+			#region Blendshape
 			mesh.ClearBlendShapes();
-			if (blendShapes != null && blendShapes.Length > 0 ) 
+			if (blendShapes != null && blendShapes.Length > 0)
 			{
-				for (int shapeIndex = 0; shapeIndex < blendShapes.Length; shapeIndex++) 
+				for (int shapeIndex = 0; shapeIndex < blendShapes.Length; shapeIndex++)
 				{
-					if (blendShapes [shapeIndex] == null) 
+					if (blendShapes[shapeIndex] == null)
 					{
 						//Debug.LogError ("blendShapes [shapeIndex] == null!");
-                        //No longer an error, this will be null if the blendshape got baked.
+						//No longer an error, this will be null if the blendshape got baked.
 						break;
 					}
 
-					for( int frameIndex = 0; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
+					for (int frameIndex = 0; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
 					{
 						//There might be an extreme edge case where someone has the same named blendshapes on different meshes that end up on different renderers.
 						string name = blendShapes[shapeIndex].shapeName;
@@ -712,14 +713,16 @@ namespace UMA
 						if (UMABlendFrame.isAllZero(deltaTangents))
 							deltaTangents = null;
 
-						mesh.AddBlendShapeFrame (name, frameWeight, deltaVertices, deltaNormals, deltaTangents);
+						mesh.AddBlendShapeFrame(name, frameWeight, deltaVertices, deltaNormals, deltaTangents);
 					}
 				}
 			}
-#endregion
+			#endregion
 
 			mesh.RecalculateBounds();
 			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
+			UMAUtils.DestroySceneObject(renderer.sharedMesh);
+			//			GameObject.Destroy(renderer.sharedMesh);
 			renderer.sharedMesh = mesh;
 			renderer.rootBone = rootBone;
 
@@ -756,6 +759,11 @@ namespace UMA
             {
                 // It seems like a no-brainer here to use Allocator.Temp. But that data is actually not freed
                 // until the end of the frame. 
+				if (ManagedBonesPerVertex == null || ManagedBonesPerVertex.Length < 1 || ManagedBoneWeights == null || ManagedBoneWeights.Length < 1)
+                {
+					Debug.LogError("Error! Boneweights and BonesPerVertex is invalid. The slot must be regenerated.");
+					return;
+                }
                 var unityBonesPerVertex = new NativeArray<byte>(ManagedBonesPerVertex, Allocator.Persistent);
                 var unityBoneWeights = new NativeArray<BoneWeight1>(ManagedBoneWeights, Allocator.Persistent);
                 mesh.SetBoneWeights(unityBonesPerVertex, unityBoneWeights);
@@ -893,6 +901,12 @@ namespace UMA
 #else
 			ManagedBoneWeights = oldWeights.ToArray();
 			ManagedBonesPerVertex = oldBonesPerVertex.ToArray();
+			oldWeights = null; // free these, in case this gets saved somehow.
+			oldBonesPerVertex = null;
+#endif
+#if UNITY_EDITOR
+			// set this dirty.
+			// force save...?
 #endif
 			LoadedBoneweights = true;
 		}
