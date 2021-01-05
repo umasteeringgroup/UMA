@@ -1,9 +1,8 @@
-Whats new in 2.11.3
+Whats new in 2.11.4
+Typo fixed
 Fixed issue where 32 bit meshes were corrupted.
 Fixed issue where LOD system could "thrash" and flipflop LOD levels.
 Added time and random variation to LOD test so all checks do not happen on the same frame.
-
-Bugfix release
 Expression player fixes - now works in Edit Mode
 Fixes for overlays with no textures
 Fixes for mismatched overlys/slots
