@@ -623,6 +623,10 @@ namespace UMA
 			CreateTransforms(skeleton);
 
 			Mesh mesh = new Mesh();//renderer.sharedMesh;
+#if UMA_32BITBUFFERS
+			mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#endif
+
 #if UNITY_EDITOR
 			if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
 			{

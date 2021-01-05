@@ -28,6 +28,11 @@ namespace UMA.Examples
 		public int CurrentLOD { get { return _currentLOD - lodOffset; } }
 		private int _currentLOD = -1;
 		private float lastDist = 0.0f;
+		private float NextTime = 0.0f;
+		[Tooltip("How much time must pass before this is checked again. Default = 0.5 seconds")]
+		public float MinCheck =  0.5f;
+		[Tooltip("Random Variance in time (added to MinCheck) so that everything doesn't trigger at the same time. Default = 0.25 seconds")]
+		public float CheckRange = 0.25f;
 
 		private DynamicCharacterAvatar _avatar;
 		private UMAData _umaData;
@@ -102,10 +107,19 @@ namespace UMA.Examples
 
 		public void Update()
 		{
+
 			if (!initialized)
 				return;
 
-			PerformLodCheck();
+			if (Time.time > NextTime)
+			{
+				PerformLodCheck();
+				NextTime = Time.time + MinCheck;
+				if (CheckRange > 0.0f)
+                {
+					NextTime += UnityEngine.Random.Range(0.0f, CheckRange);
+				}
+			}
 		}
 
 		private void PerformLodCheck()
@@ -151,11 +165,8 @@ namespace UMA.Examples
 			}
 			if (_currentLOD != currentLevel)
 			{
-				if (Mathf.Abs(cameraDistance - lastDist) > BufferZone)
-				{
 					lastDist = cameraDistance;
 					_currentLOD = currentLevel;
-				}
 			}
 
 			if (atlasResolutionScale < maxReductionf)
