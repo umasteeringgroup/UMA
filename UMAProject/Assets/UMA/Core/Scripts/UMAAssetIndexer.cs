@@ -245,14 +245,12 @@ namespace UMA
                 CachedOp c = LoadedItems[i]; 
                 if (c.Expired)
                 {
-                    Debug.Log("Cleaning up: " + c.Info);
                     Addressables.Release(c.Operation);
                     Cleanup.Add(c); 
                 }
             }
             if (Cleanup.Count > 0)
             {
-                Debug.Log("Freeing " + Cleanup.Count + " Items");
                 LoadedItems.RemoveAll(x => Cleanup.Contains(x));
             }
         }
@@ -1256,7 +1254,6 @@ namespace UMA
 
         public void UnloadAll(bool forceResourceUnload)
 		{
-            Debug.Log("Unloading ALL AsyncOperationHandle in Indexer.UnloadAll()");
 
             foreach (CachedOp op in LoadedItems)
 			{

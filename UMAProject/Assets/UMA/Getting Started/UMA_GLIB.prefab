@@ -62,14 +62,22 @@ MonoBehaviour:
   convertRenderTexture: 0
   convertMipMaps: 1
   atlasResolution: 4096
+  editorAtlasResolution: 1024
+  AtlasOverflowFitMethod: 0
+  FitPercentageDecrease: 0.5
+  SharperFitTextures: 1
   defaultOverlayAsset: {fileID: 11400000, guid: fe30fbf67b51de8499624c6913a39e64,
     type: 2}
+  ignoreTag: UMAIgnore
   meshCombiner: {fileID: 7275351159514515506}
   InitialScaleFactor: 2
+  editorInitialScaleFactor: 4
   IterationCount: 1
   fastGeneration: 1
   processAllPending: 0
   garbageCollectionRate: 8
+  collectGarbage: 1
+  NoCoroutines: 1
 --- !u!114 &7275351159514515506
 MonoBehaviour:
   m_ObjectHideFlags: 0

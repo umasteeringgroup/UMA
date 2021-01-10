@@ -420,15 +420,7 @@ namespace UMA.CharacterSystem
                 isAddressableSystem = true;
             }
 #endif
-#if UNITY_EDITOR
-            EditorUMAContextBase = GameObject.Find("UMAEditorContext");
-            if (EditorUMAContextBase != null)
-            {
-                EditorUMAContextBase.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
-                EditorApplication.update -= CheckEditorContextNeeded;
-                EditorApplication.update += CheckEditorContextNeeded;
-            }
-#endif
+
             cacheStates = new Dictionary<string, string>();
             this.context = UMAContextBase.Instance;
         }
@@ -453,11 +445,20 @@ namespace UMA.CharacterSystem
         // Use this for initialization
         public override void Start()
         {
+#if UNITY_EDITOR
+            if (UMAContextBase.Instance == null)
+            {
+                CreateEditorContext();
+            }
+#endif
             lastHide = !hide;
 
             if (umaGenerator == null)
             {
-                umaGenerator = UMAContextBase.Instance.GetComponent<UMAGeneratorBase>();
+                if (UMAContextBase.Instance != null)
+                {
+                    umaGenerator = UMAContextBase.Instance.GetComponent<UMAGeneratorBase>();
+                }
             }
 #if SUPER_LOGGING
 			Debug.Log("Start on DynamicCharacterAvatar: " + gameObject.name);
@@ -538,7 +539,13 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
         public void GenerateSingleUMA()
         {
-            UMAGenerator ugb = UMAContext.Instance.gameObject.GetComponentInChildren<UMAGenerator>();
+            UMAGenerator ugb = umaGenerator as UMAGenerator; 
+            if (umaGenerator == null)
+            {
+                if (UMAContext.Instance == null)
+                    return;
+               ugb = UMAContext.Instance.gameObject.GetComponentInChildren<UMAGenerator>();
+            }
             if (ugb != null)
             {
                 if (UnityEditor.PrefabUtility.IsPartOfPrefabInstance(gameObject.transform))
@@ -625,6 +632,7 @@ namespace UMA.CharacterSystem
 
         void OnDisable()
         {
+
 #if UNITY_EDITOR
             DestroyEditorUMAContextBase();
 #endif
@@ -632,6 +640,7 @@ namespace UMA.CharacterSystem
 
         void OnDestroy()
         {
+
 #if UNITY_EDITOR
             DestroyEditorUMAContextBase();
 #endif
@@ -1637,11 +1646,7 @@ namespace UMA.CharacterSystem
             var thisContext = UMAContextBase.Instance;
             if (thisContext == null)
             {
-#if UNITY_EDITOR
-                thisContext = CreateEditorContext();
-#else
                 return;
-#endif
             }
             //var thisDCS = thisContext.dynamicCharacterSystem as DynamicCharacterSystem;
             Dictionary<string, UMATextRecipe> wrBU = new Dictionary<string, UMATextRecipe>(_wardrobeRecipes);
@@ -2336,7 +2341,6 @@ namespace UMA.CharacterSystem
             {
                 if (thisAnimator != null)
                 {
-                    Debug.LogWarning("Nulling out runtimeanimator Controller");
                     thisAnimator.runtimeAnimatorController = null;
                 }
             }
@@ -3836,9 +3840,20 @@ namespace UMA.CharacterSystem
         /// </summary>
         public UMAContextBase CreateEditorContext()
         {
-            EditorUMAContextBase = UMAContextBase.CreateEditorContext();
+            EditorUMAContextBase = GameObject.Find("UMAEditorContext");
+            if (EditorUMAContextBase == null)
+            {
+                var glib = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/UMA/Getting Started/UMA_GLIB.prefab");
+                if (glib != null)
+                {
+                    glib.name = "UMAEditorContext";
+                    EditorUMAContextBase = (GameObject)PrefabUtility.InstantiatePrefab(glib);
+                }
+                EditorUMAContextBase.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
+            }
             EditorApplication.update -= CheckEditorContextNeeded;
             EditorApplication.update += CheckEditorContextNeeded;
+            UMAContextBase.Instance = EditorUMAContextBase.GetComponent<UMAContextBase>();
             return UMAContextBase.Instance;
         }
 
@@ -3852,8 +3867,6 @@ namespace UMA.CharacterSystem
                 }
                 DestroyImmediate(EditorUMAContextBase);
                 EditorApplication.update -= CheckEditorContextNeeded;
-                if (Debug.isDebugBuild)
-                    Debug.Log("UMAEditorContext was removed");
             }
         }
 

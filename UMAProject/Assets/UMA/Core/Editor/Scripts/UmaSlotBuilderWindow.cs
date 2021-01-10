@@ -378,7 +378,6 @@ namespace UMA.Editors
 				KeepList.Add(b.strValue);
             }
 
-			Debug.Log("Slot Mesh: " + slotMesh.name, slotMesh.gameObject);
 			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(),GetSlotName(slotMesh),nameAfterMaterial, slotMesh, material, normalReferenceMesh,KeepList, RootBone, binarySerialization);
 			slot.tags = Tags.ToArray();
 			return slot;

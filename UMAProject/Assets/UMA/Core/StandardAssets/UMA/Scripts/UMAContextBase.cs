@@ -293,14 +293,28 @@ namespace UMA
 			//Make this GameObject not show up in the scene or save
 			EditorUMAContextBase.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
 			//if this gameobject does not contain an UMAContextBase add it - we have to call it UMAContextBase because UMAContextBase.FindInstance searches for that game object
-			var thisUMAContextBase = UMAContextBase.Instance = EditorUMAContextBase.GetComponentInChildren<UMAContextBase>();
+			var context = UMAContextBase.Instance = EditorUMAContextBase.GetComponentInChildren<UMAContextBase>();
 			if (UMAContextBase.Instance == null)
 			{
-				var thisUMAContextBaseGO = new GameObject();
-				thisUMAContextBaseGO.name = "UMAContext";
-				thisUMAContextBaseGO.transform.parent = EditorUMAContextBase.transform;
-				thisUMAContextBase = thisUMAContextBaseGO.AddComponent<UMAGlobalContext>();
-				UMAContextBase.Instance = thisUMAContextBase;
+				var GO = new GameObject();
+				GO.name = "UMAContext";
+				GO.transform.parent = EditorUMAContextBase.transform;
+				context = GO.AddComponent<UMAGlobalContext>();
+				GO.AddComponent<UMADefaultMeshCombiner>();
+
+				var gen = GO.AddComponent<UMAGenerator>();
+				gen.fitAtlas = true;
+				gen.SharperFitTextures = true;
+				gen.AtlasOverflowFitMethod = UMAGeneratorBase.FitMethod.BestFitSquare;
+				gen.convertRenderTexture = false;
+				gen.editorAtlasResolution = 1024;
+				gen.InitialScaleFactor = 2;
+				gen.collectGarbage = false;
+				gen.IterationCount = 1;
+				gen.fastGeneration = true;
+				gen.processAllPending = false;
+				gen.NoCoroutines = true;
+				UMAContextBase.Instance = context;
 			}
 			return EditorUMAContextBase;
 		}
