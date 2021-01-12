@@ -68,6 +68,29 @@ namespace UMA
 			return prefab;
 		}
 
+		public static string UnityFriendlyPath(string path)
+        {
+			if (path.ToLower().StartsWith("assets") == false)
+			{
+				int assetloc = path.ToLower().IndexOf("assets/");
+				path = path.Substring(assetloc);
+			}
+			return path;
+		}
+
+		/// <summary>
+		/// Saves the passed asset to the path. The path should include the filename with extension.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="obj"></param>
+		/// <param name="path"></param>
+		public static void SaveAsset<T>(Object obj, string path)
+        {
+			path = UnityFriendlyPath(path);
+			AssetDatabase.CreateAsset(obj, path);
+			AssetDatabase.SaveAssets();
+		}
+
 
 		//public static string GetAssetPathAndName();
 		/// <summary>
