@@ -63,7 +63,7 @@ MonoBehaviour:
   convertMipMaps: 1
   atlasResolution: 4096
   editorAtlasResolution: 1024
-  AtlasOverflowFitMethod: 0
+  AtlasOverflowFitMethod: 1
   FitPercentageDecrease: 0.5
   SharperFitTextures: 1
   defaultOverlayAsset: {fileID: 11400000, guid: fe30fbf67b51de8499624c6913a39e64,
