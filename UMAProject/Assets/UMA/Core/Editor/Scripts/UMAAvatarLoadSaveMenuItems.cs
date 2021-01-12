@@ -679,6 +679,7 @@ namespace UMA.Editors
 		void OnGUI()
 		{
 			EditorGUILayout.LabelField("UMA Prefab Saver", EditorStyles.boldLabel);
+			EditorGUILayout.HelpBox("This will convert an UMA avatar into a non-UMA prefab. Once converted, it can be reused with little overhead, but all UMA functionality will be lost.", MessageType.None, false);
 			baseObject = (UMAAvatarBase)EditorGUILayout.ObjectField("UMA Avatar",baseObject, typeof(UMAAvatarBase),true);
 			UnswizzleNormalMaps = EditorGUILayout.Toggle("Unswizzle Normals", UnswizzleNormalMaps);
 			CharacterName = EditorGUILayout.TextField("Prefab Name", CharacterName);
