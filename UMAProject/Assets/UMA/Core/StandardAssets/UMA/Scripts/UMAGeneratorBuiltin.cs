@@ -96,7 +96,7 @@ namespace UMA
 			}
 		}
 
-		public virtual void LateUpdate()
+		public virtual void Update()
 		{
 			if (CheckRenderTextures())
 				return; // if render textures needs rebuild we'll not do anything else
@@ -525,7 +525,7 @@ namespace UMA
 			if (umaData)
 			{
 				umaData.FirePreUpdateUMABody();
-				umaData.skeleton.ResetAll();
+				// umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
 				// Put the skeleton into TPose so rotations will be valid for generating avatar
 				umaData.GotoTPose();
 				umaData.ApplyDNA();

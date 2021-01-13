@@ -4,6 +4,7 @@ Added a checkbox to disable garbage collection during the edit process
 Removed some debug messages that were no longer needed
 Fixed issue where DNA could get an exception if you recompile but have a scene open that does not have a UMAContext
 Edit time generation will create a UMAContext from the UMA_GLIB prefab if you drop a UMA in a scene that does not have one. This will be deleted when something else is selected.
+Fixed issue with Animancer and Playables when building an UMA.
 
 Whats new in 2.11.4
 Typo fixed
