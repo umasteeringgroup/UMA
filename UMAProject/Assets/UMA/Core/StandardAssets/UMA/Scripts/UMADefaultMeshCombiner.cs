@@ -306,14 +306,13 @@ namespace UMA
 				
 				if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
 				{
-					var fragment = generatedMaterial.materialFragments[0];
-					int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
-					idx += vertexCount;
+					foreach (var fragment in generatedMaterial.materialFragments)
+					{
+						int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
+						idx += vertexCount;
+					}
 					continue;
 				}
-
-
-
 
 				for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
 				{

@@ -38,7 +38,6 @@ namespace UMA
 					_assetSlotName = value.slotName;
 				else
 				{
-					Debug.Log("Cleared Asset Slot Name");
 					_assetSlotName = "";
 				}
             }
@@ -220,7 +219,6 @@ namespace UMA
 			//We're not logging an error here because we'll get spammed by it for empty/not-set assets.
 			if (_asset == null && string.IsNullOrEmpty(_assetSlotName))
 			{
-				Debug.Log("No reference and no name on MeshHideAsset!");
 				return;
 			}
 

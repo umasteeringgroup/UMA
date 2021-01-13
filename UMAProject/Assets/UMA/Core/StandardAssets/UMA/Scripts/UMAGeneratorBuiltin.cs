@@ -49,6 +49,8 @@ namespace UMA
         [Tooltip("Number of character updates before triggering garbage collection.")]
 		[Range(0.0f, 128.0f)]
 		public int garbageCollectionRate = 8;
+
+		public bool collectGarbage = true;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
 		[Tooltip("Generates a single UMA immediately with no coroutines. This is the fastest possible path.")]
@@ -94,12 +96,12 @@ namespace UMA
 			}
 		}
 
-		public virtual void LateUpdate()
+		public virtual void Update()
 		{
 			if (CheckRenderTextures())
 				return; // if render textures needs rebuild we'll not do anything else
 
-			if (forceGarbageCollect > garbageCollectionRate)
+			if (collectGarbage && (forceGarbageCollect > garbageCollectionRate))
 			{
 				GC.Collect();
 				forceGarbageCollect = 0;
@@ -523,7 +525,7 @@ namespace UMA
 			if (umaData)
 			{
 				umaData.FirePreUpdateUMABody();
-				umaData.skeleton.ResetAll();
+				// umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
 				// Put the skeleton into TPose so rotations will be valid for generating avatar
 				umaData.GotoTPose();
 				umaData.ApplyDNA();

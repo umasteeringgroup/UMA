@@ -487,18 +487,11 @@ namespace UMA
 				{
 					if (textureType < channelMask[overlay].Length)
 					{
-						try
-						{
-							c = channelMask[overlay][textureType];
-							c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
-							c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
-							c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
-							c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
-						}
-						catch(Exception ex)
-                        {
-							Debug.Log("overlay = " + overlay + "; textureType = " + textureType);
-                        }
+						c = channelMask[overlay][textureType];
+						c.r = Mathf.Clamp((c.r + overlayData[overlay].GetComponentAdjustmentsForChannel(c.r, textureType, 0)), 0, 1);
+						c.g = Mathf.Clamp((c.g + overlayData[overlay].GetComponentAdjustmentsForChannel(c.g, textureType, 1)), 0, 1);
+						c.b = Mathf.Clamp((c.b + overlayData[overlay].GetComponentAdjustmentsForChannel(c.b, textureType, 2)), 0, 1);
+						c.a = Mathf.Clamp((c.a + overlayData[overlay].GetComponentAdjustmentsForChannel(c.a, textureType, 3)), 0, 1);
 					}
 					return c;
 				}
@@ -1518,10 +1511,6 @@ namespace UMA
 							if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
-								if (RenderTexture.active == tempRenderTexture)
-                                {
-									Debug.Log("RenderTexture is ACTIVE!!!! Name = " + tempRenderTexture.name);
-                                }
 								tempRenderTexture.Release();
 								UMAUtils.DestroySceneObject(tempRenderTexture);
 							}
@@ -1902,14 +1891,6 @@ namespace UMA
 		/// <param name="allowRebuild">Triggers a rebuild of the uma character if the blendshape is baked</param>
 		public void SetBlendShape(string name, float weight, bool allowRebuild = false)
 		{
-#if !UNITY_2018_3_OR_NEWER
-			if (weight < 0.0f || weight > 1.0f)
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("SetBlendShape: Weight is out of range, clamping...");
-			}
-			weight = Mathf.Clamp01(weight);
-#endif
 			BlendShapeData data;
 			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
 			{

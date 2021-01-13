@@ -1,0 +1,20 @@
+﻿#pragma kernel NormalConverter
+
+Texture2D<float4> Input;
+RWTexture2D<float3> Result;
+
+[numthreads(1, 1, 1)]
+void NormalConverter(uint3 id : SV_DispatchThreadID)
+{
+    float2 src = float2(id.x, id.y);
+    float4 packednormal = Input[src];
+    float3 normal;
+
+    // This do the trick
+    packednormal.x *= packednormal.w;
+
+    normal.xy = packednormal.xy * 2 - 1;
+    normal.z = sqrt(1 - saturate(dot(normal.xy, normal.xy)));
+
+    Result[id.xy] = (normal * 0.5) + 0.5;
+}

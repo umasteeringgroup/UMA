@@ -134,9 +134,7 @@ namespace UMA.Examples
 				return;
 
 			if (lodDistance < 0)
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("LOD Distance is less than 0!");
+			{ 
 				return;
 			}
 
