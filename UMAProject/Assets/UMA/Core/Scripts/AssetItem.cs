@@ -176,16 +176,22 @@ namespace UMA
             if (o is SlotDataAsset)
             {
                 SlotDataAsset sd = o as SlotDataAsset;
-                return sd.slotName;
+                if (!string.IsNullOrEmpty(sd.slotName))
+                    return sd.slotName;
             }
             if (o is OverlayDataAsset)
             {
                 OverlayDataAsset od = o as OverlayDataAsset;
-                return od.overlayName;
+                if (!string.IsNullOrEmpty(od.overlayName))
+                    return od.overlayName;
             }
             if (o is RaceData)
             {
-                return (o as RaceData).raceName;
+                RaceData rd = o as RaceData;
+                if (string.IsNullOrEmpty(rd.raceName))
+                {
+                    return rd.raceName;
+                }
             }
 
             return o.name;

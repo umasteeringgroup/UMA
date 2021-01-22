@@ -93,7 +93,7 @@ namespace UMA.PoseTools
 					umaData.CharacterUpdated.AddListener(UmaData_OnCharacterUpdated);
 				}
 			}
-            SetupBones();
+            //SetupBones();
 			processing = true;
 			initialized = true;
         }

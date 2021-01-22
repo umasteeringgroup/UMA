@@ -11,6 +11,7 @@ using Object = UnityEngine.Object;
 using UMA;
 using UMA.Controls;
 using UnityEditor.VersionControl;
+using System.IO;
 
 namespace UMA.Editors
 {
@@ -526,7 +527,7 @@ namespace UMA.Editors
 			GUILayout.BeginHorizontal();
 			TempTag = EditorGUILayout.TextField(TempTag, GUILayout.ExpandWidth(true));
 			GUI.SetNextControlName(focusctrl);
-			if (GUILayout.Button("X",GUILayout.Width(16)))
+			if (GUILayout.Button("x",GUILayout.Width(18)))
             {
 				TempTag = "";
 				GUI.FocusControl(focusctrl);
@@ -544,6 +545,31 @@ namespace UMA.Editors
 					}
 				}
 			}
+			if (GUILayout.Button("Clear"))
+            {
+				slotData.tags = new string[0];
+			}
+			if (GUILayout.Button("Load"))
+            {
+				string fname = EditorUtility.OpenFilePanel("Load", "", "txt");
+                {
+					if (!string.IsNullOrEmpty(fname))
+                    {
+						slotData.tags = File.ReadAllLines(fname);
+                    }
+                }
+            }
+			if (GUILayout.Button("Save"))
+			{
+				string fname = EditorUtility.SaveFilePanel("Save", "", "Tags", "txt");
+				{
+					if (!string.IsNullOrEmpty(fname))
+					{
+						File.WriteAllLines(fname, slotData.tags);
+					}
+				}
+			}
+
 			GUILayout.EndHorizontal();
 
 			DoTagsDisplay(ref slotData.tags, ref Changed);
