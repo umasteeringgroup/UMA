@@ -188,7 +188,7 @@ namespace UMA
             if (o is RaceData)
             {
                 RaceData rd = o as RaceData;
-                if (string.IsNullOrEmpty(rd.raceName))
+                if (!string.IsNullOrEmpty(rd.raceName))
                 {
                     return rd.raceName;
                 }
