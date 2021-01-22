@@ -1,3 +1,12 @@
+Whats new in 2.11.6
+Tags function in character editor (clear/load/save)
+Added new eyebrows for male character
+Update male base recipe with eyebrows
+Added Set Mount Transform function on UMAMountedItem
+Reworked "hide" on DynamicCharacterAvatar do it was stateless
+Fixed Expression Player so it didn't setup the bones until it was needed.
+
+
 Whats new in 2.11.5
 Fixed bug where UVs could be incorrectly positioned when multiple slots shared a non-atlas material
 Added a checkbox to disable garbage collection during the edit process
