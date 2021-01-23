@@ -501,115 +501,131 @@ namespace UMA.Editors
 
 	public static class TagsEditor
 	{
+		public static Dictionary<string, bool> _foldout = new Dictionary<string, bool>();
+
 		public static string[] RaceNames = null;
 
 		const string focusctrl = "TheButtonThatNeedsToFocusSoTheTextInTheTextBoxDisappears";
 		public static string DoTagsGUI(ref bool Changed, string TempTag, SlotData slotData)
         {
-			GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-			if (slotData.asset.isWildCardSlot)
-			{
-				GUILayout.Label("Match Tags:");
-			}
-			else
-			{
-				GUILayout.Label("Tags");
-			}
-			//EditorGUILayout.HelpBox("Tags GUI here...", MessageType.Info);
-			if (slotData.tags == null)
-            {
-				slotData.tags = new string[0];
-            }
-			if (slotData.Races == null)
-            {
-				slotData.Races = new string[0];
-            }
-			GUILayout.BeginHorizontal();
-			TempTag = EditorGUILayout.TextField(TempTag, GUILayout.ExpandWidth(true));
-			GUI.SetNextControlName(focusctrl);
-			if (GUILayout.Button("x",GUILayout.Width(18)))
-            {
-				TempTag = "";
-				GUI.FocusControl(focusctrl);
-            }
-			if (GUILayout.Button("Add Tag"))
-            {
-				if (!string.IsNullOrWhiteSpace(TempTag))
-				{
-					var tagList = new List<string>(slotData.tags);
-					if (!tagList.Contains(TempTag))
-					{
-						tagList.Add(TempTag);
-						slotData.tags = tagList.ToArray();
-						Changed = true;
-					}
-				}
-			}
-			if (GUILayout.Button("Clear"))
-            {
-				slotData.tags = new string[0];
-			}
-			if (GUILayout.Button("Load"))
-            {
-				string fname = EditorUtility.OpenFilePanel("Load", "", "txt");
-                {
-					if (!string.IsNullOrEmpty(fname))
-                    {
-						slotData.tags = File.ReadAllLines(fname);
-                    }
-                }
-            }
-			if (GUILayout.Button("Save"))
-			{
-				string fname = EditorUtility.SaveFilePanel("Save", "", "Tags", "txt");
-				{
-					if (!string.IsNullOrEmpty(fname))
-					{
-						File.WriteAllLines(fname, slotData.tags);
-					}
-				}
-			}
+			string slotName = slotData.slotName;
 
+			if (!_foldout.ContainsKey(slotName))
+            {
+				_foldout.Add(slotName, false);
+            }
+
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			_foldout[slotName] = EditorGUILayout.Foldout(_foldout[slotName], "Edit Tags");
 			GUILayout.EndHorizontal();
-
-			DoTagsDisplay(ref slotData.tags, ref Changed);
-			if (slotData.asset.isWildCardSlot)
-            {
-				GUILayout.Space(10);
-				GUILayout.Label("Match Races:");
-				// do the race matches here.
-				if (RaceNames == null)
-                {
-					List<string> theRaceNames = new List<string>();
-					RaceData[] races = UMAContextBase.Instance.GetAllRaces();
-					foreach(RaceData race in races)
-                    {
-						theRaceNames.Add(race.raceName);
-                    }
-					RaceNames = theRaceNames.ToArray();
-                }
+			if (_foldout[slotName])
+			{
+				GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+				if (slotData.asset.isWildCardSlot)
+				{
+					GUILayout.Label("Match Tags:");
+				}
+				else
+				{
+					GUILayout.Label("Tags");
+				}
+				//EditorGUILayout.HelpBox("Tags GUI here...", MessageType.Info);
+				if (slotData.tags == null)
+				{
+					slotData.tags = new string[0];
+				}
+				if (slotData.Races == null)
+				{
+					slotData.Races = new string[0];
+				}
 				GUILayout.BeginHorizontal();
-				if (!SlotEditor.SelectedRace.ContainsKey(slotData.slotName))
-					SlotEditor.SelectedRace.Add(slotData.slotName, 0);
+				TempTag = EditorGUILayout.TextField(TempTag, GUILayout.ExpandWidth(true));
+				GUI.SetNextControlName(focusctrl);
+				if (GUILayout.Button("x", GUILayout.Width(18)))
+				{
+					TempTag = "";
+					GUI.FocusControl(focusctrl);
+				}
+				if (GUILayout.Button("Add Tag"))
+				{
+					if (!string.IsNullOrWhiteSpace(TempTag))
+					{
+						var tagList = new List<string>(slotData.tags);
+						if (!tagList.Contains(TempTag))
+						{
+							tagList.Add(TempTag);
+							slotData.tags = tagList.ToArray();
+							Changed = true;
+						}
+					}
+				}
+				if (GUILayout.Button("Clear"))
+				{
+					slotData.tags = new string[0];
+				}
+				if (GUILayout.Button("Load"))
+				{
+					string fname = EditorUtility.OpenFilePanel("Load", "", "txt");
+					{
+						if (!string.IsNullOrEmpty(fname))
+						{
+							slotData.tags = File.ReadAllLines(fname);
+						}
+					}
+				}
+				if (GUILayout.Button("Save"))
+				{
+					string fname = EditorUtility.SaveFilePanel("Save", "", "Tags", "txt");
+					{
+						if (!string.IsNullOrEmpty(fname))
+						{
+							File.WriteAllLines(fname, slotData.tags);
+						}
+					}
+				}
 
-				SlotEditor.SelectedRace[slotData.slotName]=EditorGUILayout.Popup(SlotEditor.SelectedRace[slotData.slotName], RaceNames, GUILayout.ExpandWidth(true));
-				if (GUILayout.Button("Add Race"))
-                {
-					// Add the selected race name if it's not already there.
-					string theRace = RaceNames[SlotEditor.SelectedRace[slotData.slotName]];
-					List<string> Races = new List<string>(slotData.Races);
-					if (!Races.Contains(theRace))
-                    {
-						Races.Add(theRace);
-						slotData.Races = Races.ToArray();
-						Changed = true;
-                    }
-                }
 				GUILayout.EndHorizontal();
 
-				DoTagsDisplay(ref slotData.Races, ref Changed);
+				DoTagsDisplay(ref slotData.tags, ref Changed);
+				if (slotData.asset.isWildCardSlot)
+				{
+					GUILayout.Space(10);
+					GUILayout.Label("Match Races:");
+					// do the race matches here.
+					if (RaceNames == null)
+					{
+						List<string> theRaceNames = new List<string>();
+						RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+						foreach (RaceData race in races)
+						{
+							theRaceNames.Add(race.raceName);
+						}
+						RaceNames = theRaceNames.ToArray();
+					}
+					GUILayout.BeginHorizontal();
+					if (!SlotEditor.SelectedRace.ContainsKey(slotData.slotName))
+						SlotEditor.SelectedRace.Add(slotData.slotName, 0);
+
+					SlotEditor.SelectedRace[slotData.slotName] = EditorGUILayout.Popup(SlotEditor.SelectedRace[slotData.slotName], RaceNames, GUILayout.ExpandWidth(true));
+					if (GUILayout.Button("Add Race"))
+					{
+						// Add the selected race name if it's not already there.
+						string theRace = RaceNames[SlotEditor.SelectedRace[slotData.slotName]];
+						List<string> Races = new List<string>(slotData.Races);
+						if (!Races.Contains(theRace))
+						{
+							Races.Add(theRace);
+							slotData.Races = Races.ToArray();
+							Changed = true;
+						}
+					}
+					GUILayout.EndHorizontal();
+
+					DoTagsDisplay(ref slotData.Races, ref Changed);
+				}
+				GUIHelper.EndVerticalPadded(10);
 			}
-			GUIHelper.EndVerticalPadded(10);
 			return TempTag;
 		}
 

@@ -3143,13 +3143,17 @@ namespace UMA.CharacterSystem
 
                 foreach (UMATextRecipe utr in WardrobeRecipes.Values)
                 {
+                    // don't gather hides from suppresed slots...
+                    if (SuppressSlotsStrings.Contains(utr.wardrobeSlot))
+                        continue;
+
                     //Collect all HideTags
                     if (utr.HideTags.Count > 0)
                     {
                         HideTags.AddRange(utr.HideTags);
                     }
                     //Collect all the MeshHideAssets on all the wardrobe recipes
-                    if (utr.MeshHideAssets != null && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
+                    if (utr.MeshHideAssets != null)// && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
                     {
                         foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
                         {
