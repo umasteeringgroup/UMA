@@ -563,6 +563,7 @@ namespace UMA.Editors
 				if (GUILayout.Button("Clear"))
 				{
 					slotData.tags = new string[0];
+					Changed = true;
 				}
 				if (GUILayout.Button("Load"))
 				{
@@ -571,6 +572,7 @@ namespace UMA.Editors
 						if (!string.IsNullOrEmpty(fname))
 						{
 							slotData.tags = File.ReadAllLines(fname);
+							Changed = true;
 						}
 					}
 				}
