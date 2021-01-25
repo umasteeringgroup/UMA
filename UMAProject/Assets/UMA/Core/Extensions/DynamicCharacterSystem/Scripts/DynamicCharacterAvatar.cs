@@ -93,8 +93,6 @@ namespace UMA.CharacterSystem
         //but for it to still not be shown immediately or you may want to hide it anyway
         [Tooltip("If checked will turn off the SkinnedMeshRenderer after the character has been created to hide it. If not checked will turn it on again.")]
         public bool hide = false;
-        [NonSerialized]
-        public bool lastHide;
 
         [Tooltip("If true, then the meshcombiner will merge blendshapes found on slots that are part of this umaData")]
         public bool loadBlendShapes = false;
@@ -451,7 +449,6 @@ namespace UMA.CharacterSystem
                 CreateEditorContext();
             }
 #endif
-            lastHide = !hide;
 
             if (umaGenerator == null)
             {
@@ -616,14 +613,19 @@ namespace UMA.CharacterSystem
 #endif
                 umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 
-                if (umaData.rendererCount > 0 && lastHide != hide)
+                if (umaData.rendererCount > 0)
                 {
-                    lastHide = hide;
-                    foreach(SkinnedMeshRenderer smr in umaData.GetRenderers())
+                    var renderers = umaData.GetRenderers();
+
+                    if ((renderers[0].enabled && hide) || 
+                        (renderers[0].enabled == false && hide == false))
                     {
-                        if (smr != null && smr.enabled == hide)
+                        for (int i = 0; i < renderers.Length; i++)
                         {
-                            smr.enabled = !hide;
+                            if (renderers[i] && renderers[i].enabled == hide)
+                            {
+                                renderers[i].enabled = !hide;
+                            }
                         }
                     }
                 }
