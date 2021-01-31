@@ -604,7 +604,7 @@ namespace UMA.CharacterSystem
             if (umaData != null)
             {
 #if UNITY_EDITOR
-                if (editorTimeGeneration && Application.isPlaying == false)
+                if (!hide && editorTimeGeneration && Application.isPlaying == false)
                 {
                     var r = umaData.GetRenderers();
                     if (r != null)
@@ -616,14 +616,27 @@ namespace UMA.CharacterSystem
 #endif
                 umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 
-                if (umaData.rendererCount > 0 && lastHide != hide)
+                if (umaData.rendererCount > 0)
                 {
-                    lastHide = hide;
-                    foreach(SkinnedMeshRenderer smr in umaData.GetRenderers())
+                    SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
+                    if (frenderer.enabled && hide == true)
                     {
-                        if (smr != null && smr.enabled == hide)
+                        foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
                         {
-                            smr.enabled = !hide;
+                            if (smr != null && smr.enabled == hide)
+                            {
+                                smr.enabled = !hide;
+                            }
+                        }
+                    }
+                    if (!frenderer.enabled && hide == false)
+                    {
+                        foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
+                        {
+                            if (smr != null && smr.enabled == hide)
+                            {
+                                smr.enabled = !hide;
+                            }
                         }
                     }
                 }
@@ -3130,13 +3143,17 @@ namespace UMA.CharacterSystem
 
                 foreach (UMATextRecipe utr in WardrobeRecipes.Values)
                 {
+                    // don't gather hides from suppresed slots...
+                    if (SuppressSlotsStrings.Contains(utr.wardrobeSlot))
+                        continue;
+
                     //Collect all HideTags
                     if (utr.HideTags.Count > 0)
                     {
                         HideTags.AddRange(utr.HideTags);
                     }
                     //Collect all the MeshHideAssets on all the wardrobe recipes
-                    if (utr.MeshHideAssets != null && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
+                    if (utr.MeshHideAssets != null)// && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
                     {
                         foreach (MeshHideAsset meshHide in utr.MeshHideAssets)
                         {

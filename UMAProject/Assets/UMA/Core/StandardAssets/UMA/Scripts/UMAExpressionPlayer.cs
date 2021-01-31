@@ -93,7 +93,7 @@ namespace UMA.PoseTools
 					umaData.CharacterUpdated.AddListener(UmaData_OnCharacterUpdated);
 				}
 			}
-            SetupBones();
+            //SetupBones();
 			processing = true;
 			initialized = true;
         }
@@ -108,6 +108,7 @@ namespace UMA.PoseTools
 		{
 			if ((expressionSet != null) && (umaData != null) && (umaData.skeleton != null))
 			{
+				Debug.Log("Setting up bones");
 				Transform jaw = null;
 				Transform neck = null;
 				Transform head = null;
@@ -170,9 +171,9 @@ namespace UMA.PoseTools
 
         void Update()
 		{
-
 			if (!initialized || umaData == null)
 			{
+				Debug.Log("Calling Initialize");
 				Initialize();
 				return;
 			}
@@ -187,32 +188,21 @@ namespace UMA.PoseTools
 			Quaternion headRotation = Quaternion.identity;
 			Quaternion neckRotation = Quaternion.identity;
 
-			try 
-			{
-				if (umaData.skeleton.GetBoneGameObject(headHash) == null)
-					return;
-				headRotation = umaData.skeleton.GetRotation(headHash); 
+			if (!overrideMecanimHead && headHash != 0)
+            {
+				headRotation = umaData.skeleton.GetRotation(headHash);
 			}
-			catch(System.Exception ex) 
-			{
-				Debug.LogException(ex);
-				Debug.LogError("GetRotation: Head Bone not found!"); 
+			if (!overrideMecanimNeck && neckHash != 0)
+            {
+				neckRotation = umaData.skeleton.GetRotation(neckHash);
 			}
-
-			try 
-			{
-				if (umaData.skeleton.GetBoneGameObject(neckHash) == null)
-					return;
-				neckRotation = umaData.skeleton.GetRotation(neckHash); 
-			}
-			catch(System.Exception) { Debug.LogError("GetRotation: Neck Bone not found!"); }
 
 			// Need to reset bones here if we want Mecanim animation
 			expressionSet.RestoreBones(umaData.skeleton, logResetErrors);
 
-			if (!overrideMecanimNeck)
+			if (!overrideMecanimNeck && neckHash != 0)
 				umaData.skeleton.SetRotation(neckHash, neckRotation);
-			if (!overrideMecanimHead)
+			if (!overrideMecanimHead && headHash != 0)
 				umaData.skeleton.SetRotation(headHash, headRotation);
 
 			if (gazeWeight > 0f)

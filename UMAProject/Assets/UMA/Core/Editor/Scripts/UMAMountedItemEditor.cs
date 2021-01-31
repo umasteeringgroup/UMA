@@ -26,6 +26,13 @@ namespace UMA.Editors
 			{
 				mountedItem.ResetMountPoint();
 			}
+			if (GUILayout.Button("Set mount item transform"))
+			{
+				var mp = mountedItem.EditorFindOrCreateMountpoint();
+
+				mountedItem.Position = mp.localPosition;
+				mountedItem.Orientation = mp.localRotation;
+			}
 		}
 	}
 }
