@@ -108,7 +108,6 @@ namespace UMA.PoseTools
 		{
 			if ((expressionSet != null) && (umaData != null) && (umaData.skeleton != null))
 			{
-				Debug.Log("Setting up bones");
 				Transform jaw = null;
 				Transform neck = null;
 				Transform head = null;
@@ -173,7 +172,6 @@ namespace UMA.PoseTools
 		{
 			if (!initialized || umaData == null)
 			{
-				Debug.Log("Calling Initialize");
 				Initialize();
 				return;
 			}
