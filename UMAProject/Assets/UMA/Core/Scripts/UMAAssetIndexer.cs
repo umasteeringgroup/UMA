@@ -515,7 +515,6 @@ namespace UMA
 
         public List<AssetItem> GetAssetItems(UMAPackedRecipeBase recipe, bool LookForLODs = false)
 		{
-
             if (recipe is UMAWardrobeCollection)
             {
                 return new List<AssetItem>();

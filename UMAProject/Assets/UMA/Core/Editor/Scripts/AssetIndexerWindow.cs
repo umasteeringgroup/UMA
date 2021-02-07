@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using UMA.PoseTools;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.Callbacks;
@@ -450,6 +451,20 @@ namespace UMA.Controls
 			}
 
 			ItemsMenu.AddSeparator("");
+			
+			AddMenuItemWithCallback(ItemsMenu, "Add Selected Items to Unity Selection", () =>
+			{
+				SelectSelected(false);
+				return;
+			});
+
+			AddMenuItemWithCallback(ItemsMenu, "Add Selected Items to Unity Selection(include Dependencies)", () =>
+			{
+				SelectSelected(true);
+				return;
+			});
+
+			ItemsMenu.AddSeparator("");
 
 			AddMenuItemWithCallback(ItemsMenu, "Add Keep Flag to Selected Items", () =>
 			{
@@ -486,7 +501,237 @@ namespace UMA.Controls
 
 		}
 
-		void SetItemMaterial(AssetItem ai)
+        private void SelectSelected(bool AddDependencies)
+        {
+            List<AssetTreeElement> selectedElements = GetSelectedElements();
+			if (selectedElements.Count == 0)
+            {
+				EditorUtility.DisplayDialog("Warning","No items are selected. Please select the items in the list before using this option.", "OK");
+				return;
+            }
+
+			List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
+			foreach (AssetTreeElement element in selectedElements)
+            {
+				AssetItem item = element.ai;
+				if (item != null)
+                {
+					selectedObjects.Add(item.Item);
+					if (AddDependencies)
+                    {
+						List<UnityEngine.Object> dependencies = GetDependencies(item.Item);
+						selectedObjects.AddRange(dependencies);
+                    }
+                }
+            }
+			Selection.objects = selectedObjects.ToArray();
+		}
+
+        private List<UnityEngine.Object> GetDependencies(UnityEngine.Object item)
+        {
+			if (item is SlotDataAsset)
+            {
+				return GetSlotDependencies(item as SlotDataAsset);
+            }
+			if (item is OverlayDataAsset)
+            {
+				return GetOverlayDependencies(item as OverlayDataAsset);
+            }
+			if (item is RaceData)
+            {
+				return GetRaceDependencies(item as RaceData);
+            }
+			if (item is UMATextRecipe)
+            {
+				return GetRecipeDependencies(item as UMATextRecipe);
+            }
+			// return an empty list.
+			return new List<UnityEngine.Object>();
+        }
+
+        private List<UnityEngine.Object> GetRaceDependencies(RaceData raceData)
+        {
+			List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+
+			if (raceData.baseRaceRecipe != null)
+            {
+				objects.Add(raceData.baseRaceRecipe);
+				objects.AddRange(GetRecipeDependencies(raceData.baseRaceRecipe as UMATextRecipe));
+            }
+			if (raceData.TPose != null)
+				objects.Add(raceData.TPose);
+
+			if (raceData.expressionSet != null)
+            {
+				objects.Add(raceData.expressionSet);
+				objects.AddRange(GetExpressionSetDependencies(raceData.expressionSet));
+            }
+
+			if (raceData.dnaConverterList != null)
+            {
+				foreach(var dna in raceData.dnaConverterList)
+                {
+					objects.AddRange(GetDNADepenencies(dna));
+                }
+            }
+
+			if (raceData.dnaRanges != null)
+            {
+				objects.AddRange(raceData.dnaRanges);
+            }
+			return objects;
+		}
+
+        private IEnumerable<UnityEngine.Object> GetExpressionSetDependencies(UMAExpressionSet expressionSet)
+        {
+			List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+
+			foreach(var posepair in expressionSet.posePairs)
+            {
+				if (posepair.primary != null)
+					objects.Add(posepair.primary);
+				if (posepair.inverse != null)
+					objects.Add(posepair.inverse);
+            }
+			return objects;
+		}
+
+		private List<UnityEngine.Object> GetRecipeDependencies(UMATextRecipe uMATextRecipe)
+        {
+			List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+			List<AssetItem> dependencies = UMAAssetIndexer.Instance.GetAssetItems(uMATextRecipe, true);
+
+			foreach(AssetItem ai in dependencies)
+            {
+				if (ai.Item != null)
+                {
+					if (ai.Item is SlotDataAsset)
+                    {
+						SlotDataAsset sda = ai.Item as SlotDataAsset;
+						objects.Add(sda);
+						objects.AddRange(GetSlotDependencies(sda));
+                    }
+					if (ai.Item is OverlayDataAsset)
+                    {
+						OverlayDataAsset oda = ai.Item as OverlayDataAsset;
+						objects.Add(oda);
+						objects.AddRange(GetOverlayDependencies(oda));
+                    }
+                }
+            }
+
+			if (uMATextRecipe.MeshHideAssets != null)
+            {
+				foreach(MeshHideAsset mha in uMATextRecipe.MeshHideAssets)
+                {
+					if (mha != null)
+                    {
+						objects.Add(mha);
+                    }
+                }
+            }
+
+			return objects;
+		}
+
+        private List<UnityEngine.Object> GetOverlayDependencies(OverlayDataAsset overlayDataAsset)
+        {
+			List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+	
+			if (overlayDataAsset.material != null)
+			{
+				objects.Add(overlayDataAsset.material);
+				if (overlayDataAsset.material.material != null)
+				{
+					objects.Add(overlayDataAsset.material.material);
+					objects.AddRange(GetMaterialDepencies(overlayDataAsset.material.material));
+				}
+			}
+
+			if (overlayDataAsset.alphaMask != null)
+            {
+				objects.Add(overlayDataAsset.alphaMask);
+            }
+
+			foreach(Texture t in overlayDataAsset.textureList)
+            {
+				if (t != null)
+					objects.Add(t);
+            }
+			return objects;
+		}
+
+        private List<UnityEngine.Object> GetSlotDependencies(SlotDataAsset slotDataAsset)
+        {
+			List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+			if (slotDataAsset.RendererAsset != null)
+            {
+				objects.Add(slotDataAsset.RendererAsset);
+            }
+			if (slotDataAsset.material != null)
+            {
+				objects.Add(slotDataAsset.material);
+				if (slotDataAsset.material.material != null)
+                {
+					objects.Add(slotDataAsset.material.material);
+					objects.AddRange(GetMaterialDepencies(slotDataAsset.material.material));
+				}
+			}
+			if (slotDataAsset.slotDNA != null)
+            {
+				objects.AddRange(GetDNADepenencies(slotDataAsset.slotDNA));
+            }
+			return objects;
+        }
+
+        private List<UnityEngine.Object> GetMaterialDepencies(Material material)
+        {
+			List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+
+            string[] txprops = material.GetTexturePropertyNames();
+
+			foreach (string s in txprops)
+            {
+				Texture t = material.GetTexture(s);
+				if (t is Texture2D)
+                {
+					objects.Add(t);
+                }
+            }
+			return objects;
+		}
+
+        private List<UnityEngine.Object> GetDNADepenencies(IDNAConverter converter)
+        {
+			List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+
+			if (converter is DynamicDNAConverterController)
+			{
+				var cvt = converter as DynamicDNAConverterController;
+				objects.Add(cvt);
+				if (cvt.dnaAsset != null)
+				{
+					objects.Add(cvt.dnaAsset);
+				}
+				List<DynamicDNAPlugin> plugins = cvt.GetPlugins();
+				foreach (var p in plugins)
+				{
+					if (p != null)
+						objects.Add(p);
+					if (p is BonePoseDNAConverterPlugin)
+					{
+						var bp = p as BonePoseDNAConverterPlugin;
+						foreach (var pdc in bp.poseDNAConverters)
+						{
+							objects.Add(pdc.poseToApply);
+						}
+					}
+				}
+			}
+			return objects;
+		}
+
+        void SetItemMaterial(AssetItem ai)
 		{
 			if (ai._Type == typeof(SlotDataAsset))
 			{
@@ -502,7 +747,7 @@ namespace UMA.Controls
 
 		void UpdateMaterials()
 		{
-			var treeElements = new List<AssetTreeElement>();
+            List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
 			TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
 			foreach (AssetTreeElement ate in treeElements)
@@ -595,6 +840,23 @@ namespace UMA.Controls
 					}
 				}
 			}
+		}
+
+
+		private List<AssetTreeElement> GetSelectedElements()
+        {
+			var treeElements = new List<AssetTreeElement>();
+			var selectedElements = new List<AssetTreeElement>();
+			TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+			foreach (AssetTreeElement tr in treeElements)
+			{
+				if (tr.ai != null && tr.Checked)
+				{
+					selectedElements.Add(tr);
+				}
+			}
+			return selectedElements;
 		}
 
 		private void ForceSave()
