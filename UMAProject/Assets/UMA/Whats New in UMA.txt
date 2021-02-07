@@ -1,3 +1,7 @@
+Whats new in 2.11.7
+Ability to select items in the project from the Global LIbrary items menu. 
+Removed the T-Pose layer that was missing the animation mask.
+
 Whats new in 2.11.6
 Tags function in character editor (clear/load/save)
 Added new eyebrows for male character
