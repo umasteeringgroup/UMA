@@ -17,7 +17,7 @@ MonoBehaviour:
   channels:
   - channelType: 0
     textureFormat: 0
-    materialPropertyName: _MainTex
+    materialPropertyName: _EmissionMap
     sourceTextureName: 
     Compression: 0
     DownSample: 0

@@ -81,20 +81,13 @@ namespace UMA
 		{
 			get
 			{
-				if (material.IsProcedural())
-				{
-					int count = 0;
-					for (int i = 0; i < material.channels.Length; i++)
-					{
-						if (material.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor)
-							count++;
-					}
-
-					return count;
-				}
-				else if (textureList == null)
+				if (material == null)
+                {
+					Debug.Log("Overlay Material is null on overlay: " + name);
 					return 0;
-				
+                }
+				if (textureList == null)
+					return 0;	
 				return textureList.Length;
 			}
 		}
