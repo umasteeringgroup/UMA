@@ -140,6 +140,11 @@ namespace UMA
                 StringBuilder sb = new StringBuilder();
                 foreach (AssetItem ai in AddressableItems.Keys)
                 {
+                    if (!ai.Item)
+                    {
+                        Debug.LogError($"Asset \"{ai._Name}\" of type \"{ai._Type}\" doesn't exist anymore - did it get deleted?");
+                        continue;
+                    }
                     ai.IsAddressable = true;
                     ai.AddressableAddress = ""; // let the system assign it if we are generating.
                     ai.AddressableGroup = sharedGroup.name;
