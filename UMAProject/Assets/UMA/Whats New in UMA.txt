@@ -1,6 +1,9 @@
 Whats new in 2.11.7
 Ability to select items in the project from the Global LIbrary items menu. 
 Removed the T-Pose layer that was missing the animation mask.
+Updated documentation on events, new slot builder features
+Better logic when cleaning up the rig in the editor (only on race change, and only if "rebuild skeleton" is checked)
+Moved some items out of examples that should have been in the core folders.
 
 Whats new in 2.11.6
 Tags function in character editor (clear/load/save)
