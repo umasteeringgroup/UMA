@@ -158,6 +158,11 @@ namespace UMA
 			umaData.Dirty(true, true, true);
 		}
 
+		public virtual void Hide()
+		{
+			Hide(true);
+		}
+
 		/// <summary>
 		/// Hide the avatar and clean up its components.
 		/// </summary>
