@@ -325,7 +325,18 @@ namespace UMA.Controls
 				Repaint();
 			});
 
-			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Single Group (Final Build)", () =>
+			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Single Group (Fast)", () =>
+			{
+				UMAAddressablesSupport.Instance.CleanupAddressables();
+				SingleGroupGenerator sgs = new SingleGroupGenerator();
+				sgs.ClearMaterials = false;
+				UMAAddressablesSupport.Instance.GenerateAddressables(sgs);
+				Resources.UnloadUnusedAssets();
+				m_Initialized = false;
+				Repaint();
+			});
+
+			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Single Group (Final Build Only)", () =>
 			{
 				UMAAddressablesSupport.Instance.CleanupAddressables();
 				SingleGroupGenerator sgs = new SingleGroupGenerator();

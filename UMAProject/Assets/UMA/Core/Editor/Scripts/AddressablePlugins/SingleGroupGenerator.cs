@@ -178,6 +178,10 @@ namespace UMA
                                 sda.material = null;
                                 EditorUtility.SetDirty(sda);
                             }
+                            else
+                            {
+                                sda.material = Index.GetAsset<UMAMaterial>(sda.materialName);
+                            }
                         }
                     }
                     if (ai._Type == typeof(OverlayDataAsset))
@@ -195,6 +199,10 @@ namespace UMA
                                 od.materialName = od.material.name;
                                 od.material = null;
                                 EditorUtility.SetDirty(od);
+                            }
+                            else
+                            {
+                                od.material = Index.GetAsset<UMAMaterial>(od.materialName);
                             }
                         }
 #if INCL_TEXTURE2D
