@@ -584,7 +584,7 @@ namespace UMA.CharacterSystem
         }
         }
 
-        private void CleanupGeneratedData()
+        public void CleanupGeneratedData()
         {
             List<GameObject> Cleaners = GetRenderers(gameObject);
             Hide(false);

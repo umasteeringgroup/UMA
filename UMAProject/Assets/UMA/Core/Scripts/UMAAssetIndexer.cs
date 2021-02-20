@@ -18,6 +18,7 @@ using System.Text;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
 #endif
 
 namespace UMA
@@ -159,6 +160,10 @@ namespace UMA
                         return null;
                     theIndexer.UpdateSerializedDictionaryItems();
                     theIndexer.RebuildRaceRecipes();
+#if UNITY_EDITOR
+                    EditorSceneManager.sceneSaving += EditorSceneManager_sceneSaving;
+                    EditorSceneManager.sceneSaved += EditorSceneManager_sceneSaved;
+#endif
                     //StopTimer(st,"Asset index load");
                 }
                 return theIndexer;
@@ -166,6 +171,54 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+        public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
+
+        public static bool LeanMeanSceneFiles()
+        {
+            return EditorPrefs.GetBool(ConfigToggle_LeanMeanSceneFiles, true);
+        }
+
+        private static void EditorSceneManager_sceneSaved(UnityEngine.SceneManagement.Scene scene)
+        {
+            if (!LeanMeanSceneFiles())
+                return;
+
+            GameObject[] sceneObjs = scene.GetRootGameObjects();
+            foreach (GameObject go in sceneObjs)
+            {
+                DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
+                if (dcas.Length > 0)
+                {
+                    foreach (DynamicCharacterAvatar dca in dcas)
+                    {
+                        dca.GenerateSingleUMA();
+                    }
+                }
+            }
+        }
+
+    private static void EditorSceneManager_sceneSaving(UnityEngine.SceneManagement.Scene scene, string path)
+        {
+            if (!LeanMeanSceneFiles())
+                return;
+
+            // Cleanup any editor generated UMAS
+            GameObject[] sceneObjs = scene.GetRootGameObjects();
+            foreach(GameObject go in sceneObjs)
+            {
+                DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
+                if (dcas.Length > 0)
+                {
+                    foreach(DynamicCharacterAvatar dca in dcas)
+                    {
+                        // Free all the generated data so we don't junk up the scene file.
+                        // it will be regenerated later.
+                        dca.CleanupGeneratedData();
+                    }
+                }
+            }
+        }
+ 
         public struct IndexBackup
         {
             public DateTime BackupTime;
@@ -216,22 +269,6 @@ namespace UMA
         public Type GetRuntimeType(Type type)
         {
             return TypeToLookup[type];
-        }
-
-        public string SaveIndexItems()
-        {
-            string theJson = "";
-            // Flatten asset items.
-            // save to json string?
-            return theJson;
-        }
-
-        public bool RestoreIndexItems(string json)
-        {
-            // clear index items
-            // load flattened array from json string
-            // rebuild
-            return true;
         }
 
 #if UMA_ADDRESSABLES

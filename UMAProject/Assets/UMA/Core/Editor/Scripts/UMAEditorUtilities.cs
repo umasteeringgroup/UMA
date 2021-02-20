@@ -26,6 +26,7 @@ namespace UMA
 		private const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
 		private const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
 		//private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
+		public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
 		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
 		public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
 
@@ -131,6 +132,7 @@ namespace UMA
             }
 
 			ConfigToggle(ConfigToggle_PostProcessAllAssets, "Postprocess All Assets", "When assets in unity are moved, this will fix their paths in the index. This can be very slow.", false);
+			ConfigToggle(ConfigToggle_LeanMeanSceneFiles, "Clean/Regen on Save", "When using edit-time UMA's the geometry is stored in scene files. Enabling this cleans them up before saving, and regenerates after saving, making your scene files squeaky clean.", true);
 
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.Space();
@@ -144,6 +146,8 @@ namespace UMA
 			bool prevAddressables = IsAddressable();
 
 			var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+
+
 			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
 			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables.");
 
@@ -231,12 +235,15 @@ namespace UMA
 			return PlayerPrefs.GetString(umaDefaultLabelKey,umaDefaultLabel);
 		}
 
+		public static bool LeanMeanSceneFiles()
+		{
+			return GetConfigValue(ConfigToggle_LeanMeanSceneFiles, true);
+		}
 
 		public static bool UseSharedGroupConfigured()
 		{
 			return GetConfigValue(ConfigToggle_UseSharedGroup, true);
 		}
-
 
 		public static bool StripUMAMaterials()
         {

@@ -4,6 +4,9 @@ Removed the T-Pose layer that was missing the animation mask.
 Updated documentation on events, new slot builder features
 Better logic when cleaning up the rig in the editor (only on race change, and only if "rebuild skeleton" is checked)
 Moved some items out of examples that should have been in the core folders.
+Added option (on by default) to slim down scene saved files that have UMA editor-time generated characters in them.
+Added missing "Generate Single Group (Fast)" option to generator. 
+Fixed materials that were stripped when you rebuild addressable groups.
 
 Whats new in 2.11.6
 Tags function in character editor (clear/load/save)
