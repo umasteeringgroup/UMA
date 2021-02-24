@@ -297,6 +297,10 @@ namespace UMA
 
 						if (animator.runtimeAnimatorController != null)
 							snapshot.RestoreAnimatorState(animator,umaData);
+						if (umaData.KeepAvatar)
+                        {
+							animator.Rebind();
+						}
 					}
 				}
 			}

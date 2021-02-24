@@ -16,7 +16,7 @@ namespace UMA
 {
     public class SingleGroupGenerator : IUMAAddressablePlugin
     {
-        public bool ClearMaterials; // should be set when generating during the build process, so the materials are cleared in the bundles
+        public bool ClearMaterials = false; // should be set when generating during the build process, so the materials are cleared in the bundles
         public UMAAssetIndexer Index;
         List<UMAPackedRecipeBase> Recipes;
         Dictionary<AssetItem, List<string>> AddressableItems = new Dictionary<AssetItem, List<string>>();
@@ -180,7 +180,11 @@ namespace UMA
                             }
                             else
                             {
-                                sda.material = Index.GetAsset<UMAMaterial>(sda.materialName);
+                                if (sda.material == null)
+                                {
+                                    sda.material = Index.GetAsset<UMAMaterial>(sda.materialName);
+                                    EditorUtility.SetDirty(sda);
+                                }
                             }
                         }
                     }
@@ -202,7 +206,11 @@ namespace UMA
                             }
                             else
                             {
-                                od.material = Index.GetAsset<UMAMaterial>(od.materialName);
+                                if (od.material == null)
+                                {
+                                    od.material = Index.GetAsset<UMAMaterial>(od.materialName);
+                                    EditorUtility.SetDirty(od);
+                                }
                             }
                         }
 #if INCL_TEXTURE2D

@@ -81,11 +81,6 @@ namespace UMA
 		{
 			get
 			{
-				if (material == null)
-                {
-					Debug.Log("Overlay Material is null on overlay: " + name);
-					return 0;
-                }
 				if (textureList == null)
 					return 0;	
 				return textureList.Length;
