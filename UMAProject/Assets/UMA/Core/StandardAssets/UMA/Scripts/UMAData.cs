@@ -188,6 +188,10 @@ namespace UMA
 		/// <summary>
 		/// Callback event when character has been updated.
 		/// </summary>
+		public event Action<UMAData> OnCharacterBegun { add { if (CharacterBegun == null) CharacterBegun = new UMADataEvent(); CharacterBegun.AddAction(value); } remove { CharacterBegun.RemoveAction(value); } }
+		/// <summary>
+		/// Callback event when character has been updated.
+		/// </summary>
 		public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterUpdated.AddAction(value); } remove { CharacterUpdated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event when character has been completely created.
@@ -1366,7 +1370,7 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Fire the Animator State Saved event.
+		/// Fire the Pre Update event.
 		/// This happens before the Animator State is saved.
 		/// </summary>
 		public void FirePreUpdateUMABody()

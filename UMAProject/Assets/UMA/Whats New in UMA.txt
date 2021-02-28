@@ -7,6 +7,7 @@ Moved some items out of examples that should have been in the core folders.
 Added option (on by default) to slim down scene saved files that have UMA editor-time generated characters in them.
 Added missing "Generate Single Group (Fast)" option to generator. 
 Fixed materials that were stripped when you rebuild addressable groups.
+You can now add "Override DNA" to Wardrobe Recipes. These will be applied instead of the existing DNA.
 
 Whats new in 2.11.6
 Tags function in character editor (clear/load/save)

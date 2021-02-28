@@ -35,6 +35,14 @@ namespace UMA
 
 		public List<DnaValue> PreloadValues = new List<DnaValue>();
 
+		public int Count
+        {
+			get
+            {
+				return PreloadValues.Count;
+            }
+        }
+
 		public void RemoveDNA(string Name)
 		{
 			PreloadValues.RemoveAll(x => x.Name == Name);
