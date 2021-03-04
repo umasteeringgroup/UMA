@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using UMA.Examples;
 using UMA.PoseTools;
+using static UMA.UMAPackedRecipeBase;
 
 namespace UMA.Editors
 {
@@ -133,8 +134,14 @@ namespace UMA.Editors
 			var lod = baseObject.GetComponent<UMASimpleLOD>();
 			if (lod != null) DestroyImmediate(lod);
 
-			var ud = baseObject.GetComponent<UMAData>();
-			if (ud != null) DestroyImmediate(ud);
+			UMAData uda = baseObject.GetComponent<UMAData>();
+
+			StandAloneDNA sda = baseObject.AddComponent<UMA.StandAloneDNA>();
+			sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+
+			sda.umaData = uda;
+		//	var ud = baseObject.GetComponent<UMAData>();
+		//	if (ud != null) DestroyImmediate(ud);
 
 			var ue = baseObject.GetComponent<UMAExpressionPlayer>();
 			if (ue != null) DestroyImmediate(ue);

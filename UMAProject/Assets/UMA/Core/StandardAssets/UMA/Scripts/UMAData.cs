@@ -101,6 +101,9 @@ namespace UMA
 		}
 
 		[NonSerialized]
+		public bool staticCharacter = false;
+
+		[NonSerialized]
 		public bool firstBake;
 
 		[NonSerialized]
@@ -146,6 +149,52 @@ namespace UMA
 		public RuntimeAnimatorController animationController;
 
 		private Dictionary<int, int> animatedBonesTable;
+
+
+		public void SetupSkeleton()
+		{
+			Transform rootTransform = gameObject.transform.Find("Root");
+			if (rootTransform)
+			{
+				umaRoot = rootTransform.gameObject;
+			}
+			else
+			{
+				GameObject newRoot = new GameObject("Root");
+				//make root of the UMAAvatar respect the layer setting of the UMAAvatar so cameras can just target this layer
+				newRoot.layer = gameObject.layer;
+				newRoot.transform.parent = transform;
+				newRoot.transform.localPosition = Vector3.zero;
+				if (umaRecipe.raceData.FixupRotations)
+				{
+					newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
+				}
+				else
+				{
+					newRoot.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+				}
+				newRoot.transform.localScale = Vector3.one;
+				umaRoot = newRoot;
+			}
+
+			Transform globalTransform = umaRoot.transform.Find("Global");
+			if (!globalTransform)
+			{
+				GameObject newGlobal = new GameObject("Global");
+				newGlobal.transform.parent = umaRoot.transform;
+				newGlobal.transform.localPosition = Vector3.zero;
+				if (umaRecipe.raceData.FixupRotations)
+				{
+					newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
+				}
+				else
+				{
+					newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+				}
+				globalTransform = newGlobal.transform;
+			}
+			skeleton = new UMASkeleton(globalTransform);
+		}
 
 		public void ResetAnimatedBones()
 		{
@@ -234,6 +283,7 @@ namespace UMA
 		
 			[UnityEngine.Serialization.FormerlySerializedAs("umaRecipe")]
 			public UMARecipe _umaRecipe;
+
 			public UMARecipe umaRecipe
 			{
 				get
@@ -603,6 +653,7 @@ namespace UMA
 			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAConverters = new Dictionary<int, List<DNAConvertDelegate>>();
 			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAPreApplyConverters = new Dictionary<int, List<DNAConvertDelegate>>();
 			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
+			[SerializeField]
 			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
 			public SlotData[] slotDataList;
 			public OverlayColorData[] sharedColors;
@@ -1458,6 +1509,9 @@ namespace UMA
 
 		void OnDestroy()
 		{
+			if (staticCharacter)
+				return;
+
 			if (isOfficiallyCreated)
 			{
 				if (CharacterDestroyed != null)
