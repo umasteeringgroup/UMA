@@ -1977,13 +1977,24 @@ namespace UMA.CharacterSystem
                 if (ucd.HasName())
                 {
                     OverlayColorData c;
-                    if (characterColors.GetColor(ucd.name, out c))
+                    if (ucd.PropertyBlock != null && ucd.PropertyBlock.alwaysUpdate)
                     {
-						ucd.AssignFrom(c);
+                        characterColors.SetColor(ucd.name, ucd);
                     }
                     else
                     {
-                        characterColors.SetColor(ucd.name, ucd);
+                        if (characterColors.GetColor(ucd.name, out c))
+                        {
+                            // if the character has the color, then the color from the character overwrites what is in the
+                            // recipe.
+                            ucd.AssignFrom(c);
+                        }
+                        else
+                        {
+                            // if the character doesn't have the color, then the color is loaded into the character with the 
+                            // default value from the recipe color.
+                            characterColors.SetColor(ucd.name, ucd);
+                        }
                     }
                 }
             }
