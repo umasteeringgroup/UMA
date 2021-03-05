@@ -1972,6 +1972,7 @@ namespace UMA.CharacterSystem
             if (umaData.umaRecipe.sharedColors == null)
                 return;
 
+            // Process the always update colors first
             foreach (UMA.OverlayColorData ucd in umaData.umaRecipe.sharedColors)
             {
                 if (ucd.HasName())
@@ -1981,7 +1982,15 @@ namespace UMA.CharacterSystem
                     {
                         characterColors.SetColor(ucd.name, ucd);
                     }
-                    else
+                }
+            }
+
+            foreach (UMA.OverlayColorData ucd in umaData.umaRecipe.sharedColors)
+            {
+                if (ucd.HasName())
+                {
+                    OverlayColorData c;
+                    if (!(ucd.PropertyBlock == null && ucd.PropertyBlock.alwaysUpdate))
                     {
                         if (characterColors.GetColor(ucd.name, out c))
                         {
