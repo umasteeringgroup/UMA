@@ -1347,21 +1347,18 @@ namespace UMA
 			/// </summary>
 			/// <param name="recipe">Recipe.</param>
 			/// <param name="dontSerialize">If set to <c>true</c> recipe will not be serialized.</param>
-			public void Merge(UMARecipe recipe, bool dontSerialize, bool mergeMatchingOverlays = true)
+			public void Merge(UMARecipe recipe, bool dontSerialize, bool mergeMatchingOverlays = true, bool mergeDNA = true, string raceName = null)
 			{
 				if (recipe == null)
 					return;
 
-				if ((recipe.raceData != null) && (recipe.raceData != raceData))
+				if (mergeDNA)
 				{
-					if (Debug.isDebugBuild)
-						Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
-				}
-
-				foreach (var dnaEntry in recipe.umaDna)
-				{
-					var destDNA = GetOrCreateDna(dnaEntry.Value.GetType(), dnaEntry.Key);
-					destDNA.Values = dnaEntry.Value.Values;
+					foreach (var dnaEntry in recipe.umaDna)
+					{
+						var destDNA = GetOrCreateDna(dnaEntry.Value.GetType(), dnaEntry.Key);
+						destDNA.Values = dnaEntry.Value.Values;
+					}
 				}
 
 				mergedSharedColors.Clear();
@@ -1400,11 +1397,35 @@ namespace UMA
 
 				if (slotDataList == null)
 					slotDataList = new SlotData[0];
-				if (recipe.slotDataList != null)
+				if (raceName != null)
 				{
-					for (int i = 0; i < recipe.slotDataList.Length; i++)
+					if (recipe.slotDataList != null)
 					{
-						MergeSlot(recipe.slotDataList[i], dontSerialize, mergeMatchingOverlays);
+						for (int i = 0; i < recipe.slotDataList.Length; i++)
+						{
+							SlotData sd = recipe.slotDataList[i];
+
+							if (sd == null) continue;
+
+							if (sd.HasRace(raceName))
+							{
+								MergeSlot(sd, dontSerialize, mergeMatchingOverlays);
+							}
+							else
+                            {
+								Debug.Log("Skipping: "+sd.slotName);
+                            }
+						}
+					}
+				}
+				else
+				{
+					if (recipe.slotDataList != null)
+					{
+						for (int i = 0; i < recipe.slotDataList.Length; i++)
+						{
+							MergeSlot(recipe.slotDataList[i], dontSerialize, mergeMatchingOverlays);
+						}
 					}
 				}
 			}

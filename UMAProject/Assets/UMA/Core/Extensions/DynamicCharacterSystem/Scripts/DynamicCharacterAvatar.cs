@@ -3661,7 +3661,7 @@ namespace UMA.CharacterSystem
                 foreach (var umaAdditionalRecipe in umaAdditionalSerializedRecipes)
                 {
                     UMAData.UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
-                    umaData.umaRecipe.Merge(cachedRecipe, false, true);
+                    umaData.umaRecipe.Merge(cachedRecipe, false, true,false,activeRace.racedata.name);
                 }
             }
         }

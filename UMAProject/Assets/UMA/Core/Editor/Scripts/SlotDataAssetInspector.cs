@@ -93,7 +93,7 @@ namespace UMA.Editors
 			}
 			 
 			if (_slotDataAsset.isWildCardSlot)
-				Editor.DrawPropertiesExcluding(serializedObject,WildcardSlotFields);
+				Editor.DrawPropertiesExcluding(serializedObject, WildcardSlotFields);
 			else
 				Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
 			GUILayout.Space(10);

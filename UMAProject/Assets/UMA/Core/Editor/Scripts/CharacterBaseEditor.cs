@@ -528,7 +528,7 @@ namespace UMA.Editors
 				}
 				else
 				{
-					GUILayout.Label("Tags");
+					GUILayout.Label("Tags & Races");
 				}
 				//EditorGUILayout.HelpBox("Tags GUI here...", MessageType.Info);
 				if (slotData.tags == null)
@@ -590,9 +590,10 @@ namespace UMA.Editors
 				GUILayout.EndHorizontal();
 
 				DoTagsDisplay(ref slotData.tags, ref Changed);
-				if (slotData.asset.isWildCardSlot)
-				{
-					GUILayout.Space(10);
+//				if (slotData.asset.isWildCardSlot)
+				if (true)
+					{
+						GUILayout.Space(10);
 					GUILayout.Label("Match Races:");
 					// do the race matches here.
 					if (RaceNames == null)
@@ -601,7 +602,10 @@ namespace UMA.Editors
 						RaceData[] races = UMAContextBase.Instance.GetAllRaces();
 						foreach (RaceData race in races)
 						{
-							theRaceNames.Add(race.raceName);
+							if (race != null)
+							{
+								theRaceNames.Add(race.raceName);
+							}
 						}
 						RaceNames = theRaceNames.ToArray();
 					}

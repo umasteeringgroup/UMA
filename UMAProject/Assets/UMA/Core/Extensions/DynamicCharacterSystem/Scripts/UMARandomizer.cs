@@ -66,27 +66,57 @@ namespace UMA
 		public int Chance = 1;
 		public List<RandomColors> Colors;
 #if UNITY_EDITOR
+		public string _slotName;
 		public bool GuiFoldout;
 		public bool Delete;
 		public bool AddColorTable;
 		public string[] PossibleColors;
+
+		public string SortName
+        {
+			get
+            {
+				string slot = "";
+				if (WardrobeSlot != null)
+					slot = WardrobeSlot.name;
+				return SlotName + slot;
+            }
+        }
+
+		public string SlotName
+        {
+			get
+            {
+				if (WardrobeSlot != null)
+					return WardrobeSlot.wardrobeSlot;
+				return _slotName;
+            }
+        }
 #endif
-		public RandomWardrobeSlot(UMAWardrobeRecipe slot)
+		public RandomWardrobeSlot(UMAWardrobeRecipe slot, string slotName)
 		{
 #if UNITY_EDITOR
 			GuiFoldout = true;
 			Delete = false;
-			UMAPackedRecipeBase.UMAPackRecipe upr = slot.PackedLoad();
-
-			List<string> cols = new List<string>();
-			foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd in upr.fColors)
+			_slotName = slotName;
+			if (slot == null)
 			{
-				if (pcd.name.Trim() != "-")
-				{
-					cols.Add(pcd.name);
-				}
+				PossibleColors = new string[0];
 			}
-			PossibleColors = cols.ToArray();
+			else
+			{
+				UMAPackedRecipeBase.UMAPackRecipe upr = slot.PackedLoad();
+
+				List<string> cols = new List<string>();
+				foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd in upr.fColors)
+				{
+					if (pcd.name.Trim() != "-")
+					{
+						cols.Add(pcd.name);
+					}
+				}
+				PossibleColors = cols.ToArray();
+			}
 #endif
 			Colors = new List<RandomColors>();
 			WardrobeSlot = slot;
@@ -116,6 +146,7 @@ namespace UMA
 		public int SelectedDNA;
 		public string DNAAdd;
 		public int DNADel;
+		public int currentWardrobeSlot;
 		
 #endif
 		public UMAPredefinedDNA GetRandomDNA()

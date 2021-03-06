@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UMA.Integrations;
+using UMA.CharacterSystem;
+using UnityEngine.SceneManagement;
 
 namespace UMA.Editors
 {
@@ -158,6 +160,33 @@ namespace UMA.Editors
             {
                 PowerToolsIntegration.Refresh(recipeBase);
             }
+
+			if (target is UMAWardrobeRecipe)
+            {
+				Scene scene = SceneManager.GetActiveScene();
+
+				GameObject[] sceneObjs = scene.GetRootGameObjects();
+				foreach (GameObject go in sceneObjs)
+				{
+					DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
+					if (dcas.Length > 0)
+					{
+						foreach (DynamicCharacterAvatar dca in dcas)
+						{
+							var items = dca.preloadWardrobeRecipes.recipes;
+							foreach (var wi in items)
+                            {
+								var recipe = wi._recipe;
+								if (recipe.name == target.name)
+                                {
+									dca.GenerateSingleUMA();
+									break;
+								}
+                            }
+						}
+					}
+				}
+			}
             //else
             //{
             //    PowerToolsIntegration.Show(recipeBase);

@@ -122,7 +122,11 @@ namespace UMA.Editors
 		{
 			// do random colors
 			// show each possible item.
-			GUIHelper.FoldoutBar(ref rws.GuiFoldout, rws.WardrobeSlot.name + " ("+rws.WardrobeSlot.wardrobeSlot+")", out rws.Delete);
+			string name = "<null>";
+			if (rws.WardrobeSlot != null)
+				name = rws.WardrobeSlot.name;
+
+			GUIHelper.FoldoutBar(ref rws.GuiFoldout, name + " ("+rws.Chance+")", out rws.Delete);
 			if (rws.GuiFoldout)
 			{
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
@@ -228,9 +232,27 @@ namespace UMA.Editors
 				ra.WardrobeFoldout = GUIHelper.FoldoutBar(ra.WardrobeFoldout, "Wardrobe");
 				if (ra.WardrobeFoldout)
 				{
+					// add a null slot for a 
+					GUILayout.BeginHorizontal();
+					EditorGUILayout.LabelField("Select Wardrobe Slot", GUILayout.ExpandWidth(false));
+					ra.currentWardrobeSlot = EditorGUILayout.Popup(ra.currentWardrobeSlot, ra.raceData.wardrobeSlots.ToArray(), GUILayout.ExpandWidth(true));
+					if (GUILayout.Button("Add Null",GUILayout.ExpandWidth(false)))
+                    {
+						ra.RandomWardrobeSlots.Add(new RandomWardrobeSlot(null,ra.raceData.wardrobeSlots[ra.currentWardrobeSlot]));
+						ra.RandomWardrobeSlots.Sort((x, y) => x.SortName.CompareTo(y.SortName));
+					}
+					GUILayout.EndHorizontal();
 					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
+
+					string lastSlot = "";
+
 					foreach (RandomWardrobeSlot rws in ra.RandomWardrobeSlots)
 					{
+						if (rws.SlotName != lastSlot)
+                        {
+							GUILayout.Label("[" + rws.SlotName + "]");
+							lastSlot = rws.SlotName;
+                        }
 						RandomWardrobeSlotGUI(ra, rws);
 					}
 					GUIHelper.EndVerticalPadded(10);
@@ -289,13 +311,13 @@ namespace UMA.Editors
 				{
 					if (RecipeCompatible(uwr, raceDatas[currentRace]))
 					{
-						RandomWardrobeSlot rws = new RandomWardrobeSlot(uwr);
+						RandomWardrobeSlot rws = new RandomWardrobeSlot(uwr,uwr.wardrobeSlot);
 						ra.GuiFoldout = true;
 						ra.RandomWardrobeSlots.Add(rws);
 					}
 				}
 				// sort the wardrobe slots
-				ra.RandomWardrobeSlots.Sort((x, y) => x.WardrobeSlot.wardrobeSlot.CompareTo(y.WardrobeSlot.wardrobeSlot));
+				ra.RandomWardrobeSlots.Sort((x, y) => x.SortName.CompareTo(y.SortName));
 				droppedItems.Clear();
 			}
 

@@ -1170,11 +1170,14 @@ namespace UMA.Editors
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Clear Recipe"))
                 {
-                    _recipe.slotDataList = new SlotData[0];
-                    changed |= true;
-                    _dnaDirty |= true;
-                    _textureDirty |= true;
-                    _meshDirty |= true;
+					if (EditorUtility.DisplayDialog("Clear recipe", "Are you sure?", "OK", "Cancel") == true)
+					{
+						_recipe.slotDataList = new SlotData[0];
+						changed |= true;
+						_dnaDirty |= true;
+						_textureDirty |= true;
+						_meshDirty |= true;
+					}
                 }
                 if (GUILayout.Button("Remove Nulls"))
 				{
