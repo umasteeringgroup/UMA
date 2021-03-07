@@ -13,7 +13,8 @@ namespace UMA
 			UMA.CustomAssetUtility.CreateAsset<UMAClothProperties>();
 		}
 		#endif
-
+		public float selfcollisionDistance;
+		public float selfcollisionStifiness;
 		public float bendingStiffness;
 		public float clothSolverFrequency;
 		public float collisionMassScale;
@@ -32,6 +33,8 @@ namespace UMA
 
 		public void ApplyValues(Cloth cloth)
 		{
+			cloth.selfCollisionDistance = selfcollisionDistance;
+			cloth.selfCollisionStiffness = selfcollisionStifiness;
 			cloth.bendingStiffness = bendingStiffness;
 			cloth.clothSolverFrequency = clothSolverFrequency;
 			cloth.collisionMassScale = collisionMassScale;
@@ -54,6 +57,8 @@ namespace UMA
 
 		public void ReadValues(Cloth cloth)
 		{
+			selfcollisionDistance = cloth.selfCollisionDistance;
+			selfcollisionStifiness = cloth.selfCollisionStiffness;
 			bendingStiffness = cloth.bendingStiffness;
 			clothSolverFrequency = cloth.clothSolverFrequency;
 			collisionMassScale = cloth.collisionMassScale;
