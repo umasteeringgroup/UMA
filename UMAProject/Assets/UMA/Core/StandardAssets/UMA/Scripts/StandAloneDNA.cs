@@ -10,7 +10,8 @@ namespace UMA
     {
         private List<UMADnaBase> DNA = new List<UMADnaBase>();
         public List<UMAPackedDna> PackedDNA = new List<UMAPackedDna>();
-
+        // The original AvatarDefinition;
+        public AvatarDefinition avatarDefinition; 
         public UMAData umaData;
         public RaceData originalRace;
         private Dictionary<string, DnaSetter> dna = new Dictionary<string, DnaSetter>();
@@ -30,6 +31,40 @@ namespace UMA
                 umaRecipe.AddDna(umd);
             }
             umaData._umaRecipe.ClearDNAConverters();
+        }
+
+        public void LoadDNAFromAvatarDefinition(AvatarDefinition adf)
+        {
+            var DNA = GetDNA();
+            foreach (var d in adf.Dna)
+            {
+                if (DNA.ContainsKey(d.Name))
+                {
+                    DNA[d.Name].Set(d.Value);
+                }
+            }
+        }
+
+        public AvatarDefinition SaveDNAToAvatarDefinition()
+        {
+            var CurrentDNA = GetDNA().Values;
+
+            List<DnaDef> Dna = new List<DnaDef>();
+            foreach (DnaSetter d in CurrentDNA)
+            {
+                    DnaDef def = new DnaDef(d.Name, d.Value);
+                    Dna.Add(def);
+            }
+            avatarDefinition.Dna = Dna.ToArray();
+            avatarDefinition.RaceName = originalRace.raceName;
+
+            if (avatarDefinition.Wardrobe == null)
+                avatarDefinition.Wardrobe = new string[0];
+            
+            if (avatarDefinition.Colors == null)
+                avatarDefinition.Colors = new SharedColorDef[0];
+
+            return avatarDefinition;
         }
 
         /// <summary>

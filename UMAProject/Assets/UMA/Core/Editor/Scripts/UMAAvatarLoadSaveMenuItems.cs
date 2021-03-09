@@ -61,7 +61,7 @@ namespace UMA.Editors
 			EditorUtility.DisplayDialog("Saved", "Avatar save to assets as CreatedAvatar", "OK");
 		}
 
-		public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName)
+		public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA)
 		{
 			Folder = Folder + "/" + CharName;
 
@@ -134,15 +134,23 @@ namespace UMA.Editors
 			var lod = baseObject.GetComponent<UMASimpleLOD>();
 			if (lod != null) DestroyImmediate(lod);
 
-			UMAData uda = baseObject.GetComponent<UMAData>();
-
-			StandAloneDNA sda = baseObject.AddComponent<UMA.StandAloneDNA>();
-			sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
-
-			sda.umaData = uda;
-		//	var ud = baseObject.GetComponent<UMAData>();
-		//	if (ud != null) DestroyImmediate(ud);
-
+			if (AddStandaloneDNA)
+			{
+				UMAData uda = baseObject.GetComponent<UMAData>();
+				StandAloneDNA sda = baseObject.AddComponent<UMA.StandAloneDNA>();
+				sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+				if (avatar is DynamicCharacterAvatar)
+				{
+					DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+					sda.avatarDefinition = avt.GetAvatarDefinition(true);
+				}
+				sda.umaData = uda;
+			}
+			else
+			{
+				var ud = baseObject.GetComponent<UMAData>();
+				if (ud != null) DestroyImmediate(ud);
+			}
 			var ue = baseObject.GetComponent<UMAExpressionPlayer>();
 			if (ue != null) DestroyImmediate(ue);
 
@@ -661,6 +669,8 @@ namespace UMA.Editors
 		public UMAAvatarBase baseObject;
 		[Tooltip("Convert Swizzled normal maps back to standard normal maps")]
 		public bool UnswizzleNormalMaps = true;
+		[Tooltip("If True, will keep the umaData, and add a Standalone DNA component allowing you to load/save/Deform skeletal DNA")]
+		public bool AddStandaloneDNA = true;
 		[Tooltip("The prefab will be named this, and it will be added to all assets saved")]
 		public string CharacterName;
 		[Tooltip("The folder where the prefab folder will be created")]
@@ -689,6 +699,7 @@ namespace UMA.Editors
 			EditorGUILayout.HelpBox("This will convert an UMA avatar into a non-UMA prefab. Once converted, it can be reused with little overhead, but all UMA functionality will be lost.", MessageType.None, false);
 			baseObject = (UMAAvatarBase)EditorGUILayout.ObjectField("UMA Avatar",baseObject, typeof(UMAAvatarBase),true);
 			UnswizzleNormalMaps = EditorGUILayout.Toggle("Unswizzle Normals", UnswizzleNormalMaps);
+			AddStandaloneDNA = EditorGUILayout.Toggle("Add Standalone DNA", AddStandaloneDNA);
 			CharacterName = EditorGUILayout.TextField("Prefab Name", CharacterName);
 			prefabFolder = EditorGUILayout.ObjectField("Prefab Base Folder", prefabFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 
@@ -698,7 +709,7 @@ namespace UMA.Editors
 			{
 				if (GUILayout.Button("Make Prefab") && prefabFolder != null)
 				{
-					UMAAvatarLoadSaveMenuItems.ConvertToNonUMA(baseObject.gameObject, baseObject, folder, UnswizzleNormalMaps, CharacterName);
+					UMAAvatarLoadSaveMenuItems.ConvertToNonUMA(baseObject.gameObject, baseObject, folder, UnswizzleNormalMaps, CharacterName,AddStandaloneDNA);
 					EditorUtility.DisplayDialog("UMA Prefab Saver", "Conversion complete", "OK");
 				}
 			}
