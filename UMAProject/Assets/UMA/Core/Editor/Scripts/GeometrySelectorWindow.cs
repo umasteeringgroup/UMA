@@ -107,7 +107,7 @@ namespace UMA.Editors
             Tools.hidden = false;
             DestroySceneEditObject();
             EditorApplication.UnlockReloadAssemblies();
-            
+
             if (restoreScenes != null)
             {
                 foreach (GeometrySelector.SceneInfo s in restoreScenes)
@@ -441,6 +441,10 @@ namespace UMA.Editors
             if (GUILayout.Button("Save & Return"))
             {
                 doneEditing = true;
+                /* save location and orientation of camera */
+                string CamKey = _Source.meshAsset.name + "_MHA_Cam";
+                CamSaver cs = new CamSaver(_Source.currentSceneView.camera.transform);
+                EditorPrefs.SetString(CamKey, cs.ToString());
             }
             if (GUILayout.Button("Cancel Edits"))
             {

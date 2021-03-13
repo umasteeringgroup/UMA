@@ -14,7 +14,7 @@ namespace UMA
 		public float MinValue;
 		public float MaxValue;
 #if UNITY_EDITOR
-		public bool Delete;
+		public bool Delete { get; set; }  = false;
 #endif
 		public RandomDNA(string name)
 		{
@@ -147,7 +147,6 @@ namespace UMA
 		public string DNAAdd;
 		public int DNADel;
 		public int currentWardrobeSlot;
-		
 #endif
 		public UMAPredefinedDNA GetRandomDNA()
 		{
@@ -241,6 +240,11 @@ namespace UMA
 	public class UMARandomizer : ScriptableObject
 	{
 #if UNITY_EDITOR
+		public int currentRace { get; set; } = 0;
+		public string[] races { get; set; } = new string[0];
+		public List<RaceData> raceDatas { get; set; } = new List<RaceData>();
+		public List<UMAWardrobeRecipe> droppedItems { get; set; } = new List<UMAWardrobeRecipe>();
+
 #if UMA_HOTKEYS
         [UnityEditor.MenuItem("Assets/Create/UMA/Misc/Randomizer %#h")]
 #else

@@ -16,6 +16,12 @@ namespace UMA
 		[System.NonSerialized]
 		public int nameHash;
 
+#if UNITY_EDITOR
+		public float lastActionTime { get; set; } = 0;
+		public bool doSave { get; set; } = false;
+		public bool additionalFoldout { get; set; } = false;
+		public bool textureFoldout { get; set; } = false;
+#endif
 		public enum OverlayType
 		{
 			Normal = 0,

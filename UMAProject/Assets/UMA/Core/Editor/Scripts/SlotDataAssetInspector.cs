@@ -17,10 +17,8 @@ namespace UMA.Editors
 		SerializedProperty DNAApplied;
 		SerializedProperty CharacterCompleted;
 		SerializedProperty MaxLOD;
-		private ReorderableList tagList;
-		private bool tagListInitialized = false;
+		SlotDataAsset slot;
 
-		private bool eventsFoldout = false;
 
         [MenuItem("Assets/Create/UMA/Core/Custom Slot Asset")]
         public static void CreateCustomSlotAssetMenuItem()
@@ -52,12 +50,15 @@ namespace UMA.Editors
 			DNAApplied = serializedObject.FindProperty("DNAApplied");
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
 			MaxLOD = serializedObject.FindProperty("maxLOD");
+			slot = (target as SlotDataAsset);
 		}
+
 		private void InitTagList(SlotDataAsset _slotDataAsset)
 		{
+			
 			var HideTagsProperty = serializedObject.FindProperty("tags");
-			tagList = new ReorderableList(serializedObject, HideTagsProperty, true, true, true, true);
-			tagList.drawHeaderCallback = (Rect rect) => 
+			slot.tagList = new ReorderableList(serializedObject, HideTagsProperty, true, true, true, true);
+			slot.tagList.drawHeaderCallback = (Rect rect) => 
 			{
 				if (_slotDataAsset.isWildCardSlot)
 				{
@@ -68,20 +69,19 @@ namespace UMA.Editors
 					EditorGUI.LabelField(rect, "Tags");
 				}
 			};
-			tagList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => 
+			slot.tagList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => 
 			{
-				var element = tagList.serializedProperty.GetArrayElementAtIndex(index);
+				var element = (target as SlotDataAsset).tagList.serializedProperty.GetArrayElementAtIndex(index);
 				rect.y += 2;
 				element.stringValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), element.stringValue);
 			};
-			tagListInitialized = true;
+			slot.tagListInitialized = true;
 		}
 		public override void OnInspectorGUI()
         {
-			SlotDataAsset _slotDataAsset = target as SlotDataAsset;
-			if (!tagListInitialized)
+			if (!slot.tagListInitialized)
 			{
-				InitTagList(_slotDataAsset);
+				InitTagList(slot);
 			}
 			serializedObject.Update();
 
@@ -92,18 +92,18 @@ namespace UMA.Editors
 				EditorGUILayout.HelpBox("This is a wildcard slot", MessageType.Info);
 			}
 			 
-			if (_slotDataAsset.isWildCardSlot)
+			if (slot.isWildCardSlot)
 				Editor.DrawPropertiesExcluding(serializedObject, WildcardSlotFields);
 			else
 				Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
 			GUILayout.Space(10);
-			tagList.DoLayoutList();
 			
-			eventsFoldout = EditorGUILayout.Foldout(eventsFoldout, "Slot Events");
-			if (eventsFoldout)
+
+			(target as SlotDataAsset).eventsFoldout = EditorGUILayout.Foldout((target as SlotDataAsset).eventsFoldout, "Slot Events");
+			if ((target as SlotDataAsset).eventsFoldout)
 			{
 				EditorGUILayout.PropertyField(CharacterBegun);   
-				if (!_slotDataAsset.isWildCardSlot)
+				if (!slot.isWildCardSlot)
 				{
 					EditorGUILayout.PropertyField(SlotAtlassed);
 					EditorGUILayout.PropertyField(DNAApplied); 
