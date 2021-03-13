@@ -1,3 +1,6 @@
+#if UNITY_EDITOR
+using UnityEditorInternal;
+#endif
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -13,6 +16,11 @@ namespace UMA
 		public string slotName;
 		[System.NonSerialized]
 		public int nameHash;
+#if UNITY_EDITOR
+		public ReorderableList tagList { get; set; }
+		public bool tagListInitialized { get; set; } = false;
+		public bool eventsFoldout { get; set; } = false;
+#endif
 
 		public UMARendererAsset RendererAsset { get { return _rendererAsset; } }
 		[SerializeField] private UMARendererAsset _rendererAsset=null;
