@@ -322,7 +322,7 @@ namespace UMA.Editors
 			}
 
 			SlotDataAsset sd = CreateSlot_Internal();
-			
+			UMAUpdateProcessor.UpdateSlot(sd);
 			return sd;
 		}
 

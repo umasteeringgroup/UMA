@@ -57,6 +57,7 @@ namespace UMA.Editors
 				lastActionTime = Time.realtimeSinceStartup;
 				EditorUtility.SetDirty(race);
 				AssetDatabase.SaveAssets();
+				UMAUpdateProcessor.UpdateRace(race);
 			}
 		}
 

@@ -50,6 +50,7 @@ namespace UMA.Editors
 				od.lastActionTime = Time.realtimeSinceStartup;
 				EditorUtility.SetDirty(target);
 				AssetDatabase.SaveAssets();
+				UMAUpdateProcessor.UpdateOverlay(target as OverlayDataAsset);
 			}
 		}
 

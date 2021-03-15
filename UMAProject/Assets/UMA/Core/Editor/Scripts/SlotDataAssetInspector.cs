@@ -149,6 +149,7 @@ namespace UMA.Editors
 			{
 				EditorUtility.SetDirty(target);
 				AssetDatabase.SaveAssets();
+				UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset);
 			}
         }
 
@@ -207,7 +208,6 @@ namespace UMA.Editors
 							}
 						}
 					}
-					AssetDatabase.SaveAssets();
 				}
 			}
             return null;
@@ -235,6 +235,8 @@ namespace UMA.Editors
             string existingRootBone = slot.meshData.RootBoneName;
 
             UMASlotProcessingUtil.UpdateSlotData(slot, skinnedMesh, slot.material, null, existingRootBone);
+			AssetDatabase.SaveAssets();
+			UMAUpdateProcessor.UpdateSlot(slot);
         }
     }
 }

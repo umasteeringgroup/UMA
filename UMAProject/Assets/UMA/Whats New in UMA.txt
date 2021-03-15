@@ -13,6 +13,7 @@ The Clear button in a wardrobe recipe will now ask "are you sure". Select cancel
 You can now target specific races on slots in wardrobe recipes (in the tags dropdown).
 UMARandomizer will now allow you to set null slots, and weight them (so you have a chance of not adding anything)
 Cloth self-collision properties added to UMAClothProperties
+If you edit a recipe, slot, overlay or race, any edit time UMAs that use those will be regenerated, and any instantiated ones in the cache will be released so the Index will pick up the new versions immediately.
 
 Whats new in 2.11.6
 Tags function in character editor (clear/load/save)

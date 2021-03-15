@@ -152,7 +152,6 @@ namespace UMA.Editors
             recipeBase.Save(_recipe, UMAContextBase.Instance);
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssets();
-            // AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(recipeBase));
             _rebuildOnLayout = true;
 
             _needsUpdate = false;
@@ -161,32 +160,10 @@ namespace UMA.Editors
                 PowerToolsIntegration.Refresh(recipeBase);
             }
 
-			if (target is UMAWardrobeRecipe)
+            if (target is UMATextRecipe)
             {
-				Scene scene = SceneManager.GetActiveScene();
-
-				GameObject[] sceneObjs = scene.GetRootGameObjects();
-				foreach (GameObject go in sceneObjs)
-				{
-					DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
-					if (dcas.Length > 0)
-					{
-						foreach (DynamicCharacterAvatar dca in dcas)
-						{
-							var items = dca.preloadWardrobeRecipes.recipes;
-							foreach (var wi in items)
-                            {
-								var recipe = wi._recipe;
-								if (recipe.name == target.name)
-                                {
-									dca.GenerateSingleUMA();
-									break;
-								}
-                            }
-						}
-					}
-				}
-			}
+                UMAUpdateProcessor.UpdateRecipe(target as UMATextRecipe);
+            }
             //else
             //{
             //    PowerToolsIntegration.Show(recipeBase);
