@@ -9,6 +9,7 @@ using UMA.Dynamics;
 using UnityEngine.Profiling;
 using Unity.Collections;
 using UnityEngine.Serialization;
+using System.Text;
 
 namespace UMA
 {
@@ -241,6 +242,7 @@ namespace UMA
 		static List<Color32> gColors32 = new List<Color32>(MAX_VERTEX_COUNT);
 		static Color32[] gColors32Array;
 
+		/*
 		const int UNUSED_SUBMESH = -1;
 		static List<int>[] gSubmeshTris = {
 			// Order gSubmeshTris list from smallest to largest so they can be
@@ -265,7 +267,7 @@ namespace UMA
 			UNUSED_SUBMESH,
 			UNUSED_SUBMESH,
 			UNUSED_SUBMESH
-		};
+		}; */
 
 		// They forgot the List<> method for bone weights.
 #if USE_UNSAFE_CODE
@@ -309,6 +311,7 @@ namespace UMA
 				gColors32Array = gColors32.GetBackingArray();
 				if (gColors32Array == null) haveBackingArrays = false;
 
+				/*
 				gSubmeshTriIndices = new int[gSubmeshTris.Length];
 				gSubmeshTriArrays = new int[gSubmeshTris.Length][];
 				for (int i = 0; i < gSubmeshTris.Length; i++)
@@ -322,7 +325,7 @@ namespace UMA
 				{
 					if (Debug.isDebugBuild)
 						Debug.LogError("Unable to access backing arrays for shared UMAMeshData!");
-				}
+				}*/
 			}
 
 			if (!haveBackingArrays)
@@ -355,22 +358,6 @@ namespace UMA
 		/// <returns>Either a shared or allocated int array for submesh triangles.</returns>
 		public int[] GetSubmeshBuffer(int size, int submeshIndex)
 		{
-			if (OwnSharedBuffers())
-			{
-				for (int i = 0; i < gSubmeshTris.Length; i++)
-				{
-					if ((gSubmeshTriIndices[i] == UNUSED_SUBMESH) && (size < gSubmeshTris[i].Capacity))
-					{
-						gSubmeshTriIndices[i] = submeshIndex;
-						gSubmeshTris[i].SetActiveSize(size);
-						return gSubmeshTriArrays[i];
-					}
-				}
-
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("Could not claim shared submesh buffer of size: " + size);
-			}
-
 			return new int[size];
 		}
 
@@ -398,11 +385,12 @@ namespace UMA
 				gColors32.SetActiveSize(0);
 				colors32 = null;
 
+				/*
 				for (int i = 0; i < gSubmeshTris.Length; i++)
 				{
 					gSubmeshTriIndices[i] = UNUSED_SUBMESH;
 					gSubmeshTris[i].SetActiveSize(0);
-				}
+				} */
 
 				bufferLockOwner = null;
 			}
@@ -671,24 +659,28 @@ namespace UMA
 			mesh.subMeshCount = subMeshCount;
 			for (int i = 0; i < subMeshCount; i++)
 			{
+				/*
 				bool sharedBuffer = false;
 				for (int j = 0; j < gSubmeshTris.Length; j++)
 				{
 					if (gSubmeshTriIndices[j] == i)
 					{
 						sharedBuffer = true;
+#if VALIDATE_TRIANGLES
+#else
+#endif
 						mesh.SetTriangles(gSubmeshTris[j], i);
 						gSubmeshTriIndices[j] = UNUSED_SUBMESH;
 						break;
 					}
 				}
 
-				if (!sharedBuffer)
-					mesh.SetTriangles(submeshes[i].triangles, i);
+				if (!sharedBuffer)*/
+				mesh.SetTriangles(submeshes[i].triangles, i);
 			}
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
-			#region Blendshape
+#region Blendshape
 			mesh.ClearBlendShapes();
 			if (blendShapes != null && blendShapes.Length > 0)
 			{
@@ -721,7 +713,7 @@ namespace UMA
 					}
 				}
 			}
-			#endregion
+#endregion
 
 			mesh.RecalculateBounds();
 			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
@@ -1185,6 +1177,92 @@ namespace UMA
 			newMeshData.RootBoneName = RootBoneName;
 
 			return newMeshData;
-		} 
+		}
+
+#if UNITY_EDITOR
+		internal string Validate()
+        {
+			StringBuilder errors = new StringBuilder();
+
+			if (vertices.Length != vertexCount)
+            {
+				errors.Append("; Vertices length of " + vertices.Length+" != vertexCount (" +vertexCount+ ")");
+            }
+			if (normals != null && normals.Length != vertices.Length)
+            {
+				errors.Append("; Normals length of " + normals.Length + " != vertexCount (" + vertexCount + ")"); 
+			}
+			if (tangents != null && tangents.Length != vertices.Length)
+			{
+				errors.Append("; tangents length of " + tangents.Length + " != vertexCount (" + vertexCount + ")");
+			}
+			if (colors32 != null && colors32.Length != vertices.Length)
+			{
+				errors.Append("; colors32 length of " + colors32.Length + " != vertexCount (" + vertexCount + ")");
+			}
+			if (uv != null && uv.Length != vertices.Length)
+			{
+				errors.Append("; uv length of " + tangents.Length + " != vertexCount (" + vertexCount + ")");
+			}
+			if (uv2 != null && uv2.Length != vertices.Length)
+			{
+				errors.Append("; uv2 length of " + uv2.Length + " != vertexCount (" + vertexCount + ")");
+			}
+			if (ManagedBonesPerVertex != null && ManagedBonesPerVertex.Length != vertices.Length)
+			{
+				errors.Append("; ManagedBonesPerVertex length of " + ManagedBonesPerVertex.Length + " != vertexCount (" + vertexCount + ")");
+			}
+
+			if (ManagedBoneWeights != null)
+            {
+				foreach(BoneWeight1 bw in ManagedBoneWeights)
+                {
+					if (bw.boneIndex >= bones.Length)
+                    {
+						errors.Append("; Boneweight references invalid bone index "+bw.boneIndex);
+						break;
+                    }
+                }
+            }
+
+			if (umaBones.Length != umaBoneCount)
+            {
+				errors.Append("; umaBones != umaBoneCount");
+            }
+
+			if (submeshes == null)
+			{
+				errors.Append("; Meshdata has no submeshes");
+			}
+			else
+			{
+				if (submeshes.Length == 0)
+				{
+					errors.Append("; Meshdata submesh length == 0");
+				}
+				else
+				{
+					for (int i = 0; i < submeshes.Length; i++)
+					{
+						SubMeshTriangles smt = submeshes[i];
+						foreach(int tri in smt.triangles)
+                        {
+							if (tri >= vertexCount)
+                            {
+								errors.Append("; triangle "+tri+" out of bounds on submesh " + i);
+								break;
+                            }
+                        }
+					}
+				}
+			}
+
+			if (errors.Length > 0)
+            {
+				errors.Remove(0, 2);
+            }
+			return errors.ToString();
+		}
+#endif
 	}
 }

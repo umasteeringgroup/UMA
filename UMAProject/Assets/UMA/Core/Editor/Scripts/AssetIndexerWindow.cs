@@ -26,6 +26,7 @@ namespace UMA.Controls
 		GenericMenu _FileMenu;
 		GenericMenu _AddressablesMenu;
 		GenericMenu _ItemsMenu;
+		GenericMenu _ToolsMenu;
 		bool ShowUtilities;
 		UMAMaterial Replacement;
 
@@ -50,6 +51,18 @@ namespace UMA.Controls
 					SetupMenus();
 				}
 				return _ItemsMenu;
+			}
+		}
+
+		private GenericMenu ToolsMenu
+		{
+			get
+			{
+				if (_ToolsMenu == null)
+				{
+					SetupMenus();
+				}
+				return _ToolsMenu;
 			}
 		}
 
@@ -178,6 +191,7 @@ namespace UMA.Controls
 			_FileMenu = new GenericMenu();
 			_AddressablesMenu = new GenericMenu();
 			_ItemsMenu = new GenericMenu();
+			_ToolsMenu = new GenericMenu();
 
 			AddPlugins(GetAddressablePlugins());
 
@@ -439,6 +453,28 @@ namespace UMA.Controls
 				Repaint();
 				return;
 			});
+
+
+			AddMenuItemWithCallback(ToolsMenu, "Validate All Indexed Slots", () =>
+			{
+				EditorUtility.DisplayProgressBar("Validating", "Validating Slots", 0.0f);
+                List<SlotDataAsset> slots = UMAAssetIndexer.Instance.GetAllAssets<SlotDataAsset>();
+				List<SlotDataAsset> BadSlots = new List<SlotDataAsset>();
+
+				for(int i=0;i<slots.Count;i++)
+                {
+					SlotDataAsset sda = slots[i];
+					if (!sda.ValidateMeshData())
+                    {
+						BadSlots.Add(sda);
+                    }
+					float perc = (float)i /(float)slots.Count;
+					EditorUtility.DisplayProgressBar("Validating", "Validating Slots", perc);
+				}
+				return;
+			});
+
+
 
 			foreach (RaceData rc in UAI.GetAllAssets<RaceData>())
 			{

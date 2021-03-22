@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Text;
 using UnityEditorInternal;
 #endif
 using UnityEngine;
@@ -16,8 +17,55 @@ namespace UMA
 		public string slotName;
 		[System.NonSerialized]
 		public int nameHash;
+
 #if UNITY_EDITOR
-		public ReorderableList tagList { get; set; }
+		private StringBuilder errorBuilder  = new StringBuilder();
+
+
+		public bool HasErrors
+        {
+			get
+            {
+				return (!string.IsNullOrEmpty(Errors));
+            }
+        }
+		public string Errors;
+
+		/// <summary>
+		/// Returns true if meshdata is valid or null (a utility slot).
+		/// </summary>
+		/// <returns></returns>
+		public bool ValidateMeshData()
+        {
+			Errors = "";
+			errorBuilder.Clear();
+
+			if (meshData == null)
+            {
+				return true;
+            }
+			if (material == null)
+            {
+				AddError("material is null. A valid UMAMaterial that matches the overlay should be assigned.");
+            }
+			Errors = meshData.Validate();
+			return true;
+        }
+
+        private void AddError(string v)
+        {
+			if (errorBuilder.Length == 0)
+			{
+				errorBuilder.Append(v);
+			}
+			else
+            {
+				errorBuilder.Append("; ");
+				errorBuilder.Append(v);
+            }
+        }
+
+        public ReorderableList tagList { get; set; }
 		public bool tagListInitialized { get; set; } = false;
 		public bool eventsFoldout { get; set; } = false;
 #endif

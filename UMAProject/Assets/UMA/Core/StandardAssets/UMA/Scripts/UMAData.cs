@@ -668,6 +668,11 @@ namespace UMA
 					if (MeshHideDictionary.ContainsKey(sd.slotName))
 					{   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
 						sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName]);
+
+						if (sd.meshHideMask.Length != sd.asset.meshData.submeshes[sd.asset.subMeshIndex].triangles.Length)
+                        {
+							var mha = MeshHideDictionary[sd.slotName];
+                        }
 					}
 				}
 			}
