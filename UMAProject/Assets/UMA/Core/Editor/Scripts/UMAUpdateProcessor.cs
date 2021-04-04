@@ -44,6 +44,7 @@ namespace UMA
                     var items = dca.preloadWardrobeRecipes.recipes;
                     foreach (var wi in items)
                     {
+                        if (wi == null) continue;
                         var rcp = wi._recipe;
                         if (rcp.name == recipe.name)
                         {

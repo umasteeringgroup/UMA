@@ -1416,10 +1416,6 @@ namespace UMA
 							{
 								MergeSlot(sd, dontSerialize, mergeMatchingOverlays);
 							}
-							else
-                            {
-								Debug.Log("Skipping: "+sd.slotName);
-                            }
 						}
 					}
 				}

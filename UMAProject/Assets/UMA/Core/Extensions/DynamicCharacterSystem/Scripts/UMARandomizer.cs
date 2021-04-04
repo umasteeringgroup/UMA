@@ -65,8 +65,18 @@ namespace UMA
 		[Range(1, 100)]
 		public int Chance = 1;
 		public List<RandomColors> Colors;
-#if UNITY_EDITOR
 		public string _slotName;
+		public string SlotName
+		{
+			get
+			{
+				if (WardrobeSlot != null)
+					return WardrobeSlot.wardrobeSlot;
+				return _slotName;
+			}
+		}
+#if UNITY_EDITOR
+
 		public bool GuiFoldout;
 		public bool Delete;
 		public bool AddColorTable;
@@ -80,16 +90,6 @@ namespace UMA
 				if (WardrobeSlot != null)
 					slot = WardrobeSlot.name;
 				return SlotName + slot;
-            }
-        }
-
-		public string SlotName
-        {
-			get
-            {
-				if (WardrobeSlot != null)
-					return WardrobeSlot.wardrobeSlot;
-				return _slotName;
             }
         }
 #endif
@@ -163,7 +163,7 @@ namespace UMA
 			Dictionary<string, List<RandomWardrobeSlot>> RandomSlots = new Dictionary<string, List<RandomWardrobeSlot>>();
 			foreach (RandomWardrobeSlot rws in RandomWardrobeSlots)
 			{
-				string wslot = rws.WardrobeSlot.wardrobeSlot;
+				string wslot = rws.SlotName;//rws.WardrobeSlot.wardrobeSlot;
 				if (!RandomSlots.ContainsKey(wslot))
 				{
 					RandomSlots.Add(wslot, new List<RandomWardrobeSlot>());
