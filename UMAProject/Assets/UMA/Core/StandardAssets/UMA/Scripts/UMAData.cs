@@ -266,6 +266,7 @@ namespace UMA
 
 		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) AnimatorStateSaved = new UMADataEvent(); AnimatorStateSaved.AddAction(value); } remove { AnimatorStateSaved.RemoveAction(value); } }
 		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) AnimatorStateRestored = new UMADataEvent(); AnimatorStateRestored.AddAction(value); } remove { AnimatorStateRestored.RemoveAction(value); } }
+		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) PreUpdateUMABody = new UMADataEvent(); PreUpdateUMABody.AddAction(value); } remove { PreUpdateUMABody.RemoveAction(value); } } //VES added
 
 		public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;

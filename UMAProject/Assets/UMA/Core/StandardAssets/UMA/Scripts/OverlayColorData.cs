@@ -22,7 +22,9 @@ namespace UMA
 		public Color[] channelMask = new Color[0];
 		public Color[] channelAdditiveMask = new Color[0];
 		public UMAMaterialPropertyBlock PropertyBlock; // may be null.
-
+#if UNITY_EDITOR
+		public bool foldout;
+#endif
 		public Color color
 		{
 			get

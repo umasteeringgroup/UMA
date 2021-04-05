@@ -97,7 +97,8 @@ namespace UMA.Editors
 			else
 				Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
 			GUILayout.Space(10);
-			
+			slot.tagList.DoLayoutList();
+
 
 			(target as SlotDataAsset).eventsFoldout = EditorGUILayout.Foldout((target as SlotDataAsset).eventsFoldout, "Slot Events");
 			if ((target as SlotDataAsset).eventsFoldout)

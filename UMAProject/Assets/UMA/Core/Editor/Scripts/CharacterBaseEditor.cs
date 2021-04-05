@@ -336,7 +336,7 @@ namespace UMA.Editors
 		static int selectedChannelCount = 3;//DOS MODIFIED made this three so colors by default have the channels for Gloss/Metallic
 		String[] names = new string[16] { "1", "2", "3", "4","5","6","7","8","9","10","11","12","13","14","15","16" };
 		int[] channels = new int[16] { 1, 2, 3, 4,5,6,7,8,9,10,11,12,13,14,15,16 };
-		static bool[] _ColorFoldouts = new bool[0];
+		//static bool[] _ColorFoldouts = new bool[0];
 
 		public bool OnGUI(UMAData.UMARecipe _recipe)
 		{
@@ -392,10 +392,10 @@ namespace UMA.Editors
 					changed = true;
 				}
 
-				if (_ColorFoldouts.Length != _recipe.sharedColors.Length)
-				{
-					Array.Resize<bool>(ref _ColorFoldouts, _recipe.sharedColors.Length);
-				}
+				//if (_ColorFoldouts.Length != _recipe.sharedColors.Length)
+			//	{
+				//	Array.Resize<bool>(ref _ColorFoldouts, _recipe.sharedColors.Length);
+				//}
 
 
 				for (int i = 0; i < _recipe.sharedColors.Length; i++)
@@ -403,7 +403,7 @@ namespace UMA.Editors
 					bool del = false;
 					OverlayColorData ocd = _recipe.sharedColors[i];
 
-					GUIHelper.FoldoutBar(ref _ColorFoldouts[i], i + ": " + ocd.name, out del);
+					GUIHelper.FoldoutBar(ref _recipe.sharedColors[i].foldout, i + ": " + ocd.name, out del);
 					if (del)
 					{
 						List<OverlayColorData> temp = new List<OverlayColorData>();
@@ -416,7 +416,7 @@ namespace UMA.Editors
 						//fixed @1022 by checking the shared color still exists
 						break;
 					}
-					if (_ColorFoldouts[i])
+					if (_recipe.sharedColors[i].foldout)
 					{
 						if (ocd.name == null)
 							ocd.name = "";
