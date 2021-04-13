@@ -29,7 +29,7 @@ namespace UMA
 
 	            for (int meshIndex = 0; meshIndex < originalMeshes.Length; meshIndex++)
 	            {
-	                SeamRemoval.PerformSeamRemoval(originalMeshes[meshIndex], referenceMesh, sqrthreshold);
+	                SeamRemoval.PerformSeamRemoval(originalMeshes[meshIndex], referenceMesh, sqrthreshold, true);
 	            }
 	#if UNITY_EDITOR
 	            AssetDatabase.SaveAssets();
@@ -39,11 +39,10 @@ namespace UMA
 	        runScript = false;
 	    }
 
-		public static Mesh PerformSeamRemoval(SkinnedMeshRenderer originalMesh, SkinnedMeshRenderer referenceMesh, float threshold)
+		public static Mesh PerformSeamRemoval(SkinnedMeshRenderer originalMesh, SkinnedMeshRenderer referenceMesh, float threshold, bool calcTangents)
 		{
 			float sqrthreshold = threshold * threshold;
 			int matchCount = 0;
-			bool calcTangents = false;
 
 			Vector3[] referenceVertices = referenceMesh.sharedMesh.vertices;
 			Vector3[] referencenormals = referenceMesh.sharedMesh.normals;
@@ -77,8 +76,11 @@ namespace UMA
 			tempMesh.name = originalMesh.gameObject.name;
 			tempMesh.normals = normals;
 			
-			if (calcTangents)
-				calculateMeshTangents(tempMesh);
+			
+			if (calcTangents) {
+				tempMesh.RecalculateTangents();
+			}
+				//calculateMeshTangents(tempMesh);
 			
 			return tempMesh;
 		}

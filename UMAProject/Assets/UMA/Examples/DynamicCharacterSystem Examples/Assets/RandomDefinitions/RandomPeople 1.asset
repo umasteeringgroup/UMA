@@ -40,6 +40,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -53,6 +54,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -66,6 +68,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -79,6 +82,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -92,6 +96,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -100,6 +105,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: b4204b59b1e68974997b4673544c5bfe, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -108,6 +114,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 47ba7be232f89084485a40d74ef0d13c, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -115,6 +122,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: f7ff3729dba08b044a2535b32a1251ba, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -127,6 +135,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -140,6 +149,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -154,6 +164,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -167,6 +178,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -180,6 +192,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -193,6 +206,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -206,6 +220,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -224,6 +239,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 1
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -233,6 +249,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: d40e65714e237a3499a2eada8f3411c6, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -245,6 +262,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -408,6 +426,7 @@ MonoBehaviour:
     SelectedDNA: 2
     DNAAdd: 
     DNADel: 0
+    currentWardrobeSlot: 0
   - RaceName: HumanMale
     Chance: 1
     SharedColors:
@@ -435,6 +454,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -443,6 +463,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 506e811243229714bb4e2386dcbc08d3, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -466,7 +487,8 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
-      GuiFoldout: 1
+      _slotName: 
+      GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
@@ -479,6 +501,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 1
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -493,6 +516,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -512,6 +536,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 3
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -523,6 +548,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 08ee8add251c0604787435e6e676f3db, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -531,6 +557,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 3a1edb5d395b68f4089d59c1f1217d81, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -541,6 +568,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 9d8d16d74d7897e4caae12ca4d56f223, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -551,6 +579,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 1d55460160bc861428e67152c0019388, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -561,6 +590,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 4d1e2980034c61e4197e51e6d5d2b2fc, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -569,6 +599,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: ef2ae1fcf6ddfb64ab18b01bc95ae558, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -578,6 +609,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: c6a22e687d55ee144965d37c94a9b11d, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -587,6 +619,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: cbac10d2bc6792c43b0d89e71534cf77, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -597,6 +630,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: d5470e7076173334fbd1b341e385bef0, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -606,6 +640,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 4acc51a73e0e5884eb7e770d8f803e81, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -616,6 +651,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 8e67f8d6f30659a4d9202b2e6b8809b1, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -624,6 +660,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: aba961e2f47032e41a87472b6a41306a, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -633,6 +670,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: bc2ac8c776a97fa46a5a1a9455599f2c, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -648,6 +686,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -661,6 +700,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -679,6 +719,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 1
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -688,6 +729,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 8ea3bcf334fb01b4ebab82092aa4ff46, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -700,6 +742,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -714,6 +757,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -791,3 +835,4 @@ MonoBehaviour:
     SelectedDNA: 13
     DNAAdd: 
     DNADel: 0
+    currentWardrobeSlot: 0

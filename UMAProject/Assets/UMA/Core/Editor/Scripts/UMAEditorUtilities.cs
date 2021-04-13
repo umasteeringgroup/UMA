@@ -210,8 +210,6 @@ namespace UMA
 			GUILayout.Label("Shared Group Generation");
 			GUILayout.Label("By default, Slots and Overlays (with their Texture references) are included.",EditorStyles.miniLabel);
 
-
-			ConfigToggle(ConfigToggle_AddCollectionLabels, "Add Collection Labels","Scan through Wardrobe Collections for recipes, and also label them with the collection label", false);
 			string currentLabel = PlayerPrefs.GetString(umaDefaultLabelKey, umaDefaultLabel);
 			string newUmaLabel = EditorGUILayout.DelayedTextField("Default UMA Label", currentLabel);
 			if (newUmaLabel != umaDefaultLabel)
@@ -287,6 +285,15 @@ namespace UMA
 
 		private static bool DefineSymbolToggle(HashSet<string> defineSymbols, string defineSymbol, string text, string tooltip)
 		{
+#if UMA_ALWAYSADDRESSABLE
+			if(defineSymbol == DefineSymbol_Addressables) {
+				if(!defineSymbols.Contains(defineSymbol)) {
+					defineSymbols.Add(defineSymbol);
+				}
+				EditorGUILayout.Toggle(new GUIContent(text, tooltip), true);
+				return true;
+			}
+#endif
 			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), defineSymbols.Contains(defineSymbol)))
 			{
 				defineSymbols.Add(defineSymbol);

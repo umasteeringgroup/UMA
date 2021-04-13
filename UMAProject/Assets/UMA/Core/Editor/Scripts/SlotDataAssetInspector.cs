@@ -235,7 +235,7 @@ namespace UMA.Editors
 
             string existingRootBone = slot.meshData.RootBoneName;
 
-            UMASlotProcessingUtil.UpdateSlotData(slot, skinnedMesh, slot.material, null, existingRootBone);
+            UMASlotProcessingUtil.UpdateSlotData(slot, skinnedMesh, slot.material, null, existingRootBone,true);
 			AssetDatabase.SaveAssets();
 			UMAUpdateProcessor.UpdateSlot(slot);
         }

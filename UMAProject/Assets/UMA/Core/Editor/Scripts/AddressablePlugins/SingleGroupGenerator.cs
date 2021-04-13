@@ -56,8 +56,6 @@ namespace UMA
 
                 RecipeExtraLabels = new Dictionary<string, List<string>>();
                 
-                if (UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_AddCollectionLabels, false))
-                {
                     var WardrobeCollections = UMAAssetIndexer.Instance.GetAllAssets<UMAWardrobeCollection>();
                     foreach (var wc in WardrobeCollections)
                     {
@@ -71,7 +69,6 @@ namespace UMA
                                 RecipeExtraLabels.Add(recipe, new List<string>());
                             }
                             RecipeExtraLabels[recipe].Add(label);
-                        }
                     }
                 }
 

@@ -272,99 +272,75 @@ MonoBehaviour:
     - DnaName: legsSize
       MinValue: 0.4144144
       MaxValue: 0.5495495
-      Delete: 0
     - DnaName: belly
       MinValue: 0.3301887
       MaxValue: 0.70298994
-      Delete: 0
     - DnaName: height
       MinValue: 0.41551256
       MaxValue: 0.6119007
-      Delete: 0
     - DnaName: lowCheekPronounced
       MinValue: 0
       MaxValue: 1
-      Delete: 0
     - DnaName: noseSize
       MinValue: 0.2972973
       MaxValue: 0.8468469
-      Delete: 0
     - DnaName: noseCurve
       MinValue: 0.36036035
       MaxValue: 1
-      Delete: 0
     - DnaName: noseInclination
       MinValue: 0.27083334
       MaxValue: 0.9270834
-      Delete: 0
     - DnaName: nosePosition
       MinValue: 0.42708334
       MaxValue: 0.59375
-      Delete: 0
     - DnaName: nosePronounced
       MinValue: 0.28125
       MaxValue: 0.90625
-      Delete: 0
     - DnaName: noseFlatten
       MinValue: 0.1875
       MaxValue: 0.7604167
-      Delete: 0
     - DnaName: chinSize
       MinValue: 0.072916664
       MaxValue: 0.8541667
-      Delete: 0
     - DnaName: chinPronounced
       MinValue: 0.16666667
       MaxValue: 0.7604167
-      Delete: 0
     - DnaName: chinPosition
       MinValue: 0.28125
       MaxValue: 0.8958333
-      Delete: 0
     - DnaName: mandibleSize
       MinValue: 0.1875
       MaxValue: 0.8333333
-      Delete: 0
     - DnaName: cheekSize
       MinValue: 0.26041666
       MaxValue: 0.84375
-      Delete: 0
     - DnaName: lipsSize
       MinValue: 0.072916664
       MaxValue: 0.5833334
-      Delete: 0
     - DnaName: mouthSize
       MinValue: 0.21875
       MaxValue: 0.78125
-      Delete: 0
     - DnaName: eyeRotation
       MinValue: 0.13541667
       MaxValue: 0.9166667
-      Delete: 0
     - DnaName: eyeSize
       MinValue: 0.3125
       MaxValue: 0.7604167
-      Delete: 0
     - DnaName: breastSize
       MinValue: 0.14414415
       MaxValue: 0.93693686
-      Delete: 0
     - DnaName: eyeSpacing
       MinValue: 0.22916667
       MaxValue: 0.7916667
-      Delete: 0
     - DnaName: upperWeight
       MinValue: 0.36458334
       MaxValue: 0.6666666
-      Delete: 0
     - DnaName: lowerWeight
       MinValue: 0.4791667
       MaxValue: 0.6458334
-      Delete: 0
     - DnaName: headWidth
       MinValue: 0.4375
       MaxValue: 0.6041666
-      Delete: 0
     raceData: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
     GuiFoldout: 0
     ColorsFoldout: 1
@@ -773,47 +749,37 @@ MonoBehaviour:
     - DnaName: height
       MinValue: 0.4054054
       MaxValue: 0.5945946
-      Delete: 0
     - DnaName: upperMuscle
       MinValue: 0
       MaxValue: 0.9009009
-      Delete: 0
     - DnaName: belly
       MinValue: 0
       MaxValue: 0.8648649
-      Delete: 0
     - DnaName: waist
       MinValue: 0
       MaxValue: 0.8288288
-      Delete: 0
     - DnaName: earsSize
       MinValue: 0.054054055
       MaxValue: 0.6036036
-      Delete: 0
     - DnaName: noseCurve
       MinValue: 0
       MaxValue: 1
-      Delete: 0
     - DnaName: noseWidth
       MinValue: 0
       MaxValue: 1
-      Delete: 0
     - DnaName: noseFlatten
       MinValue: 0.21621622
       MaxValue: 0.8558558
-      Delete: 0
     - DnaName: chinSize
       MinValue: 0
       MaxValue: 1
-      Delete: 0
     - DnaName: jawsSize
       MinValue: 0.3243243
       MaxValue: 0.6216216
-      Delete: 0
     raceData: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
     GuiFoldout: 1
     ColorsFoldout: 0
-    WardrobeFoldout: 0
+    WardrobeFoldout: 1
     DnaFoldout: 0
     Delete: 0
     AddColorTable: 0

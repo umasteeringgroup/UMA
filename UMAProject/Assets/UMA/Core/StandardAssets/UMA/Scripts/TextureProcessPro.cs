@@ -142,8 +142,7 @@ namespace UMA
                                     if (umaGenerator.convertRenderTexture || slotData.material.channels[textureType].ConvertRenderTexture)
                                     {
                                         #region Convert Render Textures
-                                        if (CopyRTtoTex)
-                                        {
+									if(CopyRTtoTex) {
                                             // copy the texture with mips to the Texture2D
                                             Texture2D tempTexture;
                                             tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps, true);
@@ -157,13 +156,10 @@ namespace UMA
                                             tempTexture.filterMode = slotData.material.MatFilterMode;
                                             resultingTextures[textureType] = tempTexture as Texture;
 
-                                            if (!slotData.material.channels[textureType].NonShaderTexture)
-                                            {
-                                                generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
+										if(!slotData.material.channels[textureType].NonShaderTexture) {
+											generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
                                             }
-                                        }
-                                        else
-                                        {
+									} else {
 #if USE_ASYNC_GPU_READBACK
                                             // Todo: use AsyncGPUReadback to get the texture if possible.
                                             //       
@@ -202,9 +198,9 @@ namespace UMA
                                             //    tempTexture.Compress(slotData.asset.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
                                             // }
                                             resultingTextures[textureType] = tempTexture;
-                                            if (!slotData.material.channels[textureType].NonShaderTexture)
-                                            {
-                                                generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
+										if(!slotData.material.channels[textureType].NonShaderTexture) {
+											generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
+
                                             }
                                         }
 #endif
@@ -219,7 +215,7 @@ namespace UMA
                                         resultingTextures[textureType] = destinationTexture;
                                         if (!slotData.material.channels[textureType].NonShaderTexture)
                                         {
-                                            generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
+                                            generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), destinationTexture);
                                         }
                                     }
 
@@ -243,7 +239,7 @@ namespace UMA
                                             {
                                                 if (!slotData.material.channels[textureType].NonShaderTexture)
                                                 {
-                                                    generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+                                                    generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), fragment.baseOverlay.textureList[j]);
                                                 }
                                                 if (j == 0)
                                                 {
@@ -260,7 +256,7 @@ namespace UMA
                                                     {
                                                         if (!slotData.material.channels[textureType].NonShaderTexture)
                                                         {
-                                                            generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, overlay.textureList[j]);
+                                                            generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), overlay.textureList[j]);
                                                         }
                                                     }
                                                 }

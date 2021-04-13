@@ -15,6 +15,11 @@ UMARandomizer will now allow you to set null slots, and weight them (so you have
 Cloth self-collision properties added to UMAClothProperties
 If you edit a recipe, slot, overlay or race, any edit time UMAs that use those will be regenerated, and any instantiated ones in the cache will be released so the Index will pick up the new versions immediately.
 10x increase in speed copying RenderTextures to Texture2D when using modern graphics API (DX11/12, PS4, OpenGL 4.3, OpenGL ES 3.1, Metal, etc.)
+Plugin system to add your own UI pieces into the recipe editor (IUMARecipePlugin)
+Option to recalculate tangents in slot builder
+
+
+
 
 Whats new in 2.11.6
 Tags function in character editor (clear/load/save)

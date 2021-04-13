@@ -222,6 +222,10 @@ namespace UMA
 					}
 				}
  
+				if(!animator.gameObject.activeInHierarchy) {  
+					return;
+				}
+
 					umaData.FireAnimatorStateRestoredEvent();
 				if (animator.isInitialized)
 				{

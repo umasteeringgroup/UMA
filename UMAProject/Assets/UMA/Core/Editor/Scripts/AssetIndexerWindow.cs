@@ -356,23 +356,6 @@ namespace UMA.Controls
 				Repaint();
 			});
 
-			/* AddMenuItemWithCallback(AddressablesMenu, "Generators/Generate Shared Group (fast)", () =>
-			{
-				UAI.CleanupAddressables();
-				UAI.GenerateSingleGroup();
-				Resources.UnloadUnusedAssets();
-				m_Initialized = false;
-				Repaint();
-			});
-
-			AddMenuItemWithCallback(AddressablesMenu, "Generators/Generate Shared Group (incl recipes)", () =>
-			{
-				UAI.CleanupAddressables();
-				UAI.GenerateSingleGroup(true);
-				Resources.UnloadUnusedAssets();
-				m_Initialized = false;
-				Repaint();
-			}); */
 
 			AddMenuItemWithCallback(_AddressablesMenu, "Remove Addressables", () => 
 			{

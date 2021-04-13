@@ -517,7 +517,7 @@ namespace UMA.Editors
 
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			_foldout[slotName] = EditorGUILayout.Foldout(_foldout[slotName], "Edit Tags");
+			_foldout[slotName] = EditorGUILayout.Foldout(_foldout[slotName], "Matching Criteria");
 			GUILayout.EndHorizontal();
 			if (_foldout[slotName])
 			{
@@ -2250,6 +2250,10 @@ namespace UMA.Editors
 			{
 				UMATextRecipe theRecipe = target as UMATextRecipe;
 #if UMA_ADDRESSABLES
+				if(!serializedObject.isEditingMultipleObjects) 
+				{  
+					bool wasEnabled = GUI.enabled; 
+					GUI.enabled = false;  
 				string newLabel = EditorGUILayout.TextField("Alt Addressable Label", theRecipe.label);
 				if (newLabel != theRecipe.label)
 				{
@@ -2282,6 +2286,8 @@ namespace UMA.Editors
 						RebuildIfNeeded();
 					}
 				}
+					GUI.enabled = wasEnabled; 
+				} 
 #endif
 			}
 			if (_errorMessage != null)
