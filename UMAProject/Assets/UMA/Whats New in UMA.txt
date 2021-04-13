@@ -1,4 +1,4 @@
-Whats new in 2.11.7
+Whats new in 2.12
 Ability to select items in the project from the Global LIbrary items menu. 
 Removed the T-Pose layer that was missing the animation mask.
 Updated documentation on events, new slot builder features
