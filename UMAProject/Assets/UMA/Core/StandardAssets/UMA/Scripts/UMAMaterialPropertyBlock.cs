@@ -521,7 +521,7 @@ namespace UMA
     }
 
     [Serializable]
-    public class UMAMaterialPropertyBlock : ISerializationCallbackReceiver 
+    public class UMAMaterialPropertyBlock : ScriptableObject, ISerializationCallbackReceiver 
     {
         // If this is checked, the color will always update the 
         public bool alwaysUpdate;

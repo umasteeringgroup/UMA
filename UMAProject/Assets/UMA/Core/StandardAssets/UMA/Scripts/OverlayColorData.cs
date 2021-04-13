@@ -99,6 +99,7 @@ namespace UMA
 			if (PropertyBlock != null)
             {
 				res.PropertyBlock = new UMAMaterialPropertyBlock();
+				res.PropertyBlock.alwaysUpdate = PropertyBlock.alwaysUpdate;
 				res.PropertyBlock.shaderProperties = new List<UMAProperty>(PropertyBlock.shaderProperties.Count);
 				for(int i=0;i<PropertyBlock.shaderProperties.Count;i++)
                 {
@@ -142,6 +143,13 @@ namespace UMA
             }
         }
 
+		public bool HasPropertyBlock
+        {
+			get
+            {
+				return PropertyBlock != null;
+            }
+        }
 		public bool HasProperties
         {
 			get
@@ -357,6 +365,7 @@ namespace UMA
 			PropertyBlock = new UMAMaterialPropertyBlock();
 			if (src.PropertyBlock != null)
 			{
+				PropertyBlock.alwaysUpdate = src.PropertyBlock.alwaysUpdate;
 				PropertyBlock.shaderProperties = new List<UMAProperty>(src.PropertyBlock.shaderProperties.Count);
 				for (int i = 0; i < src.PropertyBlock.shaderProperties.Count; i++)
 				{

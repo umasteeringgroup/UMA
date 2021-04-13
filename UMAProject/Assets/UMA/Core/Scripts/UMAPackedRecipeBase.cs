@@ -353,6 +353,7 @@ namespace UMA
 			// Put everything in one array
 			public short[] colors;
 			public string[] ShaderParms;
+			public bool alwaysUpdate;
 
 			public PackedOverlayColorDataV3()
 			{
@@ -383,6 +384,10 @@ namespace UMA
 						colors[colorIndex++] = (short)Mathf.FloorToInt(additiveMaskColor.a * 255f);
 					}
 				}
+				if (colorData.HasPropertyBlock)
+                {
+					alwaysUpdate = colorData.PropertyBlock.alwaysUpdate;
+                }
 				if (colorData.HasProperties)
                 {
 					ShaderParms = new string[colorData.PropertyBlock.shaderProperties.Count];
@@ -421,6 +426,7 @@ namespace UMA
 					if (ShaderParms.Length > 0)
                     {
 						overlayColorData.PropertyBlock = new UMAMaterialPropertyBlock();
+						overlayColorData.PropertyBlock.alwaysUpdate = alwaysUpdate; 
 						for(int i=0;i<ShaderParms.Length;i++)
                         {
 							overlayColorData.PropertyBlock.shaderProperties.Add(UMAProperty.FromString(ShaderParms[i]));
