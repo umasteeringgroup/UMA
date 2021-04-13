@@ -17,7 +17,7 @@ If you edit a recipe, slot, overlay or race, any edit time UMAs that use those w
 10x increase in speed copying RenderTextures to Texture2D when using modern graphics API (DX11/12, PS4, OpenGL 4.3, OpenGL ES 3.1, Metal, etc.)
 Plugin system to add your own UI pieces into the recipe editor (IUMARecipePlugin)
 Option to recalculate tangents in slot builder
-
+Added save/load/clear buttons to the tags list on the slots in the recipe editor.
 
 
 
