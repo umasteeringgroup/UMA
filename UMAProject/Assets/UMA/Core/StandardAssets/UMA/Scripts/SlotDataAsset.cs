@@ -66,7 +66,6 @@ namespace UMA
         }
 
         public ReorderableList tagList { get; set; }
-		public bool tagListInitialized { get; set; } = false;
 		public bool eventsFoldout { get; set; } = false;
 #endif
 

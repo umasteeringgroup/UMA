@@ -51,6 +51,7 @@ namespace UMA.Editors
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
 			MaxLOD = serializedObject.FindProperty("maxLOD");
 			slot = (target as SlotDataAsset);
+			InitTagList(slot);
 		}
 
 		private void InitTagList(SlotDataAsset _slotDataAsset)
@@ -75,14 +76,10 @@ namespace UMA.Editors
 				rect.y += 2;
 				element.stringValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), element.stringValue);
 			};
-			slot.tagListInitialized = true;
 		}
+
 		public override void OnInspectorGUI()
         {
-			if (!slot.tagListInitialized)
-			{
-				InitTagList(slot);
-			}
 			serializedObject.Update();
 
 			EditorGUI.BeginChangeCheck();

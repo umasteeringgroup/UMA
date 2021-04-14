@@ -41,6 +41,22 @@ namespace UMA.Examples
 		void Awake()
 		{
 			if (space <= 0) space = 1;
+			if (UMAContextBase == null)
+            {
+				UMAContextBase = UMAContext.Instance;
+            }
+			if (generator == null)
+            {
+				GameObject go = GameObject.Find("UMAGenerator");
+				if (go != null)
+                {
+					generator = go.GetComponent<UMAGenerator>();
+                }
+				else
+                {
+					generator = UMAContextBase.GetComponent<UMAGenerator>();
+                }
+            }
 		}
 
 		void Update()
@@ -111,7 +127,7 @@ namespace UMA.Examples
 			}
 
 			var keywordsLookup = new HashSet<string>(keywords);
-			UMACrowdRandomSet.Apply(umaData, race, skinColor, HairColor, Shine, keywordsLookup, UMAContextBase as UMAContext);
+			UMACrowdRandomSet.Apply(umaData, race, skinColor, HairColor, Shine, keywordsLookup, UMAContextBase);
 		}
 
 		void DefineSlots()
