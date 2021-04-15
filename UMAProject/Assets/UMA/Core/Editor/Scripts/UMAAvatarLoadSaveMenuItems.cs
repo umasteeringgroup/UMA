@@ -92,17 +92,33 @@ namespace UMA.Editors
 							Texture texture = m.GetTexture(propertyName);
 							if (texture is Texture2D || texture is RenderTexture)
 							{
+								bool isNormal = false;
 								string path = AssetDatabase.GetAssetPath(texture.GetInstanceID());
 								if (string.IsNullOrEmpty(path))
 								{
-									if (ConvertNormalMaps && propertyName.ToLower().Contains("bumpmap"))
+									if (ConvertNormalMaps)
 									{
-										// texture = ConvertNormalMap(texture);
-										texture = sconvertNormalMap(texture);
+										if (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"))
+										{
+											// texture = ConvertNormalMap(texture);
+											texture = sconvertNormalMap(texture);
+											isNormal = true;
+										}
 									}
-									string texName = Path.Combine(Folder, CharName+"_Mat_" + Material + propertyName + ".png");
+									string texName = Path.Combine(Folder, CharName + "_Mat_" + Material + propertyName + ".png");
 									SaveTexture(texture, texName);
 									AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+									if (isNormal)
+                                    {
+										TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(texName);
+										importer.isReadable = true;
+										importer.textureType = TextureImporterType.NormalMap;
+										importer.maxTextureSize = 1024; // or whatever
+										importer.textureCompression = TextureImporterCompression.CompressedHQ;
+										EditorUtility.SetDirty(importer);
+										importer.SaveAndReimport();
+									}
+
 									Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(CustomAssetUtility.UnityFriendlyPath(texName));
 									m.SetTexture(propertyName, tex);
 								}
