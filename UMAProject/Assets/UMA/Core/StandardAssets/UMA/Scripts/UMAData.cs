@@ -18,6 +18,23 @@ namespace UMA
 		public Dictionary<string, BlendShapeData> blendShapes = new Dictionary<string, BlendShapeData>();
 	}
 
+	public class UMASavedItem
+    {
+		public int ParentBoneNameHash;
+		public Transform Object;
+		public Quaternion rotation;
+		public Vector3 position;
+		public Vector3 scale;
+		public UMASavedItem(int hash, Transform obj)
+        {
+			ParentBoneNameHash = hash;
+			Object = obj;
+			rotation = obj.localRotation;
+			position = obj.localPosition;
+			scale = obj.localScale;
+        }
+	}
+
 	/// <summary>
 	/// UMA data holds the recipe for creating a character and skeleton and Unity references for a built character.
 	/// </summary>
@@ -28,8 +45,27 @@ namespace UMA
 		private SkinnedMeshRenderer[] renderers;
 		private UMARendererAsset[] rendererAssets = new UMARendererAsset[0];
 		public UMARendererAsset defaultRendererAsset { get; set; }
-
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
+
+		private List<UMASavedItem> savedItems = new List<UMASavedItem>();
+
+		public void AddSavedItem(Transform transform)
+        {
+			savedItems.Add(new UMASavedItem(UMAUtils.StringToHash(transform.parent.name),transform));
+		}
+
+		public void RestoreSavedItems()
+        {
+			foreach(UMASavedItem usi in savedItems)
+            {
+				Transform parent = skeleton.GetBoneTransform(usi.ParentBoneNameHash);
+				if (parent != null)
+                {
+					usi.Object.SetParent(parent,false);
+                }
+            }
+			savedItems.Clear();
+        }
 
 		//TODO Change these get functions to getter properties?
 		public SkinnedMeshRenderer GetRenderer(int idx)

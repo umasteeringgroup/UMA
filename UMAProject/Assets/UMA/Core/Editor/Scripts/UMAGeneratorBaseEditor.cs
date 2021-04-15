@@ -51,6 +51,7 @@ namespace UMA.Editors
             EditorGUILayout.HelpBox("Note: Atlas Overflow parameters only work with coroutines disabled below.",MessageType.None);
             EditorGUILayout.PropertyField(FitPercentageDecrease);
             GUIHelper.EndVerticalPadded();
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("SaveAndRestoreIgnoredItems"));
             EditorGUILayout.PropertyField(convertRenderTexture);
             EditorGUILayout.PropertyField(convertMipMaps);
             EditorGUILayout.IntPopup(atlasResolution, atlasLabels, atlasValues );

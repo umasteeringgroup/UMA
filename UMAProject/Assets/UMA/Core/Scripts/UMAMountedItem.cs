@@ -55,10 +55,17 @@ public class UMAMountedItem : MonoBehaviour
     }
 
     // Used when mounting manually.
-    public void MountItem()
+    public bool MountItem()
     {
+        if (avatar == null)
+        {
+            Initialize();
+            if (avatar == null)
+                return false;
+        }
         MountPoint = FindOrCreateMountpoint(avatar.umaData);
         SetMountTransform();
+        return true;
     }
 
 #if UNITY_EDITOR

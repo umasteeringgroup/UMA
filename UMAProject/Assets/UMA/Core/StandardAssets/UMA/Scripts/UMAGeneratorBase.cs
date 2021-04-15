@@ -42,6 +42,8 @@ namespace UMA
 		[NonSerialized]
 		public bool FreezeTime;
 
+		public bool SaveAndRestoreIgnoredItems;
+
 		protected OverlayData _defaultOverlayData;
 		public OverlayData defaultOverlaydata
 		{

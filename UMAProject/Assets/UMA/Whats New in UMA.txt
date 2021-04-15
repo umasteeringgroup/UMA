@@ -18,6 +18,7 @@ If you edit a recipe, slot, overlay or race, any edit time UMAs that use those w
 Plugin system to add your own UI pieces into the recipe editor (IUMARecipePlugin)
 Option to recalculate tangents in slot builder
 Added save/load/clear buttons to the tags list on the slots in the recipe editor.
+Experimental support for saving and restoring regular mounted items between builds. To use, add the "UMAIgnore" tag to the object 
 
 
 
