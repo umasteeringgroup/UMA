@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using UMA.CharacterSystem;
 using UMA.PoseTools;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -501,6 +502,13 @@ namespace UMA.Controls
 
 			ItemsMenu.AddSeparator("");
 
+			AddMenuItemWithCallback(ItemsMenu, "Apply selected races to selected wardrobe recipes", () =>
+			 {
+				 ApplyRacesToRecipes();
+				 Repaint();
+				 return;
+			 });
+
 			AddMenuItemWithCallback(ItemsMenu, "Remove Selected", () => 
 			{
 				RemoveSelected();
@@ -518,6 +526,58 @@ namespace UMA.Controls
 
 
 
+		}
+
+        private void ApplyRacesToRecipes()
+        {
+			List<AssetTreeElement> selectedElements = GetSelectedElements();
+
+			List<RaceData> races = new List<RaceData>();
+			List<UMATextRecipe> recipes = new List<UMATextRecipe>();
+
+			foreach(AssetTreeElement element in selectedElements)
+            {
+				AssetItem item = element.ai;
+				if (item != null)
+				{
+					if (item._Type.IsAssignableFrom(typeof(UMAWardrobeRecipe)) || item._Type.IsSubclassOf(typeof(UMAWardrobeRecipe)) || item._Type == typeof(UMAWardrobeCollection))
+                    {
+						recipes.Add(item.Item as UMATextRecipe);
+                    }
+					if (item._Type.IsAssignableFrom(typeof(RaceData)) || item._Type.IsSubclassOf(typeof(RaceData)))
+					{
+						races.Add(item.Item as RaceData);
+					}
+				}
+			}
+
+			if (races.Count == 0)
+            {
+				EditorUtility.DisplayDialog("Error","No races selected. You must select both the races and the wardrobe items to run this command.","OK");
+				return;
+            }
+			if (recipes.Count == 0)
+            {
+				EditorUtility.DisplayDialog("Error", "No wardrobe recipes/collections selected. You must select both the races and the wardrobe items to run this command.", "OK");
+				return;
+			}
+			if (EditorUtility.DisplayDialog("Update Recipes?","This will apply the selected race(s) to the selected wardrobe items (UMAWardrobeRecipe or UMAWardrobeCollection","Continue","Cancel"))
+            {
+				foreach (UMATextRecipe uwr in recipes)
+				{
+					foreach (RaceData race in races)
+					{
+						uwr.compatibleRaces.Add(race.raceName);
+					}
+					EditorUtility.SetDirty(uwr); 
+				}
+				UAI.ForceSave();
+				EditorUtility.DisplayDialog("Update Races", "Races assigned and index saved", "OK");
+            }
+			else
+            {
+				EditorUtility.DisplayDialog("Update Recipes", "Race application was cancelled", "OK");
+            }
 		}
 
         private void SelectSelected(bool AddDependencies)
