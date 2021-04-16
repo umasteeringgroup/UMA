@@ -23,6 +23,7 @@ new menuitem in Global Library to apply selected races to selected wardrobe item
 When creating a prefab using the prefab maker, UMA will now correctly detect detail normal maps, and will also mark all normal maps as normal maps in the import settings.
 Option to add "Standalone DNA" component to prefab, giving you the option to have DNA on the non-UMA prefabs. When using this option, UMA is required to be in the scene to be able to process the DNA.
 Experimental - multiple bone chains in UMAJiggleBone
+Fixed issue in addressables caused by out of order calling of events and actions in new addressable library
 
 
 Whats new in 2.11.6
