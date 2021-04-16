@@ -492,7 +492,7 @@ namespace UMA
 						}
 					}
 				}
-				if (umat.material.shader.name.ToLower().StartsWith("hair fade"))
+				if (umat.material.shader.name.ToLower().Contains("hair fade"))
                 {
 					umat.material.shader = Shader.Find("Universal Render Pipeline/Nature/SpeedTree8");
 					if (umat.material.name.ToLower().Contains("single"))
@@ -503,6 +503,7 @@ namespace UMA
                     {
 						umat.material.SetInt("_TwoSided", 0);
 					}
+					matModified = true;
                 }
 				if (matModified)
 				{
