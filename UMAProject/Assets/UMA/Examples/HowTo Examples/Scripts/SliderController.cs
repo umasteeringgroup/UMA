@@ -1,12 +1,40 @@
 ﻿using System;
+using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SliderController : MonoBehaviour
 {
     public GameObject SearchMe;
     public DynamicCharacterAvatar Avatar;   
     public string DnaName = "headSize";    // case matters here. 
+    public Slider theSlider;
+
+    public void AvatarGenerated(GameObject Generator, GameObject Character)
+    {
+        Avatar = SearchMe.GetComponentInChildren<DynamicCharacterAvatar>();
+        SetSlider();
+    }
+
+    public void SetSlider()
+    {
+        if (theSlider != null)
+        {
+            RaceData race = Avatar.activeRace.data;
+            foreach (var d in race.dnaRanges)
+            {
+                int index = d.IndexForDNAName(DnaName);
+                if (index >= 0)
+                {
+                    theSlider.minValue = d.means[index] - d.spreads[index];
+                    theSlider.maxValue = d.means[index] + d.spreads[index];
+                    //Debug.Log("Min = " + theSlider.minValue + " Max = " + theSlider.maxValue);
+                    return;
+                }
+            }
+        }
+    }
 
     public void SetDNA(float Value)
     {
