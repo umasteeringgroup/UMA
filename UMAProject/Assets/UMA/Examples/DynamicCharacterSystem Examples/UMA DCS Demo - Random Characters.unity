@@ -225,12 +225,12 @@ PrefabInstance:
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
       propertyPath: GridXSize
-      value: 15
+      value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
       propertyPath: GridZSize
-      value: 10
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
@@ -404,7 +404,7 @@ PrefabInstance:
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: atlasResolution
-      value: 1024
+      value: 512
       objectReference: {fileID: 0}
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
@@ -414,7 +414,12 @@ PrefabInstance:
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: InitialScaleFactor
-      value: 2
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: convertRenderTexture
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
