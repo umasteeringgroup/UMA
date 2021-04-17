@@ -157,7 +157,14 @@ namespace UMA
                                             resultingTextures[textureType] = tempTexture as Texture;
 
 										if(!slotData.material.channels[textureType].NonShaderTexture) {
-											generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
+                                                if (generatedMaterial.umaMaterial.translateSRP)
+                                                {
+                                                    generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
+                                                }
+                                                else
+                                                {
+                                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
+                                                }
                                             }
 									} else {
 #if USE_ASYNC_GPU_READBACK
@@ -199,7 +206,16 @@ namespace UMA
                                             // }
                                             resultingTextures[textureType] = tempTexture;
 										if(!slotData.material.channels[textureType].NonShaderTexture) {
-											generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
+                                                if (generatedMaterial.umaMaterial.translateSRP)
+                                                {
+                                                    generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
+                                                }
+                                                else
+                                                {
+                                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
+                                                }
+
+    											generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
 
                                             }
                                         }
@@ -215,7 +231,14 @@ namespace UMA
                                         resultingTextures[textureType] = destinationTexture;
                                         if (!slotData.material.channels[textureType].NonShaderTexture)
                                         {
-                                            generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), destinationTexture);
+                                            if (generatedMaterial.umaMaterial.translateSRP)
+                                            {
+                                                generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), destinationTexture);
+                                            }
+                                            else
+                                            {
+                                                generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
+                                            }
                                         }
                                     }
 
@@ -239,7 +262,14 @@ namespace UMA
                                             {
                                                 if (!slotData.material.channels[textureType].NonShaderTexture)
                                                 {
-                                                    generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), fragment.baseOverlay.textureList[j]);
+                                                    if (generatedMaterial.umaMaterial.translateSRP)
+                                                    {
+                                                        generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), fragment.baseOverlay.textureList[j]);
+                                                    }
+                                                    else
+                                                    {
+                                                        generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+                                                    }
                                                 }
                                                 if (j == 0)
                                                 {
@@ -256,7 +286,14 @@ namespace UMA
                                                     {
                                                         if (!slotData.material.channels[textureType].NonShaderTexture)
                                                         {
-                                                            generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), overlay.textureList[j]);
+                                                            if (generatedMaterial.umaMaterial.translateSRP)
+                                                            {
+                                                                generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), overlay.textureList[j]);
+                                                            }
+                                                            else
+                                                            {
+                                                                generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, overlay.textureList[j]);
+                                                            }
                                                         }
                                                     }
                                                 }

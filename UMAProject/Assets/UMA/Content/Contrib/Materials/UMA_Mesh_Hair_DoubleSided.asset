@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: UMA_Mesh_Hair_DoubleSided
   m_EditorClassIdentifier: 
+  translateSRP: 1
   material: {fileID: 2100000, guid: dfa6f3056d5614f40998ac56a797d454, type: 2}
   materialType: 1
   channels:

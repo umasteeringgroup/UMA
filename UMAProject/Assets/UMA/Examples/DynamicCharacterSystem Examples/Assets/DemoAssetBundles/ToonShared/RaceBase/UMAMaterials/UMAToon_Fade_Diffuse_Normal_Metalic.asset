@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: UMAToon_Fade_Diffuse_Normal_Metalic
   m_EditorClassIdentifier: 
+  translateSRP: 1
   material: {fileID: 2100000, guid: 347d9e2e7deca3e49abfd487b93d7af9, type: 2}
   materialType: 1
   channels:

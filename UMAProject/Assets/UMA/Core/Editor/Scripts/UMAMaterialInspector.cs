@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace UMA.Editors
 {
-    [CustomEditor(typeof(UMAMaterial))]
+    [CustomEditor(typeof(UMAMaterial)),CanEditMultipleObjects]
     public class UMAMaterialInspector : Editor 
     {
         private Shader _lastSelectedShader;
@@ -46,6 +46,7 @@ namespace UMA.Editors
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("material"), new GUIContent( "Material", "The Unity Material to link to."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("materialType"), new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("translateSRP"), new GUIContent("Translate SRP", "When checked, this will automatically translate the UMAMaterial property names to URP/HDRP names (ie - _MainTex becomes _BaseMap etc.)"));
 
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Generated Texture Settings", _centeredStyle);
@@ -58,24 +59,30 @@ namespace UMA.Editors
             //EditorGUILayout.PropertyField(serializedObject.FindProperty("Compression"), new GUIContent("Texture Compression", "Compress the atlas texture to DXT1 or DXT5"));
             EditorGUILayout.EndVertical();
 
-            GUILayout.Space(20f);
-            shaderParmsFoldout = EditorGUILayout.Foldout(shaderParmsFoldout, "Shader Parameter Mapping",true);
-            if (shaderParmsFoldout)
+            if (!serializedObject.isEditingMultipleObjects)
             {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(_shaderParms, true);
-                EditorGUI.indentLevel--;
+                shaderParmsFoldout = EditorGUILayout.Foldout(shaderParmsFoldout, "Shader Parameter Mapping", true);
+                if (shaderParmsFoldout)
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.PropertyField(_shaderParms, true);
+                    EditorGUI.indentLevel--;
+                }
+
+                GUILayout.Space(20);
+
+                DrawChannelList(serializedObject.FindProperty("channels"));
+
+                GUILayout.Space(20);
+
+                if (GUILayout.Button(new GUIContent("Select Matching OverlayDataAssets", "This will select all OverlayDataAssets found in the project that use this UMAMaterial."), GUILayout.Height(40)))
+                {
+                    FindMatchingOverlayDataAssets();
+                }
             }
-
-            GUILayout.Space(20);
-
-            DrawChannelList(serializedObject.FindProperty("channels"));
-
-            GUILayout.Space(20);
-
-            if(GUILayout.Button( new GUIContent("Select Matching OverlayDataAssets", "This will select all OverlayDataAssets found in the project that use this UMAMaterial."), GUILayout.Height(40)))
+            else
             {
-                FindMatchingOverlayDataAssets();
+                EditorGUILayout.LabelField("Channel properties cannot be edited multi-object");
             }
 
             serializedObject.ApplyModifiedProperties();

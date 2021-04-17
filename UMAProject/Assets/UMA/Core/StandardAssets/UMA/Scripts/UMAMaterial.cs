@@ -16,6 +16,7 @@ namespace UMA
         }
 
         public enum CompressionSettings { None, Fast, HighQuality };
+        public bool translateSRP;
         public Material material;
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels;

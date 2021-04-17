@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: UMA_Hair_Aniso
   m_EditorClassIdentifier: 
+  translateSRP: 1
   material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
   materialType: 1
   channels:
