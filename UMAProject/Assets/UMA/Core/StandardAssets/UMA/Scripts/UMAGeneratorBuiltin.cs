@@ -444,13 +444,13 @@ namespace UMA
 				if (NoCoroutines)
                 {
 					UMAData umaData = umaDirtyList[0];
-					/*if (umaData.RebuildSkeleton)
+					if (umaData.RebuildSkeleton)
                     {
 						DestroyImmediate(umaData.umaRoot, false);
 						umaData.umaRoot = null;
 						umaData.RebuildSkeleton = false;
 						umaData.isShapeDirty = true;
-					}*/ // this happens in GenerateSingleUMA now
+					} // this happens in GenerateSingleUMA now
 					GenerateSingleUMA(umaDirtyList[0],true);
 					umaDirtyList.RemoveAt(0);
 					umaData.MoveToList(cleanUmas);
@@ -578,7 +578,7 @@ namespace UMA
 			if (umaData)
 			{
 				umaData.FirePreUpdateUMABody();
-				// umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
+				umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
 				// Put the skeleton into TPose so rotations will be valid for generating avatar
 				umaData.GotoTPose();
 				umaData.ApplyDNA();
