@@ -138,6 +138,15 @@ namespace UMA.CharacterSystem
         public ColorValueList characterColors = new ColorValueList();
 
         public UMAPredefinedDNA predefinedDNA;
+        /// <summary>
+        /// When override DNA is used, the previous DNA is saved into savedDNA, so it can be restored later.
+        /// </summary>
+        private UMAPredefinedDNA savedDNA = new UMAPredefinedDNA();
+        /// <summary>
+        /// Any override DNA is accumulated in overrideDNA in BuildCharacter. This is then applied during the build process (after saving).
+        /// </summary>
+        private UMAPredefinedDNA overrideDNA = new UMAPredefinedDNA();
+
         //Load and Save fields
         //load
         public loadPathTypes loadPathType;
@@ -463,8 +472,9 @@ namespace UMA.CharacterSystem
 #if SUPER_LOGGING
 			Debug.Log("Start on DynamicCharacterAvatar: " + gameObject.name);
 #endif
-            AddCharacterStateCache("NULL"); 
-            base.Start();
+            AddCharacterStateCache("NULL");
+            InitializeAvatar();
+
 
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 
@@ -584,7 +594,7 @@ namespace UMA.CharacterSystem
         }
         }
 
-        private void CleanupGeneratedData()
+        public void CleanupGeneratedData()
         {
             List<GameObject> Cleaners = GetRenderers(gameObject);
             Hide(false);
@@ -858,7 +868,7 @@ namespace UMA.CharacterSystem
             adf.Dna = Dna.ToArray();
             adf.Colors = Colors.ToArray();
             return adf;
-        }
+        }       
 
         public string GetAvatarDefinitionString(bool skipDefaults)
         {
@@ -1962,18 +1972,37 @@ namespace UMA.CharacterSystem
             if (umaData.umaRecipe.sharedColors == null)
                 return;
 
+            // Process the always update colors first
             foreach (UMA.OverlayColorData ucd in umaData.umaRecipe.sharedColors)
             {
                 if (ucd.HasName())
                 {
-                    OverlayColorData c;
-                    if (characterColors.GetColor(ucd.name, out c))
-                    {
-						ucd.AssignFrom(c);
-                    }
-                    else
+                    if (ucd.PropertyBlock != null && ucd.PropertyBlock.alwaysUpdate)
                     {
                         characterColors.SetColor(ucd.name, ucd);
+                    }
+                }
+            }
+
+            OverlayColorData c;
+            foreach (UMA.OverlayColorData ucd in umaData.umaRecipe.sharedColors)
+            {
+                if (ucd.HasName())
+                {
+                    if (!(ucd.PropertyBlock != null && ucd.PropertyBlock.alwaysUpdate))
+                    {
+                        if (characterColors.GetColor(ucd.name, out c))
+                        {
+                            // if the character has the color, then the color from the character overwrites what is in the
+                            // recipe.
+                            ucd.AssignFrom(c);
+                        }
+                        else
+                        {
+                            // if the character doesn't have the color, then the color is loaded into the character with the 
+                            // default value from the recipe color.
+                            characterColors.SetColor(ucd.name, ucd);
+                        }
                     }
                 }
             }
@@ -2675,6 +2704,13 @@ namespace UMA.CharacterSystem
 
 #region FULL CHARACTER IMPORT
 
+        public void InitializeAvatar()
+        {
+            Initialize();
+            umaData.OnCharacterBegun += this.SaveOverrideDNA;
+            umaData.OnCharacterDnaUpdated += this.RestoreOverrideDna;
+        }
+
         /// <summary>
         /// Sets the recipe string that will be loaded when the Avatar starts. If trying to load a recipe after the character has been created use 'LoadFromRecipeString'
         /// [DEPRICATED] Please use SetLoadString instead, this will work regardless of whether the character has been created or not.
@@ -2767,7 +2803,8 @@ namespace UMA.CharacterSystem
             }
             if (umaData == null)
             {
-                Initialize();
+                InitializeAvatar();
+
             }
             if ((!thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) || settingsToLoad.packedDna.Count == 0) && activeRace.racedata != null)
             {
@@ -3085,6 +3122,7 @@ namespace UMA.CharacterSystem
 #if SUPER_LOGGING
 			Debug.Log("Building DynamicCharacterAvatar: " + gameObject.name);
 #endif
+            overrideDNA.Clear();
 
             if (activeRace.racedata == null)
             {
@@ -3126,6 +3164,10 @@ namespace UMA.CharacterSystem
             {
                 foreach (UMATextRecipe utr in WardrobeRecipes.Values)
                 {
+                    if (utr.OverrideDNA != null && utr.OverrideDNA.Count > 0)
+                    {
+                        overrideDNA.AddRange(utr.OverrideDNA);
+                    }
                     if (utr.suppressWardrobeSlots != null)
                     {
                         if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
@@ -3262,6 +3304,46 @@ namespace UMA.CharacterSystem
                     skipBundleCheck = !BundleCheck;
 #endif
             LoadCharacter(umaRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, skipBundleCheck);
+        }
+
+        public void SaveOverrideDNA(UMAData udata)
+        {
+            savedDNA.Clear();
+            if (overrideDNA.Count > 0)
+            {
+                // save the override DNA.
+                // set the new DNA
+                var currentDNA = GetDNA();
+
+                foreach (var d in overrideDNA.PreloadValues)
+                {
+                    if (currentDNA.ContainsKey(d.Name))
+                    {
+                        // in case it ends up being added twice somehow, protect from overwriting
+                        // the original value.
+                        if (!savedDNA.ContainsName(d.Name))
+                        {
+                            savedDNA.AddDNA(d.Name, currentDNA[d.Name].Value);
+                            currentDNA[d.Name].Set(d.Value);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void RestoreOverrideDna(UMAData udata)
+        {
+            if (savedDNA.Count > 0)
+            {
+                var currentDNA = GetDNA();
+                foreach (var d in savedDNA.PreloadValues)
+                {
+                    if (currentDNA.ContainsKey(d.Name))
+                    {
+                        currentDNA[d.Name].Set(d.Value);
+                    }
+                }
+            }
         }
 
 #if UMA_ADDRESSABLES
@@ -3415,7 +3497,7 @@ namespace UMA.CharacterSystem
 #endif
             if (umaData == null)
             {
-                Initialize();
+                InitializeAvatar();
             }
             umaData.defaultRendererAsset = defaultRendererAsset;
 
@@ -3579,7 +3661,7 @@ namespace UMA.CharacterSystem
                 foreach (var umaAdditionalRecipe in umaAdditionalSerializedRecipes)
                 {
                     UMAData.UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
-                    umaData.umaRecipe.Merge(cachedRecipe, false, true);
+                    umaData.umaRecipe.Merge(cachedRecipe, false, true,false,activeRace.racedata.name);
                 }
             }
         }

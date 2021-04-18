@@ -16,6 +16,12 @@ namespace UMA
 		[System.NonSerialized]
 		public int nameHash;
 
+#if UNITY_EDITOR
+		public float lastActionTime { get; set; } = 0;
+		public bool doSave { get; set; } = false;
+		public bool additionalFoldout { get; set; } = false;
+		public bool textureFoldout { get; set; } = false;
+#endif
 		public enum OverlayType
 		{
 			Normal = 0,
@@ -81,20 +87,8 @@ namespace UMA
 		{
 			get
 			{
-				if (material.IsProcedural())
-				{
-					int count = 0;
-					for (int i = 0; i < material.channels.Length; i++)
-					{
-						if (material.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor)
-							count++;
-					}
-
-					return count;
-				}
-				else if (textureList == null)
-					return 0;
-				
+				if (textureList == null)
+					return 0;	
 				return textureList.Length;
 			}
 		}

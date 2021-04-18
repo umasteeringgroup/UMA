@@ -13,6 +13,7 @@ namespace UMA.Editors
 	{
 		private Dictionary<string,RaceData> _compatibleRaceDatas = new Dictionary<string,RaceData>();
 
+		int currentRace = 0;
 		bool showIncompatible;
 		List<UMAWardrobeRecipe> DeletedRecipes = new List<UMAWardrobeRecipe>();
 		int meshHideAssetPickerID = -1;
@@ -577,8 +578,16 @@ namespace UMA.Editors
 
 		private bool ShowHidetags;
 		private bool ShowSuppressSlots;
+		private bool ShowOverrideDNA;
 		private ReorderableList hideTagsList;
 		private bool hideTagsListInitialized = false;
+
+		private RaceData lastRace;
+		public int currentDNA = 0;
+		private string cachedRace = "";
+		private string[] cachedRaceDNA = { };
+		private string[] rawcachedRaceDNA = { };
+
 		private void InitHideTagsList()
 		{
 			var HideTagsProperty = serializedObject.FindProperty("HideTags");
@@ -684,7 +693,7 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.HelpBox("Wardrobe Slot: This assigns the recipe to a Wardrobe Slot. The wardrobe slots are defined on the race. Characters can have only one recipe per Wardrobe Slot at a time, so for example, adding a 'beard' recipe to a character will replace the existing 'beard' if there is one", MessageType.Info);
 			}
-			#endregion
+            #endregion
 
 			#region Suppress UI
 			/*
@@ -951,6 +960,93 @@ namespace UMA.Editors
 			}
 			#endregion
 
+			#region Override UI
+
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			ShowOverrideDNA = EditorGUILayout.Foldout(ShowOverrideDNA, "Override DNA");
+			GUILayout.EndHorizontal();
+			if (ShowOverrideDNA)
+			{
+				if (_compatibleRaceDatas.Count == 0)
+				{
+					EditorGUILayout.HelpBox("No races set. Please set races before adding override DNA", MessageType.Warning);
+				}
+				else
+				{
+					EditorGUILayout.HelpBox("You can add Override DNA that is applied during the build process. It will only be applied while this wardrobe recipe is equipped.", MessageType.Info);
+
+					if (currentRace >= _compatibleRaceDatas.Count)
+						currentRace = 0;
+
+					EditorGUILayout.BeginHorizontal();
+					currentRace = EditorGUILayout.Popup(currentRace, compatibleRaces.ToArray());
+					string raceName = compatibleRaces[currentRace];
+
+					if (cachedRace != raceName)
+					{
+						cachedRace = raceName;
+						RaceData currentRaceData = _compatibleRaceDatas[raceName];
+						rawcachedRaceDNA = currentRaceData.GetDNANames().ToArray();
+						List<string> MenuDNA = new List<string>();
+						foreach (string s in rawcachedRaceDNA)
+						{
+							MenuDNA.Add(s.MenuCamelCase());
+						}
+						cachedRaceDNA = MenuDNA.ToArray();
+					}
+
+					currentDNA = EditorGUILayout.Popup(currentDNA, cachedRaceDNA);
+					if (recipe.OverrideDNA == null)
+					{
+						recipe.OverrideDNA = new UMAPredefinedDNA();
+					}
+					if (GUILayout.Button("Add DNA"))
+					{
+						string theDna = rawcachedRaceDNA[currentDNA];
+
+
+						if (recipe.OverrideDNA.ContainsName(theDna))
+						{
+							EditorUtility.DisplayDialog("Error", "Override DNA Already contains DNA: " + theDna, "OK");
+						}
+						else
+						{
+							recipe.OverrideDNA.AddDNA(theDna, 0.5f);
+							doUpdate = true;
+						}
+					}
+					EditorGUILayout.EndHorizontal();
+					string delme = "";
+					EditorGUI.BeginChangeCheck();
+					foreach (var pd in recipe.OverrideDNA.PreloadValues)
+					{
+						GUILayout.BeginHorizontal();
+						GUILayout.Label(ObjectNames.NicifyVariableName(pd.Name), GUILayout.Width(100));
+						//pd.Value = GUILayout.HorizontalSlider(pd.Value, 0.0f, 1.0f);
+						pd.Value = EditorGUILayout.Slider(pd.Value, 0.0f, 1.0f);
+
+						bool delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+						if (delete)
+						{
+							delme = pd.Name;
+						}
+						GUILayout.EndHorizontal();
+					}
+					if (!string.IsNullOrEmpty(delme))
+					{
+						recipe.OverrideDNA.RemoveDNA(delme);
+						doUpdate = true;
+						Repaint();
+					}
+					if (EditorGUI.EndChangeCheck())
+					{
+						doUpdate = true;
+					}
+				}
+			}
+			#endregion
+
 			#region HideTags UI
 			if (!hideTagsListInitialized)
 			{
@@ -1074,11 +1170,14 @@ namespace UMA.Editors
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Clear Recipe"))
                 {
-                    _recipe.slotDataList = new SlotData[0];
-                    changed |= true;
-                    _dnaDirty |= true;
-                    _textureDirty |= true;
-                    _meshDirty |= true;
+					if (EditorUtility.DisplayDialog("Clear recipe", "Are you sure?", "OK", "Cancel") == true)
+					{
+						_recipe.slotDataList = new SlotData[0];
+						changed |= true;
+						_dnaDirty |= true;
+						_textureDirty |= true;
+						_meshDirty |= true;
+					}
                 }
                 if (GUILayout.Button("Remove Nulls"))
 				{

@@ -32,7 +32,12 @@ namespace UMA
             EditorGUI.BeginChangeCheck();               
 
             GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.675f, 1f));
-            GUILayout.Label("Shader Properties");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Shader Properties",GUILayout.ExpandWidth(true));
+            GUILayout.Label("Always Update",GUILayout.ExpandWidth(false));
+            umpb.alwaysUpdate = GUILayout.Toggle(umpb.alwaysUpdate, "",GUILayout.ExpandWidth(false));
+
+            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
 
             TypeIndex = EditorGUILayout.Popup(TypeIndex, UMAMaterialPropertyBlock.PropertyTypeStrings);

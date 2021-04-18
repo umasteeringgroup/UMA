@@ -22,7 +22,9 @@ namespace UMA
 		public Color[] channelMask = new Color[0];
 		public Color[] channelAdditiveMask = new Color[0];
 		public UMAMaterialPropertyBlock PropertyBlock; // may be null.
-
+#if UNITY_EDITOR
+		public bool foldout;
+#endif
 		public Color color
 		{
 			get
@@ -97,6 +99,7 @@ namespace UMA
 			if (PropertyBlock != null)
             {
 				res.PropertyBlock = new UMAMaterialPropertyBlock();
+				res.PropertyBlock.alwaysUpdate = PropertyBlock.alwaysUpdate;
 				res.PropertyBlock.shaderProperties = new List<UMAProperty>(PropertyBlock.shaderProperties.Count);
 				for(int i=0;i<PropertyBlock.shaderProperties.Count;i++)
                 {
@@ -140,6 +143,13 @@ namespace UMA
             }
         }
 
+		public bool HasPropertyBlock
+        {
+			get
+            {
+				return PropertyBlock != null;
+            }
+        }
 		public bool HasProperties
         {
 			get
@@ -355,6 +365,7 @@ namespace UMA
 			PropertyBlock = new UMAMaterialPropertyBlock();
 			if (src.PropertyBlock != null)
 			{
+				PropertyBlock.alwaysUpdate = src.PropertyBlock.alwaysUpdate;
 				PropertyBlock.shaderProperties = new List<UMAProperty>(src.PropertyBlock.shaderProperties.Count);
 				for (int i = 0; i < src.PropertyBlock.shaderProperties.Count; i++)
 				{

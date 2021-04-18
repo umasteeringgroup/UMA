@@ -42,6 +42,8 @@ namespace UMA
 		[NonSerialized]
 		public bool FreezeTime;
 
+		public bool SaveAndRestoreIgnoredItems;
+
 		protected OverlayData _defaultOverlayData;
 		public OverlayData defaultOverlaydata
 		{
@@ -222,6 +224,10 @@ namespace UMA
 					}
 				}
  
+				if(!animator.gameObject.activeInHierarchy) {  
+					return;
+				}
+
 					umaData.FireAnimatorStateRestoredEvent();
 				if (animator.isInitialized)
 				{
@@ -297,6 +303,10 @@ namespace UMA
 
 						if (animator.runtimeAnimatorController != null)
 							snapshot.RestoreAnimatorState(animator,umaData);
+						if (umaData.KeepAvatar)
+                        {
+							animator.Rebind();
+						}
 					}
 				}
 			}

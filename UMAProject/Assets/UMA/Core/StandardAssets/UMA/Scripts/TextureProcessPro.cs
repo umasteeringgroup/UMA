@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using System;
+using CopyTextureSupport = UnityEngine.Rendering.CopyTextureSupport;
+using GraphicsDeviceType = UnityEngine.Rendering.GraphicsDeviceType;
 
 namespace UMA
 {
@@ -16,13 +18,18 @@ namespace UMA
         UMAGeneratorBase umaGenerator;
         bool fastPath = false;
 
+        public bool SupportsRTToTexture2D
+        {
+            get
+            {
+                return (CopyTextureSupport.RTToTexture & SystemInfo.copyTextureSupport) == CopyTextureSupport.RTToTexture;
+            }
+        }
 
         public static RenderTexture ResizeRenderTexture(RenderTexture source, int newWidth, int newHeight, FilterMode filter)
         {
             source.filterMode = filter;
             RenderTexture rt = new RenderTexture(newWidth, newHeight, 0, source.format, RenderTextureReadWrite.Linear);
-            rt.name = "Resized Render Texture..." + Time.frameCount;
-
             rt.filterMode = FilterMode.Point;
 
             RenderTexture bkup = RenderTexture.active;
@@ -86,6 +93,8 @@ namespace UMA
                             case UMAMaterial.ChannelType.NormalMap:
                             case UMAMaterial.ChannelType.DetailNormalMap:
                                 {
+                                    bool CopyRTtoTex = SupportsRTToTexture2D && fastPath;
+
                                     textureMerge.Reset();
                                     for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                                     {
@@ -108,7 +117,7 @@ namespace UMA
 
                                     destinationTexture = new RenderTexture(Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
                                     destinationTexture.filterMode = FilterMode.Point;
-                                    destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
+                                    destinationTexture.useMipMap = umaGenerator.convertMipMaps && CopyRTtoTex;// && !umaGenerator.convertRenderTexture;
                                     destinationTexture.name = slotData.material.name + " Chan " + textureType + " frame: " + Time.frameCount;
 
                                     //Draw all the Rects here
@@ -125,7 +134,6 @@ namespace UMA
                                         backgroundColor = UMAMaterial.GetBackgroundColor(slotData.material.channels[textureType].channelType);
                                     }
 
-
                                     textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor, umaGenerator.SharperFitTextures);
 
                                     //PostProcess
@@ -134,75 +142,84 @@ namespace UMA
                                     if (umaGenerator.convertRenderTexture || slotData.material.channels[textureType].ConvertRenderTexture)
                                     {
                                         #region Convert Render Textures
-                                        // if (!fastPath) yield return 25;
-                                        Texture2D tempTexture;
+									if(CopyRTtoTex) {
+                                            // copy the texture with mips to the Texture2D
+                                            Texture2D tempTexture;
+                                            tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps, true);
+                                            Graphics.CopyTexture(destinationTexture, tempTexture);
+                                            destinationTexture.Release();
+                                            UnityEngine.GameObject.DestroyImmediate(destinationTexture);
 
-                                        tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps, true);
+                                            tempTexture.wrapMode = TextureWrapMode.Repeat;
+                                            tempTexture.anisoLevel = slotData.material.AnisoLevel;
+                                            tempTexture.mipMapBias = slotData.material.MipMapBias;
+                                            tempTexture.filterMode = slotData.material.MatFilterMode;
+                                            resultingTextures[textureType] = tempTexture as Texture;
 
-                                        int xblocks = destinationTexture.width / 512;
-                                        int yblocks = destinationTexture.height / 512;
-                                        if (xblocks == 0 || yblocks == 0 || fastPath)
-                                        {
+										if(!slotData.material.channels[textureType].NonShaderTexture) {
+                                                if (generatedMaterial.umaMaterial.translateSRP)
+                                                {
+                                                    generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
+                                                }
+                                                else
+                                                {
+                                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
+                                                }
+                                            }
+									} else {
+#if USE_ASYNC_GPU_READBACK
+                                            // Todo: use AsyncGPUReadback to get the texture if possible.
+                                            //       
+                                            // material == generatedMaterial.material
+                                            // umaData ==  ;
+                                            // slotData == ;
+                                            // propname == slotData.material.channels[textureType].materialPropertyName
+                                            // mipcount
+                                            // mipsconverted[]
+                                            // Data.
+                                            //for (int i=0;i< destinationTexture.mipmapCount;i++)
+                                            //{
+                                            // 
+                                            //}
+#else
+                                            Texture2D tempTexture;
+
+                                            tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps, true);
+
                                             RenderTexture.active = destinationTexture;
-                                            //Debug.Log("CVT-FP Activated " + destinationTexture.name);
                                             tempTexture.ReadPixels(new Rect(0, 0, destinationTexture.width, destinationTexture.height), 0, 0, umaGenerator.convertMipMaps);
-                                            // Debug.Log("CVT-FP Cleared " + destinationTexture.name);
-                                        }
-                                        else
-                                        {
-                                            // figures that ReadPixels works differently on OpenGL and DirectX, someday this code will break because Unity fixes this bug!
-                                            if (IsOpenGL())
-                                            {
-                                                for (int x = 0; x < xblocks; x++)
+
+                                            //resultingTextures[textureType] = tempTexture as Texture;
+                                            RenderTexture.active = null;
+                                            destinationTexture.Release();
+                                            UnityEngine.GameObject.DestroyImmediate(destinationTexture);
+                                            // if (!fastPath) yield return 6;
+                                            //tempTexture = resultingTextures[textureType] as Texture2D;
+                                            tempTexture.Apply();
+                                            tempTexture.wrapMode = TextureWrapMode.Repeat;
+                                            tempTexture.anisoLevel = slotData.material.AnisoLevel;
+                                            tempTexture.mipMapBias = slotData.material.MipMapBias;
+                                            tempTexture.filterMode = slotData.material.MatFilterMode;
+                                            //if (slotData.asset.material.channels[textureType].Compression != UMAMaterial.CompressionSettings.None)
+                                            //{
+                                            //    tempTexture.Compress(slotData.asset.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
+                                            // }
+                                            resultingTextures[textureType] = tempTexture;
+										if(!slotData.material.channels[textureType].NonShaderTexture) {
+                                                if (generatedMaterial.umaMaterial.translateSRP)
                                                 {
-                                                    for (int y = 0; y < yblocks; y++)
-                                                    {
-                                                        RenderTexture.active = destinationTexture;
-                                                        // Debug.Log("CVT-SP OGL Activated " + destinationTexture.name+" "+x+" "+y);
-                                                        tempTexture.ReadPixels(new Rect(x * 512, y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
-                                                        // Debug.Log("CVT-SP OGL Cleared " + destinationTexture.name + " " + x + " " + y);
-                                                        // yield return 8;
-                                                    }
+                                                    generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
                                                 }
-                                            }
-                                            else
-                                            {
-                                                for (int x = 0; x < xblocks; x++)
+                                                else
                                                 {
-                                                    for (int y = 0; y < yblocks; y++)
-                                                    {
-                                                        // Debug.Log("CVT-SP NOTOGL Activated " + destinationTexture.name + " " + x + " " + y);
-                                                        RenderTexture.active = destinationTexture;
-                                                        tempTexture.ReadPixels(new Rect(x * 512, destinationTexture.height - 512 - y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
-                                                        //   Debug.Log("CVT-SP NOTOGL Cleared " + destinationTexture.name + " " + x + " " + y);
-                                                        //   yield return 8;
-                                                    }
+                                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
                                                 }
+
+    											generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
+
                                             }
                                         }
-
-
-                                        resultingTextures[textureType] = tempTexture as Texture;
-
-
-                                        destinationTexture.Release();
-                                        UnityEngine.GameObject.DestroyImmediate(destinationTexture);
-                                        // if (!fastPath) yield return 6;
-                                        tempTexture = resultingTextures[textureType] as Texture2D;
-                                        tempTexture.Apply();
-                                        tempTexture.wrapMode = TextureWrapMode.Repeat;
-                                        tempTexture.anisoLevel = slotData.material.AnisoLevel;
-                                        tempTexture.mipMapBias = slotData.material.MipMapBias;
-                                        tempTexture.filterMode = slotData.material.MatFilterMode;
-                                        //if (slotData.asset.material.channels[textureType].Compression != UMAMaterial.CompressionSettings.None)
-                                        //{
-                                        //    tempTexture.Compress(slotData.asset.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
-                                        // }
-                                        resultingTextures[textureType] = tempTexture;
-                                        if (!slotData.material.channels[textureType].NonShaderTexture)
-                                        {
-                                            generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
-                                        }
+#endif
                                         #endregion
                                     }
                                     else
@@ -214,7 +231,14 @@ namespace UMA
                                         resultingTextures[textureType] = destinationTexture;
                                         if (!slotData.material.channels[textureType].NonShaderTexture)
                                         {
-                                            generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
+                                            if (generatedMaterial.umaMaterial.translateSRP)
+                                            {
+                                                generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), destinationTexture);
+                                            }
+                                            else
+                                            {
+                                                generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
+                                            }
                                         }
                                     }
 
@@ -238,7 +262,14 @@ namespace UMA
                                             {
                                                 if (!slotData.material.channels[textureType].NonShaderTexture)
                                                 {
-                                                    generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+                                                    if (generatedMaterial.umaMaterial.translateSRP)
+                                                    {
+                                                        generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), fragment.baseOverlay.textureList[j]);
+                                                    }
+                                                    else
+                                                    {
+                                                        generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+                                                    }
                                                 }
                                                 if (j == 0)
                                                 {
@@ -255,7 +286,14 @@ namespace UMA
                                                     {
                                                         if (!slotData.material.channels[textureType].NonShaderTexture)
                                                         {
-                                                            generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, overlay.textureList[j]);
+                                                            if (generatedMaterial.umaMaterial.translateSRP)
+                                                            {
+                                                                generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), overlay.textureList[j]);
+                                                            }
+                                                            else
+                                                            {
+                                                                generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, overlay.textureList[j]);
+                                                            }
                                                         }
                                                     }
                                                 }

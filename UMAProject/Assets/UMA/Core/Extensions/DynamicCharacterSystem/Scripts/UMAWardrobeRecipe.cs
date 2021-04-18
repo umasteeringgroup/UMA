@@ -69,6 +69,10 @@ namespace UMA.CharacterSystem
 			Hides = recipeToCopyFrom.Hides;
 			wardrobeRecipeThumbs = recipeToCopyFrom.wardrobeRecipeThumbs;
 			name = recipeToCopyFrom.name;
+			
+			if (recipeToCopyFrom.OverrideDNA != null)
+				OverrideDNA = recipeToCopyFrom.OverrideDNA.Clone();
+
 			DisplayValue = recipeToCopyFrom.DisplayValue;
 			return true;
 		}

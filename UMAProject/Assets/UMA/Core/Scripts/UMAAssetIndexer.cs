@@ -18,6 +18,8 @@ using System.Text;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
+using UMA;
 #endif
 
 namespace UMA
@@ -159,6 +161,10 @@ namespace UMA
                         return null;
                     theIndexer.UpdateSerializedDictionaryItems();
                     theIndexer.RebuildRaceRecipes();
+#if UNITY_EDITOR
+                    EditorSceneManager.sceneSaving += EditorSceneManager_sceneSaving;
+                    EditorSceneManager.sceneSaved += EditorSceneManager_sceneSaved;
+#endif
                     //StopTimer(st,"Asset index load");
                 }
                 return theIndexer;
@@ -166,6 +172,54 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+        public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
+
+        public static bool LeanMeanSceneFiles()
+        {
+            return EditorPrefs.GetBool(ConfigToggle_LeanMeanSceneFiles, true);
+        }
+
+        private static void EditorSceneManager_sceneSaved(UnityEngine.SceneManagement.Scene scene)
+        {
+            if (!LeanMeanSceneFiles())
+                return;
+
+            GameObject[] sceneObjs = scene.GetRootGameObjects();
+            foreach (GameObject go in sceneObjs)
+            {
+                DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
+                if (dcas.Length > 0)
+                {
+                    foreach (DynamicCharacterAvatar dca in dcas)
+                    {
+                        dca.GenerateSingleUMA();
+                    }
+                }
+            }
+        }
+
+    private static void EditorSceneManager_sceneSaving(UnityEngine.SceneManagement.Scene scene, string path)
+        {
+            if (!LeanMeanSceneFiles())
+                return;
+
+            // Cleanup any editor generated UMAS
+            GameObject[] sceneObjs = scene.GetRootGameObjects();
+            foreach(GameObject go in sceneObjs)
+            {
+                DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
+                if (dcas.Length > 0)
+                {
+                    foreach(DynamicCharacterAvatar dca in dcas)
+                    {
+                        // Free all the generated data so we don't junk up the scene file.
+                        // it will be regenerated later.
+                        dca.CleanupGeneratedData();
+                    }
+                }
+            }
+        }
+ 
         public struct IndexBackup
         {
             public DateTime BackupTime;
@@ -216,22 +270,6 @@ namespace UMA
         public Type GetRuntimeType(Type type)
         {
             return TypeToLookup[type];
-        }
-
-        public string SaveIndexItems()
-        {
-            string theJson = "";
-            // Flatten asset items.
-            // save to json string?
-            return theJson;
-        }
-
-        public bool RestoreIndexItems(string json)
-        {
-            // clear index items
-            // load flattened array from json string
-            // rebuild
-            return true;
         }
 
 #if UMA_ADDRESSABLES
@@ -515,7 +553,6 @@ namespace UMA
 
         public List<AssetItem> GetAssetItems(UMAPackedRecipeBase recipe, bool LookForLODs = false)
 		{
-
             if (recipe is UMAWardrobeCollection)
             {
                 return new List<AssetItem>();
@@ -1010,8 +1047,8 @@ namespace UMA
                         keys.Add(GetLabel(tr));
                 }
             }
-
-			return LoadLabelList(keys,keepLoaded);
+			var op = LoadLabelList(keys, keepLoaded);
+			return op;
 		}
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(RaceData theRace, bool keepLoaded = false)
@@ -1080,13 +1117,10 @@ namespace UMA
         }
 #endif
 
-        static List<UnityEngine.Object> ProcessedItems = new List<UnityEngine.Object>();
+        //static List<UnityEngine.Object> ProcessedItems = new List<UnityEngine.Object>();
 
         public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
         {
-#if SUPER_LOGGING
-            string labels = "";
-#endif
             foreach (string label in Keys)
             {
                 if (!Preloads.ContainsKey(label))
@@ -1098,19 +1132,16 @@ namespace UMA
                     if (keepLoaded) // only overwrite if keepLoaded = true. All "keepLoaded" take precedence.
                         Preloads[label] = keepLoaded;
                 }
-#if SUPER_LOGGING
-                labels += "'" + label + "';";
-#endif
             }
 
-#if SUPER_LOGGING
-            Debug.Log("Loading Labels: " + labels);
-#endif
             var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys, result =>
             {
-                ProcessedItems.Add(result);
-                ProcessNewItem(result, true, keepLoaded);
+				// The last items is now passed here AFTER the completed event, breaking everything. 
+				// change to event model here.
+                //ProcessedItems.Add(result);
+                //ProcessNewItem(result, true, keepLoaded);
             }, Addressables.MergeMode.Union, true);
+			op.Completed += ProcessItems;
             if (!keepLoaded)
             {
                 string info = "";
@@ -1120,6 +1151,16 @@ namespace UMA
             }
             return op;
         }
+
+		private void ProcessItems(AsyncOp Op) {
+			if (Op.IsDone) {
+				foreach(var o in Op.Result) {
+					//ProcessedItems.Add(o);
+					ProcessNewItem(o, true, true);
+				}
+			}
+		}
+
 #endif
 
         private void RemoveItem(UnityEngine.Object ob)
@@ -1860,7 +1901,7 @@ namespace UMA
         /// When building, Unity needs the references to the items because we 
         /// cannot demand load them without the AssetDatabase.
         /// </summary>
-        public void UpdateReferences()
+        public void AddReferences()
         {
             // Rebuild the tables
             UpdateSerializedList();
@@ -1875,7 +1916,20 @@ namespace UMA
                     ai.FreeReference();
 				}
             }
-			// UpdateSerializedDictionaryItems();
+			UpdateSerializedDictionaryItems();
+            ForceSave();
+        }
+
+		public void UpdateReferences() {
+			// Rebuild the tables
+			UpdateSerializedList();
+			foreach(AssetItem ai in SerializedItems) {
+				if(!ai.IsAddressable) {
+					ai.CacheSerializedItem();
+				} else {
+					ai.FreeReference();
+				}
+			}
             ForceSave();
         }
 

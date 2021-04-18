@@ -151,7 +151,7 @@ namespace UMA.CharacterSystem.Editors
 					umaRecipe.objectReferenceValue = thisDCA.umaRecipe;
 					animationController.objectReferenceValue = thisDCA.animationController;
 					serializedObject.ApplyModifiedProperties();
-					GenerateSingleUMA();
+					GenerateSingleUMA(thisDCA.rebuildSkeleton);
 				}
 			}
 			if (showHelp)
@@ -723,7 +723,7 @@ namespace UMA.CharacterSystem.Editors
 				}
 			} */
 
-			void GenerateSingleUMA()
+			void GenerateSingleUMA(bool rebuild=false)
 			{
 				if (Application.isPlaying)
 					return;
@@ -749,7 +749,7 @@ namespace UMA.CharacterSystem.Editors
 
 					DynamicCharacterAvatar dca = target as DynamicCharacterAvatar;
 
-					CleanupGeneratedData();
+					CleanupGeneratedData(rebuild);
 
 					dca.activeRace.SetRaceData();
 					if (dca.activeRace.racedata == null)
@@ -791,12 +791,12 @@ namespace UMA.CharacterSystem.Editors
 				}
 			}
 
-			void CleanupGeneratedData()
+			void CleanupGeneratedData(bool clear)
 			{
 				if (Application.isPlaying)
 					return;
 				List<GameObject> Cleaners = GetRenderers(thisDCA.gameObject);
-				thisDCA.Hide();
+				thisDCA.Hide(clear);
 				foreach (GameObject go in Cleaners)
 				{
 					DestroyImmediate(go);
@@ -816,7 +816,7 @@ namespace UMA.CharacterSystem.Editors
                     }
                     else
                     {
-                        CleanupGeneratedData();
+                        CleanupGeneratedData(true);
                     }
                 }
             }

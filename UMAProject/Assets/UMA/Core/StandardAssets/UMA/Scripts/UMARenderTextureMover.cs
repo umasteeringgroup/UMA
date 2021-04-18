@@ -6,8 +6,44 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 
+
+using System.IO;
+using System.Collections;
+
+public class AsyncCapture : MonoBehaviour
+{
+    IEnumerator Start()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(1);
+            yield return new WaitForEndOfFrame();
+
+            var rt = RenderTexture.GetTemporary(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
+            ScreenCapture.CaptureScreenshotIntoRenderTexture(rt);
+            AsyncGPUReadback.Request(rt, 0, TextureFormat.ARGB32, OnCompleteReadback);
+            RenderTexture.ReleaseTemporary(rt);
+        }
+    }
+
+    void OnCompleteReadback(AsyncGPUReadbackRequest request)
+    {
+        if (request.hasError)
+        {
+            Debug.Log("GPU readback error detected.");
+            return;
+        }
+
+        var tex = new Texture2D(Screen.width, Screen.height, TextureFormat.ARGB32, false);
+        tex.LoadRawTextureData(request.GetData<uint>());
+        tex.Apply();
+        File.WriteAllBytes("test.png", ImageConversion.EncodeToPNG(tex));
+        Destroy(tex);
+    }
+}
 public class UMARenderTextureMover : MonoBehaviour
 {
+
     private DynamicCharacterAvatar avatar;
 
     public struct DestinationTextureHolder
@@ -141,7 +177,7 @@ public class UMARenderTextureMover : MonoBehaviour
 /*        dtex.mipCount = rts.renderTexture.mipmapCount; */
         dtex.MipConverted = new bool[dtex.mipCount + 1];
         dtex.isDisposed = false;
-        /*
+ 
         for (int i = 0; i < rts.renderTexture.mipmapCount; i++)
         {
             AsyncGPUReadbackRequest agr = AsyncGPUReadback.Request(rts.renderTexture, i, TextureFormat.ARGB32, OnCompleteReadback);
@@ -151,7 +187,7 @@ public class UMARenderTextureMover : MonoBehaviour
             rbt.umaData = umaData;
             rbt.texAccumulator = dtex;
             trackedItems.Add(agr, rbt);
-        } */
+        }  
     }
 
    void Cleanup(ReadBackTracker rbt)

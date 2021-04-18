@@ -26,6 +26,7 @@ namespace UMA
 		private const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
 		private const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
 		//private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
+		public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
 		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
 		public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
 
@@ -131,6 +132,7 @@ namespace UMA
             }
 
 			ConfigToggle(ConfigToggle_PostProcessAllAssets, "Postprocess All Assets", "When assets in unity are moved, this will fix their paths in the index. This can be very slow.", false);
+			ConfigToggle(ConfigToggle_LeanMeanSceneFiles, "Clean/Regen on Save", "When using edit-time UMA's the geometry is stored in scene files. Enabling this cleans them up before saving, and regenerates after saving, making your scene files squeaky clean.", true);
 
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.Space();
@@ -144,6 +146,8 @@ namespace UMA
 			bool prevAddressables = IsAddressable();
 
 			var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+
+
 			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
 			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables.");
 
@@ -206,8 +210,6 @@ namespace UMA
 			GUILayout.Label("Shared Group Generation");
 			GUILayout.Label("By default, Slots and Overlays (with their Texture references) are included.",EditorStyles.miniLabel);
 
-
-			ConfigToggle(ConfigToggle_AddCollectionLabels, "Add Collection Labels","Scan through Wardrobe Collections for recipes, and also label them with the collection label", false);
 			string currentLabel = PlayerPrefs.GetString(umaDefaultLabelKey, umaDefaultLabel);
 			string newUmaLabel = EditorGUILayout.DelayedTextField("Default UMA Label", currentLabel);
 			if (newUmaLabel != umaDefaultLabel)
@@ -231,12 +233,15 @@ namespace UMA
 			return PlayerPrefs.GetString(umaDefaultLabelKey,umaDefaultLabel);
 		}
 
+		public static bool LeanMeanSceneFiles()
+		{
+			return GetConfigValue(ConfigToggle_LeanMeanSceneFiles, true);
+		}
 
 		public static bool UseSharedGroupConfigured()
 		{
 			return GetConfigValue(ConfigToggle_UseSharedGroup, true);
 		}
-
 
 		public static bool StripUMAMaterials()
         {
@@ -280,6 +285,15 @@ namespace UMA
 
 		private static bool DefineSymbolToggle(HashSet<string> defineSymbols, string defineSymbol, string text, string tooltip)
 		{
+#if UMA_ALWAYSADDRESSABLE
+			if(defineSymbol == DefineSymbol_Addressables) {
+				if(!defineSymbols.Contains(defineSymbol)) {
+					defineSymbols.Add(defineSymbol);
+				}
+				EditorGUILayout.Toggle(new GUIContent(text, tooltip), true);
+				return true;
+			}
+#endif
 			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), defineSymbols.Contains(defineSymbol)))
 			{
 				defineSymbols.Add(defineSymbol);
@@ -478,7 +492,7 @@ namespace UMA
 						}
 					}
 				}
-				if (umat.material.shader.name.ToLower().StartsWith("hair fade"))
+				if (umat.material.shader.name.ToLower().Contains("hair fade"))
                 {
 					umat.material.shader = Shader.Find("Universal Render Pipeline/Nature/SpeedTree8");
 					if (umat.material.name.ToLower().Contains("single"))
@@ -489,6 +503,7 @@ namespace UMA
                     {
 						umat.material.SetInt("_TwoSided", 0);
 					}
+					matModified = true;
                 }
 				if (matModified)
 				{

@@ -1,6 +1,8 @@
 Library/
 Temp/
 UnityVS/
+BetterShaders/
+BetterShaders.meta
 UnityVS.meta
 *.csproj
 *.sln

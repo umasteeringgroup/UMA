@@ -118,6 +118,20 @@ namespace UMA
 			rendererAsset = null;
 		}
 
+
+		public bool HasRace(string raceName)
+		{
+			// Null always matches.
+			if (Races == null || Races.Length == 0)
+				return true;
+
+			for(int i=0;i<Races.Length;i++)
+            {
+				if (Races[i] == raceName) return true;
+            }
+			return false;
+		}
+
 		public bool HasTag(List<string> tagList)
 		{
 			if (tagList == null || tags == null)

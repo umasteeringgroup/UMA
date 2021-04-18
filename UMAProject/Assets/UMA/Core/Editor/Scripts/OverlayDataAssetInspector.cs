@@ -10,9 +10,6 @@ namespace UMA.Editors
 	{
 		//DelayedFields ony trigger GUI.changed when the user selects another field. This means if the user changes a value but never changes the selected field it does not ever save.
 		//Instead add a short delay on saving so that the asset doesn't save while the user is typing in a field
-		private float lastActionTime = 0;
-		private bool doSave = false;
-
 		private SerializedProperty _overlayName;
 		private SerializedProperty _overlayType;
 		private SerializedProperty _umaMaterial;
@@ -23,8 +20,6 @@ namespace UMA.Editors
 		private SerializedProperty _tags;
 		private SerializedProperty _occlusionEntries;
 
-		private bool additionalFoldout = false;
-		private bool textureFoldout = false;
 
 		void OnEnable()
 		{
@@ -47,19 +42,23 @@ namespace UMA.Editors
 
 		void DoDelayedSave()
 		{
-			if (doSave && Time.realtimeSinceStartup > (lastActionTime + 0.5f))
+			OverlayDataAsset od = target as OverlayDataAsset; 
+			
+			if (od.doSave && Time.realtimeSinceStartup > (od.lastActionTime + 0.5f))
 			{
-				doSave = false;
-				lastActionTime = Time.realtimeSinceStartup;
+				od.doSave = false;
+				od.lastActionTime = Time.realtimeSinceStartup;
 				EditorUtility.SetDirty(target);
 				AssetDatabase.SaveAssets();
+				UMAUpdateProcessor.UpdateOverlay(target as OverlayDataAsset);
 			}
 		}
 
 		public override void OnInspectorGUI()
 		{
-			if (lastActionTime == 0)
-				lastActionTime = Time.realtimeSinceStartup;
+			OverlayDataAsset od = target as OverlayDataAsset;
+			if (od.lastActionTime == 0)
+				od.lastActionTime = Time.realtimeSinceStartup;
 
 			serializedObject.Update();
 
@@ -83,9 +82,9 @@ namespace UMA.Editors
 				else
 					textureChannelCount = _channels.arraySize;
 
-				textureFoldout = GUIHelper.FoldoutBar(textureFoldout, "Texture Channels");
+				od.textureFoldout = GUIHelper.FoldoutBar(od.textureFoldout, "Texture Channels");
 
-				if (textureFoldout)
+				if (od.textureFoldout)
 				{
 					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 					EditorGUILayout.PropertyField(_textureList.FindPropertyRelative("Array.size"));
@@ -133,8 +132,8 @@ namespace UMA.Editors
 				EditorGUILayout.HelpBox("No UMA Material selected!", MessageType.Warning);
 
 			GUILayout.Space(20f);
-			additionalFoldout = GUIHelper.FoldoutBar(additionalFoldout, "Additional Parameters");
-			if (additionalFoldout)
+			od.additionalFoldout = GUIHelper.FoldoutBar(od.additionalFoldout, "Additional Parameters");
+			if (od.additionalFoldout)
 			{
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 				EditorGUILayout.PropertyField(_alphaMask);
@@ -146,8 +145,8 @@ namespace UMA.Editors
 			serializedObject.ApplyModifiedProperties();
 			if (EditorGUI.EndChangeCheck())
 			{
-				lastActionTime = Time.realtimeSinceStartup;
-				doSave = true;
+				od.lastActionTime = Time.realtimeSinceStartup;
+				od.doSave = true;
 			}
 		}
 	}

@@ -14,7 +14,7 @@ namespace UMA
 		public float MinValue;
 		public float MaxValue;
 #if UNITY_EDITOR
-		public bool Delete;
+		public bool Delete { get; set; }  = false;
 #endif
 		public RandomDNA(string name)
 		{
@@ -65,28 +65,58 @@ namespace UMA
 		[Range(1, 100)]
 		public int Chance = 1;
 		public List<RandomColors> Colors;
+		public string _slotName;
+		public string SlotName
+		{
+			get
+			{
+				if (WardrobeSlot != null)
+					return WardrobeSlot.wardrobeSlot;
+				return _slotName;
+			}
+		}
 #if UNITY_EDITOR
+
 		public bool GuiFoldout;
 		public bool Delete;
 		public bool AddColorTable;
 		public string[] PossibleColors;
+
+		public string SortName
+        {
+			get
+            {
+				string slot = "";
+				if (WardrobeSlot != null)
+					slot = WardrobeSlot.name;
+				return SlotName + slot;
+            }
+        }
 #endif
-		public RandomWardrobeSlot(UMAWardrobeRecipe slot)
+		public RandomWardrobeSlot(UMAWardrobeRecipe slot, string slotName)
 		{
 #if UNITY_EDITOR
 			GuiFoldout = true;
 			Delete = false;
-			UMAPackedRecipeBase.UMAPackRecipe upr = slot.PackedLoad();
-
-			List<string> cols = new List<string>();
-			foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd in upr.fColors)
+			_slotName = slotName;
+			if (slot == null)
 			{
-				if (pcd.name.Trim() != "-")
-				{
-					cols.Add(pcd.name);
-				}
+				PossibleColors = new string[0];
 			}
-			PossibleColors = cols.ToArray();
+			else
+			{
+				UMAPackedRecipeBase.UMAPackRecipe upr = slot.PackedLoad();
+
+				List<string> cols = new List<string>();
+				foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd in upr.fColors)
+				{
+					if (pcd.name.Trim() != "-")
+					{
+						cols.Add(pcd.name);
+					}
+				}
+				PossibleColors = cols.ToArray();
+			}
 #endif
 			Colors = new List<RandomColors>();
 			WardrobeSlot = slot;
@@ -116,7 +146,7 @@ namespace UMA
 		public int SelectedDNA;
 		public string DNAAdd;
 		public int DNADel;
-		
+		public int currentWardrobeSlot;
 #endif
 		public UMAPredefinedDNA GetRandomDNA()
 		{
@@ -133,7 +163,7 @@ namespace UMA
 			Dictionary<string, List<RandomWardrobeSlot>> RandomSlots = new Dictionary<string, List<RandomWardrobeSlot>>();
 			foreach (RandomWardrobeSlot rws in RandomWardrobeSlots)
 			{
-				string wslot = rws.WardrobeSlot.wardrobeSlot;
+				string wslot = rws.SlotName;//rws.WardrobeSlot.wardrobeSlot;
 				if (!RandomSlots.ContainsKey(wslot))
 				{
 					RandomSlots.Add(wslot, new List<RandomWardrobeSlot>());
@@ -210,6 +240,11 @@ namespace UMA
 	public class UMARandomizer : ScriptableObject
 	{
 #if UNITY_EDITOR
+		public int currentRace { get; set; } = 0;
+		public string[] races { get; set; } = new string[0];
+		public List<RaceData> raceDatas { get; set; } = new List<RaceData>();
+		public List<UMAWardrobeRecipe> droppedItems { get; set; } = new List<UMAWardrobeRecipe>();
+
 #if UMA_HOTKEYS
         [UnityEditor.MenuItem("Assets/Create/UMA/Misc/Randomizer %#h")]
 #else

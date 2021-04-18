@@ -31,47 +31,7 @@ namespace UMA
 			// then generate the root, global and set it up.
 			if (umaData.umaRoot == null)
 			{
-				Transform rootTransform = umaData.gameObject.transform.Find("Root");
-				if (rootTransform)
-				{
-					umaData.umaRoot = rootTransform.gameObject;
-				}
-				else
-				{
-					GameObject newRoot = new GameObject("Root");
-					//make root of the UMAAvatar respect the layer setting of the UMAAvatar so cameras can just target this layer
-					newRoot.layer = umaData.gameObject.layer;
-					newRoot.transform.parent = umaData.transform;
-					newRoot.transform.localPosition = Vector3.zero;
-					if (umaData.umaRecipe.raceData.FixupRotations)
-					{
-						newRoot.transform.localRotation = Quaternion.Euler(270f, 0, 0f);
-					}
-					else
-					{
-						newRoot.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-					}
-					newRoot.transform.localScale = Vector3.one;
-					umaData.umaRoot = newRoot;
-				}
-
-				Transform globalTransform = umaData.umaRoot.transform.Find("Global");
-				if (!globalTransform)
-				{
-					GameObject newGlobal = new GameObject("Global");
-					newGlobal.transform.parent = umaData.umaRoot.transform;
-					newGlobal.transform.localPosition = Vector3.zero;
-					if (umaData.umaRecipe.raceData.FixupRotations)
-					{
-						newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
-					}
-					else
-					{
-						newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-					}
-					globalTransform = newGlobal.transform;
-				}
-				umaData.skeleton = new UMASkeleton(globalTransform);
+				umaData.SetupSkeleton();
 			}
 			#endregion
 			if (umaData.umaRoot != null)

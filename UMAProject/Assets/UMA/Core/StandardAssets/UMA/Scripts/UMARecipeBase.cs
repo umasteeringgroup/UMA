@@ -7,7 +7,7 @@ namespace UMA
 	/// <summary>
 	/// Base class for serialized UMA recipes.
 	/// </summary>
-	public abstract class UMARecipeBase : ScriptableObject
+	public abstract partial class UMARecipeBase : ScriptableObject
 	{
 		/// <summary>
 		/// Load data into the specified umaRecipe.

@@ -378,7 +378,7 @@ namespace UMA
 
 				// We need a better method than this.
 				// if "BestFitSquare"
-				switch (umaGenerator.AtlasOverflowFitMethod)
+				/*switch (umaGenerator.AtlasOverflowFitMethod)
 				{
 					case UMAGeneratorBase.FitMethod.BestFitSquare:
 						while (true)
@@ -409,13 +409,13 @@ namespace UMA
                             }
 						}
 						break;
-					default: // Shrink Textures
+					default: // Shrink Textures */
 						while (!CalculateRects(generatedMaterial, area).success)
 						{
 							generatedMaterial.resolutionScale = generatedMaterial.resolutionScale * umaGenerator.FitPercentageDecrease;
-						}
+						}/*
 						break;
-				}
+				}*/
 
 				UpdateSharedRect(generatedMaterial);
 				if (scaled)

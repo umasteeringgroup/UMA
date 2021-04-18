@@ -16,7 +16,7 @@ namespace UMA
 {
     public class SingleGroupGenerator : IUMAAddressablePlugin
     {
-        public bool ClearMaterials; // should be set when generating during the build process, so the materials are cleared in the bundles
+        public bool ClearMaterials = false; // should be set when generating during the build process, so the materials are cleared in the bundles
         public UMAAssetIndexer Index;
         List<UMAPackedRecipeBase> Recipes;
         Dictionary<AssetItem, List<string>> AddressableItems = new Dictionary<AssetItem, List<string>>();
@@ -56,8 +56,6 @@ namespace UMA
 
                 RecipeExtraLabels = new Dictionary<string, List<string>>();
                 
-                if (UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_AddCollectionLabels, false))
-                {
                     var WardrobeCollections = UMAAssetIndexer.Instance.GetAllAssets<UMAWardrobeCollection>();
                     foreach (var wc in WardrobeCollections)
                     {
@@ -71,7 +69,6 @@ namespace UMA
                                 RecipeExtraLabels.Add(recipe, new List<string>());
                             }
                             RecipeExtraLabels[recipe].Add(label);
-                        }
                     }
                 }
 
@@ -140,6 +137,11 @@ namespace UMA
                 StringBuilder sb = new StringBuilder();
                 foreach (AssetItem ai in AddressableItems.Keys)
                 {
+                    if (!ai.Item)
+                    {
+                        Debug.LogError($"Asset \"{ai._Name}\" of type \"{ai._Type}\" doesn't exist anymore - did it get deleted?");
+                        continue;
+                    }
                     ai.IsAddressable = true;
                     ai.AddressableAddress = ""; // let the system assign it if we are generating.
                     ai.AddressableGroup = sharedGroup.name;
@@ -173,6 +175,14 @@ namespace UMA
                                 sda.material = null;
                                 EditorUtility.SetDirty(sda);
                             }
+                            else
+                            {
+                                if (sda.material == null)
+                                {
+                                    sda.material = Index.GetAsset<UMAMaterial>(sda.materialName);
+                                    EditorUtility.SetDirty(sda);
+                                }
+                            }
                         }
                     }
                     if (ai._Type == typeof(OverlayDataAsset))
@@ -190,6 +200,14 @@ namespace UMA
                                 od.materialName = od.material.name;
                                 od.material = null;
                                 EditorUtility.SetDirty(od);
+                            }
+                            else
+                            {
+                                if (od.material == null)
+                                {
+                                    od.material = Index.GetAsset<UMAMaterial>(od.materialName);
+                                    EditorUtility.SetDirty(od);
+                                }
                             }
                         }
 #if INCL_TEXTURE2D

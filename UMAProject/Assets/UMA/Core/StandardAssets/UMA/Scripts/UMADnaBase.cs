@@ -6,21 +6,28 @@ namespace UMA
 	/// Base class for UMA DNA.
 	/// </summary>
 	[System.Serializable]
-	public abstract class UMADnaBase
+	public class UMADnaBase 
 	{
-		public abstract int Count { get; }
-		public abstract float[] Values
+		public virtual int Count { get; }
+		public virtual float[] Values
 		{
 			get; set;
 		}
 
-		public abstract string[] Names
+		public virtual string[] Names
 		{
 			get;
 		}
 
-		public abstract float GetValue(int idx);
-		public abstract void SetValue(int idx, float value);
+		public virtual float GetValue(int idx)
+        {
+			return 0.0f;
+        }
+
+		public virtual void SetValue(int idx, float value)
+        {
+			return;
+        }
 
 		[SerializeField]
 		protected int dnaTypeHash;

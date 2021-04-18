@@ -18,7 +18,7 @@ namespace UMA.Editors
         /// <param name="material">Material.</param>
         /// <param name="prefabMesh">Prefab mesh.</param>
         /// <param name="rootBone">Root bone.</param>
-        public static void UpdateSlotData( SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone)
+        public static void UpdateSlotData( SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents)
         {
             string path = UMAUtils.GetAssetFolder(AssetDatabase.GetAssetPath(slot));
             string assetName = slot.slotName;
@@ -43,7 +43,7 @@ namespace UMA.Editors
             Mesh resultingMesh;
             if (prefabMesh != null)
             {
-                resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, prefabMesh, 0.0001f);
+                resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, prefabMesh, 0.0001f,calcTangents);
                 resultingSkinnedMesh.sharedMesh = resultingMesh;
                 SkinnedMeshAligner.AlignBindPose(prefabMesh, resultingSkinnedMesh);
             }
@@ -121,7 +121,7 @@ namespace UMA.Editors
 		}
 
 
-		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, string slotName, bool nameByMaterial, SkinnedMeshRenderer slotMesh, UMAMaterial material, SkinnedMeshRenderer seamsMesh, List<string> KeepList, string rootBone, bool binarySerialization = false)
+		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, string slotName, bool nameByMaterial, SkinnedMeshRenderer slotMesh, UMAMaterial material, SkinnedMeshRenderer seamsMesh, List<string> KeepList, string rootBone, bool binarySerialization = false, bool calcTangents=true)
 		{
 			if (!System.IO.Directory.Exists(slotFolder + '/' + assetFolder))
 			{
@@ -165,7 +165,7 @@ namespace UMA.Editors
 			Mesh resultingMesh;
 			if (seamsMesh != null)
 			{
-				resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, seamsMesh, 0.0001f);
+				resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, seamsMesh, 0.0001f, calcTangents);
 				resultingSkinnedMesh.sharedMesh = resultingMesh;
 				//CountBoneweights(resultingMesh);
 				SkinnedMeshAligner.AlignBindPose(seamsMesh, resultingSkinnedMesh);

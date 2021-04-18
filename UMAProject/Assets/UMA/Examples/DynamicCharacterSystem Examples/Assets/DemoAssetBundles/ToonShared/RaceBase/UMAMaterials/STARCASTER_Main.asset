@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: STARCASTER_Main
   m_EditorClassIdentifier: 
+  translateSRP: 1
   material: {fileID: 2100000, guid: d2cd26ef84b4f674f92df124308bf783, type: 2}
   materialType: 1
   channels:

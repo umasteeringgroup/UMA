@@ -40,6 +40,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -53,6 +54,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -66,6 +68,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -79,6 +82,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -92,6 +96,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -100,6 +105,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: b4204b59b1e68974997b4673544c5bfe, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -108,6 +114,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 47ba7be232f89084485a40d74ef0d13c, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -115,6 +122,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: f7ff3729dba08b044a2535b32a1251ba, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -127,6 +135,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -140,6 +149,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -154,6 +164,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -167,6 +178,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -180,6 +192,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -193,6 +206,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -206,6 +220,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -224,6 +239,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 1
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -233,6 +249,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: d40e65714e237a3499a2eada8f3411c6, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -245,6 +262,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -254,99 +272,75 @@ MonoBehaviour:
     - DnaName: legsSize
       MinValue: 0.4144144
       MaxValue: 0.5495495
-      Delete: 0
     - DnaName: belly
       MinValue: 0.3301887
       MaxValue: 0.70298994
-      Delete: 0
     - DnaName: height
       MinValue: 0.41551256
       MaxValue: 0.6119007
-      Delete: 0
     - DnaName: lowCheekPronounced
       MinValue: 0
       MaxValue: 1
-      Delete: 0
     - DnaName: noseSize
       MinValue: 0.2972973
       MaxValue: 0.8468469
-      Delete: 0
     - DnaName: noseCurve
       MinValue: 0.36036035
       MaxValue: 1
-      Delete: 0
     - DnaName: noseInclination
       MinValue: 0.27083334
       MaxValue: 0.9270834
-      Delete: 0
     - DnaName: nosePosition
       MinValue: 0.42708334
       MaxValue: 0.59375
-      Delete: 0
     - DnaName: nosePronounced
       MinValue: 0.28125
       MaxValue: 0.90625
-      Delete: 0
     - DnaName: noseFlatten
       MinValue: 0.1875
       MaxValue: 0.7604167
-      Delete: 0
     - DnaName: chinSize
       MinValue: 0.072916664
       MaxValue: 0.8541667
-      Delete: 0
     - DnaName: chinPronounced
       MinValue: 0.16666667
       MaxValue: 0.7604167
-      Delete: 0
     - DnaName: chinPosition
       MinValue: 0.28125
       MaxValue: 0.8958333
-      Delete: 0
     - DnaName: mandibleSize
       MinValue: 0.1875
       MaxValue: 0.8333333
-      Delete: 0
     - DnaName: cheekSize
       MinValue: 0.26041666
       MaxValue: 0.84375
-      Delete: 0
     - DnaName: lipsSize
       MinValue: 0.072916664
       MaxValue: 0.5833334
-      Delete: 0
     - DnaName: mouthSize
       MinValue: 0.21875
       MaxValue: 0.78125
-      Delete: 0
     - DnaName: eyeRotation
       MinValue: 0.13541667
       MaxValue: 0.9166667
-      Delete: 0
     - DnaName: eyeSize
       MinValue: 0.3125
       MaxValue: 0.7604167
-      Delete: 0
     - DnaName: breastSize
       MinValue: 0.14414415
       MaxValue: 0.93693686
-      Delete: 0
     - DnaName: eyeSpacing
       MinValue: 0.22916667
       MaxValue: 0.7916667
-      Delete: 0
     - DnaName: upperWeight
       MinValue: 0.36458334
       MaxValue: 0.6666666
-      Delete: 0
     - DnaName: lowerWeight
       MinValue: 0.4791667
       MaxValue: 0.6458334
-      Delete: 0
     - DnaName: headWidth
       MinValue: 0.4375
       MaxValue: 0.6041666
-      Delete: 0
     raceData: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
     GuiFoldout: 0
     ColorsFoldout: 1
@@ -408,6 +402,7 @@ MonoBehaviour:
     SelectedDNA: 2
     DNAAdd: 
     DNADel: 0
+    currentWardrobeSlot: 0
   - RaceName: HumanMale
     Chance: 1
     SharedColors:
@@ -427,6 +422,14 @@ MonoBehaviour:
       Delete: 0
       CurrentColor: 0
     RandomWardrobeSlots:
+    - WardrobeSlot: {fileID: 0}
+      Chance: 20
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
     - WardrobeSlot: {fileID: 11400000, guid: a2b1f4c9b2ad40f4b8a68144700342f8, type: 2}
       Chance: 1
       Colors:
@@ -435,6 +438,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -443,6 +447,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 506e811243229714bb4e2386dcbc08d3, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -451,30 +456,12 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 1df4eb647357a74498fa7e6b4672ad8d, type: 2}
       Chance: 1
       Colors: []
-      GuiFoldout: 1
+      _slotName: 
+      GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: f47ce9b8a0d9ecd48a39ef3f5c2447a6, type: 2}
-      Chance: 1
-      Colors:
-      - ColorName: Shirt
-        ColorTable: {fileID: 11400000, guid: 9d6638c0673482444a53d5dd707c3acc, type: 2}
-        GuiFoldout: 1
-        Delete: 0
-        CurrentColor: 0
-      - ColorName: ShirtAccent
-        ColorTable: {fileID: 11400000, guid: c767f9efa84cf40269e4475b89bb952d, type: 2}
-        GuiFoldout: 1
-        Delete: 0
-        CurrentColor: 1
-      GuiFoldout: 1
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors:
-      - Shirt
-      - ShirtAccent
     - WardrobeSlot: {fileID: 11400000, guid: eaf6bd26b53c0ad4b80f876eddac0a32, type: 2}
       Chance: 1
       Colors:
@@ -483,6 +470,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -502,6 +490,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 3
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -513,14 +502,36 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 08ee8add251c0604787435e6e676f3db, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
       - Shirt
-    - WardrobeSlot: {fileID: 11400000, guid: 3a1edb5d395b68f4089d59c1f1217d81, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: f47ce9b8a0d9ecd48a39ef3f5c2447a6, type: 2}
+      Chance: 1
+      Colors:
+      - ColorName: Shirt
+        ColorTable: {fileID: 11400000, guid: 9d6638c0673482444a53d5dd707c3acc, type: 2}
+        GuiFoldout: 1
+        Delete: 0
+        CurrentColor: 0
+      - ColorName: ShirtAccent
+        ColorTable: {fileID: 11400000, guid: c767f9efa84cf40269e4475b89bb952d, type: 2}
+        GuiFoldout: 1
+        Delete: 0
+        CurrentColor: 1
+      _slotName: 
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Shirt
+      - ShirtAccent
+    - WardrobeSlot: {fileID: 11400000, guid: 1d55460160bc861428e67152c0019388, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -531,6 +542,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 9d8d16d74d7897e4caae12ca4d56f223, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -538,9 +550,10 @@ MonoBehaviour:
       - Skin
       - Hair
       - Eyes
-    - WardrobeSlot: {fileID: 11400000, guid: 1d55460160bc861428e67152c0019388, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 3a1edb5d395b68f4089d59c1f1217d81, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -548,9 +561,18 @@ MonoBehaviour:
       - Skin
       - Hair
       - Eyes
+    - WardrobeSlot: {fileID: 0}
+      Chance: 20
+      Colors: []
+      _slotName: Face
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
     - WardrobeSlot: {fileID: 11400000, guid: 4d1e2980034c61e4197e51e6d5d2b2fc, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -559,6 +581,7 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: ef2ae1fcf6ddfb64ab18b01bc95ae558, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -568,15 +591,17 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: c6a22e687d55ee144965d37c94a9b11d, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
       - Shoes
       - 
-    - WardrobeSlot: {fileID: 11400000, guid: cbac10d2bc6792c43b0d89e71534cf77, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 4acc51a73e0e5884eb7e770d8f803e81, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -584,18 +609,21 @@ MonoBehaviour:
       - Skin
       - Hair
       - Eyes
-    - WardrobeSlot: {fileID: 11400000, guid: d5470e7076173334fbd1b341e385bef0, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: bc2ac8c776a97fa46a5a1a9455599f2c, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
-      - Hair
       - Skin
-    - WardrobeSlot: {fileID: 11400000, guid: 4acc51a73e0e5884eb7e770d8f803e81, type: 2}
+      - Hair
+      - Eyes
+    - WardrobeSlot: {fileID: 11400000, guid: cbac10d2bc6792c43b0d89e71534cf77, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -606,30 +634,32 @@ MonoBehaviour:
     - WardrobeSlot: {fileID: 11400000, guid: 8e67f8d6f30659a4d9202b2e6b8809b1, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
       - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: d5470e7076173334fbd1b341e385bef0, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: 
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+      - Skin
     - WardrobeSlot: {fileID: 11400000, guid: aba961e2f47032e41a87472b6a41306a, type: 2}
       Chance: 1
       Colors: []
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
       - Hair
       - Skin
-    - WardrobeSlot: {fileID: 11400000, guid: bc2ac8c776a97fa46a5a1a9455599f2c, type: 2}
-      Chance: 1
-      Colors: []
-      GuiFoldout: 0
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors:
-      - Skin
-      - Hair
-      - Eyes
     - WardrobeSlot: {fileID: 11400000, guid: ed308ddf64a50d74aae73e4097381fc1, type: 2}
       Chance: 1
       Colors:
@@ -638,11 +668,20 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
       - Pants1
+    - WardrobeSlot: {fileID: 11400000, guid: 8ea3bcf334fb01b4ebab82092aa4ff46, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: 
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
     - WardrobeSlot: {fileID: 11400000, guid: 5bbd4dc2ec713f24a84512ef4f9ffe00, type: 2}
       Chance: 1
       Colors:
@@ -651,6 +690,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -669,19 +709,13 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 1
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors:
       - Pants
       - Hearts
-    - WardrobeSlot: {fileID: 11400000, guid: 8ea3bcf334fb01b4ebab82092aa4ff46, type: 2}
-      Chance: 1
-      Colors: []
-      GuiFoldout: 0
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors: []
     - WardrobeSlot: {fileID: 11400000, guid: 3046b99fd67ac974f9fec45d5142a925, type: 2}
       Chance: 1
       Colors:
@@ -690,6 +724,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -704,6 +739,7 @@ MonoBehaviour:
         GuiFoldout: 1
         Delete: 0
         CurrentColor: 0
+      _slotName: 
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
@@ -713,46 +749,36 @@ MonoBehaviour:
     - DnaName: height
       MinValue: 0.4054054
       MaxValue: 0.5945946
-      Delete: 0
     - DnaName: upperMuscle
       MinValue: 0
       MaxValue: 0.9009009
-      Delete: 0
     - DnaName: belly
       MinValue: 0
       MaxValue: 0.8648649
-      Delete: 0
     - DnaName: waist
       MinValue: 0
       MaxValue: 0.8288288
-      Delete: 0
     - DnaName: earsSize
       MinValue: 0.054054055
       MaxValue: 0.6036036
-      Delete: 0
     - DnaName: noseCurve
       MinValue: 0
       MaxValue: 1
-      Delete: 0
     - DnaName: noseWidth
       MinValue: 0
       MaxValue: 1
-      Delete: 0
     - DnaName: noseFlatten
       MinValue: 0.21621622
       MaxValue: 0.8558558
-      Delete: 0
     - DnaName: chinSize
       MinValue: 0
       MaxValue: 1
-      Delete: 0
     - DnaName: jawsSize
       MinValue: 0.3243243
       MaxValue: 0.6216216
-      Delete: 0
     raceData: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
-    GuiFoldout: 0
-    ColorsFoldout: 1
+    GuiFoldout: 1
+    ColorsFoldout: 0
     WardrobeFoldout: 1
     DnaFoldout: 0
     Delete: 0
@@ -813,3 +839,4 @@ MonoBehaviour:
     SelectedDNA: 39
     DNAAdd: 
     DNADel: 0
+    currentWardrobeSlot: 3

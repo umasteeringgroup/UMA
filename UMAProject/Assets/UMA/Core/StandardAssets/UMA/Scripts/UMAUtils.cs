@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine.Rendering;
 
 namespace UMA
 {
@@ -31,6 +32,63 @@ namespace UMA
 			float rand_std_normal = Mathf.Sqrt(-2.0f * Mathf.Log(u1)) * Mathf.Sin(2.0f * Mathf.PI * u2);
 
 			return mean + dev * rand_std_normal;
+		}
+
+			public enum PipelineType {
+				Unsupported,
+				BuiltInPipeline,
+				UniversalPipeline,
+				HDPipeline,
+				NotSet
+			}
+
+		public static Dictionary<string, string> URPTextureTranslation = new Dictionary<string, string>() {
+			{"_MainTex","_BaseMap"},
+			{"_MetallicMap", "_MaskMap" }
+		};
+
+		public static Dictionary<string, string> HDRPTextureTranslation = new Dictionary<string, string>() {
+			{"_MainTex","_BaseMap"},
+			{"_MetallicMap", "_MaskMap" }
+		};
+
+		public static Dictionary<PipelineType, Dictionary<string, string>> PipelineTranslations = new Dictionary<PipelineType, Dictionary<string, string>>() {
+			{PipelineType.HDPipeline,HDRPTextureTranslation },
+			{PipelineType.UniversalPipeline,URPTextureTranslation }
+		};
+
+		public static PipelineType CurrentPipeline = PipelineType.NotSet;
+		/// <summary>
+		/// Returns the type of renderpipeline that is currently running
+		/// </summary>
+		/// <returns></returns>
+		public static PipelineType DetectPipeline() {
+			if(GraphicsSettings.renderPipelineAsset != null) {
+				// SRP
+				var srpType = GraphicsSettings.renderPipelineAsset.GetType().ToString();
+				if(srpType.Contains("HDRenderPipelineAsset")) {
+					return PipelineType.HDPipeline;
+				} else if(srpType.Contains("UniversalRenderPipelineAsset")) {
+					return PipelineType.UniversalPipeline;
+				} else
+					return PipelineType.Unsupported;
+			}
+			// no SRP
+			return PipelineType.BuiltInPipeline;
+		}
+	
+
+		public static string TranslatedSRPTextureName(string BuiltinName) {
+			if (CurrentPipeline == PipelineType.NotSet) {
+				CurrentPipeline = DetectPipeline();
+			}
+			if (PipelineTranslations.ContainsKey(CurrentPipeline)) {
+				var textureTranslation = PipelineTranslations[CurrentPipeline];
+				if(textureTranslation.ContainsKey(BuiltinName)) {
+					return textureTranslation[BuiltinName];
+				}
+			}
+			return BuiltinName;
 		}
 
 #if UNITY_EDITOR

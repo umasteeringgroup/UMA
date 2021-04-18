@@ -52,7 +52,7 @@ MonoBehaviour:
   umaAdditionalRecipes:
   - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
   umaGenerator: {fileID: 0}
-  animationController: {fileID: 0}
+  animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
     m_PersistentCalls:
       m_Calls: []
@@ -99,7 +99,7 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   loadBlendShapes: 0
-  keepAvatar: 0
+  keepAvatar: 1
   activeRace:
     name: HumanMale
   defaultChangeRaceOptions: 8
@@ -144,6 +144,7 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
       PropertyBlock:
+        alwaysUpdate: 0
         serializedProperties: []
       _name: 
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
@@ -160,6 +161,7 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
       PropertyBlock:
+        alwaysUpdate: 0
         serializedProperties: []
       _name: 
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
@@ -176,6 +178,7 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0.20392157}
       PropertyBlock:
+        alwaysUpdate: 0
         serializedProperties: []
       _name: 
       _color: {r: 0.9632353, g: 0.82158303, b: 0.82158303, a: 1}
@@ -192,6 +195,7 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
       PropertyBlock:
+        alwaysUpdate: 0
         serializedProperties: []
       _name: 
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
@@ -207,6 +211,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
+  ForceSlotMaterials: 0
   AtlasResolutionScale: 1
   defaultLoadOptions: 31
   savePathType: 0
@@ -314,3 +319,5 @@ MonoBehaviour:
   maxReduction: 8
   useSlotDropping: 0
   BufferZone: 0.5
+  MinCheck: 0.5
+  CheckRange: 0.25

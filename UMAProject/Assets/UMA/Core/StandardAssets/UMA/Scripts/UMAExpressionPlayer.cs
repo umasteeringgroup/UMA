@@ -44,6 +44,7 @@ namespace UMA.PoseTools
 		public float MinSaccadeDelay = 0.25f;
 		public float MaxSaccadeMagnitude = 15f;
 
+		public Animator animator;
 		private float[] LastValues;
 
 		public UMAExpressionEvent ExpressionChanged;
@@ -83,17 +84,20 @@ namespace UMA.PoseTools
 					{
 						umaData = gameObject.GetComponentInParent<UMAData>();
 					}
-					if (umaData == null)
+					if (umaData != null)
 					{
-						//if (Debug.isDebugBuild)
-						//	Debug.LogError("Couldn't locate UMAData component");
-						return;
+						umaData.CharacterBegun.AddListener(CharacterBegun);
+						umaData.CharacterUpdated.AddListener(UmaData_OnCharacterUpdated);
 					}
-					umaData.CharacterBegun.AddListener(CharacterBegun);
-					umaData.CharacterUpdated.AddListener(UmaData_OnCharacterUpdated);
 				}
 			}
-            //SetupBones();
+
+			if (umaData != null)
+			{
+				animator = gameObject.GetComponentInChildren<Animator>();
+				SetupBones();
+			}
+
 			processing = true;
 			initialized = true;
         }
@@ -106,7 +110,7 @@ namespace UMA.PoseTools
 
 		private void SetupBones()
 		{
-			if ((expressionSet != null) && (umaData != null) && (umaData.skeleton != null))
+			if ((expressionSet != null) /*&& (umaData != null) && (umaData.skeleton != null)*/)
 			{
 				Transform jaw = null;
 				Transform neck = null;
@@ -114,15 +118,15 @@ namespace UMA.PoseTools
 
 				if (umaData.animator != null)
 				{
-					jaw = umaData.animator.GetBoneTransform(HumanBodyBones.Jaw);
+					jaw = animator.GetBoneTransform(HumanBodyBones.Jaw);
 					if (jaw != null)
 						jawHash = UMAUtils.StringToHash(jaw.name);
 
-					neck = umaData.animator.GetBoneTransform(HumanBodyBones.Neck);
+					neck = animator.GetBoneTransform(HumanBodyBones.Neck);
 					if (neck != null)
 						neckHash = UMAUtils.StringToHash(neck.name);
 
-					head = umaData.animator.GetBoneTransform(HumanBodyBones.Head);
+					head = animator.GetBoneTransform(HumanBodyBones.Head);
 					if (head != null)
 						headHash = UMAUtils.StringToHash(head.name);
 				}
@@ -157,6 +161,7 @@ namespace UMA.PoseTools
         {
 			umaData = obj;
 			SetupBones();
+			animator = umaData.animator;
 			processing = true;
         }
 

@@ -1,3 +1,31 @@
+Whats new in 2.12
+Ability to select items in the project from the Global LIbrary items menu. 
+Removed the T-Pose layer that was missing the animation mask.
+Updated documentation on events, new slot builder features
+Better logic when cleaning up the rig in the editor (only on race change, and only if "rebuild skeleton" is checked)
+Moved some items out of examples that should have been in the core folders.
+Added option (on by default) to slim down scene saved files that have UMA editor-time generated characters in them.
+Fixed materials that were stripped when you rebuild addressable groups.
+You can now add "Override DNA" to Wardrobe Recipes. These will be applied instead of the existing DNA.
+New option on shared colors to force update the shared color from the recipes (on the property block)
+Now, when you edit a wardrobe item, and a character has that in their preload wardrobe in the active scene, the character will be rebuilt when the wardrobe item is changed.
+The Clear button in a wardrobe recipe will now ask "are you sure". Select cancel if you are not.
+You can now target specific races on slots in wardrobe recipes (in the tags dropdown).
+UMARandomizer will now allow you to set null slots, and weight them (so you have a chance of not adding anything)
+Cloth self-collision properties added to UMAClothProperties
+If you edit a recipe, slot, overlay or race, any edit time UMAs that use those will be regenerated, and any instantiated ones in the cache will be released so the Index will pick up the new versions immediately.
+10x increase in speed copying RenderTextures to Texture2D when using modern graphics API (DX11/12, PS4, OpenGL 4.3, OpenGL ES 3.1, Metal, etc.)
+Plugin system to add your own UI pieces into the recipe editor (IUMARecipePlugin)
+Option to recalculate tangents in slot builder
+Added save/load/clear buttons to the tags list on the slots in the recipe editor.
+Experimental support for saving and restoring regular mounted items between builds. To use, add the "UMAIgnore" tag to the object 
+new menuitem in Global Library to apply selected races to selected wardrobe items.
+When creating a prefab using the prefab maker, UMA will now correctly detect detail normal maps, and will also mark all normal maps as normal maps in the import settings.
+Option to add "Standalone DNA" component to prefab, giving you the option to have DNA on the non-UMA prefabs. When using this option, UMA is required to be in the scene to be able to process the DNA.
+Experimental - multiple bone chains in UMAJiggleBone
+Fixed issue in addressables caused by out of order calling of events and actions in new addressable library
+
+
 Whats new in 2.11.6
 Tags function in character editor (clear/load/save)
 Added new eyebrows for male character

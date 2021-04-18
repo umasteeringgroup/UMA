@@ -184,7 +184,10 @@ namespace UMA
 				{
 					List<RandomWardrobeSlot> RandomWardrobe = RandomSlots[s];
 					RandomWardrobeSlot uwr = GetRandomWardrobe(RandomWardrobe);
-					AddRandomSlot(Avatar,uwr);
+					if (uwr.WardrobeSlot != null)
+					{
+						AddRandomSlot(Avatar, uwr);
+					}
 				}
 			}
 		}

@@ -103,12 +103,8 @@ namespace UMA.Examples
 			}
 		}
 
-		public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, Color Shine, HashSet<string> Keywords, UMAContext context)
-		{
-			Apply(umaData, race, skinColor, HairColor, Shine, Keywords, context.slotLibrary, context.overlayLibrary);
-		}
 
-		public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, Color Shine, HashSet<string> Keywords, SlotLibraryBase slotLibrary, OverlayLibraryBase overlayLibrary)
+		public static void Apply(UMA.UMAData umaData, CrowdRaceData race, Color skinColor, Color HairColor, Color Shine, HashSet<string> Keywords, UMAContextBase context)
 		{
 			var slotParts = new HashSet<string>();
 			umaData.umaRecipe.slotDataList = new SlotData[race.slotElements.Length];
@@ -135,7 +131,7 @@ namespace UMA.Examples
 				SlotData slotData;
 				if (slot.useSharedOverlayList && slot.overlayListSource >= 0 && slot.overlayListSource < i)
 				{
-					slotData = slotLibrary.InstantiateSlot(slot.slotID, umaData.umaRecipe.slotDataList[slot.overlayListSource].GetOverlayList());
+					slotData = context.InstantiateSlot(slot.slotID, umaData.umaRecipe.slotDataList[slot.overlayListSource].GetOverlayList());
 				}
 				else
 				{
@@ -143,7 +139,7 @@ namespace UMA.Examples
 					{
 						Debug.LogError("UMA Crowd: Invalid overlayListSource for " + slot.slotID);
 					}
-					slotData = slotLibrary.InstantiateSlot(slot.slotID);
+					slotData = context.InstantiateSlot(slot.slotID);
 				}
 				umaData.umaRecipe.slotDataList[i] = slotData;
 				for (int overlayIdx = 0; overlayIdx < slot.overlayElements.Length; overlayIdx++)
@@ -155,7 +151,7 @@ namespace UMA.Examples
 					overlay.UpdateVersion();
 					slotParts.Add(overlay.overlayID);
 					Color overlayColor = Color.black;
-					var overlayData = overlayLibrary.InstantiateOverlay(overlay.overlayID, overlayColor);
+					var overlayData = context.InstantiateOverlay(overlay.overlayID, overlayColor);
 
 
 					switch (overlay.overlayType)

@@ -47,7 +47,7 @@ namespace UMA
 		private List<BoneData> boneHashDataBackup = new List<BoneData>();
 #endif
 
-		private Dictionary<int, BoneData> boneHashData
+		public Dictionary<int, BoneData> boneHashData
 		{
 			get
 			{
@@ -117,7 +117,6 @@ namespace UMA
 				}
 			}
 			updating = false;
-			
 		}
 
 		public virtual void SetAnimatedBone(int nameHash)

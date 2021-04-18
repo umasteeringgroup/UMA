@@ -211,13 +211,63 @@ namespace UMA
 
 					while (!activeGeneratorCoroutine.Work()) ;
 
-					activeGeneratorCoroutine = null;
+					activeGeneratorCoroutine = null; 
 				}
 
 				TextureChanged++;
 			}
 		}
 
+		public void SaveMountedItems(UMAData umaData)
+        {
+			if (!SaveAndRestoreIgnoredItems)
+				return;
+
+			GameObject holder = null;
+
+			foreach(Transform t in umaData.gameObject.transform)
+            {
+				if (t.name == "Holder")
+                {
+					holder = t.gameObject;
+                }
+            }
+
+			if (holder == null)
+            {
+				holder = new GameObject("Holder");
+				holder.tag = UMAContextBase.IgnoreTag;
+				holder.SetActive(false);
+				holder.transform.parent = umaData.gameObject.transform;
+			}
+			// walk through all the bones.
+			// if the tag has UMAContextBase.IgnoreTag, then 
+			// copy the transform
+			// copy the hash of the bone it came from  
+			// save the object by changing the parent.
+			// the parent object should be disabled so the children don't render.
+			// continue.
+			SaveBonesRecursively(umaData.umaRoot.transform, holder.transform);
+		}
+
+		public void SaveBonesRecursively(Transform bone, Transform holder)
+        {
+			if (bone.CompareTag(UMAContextBase.IgnoreTag))
+			{
+				if (bone.parent != null)
+                {
+					umaData.AddSavedItem(bone);
+					bone.SetParent(holder, false);
+                }
+			}
+			else
+			{
+				for (int i = 0; i < bone.childCount; i++)
+				{
+					SaveBonesRecursively(bone.GetChild(i),holder);
+				}
+			}
+        }
 
 		public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
@@ -231,6 +281,8 @@ namespace UMA
 
 			if (umaData.RebuildSkeleton)
 			{
+				if (umaData.umaRoot != null) 
+					SaveMountedItems(umaData);
 				DestroyImmediate(umaData.umaRoot, false);
 				umaData.umaRoot = null;
 				umaData.RebuildSkeleton = false;
@@ -245,7 +297,7 @@ namespace UMA
 				meshCombiner.Preprocess(umaData);
 			}
 			umaData.FireCharacterBegunEvents();
-			PreApply(umaData);
+			PreApply(umaData); 
 
 			if (umaData.isTextureDirty)
 			{
@@ -315,6 +367,7 @@ namespace UMA
 			}
 			if (umaData.RebuildSkeleton)
 			{
+				SaveMountedItems(umaData);
 				DestroyImmediate(umaData.umaRoot, false);
 				umaData.umaRoot = null;
 				umaData.RebuildSkeleton = false;
@@ -397,7 +450,7 @@ namespace UMA
 						umaData.umaRoot = null;
 						umaData.RebuildSkeleton = false;
 						umaData.isShapeDirty = true;
-					}
+					} // this happens in GenerateSingleUMA now
 					GenerateSingleUMA(umaDirtyList[0],true);
 					umaDirtyList.RemoveAt(0);
 					umaData.MoveToList(cleanUmas);
@@ -525,11 +578,13 @@ namespace UMA
 			if (umaData)
 			{
 				umaData.FirePreUpdateUMABody();
-				// umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
+				umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
 				// Put the skeleton into TPose so rotations will be valid for generating avatar
 				umaData.GotoTPose();
 				umaData.ApplyDNA();
 				umaData.FireDNAAppliedEvents();
+				umaData.RestoreSavedItems();
+				// This has to happen for some reason, or the default models heads cave in.
 				umaData.skeleton.EndSkeletonUpdate();
 				UpdateAvatar(umaData);
 			}

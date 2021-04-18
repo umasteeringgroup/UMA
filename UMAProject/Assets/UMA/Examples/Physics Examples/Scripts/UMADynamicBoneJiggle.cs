@@ -8,6 +8,7 @@ public class UMADynamicBoneJiggle : MonoBehaviour
 {
 	[Header("General Settings")]
 	public string jiggleBoneName;
+	public string[] AdditionalBones;
 	public List<string> exceptions;
 	[Range(0,1)]
 	public float reduceEffect;
@@ -16,12 +17,26 @@ public class UMADynamicBoneJiggle : MonoBehaviour
 	public bool deleteBoneWithSlot;
 	public string slotToWatch;
 	private string linkedRecipe;
-
-
 	public void AddJiggle(UMAData umaData)
-	{
-		Transform rootBone = SkeletonTools.RecursiveFindBone(umaData.umaRoot.transform, jiggleBoneName);
+    {
 		UMABoneCleaner cleaner = umaData.gameObject.GetComponent<UMABoneCleaner>();
+		Transform rootBone = SkeletonTools.RecursiveFindBone(umaData.umaRoot.transform, jiggleBoneName);
+		AddBoneJiggle(umaData, rootBone, cleaner);
+		if (AdditionalBones != null)
+        {
+			foreach(string s in AdditionalBones)
+            {
+				if (!string.IsNullOrEmpty(s))
+				{
+					rootBone = SkeletonTools.RecursiveFindBone(umaData.umaRoot.transform, s);
+					AddBoneJiggle(umaData, rootBone, cleaner);
+				}
+			}
+		}
+	}
+
+	public void AddBoneJiggle(UMAData umaData, Transform rootBone, UMABoneCleaner cleaner)
+	{
 		List<Transform> exclusionList = new List<Transform>();
 
 		if (rootBone != null)
@@ -76,7 +91,7 @@ public class UMADynamicBoneJiggle : MonoBehaviour
 			
 			listing.recipe = linkedRecipe;
 
-			listing.exceptions = exclusionList;
+			listing.exceptions.AddRange(exclusionList);
 			cleaner.RegisterJiggleBone(listing);
 		}
 	}

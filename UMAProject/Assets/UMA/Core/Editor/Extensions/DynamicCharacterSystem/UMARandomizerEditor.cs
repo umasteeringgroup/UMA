@@ -10,27 +10,22 @@ namespace UMA.Editors
 	[CustomEditor(typeof(UMARandomizer))]
 	public class UMARandomizerEditor : Editor
 	{
-		private int currentRace = 0;
-		private string[] races;
-		private List<RaceData> raceDatas;
-		UMARandomizer currentTarget = null;
 
-		List<UMAWardrobeRecipe> droppedItems = new List<UMAWardrobeRecipe>();
+		UMARandomizer currentTarget = null;
 
 		public void OnEnable()
 		{
 			currentTarget = target as UMARandomizer;
-			currentRace = 0;
 			List<string> Races = new List<string>();
-			raceDatas = new List<RaceData>();
+			currentTarget.raceDatas = new List<RaceData>();
 
-			raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
-			foreach(RaceData race in raceDatas)
+			currentTarget.raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
+			foreach(RaceData race in currentTarget.raceDatas)
 			{
 				if (race != null)
 				Races.Add(race.name);
 			}
-			races = Races.ToArray();
+			currentTarget.races = Races.ToArray();
 		}
 
 
@@ -49,7 +44,7 @@ namespace UMA.Editors
 
 			if (evt.type == EventType.DragPerform)
 			{
-				droppedItems.Clear();
+				currentTarget.droppedItems.Clear();
 				if (dropArea.Contains(evt.mousePosition))
 				{
 					DragAndDrop.AcceptDrag();
@@ -62,7 +57,7 @@ namespace UMA.Editors
 							if (draggedObjects[i] is UMAWardrobeRecipe)
 							{
 								UMAWardrobeRecipe utr = draggedObjects[i] as UMAWardrobeRecipe;
-								droppedItems.Add(utr);
+								currentTarget.droppedItems.Add(utr);
 								continue;
 							}
 
@@ -75,7 +70,7 @@ namespace UMA.Editors
 					}
 				}
 			}
-			return droppedItems.Count > 0;
+			return currentTarget.droppedItems.Count > 0;
 		}
 
 		protected void RecursiveScanFoldersForAssets(string path)
@@ -86,7 +81,7 @@ namespace UMA.Editors
 				var tempRecipe = AssetDatabase.LoadAssetAtPath(assetFile, typeof(UMAWardrobeRecipe)) as UMAWardrobeRecipe;
 				if (tempRecipe)
 				{
-					droppedItems.Add(tempRecipe);
+					currentTarget.droppedItems.Add(tempRecipe);
 				}
 			}
 			foreach (var subFolder in System.IO.Directory.GetDirectories(path))
@@ -122,7 +117,11 @@ namespace UMA.Editors
 		{
 			// do random colors
 			// show each possible item.
-			GUIHelper.FoldoutBar(ref rws.GuiFoldout, rws.WardrobeSlot.name + " ("+rws.WardrobeSlot.wardrobeSlot+")", out rws.Delete);
+			string name = "<null>";
+			if (rws.WardrobeSlot != null)
+				name = rws.WardrobeSlot.name;
+
+			GUIHelper.FoldoutBar(ref rws.GuiFoldout, name + " ("+rws.Chance+")", out rws.Delete);
 			if (rws.GuiFoldout)
 			{
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
@@ -228,9 +227,27 @@ namespace UMA.Editors
 				ra.WardrobeFoldout = GUIHelper.FoldoutBar(ra.WardrobeFoldout, "Wardrobe");
 				if (ra.WardrobeFoldout)
 				{
+					// add a null slot for a 
+					GUILayout.BeginHorizontal();
+					EditorGUILayout.LabelField("Select Wardrobe Slot", GUILayout.ExpandWidth(false));
+					ra.currentWardrobeSlot = EditorGUILayout.Popup(ra.currentWardrobeSlot, ra.raceData.wardrobeSlots.ToArray(), GUILayout.ExpandWidth(true));
+					if (GUILayout.Button("Add Null",GUILayout.ExpandWidth(false)))
+                    {
+						ra.RandomWardrobeSlots.Add(new RandomWardrobeSlot(null,ra.raceData.wardrobeSlots[ra.currentWardrobeSlot]));
+						ra.RandomWardrobeSlots.Sort((x, y) => x.SortName.CompareTo(y.SortName));
+					}
+					GUILayout.EndHorizontal();
 					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
+
+					string lastSlot = "";
+
 					foreach (RandomWardrobeSlot rws in ra.RandomWardrobeSlots)
 					{
+						if (rws.SlotName != lastSlot)
+                        {
+							GUILayout.Label("[" + rws.SlotName + "]");
+							lastSlot = rws.SlotName;
+                        }
 						RandomWardrobeSlotGUI(ra, rws);
 					}
 					GUIHelper.EndVerticalPadded(10);
@@ -247,10 +264,10 @@ namespace UMA.Editors
 				UpdateObject();
 			}
 
-			currentRace = EditorGUILayout.Popup("First Select Race", currentRace, races);
+			currentTarget.currentRace = EditorGUILayout.Popup("First Select Race", currentTarget.currentRace, currentTarget.races);
 			GUILayout.Space(20);
 			Rect updateDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-			GUI.Box(updateDropArea, "Then Drag Wardrobe Recipe(s) for "+ races[currentRace] + " here");
+			GUI.Box(updateDropArea, "Then Drag Wardrobe Recipe(s) for "+ currentTarget.races[currentTarget.currentRace] + " here");
 			GUILayout.Space(10);
 			DropAreaGUI(updateDropArea);
 			GUILayout.Space(10);
@@ -269,9 +286,9 @@ namespace UMA.Editors
 		private void UpdateObject()
 		{
 			// Add any dropped items.
-			int ChangeCount = droppedItems.Count;
+			int ChangeCount = currentTarget.droppedItems.Count;
 
-			if (droppedItems.Count > 0)
+			if (currentTarget.droppedItems.Count > 0)
 			{
 				foreach(RandomAvatar rv in currentTarget.RandomAvatars)
 				{
@@ -282,21 +299,21 @@ namespace UMA.Editors
 					}
 				}
 
-				RandomAvatar ra = FindAvatar(raceDatas[currentRace]);
+				RandomAvatar ra = FindAvatar(currentTarget.raceDatas[currentTarget.currentRace]);
 
 				// Add all the wardrobe items.
-				foreach (UMAWardrobeRecipe uwr in droppedItems)
+				foreach (UMAWardrobeRecipe uwr in currentTarget.droppedItems)
 				{
-					if (RecipeCompatible(uwr, raceDatas[currentRace]))
+					if (RecipeCompatible(uwr, currentTarget.raceDatas[currentTarget.currentRace]))
 					{
-						RandomWardrobeSlot rws = new RandomWardrobeSlot(uwr);
+						RandomWardrobeSlot rws = new RandomWardrobeSlot(uwr,uwr.wardrobeSlot);
 						ra.GuiFoldout = true;
 						ra.RandomWardrobeSlots.Add(rws);
 					}
 				}
 				// sort the wardrobe slots
-				ra.RandomWardrobeSlots.Sort((x, y) => x.WardrobeSlot.wardrobeSlot.CompareTo(y.WardrobeSlot.wardrobeSlot));
-				droppedItems.Clear();
+				ra.RandomWardrobeSlots.Sort((x, y) => x.SortName.CompareTo(y.SortName));
+				currentTarget.droppedItems.Clear();
 			}
 
 			ChangeCount += currentTarget.RandomAvatars.RemoveAll(x => x.Delete);

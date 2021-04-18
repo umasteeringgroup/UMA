@@ -1,8 +1,11 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UMA.Integrations;
+using UMA.CharacterSystem;
+using UnityEngine.SceneManagement;
 
 namespace UMA.Editors
 {
@@ -24,7 +27,31 @@ namespace UMA.Editors
 		//for showing a warning if any of the compatible races are missing or not assigned to bundles or the index
 		protected Texture warningIcon;
 		protected GUIStyle warningStyle;
+		private static List<IUMARecipePlugin> plugins;
+		public static List<Type> GetRecipeEditorPlugins() {
+			List<Type> theTypes = new List<Type>();
 
+			var Assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+			foreach(var asm in Assemblies) {
+
+				try {
+					var Types = asm.GetTypes();
+					foreach(var t in Types) {
+						if(typeof(IUMARecipePlugin).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract) {
+							theTypes.Add(t);
+						}
+					}
+				} catch(Exception) {
+					// This apparently blows up on some assemblies. 
+				}
+			}
+
+			return theTypes;
+			/*			return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+							 .Where(x => typeof(IUMAAddressablePlugin).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
+							 .Select(x => x).ToList();*/
+		}
 		public virtual void OnSceneDrag(SceneView view)
 		{
 			if (Event.current.type == EventType.DragUpdated)
@@ -74,9 +101,26 @@ namespace UMA.Editors
 			return GO;
 		}
 
+		void AddPlugins() {
+			List<Type> PluginTypes = GetRecipeEditorPlugins();
+
+			plugins = new List<IUMARecipePlugin>();
+			foreach(Type t in PluginTypes) {
+				plugins.Add((IUMARecipePlugin)Activator.CreateInstance(t));
+			}
+		}
+
         public override void OnEnable()
         {
+			if(plugins == null) {
+				AddPlugins();
+			}
+
             base.OnEnable();
+
+			foreach(IUMARecipePlugin plugin in plugins) {
+				plugin.OnEnable();
+			}
 
             if (!NeedsReenable())
                 return;
@@ -128,6 +172,10 @@ namespace UMA.Editors
 				UMAContextBase.Instance = null;
 				DestroyImmediate(generatedContext);
 			}
+			foreach(IUMARecipePlugin plugin in plugins) {
+				plugin.OnDestroy();
+			}
+
 		}
 
         public override void OnInspectorGUI()
@@ -140,6 +188,18 @@ namespace UMA.Editors
 				warningStyle.contentOffset = new Vector2(0, -2f);
 			}
 			if (_recipe == null) return;
+
+			foreach(IUMARecipePlugin plugin in plugins) 
+			{
+				string label = plugin.GetSectionLabel();
+				plugin.foldOut = GUIHelper.FoldoutBar(plugin.foldOut, label);
+				if(plugin.foldOut) {
+					GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+					plugin.OnInspectorGUI(serializedObject);
+					GUIHelper.EndVerticalPadded(10);
+				}
+			}
+
             PowerToolsGUI();
             base.OnInspectorGUI();
 		}
@@ -150,13 +210,17 @@ namespace UMA.Editors
             recipeBase.Save(_recipe, UMAContextBase.Instance);
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssets();
-            // AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(recipeBase));
             _rebuildOnLayout = true;
 
             _needsUpdate = false;
             if (PowerToolsIntegration.HasPreview(recipeBase))
             {
                 PowerToolsIntegration.Refresh(recipeBase);
+            }
+
+            if (target is UMATextRecipe)
+            {
+                UMAUpdateProcessor.UpdateRecipe(target as UMATextRecipe);
             }
             //else
             //{

@@ -252,6 +252,7 @@ namespace UMA.Editors
 
 		private void CreateSceneEditObject()
 		{
+			bool focusObject = true;
 			MeshHideAsset source = target as MeshHideAsset;
 			if (source.asset == null)
 				return;
@@ -332,11 +333,26 @@ namespace UMA.Editors
 			GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
 			GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
 
+			// Restore the camera position.
+			string CamKey = source.name + "_MHA_Cam";
+			if (EditorPrefs.HasKey(CamKey))
+            {
+				string xform = EditorPrefs.GetString(CamKey);
+				CamSaver cs = CamSaver.FromString(xform);
+				sceneView.camera.transform.position = cs.position;
+				sceneView.camera.transform.localRotation = cs.rotation;
+				focusObject = false;
+            }
+
 			if (geometry != null)
 			{
 				Selection.activeGameObject = obj;
-				SceneView.lastActiveSceneView.FrameSelected(true); 
+				if (focusObject)
+				{
+					SceneView.lastActiveSceneView.FrameSelected(true);
+				}
 
+				// sceneView.camera.transform;
 				geometry.meshAsset = source;
 				geometry.restoreScenes = currentscenes;
 				geometry.currentSceneView = sceneView;
@@ -354,8 +370,11 @@ namespace UMA.Editors
 				geometry.selectedTriangles = new BitArray(source.triangleFlags[source.asset.subMeshIndex]);
 
 				geometry.UpdateSelectionMesh();
-				SceneView.FrameLastActiveSceneView();
-				SceneView.lastActiveSceneView.FrameSelected(); 
+				if (focusObject)
+				{
+					SceneView.FrameLastActiveSceneView();
+					SceneView.lastActiveSceneView.FrameSelected();
+				}
 			}
 		}
 

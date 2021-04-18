@@ -358,6 +358,15 @@ namespace UMA
 		/// <summary>
 		/// Gets all plugins assigned to this converterController that are of the given type
 		/// </summary>
+		public List<DynamicDNAPlugin> GetPlugins()
+		{
+			return _plugins;
+		}
+
+
+		/// <summary>
+		/// Gets all plugins assigned to this converterController that are of the given type
+		/// </summary>
 		public List<DynamicDNAPlugin> GetPlugins(System.Type pluginType)
 		{
 			var pluginsOfType = new List<DynamicDNAPlugin>();

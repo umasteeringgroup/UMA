@@ -52,6 +52,7 @@ namespace UMA.Editors
 		public bool createRecipe;
 		public bool addToGlobalLibrary;
 		public bool binarySerialization;
+		public bool calcTangents=true;
 		public string errmsg = "";
 		public List<string> Tags = new List<string>();
 		public bool showTags;
@@ -151,6 +152,7 @@ namespace UMA.Editors
 			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
 			addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
 			EditorGUILayout.EndHorizontal();
+			calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
 			boneList.DoLayoutList();
 			GUIHelper.EndVerticalPadded(10);
 			DoDragDrop();
@@ -322,7 +324,7 @@ namespace UMA.Editors
 			}
 
 			SlotDataAsset sd = CreateSlot_Internal();
-			
+			UMAUpdateProcessor.UpdateSlot(sd);
 			return sd;
 		}
 
@@ -378,7 +380,7 @@ namespace UMA.Editors
 				KeepList.Add(b.strValue);
             }
 
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(),GetSlotName(slotMesh),nameAfterMaterial, slotMesh, material, normalReferenceMesh,KeepList, RootBone, binarySerialization);
+			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(),GetSlotName(slotMesh),nameAfterMaterial, slotMesh, material, normalReferenceMesh,KeepList, RootBone, binarySerialization,calcTangents);
 			slot.tags = Tags.ToArray();
 			return slot;
 		}

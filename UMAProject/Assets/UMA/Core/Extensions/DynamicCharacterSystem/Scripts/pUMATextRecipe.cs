@@ -37,8 +37,8 @@ namespace UMA
         [SerializeField]
         public List<MeshHideAsset> MeshHideAssets = new List<MeshHideAsset>();
 
-       // [SerializeField]
-		//public string AddressableLabel;
+		[SerializeField]
+		public UMAPredefinedDNA OverrideDNA = new UMAPredefinedDNA();
 
 
 #if UNITY_EDITOR
