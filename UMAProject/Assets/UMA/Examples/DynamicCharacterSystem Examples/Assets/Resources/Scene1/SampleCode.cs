@@ -37,6 +37,8 @@ namespace UMA.CharacterSystem.Examples
         public bool PreloadAndUnload;
         public Slider TestSlider;
         public UMAWardrobeCollection CollectionToAdd;
+        public bool UseHighresModels;
+
 
 		private List<RaceData> races;
 
@@ -86,12 +88,17 @@ namespace UMA.CharacterSystem.Examples
             Avatar.gameObject.SetActive(true);
             if (RaceDropdown != null)
             {
-
+                int i = 0;
+                int found = 0;
                 RaceDropdown.options.Clear();
                 foreach (RaceData race in races)
                 {
+                    if (race.raceName == Avatar.activeRace.name)
+                        found = i;
                     RaceDropdown.options.Add(new Dropdown.OptionData(race.raceName));
+                    i++;
                 }
+                RaceDropdown.value = found;
             }
 #endif
         }

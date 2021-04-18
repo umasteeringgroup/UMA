@@ -69,6 +69,7 @@ MonoBehaviour:
   defaultOverlayAsset: {fileID: 11400000, guid: fe30fbf67b51de8499624c6913a39e64,
     type: 2}
   ignoreTag: UMAIgnore
+  SaveAndRestoreIgnoredItems: 0
   meshCombiner: {fileID: 7275351159514515506}
   InitialScaleFactor: 2
   editorInitialScaleFactor: 4
