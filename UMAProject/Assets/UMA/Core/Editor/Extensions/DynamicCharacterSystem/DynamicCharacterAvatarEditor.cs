@@ -13,7 +13,7 @@ namespace UMA.CharacterSystem.Editors
 	{		
 		public static bool showHelp = false;
 		public static bool showWardrobe = false;
-		public static bool showEditorCustomization = false;
+		public static bool showEditorCustomization = true;
 		public static bool showPrefinedDNA = false;
 
 		public static int currentcolorfilter=0;

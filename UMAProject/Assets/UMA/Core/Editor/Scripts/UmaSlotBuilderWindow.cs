@@ -56,7 +56,7 @@ namespace UMA.Editors
 		public string errmsg = "";
 		public List<string> Tags = new List<string>();
 		public bool showTags;
-		public bool nameAfterMaterial=true;
+		public bool nameAfterMaterial=false;
 		public List<BoneName> KeepBones = new List<BoneName>();
 		private ReorderableList boneList;
 		private bool boneListInitialized;
