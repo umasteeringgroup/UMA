@@ -7,7 +7,7 @@ namespace UMA
     public class UmaAboutWindow : EditorWindow 
     {
         public static string umaVersion { get { return _version; } }
-        private static readonly string _version = "2.11.7A1";
+        private static readonly string _version = "2.12";
         private string windowTitle = "UMA About";
         private string wikiLink = "http://umadocs.secretanorak.com/doku.php";
         private string githubLink = "https://github.com/umasteeringgroup";

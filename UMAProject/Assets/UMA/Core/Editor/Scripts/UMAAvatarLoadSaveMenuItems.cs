@@ -125,7 +125,7 @@ namespace UMA.Editors
 							}
 						}
 					}
-					string matname = Folder + "/"+CharName+"_Mat_" + Material + ".mat";
+					string matname = Folder + "/"+CharName+"_Mat_" + Material + ".mat"; 
 					CustomAssetUtility.SaveAsset<Material>(m, matname);
 					Material++;
 					// Save the material to disk?
@@ -135,6 +135,7 @@ namespace UMA.Editors
 				string meshName = Folder + "/"+CharName+"_Mesh_" + meshno + ".asset";
 				meshno++;
 				// Save Mesh to disk.
+				smr.sharedMesh.Optimize();
 				CustomAssetUtility.SaveAsset<Mesh>(smr.sharedMesh, meshName);
 				smr.sharedMaterials = mats;
 				smr.materials = mats;
