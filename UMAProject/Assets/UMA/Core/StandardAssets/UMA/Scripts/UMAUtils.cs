@@ -43,7 +43,7 @@ namespace UMA
 			}
 
 		public static Dictionary<string, string> URPTextureTranslation = new Dictionary<string, string>() {
-			{"_MainTex","_BaseMap"},
+			{"_MainTex","_BaseColorMap"},
 			{"_MetallicMap", "_MaskMap" }
 		};
 

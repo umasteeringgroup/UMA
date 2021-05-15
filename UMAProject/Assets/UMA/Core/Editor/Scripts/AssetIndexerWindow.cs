@@ -425,6 +425,13 @@ namespace UMA.Controls
 				return;
 			});
 
+			AddMenuItemWithCallback(ItemsMenu, "Select all highlighted items", () =>
+			{
+				SetHighlighted(true);
+				return;
+			});
+
+
 			AddMenuItemWithCallback(ItemsMenu, "Clear Selection", () =>
 			{
 				var treeElements = new List<AssetTreeElement>();
@@ -435,6 +442,12 @@ namespace UMA.Controls
 				}
 				treeView.RecalcTypeChecks();
 				Repaint();
+				return;
+			});
+
+			AddMenuItemWithCallback(ItemsMenu, "Clear highlighted items", () =>
+			{
+				SetHighlighted(false);
 				return;
 			});
 
@@ -509,6 +522,20 @@ namespace UMA.Controls
 				 return;
 			 });
 
+			AddMenuItemWithCallback(ItemsMenu, "Copy highlighted wardrobe recipe settings to checked wardrobe recipes", () =>
+			{
+				CopyHighlightedToChecked();
+				Repaint();
+				return;
+			});
+
+			AddMenuItemWithCallback(ItemsMenu, "Copy highlighted wardrobe recipe shared colors to checked wardrobe recipes", () =>
+			{
+				CopyHighlightedColorsToChecked();
+				Repaint();
+				return;
+			});
+
 			AddMenuItemWithCallback(ItemsMenu, "Remove Selected", () => 
 			{
 				RemoveSelected();
@@ -528,7 +555,208 @@ namespace UMA.Controls
 
 		}
 
-        private void ApplyRacesToRecipes()
+
+		private Dictionary<int,AssetTreeElement> GetAllItems()
+        {
+			Dictionary<int, AssetTreeElement> AllItems = new Dictionary<int, AssetTreeElement>();
+			var treeElements = new List<AssetTreeElement>();
+			TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+			foreach(AssetTreeElement ate in treeElements)
+            {
+				AllItems.Add(ate.id, ate);
+            }
+
+			return AllItems;
+		}
+
+		private List<AssetTreeElement> GetHighlightedItems()
+        {
+			Dictionary<int, AssetTreeElement> allItems = GetAllItems();
+			IList<int> list = treeView.GetSelection();
+
+			var treeElements = new List<AssetTreeElement>();
+
+			foreach (int i in list)
+            {
+				if (allItems.ContainsKey(i))
+                {
+					treeElements.Add(allItems[i]);
+                }
+            }
+			return treeElements;
+		}
+
+		private void SetHighlighted(bool v)
+        {
+			var selected = GetHighlightedItems();
+			foreach (AssetTreeElement ate in selected)
+			{
+				ate.Checked = v;
+			}
+			treeView.RecalcTypeChecks();
+			Repaint();
+		}
+
+	
+        private void CopyHighlightedToChecked()
+        {
+			var highlight = GetHighlightedItems();
+			var selected = GetSelectedElements();
+
+			if (highlight.Count > 1 || highlight.Count == 0)
+            {
+				EditorUtility.DisplayDialog("Error", "One UMAWardrobeRecipe must be highlighted in the tree. This item will be used as the source item.", "OK");
+				return;
+            }
+
+			if (highlight[0].ai.Item as UMAWardrobeRecipe == null)
+            {
+				EditorUtility.DisplayDialog("Error", "A UMAWardrobeRecipe must be highlighted in the tree. This item will be used as the source item.", "OK");
+				return;
+			}
+
+			if (selected.Count < 1)
+            {
+				EditorUtility.DisplayDialog("Error", "At least one UMAWardrobeRecipe must be checked in the tree. These items will be updated", "OK");
+				return;
+            }
+
+			UMAWardrobeRecipe source = highlight[0].ai.Item as UMAWardrobeRecipe;
+
+			foreach(var ate in selected)
+            {
+				if (ate.ai.Item is UMAWardrobeRecipe)
+                {
+					UMAWardrobeRecipe uwr = ate.ai.Item as UMAWardrobeRecipe;
+					// Copy Compatible Races
+					foreach (string s in source.compatibleRaces)
+					{
+						if (uwr.compatibleRaces.Contains(s)) continue;
+						uwr.compatibleRaces.Add(s);
+					}
+					uwr.wardrobeSlot = source.wardrobeSlot;
+					EditorUtility.SetDirty(uwr);
+				}
+			}
+			UAI.ForceSave();
+			treeView.RecalcTypeChecks();
+			Repaint();
+			EditorUtility.DisplayDialog("Copy", "Complete", "OK");
+		}
+
+		private void CopyHighlightedColorsToChecked()
+		{
+			var highlight = GetHighlightedItems();
+			var selected = GetSelectedElements();
+
+			if (highlight.Count > 1 || highlight.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Error", "One Recipe must be highlighted in the tree. This item will be used as the source item.", "OK");
+				return;
+			}
+
+			if (highlight[0].ai.Item as UMAWardrobeRecipe == null)
+			{
+				EditorUtility.DisplayDialog("Error", "A Recipe must be highlighted in the tree. This item will be used as the source item.", "OK");
+				return;
+			}
+
+			if (selected.Count < 1)
+			{
+				EditorUtility.DisplayDialog("Error", "At least one Recipe must be checked in the tree. These items will be updated", "OK");
+				return;
+			}
+
+
+			UMATextRecipe source = highlight[0].ai.Item as UMATextRecipe;
+			UMAPackedRecipeBase.UMAPackRecipe upr = source.PackedLoad();
+            UMAPackedRecipeBase.PackedOverlayColorDataV3[] sourceColors = upr.fColors;
+		
+			if (sourceColors == null)
+            {
+				EditorUtility.DisplayDialog("Error", "Source recipe does not have any shared colors", "OK");
+				return;
+            }
+
+			foreach (var ate in selected)
+			{
+				if (ate.ai.Item is UMATextRecipe)
+				{
+					UMATextRecipe utr = ate.ai.Item as UMATextRecipe;
+
+                    UMAPackedRecipeBase.UMAPackRecipe dest = utr.PackedLoad();
+					if (dest.fColors == null)
+                    {
+						dest.fColors = sourceColors;
+						continue;
+                    }
+
+					/*
+					Dictionary<string, UMAPackedRecipeBase.PackedOverlayColorDataV3> NewColors = new Dictionary<string, UMAPackedRecipeBase.PackedOverlayColorDataV3>();
+
+					foreach(var ocd in dest.fColors)
+                    {
+						if (!string.IsNullOrEmpty(ocd.name))
+						{
+							NewColors.Add(ocd.name, ocd);
+						}
+                    }
+
+					foreach(var color in col)
+                    {
+						if (NewColors.ContainsKey(color.name))
+                        {
+							NewColors[color.name] = color;
+                        }
+						else
+                        {
+							NewColors.Add(color.name, color);
+                        }
+                    }
+					dest.fColors = NewColors.Values.ToArray();*/
+
+					List<UMAPackedRecipeBase.PackedOverlayColorDataV3> currentColors = new List<UMAPackedRecipeBase.PackedOverlayColorDataV3>();
+					currentColors.AddRange(dest.fColors);
+					foreach(var color in sourceColors)
+                    {
+						if (string.IsNullOrEmpty(color.name))
+							continue;
+						if (color.name.StartsWith("-"))
+							continue;
+						bool found = false;
+						foreach(var ocd in currentColors)
+                        {
+							if (ocd.name == color.name)
+                            {
+								ocd.colors = color.colors;
+								ocd.ShaderParms = color.ShaderParms;
+								found = true;
+                            }
+                        }
+						if (!found)
+                        {
+							currentColors.Add(color);
+                        }
+                    }
+
+					dest.fColors = currentColors.ToArray();
+					dest.sharedColorCount = dest.fColors.Length;
+					utr.PackedSave(dest, null);
+					UMAData.UMARecipe ur = new UMAData.UMARecipe();
+					utr.Load(ur);
+					EditorUtility.SetDirty(utr);
+					ate.ai._SerializedItem = null; 
+				}
+			}
+
+			UAI.ForceSave();
+			treeView.RecalcTypeChecks();
+			Repaint();
+			EditorUtility.DisplayDialog("Copy", "Complete", "OK");
+		}
+
+		private void ApplyRacesToRecipes()
         {
 			List<AssetTreeElement> selectedElements = GetSelectedElements();
 

@@ -135,7 +135,7 @@ namespace UMA.Editors
 				string meshName = Folder + "/"+CharName+"_Mesh_" + meshno + ".asset";
 				meshno++;
 				// Save Mesh to disk.
-				smr.sharedMesh.Optimize();
+				// smr.sharedMesh.Optimize(); This blows up some versions of Unity.
 				CustomAssetUtility.SaveAsset<Mesh>(smr.sharedMesh, meshName);
 				smr.sharedMaterials = mats;
 				smr.materials = mats;

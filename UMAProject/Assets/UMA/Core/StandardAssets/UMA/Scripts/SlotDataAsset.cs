@@ -17,8 +17,12 @@ namespace UMA
 		public string slotName;
 		[System.NonSerialized]
 		public int nameHash;
-
 #if UNITY_EDITOR
+		[Tooltip("This is only used when updating the slot with drag and drop below. It is not used at runtime nor is it included in the build")]
+		public SkinnedMeshRenderer normalReferenceMesh;
+		[HideInInspector]
+		public bool ConvertTangents;
+
 		private StringBuilder errorBuilder  = new StringBuilder();
 
 

@@ -82,7 +82,7 @@ namespace UMA
 		/// 
 		public override UMAContextBase CreateEditorContext()
 		{
-			UMAContextBase.CreateEditorContext();
+			//UMAContextBase.CreateEditorContext();
 			return UMAContextBase.Instance;
 		}
 #endif

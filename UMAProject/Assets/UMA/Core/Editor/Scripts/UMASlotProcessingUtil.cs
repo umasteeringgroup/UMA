@@ -50,6 +50,10 @@ namespace UMA.Editors
             else
             {
                 resultingMesh = (Mesh)GameObject.Instantiate(resultingSkinnedMesh.sharedMesh);
+				if (calcTangents)
+				{
+					resultingMesh.RecalculateTangents();
+				}
             }
 
 			//CountBoneweights(resultingMesh);

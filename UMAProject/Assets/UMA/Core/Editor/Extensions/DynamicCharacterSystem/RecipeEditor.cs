@@ -136,21 +136,17 @@ namespace UMA.Editors
                 {
 					var context = UMAContextBase.Instance;
 					//create a virtual UMAContextBase if we dont have one and we have DCS
-					if (context == null || context.gameObject.name == "UMAEditorContext")
-					{
-						context = umaRecipeBase.CreateEditorContext();//will create or update an UMAEditorContext to the latest version
-						generatedContext = context.gameObject.transform.parent.gameObject;//The UMAContextBase in a UMAEditorContext is that gameobject's child
-					}
+				//	if (context == null || context.gameObject.name == "UMAEditorContext")
+				//	{
+				//		context = umaRecipeBase.CreateEditorContext();//will create or update an UMAEditorContext to the latest version
+				//		generatedContext = context.gameObject.transform.parent.gameObject;//The UMAContextBase in a UMAEditorContext is that gameobject's child
+				//	}
 					//legacy checks for context
-					if (context == null)
+					if (context != null)
 					{
-						_errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContextBase.";
-                        Debug.LogWarning(_errorMessage);
-						//_recipe = null;
-						//return;
+						umaRecipeBase.Load(_recipe, context);
+						_description = umaRecipeBase.GetInfo();
 					}
-                    umaRecipeBase.Load(_recipe, context);
-                    _description = umaRecipeBase.GetInfo();
                 }
             }
 			catch (UMAResourceNotFoundException e)
@@ -199,6 +195,42 @@ namespace UMA.Editors
 					GUIHelper.EndVerticalPadded(10);
 				}
 			}
+
+			if (UMAContext.Instance == null)
+            {
+				EditorGUILayout.HelpBox("A valid context was not found. This is required to be able to view and edit UMA recipes. You can add a Temporary context, and it will disappear when the scene or appdomain is reloaded, or you can add a permanent UMA_GLIB to the scene.", MessageType.Warning);
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("Add Permanent Context"))
+                {
+					var glib = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/UMA/Getting Started/UMA_GLIB.prefab");
+					if (glib != null)
+					{
+						glib.name = "UMA_GLIB";
+						var g = (GameObject)PrefabUtility.InstantiatePrefab(glib);
+					}
+					else
+					{
+						EditorUtility.DisplayDialog("error", "Unable to find UMA_GLIB. Please add context manually.", "OK");
+					}
+				}
+				if (GUILayout.Button("Add Temp Context"))
+				{
+					var glib = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/UMA/Getting Started/UMA_GLIB.prefab");
+					if (glib != null)
+					{
+						glib.name = "Temp Context (does not save)";
+						var g = (GameObject)PrefabUtility.InstantiatePrefab(glib);
+						g.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
+						UMAContext.Instance = g.GetComponent<UMAGlobalContext>();
+					}
+					else
+                    {
+						EditorUtility.DisplayDialog("error", "Unable to find UMA_GLIB. Please add context manually.", "OK");
+                    }
+				}
+				EditorGUILayout.EndHorizontal();
+				return;
+            }
 
             PowerToolsGUI();
             base.OnInspectorGUI();

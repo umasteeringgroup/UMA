@@ -383,7 +383,7 @@ namespace UMA.Editors
 			if (compatibleRaces.Count > 0)
 			{
 				dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f + EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
-				dropArea.width = dropArea.width - 85f;
+				dropArea.width = dropArea.width - 105f;
 				dropAreaBox = dropArea;
 				dropAreaBox.y = dropAreaBox.y + EditorGUIUtility.singleLineHeight;
 				dropAreaBox.height = dropAreaBox.height - EditorGUIUtility.singleLineHeight;
@@ -447,32 +447,36 @@ namespace UMA.Editors
 						newCompatibleRaces.RemoveAt(i);
 					}
 				}
-				Rect thumbnailRect = dropArea;
-				thumbnailRect.x = dropArea.width + padding /*+ 20f*/;
-				thumbnailRect.width = 75f;
-				thumbnailRect.y = thumbnailRect.y - 3f;
-				Rect thumbnailDDRect = thumbnailRect;
-				Rect thumbnailThumbRect = thumbnailRect;
-				thumbnailThumbRect.height = 75f;
-				EditorGUI.LabelField(thumbnailRect, "Thumbnail");
-				thumbnailDDRect.y = thumbnailDDRect.y + EditorGUIUtility.singleLineHeight;
-				thumbnailThumbRect.y = thumbnailThumbRect.y + EditorGUIUtility.singleLineHeight;
+				Rect labelRect = dropArea;
+				labelRect.x = dropArea.width + padding + 20f;
+				labelRect.width = 85f;
+				labelRect.height = EditorGUIUtility.singleLineHeight;
+				labelRect.y = dropArea.y + EditorGUIUtility.singleLineHeight;
+				
+				Rect DDRect = labelRect;
+				Rect SpriteRect = labelRect;
+				SpriteRect.height = 75f;
+				
+				EditorGUI.LabelField(labelRect, "Thumbnail");
+
+				DDRect.y = DDRect.y + EditorGUIUtility.singleLineHeight;
+				SpriteRect.y = DDRect.y + EditorGUIUtility.singleLineHeight;
 				if (newCompatibleRaces.Count > 1)
 				{
-					thumbnailThumbRect.y = thumbnailThumbRect.y + EditorGUIUtility.singleLineHeight + padding;
-					selectedWardrobeThumb = EditorGUI.Popup(thumbnailDDRect, selectedWardrobeThumb, wardrobeThumbsDropDown.ToArray());
+					SpriteRect.y = SpriteRect.y + EditorGUIUtility.singleLineHeight + padding;
+					selectedWardrobeThumb = EditorGUI.Popup(DDRect, selectedWardrobeThumb, wardrobeThumbsDropDown.ToArray());
 				}
 				if (newWardrobeThumbs.Count != newCompatibleRaces.Count)
 				{
 					selectedWardrobeThumb = 0;
 				}
 				EditorGUI.BeginChangeCheck();
-				var thisImg = EditorGUI.ObjectField(thumbnailThumbRect, newWardrobeThumbs[selectedWardrobeThumb].thumb, typeof(Sprite), false);
+				var thisImg = EditorGUI.ObjectField(SpriteRect, newWardrobeThumbs[selectedWardrobeThumb].thumb, typeof(Sprite), false);
 				if (EditorGUI.EndChangeCheck())
 				{
 					if (thisImg != newWardrobeThumbs[selectedWardrobeThumb].thumb)
 					{
-						newWardrobeThumbs[selectedWardrobeThumb].thumb = (Sprite)thisImg;
+					 	newWardrobeThumbs[selectedWardrobeThumb].thumb = (Sprite)thisImg;
 						doUpdate = true;
 					}
 				}

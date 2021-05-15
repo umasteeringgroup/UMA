@@ -169,6 +169,7 @@ namespace UMA.Controls
 			showBorder = true;
 			customFoldoutYOffset = (kRowHeights - EditorGUIUtility.singleLineHeight) * 0.5f; // center foldout in the row since we also center content. See RowGUI
 			extraSpaceBeforeIconAndLabel = kToggleWidth;
+			
 			//multiColumnHeader.sortingChanged += OnSortingChanged;
 			//	var myColumnHeader = (MyMultiColumnHeader)treeView.multiColumnHeader;
 			//this.multiColumnHeader.mode = MyMultiColumnHeader.Mode.MinimumHeaderWithoutSorting;
@@ -527,7 +528,7 @@ namespace UMA.Controls
 
 		protected override bool CanMultiSelect(TreeViewItem item)
 		{
-			return false;
+			return true;
 		}
 
 		public static MultiColumnHeaderState CreateDefaultMultiColumnHeaderState(float treeViewWidth)

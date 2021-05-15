@@ -158,26 +158,25 @@ namespace UMA.Editors
                 AddAnimatedBone(obj.name);
         }
 
-        private void UpdateSlotDropAreaGUI(Rect dropArea)
-        {
-            GameObject obj = DropAreaGUI(dropArea);
-            if (obj != null)
-            {
-                SkinnedMeshRenderer skinnedMesh = obj.GetComponent<SkinnedMeshRenderer>();
-                if (skinnedMesh != null)
-                {
-                    Debug.Log("Updating SlotDataAsset with SkinnedMeshRenderer...");
-                    UpdateSlotData(skinnedMesh);
+		private void UpdateSlotDropAreaGUI(Rect dropArea)
+		{
+			GameObject obj = DropAreaGUI(dropArea);
+			if (obj != null)
+			{
+				SkinnedMeshRenderer skinnedMesh = obj.GetComponent<SkinnedMeshRenderer>();
+				if (skinnedMesh != null)
+				{
+					UpdateSlotData(slot.normalReferenceMesh, skinnedMesh);
 					GUI.changed = true;
-                    Debug.Log("Update Complete!");
-                }
-                else
-                    EditorUtility.DisplayDialog("Error", "No skinned mesh renderer found!", "Ok");
-            }
-                
-        }
+					EditorUtility.DisplayDialog("Complete", "Update completed","OK");
+				}
+				else
+					EditorUtility.DisplayDialog("Error", "No skinned mesh renderer found!", "Ok");
+			}
 
-        private GameObject DropAreaGUI(Rect dropArea)
+		}
+
+		private GameObject DropAreaGUI(Rect dropArea)
 		{
 			var evt = Event.current;
 
@@ -225,17 +224,16 @@ namespace UMA.Editors
 				}
 			}			
 		}
+		private void UpdateSlotData(SkinnedMeshRenderer seamsMesh, SkinnedMeshRenderer skinnedMesh)
+		{
+			SlotDataAsset slot = target as SlotDataAsset;
 
-        private void UpdateSlotData(SkinnedMeshRenderer skinnedMesh)
-        {
-            SlotDataAsset slot = target as SlotDataAsset;
+			string existingRootBone = slot.meshData.RootBoneName;
 
-            string existingRootBone = slot.meshData.RootBoneName;
-
-            UMASlotProcessingUtil.UpdateSlotData(slot, skinnedMesh, slot.material, null, existingRootBone,true);
+			UMASlotProcessingUtil.UpdateSlotData(slot, skinnedMesh, slot.material, seamsMesh, existingRootBone, true);
 			AssetDatabase.SaveAssets();
 			UMAUpdateProcessor.UpdateSlot(slot);
-        }
+		}
     }
 }
 #endif

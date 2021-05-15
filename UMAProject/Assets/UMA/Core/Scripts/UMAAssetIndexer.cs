@@ -192,7 +192,8 @@ namespace UMA
                 {
                     foreach (DynamicCharacterAvatar dca in dcas)
                     {
-                        dca.GenerateSingleUMA();
+                        if (dca.editorTimeGeneration)
+                            dca.GenerateSingleUMA();
                     }
                 }
             }
@@ -725,7 +726,12 @@ namespace UMA
             foreach (KeyValuePair<string, AssetItem> kp in TypeDic)
             {
                 if (AssetFolderCheck(kp.Value, foldersToSearch))
-                    ret.Add((kp.Value.Item as T));
+                {
+                    if (kp.Value.Item != null)
+                    {
+                        ret.Add((kp.Value.Item as T));
+                    }
+                }
             }
             StopTimer(st, "GetAllAssets type=" + typeof(T).Name);
             return ret;
@@ -968,7 +974,7 @@ namespace UMA
 				return instance;
 			}
 #if UNITY_EDITOR
-			EditorUMAContextBase = UMAContextBase.CreateEditorContext();
+			//EditorUMAContextBase = UMAContextBase.CreateEditorContext();
 			return UMAContextBase.Instance;
 #else
 			return null;
@@ -1156,7 +1162,7 @@ namespace UMA
 			if (Op.IsDone) {
 				foreach(var o in Op.Result) {
 					//ProcessedItems.Add(o);
-					ProcessNewItem(o, true, true);
+					ProcessNewItem(o, true, false);
 				}
 			}
 		}

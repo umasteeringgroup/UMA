@@ -1,3 +1,4 @@
+AssetStoreTools/
 Library/
 Temp/
 UnityVS/
@@ -44,3 +45,4 @@ UMAProject/Assets/AssetStoreTools
 UMAProject/Assets/AssetStoreTools.meta
 UMAProject/.vs
 UMAProject/Assets/Temp.meta
+UMAProject/.vsconfig

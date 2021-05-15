@@ -244,7 +244,10 @@ namespace UMA.CharacterSystem.Editors
                         }
                         recipeName = thisElement.FindPropertyRelative("_recipeName").stringValue;
 
-                        recipeIsLive = UMAContext.Instance.HasRecipe(recipeName);
+                        if (UMAContext.Instance != null)
+                        {
+                            recipeIsLive = UMAContext.Instance.HasRecipe(recipeName);
+                        }
 
                         if (!recipeIsLive)
                             valR.width = valR.width - 25f;

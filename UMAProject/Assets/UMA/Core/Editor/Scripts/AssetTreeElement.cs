@@ -38,6 +38,8 @@ namespace UMA.Controls
 			Checked = val;
 		}
 
+	
+
 		public AssetTreeElement (string name, int depth, int id) : base (name, depth, id)
 		{
 			AmountChecked = Amount.None;

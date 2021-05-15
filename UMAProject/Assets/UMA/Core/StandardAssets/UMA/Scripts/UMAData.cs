@@ -422,6 +422,7 @@ namespace UMA
 
 		public bool Validate()
 		{
+			if (Application.isBatchMode) return true;
 			bool valid = true;
 			if (umaGenerator == null)
 			{
@@ -1257,8 +1258,15 @@ namespace UMA
 						}
 						else if (converter is IDynamicDNAConverter)
 						{
-							var dna = umaDna[dnaTypeHash];
-							((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)converter).dnaAsset;
+                            UMADnaBase dna = umaDna[dnaTypeHash];
+							if (dna is DynamicUMADnaBase)
+							{
+								((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)converter).dnaAsset;
+							}
+							else
+                            {
+								Debug.LogError("Invalid converter "+converter.name+" on race " + raceData.raceName);
+                            }
 						}
 					}
 				}

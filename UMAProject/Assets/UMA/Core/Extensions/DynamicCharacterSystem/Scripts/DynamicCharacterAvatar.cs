@@ -457,7 +457,7 @@ namespace UMA.CharacterSystem
 #if UNITY_EDITOR
             if (UMAContextBase.Instance == null)
             {
-                CreateEditorContext();
+                //CreateEditorContext();
             }
 #endif
             lastHide = !hide;
@@ -562,7 +562,7 @@ namespace UMA.CharacterSystem
                 {
                     // Unfortunately we must unpack the prefab or it will blow up.
                     GameObject go = PrefabUtility.GetOutermostPrefabInstanceRoot(this.gameObject);
-                    UnityEditor.PrefabUtility.UnpackPrefabInstance(go, UnityEditor.PrefabUnpackMode.Completely, UnityEditor.InteractionMode.AutomatedAction);
+                    UnityEditor.PrefabUtility.UnpackPrefabInstance(go, UnityEditor.PrefabUnpackMode.OutermostRoot, UnityEditor.InteractionMode.AutomatedAction);
                 }
                 CleanupGeneratedData();
                 activeRace.SetRaceData();
@@ -3939,6 +3939,8 @@ namespace UMA.CharacterSystem
         /// </summary>
         public UMAContextBase CreateEditorContext()
         {
+            return null;
+            /*
             EditorUMAContextBase = GameObject.Find("UMAEditorContext");
             if (EditorUMAContextBase == null)
             {
@@ -3953,11 +3955,11 @@ namespace UMA.CharacterSystem
             EditorApplication.update -= CheckEditorContextNeeded;
             EditorApplication.update += CheckEditorContextNeeded;
             UMAContextBase.Instance = EditorUMAContextBase.GetComponent<UMAContextBase>();
-            return UMAContextBase.Instance;
+            return UMAContextBase.Instance; */
         }
 
         private void DestroyEditorUMAContextBase()
-        {
+        {/*
             if (EditorUMAContextBase != null)
             {
                 foreach (Transform child in EditorUMAContextBase.transform)
@@ -3966,11 +3968,12 @@ namespace UMA.CharacterSystem
                 }
                 DestroyImmediate(EditorUMAContextBase);
                 EditorApplication.update -= CheckEditorContextNeeded;
-            }
+            } */
         }
 
         public void CheckEditorContextNeeded()
         {
+            /*
             if (EditorUMAContextBase != null)
             {
                 if (EditorUMAContextBase.GetComponentInChildren<UMAContextBase>() != null || EditorUMAContextBase.GetComponent<UMAContextBase>() != null)
@@ -3984,8 +3987,8 @@ namespace UMA.CharacterSystem
             else
             {
                 EditorApplication.update -= CheckEditorContextNeeded;
-            }
-        }
+            }*/
+        } 
 #endif
 
 #endregion
