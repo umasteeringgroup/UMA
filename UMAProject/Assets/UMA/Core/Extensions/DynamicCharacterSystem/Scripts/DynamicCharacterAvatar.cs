@@ -1447,7 +1447,12 @@ namespace UMA.CharacterSystem
         /// </summary>
         public void LoadWardrobeCollection(string collectionName)
         {
-            UMATextRecipe utr = FindSlotRecipe("WardrobeCollection", collectionName);
+            var thisContext = UMAContextBase.Instance;
+            if (thisContext == null)
+            {
+                return;
+            }
+            UMATextRecipe utr = thisContext.GetRecipe(collectionName,false);
 
             if (!utr || !(utr is UMAWardrobeCollection))
             {
