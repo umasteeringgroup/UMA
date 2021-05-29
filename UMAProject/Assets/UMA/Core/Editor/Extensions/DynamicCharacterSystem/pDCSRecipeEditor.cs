@@ -436,6 +436,8 @@ namespace UMA.Editors
 								GUILayout.Label("Empty Slot");
 								continue;
 							}
+							if (_slotEditors[i].Slot.isBlendShapeSource)
+								continue;
 
 							changed |= editor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
 

@@ -94,6 +94,33 @@ namespace UMA.CharacterSystem.Editors
 			}
 
 			EditorGUI.EndProperty();
+			EditorGUILayout.BeginHorizontal();
+			if (GUILayout.Button("Ping Race",GUILayout.Width(90)))
+            {
+				RaceData theRace = foundRaces[newrIndex];
+				if (theRace != null)
+                {
+					EditorGUIUtility.PingObject(theRace);
+                }
+            }
+			if (GUILayout.Button("Insp Race"))
+			{
+				RaceData theRace = foundRaces[newrIndex];
+				if (theRace != null)
+				{
+					InspectorUtlity.InspectTarget(theRace);
+				}
+			}
+			if (GUILayout.Button("Insp Base Recipe"))
+			{
+				RaceData theRace = foundRaces[newrIndex];
+				if (theRace != null)
+				{
+					if (theRace.baseRaceRecipe != null)
+						InspectorUtlity.InspectTarget(theRace.baseRaceRecipe);
+				}
+			}
+			EditorGUILayout.EndHorizontal();
 		}
 	}
 }

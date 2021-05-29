@@ -27,6 +27,16 @@ namespace UMA
 
 		public string[] Races;
 
+		public bool isBlendShapeSource
+        {
+			get { return !string.IsNullOrEmpty(blendShapeTargetSlot); }
+        }
+		// This only appears in recipes
+		public string blendShapeTargetSlot;
+#if UNITY_EDITOR
+		public bool BlendshapeFoldout;
+		public bool isDeleted;
+#endif
 		/// <summary>
 		/// 
 		/// </summary>
@@ -62,6 +72,9 @@ namespace UMA
 				return asset.material;
 	        }
         }
+
+		// Slots to copy blendshapes from as needed...
+		public List<string> BlendshapeSlotNames = new List<string>();
 
 		public bool Suppressed; 
 
@@ -226,6 +239,7 @@ namespace UMA
 
 			res.Races = Races;
 			res.tags = tags;
+			res.blendShapeTargetSlot = blendShapeTargetSlot;
 			return res;
 		}
 

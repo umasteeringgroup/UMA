@@ -123,6 +123,7 @@ namespace UMA
 			generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
 			atlassedMaterials.Clear();
 			uniqueRenderers.Clear();
+			umaData.umaRecipe.BlendshapeSlots.Clear();
 
 			SlotData[] slots = umaData.umaRecipe.slotDataList;
 
@@ -133,7 +134,17 @@ namespace UMA
 					continue; 
 				if (slot.Suppressed)
 					continue;
-
+				if (slot.isBlendShapeSource)
+				{
+					// Blendshape Source Slots are not combined. Instead, their blendshapes
+					// are added to the mesh at generation time.
+					if (!umaData.umaRecipe.BlendshapeSlots.ContainsKey(slot.blendShapeTargetSlot))
+                    {
+						umaData.umaRecipe.BlendshapeSlots.Add(slot.blendShapeTargetSlot, new List<UMAMeshData>());
+                    }
+					umaData.umaRecipe.BlendshapeSlots[slot.blendShapeTargetSlot].Add(slot.asset.meshData);
+					continue;
+				}
 				//Keep a running list of unique RendererHashes from our slots
 				//Null rendererAsset gets added, which is good, it is the default renderer.
 				if (!uniqueRenderers.Contains(slot.rendererAsset))

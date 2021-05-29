@@ -85,16 +85,15 @@ namespace UMA.Editors
 #else
             SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
 #endif
-            Cleanup();
+            CleanUp();
         }
 
         private void OnDestroy()
         {
-            Cleanup();
+            CleanUp();
+         }
 
-        }
-
-        private void Cleanup()
+        private void CleanUp()
         {
             // Guard against Unity calling this via update multiple times even after
             // it's been removed from the event. Only happens on Mac.
@@ -333,7 +332,7 @@ namespace UMA.Editors
             if (doneEditing)
             {
                 SaveSelection(_Source.selectedTriangles);
-                Cleanup();
+                CleanUp();
             }
         }
             

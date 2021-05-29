@@ -110,7 +110,12 @@ namespace UMA
                             //this should be restricted to >= 1 but 0 was allowed before and projects may have the umaMaterial value serialized to 0.
                             float downSample = (slotData.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.material.channels[textureType].DownSample);
 
-                            destinationTexture = new RenderTexture(Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
+                            int ww = Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample);
+                            int hh = Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample);
+
+                            if (ww == 0 || hh == 0) continue;
+
+                            destinationTexture = new RenderTexture(ww, hh, 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
                             destinationTexture.filterMode = FilterMode.Point;
                             destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
                             destinationTexture.name = slotData.material.name + " Chan " + textureType + " frame: " + Time.frameCount;

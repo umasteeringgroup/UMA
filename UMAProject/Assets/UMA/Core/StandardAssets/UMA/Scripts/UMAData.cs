@@ -1,3 +1,4 @@
+//#define TEST_INSERTFIX
 using UnityEngine;
 using System;
 using System.Collections.Generic;
@@ -163,6 +164,7 @@ namespace UMA
 
 		public float atlasResolutionScale = 1f;
 
+		public bool ForceRebindAnimator;
 		/// <summary>
 		/// Has the character mesh changed?
 		/// </summary>
@@ -696,6 +698,7 @@ namespace UMA
 			public SlotData[] slotDataList;
 			public OverlayColorData[] sharedColors;
 			public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; set; } = new Dictionary<string, List<MeshHideAsset>>();
+			public Dictionary<string, List<UMAMeshData>> BlendshapeSlots { get; set; } = new Dictionary<string, List<UMAMeshData>>();
 
 			public void UpdateMeshHideMasks()
 			{
@@ -981,6 +984,19 @@ namespace UMA
 				slotDataList = slots;
 			}
 
+			public void RemoveSlot(SlotData sd)
+            {
+				if (sd == null) return;
+				for (int i = 0; i < slotDataList.Length; i++)
+				{
+					if (slotDataList[i] == null) continue;
+					if (slotDataList[i].slotName == sd.slotName)
+                    {
+						slotDataList[i] = null;
+                    }
+				}
+			}
+
 			/// <summary>
 			/// Combine additional slot with current data.
 			/// </summary>
@@ -992,10 +1008,19 @@ namespace UMA
 					return null;
 
 				int overlayCount = 0;
+#if TEST_INSERTFIX
+				int nullFound = -1;
+#endif
 				for (int i = 0; i < slotDataList.Length; i++)
 				{
 					if (slotDataList[i] == null)
+					{
+#if TEST_INSERTFIX
+						if (nullFound == -1) nullFound = i;
+#endif
 						continue;
+					}
+
 					if (slot.asset == slotDataList[i].asset)
 					{
 						SlotData originalSlot = slotDataList[i];
@@ -1036,9 +1061,22 @@ namespace UMA
 					}
 				}
 
+#if TEST_INSERTFIX
+				int insertIndex;
+
+				if (nullFound != -1)
+				{
+					insertIndex = nullFound;
+				}
+				else
+                {
+					insertIndex = slotDataList.Length;
+					System.Array.Resize<SlotData>(ref slotDataList, slotDataList.Length + 1);
+				}
+#else
 				int insertIndex = slotDataList.Length;
 				System.Array.Resize<SlotData>(ref slotDataList, slotDataList.Length + 1);
-
+#endif
 				SlotData slotCopy = slot.Copy();
 				slotCopy.dontSerialize = dontSerialize;
 				overlayCount = slotCopy.OverlayCount;
@@ -1954,7 +1992,7 @@ namespace UMA
 			}
 		}
 
-		#region BlendShape Support
+#region BlendShape Support
 
 		[Obsolete("AddBakedBlendShape has been replaced with SetBlendShapeData", true)]
 		public void AddBakedBlendShape(float dnaValue, string blendShapeZero, string blendShapeOne, bool rebuild = false)

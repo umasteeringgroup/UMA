@@ -119,6 +119,8 @@ namespace UMA.CharacterSystem
         public bool rebuildSkeleton = false;
         [Tooltip("Always rebuild the skeleton. This will clear out additional animated bones from slots.")]
         public bool alwaysRebuildSkeleton = false;
+        [Tooltip("This will force the animator to rebind after avatar generation. You will know if you need to do this.")]
+        public bool forceRebindAnimator = false;
 
         //the dictionary of active recipes this character is using to create itself
         private Dictionary<string, UMATextRecipe> _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
@@ -230,8 +232,6 @@ namespace UMA.CharacterSystem
 		// public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; } = new Dictionary<string, List<MeshHideAsset>>();
 
 #if UNITY_EDITOR
-		private GameObject EditorUMAContextBase = null;
-
         private PreviewModel lastPreviewModel;
         private GameObject lastCustomModel;
         private Material mat;
@@ -3601,6 +3601,7 @@ namespace UMA.CharacterSystem
 
             ApplyPredefinedDNA();
 			umaData.KeepAvatar = keepAvatar;
+            umaData.ForceRebindAnimator = forceRebindAnimator;
             //But the ExpressionPlayer needs to be Initialized AFTER Load
             if (activeRace.racedata != null && !restoreDNA)
             {

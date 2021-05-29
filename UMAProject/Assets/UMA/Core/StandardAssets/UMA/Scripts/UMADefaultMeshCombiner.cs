@@ -150,7 +150,13 @@ namespace UMA
 				{
 					// fast track
 					var tempMesh = SkinnedMeshCombiner.ShallowInstanceMesh(combinedMeshList[0].meshData, combinedMeshList[0].triangleMask );
-					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton);
+					if (umaData.umaRecipe.BlendshapeSlots.ContainsKey(combinedMeshList[0].meshData.SlotName))
+                    {
+
+						var Blendshapes = SkinnedMeshCombiner.GetBlendshapeSources(tempMesh, umaData.umaRecipe);
+						tempMesh.blendShapes = Blendshapes.ToArray();
+                    }
+					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData.umaRecipe);
 				}
 				else
 				{
@@ -160,14 +166,14 @@ namespace UMA
 					umaMesh.subMeshCount = 0;
 					umaMesh.vertexCount = 0;
 
-					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings );
+					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings,umaData.umaRecipe );
 
 					if (updatedAtlas)
 					{
 						RecalculateUV(umaMesh);
 					}
 
-					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton);
+					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData.umaRecipe);
 					umaMesh.ReleaseSharedBuffers();
 				}
 				var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
@@ -196,7 +202,7 @@ namespace UMA
 			for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
 			{
 				SlotData slotData = umaData.umaRecipe.slotDataList[i];
-				if (slotData != null)
+				if (slotData != null && !slotData.isBlendShapeSource)
 				{
 					umaData.umaRecipe.AddDNAUpdater(slotData.asset.slotDNA);
 				}

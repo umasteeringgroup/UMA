@@ -1107,6 +1107,9 @@ namespace UMA.Editors
 					continue;
 				}
 
+				if (_slotEditors[i].Slot.isBlendShapeSource)
+					continue;
+
 				changed |= editor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
 
 				if (editor.Delete)
@@ -1183,6 +1186,7 @@ namespace UMA.Editors
 
 	public class SlotEditor
 	{
+		public List<SlotData> BlendShapeSlots = new List<SlotData>();
 		public static Dictionary<string, string> TemporarySlotTags = new Dictionary<string, string>();
 		public static Dictionary<string, int> SelectedRace = new Dictionary<string, int>();
 
@@ -1299,8 +1303,94 @@ namespace UMA.Editors
 				GUILayout.EndHorizontal();
 			}
 
-			#region TAGS EDITOR
-			if (!TemporarySlotTags.ContainsKey(_slotData.slotName))
+            #region Blendshape Slot
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			_slotData.BlendshapeFoldout = EditorGUILayout.Foldout(_slotData.BlendshapeFoldout, "Additional Blendshape Slots");
+			GUILayout.EndHorizontal();
+
+			if (_slotData.BlendshapeFoldout)
+			{
+				BlendShapeSlots = new  List<SlotData>();
+				foreach(SlotData sd in _recipe.slotDataList)
+                {
+					if (sd == null) continue;
+					if (sd.isBlendShapeSource && sd.blendShapeTargetSlot == _slotData.slotName)
+                    {
+						BlendShapeSlots.Add(sd);
+                    }
+                }
+
+				GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+
+				bool wasDeleted = false;
+				foreach (SlotData sda in BlendShapeSlots)
+				{
+					GUILayout.BeginHorizontal();
+					// show slots
+					// show x (delete)
+					// add an object box to add one.
+					GUILayout.Label(sda.slotName, EditorStyles.textField, GUILayout.ExpandWidth(true));
+					if (GUILayout.Button("X",GUILayout.Width(22)))
+                    {
+						_recipe.RemoveSlot(sda);
+						wasDeleted = true;
+                    }
+					GUILayout.EndHorizontal();
+				}
+				//
+				if (wasDeleted)
+                {
+					_dnaDirty = true;
+					_meshDirty = true;
+					changed = true;
+                }  
+				var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+
+				if (addedSlot != null)
+                {
+					bool OK = true;
+
+					/*if (addedSlot.meshData.vertexCount != _slotData.asset.meshData.vertexCount)
+                    {
+						EditorUtility.DisplayDialog("Error", "Slot " + addedSlot.slotName + " Does not have the same vertex count as slot " + _slotData.asset.slotName,"OK");
+						OK = false;
+                    }
+					if(OK && !HasBlendshapes(addedSlot))
+                    {
+						EditorUtility.DisplayDialog("Error", "Slot " + addedSlot.slotName + " Does not have any blendshapes!", "OK");
+						OK = false;
+					}*/
+					if (OK)
+					{
+						foreach (SlotData sda in BlendShapeSlots)
+						{
+							if (sda.slotName == addedSlot.slotName)
+							{
+								EditorUtility.DisplayDialog("Error", "Slot " + sda.slotName + " already exists in list!", "OK");
+								OK = false;
+								break;
+							}
+						}
+					}
+					if (OK)
+					{
+						var newSlot = new SlotData(addedSlot);
+						newSlot.blendShapeTargetSlot = _slotData.slotName;
+						newSlot.SetOverlayList(new List<OverlayData>());
+						_recipe.MergeSlot(newSlot, false);
+						_dnaDirty = true;
+						_textureDirty = true;
+						_meshDirty = true;
+						changed = true;
+					}
+                }
+				GUIHelper.EndVerticalPadded(10);
+			}
+            #endregion
+
+            #region TAGS EDITOR
+            if (!TemporarySlotTags.ContainsKey(_slotData.slotName))
 			{
 				TemporarySlotTags.Add(_slotData.slotName, "");
 			}
@@ -1405,6 +1495,14 @@ namespace UMA.Editors
 
 			return changed;
 		}
+
+		public bool HasBlendshapes(SlotDataAsset sda)
+        {
+			if (sda.meshData.blendShapes == null) return false;
+			if (sda.meshData.blendShapes.Length < 1) return false;
+			return true;
+        }
+
 		public static NameSorter sorter = new NameSorter();
 		public class NameSorter : IComparer<SlotEditor>
 		{
