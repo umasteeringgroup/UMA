@@ -1351,7 +1351,7 @@ namespace UMA.Editors
                 {
 					bool OK = true;
 
-					/*if (addedSlot.meshData.vertexCount != _slotData.asset.meshData.vertexCount)
+					if (addedSlot.meshData.vertexCount != _slotData.asset.meshData.vertexCount)
                     {
 						EditorUtility.DisplayDialog("Error", "Slot " + addedSlot.slotName + " Does not have the same vertex count as slot " + _slotData.asset.slotName,"OK");
 						OK = false;
@@ -1360,7 +1360,7 @@ namespace UMA.Editors
                     {
 						EditorUtility.DisplayDialog("Error", "Slot " + addedSlot.slotName + " Does not have any blendshapes!", "OK");
 						OK = false;
-					}*/
+					}
 					if (OK)
 					{
 						foreach (SlotData sda in BlendShapeSlots)
