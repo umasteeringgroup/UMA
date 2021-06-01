@@ -1,3 +1,8 @@
+Whats new in 2.13
+Buttons to get to race and base race recipe in character editor
+Can now copy blendshapes from other slots (must have same vertex count and order!)
+Ability to have "additive" slots - so you can layer scars, etc
+
 whats new in 2.12
 ability to select items in the project from the global library items menu. 
 removed the t-pose layer that was missing the animation mask.

@@ -619,6 +619,7 @@ namespace UMA.Editors
 			FieldInfo HidesField = TargetType.GetField("Hides", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo DisplayValueField = TargetType.GetField("DisplayValue", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo UserField = TargetType.GetField("UserField", BindingFlags.Public | BindingFlags.Instance);
+			FieldInfo AppendedField = TargetType.GetField("Appended", BindingFlags.Public | BindingFlags.Instance);
 
 			// ************************************
 			// field values
@@ -665,11 +666,24 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.HelpBox("User Field is ignored by the system. You can use this to store data that can later be used by your application to provide filtering or categorizing, etc.", MessageType.Info);
 			}
-			#endregion
+            #endregion
 
-			#region Wardrobe Slot UI
-			//wardrobeSlot UI
-			int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum(wardrobeSlot, compatibleRaces, false);
+            #region Appended
+			if (AppendedField != null)
+            {
+				bool appendedValue = (bool)AppendedField.GetValue(target);
+				bool newAppend = EditorGUILayout.Toggle("Is Appended", appendedValue);
+				if (newAppend != appendedValue)
+                {
+					AppendedField.SetValue(target,newAppend);
+					doUpdate = true;
+				}
+			}
+            #endregion
+
+            #region Wardrobe Slot UI
+            //wardrobeSlot UI
+            int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum(wardrobeSlot, compatibleRaces, false);
 			string newWardrobeSlot;
 
 			List<string> newSuppressWardrobeSlot = new List<string>();

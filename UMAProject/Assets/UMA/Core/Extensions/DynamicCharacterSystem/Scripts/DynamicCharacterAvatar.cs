@@ -124,6 +124,7 @@ namespace UMA.CharacterSystem
 
         //the dictionary of active recipes this character is using to create itself
         private Dictionary<string, UMATextRecipe> _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
+        private Dictionary<string, List<UMATextRecipe>> _additiveRecipes = new Dictionary<string, List<UMATextRecipe>>(); 
         //a list of active wardrobe collections on the avatar. If the collection has a wardrobe set for the active race these are loaded into _wardrobeRecipes
         private Dictionary<string, UMAWardrobeCollection> _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
 
@@ -312,6 +313,15 @@ namespace UMA.CharacterSystem
                 return _wardrobeRecipes;
             }
         }
+
+        public Dictionary<string, List<UMATextRecipe>> AdditiveRecipes
+        {
+            get
+            {
+                return _additiveRecipes;
+            }
+        }
+
         public Dictionary<string, UMAWardrobeCollection> WardrobeCollections
         {
             get
@@ -812,6 +822,14 @@ namespace UMA.CharacterSystem
                 Wardrobe.Add(utr.name);
             }
 
+            foreach(var kp in _additiveRecipes.Values)
+            {
+                foreach(UMATextRecipe utr in kp)
+                {
+                    Wardrobe.Add(utr.name);
+                }
+            }
+
             // *****************************************************
             // Get DNA
             // *****************************************************
@@ -1239,7 +1257,11 @@ namespace UMA.CharacterSystem
                             //by one that is cross compatible
                             if (activeRace.racedata.IsCrossCompatibleWith(recipe._recipe.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(recipe._recipe.wardrobeSlot))
                             {
-                                if (!WardrobeRecipes.ContainsKey(recipe._recipe.wardrobeSlot))
+                                if (recipe._recipe.Appended)
+                                {
+                                    SetSlot(recipe._recipe);
+                                }
+                                else if (!WardrobeRecipes.ContainsKey(recipe._recipe.wardrobeSlot))
                                 {
                                     SetSlot(recipe._recipe);
                                 }
@@ -1324,6 +1346,16 @@ namespace UMA.CharacterSystem
         /// <param name="utr">The WardrobeRecipe it WardrobeCollection to add to the Avatar</param>
         private void internalSetSlot(UMATextRecipe utr, string thisRecipeSlot)
         {
+            if (utr.Appended)
+            {
+                if (!_additiveRecipes.ContainsKey(thisRecipeSlot))
+                {
+                    _additiveRecipes.Add(thisRecipeSlot, new List<UMATextRecipe>());
+                    _additiveRecipes[thisRecipeSlot].Add(utr);
+                    if (WardrobeAdded != null) WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
+                }
+                return;
+            }
             if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
             {
                 //New event that allows for tweaking the resulting recipe before the character is actually generated
@@ -1336,17 +1368,6 @@ namespace UMA.CharacterSystem
                 _wardrobeRecipes.Add(thisRecipeSlot, utr);
                 if (WardrobeAdded != null) WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
             }
-        }
-
-        /// <summary>
-        /// This function will ADD a wardrobe recipe to a slot.
-        /// This is useful for accumulating overlays, etc.
-        /// </summary>
-        /// <param name="utr"></param>
-        /// <param name="RecipeSlot"></param>
-        public void AppendSlot(UMAWardrobeRecipe utr, string RecipeSlot)
-        {
-
         }
 
         /// <summary>
@@ -1424,6 +1445,10 @@ namespace UMA.CharacterSystem
             {
                 _wardrobeRecipes.Remove(ws);
             }
+            if (_additiveRecipes.ContainsKey(ws))
+            {
+                _additiveRecipes.Remove(ws);
+            }
         }
 
         /// <summary>
@@ -1440,6 +1465,7 @@ namespace UMA.CharacterSystem
         public void ClearSlots()
         {
             WardrobeRecipes.Clear();
+            _additiveRecipes.Clear();
         }
 
         /// <summary>
@@ -3188,7 +3214,18 @@ namespace UMA.CharacterSystem
                     }
                 }
 
-                foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+                List<UMATextRecipe> allRecipes = new List<UMATextRecipe>(WardrobeRecipes.Values);
+
+                if (_additiveRecipes != null && AdditiveRecipes.Count > 0)
+                {
+                    foreach (List<UMATextRecipe> addlRecipes in _additiveRecipes.Values)
+                    {
+                        allRecipes.AddRange(addlRecipes);
+                    }
+                }
+
+
+                foreach (UMATextRecipe utr in allRecipes)
                 {
                     // don't gather hides from suppresed slots...
                     if (SuppressSlotsStrings.Contains(utr.wardrobeSlot))
@@ -3272,6 +3309,11 @@ namespace UMA.CharacterSystem
                                 }
                             }
                         }
+                    }
+                    if (AdditiveRecipes.ContainsKey(ws))
+                    {
+                        // must check additive after wardrobe
+                        Recipes.AddRange(AdditiveRecipes[ws]);
                     }
                 }
             }
