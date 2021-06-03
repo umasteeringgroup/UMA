@@ -466,7 +466,7 @@ namespace UMA
 			target.vertexCount = source.vertexCount;
 			target.vertices = source.vertices;
 			target.blendShapes = source.blendShapes;
-			target.SlotName = source.SlotName + " (shallow copy)";
+			target.SlotName = source.SlotName;
 			target.ManagedBonesPerVertex = source.ManagedBonesPerVertex;
 			target.ManagedBoneWeights = source.ManagedBoneWeights;
 

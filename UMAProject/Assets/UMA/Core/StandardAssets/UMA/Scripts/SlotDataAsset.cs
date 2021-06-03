@@ -281,6 +281,7 @@ namespace UMA
         public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName)
         {
             meshData = new UMAMeshData();
+			meshData.SlotName = this.slotName;
             meshData.RootBoneName = rootBoneName;
             meshData.RetrieveDataFromUnityMesh(meshRenderer);
 #if UNITY_EDITOR
@@ -291,6 +292,7 @@ namespace UMA
         public void UpdateMeshData(SkinnedMeshRenderer meshRenderer)
 		{
 			meshData = new UMAMeshData();
+			meshData.SlotName = this.slotName;
 			meshData.RetrieveDataFromUnityMesh(meshRenderer);
 #if UNITY_EDITOR
 			UnityEditor.EditorUtility.SetDirty(this);
