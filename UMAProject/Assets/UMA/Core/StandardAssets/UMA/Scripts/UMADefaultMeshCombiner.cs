@@ -233,6 +233,7 @@ namespace UMA
 					var slotData = materialDefinition.slotData;
 					combineInstance = new SkinnedMeshCombiner.CombineInstance();
 					combineInstance.meshData = slotData.asset.meshData;
+					combineInstance.meshData.SlotName = slotData.slotName;
 
 					//New MeshHiding
 					if (slotData.meshHideMask != null)

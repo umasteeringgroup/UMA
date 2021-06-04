@@ -313,7 +313,7 @@ namespace UMA.Editors
 			Graphics.Blit(rt, outputMap);
 
 
-			// Remember currently active render texture
+			// Remember crrently active render texture
 			RenderTexture currentActiveRT = RenderTexture.active;
 
 			// Set the supplied RenderTexture as the active one

@@ -454,7 +454,7 @@ namespace UMA
 #endif
 			target.colors32 = source.colors32;
 			target.normals = source.normals;
-			target.rootBoneHash = source.rootBoneHash;
+			target.rootBoneHash = source.rootBoneHash; 
 			target.subMeshCount = source.subMeshCount;
 			target.tangents = source.tangents;
 			target.umaBoneCount = source.umaBoneCount;

@@ -316,7 +316,7 @@ namespace UMA
             }
 			else if (meshData.boneWeights != null && meshData.boneWeights.Length > 0)
 			{
-				meshData.LoadBoneWeights();
+				meshData.LoadBoneWeights(); 
 			}
 		}
 

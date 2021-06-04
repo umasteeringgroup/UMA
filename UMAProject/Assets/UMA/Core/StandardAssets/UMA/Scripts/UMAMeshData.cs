@@ -1057,7 +1057,7 @@ namespace UMA
 		{
 			UMAMeshData newMeshData = new UMAMeshData();
 
-			newMeshData.SlotName = SlotName;
+			newMeshData.SlotName = SlotName; 
 			if (ManagedBonesPerVertex != null)
             {
 				newMeshData.ManagedBonesPerVertex = new byte[ManagedBonesPerVertex.Length];
