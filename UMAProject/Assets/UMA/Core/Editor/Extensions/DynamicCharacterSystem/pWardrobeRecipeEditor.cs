@@ -580,6 +580,8 @@ namespace UMA.Editors
 			return doUpdate;
 		}
 
+		private bool SelectingSlot;
+		private string slotFilter = "";
 		private bool ShowHidetags;
 		private bool ShowSuppressSlots;
 		private bool ShowOverrideDNA;
@@ -699,6 +701,56 @@ namespace UMA.Editors
 			}
 			else
 			{
+				newWardrobeSlot = wardrobeSlot;
+				GUILayout.BeginHorizontal();
+				EditorGUILayout.PrefixLabel("Wardrobe Slot");
+				if (GUILayout.Button(wardrobeSlot, EditorStyles.miniButton))
+				{
+					SelectingSlot = !SelectingSlot;
+				}
+				GUILayout.EndHorizontal();
+
+				if (SelectingSlot)
+				{
+					GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+					GUILayout.BeginHorizontal();
+					slotFilter = EditorGUILayout.TextField("Filter",slotFilter, GUILayout.ExpandWidth(true));
+					if (GUILayout.Button("x",GUILayout.Width(15)))
+                    {
+						slotFilter = "";
+                    }
+					GUILayout.EndHorizontal();
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Select Slot or press cancel");
+					if (GUILayout.Button("Cancel", EditorStyles.miniButton,GUILayout.Width(70)))
+					{
+						SelectingSlot = false;
+					}
+					GUILayout.EndHorizontal();
+
+					foreach (string lbl in generatedWardrobeSlotOptionsLabels)
+                    {
+						if (!string.IsNullOrEmpty(slotFilter))
+                        {
+							if (!lbl.ToLower().Contains(slotFilter.ToLower()))
+                            {
+								continue;
+                            }
+                        }
+						GUILayout.BeginHorizontal();
+						GUILayout.Space(20);
+						if (GUILayout.Button(lbl, EditorStyles.miniButton))
+						{
+							newWardrobeSlot = lbl;
+							WardrobeSlotField.SetValue(target, lbl);
+							doUpdate = true;
+							SelectingSlot = false;
+						}
+						GUILayout.EndHorizontal();
+                    }
+					GUIHelper.EndVerticalPadded(3);
+				}
+				/*
 				int newSelectedWardrobeSlotIndex = EditorGUILayout.Popup("Wardrobe Slot", selectedWardrobeSlotIndex, generatedWardrobeSlotOptionsLabels.ToArray());
 				if (newSelectedWardrobeSlotIndex != selectedWardrobeSlotIndex)
 				{
@@ -706,6 +758,7 @@ namespace UMA.Editors
 					doUpdate = true;
 				}
 				newWardrobeSlot = generatedWardrobeSlotOptions.Count > 0 ? generatedWardrobeSlotOptions[selectedWardrobeSlotIndex] : "None";
+				*/
 			}
 			if (ShowHelp)
 			{

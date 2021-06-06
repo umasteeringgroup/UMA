@@ -67,7 +67,6 @@ namespace UMA
             }
             else
             {
-                Debug.Log(value);
                 return SetFieldValue(fieldName, obj, value);
             }
         }

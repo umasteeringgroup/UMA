@@ -83,7 +83,19 @@ namespace UMA.Editors
 			serializedObject.Update();
 
 			EditorGUI.BeginChangeCheck();
+			GUILayout.BeginHorizontal();
 			EditorGUILayout.DelayedTextField(slotName);
+			if (GUILayout.Button("Use Obj Name",GUILayout.Width(90)))
+            {
+				foreach (var t in targets)
+				{
+					var slotDataAsset = t as SlotDataAsset;
+					slotDataAsset.slotName = slotDataAsset.name;
+					EditorUtility.SetDirty(slotDataAsset);
+					GUI.changed = true;
+				}
+			}
+			GUILayout.EndHorizontal();
 			if ((target as SlotDataAsset).isWildCardSlot)
 			{
 				EditorGUILayout.HelpBox("This is a wildcard slot", MessageType.Info);

@@ -1559,6 +1559,11 @@ namespace UMA
 			}
 		}
 
+        public void ClearItem(UnityEngine.Object obj)
+        {
+
+        }
+
         /// <summary>
         /// releases an asset an asset reference
         /// </summary>
@@ -1566,6 +1571,9 @@ namespace UMA
         /// <param name="Name"></param>
         public void ReleaseReference(UnityEngine.Object obj)
         {
+            if (obj == null)
+                return;
+
             string Name = AssetItem.GetEvilName(obj);
 
             // Leave if this is an unreferenced type - for example, a texture (etc).
@@ -1580,7 +1588,7 @@ namespace UMA
             if (TypeDic.ContainsKey(Name))
             {
                 AssetItem ai = TypeDic[Name];
-                ai.ReleaseItem();
+                ai.FreeReference(); 
             }
         }
 

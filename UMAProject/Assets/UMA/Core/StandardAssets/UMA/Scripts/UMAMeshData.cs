@@ -757,7 +757,7 @@ namespace UMA
                 // until the end of the frame. 
 				if (ManagedBonesPerVertex == null || ManagedBonesPerVertex.Length < 1 || ManagedBoneWeights == null || ManagedBoneWeights.Length < 1)
                 {
-					Debug.LogError("Error! Boneweights and BonesPerVertex is invalid. The slot must be regenerated.");
+					Debug.LogError("Error! Boneweights and BonesPerVertex is invalid. The slot must be regenerated. ("+this.SlotName+")");
 					return;
                 }
                 var unityBonesPerVertex = new NativeArray<byte>(ManagedBonesPerVertex, Allocator.Persistent);
