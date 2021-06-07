@@ -684,11 +684,33 @@ namespace UMA.CharacterSystem.Editors
 						EditorGUILayout.LabelField(item.Key, GUILayout.Width(88.0f));
 						EditorGUILayout.TextField(item.Value.DisplayValue + " (" + item.Value.name + ")");
 						EditorGUI.EndDisabledGroup();
-						if (GUILayout.Button("Inspect", EditorStyles.toolbarButton, GUILayout.Width(40)))
+						if (GUILayout.Button("Inspect", EditorStyles.toolbarButton, GUILayout.Width(52)))
 						{
 							InspectorUtlity.InspectTarget(item.Value);
 						}
 						GUILayout.EndHorizontal();
+					}
+
+					GUILayout.Space(10);
+					GUILayout.Label("Additive Recipes");
+					GUILayout.Space(10);
+					Dictionary<string,List<UMATextRecipe>> additiveWardrobe = thisDCA.AdditiveRecipes;
+
+					foreach (KeyValuePair<string,List<UMATextRecipe>> additem in additiveWardrobe)
+					{
+						foreach (UMATextRecipe item in additem.Value)
+						{
+							GUILayout.BeginHorizontal();
+							EditorGUI.BeginDisabledGroup(true);
+							EditorGUILayout.LabelField(additem.Key, GUILayout.Width(88.0f));
+							EditorGUILayout.TextField(item.DisplayValue + " (" + item.name + ")");
+							EditorGUI.EndDisabledGroup();
+							if (GUILayout.Button("Inspect", EditorStyles.toolbarButton, GUILayout.Width(52)))
+							{
+								InspectorUtlity.InspectTarget(item);
+							}
+							GUILayout.EndHorizontal();
+						}
 					}
 					EditorGUI.indentLevel--;
 				}

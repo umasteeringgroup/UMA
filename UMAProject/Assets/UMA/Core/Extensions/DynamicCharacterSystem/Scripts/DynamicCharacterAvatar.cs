@@ -1351,9 +1351,9 @@ namespace UMA.CharacterSystem
                 if (!_additiveRecipes.ContainsKey(thisRecipeSlot))
                 {
                     _additiveRecipes.Add(thisRecipeSlot, new List<UMATextRecipe>());
-                    _additiveRecipes[thisRecipeSlot].Add(utr);
-                    if (WardrobeAdded != null) WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
                 }
+                _additiveRecipes[thisRecipeSlot].Add(utr);
+                if (WardrobeAdded != null) WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
                 return;
             }
             if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))

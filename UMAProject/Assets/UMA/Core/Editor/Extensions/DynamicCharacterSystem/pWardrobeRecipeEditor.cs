@@ -721,7 +721,7 @@ namespace UMA.Editors
                     }
 					GUILayout.EndHorizontal();
 					GUILayout.BeginHorizontal();
-					GUILayout.Label("Select Slot or press cancel");
+					GUILayout.Label("Select Wardrobe Slot or press cancel");
 					if (GUILayout.Button("Cancel", EditorStyles.miniButton,GUILayout.Width(70)))
 					{
 						SelectingSlot = false;
