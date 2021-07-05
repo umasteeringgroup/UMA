@@ -2,16 +2,15 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Events;
+using System;
 
 namespace UMA.Editors
 {
 	public static class GUIHelper
 	{
-
+		#region ----- Private Vars -----
 		private static Texture _helpIcon;
-
 		private static GUIStyle _iconLabel;
-
 		private static Texture _inspectIcon;
 		private static GUIContent _inspectContent;
 		private static GUIStyle _inspectStyle;
@@ -19,12 +18,13 @@ namespace UMA.Editors
 
 		private static Texture helpIcon
 		{
-			get {
+			get
+			{
 				if (_helpIcon != null)
 					return _helpIcon;
 				//Sometimes editor styles is not set up when we ask for this
 				if (EditorStyles.label == null)
-					return new Texture2D(16,16);
+					return new Texture2D(16, 16);
 				_helpIcon = EditorGUIUtility.FindTexture("_Help");
 				return _helpIcon;
 			}
@@ -87,26 +87,69 @@ namespace UMA.Editors
 				return _inspectStyle;
 			}
 		}
+		#endregion
 
-		public static void BeginVerticalPadded()
+		/// <summary>
+		/// Common UMA Inspectors Colors
+		/// </summary>
+		public static class Colors
 		{
-			if (EditorGUIUtility.isProSkin)
+			private static Color grey = new Color(0.75f, 0.75f, 0.75f);
+			private static Color blue = new Color(0.75f, 0.875f, 1f, 0.7f);
+
+			public static Color Grey => grey;
+			public static Color Blue => blue;
+		}
+
+		/// <summary>
+		/// Common UMA Inspectors Styles
+		/// </summary>
+		public static class Styles
+		{
+			private static GUIStyle toggleButtonNormal = null;
+			private static GUIStyle toggleButtonToggled = null;
+			internal static GUIStyle ToggleButtonNormal
 			{
-				GUIHelper.BeginVerticalPadded(10, new Color(1.3f, 1.4f, 1.5f));
+				get
+				{
+					if (toggleButtonNormal == null) toggleButtonNormal = new GUIStyle("Button");
+					toggleButtonNormal.normal.background = MakeTex(4, 4, GUIHelper.Colors.Grey);
+					return toggleButtonNormal;
+				}
 			}
-			else
+			internal static GUIStyle ToggleButtonToggled
 			{
-				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				get
+				{
+					if (toggleButtonToggled == null)
+					{
+						toggleButtonToggled = new GUIStyle("Button");
+						toggleButtonToggled.normal.background = MakeTex(4, 4, GUIHelper.Colors.Blue);
+						// toggleButtonStyleToggled.active.background;
+					}
+					return toggleButtonToggled;
+				}
+			}
+
+			private static Texture2D MakeTex(int width, int height, Color col)
+			{
+				Color[] pix = new Color[width * height];
+				for (int i = 0; i < pix.Length; ++i)
+				{
+					pix[i] = col;
+				}
+				Texture2D result = new Texture2D(width, height);
+				result.SetPixels(pix);
+				result.Apply();
+				return result;
 			}
 		}
 
-		public static void EndVerticalPadded()
+		public static void BeginVerticalPadded(float padding = 10f, Color backgroundColor = default, GUIStyle theStyle = null)
 		{
-			GUIHelper.EndVerticalPadded(10);
-		}
+			if (backgroundColor == default)
+				backgroundColor = EditorGUIUtility.isProSkin ? new Color(1.3f, 1.4f, 1.5f) : new Color(0.75f, 0.875f, 1f);
 
-		public static void BeginVerticalPadded(float padding, Color backgroundColor, GUIStyle theStyle = null)
-		{
 			if (theStyle == null)
 				theStyle = EditorStyles.textField;
 
@@ -119,7 +162,7 @@ namespace UMA.Editors
 			GUILayout.Space(padding);
 		}
 
-		public static void EndVerticalPadded(float padding)
+		public static void EndVerticalPadded(float padding = 10f)
 		{
 			GUILayout.Space(padding);
 			GUILayout.EndVertical();
@@ -127,25 +170,16 @@ namespace UMA.Editors
 			GUILayout.EndHorizontal();
 		}
 
-		public static void BeginVerticalIndented(float indentation, Color backgroundColor)
+		public static void BeginHorizontalPadded(float padding = 10f, Color backgroundColor = default, GUIStyle theStyle = null)
 		{
-			GUI.color = backgroundColor;
-			GUILayout.BeginHorizontal();
-			GUILayout.Space(indentation);
-			GUI.color = Color.white;
-			GUILayout.BeginVertical();
-		}
+			if (backgroundColor == default)
+				backgroundColor = EditorGUIUtility.isProSkin ? new Color(1.3f, 1.4f, 1.5f) : new Color(0.75f, 0.875f, 1f);
 
-		public static void EndVerticalIndented()
-		{
-			GUILayout.EndVertical();
-			GUILayout.EndHorizontal();
-		}
+			if (theStyle == null)
+				theStyle = EditorStyles.textField;
 
-		public static void BeginHorizontalPadded(float padding, Color backgroundColor)
-		{
 			GUI.color = backgroundColor;
-			GUILayout.BeginVertical(EditorStyles.textField);
+			GUILayout.BeginVertical(theStyle);
 			GUI.color = Color.white;
 
 			GUILayout.Space(padding);
@@ -159,6 +193,24 @@ namespace UMA.Editors
 			GUILayout.EndHorizontal();
 			GUILayout.Space(padding);
 			GUILayout.EndVertical();
+		}
+
+		public static void BeginVerticalIndented(float indentation = 3f, Color backgroundColor = default)
+		{
+			if (backgroundColor == default)
+				backgroundColor = EditorGUIUtility.isProSkin ? new Color(1.3f, 1.4f, 1.5f) : new Color(0.75f, 0.875f, 1f);
+
+			GUI.color = backgroundColor;
+			GUILayout.BeginHorizontal();
+			GUILayout.Space(indentation);
+			GUI.color = Color.white;
+			GUILayout.BeginVertical();
+		}
+
+		public static void EndVerticalIndented()
+		{
+			GUILayout.EndVertical();
+			GUILayout.EndHorizontal();
 		}
 
 		public static void Separator()
@@ -197,7 +249,6 @@ namespace UMA.Editors
 			}
 			return show;
 		}
-
 
 		public static bool BeginCollapsableGroup(ref bool show, string text)
 		{
@@ -238,28 +289,57 @@ namespace UMA.Editors
 			GUILayout.EndHorizontal();
 		}
 
-		public static void FoldoutBar(ref bool foldout, string content, out bool delete)
-		{
-			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
-			GUILayout.Space(10);
-			foldout = EditorGUILayout.Foldout(foldout, content,true);
-			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
-			GUILayout.EndHorizontal();
-		}
-
+		/// <summary>
+		/// Adds a clickable Label to foldout any following GUI
+		/// </summary>
+		/// <param name="foldout"> In Foldout State (False : Folded) </param>
+		/// <param name="content"> Label Text </param>
+		/// <returns> Out Foldout State (False : Folded) </returns>
 		public static bool FoldoutBar(bool foldout, string content)
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			bool nfoldout = EditorGUILayout.Foldout(foldout, content,true);
+			bool nfoldout = EditorGUILayout.Foldout(foldout, content, true);
 			GUILayout.EndHorizontal();
 			return nfoldout;
 		}
+
+		/// <summary>
+		/// <see cref="FoldoutBar"/>, with delete option
+		/// </summary>
+		/// <param name="delete"> Out : Has foldout been deleted ? </param>
+		public static void FoldoutBar(ref bool foldout, string content, out bool delete)
+		{
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			foldout = EditorGUILayout.Foldout(foldout, content, true);
+			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+			GUILayout.EndHorizontal();
+		}
+
+		/// <summary>
+		/// <see cref="FoldoutBar"/>, with Tooltip option
+		/// </summary>
+		/// <param name="tooltip"> GUIContent to use as tooltip - for ex new GUIContent("","tooltip")</param>
+		public static bool FoldoutBar(bool foldout, string content, GUIContent tooltip)
+		{
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			bool nfoldout = EditorGUILayout.Foldout(foldout, content, true);
+			if (tooltip != null)
+			{
+				Rect position = GUILayoutUtility.GetLastRect();
+				EditorGUI.LabelField(position, tooltip);
+			}
+			GUILayout.EndHorizontal();
+			return nfoldout;
+		}
+
 		public static void FoldoutBarButton(ref bool foldout, string content, string button, out bool pressed, out bool delete)
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			foldout = EditorGUILayout.Foldout(foldout, content,true);
+			foldout = EditorGUILayout.Foldout(foldout, content, true);
 			pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
@@ -285,7 +365,7 @@ namespace UMA.Editors
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);
-			foldout = EditorGUILayout.Foldout(foldout, content,true);
+			foldout = EditorGUILayout.Foldout(foldout, content, true);
 
 			move = 0;
 			if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move--;
@@ -330,8 +410,7 @@ namespace UMA.Editors
 			if (labelStyle == null)
 				labelStyle = EditorStyles.foldout;
 			var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
-			var helpGUI= new GUIContent("", "Show Help");
-			helpGUI.image = helpIcon;
+
 			Event current = Event.current;
 			if (current.type == EventType.Repaint)
 			{
@@ -341,13 +420,10 @@ namespace UMA.Editors
 			labelWidth.x += 15f;//add the foldout arrow
 			var toolbarFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) + 30f, rect.yMin, ((rect.width / 2) + (labelWidth.x / 2f)) - 20f - 30f, rect.height);
 			isExpanded = EditorGUI.Foldout(toolbarFoldoutRect, isExpanded, label, true, labelStyle);
+
 			if (help.Length > 0)
 			{
-				helpExpanded = GUI.Toggle(helpIconRect, helpExpanded, helpGUI, iconLabel);
-				if (helpExpanded)
-				{
-					ToolbarStyleHelp(help);
-				}
+				helpExpanded = HelpGUI(helpIconRect, help, helpExpanded);
 			}
 		}
 
@@ -356,8 +432,7 @@ namespace UMA.Editors
 			var toolbarStyle = toolbarStyleOverride != null ? toolbarStyleOverride : EditorStyles.toolbar;
 			var labelStyle = labelStyleOverride != null ? labelStyleOverride : EditorStyles.label;
 			var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
-			var helpGUI = new GUIContent("", "Show Help");
-			helpGUI.image = helpIcon;
+
 			Event current = Event.current;
 			if (current.type == EventType.Repaint)
 			{
@@ -366,25 +441,32 @@ namespace UMA.Editors
 			var labelWidth = labelStyle.CalcSize(label);
 			var toolbarFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) + 30f, rect.yMin, ((rect.width / 2) + (labelWidth.x / 2f)) - 20f - 30f, rect.height);
 			EditorGUI.LabelField(toolbarFoldoutRect, label, labelStyle);
+
 			if (help.Length > 0)
 			{
-				helpExpanded = GUI.Toggle(helpIconRect, helpExpanded, helpGUI, iconLabel);
-				if (helpExpanded)
-				{
-					ToolbarStyleHelp(help);
-				}
+				helpExpanded = HelpGUI(helpIconRect, help, helpExpanded);
 			}
 		}
 
-		private static void ToolbarStyleHelp(string[] help)
+		internal static bool HelpGUI(Rect helpIconRect, string[] help, bool helpExpanded)
 		{
+			var helpGUI = new GUIContent("", "Show Help");
+			helpGUI.image = helpIcon;
+
+			helpExpanded = GUI.Toggle(helpIconRect, helpExpanded, helpGUI, iconLabel);
+
+			if (!helpExpanded) return helpExpanded;
+
 			BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 			for (int i = 0; i < help.Length; i++)
 			{
 				EditorGUILayout.HelpBox(help[i], MessageType.None);
 			}
 			EndVerticalPadded(3);
+
+			return helpExpanded;
 		}
+
 		/// <summary>
 		/// Draws an object field with an 'inspect' button next to it which opens up the editor for the assigned object in a popup window
 		/// </summary>
@@ -409,6 +491,57 @@ namespace UMA.Editors
 				}
 			}
 			EditorGUI.EndProperty();
+		}
+
+		/// <summary>
+		/// Creates a Drag & Drop area and manages basic editor events.
+		/// </summary>
+		/// <param name="processItem"> Processing method per Item dropped. Returns True if anything was successfully processed </param>
+		/// <param name="dropArea"> Rect of the Drop Area </param>
+		/// <param name="label"> Optional : Drop Area Label and tooltip. "Drop Area" by default </param>
+		/// <returns> True if any Item was processed </returns>
+		public static bool DropAreaGUI(Func<UnityEngine.Object, bool> processItem, Rect dropArea, GUIContent label = default, GUIStyle style = default)
+		{
+			if (style == default) style = new GUIStyle(GUI.skin.box);
+			GUI.Box(dropArea, label == default ? new GUIContent("Drop Area") : label, style);
+
+			bool processed = false;
+			var evt = Event.current;
+
+			if (evt.type == EventType.DragUpdated)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+					DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+
+				return false;
+			}
+
+			// Exit if Editor event is not the end of a Drag in the Drop Area
+			if (evt.type != EventType.DragPerform || !dropArea.Contains(evt.mousePosition)) return false;
+
+			DragAndDrop.AcceptDrag();
+
+			UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+			for (int i = 0; i < draggedObjects.Length; i++)
+			{
+				if (!draggedObjects[i]) continue;
+
+				processed |= processItem(draggedObjects[i]);
+			}
+			return processed;
+		}
+
+		/// <summary>
+		/// Creates a Drag & Drop area and manages basic editor events.
+		/// </summary>
+		/// <param name="processItem"> Processing method per Item dropped. Returns True if anything was successfully processed </param>
+		/// <param name="height"> Optional : The Height of the Drag & Drop Area. 50f by default. Area takes all the inspector width. </param>
+		/// <param name="label"> Optional : Drop Area Label and tooltip. "Drop Area" by default </param>
+		/// <returns> True if any Item was processed </returns>
+		public static bool DropAreaGUI(Func<UnityEngine.Object, bool> processItem, float height = 50f, GUIContent label = default, GUIStyle style = default)
+		{
+			Rect dropArea = GUILayoutUtility.GetRect(0.0f, height, GUILayout.ExpandWidth(true));
+			return DropAreaGUI(processItem, dropArea, label, style);
 		}
 	}
 }

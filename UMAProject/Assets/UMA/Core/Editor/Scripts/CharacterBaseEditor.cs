@@ -1681,6 +1681,9 @@ namespace UMA.Editors
 
 			_foldout = OverlayExpanded[_overlayData.overlayName];
 
+			if (_overlayData.asset.material == null) 
+				Debug.LogError($"Error - No material set in Overlay {_overlayData.overlayName}");
+
 			GUIHelper.FoldoutBarButton(ref _foldout, _overlayData.asset.overlayName + "(" + _overlayData.asset.material.name + ")", "inspect", out select, out move, out delete);
 
 			if (select)
