@@ -12,6 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a834b471b2a70f46be58ea3025b119f, type: 3}
   m_Name: RandomPeople
   m_EditorClassIdentifier: 
+  useDefinition: 0
+  useGlobalColors: 0
+  definition:
+    Icon: {fileID: 0}
+    Name: Random People
+    Note: 
+  global:
+    SharedColors: []
+    ColorsFoldout: 0
+    UtilityFoldout: 0
+  GlobalSharedColors: []
   RandomAvatars:
   - RaceName: HumanFemale
     Chance: 1
@@ -777,9 +788,9 @@ MonoBehaviour:
       MinValue: 0.3243243
       MaxValue: 0.6216216
     raceData: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
-    GuiFoldout: 1
+    GuiFoldout: 0
     ColorsFoldout: 0
-    WardrobeFoldout: 1
+    WardrobeFoldout: 0
     DnaFoldout: 0
     Delete: 0
     AddColorTable: 0
