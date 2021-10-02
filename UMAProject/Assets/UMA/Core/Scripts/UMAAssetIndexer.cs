@@ -192,7 +192,9 @@ namespace UMA
                 {
                     foreach (DynamicCharacterAvatar dca in dcas)
                     {
-                        dca.GenerateSingleUMA();
+                        if (dca.editorTimeGeneration) {
+                            dca.GenerateSingleUMA();
+                        }
                     }
                 }
             }
