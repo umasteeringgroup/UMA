@@ -41,7 +41,12 @@ namespace UMA
 					Debug.LogError("Failed to add Forearm Twist to: " + umaData.name);
 				return;
 			}
-
+			
+			var test = umaData.umaRoot.GetComponent<TwistBones>();
+			// If the component exists, do not add it again.  lol my uma had 1000's
+		        if (test != null)
+                		return;
+		
 			var twist = umaData.umaRoot.AddComponent<TwistBones>();
 			twist.twistValue = 0.5f;
 			twist.twistBone = new Transform[] {leftTwist.transform, rightTwist.transform};
