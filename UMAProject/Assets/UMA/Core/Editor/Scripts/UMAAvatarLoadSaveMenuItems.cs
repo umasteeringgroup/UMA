@@ -329,7 +329,7 @@ namespace UMA.Editors
 			return tex;
 		}
 
-		private static void SaveRenderTexture(RenderTexture texture, string textureName, bool isNormal = false)
+		public static void SaveRenderTexture(RenderTexture texture, string textureName, bool isNormal = false)
 		{
 			Texture2D tex;
 

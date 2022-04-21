@@ -206,17 +206,6 @@ namespace UMA
 				{
 					DNAList.AddRange(((IDynamicDNAConverter)cvt).dnaAsset.Names);
 				}
-				else
-				{
-					if (cvt is DnaConverterBehaviour)
-					{
-						var legacyDNA = (cvt as DnaConverterBehaviour).DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-						if (legacyDNA != null)
-						{
-							DNAList.AddRange(legacyDNA.Names);
-						}
-					}
-				}
 			}
 			PossibleDNA = DNAList.ToArray();
 		}

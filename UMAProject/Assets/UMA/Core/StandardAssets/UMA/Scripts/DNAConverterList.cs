@@ -15,7 +15,9 @@ namespace UMA
 		//Also the prefab gets added as a prefab rather than the component on it
 		//We can Validate but that might be slow
 		[SerializeField]
-		private List<UnityEngine.Object> _converters = new List<Object>();
+		//	private List<UnityEngine.Object> _converters = new List<Object>();
+		private List<DynamicDNAConverterController> _converters = new List<DynamicDNAConverterController>();
+
 
 		#region CONSTRUCTOR
 
@@ -26,51 +28,52 @@ namespace UMA
 		public DNAConverterList(DNAConverterList other)
 		{
 			other.Validate();
-			_converters = new List<Object>(other._converters);
+			_converters = new List<DynamicDNAConverterController>(other._converters);
 		}
 
-		public DNAConverterList(IDNAConverter[] dnaConverters)
+		public DNAConverterList(DynamicDNAConverterController[] dnaConverters)
 		{
 			_converters.Clear();
 			for (int i = 0; i < dnaConverters.Length; i++)
 			{
-				_converters.Add(dnaConverters[i] as UnityEngine.Object);
+				_converters.Add(dnaConverters[i]);
 			}
 		}
 
-		public DNAConverterList(List<IDNAConverter> dnaConverters)
+		public DNAConverterList(List<DynamicDNAConverterController> dnaConverters)
 		{
 			_converters.Clear();
 			for (int i = 0; i < dnaConverters.Count; i++)
 			{
-				_converters.Add(dnaConverters[i] as UnityEngine.Object);
+				_converters.Add(dnaConverters[i]);
 			}
 		}
 		#endregion
 
 		private void Validate()
 		{
+			/*
 			List<UnityEngine.Object> validConverters = new List<Object>();
 			for(int i = 0; i < _converters.Count; i++)
 			{
 				if (_converters[i] is IDNAConverter)
 					validConverters.Add(_converters[i]);
 			}
-			_converters = validConverters;
+			_converters = validConverters; */
 		}
 
 		#region PASSTHRU LIST METHODS
 
-		public IDNAConverter this[int key]
+		public DynamicDNAConverterController this[int key]
 		{
 			get {
 				if (_converters[key] is IDNAConverter)//will this check be fast?
-					return _converters[key] as IDNAConverter;
+					return _converters[key];
 				else
 					return null;
 			}
 			set {
-				_converters[key] = value as UnityEngine.Object;
+				_converters[key] = value;
 			}
 		}
 
@@ -94,7 +97,23 @@ namespace UMA
 		/// Adds the given object to the converters list. The object must inherit from IDNAConverter in order to be added
 		/// </summary>
 		/// <param name="converter"></param>
-		public void Add(UnityEngine.Object converter)
+	/*	public void Add(UnityEngine.Object converter)
+		{
+			if (converter == null)
+				return;
+			if (converter.GetType() == typeof(GameObject))
+			{
+				var idc = (converter as GameObject).GetComponent<IDNAConverter>();
+				if (idc != null)
+					converter = idc as DynamicDNAConverterController;
+				else
+					converter = null;
+			}
+			if (converter is DynamicDNAConverterController && !_converters.Contains(converter as DynamicDNAConverterController))
+				_converters.Add(converter as DynamicDNAConverterController);
+		}
+
+		public void Remove(DynamicDNAConverterController converter)
 		{
 			if (converter == null)
 				return;
@@ -106,83 +125,38 @@ namespace UMA
 				else
 					converter = null;
 			}
-			if (converter is IDNAConverter && !_converters.Contains(converter as UnityEngine.Object))
-				_converters.Add(converter as UnityEngine.Object);
-		}
+			if (_converters.Contains(converter as DynamicDNAConverterController))
+				_converters.Remove(converter as DynamicDNAConverterController);
+		} */
 
-		public void Remove(UnityEngine.Object converter)
+		public void Add(DynamicDNAConverterController converter)
 		{
 			if (converter == null)
 				return;
-			if (converter.GetType() == typeof(GameObject))
-			{
-				var idc = (converter as GameObject).GetComponent<IDNAConverter>();
-				if (idc != null)
-					converter = idc as UnityEngine.Object;
-				else
-					converter = null;
-			}
-			if (_converters.Contains(converter))
-				_converters.Remove(converter);
+			if (!_converters.Contains(converter))
+			_converters.Add(converter);
 		}
 
-		public void Add(IDNAConverter converter)
-		{
-			if (converter == null)
-				return;
-			if (!_converters.Contains(converter as UnityEngine.Object))
-			_converters.Add(converter as UnityEngine.Object);
-		}
-
+		/*
 		public void Remove(IDNAConverter converter)
 		{
 			if (converter == null)
 				return;
 			if (_converters.Contains(converter as UnityEngine.Object))
 				_converters.Remove(converter as UnityEngine.Object);
-		}
+		}*/
 
-		public void AddRange(IEnumerable<IDNAConverter> converters)
+		public void AddRange(IEnumerable<DynamicDNAConverterController> converters)
 		{
-			foreach (IDNAConverter converter in converters)
+			foreach (DynamicDNAConverterController converter in converters)
 				Add(converter);
 		}
 
-		public bool Contains(UnityEngine.Object converter)
+		public bool Contains(DynamicDNAConverterController converter)
 		{
-			if (converter == null)
-				return false;
-			if (converter.GetType() == typeof(GameObject))
-			{
-				var idc = (converter as GameObject).GetComponent<IDNAConverter>();
-				if (idc != null)
-					converter = idc as UnityEngine.Object;
-				else
-					converter = null;
-			}
-			if (converter == null)
-				return false;
 			return _converters.Contains(converter);
 		}
 
-		public bool Contains(IDNAConverter converter)
-		{
-			if (converter == null)
-				return false;
-			return _converters.Contains(converter as UnityEngine.Object);
-		}
-
-		public bool Contains(DnaConverterBehaviour converter)
-		{
-			if (converter == null)
-				return false;
-			for(int i = 0; i < _converters.Count; i++)
-			{
-				if (_converters[i] is DnaConverterBehaviour && _converters[i] == converter)
-					return true;
-			}
-			return false;
-		}
 
 		public void Clear()
 		{
@@ -210,68 +184,10 @@ namespace UMA
 			return -1;
 		}
 
-		public int IndexOf(IDNAConverter converter)
-		{
-			if (converter == null)
-				return -1;
-			Validate();//will this be fast enough?
-			for (int i = 0; i < _converters.Count; i++)
-			{
-				if (_converters[i] == converter as Object)
-					return i;
-			}
-			return -1;
-		}
 
-		public void Insert(int index, IDNAConverter converter)
+		public DynamicDNAConverterController[] ToArray()
 		{
-			if (converter == null)
-				return;
-			_converters.Insert(index, converter as Object);
-		}
-
-		public void InsertRange(int index, IEnumerable<IDNAConverter> converters)
-		{
-			var convertersToAdd = new List<Object>();
-			foreach (IDNAConverter converter in converters)
-			{
-				if (converter != null)
-					convertersToAdd.Add(converter as UnityEngine.Object);
-			}
-			_converters.InsertRange(index, convertersToAdd);
-		}
-
-		public void RemoveAt(int index)
-		{
-			_converters.RemoveAt(index);
-		}
-
-		public void RemoveRange(int index, int count)
-		{
-			_converters.RemoveRange(index, count);
-		}
-
-		public bool Replace(IDNAConverter oldConverter, IDNAConverter newConverter)
-		{
-			if (oldConverter == null || newConverter == null)
-				return false;
-			var replaceIndex = _converters.IndexOf(oldConverter as UnityEngine.Object);
-			if (replaceIndex != -1)
-			{
-				_converters[replaceIndex] = newConverter as UnityEngine.Object;
-				return true;
-			}
-			return false;
-		}
-
-		public IDNAConverter[] ToArray()
-		{
-			//If there is no way to add to the list directly (debug mode maybe) we wont need to validate
-			Validate();
-			var ret = new IDNAConverter[_converters.Count];
-			for (int i = 0; i < _converters.Count; i++)
-				ret[i] = _converters[i] as IDNAConverter;
-			return ret;
+			return _converters.ToArray();
 		}
 
 		#endregion

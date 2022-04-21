@@ -12,6 +12,7 @@ using UMA;
 using UMA.Controls;
 using UnityEditor.VersionControl;
 using System.IO;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
@@ -678,6 +679,7 @@ namespace UMA.Editors
 
 		protected List<SlotDataAsset> DraggedSlots = new List<SlotDataAsset>();
 		protected List<OverlayDataAsset> DraggedOverlays = new List<OverlayDataAsset>();
+
 
 		/// <summary>
 		/// Add the drag and drop files to the recipe.
@@ -1733,7 +1735,8 @@ namespace UMA.Editors
 						{
 							_overlayData.asset.material = _slotData.asset.material;
 							EditorUtility.SetDirty(_overlayData.asset);
-							AssetDatabase.SaveAssets();
+							string path = AssetDatabase.GetAssetPath(_overlayData.asset.GetInstanceID());
+							AssetDatabase.ImportAsset(path);
 						}
 					}
 					else

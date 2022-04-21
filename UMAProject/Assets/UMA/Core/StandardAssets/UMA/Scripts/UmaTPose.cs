@@ -41,6 +41,10 @@ namespace UMA
 		/// </summary>
 		public void Serialize()
 		{
+			if (humanInfo == null)
+				humanInfo = new HumanBone[0];
+			if (boneInfo == null)
+				boneInfo = new SkeletonBone[0];
 			var ms = new MemoryStream();
 			var bn = new BinaryWriter(ms);
 			bn.Write(boneInfo.Length);
@@ -100,6 +104,24 @@ namespace UMA
 				}
 			}
 		}
+
+
+		public UmaTPose Clone()
+        {
+			UmaTPose tp = new UmaTPose();
+			tp.armStretch = armStretch;
+			tp.feetSpacing = feetSpacing;
+			tp.legStretch = legStretch;
+			tp.lowerArmTwist = lowerArmTwist;
+			tp.lowerLegTwist = lowerLegTwist;
+			tp.upperArmTwist = upperArmTwist;
+			tp.upperLegTwist = upperLegTwist;
+			tp.extendedInfo = extendedInfo;
+			tp.boneInfo = (SkeletonBone[]) boneInfo.Clone();
+			tp.humanInfo = (HumanBone[])humanInfo.Clone();
+			tp.serializedChunk = (byte[])serializedChunk.Clone();
+			return tp;
+        }
 
 		private SkeletonBone DeSerializeSkeletonBone(BinaryReader br)
 		{

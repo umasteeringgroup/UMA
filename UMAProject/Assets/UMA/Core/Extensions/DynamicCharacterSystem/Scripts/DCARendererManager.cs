@@ -82,6 +82,7 @@ namespace UMA.CharacterSystem
 							for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
 							{
 								SlotData slotData = umaRecipe.slotDataList[i];
+								if (slotData == null) continue;
 								if (slotData.isBlendShapeSource)
 									continue;
 								if (slotData != null && slotData.asset != null)
@@ -126,9 +127,15 @@ namespace UMA.CharacterSystem
 
 		private bool HasSlot(List<SlotDataAsset> slots, string slotName)
 		{
-			foreach (SlotDataAsset sl in slots)
+			if (slots != null)
 			{
-				if (sl.slotName == slotName) return true;
+				foreach (SlotDataAsset sl in slots)
+				{
+					if (sl != null)
+					{
+						if (sl.slotName == slotName) return true;
+					}
+				}
 			}
 			return false;
 		}

@@ -43,9 +43,12 @@ namespace UMA.Editors
                     _lastSelectedShader = source.material.shader;
                 }
             }
+            SerializedProperty materialTypeProperty = serializedObject.FindProperty("materialType");
+
+            UMAMaterial.MaterialType MatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("material"), new GUIContent( "Material", "The Unity Material to link to."));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("materialType"), new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
+            EditorGUILayout.PropertyField(materialTypeProperty, new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("translateSRP"), new GUIContent("Translate SRP", "When checked, this will automatically translate the UMAMaterial property names to URP/HDRP names (ie - _MainTex becomes _BaseMap etc.)"));
 
             GUILayout.Space(20);
@@ -71,7 +74,14 @@ namespace UMA.Editors
 
                 GUILayout.Space(20);
 
-                DrawChannelList(serializedObject.FindProperty("channels"));
+                if (MatType == UMAMaterial.MaterialType.UseExistingMaterial)
+                {
+                    EditorGUILayout.HelpBox("Materials of type 'Use Existing Material' do not have texture channels, and do not allow compositing.", MessageType.Info);
+                }
+                else
+                {
+                    DrawChannelList(serializedObject.FindProperty("channels"));
+                }
 
                 GUILayout.Space(20);
 
@@ -85,7 +95,21 @@ namespace UMA.Editors
                 EditorGUILayout.LabelField("Channel properties cannot be edited multi-object");
             }
 
-            serializedObject.ApplyModifiedProperties();
+            bool wasChanged = serializedObject.ApplyModifiedProperties();
+            if (wasChanged)
+            {
+                UMAMaterial.MaterialType NewMatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
+                if (MatType != NewMatType)
+                {
+                    if (NewMatType == UMAMaterial.MaterialType.UseExistingMaterial)
+                    {
+                        var channelsProperty = serializedObject.FindProperty("channels");
+                        channelsProperty.ClearArray();
+                        serializedObject.ApplyModifiedProperties();
+                    }
+                    Repaint();
+                }
+            }
         }
 
         //Maybe eventually we can use the new IMGUI classes once older unity version are no longer supported.

@@ -8,6 +8,8 @@ using UMA.CharacterSystem;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
+using UnityEngine.ResourceManagement.ResourceLocations;
+
 #endif
 using PackSlot = UMA.UMAPackedRecipeBase.PackedSlotDataV3;
 using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
@@ -20,6 +22,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UMA;
+using UnityEngine.SceneManagement;
 #endif
 
 namespace UMA
@@ -164,6 +167,7 @@ namespace UMA
 #if UNITY_EDITOR
                     EditorSceneManager.sceneSaving += EditorSceneManager_sceneSaving;
                     EditorSceneManager.sceneSaved += EditorSceneManager_sceneSaved;
+                    EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged; ;
 #endif
                     //StopTimer(st,"Asset index load");
                 }
@@ -172,6 +176,26 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+
+        private static void EditorApplication_playModeStateChanged(PlayModeStateChange obj)
+        {
+            if (!EditorApplication.isPlayingOrWillChangePlaymode &&
+                 !EditorApplication.isPlaying)
+            {
+                RebuildUMAS(SceneManager.GetActiveScene());
+            }
+            UMAMeshData.CleanupGlobalBuffers();
+        }
+
+
+        [UnityEditor.Callbacks.DidReloadScripts]
+        private static void OnScriptsReloaded()
+        {
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                UMAMeshData.CleanupGlobalBuffers();
+            }
+        }
         public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
 
         public static bool LeanMeanSceneFiles()
@@ -184,6 +208,19 @@ namespace UMA
             if (!LeanMeanSceneFiles())
                 return;
 
+            RebuildUMAS(scene);
+        }
+
+        private static void EditorSceneManager_sceneSaving(UnityEngine.SceneManagement.Scene scene, string path)
+        {
+            if (!LeanMeanSceneFiles())
+                return;
+
+            CleanupUMAS(scene);
+        }
+
+        private static void RebuildUMAS(Scene scene)
+        {
             GameObject[] sceneObjs = scene.GetRootGameObjects();
             foreach (GameObject go in sceneObjs)
             {
@@ -199,19 +236,16 @@ namespace UMA
             }
         }
 
-    private static void EditorSceneManager_sceneSaving(UnityEngine.SceneManagement.Scene scene, string path)
+        private static void CleanupUMAS(Scene scene)
         {
-            if (!LeanMeanSceneFiles())
-                return;
-
             // Cleanup any editor generated UMAS
             GameObject[] sceneObjs = scene.GetRootGameObjects();
-            foreach(GameObject go in sceneObjs)
+            foreach (GameObject go in sceneObjs)
             {
                 DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
                 if (dcas.Length > 0)
                 {
-                    foreach(DynamicCharacterAvatar dca in dcas)
+                    foreach (DynamicCharacterAvatar dca in dcas)
                     {
                         // Free all the generated data so we don't junk up the scene file.
                         // it will be regenerated later.
@@ -220,7 +254,7 @@ namespace UMA
                 }
             }
         }
- 
+
         public struct IndexBackup
         {
             public DateTime BackupTime;
@@ -281,11 +315,11 @@ namespace UMA
 
             for(int i=0;i<LoadedItems.Count;i++)
             {
-                CachedOp c = LoadedItems[i]; 
+                CachedOp c = LoadedItems[i];
                 if (c.Expired)
                 {
                     Addressables.Release(c.Operation);
-                    Cleanup.Add(c); 
+                    Cleanup.Add(c);
                 }
             }
             if (Cleanup.Count > 0)
@@ -331,7 +365,7 @@ namespace UMA
             SerializedItems.Clear();
             foreach (AssetItem ai in ItemsByPath.Values)
             {
-                // We null things out when we want to delete them. This prevents it from going back into 
+                // We null things out when we want to delete them. This prevents it from going back into
                 // the dictionary when rebuilt.
                 if (ai == null)
                     continue;
@@ -364,7 +398,7 @@ namespace UMA
         /// </summary>
         /// <returns></returns>
         public System.Type[] GetTypes()
-        { 
+        {
             return Types;
         }
 
@@ -477,7 +511,7 @@ namespace UMA
 			System.Type ot = typeof(T);
 			System.Type theType = TypeToLookup[ot];
 			Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
-			
+
 			// This honestly hurt my heart typing this.
 			// Todo: replace this loop with a dictionary.
 			foreach(string s in TypeDic.Keys)
@@ -489,8 +523,8 @@ namespace UMA
 
 		/// <summary>
 		/// Return the asset specified, if it exists.
-		/// if it can't be found by name, then we do a scan of the assets to see if 
-		/// we can find the name directly on the object, and return that. 
+		/// if it can't be found by name, then we do a scan of the assets to see if
+		/// we can find the name directly on the object, and return that.
 		/// We then rebuild the index to make sure it's up to date.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
@@ -519,8 +553,8 @@ namespace UMA
 
         /// <summary>
         /// Return the asset specified, if it exists.
-        /// if it can't be found by name, then we do a scan of the assets to see if 
-        /// we can find the name directly on the object, and return that. 
+        /// if it can't be found by name, then we do a scan of the assets to see if
+        /// we can find the name directly on the object, and return that.
         /// We then rebuild the index to make sure it's up to date.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -541,7 +575,7 @@ namespace UMA
             return null;
         }
 
-        
+
         public List<AssetItem> GetAssetItems(string recipe, bool LookForLODs = false)
         {
             AssetItem ai = GetAssetItem<UMAWardrobeRecipe>(recipe);
@@ -570,7 +604,7 @@ namespace UMA
 
 			foreach (var slot in Slots)
 			{
-                // We are getting extra blank slots. That's weird. 
+                // We are getting extra blank slots. That's weird.
 
                 if (string.IsNullOrWhiteSpace(slot.id)) continue;
 
@@ -581,7 +615,7 @@ namespace UMA
                     string LodIndicator = slot.id.Trim() + "_LOD";
                     if (slot.id.Contains("_LOD"))
                     {
-                        // LOD is directly in the base recipe. 
+                        // LOD is directly in the base recipe.
                         LodIndicator = slot.id.Substring(0, slot.id.Length-1);
                     }
 
@@ -604,7 +638,7 @@ namespace UMA
                             {
                                 AssetItem lodSlot = GetAssetItem<SlotDataAsset>(slod);
                                 returnval.Add(lodSlot);
-                            } 
+                            }
                         }
                     }
                 }
@@ -852,7 +886,7 @@ namespace UMA
 		public Dictionary<string, List<UMATextRecipe>> GetRecipes(string race)
 		{
 			Dictionary<string, HashSet<UMATextRecipe>> aggregate = new Dictionary<string, HashSet<UMATextRecipe>>();
-			
+
 			internalGetRecipes(race, ref aggregate);
 
 			RaceData rc = GetAsset<RaceData>(race);
@@ -917,7 +951,7 @@ namespace UMA
             foreach(Type t in Types)
             {
                 var objs = ab.LoadAllAssets(t);
-                
+
                 foreach(UnityEngine.Object o in objs)
                 {
                     ProcessNewItem(o, false, false);
@@ -1007,7 +1041,7 @@ namespace UMA
 			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
 
 			// preload any assigned recipes.
-			foreach (var wr in avatar.WardrobeRecipes.Values) 
+			foreach (var wr in avatar.WardrobeRecipes.Values)
 			{
                 //Debug.Log("Adding Wardrobe recipe: " + wr.name);
                 if (wr != null)
@@ -1024,12 +1058,12 @@ namespace UMA
 			return LoadLabelList(keys, keepLoaded);
 		}
 
-       
+
         public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(DynamicCharacterAvatar avatar, bool keepLoaded = false)
 		{
 			List<string> keys = new List<string>();
 			RaceData race = GetAsset<RaceData>(avatar.activeRace.name);
-			
+
 			// preload the race
 			if (race != null)
 			{
@@ -1083,6 +1117,14 @@ namespace UMA
 			return LoadLabelList(keys, keepLoaded);
 		}
 
+
+        public static string KeysToString(string msg, List<string> keys)
+        {
+            StringBuilder sb = new StringBuilder(msg);
+            sb.Append(String.Join("; ", keys));
+            return sb.ToString();
+        }
+
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(UMATextRecipe theRecipe, bool keepLoaded = false)
 		{
 #if SUPER_LOGGING
@@ -1113,7 +1155,7 @@ namespace UMA
 			return LoadLabelList(Keys,keepLoaded);
 		}
 #if UNITY_EDITOR
-        async void ValidateSingleKey(string s) 
+        async void ValidateSingleKey(string s)
         {
             var result = await Addressables.LoadResourceLocationsAsync(s).Task;
 
@@ -1122,8 +1164,6 @@ namespace UMA
             Debug.Log(info);
         }
 #endif
-
-        //static List<UnityEngine.Object> ProcessedItems = new List<UnityEngine.Object>();
 
         public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
         {
@@ -1142,28 +1182,57 @@ namespace UMA
 
             var op = Addressables.LoadAssetsAsync<UnityEngine.Object>(Keys, result =>
             {
-				// The last items is now passed here AFTER the completed event, breaking everything. 
-				// change to event model here.
-                //ProcessedItems.Add(result);
-                //ProcessNewItem(result, true, keepLoaded);
+                    // The last items is now passed here AFTER the completed event, breaking everything.
+                    // change to event model here.
             }, Addressables.MergeMode.Union, true);
-			op.Completed += ProcessItems;
+            if (op.Status == AsyncOperationStatus.Failed)
+            {
+                if (op.OperationException is InvalidKeyException exk)
+                {
+                    string badMessage = "Resources for the following recipes cannot be loaded from the Addressables System: ";
+                    if (exk.Key is List<string> badKeys && badKeys.Count > 0)
+                    {
+                        throw new UMAInvalidKeyException(badMessage+KeysToString(badMessage,badKeys), badKeys);
+                    }
+                    else
+                    {
+                        badMessage = "Resources for the following recipes cannot be loaded from the Addressables System: "+exk.Key.ToString()+" - " + KeysToString("Resource Keys = ",Keys);
+                        throw new UMAInvalidKeyException(badMessage, exk.Key as List<string>);
+                    }
+                }
+                else
+                {
+
+                    if (op.OperationException != null)
+                        throw new Exception("An exception of type: " + op.OperationException.GetType().ToString() + " was thrown while loading recipes from the Addressables system. Message is:  " + op.OperationException.Message);
+                    else
+                        throw new Exception("Addressables call failed but an exception was not specified.");
+                }
+            }
+            op.Completed += ProcessItems;
             if (!keepLoaded)
             {
                 string info = "";
                 foreach (string s in Keys)
-                    info += Keys + "; ";
+                    info += s + "; ";
                 LoadedItems.Add(new CachedOp(op, info));
             }
             return op;
         }
 
-		private void ProcessItems(AsyncOp Op) {
-			if (Op.IsDone) {
-				foreach(var o in Op.Result) {
-					//ProcessedItems.Add(o);
-					ProcessNewItem(o, true, false);
-				}
+        // It appears that Addressables can now call this function on an invalid result.
+        // We need to ensure that the operation succeeded, and that the result value is not null
+        private void ProcessItems(AsyncOp Op)
+        {
+			if (Op.IsDone && Op.Status == AsyncOperationStatus.Succeeded)
+            {
+                if (Op.Result != null)
+                {
+                    foreach (var o in Op.Result)
+                    {
+                        ProcessNewItem(o, true, false);
+                    }
+                }
 			}
 		}
 
@@ -1210,6 +1279,14 @@ namespace UMA
                 resultItem.AddReference();
             }
 
+            if (result is UMAMaterial um)
+            {
+                if (um.material.shader == null)
+                {
+                    // if the shader has been stripped, then we need to reset it.
+                    um.material.shader = Shader.Find(um.ShaderName);
+                }
+            }
             if (result is UMAWardrobeRecipe)
             {
                 AddRaceRecipe(result as UMAWardrobeRecipe);
@@ -1243,6 +1320,27 @@ namespace UMA
 #if UNITY_EDITOR
             var slots = GetAllAssets<SlotDataAsset>();
             var overlays = GetAllAssets<OverlayDataAsset>();
+            var umaMaterials = GetAllAssets<UMAMaterial>();
+
+            // if we stripped the shaders from the materials, we need to look them up
+            // and reassign them here.
+            foreach (UMAMaterial um in umaMaterials)
+            {
+                if (um.material.shader == null)
+                {
+                    um.material.shader = Shader.Find(um.ShaderName);
+                    if (um.material.shader == null)
+                    {
+                        Debug.LogError("Unable to find shader " + um.ShaderName + " on UMAMaterial " + um.name);
+                    }
+                    else
+                    {
+                        // Shader was found. We need to resave the material with the correct shader
+                        EditorUtility.SetDirty(um);
+                    }
+                }
+            }
+
             foreach(SlotDataAsset sd in slots)
             {
                 if (sd.material == null)
@@ -1322,7 +1420,7 @@ namespace UMA
             // After freeing everything, we really only need to know about the "keeps".
             // This is necessary, because it's possible to request to "keep" something in one call
             // and NOT keep it in another call. In this case, the previous "Keep" needs to be kept, so
-            // we can honor the keep. 
+            // we can honor the keep.
             //
 			// cheesiest cheap way to clear the Preloads
 			Dictionary<string, bool> newPreloads = new Dictionary<string, bool>();
@@ -1390,7 +1488,7 @@ namespace UMA
                 RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'));
             }
         }
-        
+
         public void RecursiveScanFoldersForRemovingAssets(string path)
         {
             var assetFiles = System.IO.Directory.GetFiles(path);
@@ -1588,7 +1686,7 @@ namespace UMA
             if (TypeDic.ContainsKey(Name))
             {
                 AssetItem ai = TypeDic[Name];
-                ai.FreeReference(); 
+                ai.FreeReference();
             }
         }
 
@@ -1605,15 +1703,15 @@ namespace UMA
         }
         /// <summary>
         /// This is the evil version of AddAsset. This version cares not for the good of the project, nor
-        /// does it care about readability, expandibility, and indeed, hates goodness with every beat of it's 
-        /// tiny evil shrivelled heart. 
+        /// does it care about readability, expandibility, and indeed, hates goodness with every beat of it's
+        /// tiny evil shrivelled heart.
         /// I started going down the good path - I created an interface to get the name info, added it to all the
         /// classes. Then we ran into RuntimeAnimatorController. I would have had to wrap it. And Visual Studio kept
         /// complaining about the interface, even though Unity thought it was OK.
-        /// 
+        ///
         /// So in the end, good was defeated. And would never raise it's sword in the pursuit of chivalry again.
-        /// 
-        /// And EvilAddAsset doesn't save either. You have to do that manually. 
+        ///
+        /// And EvilAddAsset doesn't save either. You have to do that manually.
         /// </summary>
         /// <param name="type"></param>
         /// <param name="o"></param>
@@ -1640,7 +1738,10 @@ namespace UMA
             {
 				AssetItem ai = TypeDic[Name];
 				TypeDic.Remove(Name);
-                GuidTypes.Remove(ai._Guid);
+                if (GuidTypes.ContainsKey(ai._Guid))
+                {
+                    GuidTypes.Remove(ai._Guid);
+                }
 				if (theType == typeof(UMAWardrobeRecipe))
 				{
 					// remove it from the race lookup.
@@ -1686,7 +1787,7 @@ namespace UMA
 //             Debug.Log("Adding Items");
             foreach (AssetItem ai in SerializedItems)
             {
-                // We null things out when we want to delete them. This prevents it from going back into 
+                // We null things out when we want to delete them. This prevents it from going back into
                 // the dictionary when rebuilt.
                 if (ai == null)
                     continue;
@@ -1715,7 +1816,7 @@ namespace UMA
         }
 
         private recipeEqualityComparer req;
-        
+
         private void AddRaceRecipe(UMAWardrobeRecipe uwr)
         {
             if (!uwr) return;
@@ -1749,7 +1850,7 @@ namespace UMA
 			/// Build Race Recipes and RaceLookup
 			raceRecipes.Clear();
 
-			/// Add all the directly assigned items. 
+			/// Add all the directly assigned items.
 			var wardrobe = GetAllAssets<UMAWardrobeRecipe>();
 
 			foreach(UMAWardrobeRecipe uwr in wardrobe)
@@ -1776,7 +1877,7 @@ namespace UMA
         }
 
         /// <summary>
-        /// Updates the list so all items can be processed at once, or for 
+        /// Updates the list so all items can be processed at once, or for
         /// serialization.
         /// </summary>
         public List<AssetItem> UpdateSerializedList()
@@ -1912,7 +2013,7 @@ namespace UMA
         /// <summary>
         /// Adds references to all items by accessing the item property.
         /// This forces Unity to load the item and return a reference to it.
-        /// When building, Unity needs the references to the items because we 
+        /// When building, Unity needs the references to the items because we
         /// cannot demand load them without the AssetDatabase.
         /// </summary>
         public void AddReferences()
@@ -1948,11 +2049,11 @@ namespace UMA
         }
 
         /// <summary>
-        /// This releases items by dereferencing them so they can be 
+        /// This releases items by dereferencing them so they can be
         /// picked up by garbage collection.
         /// This also makes working with the index much faster.
         /// </summary>
-        public void ClearReferences() 
+        public void ClearReferences()
         {
             // Rebuild the tables
             UpdateSerializedList();
@@ -1966,9 +2067,27 @@ namespace UMA
         }
 
         /// <summary>
-        /// Repairs the index. Removes anything that it cannot find.
+        /// This releases items by dereferencing them so they can be
+        /// picked up by garbage collection.
+        /// This also makes working with the index much faster.
         /// </summary>
-        public void RepairAndCleanup()
+        public void RemoveReferences()
+        {
+            // Rebuild the tables
+            UpdateSerializedList();
+            foreach (AssetItem ai in SerializedItems)
+            {
+                ai.FreeReference();
+            }
+            UpdateSerializedDictionaryItems();
+            ForceSave();
+        }
+
+
+            /// <summary>
+            /// Repairs the index. Removes anything that it cannot find.
+            /// </summary>
+            public void RepairAndCleanup()
         {
             // Rebuild the tables
             UpdateSerializedList();
@@ -2046,7 +2165,7 @@ namespace UMA
         }
 
         /// <summary>
-        /// Rebuilds the name indexes by dumping everything back to the list, updating the name, and then rebuilding 
+        /// Rebuilds the name indexes by dumping everything back to the list, updating the name, and then rebuilding
         /// the dictionaries.
         /// </summary>
         public void RebuildIndex()
@@ -2145,4 +2264,33 @@ namespace UMA
         }
 #endregion
     }
+
+#if UMA_ADDRESSABLES
+
+    /// <summary>
+    /// This exception exists as a separate exception so we can track keys.
+    /// </summary>
+    public class UMAInvalidKeyException : Exception
+    {
+        public string Labels { get; private set; }
+        public UMAInvalidKeyException()
+        {
+            Labels = "No Key Specified";
+        }
+
+        public UMAInvalidKeyException(string msg) : base(msg)
+        {
+            Labels = "No Key Specified";
+        }
+        public UMAInvalidKeyException(string msg, Exception inner) : base(msg,inner)
+        {
+            Labels = "No Key Specified";
+        }
+
+        public UMAInvalidKeyException(string msg, List<string> Keys) : base(msg)
+        {
+            Labels = UMAAssetIndexer.KeysToString(msg,Keys);
+        }
+    };
+#endif
 }

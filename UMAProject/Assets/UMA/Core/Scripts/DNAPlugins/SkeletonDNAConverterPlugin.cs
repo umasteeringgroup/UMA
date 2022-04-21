@@ -70,6 +70,8 @@ namespace UMA
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
 			var umaDna = umaData.GetDna(dnaTypeHash);
+			if (umaDna == null) return;
+
 			var masterWeightCalc = masterWeight.GetWeight(umaDna);
 			if (masterWeightCalc == 0f)
 				return;
@@ -183,23 +185,7 @@ namespace UMA
 					importedSkeletonModifiers = (skelModPlugs[0] as SkeletonDNAConverterPlugin)._skeletonModifiers;
 				}
 			}
-			else
-			{
-				if (typeof(GameObject).IsAssignableFrom(pluginToImport.GetType()))
-				{
-					var DDCB = (pluginToImport as GameObject).GetComponent<DynamicDNAConverterBehaviour>();
-					if(DDCB != null)
-					{
-						importedSkeletonModifiers = DDCB.skeletonModifiers;
-						//hmm this is not always the case because of the backwards compatible property giving us the first found skelModsPlugin aswell
-						//so if there is no converter controller, *then* its legacy- 
-						//or is it? the user could still assign a controller without upgrading and then try and drag the behaviour in here
-						//UMA2.8+ FixDNAPrefabs ConverterController doesn't do this backwards compatibility now
-						//if(DDCB.ConverterController == null)
-							isLegacy = true;
-					}
-				}
-			}
+
 			if(importedSkeletonModifiers != null)
 			{
 				// add the modifiers- if the import method is Replace this is a new list

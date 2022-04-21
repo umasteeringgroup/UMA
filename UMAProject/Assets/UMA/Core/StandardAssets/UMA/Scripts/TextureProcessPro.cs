@@ -236,12 +236,20 @@ namespace UMA
                                         if (!slotData.material.channels[textureType].NonShaderTexture)
                                         {
                                             if (generatedMaterial.umaMaterial.translateSRP)
-                                            {
-                                                generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), destinationTexture);
+                                            { 
+                                                string texProperty = UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName);
+                                                if (generatedMaterial.material.HasProperty(texProperty))
+                                                {
+                                                    generatedMaterial.material.SetTexture(texProperty, destinationTexture);
+                                                }
                                             }
                                             else
                                             {
-                                                generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
+                                                string texProperty = slotData.material.channels[textureType].materialPropertyName;
+                                                if (generatedMaterial.material.HasProperty(texProperty))
+                                                {
+                                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
+                                                }
                                             }
                                         }
                                     } 

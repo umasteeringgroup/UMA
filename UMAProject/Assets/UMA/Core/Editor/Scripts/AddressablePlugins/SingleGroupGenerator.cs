@@ -42,7 +42,11 @@ namespace UMA
 
         public void Complete()
         {
+            // if the preference is turned on, then force the build flag to clear materials
             bool stripUmaMaterials = UMAEditorUtilities.StripUMAMaterials();
+            if (stripUmaMaterials)
+                ClearMaterials = true;
+
             try
             {
                 LogText("");
@@ -159,7 +163,7 @@ namespace UMA
 
                     UMAAddressablesSupport.Instance.AddItemToSharedGroup(itemGUID, ai.AddressableAddress, AddressableItems[ai], sharedGroup);
 
-                    if (ai._Type == typeof(SlotDataAsset) && stripUmaMaterials)
+                    if (ai._Type == typeof(SlotDataAsset) && ClearMaterials)
                     {
                         SlotDataAsset sda = ai.Item as SlotDataAsset;
                         if (sda == null)
@@ -208,6 +212,16 @@ namespace UMA
                                     od.material = Index.GetAsset<UMAMaterial>(od.materialName);
                                     EditorUtility.SetDirty(od);
                                 }
+                            }
+                        }
+                        // Clear out the shaders on the UMAMaterial
+                        if (ai.Item is UMAMaterial um)
+                        {
+                            if (um.material != null)
+                            {
+                                um.ShaderName = um.material.shader.name;
+                                um.MaterialName = um.material.name;
+                                um.material.shader = null;
                             }
                         }
 #if INCL_TEXTURE2D

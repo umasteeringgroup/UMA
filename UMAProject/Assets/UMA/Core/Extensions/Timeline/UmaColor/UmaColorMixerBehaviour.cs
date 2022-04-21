@@ -1,4 +1,4 @@
-﻿#if UNITY_2017_1_OR_NEWER
+#if UNITY_2017_1_OR_NEWER
 using UnityEngine;
 using UnityEngine.Playables;
 using UMA.CharacterSystem;

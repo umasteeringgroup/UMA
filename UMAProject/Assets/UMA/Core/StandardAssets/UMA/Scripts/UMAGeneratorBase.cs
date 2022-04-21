@@ -259,6 +259,8 @@ namespace UMA
 		{
 			if (umaData)
 			{
+				if (umaData.rawAvatar)
+					return;
 				if (umaData.animationController != null)
 				{
 					var umaTransform = umaData.transform;
@@ -319,7 +321,7 @@ namespace UMA
 		/// <param name="animator">Animator.</param>
 		public static void SetAvatar(UMAData umaData, Animator animator)
 		{
-			var umaTPose = umaData.umaRecipe.raceData.TPose;
+			var umaTPose = umaData.GetTPose();
 
 			switch (umaData.umaRecipe.raceData.umaTarget)
 			{

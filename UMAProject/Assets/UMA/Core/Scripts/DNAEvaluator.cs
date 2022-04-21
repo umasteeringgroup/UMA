@@ -136,10 +136,13 @@ namespace UMA
 			}
 			else
 			{
-			_lastIndex = System.Array.IndexOf(dna.Names, _dnaName);
-				if (_lastIndex > -1)
+				if (!string.IsNullOrEmpty(_dnaName) && dna.Names != null)
 				{
-					return Evaluate(dna.GetValue(_lastIndex));
+					_lastIndex = System.Array.IndexOf(dna.Names, _dnaName);
+					if (_lastIndex > -1)
+					{
+						return Evaluate(dna.GetValue(_lastIndex));
+					}
 				}
 			}
 			return defaultDNAValue;

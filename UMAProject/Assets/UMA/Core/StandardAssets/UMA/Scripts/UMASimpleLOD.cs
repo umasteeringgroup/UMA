@@ -36,7 +36,6 @@ namespace UMA.Examples
 
 		private DynamicCharacterAvatar _avatar;
 		private UMAData _umaData;
-		private Transform _cameraTransform;
 
 		private bool initialized = false;
 
@@ -47,8 +46,6 @@ namespace UMA.Examples
 			bool changedSlots = ProcessRecipe(_currentLOD);
 			if (changedSlots)
 			{
-				//var renderer = lodDisplay.GetComponent<Renderer>();
-				//renderer.material.SetColor("_EmissionColor", Color.grey);
 				_umaData.Dirty(true, true, true);
 			}
 		}
@@ -58,7 +55,13 @@ namespace UMA.Examples
 			_currentLOD = -1;
 		}
 
-		public void OnEnable()
+        public void Reset()
+        {
+			_currentLOD = -1;
+			NextTime = Time.time;
+        }
+
+        public void OnEnable()
 		{
 			_avatar = GetComponent<DynamicCharacterAvatar>();
 			if (_avatar != null)
@@ -71,49 +74,40 @@ namespace UMA.Examples
 				if (_umaData != null)
 					_umaData.CharacterCreated.AddListener(CharacterCreated);
 			}
-
-			//cache the camera transform for performance
-			_cameraTransform = Camera.main.transform;
 		}
 
 		public void CharacterCreated(UMAData umaData)
 		{
-			if (!_cameraTransform)
-			{
-				_cameraTransform = Camera.main.transform;
-				if (!_cameraTransform)
-				{
-					Debug.LogError("Unable to find main camera!!!");
-					return;
-				}
-			}
 			initialized = true;
 		}
 
 		public void CharacterBegun(UMAData umaData)
-		{
-			if (!_cameraTransform)
-			{
-				_cameraTransform = Camera.main.transform;
-				if (!_cameraTransform)
-				{
-					Debug.LogError("Unable to find main camera!!!");
-					return;
-				}
-			}
-			initialized = true;
-			PerformLodCheck();
-		}
+        {
+            initialized = true;
+            DoLODCheck(umaData);
+        }
 
-		public void Update()
-		{
+        private void DoLODCheck(UMAData umaData)
+        {
+            if (!PerformLodCheck())
+            {
+                _currentLOD = 0;
+                if (umaData != null)
+                {
+                    umaData.atlasResolutionScale = 1.0f;
+                    ProcessRecipe(_currentLOD);
+                }
+            }
+        }
 
+        public void Update()
+		{
 			if (!initialized)
 				return;
 
 			if (Time.time > NextTime)
 			{
-				PerformLodCheck();
+                DoLODCheck(_umaData);
 				NextTime = Time.time + MinCheck;
 				if (CheckRange > 0.0f)
                 {
@@ -122,30 +116,34 @@ namespace UMA.Examples
 			}
 		}
 
-		private void PerformLodCheck()
+
+
+		public bool PerformLodCheck()
 		{
 			if (_umaData == null)
 				_umaData = gameObject.GetComponent<UMAData>();
 
 			if (_umaData == null)
-				return;
+				return false;
 
 			if (_umaData.umaRecipe == null)
-				return;
+				return false;
 
 			if (lodDistance < 0)
 			{ 
-				return;
+				return false;
 			}
 
-			if (!_cameraTransform)
+			if (Camera.main == null)
+				return false;
+
+
+			Transform _cameraTransform = Camera.main.transform;
+
+			if (_cameraTransform == null)
 			{
-				_cameraTransform = Camera.main.transform;
-				if (!_cameraTransform)
-				{
-					Debug.LogError("Unable to find main camera!");
-					return;
-				}
+				Debug.Log("Camera transform is null in UMASimpleLOD");
+				return false;
 			}
 
 			float cameraDistance = (transform.position - _cameraTransform.position).magnitude;
@@ -188,6 +186,7 @@ namespace UMA.Examples
 					}
 				}
 			}
+			return true;
 		}
 
 		private bool ProcessRecipe(int currentLevel)
@@ -222,8 +221,7 @@ namespace UMA.Examples
 								changedSlots = true;
 							}
 							slot.Suppressed = false;
-						}
-						
+						}						
 					}
 
 					var slotName = slot.slotName;

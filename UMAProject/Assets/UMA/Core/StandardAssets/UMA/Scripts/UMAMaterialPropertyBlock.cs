@@ -546,11 +546,39 @@ namespace UMA
         }
 
         // Returns a list of types to load 
-        public static List<Type> GetPropertyTypes()
+   /*     public static List<Type> GetPropertyTypes()
         {
             return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
                  .Where(x => typeof(UMAProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
                  .Select(x => x).ToList();
+        }*/
+        public static List<Type> GetPropertyTypes()
+        {
+            List<Type> theTypes = new List<Type>();
+
+            var Assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            foreach (var asm in Assemblies)
+            {
+
+                try
+                {
+                    var Types = asm.GetTypes();
+                    foreach (var t in Types)
+                    {
+                        if (typeof(UMAProperty).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                        {
+                            theTypes.Add(t);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // This apparently blows up on some assemblies. 
+                }
+            }
+
+            return theTypes;
         }
 
         public void Validate()

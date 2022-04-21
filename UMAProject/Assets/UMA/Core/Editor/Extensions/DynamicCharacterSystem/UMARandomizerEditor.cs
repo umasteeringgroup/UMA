@@ -142,7 +142,8 @@ namespace UMA.Editors
 					{
 						rws.Colors.Remove(delme);
 						EditorUtility.SetDirty(this.target);
-						AssetDatabase.SaveAssets();
+						string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+						AssetDatabase.ImportAsset(path);
 					}
 				}
 				else
@@ -278,7 +279,8 @@ namespace UMA.Editors
 			if (GUI.changed)
 			{
 				EditorUtility.SetDirty(currentTarget);
-				AssetDatabase.SaveAssets();
+				string path = AssetDatabase.GetAssetPath(currentTarget.GetInstanceID());
+				AssetDatabase.ImportAsset(path);
 			}
 		}
 
@@ -350,7 +352,8 @@ namespace UMA.Editors
 			if (ChangeCount > 0)
 			{
 				EditorUtility.SetDirty(currentTarget);
-				AssetDatabase.SaveAssets();
+				string path = AssetDatabase.GetAssetPath(currentTarget.GetInstanceID());
+				AssetDatabase.ImportAsset(path);
 			}
 		}
 

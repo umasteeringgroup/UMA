@@ -271,7 +271,8 @@ namespace UMA
 				{
 					ovl.rect = overlayEditor.Overlay.rect;
 					EditorUtility.SetDirty(ovl);
-					AssetDatabase.SaveAssets();
+					string path = AssetDatabase.GetAssetPath(ovl.GetInstanceID());
+					AssetDatabase.ImportAsset(path);
 					EditorUtility.DisplayDialog("Message", "Overlay '" + ovl.overlayName + "' Saved", "OK");
 				}
 			}

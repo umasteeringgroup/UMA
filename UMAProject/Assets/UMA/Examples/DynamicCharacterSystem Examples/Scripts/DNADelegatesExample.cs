@@ -46,23 +46,11 @@ namespace UMA.CharacterSystem.Examples
 			if (umaData.umaRecipe.raceData)
 			{
 				lastRace = umaData.umaRecipe.raceData;
-                foreach (IDNAConverter dcb in umaData.umaRecipe.raceData.dnaConverterList)
+                foreach (DynamicDNAConverterController dcb in umaData.umaRecipe.raceData.dnaConverterList)
 				{
-					if(dcb.GetType() == typeof(DynamicDNAConverterBehaviour) || dcb.GetType() == typeof(DynamicDNAConverterController))
-					{
-						if (dcb.GetType() == typeof(DynamicDNAConverterBehaviour))
-						{
-							(dcb as DynamicDNAConverterBehaviour).AddDnaCallbackDelegate(ChangeCharacterRedness, "skinRedness");
-							(dcb as DynamicDNAConverterBehaviour).AddDnaCallbackDelegate(ChangeCharacterGreenness, "skinGreenness");
-							(dcb as DynamicDNAConverterBehaviour).AddDnaCallbackDelegate(ChangeCharacterBlueness, "skinBlueness");
-						}
-						else
-						{
-							(dcb as DynamicDNAConverterController).AddDnaCallbackDelegate(ChangeCharacterRedness, "skinRedness");
-							(dcb as DynamicDNAConverterController).AddDnaCallbackDelegate(ChangeCharacterGreenness, "skinGreenness");
-							(dcb as DynamicDNAConverterController).AddDnaCallbackDelegate(ChangeCharacterBlueness, "skinBlueness");
-						}
-					}
+							dcb.AddDnaCallbackDelegate(ChangeCharacterRedness, "skinRedness");
+							dcb.AddDnaCallbackDelegate(ChangeCharacterGreenness, "skinGreenness");
+							dcb.AddDnaCallbackDelegate(ChangeCharacterBlueness, "skinBlueness");
 				}
 				if (delegateDNAEditor)
 				{

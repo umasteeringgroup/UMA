@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEngine.SceneManagement;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
@@ -69,9 +71,26 @@ namespace UMA.Editors
 				EditorGUILayout.LabelField("Texture Dirty", string.Format("{0}", generator.TextureChanged));
 				EditorGUILayout.LabelField("Mesh Dirty", string.Format("{0}", generator.SlotsChanged));
 			}
-
+			else {
+				if (GUILayout.Button("Rebuild all editor UMA")) {
+					Scene scene = SceneManager.GetActiveScene();
+					if(scene != null) {
+						GameObject[] sceneObjs = scene.GetRootGameObjects();
+						foreach(GameObject go in sceneObjs) 
+						{
+							DynamicCharacterAvatar[] dcas = go.GetComponentsInChildren<DynamicCharacterAvatar>(false);
+							if(dcas.Length > 0) {
+								foreach(DynamicCharacterAvatar dca in dcas) 
+								{
+									if (dca.editorTimeGeneration)
+										dca.GenerateSingleUMA();
+								}
+							}
+						}
+					}
+				}
+			}
 			serializedObject.ApplyModifiedProperties();
 		}
 	}
 }
-

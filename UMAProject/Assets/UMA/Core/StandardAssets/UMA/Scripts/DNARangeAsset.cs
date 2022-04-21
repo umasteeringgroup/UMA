@@ -17,18 +17,8 @@ namespace UMA
 	/// is a way of specifying the values which are actually valid for a race.
 	/// </remarks>
 	[System.Serializable]
-	public class DNARangeAsset : ScriptableObject, ISerializationCallbackReceiver
+	public class DNARangeAsset : ScriptableObject 
 	{
-#pragma warning disable 649
-		//UMA 2.8 FixDNAPrefabs: this needs to use the new DNAConverterField
-		//we need this so we can get the data out of it on deserialize
-		/// <summary>
-		/// The DNA converter for which the ranges apply.
-		/// </summary>
-		[FormerlySerializedAs("dnaConverter")]
-		[SerializeField]
-		private DnaConverterBehaviour _dnaConverterLegacy;
-#pragma warning restore 649
 
 		[SerializeField]
 		[Tooltip("The DNA converter for which the ranges apply. Accepts a DNAConverterController asset or a legacy DNAConverterBehaviour prefab.")]
@@ -65,50 +55,7 @@ namespace UMA
 				return 0;
 			}
 		}
-		//UMA 2.8 FixDNAPrefabs: Swaps the legacy converter (DnaConverterBehaviour Prefab) for the new DNAConverterController
-		/// <summary>
-		/// Replaces a legacy DnaConverterBehaviour Prefab with a new DynamicDNAConverterController
-		/// </summary>
-		/// <returns>returns true if any converters were replaced.</returns>
-		public bool UpgradeFromLegacy(DnaConverterBehaviour oldConverter, DynamicDNAConverterController newConverter, bool saveChanges = false)
-		{
-			if (_dnaConverter.Value as Object == oldConverter)//Not sure why I am being told by visualStudio to cast the left side to Object here...
-			{
-				_dnaConverter.Value = newConverter;
-				//we need to update means/spreads/deviations here too- keeping existing data if we can
-				var matchingIndexes = GetMatchingIndexes(oldConverter, newConverter);
-				var newMeans = new float[EntryCount];
-				var newDeviations = new float[EntryCount];
-				var newSpreads = new float[EntryCount];
-				for (int i = 0; i < EntryCount; i++)
-				{
-					if (matchingIndexes.ContainsKey(i))
-					{
-						newMeans[i] = means[matchingIndexes[i]];
-						newDeviations[i] = deviations[matchingIndexes[i]];
-						newSpreads[i] = spreads[matchingIndexes[i]];
-					}
-					else
-					{
-						newMeans[i] = 0.5f;
-						newDeviations[i] = 0.16f;
-						newSpreads[i] = 0.5f;
-					}
-				}
-				means = newMeans;
-				deviations = newDeviations;
-				spreads = newSpreads;
-#if UNITY_EDITOR
-				if (saveChanges)
-				{
-					UnityEditor.EditorUtility.SetDirty(this);
-					UnityEditor.AssetDatabase.SaveAssets();
-				}
-#endif
-				return true;
-			}
-			return false;
-		}
+
 
 		/// <summary>
 		/// Finds any names in the given replacing converter, that match ones in the original converter
@@ -363,25 +310,5 @@ namespace UMA
 			
 			dna.Values = values;
 		}
-		#region ISERIALIZATIONCALLBACKRECIEVER
-
-		public void OnBeforeSerialize()
-		{
-			//do nothing
-		}
-
-		/// <summary>
-		/// Converts DnaConverterBehaviour _dnaConverterLegacy to  IDNAConverter _dnaConverter to preserve legacy data
-		/// </summary>
-		public void OnAfterDeserialize()
-		{
-			if (_dnaConverterLegacy != null && _dnaConverter.Value == null)
-			{
-				_dnaConverter.Value = _dnaConverterLegacy;
-			}
-			//Clear _dnaConverterLegacy?
-		}
-
-		#endregion
 	}
 }

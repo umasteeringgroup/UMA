@@ -20881,7 +20881,7 @@ MonoBehaviour:
   generateLotsUMA: 1
   hideWhileGeneratingLots: 1
   stressTest: 0
-  umaCrowdSize: {x: 20, y: 10}
+  umaCrowdSize: {x: 10, y: 7}
   randomDna: 1
   allAtOnce: 1
   additionalRecipes:

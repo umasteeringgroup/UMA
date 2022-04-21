@@ -36,11 +36,17 @@ namespace UMA
         public bool MaskWithCurrentColor;
         [Tooltip("The current color is multiplied by this color to determine the masking color when 'MaskWithCurrentColor' is checked.")]
         public Color maskMultiplier = Color.white;
+
+        [Tooltip("Used by addressables when stripping materials")]
+        public string MaterialName;
+        [Tooltip("Used by addressables when stripping materials")]
+        public string ShaderName;
+
         public enum MaterialType
         {
             Atlas = 1,
             NoAtlas = 2,
-            UseExistingTexture = 4
+            UseExistingMaterial = 4
         }
 
         public enum ChannelType

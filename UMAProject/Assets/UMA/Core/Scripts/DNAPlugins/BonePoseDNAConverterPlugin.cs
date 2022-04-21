@@ -171,15 +171,6 @@ namespace UMA
 
 		public override bool ImportSettings(UnityEngine.Object pluginToImport, int importMethod)
 		{
-			//deal with legacy settings from a DynamicDNAConverterBehaviour prefab
-			if (typeof(GameObject).IsAssignableFrom(pluginToImport.GetType()))
-			{
-				var DDCB = (pluginToImport as GameObject).GetComponent<DynamicDNAConverterBehaviour>();
-				if (DDCB != null)
-				{
-					return ImportLegacySettings(DDCB, importMethod);
-				}
-			}
 			//TODO Deal with Morphset?
 			var importPlug = pluginToImport as BonePoseDNAConverterPlugin;
 			if (importPlug == null)
@@ -206,16 +197,6 @@ namespace UMA
 			return true;
 		}
 
-#pragma warning disable 618
-		private bool ImportLegacySettings(DynamicDNAConverterBehaviour DDCB, int importMethod)
-		{
-			if(importMethod == 1)
-				_poseDNAConverters.Clear();
-			if(DDCB.startingPose != null)
-				_poseDNAConverters.Add(new BonePoseDNAConverter(DDCB.startingPose, DDCB.startingPoseWeight));
-			return false;
-		}
-#pragma warning restore 618
 
 #endif
 		#endregion

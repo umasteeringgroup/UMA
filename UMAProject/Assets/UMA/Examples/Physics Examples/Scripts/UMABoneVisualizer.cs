@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+
 public class UMABoneVisualizer : MonoBehaviour
 {
 
@@ -121,7 +122,12 @@ public class UMABoneVisualizer : MonoBehaviour
                             continue;
 
                         Quaternion rotation = (relativePos == Vector3.zero) ? Quaternion.identity : Quaternion.LookRotation(relativePos);
+#if UNITY_EDITOR
+                        if (child == UnityEditor.Selection.activeTransform)
+                            Gizmos.color = Color.yellow;
+#endif
                         Gizmos.DrawMesh(BoneMesh, child.parent.position, rotation, Scale);
+                        Gizmos.color = Color.green;
                     }
                     else
                     {

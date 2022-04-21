@@ -332,12 +332,27 @@ namespace UMA
 			{
 				res.accessedFrame = frame;
 				if (res.boneTransform == null)
-                {
+				{
 					return null;
-                }
+				}
 				return res.boneTransform.gameObject;
 			}
 			return null;
+		}
+
+
+		public List<KeyValuePair<int,string>> GetBoneHashNames()
+        {
+			List<KeyValuePair<int, string>> bhn = new List<KeyValuePair<int, string>>();
+
+			foreach (KeyValuePair<int,BoneData> kp in boneHashData)
+            {
+				int Hash = kp.Key;
+				string Name = kp.Value.boneTransform.gameObject.name;
+				KeyValuePair<int, string> kvp = new KeyValuePair<int, string>(Hash, Name);
+				bhn.Add(kvp);
+            }
+			return bhn;
 		}
 
 		protected virtual IEnumerable<int> GetBoneHashes()

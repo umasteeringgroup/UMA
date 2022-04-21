@@ -593,6 +593,81 @@ namespace UMA.Editors
 		private string cachedRace = "";
 		private string[] cachedRaceDNA = { };
 		private string[] rawcachedRaceDNA = { };
+		protected List<MeshHideAsset> DraggedMHA = new List<MeshHideAsset>();
+
+		protected void AddDraggedFiles()
+		{
+			bool found = false;
+			UMAWardrobeRecipe recipe = target as UMAWardrobeRecipe;
+
+			foreach (MeshHideAsset mha in DraggedMHA)
+			{
+				foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
+				{
+					if (theAsset.GetInstanceID() == mha.GetInstanceID())
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+					recipe.MeshHideAssets.Add(mha);
+			}
+		}
+
+		protected bool DropAreaGUI(Rect dropArea)
+		{
+			var evt = Event.current;
+	
+			if (evt.type == EventType.DragPerform)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					DraggedMHA.Clear();
+					DragAndDrop.AcceptDrag();
+
+					UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+					for (int i = 0; i < draggedObjects.Length; i++)
+					{
+						if (draggedObjects[i] is MeshHideAsset)
+						{
+							MeshHideAsset mha = draggedObjects[i] as MeshHideAsset;
+							DraggedMHA.Add(mha);
+
+							var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
+							if (System.IO.Directory.Exists(path))
+							{
+								RecursiveScanFoldersForAssets(path);
+							}
+						}
+					}
+					if (DraggedMHA.Count > 0)
+					{
+						AddDraggedFiles();
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		protected void RecursiveScanFoldersForAssets(string path)
+		{
+			var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
+			foreach (var assetFile in assetFiles)
+			{
+				var mha = AssetDatabase.LoadAssetAtPath(assetFile, typeof(MeshHideAsset)) as MeshHideAsset;
+				if (mha)
+				{
+					DraggedMHA.Add(mha);
+				}
+			}
+			foreach (var subFolder in System.IO.Directory.GetDirectories(path))
+			{
+				RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'));
+			}
+		}
+
 
 		private void InitHideTagsList()
 		{
@@ -887,6 +962,7 @@ namespace UMA.Editors
 				meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
 				EditorGUIUtility.ShowObjectPicker<MeshHideAsset>(null, false, "", meshHideAssetPickerID);
 			}
+
 			UMAWardrobeRecipe recipe = target as UMAWardrobeRecipe;
 			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == meshHideAssetPickerID)
 			{
@@ -909,7 +985,8 @@ namespace UMA.Editors
 					{
 						recipe.MeshHideAssets.Add(mha);
 						EditorUtility.SetDirty(target);
-						AssetDatabase.SaveAssets();
+						string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+						AssetDatabase.ImportAsset(path);
 						Repaint();
 						/*
 						meshHides.InsertArrayElementAtIndex(0);
@@ -921,6 +998,17 @@ namespace UMA.Editors
 					}
 				}
 			}
+			GUILayout.Space(10);
+			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+			GUI.Box(dropArea, "Drag Mesh Hide Assets here");
+			if (DropAreaGUI(dropArea))
+			{
+				EditorUtility.SetDirty(target);
+				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+				AssetDatabase.ImportAsset(path);
+				Repaint();
+			}
+
 			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 			MeshHideAsset deleteme = null;
 			bool deleteNulls = false;
@@ -931,6 +1019,10 @@ namespace UMA.Editors
 				if (mha != null)
 				{
 					EditorGUILayout.LabelField(mha.name + " (" + mha.AssetSlotName + ")");
+					if (GUILayout.Button("Inspect",GUILayout.Width(65)))
+                    {
+						InspectorUtlity.InspectTarget(mha);
+					}
 					if (GUILayout.Button("X", GUILayout.Width(20.0f)))
 					{
 						deleteme = mha;
@@ -948,13 +1040,15 @@ namespace UMA.Editors
 			{
 				recipe.MeshHideAssets.RemoveAll(x => x == null);
 				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
+				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+				AssetDatabase.ImportAsset(path);
 			}
 			if (deleteme != null)
 			{
 				recipe.MeshHideAssets.Remove(deleteme);
 				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
+				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+				AssetDatabase.ImportAsset(path);
 			}
 			// EditorGUILayout.PropertyField(meshHides, true);
 			if (EditorGUI.EndChangeCheck())

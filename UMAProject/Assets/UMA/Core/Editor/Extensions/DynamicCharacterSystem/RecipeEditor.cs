@@ -241,8 +241,9 @@ namespace UMA.Editors
             var recipeBase = (UMARecipeBase)target;
             recipeBase.Save(_recipe, UMAContextBase.Instance);
             EditorUtility.SetDirty(recipeBase);
-            AssetDatabase.SaveAssets();
-            _rebuildOnLayout = true;
+			string path = AssetDatabase.GetAssetPath(recipeBase.GetInstanceID());
+			AssetDatabase.ImportAsset(path);
+			_rebuildOnLayout = true;
 
             _needsUpdate = false;
             if (PowerToolsIntegration.HasPreview(recipeBase))

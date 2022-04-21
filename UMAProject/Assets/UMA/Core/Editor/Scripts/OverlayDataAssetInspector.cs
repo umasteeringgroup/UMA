@@ -49,7 +49,7 @@ namespace UMA.Editors
 				od.doSave = false;
 				od.lastActionTime = Time.realtimeSinceStartup;
 				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
+				//AssetDatabase.SaveAssets();
 				UMAUpdateProcessor.UpdateOverlay(target as OverlayDataAsset);
 			}
 		}

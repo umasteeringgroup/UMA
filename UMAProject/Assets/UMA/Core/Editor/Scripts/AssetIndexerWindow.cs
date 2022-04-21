@@ -15,7 +15,7 @@ namespace UMA.Controls
 {
 	class AssetIndexerWindow : EditorWindow
 	{
-		[NonSerialized] private float UtilityPanelHeight = 20.0f;
+		[NonSerialized] private float UtilityPanelHeight = 40.0f;
 		[NonSerialized] bool m_Initialized;
 		[SerializeField] TreeViewState m_TreeViewState; // Serialized in the window layout file so it survives assembly reloading
 		[SerializeField] MultiColumnHeaderState m_MultiColumnHeaderState;
@@ -30,6 +30,7 @@ namespace UMA.Controls
 		GenericMenu _ToolsMenu;
 		bool ShowUtilities;
 		UMAMaterial Replacement;
+		MeshHideAsset AddedMHA = null;
 
 		private GenericMenu FileMenu
 		{
@@ -214,17 +215,17 @@ namespace UMA.Controls
 				UAI.Clear();
 				UAI.BuildStringTypes();
 				UAI.AddEverything(true);
-				Resources.UnloadUnusedAssets();
+				Resources.UnloadUnusedAssets(); 
 				m_Initialized = false;
 				Repaint();
 			});
-			AddMenuItemWithCallback(FileMenu, "Cleanup References", () =>
+			AddMenuItemWithCallback(FileMenu, "Clear References", () =>
 			{
-				UAI.UpdateReferences();
-				Resources.UnloadUnusedAssets();
+				UAI.RemoveReferences();
+				Resources.UnloadUnusedAssets(); 
 				m_Initialized = false;
 				Repaint();
-				EditorUtility.DisplayDialog("Repair", "References cleaned", "OK");
+				EditorUtility.DisplayDialog("Repair", "References Removed", "OK");
 			});
 
 			AddMenuItemWithCallback(FileMenu, "Repair and remove invalid items", () => 
@@ -1052,6 +1053,84 @@ namespace UMA.Controls
 			}
 		}
 
+		bool SetItemMHA(AssetItem ai)
+        {
+			UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
+			if (uwr != null)
+            {
+				bool found = false;
+				foreach (MeshHideAsset theAsset in uwr.MeshHideAssets)
+				{
+					if (theAsset.GetInstanceID() == AddedMHA.GetInstanceID())
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					Debug.Log("Updating item: " + ai._Name);
+					uwr.MeshHideAssets.Add(AddedMHA);
+					EditorUtility.SetDirty(uwr);
+					string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
+					AssetDatabase.ImportAsset(path);
+					return true;
+				}
+				else
+                {
+
+                }
+			}
+			else
+            {
+				Debug.LogError("Error: Processed item is null: " +ai._Name);
+            }
+			return false;
+		}
+
+		void UpdateMeshHideAssets()
+        {
+			int count = 0;
+			int founditems = 0;
+			List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
+			TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+			foreach (AssetTreeElement ate in treeElements)
+			{
+				if (ate.ai != null && ate.Checked)
+				{
+					founditems++;
+					if (ate.ai.Item is UMAWardrobeRecipe)
+					{
+						if (SetItemMHA(ate.ai))
+						{
+							count++;
+						}
+					}
+					else
+                    {
+						Debug.Log("Item is not a wardrobe item! "+ate.ai._Name);
+                    }
+				}
+			}
+			if (founditems < 1)
+			{
+				EditorUtility.DisplayDialog("Info", "No items found to update.", "OK");
+			}
+			else
+			{
+				if (count > 0)
+				{
+					EditorUtility.DisplayDialog("Info", count + " recipes updated.", "OK");
+				}
+				else
+				{
+					EditorUtility.DisplayDialog("Info", "No recipes updated.", "OK");
+				}
+			}
+		}
+
+
 		void UpdateMaterials()
 		{
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
@@ -1092,6 +1171,65 @@ namespace UMA.Controls
 				if (ate.ai != null && items.Contains(ate.ai))
 				{
 					ate.Checked = true;
+				}
+			}
+			treeView.RecalcTypeChecks();
+		}
+
+		void FixupTextureChannels(UMAMaterial material)
+        {
+			int ChannelLength = material.channels.Length;
+
+			var Overlays = UMAAssetIndexer.Instance.GetAllAssets<OverlayDataAsset>();
+
+			foreach(OverlayDataAsset oda in Overlays)
+            {
+				if (oda.material == null) continue;
+
+				if (oda.material.name == material.name)
+                {
+					if (oda.textureCount == ChannelLength) continue;
+
+					if (oda.textureCount > ChannelLength)
+                    {
+						// lower the texture count.
+						List<Texture> newTextures = new List<Texture>();
+						for(int i=0;i< ChannelLength; i++)
+                        {
+							newTextures.Add(oda.textureList[i]);
+                        }
+						oda.textureList = newTextures.ToArray();
+						EditorUtility.SetDirty(oda);
+                    }
+					else
+                    {
+						// todo: increase the texture count.
+                    }
+					// todo: We may need to go through the recipes and update the "ColorData" array to have the right number of channels.
+                }
+            }
+			AssetDatabase.SaveAssets();
+        }
+
+		void SelectByMaterial(UMAMaterial material)
+        {
+			var treeElements = new List<AssetTreeElement>();
+			TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+			foreach (AssetTreeElement ate in treeElements)
+			{
+				if (ate.ai != null)
+				{
+					if (ate.type == typeof(OverlayDataAsset))
+                    {
+						OverlayDataAsset oda = ate.ai.Item as OverlayDataAsset;
+						if (oda.material == null) continue;
+
+						if (oda.material.name == material.name)
+						{
+							ate.Checked = true;
+						}
+					}
 				}
 			}
 			treeView.RecalcTypeChecks();
@@ -1689,18 +1827,40 @@ namespace UMA.Controls
 				GUI.Box(rect, "");
 				GUILayout.BeginArea(rect);
 				GUILayout.BeginHorizontal();
-				if (GUILayout.Button("Apply UMAMaterials to Selection",GUILayout.Width(259)))
+				if (GUILayout.Button("Apply MeshHideAssets to Selection", GUILayout.Width(259)))
+				{
+					UpdateMeshHideAssets();
+					AssetDatabase.SaveAssets();
+				}
+				AddedMHA = EditorGUILayout.ObjectField("", AddedMHA, typeof(MeshHideAsset), false, GUILayout.Width(250)) as MeshHideAsset;
+				GUILayout.EndHorizontal();
+				GUILayout.EndArea();
+				rect.y += rect.height;
+				GUI.Box(rect, "");
+				GUILayout.BeginArea(rect);
+				GUILayout.BeginHorizontal();
+				if (GUILayout.Button("Apply UMAMaterial to Selection", GUILayout.Width(259)))
 				{
 					UpdateMaterials();
 					AssetDatabase.SaveAssets();
 				}
 				Replacement = EditorGUILayout.ObjectField("", Replacement, typeof(UMAMaterial), false, GUILayout.Width(250)) as UMAMaterial;
+				if (GUILayout.Button("Select overlays with UMAMaterial", GUILayout.Width(259)))
+				{
+					SelectByMaterial(Replacement);
+				}
+				if (GUILayout.Button("Fixup Texture Channels",GUILayout.Width(150)))
+                {
+					FixupTextureChannels(Replacement);
+                }
 				GUILayout.EndHorizontal();
 				GUILayout.EndArea();
+
+
 			}
 		}
 
-		void SearchBar (Rect rect)
+        void SearchBar (Rect rect)
 		{
 			Rect DropDown = new Rect(rect);
 			DropDown.width = 150;

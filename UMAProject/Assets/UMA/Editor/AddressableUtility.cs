@@ -92,6 +92,7 @@ namespace UMA
 
             foreach (var group in AddressableSettings.groups)
             {
+                if (group == null) continue;
                 if (group.HasSchema<PlayerDataGroupSchema>())
                     continue;
 
