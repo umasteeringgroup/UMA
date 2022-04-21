@@ -40,6 +40,7 @@ namespace UMA
 				if (umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets))
 				{
 					renderers = umaData.GetRenderers();
+					umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
 				}
 				else
 				{
@@ -146,6 +147,9 @@ namespace UMA
 
 				BuildCombineInstances();
 
+				if (combinedMeshList.Count == 0)
+					continue;
+
 				if (combinedMeshList.Count == 1)
 				{
 					// fast track
@@ -161,8 +165,10 @@ namespace UMA
 				else
 				{
 					UMAMeshData umaMesh = new UMAMeshData();
+					umaMesh.SlotName = "CombinedMesh";
+#if NO_BAD_BUFFERS
 					umaMesh.ClaimSharedBuffers();
-
+#endif
 					umaMesh.subMeshCount = 0;
 					umaMesh.vertexCount = 0;
 
@@ -174,7 +180,9 @@ namespace UMA
 					}
 
 					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData.umaRecipe);
+#if NO_BAD_BUFFERS
 					umaMesh.ReleaseSharedBuffers();
+#endif
 				}
 				var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
 				if (clothProperties != null)
@@ -232,8 +240,16 @@ namespace UMA
 					var materialDefinition = generatedMaterial.materialFragments[materialDefinitionIndex];
 					var slotData = materialDefinition.slotData;
 					combineInstance = new SkinnedMeshCombiner.CombineInstance();
-					combineInstance.meshData = slotData.asset.meshData;
-					combineInstance.meshData.SlotName = slotData.slotName;
+					if (umaData.VertexOverrides.ContainsKey(slotData.slotName))
+					{
+						combineInstance.meshData = slotData.asset.meshData.ShallowCopy(umaData.VertexOverrides[slotData.slotName]);
+						combineInstance.meshData.SlotName = slotData.slotName;
+					}
+					else
+                    {
+						combineInstance.meshData = slotData.asset.meshData;
+						combineInstance.meshData.SlotName = slotData.slotName;
+					}
 
 					//New MeshHiding
 					if (slotData.meshHideMask != null)

@@ -121,10 +121,12 @@ namespace UMA
 			if(!blendShapeSettings.ignoreBlendShapes)
 				AnalyzeBlendShapeSources(sources, blendShapeSettings, ref meshComponents, out blendShapeNames, recipe);
 
-			int[][] submeshTriangles = new int[subMeshCount][];
+			//int[][] submeshTriangles = new int[subMeshCount][];
+
+			List<NativeArray<int>> submeshTriangles = new System.Collections.Generic.List<NativeArray<int>>(subMeshTriangleLength.Length);
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
 			{
-				submeshTriangles[i] = target.GetSubmeshBuffer(subMeshTriangleLength[i], i);
+				submeshTriangles.Add(target.GetSubmeshBuffer(subMeshTriangleLength[i], i));
 				subMeshTriangleLength[i] = 0;
 			}
 
@@ -373,18 +375,22 @@ namespace UMA
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
-						int[] subTriangles = source.meshData.submeshes[i].triangles;
+						NativeArray<int> subTriangles = source.meshData.submeshes[i].GetTriangles();
 						int triangleLength = subTriangles.Length;
 						int destMesh = source.targetSubmeshIndices[i];
 
 						if (source.triangleMask == null)
 						{
+
 							CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);
 							subMeshTriangleLength[destMesh] += triangleLength;
 						}
 						else
 						{
-							MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] );
+							if (!MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] ))
+                            {
+								Debug.LogWarning("Error copying int array on slot: " + source.meshData.SlotName);
+                            }
 							subMeshTriangleLength[destMesh] += (triangleLength - (UMAUtils.GetCardinality(source.triangleMask[i])*3));
 						}
 					}
@@ -438,7 +444,8 @@ namespace UMA
 			target.umaBoneCount = boneCount;
 			for (int i = 0; i < subMeshCount; i++)
 			{
-				target.submeshes[i].triangles = submeshTriangles[i];
+				target.submeshes[i].SetTriangles(null);
+				target.submeshes[i].nativeTriangles = submeshTriangles[i];
 			}
 			target.boneNameHashes = bonesList.ToArray();
 		}
@@ -477,12 +484,13 @@ namespace UMA
 				for (int i = 0; i < source.subMeshCount; i++)
 				{
 
-					int sourceLength = source.submeshes[i].triangles.Length;
+					int sourceLength = source.submeshes[i].GetTriangles().Length;
 					int triangleLength = sourceLength - (UMAUtils.GetCardinality(triangleMask[i]) * 3);
-					int[] destTriangles = new int[triangleLength];
+					NativeArray<int> destTriangles = new NativeArray<int>(triangleLength, Allocator.Persistent);
 
-					MaskedCopyIntArrayAdd(source.submeshes[i].triangles, 0, destTriangles, 0, sourceLength, 0, triangleMask[i]);
-					target.submeshes[i].triangles = destTriangles;
+					MaskedCopyIntArrayAdd(source.submeshes[i].GetTriangles(), 0, destTriangles, 0, sourceLength, 0, triangleMask[i]);
+					target.submeshes[i].SetTriangles(null);
+					target.submeshes[i].nativeTriangles = destTriangles;
 				}
 			}
 			else
@@ -799,8 +807,9 @@ namespace UMA
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
-						int triangleLength = (source.triangleMask == null) ? source.meshData.submeshes[i].triangles.Length :
-							(source.meshData.submeshes[i].triangles.Length - (UMAUtils.GetCardinality(source.triangleMask[i]) * 3));
+						int subTriangleLen = source.meshData.submeshes[i].GetTriangles().Length;
+						int triangleLength = (source.triangleMask == null) ? subTriangleLen :
+							(subTriangleLen - (UMAUtils.GetCardinality(source.triangleMask[i]) * 3));
 
 						subMeshTriangleLength[source.targetSubmeshIndices[i]] += triangleLength;
 					}
@@ -884,7 +893,7 @@ namespace UMA
 #endif
 		}
 
-		private struct BoneIndexEntry
+		private class BoneIndexEntry
 		{
 			public int index;
 			public List<int> indices;
@@ -1015,7 +1024,7 @@ namespace UMA
 			}
 		}
 
-		private static void CopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add)
+		private static void CopyIntArrayAdd(NativeArray<int> source, int sourceIndex, NativeArray<int> dest, int destIndex, int count, int add)
 		{
 			for (int i = 0; i < count; i++)
 			{
@@ -1023,15 +1032,22 @@ namespace UMA
 			}
 		}
 
-		public static void MaskedCopyIntArrayAdd(int[] source, int sourceIndex, int[] dest, int destIndex, int count, int add, BitArray mask)
+		public static bool MaskedCopyIntArrayAdd(NativeArray<int> source, int sourceIndex, NativeArray<int> dest, int destIndex, int count, int add, BitArray mask)
 		{
-			if ((mask.Count*3) != source.Length || (mask.Count*3) != count)
+			if ((mask.Count*3) != source.Length)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("MaskedCopyIntArrayAdd: mask and source count do not match!");
-				return;
+					Debug.LogError("MaskedCopyIntArrayAdd: mask count  (" + (mask.Count * 3) + ") and source length ("+source.Length+") do not match!");
+				return false;
 			}
-                
+			if ((mask.Count * 3) != count)
+			{
+				if (Debug.isDebugBuild)
+					Debug.LogError("MaskedCopyIntArrayAdd: mask count ("+(mask.Count*3)+") and count "+count+" do not match");
+				return false;
+			}
+
+
 			for (int i = 0; i < count; i+=3)
 			{
 				if (!mask[(i/3)])
@@ -1041,6 +1057,7 @@ namespace UMA
 					dest[destIndex++] = source[sourceIndex + i + 2] + add;
 				}
 			}
+			return true;
 		}
 
 		private static T[] EnsureArrayLength<T>(T[] oldArray, int newLength)

@@ -323,7 +323,6 @@ public class UMABlendShapeExpressions : MonoBehaviour
 
     public int BlendShapeByString(string arg)
     {
-        int blendIndex;
         int blendShapeLength;
         blendShapeLength = targetSkinnedRenderer.sharedMesh.blendShapeCount;
         for (int i = 0; i < blendShapeLength; i++)

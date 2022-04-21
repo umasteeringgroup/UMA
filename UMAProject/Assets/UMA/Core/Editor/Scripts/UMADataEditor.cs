@@ -20,6 +20,11 @@ namespace UMA.Editors
             showBaseEditor = false;
             _umaData = target as UMAData;
             _errorMessage = null;
+            if (_umaData == null)
+            {
+                _errorMessage = "UmaData is null";
+                return; 
+            }
             _recipe = _umaData.umaRecipe;
 			if (_recipe == null || _recipe.raceData == null)
             {				
@@ -71,15 +76,32 @@ namespace UMA.Editors
 			return true;
 		}
 
+		public static bool ShowOverrides;
+
 		public override void OnInspectorGUI()
         {
-			if (dnaEditor != null)
-				if (!CheckCurrentDNATypeHashes())
-				{
-					dnaEditor = new DNAMasterEditor(_recipe);
-					SetCurrentDnaTypeHashes();
-				}
-			base.OnInspectorGUI();
+			if (EditorApplication.isPlayingOrWillChangePlaymode)
+			{
+				if (GUIHelper.BeginCollapsableGroup(ref ShowOverrides, "Override Info"))
+                {
+					EditorGUILayout.LabelField("Object ID", _umaData.GetInstanceID().ToString());
+					EditorGUILayout.LabelField("TPose Override", (_umaData.OverrideTpose != null).ToString());
+					EditorGUILayout.LabelField("Texture Override", (_umaData.TextureOverrides.Count != 0).ToString());
+
+					GUIHelper.EndCollapsableGroup();
+                }
+				if (dnaEditor != null)
+					if (!CheckCurrentDNATypeHashes())
+					{
+						dnaEditor = new DNAMasterEditor(_recipe);
+						SetCurrentDnaTypeHashes();
+					}
+				base.OnInspectorGUI();
+			}
+			else
+            {
+				EditorGUILayout.HelpBox("The UMAData component is a runtime component and cannot be adjusted at edit time.",MessageType.Info);
+            }
         }
 
         protected override void DoUpdate()

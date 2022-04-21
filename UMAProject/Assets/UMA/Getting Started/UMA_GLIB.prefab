@@ -59,19 +59,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fitAtlas: 1
   textureMerge: {fileID: 11400000, guid: d242fc6cda21e9b42b95a0c72bb3bee1, type: 2}
-  convertRenderTexture: 0
+  convertRenderTexture: 1
   convertMipMaps: 1
-  atlasResolution: 4096
+  atlasResolution: 2048
   editorAtlasResolution: 1024
   AtlasOverflowFitMethod: 1
   FitPercentageDecrease: 0.5
   SharperFitTextures: 1
-  defaultOverlayAsset: {fileID: 11400000, guid: fe30fbf67b51de8499624c6913a39e64,
-    type: 2}
+  defaultOverlayAsset: {fileID: 0}
   ignoreTag: UMAIgnore
   SaveAndRestoreIgnoredItems: 0
   meshCombiner: {fileID: 7275351159514515506}
-  InitialScaleFactor: 2
+  InitialScaleFactor: 1
   editorInitialScaleFactor: 4
   IterationCount: 1
   fastGeneration: 1
@@ -79,6 +78,7 @@ MonoBehaviour:
   garbageCollectionRate: 8
   collectGarbage: 1
   NoCoroutines: 1
+  autoSetRaceBlendshapes: 0
 --- !u!114 &7275351159514515506
 MonoBehaviour:
   m_ObjectHideFlags: 0

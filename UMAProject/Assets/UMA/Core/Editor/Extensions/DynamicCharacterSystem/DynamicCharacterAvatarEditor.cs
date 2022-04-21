@@ -106,6 +106,7 @@ namespace UMA.CharacterSystem.Editors
 				serializedObject.ApplyModifiedProperties();
 			}
 
+            EditorGUI.BeginChangeCheck();
 			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide","BundleCheck", "loadBlendShapes","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
 				/* Editor Only Fields */ "editorTimeGeneration",
 				"characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar","KeepAnimatorController",
@@ -114,9 +115,12 @@ namespace UMA.CharacterSystem.Editors
 				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController", "defaultRendererAsset",
 				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored","WardrobeAdded","WardrobeRemoved",
 				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA","alwaysRebuildSkeleton", "umaRecipe"});
-
-			//The base DynamicAvatar properties- get these early because changing the race changes someof them
-			SerializedProperty context = serializedObject.FindProperty("context");
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+            }
+             //The base DynamicAvatar properties- get these early because changing the race changes someof them
+            SerializedProperty context = serializedObject.FindProperty("context");
 			SerializedProperty umaData = serializedObject.FindProperty("umaData");
 			SerializedProperty umaGenerator = serializedObject.FindProperty("umaGenerator");
 			SerializedProperty umaRecipe = serializedObject.FindProperty("umaRecipe");
@@ -145,7 +149,7 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
 
-				if (okToProcess)
+				if (okToProcess && thisDCA.editorTimeGeneration)
 				{
 					thisDCA.ChangeRace((string)thisRaceSetter.FindPropertyRelative("name").stringValue, DynamicCharacterAvatar.ChangeRaceOptions.useDefaults, true);
 					//Changing the race may cause umaRecipe, animationController to change so forcefully update these too
@@ -227,6 +231,10 @@ namespace UMA.CharacterSystem.Editors
 						}
 					}
 				}
+				if (GUILayout.Button("Regen"))
+                {
+					UpdateCharacter();
+                }
 				EditorGUILayout.EndHorizontal();
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
@@ -603,6 +611,7 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("BundleCheck"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("AtlasResolutionScale"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultRendererAsset"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("rawAvatar"));
 
 				if (EditorGUI.EndChangeCheck())
 				{
@@ -668,11 +677,12 @@ namespace UMA.CharacterSystem.Editors
 				serializedObject.ApplyModifiedProperties();
 			}
 
-			if (Application.isPlaying)
+			if (Application.isPlaying || thisDCA.editorTimeGeneration)
 			{
 				showWardrobe = EditorGUILayout.Foldout(showWardrobe, "Current Wardrobe");
 				if (showWardrobe)
 				{
+					string DeleteMe = null;
 
 					EditorGUI.indentLevel++;
 					Dictionary<string, UMATextRecipe> currentWardrobe = thisDCA.WardrobeRecipes;
@@ -688,8 +698,18 @@ namespace UMA.CharacterSystem.Editors
 						{
 							InspectorUtlity.InspectTarget(item.Value);
 						}
+						if (GUILayout.Button("X",EditorStyles.toolbarButton,GUILayout.Width(18)))
+                        {
+							DeleteMe = item.Key;
+                        }
 						GUILayout.EndHorizontal();
 					}
+
+					if (!string.IsNullOrEmpty(DeleteMe))
+                    {
+						currentWardrobe.Remove(DeleteMe);
+						thisDCA.BuildCharacter(true);
+                    }
 
 					GUILayout.Space(10);
 					GUILayout.Label("Additive Recipes");

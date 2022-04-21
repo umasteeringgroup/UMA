@@ -374,14 +374,24 @@ namespace UMA
 			var list = new List<Type>();
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 			{
-				foreach (var type in assembly.GetTypes())
+				try
 				{
-					if (type.IsAbstract) continue;
-					if (PluginDerivesFromBase(type))
+					if (assembly != null)
 					{
-						list.Add(type);
+						foreach (var type in assembly.GetTypes())
+						{
+							if (type.IsAbstract) continue;
+							if (PluginDerivesFromBase(type))
+							{
+								list.Add(type);
+							}
+						}
 					}
 				}
+				catch
+                {
+					Debug.Log("An exception occurred loading assemblies. this can happen when an invalid assembly is present in the project and it cannot be loaded.");
+                }
 			}
 			_pluginTypes = list;
 		}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -390,7 +390,8 @@ namespace UMA
 
 				_mechanimBoneDict.Clear();
 
-				var umaTPose = umaData.umaRecipe.raceData.TPose;
+				//var umaTPose = umaData.umaRecipe.raceData.TPose;
+				var umaTPose = umaData.GetTPose();
 				if (umaTPose == null)
 				{
 					_lastRace = null;
@@ -486,23 +487,28 @@ namespace UMA
 
 					if (_adjustRadius)
 					{
-						float shouldersWidth = Mathf.Abs(skeleton.GetRelativePosition(_mechanimBoneDict["LeftUpperArm"]).x - skeleton.GetRelativePosition(_mechanimBoneDict["RightUpperArm"]).x);
-						//Also female charcaters tend to have hips wider than their shoulders, so check that
-						float hipsWidth = Mathf.Abs(skeleton.GetRelativePosition(_mechanimBoneDict["LeftUpperLeg"]).x - skeleton.GetRelativePosition(_mechanimBoneDict["RightUpperLeg"]).x);
-						//the outerWidth of the hips is larger than this because the thigh muscles are so big so make this 1/3rd bigger
-						hipsWidth = (hipsWidth / 2) * 3;
+                        if (skeleton.BoneExists(_mechanimBoneDict["LeftUpperArm"]) && skeleton.BoneExists(_mechanimBoneDict["RightUpperArm"]) &&
+                            skeleton.BoneExists(_mechanimBoneDict["LeftUpperLeg"]) && skeleton.BoneExists(_mechanimBoneDict["RightUpperLeg"])
+                            )
+                        {
+                            float shouldersWidth = Mathf.Abs(skeleton.GetRelativePosition(_mechanimBoneDict["LeftUpperArm"]).x - skeleton.GetRelativePosition(_mechanimBoneDict["RightUpperArm"]).x);
+                            //Also female charcaters tend to have hips wider than their shoulders, so check that
+                            float hipsWidth = Mathf.Abs(skeleton.GetRelativePosition(_mechanimBoneDict["LeftUpperLeg"]).x - skeleton.GetRelativePosition(_mechanimBoneDict["RightUpperLeg"]).x);
+                            //the outerWidth of the hips is larger than this because the thigh muscles are so big so make this 1/3rd bigger
+                            hipsWidth = (hipsWidth / 2) * 3;
 
-						//classically the width of the body is 3* headwidth for a strong character so headwidth will be
-						headWidth = shouldersWidth / 2.75f;
-						//but bobble headed charcaters (toons), children or dwarves etc have bigger heads proportionally and the head can be wider than the shoulders
-						//so if we have eye bones use them to calculate head with
-						if (skeleton.BoneExists(_mechanimBoneDict["LeftEye"]) && skeleton.BoneExists(_mechanimBoneDict["RightEye"]))
-						{
-							//clasically a face is 5* the width of the eyes where the distance between the pupils is 2 * eye width
-							var eyeWidth = Mathf.Abs(skeleton.GetRelativePosition(_mechanimBoneDict["LeftEye"]).x - skeleton.GetRelativePosition(_mechanimBoneDict["RightEye"]).x) / 2;
-							headWidth = eyeWidth * 5f;
-						}
-						charWidth = (shouldersWidth > headWidth || hipsWidth > headWidth) ? (shouldersWidth > hipsWidth ? shouldersWidth : hipsWidth) : headWidth;
+                            //classically the width of the body is 3* headwidth for a strong character so headwidth will be
+                            headWidth = shouldersWidth / 2.75f;
+                            //but bobble headed charcaters (toons), children or dwarves etc have bigger heads proportionally and the head can be wider than the shoulders
+                            //so if we have eye bones use them to calculate head with
+                            if (skeleton.BoneExists(_mechanimBoneDict["LeftEye"]) && skeleton.BoneExists(_mechanimBoneDict["RightEye"]))
+                            {
+                                //clasically a face is 5* the width of the eyes where the distance between the pupils is 2 * eye width
+                                var eyeWidth = Mathf.Abs(skeleton.GetRelativePosition(_mechanimBoneDict["LeftEye"]).x - skeleton.GetRelativePosition(_mechanimBoneDict["RightEye"]).x) / 2;
+                                headWidth = eyeWidth * 5f;
+                            }
+                            charWidth = (shouldersWidth > headWidth || hipsWidth > headWidth) ? (shouldersWidth > hipsWidth ? shouldersWidth : hipsWidth) : headWidth;
+                        }
 						//we might also want to take into account the z depth between the hips and the head, 
 						//because if the character has been made into a horse or something it might be on all fours (and still be mechanim.Humanoid [if that even works!])
 						//capsule colliders break down in this scenario though (switch race to SkyCar to see what I mean), so would we want to change the orientation of the collider or the type?

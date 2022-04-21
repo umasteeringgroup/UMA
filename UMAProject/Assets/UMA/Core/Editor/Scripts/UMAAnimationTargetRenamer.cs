@@ -132,8 +132,11 @@ public class UMAAnimationPathRenamer : EditorWindow
 			foreach (var curveData in CurveDatasList[i])
 			{
 				selectedClips[i].SetCurve(curveData.Binding.path, curveData.Binding.type, curveData.Binding.propertyName, curveData.Curve);
+				EditorUtility.SetDirty(selectedClips[i]);
 			}
 		}
+
+		AssetDatabase.SaveAssets();
 
 		Clear();
 		Initialize();

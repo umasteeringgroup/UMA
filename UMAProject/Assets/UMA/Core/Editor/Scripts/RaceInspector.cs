@@ -56,7 +56,8 @@ namespace UMA.Editors
 				doSave = false;
 				lastActionTime = Time.realtimeSinceStartup;
 				EditorUtility.SetDirty(race);
-				AssetDatabase.SaveAssets();
+				string path = AssetDatabase.GetAssetPath(race.GetInstanceID());
+				AssetDatabase.ImportAsset(path);
 				UMAUpdateProcessor.UpdateRace(race);
 			}
 		}

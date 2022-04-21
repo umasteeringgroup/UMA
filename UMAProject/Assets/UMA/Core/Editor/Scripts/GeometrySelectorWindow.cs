@@ -68,8 +68,9 @@ namespace UMA.Editors
             whiteLabels.normal.textColor = Color.white;
             blackLabels.normal.textColor = Color.black;
 
-            Tools.current = Tool.None;
-            Tools.hidden = true;
+            
+           // Tools.current = Tool.None;
+           // Tools.hidden = true;
             EditorApplication.LockReloadAssemblies();
 #if UNITY_2019_1_OR_NEWER
             SceneView.duringSceneGui += this.OnSceneGUI;
@@ -129,6 +130,11 @@ namespace UMA.Editors
         public override void OnInspectorGUI()
         {
             EditorGUILayout.LabelField("Mesh Selector Utilities", EditorStyles.largeLabel, GUILayout.MaxHeight(25) );
+#if UNITY_2021_2_OR_NEWER
+            GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
+            SceneWindow(0);
+            GUIHelper.EndVerticalPadded(10);
+#endif
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
             GUILayout.Space(20);
 
@@ -467,8 +473,12 @@ namespace UMA.Editors
             ResetLabelStart();
 
             Handles.BeginGUI();
+#if !UNITY_2021_2_OR_NEWER
 
-            GUI.Window(1, new Rect(SceneView.lastActiveSceneView.position.width -(WindowWidth+Margin), SceneView.lastActiveSceneView.position.height - (WindowHeight+Margin), WindowWidth, WindowHeight), SceneWindow, "UMA Mesh Hide Geometry Selector");
+            Rect WinRect = new Rect(SceneView.lastActiveSceneView.position.width - (WindowWidth + Margin), SceneView.lastActiveSceneView.position.height - (WindowHeight + Margin),WindowWidth, WindowHeight);
+
+            GUI.Window(1,WinRect, SceneWindow, "UMA Mesh Hide Geometry Selector");
+#endif
             DrawNextLabel("Left click and drag to area select");
             DrawNextLabel("Hold SHIFT while dragging to paint");
             DrawNextLabel("Hold CTRL while dragging to paint inverse");
@@ -572,7 +582,7 @@ namespace UMA.Editors
                     screenSelectionRect.max = HandleUtility.GUIPointToScreenPixelCoordinate(new Vector2(selectionRect.xMax, selectionRect.yMin));
 
 
-                    int[] triangles = _Source.meshAsset.asset.meshData.submeshes[0].triangles;
+                    int[] triangles = _Source.meshAsset.asset.meshData.submeshes[0].nativeTriangles.ToArray();
                     for(int i = 0; i < triangles.Length; i+=3 )
                     {
                         bool found = false;

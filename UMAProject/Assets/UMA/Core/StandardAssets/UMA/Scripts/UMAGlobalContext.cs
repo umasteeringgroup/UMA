@@ -119,7 +119,11 @@ namespace UMA
 			SlotDataAsset source = UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(name);
 			if (source == null)
 			{
-				throw new UMAResourceNotFoundException("UMAGlobalContext: Unable to find SlotDataAsset: " + name);
+				if (Debug.isDebugBuild)
+				{
+					Debug.LogError("UMAGlobalContext: Unable to find SlotDataAsset: " + name);
+				}
+				return null;
 			}
 			return new SlotData(source);
 		}

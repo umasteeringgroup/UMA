@@ -60,6 +60,7 @@ namespace UMA.Editors
 		public List<BoneName> KeepBones = new List<BoneName>();
 		private ReorderableList boneList;
 		private bool boneListInitialized;
+		public string BoneStripper;
 
 		string GetAssetFolder()
 		{
@@ -153,6 +154,7 @@ namespace UMA.Editors
 			addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
 			EditorGUILayout.EndHorizontal();
 			calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
+			BoneStripper = EditorGUILayout.TextField("Strip from Bones:", BoneStripper);
 			boneList.DoLayoutList();
 			GUIHelper.EndVerticalPadded(10);
 			DoDragDrop();
@@ -379,8 +381,20 @@ namespace UMA.Editors
             {
 				KeepList.Add(b.strValue);
             }
-
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(),GetSlotName(slotMesh),nameAfterMaterial, slotMesh, material, normalReferenceMesh,KeepList, RootBone, binarySerialization,calcTangents);
+			if (!string.IsNullOrEmpty(BoneStripper))
+			{
+				int stripCount = 0;
+				foreach (Transform t in slotMesh.bones)
+				{
+					if (t.name.Contains(BoneStripper))
+					{
+						t.name = t.name.Replace(BoneStripper, "");
+						stripCount++;
+					}
+				}
+				Debug.Log("Stripped " + stripCount + " Bones");
+			}
+			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(),GetSlotName(slotMesh),nameAfterMaterial, slotMesh, material, normalReferenceMesh,KeepList, RootBone, binarySerialization,calcTangents,BoneStripper);
 			slot.tags = Tags.ToArray();
 			return slot;
 		}

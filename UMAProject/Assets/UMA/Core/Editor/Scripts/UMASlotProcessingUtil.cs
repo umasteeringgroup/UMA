@@ -125,7 +125,7 @@ namespace UMA.Editors
 		}
 
 
-		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, string slotName, bool nameByMaterial, SkinnedMeshRenderer slotMesh, UMAMaterial material, SkinnedMeshRenderer seamsMesh, List<string> KeepList, string rootBone, bool binarySerialization = false, bool calcTangents=true)
+		public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, string slotName, bool nameByMaterial, SkinnedMeshRenderer slotMesh, UMAMaterial material, SkinnedMeshRenderer seamsMesh, List<string> KeepList, string rootBone, bool binarySerialization = false, bool calcTangents=true, string stripBones="")
 		{
 			if (!System.IO.Directory.Exists(slotFolder + '/' + assetFolder))
 			{
@@ -208,6 +208,15 @@ namespace UMA.Editors
 
 			for (int i = 0; i < transformList.Length; i++)
 			{
+				if (!string.IsNullOrEmpty(stripBones))
+                {
+					string bname = transformList[i].name;
+					if (bname.Contains(stripBones))
+                    {
+						bname = bname.Replace(stripBones, "");
+                    }
+					transformList[i].name = bname;
+                }
 				if (transformList[i].name == rootBone)
 				{
 					transformList[i].parent = newObject.transform;

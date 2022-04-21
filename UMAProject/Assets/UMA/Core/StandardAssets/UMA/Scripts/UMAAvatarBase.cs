@@ -180,6 +180,7 @@ namespace UMA
 					umaData.skeleton = null;
 				}
 				umaData.SetRenderers(null);
+				umaData.SetRendererAssets(null);
 				umaData.animator = null;
 				umaData.firstBake = true;
 			}

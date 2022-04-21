@@ -18,6 +18,7 @@ namespace UMA
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
 		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public UMAMeshCombiner meshCombiner;
+		private HashSet<string> raceNames;
 
 		/// <summary>
 		/// 
@@ -55,6 +56,9 @@ namespace UMA
 
 		[Tooltip("Generates a single UMA immediately with no coroutines. This is the fastest possible path.")]
 		public bool NoCoroutines=true;
+
+		[Tooltip("Automatically set blendshapes based on race")]
+		public bool autoSetRaceBlendshapes = false;
 
 		[NonSerialized]
 		public long ElapsedTicks;
@@ -297,7 +301,10 @@ namespace UMA
 				meshCombiner.Preprocess(umaData);
 			}
 			umaData.FireCharacterBegunEvents();
-			PreApply(umaData); 
+			if (!umaData.rawAvatar)
+			{
+				PreApply(umaData);
+			}
 
 			if (umaData.isTextureDirty)
 			{
@@ -330,6 +337,45 @@ namespace UMA
 			else if (umaData.skeleton.isUpdating)
 			{
 				umaData.skeleton.EndSkeletonUpdate();
+			}
+
+			/* here, set any race specific blendshapes */
+			SkinnedMeshRenderer[] renderers = umaData.GetRenderers();
+
+			if (autoSetRaceBlendshapes)
+			{
+				if (raceNames == null && UMAContextBase.Instance != null)
+				{
+					RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+					raceNames = new HashSet<string>();
+					foreach (RaceData r in races)
+					{
+						raceNames.Add(r.raceName);
+					}
+				}
+
+
+				if (raceNames != null && raceNames.Count > 0)
+				{
+					foreach (SkinnedMeshRenderer smr in renderers)
+					{
+						if (smr.sharedMesh.blendShapeCount > 0)
+						{
+							for (int i = 0; i < smr.sharedMesh.blendShapeCount;i++)
+							{
+								string currentBlendshape = smr.sharedMesh.GetBlendShapeName(i);
+								if (currentBlendshape == umaData.umaRecipe.raceData.raceName)
+								{
+									smr.SetBlendShapeWeight(i, 1.0f);
+								}
+								else if (raceNames.Contains(currentBlendshape))
+								{
+									smr.SetBlendShapeWeight(i, 0.0f);
+								}
+							}
+						}
+					}
+				}
 			}
 
 			umaData.dirty = false;
@@ -441,17 +487,29 @@ namespace UMA
 		{
 			try
 			{
+				if (umaDirtyList.Count < 1) return;
+
 				if (NoCoroutines)
                 {
 					UMAData umaData = umaDirtyList[0];
-					if (umaData.RebuildSkeleton)
+					try
+					{
+						if (umaData.RebuildSkeleton)
+						{
+							DestroyImmediate(umaData.umaRoot, false);
+							umaData.umaRoot = null;
+							umaData.RebuildSkeleton = false;
+							umaData.isShapeDirty = true;
+						}
+						GenerateSingleUMA(umaDirtyList[0], true);
+					}
+					catch (Exception ex)
                     {
-						DestroyImmediate(umaData.umaRoot, false);
-						umaData.umaRoot = null;
-						umaData.RebuildSkeleton = false;
-						umaData.isShapeDirty = true;
-					} // this happens in GenerateSingleUMA now
-					GenerateSingleUMA(umaDirtyList[0],true);
+						if (Debug.isDebugBuild)
+                        {
+							Debug.LogException(ex);
+                        }
+                    }
 					umaDirtyList.RemoveAt(0);
 					umaData.MoveToList(cleanUmas);
 					umaData = null;
@@ -552,14 +610,18 @@ namespace UMA
 			return umaDirtyList.Count;
 		}
 
-		public virtual void UMAReady()
+		public virtual void UMAReady(bool fireEvents = true)
 		{
 			if (umaData)
 			{
 				umaData.Show();
-				umaData.FireUpdatedEvent(false);
-				umaData.FireCharacterCompletedEvents();
-				if (umaData.skeleton.boneCount > 500)
+				if (fireEvents)
+                {
+                    umaData.FireUpdatedEvent(false);
+                }
+
+                umaData.FireCharacterCompletedEvents(fireEvents);
+				if (umaData.skeleton.boneCount > 600)
 				{
 					if (Debug.isDebugBuild)
 						Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
@@ -579,10 +641,13 @@ namespace UMA
 			{
 				umaData.FirePreUpdateUMABody();
 				umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
-				// Put the skeleton into TPose so rotations will be valid for generating avatar
-				umaData.GotoTPose();
-				umaData.ApplyDNA();
-				umaData.FireDNAAppliedEvents();
+												// Put the skeleton into TPose so rotations will be valid for generating avatar
+				if (!umaData.rawAvatar)
+				{
+					umaData.GotoTPose();
+					umaData.ApplyDNA();
+					umaData.FireDNAAppliedEvents();
+				}
 				umaData.RestoreSavedItems();
 				// This has to happen for some reason, or the default models heads cave in.
 				umaData.skeleton.EndSkeletonUpdate();

@@ -151,13 +151,6 @@ namespace UMA
 		{
 			get { return _overallModifiers.scale; }
 		}
-#if UNITY_EDITOR
-		public void ImportConverterBehaviourData(DynamicDNAConverterBehaviour DCB)
-		{
-			_dnaAsset = DCB.dnaAsset;
-			_overallModifiers.ImportSettings(DCB.overallModifiers);
-		}
-#endif
 		public void Prepare()
 		{
 			if (!_prepared)
@@ -232,9 +225,11 @@ namespace UMA
 
 			UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
 			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
-			if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset && DNAAsset != null)
-				((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
-
+			if (umaDna is DynamicUMADnaBase)
+			{
+				if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset && DNAAsset != null)
+					((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
+			}
 			if (_applyDNAPrepassPlugins.Count > 0)
 			{
 				for (int i = 0; i < _applyDNAPrepassPlugins.Count; i++)
@@ -252,7 +247,10 @@ namespace UMA
 		/// <param name="dnaTypeHash">The dnaTypeHash that this converters behaviour is using</param>
 		public void ApplyDNA(UMAData umaData, UMASkeleton skeleton)
 		{
-			UMADnaBase umaDna = null;
+            if (!_prepared)
+                Prepare();
+
+            UMADnaBase umaDna = null;
 			//reset the live scale on the overallModifiers ready for any adjustments any plugins might make
 			liveScale = -1;
 			
@@ -265,9 +263,12 @@ namespace UMA
 			//if (!asReset)
 			//{
 				umaDna = umaData.GetDna(DNATypeHash);
-				//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
+			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
+			if (umaDna is DynamicUMADnaBase)
+			{
 				if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset)
 					((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
+			}
 			//}
 			for (int i = 0; i < _applyDNAPlugins.Count; i++)
 			{

@@ -102,12 +102,21 @@ namespace UMA
 			var res = new UMAData.GeneratedMaterial();
 			res.rendererAsset = renderer;
 			res.umaMaterial = umaMaterial;
-			res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
-			res.material.name = umaMaterial.material.name;
+			if (res.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingMaterial)
+			{
+				res.material = umaMaterial.material;
+				res.material.SetOverrideTag("Keep", "Keep");
+			}
+			else
+			{
+				res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
+				res.material.name = umaMaterial.material.name;
 #if UNITY_WEBGL
 			res.material.shader = Shader.Find(res.material.shader.name);
 #endif
-			res.material.CopyPropertiesFromMaterial(umaMaterial.material);
+				res.material.shader = umaMaterial.material.shader;
+				res.material.CopyPropertiesFromMaterial(umaMaterial.material);
+			}
 			atlassedMaterials.Add(res);
 			generatedMaterials.Add(res);
 
@@ -243,7 +252,25 @@ namespace UMA
 					}
 					else
 					{
-						tempMaterialDefinition.baseOverlay.textureList = overlay0.textureArray;
+						var baseOverride = (umaData.GetTextureOverrides(overlay0.overlayName));
+
+						if (baseOverride != null)
+                        {
+							tempMaterialDefinition.baseOverlay.textureList = (Texture[])overlay0.textureArray.Clone();
+							var keys = baseOverride.Keys;
+							foreach (var k in keys)
+                            {
+								if (k < tempMaterialDefinition.baseOverlay.textureList.Length)
+								{
+									if (baseOverride[k])
+									tempMaterialDefinition.baseOverlay.textureList[k] = baseOverride[k];
+								}
+							}
+						}
+						else
+                        {
+							tempMaterialDefinition.baseOverlay.textureList = overlay0.textureArray;
+						}
 						tempMaterialDefinition.baseOverlay.alphaTexture = overlay0.alphaMask;
 						tempMaterialDefinition.baseOverlay.overlayType = overlay0.overlayType;
 						tempMaterialDefinition.baseColor = overlay0.colorData.color;
@@ -259,12 +286,18 @@ namespace UMA
 						tempMaterialDefinition.channelMask[0] = slot.GetOverlay(0).colorData.channelMask;
 						tempMaterialDefinition.channelAdditiveMask[0] = slot.GetOverlay(0).colorData.channelAdditiveMask;
 					}
+					tempMaterialDefinition.overrides = new List<Dictionary<int, Texture2D>>();
+					if (tempMaterialDefinition.overlayData != null && tempMaterialDefinition.overlayData.Length > 0)
+					{
+						tempMaterialDefinition.overrides.Add(umaData.GetTextureOverrides(tempMaterialDefinition.overlayData[0].overlayName));
+					}
 					tempMaterialDefinition.slotData = slot;
 
 					int overlayID = 0;
 					for (int j = 1; j < slot.OverlayCount; j++)
 					{
 						OverlayData overlay = slot.GetOverlay(j);
+						tempMaterialDefinition.overrides.Add(umaData.GetTextureOverrides(overlay.overlayName));
 						if (overlay == null)
 							continue;
 
@@ -282,7 +315,7 @@ namespace UMA
 						tempMaterialDefinition.overlays[overlayID].alphaTexture = overlay.alphaMask;
 						tempMaterialDefinition.overlays[overlayID].overlayType = overlay.overlayType;
 						tempMaterialDefinition.overlayColors[overlayID] = overlay.colorData.color;
-
+						// This hurts my head. Some of the data is in overlay# -1, And some on Overlay#
 						overlayID++;
 						tempMaterialDefinition.overlayData[overlayID] = overlay;
 						tempMaterialDefinition.channelMask[overlayID] = overlay.colorData.channelMask;
@@ -405,7 +438,20 @@ namespace UMA
 					{
 						if (atlasses[i].rendererAsset == umaData.GetRendererAsset(j))
 						{
-							UMAUtils.DestroySceneObject(mats[materialIndex]);
+							if (mats.Length > materialIndex) 
+							{
+								var val = mats[materialIndex].GetTag("Keep", false);
+								if (string.IsNullOrEmpty(val))
+								{
+									UMAUtils.DestroySceneObject(mats[materialIndex]);
+								}
+							}
+							else
+                            {
+								List<Material> listMats = new List<Material>(newMats);
+								listMats.Add(null);
+								newMats = listMats.ToArray();
+                            }
 							newMats[materialIndex] = atlasses[i].material;
 							atlasses[i].skinnedMeshRenderer = renderer;
 							atlasses[i].materialIndex = materialIndex;
@@ -594,6 +640,19 @@ namespace UMA
 					continue;
 				if (tempMaterialDef.isNoTextures)
 					continue;
+
+				if (tempMaterialDef.baseOverlay == null)
+					continue;
+				if (tempMaterialDef.baseOverlay.textureList == null)
+                {
+					continue;
+                }
+				if (tempMaterialDef.baseOverlay.textureList[0] == null)
+				{
+					var t = tempMaterialDef.overlayData[0].textureArray;
+					continue;
+				}
+
 
 				int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale);
 				int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale);

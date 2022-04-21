@@ -9,7 +9,7 @@ namespace UMA.CharacterSystem.Editors
     [CustomPropertyDrawer(typeof(DynamicCharacterAvatar.WardrobeRecipeList))]
     public class WardrobeRecipeListPropertyDrawer : PropertyDrawer
     {
-        float padding = 2f;
+        // float padding = 2f;
         // public DynamicCharacterSystem thisDCS;
         public DynamicCharacterAvatar thisDCA;
 		public bool changed = false;

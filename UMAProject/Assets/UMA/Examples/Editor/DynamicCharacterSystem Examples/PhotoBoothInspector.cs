@@ -25,7 +25,7 @@ namespace UMA.CharacterSystem.Examples
             {
 				EditorGUILayout.HelpBox("To take photos you must be in play mode. Select the destination folder, choose 'auto photo' mode, and press 'Take Photo'", MessageType.Info);
 			}
-			Editor.DrawPropertiesExcluding(serializedObject, new string[] {"doingTakePhoto","animationFreezeFrame", "autoPhotosEnabled", "textureToPhoto","dimAllButTarget","dimToColor", "dimToMetallic", "neutralizeTargetColors","neutralizeToColor", "neutralizeToMetallic", "addUnderwearToBasePhoto","overwriteExistingPhotos","destinationFolder","photoName" });
+			Editor.DrawPropertiesExcluding(serializedObject, new string[] {"doingTakePhoto","animationFreezeFrame", "autoPhotosEnabled", "textureToPhoto","dimAllButTarget","dimToColor", "dimToMetallic", "neutralizeTargetColors","neutralizeToColor", "neutralizeToMetallic", "addUnderwearToBasePhoto","overwriteExistingPhotos","destinationFolder","photoName", "hideRaceBody","gammaCorrection","linearCorrection" });
 			serializedObject.ApplyModifiedProperties();
 			bool freezeAnimation = serializedObject.FindProperty("freezeAnimation").boolValue;
 			bool doingTakePhoto = serializedObject.FindProperty("doingTakePhoto").boolValue;
@@ -51,6 +51,9 @@ namespace UMA.CharacterSystem.Examples
 				}
 			}
 			EditorGUILayout.Space();
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("hideRaceBody"));
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("gammaCorrection"));
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("linearCorrection"));
 			bool autoPhotosEnabled = serializedObject.FindProperty("autoPhotosEnabled").boolValue;
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("autoPhotosEnabled"));
 			if (autoPhotosEnabled)
@@ -101,6 +104,10 @@ namespace UMA.CharacterSystem.Examples
 						thisPB.TakePhotos();
 					}
 				}
+				if (GUILayout.Button("Disable Culling"))
+                {
+					thisPB.ForceNoCulling();
+                }
 				if (doingTakePhoto)
 				{
 					EditorGUI.EndDisabledGroup();

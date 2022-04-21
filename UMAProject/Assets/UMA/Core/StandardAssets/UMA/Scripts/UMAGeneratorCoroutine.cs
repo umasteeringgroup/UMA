@@ -79,10 +79,13 @@ namespace UMA
 			res.umaMaterial = umaMaterial;
 			res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
 			res.material.name = umaMaterial.material.name;
+            res.material.shader = umaMaterial.material.shader;
 #if UNITY_WEBGL
 			res.material.shader = Shader.Find(res.material.shader.name);
+#else
+            res.material.shader = umaMaterial.material.shader;
 #endif
-			res.material.CopyPropertiesFromMaterial(umaMaterial.material);
+            res.material.CopyPropertiesFromMaterial(umaMaterial.material);
 			atlassedMaterials.Add(res);
 			generatedMaterials.Add(res);
 

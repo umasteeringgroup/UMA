@@ -180,7 +180,8 @@ namespace UMA
             _sharedMesh.uv4 = meshData.uv4;
             _sharedMesh.colors32 = meshData.colors32;
 
-            _sharedMesh.SetTriangles(meshData.submeshes[meshAsset.asset.subMeshIndex].triangles, 0);
+            //_sharedMesh.SetTriangles(meshData.submeshes[meshAsset.asset.subMeshIndex].triangles, 0);
+            _sharedMesh.SetIndices(meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles(), MeshTopology.Triangles, 0);
             _sharedMesh.RecalculateBounds();
             Initialize();
         }
@@ -265,13 +266,13 @@ namespace UMA
                 return;
             }
 
-            for (int i = 0; i < meshAsset.asset.meshData.submeshes[0].triangles.Length; i+=3)
+            for (int i = 0; i < meshAsset.asset.meshData.submeshes[0].GetTriangles().Length; i+=3)
             {
                 bool selected = false;
                 Vector2 centerUV = new Vector2();
                 for (int k = 0; k < 3; k++)
                 {            
-                    int index = meshAsset.asset.meshData.submeshes[0].triangles[i + k];
+                    int index = meshAsset.asset.meshData.submeshes[0].GetTriangles()[i + k];
                     centerUV += meshAsset.asset.meshData.uv[index];
                     int x = Mathf.FloorToInt(meshAsset.asset.meshData.uv[index].x * tex.width);
                     int y = Mathf.FloorToInt(meshAsset.asset.meshData.uv[index].y * tex.height);
@@ -353,7 +354,10 @@ namespace UMA
 			_occlusionMesh.subMeshCount = meshData.subMeshCount;
 
             for (int i = 0; i < meshData.subMeshCount; i++)
-                occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
+            {
+                occlusionMesh.SetIndices(meshData.submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
+               // occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
+            }     
         }
 
         public void UpdateOcclusionMesh(UMAMeshData meshData, float offset, Vector3 pos, Vector3 rot, Vector3 s)

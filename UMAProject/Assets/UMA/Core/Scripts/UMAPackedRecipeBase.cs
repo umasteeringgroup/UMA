@@ -966,6 +966,8 @@ namespace UMA
                 if (UMAPackRecipe.SlotIsValid(packedSlot))
                 {
                     var tempSlotData = context.InstantiateSlot(packedSlot.id);
+					if (tempSlotData == null)
+						continue;
 					if (packedSlot.Tags != null)
                     {
 						tempSlotData.tags = packedSlot.Tags;

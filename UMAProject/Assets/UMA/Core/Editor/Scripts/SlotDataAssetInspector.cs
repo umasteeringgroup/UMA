@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
@@ -18,9 +19,15 @@ namespace UMA.Editors
 		SerializedProperty CharacterCompleted;
 		SerializedProperty MaxLOD;
 		SlotDataAsset slot;
+		SlotDataAsset.Welding lastWeld = null;
 
+		bool CopyNormals;
+		bool CopyBoneWeights;
+		private int selectedRaceIndex = -1;
+		private List<RaceData> foundRaces = new List<RaceData>();
+		private List<string> foundRaceNames = new List<string>();
 
-        [MenuItem("Assets/Create/UMA/Core/Custom Slot Asset")]
+		[MenuItem("Assets/Create/UMA/Core/Custom Slot Asset")]
         public static void CreateCustomSlotAssetMenuItem()
         {
         	CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Custom");
@@ -33,13 +40,14 @@ namespace UMA.Editors
 			wildcard.isWildCardSlot = true;
 			wildcard.slotName = "WildCard";
 			EditorUtility.SetDirty(wildcard);
-			AssetDatabase.SaveAssets();
+			string path = AssetDatabase.GetAssetPath(wildcard.GetInstanceID());
+			AssetDatabase.ImportAsset(path);
 			EditorUtility.DisplayDialog("UMA", "Wildcard slot created. You should first change the SlotName in the inspector, and then add it to the global library or to a scene library", "OK");
 		}
 
 		private void OnDestroy()
 		{
-			// AssetDatabase.SaveAssets();
+
 		}
 
 		void OnEnable()
@@ -51,6 +59,8 @@ namespace UMA.Editors
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
 			MaxLOD = serializedObject.FindProperty("maxLOD");
 			slot = (target as SlotDataAsset);
+			SetRaceLists();
+
 			InitTagList(slot);
 		}
 
@@ -76,6 +86,35 @@ namespace UMA.Editors
 				rect.y += 2;
 				element.stringValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), element.stringValue);
 			};
+		}
+
+		public void SetRaceLists()
+		{
+			UMAContextBase ubc = UMAContext.Instance;
+			if (ubc != null)
+			{
+				RaceData[] raceDataArray = ubc.GetAllRaces();
+				foundRaces.Clear();
+				foundRaceNames.Clear();
+				foundRaces.Add(null);
+				foundRaceNames.Add("None Set");
+				foreach (RaceData race in raceDataArray)
+				{
+					if (race != null && race.raceName != "RaceDataPlaceholder")
+					{
+						foundRaces.Add(race);
+						foundRaceNames.Add(race.raceName);
+					}
+				}
+			}
+		}
+
+		private void UpdateSourceAsset(SlotDataAsset sda)
+		{
+			if (sda != null)
+			{
+				lastWeld = slot.CalculateWelds(sda, CopyNormals, CopyBoneWeights);
+			}
 		}
 
 		public override void OnInspectorGUI()
@@ -140,7 +179,7 @@ namespace UMA.Editors
 				}
 			}
 
-			if (!(target as SlotDataAsset).isWildCardSlot)
+			if (!slot.isWildCardSlot)
 			{
 				GUILayout.Space(20);
 				Rect updateDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
@@ -154,13 +193,78 @@ namespace UMA.Editors
 				GUILayout.Space(10);
 				AnimatedBoneDropAreaGUI(boneDropArea);
 			}
+
 			serializedObject.ApplyModifiedProperties();
-			if (EditorGUI.EndChangeCheck())
+
+            #region WELDS
+            bool forceUpdate = false;
+
+			selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
+			if (selectedRaceIndex <= 0)
+			{
+				EditorGUILayout.HelpBox("Select a slot by race quickly, or use manual selection below", MessageType.Info);
+			}
+			else
+			{ 
+				UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
+				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContextBase.Instance);
+
+				foreach (SlotData sd in baseRecipe.slotDataList)
+				{
+					if (sd != null && sd.asset != null)
+					{
+						if (GUILayout.Button(string.Format("{0} ({1})", sd.asset.name, sd.slotName)))
+						{
+							UpdateSourceAsset(sd.asset);
+						}
+					}
+				}
+			}
+
+			GUILayout.Space(12);
+			//int inx = 0;
+			//foreach(SlotDataAsset.Welding thisWeld in slot.Welds)
+			//{
+			if (lastWeld != null)
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label(lastWeld.WeldedToSlot + " (" + lastWeld.WeldPoints.Count.ToString() + " points, " + lastWeld.MisMatchCount + " mismatches)", GUILayout.ExpandWidth(true));
+				//if (GUILayout.Button("x", GUILayout.Width(18)))
+				//	deleteme = inx; 
+				GUILayout.EndHorizontal();
+			}
+				//inx++;
+           // }
+
+			//if (deleteme >= 0)
+            //{
+			//	slot.Welds.RemoveAt(deleteme);
+			//	forceUpdate = true;
+            //}
+
+			SlotDataAsset sda = null;
+
+			sda = EditorGUILayout.ObjectField("Drop slot here to create weld",sda, typeof(SlotDataAsset),false) as SlotDataAsset;
+
+			if (sda != null)
+            {
+				slot.CalculateWelds(sda,CopyNormals,CopyBoneWeights);
+				forceUpdate = true;
+            }
+
+			CopyBoneWeights = EditorGUILayout.Toggle("Copy Boneweights", CopyBoneWeights);
+			CopyNormals = EditorGUILayout.Toggle("Copy Normals", CopyNormals);
+			#endregion
+
+			if (EditorGUI.EndChangeCheck() || forceUpdate)
 			{
 				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
+				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+				AssetDatabase.ImportAsset(path);
 				UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset);
 			}
+
+			
         }
 
         private void AnimatedBoneDropAreaGUI(Rect dropArea)
@@ -243,7 +347,8 @@ namespace UMA.Editors
 			string existingRootBone = slot.meshData.RootBoneName;
 
 			UMASlotProcessingUtil.UpdateSlotData(slot, skinnedMesh, slot.material, seamsMesh, existingRootBone, true);
-			AssetDatabase.SaveAssets();
+			string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+			AssetDatabase.ImportAsset(path);
 			UMAUpdateProcessor.UpdateSlot(slot);
 		}
     }

@@ -1,9 +1,12 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using System.Text;
 using UnityEditorInternal;
 #endif
 using UnityEngine;
 using UnityEngine.Serialization;
+
+using boneWeld = System.Collections.Generic.List<UnityEngine.BoneWeight1>;
 
 namespace UMA
 {
@@ -25,6 +28,191 @@ namespace UMA
 
 		private StringBuilder errorBuilder  = new StringBuilder();
 
+		[System.Serializable]
+		public class WeldPoint
+        {
+			public int ourVertex;
+			public int theirVertex;
+			public Vector3 newNormal;
+			public bool misMatch;
+			public WeldPoint(int ours, int theirs, Vector3 newNormal, bool misMatch)
+            {
+				ourVertex = ours;
+				theirVertex = theirs;
+				this.newNormal = newNormal;
+				this.misMatch = misMatch;
+            }
+        }
+
+		[System.Serializable]
+		public class Welding
+        {
+			public string WeldedToSlot;
+			public int MisMatchCount = 0;
+			public List<WeldPoint> WeldPoints = new List<WeldPoint>();
+        }
+
+		public List<Welding> Welds = new List<Welding>();
+
+
+		public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights)
+        {
+			Welding thisWeld = new Welding();
+			
+
+			thisWeld.MisMatchCount = 0;
+			thisWeld.WeldedToSlot = slot.slotName;
+			for (int Dest=0;Dest< slot.meshData.vertices.Length; Dest++)
+            {
+				for (int Src = 0; Src < meshData.vertices.Length; Src++)
+                {
+					Vector3 DestVert = slot.meshData.vertices[Dest];
+					Vector3 Srcvert = meshData.vertices[Src];
+					float Len = (DestVert - Srcvert).magnitude;
+					if (Len < Vector3.kEpsilon)
+                    {
+						bool misMatch = false;
+						float Normaldiff = (meshData.normals[Src] - slot.meshData.normals[Dest]).magnitude;
+						if (Normaldiff > Vector3.kEpsilon)
+						{
+							thisWeld.MisMatchCount++;
+							if (CopyNormals)
+							{
+								meshData.normals[Src] = slot.meshData.normals[Dest];
+								if (meshData.tangents != null && slot.meshData.tangents != null)
+                                {
+									meshData.tangents[Src] = slot.meshData.tangents[Dest];
+                                }
+							}
+							misMatch = true;
+						}
+						WeldPoint wp = new WeldPoint(Src, Dest, slot.meshData.normals[Dest], misMatch);
+						thisWeld.WeldPoints.Add(wp);
+                    }
+                }
+            }
+
+			if (CopyBoneWeights)
+            {
+				EnsureBoneWeights();
+				slot.EnsureBoneWeights();
+
+				Dictionary<int, int> theirBonePositionInBoneWeights = new Dictionary<int, int>();
+				//Dictionary<int, int> ourBonePositionInBoneWeights = new Dictionary<int, int>();
+				Dictionary<int, WeldPoint> ourWeldPoints = new Dictionary<int, WeldPoint>();
+				//Dictionary<int,string> theirBoneNames = new Dictionary<int,string>();
+				Dictionary<string, int> theirBoneIndexByName = new Dictionary<string, int>();
+				//Dictionary<string,int> ourBoneIndexes = new Dictionary<string,int>();
+
+				/*for(int i=0;i<slot.meshData.umaBones.Length;i++)
+                {
+					theirBoneNames.Add(i, slot.meshData.umaBones[i].name);
+                }
+
+				for (int i=0;i<meshData.umaBones.Length;i++)
+                {
+					ourBoneIndexes.Add(meshData.umaBones[i].name, i);
+                }*/
+
+				int bonePos = 0;
+				int bone = 0;
+				foreach(byte WeightCount in slot.meshData.ManagedBonesPerVertex)
+                {
+					theirBonePositionInBoneWeights.Add(bone, bonePos);
+					theirBoneIndexByName.Add(slot.meshData.umaBones[bone].name, bone);
+					bonePos += slot.meshData.ManagedBonesPerVertex[bone];
+					bone++;
+				}
+
+/*				bonePos = 0;
+				bone = 0;
+				foreach (byte WeightCount in meshData.ManagedBonesPerVertex)
+				{
+					ourBonePositionInBoneWeights.Add(bone, bonePos);
+					bonePos += meshData.ManagedBonesPerVertex[bone];
+					bone++;
+				}*/
+
+				foreach (WeldPoint p in thisWeld.WeldPoints)
+                {
+					ourWeldPoints.Add(p.ourVertex, p);
+                }
+
+
+
+				List<boneWeld> BoneWelds = new List<boneWeld>();
+				int ourBonePos = 0;
+				boneWeld b = new boneWeld();
+				for (int i=0;i<meshData.ManagedBonesPerVertex.Length;i++)
+                {
+
+					if (ourWeldPoints.ContainsKey(i))
+                    {
+						WeldPoint p = ourWeldPoints[i];
+						// 
+
+						// copy translated bones and weights and BonesPerVertex.
+						// get bone name
+						// find new bone index
+						// get THEIR bone index for OUR bone name.
+						// Add the weights for THEIR bone index to our BoneWeights, but use OUR INDEX
+
+						string ourBoneName = meshData.umaBones[i].name;
+						int translatedBoneIndex = theirBoneIndexByName[ourBoneName];
+						int theirBonePos = theirBonePositionInBoneWeights[translatedBoneIndex];
+
+						// get the number of weights for their bone.
+						int weightcount = slot.meshData.ManagedBonesPerVertex[translatedBoneIndex];
+
+						for (int bpi = 0; bpi<weightcount; bpi++)
+                        {
+							BoneWeight1 bw = new BoneWeight1();
+							bw.boneIndex = i; // this is in "our" bonespace
+							bw.weight = meshData.ManagedBoneWeights[bpi+theirBonePos].weight;
+							b.Add(bw);
+						}
+
+						// advance through our bone weights
+						ourBonePos += meshData.ManagedBonesPerVertex[i];
+					}
+					else
+                    {
+						for(int bpi = 0;bpi < meshData.ManagedBonesPerVertex[i]; bpi++)
+                        {
+							BoneWeight1 bw = new BoneWeight1();
+							bw.boneIndex = i;
+							bw.weight = meshData.ManagedBoneWeights[ourBonePos].weight;
+							b.Add(bw);
+							ourBonePos++;
+                        }
+                    }
+                }
+				// copy bonewelds to bone arrays
+
+				int boneIndex = 0;
+				boneWeld newBoneWeights = new boneWeld();
+				foreach(boneWeld bw in BoneWelds)
+                {
+					meshData.ManagedBonesPerVertex[boneIndex] = (byte)bw.Count;
+					newBoneWeights.AddRange(bw);
+                }
+
+				meshData.ManagedBoneWeights = newBoneWeights.ToArray();
+				meshData.boneWeights = null;
+			}
+
+
+			//for (int i=0;i<Welds.Count;i++)
+            //{
+			//	if (Welds[i].WeldedToSlot == slot.slotName)
+            //    {
+			//		Welds[i] = thisWeld;
+			//		return thisWeld.WeldPoints.Count;
+            //    }
+           // }
+			//Welds.Add(thisWeld);
+			return thisWeld;
+		}
 
 		public bool HasErrors
         {
@@ -142,6 +330,10 @@ namespace UMA
 		[UnityEngine.HideInInspector]
 		public int[] animatedBoneHashes = new int[0];
 
+		[Tooltip("This object can process events ")]
+		public GameObject SlotObject;
+		private bool SlotObjectHookedUp = false;
+
 #pragma warning disable 649
 		//UMA2.8+ we need to use DNAConverterField now because that can contain Behaviours and the new controllers
 		//we need this because we need the old data out of it on deserialize
@@ -189,20 +381,6 @@ namespace UMA
 			material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(materialName);
         }
 
-		//UMA 2.8 FixDNAPrefabs: Swaps the legacy converter (DnaConverterBehaviour Prefab) for the new DNAConverterController
-		/// <summary>
-		/// Replaces a legacy DnaConverterBehaviour Prefab with a new DynamicDNAConverterController
-		/// </summary>
-		/// <returns>returns true if any converters were replaced.</returns>
-		public bool UpgradeFromLegacy(DnaConverterBehaviour oldConverter, DynamicDNAConverterController newConverter)
-		{
-			if (_slotDNA.Value as Object == oldConverter)//Not sure why I am being told by visualStudio to cast the left side to Object here...
-			{
-				_slotDNA.Value = newConverter;
-				return true;
-			}
-			return false;
-		}
 
 		/// <summary>
 		/// The mesh data.
@@ -255,17 +433,71 @@ namespace UMA
 
 		public SlotDataAsset()
 		{
-            
+
 		}
 
-        public void OnDestroy()
+		private List<IUMAEventHookup> EventHookups = new List<IUMAEventHookup>();
+
+        public void Awake()
         {
-			meshData.FreeBoneWeights();
+        }
+
+		public void Begin(UMAData umaData)
+        {
+			if (SlotObject != null)
+			{
+				HookupObjectEvents();
+				foreach(var ih in EventHookups)
+                {
+					ih.Begun(umaData);
+                }
+			}
+        }
+
+		public void Completed(UMAData umaData)
+        {
+			if (SlotObject != null)
+            {
+				foreach(var ih in EventHookups)
+                {
+					ih.Completed(umaData,this.SlotObject);	
+                }
+            }
+        }
+
+		private void HookupObjectEvents()
+        {
+			if (this.SlotObject != null)
+			{
+				if (SlotObjectHookedUp && EventHookups.Count > 0)
+					return;
+
+				SlotObjectHookedUp = true;
+				var Behaviors = SlotObject.GetComponents<MonoBehaviour>();
+				Debug.Log($"There are {Behaviors.Length} components");
+
+				foreach (var mb in Behaviors)
+				{
+					if (mb is IUMAEventHookup)
+					{
+						Debug.Log("SDA Hooking up events");
+						EventHookups.Add(mb as IUMAEventHookup);
+						(mb as IUMAEventHookup).HookupEvents(this);
+					}
+				}
+			}
+		}
+
+		public void OnDestroy()
+        {
+			if (meshData != null)
+				meshData.FreeBoneWeights();
         }
 
 		public void OnDisable()
-		{
-			meshData.FreeBoneWeights();
+		{ 
+			if (meshData != null)
+				meshData.FreeBoneWeights();
 		}
 
 		public int GetTextureChannelCount(UMAGeneratorBase generator)
@@ -320,6 +552,15 @@ namespace UMA
 			}
 		}
 
+		public void EnsureBoneWeights()
+        {
+			if (meshData.ManagedBonesPerVertex == null || meshData.ManagedBonesPerVertex.Length == 0)
+            {
+				meshData.LoadBoneWeights();
+            }
+        }
+
+
         public void UpdateMeshData()
 		{
 		}
@@ -327,13 +568,6 @@ namespace UMA
 		public void OnAfterDeserialize()
 		{
 			nameHash = UMAUtils.StringToHash(slotName);
-
-			//UMA 2.8 FixDNAPrefabs: Automatically update the data from the old field to the new one
-			if (_slotDNALegacy != null && _slotDNA.Value == null)
-			{
-				_slotDNA.Value = _slotDNALegacy;
-				//Clear the legacy field?
-			}
 		}
 
 		public void OnBeforeSerialize() 

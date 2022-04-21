@@ -120,7 +120,7 @@ namespace UMA.PoseTools
 				// add the active DNA to the pre DNA avatar
 				// UMA2.8+ Lots of converters can use the same DNA now
 				//UMA2.8+ FixDNAPrefabs raceData.GetConverter(s) now returns IDNAConverter([])
-				IDNAConverter[] activeConverters = sourceUMA.umaRecipe.raceData.GetConverters(sourceUMA.umaRecipe.GetDna(selectedDNAHash));
+				DynamicDNAConverterController[] activeConverters = sourceUMA.umaRecipe.raceData.GetConverters(sourceUMA.umaRecipe.GetDna(selectedDNAHash));
 				//umaPreDNA.umaRecipe.raceData.dnaConverterList = new DnaConverterBehaviour[1];
 				//umaPreDNA.umaRecipe.raceData.dnaConverterList[0] = activeConverter;
 				umaPreDNA.umaRecipe.raceData.dnaConverterList = activeConverters;
@@ -177,7 +177,9 @@ namespace UMA.PoseTools
 			}
 			else
 			{
-				UMAUtils.DestroySceneObject(tempAvatarPreDNA);
+				// TODO: Save to a bone pose
+
+				/* UMAUtils.DestroySceneObject(tempAvatarPreDNA);
 				UMAUtils.DestroySceneObject(tempAvatarPostDNA);
 
 				// Build a prefab DNA Converter and populate it with the morph set
@@ -207,8 +209,9 @@ namespace UMA.PoseTools
 					onePose.objectReferenceValue = AssetDatabase.LoadAssetAtPath<UMABonePose>(folderPath + "/" + posePairName + "_1.asset");
 				}
 				serializedAsset.ApplyModifiedPropertiesWithoutUndo();
-					
+				*/	
 				// Build a prefab DNA Converter and populate it with the morph set
+				/*
 				string prefabName = "Converter Prefab";
 				string prefabPath = AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + prefabName + ".prefab");
 
@@ -225,7 +228,7 @@ namespace UMA.PoseTools
 #else
 				PrefabUtility.CreatePrefab(prefabPath, tempConverterPrefab);
 #endif
-				DestroyImmediate(tempConverterPrefab, false);
+				DestroyImmediate(tempConverterPrefab, false); */
 			}
 		}
 
@@ -233,7 +236,7 @@ namespace UMA.PoseTools
 		{
 			// UMA2.8+ Lots of converters can use the same DNA now
 			//UMA2.8+ FixDNAPrefabs raceData.GetConverter(s) now returns IDNAConverter([])
-			IDNAConverter[] activeConverters = sourceUMA.umaRecipe.raceData.GetConverters(sourceUMA.umaRecipe.GetDna(selectedDNAHash));
+			DynamicDNAConverterController[] activeConverters = sourceUMA.umaRecipe.raceData.GetConverters(sourceUMA.umaRecipe.GetDna(selectedDNAHash));
 			//Just use the first result?
 			folderPath = AssetDatabase.GetAssetPath(outputFolder) + "/" + activeConverters[0].name;
 			if (!AssetDatabase.IsValidFolder(folderPath))

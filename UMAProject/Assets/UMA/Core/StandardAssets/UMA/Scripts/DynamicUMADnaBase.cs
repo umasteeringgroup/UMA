@@ -127,6 +127,7 @@ namespace UMA
 
 		public abstract int ImportUMADnaValues(UMADnaBase umaDna);
 
+
 		public virtual void SetDnaTypeHash(int typeHash)
 		{
 			base.dnaTypeHash = typeHash;

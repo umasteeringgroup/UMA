@@ -21,10 +21,11 @@ using System.Threading.Tasks;
 namespace UMA.CharacterSystem
 {
     [ExecuteInEditMode]
-    public class DynamicCharacterAvatar : UMAAvatarBase 
+    public class DynamicCharacterAvatar : UMAAvatarBase
     {
         public float DelayUnload = 2.0f;
         public bool BundleCheck = true;
+        private bool StartGuard = false;
         public bool KeepAnimatorController = false;
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar",false,10)]
@@ -99,8 +100,11 @@ namespace UMA.CharacterSystem
         [Tooltip("If true, then the meshcombiner will merge blendshapes found on slots that are part of this umaData")]
         public bool loadBlendShapes = false;
 
-		[Tooltip("If true, will reuse the mecanim avatar if it exists.")]
-		public bool keepAvatar;
+        [Tooltip("If true, will reuse the mecanim avatar if it exists.")]
+        public bool keepAvatar;
+
+        [Tooltip("If checked, will not animate or modify the vertexes")]
+        public bool rawAvatar;
 
         //This will generate itself from a list available Races and set itself to the current value of activeRace.name
         [Tooltip("Selects the race to used. When initialized, the Avatar will use the base recipe from the RaceData selected.")]
@@ -276,6 +280,10 @@ namespace UMA.CharacterSystem
                 if (context == null)
                 {
                     context = UMAContext.Instance;
+                }
+                if (context == null || activeRace == null)
+                {
+                    return new Dictionary<string, List<UMATextRecipe>>();
                 }
                 return context.GetRecipes(activeRace.name);
             }
@@ -464,6 +472,16 @@ namespace UMA.CharacterSystem
         // Use this for initialization
         public override void Start()
         {
+            InitialStartup();
+        }
+
+
+        public void InitialStartup()
+        {
+            if (StartGuard)
+                return;
+            StartGuard = true;
+
 #if UNITY_EDITOR
             if (UMAContextBase.Instance == null)
             {
@@ -556,15 +574,45 @@ namespace UMA.CharacterSystem
             InitializeFromPreset(prs);
         }
 
-#if UNITY_EDITOR
-        public void GenerateSingleUMA()
+
+        /// <summary>
+        /// Generate the UMA synchronously in this thread.
+        /// This is for those times when you need the character to be created inline.
+        /// After this call, you have a completely generated character.
+        /// This will NOT work with Addressables!!!
+        /// </summary>
+        public void GenerateNow()
         {
-            UMAGenerator ugb = umaGenerator as UMAGenerator; 
+            // We need to find the generator if we don't already have a reference to it.
+            UMAGenerator ugb = umaGenerator as UMAGenerator;
             if (umaGenerator == null)
             {
                 if (UMAContext.Instance == null)
                     return;
-               ugb = UMAContext.Instance.gameObject.GetComponentInChildren<UMAGenerator>();
+                ugb = UMAContext.Instance.gameObject.GetComponentInChildren<UMAGenerator>();
+            }
+            if (ugb != null)
+            {
+                activeRace.SetRaceData();
+                if (activeRace.racedata != null)
+                {
+                    BuildCharacter(false, true);
+                    ugb.GenerateSingleUMA(umaData, true); // don't fire completed events in the editor
+                    ugb.Clear();
+                }
+            }
+        }
+
+#if UNITY_EDITOR
+
+        public void GenerateSingleUMA()
+        {
+            UMAGenerator ugb = umaGenerator as UMAGenerator;
+            if (umaGenerator == null)
+            {
+                if (UMAContext.Instance == null)
+                    return;
+                ugb = UMAContext.Instance.gameObject.GetComponentInChildren<UMAGenerator>();
             }
             if (ugb != null)
             {
@@ -578,30 +626,32 @@ namespace UMA.CharacterSystem
                 activeRace.SetRaceData();
                 if (activeRace.racedata != null)
                 {
-                LoadDefaultWardrobe();
+                    LoadDefaultWardrobe();
 
-                // save the predefined DNA...
-                var dna = predefinedDNA.Clone();
-                BuildCharacter(false, true);
-                predefinedDNA = dna;
+                    // save the predefined DNA...
+                    var dna = predefinedDNA.Clone();
+                    BuildCharacter(false, true);
+                    predefinedDNA = dna;
 
-                bool oldFastGen = ugb.fastGeneration;
-                int oldScaleFactor = ugb.InitialScaleFactor;
-                int oldAtlasResolution = ugb.atlasResolution;
+                    bool oldFastGen = ugb.fastGeneration;
+                    int oldScaleFactor = ugb.InitialScaleFactor;
+                    int oldAtlasResolution = ugb.atlasResolution;
 
-                ugb.FreezeTime = true;
-                ugb.fastGeneration = true;
-                ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
-                ugb.atlasResolution = ugb.editorAtlasResolution;
+                    umaData.rawAvatar = rawAvatar;
+                    ugb.FreezeTime = true;
+                    ugb.fastGeneration = true;
+                    ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
+                    ugb.atlasResolution = ugb.editorAtlasResolution;
 
-                ugb.GenerateSingleUMA(umaData,false); // don't fire completed events in the editor
+                    ugb.GenerateSingleUMA(umaData, false); // don't fire completed events in the editor
 
-                ugb.fastGeneration = oldFastGen;
-                ugb.FreezeTime = false;
-                ugb.InitialScaleFactor = oldScaleFactor;
-                ugb.atlasResolution = oldAtlasResolution;
+                    ugb.fastGeneration = oldFastGen;
+                    ugb.FreezeTime = false;
+                    ugb.InitialScaleFactor = oldScaleFactor;
+                    ugb.atlasResolution = oldAtlasResolution;
+                    ugb.Clear();
+                }
             }
-        }
         }
 
         public void CleanupGeneratedData()
@@ -629,7 +679,7 @@ namespace UMA.CharacterSystem
                     var r = umaData.GetRenderers();
                     if (r != null)
                     {
-                        if (r.Length > 0 && r[0].sharedMesh == null)
+                        if (r.Length > 0 && r[0] != null && r[0].sharedMesh == null)
                             GenerateSingleUMA();
                     }
                 }
@@ -639,23 +689,26 @@ namespace UMA.CharacterSystem
                 if (umaData.rendererCount > 0)
                 {
                     SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
-                    if (frenderer.enabled && hide == true)
+                    if (frenderer != null)
                     {
-                        foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
+                        if (frenderer.enabled && hide == true)
                         {
-                            if (smr != null && smr.enabled == hide)
+                            foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
                             {
-                                smr.enabled = !hide;
+                                if (smr != null && smr.enabled == hide)
+                                {
+                                    smr.enabled = !hide;
+                                }
                             }
                         }
-                    }
-                    if (!frenderer.enabled && hide == false)
-                    {
-                        foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
+                        if (!frenderer.enabled && hide == false)
                         {
-                            if (smr != null && smr.enabled == hide)
+                            foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
                             {
-                                smr.enabled = !hide;
+                                if (smr != null && smr.enabled == hide)
+                                {
+                                    smr.enabled = !hide;
+                                }
                             }
                         }
                     }
@@ -802,7 +855,13 @@ namespace UMA.CharacterSystem
         }
 
 
-        public AvatarDefinition GetAvatarDefinition(bool skipRaceDefaults)
+        /// <summary>
+        /// Gets a an AvatarDefinition of the character
+        /// </summary>
+        /// <param name="skipRaceDefaults">Skip DNA default values on the race. You should pass this if you create from a prefab or from code each time.</param>
+        /// <param name="skipColorDefaults">Skip default colors. If you do this, any shared color default values in a recipe should be default values to avoid issues.</param>
+        /// <returns></returns>
+        public AvatarDefinition GetAvatarDefinition(bool skipRaceDefaults, bool skipColorDefaults=false)
         {
             RaceData r = activeRace.data;
 
@@ -867,7 +926,10 @@ namespace UMA.CharacterSystem
 
                 for (int i=0; i<col.channelCount;i++)
                 {
-                    if (col.isDefault(i)) continue;
+                    if (skipColorDefaults)
+                    {
+                        if (col.isDefault(i)) continue;
+                    }
                     Color Mask = col.channelMask[i];
                     Color Additive = col.channelAdditiveMask[i];
                     colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
@@ -888,9 +950,15 @@ namespace UMA.CharacterSystem
             return adf;
         }       
 
-        public string GetAvatarDefinitionString(bool skipDefaults)
+        /// <summary>
+        /// Gets a string representation of the avatar
+        /// </summary>
+        /// <param name="skipDefaults">Skip DNA default values on the race. You should pass this if you create from a prefab or from code each time.</param>
+        /// <param name="skipColorDefaults">Skip default colors. If you do this, any shared color default values in a recipe should be default values to avoid issues.</param>
+        /// <returns></returns>
+        public string GetAvatarDefinitionString(bool skipDefaults,bool skipColorDefaults=false)
         {
-            AvatarDefinition adf = GetAvatarDefinition(skipDefaults);
+            AvatarDefinition adf = GetAvatarDefinition(skipDefaults, skipColorDefaults);
             return JsonUtility.ToJson(adf);
         }
 
@@ -1093,6 +1161,8 @@ namespace UMA.CharacterSystem
                 RacePreset = racename;
                 return true;
             }
+            if (context == null)
+                return false;
             if (UpdatePending())
             {
                 return false;
@@ -1101,6 +1171,14 @@ namespace UMA.CharacterSystem
             if (racename != "None Set")
                 thisRace = context.GetRace(racename);
             ChangeRace(thisRace, customChangeRaceOptions, ForceChange);
+            return true;
+        }
+
+        public bool ForceRaceChange(string racename)
+        {
+            // never been built, just use the race preset.
+            RaceData thisRace = context.GetRace(racename);
+            ChangeRace(thisRace, ChangeRaceOptions.useDefaults,true);
             return true;
         }
 
@@ -1955,6 +2033,19 @@ namespace UMA.CharacterSystem
         }
 
         /// <summary>
+        /// Simpler version of SetColor
+        /// </summary>
+        /// <param name="SharedColorName"></param>
+        /// <param name="AlbedoColor"></param>
+        /// <param name="UpdateTexture"></param>
+        public void SetColorValue(string SharedColorName, Color AlbedoColor)
+        {
+            OverlayColorData ocd = new OverlayColorData(3);
+            ocd.channelMask[0] = AlbedoColor;
+            SetColor(SharedColorName, ocd, false);
+        }
+
+        /// <summary>
         /// Sets the given color name to the given OverlayColorData optionally updating the texture (default:true)
         /// </summary>
         /// <param name="Name"></param>
@@ -2257,6 +2348,99 @@ namespace UMA.CharacterSystem
         }
 
 
+        /// <summary>
+        /// Gets the default DNA for the race.
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<string, float> GetDefaultDNA()
+        {
+            Dictionary<string, float> dna = new Dictionary<string, float>();
+            if (activeRace == null)
+            {
+                Debug.Log($"No race set getting default race DNA on character {gameObject.name}");
+                return dna;
+            }
+
+            // if the race has never been set, 
+            if (activeRace.racedata == null)
+            {
+                activeRace.SetRaceData();
+            }
+
+            // if anything has gone wrong getting the race, then just return nothing.
+            if (activeRace.racedata == null)
+            {
+                Debug.Log($"Unable to get racedata for race {activeRace.name} on character {gameObject.name}");
+                return dna;
+            }
+
+            return activeRace.racedata.GetDefaultDNA();
+        }
+
+        /// <summary>
+        /// Get DNA names and Values for the current character.
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<string, float> GetDNAValues(UMAData.UMARecipe recipe = null)
+        {
+            Dictionary<string, float> dna = new Dictionary<string, float>();
+
+            if (activeRace == null)
+            {
+                Debug.Log($"No race set getting default race DNA on character {gameObject.name}");
+                return dna;
+            }
+
+            if (activeRace.racedata == null)
+            {
+                activeRace.SetRaceData();
+            }
+            // if anything has gone wrong getting the race, then just return nothing.
+            if (activeRace.racedata == null)
+            {
+                Debug.Log($"Unable to get racedata for race {activeRace.name} on character {gameObject.name}");
+                return dna;
+            }
+
+            if (umaData == null)
+            {
+                return GetDefaultDNA();
+            }
+
+            UMADnaBase[] dnaBase = umaData.GetAllDna();
+
+            if (recipe == null)
+                dnaBase = umaData.GetAllDna();
+            else
+                dnaBase = recipe.GetAllDna();
+
+            foreach (UMADnaBase db in dnaBase)
+            {
+                string Category = db.GetType().ToString();
+
+                //TODO racedata.GetConverter is obsolete because lots of converters can use the same dna names (dnaAsset) now 
+                //I'm just gonna use the first found one- we can do something more advanced if/when we need to
+                IDNAConverter[] dcb = activeRace.racedata.GetConverters(db);
+                if (dcb.Length > 0 && dcb[0] != null && (!string.IsNullOrEmpty(dcb[0].DisplayValue)))
+                {
+                    Category = dcb[0].DisplayValue;
+                }
+
+                for (int i = 0; i < db.Count; i++)
+                {
+                    if (dna.ContainsKey(db.Names[i]))
+                    {
+                        dna[db.Names[i]] = db.Values[i];// DnaSetter(db.Names[i], db.Values[i], i, db, Category);
+                    }
+                    else
+                    {
+                        dna.Add(db.Names[i],db.Values[i]);
+                    }
+                }
+            }
+            return dna;
+        }
+
 
         /// <summary>
         /// Get all of the DNA for the current character, and return it as a list of DnaSetters.
@@ -2268,6 +2452,16 @@ namespace UMA.CharacterSystem
         {
             Dictionary<string, DnaSetter> dna = new Dictionary<string, DnaSetter>();
 
+            if (activeRace == null)
+            {
+                Debug.Log($"No race set getting default race DNA on character {gameObject.name}");
+                return dna;
+            }
+
+            if (activeRace.racedata == null)
+            {
+                activeRace.SetRaceData();
+            }
             if (umaData == null)
             {
                 return dna;
@@ -2986,7 +3180,7 @@ namespace UMA.CharacterSystem
         }
 
         /// <summary>
-        /// Loads the text file in the loadFilename field to get its recipe string, and then calls LoadFromRecipeString to to process the recipe and load the Avatar.
+        /// Loads the text file in the loadFilename field to get its recipe string, and then calls   to to process the recipe and load the Avatar.
         /// </summary>
         public void DoLoad()
         {
@@ -3142,6 +3336,16 @@ namespace UMA.CharacterSystem
 
 #region CHARACTER FINAL ASSEMBLY
      
+        public bool DNAIsValid(UMADnaBase[] CurrentDNA)
+        {
+            if (CurrentDNA == null) return false;
+            if (CurrentDNA.Length == 0) return false;
+            foreach(var dna in CurrentDNA)
+            {
+                if (dna.Values == null) return false;
+            }
+            return true;
+        }
 
         /// <summary>
         /// Builds the character by combining the Avatar's raceData.baseRecipe with the any wardrobe recipes that have been applied to the avatar.
@@ -3150,16 +3354,17 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
-#if SUPER_LOGGING
-			Debug.Log("Building DynamicCharacterAvatar: " + gameObject.name);
-#endif
             overrideDNA.Clear();
 
             if (activeRace.racedata == null)
             {
                 activeRace.SetRaceData();
             }
-            umaRecipe = activeRace.racedata.baseRaceRecipe;
+
+            if (activeRace.racedata != null)
+            {
+                umaRecipe = activeRace.racedata.baseRaceRecipe;
+            }
 
             List<string> HiddenSlots = new List<string>();//why was this HashSet list is faster for our purposes (http://stackoverflow.com/questions/150750/hashset-vs-list-performance)
 
@@ -3183,8 +3388,10 @@ namespace UMA.CharacterSystem
                     CurrentDNA = umaData.umaRecipe.GetDefinedDna();
                 }
             }
-            if (CurrentDNA == null)
+            if (DNAIsValid(CurrentDNA)== false)
+            {
                 RestoreDNA = false;
+            }
 
             List<UMAWardrobeRecipe> ReplaceRecipes = new List<UMAWardrobeRecipe>();
             List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
@@ -3563,6 +3770,7 @@ namespace UMA.CharacterSystem
             this.umaRecipe = umaRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
 
             umaRecipe.Load(umaData.umaRecipe, context);
+            umaData.umaRecipe.raceData = this.activeRace.racedata;
             umaData.umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
             umaData.AddAdditionalRecipes(AdditionalRecipes, context, false);
@@ -3647,6 +3855,7 @@ namespace UMA.CharacterSystem
                 umaData.RebuildSkeleton = true;
 
             ApplyPredefinedDNA();
+            umaData.rawAvatar = rawAvatar;
 			umaData.KeepAvatar = keepAvatar;
             umaData.ForceRebindAnimator = forceRebindAnimator;
             //But the ExpressionPlayer needs to be Initialized AFTER Load
@@ -3916,6 +4125,7 @@ namespace UMA.CharacterSystem
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
         {
+            umaData.rawAvatar = rawAvatar;
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
 
@@ -4137,7 +4347,8 @@ namespace UMA.CharacterSystem
         {
             public string name;
 
-            RaceData _data;
+            [NonSerialized]
+            RaceData _theRaceData;
 
             //These properties use camelCase rather than lower case to deliberately hide the fact they are properties
             /// <summary>
@@ -4148,11 +4359,11 @@ namespace UMA.CharacterSystem
                 get
                 {
                     SetRaceData();
-                    return _data;
+                    return _theRaceData;
                 }
                 set
                 {
-                    _data = value;
+                    _theRaceData = value;
                 }
             }
             /// <summary>
@@ -4160,7 +4371,7 @@ namespace UMA.CharacterSystem
             /// </summary>
             public RaceData racedata
             {
-                get { return _data; }
+                get { return _theRaceData; }
             }
 
             public void SetRaceData()
@@ -4172,7 +4383,7 @@ namespace UMA.CharacterSystem
                         Debug.LogWarning("UMAContextBase was missing this is required in scenes that use UMA. Please add the UMA_GLIB prefab to the scene");
                     return;
                 }
-                _data = thisContext.GetRace(name);
+                _theRaceData = thisContext.GetRace(name);
             }
         }
 
