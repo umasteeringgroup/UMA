@@ -21,7 +21,7 @@ MonoBehaviour:
     materialPropertyName: _MainTex
     sourceTextureName: 
     Compression: 0
-    DownSample: 0
+    DownSample: 1
     ConvertRenderTexture: 0
     NonShaderTexture: 0
   MipMapBias: 0
@@ -31,3 +31,5 @@ MonoBehaviour:
   shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

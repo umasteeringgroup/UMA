@@ -618,7 +618,15 @@ namespace UMA.Editors
 		protected bool DropAreaGUI(Rect dropArea)
 		{
 			var evt = Event.current;
-	
+
+			if (evt.type == EventType.DragUpdated)
+			{
+				if (dropArea.Contains(evt.mousePosition))
+				{
+					DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+				}
+			}
+
 			if (evt.type == EventType.DragPerform)
 			{
 				if (dropArea.Contains(evt.mousePosition))
@@ -640,11 +648,6 @@ namespace UMA.Editors
 								RecursiveScanFoldersForAssets(path);
 							}
 						}
-					}
-					if (DraggedMHA.Count > 0)
-					{
-						AddDraggedFiles();
-						return true;
 					}
 				}
 			}
@@ -1253,6 +1256,13 @@ namespace UMA.Editors
 				doUpdate = true;
 			}
 			#endregion
+
+			if (DraggedMHA.Count > 0)
+			{
+				AddDraggedFiles();
+				DraggedMHA.Clear();
+				return true;
+			}
 
 			return doUpdate;
 		}

@@ -44,7 +44,8 @@ namespace UMA
 		[Tooltip("A 'nice name' to use when Categorizing DNASetters in the UI")]
 		private string _displayValue;
 #pragma warning restore 649
-
+		[System.NonSerialized]
+		private List<DynamicDNAPlugin> _applyDNAPostpassPlugins = new List<DynamicDNAPlugin>();
 		[System.NonSerialized]
 		private List<DynamicDNAPlugin> _applyDNAPrepassPlugins = new List<DynamicDNAPlugin>();
 		[System.NonSerialized]
@@ -86,6 +87,11 @@ namespace UMA
 		{
 			get { return ApplyDNAPrepass; }
 		}
+
+		public DNAConvertDelegate PostApplyDnaAction
+        {
+			get { return ApplyDNAPostpass;  }
+        }
 
 		public DNAConvertDelegate ApplyDnaAction
 		{
@@ -169,6 +175,13 @@ namespace UMA
 							_applyDNAPrepassPlugins.Add(_plugins[i]);
 						}
 					}
+					else if (_plugins[i].ApplyPass == DynamicDNAPlugin.ApplyPassOpts.PostPass)
+                    {
+						if (!_applyDNAPostpassPlugins.Contains(_plugins[i]))
+						{
+							_applyDNAPostpassPlugins.Add(_plugins[i]);
+						}
+					}
 				}
 				_prepared = true;
 			}
@@ -238,6 +251,34 @@ namespace UMA
 				}
 			}
 		}
+
+		/// <summary>
+		/// Calls ApplyDNA on all this convertersControllers plugins (aka converters) that apply dna during the pre-pass
+		/// </summary>
+		/// <param name="umaData">The umaData on the avatar</param>
+		/// <param name="skeleton">The avatars skeleton</param>
+		/// <param name="dnaTypeHash">The dnaTypeHash that this converters behaviour is using</param>
+		public void ApplyDNAPostpass(UMAData umaData, UMASkeleton skeleton)
+		{
+			if (!_prepared)
+				Prepare();
+
+			UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
+			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
+			if (umaDna is DynamicUMADnaBase)
+			{
+				if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset && DNAAsset != null)
+					((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
+			}
+			if (_applyDNAPostpassPlugins.Count > 0)
+			{
+				for (int i = 0; i < _applyDNAPostpassPlugins.Count; i++)
+				{
+					_applyDNAPostpassPlugins[i].ApplyDNA(umaData, skeleton, DNATypeHash);
+				}
+			}
+		}
+
 
 		/// <summary>
 		/// Calls ApplyDNA on all this convertersControllers plugins (aka converters) that apply dna at the standard time

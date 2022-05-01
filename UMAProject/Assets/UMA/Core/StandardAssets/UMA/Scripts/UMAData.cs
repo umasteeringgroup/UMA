@@ -160,6 +160,10 @@ namespace UMA
 
 		public bool rawAvatar;
 
+		public bool raceChanged;
+
+		public bool hideRenderers;
+
 		public UMAGeneratorBase umaGenerator;
 
 		[NonSerialized]
@@ -738,8 +742,15 @@ namespace UMA
 
 		public void Show()
 		{
-			for (int i = 0; i < rendererCount; i++)
-				GetRenderer(i).enabled = true;
+			if (hideRenderers)
+			{
+				Hide();
+			}
+			else
+			{
+				for (int i = 0; i < rendererCount; i++)
+					GetRenderer(i).enabled = true;
+			}
 		}
 
 		public void Hide()
@@ -791,6 +802,7 @@ namespace UMA
 			//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
 			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAConverters = new Dictionary<int, List<DNAConvertDelegate>>();
 			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAPreApplyConverters = new Dictionary<int, List<DNAConvertDelegate>>();
+			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAPostApplyConverters = new Dictionary<int, List<DNAConvertDelegate>>();
 			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
 			[SerializeField]
 			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
@@ -1360,6 +1372,33 @@ namespace UMA
 			}
 
 			/// <summary>
+			/// Applies each DNA converter to the UMA data and skeleton.
+			/// </summary>
+			/// <param name="umaData">UMA data.</param>
+			public void ApplyPostpassDNA(UMAData umaData)
+			{
+				foreach (var dnaEntry in umaDna)
+				{
+					//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+					List<DNAConvertDelegate> dnaConverters;
+					this.umaDNAPostApplyConverters.TryGetValue(dnaEntry.Key, out dnaConverters);
+
+					if (dnaConverters != null && dnaConverters.Count > 0)
+					{
+						for (int i = 0; i < dnaConverters.Count; i++)
+						{
+							dnaConverters[i](umaData, umaData.GetSkeleton());
+						}
+					}
+					else
+					{
+						if (Debug.isDebugBuild)
+							Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
+					}
+				}
+			}
+
+			/// <summary>
 			/// Ensures all DNA convertes from slot and race data are defined.
 			/// </summary>
 			public void EnsureAllDNAPresent()
@@ -1465,6 +1504,7 @@ namespace UMA
 			{
 				umaDNAConverters.Clear();
 				umaDNAPreApplyConverters.Clear();
+				umaDNAPostApplyConverters.Clear();
 				if (raceData != null)
 				{
 					foreach (var converter in raceData.dnaConverterList)
@@ -1503,6 +1543,16 @@ namespace UMA
 						umaDNAPreApplyConverters[dnaConverter.DNATypeHash].Add(dnaConverter.PreApplyDnaAction);
 					}
 				}
+				if (dnaConverter.PostApplyDnaAction != null)
+				{
+					if (!umaDNAPostApplyConverters.ContainsKey(dnaConverter.DNATypeHash))
+						umaDNAPostApplyConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
+					if (!umaDNAPostApplyConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.PostApplyDnaAction))
+					{
+						umaDNAPostApplyConverters[dnaConverter.DNATypeHash].Add(dnaConverter.PostApplyDnaAction);
+					}
+				}
+
 				if (!umaDNAConverters.ContainsKey(dnaConverter.DNATypeHash))
 					umaDNAConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
 				if (!umaDNAConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.ApplyDnaAction))
@@ -1697,6 +1747,15 @@ namespace UMA
 		public void ApplyDNA()
 		{
 			umaRecipe.ApplyDNA(this);
+		}
+
+		public void PostApplyDNA()
+        {
+			// Blendshape DNA has to be applied after the
+			// skeleton is done, and the avatar is rebuilt
+			// otherwise some caching issue in the animator can
+			// restore bad blendshapes.
+			umaRecipe.ApplyPostpassDNA(this);
 		}
 
 		public virtual void Dirty()
@@ -2208,7 +2267,9 @@ namespace UMA
 				{
 					int index = renderer.sharedMesh.GetBlendShapeIndex(name);
 					if (index >= 0)
+					{
 						renderer.SetBlendShapeWeight(index, weight);
+					}
 				}
 			}
 		}

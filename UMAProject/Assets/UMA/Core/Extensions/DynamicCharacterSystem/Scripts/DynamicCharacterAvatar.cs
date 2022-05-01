@@ -27,6 +27,7 @@ namespace UMA.CharacterSystem
         public bool BundleCheck = true;
         private bool StartGuard = false;
         public bool KeepAnimatorController = false;
+        public bool RecreateAnimatorOnRaceChange = true;
 #if UNITY_EDITOR
 		[UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar",false,10)]
 		public static void CreateDynamicCharacterAvatarMenuItem()
@@ -342,7 +343,10 @@ namespace UMA.CharacterSystem
         /// </summary>
         public bool BuildCharacterEnabled
         {
-            get { return _buildCharacterEnabled; }
+            get 
+            { 
+                return _buildCharacterEnabled; 
+            }
             set
             {
                 if (_buildCharacterEnabled == false && value == true)
@@ -667,7 +671,47 @@ namespace UMA.CharacterSystem
             ClearSlots();
         }
 #endif
+        public void ToggleHide(bool toggle)
+        {
+            hide = toggle;
+            SetRenderers(toggle);
+            if (umaData != null)
+            {
+                umaData.hideRenderers = this.hide;
+            }
+            lastHide = hide;
+        }
 
+        public void SetRenderers(bool val)
+        {
+            if (umaData.rendererCount > 0)
+            {
+                SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
+                if (frenderer != null)
+                {
+                    if (frenderer.enabled && hide == true)
+                    {
+                        foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
+                        {
+                            if (smr != null && smr.enabled == hide)
+                            {
+                                smr.enabled = !hide;
+                            }
+                        }
+                    }
+                    if (!frenderer.enabled && hide == false)
+                    {
+                        foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
+                        {
+                            if (smr != null && smr.enabled == hide)
+                            {
+                                smr.enabled = !hide;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         void Update()
         {
@@ -684,34 +728,10 @@ namespace UMA.CharacterSystem
                     }
                 }
 #endif
-                umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
 
-                if (umaData.rendererCount > 0)
+                if (hide != lastHide)
                 {
-                    SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
-                    if (frenderer != null)
-                    {
-                        if (frenderer.enabled && hide == true)
-                        {
-                            foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
-                            {
-                                if (smr != null && smr.enabled == hide)
-                                {
-                                    smr.enabled = !hide;
-                                }
-                            }
-                        }
-                        if (!frenderer.enabled && hide == false)
-                        {
-                            foreach (SkinnedMeshRenderer smr in umaData.GetRenderers())
-                            {
-                                if (smr != null && smr.enabled == hide)
-                                {
-                                    smr.enabled = !hide;
-                                }
-                            }
-                        }
-                    }
+                    ToggleHide(hide);
                 }
             }
         }
@@ -2595,6 +2615,13 @@ namespace UMA.CharacterSystem
                 originalRot = umaData.transform.localRotation;
 
             var thisAnimator = gameObject.GetComponent<Animator>();
+            
+            if (RecreateAnimatorOnRaceChange)
+            {
+                GameObject.DestroyImmediate(thisAnimator);
+                thisAnimator = gameObject.AddComponent<Animator>(); 
+            }
+
             if (controllerToUse != null)
             {
                 if (thisAnimator == null && addAnimator)
@@ -3629,6 +3656,15 @@ namespace UMA.CharacterSystem
 
         Dictionary<AsyncOp, BuildSave> LoadQueue = new Dictionary<AsyncOp, BuildSave>();
 
+
+        public bool AddressableBuildPending
+        {
+            get
+            {
+                return LoadQueue.Count > 0;
+            }
+        }
+
         private void LoadWhenReady(AsyncOp Op)
         {
             try
@@ -3753,13 +3789,11 @@ namespace UMA.CharacterSystem
             {
                 InitializeAvatar();
             }
-            umaData.defaultRendererAsset = defaultRendererAsset;
 
-            // Set the current resolution scale if defined on the DCA.
-            if (AtlasResolutionScale != 1.0f)
-            {
-                umaData.atlasResolutionScale = this.AtlasResolutionScale;
-            }
+            umaData.defaultRendererAsset = defaultRendererAsset;
+            umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
+            umaData.atlasResolutionScale = this.AtlasResolutionScale;
+            umaData.hideRenderers = this.hide;
 
             //set the umaData.animator if we have an animator already
             if (this.gameObject.GetComponent<Animator>())
@@ -3770,7 +3804,7 @@ namespace UMA.CharacterSystem
             this.umaRecipe = umaRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
 
             umaRecipe.Load(umaData.umaRecipe, context);
-            umaData.umaRecipe.raceData = this.activeRace.racedata;
+            umaData.umaRecipe.SetRace(this.activeRace.racedata); // JRRM Test
             umaData.umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
             umaData.AddAdditionalRecipes(AdditionalRecipes, context, false);
@@ -3825,29 +3859,31 @@ namespace UMA.CharacterSystem
 
             if (umaRace != umaData.umaRecipe.raceData)
             {
-              /*if (rebuildSkeleton)
-                {
-                    
-                    // Old New Way
-                    DestroyImmediate(umaData.umaRoot,false);
-                    umaData.umaRoot = null;
-                    // New Way end
+                /*if (rebuildSkeleton)
+                  {
 
-                    // Old Way
-                    //
-                    //foreach (Transform child in gameObject.transform)
-                    //{
-                    //    UMAUtils.DestroySceneObject(child.gameObject);
-                    //}
-                    // Old way end
-                } */
+                      // Old New Way
+                      DestroyImmediate(umaData.umaRoot,false);
+                      umaData.umaRoot = null;
+                      // New Way end
+
+                      // Old Way
+                      //
+                      //foreach (Transform child in gameObject.transform)
+                      //{
+                      //    UMAUtils.DestroySceneObject(child.gameObject);
+                      //}
+                      // Old way end
+                  } */
                 // new way
                 umaData.RebuildSkeleton = rebuildSkeleton;
+                umaData.raceChanged = true;
                 UpdateNewRace();
             }
             else
             {
                 umaData.RebuildSkeleton = false;
+                umaData.raceChanged = false;
                 UpdateSameRace();
             }
 
@@ -4319,6 +4355,7 @@ namespace UMA.CharacterSystem
             }
         }
 
+
         /// <summary>
         /// Looks through the dirtylist to see if it is being update.
         /// You should probably not do this every frame.
@@ -4349,6 +4386,16 @@ namespace UMA.CharacterSystem
 
             [NonSerialized]
             RaceData _theRaceData;
+
+            public bool isValid
+            {
+                get
+                {
+                    if (string.IsNullOrWhiteSpace(name)) return false;
+                    if (_theRaceData == null) return false;
+                    return true;
+                }
+            }
 
             //These properties use camelCase rather than lower case to deliberately hide the fact they are properties
             /// <summary>

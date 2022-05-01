@@ -112,7 +112,7 @@ namespace UMA.CharacterSystem.Editors
 				"characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar","KeepAnimatorController",
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
-				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController", "defaultRendererAsset",
+				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController", "defaultRendererAsset","forceRebindAnimator",
 				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored","WardrobeAdded","WardrobeRemoved",
 				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA","alwaysRebuildSkeleton", "umaRecipe"});
             if (EditorGUI.EndChangeCheck())
@@ -236,6 +236,48 @@ namespace UMA.CharacterSystem.Editors
 					UpdateCharacter();
                 }
 				EditorGUILayout.EndHorizontal();
+				if (EditorApplication.isPlayingOrWillChangePlaymode)
+				{
+					EditorGUILayout.BeginHorizontal();
+					if (GUILayout.Button("Save Avatar Definition"))
+                    {
+						string fileName = EditorUtility.SaveFilePanel("Save Avatar Definition", "", "", "adf");
+						if (!string.IsNullOrEmpty(fileName))
+						{
+							try
+							{
+								AvatarDefinition adf = thisDCA.GetAvatarDefinition(false, false);
+								string charstr = adf.ToCompressedString("|");
+								System.IO.File.WriteAllText(fileName, charstr);
+							}
+							catch (Exception ex)
+							{
+								Debug.LogException(ex);
+								EditorUtility.DisplayDialog("Error", "Error writing avatar definition file: " + ex.Message, "OK");
+							}
+						}
+					}
+					if (GUILayout.Button("Load Avatar Definition"))
+                    {
+						string fileName = EditorUtility.OpenFilePanel("Load Avatar Definition", "", "adf");
+						if (!string.IsNullOrEmpty(fileName))
+						{
+							try
+							{
+								string presetstring = System.IO.File.ReadAllText(fileName);
+								AvatarDefinition adf = AvatarDefinition.FromCompressedString(presetstring, '|');
+								thisDCA.LoadAvatarDefinition(adf);
+								thisDCA.BuildCharacter(false);
+							}
+							catch (Exception ex)
+							{
+								Debug.LogException(ex);
+								EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message, "OK");
+							}
+						}
+					}
+					EditorGUILayout.EndHorizontal();
+				}
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
 				if (EditorGUI.EndChangeCheck())
@@ -263,7 +305,7 @@ namespace UMA.CharacterSystem.Editors
 					{
 						thisDCA.ClearSlots();
 						thisDCA.LoadDefaultWardrobe();
-						thisDCA.BuildCharacter(true);
+						thisDCA.BuildCharacter(false);
 					}
 					else
 					{
@@ -612,6 +654,7 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("AtlasResolutionScale"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultRendererAsset"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("rawAvatar"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("forceRebindAnimator"));
 
 				if (EditorGUI.EndChangeCheck())
 				{

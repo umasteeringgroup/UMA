@@ -37,7 +37,7 @@ namespace UMA
 			if (umaData.umaRoot != null)
 			{
 				umaData.CleanMesh(false);
-				if (umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets))
+				if ((umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets)))
 				{
 					renderers = umaData.GetRenderers();
 					umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());

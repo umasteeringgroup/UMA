@@ -111,7 +111,11 @@ namespace UMA
                             case UMAMaterial.ChannelType.NormalMap:
                             case UMAMaterial.ChannelType.DetailNormalMap:
                                 {
-                                    bool CopyRTtoTex = SupportsRTToTexture2D && fastPath;
+                                    bool CopyRTtoTex = SupportsRTToTexture2D && fastPath && (umaGenerator.convertRenderTexture || slotData.material.channels[textureType].ConvertRenderTexture);
+                                    if (CopyRTtoTex && !TextureFormats.ContainsKey(slotData.material.channels[textureType].textureFormat))
+                                    {
+                                        CopyRTtoTex = false;
+                                    }
 
                                     textureMerge.Reset();
                                     for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
@@ -130,11 +134,6 @@ namespace UMA
                                         continue;
                                     }
 
-                                    //this should be restricted to >= 1 but 0 was allowed before and projects may have the umaMaterial value serialized to 0.
-                                    //float downSample = (slotData.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.material.channels[textureType].DownSample);
-
-                                    //destinationTexture = new RenderTexture(Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
-
                                     float downSample = (slotData.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.material.channels[textureType].DownSample);
 
                                     int ww = Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample);
@@ -142,18 +141,35 @@ namespace UMA
 
                                     if (ww == 0 || hh == 0) continue;
 
-                                    destinationTexture = new RenderTexture(ww, hh, 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
-
+                                    if (CopyRTtoTex)
+                                    {
+                                        destinationTexture = RenderTexture.GetTemporary(ww, hh, 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
+                                        if (destinationTexture.useMipMap != umaGenerator.convertMipMaps)
+                                        {
+                                            if (destinationTexture.IsCreated())
+                                            {
+                                                destinationTexture.Release();
+                                            }
+                                            destinationTexture.useMipMap = umaGenerator.convertMipMaps;
+                                            if (destinationTexture.IsCreated())
+                                            {
+                                                destinationTexture.Create();
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        destinationTexture = new RenderTexture(ww, hh, 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
+                                        destinationTexture.useMipMap = umaGenerator.convertMipMaps; // && !umaGenerator.convertRenderTexture;
+                                    }
                                     destinationTexture.filterMode = FilterMode.Point;
-                                    destinationTexture.useMipMap = umaGenerator.convertMipMaps && CopyRTtoTex;// && !umaGenerator.convertRenderTexture;
                                     destinationTexture.name = slotData.material.name + " Chan " + textureType + " frame: " + Time.frameCount;
 
-                                    //Draw all the Rects here
-
+                                    //This draw the rects
                                     Color backgroundColor;
                                     UMAMaterial.ChannelType channelType = slotData.material.channels[textureType].channelType;
 
-                                    if (slotData.material.MaskWithCurrentColor && (channelType == UMAMaterial.ChannelType.DiffuseTexture || channelType == UMAMaterial.ChannelType.Texture || channelType == UMAMaterial.ChannelType.TintedTexture))
+                                    if (slotData.material.MaskWithCurrentColor && (channelType == UMAMaterial.ChannelType.DiffuseTexture || channelType == UMAMaterial.ChannelType.Texture))
                                     {
                                         backgroundColor = slotData.material.maskMultiplier * textureMerge.camBackgroundColor;
                                     }
@@ -167,91 +183,26 @@ namespace UMA
                                     //PostProcess
                                     textureMerge.PostProcess(destinationTexture, slotData.material.channels[textureType].channelType);
 
-                                    if (umaGenerator.convertRenderTexture || slotData.material.channels[textureType].ConvertRenderTexture)
+                                    if (CopyRTtoTex)
                                     {
                                         #region Convert Render Textures
-                                        if (CopyRTtoTex)
-                                        {
-                                            // copy the texture with mips to the Texture2D
-                                            Texture2D tempTexture;
+                                        // copy the texture with mips to the Texture2D
+                                        Texture2D tempTexture;
 
-                                            if (TextureFormats.ContainsKey(destinationTexture.format))
-                                            {
-                                                TextureFormat texFmt = TextureFormats[destinationTexture.format];
-                                                tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, umaGenerator.convertMipMaps, true);
-                                                Graphics.CopyTexture(destinationTexture, tempTexture);
-                                                destinationTexture.Release();
-                                                UnityEngine.GameObject.DestroyImmediate(destinationTexture);
-                                                resultingTextures[textureType] = tempTexture as Texture;
-                                                SetMaterialTexture(generatedMaterial, slotData, textureType, tempTexture);
-                                                if (slotData.material.channels[textureType].channelType == UMAMaterial.ChannelType.NormalMap)
-                                                {
-                                                   //  tempTexture.n
-                                                }
-                                            }
-                                            else
-                                            {
-                                                resultingTextures[textureType] = destinationTexture;
-                                                SetMaterialTexture(generatedMaterial, slotData, textureType, destinationTexture);
-                                            }
-                                        }
-                                        else
-                                        {
-#if USE_ASYNC_GPU_READBACK
-                                            // Todo: use AsyncGPUReadback to get the texture if possible.
-                                            //       
-                                            // material == generatedMaterial.material
-                                            // umaData ==  ;
-                                            // slotData == ;
-                                            // propname == slotData.material.channels[textureType].materialPropertyName
-                                            // mipcount
-                                            // mipsconverted[]
-                                            // Data.
-                                            //for (int i=0;i< destinationTexture.mipmapCount;i++)
-                                            //{
-                                            // 
-                                            //}
-#else
-                                            Texture2D tempTexture;
-                                            tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps, true);
-                                            RenderTexture.active = destinationTexture;
-                                            tempTexture.ReadPixels(new Rect(0, 0, destinationTexture.width, destinationTexture.height), 0, 0, umaGenerator.convertMipMaps);
-                                            RenderTexture.active = null;
-                                            destinationTexture.Release();
-                                            UnityEngine.GameObject.DestroyImmediate(destinationTexture);
-                                            tempTexture.Apply();
-                                            SetMaterialTexture(generatedMaterial, slotData, textureType, tempTexture);
-                                            resultingTextures[textureType] = tempTexture;
-                                        }
-#endif
+                                        TextureFormat texFmt = TextureFormats[destinationTexture.format];
+                                        tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, umaGenerator.convertMipMaps, true);
+                                        Graphics.CopyTexture(destinationTexture, tempTexture);
+                                        RenderTexture.ReleaseTemporary(destinationTexture);
+                                        //destinationTexture.Release();
+                                        //UnityEngine.GameObject.DestroyImmediate(destinationTexture);
+                                        resultingTextures[textureType] = tempTexture as Texture;
+                                        SetMaterialTexture(generatedMaterial, slotData, textureType, tempTexture);
                                         #endregion
                                     }
                                     else
                                     {
-                                        destinationTexture.anisoLevel = slotData.material.AnisoLevel;
-                                        destinationTexture.mipMapBias = slotData.material.MipMapBias;
-                                        destinationTexture.filterMode = slotData.material.MatFilterMode;
-                                        destinationTexture.wrapMode = TextureWrapMode.Repeat;
+                                        SetMaterialTexture(generatedMaterial, slotData, textureType, destinationTexture);
                                         resultingTextures[textureType] = destinationTexture;
-                                        if (!slotData.material.channels[textureType].NonShaderTexture)
-                                        {
-                                            if (generatedMaterial.umaMaterial.translateSRP)
-                                            { 
-                                                string texProperty = UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName);
-                                                if (generatedMaterial.material.HasProperty(texProperty))
-                                                {
-                                                    generatedMaterial.material.SetTexture(texProperty, destinationTexture);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                string texProperty = slotData.material.channels[textureType].materialPropertyName;
-                                                if (generatedMaterial.material.HasProperty(texProperty))
-                                                {
-                                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
-                                                }
-                                            }
-                                        }
                                     } 
 
                                     break;
@@ -264,6 +215,7 @@ namespace UMA
                                 }
                             case UMAMaterial.ChannelType.TintedTexture:
                                 {
+
                                     for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                                     {
                                         var fragment = generatedMaterial.materialFragments[i];
@@ -289,26 +241,39 @@ namespace UMA
                                                 }
                                             }
                                         }
+
+
                                         foreach (var overlay in fragment.overlays)
                                         {
                                             if (generatedMaterial.textureNameList == null)
+                                            {
                                                 for (int j = 0; j < overlay.textureList.Length; j++)
                                                 {
                                                     if (overlay.textureList[j] != null)
                                                     {
                                                         if (!slotData.material.channels[textureType].NonShaderTexture)
                                                         {
+                                                            string materialPropertyName;
                                                             if (generatedMaterial.umaMaterial.translateSRP)
                                                             {
-                                                                generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), overlay.textureList[j]);
+                                                                materialPropertyName = UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName) + (j + 1);
                                                             }
                                                             else
                                                             {
-                                                                generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, overlay.textureList[j]);
+                                                                materialPropertyName = slotData.material.channels[j].materialPropertyName + (j + 1);
                                                             }
-                                                        }
+
+                                                            // if the shader has a parameter for this extra texture, then set it.
+                                                            // example, if the texture channel property name is "_MainTex", then the first additional overlay would be _MainTex1.
+                                                            // The shader would need to be written in such a way as to do the combine in the shader itself.
+                                                            if (generatedMaterial.material.HasProperty(materialPropertyName))
+                                                            {
+                                                                generatedMaterial.material.SetTexture(materialPropertyName, overlay.textureList[j]);
+                                                            }
+                                                        } 
                                                     }
                                                 }
+                                            }
                                         }
                                     }
                                     break;

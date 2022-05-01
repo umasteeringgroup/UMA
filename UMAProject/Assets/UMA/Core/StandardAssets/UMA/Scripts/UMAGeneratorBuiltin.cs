@@ -177,6 +177,7 @@ namespace UMA
 #pragma warning disable 618
 		public void RebuildAllRenderTextures()
 		{
+			Debug.Log("Rebuilding all render textures");
 			var activeUmaData = umaData;
 			var storedGeneratorCoroutine = activeGeneratorCoroutine;
 
@@ -273,11 +274,13 @@ namespace UMA
 			}
         }
 
+
 		public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
 			UMAContextBase.IgnoreTag = ignoreTag;
 			if (data == null)
 				return true;
+
 
 			data.umaGenerator = this;
 			FreezeTime = true;
@@ -296,10 +299,13 @@ namespace UMA
 			if (!umaData.Validate())
 				return true;
 
+			RenderTexture rbackup = RenderTexture.active;
+
 			if (meshCombiner != null)
 			{
 				meshCombiner.Preprocess(umaData);
 			}
+
 			umaData.FireCharacterBegunEvents();
 			if (!umaData.rawAvatar)
 			{
@@ -341,7 +347,7 @@ namespace UMA
 
 			/* here, set any race specific blendshapes */
 			SkinnedMeshRenderer[] renderers = umaData.GetRenderers();
-
+		
 			if (autoSetRaceBlendshapes)
 			{
 				if (raceNames == null && UMAContextBase.Instance != null)
@@ -377,6 +383,8 @@ namespace UMA
 					}
 				}
 			}
+
+			RenderTexture.active = rbackup;
 
 			umaData.dirty = false;
 			if (fireEvents)
@@ -640,18 +648,21 @@ namespace UMA
 			if (umaData)
 			{
 				umaData.FirePreUpdateUMABody();
+
 				umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
 												// Put the skeleton into TPose so rotations will be valid for generating avatar
 				if (!umaData.rawAvatar)
 				{
 					umaData.GotoTPose();
 					umaData.ApplyDNA();
-					umaData.FireDNAAppliedEvents();
 				}
 				umaData.RestoreSavedItems();
 				// This has to happen for some reason, or the default models heads cave in.
 				umaData.skeleton.EndSkeletonUpdate();
 				UpdateAvatar(umaData);
+				// Blendshape DNA must be applied after the avatar is reset on the animator
+				umaData.PostApplyDNA();
+				umaData.FireDNAAppliedEvents();
 			}
 		}
 #pragma warning restore 618

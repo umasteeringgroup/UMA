@@ -3,15 +3,17 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c86f7fb3ea5bac04a857e5f4a0b30077, type: 3}
   m_Name: SweatPantAnklesMeshHideAsset
   m_EditorClassIdentifier: 
-  _asset: {fileID: 11400000, guid: 2041a0dad0ad3894ea9590072acacf65, type: 2}
+  _asset: {fileID: 0}
+  _assetSlotName: MaleLegs
   _serializedFlags:
-  - flags: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffffffffff00ff870078e721fef97ff8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1f0000706098fef1fffdffffffffffff
+  - flags: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f8fffffffff3f00a90100208601feb97ff8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff9ff7ffffffffffffffff0f080000000000fcf1fffdffffffffffff
     Count: 884

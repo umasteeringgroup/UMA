@@ -39,14 +39,25 @@ namespace UMA.CharacterSystem
 			avatar = GetComponent<DynamicCharacterAvatar>();
 			avatar.CharacterBegun.AddListener(CharacterBegun);
 			context = UMAContextBase.Instance;
+			lastState = RenderersEnabled; // only cause it to rebuild if it actually changes
 		}
 
         private void Update()
         {
             if (RenderersEnabled != lastState)
             {
+				if (avatar.activeRace.isValid == false)
+					return;
+
+				if (avatar.UpdatePending())
+					return;
+#if UMA_ADDRESSABLES
+				if (avatar.AddressableBuildPending)
+					return;
+#endif
 				if (avatar.hide)
 					return;
+
                 lastState = RenderersEnabled;
                 avatar.BuildCharacter();
             }

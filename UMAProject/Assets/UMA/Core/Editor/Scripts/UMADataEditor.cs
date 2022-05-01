@@ -14,8 +14,15 @@ namespace UMA.Editors
 
 		public override void OnEnable()
         {
-            if (!NeedsReenable())
-                return;
+            dnaEditor = null;
+            slotEditor = null;
+            InitializeUMADataEditor();
+        }
+
+        public void InitializeUMADataEditor()
+        {
+            //   if (!NeedsReenable())
+            //       return;
 
             showBaseEditor = false;
             _umaData = target as UMAData;
@@ -23,26 +30,26 @@ namespace UMA.Editors
             if (_umaData == null)
             {
                 _errorMessage = "UmaData is null";
-                return; 
+                return;
             }
             _recipe = _umaData.umaRecipe;
-			if (_recipe == null || _recipe.raceData == null)
-            {				
+            if (_recipe == null || _recipe.raceData == null)
+            {
                 _errorMessage = "Recipe data has not been generated.";
-            } 
+            }
             else
             {
-				DNAMasterEditor.umaGenerator = _umaData.umaGenerator;
+                DNAMasterEditor.umaGenerator = _umaData.umaGenerator;
                 dnaEditor = new DNAMasterEditor(_recipe);
                 slotEditor = new SlotMasterEditor(_recipe);
 
-				SetCurrentDnaTypeHashes();
+                SetCurrentDnaTypeHashes();
 
-				_rebuildOnLayout = true;
+                _rebuildOnLayout = true;
             }
         }
 
-		private void SetCurrentDnaTypeHashes()
+        private void SetCurrentDnaTypeHashes()
 		{
 			UMADnaBase[] allDna = (target as UMAData).umaRecipe.GetAllDna();
 			_currentDnaTypeHashes = new int[allDna.Length];
@@ -82,6 +89,10 @@ namespace UMA.Editors
         {
 			if (EditorApplication.isPlayingOrWillChangePlaymode)
 			{
+                if (dnaEditor == null)
+                {
+                    InitializeUMADataEditor();
+                }
 				if (GUIHelper.BeginCollapsableGroup(ref ShowOverrides, "Override Info"))
                 {
 					EditorGUILayout.LabelField("Object ID", _umaData.GetInstanceID().ToString());

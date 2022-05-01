@@ -26,7 +26,6 @@ namespace UMA
 
         private static void CleanupNativeArrays()
         {
-			//Debug.Log("Cleaned up SkinnedMesh Arrays in mesh combiner");
             if (nativeBoneWeights.IsCreated) nativeBoneWeights.Dispose();
             if (nativeBonesPerVertex.IsCreated) nativeBonesPerVertex.Dispose();
         }

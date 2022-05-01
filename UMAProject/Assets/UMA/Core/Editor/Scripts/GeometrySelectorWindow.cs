@@ -582,8 +582,8 @@ namespace UMA.Editors
                     screenSelectionRect.max = HandleUtility.GUIPointToScreenPixelCoordinate(new Vector2(selectionRect.xMax, selectionRect.yMin));
 
 
-                    int[] triangles = _Source.meshAsset.asset.meshData.submeshes[0].nativeTriangles.ToArray();
-                    for(int i = 0; i < triangles.Length; i+=3 )
+                    int[] triangles = _Source.meshAsset.asset.meshData.submeshes[_Source.meshAsset.asset.subMeshIndex].nativeTriangles.ToArray();
+                    for (int i = 0; i < triangles.Length; i+=3 )
                     {
                         bool found = false;
                         Vector3 center = new Vector3();

@@ -173,6 +173,12 @@ namespace UMA
 			if (deltas == null)
 				return true;
 
+			if (deltas.Length > 0)
+				return false;
+
+#if !ASSUME_EXPORTERS_KNOW_WHAT_THEY_ARE_DOING
+			return true;
+#else
 			for(int i = 0; i < deltas.Length; i++)
 			{
 				if (deltas[i].sqrMagnitude > 0.0001f)
@@ -180,6 +186,7 @@ namespace UMA
 			}
 
 			return true;
+#endif
 		}
 	}
 
@@ -379,7 +386,19 @@ namespace UMA
 #endif
 
 		public static Dictionary<int, NativeArray<int>> SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
-		public static void CleanupGlobalBuffers()
+
+
+		static UMAMeshData()
+		{
+			AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+		}
+
+        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        {
+			CleanupGlobalBuffers();
+        }
+
+        public static void CleanupGlobalBuffers()
         {
 			foreach (var d in SubmeshBuffers.Values)
 			{
@@ -524,7 +543,7 @@ namespace UMA
 			}
 
 			//Create the blendshape data on the slot asset from the unity mesh
-			#region Blendshape
+#region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
 
 			Vector3[] deltaVertices;
@@ -1020,7 +1039,7 @@ namespace UMA
         {
 			foreach(var sm in submeshes)
             {
-				if (sm.nativeTriangles.IsCreated)
+				if (sm.nativeTriangles.IsCreated) 
 					sm.nativeTriangles.Dispose();
             }
 

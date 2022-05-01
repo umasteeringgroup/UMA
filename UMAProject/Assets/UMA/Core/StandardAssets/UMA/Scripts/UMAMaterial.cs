@@ -44,9 +44,10 @@ namespace UMA
 
         public enum MaterialType
         {
-            Atlas = 1,
+            Atlas = 1, 
             NoAtlas = 2,
-            UseExistingMaterial = 4
+            UseExistingMaterial = 4,
+            UseExistingTextures = 8
         }
 
         public enum ChannelType
@@ -97,6 +98,13 @@ namespace UMA
 			UMA.CustomAssetUtility.CreateAsset<UMAMaterial>();
 		}
 #endif
+
+        public bool isNoAtlas()
+        {
+            if (materialType == MaterialType.Atlas) return true;
+            return false;
+        }
+
 		/// <summary>
 		/// Is the UMAMaterial based on a procedural material (substance)?
 		/// </summary>
