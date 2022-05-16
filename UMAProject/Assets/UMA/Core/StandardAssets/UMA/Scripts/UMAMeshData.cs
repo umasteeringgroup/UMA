@@ -617,6 +617,17 @@ namespace UMA
 			{
 				if (bone == null)    
                 {
+					if (Debug.isDebugBuild)
+                    {
+						if (lastBone != null)
+                        {
+							Debug.Log("Bone is null updating skinned mesh. Last good bone is " + lastBone.name);
+                        }
+						else
+                        {
+							Debug.Log("Bone is null updating skinned mesh. Last good bone is null");
+						}
+					}
 					continue;
                 }
 				lastBone = bone;
@@ -921,6 +932,30 @@ namespace UMA
             }
 #endif
         }
+
+		public Mesh ToUnityMesh()
+        {
+			Mesh mesh = new Mesh();
+			mesh.vertices = vertices;
+			mesh.normals = normals;
+			mesh.tangents = tangents;
+			mesh.uv = uv;
+			mesh.uv2 = uv2;
+			mesh.uv3 = uv3;
+			mesh.uv4 = uv4;
+			mesh.colors32 = colors32;
+			mesh.bindposes = bindPoses;
+
+			var subMeshCount = submeshes.Length;
+			mesh.subMeshCount = subMeshCount;
+			for (int i = 0; i < subMeshCount; i++)
+			{
+				NativeArray<int> triangles = submeshes[i].GetTriangles();
+				mesh.SetIndices(triangles, MeshTopology.Triangles, i);
+				triangles.Dispose();
+			}
+			return mesh;
+		}
 
         /// <summary>
         /// Applies the data to a Unity mesh.

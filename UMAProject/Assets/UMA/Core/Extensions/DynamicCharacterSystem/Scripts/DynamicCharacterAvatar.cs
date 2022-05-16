@@ -2619,7 +2619,8 @@ namespace UMA.CharacterSystem
             if (RecreateAnimatorOnRaceChange)
             {
                 GameObject.DestroyImmediate(thisAnimator);
-                thisAnimator = gameObject.AddComponent<Animator>(); 
+                // todo.. this sometimes blows up with the component already exists!!!
+                thisAnimator = gameObject.AddComponent<Animator>();
             }
 
             if (controllerToUse != null)

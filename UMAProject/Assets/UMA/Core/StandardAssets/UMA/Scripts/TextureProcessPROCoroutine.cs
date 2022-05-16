@@ -262,7 +262,6 @@ namespace UMA
                                 }
                                 foreach (var overlay in fragment.overlays)
                                 {
-                                    if (generatedMaterial.textureNameList == null)
                                     for (int j = 0; j < overlay.textureList.Length; j++)
                                     {
                                         if (overlay.textureList[j] != null)

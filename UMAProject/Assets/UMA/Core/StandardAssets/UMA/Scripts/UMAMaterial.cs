@@ -17,7 +17,13 @@ namespace UMA
 
         public enum CompressionSettings { None, Fast, HighQuality };
         public bool translateSRP;
+
+        [Tooltip("The material used either as a template, or as the direct Material")]
         public Material material;
+
+        [Tooltip("Used as a second pass when 'Use Existing Textures' is set. Leave null for most cases.")]
+        public Material secondPass;
+
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels;
 

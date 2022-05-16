@@ -128,6 +128,7 @@ namespace UMA.PoseTools
 
 				if (umaData.animator != null)
 				{
+					animator = umaData.animator;
 					jaw = animator.GetBoneTransform(HumanBodyBones.Jaw);
 					if (jaw != null)
 						jawHash = UMAUtils.StringToHash(jaw.name);

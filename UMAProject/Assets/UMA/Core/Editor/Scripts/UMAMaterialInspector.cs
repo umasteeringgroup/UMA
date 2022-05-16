@@ -120,6 +120,12 @@ namespace UMA.Editors
                 UMAMaterial.MaterialType NewMatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
                 if (MatType != NewMatType)
                 {
+                    if (NewMatType != UMAMaterial.MaterialType.UseExistingTextures)
+                    {
+                        // second Pass only used for UseExistingTextures
+                        var secondPassProperty = serializedObject.FindProperty("secondPass");
+                        secondPassProperty.SetValue<Object>(null);
+                    }
                     if (NewMatType == UMAMaterial.MaterialType.UseExistingMaterial)
                     {
                         var channelsProperty = serializedObject.FindProperty("channels");

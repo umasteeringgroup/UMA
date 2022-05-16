@@ -1,0 +1,23 @@
+{
+    "name": "JBooth.ShaderPackager.Editor",
+    "references": [
+        "GUID:a0792b212a555914396dda56372bbfdf"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.jbooth.better-shaders",
+            "expression": "",
+            "define": "__BETTERSHADERS__"
+        }
+    ],
+    "noEngineReferences": false
+}

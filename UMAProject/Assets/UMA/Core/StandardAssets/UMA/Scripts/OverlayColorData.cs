@@ -39,6 +39,32 @@ namespace UMA
 					channelMask[0] = value;
 			}
 		}
+
+		public Color Add
+        {
+			get
+            {
+				if (channelAdditiveMask.Length < 1)
+					return EmptyAdditive;
+				return channelAdditiveMask[0];
+            }
+        }
+
+
+		public Color GetTint(int channel)
+		{
+			if (channel < channelMask.Length)
+				return channelMask[channel];
+			return Color.white;
+		}
+
+		public Color GetAdditive(int channel)
+        {
+			if (channel < channelAdditiveMask.Length)
+				return channelAdditiveMask[channel];
+			return EmptyAdditive;
+		}
+
 		public int channelCount { get { return channelMask.Length; } }
 		public bool isDefault(int Channel)
 		{

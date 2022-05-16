@@ -125,7 +125,10 @@ namespace UMA
 			List<NativeArray<int>> submeshTriangles = new System.Collections.Generic.List<NativeArray<int>>(subMeshTriangleLength.Length);
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
 			{
-				submeshTriangles.Add(target.GetSubmeshBuffer(subMeshTriangleLength[i], i));
+				if (subMeshTriangleLength[i] > 0)
+				{
+					submeshTriangles.Add(target.GetSubmeshBuffer(subMeshTriangleLength[i], i));
+				}
 				subMeshTriangleLength[i] = 0;
 			}
 
