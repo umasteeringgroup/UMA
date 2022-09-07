@@ -481,8 +481,85 @@ namespace UMA
 				bool matModified = false;
 				string path = AssetDatabase.GUIDToAssetPath(guid);
 				UMAMaterial umat = AssetDatabase.LoadAssetAtPath<UMAMaterial>(path);
-				if (umat.material.shader.name.ToLower().StartsWith("standard") || umat.material.shader.name.ToLower().Contains("lit"))
+				var lowerShaderName = umat.material.shader.name.ToLower();
+				if (lowerShaderName.StartsWith("standard") || lowerShaderName.Contains("lit"))
 				{
+					if ((lowerShaderName.StartsWith("standard") && From == "_MainTex") || (lowerShaderName.Contains("lit") && To == "_MainTex"))
+					{
+						matModified = true;
+						var tex = umat.material.GetTexture(From);
+						if (lowerShaderName.StartsWith("standard"))
+						{
+							var mode = umat.material.GetFloat("_Mode");
+							umat.material.shader = Shader.Find("Universal Render Pipeline/Lit");
+							var keywords = umat.material.shaderKeywords;
+							switch (mode)
+							{
+								case 0:
+									umat.material.SetFloat("_Surface", 0);
+									break;
+								case 1:
+									umat.material.SetFloat("_Surface", 1);
+									umat.material.SetFloat("_AlphaClip", 1);
+									ArrayUtility.Add(ref keywords, "_SURFACE_TYPE_TRANSPARENT");
+									ArrayUtility.Add(ref keywords, "_ALPHATEST_ON");
+									break;
+								case 2:
+									umat.material.SetFloat("_Surface", 1);
+									umat.material.SetFloat("_SpecularHighlights", 0);
+									umat.material.SetFloat("_EnvironmentReflections", 0);
+									ArrayUtility.Add(ref keywords, "_SURFACE_TYPE_TRANSPARENT");
+									ArrayUtility.Add(ref keywords, "_SPECULARHIGHLIGHTS_OFF");
+									ArrayUtility.Add(ref keywords, "_ENVIRONMENTREFLECTIONS_OFF");
+									break;
+								case 3:
+									umat.material.SetFloat("_Surface", 1);
+									ArrayUtility.Add(ref keywords, "_SURFACE_TYPE_TRANSPARENT");
+									break;
+							}
+							umat.material.shaderKeywords = keywords;
+							if (lowerShaderName.Contains("specular"))
+							{
+								umat.material.SetFloat("_WorkflowMode", 0);
+							}
+							else
+							{
+								umat.material.SetFloat("_WorkflowMode", 1);
+							}
+							EditorUtility.SetDirty(umat.material);
+						}
+						else if (lowerShaderName.Contains("lit"))
+						{
+							var keywords = umat.material.shaderKeywords;
+							var transparent = umat.material.GetFloat("_Surface") > 0.5f;
+							if (umat.material.GetFloat("_WorkflowMode") == 1)
+							{
+								umat.material.shader = Shader.Find("Standard");
+							}
+							else
+							{
+								umat.material.shader = Shader.Find("Standard (Specular setup)");
+							}
+							if (!transparent)
+							{
+								umat.material.SetFloat("_Mode", 0);
+							}
+							else if (Array.IndexOf(keywords, "_SPECULARHIGHLIGHTS_OFF") >= 0)
+							{
+								umat.material.SetFloat("_Mode", 2);
+							}
+							else if (Array.IndexOf(keywords, "_ALPHATEST_ON") >= 0)
+							{
+								umat.material.SetFloat("_Mode", 1);
+							}
+							else
+							{
+								umat.material.SetFloat("_Mode", 3);
+							}
+						}
+						umat.material.SetTexture(To, tex);
+						EditorUtility.SetDirty(umat.material);
+					}
 					for (int i = 0; i < umat.channels.Length; i++)
 					{
 						if (umat.channels[i].materialPropertyName == From)
@@ -503,6 +580,7 @@ namespace UMA
                     {
 						umat.material.SetInt("_TwoSided", 0);
 					}
+					EditorUtility.SetDirty(umat.material);
 					matModified = true;
                 }
 				if (matModified)
