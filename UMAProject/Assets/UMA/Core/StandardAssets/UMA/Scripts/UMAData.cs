@@ -80,8 +80,11 @@ namespace UMA
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
 			if (renderers != null && idx < renderers.Length)
-				return renderers[idx];
-			return null;
+            {
+                return renderers[idx];
+            }
+
+            return null;
 		}
 
 		public int GetRendererIndex(SkinnedMeshRenderer renderer)
@@ -89,8 +92,10 @@ namespace UMA
 			for(int i = 0; i < renderers.Length; i++)
 			{
 				if (renderer == renderers[i])
-					return i;
-			}
+                {
+                    return i;
+                }
+            }
 
 			return -1;
 		}
@@ -127,26 +132,32 @@ namespace UMA
 		public bool AreRenderersEqual( List<UMARendererAsset> rendererList )
 		{
 			if (renderers.Length != rendererList.Count)
-				return false;
+            {
+                return false;
+            }
 
-			if (rendererAssets == null)
+            if (rendererAssets == null)
             {
 				return false;
             }
 			for(int i = 0; i < rendererAssets.Length; i++)
 			{
 				if (rendererAssets[i] != rendererList[i])
-					return false;
-			}
+                {
+                    return false;
+                }
+            }
 			return true;
 		}
 
 		public void ResetRendererSettings(int idx)
 		{
 			if (idx < 0 || idx >= renderers.Length)
-				return;
+            {
+                return;
+            }
 
-			UMARendererAsset.ResetRenderer(renderers[idx]);
+            UMARendererAsset.ResetRenderer(renderers[idx]);
 		}
 
 		[NonSerialized]
@@ -256,9 +267,11 @@ namespace UMA
 		public Dictionary<int, Texture2D> GetTextureOverrides(string OverlayName)
         {
 			if (TextureOverrides.ContainsKey(OverlayName))
-				return TextureOverrides[OverlayName];
+            {
+                return TextureOverrides[OverlayName];
+            }
 
-			return null;
+            return null;
 		}
 
 
@@ -375,36 +388,36 @@ namespace UMA
 		/// <summary>
 		/// Callback event when character has been updated.
 		/// </summary>
-		public event Action<UMAData> OnCharacterBegun { add { if (CharacterBegun == null) CharacterBegun = new UMADataEvent(); CharacterBegun.AddAction(value); } remove { CharacterBegun.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterBegun { add { if (CharacterBegun == null) { CharacterBegun = new UMADataEvent(); } CharacterBegun.AddAction(value); } remove { CharacterBegun.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event when character has been updated.
 		/// </summary>
-		public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) CharacterUpdated = new UMADataEvent(); CharacterUpdated.AddAction(value); } remove { CharacterUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) { CharacterUpdated = new UMADataEvent(); } CharacterUpdated.AddAction(value); } remove { CharacterUpdated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event when character has been completely created.
 		/// </summary>
-		public event Action<UMAData> OnCharacterCreated { add { if (CharacterCreated == null) CharacterCreated = new UMADataEvent(); CharacterCreated.AddAction(value); } remove { CharacterCreated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterCreated { add { if (CharacterCreated == null) { CharacterCreated = new UMADataEvent(); } CharacterCreated.AddAction(value); } remove { CharacterCreated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event when character has been destroyed.
 		/// </summary>
-		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) CharacterDestroyed = new UMADataEvent(); CharacterDestroyed.AddAction(value); } remove { CharacterDestroyed.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) { CharacterDestroyed = new UMADataEvent(); } CharacterDestroyed.AddAction(value); } remove { CharacterDestroyed.RemoveAction(value); } }
 
 		/// <summary>
 		/// Callback event when character DNA has been updated.
 		/// </summary>
-		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) CharacterDnaUpdated = new UMADataEvent(); CharacterDnaUpdated.AddAction(value); } remove { CharacterDnaUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) { CharacterDnaUpdated = new UMADataEvent(); } CharacterDnaUpdated.AddAction(value); } remove { CharacterDnaUpdated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event used by UMA to make last minute tweaks
 		/// </summary>
-		public event Action<UMAData> OnCharacterBeforeUpdated { add { if (CharacterBeforeUpdated == null) CharacterBeforeUpdated = new UMADataEvent(); CharacterBeforeUpdated.AddAction(value);} remove { CharacterBeforeUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterBeforeUpdated { add { if (CharacterBeforeUpdated == null) { CharacterBeforeUpdated = new UMADataEvent(); } CharacterBeforeUpdated.AddAction(value);} remove { CharacterBeforeUpdated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event used by UMA to make last minute tweaks
 		/// </summary>
-		public event Action<UMAData> OnCharacterBeforeDnaUpdated { add { if (CharacterBeforeDnaUpdated == null) CharacterBeforeDnaUpdated = new UMADataEvent(); CharacterBeforeDnaUpdated.AddAction(value);} remove { CharacterBeforeDnaUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterBeforeDnaUpdated { add { if (CharacterBeforeDnaUpdated == null) { CharacterBeforeDnaUpdated = new UMADataEvent(); } CharacterBeforeDnaUpdated.AddAction(value);} remove { CharacterBeforeDnaUpdated.RemoveAction(value); } }
 
-		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) AnimatorStateSaved = new UMADataEvent(); AnimatorStateSaved.AddAction(value); } remove { AnimatorStateSaved.RemoveAction(value); } }
-		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) AnimatorStateRestored = new UMADataEvent(); AnimatorStateRestored.AddAction(value); } remove { AnimatorStateRestored.RemoveAction(value); } }
-		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) PreUpdateUMABody = new UMADataEvent(); PreUpdateUMABody.AddAction(value); } remove { PreUpdateUMABody.RemoveAction(value); } } //VES added
+		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) { AnimatorStateSaved = new UMADataEvent(); } AnimatorStateSaved.AddAction(value); } remove { AnimatorStateSaved.RemoveAction(value); } }
+		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) { AnimatorStateRestored = new UMADataEvent(); } AnimatorStateRestored.AddAction(value); } remove { AnimatorStateRestored.RemoveAction(value); } }
+		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) { PreUpdateUMABody = new UMADataEvent(); } PreUpdateUMABody.AddAction(value); } remove { PreUpdateUMABody.RemoveAction(value); } } //VES added
 
 		public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;
@@ -472,13 +485,19 @@ namespace UMA
 			if (!umaGenerator)
             {
 				if (UMAContextBase.Instance != null)
-				umaGenerator = UMAContextBase.Instance.gameObject.GetComponent<UMAGeneratorBase>();
+                {
+                    umaGenerator = UMAContextBase.Instance.gameObject.GetComponent<UMAGeneratorBase>();
+                }
             }
 			if (!umaGenerator)
 			{
 				var generatorGO = GameObject.Find("UMAGenerator");
-				if (generatorGO == null) return;
-				umaGenerator = generatorGO.GetComponent<UMAGeneratorBase>();
+				if (generatorGO == null)
+                {
+                    return;
+                }
+
+                umaGenerator = generatorGO.GetComponent<UMAGeneratorBase>();
 			}
 			Initialize(umaGenerator);
 		}
@@ -488,9 +507,11 @@ namespace UMA
 			firstBake = true;
 
 			if (umaGenerator == null)
-				umaGenerator = generator;
+            {
+                umaGenerator = generator;
+            }
 
-			if (_umaRecipe == null)
+            if (_umaRecipe == null)
 			{
 				_umaRecipe = new UMARecipe();
 			}
@@ -525,20 +546,30 @@ namespace UMA
 
 		public bool Validate()
 		{
-			if (Application.isBatchMode) return true;
-			bool valid = true;
+			if (Application.isBatchMode)
+            {
+                return true;
+            }
+
+            bool valid = true;
 			if (umaGenerator == null)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("UMA data missing required generator!");
-				valid = false;
+                {
+                    Debug.LogError("UMA data missing required generator!");
+                }
+
+                valid = false;
 			}
 
 			if (_umaRecipe == null)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("UMA data missing required recipe!");
-				valid = false;
+                {
+                    Debug.LogError("UMA data missing required recipe!");
+                }
+
+                valid = false;
 			}
 			else
 			{
@@ -550,16 +581,21 @@ namespace UMA
 				if (Application.isPlaying)
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogWarning("No animation controller supplied.");
-				}
+                    {
+                        Debug.LogWarning("No animation controller supplied.");
+                    }
+                }
 			}
 
 #if UNITY_EDITOR
 			if (!valid && UnityEditor.EditorApplication.isPlaying)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("UMAData: Recipe or Generator is not valid!");
-				UnityEditor.EditorApplication.isPaused = true;
+                {
+                    Debug.LogError("UMAData: Recipe or Generator is not valid!");
+                }
+
+                UnityEditor.EditorApplication.isPaused = true;
 			}
 #endif
 
@@ -581,12 +617,16 @@ namespace UMA
 			public List<Texture> GetTextures(UMAMaterial umaMaterial, int textureChannel)
 			{
 				if (umaMaterial == null)
-					return null;
+                {
+                    return null;
+                }
 
-				if (textureChannel < 0 || textureChannel > umaMaterial.channels.Length)
-					return null;
+                if (textureChannel < 0 || textureChannel > umaMaterial.channels.Length)
+                {
+                    return null;
+                }
 
-				List<Texture> textures = new List<Texture>();
+                List<Texture> textures = new List<Texture>();
 
 				foreach (GeneratedMaterial generatedMaterial in materials)
 				{
@@ -677,10 +717,12 @@ namespace UMA
 			public Color GetMultiplier(int overlay, int textureType)
 			{
 				var c = Color.white;
-				if (overlay >= overlayData.Length) 
-					return c;
+				if (overlay >= overlayData.Length)
+                {
+                    return c;
+                }
 
-				if (channelMask[overlay] != null && channelMask[overlay].Length > 0)
+                if (channelMask[overlay] != null && channelMask[overlay].Length > 0)
 				{
 					if (textureType < channelMask[overlay].Length)
 					{
@@ -749,15 +791,19 @@ namespace UMA
 			else
 			{
 				for (int i = 0; i < rendererCount; i++)
-					GetRenderer(i).enabled = true;
-			}
+                {
+                    GetRenderer(i).enabled = true;
+                }
+            }
 		}
 
 		public void Hide()
 		{
 			for (int i = 0; i < rendererCount; i++)
-				GetRenderer(i).enabled = false;
-		}
+            {
+                GetRenderer(i).enabled = false;
+            }
+        }
 
 		[System.Serializable]
 		public class textureData
@@ -789,8 +835,10 @@ namespace UMA
 					{
 						_umaDna = new Dictionary<int, UMADnaBase>();
 						for (int i = 0; i < dnaValues.Count; i++)
-							_umaDna.Add(dnaValues[i].DNATypeHash, dnaValues[i]);
-					}
+                        {
+                            _umaDna.Add(dnaValues[i].DNATypeHash, dnaValues[i]);
+                        }
+                    }
 					return _umaDna;
 				}
 				set
@@ -815,8 +863,12 @@ namespace UMA
 			{
 				foreach (SlotData sd in slotDataList)
 				{
-					if (!sd) continue;
-					sd.meshHideMask = null;
+					if (!sd)
+                    {
+                        continue;
+                    }
+
+                    sd.meshHideMask = null;
 					//Add MeshHideAsset here
 					if (MeshHideDictionary.ContainsKey(sd.slotName))
 					{   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
@@ -836,8 +888,11 @@ namespace UMA
 				if (raceData == null)
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogError("UMA recipe missing required race!");
-					valid = false;
+                    {
+                        Debug.LogError("UMA recipe missing required race!");
+                    }
+
+                    valid = false;
 				}
 				else
 				{
@@ -847,8 +902,11 @@ namespace UMA
 				if (slotDataList == null || slotDataList.Length == 0)
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogError("UMA recipe slot list is empty!");
-					valid = false;
+                    {
+                        Debug.LogError("UMA recipe slot list is empty!");
+                    }
+
+                    valid = false;
 				}
 				int slotDataCount = 0;
 				for (int i = 0; i < slotDataList.Length; i++)
@@ -863,8 +921,11 @@ namespace UMA
 				if (slotDataCount < 1)
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogError("UMA recipe slot list contains only null objects!");
-					valid = false;
+                    {
+                        Debug.LogError("UMA recipe slot list contains only null objects!");
+                    }
+
+                    valid = false;
 				}
 				return valid;
 			}
@@ -969,12 +1030,11 @@ namespace UMA
 			/// <param name="type">Type.</param>
 			public UMADnaBase GetDna(Type type)
 			{
-				UMADnaBase dna;
-				if (umaDna.TryGetValue(UMAUtils.StringToHash(type.Name), out dna))
-				{
-					return dna;
-				}
-				return null;
+                if (umaDna.TryGetValue(UMAUtils.StringToHash(type.Name), out var dna))
+                {
+                    return dna;
+                }
+                return null;
 			}
 			/// <summary>
 			/// Get DNA of specified type.
@@ -1098,11 +1158,19 @@ namespace UMA
 
 			public void RemoveSlot(SlotData sd)
             {
-				if (sd == null) return;
-				for (int i = 0; i < slotDataList.Length; i++)
+				if (sd == null)
+                {
+                    return;
+                }
+
+                for (int i = 0; i < slotDataList.Length; i++)
 				{
-					if (slotDataList[i] == null) continue;
-					if (slotDataList[i].slotName == sd.slotName)
+					if (slotDataList[i] == null)
+                    {
+                        continue;
+                    }
+
+                    if (slotDataList[i].slotName == sd.slotName)
                     {
 						slotDataList[i] = null;
                     }
@@ -1117,9 +1185,11 @@ namespace UMA
 			public SlotData MergeSlot(SlotData slot, bool dontSerialize, bool mergeMatchingOverlays = true)
 			{
 				if ((slot == null) || (slot.asset == null))
-					return null;
+                {
+                    return null;
+                }
 
-				int overlayCount = 0;
+                int overlayCount = 0;
 #if TEST_INSERTFIX
 				int nullFound = -1;
 #endif
@@ -1220,8 +1290,11 @@ namespace UMA
 			public SlotData GetSlot(int index)
 			{
 				if (index < slotDataList.Length)
-					return slotDataList[index];
-				return null;
+                {
+                    return slotDataList[index];
+                }
+
+                return null;
 			}
 
 			/// <summary>
@@ -1251,31 +1324,43 @@ namespace UMA
 			public static bool OverlayListsMatch(List<OverlayData> list1, List<OverlayData> list2)
 			{
 				if ((list1 == null) || (list2 == null))
-					return false;
-				if ((list1.Count == 0) || (list1.Count != list2.Count))
-					return false;
+                {
+                    return false;
+                }
 
-				for (int i = 0; i < list1.Count; i++)
+                if ((list1.Count == 0) || (list1.Count != list2.Count))
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < list1.Count; i++)
 				{
 					OverlayData overlay1 = list1[i];
 					if (!(overlay1))
-						continue;
-					bool found = false;
+                    {
+                        continue;
+                    }
+
+                    bool found = false;
 					for (int j = 0; j < list2.Count; j++)
 					{
 						OverlayData overlay2 = list2[i];
 						if (!(overlay2))
-							continue;
+                        {
+                            continue;
+                        }
 
-						if (OverlayData.Equivalent(overlay1, overlay2))
+                        if (OverlayData.Equivalent(overlay1, overlay2))
 						{
 							found = true;
 							break;
 						}
 					}
 					if (!found)
-						return false;
-				}
+                    {
+                        return false;
+                    }
+                }
 
 				return true;
 			}
@@ -1288,8 +1373,11 @@ namespace UMA
 				for (int i = 0; i < slotDataList.Length; i++)
 				{
 					if (slotDataList[i] == null)
-						continue;
-					List<OverlayData> slotOverlays = slotDataList[i].GetOverlayList();
+                    {
+                        continue;
+                    }
+
+                    List<OverlayData> slotOverlays = slotDataList[i].GetOverlayList();
 					for(int oi= 0; oi < slotOverlays.Count; oi++)
 					{
 						slotOverlays[oi].colorComponentAdjusters.Clear();
@@ -1305,13 +1393,19 @@ namespace UMA
 				for (int i = 0; i < slotDataList.Length; i++)
 				{
 					if (slotDataList[i] == null)
-						continue;
-					List<OverlayData> slotOverlays = slotDataList[i].GetOverlayList();
+                    {
+                        continue;
+                    }
+
+                    List<OverlayData> slotOverlays = slotDataList[i].GetOverlayList();
 					for (int j = i + 1; j < slotDataList.Length; j++)
 					{
 						if (slotDataList[j] == null)
-							continue;
-						List<OverlayData> slot2Overlays = slotDataList[j].GetOverlayList();
+                        {
+                            continue;
+                        }
+
+                        List<OverlayData> slot2Overlays = slotDataList[j].GetOverlayList();
 						if (OverlayListsMatch(slotOverlays, slot2Overlays))
 						{
 							slotDataList[j].SetOverlayList(slotOverlays);
@@ -1366,8 +1460,10 @@ namespace UMA
 					else
 					{
 						if (Debug.isDebugBuild)
-								Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
-					}
+                        {
+                            Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
+                        }
+                    }
 				}
 			}
 
@@ -1393,8 +1489,10 @@ namespace UMA
 					else
 					{
 						if (Debug.isDebugBuild)
-							Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
-					}
+                        {
+                            Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
+                        }
+                    }
 				}
 			}
 
@@ -1412,11 +1510,16 @@ namespace UMA
 						//'old' dna converters return a typehash based on the type name. 
 						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
 						if (dnaTypeHash == 0)
-						continue;
-						//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
-						//check the hash isn't already in the list
-						if(!requiredDnas.Contains(dnaTypeHash))
-							requiredDnas.Add(dnaTypeHash);
+                        {
+                            continue;
+                        }
+                        //DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+                        //check the hash isn't already in the list
+                        if (!requiredDnas.Contains(dnaTypeHash))
+                        {
+                            requiredDnas.Add(dnaTypeHash);
+                        }
+
                         if (!umaDna.ContainsKey(dnaTypeHash))
 						{
 							var dna = converter.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
@@ -1451,12 +1554,17 @@ namespace UMA
 						//'old' dna converters return a typehash based on the type name. 
 						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
 						if (dnaTypeHash == 0)
-							continue;
-						//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
-						//check the hash isn't already in the list
-						if (!requiredDnas.Contains(dnaTypeHash))
-							requiredDnas.Add(dnaTypeHash);
-						if (!umaDna.ContainsKey(dnaTypeHash))
+                        {
+                            continue;
+                        }
+                        //DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+                        //check the hash isn't already in the list
+                        if (!requiredDnas.Contains(dnaTypeHash))
+                        {
+                            requiredDnas.Add(dnaTypeHash);
+                        }
+
+                        if (!umaDna.ContainsKey(dnaTypeHash))
 						{
 							var dna = slotData.asset.slotDNA.DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
 							dna.DNATypeHash = dnaTypeHash;
@@ -1480,16 +1588,20 @@ namespace UMA
 				foreach (int addedDNAHash in umaDNAConverters.Keys)
 				{
 					if(!requiredDnas.Contains(addedDNAHash))
-						requiredDnas.Add(addedDNAHash);
-				}
+                    {
+                        requiredDnas.Add(addedDNAHash);
+                    }
+                }
 
 				//now remove any we no longer need
 				var keysToRemove = new List<int>();
 				foreach(var kvp in umaDna)
 				{
 					if (!requiredDnas.Contains(kvp.Key))
-						keysToRemove.Add(kvp.Key);
-				}
+                    {
+                        keysToRemove.Add(kvp.Key);
+                    }
+                }
 				for(int i = 0; i < keysToRemove.Count; i++)
 				{
 					RemoveDna(keysToRemove[i]);
@@ -1512,14 +1624,20 @@ namespace UMA
 						if(converter == null)
 						{
 							if (Debug.isDebugBuild)
-								Debug.LogWarning("RaceData " + raceData.raceName + " has a missing DNAConverter");
-							continue;
+                            {
+                                Debug.LogWarning("RaceData " + raceData.raceName + " has a missing DNAConverter");
+                            }
+
+                            continue;
 						}
 						//'old' dna converters return a typehash based on the type name. 
 						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
 						if (converter.DNATypeHash == 0)
-							continue;
-						AddDNAUpdater(converter);
+                        {
+                            continue;
+                        }
+
+                        AddDNAUpdater(converter);
 					}
 				}
 			}
@@ -1530,15 +1648,21 @@ namespace UMA
 			/// <param name="dnaConverter">DNA converter.</param>
 			public void AddDNAUpdater(IDNAConverter dnaConverter)
 			{
-				if (dnaConverter == null) return;
-				//DynamicDNAConverter:: We need to SET these values using the TypeHash since 
-				//just getting the hash of the DNAType will set the same value for all instance of a DynamicDNAConverter
-				//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
-				if (dnaConverter.PreApplyDnaAction != null)
+				if (dnaConverter == null)
+                {
+                    return;
+                }
+                //DynamicDNAConverter:: We need to SET these values using the TypeHash since 
+                //just getting the hash of the DNAType will set the same value for all instance of a DynamicDNAConverter
+                //DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+                if (dnaConverter.PreApplyDnaAction != null)
 				{
 					if (!umaDNAPreApplyConverters.ContainsKey(dnaConverter.DNATypeHash))
-						umaDNAPreApplyConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
-					if (!umaDNAPreApplyConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.PreApplyDnaAction))
+                    {
+                        umaDNAPreApplyConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
+                    }
+
+                    if (!umaDNAPreApplyConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.PreApplyDnaAction))
 					{
 						umaDNAPreApplyConverters[dnaConverter.DNATypeHash].Add(dnaConverter.PreApplyDnaAction);
 					}
@@ -1546,22 +1670,30 @@ namespace UMA
 				if (dnaConverter.PostApplyDnaAction != null)
 				{
 					if (!umaDNAPostApplyConverters.ContainsKey(dnaConverter.DNATypeHash))
-						umaDNAPostApplyConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
-					if (!umaDNAPostApplyConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.PostApplyDnaAction))
+                    {
+                        umaDNAPostApplyConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
+                    }
+
+                    if (!umaDNAPostApplyConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.PostApplyDnaAction))
 					{
 						umaDNAPostApplyConverters[dnaConverter.DNATypeHash].Add(dnaConverter.PostApplyDnaAction);
 					}
 				}
 
 				if (!umaDNAConverters.ContainsKey(dnaConverter.DNATypeHash))
-					umaDNAConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
-				if (!umaDNAConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.ApplyDnaAction))
+                {
+                    umaDNAConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
+                }
+
+                if (!umaDNAConverters[dnaConverter.DNATypeHash].Contains(dnaConverter.ApplyDnaAction))
 				{
 					umaDNAConverters[dnaConverter.DNATypeHash].Add(dnaConverter.ApplyDnaAction);
 				}
 				else
-					Debug.LogWarning("The applyAction for " + dnaConverter + " already existed in the list");
-			}
+                {
+                    Debug.LogWarning("The applyAction for " + dnaConverter + " already existed in the list");
+                }
+            }
 
 			/// <summary>
 			/// Shallow copy of UMARecipe.
@@ -1584,15 +1716,19 @@ namespace UMA
 			public void Merge(UMARecipe recipe, bool dontSerialize, bool mergeMatchingOverlays = true, bool mergeDNA = true, string raceName = null)
 			{
 				if (recipe == null)
-					return;
+                {
+                    return;
+                }
 
-				if (mergeDNA)
+                if (mergeDNA)
 				{
 					if ((recipe.raceData != null) && (recipe.raceData != raceData))
 					{
 						if (Debug.isDebugBuild)
-							Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
-					}
+                        {
+                            Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
+                        }
+                    }
 					foreach (var dnaEntry in recipe.umaDna)
 					{
 						var destDNA = GetOrCreateDna(dnaEntry.Value.GetType(), dnaEntry.Key);
@@ -1602,8 +1738,11 @@ namespace UMA
 
 				mergedSharedColors.Clear();
 				if (sharedColors == null)
-					sharedColors = new OverlayColorData[0];
-				if (recipe.sharedColors != null)
+                {
+                    sharedColors = new OverlayColorData[0];
+                }
+
+                if (recipe.sharedColors != null)
 				{
 					for (int i = 0; i < sharedColors.Length; i++)
 					{
@@ -1635,8 +1774,11 @@ namespace UMA
 				}
 
 				if (slotDataList == null)
-					slotDataList = new SlotData[0];
-				if (raceName != null)
+                {
+                    slotDataList = new SlotData[0];
+                }
+
+                if (raceName != null)
 				{
 					if (recipe.slotDataList != null)
 					{
@@ -1644,9 +1786,12 @@ namespace UMA
 						{
 							SlotData sd = recipe.slotDataList[i];
 
-							if (sd == null) continue;
+							if (sd == null)
+                            {
+                                continue;
+                            }
 
-							if (sd.HasRace(raceName))
+                            if (sd.HasRace(raceName))
 							{
 								MergeSlot(sd, dontSerialize, mergeMatchingOverlays);
 							}
@@ -1760,8 +1905,12 @@ namespace UMA
 
 		public virtual void Dirty()
 		{
-			if (dirty) return;
-			dirty = true;
+			if (dirty)
+            {
+                return;
+            }
+
+            dirty = true;
 			if (!umaGenerator)
 			{
 				umaGenerator = FindObjectOfType<UMAGeneratorBase>();
@@ -1775,9 +1924,11 @@ namespace UMA
 		void OnDestroy()
 		{
 			if (staticCharacter)
-				return;
+            {
+                return;
+            }
 
-			if (isOfficiallyCreated)
+            if (isOfficiallyCreated)
 			{
 				if (CharacterDestroyed != null)
 				{
@@ -1862,19 +2013,21 @@ namespace UMA
 			{
 				var renderer = GetRenderer(j);
 				if (renderer == null)
-					continue;
-				/* This is being cleaned up in CleanTextures
-				var mats = renderer.sharedMaterials;
-				for (int i = 0; i < mats.Length; i++)
-				{
-					if (mats[i])
-					{
+                {
+                    continue;
+                }
+                /* This is being cleaned up in CleanTextures
+var mats = renderer.sharedMaterials;
+for (int i = 0; i < mats.Length; i++)
+{
+    if (mats[i])
+    {
 
-						UMAUtils.DestroySceneObject(mats[i]);
-					}
-				} */
+        UMAUtils.DestroySceneObject(mats[i]);
+    }
+} */
 
-				if (destroyRenderer)
+                if (destroyRenderer)
 				{
 					// need to kill cloth first if it exists.
 					var cloth = renderer.gameObject.GetComponent<Cloth>();
@@ -2080,8 +2233,12 @@ namespace UMA
 				{
 					var bone = tpose.boneInfo[i];
 					var hash = UMAUtils.StringToHash(bone.name);
-					if (!skeleton.HasBone(hash)) continue;
-					skeleton.Set(hash, bone.position, bone.scale, bone.rotation);
+					if (!skeleton.HasBone(hash))
+                    {
+                        continue;
+                    }
+
+                    skeleton.Set(hash, bone.position, bone.scale, bone.rotation);
 				}
 			}
 		}
@@ -2102,9 +2259,11 @@ namespace UMA
 		public void FireCharacterBegunEvents()
 		{
 			if (CharacterBegun != null)
-				CharacterBegun.Invoke(this);
+            {
+                CharacterBegun.Invoke(this);
+            }
 
-			foreach (var slotData in umaRecipe.slotDataList)
+            foreach (var slotData in umaRecipe.slotDataList)
 			{
 				if (slotData != null && slotData.asset.CharacterBegun != null)
 				{
@@ -2149,8 +2308,10 @@ namespace UMA
 				{
 					slotData.asset.Completed(this);
 					if (fireEvents)
-						slotData.asset.CharacterCompleted.Invoke(this);
-				}
+                    {
+                        slotData.asset.CharacterCompleted.Invoke(this);
+                    }
+                }
 			}
 		}
 
@@ -2208,7 +2369,9 @@ namespace UMA
             }
 
             if (rebuild)
+            {
                 Dirty(true, true, true);
+            }
         }
 
         /// <summary>
@@ -2224,7 +2387,9 @@ namespace UMA
             }
 
             if (rebuild)
+            {
                 Dirty(true, true, true);
+            }
         }
 
 		/// <summary>
@@ -2284,27 +2449,35 @@ namespace UMA
 			if (shapeIndex < 0) 
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError ("GetBlendShapeName: Index is less than zero!");
+                {
+                    Debug.LogError ("GetBlendShapeName: Index is less than zero!");
+                }
 
-				return "";
+                return "";
 			}
 				
 			if (rendererIndex >= rendererCount) //for multi-renderer support
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError ("GetBlendShapeName: This renderer doesn't exist!");
+                {
+                    Debug.LogError ("GetBlendShapeName: This renderer doesn't exist!");
+                }
 
-				return "";
+                return "";
 			}
 
 			//for multi-renderer support
 			if( shapeIndex < renderers [rendererIndex].sharedMesh.blendShapeCount )
-				return renderers [rendererIndex].sharedMesh.GetBlendShapeName (shapeIndex);
+            {
+                return renderers [rendererIndex].sharedMesh.GetBlendShapeName (shapeIndex);
+            }
 
-			if (Debug.isDebugBuild)
-				Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
+            if (Debug.isDebugBuild)
+            {
+                Debug.LogError ("GetBlendShapeName: no blendshape at index " + shapeIndex + "!");
+            }
 
-			return "";
+            return "";
 		}
 			
 #endregion

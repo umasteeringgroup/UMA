@@ -21,8 +21,23 @@ namespace UMA
 		/// <param name="context">Context.</param>
 		public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContextBase context = null)
 		{
-			if ((recipeString == null) || (recipeString.Length == 0)) return new UMAPackRecipe();
-				return JsonUtility.FromJson<UMAPackRecipe>(recipeString);
+            if ((recipeString == null) || (recipeString.Length == 0))
+            {
+                return new UMAPackRecipe();
+            }
+            var rcpe =JsonUtility.FromJson<UMAPackRecipe>(recipeString);
+            if (string.IsNullOrEmpty(rcpe.race))
+            {
+                foreach(string s in this.compatibleRaces)
+                {
+                    if (UMAAssetIndexer.Instance.HasAsset<RaceData>(s))
+                    {
+                        rcpe.race = s;
+                        break;
+                    }
+                }
+            }
+            return rcpe;
 		}
 
 		/// <summary>

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.IO;
 using System;
 using System.Collections.Generic;
@@ -807,6 +807,22 @@ namespace UMA
                 items.Remove(key);
             }
             UMAAssetIndexer.Instance.ForceSave();
+        }
+
+        public List<AssetItem>  GetOrphans(Type type)
+        {
+            var items = UMAAssetIndexer.Instance.GetAssetDictionary(type);
+            var returnval = new List<AssetItem>();
+
+            foreach (KeyValuePair<string, AssetItem> pair in items)
+            {
+                if (pair.Value.IsAddressable == false && pair.Value.IsResource == false)
+                {
+                    returnval.Add(pair.Value);
+                }
+            }
+
+            return returnval;
         }
 
         public void ReleaseReferences(Type type)

@@ -440,11 +440,14 @@ namespace UMA
 						{
 							if (mats.Length > materialIndex) 
 							{
-								var val = mats[materialIndex].GetTag("Keep", false);
-								if (string.IsNullOrEmpty(val))
-								{
-									UMAUtils.DestroySceneObject(mats[materialIndex]);
-								}
+                                if (mats[materialIndex] != null)
+                                {
+                                    var val = mats[materialIndex].GetTag("Keep", false);
+                                    if (string.IsNullOrEmpty(val))
+                                    {
+                                        UMAUtils.DestroySceneObject(mats[materialIndex]);
+                                    }
+                                }
 							}
 							else
                             {

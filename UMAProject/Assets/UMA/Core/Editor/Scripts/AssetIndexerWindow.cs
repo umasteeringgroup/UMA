@@ -397,6 +397,27 @@ namespace UMA.Controls
 					Repaint();
 				}
 			});
+
+            AddMenuItemWithCallback(_AddressablesMenu, "Select Orphaned Slots", () =>
+            {
+                if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this!", "OK", "Cancel"))
+                {
+                    List<AssetItem> orphans = UMAAddressablesSupport.Instance.GetOrphans(typeof(SlotDataAsset));
+                    SelectByAssetItems(orphans);
+                    Repaint();
+                }
+            });
+
+            AddMenuItemWithCallback(_AddressablesMenu, "Select Orphaned Overlays", () =>
+            {
+                if (EditorUtility.DisplayDialog("Warning!", "You *must* build the addressable groups, and mark any slots you want to keep as 'keep' before running this.", "OK", "Cancel"))
+                {
+                    List<AssetItem> orphans = UMAAddressablesSupport.Instance.GetOrphans(typeof(OverlayDataAsset));
+                    SelectByAssetItems(orphans);
+                    Repaint();
+                }
+            });
+
 #else
 			AddMenuItemWithCallback(_AddressablesMenu, "Enable Addressables (Package must be installed first)", () =>
 			{
@@ -410,10 +431,10 @@ namespace UMA.Controls
 				}
 			});
 #endif
-			// ***********************************************************************************
-			// Items Menu items
-			// ***********************************************************************************
-			AddMenuItemWithCallback(ItemsMenu, "Select All", () =>
+            // ***********************************************************************************
+            // Items Menu items
+            // ***********************************************************************************
+            AddMenuItemWithCallback(ItemsMenu, "Select All", () =>
 			{
 				var treeElements = new List<AssetTreeElement>();
 				TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
@@ -544,7 +565,28 @@ namespace UMA.Controls
 				Repaint();
 				return; 
 			});
-			AddMenuItemWithCallback(ItemsMenu, "Force Selected Items to Save", () => 
+
+
+
+            AddMenuItemWithCallback(ItemsMenu, "Permanently delete Selected", () =>
+            {
+                if (EditorUtility.DisplayDialog("Warning!", "This is permanent! There is NO undo! If you really want to continue, press 'Delete Selected'", "Delete Selected", "Cancel"))
+                {
+                    DeleteSelected();
+                    m_Initialized = false;
+                    Repaint();
+                    return;
+                }
+            });
+
+            AddMenuItemWithCallback(ItemsMenu, "Calculate size of selected items", () =>
+            {
+                int sizek = CalculateSelectedSize();
+                EditorUtility.DisplayDialog("Calculate Size", $"Size of selected items is {sizek}k", "OK");
+            });
+
+
+            AddMenuItemWithCallback(ItemsMenu, "Force Selected Items to Save", () => 
 			{
 				ForceSave();
 				m_Initialized = false;
@@ -1339,7 +1381,62 @@ namespace UMA.Controls
 			EditorUtility.ClearProgressBar();
 		}
 
-		private void RemoveSelected()
+        private void DeleteSelected()
+        {
+            var treeElements = new List<AssetTreeElement>();
+            TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+            EditorUtility.DisplayProgressBar("Deleting Assets", "Finding and deleting selected assets from filesystem", 0.0f);
+
+            float total = 0.0f;
+            foreach (AssetTreeElement tr in treeElements)
+            {
+                if (tr.ai != null && tr.Checked)
+                {
+                    total += 1.0f;
+                }
+            }
+
+            if (total > 0.0f)
+            {
+                float current = 0.0f;
+                foreach (AssetTreeElement tr in treeElements)
+                {
+                    if (tr.ai != null && tr.Checked)
+                    {
+
+                        EditorUtility.DisplayProgressBar("Deleting Assets", "Deleting Item: " + tr.ai.EvilName, current / total);
+                        UAI.DeleteAsset(tr.ai._Type, tr.ai._Name);
+                        current += 1.0f;
+                    }
+                }
+            }
+            EditorUtility.DisplayProgressBar("Deleting Assets", "Save Index to Disk", 1.0f);
+            UAI.ForceSave();
+            EditorUtility.ClearProgressBar();
+        }
+
+        private int CalculateSelectedSize()
+        {
+            long kbytes = 0;
+
+            var treeElements = new List<AssetTreeElement>();
+            TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+            foreach (AssetTreeElement tr in treeElements)
+            {
+                if (tr.ai != null && tr.Checked)
+                {
+                    System.IO.FileInfo fi = new System.IO.FileInfo(tr.ai._Path);
+
+                    kbytes += fi.Length;
+                }
+            }
+
+            return (int)(kbytes / 1024);
+        }
+
+        private void RemoveSelected()
 		{
 			var treeElements = new List<AssetTreeElement>();
 			TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
@@ -1372,7 +1469,6 @@ namespace UMA.Controls
 			EditorUtility.DisplayProgressBar("Removing Assets", "Save Index to Disk", 1.0f);
 			UAI.ForceSave();
 			EditorUtility.ClearProgressBar();
-
 		}
 
 #endregion

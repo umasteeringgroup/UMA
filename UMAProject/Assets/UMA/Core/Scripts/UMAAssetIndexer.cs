@@ -25,6 +25,7 @@ using UMA;
 using UnityEngine.SceneManagement;
 #endif
 
+
 namespace UMA
 {
     [PreferBinarySerialization]
@@ -74,8 +75,9 @@ namespace UMA
         public static string[] SortOrders = { "Name", "AssetName" };
         public static Dictionary<string, System.Type> TypeFromString = new Dictionary<string, System.Type>();
         public static Dictionary<string, AssetItem> GuidTypes = new Dictionary<string, AssetItem>();
-#endregion
-#region Fields
+        public static Dictionary<string, string> LowerCaseLookup = new Dictionary<string, string>();
+        #endregion
+        #region Fields
         protected Dictionary<System.Type, System.Type> TypeToLookup = new Dictionary<System.Type, System.Type>()
         {
         { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
@@ -90,8 +92,9 @@ namespace UMA
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
         {  typeof(TextAsset), typeof(TextAsset) },
-        { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
-        {(typeof(UMAMaterial)), (typeof(UMAMaterial)) }
+        {  typeof(DynamicUMADnaAsset), typeof(DynamicUMADnaAsset) },
+        {  typeof(UMAMaterial), typeof(UMAMaterial) },
+        {  typeof(UMAColorScheme), typeof(UMAColorScheme) }
         };
 
 
@@ -117,7 +120,8 @@ namespace UMA
 #endif
         (typeof(DynamicUMADnaAsset)),
         (typeof(TextAsset)),
-        (typeof(UMAMaterial))
+        (typeof(UMAMaterial)),
+        (typeof(UMAColorScheme))
     };
 
 
@@ -518,7 +522,7 @@ namespace UMA
 			{
 				if (UMAUtils.StringToHash(s) == NameHash) return true;
 			}
-			return false;
+			return false; 
 		}
 
 		/// <summary>
@@ -532,22 +536,42 @@ namespace UMA
 		/// <returns></returns>
 		public AssetItem GetAssetItem<T>(string Name)
         {
+#if UMA_INDEX_LC
+            Name = Name.ToLower();
+#endif
             System.Type ot = typeof(T);
+
+            if (!TypeToLookup.ContainsKey(ot))
+            {
+                Debug.LogError($"Unknown type: {ot.ToString()} for item {Name}");
+            }
             System.Type theType = TypeToLookup[ot];
+
             Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+
+            if (!TypeDic.ContainsKey(Name))
+            {
+                string lname = Name.ToLowerInvariant() + "." + ot.ToString();
+                if (LowerCaseLookup.ContainsKey(lname))
+                {
+                    Name = LowerCaseLookup[lname];
+                }
+            }
+
             if (TypeDic.ContainsKey(Name))
             {
+                if (TypeDic[Name] == null)
+                {
+                    Debug.LogError($"Asset with Name {Name} is NULL for type {ot.ToString()}");
+                }
+
                 return TypeDic[Name];
             }
-            /*
-            foreach (AssetItem ai in TypeDic.Values)
+            else
             {
-                if (Name == ai.EvilName)
-                {
-                    RebuildIndex();
-                    return ai;
-                }
-            }*/
+                Debug.LogError($"Unknown item [{Name}]");
+            }
+
             return null;
         }
 
@@ -723,6 +747,10 @@ namespace UMA
                 assetName = o.name;
                 assetHash = UMAUtils.StringToHash(assetName);
             }
+#if UMA_INDEX_LC
+            assetName = assetName.ToLower();
+            assetHash = UMAUtils.StringToHash(assetName);
+#endif
         }
 
         public List<AssetItem> GetAssetItems<T>()
@@ -1581,6 +1609,12 @@ namespace UMA
                     AddToRaceLookup(ai._SerializedItem as UMAWardrobeRecipe);
                 }
 
+                string Key = ai._Name.ToLowerInvariant() + "." + ai._Type.ToString();
+
+                if (!LowerCaseLookup.ContainsKey(Key))
+                {
+                    LowerCaseLookup.Add(Key, ai._Name);
+                }
 
 #if UNITY_EDITOR
                 if (string.IsNullOrWhiteSpace(ai._Name))
@@ -1619,7 +1653,8 @@ namespace UMA
                 }
                 else
                 {
-                    // warning?
+                    // New:  update existing items. This will allow for mods.
+                    TypeDic[ai._Name] = ai;
                 }
             }
             catch (System.Exception ex)
@@ -1755,6 +1790,35 @@ namespace UMA
 				}
 			}
 		}
+
+        // Permanently delete the item from the filesystem.
+        public void DeleteAsset(System.Type type, string Name)
+        {
+            System.Type theType = TypeToLookup[type];
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+            if (TypeDic.ContainsKey(Name))
+            {
+                AssetItem ai = TypeDic[Name];
+                TypeDic.Remove(Name);
+                if (GuidTypes.ContainsKey(ai._Guid))
+                {
+                    GuidTypes.Remove(ai._Guid);
+                }
+                if (theType == typeof(UMAWardrobeRecipe))
+                {
+                    // remove it from the race lookup.
+                    foreach (SlotRecipes sl in raceRecipes.Values)
+                    {
+                        foreach (List<UMATextRecipe> recipes in sl.Values)
+                        {
+                            recipes.Remove(ai.Item as UMATextRecipe);
+                        }
+                    }
+                }
+                File.Delete(ai._Path);
+            }
+        }
+
 #endif
         #endregion
 
@@ -1779,11 +1843,16 @@ namespace UMA
         /// </summary>
         public void UpdateSerializedDictionaryItems()
         {
+            // Rebuuild all the lookup tables
+            // Lookup by guid
             GuidTypes = new Dictionary<string, AssetItem>();
+            // Lookup by type, object name
             foreach (System.Type type in Types)
             {
                 CreateLookupDictionary(type);
             }
+            // Lookup actual name from lowercase name.
+            LowerCaseLookup = new Dictionary<string, string>();
 //             Debug.Log("Adding Items");
             foreach (AssetItem ai in SerializedItems)
             {
@@ -2204,7 +2273,8 @@ namespace UMA
 #endif
         (typeof(DynamicUMADnaAsset)),
         (typeof(TextAsset)),
-        (typeof(UMAMaterial))
+        (typeof(UMAMaterial)),
+        typeof(UMAColorScheme)
         };
 
             TypeToLookup = new Dictionary<System.Type, System.Type>()
@@ -2222,7 +2292,8 @@ namespace UMA
 #endif
         {  typeof(TextAsset), typeof(TextAsset) },
         { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
-        { (typeof(UMAMaterial)),(typeof(UMAMaterial)) }
+        { (typeof(UMAMaterial)),(typeof(UMAMaterial)) },
+        {  typeof(UMAColorScheme), typeof(UMAColorScheme) }
         };
 
             List<string> invalidTypeNames = new List<string>();

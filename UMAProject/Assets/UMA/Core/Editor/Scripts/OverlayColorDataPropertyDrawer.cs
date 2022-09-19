@@ -70,7 +70,10 @@ namespace UMA.Editors
 					if (ChannelCount != ocd.channelCount)
 					{
 						ocd.SetChannels(ChannelCount);
-						EditorUtility.SetDirty(dca);
+                        if (dca != null)
+                        {
+                            EditorUtility.SetDirty(dca);
+                        }
 					}
 				}
 
@@ -151,11 +154,6 @@ namespace UMA.Editors
 		}
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			/*var name = property.FindPropertyRelative("name");
-			if (!name.isExpanded)
-			{
-				return (EditorGUIUtility.singleLineHeight * 3f) - 2f;
-			}*/
 			return -2f;
 		}
 
@@ -169,27 +167,15 @@ namespace UMA.Editors
 		{
 			return new Vector4(color.r, color.g, color.b, color.a);
 		}
-	}
+
+    }
 	public class PropertyDrawerUtility
 	{
 		public static OverlayColorData GetOverlayDataAsset(System.Reflection.FieldInfo fieldInfo, SerializedProperty property)
 		{ 
 			DynamicCharacterAvatar dca = property.serializedObject.targetObject as DynamicCharacterAvatar;
-
-
 			return new OverlayColorData();
-			/* T actualObject = null;
-			if (obj.GetType().IsArray)
-			{
-				var index = System.Convert.ToInt32(new string(property.propertyPath.Where(c => char.IsDigit(c)).ToArray()));
-				actualObject = ((T[])obj)[index];
-			}
-			else
-			{
-				actualObject = obj as T;
-			}
-			
-			return actualObject; */
+
 		}
 	}
 }

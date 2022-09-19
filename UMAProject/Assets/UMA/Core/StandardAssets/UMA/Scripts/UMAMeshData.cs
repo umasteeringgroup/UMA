@@ -171,13 +171,17 @@ namespace UMA
 		public static bool isAllZero(Vector3[] deltas)
 		{
 			if (deltas == null)
-				return true;
+            {
+                return true;
+            }
 
-			if (deltas.Length > 0)
-				return false;
+            if (deltas.Length > 0)
+            {
+                return false;
+            }
 
 #if !ASSUME_EXPORTERS_KNOW_WHAT_THEY_ARE_DOING
-			return true;
+            return true;
 #else
 			for(int i = 0; i < deltas.Length; i++)
 			{
@@ -539,7 +543,6 @@ namespace UMA
 			for (int i = 0; i < subMeshCount; i++)
 			{
 				submeshes[i].SetTriangles(sharedMesh.GetTriangles(i));
-				//submeshes[i].nativeTriangles = new NativeArray<int>(sharedMesh.GetTriangles(i), Allocator.Persistent);
 			}
 
 			//Create the blendshape data on the slot asset from the unity mesh
@@ -599,8 +602,10 @@ namespace UMA
 			clothSkinning = cloth.coefficients;
 			clothSkinningSerialized = new Vector2[clothSkinning.Length];
 			for (int i = 0; i < clothSkinning.Length; i++)
-				SkinnedMeshCombiner.ConvertData(ref clothSkinning[i], ref clothSkinningSerialized[i]);
-		}
+            {
+                SkinnedMeshCombiner.ConvertData(ref clothSkinning[i], ref clothSkinningSerialized[i]);
+            }
+        }
 
 		/// <summary>
 		/// Validates the skinned transform hierarchy.
@@ -660,13 +665,19 @@ namespace UMA
 
 		private static Transform RecursiveFindBone(Transform bone, string raceRoot)
 		{
-			if (bone.name == raceRoot) return bone;
-			for (int i = 0; i < bone.childCount; i++)
+			if (bone.name == raceRoot)
+            {
+                return bone;
+            }
+
+            for (int i = 0; i < bone.childCount; i++)
 			{
 				var result = RecursiveFindBone(bone.GetChild(i), raceRoot);
 				if (result != null)
-					return result;
-			}
+                {
+                    return result;
+                }
+            }
 			return null;
 		}
 
@@ -700,8 +711,11 @@ namespace UMA
 			if (renderer == null)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("Renderer is null!");
-				return;
+                {
+                    Debug.LogError("Renderer is null!");
+                }
+
+                return;
 			}
 
 			CreateTransforms(skeleton);
@@ -715,15 +729,19 @@ namespace UMA
 			if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("Cannot apply changes to prefab!");
-			}
+                {
+                    Debug.LogError("Cannot apply changes to prefab!");
+                }
+            }
 			if (mesh != null)
 			{
 				if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogError("Cannot apply changes to asset mesh!");
-				}
+                    {
+                        Debug.LogError("Cannot apply changes to asset mesh!");
+                    }
+                }
 			}
 #endif
 			mesh.subMeshCount = 1;
@@ -759,25 +777,7 @@ namespace UMA
 			mesh.subMeshCount = subMeshCount;
 			for (int i = 0; i < subMeshCount; i++)
 			{
-				/*
-				bool sharedBuffer = false;
-				for (int j = 0; j < gSubmeshTris.Length; j++)
-				{
-					if (gSubmeshTriIndices[j] == i)
-					{
-						sharedBuffer = true;
-#if VALIDATE_TRIANGLES
-#else
-#endif
-						mesh.SetTriangles(gSubmeshTris[j], i);
-						gSubmeshTriIndices[j] = UNUSED_SUBMESH;
-						break;
-					}
-				}
-
-				if (!sharedBuffer)*/
 				mesh.SetIndices(submeshes[i].GetTriangles(),MeshTopology.Triangles,i);
-//				mesh.SetIndices(submeshes[i].triangles, MeshTopology.Triangles, i);
 			}
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
@@ -1074,8 +1074,10 @@ namespace UMA
         {
 			foreach(var sm in submeshes)
             {
-				if (sm.nativeTriangles.IsCreated) 
-					sm.nativeTriangles.Dispose();
+				if (sm.nativeTriangles.IsCreated)
+                {
+                    sm.nativeTriangles.Dispose();
+                }
             }
 
 #if USE_NATIVE_ARRAYS

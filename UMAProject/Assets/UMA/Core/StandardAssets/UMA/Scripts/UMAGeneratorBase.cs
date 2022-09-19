@@ -48,9 +48,16 @@ namespace UMA
 		public OverlayData defaultOverlaydata
 		{
 			get { return _defaultOverlayData; }
-		}
+        }
 
-		public static HashSet<int> CreatedAvatars = new HashSet<int>();
+#if UNITY_EDITOR
+#if UMA_ADDRESSABLES
+        [Tooltip("If Addressables are enabled, skip the recipe lookup and just load the items. This should be for testing only.")]
+        public bool skipAddressableRecipeLookupInEditor;
+#endif
+#endif
+
+        public static HashSet<int> CreatedAvatars = new HashSet<int>();
 
         /// <summary>
         /// returns true if the UMAData is in the update queue.
@@ -104,8 +111,12 @@ namespace UMA
 		public static UMAGeneratorBase FindInstance()
 		{
 			var generatorGO = GameObject.Find("UMAGenerator");
-			if (generatorGO == null) return null;
-			return generatorGO.GetComponent<UMAGeneratorBase>();
+			if (generatorGO == null)
+            {
+                return null;
+            }
+
+            return generatorGO.GetComponent<UMAGeneratorBase>();
 		}
 
 		/// <summary>
@@ -131,9 +142,11 @@ namespace UMA
 				umaData.FireAnimatorStateSavedEvent();
 
 				if (animator.runtimeAnimatorController == null)
-					return;
+                {
+                    return;
+                }
 
-				int layerCount = 0;
+                int layerCount = 0;
 				if (animator.isInitialized)
 				{
 					layerCount = animator.layerCount;
@@ -187,11 +200,16 @@ namespace UMA
 			public void RestoreAnimatorState(Animator animator, UMAData umaData)
 			{
 				if (wasCopied == false)
-					return;
-				if (animator == false)
-					return;
+                {
+                    return;
+                }
 
-				if (animator.layerCount == stateHashes.Length)
+                if (animator == false)
+                {
+                    return;
+                }
+
+                if (animator.layerCount == stateHashes.Length)
 				{
 					for (int i = 0; i < animator.layerCount; i++)
 					{
@@ -260,8 +278,11 @@ namespace UMA
 			if (umaData)
 			{
 				if (umaData.rawAvatar)
-					return;
-				if (umaData.animationController != null)
+                {
+                    return;
+                }
+
+                if (umaData.animationController != null)
 				{
 					var umaTransform = umaData.transform;
 					var oldParent = umaTransform.parent;
@@ -277,8 +298,11 @@ namespace UMA
 					{
 						animator = umaData.gameObject.GetComponent<Animator>();
 						if (animator == null)
-							animator = umaData.gameObject.AddComponent<Animator>();
-						SetAvatar(umaData, animator);
+                        {
+                            animator = umaData.gameObject.AddComponent<Animator>();
+                        }
+
+                        SetAvatar(umaData, animator);
 						animator.runtimeAnimatorController = umaData.animationController;
 						umaData.animator = animator;
 
@@ -304,8 +328,11 @@ namespace UMA
 						umaTransform.localPosition = originalPos;
 
 						if (animator.runtimeAnimatorController != null)
-							snapshot.RestoreAnimatorState(animator,umaData);
-						if (umaData.ForceRebindAnimator)
+                        {
+                            snapshot.RestoreAnimatorState(animator,umaData);
+                        }
+
+                        if (umaData.ForceRebindAnimator)
                         {
 							animator.Rebind();
 						}
@@ -338,33 +365,48 @@ namespace UMA
 		public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
 		{
 			if (Debug.isDebugBuild)
-				Debug.Log("***", root);
-			Dictionary<String, String> bones = new Dictionary<String, String>();
+            {
+                Debug.Log("***", root);
+            }
+
+            Dictionary<String, String> bones = new Dictionary<String, String>();
 			foreach (var sb in description.skeleton)
 			{
 				if (Debug.isDebugBuild)
-					Debug.Log(sb.name);
-				bones[sb.name] = sb.name;
+                {
+                    Debug.Log(sb.name);
+                }
+
+                bones[sb.name] = sb.name;
 			}
 			if (Debug.isDebugBuild)
-				Debug.Log("----");
-			foreach (var hb in description.human)
+            {
+                Debug.Log("----");
+            }
+
+            foreach (var hb in description.human)
 			{
 				string boneName;
 				if (bones.TryGetValue(hb.boneName, out boneName))
 				{
 					if (Debug.isDebugBuild)
-						Debug.Log(hb.humanName + " -> " + boneName);
-				}
+                    {
+                        Debug.Log(hb.humanName + " -> " + boneName);
+                    }
+                }
 				else
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
-				}
+                    {
+                        Debug.LogWarning(hb.humanName + " !-> " + hb.boneName);
+                    }
+                }
 			}
 			if (Debug.isDebugBuild)
-				Debug.Log("++++");
-		}
+            {
+                Debug.Log("++++");
+            }
+        }
 
 		/// <summary>
 		/// Creates a human (biped) avatar for a UMA character.

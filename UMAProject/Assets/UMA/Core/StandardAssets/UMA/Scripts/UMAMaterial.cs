@@ -107,14 +107,13 @@ namespace UMA
 
         public bool isNoAtlas()
         {
-            if (materialType == MaterialType.Atlas) return true;
-            return false;
+            return materialType == MaterialType.Atlas;
         }
 
-		/// <summary>
-		/// Is the UMAMaterial based on a procedural material (substance)?
-		/// </summary>
-		public bool IsProcedural()
+        /// <summary>
+        /// Is the UMAMaterial based on a procedural material (substance)?
+        /// </summary>
+        public bool IsProcedural()
 		{
 			#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			if ((material != null) && (material is ProceduralMaterial))
@@ -128,8 +127,7 @@ namespace UMA
         {
             get
             {
-                if (channels == null) return true;
-                return channels.Length == 0;
+                return channels == null ? true : channels.Length == 0;
             }
         }
 
@@ -142,44 +140,7 @@ namespace UMA
         /// <returns></returns>
         public bool Equals(UMAMaterial material)
         {
-            if (this.name == material.name)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-            /*
-            if (this.GetInstanceID() == material.GetInstanceID())
-            {
-                return true;
-            }
-            else
-            {
-				if (this.material.name != material.material.name)
-					return false;
-				//if (this.material.shader != material.material.shader)
-				//	return false;
-                if (this.material.renderQueue != material.material.renderQueue)
-                    return false;
-				if (this.materialType != material.materialType)
-					return false;
-				if (this.channels.Length != material.channels.Length)
-					return false;
-				for (int i = 0; i < this.channels.Length; i++)
-				{
-					MaterialChannel thisChannel = this.channels[i];
-					MaterialChannel otherChannel = material.channels[i];
-					if (thisChannel.channelType != otherChannel.channelType)
-						return false;
-					if (thisChannel.materialPropertyName != otherChannel.materialPropertyName)
-						return false;
-				}
-
-				return true;
-            }
-            */
+            return name == material.name;
         }
 
     }

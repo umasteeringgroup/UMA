@@ -13,6 +13,21 @@ namespace UMA
     [Serializable]
     public class TextureProcessPRO
     {
+        static readonly string[,] tintProperties = new string[,]
+        {
+            {"_Tint0_0","_Tint0_1","_Tint0_2","_Tint0_3" },
+            {"_Tint1_0","_Tint1_1","_Tint1_2","_Tint1_3" },
+            {"_Tint2_0","_Tint2_1","_Tint2_2","_Tint2_3" },
+            {"_Tint3_0","_Tint3_1","_Tint3_2","_Tint3_3" }
+        };
+        static readonly string[,] addProperties = new string[,]
+        {
+            {"_Add0_0","_Add0_1","_Add0_2","_Add0_3" },
+            {"_Add1_0","_Add1_1","_Add1_2","_Add1_3" },
+            {"_Add2_0","_Add2_1","_Add2_2","_Add2_3" },
+            {"_Add3_0","_Add3_1","_Add3_2","_Add3_3" }
+        };
+
         static string[] alphaMaskProperties = {"_AlphaMask","_AlphaMask1","_AlphaMask2","_AlphaMask3", "_AlphaMask4", "_AlphaMask5", "_AlphaMask6", "_AlphaMask7" };
         static Dictionary<RenderTextureFormat, TextureFormat> TextureFormats = new Dictionary<RenderTextureFormat, TextureFormat>()
         {
@@ -72,13 +87,19 @@ namespace UMA
                 fastPath = (umaGenerator as UMAGenerator).fastGeneration;
             }
 
-            if (umaData.atlasResolutionScale <= 0) umaData.atlasResolutionScale = 1f;
+            if (umaData.atlasResolutionScale <= 0)
+            {
+                umaData.atlasResolutionScale = 1f;
+            }
+
             var textureMerge = umaGenerator.textureMerge;
             textureMerge.RefreshMaterials();
             if (textureMerge == null)
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogError("TextureMerge is null!");
+                }
                 // yield return null;
             }
             try
@@ -140,7 +161,10 @@ namespace UMA
                                     int ww = Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample);
                                     int hh = Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample);
 
-                                    if (ww == 0 || hh == 0) continue;
+                                    if (ww == 0 || hh == 0)
+                                    {
+                                        continue;
+                                    }
 
                                     if (CopyRTtoTex)
                                     {
@@ -166,7 +190,7 @@ namespace UMA
                                     destinationTexture.filterMode = FilterMode.Point;
                                     destinationTexture.name = slotData.material.name + " Chan " + textureChannelNumber + " frame: " + Time.frameCount;
 
-                                    //This draw the rects
+                                    //This draws all the rects
                                     Color backgroundColor;
                                     UMAMaterial.ChannelType channelType = slotData.material.channels[textureChannelNumber].channelType;
 
@@ -210,7 +234,11 @@ namespace UMA
                                 }
                             case UMAMaterial.ChannelType.MaterialColor:
                                 {
-                                    if (slotData.material.channels[textureChannelNumber].NonShaderTexture) break;
+                                    if (slotData.material.channels[textureChannelNumber].NonShaderTexture)
+                                    {
+                                        break;
+                                    }
+
                                     generatedMaterial.material.SetColor(slotData.material.channels[textureChannelNumber].materialPropertyName, generatedMaterial.materialFragments[0].baseColor);
                                     break;
                                 }
@@ -221,15 +249,18 @@ namespace UMA
                                     for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                                     {
                                         var frag = generatedMaterial.materialFragments[i];
-                                        if (frag.isRectShared) continue;
+                                        if (frag.isRectShared)
+                                        {
+                                            continue;
+                                        }
 
                                         fragment = frag;
                                     }
 
-                                    if (fragment == null) break;
-
-                                    //var overlay0 = fragment.slotData.GetOverlay(0);
-                                    //SetChannelTexture(umaData, textureChannelNumber, 0, generatedMaterial.material, overlay0);
+                                    if (fragment == null)
+                                    {
+                                        break;
+                                    }
 
                                     for (int i=0;i<slotData.OverlayCount;i++)
                                     {
@@ -250,11 +281,13 @@ namespace UMA
 
                                         var overlays = fragment.slotData.GetOverlayList();
 
-                                        int i = 0;
+                                        int i = 0, ovl = 0;
+
                                         foreach (var overlay in overlays)
                                         {
                                             for (int c = 0; c < numChannels; c++)
                                             {
+                                                // Some shaders use arrays, and some use hardcoded prop names.
                                                 if (overlay != null)
                                                 {
                                                     ColorTints[i] = overlay.GetColor(c);
@@ -265,156 +298,34 @@ namespace UMA
                                                     ColorTints[i] = Color.white;
                                                     ColorAdds[i] = OverlayColorData.EmptyAdditive;
                                                 }
+                                                // don't go out of bounds if someone goes crazy with overlays and channels
+                                                if (c < tintProperties.GetLength(1) && ovl < tintProperties.GetLength(0))
+                                                {
+                                                    if (generatedMaterial.material.HasProperty(tintProperties[ovl, c]))
+                                                    {
+                                                        generatedMaterial.material.SetColor(tintProperties[ovl, c], ColorTints[i]);
+                                                    }
+                                                    if (generatedMaterial.material.HasProperty(addProperties[ovl, c]))
+                                                    {
+                                                        generatedMaterial.material.SetColor(addProperties[ovl, c], ColorAdds[i]);
+                                                    }
+                                                }
                                                 i++;
-                                            } 
+                                            }
+                                            ovl++;
                                         }
 
                                       
                                         generatedMaterial.material.SetInt("_OverlayCount", numOverlays);
+                                        /*  We will revert these to arrays in the future
                                         generatedMaterial.material.SetColorArray("ColorTints", ColorTints);
-                                        generatedMaterial.material.SetColorArray("ColorAdds", ColorAdds);
+                                        generatedMaterial.material.SetColorArray("ColorAdds", ColorAdds); */
                                     }
                                     else if (textureChannelNumber == 0)
                                     {
-                                        Debug.Log("Setting base color");
                                         generatedMaterial.material.color = fragment.baseColor;
                                     }
 
-                                    /*
-                                    for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
-                                    {
-                                        var fragment = generatedMaterial.materialFragments[i];
-                                        if (fragment.isRectShared) continue;
-
-                                        int numChannels = fragment.baseOverlay.textureList.Length;
-                                        int numOverlays = 1 + fragment.overlays.Length;
-
-                                        Material mat = generatedMaterial.material;
-
-                                        var overlay0 = fragment.slotData.GetOverlay(0);
-                                        //SetChannelTexture(textureChannelNumber, mat,overlay0)
-
-
-                                        Color[] ColorTints = new Color[numChannels * numOverlays];
-                                        Color[] ColorAdds  = new Color[numChannels * numOverlays];
-
-                                        var baseOverrides = (umaData.GetTextureOverrides(overlay0.overlayName));
-
-                                        if (overlay0.alphaMask != null)
-                                        {
-                                            if (mat.HasProperty(alphaMaskProperties[0]))
-                                            {
-                                                mat.SetTexture(alphaMaskProperties[0], overlay0.alphaMask);
-                                            }
-                                        }
-                                        for (int j = 0; j < fragment.baseOverlay.textureList.Length; j++)
-                                        {
-
-                                            ColorTints[j] = overlay0.colorData.color;
-                                            ColorAdds[j] = overlay0.colorData.Add;
-
-                                            var theTex = fragment.baseOverlay.textureList[j];
-
-                                            if (baseOverrides != null)
-                                            {
-                                                if (baseOverrides.ContainsKey(j))
-                                                {
-                                                    theTex = baseOverrides[j];
-                                                }
-                                            }
-
-                                            if (theTex != null)
-                                            {
-                                                if (!slotData.material.channels[textureChannelNumber].NonShaderTexture)
-                                                {
-                                                    if (generatedMaterial.umaMaterial.translateSRP)
-                                                    {
-                                                        generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName), theTex);
-                                                    }
-                                                    else
-                                                    {
-                                                        generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, theTex);
-                                                    }
-                                                }
-                                                if (j == 0)
-                                                {
-                                                    generatedMaterial.material.color = fragment.baseColor;
-                                                }
-                                            }
-                                        }
-
-                                        int OverlayNumber = 1;
-                                        foreach (var overlay in fragment.overlays)
-                                        {
-                                            var actoverlay = fragment.slotData.GetOverlay(OverlayNumber);
-                                            var overlayOverrides = (umaData.GetTextureOverrides(actoverlay.overlayName));
-
-                                            int colorbase = OverlayNumber * numChannels;
-
-                                            if (actoverlay.alphaMask != null)
-                                            {
-
-                                                if (mat.HasProperty(alphaMaskProperties[OverlayNumber]))
-                                                {
-                                                    mat.SetTexture(alphaMaskProperties[OverlayNumber], actoverlay.alphaMask);
-                                                }
-                                            }
-
-
-                                            for (int j = 0; j < overlay.textureList.Length; j++)
-                                            {
-                                                ColorTints[colorbase + j] = actoverlay.colorData.GetTint(j);
-                                                ColorAdds[colorbase + j] = actoverlay.colorData.GetAdditive(j);
-
-                                                var theTex = overlay.textureList[j];
-
-                                                if (overlayOverrides != null)
-                                                {
-                                                    if (overlayOverrides.ContainsKey(j))
-                                                    {
-                                                        theTex = overlayOverrides[j];
-                                                    }
-                                                }
-
-                                                if (theTex != null)
-                                                {
-                                                    if (!slotData.material.channels[textureChannelNumber].NonShaderTexture)
-                                                    {
-                                                        string materialPropertyName;
-                                                        if (generatedMaterial.umaMaterial.translateSRP)
-                                                        {
-                                                            materialPropertyName = UMAUtils.TranslatedSRPTextureName(slotData.material.channels[j].materialPropertyName) + (OverlayNumber);
-                                                        }
-                                                        else
-                                                        {
-                                                            materialPropertyName = slotData.material.channels[j].materialPropertyName + (theTex);
-                                                        }
-
-                                                        // if the shader has a parameter for this extra texture, then set it.
-                                                        // example, if the texture channel property name is "_MainTex", then the first additional overlay would be _MainTex1.
-                                                        // The shader would need to be written in such a way as to do the combine in the shader itself.
-                                                        if (generatedMaterial.material.HasProperty(materialPropertyName))
-                                                        {
-                                                            generatedMaterial.material.SetTexture(materialPropertyName, theTex);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            OverlayNumber++;
-                                        }
-                                        if (generatedMaterial.material.HasProperty("_OverlayCount"))
-                                        {
-                                            generatedMaterial.material.SetInt("_OverlayCount", numOverlays);
-                                        }
-                                        if (generatedMaterial.material.HasProperty("_ColorTints"))
-                                        {
-                                            generatedMaterial.material.SetColorArray("_ColorTints", ColorTints);
-                                        }
-                                        if (generatedMaterial.material.HasProperty("_ColorAdds"))
-                                        {
-                                            generatedMaterial.material.SetColorArray("_ColorAdds", ColorAdds);
-                                        }
-                                } */
                                     break;
                                 }
                         }
@@ -430,7 +341,6 @@ namespace UMA
  
         private static void SetChannelTexture(UMAData umaData, int textureChannelNumber, int overlayNumber, Material mat, OverlayData overlay0)
         {
-            var overrides = (umaData.GetTextureOverrides(overlay0.overlayName));
             var theTex = overlay0.GetTexture(textureChannelNumber);
             var overlayOverrides = (umaData.GetTextureOverrides(overlay0.overlayName));
             var umaMaterial = overlay0.asset.material;

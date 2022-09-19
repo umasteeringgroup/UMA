@@ -1,4 +1,4 @@
-﻿//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
 // Shader Packager
 // Copyright (c)2021 Jason Booth
 //////////////////////////////////////////////////////
@@ -191,18 +191,19 @@ namespace UMA.ShaderPackager
 
          foreach (var e in entries)
          {
-            if (e.shader
+                if (e.shader)
+                {
 #if __BETTERSHADERS__
-               && betterShader == null
+                    if(betterShader == null)
 #endif
-               )
-            {
-               if (warnErrors)
-               {
-                  Debug.LogError("Shader is null, cannot pack");
-               }
-               break;
-            }
+                    {
+                        if (warnErrors)
+                        {
+                            Debug.LogError("Shader is null, cannot pack");
+                        }
+                        break;
+                    }
+                }
             if (e.UnityVersionMax == ShaderPackage.UnityVersion.Min && e.UnityVersionMin == ShaderPackage.UnityVersion.Min)
             {
                e.UnityVersionMax = ShaderPackage.UnityVersion.Max;

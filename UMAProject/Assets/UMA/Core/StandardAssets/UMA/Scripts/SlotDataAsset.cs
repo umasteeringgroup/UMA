@@ -365,15 +365,37 @@ namespace UMA
 		{
 			get
 			{
-				if (meshData != null || meshData.vertexCount > 0) return false;
+				if (meshData != null || meshData.vertexCount > 0)
+                {
+                    return false;
+                }
 
-				if (material == null) return true;
-				if (CharacterBegun != null && CharacterBegun.GetPersistentEventCount() > 0) return true;
-				if (SlotAtlassed != null && SlotAtlassed.GetPersistentEventCount() > 0) return true;
-				if (DNAApplied != null && DNAApplied.GetPersistentEventCount() > 0) return true;
-				if (CharacterCompleted != null && CharacterCompleted.GetPersistentEventCount() > 0) return true;
+                if (material == null)
+                {
+                    return true;
+                }
 
-				return false;
+                if (CharacterBegun != null && CharacterBegun.GetPersistentEventCount() > 0)
+                {
+                    return true;
+                }
+
+                if (SlotAtlassed != null && SlotAtlassed.GetPersistentEventCount() > 0)
+                {
+                    return true;
+                }
+
+                if (DNAApplied != null && DNAApplied.GetPersistentEventCount() > 0)
+                {
+                    return true;
+                }
+
+                if (CharacterCompleted != null && CharacterCompleted.GetPersistentEventCount() > 0)
+                {
+                    return true;
+                }
+
+                return false;
 			}
 		}
 
@@ -471,9 +493,11 @@ namespace UMA
 			if (this.SlotObject != null)
 			{
 				if (SlotObjectHookedUp && EventHookups.Count > 0)
-					return;
+                {
+                    return;
+                }
 
-				SlotObjectHookedUp = true;
+                SlotObjectHookedUp = true;
 				var Behaviors = SlotObject.GetComponents<MonoBehaviour>();
 				Debug.Log($"There are {Behaviors.Length} components");
 
@@ -492,14 +516,18 @@ namespace UMA
 		public void OnDestroy()
         {
 			if (meshData != null)
-				meshData.FreeBoneWeights();
+            {
+                meshData.FreeBoneWeights();
+            }
         }
 
 		public void OnDisable()
 		{ 
 			if (meshData != null)
-				meshData.FreeBoneWeights();
-		}
+            {
+                meshData.FreeBoneWeights();
+            }
+        }
 
 		public int GetTextureChannelCount(UMAGeneratorBase generator)
 		{
@@ -536,9 +564,11 @@ namespace UMA
         public void OnEnable()
         {
 			if (meshData == null)
-				return;
+            {
+                return;
+            }
 
-			if (meshData.LoadedBoneweights)
+            if (meshData.LoadedBoneweights)
             {
 				// already loaded. just return.
 				return;

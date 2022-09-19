@@ -15,8 +15,16 @@ namespace UMA.CharacterSystem.Examples
 	//UPDATED For CharacterSystem.
 	//Takes photos of the character based on the Wardrobe slots.
 	//HUGE MemoryLeak or infinite loop in this somewhere...
+    [ExecuteInEditMode]
 	public class PhotoBooth : MonoBehaviour
 	{
+        [Serializable]
+        public class replacementMaterial
+        {
+            public Material material;
+            public Material doubleSidedReplacement;
+        }
+        public List<replacementMaterial> doubleSidedReplacements = new List<replacementMaterial>();
 
 		public RenderTexture bodyRenderTexture;
 		public RenderTexture outfitRenderTexture;
@@ -62,10 +70,10 @@ namespace UMA.CharacterSystem.Examples
 		public bool hideRaceBody = false;
 		public bool gammaCorrection = true;
 		public bool linearCorrection = false;
-
 		private Camera bestCam = null;
+        private PopUpAssetInspector inspector;
 
-		RenderTexture renderTextureToUse;
+        RenderTexture renderTextureToUse;
 		List<UMATextRecipe> wardrobeRecipeToPhoto = new List<UMATextRecipe>();
 		Dictionary<int, Dictionary<int, Color>> originalColors = new Dictionary<int, Dictionary<int, Color>>();
 
@@ -74,9 +82,22 @@ namespace UMA.CharacterSystem.Examples
 		void Start()
 		{
 			destinationFolder = "";
+            CheckInspector();
 		}
+        void CheckInspector()
+        {
+            if (inspector == null)
+            {
+                inspector = PopUpAssetInspector.Create(this);
+            }
+        }
 
-		public void TakePhotos()
+        private void Update()
+        {
+            CheckInspector();
+        }
+
+        public void TakePhotos()
 		{
 			if (doingTakePhoto == false)
 			{
@@ -534,8 +555,17 @@ namespace UMA.CharacterSystem.Examples
 			{
 				var mats = smr.materials;
 
-				foreach (Material m in mats)
-				{
+				//foreach (Material m in mats)
+                for (int i=0; i< mats.Length; i++)
+                {
+                    Material m = mats[i];
+                    foreach (replacementMaterial replacer in doubleSidedReplacements)
+                    {
+                        if (m.shader.name == replacer.material.shader.name)
+                        {
+                            mats[i] = replacer.doubleSidedReplacement;
+                        }
+                    }
 					if (m.shader.name.Contains("Lit"))
 					{
 						m.SetFloat("__cull", 0);

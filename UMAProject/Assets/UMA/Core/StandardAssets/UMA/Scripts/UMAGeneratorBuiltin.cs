@@ -69,7 +69,7 @@ namespace UMA
 		[NonSerialized]
 		public long SlotsChanged;
 
-		public virtual void OnEnable()
+        public virtual void OnEnable()
 		{
 			activeGeneratorCoroutine = null;
 		}
@@ -79,16 +79,22 @@ namespace UMA
 			activeGeneratorCoroutine = null;
 
 			if (atlasResolution == 0)
-				atlasResolution = 256;
+            {
+                atlasResolution = 256;
+            }
 
-			if (defaultOverlayAsset != null)
-				_defaultOverlayData = new OverlayData (defaultOverlayAsset);
+            if (defaultOverlayAsset != null)
+            {
+                _defaultOverlayData = new OverlayData (defaultOverlayAsset);
+            }
 
-			if (!textureMerge)
+            if (!textureMerge)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("No TextureMerge set!");
-			}
+                {
+                    Debug.LogError("No TextureMerge set!");
+                }
+            }
 
 			//Garbage Collection hack
 			var mb = (System.GC.GetTotalMemory(false) / (1024 * 1024));
@@ -129,8 +135,11 @@ namespace UMA
 			{
 				var rt = iteratorNode.Value.GetFirstRenderTexture();
 				if (rt != null)
-					return rt;
-				iteratorNode = iteratorNode.Next;
+                {
+                    return rt;
+                }
+
+                iteratorNode = iteratorNode.Next;
 			}
 			return null;
 		}
@@ -162,15 +171,20 @@ namespace UMA
 				if (processAllPending)
 				{
 					count = umaDirtyList.Count;
-					if (!fastGeneration) count *= 2;
-				}
+					if (!fastGeneration)
+                    {
+                        count *= 2;
+                    }
+                }
 
 				for (int i = 0; i < count; i++)
 				{
 					OnDirtyUpdate();
 					if (IsIdle())
-						break;
-				}
+                    {
+                        break;
+                    }
+                }
 				ElapsedTicks += stopWatch.ElapsedTicks;
 #if UNITY_EDITOR
 				UnityEditor.EditorUtility.SetDirty(this);
@@ -183,7 +197,6 @@ namespace UMA
 #pragma warning disable 618
 		public void RebuildAllRenderTextures()
 		{
-			Debug.Log("Rebuilding all render textures");
 			var activeUmaData = umaData;
 			var storedGeneratorCoroutine = activeGeneratorCoroutine;
 
@@ -220,9 +233,12 @@ namespace UMA
 					activeGeneratorCoroutine = new UMAGeneratorCoroutine();
 					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true, InitialScaleFactor);
 
-					while (!activeGeneratorCoroutine.Work()) ;
+					while (!activeGeneratorCoroutine.Work())
+                    {
+                        ;
+                    }
 
-					activeGeneratorCoroutine = null; 
+                    activeGeneratorCoroutine = null; 
 				}
 
 				TextureChanged++;
@@ -232,9 +248,11 @@ namespace UMA
 		public void SaveMountedItems(UMAData umaData)
         {
 			if (!SaveAndRestoreIgnoredItems)
-				return;
+            {
+                return;
+            }
 
-			GameObject holder = null;
+            GameObject holder = null;
 
 			foreach(Transform t in umaData.gameObject.transform)
             {
@@ -283,42 +301,69 @@ namespace UMA
 
 		public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
-			UMAContextBase.IgnoreTag = ignoreTag;
+#if DEBUG_TIMING
+            System.Diagnostics.Stopwatch gstopWatch = System.Diagnostics.Stopwatch.StartNew();
+            gstopWatch.Start();
+#endif
+            UMAContextBase.IgnoreTag = ignoreTag;
 			if (data == null)
-				return true;
+            {
+                return true;
+            }
 
-
-			data.umaGenerator = this;
+            data.umaGenerator = this;
 			FreezeTime = true;
 			umaData = data;
 
 			if (umaData.RebuildSkeleton)
 			{
-				if (umaData.umaRoot != null) 
-					SaveMountedItems(umaData);
-				DestroyImmediate(umaData.umaRoot, false);
+				if (umaData.umaRoot != null)
+                {
+                    SaveMountedItems(umaData);
+                }
+
+                DestroyImmediate(umaData.umaRoot, false);
 				umaData.umaRoot = null;
 				umaData.RebuildSkeleton = false;
 				umaData.isShapeDirty = true;
 			}
 
 			if (!umaData.Validate())
-				return true;
-
-			RenderTexture rbackup = RenderTexture.active;
+            {
+                return true;
+            }
+#if DEBUG_TIMING
+            long validation = gstopWatch.ElapsedTicks;
+            gstopWatch.Restart();
+#endif
+            RenderTexture rbackup = RenderTexture.active;
 
 			if (meshCombiner != null)
 			{
 				meshCombiner.Preprocess(umaData);
 			}
 
-			umaData.FireCharacterBegunEvents();
-			if (!umaData.rawAvatar)
+#if DEBUG_TIMING
+            long meshpreprocess = gstopWatch.ElapsedTicks;
+            gstopWatch.Restart();
+#endif
+            umaData.FireCharacterBegunEvents();
+
+#if DEBUG_TIMING
+            long BegunEvents = gstopWatch.ElapsedTicks;
+            gstopWatch.Restart();
+#endif
+            if (!umaData.rawAvatar)
 			{
 				PreApply(umaData);
 			}
 
-			if (umaData.isTextureDirty)
+#if DEBUG_TIMING
+            long preapply = gstopWatch.ElapsedTicks;
+            gstopWatch.Restart();
+#endif
+
+            if (umaData.isTextureDirty)
 			{
 				UMAGeneratorPro ugp = new UMAGeneratorPro();
 				ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
@@ -327,7 +372,11 @@ namespace UMA
 				TextureChanged++;
 			}
 
-			if (umaData.isMeshDirty)
+#if DEBUG_TIMING
+            long textureprocessing = gstopWatch.ElapsedTicks;
+            gstopWatch.Restart();
+#endif
+            if (umaData.isMeshDirty)
 			{
 				UpdateUMAMesh(umaData.isAtlasDirty);
 				umaData.isAtlasDirty = false;
@@ -335,8 +384,12 @@ namespace UMA
 				SlotsChanged++;
 				forceGarbageCollect++;
 			}
+#if DEBUG_TIMING
+            long meshUpdates = gstopWatch.ElapsedTicks;
+            gstopWatch.Restart();
+#endif
 
-			if (umaData.isShapeDirty)
+            if (umaData.isShapeDirty)
 			{
 				if (!umaData.skeleton.isUpdating)
 				{
@@ -350,6 +403,10 @@ namespace UMA
 			{
 				umaData.skeleton.EndSkeletonUpdate();
 			}
+#if DEBUG_TIMING
+            long skeletonUpdates = gstopWatch.ElapsedTicks;
+            gstopWatch.Restart();
+#endif
 
 			/* here, set any race specific blendshapes */
 			SkinnedMeshRenderer[] renderers = umaData.GetRenderers();
@@ -390,7 +447,11 @@ namespace UMA
 				}
 			}
 
-			RenderTexture.active = rbackup;
+#if DEBUG_TIMING
+            long raceblendshapes = gstopWatch.ElapsedTicks;
+            gstopWatch.Restart();
+#endif
+            RenderTexture.active = rbackup;
 
 			umaData.dirty = false;
 			if (fireEvents)
@@ -401,24 +462,50 @@ namespace UMA
             {
 				umaData.Show();
             }
+#if DEBUG_TIMING
+            long endEvents = gstopWatch.ElapsedTicks;
+            gstopWatch.Stop();
+#endif
 			FreezeTime = false;
-			return true;
+#if DEBUG_TIMING
+            Debug.Log($"GenerateSingleUMA - Validation {ToMS(validation)} ms");
+            Debug.Log($"GenerateSingleUMA - Mesh Preprocess {ToMS(meshpreprocess)} ms");
+            Debug.Log($"GenerateSingleUMA - Begun Events {ToMS(BegunEvents)} ms");
+            Debug.Log($"GenerateSingleUMA - Pre Apply { ToMS(preapply) } ms");
+            Debug.Log($"GenerateSingleUMA - texture updates { ToMS(textureprocessing) } ms");
+            Debug.Log($"GenerateSingleUMA - mesh Updates { ToMS(meshUpdates) } ms");
+            Debug.Log($"GenerateSingleUMA - skeleton Updates { ToMS(skeletonUpdates) } ms");
+            Debug.Log($"GenerateSingleUMA - racial blendshapes { ToMS(raceblendshapes) } ms");
+            Debug.Log($"GenerateSingleUMA - end Events { ToMS(endEvents) } ms");
+            Debug.Log($"Total for last UMA = {ToMS(validation + meshpreprocess + BegunEvents + preapply + textureprocessing+ meshUpdates + skeletonUpdates+raceblendshapes+endEvents)} ms");
+            Debug.Log($"Ticks = {System.Diagnostics.Stopwatch.Frequency}");
+#endif
+            return true;
 		}
+
+        int ToMS(long ticks)
+        {
+            return Convert.ToInt32((ticks * 1000) / System.Diagnostics.Stopwatch.Frequency);
+        }
 
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{
 			UMAContextBase.IgnoreTag = ignoreTag;
 			if (data == null)
-				return true;
+            {
+                return true;
+            }
 
-			if (umaData != data)
+            if (umaData != data)
 			{
 				umaData = data;
 
 				if (!umaData.Validate())
-					return true;
+                {
+                    return true;
+                }
 
-				if (meshCombiner != null)
+                if (meshCombiner != null)
 				{
 					meshCombiner.Preprocess(umaData);
 				}
@@ -460,7 +547,6 @@ namespace UMA
 				//shouldn't this only cause another loop if this part MADE the mesh dirty?
 				if (!workDone || !fastGeneration || (!meshWasDirty && umaData.isMeshDirty))
 				{
-					//Debug.Log("workDone = " + workDone + " fastGeneration = " + fastGeneration + " umaData.isMeshDirty = " + umaData.isMeshDirty);
 					return false;
 				}
 			}
@@ -475,8 +561,10 @@ namespace UMA
 				forceGarbageCollect++;
 
 				if (!fastGeneration)
-					return false;
-			}
+                {
+                    return false;
+                }
+            }
 
 			if (umaData.isShapeDirty)
 			{
@@ -501,9 +589,12 @@ namespace UMA
 		{
 			try
 			{
-				if (umaDirtyList.Count < 1) return;
+				if (umaDirtyList.Count < 1)
+                {
+                    return;
+                }
 
-				if (NoCoroutines)
+                if (NoCoroutines)
                 {
 					UMAData umaData = umaDirtyList[0];
 					try
@@ -538,8 +629,10 @@ namespace UMA
 			catch (Exception ex)
 			{
 				if (Debug.isDebugBuild)
-					UnityEngine.Debug.LogException(ex);
-			}
+                {
+                    UnityEngine.Debug.LogException(ex);
+                }
+            }
 		}
 
 		private void UpdateUMAMesh(bool updatedAtlas)
@@ -551,8 +644,10 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
-			}
+                {
+                    Debug.LogError("UMAGenerator.UpdateUMAMesh, no MeshCombiner specified", gameObject);
+                }
+            }
 		}
 
 
@@ -560,7 +655,9 @@ namespace UMA
         public override bool updatePending(UMAData umaToCheck)
         {
             if (umaDirtyList.Count < 2)
+            {
                 return false;
+            }
 
             int val = umaDirtyList.IndexOf(umaToCheck, 1);
             return val != -1;
@@ -572,7 +669,9 @@ namespace UMA
             if (umaDirtyList.Count > 0)
             {
                 if (umaDirtyList[0] == umaToCheck)
+                {
                     return true;
+                }
             }
             return false;
         }
@@ -631,16 +730,20 @@ namespace UMA
 				if (umaData.skeleton.boneCount > 600)
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
-				}
+                    {
+                        Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
+                    }
+                }
 			}
 		}
 
 		public virtual void PreApply(UMAData umaData)
 		{
 			if (umaData)
-				umaData.PreApplyDNA();
-		}
+            {
+                umaData.PreApplyDNA();
+            }
+        }
 
 		public virtual void UpdateUMABody(UMAData umaData)
 		{

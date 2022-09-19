@@ -98,7 +98,7 @@ namespace UMA.Editors
 			{
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 			}
-		}
+		} 
 
 		public static void EndVerticalPadded()
 		{

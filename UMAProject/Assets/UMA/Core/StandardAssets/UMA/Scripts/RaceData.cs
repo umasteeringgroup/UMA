@@ -161,8 +161,10 @@ namespace UMA
 			for (int i = 0; i < _dnaConverterList.Count; i++)
 			{
 				if (_dnaConverterList[i] != null)
-					_dnaConverterList[i].Prepare();
-				else
+                {
+                    _dnaConverterList[i].Prepare();
+                }
+                else
                 {
 					Debug.LogWarning($"Null converter list on race: {raceName} object {this.name} ");
                 }
