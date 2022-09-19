@@ -245,7 +245,7 @@ namespace UMA.Editors
 
 		/// <param name="normalMap"></param>
 		/// <returns></returns>
-		private static Texture2D sconvertNormalMap(Texture2D normalMap)
+		private static Texture2D SConvertNormalMap(Texture2D normalMap)
 		{
 			ComputeShader normalMapConverter = Resources.Load<ComputeShader>("Shader/NormalShader");
 			int kernel = normalMapConverter.FindKernel("NormalConverter");
@@ -265,7 +265,7 @@ namespace UMA.Editors
 			return convertedNormalMap;
 		}
 
-		private static Texture2D sconvertNormalMap(RenderTexture normalMap)
+		private static Texture2D SConvertNormalMap(RenderTexture normalMap)
 		{
 			ComputeShader normalMapConverter = Resources.Load<ComputeShader>("Shader/NormalShader");
 			int kernel = normalMapConverter.FindKernel("NormalConverter");
@@ -288,7 +288,7 @@ namespace UMA.Editors
 		private static Texture2D sconvertNormalMap2(RenderTexture rt)
 		{
 			Texture2D tex = GetRTPixels(rt);
-			Texture2D result = sconvertNormalMap(tex);
+			Texture2D result = SConvertNormalMap(tex);
 			DestroyImmediate(tex);
 			return result;
 		}
@@ -296,16 +296,18 @@ namespace UMA.Editors
 		private static Texture2D sconvertNormalMap(Texture tex)
 		{
 			if (tex is RenderTexture)
-				return sconvertNormalMap(tex as RenderTexture);
+            {
+                return SConvertNormalMap(tex as RenderTexture);
+            }
 
-			return sconvertNormalMap(tex as Texture2D);
+            return SConvertNormalMap(tex as Texture2D);
 		}
 
 		static public Texture2D GetRTPixels(RenderTexture rt)
 		{
-			/// Some goofiness ends up with the texture being too dark unless
-			/// I send it to a new render texture.
-			RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32);
+            /// Some goofiness ends up with the texture being too dark unless
+            /// I send it to a new render texture.
+            RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB); 
 			outputMap.enableRandomWrite = true;
 			outputMap.Create();
 			RenderTexture.active = outputMap;
@@ -329,13 +331,31 @@ namespace UMA.Editors
 			return tex;
 		}
 
-		public static void SaveRenderTexture(RenderTexture texture, string textureName, bool isNormal = false)
+        static public void LinearSave(RenderTexture rt, string textureName)
+        {
+            // Remember crrently active render texture
+            RenderTexture currentActiveRT = RenderTexture.active;
+
+            // Set the supplied RenderTexture as the active one
+            RenderTexture.active = rt;
+
+            // Create a new Texture2D and read the RenderTexture image into it
+            Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.ARGB32, false, true);
+            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+
+            // Restore previously active render texture
+            RenderTexture.active = currentActiveRT;
+            SaveTexture2D(tex, textureName);
+            
+        }
+
+        public static void SaveRenderTexture(RenderTexture texture, string textureName, bool isNormal = false)
 		{
 			Texture2D tex;
 
 			if (isNormal)
 			{
-				tex = sconvertNormalMap(texture);
+				tex = SConvertNormalMap(texture);
 			}
 			else
 			{

@@ -39,6 +39,7 @@ namespace UMA
 			public UMAMeshData meshData;
 			public int[] targetSubmeshIndices;
 			public BitArray[] triangleMask;
+            public SlotData slotData;
 		}
 
 		private enum MeshComponents
@@ -101,7 +102,7 @@ namespace UMA
 		/// <param name="target">Target.</param>
 		/// <param name="sources">Sources.</param>
 		/// <param name="blendShapeSettings">BlendShape Settings.</param>
-		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, BlendShapeSettings blendShapeSettings, UMAData.UMARecipe recipe)
+		public static void CombineMeshes(UMAMeshData target, CombineInstance[] sources, BlendShapeSettings blendShapeSettings, UMAData.UMARecipe recipe, int currentRenderer)
 		{
 			if (blendShapeSettings == null)
 				blendShapeSettings = new BlendShapeSettings();
@@ -193,6 +194,7 @@ namespace UMA
 
 			foreach (var source in sources)
 			{
+                // source.meshData.sl
 				int sourceVertexCount = source.meshData.vertices.Length;
 				BuildBoneWeights(source.meshData, nativeBoneWeights, nativeBonesPerVertex, vertexIndex, boneWeightIndex, sourceVertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
 				Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, sourceVertexCount);
@@ -373,15 +375,19 @@ namespace UMA
 					}
 				}
 
-				for (int i = 0; i < source.meshData.subMeshCount; i++)
+                source.slotData.vertexOffset = vertexIndex;
+                source.slotData.skinnedMeshRenderer = currentRenderer;
+
+                for (int i = 0; i < source.meshData.subMeshCount; i++)
 				{
 					if (source.targetSubmeshIndices[i] >= 0)
 					{
 						NativeArray<int> subTriangles = source.meshData.submeshes[i].GetTriangles();
 						int triangleLength = subTriangles.Length;
 						int destMesh = source.targetSubmeshIndices[i];
+                        source.slotData.submeshIndex = destMesh;
 
-						if (source.triangleMask == null)
+                        if (source.triangleMask == null)
 						{
 
 							CopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex);

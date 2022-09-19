@@ -1,0 +1,87 @@
+#pragma kernel Combiner
+Texture2D<float4> InputR;
+Texture2D<float4> InputG;
+Texture2D<float4> InputB;
+Texture2D<float4> InputA;
+RWTexture2D<float4> Result;
+
+SamplerState UMALinearClampSampler;
+
+SamplerState samplerInputR;
+SamplerState samplerInputG;
+SamplerState samplerInputB;
+SamplerState samplerInputA;
+
+// texture sources
+// 0 = r
+// 1 = g
+// 2 = b
+// 3 = a
+// 4 = pixel luminance
+// 5 = pixel average
+// 6 = color
+
+int rSource;
+int gSource;
+int bSource;
+int aSource;
+
+float ColorR;
+float ColorG;
+float ColorB;
+float ColorA;
+
+int alphaOnly;
+
+float GetColor(int colorsrc, float2 uv, float color, Texture2D tex, SamplerState myState)
+{
+    if (colorsrc == 6)
+       return color;
+
+    float4 col = tex.SampleLevel(myState, uv, 0);
+
+    if (colorsrc == 4)
+    {
+       float luma = (col.r * 0.2126) + (col.g * 0.7152) + (col.b * 0.0722);
+       return clamp(luma,0.0f,1.0f);
+    }
+    if (colorsrc == 5)
+    {
+       return clamp((col.r+col.g+col.b)/3.0f,0.0f,1.0f);
+    }
+
+    return col[colorsrc];
+}
+
+[numthreads(1, 1, 1)]
+void Combiner(uint3 id : SV_DispatchThreadID)
+{
+    float2 src = float2(id.x, id.y);
+
+    float W,H;
+    float2 UV;
+
+    Result.GetDimensions(W,H);
+    UV = float2((id.x+0.5f)/W, (id.y+0.5f)/H);
+
+    float4 outColor;
+
+    if (alphaOnly == 1)
+    {
+        outColor.r = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
+        outColor.g = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
+        outColor.b = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
+        outColor.a = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
+    }
+    else
+    {
+        outColor.r = GetColor(rSource,UV,ColorR,InputR,samplerInputR);
+        outColor.g = GetColor(gSource,UV,ColorG,InputG,samplerInputG);
+        outColor.b = GetColor(bSource,UV,ColorB,InputB,samplerInputB);
+        outColor.a = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
+    }
+
+    Result[id.xy] = outColor;
+}
+
+

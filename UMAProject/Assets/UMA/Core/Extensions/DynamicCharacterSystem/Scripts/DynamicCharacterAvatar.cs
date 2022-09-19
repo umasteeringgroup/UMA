@@ -235,7 +235,12 @@ namespace UMA.CharacterSystem
         //This is reset at the beginning of every build operation
         private List<string> crossCompatibleRaces = new List<string>();
 
-		// public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; } = new Dictionary<string, List<MeshHideAsset>>();
+        // Any wardrobe slots in this list are force suppressed. That is, their recipes are NOT
+        // merged in. 
+        private List<string> forceSuppressedWardrobeSlots = new List<string>();
+        // Any base slot that is in this list is forceably nulled out in the slot list after merging recipes
+        // so that the slot will not be included in the next build. 
+        private HashSet<string> forceRemovedBaseSlots = new HashSet<string>();
 
 #if UNITY_EDITOR
         private PreviewModel lastPreviewModel;
@@ -245,16 +250,11 @@ namespace UMA.CharacterSystem
 #endif
 #endregion
 
-#region PROPERTIES 
-        //this previously get/set the base.umaRace value - but we dont want anyone to do that. because set wont actually change the race of the avatar 
-        //and the value for get is only correct after the avatar has been built- not while we are generating the actual settings before we call 'Load'
-        //If the want to set the Race when the avatar has built they should use ChangeRace. If they want to set it before they should use RacePreset
-        //It could be used to return activeRace.raceData and/or could be made to call the right methods depending on whether the Avatar has been created
-        /*RaceData RaceData
-        {
-            get { return base.umaRace; }
-            set { base.umaRace = value; }
-        }*/
+#region PROPERTIES
+
+        public HashSet<string> ForceRemovedBaseSlots { get { return forceRemovedBaseSlots; } }
+        public List<string> ForceSuppressedWardrobeSlots {  get { return forceSuppressedWardrobeSlots;} }
+
         /// <summary>
         /// Set this before initialization to determine the active race. This can be set in the inspector
         /// using the activeRace dropdown.
@@ -3711,7 +3711,7 @@ namespace UMA.CharacterSystem
 
             List<UMAWardrobeRecipe> ReplaceRecipes = new List<UMAWardrobeRecipe>();
             List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
-            List<string> SuppressSlotsStrings = new List<string>();
+            List<string> SuppressSlotsStrings = new List<string>(forceSuppressedWardrobeSlots);
             List<string> HideTags = new List<string>();
 
             if ((WardrobeRecipes.Count > 0) && activeRace.racedata != null)
@@ -3864,6 +3864,11 @@ namespace UMA.CharacterSystem
                         }
                     }
                 }
+            }
+
+            foreach(string s in forceRemovedBaseSlots)
+            {
+                HiddenSlots.Add(s);
             }
 
 #if UNITY_EDITOR
@@ -4342,7 +4347,7 @@ namespace UMA.CharacterSystem
         }
 
 
-        void ReplaceSlot(UMAWardrobeRecipe Replacer)
+        void OldReplaceSlot(UMAWardrobeRecipe Replacer)
         {
             //we need to check if *this* recipe is directly or only cross compatible with this race
             bool isCrossCompatibleRecipe = (activeRace.racedata.IsCrossCompatibleWith(Replacer.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(Replacer.wardrobeSlot));
@@ -4391,6 +4396,77 @@ namespace UMA.CharacterSystem
             }
         }
 
+        void ReplaceSlot(UMAWardrobeRecipe Replacer)
+        {
+            //we need to check if *this* recipe is directly or only cross compatible with this race
+            bool isCrossCompatibleRecipe = (activeRace.racedata.IsCrossCompatibleWith(Replacer.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(Replacer.wardrobeSlot));
+            string replaceSlot = Replacer.replaces;
+            if (isCrossCompatibleRecipe)
+            {
+                var equivalentSlot = activeRace.racedata.FindEquivalentSlot(Replacer.compatibleRaces, replaceSlot, true);
+                if (!string.IsNullOrEmpty(equivalentSlot))
+                {
+                    replaceSlot = equivalentSlot;
+                }
+            }
+            OverlayData replacedOverlay = null;
+            SlotData replacedSlot = null;
+
+
+            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+            {
+                SlotData originalSlot = umaData.umaRecipe.slotDataList[i];
+                if (originalSlot == null)
+                {
+                    continue;
+                }
+
+                if (originalSlot.slotName == replaceSlot)
+                {
+                    UMAPackedRecipeBase.UMAPackRecipe PackRecipe = Replacer.PackedLoad(context);
+                    UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe, context);
+                    if (TempRecipe.slotDataList.Length > 0)
+                    {
+                        List<OverlayData> originalOverlays = originalSlot.GetOverlayList();
+                        foreach (SlotData replacementSlot in TempRecipe.slotDataList)
+                        {
+                            if (replacementSlot != null)
+                            {
+                                if (originalOverlays.Count > 1)
+                                {
+                                    replacedOverlay = originalOverlays[0];
+                                    for (int j = 1; j < originalOverlays.Count; j++)
+                                    {
+                                        replacementSlot.AddOverlay(originalOverlays[j]);
+                                    }
+                                }
+                                // replacementSlot.SetOverlayList(originalOverlays);
+                                umaData.umaRecipe.slotDataList[i] = replacementSlot;
+                                replacedSlot = replacementSlot;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (replacedSlot != null && replacedOverlay != null)
+            {
+                foreach (SlotData sd in umaData.umaRecipe.slotDataList)
+                {
+                    var ovl = sd.GetOverlay(0);
+                    if (ovl != null)
+                    {
+                        if (ovl.overlayName == replacedOverlay.overlayName)
+                        {
+                            sd.SetOverlayList(replacedSlot.GetOverlayList());
+
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// JRM - Renamed from ProcessHiddenSlots for Wildcards
         ///     - This is the only function changed for Wildcards
@@ -4402,12 +4478,15 @@ namespace UMA.CharacterSystem
             List<SlotData> WildCards = null;// = new List<SlotData>();
 
             List<SlotData> NewSlots = new List<SlotData>();
-            foreach (SlotData sd in umaData.umaRecipe.slotDataList)
+            //foreach (SlotData sd in umaData.umaRecipe.slotDataList)
+            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++) 
             {
+                SlotData sd = umaData.umaRecipe.slotDataList[i];
                 if (sd == null || sd.asset == null)
                 {
                     continue;
                 }
+
 
                 if (sd.HasTag(hideTags))
                 {

@@ -468,7 +468,7 @@ namespace UMA.Editors
         {
             const float WindowHeight = 140;
             const float WindowWidth = 380;
-            const float Margin = 20;
+            const float Margin = 40;
 
             ResetLabelStart();
 

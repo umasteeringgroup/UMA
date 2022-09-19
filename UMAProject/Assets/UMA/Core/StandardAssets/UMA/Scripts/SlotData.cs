@@ -37,6 +37,14 @@ namespace UMA
 		public bool BlendshapeFoldout;
 		public bool isDeleted;
 #endif
+
+        // These are set by the combiner
+        // so we can later determine where this is in the end SMR
+        public int skinnedMeshRenderer;
+        public int submeshIndex;
+        public int vertexOffset;
+        public Rect UVArea;
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -49,6 +57,11 @@ namespace UMA
 				return false;
 			}
 		}
+
+        public Vector2 ConvertToAtlasUV(Vector2 uvIn)
+        {
+            return new Vector2(UVArea.x + UVArea.width * uvIn.x, UVArea.y + UVArea.height * uvIn.y);
+        }
 
 		/// <summary>
 		/// The Maximum LOD that this is displayed on.
@@ -236,7 +249,10 @@ namespace UMA
 					res.overlayList.Add(overlay.Duplicate());
 				}
 			}
-
+            res.skinnedMeshRenderer = 0;
+            res.submeshIndex = 0;
+            res.vertexOffset = 0;
+            res.UVArea.Set(0, 0, 1.0f, 1.0f);
 			res.Races = Races;
 			res.tags = tags;
 			res.blendShapeTargetSlot = blendShapeTargetSlot;
