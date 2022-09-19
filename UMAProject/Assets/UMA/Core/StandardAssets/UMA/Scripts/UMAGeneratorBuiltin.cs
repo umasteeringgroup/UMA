@@ -101,20 +101,13 @@ namespace UMA
 		}
 
 		public virtual void Update()
-		{
-			if (CheckRenderTextures())
-				return; // if render textures needs rebuild we'll not do anything else
+        {
+            if (CheckRenderTextures())
+            {
+                return; // if render textures needs rebuild we'll not do anything else
+            }
 
-			if (collectGarbage && (forceGarbageCollect > garbageCollectionRate))
-			{
-				GC.Collect();
-				forceGarbageCollect = 0;
-				if (garbageCollectionRate < 1) garbageCollectionRate = 1;
-			}
-			else
-			{
-				Work();
-			}
+			Work();
 		}
 
 		private bool CheckRenderTextures()
@@ -147,7 +140,20 @@ namespace UMA
 			UMAContextBase.IgnoreTag = ignoreTag;
 			if (!IsIdle())
 			{
-				stopWatch.Reset();
+                // forceGarbageCollect is incremented every time the mesh/rig is built.
+                // it does not increment on texture changes or rig adjustments.
+                // the choice used to be "collect garbage, or build an UMA"
+                // but collection is so cheap, we should just collect first
+                // and then go ahead and build the same frame
+                if (forceGarbageCollect > garbageCollectionRate)
+                {
+                    // TODO: Test this on IOS when I get it building. 
+                    // GC.Collect(0, GCCollectionMode.Forced, true, true);
+                    GC.Collect();
+                    forceGarbageCollect = 0;
+                }
+
+                stopWatch.Reset();
 				stopWatch.Start();
 				int count = IterationCount;
 
@@ -502,13 +508,6 @@ namespace UMA
 					UMAData umaData = umaDirtyList[0];
 					try
 					{
-						if (umaData.RebuildSkeleton)
-						{
-							DestroyImmediate(umaData.umaRoot, false);
-							umaData.umaRoot = null;
-							umaData.RebuildSkeleton = false;
-							umaData.isShapeDirty = true;
-						}
 						GenerateSingleUMA(umaDirtyList[0], true);
 					}
 					catch (Exception ex)

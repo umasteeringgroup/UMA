@@ -3860,23 +3860,6 @@ namespace UMA.CharacterSystem
 
             if (umaRace != umaData.umaRecipe.raceData)
             {
-                /*if (rebuildSkeleton)
-                  {
-
-                      // Old New Way
-                      DestroyImmediate(umaData.umaRoot,false);
-                      umaData.umaRoot = null;
-                      // New Way end
-
-                      // Old Way
-                      //
-                      //foreach (Transform child in gameObject.transform)
-                      //{
-                      //    UMAUtils.DestroySceneObject(child.gameObject);
-                      //}
-                      // Old way end
-                  } */
-                // new way
                 umaData.RebuildSkeleton = rebuildSkeleton;
                 umaData.raceChanged = true;
                 UpdateNewRace();

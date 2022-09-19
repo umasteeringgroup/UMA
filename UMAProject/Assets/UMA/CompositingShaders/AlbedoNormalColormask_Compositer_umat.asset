@@ -10,40 +10,40 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
-  m_Name: uAlbedoNormalMaskmap_Compositer
+  m_Name: AlbedoNormalColormask_Compositer_umat
   m_EditorClassIdentifier: 
   translateSRP: 0
-  material: {fileID: 0}
+  material: {fileID: 2100000, guid: 9abfc81748bd8ee44bc9f6b91859a06d, type: 2}
   secondPass: {fileID: 0}
   materialType: 8
   channels:
-  - channelType: 0
+  - channelType: 3
     textureFormat: 0
-    materialPropertyName: 
+    materialPropertyName: _Albedo
     sourceTextureName: 
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 0
+  - channelType: 3
     textureFormat: 0
-    materialPropertyName: 
+    materialPropertyName: _NormalMask
     sourceTextureName: 
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 0
+  - channelType: 3
     textureFormat: 0
-    materialPropertyName: 
+    materialPropertyName: _ColorMask
     sourceTextureName: 
     Compression: 0
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
   MipMapBias: 0
-  AnisoLevel: 1
-  MatFilterMode: 1
+  AnisoLevel: 4
+  MatFilterMode: 2
   Compression: 0
   shaderParms: []
   MaskWithCurrentColor: 0

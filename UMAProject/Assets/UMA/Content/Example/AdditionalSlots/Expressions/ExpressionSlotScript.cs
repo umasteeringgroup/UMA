@@ -35,6 +35,10 @@ namespace UMA.PoseTools
 				expressionPlayer.SlotUpdateVsCharacterUpdate++;
 				umaData.CharacterUpdated.AddListener(new UnityAction<UMAData>(umaData_OnCharacterUpdated));
 			}
+			else
+            {
+				expressionPlayer.enabled = true;
+            }
 			expressionPlayer.expressionSet = expressionSet;
 			expressionPlayer.umaData = umaData;
 			foreach (var hash in expressionSet.GetAnimatedBoneHashes())

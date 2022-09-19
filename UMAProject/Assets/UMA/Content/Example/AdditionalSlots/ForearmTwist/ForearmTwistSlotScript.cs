@@ -42,10 +42,13 @@ namespace UMA
 				return;
 			}
 
-			var twist = umaData.umaRoot.AddComponent<TwistBones>();
-			twist.twistValue = 0.5f;
-			twist.twistBone = new Transform[] {leftTwist.transform, rightTwist.transform};
-			twist.refBone = new Transform[] {leftHand.transform, rightHand.transform};
+			if (umaData.gameObject.GetComponent<TwistBones>() == null)
+			{
+				var twist = umaData.gameObject.AddComponent<TwistBones>();
+				twist.twistValue = 0.5f;
+				twist.twistBone = new Transform[] { leftTwist.transform, rightTwist.transform };
+				twist.refBone = new Transform[] { leftHand.transform, rightHand.transform };
+			}
 		}
 	}
 }
