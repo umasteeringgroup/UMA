@@ -1,4 +1,3 @@
-using Haven.PathPainter2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -1108,7 +1107,11 @@ namespace UMA.Controls
                 if (removed)
                 {
                     EditorUtility.SetDirty(uwr);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
                     AssetDatabase.SaveAssetIfDirty(uwr);
+#else
+                    AssetDatabase.SaveAssets();
+#endif
                     string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
                     AssetDatabase.ImportAsset(path);
                     return true;
@@ -1140,7 +1143,12 @@ namespace UMA.Controls
                     Debug.Log("Updating item: " + ai._Name);
                     uwr.MeshHideAssets.Add(AddedMHA);
                     EditorUtility.SetDirty(uwr);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
                     AssetDatabase.SaveAssetIfDirty(uwr);
+#else
+                    AssetDatabase.SaveAssets();
+#endif
+
                     string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
                     AssetDatabase.ImportAsset(path);
                     return true;
@@ -1247,7 +1255,12 @@ namespace UMA.Controls
                 {
                     uwr.compatibleRaces.Add(race.raceName);
                     EditorUtility.SetDirty(uwr);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
                     AssetDatabase.SaveAssetIfDirty(uwr);
+#else
+                    AssetDatabase.SaveAssets();
+#endif
+
                     string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
                     AssetDatabase.ImportAsset(path);
                 }
@@ -1265,7 +1278,12 @@ namespace UMA.Controls
                     uwr.compatibleRaces.Clear();
                     uwr.compatibleRaces.Add(race.raceName);
                     EditorUtility.SetDirty(uwr);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
                     AssetDatabase.SaveAssetIfDirty(uwr);
+#else
+                    AssetDatabase.SaveAssets();
+#endif
+
                     string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
                     AssetDatabase.ImportAsset(path);
                 }
@@ -1282,7 +1300,12 @@ namespace UMA.Controls
                 {
                     uwr.compatibleRaces.Remove(race.raceName);
                     EditorUtility.SetDirty(uwr);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
                     AssetDatabase.SaveAssetIfDirty(uwr);
+#else
+                    AssetDatabase.SaveAssets();
+#endif
+
                     string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
                     AssetDatabase.ImportAsset(path);
                 }
@@ -1683,9 +1706,9 @@ namespace UMA.Controls
             EditorUtility.ClearProgressBar();
         }
 
-        #endregion
+#endregion
 
-        #region GUI Rectangles
+#region GUI Rectangles
         int sidePanelWidth = 300;
 
         float positionwidth
@@ -1764,9 +1787,9 @@ namespace UMA.Controls
                 return toolbar;
             }
         }
-        #endregion
+#endregion
 
-        #region GUI
+#region GUI
         void InitIfNeeded()
         {
             if (!m_Initialized)
@@ -1932,7 +1955,7 @@ namespace UMA.Controls
             }
         }
 
-        #region DragDrop
+#region DragDrop
         private void DragDropAdd(Rect dropArea)
         {
 
@@ -2041,7 +2064,7 @@ namespace UMA.Controls
                 }
             }
         }
-        #endregion
+#endregion
 
         private string dots = "";
         void OnGUI()
