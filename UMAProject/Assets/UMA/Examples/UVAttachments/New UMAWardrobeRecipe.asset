@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
-  m_Name: BodyHair
+  m_Name: New UMAWardrobeRecipe
   m_EditorClassIdentifier: 
   label: 
   resourcesOnly: 0
@@ -19,7 +19,7 @@ MonoBehaviour:
   compatibleRaces: []
   wardrobeRecipeThumbs: []
   wardrobeSlot: None
-  Appended: 1
+  Appended: 0
   Hides: []
   HideTags: []
   suppressWardrobeSlots: []
@@ -27,7 +27,7 @@ MonoBehaviour:
   MeshHideAssets: []
   OverrideDNA:
     PreloadValues: []
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[],"colors":[],"fColors":[],"sharedColorCount":0,"race":"","packedDna":[]}'
+  recipeString: 
   IncompatibleRecipes: []
   UserField: 
-  replaces: Nothing
+  replaces: 

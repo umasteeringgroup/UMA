@@ -213,11 +213,15 @@ namespace UMA
 				{
 					for (int i = 0; i < animator.layerCount; i++)
 					{
-						animator.Play(stateHashes[i], i, stateTimes[i]);
-						if (i < layerWeights.Count)
-						{
-							animator.SetLayerWeight(i, layerWeights[i]);
-						}
+                        if (animator.GetLayerName(i).ToLower().Contains("sync") == false)
+                        {
+                            animator.Play(stateHashes[i], i, stateTimes[i]);
+                            if (i < layerWeights.Count)
+                            {
+
+                                animator.SetLayerWeight(i, layerWeights[i]);
+                            }
+                        }
 					}
 				}
 				if (parameters != null)

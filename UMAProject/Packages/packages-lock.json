@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.jbooth.better-shaders": {
+      "version": "file:com.jbooth.better-shaders",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.burst": {
       "version": "1.4.11",
       "depth": 0,

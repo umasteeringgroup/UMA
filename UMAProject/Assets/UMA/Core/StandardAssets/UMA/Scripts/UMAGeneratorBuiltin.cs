@@ -281,6 +281,8 @@ namespace UMA
 
 		public void SaveBonesRecursively(Transform bone, Transform holder)
         {
+            List<Transform> childlist = new List<Transform>();
+
 			if (bone.CompareTag(UMAContextBase.IgnoreTag))
 			{
 				if (bone.parent != null)
@@ -291,9 +293,15 @@ namespace UMA
 			}
 			else
 			{
-				for (int i = 0; i < bone.childCount; i++)
+                foreach(Transform child in bone)
+                {
+                    childlist.Add(child);
+                }
+
+
+				foreach(var child in childlist)
 				{
-					SaveBonesRecursively(bone.GetChild(i),holder);
+					SaveBonesRecursively(child,holder);
 				}
 			}
         }

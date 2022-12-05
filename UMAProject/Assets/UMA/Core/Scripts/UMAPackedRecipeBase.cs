@@ -851,8 +851,10 @@ namespace UMA
 		public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV2.Length];
-			umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
-
+			if (!String.IsNullOrWhiteSpace(umaPackRecipe.race))
+			{
+				umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
+			}
 			umaRecipe.ClearDna();
 			List<UMADnaBase> packedDna = UnPackDNA(umaPackRecipe.packedDna);
 

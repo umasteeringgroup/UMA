@@ -12,6 +12,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
+using System.Linq;
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
@@ -4398,7 +4399,6 @@ namespace UMA.CharacterSystem
 
         void ReplaceSlot(UMAWardrobeRecipe Replacer)
         {
-            //we need to check if *this* recipe is directly or only cross compatible with this race
             bool isCrossCompatibleRecipe = (activeRace.racedata.IsCrossCompatibleWith(Replacer.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(Replacer.wardrobeSlot));
             string replaceSlot = Replacer.replaces;
             if (isCrossCompatibleRecipe)
@@ -4409,9 +4409,10 @@ namespace UMA.CharacterSystem
                     replaceSlot = equivalentSlot;
                 }
             }
-            OverlayData replacedOverlay = null;
-            SlotData replacedSlot = null;
 
+
+            SlotData replacedSlot = null;
+            List<OverlayData> ReplacedOverlays = null;
 
             for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
             {
@@ -4420,60 +4421,105 @@ namespace UMA.CharacterSystem
                 {
                     continue;
                 }
-
                 if (originalSlot.slotName == replaceSlot)
                 {
                     UMAPackedRecipeBase.UMAPackRecipe PackRecipe = Replacer.PackedLoad(context);
                     UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe, context);
-                    if (TempRecipe.slotDataList.Length > 0)
+                    SlotData newSlot = TempRecipe.GetFirstSlot();
+                    if (newSlot != null)
                     {
-                        List<OverlayData> originalOverlays = originalSlot.GetOverlayList();
-                        foreach (SlotData replacementSlot in TempRecipe.slotDataList)
+                        replacedSlot = originalSlot;
+                        var newOverlays = newSlot.GetOverlayList();
+
+                        newSlot.SetOverlayList(replacedSlot.GetOverlayList());
+                        newSlot.AddOverlayList(newOverlays);
+                        ReplacedOverlays = newSlot.GetOverlayList();
+                        umaData.umaRecipe.slotDataList[i] = newSlot;
+                    }
+                }
+            }
+
+            if (ReplacedOverlays != null)
+            {
+                for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+                {
+                    SlotData checkSlot = umaData.umaRecipe.slotDataList[i];
+                    if (checkSlot == null)
+                    {
+                        continue;
+                    }
+                    var ovl = checkSlot.GetOverlay(0);
+                    if (ovl.overlayName == replacedSlot.GetOverlay(0).overlayName)
+                    {
+                        checkSlot.SetOverlayList(ReplacedOverlays);
+                    }
+                }
+            }
+
+            /*
+
+                        for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
                         {
-                            if (replacementSlot != null)
+                            SlotData originalSlot = umaData.umaRecipe.slotDataList[i];
+                            if (originalSlot == null)
                             {
-                                if (originalOverlays.Count > 1)
+                                continue;
+                            }
+
+                            if (originalSlot.slotName == replaceSlot)
+                            {
+                                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = Replacer.PackedLoad(context);
+                                UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe, context);
+                                if (TempRecipe.slotDataList.Length > 0)
                                 {
-                                    replacedOverlay = originalOverlays[0];
-                                    for (int j = 1; j < originalOverlays.Count; j++)
+                                    List<OverlayData> originalOverlays = originalSlot.GetOverlayList();
+                                    foreach (SlotData replacementSlot in TempRecipe.slotDataList)
                                     {
-                                        replacementSlot.AddOverlay(originalOverlays[j]);
+                                        if (replacementSlot != null)
+                                        {
+                                            if (originalOverlays.Count > 1)
+                                            {
+                                                replacedOverlay = originalOverlays[0];
+                                                for (int j = 1; j < originalOverlays.Count; j++)
+                                                {
+                                                    replacementSlot.AddOverlay(originalOverlays[j]);
+                                                }
+                                            }
+                                            // replacementSlot.SetOverlayList(originalOverlays);
+                                            umaData.umaRecipe.slotDataList[i] = replacementSlot;
+                                            replacedSlot = replacementSlot;
+                                            break;
+                                        }
                                     }
                                 }
-                                // replacementSlot.SetOverlayList(originalOverlays);
-                                umaData.umaRecipe.slotDataList[i] = replacementSlot;
-                                replacedSlot = replacementSlot;
-                                break;
                             }
                         }
-                    }
-                }
-            }
 
-            if (replacedSlot != null && replacedOverlay != null)
-            {
-                foreach (SlotData sd in umaData.umaRecipe.slotDataList)
-                {
-                    var ovl = sd.GetOverlay(0);
-                    if (ovl != null)
-                    {
-                        if (ovl.overlayName == replacedOverlay.overlayName)
+                        if (replacedSlot != null && replacedOverlay != null)
                         {
-                            sd.SetOverlayList(replacedSlot.GetOverlayList());
+                            foreach (SlotData sd in umaData.umaRecipe.slotDataList)
+                            {
+                                var ovl = sd.GetOverlay(0);
+                                if (ovl != null)
+                                {
+                                    if (ovl.overlayName == replacedOverlay.overlayName)
+                                    {
+                                        sd.SetOverlayList(replacedSlot.GetOverlayList());
 
+                                    }
+                                }
+                            }
                         }
-                    }
-                }
-            }
+            */
         }
 
-        /// <summary>
-        /// JRM - Renamed from ProcessHiddenSlots for Wildcards
-        ///     - This is the only function changed for Wildcards
-        /// </summary>
-        /// <param name="hiddenSlots"></param>
-        /// <param name="hideTags"></param>
-        void PostProcessSlots(List<string> hiddenSlots, List<string> hideTags = null)
+            /// <summary>
+            /// JRM - Renamed from ProcessHiddenSlots for Wildcards
+            ///     - This is the only function changed for Wildcards
+            /// </summary>
+            /// <param name="hiddenSlots"></param>
+            /// <param name="hideTags"></param>
+            void PostProcessSlots(List<string> hiddenSlots, List<string> hideTags = null)
         {
             List<SlotData> WildCards = null;// = new List<SlotData>();
 

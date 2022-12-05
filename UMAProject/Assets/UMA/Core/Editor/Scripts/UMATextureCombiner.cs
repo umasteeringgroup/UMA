@@ -19,11 +19,16 @@ namespace UMA
         {
             // Get the compute shader
             textureComputeShader = Resources.Load<ComputeShader>("Shader/Combiner");
+            if (textureComputeShader == null)
+            {
+                EditorUtility.DisplayDialog("Error!","Compute shader 'Combiner' not found","OK");
+                return;
+            }
             kernel = textureComputeShader.FindKernel("Combiner");
 
             var w = GetWindow<UMATextureCombiner>(true, "UMA Texture Combiner");
-            w.minSize = new Vector2(870, 420);
-            w.maxSize = new Vector2(870, 420);
+            w.minSize = new Vector2(800, 420);
+            w.maxSize = new Vector2(800, 420);
         }
 
         public enum Channel { R, G, B, A, Luma, Average, Value }
@@ -47,6 +52,11 @@ namespace UMA
         float bColor = 0.0f;
         float aColor = 0.0f;
 
+        bool invertR = false;
+        bool invertG = false;
+        bool invertB = false;
+        bool invertA = false;
+
         float[] rUV = new float[2];
         float[] gUV = new float[2];
         float[] bUV = new float[2];
@@ -57,6 +67,11 @@ namespace UMA
 
         private void OnEnable()
         {
+            if (textureComputeShader == null)
+            {
+                textureComputeShader = Resources.Load<ComputeShader>("Shader/Combiner");
+                kernel = textureComputeShader.FindKernel("Combiner");
+            }
             if (textureR == null)
             {
                 textureR = Texture2D.whiteTexture;
@@ -80,14 +95,60 @@ namespace UMA
             UpdateRenderTextures(false);
         }
 
-        void OnGUI()
+        void DrawBox(Rect r)
         {
+            Color b = GUI.color;
+            if (EditorGUIUtility.isProSkin)
+            {
+                GUI.color = new Color(1.3f, 1.4f, 1.5f);
+            }
+            else
+            {
+                GUI.color = new Color(0.75f, 0.875f, 1f);
+            }
 
+            GUIStyle theStyle = EditorStyles.textField;
+
+            GUI.Box(r,"",theStyle);
+
+            GUI.color = b;
+        }
+
+void OnGUI()
+        {
+            // TODO: Add a preset function
             GUILayout.Space(8f);
 
-            float space = 8f;
+            float space = 12f;
+            float rowHeight = 64f;
+
             var r = EditorGUILayout.GetControlRect(false, (64f + space) * 4f);
+            var lblRect = r;
+            lblRect.width = 20f;
+
+            var chanRect = r;
+            chanRect.width = 320f;
+
             var texRect = r;
+            texRect.width = 64f;
+
+            Rect outline = r;
+            outline.y += 28;
+            outline.width = lblRect.width + chanRect.width + texRect.width + 32f;
+            outline.height = 72f;
+
+
+
+            for (int i = 0;  i < 4; i++)
+            {
+                DrawBox(outline);
+                outline.y += rowHeight+space;
+            }
+
+            texRect.height = 32;
+            texRect.width = 128;
+            EditorGUI.LabelField(texRect,"Input Texture");
+            texRect.y += 32;
             texRect.x += 24f;
             texRect.height = 64f;
             texRect.width = 64f;
@@ -99,10 +160,8 @@ namespace UMA
             texRect.y += 64f + space;
             textureA = (Texture2D)EditorGUI.ObjectField(texRect, textureA, typeof(Texture2D), false);
 
-            var lblRect = r;
-            lblRect.width = 20f;
             lblRect.x += 4f;
-            lblRect.y += 22f;
+            lblRect.y += 22f + 32f;
             GUI.Label(lblRect, "R", EditorStyles.largeLabel);
             lblRect.y += 64f + space;
             GUI.Label(lblRect, "G", EditorStyles.largeLabel);
@@ -111,36 +170,62 @@ namespace UMA
             lblRect.y += 64f + space;
             GUI.Label(lblRect, "A", EditorStyles.largeLabel);
 
-            var chanRect = r;
-            chanRect.width = 320f;
             chanRect.x += texRect.x + texRect.width + space;
+
+            chanRect.height = 32;
+            EditorGUI.LabelField(chanRect,"Channel Source");
+
             chanRect.height = 64f;
-            sourceR = (Channel)GUI_SourceChannel(chanRect, sourceR, ref rColor);
+            chanRect.y += 32;
+            sourceR = (Channel)GUI_SourceChannel(chanRect, sourceR, ref rColor, 0);
             chanRect.y += 64f + space;
-            sourceG = (Channel)GUI_SourceChannel(chanRect, sourceG, ref gColor);
+            sourceG = (Channel)GUI_SourceChannel(chanRect, sourceG, ref gColor, 1);
             chanRect.y += 64f + space;
-            sourceB = (Channel)GUI_SourceChannel(chanRect, sourceB, ref bColor);
+            sourceB = (Channel)GUI_SourceChannel(chanRect, sourceB, ref bColor, 2);
             chanRect.y += 64f + space;
-            sourceA = (Channel)GUI_SourceChannel(chanRect, sourceA, ref aColor);
+            sourceA = (Channel)GUI_SourceChannel(chanRect, sourceA, ref aColor, 3);
 
             var resultRect = r;
-            resultRect.height = (64f + space) * 4f;
             resultRect.x += lblRect.x + lblRect.width + texRect.width + chanRect.width + 64f;
+            resultRect.height = 32;
+            EditorGUI.LabelField(resultRect, "Output Texture");
+
+            resultRect.height = (64f + space) * 4f;
+            resultRect.y += 32;
             resultRect.width = resultRect.height;
+
 
             if (textureCombined != null)
             {
                 var alphaRect = resultRect;
-                alphaRect.width = resultRect.width / 2.0f;
+                alphaRect.width = resultRect.width / 5.0f;
                 alphaRect.height += 24.0f;
 
-                if (GUI.Toggle(alphaRect, viewAlpha == 0, "View RGB", EditorStyles.miniButton))
+                if (GUI.Toggle(alphaRect, viewAlpha == 0, "RGB", EditorStyles.miniButton))
                 {
                     viewAlpha = 0;
                 }
 
                 alphaRect.x += alphaRect.width;
-                if (GUI.Toggle(alphaRect, viewAlpha == 1,"View Alpha", EditorStyles.miniButton))
+                if (GUI.Toggle(alphaRect, viewAlpha == 2,"Red", EditorStyles.miniButton))
+                {
+                    viewAlpha = 2;
+                }
+
+                alphaRect.x += alphaRect.width;
+                if (GUI.Toggle(alphaRect, viewAlpha == 3, "Green", EditorStyles.miniButton))
+                {
+                    viewAlpha = 3;
+                }
+
+                alphaRect.x += alphaRect.width;
+                if (GUI.Toggle(alphaRect, viewAlpha == 4, "Blue", EditorStyles.miniButton))
+                {
+                    viewAlpha = 4;
+                }
+
+                alphaRect.x += alphaRect.width;
+                if (GUI.Toggle(alphaRect, viewAlpha == 1, "Alpha", EditorStyles.miniButton))
                 {
                     viewAlpha = 1;
                 }
@@ -156,6 +241,8 @@ namespace UMA
                 EditorGUI.HelpBox(resultRect, "texture not generated yet", MessageType.Warning);
             }
 
+            GUILayout.Space(32);
+            GUILayout.Label("Output Texture Size");
             GUILayout.Space(8f);
             GUILayout.BeginHorizontal();
 
@@ -187,6 +274,8 @@ namespace UMA
             {
                 SaveAs();
             }
+            GUILayout.Space(18);
+
             GUILayout.EndHorizontal();
 
             //Options
@@ -199,9 +288,10 @@ namespace UMA
             {
                 Reset();
             }
+            GUILayout.Space(18);
             GUILayout.EndHorizontal();
 
-            if (GUI.changed)
+            if (GUI.changed && textureComputeShader != null)
             {
                 RefreshCombinedTexture(true);
             }
@@ -224,21 +314,28 @@ namespace UMA
             sourceG = Channel.R;
             sourceB = Channel.R;
             sourceA = Channel.R;
-            textureR = null;
-            textureG = null;
-            textureB = null;
-            textureA = null;
+            textureR = Texture2D.whiteTexture;
+            textureG = Texture2D.whiteTexture;
+            textureB = Texture2D.whiteTexture;
+            textureA = Texture2D.whiteTexture;
             textureSaved = null;
             rColor = 0.0f;
             gColor = 0.0f;
             bColor = 0.0f;
-            aColor = 0.0f;  
+            aColor = 0.0f;
+            invertR = false;
+            invertG = false;
+            invertB = false;
+            invertA = false;
+
         }
 
         void UpdateRenderTextures(bool delete)
         {
             if (delete && textureCombined != null)
+            {
                 ClearRenderTexture(textureCombined);
+            }
 
             if (textureCombined == null)
             {
@@ -263,6 +360,10 @@ namespace UMA
             textureComputeShader.SetInt("bSource", (int)sourceB);
             textureComputeShader.SetInt("aSource", (int)sourceA);
 
+            textureComputeShader.SetInt("invertR", invertR ? 1 : 0);
+            textureComputeShader.SetInt("invertG", invertG ? 1 : 0);
+            textureComputeShader.SetInt("invertB", invertB ? 1 : 0);
+            textureComputeShader.SetInt("invertA", invertA ? 1 : 0);
 
             textureComputeShader.SetFloat("ColorR", rColor);
             textureComputeShader.SetFloat("ColorG", gColor);
@@ -280,7 +381,9 @@ namespace UMA
         void OnDestroy()
         {
             if (textureCombined != null)
+            {
                 ClearRenderTexture(textureCombined);
+            }
         }
 
         void ClearRenderTexture(RenderTexture rt)
@@ -289,7 +392,7 @@ namespace UMA
             DestroyImmediate(rt);
         }
 
-        int GUI_SourceChannel(Rect position, Channel channel, ref float ChannelColor)
+        int GUI_SourceChannel(Rect position, Channel channel, ref float ChannelColor, int outputChannel)
         {
             // I know this looks a bit goofy, but I needed to pack the
             // controls in two columns to make the new ones fit.
@@ -352,9 +455,52 @@ namespace UMA
                 channel = (Channel)i;
             }
 
+
+
             if ((int)channel == i)
             {
                 ChannelColor = EditorGUI.Slider(r2, ChannelColor, 0.0f, 1.0f);
+                if (outputChannel == 0)
+                {
+                    invertR = false;
+                }
+
+                if (outputChannel == 1)
+                {
+                    invertG = false;
+                }
+
+                if (outputChannel == 2)
+                {
+                    invertB = false;
+                }
+
+                if (outputChannel == 3)
+                {
+                    invertA = false;
+                }
+            }
+            else
+            {
+                if (outputChannel == 0)
+                {
+                    invertR = GUI.Toggle(r2, invertR, "Invert");
+                }
+
+                if (outputChannel == 1)
+                {
+                    invertG = GUI.Toggle(r2, invertG, "Invert");
+                }
+
+                if (outputChannel == 2)
+                {
+                    invertB = GUI.Toggle(r2, invertB, "Invert");
+                }
+
+                if (outputChannel == 3)
+                {
+                    invertA = GUI.Toggle(r2, invertA, "Invert");
+                }
             }
 
             return (int)channel;

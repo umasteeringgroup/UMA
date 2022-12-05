@@ -1,16 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using UMA.CharacterSystem;
 using UMA.Editors;
 using UMA.PoseTools;
 using UnityEditor;
 using UnityEditor.Animations;
-using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 
 namespace UMA.Controls
@@ -33,6 +30,7 @@ namespace UMA.Controls
         bool ShowUtilities;
         UMAMaterial umaMaterial;
         RaceData umaRaceData;
+        OverlayDataAsset umaOverlay;
         MeshHideAsset AddedMHA = null;
 
         private GenericMenu FileMenu
@@ -1245,6 +1243,80 @@ namespace UMA.Controls
             return assets;
         }
 
+        bool setRect;
+        bool setRotation;
+        bool setScale;
+
+        private void UpdateRecipeTransforms(Rect rect, Vector3 scale, float rotation, bool rectLimit, Rect rectCheck)
+        {
+            if (UMAContext.Instance == null)
+            {
+                EditorUtility.DisplayDialog("No context found!","A valid context must be loaded in an open scene to use this function.","OK");
+                return;
+            }
+            var assets = GetSelectedAssets(typeof(UMAWardrobeRecipe));
+            foreach (var ai in assets)
+            {
+                UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
+                if (uwr != null)
+                {
+                    uwr.PackedLoad(UMAContext.Instance);
+                    UMAData.UMARecipe _recipe = new UMAData.UMARecipe();
+                    uwr.Load(_recipe, UMAContext.Instance);
+
+                    foreach (SlotData sd in _recipe.slotDataList)
+                    {
+                        if (sd != null)
+                        {
+                            var ovls = sd.GetOverlayList();
+
+                            foreach (OverlayData od in ovls)
+                            {
+                                if (_overlayLimit)
+                                {
+                                    if (od.overlayName != umaOverlay.overlayName)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                if (rectLimit)
+                                {
+                                    if (od.rect.x != rectCheck.x || od.rect.y != rectCheck.y || od.rect.width != rectCheck.width || od.rect.height != rectCheck.height)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                if (setRect)
+                                {
+                                    od.rect.Set(rect.x, rect.y, rect.width, rect.height);
+                                }
+                                if (setScale)
+                                {
+                                    od.Scale.Set(scale.x, scale.y, scale.z);
+                                }
+                                if (setRotation)
+                                {
+                                    od.Rotation = rotation;
+                                }
+                            }
+                        }
+                    }
+
+
+                    uwr.Save(_recipe, UMAContextBase.Instance);
+                    EditorUtility.SetDirty(uwr);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
+                    AssetDatabase.SaveAssetIfDirty(uwr);
+#else
+                    AssetDatabase.SaveAssets();
+#endif
+
+                    string path = AssetDatabase.GetAssetPath(uwr.GetInstanceID());
+                    AssetDatabase.ImportAsset(path);
+                }
+            }
+        }
+
         void AddToWardrobeRecipes(RaceData race)
         {
             var assets = GetSelectedAssets(typeof(UMAWardrobeRecipe));
@@ -2106,6 +2178,13 @@ namespace UMA.Controls
         bool _meshHideFoldout;
         bool _materialFoldout;
         bool _raceFoldout;
+        bool _recipeFoldout;
+        Rect _rect;
+        Vector3 _scale;
+        float _rotation;
+        bool _rectLimit;
+        bool _overlayLimit;
+        Rect _rectCheck;
         
         void ShowSidebar()
         {
@@ -2184,11 +2263,54 @@ namespace UMA.Controls
                 }
                 GUIHelper.EndVerticalPadded(10);
             }
+            _recipeFoldout = EditorGUILayout.Foldout(_recipeFoldout, "Update Recipe Transforms");
+            if (_recipeFoldout)
+            {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+
+                setRect = EditorGUILayout.ToggleLeft("Set Rect Value",setRect);
+                if (setRect)
+                {
+                    _rect = EditorGUILayout.RectField("Rect: ", _rect);
+                }
+
+                setRotation = EditorGUILayout.ToggleLeft("Set Rotation Value", setRotation);
+                if (setRotation)
+                {
+                    _rotation = EditorGUILayout.FloatField("Rotation: ", _rotation);
+                }
+
+                setScale = EditorGUILayout.ToggleLeft("Set Scale", setScale);
+                if (setScale)
+                {
+                    _scale = EditorGUILayout.Vector3Field("Scale: ", _scale);
+                }
+
+                _rectLimit = EditorGUILayout.ToggleLeft("Only where Rect = ",_rectLimit, GUILayout.ExpandWidth(false));
+                if (_rectLimit)
+                {
+                    _rectCheck = EditorGUILayout.RectField(_rectCheck);
+                }
+
+                _overlayLimit = EditorGUILayout.ToggleLeft("Only where Overlay = ", _overlayLimit, GUILayout.ExpandWidth(false));
+                if (_overlayLimit)
+                {
+                    umaOverlay = EditorGUILayout.ObjectField("", umaOverlay, typeof(OverlayDataAsset), false, GUILayout.Width(250)) as OverlayDataAsset;
+                }
+
+                if (GUILayout.Button("Update Transforms"))
+                {
+                    UpdateRecipeTransforms(_rect,_scale,_rotation,_rectLimit,_rectCheck);
+                    AssetDatabase.SaveAssets();
+                }
+                GUIHelper.EndVerticalPadded(10);
+            }
 
             GUILayout.EndScrollView();
         }
 
-		void MenuBar(Rect rect)
+
+        void MenuBar(Rect rect)
 		{
 #if UMA_ADDRESSABLES
 			if (AddressablesMenu.GetItemCount() == 1)

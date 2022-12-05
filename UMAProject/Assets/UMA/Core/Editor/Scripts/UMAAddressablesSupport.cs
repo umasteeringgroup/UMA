@@ -560,6 +560,63 @@ namespace UMA
             return ai._Type == typeof(OverlayDataAsset);
         }
 
+        /// <summary>
+        /// UMA assets must have addressable labels that specify what recipe they load with. In addition,
+        /// the materials need to be stripped from the items so we do not have duplicate shaders and duplicate
+        /// template materials loaded into the bundles (and into memory).
+        ///
+        /// You should call this in your buildscript BEFORE calling BuildPlayerContent.
+        /// 
+        ///			AddressableAssetSettings.BuildPlayerContent(out var result);
+        ///
+        /// Then after building the player content, you should call AddressablesBuildPostStep() below.
+        /// </summary>
+        public void AddressablesBuildPreStep()
+        {
+            // Clear the index, rebuild the type arrays, and then query to project for the indexed types, and
+            // add everything to the index. Do not add the text assets (only needed if loading characters from resources)
+            Debug.Log("AddressablesBuildPreStep - Rebuilding asset index.");
+            UMAAssetIndexer assetIndex = UMAAssetIndexer.Instance;
+            try
+            {
+                assetIndex.PrepareBuild();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+            Debug.Log($"AddressablesBuildPreStep - Generating UMA addressable labels.");
+
+            // Generate all UMA addressable labels by recipe. Every recipe gets a unique label, so when that
+            // recipe needs to be loaded, all bundles that contain that item are demand loaded into memory.
+            // they are unloaded when there is no active character using any of the assets.
+            UMAAddressablesSupport.Instance.GenerateAddressables(new SingleGroupGenerator { ClearMaterials = true });
+
+            // Make sure that the global library has a reference to every item that is not addressable.
+            // This ensures that they item is included in resources. (Since the items are built dynamically,
+            // they must be able to be loaded at runtime either through addressable bundles or resources).
+            Debug.Log($"AddressablesBuildPreStep - Adding UMA resource references");
+            assetIndex.AddReferences();
+        }
+
+
+        /// <summary>
+        /// This will reset the materials on the assets by looking up the materials in the library.
+        /// This needs to happen after the bundles are built.
+        /// </summary>
+        public void AddressablesBuildPostStep()
+        {
+            Debug.Log($"AddressablesBuildPostStep - Adding UMA resource references");
+            try
+            {
+                UMAAssetIndexer.Instance.PostBuildMaterialFixup();
+            }
+            catch (Exception ex)
+            {
+                Debug.Log($"AddressablesBuildPostStep - Adding UMA resource references failed with exception {ex.Message}");
+            }
+        }
+
         public void GenerateAddressables(IUMAAddressablePlugin plugin)
         {
             bool OK = plugin.Prepare();

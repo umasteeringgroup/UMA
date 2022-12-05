@@ -566,11 +566,14 @@ namespace UMA.CharacterSystem.Examples
                             mats[i] = replacer.doubleSidedReplacement;
                         }
                     }
-					if (m.shader.name.Contains("Lit"))
-					{
-						m.SetFloat("__cull", 0);
-						m.SetFloat("_Cull", 0);
-					}
+                    if (m.HasProperty("_Cull"))
+                    {
+                        m.SetFloat("_Cull", 0);
+                    }
+                    if (m.HasProperty("__cull"))
+                    {
+                        m.SetFloat("__cull", 0);
+                    }
 				}
 			}
 		}

@@ -26,6 +26,11 @@ int gSource;
 int bSource;
 int aSource;
 
+int invertR;
+int invertG;
+int invertB;
+int invertA;
+
 float ColorR;
 float ColorG;
 float ColorB;
@@ -68,10 +73,55 @@ void Combiner(uint3 id : SV_DispatchThreadID)
 
     if (alphaOnly == 1)
     {
-        outColor.r = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
-        outColor.g = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
-        outColor.b = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
-        outColor.a = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
+        // Alpha only output
+        float a = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
+        if (invertA) 
+        { 
+            a = 1.0f-a;
+        }
+        outColor.r = a;
+        outColor.g = a;
+        outColor.b = a;
+        outColor.a = 1.0f;
+    }
+    else if (alphaOnly==2) 
+    {
+        // Red only output
+        float r = GetColor(rSource,UV,ColorR,InputR,samplerInputR);
+        if (invertR) 
+        { 
+            r = 1.0f - r;
+        }
+        outColor.r = r;
+        outColor.g = r;
+        outColor.b = r;
+        outColor.a = 1.0f;
+    }
+    else if (alphaOnly==3) 
+    {
+        // Green only output
+        float g = GetColor(gSource,UV,ColorG,InputG,samplerInputG);
+        if(invertG)
+        {
+            g = 1.0f - g;
+        }
+        outColor.r = g;
+        outColor.g = g;
+        outColor.b = g;
+        outColor.a = 1.0f;
+    }
+    else if (alphaOnly==4) 
+    {
+        // Blue only output
+        float b = GetColor(bSource,UV,ColorB,InputB,samplerInputB);
+        if (invertB) 
+        { 
+           b = 1.0f - b;
+        }
+        outColor.r = b;
+        outColor.g = b;
+        outColor.b = b;
+        outColor.a = 1.0f;
     }
     else
     {
@@ -79,6 +129,22 @@ void Combiner(uint3 id : SV_DispatchThreadID)
         outColor.g = GetColor(gSource,UV,ColorG,InputG,samplerInputG);
         outColor.b = GetColor(bSource,UV,ColorB,InputB,samplerInputB);
         outColor.a = GetColor(aSource,UV,ColorA,InputA,samplerInputA);
+        if (invertR>0) 
+        { 
+            outColor.r = 1.0f - outColor.r;
+        }
+        if (invertG>0) 
+        { 
+            outColor.g = 1.0f - outColor.g;
+        }
+        if (invertB>0) 
+        { 
+            outColor.b = 1.0f - outColor.b;
+        }
+        if (invertA>0) 
+        { 
+            outColor.a = 1.0f - outColor.a;
+        }
     }
 
     Result[id.xy] = outColor;
