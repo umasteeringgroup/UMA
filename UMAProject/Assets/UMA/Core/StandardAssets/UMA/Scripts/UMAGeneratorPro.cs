@@ -422,7 +422,7 @@ namespace UMA
 			textureProcesser.ProcessTexture(_umaData,_umaGenerator);
 
 			CleanBackUpTextures();
-			UpdateUV();
+ 			UpdateUV();
 
 			// Procedural textures were done here 
 			if (updateMaterialList)
@@ -440,11 +440,14 @@ namespace UMA
 						{
 							if (mats.Length > materialIndex) 
 							{
-								var val = mats[materialIndex].GetTag("Keep", false);
-								if (string.IsNullOrEmpty(val))
-								{
-									UMAUtils.DestroySceneObject(mats[materialIndex]);
-								}
+                                if (mats[materialIndex] != null)
+                                {
+                                    var val = mats[materialIndex].GetTag("Keep", false);
+                                    if (string.IsNullOrEmpty(val))
+                                    {
+                                        UMAUtils.DestroySceneObject(mats[materialIndex]);
+                                    }
+                                }
 							}
 							else
                             {
@@ -809,20 +812,41 @@ namespace UMA
 			for (int atlasIndex = 0; atlasIndex < umaAtlasList.materials.Count; atlasIndex++)
 			{
 				var material = umaAtlasList.materials[atlasIndex];
-				if (material.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
-					continue;
+
+                if (material.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
+                {
+                    if (material.materialFragments != null)
+                    {
+                        foreach (var fragment in material.materialFragments)
+                        {
+                            SlotData sd = fragment.slotData;
+                            sd.skinnedMeshRenderer = 0;
+                            sd.submeshIndex = 0;
+                            sd.vertexOffset = 0;
+                            sd.UVArea.Set(0, 0, 1.0f, 1.0f);
+                        }
+                    }
+                    continue;
+                }
 
 				Vector2 finalAtlasAspect = new Vector2(umaGenerator.atlasResolution / material.cropResolution.x, umaGenerator.atlasResolution / material.cropResolution.y);
 
 				for (int atlasElementIndex = 0; atlasElementIndex < material.materialFragments.Count; atlasElementIndex++)
 				{
-					Rect tempRect = material.materialFragments[atlasElementIndex].atlasRegion;
+                    var fragment = material.materialFragments[atlasElementIndex];
+					Rect tempRect = fragment.atlasRegion;
 					tempRect.xMin = tempRect.xMin * finalAtlasAspect.x;
 					tempRect.xMax = tempRect.xMax * finalAtlasAspect.x;
 					tempRect.yMin = tempRect.yMin * finalAtlasAspect.y;
 					tempRect.yMax = tempRect.yMax * finalAtlasAspect.y;
 					material.materialFragments[atlasElementIndex].atlasRegion = tempRect;
-				}
+
+                    SlotData sd = fragment.slotData;
+                    sd.skinnedMeshRenderer = 0;
+                    sd.submeshIndex = 0;
+                    sd.vertexOffset = 0;
+                    sd.UVArea.Set(0, 0, 1.0f, 1.0f);
+                }
 			}
 		}
 	}

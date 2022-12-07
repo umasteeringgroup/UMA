@@ -173,6 +173,10 @@ namespace UMA.Editors
 
             if (avatar != null && avatar.activeRace != null && avatar.activeRace.data != null)
             {
+#if UMA_ADDRESSABLES
+                if (avatar.AddressableBuildPending)
+                    return;
+#endif
                 currentRaceData = avatar.activeRace.data;
                 wardrobeOptions.AddRange(avatar.activeRace.data.wardrobeSlots);
                 wardrobeOptions.Insert(0, "Add Wardrobe Slot");

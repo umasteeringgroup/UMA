@@ -18,6 +18,8 @@ namespace UMA
 
 		DNAConvertDelegate ApplyDnaAction { get; }
 
+		DNAConvertDelegate PostApplyDnaAction { get; }
+
 		void Prepare();
 
 	}

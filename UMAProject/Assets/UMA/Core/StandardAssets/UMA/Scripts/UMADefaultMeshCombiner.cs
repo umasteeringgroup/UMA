@@ -37,7 +37,7 @@ namespace UMA
 			if (umaData.umaRoot != null)
 			{
 				umaData.CleanMesh(false);
-				if (umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets))
+				if ((umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets)))
 				{
 					renderers = umaData.GetRenderers();
 					umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
@@ -161,6 +161,10 @@ namespace UMA
 						tempMesh.blendShapes = Blendshapes.ToArray();
                     }
 					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData.umaRecipe);
+                    var inst = combinedMeshList[0];
+                    inst.slotData.vertexOffset = 0;
+                    inst.slotData.submeshIndex = 0;
+                    inst.slotData.skinnedMeshRenderer = currentRendererIndex;
 				}
 				else
 				{
@@ -172,7 +176,7 @@ namespace UMA
 					umaMesh.subMeshCount = 0;
 					umaMesh.vertexCount = 0;
 
-					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings,umaData.umaRecipe );
+					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings,umaData.umaRecipe, currentRendererIndex );
 
 					if (updatedAtlas)
 					{
@@ -250,6 +254,9 @@ namespace UMA
 						combineInstance.meshData = slotData.asset.meshData;
 						combineInstance.meshData.SlotName = slotData.slotName;
 					}
+                    // save a copy of the slotData so we can add
+                    // the vertex offsets, submeshindex to it.
+                    combineInstance.slotData = slotData;
 
 					//New MeshHiding
 					if (slotData.meshHideMask != null)
@@ -326,6 +333,9 @@ namespace UMA
 							atlasYRange = size.y / generatedMaterial.cropResolution.y;
 						}
 					}
+
+                    var sd = fragment.slotData;
+                    sd.UVArea.Set(atlasXMin, atlasYMin, atlasXRange, atlasYRange);
 
 					while (vertexCount-- > 0)
 					{

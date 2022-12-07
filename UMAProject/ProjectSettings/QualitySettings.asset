@@ -4,7 +4,7 @@
 QualitySettings:
   m_ObjectHideFlags: 0
   serializedVersion: 5
-  m_CurrentQuality: 4
+  m_CurrentQuality: 5
   m_QualitySettings:
   - serializedVersion: 2
     name: Fastest
@@ -154,7 +154,7 @@ QualitySettings:
     name: Beautiful
     pixelLightCount: 2
     shadows: 2
-    shadowResolution: 1
+    shadowResolution: 3
     shadowProjection: 1
     shadowCascades: 2
     shadowDistance: 40
@@ -225,4 +225,4 @@ QualitySettings:
   m_PerPlatformDefaultQuality:
     Android: 4
     Standalone: 4
-    WebGL: 0
+    WebGL: 4

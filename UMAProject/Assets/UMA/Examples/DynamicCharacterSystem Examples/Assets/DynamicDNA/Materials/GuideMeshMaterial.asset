@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: GuideMeshMaterial
   m_EditorClassIdentifier: 
-  translateSRP: 1
+  translateSRP: 0
   material: {fileID: 2100000, guid: ec6e052444d0c7e48aaec28d20a511f4, type: 2}
   materialType: 1
   channels:
@@ -47,3 +47,5 @@ MonoBehaviour:
   shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

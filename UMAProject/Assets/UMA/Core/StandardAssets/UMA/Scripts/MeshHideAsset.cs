@@ -349,13 +349,20 @@ namespace UMA
                 final[i] = new BitArray(flags[0][i]);
             }
 
+            BitArray[] baseSubmeshFlags = flags[0];
+
             for (int i = 1; i < flags.Count; i++)
-            {
-                for (int j = 0; j < flags[i].Length; j++)
+            {              
+                BitArray[] SubmeshFlags = flags[i];
+
+                for (int j = 0; j < SubmeshFlags.Length; j++)
                 {
-                    if (flags[i][j] != null && flags[0][j] != null && flags[i][j].Count == flags[0][j].Count)
+                    if (j < baseSubmeshFlags.Length)
                     {
-                       final[j].Or(flags[i][j]);
+                        if (SubmeshFlags[j] != null && baseSubmeshFlags[j] != null && SubmeshFlags[j].Count == baseSubmeshFlags[j].Count)
+                        {
+                            final[j].Or(SubmeshFlags[j]);
+                        }
                     }
                 }
             }

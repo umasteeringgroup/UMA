@@ -9,6 +9,10 @@ using UnityEngine.SceneManagement;
 using UMA;
 using UnityEditor.Compilation;
 
+#if UNITY_2020_1_OR_NEWER
+// Get rid of the annoying icon not found error.
+[EditorWindowTitle(icon = "", title = "InteractiveWindow", useTypeNameAsIconName = false)]
+#endif
 public class InteractiveUMAWindow : SceneView
 {
     bool isInitialized;
@@ -214,11 +218,11 @@ public class InteractiveUMAWindow : SceneView
         try 
         {
             //InitializeIfNeeded(); Don't ever do this
+            base.OnEnable();
             titleContent = new GUIContent(WindowName);
             EditorApplication.playModeStateChanged += EditorChanged;
             CompilationPipeline.assemblyCompilationStarted += CompilationPipeline_assemblyCompilationStarted;
             duringSceneGui += InteractiveUMAWindow_duringSceneGui;             
-            base.OnEnable();
         }
         catch (Exception) { };
     }

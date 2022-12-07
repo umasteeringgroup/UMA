@@ -45,7 +45,8 @@ namespace UMA
 		public enum ApplyPassOpts
 		{
 			PrePass,
-			Standard
+			Standard,
+			PostPass
 		}
 
 		#region ABSTRACT PROPERTIES AND METHODS

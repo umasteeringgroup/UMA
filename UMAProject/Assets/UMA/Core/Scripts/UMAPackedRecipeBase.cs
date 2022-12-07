@@ -851,8 +851,10 @@ namespace UMA
 		public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
 		{
 			umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV2.Length];
-			umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
-
+			if (!String.IsNullOrWhiteSpace(umaPackRecipe.race))
+			{
+				umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
+			}
 			umaRecipe.ClearDna();
 			List<UMADnaBase> packedDna = UnPackDNA(umaPackRecipe.packedDna);
 
@@ -942,8 +944,14 @@ namespace UMA
 		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
         {
             umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV3.Length];
-            umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
-
+            if (!string.IsNullOrEmpty(umaPackRecipe.race))
+            {
+                umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
+            }
+            else
+            {
+                Debug.Log($"Recipe has no race set.");
+            }
             umaRecipe.ClearDna();
             List<UMADnaBase> packedDna = UnPackDNA(umaPackRecipe.packedDna);
 

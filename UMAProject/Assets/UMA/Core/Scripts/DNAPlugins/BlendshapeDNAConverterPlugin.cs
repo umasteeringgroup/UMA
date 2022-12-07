@@ -63,6 +63,15 @@ namespace UMA
 				return dict;
 			}
 		}
+
+		public override ApplyPassOpts ApplyPass
+		{
+			get
+			{
+				return ApplyPassOpts.PostPass;
+			}
+		}
+
 		/// <summary>
 		/// Apply the blendshape modifications according to the given dna (determined by the dnaTypeHash)
 		/// </summary>

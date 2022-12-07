@@ -160,7 +160,14 @@ namespace UMA
 			//UMA2.8+ call Prepare() on the elements in _dnaConverterList now.
 			for (int i = 0; i < _dnaConverterList.Count; i++)
 			{
-				_dnaConverterList[i].Prepare();
+				if (_dnaConverterList[i] != null)
+                {
+                    _dnaConverterList[i].Prepare();
+                }
+                else
+                {
+					Debug.LogWarning($"Null converter list on race: {raceName} object {this.name} ");
+                }
 			}
 	    }
 #pragma warning restore 618

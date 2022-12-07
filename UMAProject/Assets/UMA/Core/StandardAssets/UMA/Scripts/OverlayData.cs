@@ -92,6 +92,16 @@ namespace UMA
 				return asset.textureList;
 			}
 		}
+
+		public Texture GetTexture(int ChannelNumber)
+        {
+			if (ChannelNumber < asset.textureList.Length)
+            {
+				return asset.textureList[ChannelNumber];
+            }
+			return null;
+        }
+
 		public int pixelCount
 		{
 			get

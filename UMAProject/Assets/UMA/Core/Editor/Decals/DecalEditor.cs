@@ -65,11 +65,11 @@ namespace UMA
         }
 
 
-        [MenuItem("UMA/Interactive Decals")]
+        [MenuItem("UMA/Interactive Decals (EXPERIMENTAL)")]
         public static void Init()
         {
             DecalEditor de = new DecalEditor();
-            InteractiveUMAWindow.Init("UMA Decals", de);
+            InteractiveUMAWindow.Init("UMA Decals - EXPERIMENTAL", de);
         }
 
         private void ResetLabelStart()
@@ -120,7 +120,7 @@ namespace UMA
 
         Plane GetPlaneInWorldSpace(GameObject planeObject)
         {
-            // get the corners of the plane in worldspace
+            // get the corners of the plane in worldspace 
             // return new plane for those corners.
 
             // 0, 10, 110
@@ -131,14 +131,14 @@ namespace UMA
             Vector3 v0 = t.TransformPoint(m.sharedMesh.vertices[0]);
             Vector3 v2 = t.TransformPoint(m.sharedMesh.vertices[10]);
             Vector3 v1 = t.TransformPoint(m.sharedMesh.vertices[110]);
-
+#if SHOW_PLANES
             GameObject g1 = GameObject.Instantiate(PlanesMarker, v0, Quaternion.identity, Root);
             GameObject g2 = GameObject.Instantiate(PlanesMarker, v1, Quaternion.identity, Root);
             GameObject g3 = GameObject.Instantiate(PlanesMarker, v2, Quaternion.identity, Root);
             SceneManager.MoveGameObjectToScene(g1, scene);
             SceneManager.MoveGameObjectToScene(g2, scene);
-            SceneManager.MoveGameObjectToScene(g3, scene);
-
+            SceneManager.MoveGameObjectToScene(g3, scene); 
+#endif
             return new Plane(v0, v1, v2);
         }
 
@@ -568,31 +568,41 @@ namespace UMA
             {
                 var smd = theMesh.GetSubMesh(i);
                 if (hit.triangleIndex < smd.indexStart) continue;
-                if (hit.triangleIndex >= (smd.indexStart + smd.indexCount)) continue;
+                if (hit.triangleIndex >= (smd.indexStart + (smd.indexCount/3))) continue;
 
                 // should fall through for only ONE submesh.
                 int[] tris = theMesh.GetTriangles(i);
+                int submishtricount = smd.indexCount / 3;
+                int baseIndexStart = hit.triangleIndex - smd.indexStart;
                 int tribase = 3 * (hit.triangleIndex - smd.indexStart);
 
-                
-                int v1x = tris[tribase];
-                int v2x = tris[tribase+1];
-                int v3x = tris[tribase+2];
+                try
+                {
 
-                Vector3 v1 = theMesh.vertices[v1x];
-                Vector3 v2 = theMesh.vertices[v2x];
-                Vector3 v3 = theMesh.vertices[v3x];
+                    int v1x = tris[tribase];
+                    int v2x = tris[tribase + 1];
+                    int v3x = tris[tribase + 2];
+
+                    Vector3 v1 = theMesh.vertices[v1x];
+                    Vector3 v2 = theMesh.vertices[v2x];
+                    Vector3 v3 = theMesh.vertices[v3x];
+
+
 #if LOCAL_SPACE
                 // lastboneWeights = GetBoneWeights(LocalHitpoint, v1, v2, v3, v1x, v2x, v3x, VertexBoneWeightOffset, basebonesPerVertex, baseboneWeights);
 #else
-                Matrix4x4 theMat = Character.transform.localToWorldMatrix;
+                    Matrix4x4 theMat = Character.transform.localToWorldMatrix;
 
-                v1 = theMat * v1;
-                v2 = theMat * v2;
-                v3 = theMat * v3;
-                lastboneWeights = GetBoneWeights(hitpoint, v1, v2, v3, v1x, v2x, v3x, VertexBoneWeightOffset, basebonesPerVertex, baseboneWeights);
-
+                    v1 = theMat * v1;
+                    v2 = theMat * v2;
+                    v3 = theMat * v3;
+                    lastboneWeights = GetBoneWeights(hitpoint, v1, v2, v3, v1x, v2x, v3x, VertexBoneWeightOffset, basebonesPerVertex, baseboneWeights);
 #endif
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
             }
 
             return LocalHitpoint;

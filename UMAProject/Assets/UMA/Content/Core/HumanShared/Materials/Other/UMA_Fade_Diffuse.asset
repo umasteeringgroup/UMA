@@ -14,14 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   translateSRP: 1
   material: {fileID: 2100000, guid: 15a5f99afe13df8468a9d786b532a08f, type: 2}
-  materialType: 2
+  secondPass: {fileID: 0}
+  materialType: 1
   channels:
-  - channelType: 3
+  - channelType: 0
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 
     Compression: 0
-    DownSample: 0
+    DownSample: 1
     ConvertRenderTexture: 0
     NonShaderTexture: 0
   MipMapBias: 0
@@ -31,3 +32,5 @@ MonoBehaviour:
   shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

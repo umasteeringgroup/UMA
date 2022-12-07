@@ -33,7 +33,7 @@ UMAProject/Assets/UMA/Examples/Main Examples/Scenes/UMA Core Demo - Crowd
 UMA DCS Demo - Simple Setup
 UMAProject/ProjectSettings/GraphicsSettings.asset
 UMAProject/ProjectSettings/GraphicsSettings.asset
-
+UMAProject/Packages
 UMAProject/Assets/Obi/
 UMAProject/Assets/Gizmos/
 UMAProject/Assets/Editor default resources/Obi/
@@ -46,3 +46,4 @@ UMAProject/Assets/AssetStoreTools.meta
 UMAProject/.vs
 UMAProject/Assets/Temp.meta
 UMAProject/.vsconfig
+UMAProject/Logs
