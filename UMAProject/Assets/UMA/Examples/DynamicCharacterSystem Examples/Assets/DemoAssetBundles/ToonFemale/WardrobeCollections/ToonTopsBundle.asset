@@ -3,14 +3,17 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6ae7341e07d1b8f41aa37f5e2c910168, type: 3}
   m_Name: ToonTopsBundle
   m_EditorClassIdentifier: 
+  label: 
+  resourcesOnly: 0
   recipeType: Wardrobe
   DisplayValue: 
   compatibleRaces:
@@ -20,9 +23,14 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 21300000, guid: 54c81785648a33243a6fa7c97cd4f683, type: 3}
   wardrobeSlot: None
+  Appended: 0
   Hides: []
+  HideTags: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
+  MeshHideAssets: []
+  OverrideDNA:
+    PreloadValues: []
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[],"colors":[],"fColors":[],"sharedColorCount":0,"race":"","packedDna":[]}'
   coverImages: []
   wardrobeCollection:

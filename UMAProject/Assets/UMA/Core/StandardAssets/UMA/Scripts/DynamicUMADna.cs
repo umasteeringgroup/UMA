@@ -175,7 +175,8 @@ namespace UMA
         {
             if (idx < Count)
             {
-                return Values[idx];
+				float value = _values[idx];
+				return value;
             }
             throw new System.ArgumentOutOfRangeException();
         }

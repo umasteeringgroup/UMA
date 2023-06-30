@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 4c8093fd4489d1d46a72b9e5165f8106
+labels:
+- UMA_Slot
 NativeFormatImporter:
   externalObjects: {}
   mainObjectFileID: 11400000

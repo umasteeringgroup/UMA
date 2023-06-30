@@ -156,7 +156,11 @@ namespace UMA.Editors
 
 		public void RandomAvatarGUI(RandomAvatar ra)
 		{
-			bool del = false;
+            if (ra.raceData == null)
+			{
+                ra.raceData = UMAAssetIndexer.Instance.GetAsset<RaceData>(ra.RaceName);
+            }
+            bool del = false;
 			GUIHelper.FoldoutBar(ref ra.GuiFoldout, ra.RaceName, out del);
 			if (ra.GuiFoldout)
 			{

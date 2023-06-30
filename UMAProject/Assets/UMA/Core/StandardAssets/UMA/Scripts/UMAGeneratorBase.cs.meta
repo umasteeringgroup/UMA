@@ -1,8 +1,13 @@
 fileFormatVersion: 2
 guid: b05ae995db018f5419cf2ad35e17e420
+labels:
+- UMA_Text
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
   defaultReferences: []
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -17,8 +17,8 @@ TagManager:
   - Ragdoll
   - Player
   - NoCollisions
-  - 
-  - 
+  - HeadLayer
+  - TheMainLayer
   - 
   - 
   - 

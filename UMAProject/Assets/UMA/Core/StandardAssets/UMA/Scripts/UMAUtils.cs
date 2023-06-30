@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine.Rendering;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UMA
 {
@@ -77,6 +80,17 @@ namespace UMA
 			return PipelineType.BuiltInPipeline;
 		}
 	
+		public static Material GetDefaultDiffuseMaterial()
+		{
+			var pipe = DetectPipeline();
+#if UNITY_EDITOR
+			if (pipe != PipelineType.UniversalPipeline && pipe != PipelineType.HDPipeline)
+			{
+				return AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+			}
+#endif
+            return new Material(Shader.Find("Lit"));
+        }
 
 		public static string TranslatedSRPTextureName(string BuiltinName) {
 			if (CurrentPipeline == PipelineType.NotSet) {

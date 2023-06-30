@@ -1,8 +1,9 @@
 fileFormatVersion: 2
 guid: 1b9962f1e2cfc7e42bda744040c488b2
-timeCreated: 1456951086
-licenseType: Free
+labels:
+- UMA_Text
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
   defaultReferences: []
   executionOrder: 0

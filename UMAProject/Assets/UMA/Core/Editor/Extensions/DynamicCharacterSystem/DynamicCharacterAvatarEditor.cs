@@ -812,7 +812,10 @@ namespace UMA.CharacterSystem.Editors
 			void GenerateSingleUMA(bool rebuild=false)
 			{
 				if (Application.isPlaying)
+                {
+                    thisDCA.BuildCharacter(rebuild);
 					return;
+                }
 
 				if (thisDCA.editorTimeGeneration == false)
 					return;

@@ -31,11 +31,14 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: FullOutfit
+  Appended: 0
   Hides: []
   HideTags: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  OverrideDNA:
+    PreloadValues: []
   recipeString: '{"packedRecipeType":"WardrobeCollection","name":"ChangerArmorCollection","race":"","dna":[],"characterColors":[{"name":"Leather","colors":[56,30,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"Metal","colors":[238,238,238,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,255,255,255,133]},{"name":"Pants","colors":[48,35,24,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"wardrobeSet":[],"raceAnimatorController":""}'
   coverImages: []
   wardrobeCollection:

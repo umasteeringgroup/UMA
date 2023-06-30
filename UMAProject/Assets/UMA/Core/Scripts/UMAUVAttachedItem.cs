@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UMA;
 using UMA.CharacterSystem;
 using Unity.Collections;
@@ -10,199 +11,415 @@ using UnityEngine;
 
 namespace UMA
 {
-    public class UMAUVAttachedItem : MonoBehaviour
+    [Serializable]
+    public class UMAUVAttachedItem 
     {
-        // TODO:
-        // Should take an array of UV, and save an array of vertex indexes.
-        // and a array of prefabs...
-
-        public DynamicCharacterAvatar avatar;
         public Vector2 uVLocation;
+        public Vector2 uvUp;
         public string slotName;
         public Quaternion rotation;
+        public Vector3 normalAdjust;
         public Vector3 translation;
         public GameObject prefab;
+        public string boneName;
+        public string sourceSlotName;
+        public bool useMostestBone;
 
         private GameObject prefabInstance;
-        public int VertexNumber;
         public int subMeshNumber;
+        public List<int> triangle = new List<int>();
         public SkinnedMeshRenderer skin;
         private Mesh tempMesh;
+        public  UMAUVAttachedItemLauncher bootStrapper;
+        private UMAData umaData;
+        private Transform mostestBone;
+        public Vector3 originalPosition;
+        public Vector3 normal;
+        public Vector3 normalMult = Vector3.one;
 
-#if !USING_BAKEMESH
-    // Only used when not baking mesh
-    private Matrix4x4[] boneMatrices;
-    private BoneWeight[] meshBoneWeights;
-    private Matrix4x4[] meshBindposes; 
-    private Transform[] skinnedBones; 
-    private Vector3 UntransformedPosition;
-    private Vector3 UntransformedNormal;
-#endif
-        private bool worldTransform;
+        public bool InitialFound = false;
+        public float DistanceFromBone = 0.0f;
+        public float InitialDistanceFromBone = 0.0f;
 
-        // Start is called before the first frame update
-        void Start()
+        private struct BonesAndWeights
         {
-            tempMesh = new Mesh();
-            VertexNumber = -1;
-            subMeshNumber = -1;
-            if (avatar == null)
-            {
-                avatar = GetComponent<DynamicCharacterAvatar>();
-            }
+            public Transform Bone;
+            public float Weight;
+            public Vector3 Normal;
+        }
 
-            if (avatar != null)
+        private struct UVVerts
+        {
+            public int positionVertex;
+            public int upVertex;
+            public Vector3 InitialPosition;
+        }
+
+        private List<BonesAndWeights> weights;
+
+        public bool worldTransform;
+        private UVVerts uvVerts;
+
+        public void CleanUp()
+        {
+            if (prefabInstance != null)
             {
-                avatar.CharacterUpdated.AddListener(UMAUpdated);
+                GameObject.Destroy(prefabInstance);
+                prefabInstance = null;
             }
         }
 
-        public void UMAUpdated(UMAData umaData)
+        public void Setup(UMAData umaData, UMAUVAttachedItemLauncher bootstrap)
         {
-            // find the slot in the recipe.
-            // find the overlay in the recipe
-            // calculate the new UV coordinates (in case it changed).
-            // Loop through the vertexes, and find the one with the closest UV.
-            skin = umaData.GetRenderer(0);
-#if !USING_BAKEMESH
-        boneMatrices = new Matrix4x4[skin.bones.Length];
-#endif
-            foreach (var slotData in umaData.umaRecipe.slotDataList)
+            if (tempMesh == null)
             {
-                if (slotData != null)
-                {
-                    if (slotData.slotName == slotName)
-                    {
-                        ProcessSlot(umaData, slotData);
-                        break;
-                    }
-                }
-            }
-            if (prefabInstance == null)
-            {
-                prefabInstance = Instantiate(prefab,umaData.gameObject.transform);
-                UMAUVAttachedItem umaUV = prefabInstance.GetComponent<UMAUVAttachedItem>();
-                if (umaUV)
-                {
-                    umaUV.VertexNumber = VertexNumber;
-                    umaUV.subMeshNumber = subMeshNumber;
-                    umaUV.avatar = avatar;
+                tempMesh = new Mesh();
+                uvVerts = new UVVerts();
+                subMeshNumber = -1;
+                bootStrapper = bootstrap;
 
-                }
+                normalAdjust = bootstrap.normalAdjust;
+                uVLocation = bootstrap.uVLocation;
+                uvUp = bootstrap.uVUp;
+                slotName = bootstrap.slotName;
+                rotation = bootstrap.rotation;
+                translation = bootstrap.translation;
+                prefab = bootstrap.prefab;
+                boneName = bootstrap.boneName;
+                sourceSlotName = bootstrap.sourceSlot.slotName;
+                useMostestBone = bootstrap.useMostestBone;
+                this.umaData = umaData;
             }
         }
 
-        private void ProcessSlot(UMAData umaData, SlotData slotData)
+        public void ProcessSlot(UMAData umaData, SlotData slotData, DynamicCharacterAvatar avatar)
         {
+            Debug.Log($"Processing slot {slotData.slotName}");
             Vector2 UVInAtlas = slotData.ConvertToAtlasUV(uVLocation);
+            Vector2 UvUpInAtlas = slotData.ConvertToAtlasUV(uvUp);
             SkinnedMeshRenderer smr = umaData.GetRenderer(slotData.skinnedMeshRenderer);
 
             Mesh mesh = smr.sharedMesh;
             subMeshNumber = slotData.submeshIndex;
             var smd = mesh.GetSubMesh(subMeshNumber);
             int maxVert = slotData.asset.meshData.vertexCount + slotData.vertexOffset;
-#if !USING_BAKEMESH
-            meshBoneWeights = mesh.boneWeights;
-#endif
+
             using (var dataArray = Mesh.AcquireReadOnlyMeshData(mesh))
             {
                 Mesh.MeshData dat = dataArray[0];
                 var allUVS = new NativeArray<Vector2>(mesh.vertexCount, Allocator.Temp);
                 var allNormals = new NativeArray<Vector3>(mesh.vertexCount, Allocator.Temp);
                 var allVerts = new NativeArray<Vector3>(mesh.vertexCount, Allocator.Temp);
+
                 dat.GetUVs(0, allUVS);
                 dat.GetNormals(allNormals);
                 dat.GetVertices(allVerts);
-                VertexNumber = FindVert(slotData, maxVert, UVInAtlas, allUVS);
-#if !USING_BAKEMESH
-            UntransformedNormal = allNormals[VertexNumber];
-            UntransformedPosition = allVerts[VertexNumber];
-#endif
-            }
-        }
-
-        private int FindVert(SlotData slotData, int maxVert, Vector2 UV, NativeArray<Vector2> allUVS)
-        {
-            int v = slotData.vertexOffset;
-            float shortestDistance = Mathf.Abs((allUVS[slotData.vertexOffset] - UV).magnitude);
-            for (int i = slotData.vertexOffset + 1; i < maxVert; i++)
-            {
-                float thisDist = Mathf.Abs((allUVS[i] - UV).magnitude);
-                if (thisDist < shortestDistance)
-                {
-                    v = i;
-                    shortestDistance = thisDist;
-                }
+                uvVerts = FindVert(slotData, maxVert, UVInAtlas,UvUpInAtlas, allUVS);
+                Debug.Log($"Found vertex {uvVerts.positionVertex}");
+                triangle = FindTriangle(uvVerts.positionVertex, dat, mesh);
+                //if (useMostestBone)
+                //{
+                    mostestBone = GetMostestBone(uvVerts.positionVertex, mesh, smr);
+                //}
             }
 
-            return v;
-        }
-
-        void LateUpdate()
-        {
-            if (avatar != null && prefabInstance != null && VertexNumber >= 0 && subMeshNumber >= 0)
+            if (prefabInstance == null)
             {
-                Vector3 position;
-                Vector3 normal;
-
-#if USING_BAKEMESH
-                skin.BakeMesh(tempMesh);
-                Mesh.MeshData data = Mesh.AcquireReadOnlyMeshData(tempMesh)[0];
-
-                var allVerts = new NativeArray<Vector3>(tempMesh.vertexCount, Allocator.TempJob);
-                data.GetVertices(allVerts);
-                var allNormals = new NativeArray<Vector3>(tempMesh.vertexCount, Allocator.TempJob);
-                position = allVerts[VertexNumber];
-                normal = allNormals[VertexNumber];
-#else
-                for (int i = 0; i < boneMatrices.Length; i++)
+                Debug.Log("Creating prefab");
+                if (useMostestBone)
                 {
-                    boneMatrices[i] = skinnedBones[i].localToWorldMatrix * meshBindposes[i];
-                }
-
-                BoneWeight weight;
-                Matrix4x4 bm0;
-                Matrix4x4 bm1;
-                Matrix4x4 bm2;
-                Matrix4x4 bm3;
-                Matrix4x4 vm = new Matrix4x4();
-                
-                weight = meshBoneWeights[VertexNumber];
-                bm0 = boneMatrices[weight.boneIndex0];
-                bm1 = boneMatrices[weight.boneIndex1];
-                bm2 = boneMatrices[weight.boneIndex2];
-                bm3 = boneMatrices[weight.boneIndex3];
-
-                vm.m00 = bm0.m00 * weight.weight0 + bm1.m00 * weight.weight1 + bm2.m00 * weight.weight2 + bm3.m00 * weight.weight3;
-                vm.m01 = bm0.m01 * weight.weight0 + bm1.m01 * weight.weight1 + bm2.m01 * weight.weight2 + bm3.m01 * weight.weight3;
-                vm.m02 = bm0.m02 * weight.weight0 + bm1.m02 * weight.weight1 + bm2.m02 * weight.weight2 + bm3.m02 * weight.weight3;
-                vm.m03 = bm0.m03 * weight.weight0 + bm1.m03 * weight.weight1 + bm2.m03 * weight.weight2 + bm3.m03 * weight.weight3;
-
-                vm.m10 = bm0.m10 * weight.weight0 + bm1.m10 * weight.weight1 + bm2.m10 * weight.weight2 + bm3.m10 * weight.weight3;
-                vm.m11 = bm0.m11 * weight.weight0 + bm1.m11 * weight.weight1 + bm2.m11 * weight.weight2 + bm3.m11 * weight.weight3;
-                vm.m12 = bm0.m12 * weight.weight0 + bm1.m12 * weight.weight1 + bm2.m12 * weight.weight2 + bm3.m12 * weight.weight3;
-                vm.m13 = bm0.m13 * weight.weight0 + bm1.m13 * weight.weight1 + bm2.m13 * weight.weight2 + bm3.m13 * weight.weight3;
-
-                vm.m20 = bm0.m20 * weight.weight0 + bm1.m20 * weight.weight1 + bm2.m20 * weight.weight2 + bm3.m20 * weight.weight3;
-                vm.m21 = bm0.m21 * weight.weight0 + bm1.m21 * weight.weight1 + bm2.m21 * weight.weight2 + bm3.m21 * weight.weight3;
-                vm.m22 = bm0.m22 * weight.weight0 + bm1.m22 * weight.weight1 + bm2.m22 * weight.weight2 + bm3.m22 * weight.weight3;
-                vm.m23 = bm0.m23 * weight.weight0 + bm1.m23 * weight.weight1 + bm2.m23 * weight.weight2 + bm3.m23 * weight.weight3;
-
-                position = vm.MultiplyPoint3x4(UntransformedPosition);
-                normal = vm.MultiplyVector(UntransformedNormal).normalized;
-#endif
-
-                if (worldTransform)
-                {
-                    position = transform.TransformPoint(position);
-                    normal = transform.TransformDirection(normal).normalized;
-                    prefabInstance.transform.position = position;
-                    prefabInstance.transform.rotation = Quaternion.Euler(normal);
+                    prefabInstance = GameObject.Instantiate(prefab, mostestBone);
                 }
                 else
                 {
-                    prefabInstance.transform.localPosition = position;
-                    prefabInstance.transform.localRotation = Quaternion.Euler(normal);
+                    prefabInstance = GameObject.Instantiate(prefab, umaData.gameObject.transform);
+                }
+            }
+        }
+
+        private List<int> FindTriangle(int vert, Mesh.MeshData dat, Mesh mesh)
+        {
+            var f = dat.indexFormat;
+
+
+            for (int i = 0; i < dat.subMeshCount; i++)
+            {
+                var mt = mesh.GetTopology(i);
+
+                if (mt != MeshTopology.Triangles)
+                {
+                    continue;
+                }
+                var submesh = dat.GetSubMesh(i);
+                var count = submesh.indexCount;
+
+                var subIndices = new NativeArray<int>(count,Allocator.Temp);
+                dat.GetIndices(subIndices, i);
+                for(int j = 0; j < count; j+= 3)
+                {
+                    if (subIndices[j] == vert || subIndices[j+1] == vert || subIndices[j+2] == vert)
+                    {
+                        var tri = new List<int>(3);
+                        tri.Add(subIndices[j]);
+                        tri.Add(subIndices[j + 1]);
+                        tri.Add(subIndices[j + 2]);
+                        return tri;
+                    }
+                }
+            }
+            return new List<int>();
+        }
+
+        private Transform GetMostestBone(int vertexNumber, Mesh mesh, SkinnedMeshRenderer smr)
+        {
+            var weights = new List<BonesAndWeights>();
+            var meshweights = mesh.GetAllBoneWeights();
+            var meshbpv = mesh.GetBonesPerVertex();
+
+            int myOffset = 0;
+
+            // find the beginning of the bone
+            for (int i = 0; i < vertexNumber; i++)
+            {
+                myOffset += meshbpv[i];
+            }
+            Transform mostestBone = smr.bones[meshweights[myOffset].boneIndex];
+
+            Debug.Log($"Vertex {vertexNumber} Offset = {myOffset} in BoneWeights Mostest Bone = {mostestBone.gameObject.name}");
+            return mostestBone;
+        }
+
+        private List<BonesAndWeights> GetBoneWeights(int vertexNumber, Mesh mesh, SkinnedMeshRenderer smr)
+        {
+            var weights = new List<BonesAndWeights>();
+            var meshweights = mesh.GetAllBoneWeights();
+            var meshbpv = mesh.GetBonesPerVertex();
+
+            int myOffset = 0;
+
+            // find the beginning of the bone
+            for (int i = 0; i < vertexNumber; i++)
+            {
+                myOffset += meshbpv[i];
+            }
+
+            Debug.Log($"Vertex {vertexNumber} Offset = {myOffset} in BoneWeights");
+            for(int i=myOffset; i < myOffset + meshbpv[vertexNumber]; i++)
+            {
+                BonesAndWeights boneWeights = new BonesAndWeights();
+                boneWeights.Bone = smr.bones[meshweights[i].boneIndex];
+                boneWeights.Weight = meshweights[i].weight;
+                weights.Add(boneWeights);
+            }
+            Debug.Log($"weights size = {weights.Count}");
+            return weights;
+        }
+
+        private UVVerts FindVert(SlotData slotData, int maxVert, Vector2 UV, Vector2 UvUp, NativeArray<Vector2> allUVS)
+        {
+            UVVerts verts = new UVVerts();
+            verts.positionVertex = slotData.vertexOffset;
+            float shortestDistance =   Mathf.Abs((allUVS[slotData.vertexOffset] - UV).magnitude);
+            float shortestUpDistance = Mathf.Abs((allUVS[slotData.vertexOffset] - UvUp).magnitude);
+
+            for (int i = slotData.vertexOffset + 1; i < maxVert; i++)
+            {
+                float thisDist = Mathf.Abs((allUVS[i] - UV).magnitude);
+                float upDist = Mathf.Abs((allUVS[i]-UvUp).magnitude);
+                if (thisDist < shortestDistance)
+                {
+                    Vector3 restPos = slotData.asset.meshData.vertices[i - slotData.vertexOffset];
+                    verts.InitialPosition = new Vector3(restPos.x, restPos.z, restPos.y);
+                    verts.positionVertex = i;
+                    shortestDistance = thisDist;
+                }
+                if (upDist < shortestUpDistance)
+                {
+                    verts.upVertex = i;
+                    shortestUpDistance = upDist;
+                }
+            }
+
+            return verts;
+        }
+
+        public Vector3 GetOffset(Vector3 position, Vector3 initialposition, DynamicCharacterAvatar avatar)
+        {
+            Vector3 offset = position - initialposition;
+          //  if (avatar.activeRace.racedata.FixupRotations)
+          //  {
+          //      float t = offset.y;
+          //      offset.y = offset.z;
+          //      offset.z = t;
+           // }
+            return offset;
+        }
+
+		private Vector3 LerpVector(Vector3 a, Vector3 b, float t) 
+		{
+			if (Mathf.Approximately(t, 0f))
+				return a;	
+			if (Mathf.Approximately(t, 1f))
+				return b;
+
+			Vector3 result = new Vector3();
+			result.x = Mathf.Lerp(a.x, b.x, t);
+			result.y = Mathf.Lerp(a.y, b.y, t);
+			result.z = Mathf.Lerp(a.z, b.z, t);
+			return result;
+		}
+
+		private Vector3 LerpAngle(Vector3 a, Vector3 b, float t) 
+		{
+			if(Mathf.Approximately(t, 0f))
+				return a;
+			if(Mathf.Approximately(t, 1f))
+				return b;
+
+			Vector3 result = new Vector3();
+			result.x = Mathf.LerpAngle(a.x, b.x, t);
+			result.y = Mathf.LerpAngle(a.y, b.y, t);
+			result.z = Mathf.LerpAngle(a.z, b.z, t);
+			return result;
+		}
+
+        public void DoLateUpdate(SkinnedMeshRenderer skin, Transform transform, DynamicCharacterAvatar avatar)
+        {
+            if (avatar != null && prefabInstance != null && uvVerts.positionVertex >= 0 && subMeshNumber >= 0)
+            {
+                Vector3 VertexInLocalSpace;
+                int VertexNumber = uvVerts.positionVertex;
+
+                skin.BakeMesh(tempMesh);
+                using (var dataArray = Mesh.AcquireReadOnlyMeshData(tempMesh))
+                {
+                    var data = dataArray[0];
+                    var allVerts = new NativeArray<Vector3>(tempMesh.vertexCount, Allocator.Temp);
+                    data.GetVertices(allVerts);
+                    var allNormals = new NativeArray<Vector3>(tempMesh.vertexCount, Allocator.Temp);
+                    data.GetNormals(allNormals);
+                    VertexInLocalSpace = allVerts[VertexNumber];
+                    normal = allNormals[VertexNumber];
+
+
+                    if (useMostestBone)
+                    {
+						Vector3 newNormalAdjust = new Vector3(normalAdjust.x, normalAdjust.y, normalAdjust.z);
+						Vector3 newTranslation = new Vector3(translation.x, translation.y, translation.z);
+#if true
+
+						foreach (var bsAdjust in bootStrapper.blendshapeAdjusters) 
+						{
+							if(string.IsNullOrEmpty(bsAdjust.RaceName) || bsAdjust.RaceName == avatar.activeRace.name) 
+								{
+								SkinnedMeshRenderer smr = avatar.umaData.GetRenderer(0);
+								int bsIndex = smr.sharedMesh.GetBlendShapeIndex(bsAdjust.BlendshapeName);
+								if(bsIndex >= 0) {
+									float bsWeight = smr.GetBlendShapeWeight(bsIndex)/100.0f;
+									newTranslation = LerpVector(translation, bsAdjust.newOffset, bsWeight);
+									newNormalAdjust = LerpAngle(normalAdjust, bsAdjust.newOrientation, bsWeight);
+								}
+								else 
+								{
+									newTranslation = bsAdjust.newOffset;
+									newNormalAdjust = bsAdjust.newOrientation;
+								}
+							}
+						}
+                        // object is a child of the bone at this point.
+                        // so we need to get the position of the vertex, and then get that into the bones local space.
+
+                        //Vector3 VertexInWorldSpace = transform.localToWorldMatrix * VertexInLocalSpace;
+                        //Vector3 VertexInBoneSpace = mostestBone.worldToLocalMatrix * VertexInWorldSpace;
+
+                        Vector3 VertexInWorldSpace = transform.TransformPoint(VertexInLocalSpace);
+                        Vector3 VertexInBoneSpace  = mostestBone.transform.InverseTransformPoint(VertexInWorldSpace);
+
+
+                        // VertexInBoneSpace is the position relative to the bone we are attached to.
+                        // VertexInWorldSpace is the position in the world
+                        // VertexInLocalSpace is the position relative to the characters transform
+
+                        prefabInstance.transform.localPosition = newTranslation + VertexInBoneSpace;
+                        prefabInstance.transform.localRotation = Quaternion.Euler(newNormalAdjust);
+
+#else
+
+                        Vector3 MostestLocalBonePosition  = transform.worldToLocalMatrix * mostestBone.position; 
+
+                        Vector3 BoneVector = VertexInLocalSpace - MostestLocalBonePosition;
+
+                        // if things get goofy with initial position, perhap try using the 
+                        // raw distance from the MeshData?
+                        if (!InitialFound)
+                        {
+                            InitialDistanceFromBone = (MostestLocalBonePosition - VertexInLocalSpace).magnitude;
+                            InitialFound = true;
+                        }
+
+                        float currentDistanceToBone = (MostestLocalBonePosition - VertexInLocalSpace).magnitude;
+                                                  // 5                   // 1
+                        float newPositionDelta = currentDistanceToBone - InitialDistanceFromBone;
+                        
+                        if (newPositionDelta != 0.0f)
+                        {
+                            Vector3 MoveVector = BoneVector.normalized;
+                            VertexInLocalSpace = MostestLocalBonePosition + (MoveVector * currentDistanceToBone);
+                        }
+
+                       
+                        Vector3 init = uvVerts.InitialPosition;
+                        prefabInstance.transform.localPosition = this.translation + VertexInLocalSpace; 
+                       // prefabInstance.transform.localRotation = this.rotation;
+                       // position = transform.TransformPoint(position);
+
+//                        normal = transform.TransformDirection(normal).normalized;
+                        // prefabInstance.transform.localPosition = position;
+ //                       prefabInstance.transform.rotation = Quaternion.Euler(normal);
+#endif
+                    } 
+                    else
+                    {
+                        if (triangle.Count > 0)
+                        {
+                            Transform t = prefabInstance.transform;
+#if global
+                            Vector3 v1 = t.TransformPoint(allVerts[triangle[0]]);
+                            Vector3 v2 = t.TransformPoint(allVerts[triangle[1]]);
+                            Vector3 v3 = t.TransformPoint(allVerts[triangle[2]]);
+#else
+                            Vector3 v1 = allVerts[triangle[0]];
+                            Vector3 v2 = allVerts[triangle[1]];
+                            Vector3 v3 = allVerts[triangle[2]];
+                            Vector3 vUp = VertexInLocalSpace - allVerts[uvVerts.upVertex];
+#endif
+                            Plane plane = new Plane(v1, v2, v3);
+                            Vector3 newNormal = plane.normal;
+                            t.localPosition = VertexInLocalSpace;
+                            t.localRotation = Quaternion.FromToRotation(vUp,newNormal);
+
+
+//                            t.localPosition = position;
+  //                          Vector3 newNormal = new Vector3(normal.x * normalMult.x, normal.y * normalMult.y, normal.z * normalMult.z);
+//                            t.localRotation = Quaternion.FromToRotation(Vector3.up, newNormal);
+                           // t.localRotation = Quaternion.AngleAxis(0,newNormal);
+
+                            //Plane plane = new Plane(allVerts[triangle[0]], allVerts[triangle[1]], allVerts[triangle[2]]);
+
+
+
+                            //prefabInstance.transform.SetPositionAndRotation(position, Quaternion.LookRotation(allVerts[triangle[1]]- allVerts[triangle[0]],normal));
+                            //prefabInstance.transform.localPosition = position + (translation.x * plane.normal);
+                            // prefabInstance.transform.localRotation = Quaternion.LookRotation((plane.normal + normalAdjust).normalized);// * rotation;
+                        }
+                        else
+                        {
+                            Vector3 newNormal = Vector3.Normalize(mostestBone.position - VertexInLocalSpace);
+                            // Vector3 newNormal = normal;                            
+                            prefabInstance.transform.localPosition = VertexInLocalSpace;
+                            prefabInstance.transform.localRotation = Quaternion.LookRotation(newNormal);
+                        }
+                    }
                 }
                 return;
             }

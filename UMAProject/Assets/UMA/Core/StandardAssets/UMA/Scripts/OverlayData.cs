@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using static UMA.OverlayDataAsset;
 
 namespace UMA
 {
@@ -91,6 +92,52 @@ namespace UMA
 
 				return asset.textureList;
 			}
+		}
+
+		private OverlayBlend[] blendOverrides;
+
+
+		public OverlayBlend[] textureBlendArray
+		{
+			get
+			{
+				if (blendOverrides != null)
+				{
+					return blendOverrides;
+				}
+				return asset.overlayBlend;
+			}
+		}
+
+		public void SetOverlayBlend(int ChannelNumber, OverlayBlend overlayBlend)
+		{
+			if (blendOverrides == null || blendOverrides.Length != textureArray.Length)
+			{
+				blendOverrides = new OverlayBlend[asset.textureList.Length];
+				for(int i=0; i<blendOverrides.Length; i++)
+				{
+					blendOverrides[i] = asset.GetBlend(i);
+				}
+			}
+			blendOverrides[ChannelNumber] = overlayBlend;
+		}
+
+		public OverlayBlend getTextureBlend(int ChannelNumber)
+		{
+			if (blendOverrides != null)
+			{
+				if (ChannelNumber >= blendOverrides.Length)
+				{
+					return OverlayBlend.Normal;
+				}	
+				return blendOverrides[ChannelNumber];
+			}
+
+			if (ChannelNumber >= asset.overlayBlend.Length)
+			{
+				return OverlayBlend.Normal;
+			}
+			return asset.overlayBlend[ChannelNumber];
 		}
 
 		public Texture GetTexture(int ChannelNumber)

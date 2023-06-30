@@ -7,13 +7,12 @@ namespace UMA
     public class UmaAboutWindow : EditorWindow 
     {
         public static string umaVersion { get { return _version; } }
-        private static readonly string _version = "2.13a1";
+        private static readonly string _version = "2.13a4";
         private string windowTitle = "UMA About";
         private string wikiLink = "http://umadocs.secretanorak.com/doku.php";
         private string githubLink = "https://github.com/umasteeringgroup";
         private string unityThreadLink = "https://forum.unity.com/threads/uma-unity-multipurpose-avatar-on-the-asset-store.219175/";
         private string umaForumLink = "http://umacommunity.boards.net/forum";
-        private string slackLink = "https://uma-community.slack.com";
         private string discordLink = "https://discord.gg/KdteVKd";
 
         private Vector2 size = new Vector2(400, 300);
@@ -73,10 +72,7 @@ namespace UMA
             {
                 Application.OpenURL(umaForumLink);
             }
-            if (GUILayout.Button("Slack Channel"))
-            {
-                Application.OpenURL(slackLink);
-            }
+
             if(GUILayout.Button("Secret Anorak's Discord Channel"))
             {
                 Application.OpenURL(discordLink);

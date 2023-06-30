@@ -42,3 +42,25 @@ The following packages were updated:
   com.unity.ide.rider from version 1.1.4 to 1.2.1
   com.unity.test-framework from version 1.1.19 to 1.1.27
   com.unity.timeline from version 1.2.17 to 1.2.18
+
+=== Fri Dec 16 21:43:59 2022
+
+Packages were changed.
+Update Mode: mergeDefaultDependencies
+
+The following packages were added:
+  com.unity.animation.rigging@1.0.3
+  com.unity.collab-proxy@1.5.7
+  com.unity.textmeshpro@3.0.6
+The following packages were updated:
+  com.unity.timeline from version 1.4.7 to 1.4.8
+
+=== Wed Apr 12 13:31:03 2023
+
+Packages were changed.
+Update Mode: updateDependencies
+
+The following packages were updated:
+  com.unity.collab-proxy from version 1.5.7 to 1.15.15
+  com.unity.ide.vscode from version 1.2.3 to 1.2.5
+  com.unity.test-framework from version 1.1.27 to 1.1.31

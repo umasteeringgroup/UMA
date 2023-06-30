@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using System.Runtime.CompilerServices;
+using UMA.CharacterSystem;
 
 namespace UMA
 {
@@ -199,9 +201,19 @@ namespace UMA
 			public string[] Tags; // Any recipe specific tags.
 			public string[] Races;
 			public string blendShapeTarget;
+			public float overSmoosh;
+			public float smooshDistance;
+            public bool smooshInvertX;
+            public bool smooshInvertY;
+            public bool smooshInvertZ;
+			public bool smooshInvertDist;
+			public string smooshTargetTag;
+			public string smooshableTag;
+            public bool isSwapSlot;
+            public string swapTag;
 		}
 
-		[System.Serializable]
+        [System.Serializable]
 		public class PackedOverlayDataV3
 		{
 			public string id;
@@ -512,104 +524,6 @@ namespace UMA
 			return PackedDNAlist;
 		}
 
-		/*
- 	public static UMAPackRecipe PackRecipeV2(UMA.UMAData.UMARecipe umaRecipe)
-	{
-		UMAPackRecipe umaPackRecipe = new UMAPackRecipe();
-		umaPackRecipe.version = 2;
-
-		int slotCount = umaRecipe.slotDataList.Length;
-		umaPackRecipe.slotsV2 = new PackedSlotDataV2[slotCount];
-		if (UMAPackRecipe.RaceIsValid(umaRecipe.raceData))
-		{
-			umaPackRecipe.race = umaRecipe.raceData.raceName;
-		}
-
-        umaPackRecipe.packedDna = GetPackedDNA(umaRecipe);
-
-		umaPackRecipe.sharedColorCount = 0;
-		if (UMAPackRecipe.ArrayHasData(umaRecipe.sharedColors))
-			umaPackRecipe.sharedColorCount = umaRecipe.sharedColors.Length;
-		List<OverlayColorData> colorEntries = new List<OverlayColorData>(umaPackRecipe.sharedColorCount);
-		List<PackedOverlayColorDataV3> packedColorEntries = new List<PackedOverlayColorDataV3>(umaPackRecipe.sharedColorCount);
-		for (int i = 0; i < umaPackRecipe.sharedColorCount; i++)
-		{
-			colorEntries.Add(umaRecipe.sharedColors[i]);
-			packedColorEntries.Add(new PackedOverlayColorDataV3(umaRecipe.sharedColors[i]));
-		}
-
-		for (int i = 0; i < slotCount; i++)
-		{
-			if (UMAPackRecipe.SlotIsValid(umaRecipe.slotDataList[i]) && !umaRecipe.slotDataList[i].dontSerialize)
-			{
-				PackedSlotDataV2 tempPackedSlotData = new PackedSlotDataV2();
-				umaPackRecipe.slotsV2[i] = tempPackedSlotData;
-
-				tempPackedSlotData.id = umaRecipe.slotDataList[i].asset.slotName;
-				tempPackedSlotData.scale = Mathf.FloorToInt(umaRecipe.slotDataList[i].overlayScale * 100);
-
-				bool copiedOverlays = false;
-				for (int i2 = 0; i2 < i; i2++)
-				{
-					if (UMAPackRecipe.SlotIsValid(umaRecipe.slotDataList[i2]) && UMAPackRecipe.SlotIsValid(umaPackRecipe.slotsV2[i2]))
-					{
-						if (umaRecipe.slotDataList[i].GetOverlayList() == umaRecipe.slotDataList[i2].GetOverlayList())
-						{
-							tempPackedSlotData.copyIdx = i2;
-							copiedOverlays = true;
-							break;
-						}
-					}
-				}
-				if (copiedOverlays) continue;
-
-				tempPackedSlotData.overlays = new PackedOverlayDataV2[umaRecipe.slotDataList[i].OverlayCount];
-
-				for (int overlayIdx = 0; overlayIdx < tempPackedSlotData.overlays.Length; overlayIdx++)
-				{
-					PackedOverlayDataV2 tempPackedOverlay = new PackedOverlayDataV2();
-
-					OverlayData overlayData = umaRecipe.slotDataList[i].GetOverlay(overlayIdx);
-					tempPackedOverlay.id = overlayData.overlayName;
-					tempPackedOverlay.rect = new int[4];
-					tempPackedOverlay.rect[0] = Mathf.FloorToInt(overlayData.rect.x);
-					tempPackedOverlay.rect[1] = Mathf.FloorToInt(overlayData.rect.y);
-					tempPackedOverlay.rect[2] = Mathf.FloorToInt(overlayData.rect.width);
-					tempPackedOverlay.rect[3] = Mathf.FloorToInt(overlayData.rect.height);
-
-					OverlayColorData colorData = overlayData.colorData;
-					int colorIndex = -1;
-					int cIndex = 0;
-					foreach (OverlayColorData cData in colorEntries)
-					{
-						if (cData.name != null && cData.name.Equals(colorData.name) && cData.Equals(colorData))
-						{
-							colorIndex = cIndex;
-							break;
-						}
-						cIndex++;
-					}
-
-					if (colorIndex < 0)
-					{
-						PackedOverlayColorDataV3 newColorEntry = new PackedOverlayColorDataV3(colorData);
-						packedColorEntries.Add(newColorEntry);
-						colorIndex = colorEntries.Count;
-						colorEntries.Add(colorData);
-
-					}
-
-					tempPackedOverlay.colorIdx = colorIndex;
-
-					tempPackedSlotData.overlays[overlayIdx] = tempPackedOverlay;
-				}
-			}
-		}
-
-		umaPackRecipe.fColors = packedColorEntries.ToArray();
-		return umaPackRecipe;
-	}
-*/
 
 		public static UMAPackRecipe PackRecipeV3(UMA.UMAData.UMARecipe umaRecipe)
 		{
@@ -648,6 +562,16 @@ namespace UMA
 					tempPackedSlotData.Tags = umaRecipe.slotDataList[i].tags;
 					tempPackedSlotData.Races = umaRecipe.slotDataList[i].Races;
 					tempPackedSlotData.blendShapeTarget = umaRecipe.slotDataList[i].blendShapeTargetSlot;
+					tempPackedSlotData.overSmoosh = umaRecipe.slotDataList[i].overSmoosh;
+					tempPackedSlotData.smooshDistance = umaRecipe.slotDataList[i].smooshDistance;
+					tempPackedSlotData.smooshInvertDist = umaRecipe.slotDataList[i].smooshInvertDist;
+					tempPackedSlotData.smooshInvertX = umaRecipe.slotDataList[i].smooshInvertX;
+					tempPackedSlotData.smooshInvertY = umaRecipe.slotDataList[i].smooshInvertY;
+					tempPackedSlotData.smooshInvertZ = umaRecipe.slotDataList[i].smooshInvertZ;
+					tempPackedSlotData.smooshableTag = umaRecipe.slotDataList[i].smooshableTag;
+					tempPackedSlotData.smooshTargetTag = umaRecipe.slotDataList[i].smooshTargetTag;
+                    tempPackedSlotData.swapTag = umaRecipe.slotDataList[i].swapTag;
+                    tempPackedSlotData.isSwapSlot = umaRecipe.slotDataList[i].isSwapSlot;
 
 					bool copiedOverlays = false;
 					for (int i2 = 0; i2 < i; i2++)
@@ -944,15 +868,17 @@ namespace UMA
 		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
         {
             umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV3.Length];
+
             if (!string.IsNullOrEmpty(umaPackRecipe.race))
             {
-                umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
+				var race = context.GetRace(umaPackRecipe.race);
+				if (race != null)
+				{
+					umaRecipe.SetRace(race);
+				}
             }
-            else
-            {
-                Debug.Log($"Recipe has no race set.");
-            }
-            umaRecipe.ClearDna();
+ 
+			umaRecipe.ClearDna();
             List<UMADnaBase> packedDna = UnPackDNA(umaPackRecipe.packedDna);
 
             foreach (UMADnaBase umd in packedDna)
@@ -986,6 +912,18 @@ namespace UMA
                     }
 					tempSlotData.blendShapeTargetSlot = packedSlot.blendShapeTarget;
 					tempSlotData.overlayScale = packedSlot.scale * 0.01f;
+					tempSlotData.overSmoosh = packedSlot.overSmoosh;
+					tempSlotData.smooshDistance = packedSlot.smooshDistance;
+					tempSlotData.smooshInvertDist = packedSlot.smooshInvertDist;
+					tempSlotData.smooshInvertX = packedSlot.smooshInvertX;
+					tempSlotData.smooshInvertY = packedSlot.smooshInvertY;
+					tempSlotData.smooshInvertZ	= packedSlot.smooshInvertZ;
+					tempSlotData.smooshableTag = packedSlot.smooshableTag;
+					tempSlotData.smooshTargetTag = packedSlot.smooshTargetTag;
+                    tempSlotData.isSwapSlot = packedSlot.isSwapSlot;
+                    tempSlotData.swapTag = packedSlot.swapTag;
+
+
                     umaRecipe.slotDataList[i] = tempSlotData;
 
                     if (packedSlot.copyIdx == -1)

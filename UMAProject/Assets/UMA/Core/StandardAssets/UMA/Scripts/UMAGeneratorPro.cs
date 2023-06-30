@@ -286,7 +286,7 @@ namespace UMA
 						tempMaterialDefinition.channelMask[0] = slot.GetOverlay(0).colorData.channelMask;
 						tempMaterialDefinition.channelAdditiveMask[0] = slot.GetOverlay(0).colorData.channelAdditiveMask;
 					}
-					tempMaterialDefinition.overrides = new List<Dictionary<int, Texture2D>>();
+					tempMaterialDefinition.overrides = new List<Dictionary<int, Texture>>();
 					if (tempMaterialDefinition.overlayData != null && tempMaterialDefinition.overlayData.Length > 0)
 					{
 						tempMaterialDefinition.overrides.Add(umaData.GetTextureOverrides(tempMaterialDefinition.overlayData[0].overlayName));
@@ -346,10 +346,9 @@ namespace UMA
 				for (int j = 0; j < ugm.materialFragments.Count; j++)
 				{
 					UMAData.MaterialFragment matfrag = ugm.materialFragments[j];
-					// Shader parameters from the shared colors are only pulled from the first overlay.
-					// this is so we don't have conflicting overlays.
-					// TODO: if we pulled from all of them, it would be a little slower, but it could allow for us to have overlays override some
-					// parameters. 
+
+                    bool isCompositor = ugm.material.HasProperty("_OverlayCount");
+
 					if (matfrag.overlayData != null && matfrag.overlayData.Length > 0)
 					{
 						for (int oi = 0; oi < matfrag.overlayData.Length; oi++)
@@ -360,9 +359,13 @@ namespace UMA
 							{
 								foreach (var s in od.colorData.PropertyBlock.shaderProperties)
 								{
-									if (ugm.material.HasProperty(s.name))
+                                    if (isCompositor)
 									{
-										s.Apply(ugm.material);
+                                        s.Apply(ugm.material, oi);
+                                    }
+                                    else
+                                    {
+                                        s.Apply(ugm.material, -1);
 									}
 								}
 							}

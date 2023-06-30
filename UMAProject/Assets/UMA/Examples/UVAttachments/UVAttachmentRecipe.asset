@@ -19,11 +19,15 @@ MonoBehaviour:
   compatibleRaces:
   - HumanMale
   - HumanMaleHighPoly
+  - DNAConverterControllerExampleRace
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
     thumb: {fileID: 0}
   - race: HumanMaleHighPoly
+    filename: 
+    thumb: {fileID: 0}
+  - race: DNAConverterControllerExampleRace
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: Cape

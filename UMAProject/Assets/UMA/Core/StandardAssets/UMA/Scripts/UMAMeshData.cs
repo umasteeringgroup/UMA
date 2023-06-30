@@ -22,6 +22,10 @@ namespace UMA
 		[SerializeField]
 		private int[] triangles;
 
+		public int[] getBaseTriangles()
+		{
+			return triangles;
+		}
 
 		public void SetTriangles(int[] tris)
 		{

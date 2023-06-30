@@ -53,6 +53,26 @@ namespace UMA
     }
 
 	/// <summary>
+	/// UMAEvent that happens when a slot is processed
+	/// </summary>
+    [Serializable]
+    public class UMADataSlotProcessedEvent: UnityEvent<UMAData, SlotData>
+	{
+		public UMADataSlotProcessedEvent()
+		{
+
+		}
+        public UMADataSlotProcessedEvent(UMADataSlotProcessedEvent source)
+        {
+            for (int i = 0; i < source.GetPersistentEventCount(); i++)
+            {
+                var target = source.GetPersistentTarget(i);
+                AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(UMAData), typeof(SlotData) }));
+            }
+        }
+    }
+
+	/// <summary>
 	/// UMA event occuring on material.
 	/// </summary>
 	[Serializable]

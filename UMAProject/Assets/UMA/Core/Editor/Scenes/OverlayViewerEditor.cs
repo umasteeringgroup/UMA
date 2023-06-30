@@ -41,6 +41,11 @@ namespace UMA
 
 		private void Initialize(bool retry = true)
 		{
+			if (serializedObject == null)
+                return;
+			if (serializedObject.targetObject == null)  // I don't even know how this is possible. Nothing is selected. But unity is doing it.
+                return;
+
 			overlayViewer = serializedObject.targetObject as OverlayViewer;
 			TempUMAData = overlayViewer.gameObject.GetComponent<UMAData>();
 			ugb = overlayViewer.gameObject.GetComponent<UMAGeneratorStub>();
