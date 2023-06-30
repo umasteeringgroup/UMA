@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 #if UNITY_EDITOR 
 using UnityEditor;
-using UnityEditor.SceneManagement;//for marking converted colors as needing saving
+using UnityEditor.SceneManagement;
 #endif
 using UnityEngine.Serialization;//for converting old characterColors.Colors to new colors
 
@@ -12,7 +12,9 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
-using System.Linq;
+using UnityEngine.SceneManagement;
+using System.Web;
+using static HairSmoosher;
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
@@ -29,17 +31,18 @@ namespace UMA.CharacterSystem
         private bool StartGuard = false;
         public bool KeepAnimatorController = false;
         public bool RecreateAnimatorOnRaceChange = true;
+        public string userInformation = "";
 #if UNITY_EDITOR
-		[UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar",false,10)]
-		public static void CreateDynamicCharacterAvatarMenuItem()
-		{
-			var res = new GameObject("New Dynamic Character Avatar");
-			var da = res.AddComponent<DynamicCharacterAvatar>();
-			da.context = UMAContextBase.Instance;
-			da.ChangeRace("HumanMale");
-			da.umaGenerator = Component.FindObjectOfType<UMAGeneratorBase>();
-			UnityEditor.Selection.activeGameObject = res;
-		}
+        [UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar", false, 10)]
+        public static void CreateDynamicCharacterAvatarMenuItem()
+        {
+            var res = new GameObject("New Dynamic Character Avatar");
+            var da = res.AddComponent<DynamicCharacterAvatar>();
+            da.context = UMAContextBase.Instance;
+            da.ChangeRace("HumanMale");
+            da.umaGenerator = Component.FindObjectOfType<UMAGeneratorBase>();
+            UnityEditor.Selection.activeGameObject = res;
+        }
 
 #endif
         #region Extra Events
@@ -88,9 +91,9 @@ namespace UMA.CharacterSystem
 
         public enum savePathTypes { persistentDataPath, Resources, FileSystem };
 
-#endregion
+        #endregion
 
-#region PUBLIC FIELDS
+        #region PUBLIC FIELDS
 
         //because the character might need to be preloaded, we may want everything required to create it to happen
         //but for it to still not be shown immediately or you may want to hide it anyway
@@ -108,9 +111,12 @@ namespace UMA.CharacterSystem
         [Tooltip("If checked, will not animate or modify the vertexes")]
         public bool rawAvatar;
 
+        [Tooltip("If checked, the predefined DNA will always be loaded every time the character is built.")]
+        public bool keepPredefinedDNA;
+
         //This will generate itself from a list available Races and set itself to the current value of activeRace.name
         [Tooltip("Selects the race to used. When initialized, the Avatar will use the base recipe from the RaceData selected.")]
-        public RaceSetter activeRace = new RaceSetter(); 
+        public RaceSetter activeRace = new RaceSetter();
 
         //To determine what recipes from a previous race can be applied to a the new race (on race change) sometimes we need to know what the previous race was
         //for example when a wardrobe collection is applied to a race, when the race changes we need to know if a given current slot was set because the wardrobe collection was compatible with the previous race.
@@ -130,7 +136,7 @@ namespace UMA.CharacterSystem
 
         //the dictionary of active recipes this character is using to create itself
         private Dictionary<string, UMATextRecipe> _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
-        private Dictionary<string, List<UMATextRecipe>> _additiveRecipes = new Dictionary<string, List<UMATextRecipe>>(); 
+        private Dictionary<string, List<UMATextRecipe>> _additiveRecipes = new Dictionary<string, List<UMATextRecipe>>();
         //a list of active wardrobe collections on the avatar. If the collection has a wardrobe set for the active race these are loaded into _wardrobeRecipes
         private Dictionary<string, UMAWardrobeCollection> _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
 
@@ -172,8 +178,8 @@ namespace UMA.CharacterSystem
         private Queue<AsyncOp> LoadedHandles = new Queue<AsyncOp>();
 #endif
         [Tooltip("Change to lower this specific DCA's atlas resolution. Leave 1.0f for resolution to be automatic.")]
-        [Range(0.0f,1.0f)]
-        public float AtlasResolutionScale = 1.0f; 
+        [Range(0.0f, 1.0f)]
+        public float AtlasResolutionScale = 1.0f;
 
         [EnumFlags]
         public LoadOptions defaultLoadOptions = LoadOptions.loadRace | LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadBodyColors | LoadOptions.loadWardrobeColors;
@@ -208,9 +214,9 @@ namespace UMA.CharacterSystem
         [Tooltip("What color to give the placeholder.")]
         public Color previewColor = Color.grey;
 #endif
-#endregion
+        #endregion
 
-#region PRIVATE FIELDS 
+        #region PRIVATE FIELDS 
         //Is building the character enabled? Disable this to make multiple changes to the avatar that will be built
         //without creating multiple build calls. when you are finished set it to true and the character will build
         [SerializeField]
@@ -249,12 +255,12 @@ namespace UMA.CharacterSystem
         private Material mat;
         private Mesh previewMesh;
 #endif
-#endregion
+        #endregion
 
-#region PROPERTIES
+        #region PROPERTIES
 
         public HashSet<string> ForceRemovedBaseSlots { get { return forceRemovedBaseSlots; } }
-        public List<string> ForceSuppressedWardrobeSlots {  get { return forceSuppressedWardrobeSlots;} }
+        public List<string> ForceSuppressedWardrobeSlots { get { return forceSuppressedWardrobeSlots; } }
 
         /// <summary>
         /// Set this before initialization to determine the active race. This can be set in the inspector
@@ -347,9 +353,9 @@ namespace UMA.CharacterSystem
         /// </summary>
         public bool BuildCharacterEnabled
         {
-            get 
-            { 
-                return _buildCharacterEnabled; 
+            get
+            {
+                return _buildCharacterEnabled;
             }
             set
             {
@@ -377,7 +383,7 @@ namespace UMA.CharacterSystem
                             //so just build
                             SetAnimatorController(true);//may cause downloads to happen- So call BuildCharacterWhenReady() instead
                             SetExpressionSet();
-                            BuildCharacter(true,!BundleCheck);
+                            BuildCharacter(true, !BundleCheck);
                         }
                     }
                 }
@@ -395,7 +401,7 @@ namespace UMA.CharacterSystem
             get
             {
 				bool startRecipeEmpty = (loadString == "" && loadFilename == "" /* && umaRecipe == null */);
-				if (loadFileOnStart && !startRecipeEmpty) // was &&
+                if (loadFileOnStart && !startRecipeEmpty) // was &&
                 {
                     return false;
                 }
@@ -406,11 +412,11 @@ namespace UMA.CharacterSystem
             }
         }
 
-#endregion
+        #endregion
 
-#region METHODS 
+        #region METHODS 
 
-#region Start Update and Inititalization
+        #region Start Update and Inititalization
 
         public void Awake()
         {
@@ -790,7 +796,7 @@ namespace UMA.CharacterSystem
                 mat.hideFlags = HideFlags.HideAndDontSave;
             }
 
-            if (showPlaceholder && editorTimeGeneration==false)
+            if (showPlaceholder && editorTimeGeneration == false)
             {
                 // Check for mesh Change
                 if (!previewMesh || lastPreviewModel != previewModel || customModel != lastCustomModel)
@@ -909,8 +915,8 @@ namespace UMA.CharacterSystem
             }
         }
 
-#endregion
-#region AVATAR Definition
+        #endregion
+        #region AVATAR Definition
 
         private bool isDefaultDna(float val)
         {
@@ -931,7 +937,7 @@ namespace UMA.CharacterSystem
         /// <param name="skipRaceDefaults">Skip DNA default values on the race. You should pass this if you create from a prefab or from code each time.</param>
         /// <param name="skipColorDefaults">Skip default colors. If you do this, any shared color default values in a recipe should be default values to avoid issues.</param>
         /// <returns></returns>
-        public AvatarDefinition GetAvatarDefinition(bool skipRaceDefaults, bool skipColorDefaults=false)
+        public AvatarDefinition GetAvatarDefinition(bool skipRaceDefaults, bool skipColorDefaults = false)
         {
             RaceData r = activeRace.data;
 
@@ -951,9 +957,9 @@ namespace UMA.CharacterSystem
                 Wardrobe.Add(utr.name);
             }
 
-            foreach(var kp in _additiveRecipes.Values)
+            foreach (var kp in _additiveRecipes.Values)
             {
-                foreach(UMATextRecipe utr in kp)
+                foreach (UMATextRecipe utr in kp)
                 {
                     Wardrobe.Add(utr.name);
                 }
@@ -965,7 +971,7 @@ namespace UMA.CharacterSystem
             List<DnaDef> Dna = new List<DnaDef>();
             var CurrentDNA = GetDNA().Values;
 
-            foreach(DnaSetter d in CurrentDNA)
+            foreach (DnaSetter d in CurrentDNA)
             {
                 if (skipRaceDefaults)
                 {
@@ -989,12 +995,12 @@ namespace UMA.CharacterSystem
 
             var CurrentColors = characterColors.Colors;
 
-            foreach(var col in CurrentColors)
+            foreach (var col in CurrentColors)
             {
-                SharedColorDef scd = new SharedColorDef(col.name,col.channelCount);
+                SharedColorDef scd = new SharedColorDef(col.name, col.channelCount);
                 List<ColorDef> colorchannels = new List<ColorDef>();
 
-                for (int i=0; i<col.channelCount;i++)
+                for (int i = 0; i < col.channelCount; i++)
                 {
                     if (skipColorDefaults)
                     {
@@ -1015,13 +1021,13 @@ namespace UMA.CharacterSystem
             }
 
             // Save the Avatar def.
-            AvatarDefinition adf = new AvatarDefinition(); 
+            AvatarDefinition adf = new AvatarDefinition();
             adf.RaceName = this.activeRace.name;
             adf.Wardrobe = Wardrobe.ToArray();
             adf.Dna = Dna.ToArray();
             adf.Colors = Colors.ToArray();
             return adf;
-        }       
+        }
 
         /// <summary>
         /// Gets a string representation of the avatar
@@ -1029,7 +1035,7 @@ namespace UMA.CharacterSystem
         /// <param name="skipDefaults">Skip DNA default values on the race. You should pass this if you create from a prefab or from code each time.</param>
         /// <param name="skipColorDefaults">Skip default colors. If you do this, any shared color default values in a recipe should be default values to avoid issues.</param>
         /// <returns></returns>
-        public string GetAvatarDefinitionString(bool skipDefaults,bool skipColorDefaults=false)
+        public string GetAvatarDefinitionString(bool skipDefaults, bool skipColorDefaults = false)
         {
             AvatarDefinition adf = GetAvatarDefinition(skipDefaults, skipColorDefaults);
             return JsonUtility.ToJson(adf);
@@ -1046,7 +1052,7 @@ namespace UMA.CharacterSystem
             {
                 characterColors.Colors.Clear();
                 List<OverlayColorData> colors = activeRace.data.GetDefaultColors();
-                foreach(OverlayColorData ocd in colors)
+                foreach (OverlayColorData ocd in colors)
                 {
                     if (ocd.HasName())
                     {
@@ -1055,7 +1061,7 @@ namespace UMA.CharacterSystem
                 }
             }
 
-            foreach(SharedColorDef sc in adf.Colors)
+            foreach (SharedColorDef sc in adf.Colors)
             {
                 if (characterColors.GetColor(sc.name, out OverlayColorData ocd))
                 {
@@ -1072,7 +1078,7 @@ namespace UMA.CharacterSystem
                         ocd.channelAdditiveMask[i] = new Color(0, 0, 0, 0);
                     }
 
-                    foreach(ColorDef def in sc.channels)
+                    foreach (ColorDef def in sc.channels)
                     {
                         ocd.channelMask[def.chan] = ColorDef.ToColor(def.mCol);
                         ocd.channelAdditiveMask[def.chan] = ColorDef.ToColor(def.aCol);
@@ -1108,10 +1114,10 @@ namespace UMA.CharacterSystem
             }
 
             var recipes = UMAContextBase.Instance.GetRecipes(adf.RaceName);
-            foreach(string s in adf.Wardrobe)
+            foreach (string s in adf.Wardrobe)
             {
-               UMATextRecipe utr = UMAContextBase.Instance.GetRecipe(s,false);
-               if (utr != null)
+                UMATextRecipe utr = UMAContextBase.Instance.GetRecipe(s, false);
+                if (utr != null)
                 {
                     SetSlot(utr);
                 }
@@ -1121,7 +1127,7 @@ namespace UMA.CharacterSystem
         private void PreloadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe, bool resetDNA, bool resetWardrobe, bool resetColors)
         {
             RacePreset = adf.RaceName;
-            LoadColors(adf,resetColors);
+            LoadColors(adf, resetColors);
             LoadWardrobe(adf, loadDefaultWardrobe, resetWardrobe);
 
             PreloadDNA(adf, resetDNA);
@@ -1135,8 +1141,8 @@ namespace UMA.CharacterSystem
                 // get DNA from race...
                 if (activeRace.data != null)
                 {
-                    Dictionary<string,float> defaultDNA = activeRace.data.GetDefaultDNA();
-                    foreach(var kp in defaultDNA)
+                    Dictionary<string, float> defaultDNA = activeRace.data.GetDefaultDNA();
+                    foreach (var kp in defaultDNA)
                     {
                         predefinedDNA.AddDNA(kp.Key, kp.Value);
                     }
@@ -1151,11 +1157,11 @@ namespace UMA.CharacterSystem
             }
         }
 
-        public void LoadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe=false, bool ResetDNA=true,bool ResetWardrobe = true, bool ResetColors=true)
+        public void LoadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true)
         {
             if (umaData == null)
             {
-                PreloadAvatarDefinition(adf, loadDefaultWardrobe,ResetDNA,ResetWardrobe,ResetColors);
+                PreloadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors);
                 return;
             }
 
@@ -1165,18 +1171,18 @@ namespace UMA.CharacterSystem
                 activeRace.SetRaceData();
             }
 
-            LoadColors(adf,ResetColors);
+            LoadColors(adf, ResetColors);
             WardrobeRecipes.Clear();
             LoadWardrobe(adf, loadDefaultWardrobe, ResetWardrobe);
             PreloadDNA(adf, ResetDNA);
         }
 
-        public void LoadAvatarDefinition(string adfstring, bool loadDefaultWardrobe=false, bool ResetDNA=true,bool ResetWardrobe=true, bool ResetColors=true)
+        public void LoadAvatarDefinition(string adfstring, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true)
         {
             if (adfstring.StartsWith("AA*"))
             {
                 AvatarDefinition adf = AvatarDefinition.FromCompressedString(adfstring);
-                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA,ResetWardrobe, ResetColors);
+                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors);
             }
             else
             {
@@ -1184,9 +1190,9 @@ namespace UMA.CharacterSystem
                 LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors);
             }
         }
-#endregion
+        #endregion
 
-#region SETTINGS MODIFICATION (RACE RELATED)
+        #region SETTINGS MODIFICATION (RACE RELATED)
 
         /// <summary>
         /// Sets the starting race of the avatar based on the value of the 'activeRace'. 
@@ -1226,7 +1232,7 @@ namespace UMA.CharacterSystem
                     Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
                 }
 
-                return false; 
+                return false;
             }
             return true;
         }
@@ -1241,7 +1247,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <param name="racename">race to change to</param>
         /// <param name="customChangeRaceOptions">flags for the race change options</param>
-        public bool ChangeRace(string racename, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults,bool ForceChange = false)
+        public bool ChangeRace(string racename, ChangeRaceOptions customChangeRaceOptions = ChangeRaceOptions.useDefaults, bool ForceChange = false)
         {
             // never been built, just use the race preset.
             if (activeRace.racedata == null && ForceChange == false)
@@ -1272,7 +1278,7 @@ namespace UMA.CharacterSystem
         {
             // never been built, just use the race preset.
             RaceData thisRace = context.GetRace(racename);
-            ChangeRace(thisRace, ChangeRaceOptions.useDefaults,true);
+            ChangeRace(thisRace, ChangeRaceOptions.useDefaults, true);
             return true;
         }
 
@@ -1403,9 +1409,9 @@ namespace UMA.CharacterSystem
             }
         }
 
-#endregion
+        #endregion
 
-#region SETTINGS MODIFICATION (WARDROBE RELATED)
+        #region SETTINGS MODIFICATION (WARDROBE RELATED)
 
         /// <summary>
         /// Loads the default wardobe items set in 'defaultWardrobeRecipes' in the CharacterAvatar itself onto the Avatar's base race recipe. Use this to make a naked avatar always have underwear or a set of clothes for example
@@ -1485,15 +1491,29 @@ namespace UMA.CharacterSystem
             }
 
             List<UMATextRecipe> SlotRecipes = recipes[Slotname];
-
+			if(SlotRecipes == null) { //VES added
+				Debug.LogWarning("DCA SlotRecipes is null");
+				return null;
+			}
             for (int i = 0; i < SlotRecipes.Count; i++)
             {
-                UMATextRecipe utr = SlotRecipes[i];
-                if (utr.name == Recipename)
+				UMATextRecipe utr;
+				try { //VES added try catch workaround
+					utr = SlotRecipes[i];
+				} catch(Exception exception) {
+					System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+					stringBuilder.Append("DynamicCharacterAvatar.FindSlotRecipe() failed to access list element, so skipping ");
+					stringBuilder.Append(Slotname);
+					stringBuilder.Append(", iter ");
+					stringBuilder.Append(i);
+					stringBuilder.Append(" of ");
+					stringBuilder.Append(SlotRecipes.Count);
+					Debug.Log(stringBuilder.ToString());
+					stringBuilder.Append(exception.Message); //bypassing editor warning for not using exception
+					continue;
+				}
+				if (utr != null && utr.name == Recipename) //VES added null check
                 {
-#if SUPER_LOGGINGCOLLECTIONS
-                    Debug.Log("Found recipe "+Recipename+" for slot "+Slotname);
-#endif
                     return utr;
                 }
             }
@@ -1688,7 +1708,7 @@ namespace UMA.CharacterSystem
             {
                 return;
             }
-            UMATextRecipe utr = thisContext.GetRecipe(collectionName,false);
+            UMATextRecipe utr = thisContext.GetRecipe(collectionName, false);
 
             if (!utr || !(utr is UMAWardrobeCollection))
             {
@@ -1708,16 +1728,16 @@ namespace UMA.CharacterSystem
             }
         }
 
-		public void LoadWardrobeCollection(UMAWardrobeCollection uwr)
-		{
-			//If there is already a WardrobeCollection belonging to this group applied to the Avatar, unload and remove it
-			if (_wardrobeCollections.ContainsKey(uwr.wardrobeSlot))
-			{
+        public void LoadWardrobeCollection(UMAWardrobeCollection uwr)
+        {
+            //If there is already a WardrobeCollection belonging to this group applied to the Avatar, unload and remove it
+            if (_wardrobeCollections.ContainsKey(uwr.wardrobeSlot))
+            {
 #if SUPER_LOGGINGCOLLECTIONS
                 Debug.Log("Unloading old wardrobe collection: " + uwr.wardrobeSlot);
 #endif
                 UnloadWardrobeCollectionGroup(uwr.wardrobeSlot);
-			}
+            }
 #if SUPER_LOGGINGCOLLECTIONS
             Debug.Log("Adding to slot: " + uwr.wardrobeSlot);
 #endif
@@ -1748,7 +1768,7 @@ namespace UMA.CharacterSystem
 #endif
 
             return;
-		}
+        }
 
         /// <summary>
         /// Call this when slots are removed from WardrobeRecipes so that any slots that are left empty by the change have any wardrobe collection recipes re-applied
@@ -1971,7 +1991,7 @@ namespace UMA.CharacterSystem
                                     {
                                         if (!newWardrobeRecipes.ContainsKey(aWardrobeSet[acri].slot))
                                         {
-                                            var thisWCRecipe = UMAContext.Instance.GetRecipe(aWardrobeSet[acri].recipe,false);
+                                            var thisWCRecipe = UMAContext.Instance.GetRecipe(aWardrobeSet[acri].recipe, false);
                                             newWardrobeRecipes.Add(aWardrobeSet[acri].slot, thisWCRecipe);
                                         }
                                     }
@@ -2020,7 +2040,7 @@ namespace UMA.CharacterSystem
                 {
                     if (!newWardrobeRecipes.ContainsKey(fallbackSet[i].slot))
                     {
-                        var fbRecipe = UMAContext.Instance.GetRecipe(fallbackSet[i].recipe,false);
+                        var fbRecipe = UMAContext.Instance.GetRecipe(fallbackSet[i].recipe, false);
                         newWardrobeRecipes.Add(fallbackSet[i].slot, fbRecipe);
                     }
                 }
@@ -2121,7 +2141,7 @@ namespace UMA.CharacterSystem
             {
                 foreach (UMAWardrobeCollection uwr in _wardrobeCollections.Values)
                 {
-					//dont do anything to collections that are downloading
+                    //dont do anything to collections that are downloading
                     var collectionSet = uwr.GetRacesWardrobeSet(activeRace.racedata);
                     if (collectionSet.Count > 0)
                     {
@@ -2154,9 +2174,9 @@ namespace UMA.CharacterSystem
             }
         }
 
-#endregion
+        #endregion
 
-#region SETTINGS MODIFICATION (COLORS RELATED)
+        #region SETTINGS MODIFICATION (COLORS RELATED)
 
         /// <summary>
         /// Gets the color from the current characterColors.
@@ -2221,27 +2241,27 @@ namespace UMA.CharacterSystem
             }
         }
 
-		public void SetRawColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
-		{
-			characterColors.SetRawColor(Name, colorData);
-			if (UpdateTexture)
-			{
-				UpdateColors();
-				ForceUpdate(false, UpdateTexture, false);
-			}
-		}
-
-		/// <summary>
-		/// Remove a previously added color
-		/// </summary>
-		/// <param name="Name"></param>
-		/// <param name="UpdateTexture"></param>
-		public void ClearColor(string Name, bool Update = true)
+        public void SetRawColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
         {
-            characterColors.RemoveColor(Name);  
+            characterColors.SetRawColor(Name, colorData);
+            if (UpdateTexture)
+            {
+                UpdateColors();
+                ForceUpdate(false, UpdateTexture, false);
+            }
+        }
+
+        /// <summary>
+        /// Remove a previously added color
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="UpdateTexture"></param>
+        public void ClearColor(string Name, bool Update = true)
+        {
+            characterColors.RemoveColor(Name);
             if (Update)
             {
-                BuildCharacter(true,!BundleCheck);
+                BuildCharacter(true, !BundleCheck);
             }
         }
 
@@ -2506,9 +2526,9 @@ namespace UMA.CharacterSystem
             return newSharedColors;
         }
 
-#endregion
+        #endregion
 
-#region SETTINGS MODIFICATION (DNA RELATED)
+        #region SETTINGS MODIFICATION (DNA RELATED)
 
         private void TryImportDNAValues(UMADnaBase[] prevDna)
         {
@@ -2623,7 +2643,7 @@ namespace UMA.CharacterSystem
                     }
                     else
                     {
-                        dna.Add(db.Names[i],db.Values[i]);
+                        dna.Add(db.Names[i], db.Values[i]);
                     }
                 }
             }
@@ -2699,9 +2719,9 @@ namespace UMA.CharacterSystem
             return umaData.GetAllDna();
         }
 
-#endregion
+        #endregion
 
-#region SETTINGS MODIFICATION (ANIMATION RELATED)
+        #region SETTINGS MODIFICATION (ANIMATION RELATED)
 
         /// <summary>
         /// Sets the Expression set for the Avatar based on the Avatars set race.
@@ -2786,7 +2806,7 @@ namespace UMA.CharacterSystem
             if (controllerToUse == null)
             {
                 List<string> compat = activeRace.data.GetCrossCompatibleRaces();
-                foreach(string s in compat)
+                foreach (string s in compat)
                 {
                     controllerToUse = raceAnimationControllers.GetAnimatorForRace(s);
                     if (controllerToUse)
@@ -2810,7 +2830,7 @@ namespace UMA.CharacterSystem
             }
 
             var thisAnimator = gameObject.GetComponent<Animator>();
-            
+
             if (RecreateAnimatorOnRaceChange)
             {
                 GameObject.DestroyImmediate(thisAnimator);
@@ -2844,9 +2864,9 @@ namespace UMA.CharacterSystem
             }
         }
 
-#endregion
+        #endregion
 
-#region SETTINGS EXPORT (SAVE)
+        #region SETTINGS EXPORT (SAVE)
 
         /// <summary>
         /// Helper method for getting the required DCA.SaveOptions flags. Set all to false for DCA.SaveOptions.UseDefaults
@@ -2884,7 +2904,7 @@ namespace UMA.CharacterSystem
             }
         }
 
-#region PARTIAL EXPORT - HelperMethods
+        #region PARTIAL EXPORT - HelperMethods
 
         public string GetCurrentWardrobeRecipe(string recipeName = "", bool includeColors = false, params string[] slotsToSave)
         {
@@ -2931,9 +2951,9 @@ namespace UMA.CharacterSystem
             return JsonUtility.ToJson(DCSModel);
         }
 
-#endregion
+        #endregion
 
-#region FULL EXPORT
+        #region FULL EXPORT
         /// <summary>
         /// Returns the UMATextRecipe string with the addition of the Avatars current WardrobeSet.
         /// </summary>
@@ -3134,11 +3154,11 @@ namespace UMA.CharacterSystem
                 return "";
             }
         }
-#endregion
+        #endregion
 
-#endregion
+        #endregion
 
-#region SETTINGS IMPORT (LOAD)
+        #region SETTINGS IMPORT (LOAD)
 
         /// <summary>
         /// Helper method for getting the required DCA.LoadOptions flags. Set all to false for DCA.LoadOptions.UseDefaults
@@ -3184,7 +3204,7 @@ namespace UMA.CharacterSystem
             }
         }
 
-#region PARTIAL IMPORT - HelperMethods
+        #region PARTIAL IMPORT - HelperMethods
 
         //DOS 11012017 changed the following so that they dont load race- if you want to load the race call LoadFromRecipeString directly with the appropriate flags
         public void LoadWardrobeFromRecipeString(string recipeString, bool loadColors = true, bool clearExisting = false)
@@ -3207,9 +3227,9 @@ namespace UMA.CharacterSystem
             LoadFromRecipeString(recipeString, GetLoadOptionsFlags(false, true, false, false, false));
         }
 
-#endregion
+        #endregion
 
-#region FULL CHARACTER IMPORT
+        #region FULL CHARACTER IMPORT
 
         public void InitializeAvatar()
         {
@@ -3289,10 +3309,10 @@ namespace UMA.CharacterSystem
         /// <param name="customLoadOptions"></param>
         public void LoadFromRecipeString(string settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool ClearWardrobe = false)
         {
-			if (ClearWardrobe)
-			{
-				this._wardrobeRecipes.Clear();
-			}
+            if (ClearWardrobe)
+            {
+                this._wardrobeRecipes.Clear();
+            }
             ImportSettings(UMATextRecipe.PackedLoadDCS(context, settingsToLoad), customLoadOptions);
         }
 
@@ -3452,7 +3472,7 @@ namespace UMA.CharacterSystem
             umaData.umaRecipe.sharedColors = ImportSharedColors(settingsToLoad.sharedColors, thisLoadOptions);
             UpdateColors();
             //additionalRecipes
-            umaData.AddAdditionalRecipes(umaAdditionalRecipes, context,false);
+            umaData.AddAdditionalRecipes(umaAdditionalRecipes, context, false);
             //UMAs unpacking sets the DNA
             //but we can still try to set it back if thats what we want
             if (prevDna.Length > 0 && !thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) && wasBuildCharacterEnabled)
@@ -3581,7 +3601,7 @@ namespace UMA.CharacterSystem
                     for (int i = 0; i < textFiles.Length; i++)
                     {
                         if (textFiles[i].name == loadFilename.Trim() || textFiles[i].name.ToLower() == loadFilename.Trim())
-                        { 
+                        {
                             recipeString = textFiles[i].text;
                         }
                     }
@@ -3624,7 +3644,7 @@ namespace UMA.CharacterSystem
                 }
 
                 BuildFromComponentSettings();
-			}
+            }
         }
 
         IEnumerator DoWebLoad(string path)
@@ -3637,11 +3657,11 @@ namespace UMA.CharacterSystem
 #endif
             LoadFromRecipeString(www.downloadHandler.text);
         }
-#endregion
-#endregion
+        #endregion
+        #endregion
 
-#region CHARACTER FINAL ASSEMBLY
-     
+        #region CHARACTER FINAL ASSEMBLY
+
         public bool DNAIsValid(UMADnaBase[] CurrentDNA)
         {
             if (CurrentDNA == null)
@@ -3704,8 +3724,9 @@ namespace UMA.CharacterSystem
                 {
                     CurrentDNA = umaData.umaRecipe.GetDefinedDna();
                 }
+                umaData.userInformation = userInformation;
             }
-            if (DNAIsValid(CurrentDNA)== false)
+            if (DNAIsValid(CurrentDNA) == false)
             {
                 RestoreDNA = false;
             }
@@ -3867,7 +3888,7 @@ namespace UMA.CharacterSystem
                 }
             }
 
-            foreach(string s in forceRemovedBaseSlots)
+            foreach (string s in forceRemovedBaseSlots)
             {
                 HiddenSlots.Add(s);
             }
@@ -4033,11 +4054,15 @@ namespace UMA.CharacterSystem
                             dna[dv.Name].Set(dv.Value);
                         }
                     }
+                    // Use this when you are managing DNA outside of UMA, and rebuild the character over and over.
+                    if (!keepPredefinedDNA)
+                    {
                     this.predefinedDNA.Clear();
                 }
             }
         }
-         
+        }
+
         /// <summary>
         /// With a DynamicCharacterAvatar you do not call Load directly. If you want to load an UMATextRecipe directly call ImportSettings(yourUMATextRecipe)
         /// </summary>
@@ -4061,7 +4086,7 @@ namespace UMA.CharacterSystem
         /// <param name="Replaces"></param>
         /// <param name="umaAdditionalSerializedRecipes"></param>
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
-        private void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck )
+        private void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
         {
 #if UMA_ADDRESSABLES
 #if UNITY_EDITOR
@@ -4142,6 +4167,10 @@ namespace UMA.CharacterSystem
                 ReplaceSlot(umr);
             }
 
+            List<SlotData> smooshSlots = new List<SlotData>();
+            List<SlotData> clippingPlanes = new List<SlotData>();
+
+
             foreach (SlotData sd in umaData.umaRecipe.slotDataList)
             {
                 if (sd.OverlayCount > 1)
@@ -4168,7 +4197,62 @@ namespace UMA.CharacterSystem
                     sd.altMaterial = SortedOverlays[0].asset.material;
                     sd.UpdateOverlayList(SortedOverlays);
                 }
+                if (sd.asset.isClippingPlane)
+                {
+                    clippingPlanes.Add(sd);
+                }
+                if (sd.asset.isSmooshable)
+                {
+                    smooshSlots.Add(sd);
+                }
             }
+
+            // Loop through all planes, and then smoosh the smooshables that are targeted by the plane.
+            foreach(SlotData clipSlot in clippingPlanes)
+            {
+                List<SlotDataAsset> SmooshThese = new List<SlotDataAsset>();
+                SlotDataAsset SmooshTarget = null;
+
+                string smooshTargetTag = clipSlot.smooshTargetTag;
+                string smooshableTag = clipSlot.smooshableTag;
+
+                if (string.IsNullOrEmpty(smooshTargetTag))
+                {
+                    smooshTargetTag = "smooshtarget";
+                }
+
+                if (string.IsNullOrEmpty(smooshableTag))
+                {
+                    smooshableTag = "smooshable";
+                }
+
+                List<SlotData> Smooshables = new List<SlotData>();
+
+                foreach (SlotData lookSloot in umaData.umaRecipe.slotDataList)
+                {
+                    if (lookSloot.HasTag(smooshTargetTag))
+                    {
+                        SmooshTarget = lookSloot.asset;
+                    }
+                }
+
+                foreach (SlotData lookSloot in smooshSlots )
+                {
+                    if (lookSloot.HasTag(smooshableTag))
+                    {
+                        SmooshThese.Add(lookSloot.asset);
+                    }
+                }
+
+                if (SmooshTarget != null && SmooshThese.Count > 0)
+                {
+                    foreach(var smooshslot in SmooshThese)
+                    {
+                        SmooshSlotPhysics(umaData, smooshslot, clipSlot.asset, SmooshTarget, clipSlot.smooshInvertX, clipSlot.smooshInvertY, clipSlot.smooshInvertZ, clipSlot.smooshInvertDist, clipSlot.smooshDistance, clipSlot.overSmoosh);
+                    }
+                }
+            }
+
             UpdateColors();
 
             //New event that allows for tweaking the resulting recipe before the character is actually generated
@@ -4197,7 +4281,7 @@ namespace UMA.CharacterSystem
 
             ApplyPredefinedDNA();
             umaData.rawAvatar = rawAvatar;
-			umaData.KeepAvatar = keepAvatar;
+            umaData.KeepAvatar = keepAvatar;
             umaData.ForceRebindAnimator = forceRebindAnimator;
             //But the ExpressionPlayer needs to be Initialized AFTER Load
             if (activeRace.racedata != null && !restoreDNA)
@@ -4218,7 +4302,140 @@ namespace UMA.CharacterSystem
                 }
             }
         }
-        
+
+        public Vector3 GetDestVertPhys(Vector3 vertex, Vector3 center, float PlaneDist, SlotDataAsset SmooshTarget, PhysicsScene ps, int vertindex, float smooshDistance, float overSmoosh)
+        {
+            Vector3 result = new Vector3();
+
+            Vector3 AlternateCenter = new Vector3(center.x, center.y + 0.001f, center.z);
+            result.Set(vertex.x, vertex.y, vertex.z);
+            float distance = Vector3.Distance(center, vertex);
+
+            Vector3 direction = (center - vertex).normalized;
+            if (ps.Raycast(vertex, direction, out RaycastHit hit, 5.0f, -5, QueryTriggerInteraction.Ignore))
+            {
+                // todo: offset by smoosh distance
+                float vertdistance = (hit.point - vertex).magnitude;
+                if (vertdistance < distance)
+                {
+                    distance = vertdistance;
+                    float newSmooshDistance = smooshDistance;
+                    // Smooth smooshing
+                    if (distance > 0.0f)
+                    {
+                        newSmooshDistance = smooshDistance + (smooshDistance * (distance / overSmoosh));
+                    }
+                    Vector3 newLocation = hit.point + (direction * (0 - newSmooshDistance));
+                    result.Set(newLocation.x, newLocation.y, newLocation.z);
+                }
+                else
+                {
+                    result.Set(hit.point.x, hit.point.y, hit.point.z);
+                }
+            }
+            else
+            {
+                result.Set(center.x, center.y, center.z);
+            }
+
+            return result;
+        }
+
+        public void SmooshSlotPhysics(UMAData umaData, SlotDataAsset SmooshMe, SlotDataAsset SmooshPlane, SlotDataAsset SmooshTarget, bool invertX, bool invertY, bool invertZ, bool invertDist, float smooshDistance, float overSmoosh)
+        {
+            if (SmooshMe == null || SmooshPlane == null || SmooshTarget == null)
+            {
+                return;
+            }
+            Mesh m = new Mesh();
+
+            if (umaData.VertexOverrides.ContainsKey(SmooshTarget.slotName))
+            {
+                m.SetVertices(umaData.VertexOverrides[SmooshTarget.slotName]);
+            }
+            else
+            {
+                m.SetVertices(SmooshTarget.meshData.vertices);
+            }
+            m.SetTriangles(SmooshTarget.meshData.submeshes[0].getBaseTriangles(), 0);
+#if UNITY_EDITOR
+            Scene S = EditorSceneManager.NewPreviewScene();
+#else
+            CreateSceneParameters csp = new CreateSceneParameters(LocalPhysicsMode.Physics3D);
+            Scene S = SceneManager.CreateScene("SmooshScene", csp);
+#endif
+            GameObject go = new GameObject();
+            try
+            {
+                var collider = go.AddComponent<MeshCollider>();
+                collider.sharedMesh = m;
+                SceneManager.MoveGameObjectToScene(go, S);
+                PhysicsScene physicsScene = S.GetPhysicsScene();
+
+                var a = SmooshPlane.meshData.vertices[0];
+                var b = SmooshPlane.meshData.vertices[1];
+                var c = SmooshPlane.meshData.vertices[2];
+
+                if (invertY)
+                {
+                    a.y = -a.y;
+                    b.y = -b.y;
+                    c.y = -c.y;
+                }
+                if (invertX)
+                {
+                    a.x = -a.x;
+                    b.x = -b.x;
+                    c.x = -c.x;
+                }
+
+                Plane p = new Plane(a, b, c);
+                Vector3 center = (a + b + c) / 3;
+
+                Vector3[] newVerts = new Vector3[SmooshMe.meshData.vertices.Length];
+
+                Vector3[] sourceVertexes = SmooshMe.meshData.vertices;
+
+                if (umaData.VertexOverrides.ContainsKey(SmooshMe.slotName))
+                {
+                    sourceVertexes = umaData.VertexOverrides[SmooshMe.slotName];
+                }
+
+                for (int i = 0; i < newVerts.Length; i++)
+                {
+                    Vector3 currentVert = sourceVertexes[i];
+
+                    float dist = p.GetDistanceToPoint(currentVert);
+                    if (invertDist)
+                    {
+                        dist *= -1;
+                    }
+
+                    if (dist > -overSmoosh)
+                    {
+                        newVerts[i] = GetDestVertPhys(currentVert, center, dist, SmooshTarget, physicsScene, i, smooshDistance, overSmoosh);
+                    }
+                    else
+                    {
+                        newVerts[i] = currentVert;
+                    }
+                }
+                umaData.AddVertexOverride(SmooshMe, newVerts);
+            }
+            finally
+            {
+#if UNITY_EDITOR
+                EditorSceneManager.UnloadSceneAsync(S);
+                GameObject.DestroyImmediate(m);
+#else
+                //  Cleanup
+                SceneManager.UnloadSceneAsync(S);
+                GameObject.Destroy(m);
+#endif
+            }
+        }
+
+
         void UpdateBounds()
         {
             foreach (IDNAConverter id in activeRace.data.dnaConverterList)
@@ -4334,13 +4551,13 @@ namespace UMA.CharacterSystem
                                 }
                             }
                         }
-						//09072019 if the equivalent slot is the same as the slot we are checking, then the user has added an unnecessary entry to the compatibility settings
-						//but its very easy to do when base races share things like the inner mouth and eyes, so just skip it.
-						if (!hiddenSlots.Contains(sd.slotName) && equivalentSlot != sd.slotName)
-						{
-							hiddenSlots.Add(sd.slotName);
-						}
-					}
+                        //09072019 if the equivalent slot is the same as the slot we are checking, then the user has added an unnecessary entry to the compatibility settings
+                        //but its very easy to do when base races share things like the inner mouth and eyes, so just skip it.
+                        if (!hiddenSlots.Contains(sd.slotName) && equivalentSlot != sd.slotName)
+                        {
+                            hiddenSlots.Add(sd.slotName);
+                        }
+                    }
                 }
             }
             //if we make this happen after RemoveHiddenSlots() we need to call it again
@@ -4399,6 +4616,7 @@ namespace UMA.CharacterSystem
 
         void ReplaceSlot(UMAWardrobeRecipe Replacer)
         {
+            //we need to check if *this* recipe is directly or only cross compatible with this race
             bool isCrossCompatibleRecipe = (activeRace.racedata.IsCrossCompatibleWith(Replacer.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(Replacer.wardrobeSlot));
             string replaceSlot = Replacer.replaces;
             if (isCrossCompatibleRecipe)
@@ -4449,7 +4667,8 @@ namespace UMA.CharacterSystem
                         continue;
                     }
                     var ovl = checkSlot.GetOverlay(0);
-                    if (ovl.overlayName == replacedSlot.GetOverlay(0).overlayName)
+
+                    if (ovl != null && replacedSlot != null && ovl.overlayName == replacedSlot.GetOverlay(0).overlayName)
                     {
                         checkSlot.SetOverlayList(ReplacedOverlays);
                     }
@@ -4513,19 +4732,59 @@ namespace UMA.CharacterSystem
             */
         }
 
-            /// <summary>
-            /// JRM - Renamed from ProcessHiddenSlots for Wildcards
-            ///     - This is the only function changed for Wildcards
-            /// </summary>
-            /// <param name="hiddenSlots"></param>
-            /// <param name="hideTags"></param>
-            void PostProcessSlots(List<string> hiddenSlots, List<string> hideTags = null)
+        /// <summary>
+        /// JRM - Renamed from ProcessHiddenSlots for Wildcards
+        ///     - This is the only function changed for Wildcards
+        /// </summary>
+        /// <param name="hiddenSlots"></param>
+        /// <param name="hideTags"></param>
+        void PostProcessSlots(List<string> hiddenSlots, List<string> hideTags = null)
         {
             List<SlotData> WildCards = null;// = new List<SlotData>();
 
             List<SlotData> NewSlots = new List<SlotData>();
-            //foreach (SlotData sd in umaData.umaRecipe.slotDataList)
-            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++) 
+            List<SlotData> SwapSlots = new List<SlotData>();
+
+            // first, gather any swap slot tags. These are slots that will be replaced by other slots.
+
+            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+            {
+                SlotData sd = umaData.umaRecipe.slotDataList[i];
+                if (sd == null || sd.asset == null)
+                {
+                    continue;
+                }
+                // all swap slots are hidden by default.
+                if (sd.isSwapSlot)
+                {
+                    sd.tempHidden = true;
+                    SwapSlots.Add(sd);
+                }
+                else
+                {
+                    sd.tempHidden = false;
+                }
+            }
+
+            // if there are any swap slots, we need to go through the recipe and find any slots that have the swap tag.
+            // if there are any with the swap tag, then they will be hidden, and the swap slot will be shown instead.
+            foreach (SlotData swap in SwapSlots)
+            {
+                foreach(SlotData sd in umaData.umaRecipe.slotDataList)
+                {
+                    if (sd == null || sd.asset == null)
+                    {
+                        continue;
+                    }
+                    if (sd.HasTag(swap.swapTag))
+                    {
+                        swap.tempHidden = false;
+                        sd.tempHidden = true;
+                    }
+                }
+            }
+
+            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
             {
                 SlotData sd = umaData.umaRecipe.slotDataList[i];
                 if (sd == null || sd.asset == null)
@@ -4533,6 +4792,10 @@ namespace UMA.CharacterSystem
                     continue;
                 }
 
+                if (sd.tempHidden)
+                {
+                    continue;
+                }
 
                 if (sd.HasTag(hideTags))
                 {
@@ -4545,7 +4808,7 @@ namespace UMA.CharacterSystem
                     {
                         if (sd.Races.Length > 0)
                         {
-                            foreach(string s in sd.Races)
+                            foreach (string s in sd.Races)
                             {
                                 if (s == activeRace.racedata.raceName)
                                 {
@@ -4595,7 +4858,7 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
-            
+
             umaData.umaRecipe.slotDataList = NewSlots.ToArray();
         }
 
@@ -4697,7 +4960,7 @@ namespace UMA.CharacterSystem
 
 #endregion
 
-#region UMAContextBase RELATED
+        #region UMAContextBase RELATED
 
         //If the user inspects a DCA when there is no UMAContextBase in the scene it will blow up because RaceSetter needs one in order to find all the available races
         //and the Default Wardrobe and Race animators need one in order to assess whether the assets will be available at run time so create one on the fly like UMATextRecipe does
@@ -4756,12 +5019,12 @@ namespace UMA.CharacterSystem
             {
                 EditorApplication.update -= CheckEditorContextNeeded;
             }*/
-        } 
+        }
 #endif
 
-#endregion
+        #endregion
 
-#region ASSETBUNDLES RELATED
+        #region ASSETBUNDLES RELATED
 
         /// <summary>
         /// Use when temporary wardrobe recipes have been used while the real ones have been downloading. Will replace the temp textrecipes with the downloaded ones.
@@ -4807,9 +5070,9 @@ namespace UMA.CharacterSystem
                 _wardrobeCollections = newWardrobeCollections;
             }
         }
-#endregion
+        #endregion
 
-#region CLEANUP 
+        #region CLEANUP 
 
         /// <summary>
         /// Cleanup UMA system
@@ -4825,7 +5088,7 @@ namespace UMA.CharacterSystem
             }
 #endif
             if (umaData != null)
-            { 
+            {
                 if (umaData.umaGenerator != null)
                 {
                     umaData.umaGenerator.removeUMA(umaData);
@@ -4857,11 +5120,11 @@ namespace UMA.CharacterSystem
             }
             return false;
         }
-#endregion
+        #endregion
 
 #endregion
 
-#region SPECIALTYPES // these types should only be needed by DynamicCharacterAvatar
+        #region SPECIALTYPES // these types should only be needed by DynamicCharacterAvatar
 
         [Serializable]
         public class RaceSetter
@@ -4983,7 +5246,7 @@ namespace UMA.CharacterSystem
                     WLIRecipe._compatibleRaces = new List<string>(WLIRecipe._recipe.compatibleRaces);
                     if (raceName == "" || WLIRecipe._recipe.compatibleRaces.Contains(raceName) || (race != null && race.IsCrossCompatibleWith(WLIRecipe._recipe.compatibleRaces)))
                     {
-                       validRecipes.Add(WLIRecipe);
+                        validRecipes.Add(WLIRecipe);
                     }
                 }
                 return validRecipes;
@@ -5015,7 +5278,7 @@ namespace UMA.CharacterSystem
                     {
                         if (animators[i].animatorController == null)
                         {
-							animators[i].animatorController = UMAAssetIndexer.Instance.GetAsset<RuntimeAnimatorController>(animators[i].animatorControllerName);
+                            animators[i].animatorController = UMAAssetIndexer.Instance.GetAsset<RuntimeAnimatorController>(animators[i].animatorControllerName);
                         }
                         if (animators[i].animatorController != null)
                         {
@@ -5041,8 +5304,8 @@ namespace UMA.CharacterSystem
             [FormerlySerializedAs("MetallicGloss")]
             [SerializeField]
             private Color _metallicGloss = new Color(0, 0, 0, 0);
-			[SerializeField]
-			private bool Raw;
+            [SerializeField]
+            private bool Raw;
 
             public bool valuesConverted = false;
 
@@ -5145,7 +5408,7 @@ namespace UMA.CharacterSystem
             /// </summary>
             private void ConvertOldFieldsToNew()
             {
-                if (!String.IsNullOrEmpty(_name))
+                if (!string.IsNullOrEmpty(_name))
                 {
                     EnsureChannels(3);
                     name = _name;
@@ -5173,7 +5436,7 @@ namespace UMA.CharacterSystem
                 set { _colors = value; }
             }
 
-#region CONSTRUCTOR
+            #region CONSTRUCTOR
 
             /// <summary>
             /// The default Constructor adds a delegate to EditorApplication.update which checks if any of the ColorValues were updated from old values to new values and marks the scene as dirty
@@ -5196,7 +5459,7 @@ namespace UMA.CharacterSystem
                 Colors = colorValueList;
             }
 
-#endregion
+            #endregion
 
 
             private ColorValue GetColorValue(string name)
@@ -5276,32 +5539,32 @@ namespace UMA.CharacterSystem
                 }
             }
 
-			public void SetRawColor(string name, OverlayColorData c)
-			{
-				ColorValue cv = GetColorValue(name);
-				if (cv != null)
-				{
-					cv.AssignFrom(c);
-				}
-				else
-				{
-					Colors.Add(new ColorValue(name, c));
-				}
-			}
+            public void SetRawColor(string name, OverlayColorData c)
+            {
+                ColorValue cv = GetColorValue(name);
+                if (cv != null)
+                {
+                    cv.AssignFrom(c);
+                }
+                else
+                {
+                    Colors.Add(new ColorValue(name, c));
+                }
+            }
 
 
-			public void RemoveColor(string name)
+            public void RemoveColor(string name)
             {
                 List<ColorValue> newColors = new List<ColorValue>();
 
                 foreach (ColorValue cv in Colors)
-                { 
+                {
                     if (cv.Name != name)
                     {
                         newColors.Add(cv);
                     }
                 }
-                 
+
                 Colors = newColors;
             }
         }
@@ -5356,7 +5619,7 @@ namespace UMA.CharacterSystem
 #endif
     }
 
-#endregion
+    #endregion
 
 
 }

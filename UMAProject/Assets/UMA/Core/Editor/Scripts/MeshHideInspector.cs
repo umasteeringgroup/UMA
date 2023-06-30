@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
 using Unity.Collections;
+using static UMA.UMAUtils;
 
 namespace UMA.Editors
 {
@@ -407,8 +408,10 @@ namespace UMA.Editors
 			if (_meshPreview == null)
 				return;
 
-			if( _material == null )
-				_material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+			if (_material == null)
+			{
+				_material = GetDefaultDiffuseMaterial();
+			}
 
 			_drag = Drag2D(_drag, r);
 

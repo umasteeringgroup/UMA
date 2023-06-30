@@ -121,7 +121,8 @@ namespace UMA
 					if (!string.IsNullOrEmpty(_dnaEvaluators[i].dnaName))
 					{
 						aveCount++;
-						result += _dnaEvaluators[i].Evaluate(dna);
+						float value = _dnaEvaluators[i].Evaluate(dna);
+						result += value;
 					}
 				}
 				if (aveCount > 0)

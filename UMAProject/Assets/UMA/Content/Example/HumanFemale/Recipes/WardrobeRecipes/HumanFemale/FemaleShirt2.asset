@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: FemaleShirt2
   m_EditorClassIdentifier: 
   label: 
+  resourcesOnly: 0
   recipeType: Wardrobe
   DisplayValue: Shirt 2
   compatibleRaces:
@@ -26,11 +27,14 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 21300000, guid: 7d62e9fe46bc2694fb5c5d5d3371180f, type: 3}
   wardrobeSlot: Chest
+  Appended: 0
   Hides: []
+  HideTags: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
-  AddressableLabel: 
+  OverrideDNA:
+    PreloadValues: []
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"FemaleTorso","scale":100,"copyIdx":-1,"overlays":[{"id":"FemaleShirt01","colorIdx":0,"rect":[0,1024,2048,1024]}]}],"colors":[],"fColors":[{"name":"Shirt","colors":[54,146,97,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   IncompatibleRecipes: []
   UserField: 

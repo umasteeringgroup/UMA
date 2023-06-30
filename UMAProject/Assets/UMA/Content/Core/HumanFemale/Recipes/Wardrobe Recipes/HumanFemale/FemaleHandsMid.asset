@@ -3,14 +3,17 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
   m_Name: FemaleHandsMid
   m_EditorClassIdentifier: 
+  label: 
+  resourcesOnly: 0
   recipeType: Wardrobe
   DisplayValue: 
   compatibleRaces:
@@ -24,9 +27,16 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 21300000, guid: 8292b70d54e5a23498806f2ee4214b60, type: 3}
   wardrobeSlot: Hands
+  Appended: 0
   Hides:
   - FemaleHands
+  HideTags: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
+  MeshHideAssets: []
+  OverrideDNA:
+    PreloadValues: []
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"UMA_Human_Female_Hands_HQ","scale":100,"copyIdx":-1,"overlays":[{"id":"F_H_Bod","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  IncompatibleRecipes: []
+  UserField: 
   replaces: Nothing

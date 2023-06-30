@@ -218,7 +218,13 @@ namespace UMA
 			}
 			GUILayout.Label("Note: If you include recipes or other items, you will need to manually load them using LoadLabelList!", EditorStyles.miniLabel);
 			ConfigToggle(ConfigToggle_StripUmaMaterials, "Strip UMAMaterials", "In some versions of Unity, using an SRP can cause each bundle to include the compiled shaders. This will stop that from happening.", false);
-			ConfigToggle(ConfigToggle_IncludeRecipes, "Include Recipes", "Include recipes in shared group generation", false);
+			ConfigToggle(ConfigToggle_IncludeRecipes, "Include Recipes", "Include recipes in shared group generation",
+#if UMA_ALWAYS_INCLUDE_RECIPES //VES added
+				true
+#else
+				false
+#endif
+			);
 			ConfigToggle(ConfigToggle_IncludeOther, "Include all other types", "Include all other types in index in shared group generation", false);
 
 			GUI.enabled = true;
@@ -273,12 +279,22 @@ namespace UMA
 
 		private static void SetConfigValue(string toggleId, bool value)
 		{
+#if UMA_ALWAYS_INCLUDE_RECIPES //VES added
+			if(toggleId == ConfigToggle_IncludeRecipes) {
+				value = true;
+			}
+#endif
 			//TODO: obviously not the right place!
 			EditorPrefs.SetBool(toggleId, value);
 		}
 
 		public static bool GetConfigValue(string toggleId, bool defaultValue)
 		{
+#if UMA_ALWAYS_INCLUDE_RECIPES //VES added
+			if(toggleId == ConfigToggle_IncludeRecipes) {
+				return true;
+			}
+#endif
 			//TODO: obviously not the right place!
 			return EditorPrefs.GetBool(toggleId, defaultValue);
 		}

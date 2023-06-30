@@ -1,8 +1,10 @@
 fileFormatVersion: 2
 guid: b66591cce48d21043a814071716e6281
-timeCreated: 1457758121
-licenseType: Free
+labels:
+- UMA_Overlay
 NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 

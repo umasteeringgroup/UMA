@@ -27,6 +27,7 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: Legs
+  Appended: 0
   Hides:
   - MaleLegs
   HideTags: []

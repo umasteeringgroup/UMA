@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 84b952592715cb94da0e3e81d267e72f
+labels:
+- UMA_Text Recipe
 NativeFormatImporter:
   externalObjects: {}
   mainObjectFileID: 11400000

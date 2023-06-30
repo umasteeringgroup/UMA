@@ -14,6 +14,7 @@ namespace UMA.Editors
 		private SerializedProperty _overlayType;
 		private SerializedProperty _umaMaterial;
 		private SerializedProperty _textureList;
+		private SerializedProperty _blendList;
 		private SerializedProperty _channels;
 		private SerializedProperty _rect;
 		private SerializedProperty _alphaMask;
@@ -27,6 +28,7 @@ namespace UMA.Editors
 			_overlayType = serializedObject.FindProperty("overlayType");
 			_umaMaterial = serializedObject.FindProperty("material");
 			_textureList = serializedObject.FindProperty("textureList");
+			_blendList =   serializedObject.FindProperty("overlayBlend");
 			_rect = serializedObject.FindProperty("rect");
 			_alphaMask = serializedObject.FindProperty("alphaMask");
 			_tags = serializedObject.FindProperty("tags");
@@ -60,6 +62,7 @@ namespace UMA.Editors
 			if (od.lastActionTime == 0)
 				od.lastActionTime = Time.realtimeSinceStartup;
 
+			od.ValidateBlendList();
 			serializedObject.Update();
 
 			EditorGUI.BeginChangeCheck();
@@ -91,6 +94,7 @@ namespace UMA.Editors
 					for (int i = 0; i < _textureList.arraySize; i++)
 					{
 						SerializedProperty textureElement = _textureList.GetArrayElementAtIndex(i);
+						SerializedProperty blendElement = _blendList.GetArrayElementAtIndex(i);
 						string materialName = "Unknown";
 
 						if (i < _channels.arraySize)
@@ -105,8 +109,10 @@ namespace UMA.Editors
 								}
 							}
 						}
-
-						EditorGUILayout.PropertyField(textureElement, new GUIContent(materialName));
+						GUILayout.BeginHorizontal();
+						EditorGUILayout.PropertyField(textureElement, new GUIContent(materialName), GUILayout.ExpandWidth(true));
+						EditorGUILayout.PropertyField(blendElement, new GUIContent(""), GUILayout.Width(110));
+						GUILayout.EndHorizontal();
 					}
 					GUIHelper.EndVerticalPadded(10);
 				}

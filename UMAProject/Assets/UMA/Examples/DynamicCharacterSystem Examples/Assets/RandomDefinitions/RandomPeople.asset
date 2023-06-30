@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   RandomAvatars:
   - RaceName: HumanFemale
-    Chance: 1
+    Chance: 5
     SharedColors:
     - ColorName: Skin
       ColorTable: {fileID: 11400000, guid: 77bea8d4eaa1f0b47acb6086897c8337, type: 2}
@@ -751,13 +751,13 @@ MonoBehaviour:
       MaxValue: 0.5945946
     - DnaName: upperMuscle
       MinValue: 0
-      MaxValue: 0.9009009
+      MaxValue: 0.61860424
     - DnaName: belly
       MinValue: 0
-      MaxValue: 0.8648649
+      MaxValue: 1
     - DnaName: waist
       MinValue: 0
-      MaxValue: 0.8288288
+      MaxValue: 0.99150825
     - DnaName: earsSize
       MinValue: 0.054054055
       MaxValue: 0.6036036
@@ -776,11 +776,11 @@ MonoBehaviour:
     - DnaName: jawsSize
       MinValue: 0.3243243
       MaxValue: 0.6216216
-    raceData: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
-    GuiFoldout: 1
+    raceData: {fileID: 11400000, guid: a88284a0175502f459c5496bda675fb1, type: 2}
+    GuiFoldout: 0
     ColorsFoldout: 0
     WardrobeFoldout: 1
-    DnaFoldout: 0
+    DnaFoldout: 1
     Delete: 0
     AddColorTable: 0
     DnaChanged: 1

@@ -1,8 +1,11 @@
 fileFormatVersion: 2
 guid: 03e725a9262c64446b222b3a045c45c4
-timeCreated: 1485115956
-licenseType: Pro
+labels:
+- UMA_Text Recipe
+- UMA_Wardrobe Recipe
 NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 

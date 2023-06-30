@@ -27,11 +27,22 @@ namespace UMA
 			Normal = 0,
 			Cutout = 1,
 		}
+
+		public enum OverlayBlend
+		{
+			Normal = 0,
+			Multiply = 1,
+			Overlay = 2,
+			Screen = 3,
+			Divide = 4
+		}
+
 		/// <summary>
 		/// How should this overlay be processed.
 		/// </summary>
 		[Tooltip("Normal or Cutout overlay type. This determines whether or not to use a cutout shader during the texture merging process.")]
 		public OverlayType overlayType;
+
 		/// <summary>
 		/// Destination rectangle for drawing overlay textures.
 		/// </summary>
@@ -48,11 +59,15 @@ namespace UMA
 		/// </summary>
 		[Tooltip("Array of textures required for the overlay material.")]
 		public Texture[] textureList = new Texture[0];
-		/// <summary>
-		/// Use this to identify what kind of overlay this is and what it fits
-		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
-		/// </summary>
-		[Tooltip("Use this to identify what kind of overlay this is and what it fits.")]
+
+        [Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
+        public OverlayBlend[] overlayBlend = new OverlayBlend[0];
+
+        /// <summary>
+        /// Use this to identify what kind of overlay this is and what it fits
+        /// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+        /// </summary>
+        [Tooltip("Use this to identify what kind of overlay this is and what it fits.")]
 		public string[] tags;
 
 		/// <summary>
@@ -90,6 +105,23 @@ namespace UMA
 				if (textureList == null)
 					return 0;	
 				return textureList.Length;
+			}
+		}
+
+		public OverlayBlend GetBlend(int channel)
+		{
+			if (channel >= overlayBlend.Length)
+			{
+				return OverlayBlend.Normal;
+			}
+			return overlayBlend[channel];
+		}
+
+		public void ValidateBlendList()
+		{
+			if (overlayBlend.Length != textureList.Length)
+			{
+				overlayBlend = new OverlayBlend[textureList.Length];
 			}
 		}
 

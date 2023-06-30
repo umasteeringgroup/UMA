@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0188188c253e0c4bb9b46e19fa7312e, type: 3}
   m_Name: MaleShortHair_Recipe
   m_EditorClassIdentifier: 
+  label: 
+  resourcesOnly: 0
   recipeType: Wardrobe
   DisplayValue: MaleShortHair
   compatibleRaces:
@@ -25,11 +27,14 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: Hair
+  Appended: 0
   Hides: []
+  HideTags: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
-  AddressableLabel: 
+  OverrideDNA:
+    PreloadValues: []
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"MaleShortHair","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleShortHair_Overlay","colorIdx":0,"rect":[0,0,0,0]}]},{"id":"M_High
     poly Head","scale":100,"copyIdx":-1,"overlays":[{"id":"Maincap_Overlay","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Hair","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   IncompatibleRecipes: []

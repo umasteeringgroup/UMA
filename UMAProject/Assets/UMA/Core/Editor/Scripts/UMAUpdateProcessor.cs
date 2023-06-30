@@ -33,6 +33,11 @@ namespace UMA
 
         public static void UpdateRecipe(UMATextRecipe recipe)
         {
+            if (recipe == null)
+            {
+                return;
+            }
+
             UMAAssetIndexer.Instance.ReleaseReference(recipe);
 
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
@@ -76,6 +81,10 @@ namespace UMA
 
         public static void UpdateSlot(SlotDataAsset slot)
         {
+            if (slot == null)
+            {
+                return;
+            }
             // look at the slot list of any generated UMA
             UMAAssetIndexer.Instance.ReleaseReference(slot);
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
@@ -106,6 +115,11 @@ namespace UMA
 
         public static void UpdateOverlay(OverlayDataAsset overlay)
         {
+            if (overlay == null)
+            {
+                return;
+            }
+
             UMAAssetIndexer.Instance.ReleaseReference(overlay);
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
 
@@ -146,6 +160,11 @@ namespace UMA
 
         public static void UpdateRace(RaceData race)
         {
+            if (race == null)
+            {
+                return;
+            }
+
             UMAAssetIndexer.Instance.ReleaseReference(race);
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
 

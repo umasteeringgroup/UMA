@@ -31,14 +31,8 @@ MonoBehaviour:
   activeWardrobeSet: []
   MeshHideAssets: []
   OverrideDNA:
-    PreloadValues:
-    - Name: handsSize
-      Value: 0.844
-    - Name: headSize
-      Value: 0.677
-    - Name: noseSize
-      Value: 0.882
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":""},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":""},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":""},{"id":"MaleJeans02","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleJeans01","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":0.0,"y":0.0,"z":0.0},"rotation":0.0}],"Tags":[],"Races":[],"blendShapeTarget":""}],"colors":[],"fColors":[{"name":"Pants1","colors":[35,16,157,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
+    PreloadValues: []
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":""},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":""},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":""},{"id":"MaleJeans02","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleJeans01","colorIdx":1,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":0.0,"y":0.0,"z":0.0},"rotation":0.0}],"Tags":[],"Races":[],"blendShapeTarget":""}],"colors":[],"fColors":[{"name":"Pants1","colors":[44,121,178,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false},{"name":"-","colors":[44,121,178,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

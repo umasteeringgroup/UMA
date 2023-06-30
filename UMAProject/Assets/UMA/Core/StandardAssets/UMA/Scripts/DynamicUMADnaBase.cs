@@ -69,7 +69,15 @@ namespace UMA
 			{
 				if (uda != null)
 				{
-					DynamicDNADictionary.Add(uda.name, uda);
+					if (DynamicDNADictionary.ContainsKey(uda.name))
+					{
+                        if (Debug.isDebugBuild)
+                            Debug.LogWarning("DynamicDNADictionary already contained DNA asset " + uda.name);
+                    }
+                    else
+					{
+                        DynamicDNADictionary.Add(uda.name, uda);
+                    }
 				}
 			}
 

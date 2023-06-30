@@ -54,12 +54,20 @@ namespace UMA
 						if (oldRenderers != null && oldRenderers.Length > i)
 						{
 							renderers[i] = oldRenderers[i];
-							if (umaData.generatedMaterials.rendererAssets[i] != null)
-								umaData.generatedMaterials.rendererAssets[i].ApplySettingsToRenderer(renderers[i]);
-							else
-								umaData.ResetRendererSettings(i);
+                            if (umaData.generatedMaterials.rendererAssets[i] != null)
+                            {
+                                umaData.generatedMaterials.rendererAssets[i].ApplySettingsToRenderer(renderers[i]);
+                            }
+                            else
+                            {
+                                umaData.ResetRendererSettings(i);
+                                if (umaData.defaultRendererAsset != null)
+                                {
+                                    umaData.defaultRendererAsset.ApplySettingsToRenderer(renderers[i]);
+                                }
+                            }
 
-							continue;
+                            continue;
 						}
 						UMARendererAsset rendererAsset = umaData.generatedMaterials.rendererAssets[i];
 						if (rendererAsset == null)
@@ -263,6 +271,9 @@ namespace UMA
 						combineInstance.triangleMask = slotData.meshHideMask;
 
 					combineInstance.targetSubmeshIndices = new int[combineInstance.meshData.subMeshCount];
+					if (combineInstance.meshData.subMeshCount == 0) {
+						continue;
+					}
 					for (int i = 0; i < combineInstance.meshData.subMeshCount; i++)
 					{
 						combineInstance.targetSubmeshIndices[i] = -1;

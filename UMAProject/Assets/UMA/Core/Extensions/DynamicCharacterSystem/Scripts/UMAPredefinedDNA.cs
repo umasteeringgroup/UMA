@@ -59,6 +59,15 @@ namespace UMA
 
 		public void AddDNA(string Name, float Value)
 		{
+            foreach(DnaValue value in PreloadValues)
+            {
+                if (value.Name.Equals(Name))
+                {
+                    value.Value = Value;
+                    return; 
+                }
+            }
+            // If not found, add new one
 			PreloadValues.Add(new DnaValue(Name, Value));
 		}
 		public void Clear()

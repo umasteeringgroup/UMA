@@ -56,7 +56,9 @@ public class UMANormalViewer : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         EditorUtility.SetSelectedWireframeHidden(GetComponent<Renderer>(), !_displayWireframe);
+#pragma warning restore CS0618 // Type or member is obsolete
         OnDrawNormals(true);
     }
 

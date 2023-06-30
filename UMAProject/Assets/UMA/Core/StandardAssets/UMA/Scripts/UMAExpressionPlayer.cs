@@ -238,36 +238,62 @@ namespace UMA.PoseTools
 		void LateUpdate()
 		{
 			if (!processing)
+            {
 				return;
+            }
 
 			if (!initialized)
+            {
 				return;
+            }
 
 			if (umaData == null || umaData.skeleton == null)
+            {
 				return;
+            }
 
 			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).sqrMagnitude > (disableDistance * disableDistance))
+            {
 				return;
+            }
 
 			if (enableSaccades)
+            {
 				UpdateSaccades();
+            }
 
 			if (enableBlinking)
+            {
 				UpdateBlinking();
+            }
 
 			float[] values = Values;
 
 			MecanimJoint mecanimMask = MecanimJoint.None;
 			if (!overrideMecanimNeck)
+            {
 				mecanimMask |= MecanimJoint.Neck;
+            }
+
 			if (!overrideMecanimHead)
+            {
 				mecanimMask |= MecanimJoint.Head;
+            }
+
 			if (!overrideMecanimJaw)
+            {
 				mecanimMask |= MecanimJoint.Jaw;
+            }
+
 			if (!overrideMecanimEyes)
+            {
 				mecanimMask |= MecanimJoint.Eye;
+            }
+
 			if (!overrideMecanimHands)
+            {
 				mecanimMask |= MecanimJoint.Hands;
+            }
 
 			if (overrideMecanimJaw)
 			{

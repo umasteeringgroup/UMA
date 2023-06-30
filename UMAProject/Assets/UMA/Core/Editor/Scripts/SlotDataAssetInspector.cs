@@ -10,14 +10,17 @@ namespace UMA.Editors
 	[CanEditMultipleObjects]
 	public class SlotDataAssetInspector : Editor
 	{
-		static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCardSlot","Races"};
-		static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "animatedBoneNames", "_slotDNA", "meshData", "subMeshIndex", };
+		static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCardSlot","Races"};
+		static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "animatedBoneNames", "_slotDNA", "meshData", "subMeshIndex", };
 		SerializedProperty slotName;
 		SerializedProperty CharacterBegun;
 		SerializedProperty SlotAtlassed;
-		SerializedProperty DNAApplied;
+		SerializedProperty SlotProcessed;
+        SerializedProperty SlotBeginProcessing;
+        SerializedProperty DNAApplied;
 		SerializedProperty CharacterCompleted;
 		SerializedProperty MaxLOD;
+		SerializedProperty isClippingPlane;
 		SlotDataAsset slot;
 		SlotDataAsset.Welding lastWeld = null;
 
@@ -56,8 +59,11 @@ namespace UMA.Editors
 			CharacterBegun = serializedObject.FindProperty("CharacterBegun");
 			SlotAtlassed = serializedObject.FindProperty("SlotAtlassed");
 			DNAApplied = serializedObject.FindProperty("DNAApplied");
+			SlotProcessed = serializedObject.FindProperty("SlotProcessed");
+			SlotBeginProcessing = serializedObject.FindProperty("SlotBeginProcessing");
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
 			MaxLOD = serializedObject.FindProperty("maxLOD");
+            isClippingPlane = serializedObject.FindProperty("isClippingPlane");	
 			slot = (target as SlotDataAsset);
 			SetRaceLists();
 
@@ -119,6 +125,7 @@ namespace UMA.Editors
 
 		public override void OnInspectorGUI()
         {
+			SlotDataAsset targetAsset = target as SlotDataAsset;
 			serializedObject.Update();
 
 			EditorGUI.BeginChangeCheck();
@@ -140,6 +147,8 @@ namespace UMA.Editors
 				EditorGUILayout.HelpBox("This is a wildcard slot", MessageType.Info);
 			}
 			 
+			EditorGUILayout.LabelField($"UtilitySlot: " + targetAsset.isUtilitySlot);
+			 
 			if (slot.isWildCardSlot)
 				Editor.DrawPropertiesExcluding(serializedObject, WildcardSlotFields);
 			else
@@ -155,7 +164,9 @@ namespace UMA.Editors
 				if (!slot.isWildCardSlot)
 				{
 					EditorGUILayout.PropertyField(SlotAtlassed);
-					EditorGUILayout.PropertyField(DNAApplied); 
+					EditorGUILayout.PropertyField(DNAApplied);
+                    EditorGUILayout.PropertyField(SlotBeginProcessing);
+                    EditorGUILayout.PropertyField(SlotProcessed);
 				}
 				EditorGUILayout.PropertyField(CharacterCompleted);
 			}

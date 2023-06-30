@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: RobeCollection
   m_EditorClassIdentifier: 
   label: 
+  resourcesOnly: 0
   recipeType: WardrobeCollection
   DisplayValue: 
   compatibleRaces:
@@ -22,12 +23,14 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: FullOutfit
+  Appended: 0
   Hides: []
   HideTags: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
-  AddressableLabel: 
+  OverrideDNA:
+    PreloadValues: []
   recipeString: '{"packedRecipeType":"WardrobeCollection","name":"New UMAWardrobeCollection","race":"","dna":[],"characterColors":[],"wardrobeSet":[],"raceAnimatorController":""}'
   coverImages: []
   wardrobeCollection:

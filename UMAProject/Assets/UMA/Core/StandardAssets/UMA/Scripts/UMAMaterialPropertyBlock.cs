@@ -19,8 +19,19 @@ namespace UMA
         public static char[] vectorsplitter = { ',' }; // needs to correspond to the format string above.
 
         public string name;
-        public abstract void Apply(Material mpb);
+        public abstract void Apply(Material mpb, int overlayNumber);
+
         public abstract UMAProperty Clone();
+
+        public string GetPropertyName(int overlayNumber)
+        {
+            if (overlayNumber < 0)
+            {
+                return name;
+            }
+
+            return $"{name}{overlayNumber}";
+        }
 
         public static UMAProperty FromString(string serializedString)
         {
@@ -103,9 +114,13 @@ namespace UMA
     public class UMAFloatProperty : UMAProperty
     {
         public float Value;
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetFloat(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetFloat(propName, Value);
+            }
         }
 
         public override UMAProperty Clone()
@@ -135,9 +150,13 @@ namespace UMA
     public class UMAColorProperty : UMAProperty
     {
         public Color Value;
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetColor(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetColor(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -181,9 +200,13 @@ namespace UMA
             Value.Set(vector.x, vector.y, 0.0f, 0.0f);
         }
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber=-1)
         {
-            mpb.SetVector(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetVector(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -210,9 +233,13 @@ namespace UMA
     {
         public Vector4[] Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber=-1)
         {
-            mpb.SetVectorArray(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetVectorArray(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -242,9 +269,13 @@ namespace UMA
     {
         public Texture Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber=-1)
         {
-            mpb.SetTexture(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetTexture(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -284,9 +315,13 @@ namespace UMA
     {
         public float[] Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetFloatArray(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+        {
+                mpb.SetFloatArray(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -315,9 +350,13 @@ namespace UMA
     {
         public int Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetInt(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetInt(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -345,9 +384,13 @@ namespace UMA
     {
         public Matrix4x4 Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetMatrix(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+        {
+                mpb.SetMatrix(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -372,9 +415,13 @@ namespace UMA
     {
         public Matrix4x4[] Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1 )
         {
-            mpb.SetMatrixArray(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+        {
+                mpb.SetMatrixArray(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -403,9 +450,13 @@ namespace UMA
     {
         public ComputeBuffer Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1 )
         {
-            mpb.SetBuffer(name,Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetBuffer(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -433,9 +484,13 @@ namespace UMA
         public int offset; 
         public int size;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber=-1)
         {
-            mpb.SetConstantBuffer(name, Value, offset, size);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+        {
+                mpb.SetConstantBuffer(propName, Value,offset,size);
+            }
         }
         public override UMAProperty Clone()
         {

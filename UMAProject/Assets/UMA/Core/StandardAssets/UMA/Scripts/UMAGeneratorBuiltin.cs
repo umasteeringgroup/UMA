@@ -729,7 +729,7 @@ namespace UMA
 			if (umaData)
 			{
 				umaData.Show();
-				if (fireEvents)
+                if (fireEvents)
                 {
                     umaData.FireUpdatedEvent(false);
                 }

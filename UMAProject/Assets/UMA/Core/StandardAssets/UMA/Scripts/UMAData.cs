@@ -57,6 +57,7 @@ namespace UMA
 
         public List<SlotTracker> slotTrackers = new List<SlotTracker>();
 		private List<UMASavedItem> savedItems = new List<UMASavedItem>();
+        public string userInformation = "";
 
 		public void AddSavedItem(Transform transform)
         {
@@ -194,7 +195,7 @@ namespace UMA
 		public UmaTPose OverrideTpose = null;
 
 		// key: OverlayName, Channel
-		public Dictionary<string, Dictionary<int, Texture2D>> TextureOverrides = new Dictionary<string, Dictionary<int,Texture2D>>();
+        public Dictionary<string, Dictionary<int, Texture>> TextureOverrides = new Dictionary<string, Dictionary<int, Texture>>();
 		public Dictionary<string, Vector3[]> VertexOverrides = new Dictionary<string, Vector3[]>();
 		public Dictionary<string, Vector2[]> UVOverrides = new Dictionary<string, Vector2[]>();
 
@@ -204,6 +205,8 @@ namespace UMA
 			UVOverrides = new Dictionary<string, Vector2[]>();
 			VertexOverrides = new Dictionary<string, Vector3[]>();
 
+            if (TextureOverrides != null)
+            {
 			foreach(var kp in TextureOverrides.Values)
             {
 				foreach(var tex in kp.Values)
@@ -214,7 +217,8 @@ namespace UMA
 					}
                 }
             }
-			TextureOverrides = new Dictionary<string, Dictionary<int, Texture2D>>();
+            }
+            TextureOverrides = new Dictionary<string, Dictionary<int, Texture>>();
         }
 
 		public void AddOverrideTPose(UmaTPose thePose)
@@ -246,25 +250,46 @@ namespace UMA
             }
         }
 
+		public void RemoveVertexOverride(SlotDataAsset theSlot)
+		{
+			if (VertexOverrides.ContainsKey(theSlot.slotName))
+			{
+                VertexOverrides.Remove(theSlot.slotName);
+            }	
+		}
+
 		public void AddTextureOverride(string OverlayName, int Channel, Texture2D theTexture)
         {
 			// string theKey = OverlayOverideKey(OverlayName, Channel);
 			if (!TextureOverrides.ContainsKey(OverlayName))
 			{
-				TextureOverrides.Add(OverlayName, new Dictionary<int, Texture2D>());
+                TextureOverrides.Add(OverlayName, new Dictionary<int, Texture>());
 			}
 
-			Dictionary<int, Texture2D> ChannelDictionary = TextureOverrides[OverlayName];
+            Dictionary<int, Texture> ChannelDictionary = TextureOverrides[OverlayName];
 			if (ChannelDictionary.ContainsKey(Channel))
             {
-				Texture2D tex = ChannelDictionary[Channel];
+                Texture tex = ChannelDictionary[Channel];
 				UnityEngine.Object.DestroyImmediate(tex, false);
 				ChannelDictionary.Remove(Channel);
 			}
 			ChannelDictionary.Add(Channel, theTexture);
         }
 
-		public Dictionary<int, Texture2D> GetTextureOverrides(string OverlayName)
+        public bool hasOverrides()
+        {
+            return TextureOverrides.Count > 0;
+        }
+
+        public void LogOverrides()
+        {
+            foreach(var t in TextureOverrides)
+            {
+                Debug.Log(t.Key + " " + t.Value[0].name);
+            }
+        }
+
+		public Dictionary<int, Texture> GetTextureOverrides(string OverlayName)
         {
 			if (TextureOverrides.ContainsKey(OverlayName))
             {
@@ -419,16 +444,16 @@ namespace UMA
 		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) { AnimatorStateRestored = new UMADataEvent(); } AnimatorStateRestored.AddAction(value); } remove { AnimatorStateRestored.RemoveAction(value); } }
 		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) { PreUpdateUMABody = new UMADataEvent(); } PreUpdateUMABody.AddAction(value); } remove { PreUpdateUMABody.RemoveAction(value); } } //VES added
 
-		public UMADataEvent CharacterCreated;
-		public UMADataEvent CharacterDestroyed;
-		public UMADataEvent CharacterUpdated;
-		public UMADataEvent CharacterBeforeUpdated;
-		public UMADataEvent CharacterBeforeDnaUpdated;
-		public UMADataEvent CharacterDnaUpdated;
-		public UMADataEvent CharacterBegun;
-		public UMADataEvent AnimatorStateSaved;
-		public UMADataEvent AnimatorStateRestored;
-		public UMADataEvent PreUpdateUMABody;
+		public UMADataEvent CharacterCreated = new UMADataEvent();
+		public UMADataEvent CharacterDestroyed = new UMADataEvent();
+		public UMADataEvent CharacterUpdated = new UMADataEvent();
+		public UMADataEvent CharacterBeforeUpdated = new UMADataEvent();
+		public UMADataEvent CharacterBeforeDnaUpdated = new UMADataEvent();
+		public UMADataEvent CharacterDnaUpdated = new UMADataEvent();
+		public UMADataEvent CharacterBegun = new UMADataEvent();
+		public UMADataEvent AnimatorStateSaved = new UMADataEvent();
+		public UMADataEvent AnimatorStateRestored = new UMADataEvent();
+		public UMADataEvent PreUpdateUMABody = new UMADataEvent();
 
 		public GameObject umaRoot;
 
@@ -594,8 +619,6 @@ namespace UMA
                 {
                     Debug.LogError("UMAData: Recipe or Generator is not valid!");
                 }
-
-                UnityEditor.EditorApplication.isPaused = true;
 			}
 #endif
 
@@ -712,7 +735,7 @@ namespace UMA
 			public MaterialFragment rectFragment;
 			public textureData baseOverlay;
             public int baseVertexInMesh;
-			public List<Dictionary<int, Texture2D>> overrides = new List<Dictionary<int,Texture2D>>();
+			public List<Dictionary<int, Texture>> overrides = new List<Dictionary<int,Texture>>();
 
 			public Color GetMultiplier(int overlay, int textureType)
 			{
@@ -1336,12 +1359,54 @@ namespace UMA
 			}
 
 			/// <summary>
-			/// Are two overlay lists the same?
+			/// Returns an Dictionary of slots, indexed by slotName
+			/// Use this when you need to make multiple passes to find slots
 			/// </summary>
-			/// <returns><c>true</c>, if lists match, <c>false</c> otherwise.</returns>
-			/// <param name="list1">List1.</param>
-			/// <param name="list2">List2.</param>
-			public static bool OverlayListsMatch(List<OverlayData> list1, List<OverlayData> list2)
+			/// <returns></returns>
+			public Dictionary<string,SlotData> GetIndexedSlots()
+			{
+				Dictionary<string,SlotData> indexedSlots = new Dictionary<string,SlotData>();
+				foreach(SlotData slotData in slotDataList)
+				{
+					if (slotData != null)
+					{
+						indexedSlots.Add(slotData.slotName, slotData);
+					}
+				}
+				return indexedSlots;
+			}
+
+
+
+            public Dictionary<string, SlotData> GetIndexedSlotsByTag()
+            {
+                Dictionary<string, SlotData> indexedSlots = new Dictionary<string, SlotData>();
+                foreach (SlotData slotData in slotDataList)
+                {
+                    if (slotData != null)
+                    {
+						foreach (string t in slotData.tags)
+						{
+							if (!string.IsNullOrEmpty(t))
+							{
+								if (!indexedSlots.ContainsKey(t))
+								{
+									indexedSlots.Add(t, slotData);
+								}
+							}
+						}
+                    }
+                }
+                return indexedSlots;
+            }
+
+            /// <summary>
+            /// Are two overlay lists the same?
+            /// </summary>
+            /// <returns><c>true</c>, if lists match, <c>false</c> otherwise.</returns>
+            /// <param name="list1">List1.</param>
+            /// <param name="list2">List2.</param>
+            public static bool OverlayListsMatch(List<OverlayData> list1, List<OverlayData> list2)
 			{
 				if ((list1 == null) || (list2 == null))
                 {
@@ -1956,6 +2021,7 @@ namespace UMA
 				}
 				isOfficiallyCreated = false;
 			}
+            ClearOverrides();
 			CleanTextures();
 			CleanMesh(true);
 			CleanAvatar();
@@ -2278,10 +2344,6 @@ for (int i = 0; i < mats.Length; i++)
 		/// </summary>
 		public void FireCharacterBegunEvents()
 		{
-			if (CharacterBegun != null)
-            {
-                CharacterBegun.Invoke(this);
-            }
 
             foreach (var slotData in umaRecipe.slotDataList)
 			{
@@ -2289,8 +2351,15 @@ for (int i = 0; i < mats.Length; i++)
 				{
 					slotData.asset.Begin(this);
 					slotData.asset.CharacterBegun.Invoke(this);
-				}
+                    slotData.asset.SlotBeginProcessing.Invoke(this,slotData);
+                }
 			}
+			
+			if (CharacterBegun != null)
+            {
+                CharacterBegun.Invoke(this);
+            }
+
 		}
 
 		/// <summary>
@@ -2313,7 +2382,11 @@ for (int i = 0; i < mats.Length; i++)
 				if (slotData != null && slotData.asset.DNAApplied != null)
 				{
 					slotData.asset.DNAApplied.Invoke(this);
-				}
+                    if (slotData.asset.SlotProcessed != null)
+                    {
+                        slotData.asset.SlotProcessed.Invoke(this, slotData);
+                    }
+                }
 			}
 		}
 
@@ -2329,7 +2402,10 @@ for (int i = 0; i < mats.Length; i++)
 					slotData.asset.Completed(this);
 					if (fireEvents)
                     {
-                        slotData.asset.CharacterCompleted.Invoke(this);
+						if (slotData.asset.CharacterCompleted != null)
+						{
+							slotData.asset.CharacterCompleted.Invoke(this);
+						}
                     }
                 }
 			}

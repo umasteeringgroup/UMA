@@ -1,20 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using UMA.CharacterSystem;
 using UMA.Editors;
 using UMA.PoseTools;
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 
 namespace UMA.Controls
 {
     class AssetIndexerWindow : EditorWindow
     {
+#pragma warning disable IDE0051 // Remove unused private members
+#pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS0414
         [NonSerialized] private float UtilityPanelHeight = 40.0f;
+#pragma warning restore CS0414
+#pragma warning restore IDE0044 // Add readonly modifier
+#pragma warning restore IDE0051 // Remove unused private members
         [NonSerialized] bool m_Initialized;
         [SerializeField] TreeViewState m_TreeViewState; // Serialized in the window layout file so it survives assembly reloading
         [SerializeField] MultiColumnHeaderState m_MultiColumnHeaderState;
