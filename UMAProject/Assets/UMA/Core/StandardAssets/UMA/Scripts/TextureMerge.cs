@@ -178,9 +178,9 @@ namespace UMA
 					if (tr.advancedBlending)
 					{
                         // Create a temporary texture that is the size of the overlay rect in atlas space.
-						Debug.Log("SRC texture location is " +tr.rect.ToString());
+						//Debug.Log("SRC texture location is " +tr.rect.ToString());
                         scratch = RenderTexture.GetTemporary((int)tr.rect.width, (int)tr.rect.height, 0, target.format, RenderTextureReadWrite.Linear);
-						Debug.Log("Scratch texture is " + scratch.width + "x" + scratch.height + " " + scratch.format.ToString());
+						//Debug.Log("Scratch texture is " + scratch.width + "x" + scratch.height + " " + scratch.format.ToString());
 
 						float fw = (float)width;
 						float fh = (float)height;
@@ -194,14 +194,14 @@ namespace UMA
 						// Set the source rect in UV space
 						Src.Set(tr.rect.x/fw, 1.0f-((tr.rect.y+tr.rect.height)/fh), (tr.rect.width/fw), (tr.rect.height / fh));  // get the rect in UV space
 
-                        SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-before.png"));
+                        //SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-before.png"));
                         // should be drawing to the scratch texture now
                         RenderTexture.active = scratch;
                         Graphics.DrawTexture(Destination, target, Src, 0, 0, 0, 0);
 						Debug.Log("Src Texture is "+Src.ToString());
 						RenderTexture.active = target;
-                        SaveRenderTexture(scratch, System.IO.Path.Combine(Application.dataPath, "scratch-after.png"));
-                        SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-after.png"));
+                        //SaveRenderTexture(scratch, System.IO.Path.Combine(Application.dataPath, "scratch-after.png"));
+                        //SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-after.png"));
 						GL.PopMatrix();
 						tr.mat.SetTexture("_BaseTex", scratch);
 						DrawRect (ref tr, sharperFitTextures);
