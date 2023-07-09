@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using UMA.Controls;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -2275,7 +2276,7 @@ namespace UMA.Editors
             bool changed = false;
 
             InitEditor();
-            var currentBlendMode = _overlay.getTextureBlend(_channel);
+            var currentBlendMode = _overlay.GetOverlayBlend(_channel);
             var newBlendMode = (OverlayDataAsset.OverlayBlend)EditorGUILayout.EnumPopup(currentBlendMode, GUILayout.Width(100));
             RestoreEditor();
 

@@ -91,6 +91,7 @@ namespace UMA.Editors
 				{
 					GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 					EditorGUILayout.PropertyField(_textureList.FindPropertyRelative("Array.size"));
+					_blendList.arraySize = _textureList.arraySize;
 					for (int i = 0; i < _textureList.arraySize; i++)
 					{
 						SerializedProperty textureElement = _textureList.GetArrayElementAtIndex(i);

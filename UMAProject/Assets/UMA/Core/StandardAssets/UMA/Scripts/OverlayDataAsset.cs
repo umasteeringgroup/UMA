@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System;
+using UnityEngine.Rendering;
 
 namespace UMA
 {
@@ -31,10 +32,16 @@ namespace UMA
 		public enum OverlayBlend
 		{
 			Normal = 0,
-			Multiply = 1,
-			Overlay = 2,
-			Screen = 3,
-			Divide = 4
+			Multiply = BlendOp.Multiply,
+			Overlay = BlendOp.Overlay,
+			Screen = BlendOp.Screen,
+			Darken = BlendOp.Darken,
+			Lighten = BlendOp.Lighten,
+			ColorDodge = BlendOp.ColorDodge,
+			ColorBurn = BlendOp.ColorBurn,
+			SoftLight = BlendOp.SoftLight,
+			HardLight = BlendOp.HardLight,
+			Subtract = BlendOp.Subtract
 		}
 
 		/// <summary>

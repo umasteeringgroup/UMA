@@ -5,7 +5,6 @@ using UnityEditor;
 #if !UMA_NOASMDEF
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace UMA

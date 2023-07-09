@@ -109,6 +109,20 @@ namespace UMA
 			}
 		}
 
+		public void SetOverlayBlendsLength(int count)
+		{
+			blendOverrides = new OverlayBlend[count];
+		}
+
+		public int GetOverlayBlendsLength()
+		{
+            if (blendOverrides != null)
+			{
+                return blendOverrides.Length;
+            }
+            return asset.overlayBlend.Length;
+        }
+
 		public void SetOverlayBlend(int ChannelNumber, OverlayBlend overlayBlend)
 		{
 			if (blendOverrides == null || blendOverrides.Length != textureArray.Length)
@@ -122,7 +136,7 @@ namespace UMA
 			blendOverrides[ChannelNumber] = overlayBlend;
 		}
 
-		public OverlayBlend getTextureBlend(int ChannelNumber)
+		public OverlayBlend GetOverlayBlend(int ChannelNumber)
 		{
 			if (blendOverrides != null)
 			{
@@ -220,6 +234,14 @@ namespace UMA
 			res.Scale = Scale;
 			if (colorData != null)
 				res.colorData = colorData.Duplicate();
+			if (blendOverrides != null)
+			{
+                res.blendOverrides = new OverlayBlend[blendOverrides.Length];
+                for (int i = 0; i < blendOverrides.Length; i++)
+				{
+					res.blendOverrides[i] = blendOverrides[i];
+                }
+            }
 			return res;
 		}
 

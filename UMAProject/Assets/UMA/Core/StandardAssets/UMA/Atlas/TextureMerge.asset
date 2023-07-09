@@ -24,3 +24,26 @@ MonoBehaviour:
   dataPostProcesses: []
   detailNormalPostProcesses:
   - {fileID: 11400000, guid: 6723c87feec7dbc49914728f5b571b02, type: 2}
+  DiffuseBlendModeShaders:
+  - BlendMode: 0
+    Combiner: {fileID: 4800000, guid: ae83be5246f311646b3043ed012d9d64, type: 3}
+  - BlendMode: 1
+    Combiner: {fileID: 4800000, guid: 5319104211becc640a93c5310f80c8e3, type: 3}
+  - BlendMode: 21
+    Combiner: {fileID: 4800000, guid: b2242db2c314abc49b2ff484123ea161, type: 3}
+  - BlendMode: 23
+    Combiner: {fileID: 4800000, guid: ebfa7a5903b17e34494d3c74eb7fc305, type: 3}
+  - BlendMode: 24
+    Combiner: {fileID: 4800000, guid: 744ac0ef59fda2f4db65e637e41f65f8, type: 3}
+  - BlendMode: 25
+    Combiner: {fileID: 4800000, guid: 3254ca564125ccd448b4533e4dc6a54a, type: 3}
+  - BlendMode: 26
+    Combiner: {fileID: 4800000, guid: 7b90e2d2fd21de84ea1e1895046ac3e7, type: 3}
+  - BlendMode: 27
+    Combiner: {fileID: 4800000, guid: f9f9211b52af6604885380483f5968fd, type: 3}
+  - BlendMode: 28
+    Combiner: {fileID: 4800000, guid: b2a1284fa6f898e4898d45fefe12fee1, type: 3}
+  - BlendMode: 29
+    Combiner: {fileID: 4800000, guid: e929ee9992023f74c9c670807abae009, type: 3}
+  - BlendMode: 22
+    Combiner: {fileID: 4800000, guid: 6059699f235f2824296f29d2abe77d5a, type: 3}
