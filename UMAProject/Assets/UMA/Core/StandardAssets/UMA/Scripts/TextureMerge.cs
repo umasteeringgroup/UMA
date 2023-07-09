@@ -41,7 +41,7 @@ namespace UMA
 		[Header("Blend Mode Shaders.", order = 1)]
 		[Header("Note 'logical' blend modes are only available on DX11", order = 2)]
 		public List<BlendModeShaders> DiffuseBlendModeShaders = new List<BlendModeShaders>();
-		public List<BlendModeShaders> CutoutBlendModeShaders = new List<BlendModeShaders>();
+		public List<BlendModeShaders> DataBlendModeShaders = new List<BlendModeShaders>();
 		public List<BlendModeShaders> NormalBlendModeShaders = new List<BlendModeShaders>();
 
 		private int textureMergeRectCount;
@@ -84,42 +84,19 @@ namespace UMA
 			RenderTexture activeTexture = RenderTexture.active;
 			bool bkUpSRGBWrite = GL.sRGBWrite;
 
-			//GL.sRGBWrite = false;
-            
+			// Disabling linear to srgb conversion is not enough. It seems that Unity always does the conversion when reading from a RenderTexture.
+			// As a workaround, we will nead to create a non-linear texture to blit to, so the conversion happens, but it's OK for it to happen.
+			GL.sRGBWrite = false;            
 		    RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
             outputMap.enableRandomWrite = true;
             outputMap.Create();
             RenderTexture.active = outputMap;
             GL.Clear(true, true, Color.black);
             Graphics.Blit(rt, outputMap);	
-			
+			// End of workaround.
+
 			tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
 
-            /*
-            /// Some goofiness ends up with the texture being too dark unless
-            /// I send it to a new render texture.
-            RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
-            outputMap.enableRandomWrite = true;
-            outputMap.Create();
-            RenderTexture.active = outputMap;
-            GL.Clear(true, true, Color.black);
-            Graphics.Blit(rt, outputMap);
-
-
-            // Remember crrently active render texture
-            RenderTexture currentActiveRT = RenderTexture.active;
-
-            // Set the supplied RenderTexture as the active one
-            RenderTexture.active = outputMap;
-
-            // Create a new Texture2D and read the RenderTexture image into it
-            Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.ARGB32, false, true);
-            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-
-            // Restore previously active render texture
-            RenderTexture.active = currentActiveRT;
-            DestroyImmediate(outputMap);
-            */
             GL.sRGBWrite = bkUpSRGBWrite;
 			RenderTexture.active = activeTexture;
 
@@ -205,50 +182,6 @@ namespace UMA
 						GL.PopMatrix();
 						tr.mat.SetTexture("_BaseTex", scratch);
 						DrawRect (ref tr, sharperFitTextures);
-
-                        //Graphics.Blit(target, scratch);
-                        //SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath,"scratch.png"));
-                        //SaveRenderTexture(scratch, System.IO.Path.Combine(Application.dataPath, "scratch.png"));
-                        //tr.mat.shader = Shader.Find("UMA/AtlasDiffuseShader_Subtract"); // this should already be set. this is a test
-                        //GL.PushMatrix();
-                        //GL.LoadPixelMatrix(0, 1, 1, 0);
-
-
-
-                        /*
-						float atlasSpaceX = tr.rect.x / width;
-						float atlasSpaceY = tr.rect.y / height;
-                        float atlasSpaceWidth = tr.tex.width/width;
-						float atlasSpaceHeight = tr.tex.height/height;
-                        float atlasSpaceWidth2 = tr.tex.width * (width / tr.tex.width);
-                        float atlasSpaceHeight2 = tr.rect.height * (height / tr.rect.height);
-						
-						
-
-
-
-						// This appears to be correct. 
-						Destination.Set(0,0,atlasSpaceWidth2, atlasSpaceHeight2	);
-
-						// this is incorrect. 
-						Src.Set(tr.rect.x/(float)width,1.0f-(tr.rect.y/(float)height),tr.rect.width/(float)width,tr.rect.height/(float)height);
-						//Src.Set(0, 0, 1, 1);
-                        // Create a temporary texture that is the size of the overlay.
-                        scratch = RenderTexture.GetTemporary(tr.tex.width, tr.tex.height, 0, target.format, RenderTextureReadWrite.Linear);
-                        // Set it as the current render target.
-						RenderTexture.active = scratch; 
-						// Draw from the atlas to the temporary texture. 
-						// The atlas location should be the same as the overlay location.
-						// The destination rect should be the entire scratch texture.
-						Graphics.DrawTexture(Destination, target, Src, 0,0,0,0, null);
-						// Set the scratch texture as the base texture on the material.
-                        RenderTexture.active = target; 
-						SaveRenderTexture(scratch, System.IO.Path.Combine(Application.dataPath, "scratch.png"));
-                        SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target.png"));
-                        tr.mat.SetTexture("_BaseTex", scratch);
-						DrawRect(ref tr, sharperFitTextures,null);
-						//GL.PopMatrix();
-						*/
                     }
                     else
 					{
@@ -260,11 +193,6 @@ namespace UMA
                         RenderTexture.ReleaseTemporary(scratch);
                         scratch = null;
                     }
-
-					//if (tr.advancedBlending)
-					//{
-					//	SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "result.png"));
-                    //}
 				}
 
 #else
@@ -432,6 +360,7 @@ namespace UMA
 					textureMergeRect.mat.shader = detailNormalShader;
 					break;
 			}
+
 			textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
 			textureMergeRect.mat.SetTexture("_ExtraTex", source.baseOverlay.alphaTexture);
 			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureType));
@@ -529,7 +458,27 @@ namespace UMA
 			return diffuseShader;
 		}
 
-		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int i2, ref Rect overlayRect, int textureType)
+        private Shader GetBlendModeShader(List<BlendModeShaders> shaderList, OverlayData od, int TextureType, out bool isAdvanced)
+        {
+            var blendmode = od.GetOverlayBlend(TextureType);
+
+            isAdvanced = false;
+            if (blendmode == OverlayDataAsset.OverlayBlend.Normal)
+            {
+                return shaderList[0].Combiner;
+            }
+            foreach (var s in shaderList)
+            {
+                if ((int)s.BlendMode == (int)blendmode)
+                {
+                    isAdvanced = true;
+                    return s.Combiner;
+                }
+            }
+            return shaderList[0].Combiner;
+        }
+
+        private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int i2, ref Rect overlayRect, int textureType)
 		{
 			textureMergeRect.rect = overlayRect;
 			textureMergeRect.tex = source.overlays[i2].textureList[textureType];
@@ -541,16 +490,17 @@ namespace UMA
 
             if (source.overlays[i2].overlayType == OverlayDataAsset.OverlayType.Normal)
 			{
-				switch (source.slotData.material.channels[textureType].channelType)
+                OverlayData od = source.overlayData[i2 + 1];
+
+                switch (source.slotData.material.channels[textureType].channelType)
 				{
-					case UMAMaterial.ChannelType.NormalMap:
-						textureMergeRect.mat.shader = normalShader;
+                    case UMAMaterial.ChannelType.NormalMap:
+						textureMergeRect.mat.shader = GetBlendModeShader(NormalBlendModeShaders,od, textureType, out textureMergeRect.advancedBlending);
 						break;
 					case UMAMaterial.ChannelType.Texture:
-						textureMergeRect.mat.shader = dataShader;
+						textureMergeRect.mat.shader = GetBlendModeShader(DataBlendModeShaders, od, textureType, out textureMergeRect.advancedBlending);
 						break;
 					case UMAMaterial.ChannelType.DiffuseTexture:
-						OverlayData od = source.overlayData[i2 + 1];
 						textureMergeRect.mat.shader = GetBlendModeDiffuseShader(od, textureType, out textureMergeRect.advancedBlending);
 						break;
 					case UMAMaterial.ChannelType.DetailNormalMap:
@@ -561,10 +511,6 @@ namespace UMA
 				textureMergeRect.mat.SetTexture("_ExtraTex", source.overlays[i2].alphaTexture);
 				textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(i2 + 1, textureType));
 				textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(i2 + 1, textureType));
-				if (textureMergeRect.mat.shader.FindPropertyIndex("_BaseTex") > -1)
-				{
-                    textureMergeRect.mat.SetTexture("_BaseTex", source.overlays[i2].textureList[textureType]);
-                }
 			}
 			else
 			{

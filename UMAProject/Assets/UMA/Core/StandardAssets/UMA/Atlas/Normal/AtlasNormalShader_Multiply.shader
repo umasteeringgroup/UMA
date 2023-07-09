@@ -5,12 +5,13 @@
 //	Author: 	Joen Joensen (@UnLogick)
 //	============================================================
 
-Shader "UMA/AtlasShaderNormal" {
+Shader "UMA/AtlasShaderNormal_Multiply" {
 Properties {
 	_Color ("Main Color", Color) = (1,1,1,1)
 	_AdditiveColor ("Additive Color", Color) = (0,0,0,0)
 	_MainTex ("Normalmap", 2D) = "bump" {}
 	_ExtraTex ("mask", 2D) = "white" {}
+	_BaseTex ("Blendbase Texture", 2D) = "white" {}
 }
 
 SubShader 
@@ -22,6 +23,7 @@ SubShader
 		Tags{ "LightMode" = "Vertex" }
 		Fog{ Mode Off }
 		Blend SrcAlpha OneMinusSrcAlpha
+
 		Lighting Off
 		CGPROGRAM
 		#pragma vertex vert
@@ -34,6 +36,7 @@ SubShader
 		float4 _AdditiveColor;
 		sampler2D _MainTex;
 		sampler2D _ExtraTex;
+		sampler2D _BaseTex;
 
 		struct v2f {
 			float4  pos : SV_POSITION;
@@ -50,18 +53,24 @@ SubShader
 			return o;
 		}
 
+float3 BlendMode_Multiply(float3 base, float3 blend)
+{
+	return base*blend;
+}
+
 		half4 frag(v2f i) : COLOR
 		{
 			half4 n = tex2D(_MainTex, i.uv);
 			half4 extra = tex2D(_ExtraTex, i.uv);
+			float4 basecol = tex2D(_BaseTex, i.uv);
 
 #if !defined(UNITY_NO_DXT5nm)
 			//swizzle the alpha and red channel, we will swizzle back in the post process SwizzleShader
 			n.r = n.a;
 #endif
+			n.rgb = BlendMode_Multiply(basecol.rgb, n.rgb); // subtract the overlay from the previous pass
 			n.a = min(extra.a, _Color.a);
-			return n;
-
+			return n * _Color + _AdditiveColor;
 		}
 		ENDCG
 	}

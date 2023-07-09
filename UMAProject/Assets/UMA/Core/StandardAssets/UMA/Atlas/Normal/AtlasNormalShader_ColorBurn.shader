@@ -5,7 +5,7 @@
 //	Author: 	Joen Joensen (@UnLogick)
 //	============================================================
 
-Shader "UMA/AtlasShaderNormal_Subtract" {
+Shader "UMA/AtlasShaderNormal_ColorBurn" {
 Properties {
 	_Color ("Main Color", Color) = (1,1,1,1)
 	_AdditiveColor ("Additive Color", Color) = (0,0,0,0)
@@ -53,9 +53,21 @@ SubShader
 			return o;
 		}
 
-		float3 BlendMode_Subtract(float3 base, float3 blend)
+		float BlendMode_ColorBurn(float base, float blend)
 		{
-			return max(0, base - blend);
+			if (base >= 1.0)
+				return 1.0;
+			else if (blend <= 0.0)
+				return 0.0;
+			else    
+    			return 1.0 - min(1.0, (1.0-base) / blend);
+		}
+
+		float3 BlendMode_ColorBurn(float3 base, float3 blend)
+		{
+			return float3(  BlendMode_ColorBurn(base.r, blend.r), 
+							BlendMode_ColorBurn(base.g, blend.g), 
+							BlendMode_ColorBurn(base.b, blend.b) );
 		}
 
 		half4 frag(v2f i) : COLOR
@@ -68,7 +80,7 @@ SubShader
 			//swizzle the alpha and red channel, we will swizzle back in the post process SwizzleShader
 			n.r = n.a;
 #endif
-			n.rgb = BlendMode_Subtract(basecol.rgb, n.rgb); // subtract the overlay from the previous pass
+			n.rgb = BlendMode_ColorBurn(basecol.rgb, n.rgb); // subtract the overlay from the previous pass
 			n.a = min(extra.a, _Color.a);
 			return n * _Color + _AdditiveColor;
 		}
