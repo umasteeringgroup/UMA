@@ -866,6 +866,13 @@ namespace UMA
         /// </summary>
         public bool CheckIndex()
         {
+            // Unfortunately that asmdef is not available here
+            string autoconfig = "UMA_INDEX_AUTOREPAIR";
+            if (EditorPrefs.GetBool(autoconfig, false))
+            {
+                return false;
+            }
+
             if (WasChecked)
             {
                 return false;
