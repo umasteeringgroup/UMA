@@ -444,16 +444,16 @@ namespace UMA
 		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) { AnimatorStateRestored = new UMADataEvent(); } AnimatorStateRestored.AddAction(value); } remove { AnimatorStateRestored.RemoveAction(value); } }
 		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) { PreUpdateUMABody = new UMADataEvent(); } PreUpdateUMABody.AddAction(value); } remove { PreUpdateUMABody.RemoveAction(value); } } //VES added
 
-		public UMADataEvent CharacterCreated = new UMADataEvent();
-		public UMADataEvent CharacterDestroyed = new UMADataEvent();
-		public UMADataEvent CharacterUpdated = new UMADataEvent();
-		public UMADataEvent CharacterBeforeUpdated = new UMADataEvent();
-		public UMADataEvent CharacterBeforeDnaUpdated = new UMADataEvent();
-		public UMADataEvent CharacterDnaUpdated = new UMADataEvent();
-		public UMADataEvent CharacterBegun = new UMADataEvent();
-		public UMADataEvent AnimatorStateSaved = new UMADataEvent();
-		public UMADataEvent AnimatorStateRestored = new UMADataEvent();
-		public UMADataEvent PreUpdateUMABody = new UMADataEvent();
+		public UMADataEvent CharacterCreated;
+		public UMADataEvent CharacterDestroyed;
+		public UMADataEvent CharacterUpdated;
+		public UMADataEvent CharacterBeforeUpdated;
+		public UMADataEvent CharacterBeforeDnaUpdated;
+		public UMADataEvent CharacterDnaUpdated;
+		public UMADataEvent CharacterBegun;
+		public UMADataEvent AnimatorStateSaved;
+		public UMADataEvent AnimatorStateRestored;
+		public UMADataEvent PreUpdateUMABody;
 
 		public GameObject umaRoot;
 
@@ -705,6 +705,7 @@ namespace UMA
 		{
 			public UMAMaterial umaMaterial;
 			public Material material;
+			public Material secondPassMaterial;
 			public List<MaterialFragment> materialFragments = new List<MaterialFragment>();
 			public Texture[] resultingAtlasList;
 			public Vector2 cropResolution;
@@ -2067,6 +2068,11 @@ namespace UMA
                     {
 						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
 					}
+					if (generatedMaterials.materials[atlasIndex].secondPassMaterial != null)
+					{
+						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
+						generatedMaterials.materials[atlasIndex].secondPassMaterial = null;
+                    }
 					for (int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++)
 					{
 						if (generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null)
@@ -2102,27 +2108,28 @@ namespace UMA
                 {
                     continue;
                 }
-                /* This is being cleaned up in CleanTextures
-var mats = renderer.sharedMaterials;
-for (int i = 0; i < mats.Length; i++)
-{
-    if (mats[i])
-    {
-
-        UMAUtils.DestroySceneObject(mats[i]);
-    }
-} */
-
-                if (destroyRenderer)
+				if (this.blendShapeSettings.loadAllBlendShapes && renderer.sharedMesh != null)
 				{
-					// need to kill cloth first if it exists.
-					var cloth = renderer.gameObject.GetComponent<Cloth>();
-					if (cloth != null)
-                    {
-						UMAUtils.DestroySceneObject(cloth);
+					for (int i = 0; i < renderer.sharedMesh.blendShapeCount; i++)
+					{
+						if (renderer.GetBlendShapeWeight(i) != 0.0f)
+						{
+							renderer.SetBlendShapeWeight(i, 0.0f);
+						}
 					}
-					UMAUtils.DestroySceneObject(renderer.sharedMesh);
-					UMAUtils.DestroySceneObject(renderer);
+
+
+					if (destroyRenderer)
+					{
+						// need to kill cloth first if it exists.
+						var cloth = renderer.gameObject.GetComponent<Cloth>();
+						if (cloth != null)
+						{
+							UMAUtils.DestroySceneObject(cloth);
+						}
+						UMAUtils.DestroySceneObject(renderer.sharedMesh);
+						UMAUtils.DestroySceneObject(renderer);
+					}
 				}
 			}
 		}
@@ -2344,6 +2351,10 @@ for (int i = 0; i < mats.Length; i++)
 		/// </summary>
 		public void FireCharacterBegunEvents()
 		{
+			if (CharacterBegun != null)
+            {
+                CharacterBegun.Invoke(this);
+            }
 
             foreach (var slotData in umaRecipe.slotDataList)
 			{
@@ -2354,12 +2365,6 @@ for (int i = 0; i < mats.Length; i++)
                     slotData.asset.SlotBeginProcessing.Invoke(this,slotData);
                 }
 			}
-			
-			if (CharacterBegun != null)
-            {
-                CharacterBegun.Invoke(this);
-            }
-
 		}
 
 		/// <summary>

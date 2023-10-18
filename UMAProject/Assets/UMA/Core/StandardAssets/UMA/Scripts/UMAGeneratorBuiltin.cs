@@ -191,7 +191,11 @@ namespace UMA
 #endif
 				stopWatch.Stop();
 				UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
-			}
+                if (garbageCollectionRate == 0)
+                {
+                    GC.Collect(0);
+                }
+            }
 		}
 
 #pragma warning disable 618
@@ -495,6 +499,24 @@ namespace UMA
         {
             return Convert.ToInt32((ticks * 1000) / System.Diagnostics.Stopwatch.Frequency);
         }
+
+        public void UpdateSlots(UMAData data)
+        {
+            umaData = data;
+            if (meshCombiner != null)
+            {
+                meshCombiner.Preprocess(umaData);
+            }
+            PreApply(umaData);
+            UpdateUMAMesh(umaData.isAtlasDirty);
+            umaData.isMeshDirty = false;
+
+            if (umaData.skeleton.isUpdating)
+            {
+                umaData.skeleton.EndSkeletonUpdate();
+            }
+        }
+
 
 		public virtual bool HandleDirtyUpdate(UMAData data)
 		{

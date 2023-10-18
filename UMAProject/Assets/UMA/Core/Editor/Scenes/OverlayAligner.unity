@@ -552,7 +552,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1298796148
 RectTransform:
   m_ObjectHideFlags: 0
@@ -671,7 +671,7 @@ MonoBehaviour:
   SlotDataAsset: {fileID: 11400000, guid: 8101f58894cb83942b6f90705654d663, type: 2}
   BaseOverlay: {fileID: 11400000, guid: 19ca51fa9b344074ebeaad4c873fd125, type: 2}
   Overlays:
-  - {fileID: 11400000, guid: eea2e3c934a89a549bcc3dc6427c16ad, type: 2}
+  - {fileID: 11400000, guid: 77a1606bb44cacf46b25dcf362209aa5, type: 2}
   ImageViewer: {fileID: 1828955162}
   AnnoyingPanel: {fileID: 1298796147}
 --- !u!114 &1303087728
@@ -788,13 +788,13 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!84 &1402217203
+--- !u!84 &1494026056
 RenderTexture:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: 'UMA_Diffuse_Normal_Metallic Chan 0 frame: 1'
+  m_Name: 'UMA_Diffuse_Normal_Metallic Chan 0 frame: 79'
   m_ImageContentsHash:
     serializedVersion: 2
     Hash: 00000000000000000000000000000000
@@ -1063,7 +1063,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 1402217203}
+  m_Texture: {fileID: 1494026056}
   m_UVRect:
     serializedVersion: 2
     x: 0

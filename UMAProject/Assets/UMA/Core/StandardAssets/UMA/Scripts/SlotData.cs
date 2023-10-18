@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace UMA
 {
@@ -328,6 +329,34 @@ namespace UMA
             return res;
         }
 
+        public void RemoveOverlayTags(List<string> HideTags)
+        {
+            // if we have only one, or no overlays, then we can skip this
+            if (overlayList.Count < 2)
+            {
+                return;
+            }
+            // if we have no tags to hide, then we can skip this
+            if (HideTags.Count < 1)
+            {
+                return;
+            }
+           // List<OverlayData> newOverlays = new List<OverlayData>(overlayList);
+
+            foreach (var tag in HideTags)
+            {
+                for (int i = 0; i < overlayList.Count; i++)
+                {
+                    if (overlayList[i].asset.tags.Contains<string>(tag))
+                    {
+                        overlayList.RemoveAt(i);
+                        break;
+                        //newOverlays.Remove(overlayList[i]);
+                    }
+                }
+            }
+            //overlayList = newOverlays;
+        }
 
         public bool RemoveOverlay(params string[] names)
         {

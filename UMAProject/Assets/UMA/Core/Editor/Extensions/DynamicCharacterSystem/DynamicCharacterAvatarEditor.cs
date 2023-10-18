@@ -97,7 +97,8 @@ namespace UMA.CharacterSystem.Editors
 
 		public override void OnInspectorGUI()
 		{
-			serializedObject.Update();
+            thisDCA = target as DynamicCharacterAvatar;
+            serializedObject.Update();
 
 			EditorGUI.BeginChangeCheck();
 			showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
@@ -105,6 +106,31 @@ namespace UMA.CharacterSystem.Editors
 			{
 				serializedObject.ApplyModifiedProperties();
 			}
+
+            if (Application.isPlaying)
+            {
+                BeginVerticalPadded();
+                EditorGUILayout.LabelField("Force Regenerate (Playtime)", EditorStyles.boldLabel);
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Full Build"))
+                {
+                    thisDCA.BuildCharacter(true);
+                }
+                if (GUILayout.Button("Textures"))
+                {
+                    thisDCA.ForceUpdate(false, true, false);
+                }
+                if (GUILayout.Button("DNA"))
+                {
+                    thisDCA.ForceUpdate(true, false, false);
+                }
+                if (GUILayout.Button("Mesh"))
+                {
+                    thisDCA.ForceUpdate(false, false, true);
+                }
+                EditorGUILayout.EndHorizontal();
+                EndVerticalPadded();
+            }
 
             EditorGUI.BeginChangeCheck();
 			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide","BundleCheck", "loadBlendShapes","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers",
@@ -327,7 +353,32 @@ namespace UMA.CharacterSystem.Editors
 				EditorGUI.BeginChangeCheck();
 				if (newCharacterColors.isExpanded)
 				{
-					currentcolorfilter = EditorGUILayout.Popup("Filter Colors", currentcolorfilter, colorfilters);
+                    var charcol = thisDCA.characterColors._colors;
+					int baseColors = 0;
+					foreach(var c in charcol)
+					{
+						if (c != null)
+						{
+							if (c.isBaseColor)
+							{
+								baseColors++;
+							}
+                        }
+					}
+
+					if (baseColors == 0 && charcol.Count > 0 )
+					{
+						foreach(var c in charcol)
+						{
+							if (baseColorNames.Contains(c.name.ToLower()))
+							{
+                                c.isBaseColor = true;
+                                baseColors++;
+                            }
+						}
+					}
+
+                    currentcolorfilter = EditorGUILayout.Popup("Filter Colors", currentcolorfilter, colorfilters);
 
 					n_newArraySize = EditorGUILayout.DelayedIntField(new GUIContent("Size"), n_origArraySize);
 					EditorGUILayout.Space();
@@ -337,7 +388,22 @@ namespace UMA.CharacterSystem.Editors
 						for (int i = 0; i < n_origArraySize; i++)
 						{
 							SerializedProperty currentColor = newCharacterColors.GetArrayElementAtIndex(i);
-							if (currentcolorfilter == 0 && !baseColorNames.Contains(currentColor.displayName.ToLower())) continue;
+							// What a hack. 
+							var col = thisDCA.characterColors._colors[i];
+							if (col == null)
+							{
+								continue;
+							}
+							
+
+							if (currentcolorfilter == 0)
+							{
+								if (!col.isBaseColor)
+								{
+									continue;
+                                }
+							}
+							//&& !baseColorNames.Contains(currentColor.displayName.ToLower())) continue;
 							if (currentcolorfilter == 2 && currentColor.displayName.ToLower().Contains("colordna")) continue;
 							EditorGUILayout.PropertyField(newCharacterColors.GetArrayElementAtIndex(i));
 						}

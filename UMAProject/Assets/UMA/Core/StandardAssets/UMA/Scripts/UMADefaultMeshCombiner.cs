@@ -1,7 +1,10 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Rendering;
+using System.Runtime.ExceptionServices;
+using System;
+using System.Runtime.CompilerServices;
 
 namespace UMA
 {
@@ -209,16 +212,44 @@ namespace UMA
 					UMAUtils.DestroySceneObject(cloth);
 				}
 
-				Material[] materials = new Material[combinedMaterialList.Count];
+				//Material[] materials = new Material[combinedMaterialList.Count];
+				
+				// allocate enough space to avoid extra allocations
+				List<Material> materials = new List<Material>(combinedMaterialList.Count+2);
+
+				var renderer = renderers[currentRendererIndex];
+				var submeshes = new List<SubMeshDescriptor>();
+				
 				for(int i=0;i<combinedMaterialList.Count;i++)
                 {
-					materials[i] = combinedMaterialList[i].material;
-					combinedMaterialList[i].skinnedMeshRenderer = renderers[currentRendererIndex];
+					var cm = combinedMaterialList[i];
+					materials.Add(cm.material);
+					submeshes.Add(renderer.sharedMesh.GetSubMesh(i));
+                    if (cm.umaMaterial.secondPass != null)
+                    {
+                        Material secondPass = Instantiate(cm.umaMaterial.secondPass);
+						cm.secondPassMaterial = secondPass;
+                        // Apply shader property blocks to second pass material
+                        UMAGeneratorPro.ApplyMaterialParameters(cm,umaData,secondPass);
+                        // set textures based on overlay texture channels
+                        CopyMaterialTextures(secondPass, cm.material, cm.umaMaterial);
+						// set compositing parameters if needed
+						if (cm.material.HasProperty("_OverlayCount"))
+						{
+							SetCompositingParameters(secondPass, cm);
+						}
+						materials.Add(secondPass);	
+                        submeshes.Add(renderer.sharedMesh.GetSubMesh(i));
+                    }
+                    combinedMaterialList[i].skinnedMeshRenderer = renderers[currentRendererIndex];
 				}
-				renderers[currentRendererIndex].sharedMaterials = materials;
-			}
+				//renderers[currentRendererIndex].sharedMaterials = materials;
+				renderers[currentRendererIndex].sharedMaterials = materials.ToArray();
+				renderers[currentRendererIndex].sharedMesh.SetSubMeshes(submeshes.ToArray(), MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
+                renderers[currentRendererIndex].sharedMesh.UploadMeshData(true);
+            }
 
-			umaData.umaRecipe.ClearDNAConverters();
+            umaData.umaRecipe.ClearDNAConverters();
 			for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
 			{
 				SlotData slotData = umaData.umaRecipe.slotDataList[i];
@@ -231,7 +262,28 @@ namespace UMA
 			umaData.firstBake = false;
 		}
 
-		protected void BuildCombineInstances()
+        public static void SetCompositingParameters(Material secondPass, UMAData.GeneratedMaterial cm)
+        {
+			// if this is a compositing shader, there is only one material fragment.
+            if (cm.materialFragments.Count == 1)
+			{
+				TextureProcessPRO.SetCompositingProperties(cm, secondPass, cm.materialFragments[0]);
+			}
+        }
+
+        public static void CopyMaterialTextures(Material secondPass, Material material, UMAMaterial uMAMaterial)
+        {
+            foreach(UMAMaterial.MaterialChannel channel in uMAMaterial.channels)
+			{
+				var texture = material.GetTexture(channel.materialPropertyName);
+				if (texture != null)
+				{
+                    secondPass.SetTexture(channel.materialPropertyName, texture);
+                }
+			}
+        }
+
+        protected void BuildCombineInstances()
 		{
 			SkinnedMeshCombiner.CombineInstance combineInstance;
 

@@ -50,11 +50,27 @@ namespace UMA.Editors
 
             showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
 
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("material"), new GUIContent( "Material", "The Unity Material to link to."));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_material"), new GUIContent( "Default Material", "The Unity Material to link to."));
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("Default Material: This is the material that will be used if no other material is found.", MessageType.Info);
+            }
+
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("srpMaterials"), new GUIContent("SRP Materials", "Materials for SRP pipelines. If no SRP materials are found, the default material will be used."));
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("SRP Materials: These are the materials that will be used for the various SRP pipelines. If no SRP materials are found, the default material will be used.", MessageType.Info);
+            }
+
+
             EditorGUILayout.PropertyField(materialTypeProperty, new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
             if (showHelp)
             {
                 EditorGUILayout.HelpBox("Atlas: Combine all textures using this material into a single atlas. Each channel will be a separate atlas - ie, normal maps will not be combine with albedo\nNo Atlas: Create a single texture for each channel, compositing all layers and colorizing as needed.\nUseExistingMaterial: use the material assigned directly. No channels, layering or colorizing will be done. This type has no texture channels.\nUseExistingTextures: Generates a new material, assigns the textures from the overlay to the appropriate channel. No layering can be done, but you can colorize the texture using Color 0 on the overlay. This will set all channels to type TintedTexture.", MessageType.Info);
+            }
+            if (MatType == UMAMaterial.MaterialType.UseExistingTextures)
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("secondPass"), new GUIContent("Second Pass", "The Unity Material for a second pass. Usually NULL."));
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("translateSRP"), new GUIContent("Translate SRP", "When checked, this will automatically translate the UMAMaterial property names to URP/HDRP names (ie - _MainTex becomes _BaseMap etc.)"));
 

@@ -65,10 +65,10 @@ namespace UMA
 		/// Array of textures required for the overlay material.
 		/// </summary>
 		[Tooltip("Array of textures required for the overlay material.")]
-		public Texture[] textureList = new Texture[0];
+		public Texture[] textureList = new Texture[1];
 
         [Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
-        public OverlayBlend[] overlayBlend = new OverlayBlend[0];
+        public OverlayBlend[] overlayBlend = new OverlayBlend[1];
 
         /// <summary>
         /// Use this to identify what kind of overlay this is and what it fits

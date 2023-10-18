@@ -26,6 +26,7 @@ namespace UMA.Controls
 			IsAddressable,
 			Group,
 			Labels,
+			Ignore,
 			Always,
 			Buttons
 		}
@@ -217,7 +218,13 @@ namespace UMA.Controls
 				}
 				break;
 
-				case AssetColumns.IsResource:
+                case AssetColumns.Ignore:
+                    {
+                        GUI.Label(cellRect, ate.IgnoreCount.ToString());
+                    }
+                    break;
+
+                case AssetColumns.IsResource:
 				{
 					GUI.Label(cellRect, ate.IsResourceCount.ToString());
 				}
@@ -323,7 +330,21 @@ namespace UMA.Controls
 				}
 				break;
 
-				case AssetColumns.IsResource:
+                case AssetColumns.Ignore:
+                    {
+                        cellRect.x += kCheckboxOffset;
+                        cellRect.width -= kCheckboxOffset;
+                        bool clicked = EditorGUI.Toggle(cellRect, ai.Ignore);
+                        if (clicked != ai.Ignore)
+                        {
+                            ai.Ignore = clicked;
+                            UMAAssetIndexer.Instance.ForceSave();
+                        }
+                    }
+                    break;
+
+
+                case AssetColumns.IsResource:
 				{
 					cellRect.x += kCheckboxOffset;
 					cellRect.width -= kCheckboxOffset;
@@ -626,7 +647,19 @@ namespace UMA.Controls
 					autoResize = false,
 					allowToggleVisibility = true
 				},
-				new MultiColumnHeaderState.Column
+                new MultiColumnHeaderState.Column
+                {
+                    headerContent = new GUIContent("Ignore", "This is not included in addressables or resources"),
+                    headerTextAlignment = TextAlignment.Center,
+                    sortedAscending = true,
+                    sortingArrowAlignment = TextAlignment.Left,
+                    width = 40,
+                    minWidth = 40,
+                    maxWidth = 40,
+                    autoResize = false,
+                    allowToggleVisibility = true
+                },
+                new MultiColumnHeaderState.Column
 				{
 					headerContent = new GUIContent("Commands", "Command Buttons"),
 					headerTextAlignment = TextAlignment.Center,

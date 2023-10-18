@@ -5,10 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using UMA.Controls;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using UMA;
+using UMA.Controls;
+using System.IO;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
@@ -772,6 +775,7 @@ namespace UMA.Editors
         {
             var evt = Event.current;
             int pickedCount = 0;
+            bool recipesMerged = false;
             //make the box clickable so that the user can select slotData assets from the asset selection window
             //TODO if we can make this so you can click multiple slots to add them make this the only option and get rid of the object selection 'field'
             if (evt.type == EventType.MouseUp)
@@ -832,6 +836,16 @@ namespace UMA.Editors
                             {
                                 DraggedOverlays.Add(draggedObjects[i] as OverlayDataAsset);
                             }
+                            if (draggedObjects[i] is UMATextRecipe)
+                            {
+                                var textRecipe = draggedObjects[i] as UMATextRecipe;
+                                var recipe = textRecipe.GetCachedRecipe(UMAContextBase.Instance);
+                                if (recipe != null)
+                                {
+                                    _recipe.Merge(recipe, false);
+                                    recipesMerged = true;
+                                }
+                            }
 
                             var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
                             if (System.IO.Directory.Exists(path))
@@ -840,7 +854,7 @@ namespace UMA.Editors
                             }
                         }
                     }
-                    if (DraggedSlots.Count > 0 || DraggedOverlays.Count > 0)
+                    if (DraggedSlots.Count > 0 || DraggedOverlays.Count > 0 || recipesMerged == true)
                     {
                         AddDraggedFiles();
                         return true;
@@ -989,7 +1003,7 @@ namespace UMA.Editors
 
             GUILayout.Space(10);
             Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-            GUI.Box(dropArea, "Drag Slots and Overlays here. Click to Pick");
+            GUI.Box(dropArea, "Drag Slots, Overlays and recipes here. Click to Pick");
             if (DropAreaGUI(dropArea))
             {
                 changed |= true;
@@ -1836,6 +1850,21 @@ namespace UMA.Editors
 
             _overlayData.Validate();
 
+            bool changed = false;
+
+            if (!isUV)
+            {
+                EditorGUILayout.HelpBox("Overlay " + _overlayData.asset.name + " is not using UV coordinates! Convert?", MessageType.Error);
+                _overlayData.editorReferenceTextureSize = EditorGUILayout.Vector2Field("Reference Texture Size", _overlayData.editorReferenceTextureSize);
+                if (_overlayData.editorReferenceTextureSize.magnitude != 0.0f)
+                { 
+                    if (GUILayout.Button("Convert to UV"))
+                    {
+                        _overlayData.rect = new Rect(_overlayData.rect.x / _overlayData.editorReferenceTextureSize.x, _overlayData.rect.y / _overlayData.editorReferenceTextureSize.y, _overlayData.rect.width / _overlayData.editorReferenceTextureSize.x, _overlayData.rect.height / _overlayData.editorReferenceTextureSize.y);
+                        changed = true;
+                    }
+                }
+            }
             if (_slotData.asset.material != null)
             {
                 if (_overlayData.asset.material.name != _slotData.material.name)
@@ -1872,7 +1901,7 @@ namespace UMA.Editors
             }
 
             // Edit the colors
-            bool changed = OnColorGUI();
+            changed |= OnColorGUI();
 
 
             // Edit the transformations

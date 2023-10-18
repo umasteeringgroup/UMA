@@ -368,12 +368,17 @@ namespace UMA
 			public short[] colors;
 			public string[] ShaderParms;
 			public bool alwaysUpdate;
+			public bool isBaseColor;
 
 			public PackedOverlayColorDataV3()
 			{
 				name = "";
 				colors = new short[0];
 				ShaderParms = new string[0];
+#if UNITY_EDITOR
+				alwaysUpdate = false;
+                isBaseColor = false;
+#endif
 			}
 
 			public PackedOverlayColorDataV3(OverlayColorData colorData)
@@ -402,6 +407,9 @@ namespace UMA
                 {
 					alwaysUpdate = colorData.PropertyBlock.alwaysUpdate;
                 }
+#if UNITY_EDITOR
+				isBaseColor = colorData.isBaseColor;
+#endif
 				if (colorData.HasProperties)
                 {
 					ShaderParms = new string[colorData.PropertyBlock.shaderProperties.Count];
@@ -424,6 +432,9 @@ namespace UMA
 					int channelCount = colors.Length / 8;
 					overlayColorData.channelMask = new Color[channelCount];
 					overlayColorData.channelAdditiveMask = new Color[channelCount];
+#if UNITY_EDITOR
+					overlayColorData.isBaseColor = isBaseColor;
+#endif
 					int colorIndex = 0;
 					for (int channel = 0; channel < channelCount; channel++)
 					{

@@ -6,13 +6,13 @@ using UMA.CharacterSystem;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Collections;
+using UnityEditor.UIElements;
 
 namespace UMA.Editors
 {
 	[CustomPropertyDrawer(typeof(OverlayColorData),true)]
 	public class OverlayColorDataPropertyDrawer : PropertyDrawer
 	{
-		bool showAdvanced;
 		GUIContent Modulate = new GUIContent("Multiplier");
 		GUIContent Additive = new GUIContent("Additive");
 		GUIContent Channels = new GUIContent("Channel Count");
@@ -62,8 +62,9 @@ namespace UMA.Editors
 			if (name.isExpanded)
 			{
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
+                EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
 
-				if (ocd != null)
+                if (ocd != null)
 				{
 					string Name = property.FindPropertyRelative("name").stringValue;
 					int ChannelCount = EditorGUILayout.IntSlider(Channels, ocd.channelCount, 0, 16);
@@ -77,13 +78,16 @@ namespace UMA.Editors
 					}
 				}
 
-				showAdvanced = EditorGUILayout.Toggle("Show Extended Ranges", showAdvanced);
+				SerializedProperty showAdvancedProperty = property.FindPropertyRelative("showAdvanced");
+				EditorGUILayout.PropertyField(showAdvancedProperty);
+				//showAdvanced = EditorGUILayout.Toggle("Show Extended Ranges", showAdvanced);
 
 				GUILayout.Space(5);
 
+
 				for (int i = 0; i < mask.arraySize; i++)
 				{
-					if (showAdvanced)
+					if (showAdvancedProperty.boolValue)
 					{
 						var channelMask = mask.GetArrayElementAtIndex(i);
 						var channelColor = ToVector4(channelMask.colorValue);

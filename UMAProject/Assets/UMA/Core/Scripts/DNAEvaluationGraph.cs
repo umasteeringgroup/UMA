@@ -58,8 +58,7 @@ namespace UMA
 		/// </returns>
 		public float Evaluate(float dnaValue)
 		{
-			float value = _graph.Evaluate(dnaValue);
-			return value;
+			return _graph.Evaluate(dnaValue);
 		}
 
 		/// <summary>

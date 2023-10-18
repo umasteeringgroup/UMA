@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using Unity.Burst;
 #if UNITY_2019_3_OR_NEWER
 using Unity.Collections;
 #endif
@@ -638,7 +639,9 @@ namespace UMA
 			dest.x = source.collisionSphereDistance;
 			dest.y = source.maxDistance;
 		}
-
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
 		private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
 		{
 			int newBones = 0;
@@ -931,7 +934,11 @@ namespace UMA
 			}
 		}
 
-		private static bool CompareSkinningMatrices(Matrix4x4 m1, ref Matrix4x4 m2)
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+
+        private static bool CompareSkinningMatrices(Matrix4x4 m1, ref Matrix4x4 m2)
 		{
 			if (Mathf.Abs(m1.m00 - m2.m00) > 0.0001) return false;
 			if (Mathf.Abs(m1.m01 - m2.m01) > 0.0001) return false;
@@ -983,7 +990,10 @@ namespace UMA
 			}
 		}
 
-		private static void CopyColorsToColors32(Color[] source, int sourceIndex, Color32[] dest, int destIndex, int count)
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+        private static void CopyColorsToColors32(Color[] source, int sourceIndex, Color32[] dest, int destIndex, int count)
 		{
 			while (count-- > 0)
 			{
@@ -992,7 +1002,10 @@ namespace UMA
 			}
 		}
 
-		private static void FillArray(Vector4[] array, int index, int count, Vector4 value)
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+        private static void FillArray(Vector4[] array, int index, int count, Vector4 value)
 		{
 			while (count-- > 0)
 			{
@@ -1000,7 +1013,10 @@ namespace UMA
 			}
 		}
 
-		private static void FillArray(Vector3[] array, int index, int count, Vector3 value)
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+        private static void FillArray(Vector3[] array, int index, int count, Vector3 value)
 		{
 			while (count-- > 0)
 			{
@@ -1008,7 +1024,10 @@ namespace UMA
 			}
 		}
 
-		private static void FillArray(Vector2[] array, int index, int count, Vector2 value)
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+        private static void FillArray(Vector2[] array, int index, int count, Vector2 value)
 		{
 			while (count-- > 0)
 			{
@@ -1016,7 +1035,10 @@ namespace UMA
 			}
 		}
 
-		private static void FillArray(Color[] array, int index, int count, Color value)
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+        private static void FillArray(Color[] array, int index, int count, Color value)
 		{
 			while (count-- > 0)
 			{
@@ -1024,7 +1046,10 @@ namespace UMA
 			}
 		}
 
-		private static void FillArray(Color32[] array, int index, int count, Color32 value)
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+        private static void FillArray(Color32[] array, int index, int count, Color32 value)
 		{
 			while (count-- > 0)
 			{
@@ -1032,7 +1057,11 @@ namespace UMA
 			}
 		}
 
-		private static void CopyIntArrayAdd(NativeArray<int> source, int sourceIndex, NativeArray<int> dest, int destIndex, int count, int add)
+
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+        private static void CopyIntArrayAdd(NativeArray<int> source, int sourceIndex, NativeArray<int> dest, int destIndex, int count, int add)
 		{
 			for (int i = 0; i < count; i++)
 			{
@@ -1040,7 +1069,10 @@ namespace UMA
 			}
 		}
 
-		public static bool MaskedCopyIntArrayAdd(NativeArray<int> source, int sourceIndex, NativeArray<int> dest, int destIndex, int count, int add, BitArray mask)
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+        public static bool MaskedCopyIntArrayAdd(NativeArray<int> source, int sourceIndex, NativeArray<int> dest, int destIndex, int count, int add, BitArray mask)
 		{
 			if ((mask.Count*3) != source.Length)
 			{
@@ -1060,6 +1092,17 @@ namespace UMA
 			{
 				if (!mask[(i/3)])
 				{
+                    if (destIndex+2 > dest.Length)
+                    {
+                        Debug.Log("destIndex+2 > dest.Length");
+                        return false;
+                    }
+                    if (sourceIndex + 2 > source.Length)
+                    {
+                        Debug.Log("sourceIndex + 2 > source.Length");
+                        return false;
+                    }
+
 					dest[destIndex++] = source[sourceIndex + i + 0] + add;
 					dest[destIndex++] = source[sourceIndex + i + 1] + add;
 					dest[destIndex++] = source[sourceIndex + i + 2] + add;

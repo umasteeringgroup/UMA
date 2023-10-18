@@ -23,6 +23,7 @@ namespace UMA.Controls
 		public int IsResourceCount;
 		public int IsAddrCount;
 		public int Keepcount;
+		public int IgnoreCount;
 
 
 		// detail item
