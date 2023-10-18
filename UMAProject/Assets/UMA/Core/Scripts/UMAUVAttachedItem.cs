@@ -30,12 +30,12 @@ namespace UMA
         public List<int> triangle = new List<int>();
         public SkinnedMeshRenderer skin;
         private Mesh tempMesh;
-        public  UMAUVAttachedItemLauncher bootStrapper;
         private UMAData umaData;
         private Transform mostestBone;
         public Vector3 originalPosition;
         public Vector3 normal;
         public Vector3 normalMult = Vector3.one;
+		public List<UMAUVAttachedItemBlendshapeAdjuster> blendshapeAdjusters = new List<UMAUVAttachedItemBlendshapeAdjuster>();
 
         public bool InitialFound = false;
         public float DistanceFromBone = 0.0f;
@@ -76,7 +76,10 @@ namespace UMA
                 tempMesh = new Mesh();
                 uvVerts = new UVVerts();
                 subMeshNumber = -1;
-                bootStrapper = bootstrap;
+                blendshapeAdjusters.Clear();
+				foreach(var bsa in bootstrap.blendshapeAdjusters) {
+					blendshapeAdjusters.Add(new UMAUVAttachedItemBlendshapeAdjuster(bsa));
+				}
 
                 normalAdjust = bootstrap.normalAdjust;
                 uVLocation = bootstrap.uVLocation;
@@ -308,7 +311,7 @@ namespace UMA
 						Vector3 newTranslation = new Vector3(translation.x, translation.y, translation.z);
 #if true
 
-						foreach (var bsAdjust in bootStrapper.blendshapeAdjusters) 
+						foreach (var bsAdjust in blendshapeAdjusters) 
 						{
 							if(string.IsNullOrEmpty(bsAdjust.RaceName) || bsAdjust.RaceName == avatar.activeRace.name) 
 								{

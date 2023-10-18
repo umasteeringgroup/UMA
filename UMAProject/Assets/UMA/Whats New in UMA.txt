@@ -1,3 +1,34 @@
+What's new in UMA 2.13b
+
+You can now enable/disable default wardrobe recipes without removing them from the list in the customization section.
+The currently equipped wardrobe recipe is marked with a * in the list.
+Enabled recipes are marked with a plus sign.
+Disabled recipes are marked with a minus sign.
+The Hair Smoosher has been updated and bugs fixed.
+Clipping Plane offset - It will now allow you to tune the plane points on the clipping plane slot.
+You can now scale and offset the smooshed hair to help adjust for different polygon densities on the hair slot.
+Overlays can now have Photoshop-style blend modes applied to them. This allows for more control over how the overlay is blended with the underlying texture.
+Blends are specified on the individual texture channel on the overlay.  
+Supported blend modes are: Normal, Multiply, Screen, Overlay, Darken, Lighten, Color Dodge, Color Burn, Hard Light, Soft Light, and Subtract.
+Drag and drop support for merging recipes into other recipes, with slots/overlays/colors/options.
+Mesh Hide asset editor can now export occlusion data to a texture, and load and apply occlusion data from a texture.
+Fixed bug in Addressable preloader where it would not ask to load additive recipes, causing those not to work at all when using addressables.
+Added new compositing shader for Diffuse/Normal/Metallic workflow, so you can drop it in most recipes.
+Added favorites window so you can add whatever favorites you want
+Colors can now be marked as "base colors" in the customization window, and filtered to those colors.
+Added option to "average normals" on the slot welder.
+Added ability on DCA to "force suppress" slots or overlays based on tag. For example, if you want to remove an eyebrow overlay off the face if you have used replacement texture for the face that already contains them.
+Added preference to use the Burst Compiler to speed up mesh generation. Requires the burst compiler to be installed.
+Added option to tile overlays when using the Keep Textures mode.
+Added additional sanity checking in various functions for those times when things are going so well. :)
+Disabled index healing (even when enabled in preferences) when playing in the editor
+Added option to trigger various rebuild types in the editor, not just a full rebuild.
+Added "Second pass" material to UMAMaterial. When present, will duplicate the submesh, and draw the submesh a second time with the second material. This is useful for simulating multi-pass in URP.
+Added option to UMAMaterial to specify alternate materials for different SRP pipelines.
+ConvertRenderTexture is now off by default on mobile.
+Fixed various leaks/bugs in MeshHideAsset Inspector.
+
+
 What's new in UMA 2.13a4
 
 

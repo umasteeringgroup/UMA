@@ -17,13 +17,6 @@ namespace UMA.Controls
 {
     class AssetIndexerWindow : EditorWindow
     {
-#pragma warning disable IDE0051 // Remove unused private members
-#pragma warning disable IDE0044 // Add readonly modifier
-#pragma warning disable CS0414
-        [NonSerialized] private float UtilityPanelHeight = 40.0f;
-#pragma warning restore CS0414
-#pragma warning restore IDE0044 // Add readonly modifier
-#pragma warning restore IDE0051 // Remove unused private members
         [NonSerialized] bool m_Initialized;
         [SerializeField] TreeViewState m_TreeViewState; // Serialized in the window layout file so it survives assembly reloading
         [SerializeField] MultiColumnHeaderState m_MultiColumnHeaderState;
@@ -1629,6 +1622,7 @@ namespace UMA.Controls
                 ate.IsResourceCount = 0;
                 ate.IsAddrCount = 0;
                 ate.Keepcount = 0;
+                ate.IgnoreCount = 0;
                 if (t.hasChildren)
                 {
                     foreach (TreeElement c in t.children)
@@ -1640,6 +1634,8 @@ namespace UMA.Controls
                             ate.Keepcount++;
                         if (ai.IsAddressable)
                             ate.IsAddrCount++;
+                        if (ai.Ignore)
+                            ate.IgnoreCount++;
                     }
                 }
             }

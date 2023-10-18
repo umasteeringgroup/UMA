@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using static UMA.UMAData;
 
 namespace UMA
 {
@@ -263,9 +264,11 @@ namespace UMA
 								if (k < tempMaterialDefinition.baseOverlay.textureList.Length)
 								{
 									if (baseOverride[k])
+                                    {
 									tempMaterialDefinition.baseOverlay.textureList[k] = baseOverride[k];
 								}
 							}
+						}
 						}
 						else
                         {
@@ -337,68 +340,74 @@ namespace UMA
 				}
 			}
 
-			//****************************************************
-			//* Set parameters based on shader parameter mapping
-			//****************************************************
 			for (int i=0;i<generatedMaterials.Count;i++)
-			{
-				UMAData.GeneratedMaterial ugm = generatedMaterials[i];
-				for (int j = 0; j < ugm.materialFragments.Count; j++)
-				{
-					UMAData.MaterialFragment matfrag = ugm.materialFragments[j];
-
-                    bool isCompositor = ugm.material.HasProperty("_OverlayCount");
-
-					if (matfrag.overlayData != null && matfrag.overlayData.Length > 0)
-					{
-						for (int oi = 0; oi < matfrag.overlayData.Length; oi++)
-						{
-							OverlayData od = matfrag.overlayData[oi];
-							if (od == null) continue;
-							if (od.colorData.HasProperties)
-							{
-								foreach (var s in od.colorData.PropertyBlock.shaderProperties)
-								{
-                                    if (isCompositor)
-									{
-                                        s.Apply(ugm.material, oi);
-                                    }
-                                    else
-                                    {
-                                        s.Apply(ugm.material, -1);
-									}
-								}
-							}
-						}
-					}
-				}
-
-				if (ugm.umaMaterial.shaderParms != null)
-				{
-
-					// Set Shader properties from shared colors
-					for(int j=0;j<ugm.umaMaterial.shaderParms.Length;j++)
-					{
-						UMAMaterial.ShaderParms parm = ugm.umaMaterial.shaderParms[j];
-						if (ugm.material.HasProperty(parm.ParameterName))
-						{
-							foreach (OverlayColorData ocd in umaData.umaRecipe.sharedColors)
-							{
-								if (ocd.name == parm.ColorName)
-								{
-									ugm.material.SetColor(parm.ParameterName, ocd.color);
-									break;
-								}
-							}
-						}
-					}
-
-				}
-			}
-			packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
+            {
+                UMAData.GeneratedMaterial ugm = generatedMaterials[i];
+                ApplyMaterialParameters(ugm,umaData,ugm.material);
+            }
+            packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
 		}
 
-		public class MaterialDefinitionComparer : IComparer<UMAData.MaterialFragment>
+
+        //****************************************************
+        //* Set parameters based on shader parameter mapping
+        //****************************************************
+        public static void ApplyMaterialParameters(GeneratedMaterial ugm, UMAData umaData, Material material)
+        {
+            for (int j = 0; j < ugm.materialFragments.Count; j++)
+            {
+                UMAData.MaterialFragment matfrag = ugm.materialFragments[j];
+
+                bool isCompositor = material.HasProperty("_OverlayCount");
+
+                if (matfrag.overlayData != null && matfrag.overlayData.Length > 0)
+                {
+                    for (int oi = 0; oi < matfrag.overlayData.Length; oi++)
+                    {
+                        OverlayData od = matfrag.overlayData[oi];
+                        if (od == null) continue;
+                        if (od.colorData.HasProperties)
+                        {
+                            foreach (var s in od.colorData.PropertyBlock.shaderProperties)
+                            {
+                                if (isCompositor)
+                                {
+                                    s.Apply(material, oi);
+                                }
+                                else
+                                {
+                                    s.Apply(material, -1);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (ugm.umaMaterial.shaderParms != null)
+            {
+
+                // Set Shader properties from shared colors
+                for (int j = 0; j < ugm.umaMaterial.shaderParms.Length; j++)
+                {
+                    UMAMaterial.ShaderParms parm = ugm.umaMaterial.shaderParms[j];
+                    if (material.HasProperty(parm.ParameterName))
+                    {
+                        foreach (OverlayColorData ocd in umaData.umaRecipe.sharedColors)
+                        {
+                            if (ocd.name == parm.ColorName)
+                            {
+                                material.SetColor(parm.ParameterName, ocd.color);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+
+        public class MaterialDefinitionComparer : IComparer<UMAData.MaterialFragment>
 		{
 			public int Compare(UMAData.MaterialFragment x, UMAData.MaterialFragment y)
 			{
@@ -461,6 +470,34 @@ namespace UMA
 							newMats[materialIndex] = atlasses[i].material;
 							atlasses[i].skinnedMeshRenderer = renderer;
 							atlasses[i].materialIndex = materialIndex;
+                            var cm = atlasses[i];
+                            var firstPass = newMats[materialIndex];
+                            UMAGeneratorPro.ApplyMaterialParameters(cm, umaData, firstPass);
+                            UMADefaultMeshCombiner.CopyMaterialTextures(firstPass, cm.material, cm.umaMaterial);
+                            if (cm.material.HasProperty("_OverlayCount"))
+                            {
+                                UMADefaultMeshCombiner.SetCompositingParameters(firstPass, cm);
+                            }
+
+
+                            if (atlasses[i].umaMaterial.secondPass != null) 
+                            {
+                                Material secondPass = GameObject.Instantiate(cm.umaMaterial.secondPass);
+                                cm.secondPassMaterial = secondPass;
+                                // Apply shader property blocks to second pass material
+                                UMAGeneratorPro.ApplyMaterialParameters(cm, umaData, secondPass);
+                                // set textures based on overlay texture channels
+                                UMADefaultMeshCombiner.CopyMaterialTextures(secondPass, cm.material, cm.umaMaterial);
+                                // set compositing parameters if needed
+                                if (cm.material.HasProperty("_OverlayCount"))
+                                {
+                                    UMADefaultMeshCombiner.SetCompositingParameters(secondPass, cm);
+                                }
+                                //secondPass.CopyPropertiesFromMaterial(newMats[materialIndex]);
+                                materialIndex++;
+                                newMats[materialIndex] = secondPass;
+                                //materials.Add(secondPass);
+                            }
 							materialIndex++;
 						}
 					}

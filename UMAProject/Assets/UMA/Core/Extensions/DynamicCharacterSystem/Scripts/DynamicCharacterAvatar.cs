@@ -1,3 +1,5 @@
+#undef SUPER_LOGGINGCOLLECTIONS
+
 using UnityEngine;
 //For loading a recipe directly from the web @2465
 using UnityEngine.Networking;
@@ -14,7 +16,7 @@ using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
 using UnityEngine.SceneManagement;
 using System.Web;
-using static HairSmoosher;
+
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
@@ -249,6 +251,7 @@ namespace UMA.CharacterSystem
         // so that the slot will not be included in the next build. 
         private HashSet<string> forceRemovedBaseSlots = new HashSet<string>();
 
+        private HashSet<string> forceRemovedTags = new HashSet<string>();
 #if UNITY_EDITOR
         private PreviewModel lastPreviewModel;
         private GameObject lastCustomModel;
@@ -259,6 +262,7 @@ namespace UMA.CharacterSystem
 
         #region PROPERTIES
 
+        public HashSet<string> ForceRemovedTags { get { return forceRemovedTags; } }
         public HashSet<string> ForceRemovedBaseSlots { get { return forceRemovedBaseSlots; } }
         public List<string> ForceSuppressedWardrobeSlots { get { return forceSuppressedWardrobeSlots; } }
 
@@ -636,7 +640,7 @@ namespace UMA.CharacterSystem
 
 #if UNITY_EDITOR
 
-        public void GenerateSingleUMA()
+        public void GenerateSingleUMA(bool slotsOnly = false)
         {
             UMAGenerator ugb = umaGenerator as UMAGenerator;
             if (umaGenerator == null)
@@ -650,6 +654,11 @@ namespace UMA.CharacterSystem
             }
             if (ugb != null)
             {
+               /* if (slotsOnly)
+                {
+                    ugb.UpdateSlots(umaData);
+                    return;
+                } */ // TODO: Fix this
                 if (UnityEditor.PrefabUtility.IsPartOfPrefabInstance(gameObject.transform))
                 {
                     // Unfortunately we must unpack the prefab or it will blow up.
@@ -1438,7 +1447,7 @@ namespace UMA.CharacterSystem
             {
                 foreach (WardrobeRecipeListItem recipe in validRecipes)
                 {
-                    if (recipe._recipe != null)
+                    if (recipe._recipe != null && recipe._enabledInDefaultWardrobe)
                     {
                         if (((recipe._recipe.compatibleRaces.Count == 0 || recipe._recipe.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(recipe._recipe.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(recipe._recipe.wardrobeSlot))))
                         {
@@ -1465,7 +1474,7 @@ namespace UMA.CharacterSystem
                     }
                     else
                     {
-                        if (Debug.isDebugBuild)
+                        if (Debug.isDebugBuild && recipe._recipe == null)
                         {
                             Debug.LogWarning("[DynamicCharacterAvatar:LoadDefaultWardrobe] recipe._recipe was null for " + recipe._recipeName);
                         }
@@ -1644,6 +1653,15 @@ namespace UMA.CharacterSystem
 
             // must be incompatible
             return false;
+        }
+
+        public void SetSlot(string Slotname)
+        {
+            var UTR = UMAContext.Instance.GetRecipe(Slotname,false);
+            if (UTR != null)
+            {
+                SetSlot(UTR);
+            }
         }
 
         public void SetSlot(string Slotname, string Recipename)
@@ -3893,6 +3911,11 @@ namespace UMA.CharacterSystem
                 HiddenSlots.Add(s);
             }
 
+            foreach(string s in forceRemovedTags)
+            {
+                HideTags.Add(s);
+            }
+
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
@@ -4204,6 +4227,10 @@ namespace UMA.CharacterSystem
                 if (sd.asset.isSmooshable)
                 {
                     smooshSlots.Add(sd);
+                    if (umaData.VertexOverrides.ContainsKey(sd.slotName))
+                    {
+                        umaData.VertexOverrides.Remove(sd.slotName);
+                    }
                 }
             }
 
@@ -4274,6 +4301,7 @@ namespace UMA.CharacterSystem
                 UpdateSameRace();
             }
 
+			umaData.RebuildSkeleton = false;
             if (alwaysRebuildSkeleton)
             {
                 umaData.RebuildSkeleton = true;
@@ -4303,27 +4331,43 @@ namespace UMA.CharacterSystem
             }
         }
 
-        public Vector3 GetDestVertPhys(Vector3 vertex, Vector3 center, float PlaneDist, SlotDataAsset SmooshTarget, PhysicsScene ps, int vertindex, float smooshDistance, float overSmoosh)
+
+        public Vector3 GetDestVertPhys(Vector3 originVertex, Vector3 center, float PlaneDist, SlotDataAsset SmooshTarget, PhysicsScene ps, int vertindex, float smooshDistance, float overSmoosh)
         {
             Vector3 result = new Vector3();
-
-            Vector3 AlternateCenter = new Vector3(center.x, center.y + 0.001f, center.z);
-            result.Set(vertex.x, vertex.y, vertex.z);
-            float distance = Vector3.Distance(center, vertex);
-
-            Vector3 direction = (center - vertex).normalized;
-            if (ps.Raycast(vertex, direction, out RaycastHit hit, 5.0f, -5, QueryTriggerInteraction.Ignore))
+            if (overSmoosh == 0)
             {
+                overSmoosh = 0.00001f;
+            }
+
+            result.Set(originVertex.x, originVertex.y, originVertex.z);
+
+            Vector3 direction = (center - originVertex);
+            float distance = direction.magnitude;
+
+
+            if (ps.Raycast(originVertex, direction, out RaycastHit hit))//, 5.0f, -5, QueryTriggerInteraction.Ignore))
+            {
+
+                var facing = Vector3.Dot(hit.normal, direction);
+
+                if (facing > 0)
+            {
+                    return result;
+                } 
+
                 // todo: offset by smoosh distance
-                float vertdistance = (hit.point - vertex).magnitude;
+                result.Set(hit.point.x, hit.point.y, hit.point.z);
+
+                float vertdistance = (hit.point - originVertex).magnitude;
                 if (vertdistance < distance)
                 {
                     distance = vertdistance;
                     float newSmooshDistance = smooshDistance;
                     // Smooth smooshing
-                    if (distance > 0.0f)
+                    if (PlaneDist > 0.0f)
                     {
-                        newSmooshDistance = smooshDistance + (smooshDistance * (distance / overSmoosh));
+                        newSmooshDistance = smooshDistance + (smooshDistance * (PlaneDist / overSmoosh));
                     }
                     Vector3 newLocation = hit.point + (direction * (0 - newSmooshDistance));
                     result.Set(newLocation.x, newLocation.y, newLocation.z);
@@ -4333,12 +4377,44 @@ namespace UMA.CharacterSystem
                     result.Set(hit.point.x, hit.point.y, hit.point.z);
                 }
             }
+
+                return result;
+        }
+
+ 
+        // cache these
+        private static Scene SmooshScene;
+        // todo: Should cache these. Maybe in a dictionary by slot name?
+        private static Dictionary<string, Mesh> SmooshTargets = new Dictionary<string, Mesh>();
+
+        private static void CreateSmooshScene()
+        {
+            if (SmooshScene.IsValid())
+            {
+                CleanScene(SmooshScene);
+            }
             else
             {
-                result.Set(center.x, center.y, center.z);
+#if UNITY_EDITOR
+                SmooshScene = EditorSceneManager.NewPreviewScene();
+#else
+            CreateSceneParameters csp = new CreateSceneParameters(LocalPhysicsMode.Physics3D);
+            SmooshScene = SceneManager.CreateScene("SmooshScene", csp);
+#endif
+            }
             }
 
-            return result;
+        private static void CleanScene(Scene scene)
+        {
+            var rootObjects = scene.GetRootGameObjects();
+            foreach (var rootObject in rootObjects)
+            {
+#if UNITY_EDITOR
+                GameObject.DestroyImmediate(rootObject);
+#else
+                GameObject.Destroy(rootObject);
+#endif
+            }
         }
 
         public void SmooshSlotPhysics(UMAData umaData, SlotDataAsset SmooshMe, SlotDataAsset SmooshPlane, SlotDataAsset SmooshTarget, bool invertX, bool invertY, bool invertZ, bool invertDist, float smooshDistance, float overSmoosh)
@@ -4349,32 +4425,34 @@ namespace UMA.CharacterSystem
             }
             Mesh m = new Mesh();
 
-            if (umaData.VertexOverrides.ContainsKey(SmooshTarget.slotName))
-            {
-                m.SetVertices(umaData.VertexOverrides[SmooshTarget.slotName]);
-            }
-            else
-            {
-                m.SetVertices(SmooshTarget.meshData.vertices);
-            }
-            m.SetTriangles(SmooshTarget.meshData.submeshes[0].getBaseTriangles(), 0);
-#if UNITY_EDITOR
-            Scene S = EditorSceneManager.NewPreviewScene();
-#else
-            CreateSceneParameters csp = new CreateSceneParameters(LocalPhysicsMode.Physics3D);
-            Scene S = SceneManager.CreateScene("SmooshScene", csp);
-#endif
+            m.SetVertices(SmooshTarget.meshData.vertices);
+
+            int[] triangles = new int[SmooshTarget.meshData.submeshes[0].getBaseTriangles().Length];
+            Array.Copy(SmooshTarget.meshData.submeshes[0].getBaseTriangles(), triangles, SmooshTarget.meshData.submeshes[0].getBaseTriangles().Length);
+            m.SetTriangles(triangles, 0);
+
+            Physics.BakeMesh(m.GetInstanceID(), false);
+
+            CreateSmooshScene();
+
             GameObject go = new GameObject();
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one;
             try
             {
                 var collider = go.AddComponent<MeshCollider>();
                 collider.sharedMesh = m;
-                SceneManager.MoveGameObjectToScene(go, S);
-                PhysicsScene physicsScene = S.GetPhysicsScene();
 
-                var a = SmooshPlane.meshData.vertices[0];
-                var b = SmooshPlane.meshData.vertices[1];
-                var c = SmooshPlane.meshData.vertices[2];
+
+                SceneManager.MoveGameObjectToScene(go, SmooshScene);
+                PhysicsScene physicsScene = SmooshScene.GetPhysicsScene();
+                // Physics.SyncTransforms();
+
+                var a = SmooshPlane.meshData.vertices[0] + SmooshPlane.clippingPlaneOffset[0];
+                var b = SmooshPlane.meshData.vertices[1] + SmooshPlane.clippingPlaneOffset[1];
+                var c = SmooshPlane.meshData.vertices[2] + SmooshPlane.clippingPlaneOffset[2];
+                var d = SmooshPlane.meshData.vertices[3] + SmooshPlane.clippingPlaneOffset[3];
 
                 if (invertY)
                 {
@@ -4389,8 +4467,16 @@ namespace UMA.CharacterSystem
                     c.x = -c.x;
                 }
 
-                Plane p = new Plane(a, b, c);
-                Vector3 center = (a + b + c) / 3;
+                //Plane p = new Plane(a, b, c);
+                Plane p = new Plane(a, c, b);
+
+                Vector3 total = Vector3.zero;
+                for(int i=0; i<SmooshPlane.meshData.vertices.Length; i++)
+                {
+                    total += SmooshPlane.meshData.vertices[i];
+                }
+
+                Vector3 center = total / SmooshPlane.meshData.vertices.Length;
 
                 Vector3[] newVerts = new Vector3[SmooshMe.meshData.vertices.Length];
 
@@ -4411,27 +4497,24 @@ namespace UMA.CharacterSystem
                         dist *= -1;
                     }
 
+                    Vector3 newVector = currentVert;
                     if (dist > -overSmoosh)
                     {
-                        newVerts[i] = GetDestVertPhys(currentVert, center, dist, SmooshTarget, physicsScene, i, smooshDistance, overSmoosh);
+                        newVector = GetDestVertPhys(currentVert, center, dist, SmooshTarget, physicsScene, i, smooshDistance, overSmoosh);
+                        if (Mathf.Abs((newVector - currentVert).magnitude) > 0.18f)
+                        {
+                            newVector = currentVert;
+                        }
                     }
-                    else
-                    {
-                        newVerts[i] = currentVert;
-                    }
+
+                   newVector = SmooshMe.smooshOffset + newVector;
+                   newVerts[i].Set(newVector.x * SmooshMe.smooshExpand.x, newVector.y * SmooshMe.smooshExpand.y, newVector.z * SmooshMe.smooshExpand.z);
                 }
                 umaData.AddVertexOverride(SmooshMe, newVerts);
             }
             finally
             {
-#if UNITY_EDITOR
-                EditorSceneManager.UnloadSceneAsync(S);
-                GameObject.DestroyImmediate(m);
-#else
-                //  Cleanup
-                SceneManager.UnloadSceneAsync(S);
-                GameObject.Destroy(m);
-#endif
+                CleanScene(SmooshScene);
             }
         }
 
@@ -4667,70 +4750,15 @@ namespace UMA.CharacterSystem
                         continue;
                     }
                     var ovl = checkSlot.GetOverlay(0);
-
-                    if (ovl != null && replacedSlot != null && ovl.overlayName == replacedSlot.GetOverlay(0).overlayName)
+                    if (ovl.overlayName == replacedSlot.GetOverlay(0).overlayName)
                     {
                         checkSlot.SetOverlayList(ReplacedOverlays);
                     }
                 }
             }
-
-            /*
-
-                        for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
-                        {
-                            SlotData originalSlot = umaData.umaRecipe.slotDataList[i];
-                            if (originalSlot == null)
-                            {
-                                continue;
-                            }
-
-                            if (originalSlot.slotName == replaceSlot)
-                            {
-                                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = Replacer.PackedLoad(context);
-                                UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe, context);
-                                if (TempRecipe.slotDataList.Length > 0)
-                                {
-                                    List<OverlayData> originalOverlays = originalSlot.GetOverlayList();
-                                    foreach (SlotData replacementSlot in TempRecipe.slotDataList)
-                                    {
-                                        if (replacementSlot != null)
-                                        {
-                                            if (originalOverlays.Count > 1)
-                                            {
-                                                replacedOverlay = originalOverlays[0];
-                                                for (int j = 1; j < originalOverlays.Count; j++)
-                                                {
-                                                    replacementSlot.AddOverlay(originalOverlays[j]);
-                                                }
-                                            }
-                                            // replacementSlot.SetOverlayList(originalOverlays);
-                                            umaData.umaRecipe.slotDataList[i] = replacementSlot;
-                                            replacedSlot = replacementSlot;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
                         }
 
-                        if (replacedSlot != null && replacedOverlay != null)
-                        {
-                            foreach (SlotData sd in umaData.umaRecipe.slotDataList)
-                            {
-                                var ovl = sd.GetOverlay(0);
-                                if (ovl != null)
-                                {
-                                    if (ovl.overlayName == replacedOverlay.overlayName)
-                                    {
-                                        sd.SetOverlayList(replacedSlot.GetOverlayList());
 
-                                    }
-                                }
-                            }
-                        }
-            */
-        }
 
         /// <summary>
         /// JRM - Renamed from ProcessHiddenSlots for Wildcards
@@ -4796,6 +4824,8 @@ namespace UMA.CharacterSystem
                 {
                     continue;
                 }
+
+                sd.RemoveOverlayTags(hideTags);
 
                 if (sd.HasTag(hideTags))
                 {
@@ -5198,6 +5228,7 @@ namespace UMA.CharacterSystem
             public string _recipeName;
             [System.NonSerialized]
             public UMATextRecipe _recipe;
+            public bool _enabledInDefaultWardrobe = true;
             //store compatible races here because when a recipe is not downloaded we dont have access to this info...
             public List<string> _compatibleRaces;
 

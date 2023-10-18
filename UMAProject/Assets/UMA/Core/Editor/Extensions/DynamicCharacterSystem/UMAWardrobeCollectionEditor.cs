@@ -362,16 +362,9 @@ namespace UMA.Editors
 				bool added = false;
 				if (!recipes.Contains(tempRecipeAsset.name))
 				{
-					Type TargetType = tempRecipeAsset.GetType();
-					if (TargetType.ToString() == "UMATextRecipe" || TargetType.ToString() == "UMAWardrobeRecipe")
-					{
-						FieldInfo RecipeTypeField = TargetType.GetField("recipeType", BindingFlags.Public | BindingFlags.Instance);
-						string recipeType = (string)RecipeTypeField.GetValue(tempRecipeAsset);
-						if (recipeType == "Wardrobe")
-						{
+					if(tempRecipeAsset is UMAWardrobeRecipe) {
 							recipes.Add(tempRecipeAsset.name);
 							added = true;
-						}
 					}
 				}
 				return added;

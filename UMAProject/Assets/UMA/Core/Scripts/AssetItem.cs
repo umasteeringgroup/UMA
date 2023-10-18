@@ -27,6 +27,7 @@ namespace UMA
         public bool IsAssetBundle;
 		public bool IsAddressable;
 		public bool IsAlwaysLoaded;
+        public bool Ignore; // does not go into adressables or resources.
 		public string AddressableGroup;
 		public string AddressableAddress
         {

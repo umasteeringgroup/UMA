@@ -1,5 +1,7 @@
 using UnityEngine;
 using System;
+using UnityEngine.Serialization;
+using System.Collections.Generic;
 
 namespace UMA
 {
@@ -18,8 +20,62 @@ namespace UMA
         public enum CompressionSettings { None, Fast, HighQuality };
         public bool translateSRP;
 
-        [Tooltip("The material used either as a template, or as the direct Material")]
-        public Material material;
+        [SerializeField]
+        [FormerlySerializedAs("material")]
+        private Material _material;
+
+        [Serializable]
+        public struct SRPMaterial
+        {
+            public UMAUtils.PipelineType SRP;
+            public Material material;
+        };
+
+        public List<SRPMaterial> srpMaterials = new List<SRPMaterial>();
+        private Dictionary<UMAUtils.PipelineType, Material> _srpMaterialLookup = new Dictionary<UMAUtils.PipelineType, Material>();
+
+        public Material  material
+        {
+            get 
+            {
+                var pipe = UMAUtils.DetectPipeline();   
+                if (_srpMaterialLookup.ContainsKey(pipe))
+                {
+                    return _srpMaterialLookup[pipe];
+                }
+                else
+                {
+                    // NO SrpMaterials in the list, so just return the material
+                    if (srpMaterials.Count == 0)
+                    {
+                        _srpMaterialLookup.Add(pipe, _material);
+                        return _material;
+                    }
+
+                    if (_srpMaterialLookup.Count == 0)
+                    {
+                        foreach (var srpMat in srpMaterials)
+                        {
+                            _srpMaterialLookup.Add(srpMat.SRP, srpMat.material);
+                        }
+                    }
+                    if (_srpMaterialLookup.ContainsKey(pipe))
+                    {
+                        return _srpMaterialLookup[pipe];
+                    }
+                    else
+                    {
+                        // Just stick the default material in there.
+                        _srpMaterialLookup.Add(pipe, _material);
+                        return _material;
+                    }
+                }
+            }
+            set { _material = value; }
+        }
+
+
+
 
         [Tooltip("Used as a second pass when 'Use Existing Textures' is set. Leave null for most cases.")]
         public Material secondPass;
@@ -104,6 +160,14 @@ namespace UMA
 			UMA.CustomAssetUtility.CreateAsset<UMAMaterial>();
 		}
 #endif
+
+        private bool isGeneratedTextures
+        {
+            get
+            {
+                return materialType == MaterialType.Atlas || materialType == MaterialType.NoAtlas;
+            }
+        }
 
         public bool isNoAtlas()
         {

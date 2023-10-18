@@ -1291,7 +1291,7 @@ namespace UMA.Editors
 
 				GUILayout.Space(6);
 				Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-				GUI.Box(dropArea, "Drag Slots and Overlays here. Click to pick");
+				GUI.Box(dropArea, "Drag Slots, Overlays or Recipes here. Click to pick");
 				if (DropAreaGUI(dropArea))
 				{
 					changed |= true;

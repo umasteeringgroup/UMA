@@ -273,50 +273,7 @@ namespace UMA
                                     if (textureChannelNumber == 0 && isCompositor)
                                     {
                                         /* set all the properties on the material */
-                                        int numChannels = fragment.baseOverlay.textureList.Length;
-                                        int numOverlays = 1 + fragment.overlays.Length;
-
-                                        Color[] ColorTints = new Color[numChannels * numOverlays];
-                                        Color[] ColorAdds = new Color[numChannels * numOverlays];
-
-                                        var overlays = fragment.slotData.GetOverlayList();
-
-                                        int i = 0, ovl = 0;
-
-                                        foreach (var overlay in overlays)
-                                        {
-                                            for (int c = 0; c < numChannels; c++)
-                                            {
-                                                // Some shaders use arrays, and some use hardcoded prop names.
-                                                if (overlay != null)
-                                                {
-                                                    ColorTints[i] = overlay.GetColor(c);
-                                                    ColorAdds[i] = overlay.GetAdditive(c);
-                                                }
-                                                else
-                                                {
-                                                    ColorTints[i] = Color.white;
-                                                    ColorAdds[i] = OverlayColorData.EmptyAdditive;
-                                                }
-                                                // don't go out of bounds if someone goes crazy with overlays and channels
-                                                if (c < tintProperties.GetLength(1) && ovl < tintProperties.GetLength(0))
-                                                {
-                                                    if (generatedMaterial.material.HasProperty(tintProperties[ovl, c]))
-                                                    {
-                                                        generatedMaterial.material.SetColor(tintProperties[ovl, c], ColorTints[i]);
-                                                    }
-                                                    if (generatedMaterial.material.HasProperty(addProperties[ovl, c]))
-                                                    {
-                                                        generatedMaterial.material.SetColor(addProperties[ovl, c], ColorAdds[i]);
-                                                    }
-                                                }
-                                                i++;
-                                            }
-                                            ovl++;
-                                        }
-
-                                      
-                                        generatedMaterial.material.SetInt("_OverlayCount", numOverlays);
+                                        SetCompositingProperties(generatedMaterial, generatedMaterial.material, fragment);
                                         /*  We will revert these to arrays in the future
                                         generatedMaterial.material.SetColorArray("ColorTints", ColorTints);
                                         generatedMaterial.material.SetColorArray("ColorAdds", ColorAdds); */
@@ -338,7 +295,71 @@ namespace UMA
                 RenderTexture.active = null;
             }
         }
- 
+
+        public static void SetCompositingProperties(UMAData.GeneratedMaterial generatedMaterial, Material material, UMAData.MaterialFragment fragment)
+        {
+            int numChannels = fragment.baseOverlay.textureList.Length;
+            int numOverlays = 1 + fragment.overlays.Length;
+
+            Color[] ColorTints = new Color[numChannels * numOverlays];
+            Color[] ColorAdds = new Color[numChannels * numOverlays];
+
+            var overlays = fragment.slotData.GetOverlayList();
+
+            int i = 0, ovl = 0;
+
+            foreach (var overlay in overlays)
+            {
+                // apply tileable properties.
+                // apply UV offset properties.
+                // x,y,z,w = xuv, yuv, xwidth, ywidth
+                if (material.HasProperty("_UseTiling" + ovl))
+                {
+                    float tiling = 0;
+                    if (overlay.Tiling)
+                    {
+                        tiling = 1;
+                    }
+                    material.SetFloat("_UseTiling" + ovl, tiling);
+                }
+                if (material.HasProperty("_UV_Offset" + ovl))
+                {
+                    Vector4 uv = overlay.GetUV();
+                    material.SetVector("_UV_Offset" + ovl, uv);
+                }
+
+                for (int c = 0; c < numChannels; c++)
+                {
+                    // Some shaders use arrays, and some use hardcoded prop names.
+                    if (overlay != null)
+                    {
+                        ColorTints[i] = overlay.GetColor(c);
+                        ColorAdds[i] = overlay.GetAdditive(c);
+                    }
+                    else
+                    {
+                        ColorTints[i] = Color.white;
+                        ColorAdds[i] = OverlayColorData.EmptyAdditive;
+                    }
+                    // don't go out of bounds if someone goes crazy with overlays and channels
+                    if (c < tintProperties.GetLength(1) && ovl < tintProperties.GetLength(0))
+                    {
+                        if (material.HasProperty(tintProperties[ovl, c]))
+                        {
+                            material.SetColor(tintProperties[ovl, c], ColorTints[i]);
+                        }
+                        if (material.HasProperty(addProperties[ovl, c]))
+                        {
+                            material.SetColor(addProperties[ovl, c], ColorAdds[i]);
+                        }
+                    }
+                    i++;
+                }
+                ovl++;
+            }
+            material.SetInt("_OverlayCount", numOverlays);
+        }
+
         private static void SetChannelTexture(UMAData umaData, int textureChannelNumber, int overlayNumber, Material mat, OverlayData overlay0)
         {
             var theTex = overlay0.GetTexture(textureChannelNumber);

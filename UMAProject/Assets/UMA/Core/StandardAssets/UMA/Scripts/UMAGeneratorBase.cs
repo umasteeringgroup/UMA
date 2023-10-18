@@ -15,8 +15,13 @@ namespace UMA
 		public bool fitAtlas;
 		[HideInInspector]
 		public TextureMerge textureMerge;
-        [Tooltip("Convert this to a normal texture.")]
-		public bool convertRenderTexture;
+        [Header("Convert Render Texture should not be used on mobile devices")]
+        [Tooltip("Convert this to a normal texture. This should be OFF for mobile devices or devices that have unified memory")]
+#if UNITY_ANDROID || UNITY_IOS
+		public bool convertRenderTexture = false;
+#else
+        public bool convertRenderTexture = true;
+#endif
         [Tooltip("Create Mipmaps for the generated texture. Checking this is a good idea.")]
 		public bool convertMipMaps;
         [Tooltip("Initial size of the texture atlas (square)")]

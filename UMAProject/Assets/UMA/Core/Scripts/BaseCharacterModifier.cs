@@ -301,6 +301,7 @@ namespace UMA
 			bool prevColliderEnabled = false;
 			bool prevUpdateWhenOffScreen = false;
 			Bounds newBounds = targetRenderer.bounds;
+			var saveRoot = targetRenderer.rootBone;
 			targetRenderer.rootBone = null;
 
 			if (_updateBounds)
@@ -365,6 +366,7 @@ namespace UMA
 					umaCollider.enabled = prevColliderEnabled;
 			}
 			targetRenderer.localBounds = newBounds;
+			targetRenderer.rootBone = saveRoot;
 			return newBounds;
 		}
 

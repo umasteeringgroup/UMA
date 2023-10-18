@@ -24,6 +24,8 @@ namespace UMA
 		public UMAMaterialPropertyBlock PropertyBlock; // may be null.
 #if UNITY_EDITOR
 		public bool foldout;
+		public bool showAdvanced;
+		public bool isBaseColor = false;
 #endif
 		public Color color
 		{
@@ -125,7 +127,11 @@ namespace UMA
 		{
 			var res = new OverlayColorData();
 			res.name = name;
- 
+#if UNITY_EDITOR
+			res.foldout = foldout;
+			res.isBaseColor = isBaseColor;
+#endif
+
 			res.channelMask = new Color[channelMask.Length];
 			for (int i = 0; i < channelMask.Length; i++)
 			{
@@ -407,7 +413,11 @@ namespace UMA
 			for (int i = 0; i < channelAdditiveMask.Length; i++)
 			{
 				dest.channelAdditiveMask[i] = channelAdditiveMask[i];
-			}			
+			}
+
+#if UNITY_EDITOR
+            dest.isBaseColor = isBaseColor;
+#endif
 		}
 		public void AssignFrom(OverlayColorData src)
 		{
@@ -436,6 +446,9 @@ namespace UMA
 					PropertyBlock.shaderProperties.Add(up.Clone());
 				}
 			}
-		}
-	}
+#if UNITY_EDITOR
+			isBaseColor = src.isBaseColor;
+#endif
+        }
+    }
 }

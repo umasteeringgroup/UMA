@@ -56,7 +56,7 @@ namespace UMA
         public List<Welding> Welds = new List<Welding>();
 
 
-        public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights)
+		public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals)
         {
             Welding thisWeld = new Welding();
 
@@ -83,6 +83,10 @@ namespace UMA
                                 if (meshData.tangents != null && slot.meshData.tangents != null)
                                 {
                                     meshData.tangents[Src] = slot.meshData.tangents[Dest];
+                                }
+                                if (AverageNormals)
+                                {
+                                    meshData.normals[Src] = (slot.meshData.normals[Dest] + meshData.normals[Src]).normalized;
                                 }
                             }
                             misMatch = true;
@@ -334,8 +338,17 @@ namespace UMA
         [Tooltip("This object is a clipping plane, and is not added to the model.")]
         public bool isClippingPlane = false;
 
+        [Tooltip("You can adjust the corners of the clipping plane here. Do not make the plane non-planar!")]
+        public Vector3[] clippingPlaneOffset = new Vector3[4];
+
         [Tooltip("This object is a smooshable. Any overriden vertexes will be cleared before smooshing.")]
         public bool isSmooshable = false;
+
+        [Tooltip("This is used to offset the slot for some reason")]
+        public Vector3 smooshOffset = Vector3.zero;
+
+        [Tooltip("This is used to grow around the center. Negative values subtract. Positive values add.")]
+        public Vector3 smooshExpand = Vector3.one;
 
         [Tooltip("This object can process events ")]
         public GameObject SlotObject;

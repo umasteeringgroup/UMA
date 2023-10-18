@@ -685,6 +685,10 @@ namespace UMA
             foreach (var slot in Slots)
             {
                 // We are getting extra blank slots. That's weird.
+                if (slot == null)
+                {
+                    continue;
+                }
 
                 if (string.IsNullOrWhiteSpace(slot.id)) continue;
 
@@ -703,6 +707,11 @@ namespace UMA
                     {
                         foreach (var overlay in slot.overlays)
                         {
+                            if (overlay == null)
+                            {
+                                continue;
+                            }
+
                             AssetItem o = GetAssetItem<OverlayDataAsset>(overlay.id);
                             if (o != null)
                             {
@@ -714,6 +723,11 @@ namespace UMA
                     {
                         foreach (string slod in TypeDic.Keys)
                         {
+                            if (String.IsNullOrEmpty(slod))
+                            {
+                                continue;
+                            }
+
                             if (slod.StartsWith(LodIndicator))
                             {
                                 AssetItem lodSlot = GetAssetItem<SlotDataAsset>(slod);
@@ -742,9 +756,15 @@ namespace UMA
             foreach (var slot in Slots)
             {
                 if (slot == null)
+                {
                     continue;
+                }
+
                 if (string.IsNullOrEmpty(slot.id))
+                {
                     continue;
+                }
+
                 string LodIndicator = slot.id.Trim() + "_LOD";
                 AssetItem s = GetAssetItem<SlotDataAsset>(slot.id);
                 if (s != null)
@@ -866,6 +886,13 @@ namespace UMA
         /// </summary>
         public bool CheckIndex()
         {
+            // Unfortunately that asmdef is not available here
+            string autoconfig = "UMA_INDEX_AUTOREPAIR";
+            if (EditorPrefs.GetBool(autoconfig, false))
+            {
+                return false;
+            }
+
             if (WasChecked)
             {
                 return false;
@@ -962,6 +989,7 @@ namespace UMA
                 FolderFilter = TypeFolderSearch[typeString];
             }
             AddType(typeString, ot, FolderFilter);
+            ForceSave();
         }
 #endif
 
@@ -1240,6 +1268,21 @@ namespace UMA
                     keys.Add(GetLabel(wr));
 			}
 
+            // preload any additive recipes.
+            foreach (var addList in avatar.AdditiveRecipes.Values)
+            {
+                if (addList != null)
+                {
+                    foreach (var wr in addList)
+                    {
+                        if (wr != null)
+                        {
+                            keys.Add(GetLabel(wr));
+                        }
+                    }
+                }
+            }
+
 			// preload utility recipes
 			foreach (var tr in avatar.umaAdditionalRecipes)
 			{
@@ -1269,6 +1312,20 @@ namespace UMA
 			{
                 if (wr != null)
                     keys.Add(GetLabel(wr));
+            }
+
+            foreach(var addList in avatar.AdditiveRecipes.Values)
+            {
+                if (addList != null)
+                {
+                    foreach(var wr in addList)
+                    {
+                        if (wr != null)
+                        {
+                            keys.Add(GetLabel(wr));
+                        }
+                    }
+                }
             }
 
             if (avatar.umaAdditionalRecipes != null)
@@ -2293,7 +2350,6 @@ namespace UMA
                 }
             }
             EditorUtility.ClearProgressBar();
-            ForceSave();
         }
 
 
@@ -2499,6 +2555,13 @@ namespace UMA
         /// </summary>
         public void HealIndex(bool AlwaysRebuild = false)
         {
+            // do not heal in the editor if we are playing.
+            if (Application.isPlaying == true)
+            {
+                return;
+            }
+
+            Debug.Log("Healing index...");
             if (!AlwaysRebuild)
             {
                 // See if we can shortcut 
@@ -2533,6 +2596,7 @@ namespace UMA
                 ai._Name = ai.EvilName;
             }
             UpdateSerializedDictionaryItems();
+            RebuildRaceRecipes();
         }
 
 #endregion

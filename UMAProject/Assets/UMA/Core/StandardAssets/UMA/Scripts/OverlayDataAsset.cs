@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System;
+using UnityEngine.Rendering;
 
 namespace UMA
 {
@@ -31,10 +32,16 @@ namespace UMA
 		public enum OverlayBlend
 		{
 			Normal = 0,
-			Multiply = 1,
-			Overlay = 2,
-			Screen = 3,
-			Divide = 4
+			Multiply = BlendOp.Multiply,
+			Overlay = BlendOp.Overlay,
+			Screen = BlendOp.Screen,
+			Darken = BlendOp.Darken,
+			Lighten = BlendOp.Lighten,
+			ColorDodge = BlendOp.ColorDodge,
+			ColorBurn = BlendOp.ColorBurn,
+			SoftLight = BlendOp.SoftLight,
+			HardLight = BlendOp.HardLight,
+			Subtract = BlendOp.Subtract
 		}
 
 		/// <summary>
@@ -58,10 +65,10 @@ namespace UMA
 		/// Array of textures required for the overlay material.
 		/// </summary>
 		[Tooltip("Array of textures required for the overlay material.")]
-		public Texture[] textureList = new Texture[0];
+		public Texture[] textureList = new Texture[1];
 
         [Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
-        public OverlayBlend[] overlayBlend = new OverlayBlend[0];
+        public OverlayBlend[] overlayBlend = new OverlayBlend[1];
 
         /// <summary>
         /// Use this to identify what kind of overlay this is and what it fits

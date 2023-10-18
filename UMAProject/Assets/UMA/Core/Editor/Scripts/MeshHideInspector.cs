@@ -201,8 +201,8 @@ namespace UMA.Editors
 
 			for (int i = 0; i < _meshData.subMeshCount; i++)
 			{
-//				_meshPreview.SetTriangles(_meshData.submeshes[i].triangles, i);
-				_meshPreview.SetIndices(_meshData.submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
+                var tris = _meshData.submeshes[i].getBaseTriangles();
+				_meshPreview.SetIndices(tris, MeshTopology.Triangles, i);
 			}
 
 			ResetPreviewCamera();

@@ -18,14 +18,10 @@ MonoBehaviour:
   DisplayValue: Mystic Robe Hood
   compatibleRaces:
   - HumanMale
-  - HumanMaleDCS
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
     thumb: {fileID: 21300000, guid: 9f540207166d6874f9e8b31f2aa88076, type: 3}
-  - race: HumanMaleDCS
-    filename: 
-    thumb: {fileID: 0}
   wardrobeSlot: Helmet
   Appended: 0
   Hides: []
@@ -36,10 +32,11 @@ MonoBehaviour:
   MeshHideAssets: []
   OverrideDNA:
     PreloadValues: []
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[]},{"id":"M_Freebie
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":""},{"id":"M_Freebie
     Robeset Hood_Slot","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Freebie Robeset
-    Hood","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":1.0},"rotation":0.0},{"id":"M_Freebie
-    Robeset Hood AC","colorIdx":1,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":1.0},"rotation":0.0}],"Tags":[],"Races":[]}],"colors":[],"fColors":[{"name":"Shirt","colors":[106,4,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[]},{"name":"ShirtAccent","colors":[232,8,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[]}],"sharedColorCount":2,"race":"","packedDna":[]}'
+    Hood","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":1.0},"rotation":0.0,"blendModes":[]},{"id":"M_Freebie
+    Robeset Hood AC","colorIdx":1,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":1.0},"rotation":0.0,"blendModes":[]}],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":""},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":""},{"id":"M_High
+    poly Head","scale":100,"copyIdx":-1,"overlays":[{"id":"MaleHair01","colorIdx":3,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":1.0},"rotation":0.0,"blendModes":[]}],"Tags":["Head","Face"],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":true,"swapTag":"unsmooshable"}],"colors":[],"fColors":[{"name":"Shirt","colors":[106,4,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false},{"name":"ShirtAccent","colors":[232,8,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false},{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false},{"name":"Hair","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false},{"name":"Eyes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false}],"sharedColorCount":5,"race":"HumanMale","packedDna":[]}'
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

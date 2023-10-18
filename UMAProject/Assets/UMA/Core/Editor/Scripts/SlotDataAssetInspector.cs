@@ -10,7 +10,7 @@ namespace UMA.Editors
 	[CanEditMultipleObjects]
 	public class SlotDataAssetInspector : Editor
 	{
-		static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCardSlot","Races"};
+		static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCardSlot","Races","smooshOffset", "smooshExpand"};
 		static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "animatedBoneNames", "_slotDNA", "meshData", "subMeshIndex", };
 		SerializedProperty slotName;
 		SerializedProperty CharacterBegun;
@@ -21,11 +21,15 @@ namespace UMA.Editors
 		SerializedProperty CharacterCompleted;
 		SerializedProperty MaxLOD;
 		SerializedProperty isClippingPlane;
+        SerializedProperty smooshOffset;
+        SerializedProperty smooshExpand;
 		SlotDataAsset slot;
 		SlotDataAsset.Welding lastWeld = null;
+        SlotDataAsset WeldToSlot = null;
 
-		bool CopyNormals;
+        bool CopyNormals;
 		bool CopyBoneWeights;
+		bool AverageNormals;
 		private int selectedRaceIndex = -1;
 		private List<RaceData> foundRaces = new List<RaceData>();
 		private List<string> foundRaceNames = new List<string>();
@@ -64,6 +68,8 @@ namespace UMA.Editors
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
 			MaxLOD = serializedObject.FindProperty("maxLOD");
             isClippingPlane = serializedObject.FindProperty("isClippingPlane");	
+            smooshExpand = serializedObject.FindProperty("smooshExpand");
+            smooshOffset = serializedObject.FindProperty("smooshOffset");
 			slot = (target as SlotDataAsset);
 			SetRaceLists();
 
@@ -119,12 +125,17 @@ namespace UMA.Editors
 		{
 			if (sda != null)
 			{
-				lastWeld = slot.CalculateWelds(sda, CopyNormals, CopyBoneWeights);
+				lastWeld = slot.CalculateWelds(sda, CopyNormals, CopyBoneWeights, AverageNormals);
 			}
 		}
 
 		public override void OnInspectorGUI()
         {
+			if (slot == null)
+			{
+				OnEnable();
+			}
+            bool forceUpdate = false;
 			SlotDataAsset targetAsset = target as SlotDataAsset;
 			serializedObject.Update();
 
@@ -153,6 +164,42 @@ namespace UMA.Editors
 				Editor.DrawPropertiesExcluding(serializedObject, WildcardSlotFields);
 			else
 				Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
+
+            GUILayout.Space(10);
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+            EditorGUILayout.HelpBox("Smooshing is a feature that conforms one slot to another using a clipping plane. Smoosh Offset is used to adjust the offset of the conforming vertexes to help assist conforming and fitting. Smoosh Expand expands scales the vertexes. ", MessageType.Info);
+
+            var currentTarget = target as SlotDataAsset;
+
+            forceUpdate = EditorGUI.EndChangeCheck();
+            EditorGUILayout.PropertyField(smooshOffset);
+            EditorGUILayout.PropertyField(smooshExpand);
+
+            //GUILayout.BeginHorizontal();
+            /*GUILayout.Label("Smoosh Offset", GUILayout.Width(100));
+            currentTarget.smooshOffset.x = EditorGUILayout.DelayedFloatField("X", currentTarget.smooshOffset.x, GUILayout.Width(50),GUILayout.ExpandWidth(false));
+            currentTarget.smooshOffset.y = EditorGUILayout.DelayedFloatField("Y", currentTarget.smooshOffset.y, GUILayout.Width(50),GUILayout.ExpandWidth(false));
+            currentTarget.smooshOffset.z = EditorGUILayout.DelayedFloatField("Z", currentTarget.smooshOffset.z, GUILayout.Width(50),GUILayout.ExpandWidth(false));
+           // GUILayout.EndHorizontal();
+           // GUILayout.BeginHorizontal();
+            GUILayout.Label("Smoosh Expand", GUILayout.Width(100));
+            currentTarget.smooshOffset.x = EditorGUILayout.DelayedFloatField("X", currentTarget.smooshOffset.x, GUILayout.Width(50),GUILayout.ExpandWidth(false));
+            currentTarget.smooshOffset.y = EditorGUILayout.DelayedFloatField("Y", currentTarget.smooshOffset.y, GUILayout.Width(50),GUILayout.ExpandWidth(false));
+            currentTarget.smooshOffset.z = EditorGUILayout.DelayedFloatField("Z", currentTarget.smooshOffset.z, GUILayout.Width(50),GUILayout.ExpandWidth(false));
+            //GUILayout.EndHorizontal(); */
+            if (GUILayout.Button("Save and Test Smoosh"))
+            {
+                UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
+                EditorUtility.SetDirty(target);
+                AssetDatabase.SaveAssetIfDirty(target);
+                string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+                AssetDatabase.ImportAsset(path);
+                forceUpdate = true;
+            }
+            EditorGUI.BeginChangeCheck();
+           // EditorGUILayout.PropertyField(smooshOffset);
+            //EditorGUILayout.PropertyField(smooshExpand);
+            GUIHelper.EndVerticalPadded(10);
 			GUILayout.Space(10);
 			slot.tagList.DoLayoutList();
 
@@ -208,7 +255,7 @@ namespace UMA.Editors
 			serializedObject.ApplyModifiedProperties();
 
             #region WELDS
-            bool forceUpdate = false;
+
 
 			selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
 			if (selectedRaceIndex <= 0)
@@ -226,56 +273,65 @@ namespace UMA.Editors
 					{
 						if (GUILayout.Button(string.Format("{0} ({1})", sd.asset.name, sd.slotName)))
 						{
-							UpdateSourceAsset(sd.asset);
+							// UpdateSourceAsset(sd.asset);
+							WeldToSlot = sd.asset;
 						}
 					}
 				}
 			}
 
 			GUILayout.Space(12);
-			//int inx = 0;
-			//foreach(SlotDataAsset.Welding thisWeld in slot.Welds)
-			//{
-			if (lastWeld != null)
-			{
-				GUILayout.BeginHorizontal();
-				GUILayout.Label(lastWeld.WeldedToSlot + " (" + lastWeld.WeldPoints.Count.ToString() + " points, " + lastWeld.MisMatchCount + " mismatches)", GUILayout.ExpandWidth(true));
-				//if (GUILayout.Button("x", GUILayout.Width(18)))
-				//	deleteme = inx; 
-				GUILayout.EndHorizontal();
-			}
-				//inx++;
-           // }
 
-			//if (deleteme >= 0)
-            //{
-			//	slot.Welds.RemoveAt(deleteme);
-			//	forceUpdate = true;
-            //}
 
-			SlotDataAsset sda = null;
 
-			sda = EditorGUILayout.ObjectField("Drop slot here to create weld",sda, typeof(SlotDataAsset),false) as SlotDataAsset;
+			WeldToSlot = EditorGUILayout.ObjectField("Drop slot here to create weld",WeldToSlot, typeof(SlotDataAsset),false) as SlotDataAsset;
 
-			if (sda != null)
-            {
-				slot.CalculateWelds(sda,CopyNormals,CopyBoneWeights);
-				forceUpdate = true;
-            }
 
 			CopyBoneWeights = EditorGUILayout.Toggle("Copy Boneweights", CopyBoneWeights);
 			CopyNormals = EditorGUILayout.Toggle("Copy Normals", CopyNormals);
-			#endregion
+			AverageNormals = EditorGUILayout.Toggle("Average Normals", AverageNormals);
+			GUILayout.Box("Warning! averaging normals will update both slots!",GUILayout.ExpandWidth(true));
 
-			if (EditorGUI.EndChangeCheck() || forceUpdate)
+			if (WeldToSlot == null)
 			{
-				EditorUtility.SetDirty(target);
-				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
-				AssetDatabase.ImportAsset(path);
-				UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset);
+				EditorGUI.BeginDisabledGroup(true);
+			}
+			if (GUILayout.Button("Perform Weld"))
+			{
+                lastWeld = slot.CalculateWelds(WeldToSlot, CopyNormals, CopyBoneWeights,AverageNormals);
+                forceUpdate = true;
+            }
+            if (WeldToSlot == null)
+            {
+				EditorGUI.EndDisabledGroup();
+            }
+
+			int lastWeldCount = 0;
+			int lastWeldMismatch = 0;
+			if (lastWeld != null) 
+			{
+				lastWeldCount = lastWeld.WeldPoints.Count;
+				lastWeldMismatch = lastWeld.MisMatchCount;
 			}
 
-			
+            if (lastWeld != null)
+            {
+            GUILayout.Label($"Last Weld: {lastWeldCount} points, {lastWeld.MisMatchCount} mismatches", GUILayout.ExpandWidth(true));
+            }
+            else
+            {
+                GUILayout.Label($"Last Weld: None", GUILayout.ExpandWidth(true));
+            }
+            #endregion
+
+            if (EditorGUI.EndChangeCheck() || forceUpdate)
+			{
+				EditorUtility.SetDirty(target);
+				AssetDatabase.SaveAssetIfDirty(target);
+				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+				AssetDatabase.ImportAsset(path);
+				UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
+			}	
         }
 
         private void AnimatedBoneDropAreaGUI(Rect dropArea)
@@ -336,7 +392,6 @@ namespace UMA.Editors
 			}
             return null;
 		}
-
 		private void AddAnimatedBone(string animatedBone)
 		{
 			var hash = UMASkeleton.StringToHash(animatedBone);

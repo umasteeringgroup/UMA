@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: UMA_Cutout_Diffuse_Normal_Metallic
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: 40307702d879bbd4ab01db8945ade355, type: 2}
+  _material: {fileID: 2100000, guid: 40307702d879bbd4ab01db8945ade355, type: 2}
+  srpMaterials: []
+  secondPass: {fileID: 0}
   materialType: 1
   channels:
   - channelType: 4
@@ -47,3 +49,5 @@ MonoBehaviour:
   shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

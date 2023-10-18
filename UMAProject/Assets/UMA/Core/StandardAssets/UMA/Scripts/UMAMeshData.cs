@@ -10,14 +10,17 @@ using UnityEngine.Profiling;
 using Unity.Collections;
 using UnityEngine.Serialization;
 using System.Text;
+using System.Runtime.InteropServices;
+using UnityEngine.Rendering;
 
 namespace UMA
 {
 	[Serializable]
-	/// <summary>
-	/// UMA version of Unity mesh triangle data.
-	/// </summary>
-	public struct SubMeshTriangles
+    /// <summary>
+    /// UMA version of Unity mesh triangle data.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct SubMeshTriangles
 	{
 		[SerializeField]
 		private int[] triangles;
@@ -112,7 +115,8 @@ namespace UMA
 	/// This is only used for compatibility in UMA 2.11
 	/// </summary>
 	[Serializable]
-	public struct UMABoneWeight
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct UMABoneWeight
 	{
 		public int boneIndex0;
 		public int boneIndex1;
@@ -199,7 +203,8 @@ namespace UMA
 	}
 
 	[Serializable]
-	public class UMABlendShape
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public class UMABlendShape
 	{
 		public string shapeName;
 		public UMABlendFrame[] frames;
@@ -209,6 +214,7 @@ namespace UMA
 	/// UMA version of Unity mesh data.
 	/// </summary>
 	[Serializable]
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public class UMAMeshData
 	{
 		public Matrix4x4[] bindPoses;
@@ -548,10 +554,11 @@ namespace UMA
 			{
 				submeshes[i].SetTriangles(sharedMesh.GetTriangles(i));
 			}
-
-			//Create the blendshape data on the slot asset from the unity mesh
-#region Blendshape
-			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
+            //SubMeshDescriptor subMeshDescriptor = new SubMeshDescriptor(0, submeshes[i].GetTriangles().Length, MeshTopology.Triangles);
+            //mesh.SetSubMesh(i, subMeshDescriptor);
+            //Create the blendshape data on the slot asset from the unity mesh
+            #region Blendshape
+            blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
 
 			Vector3[] deltaVertices;
 			Vector3[] deltaNormals;
@@ -777,15 +784,42 @@ namespace UMA
 #endif
 			mesh.bindposes = bindPoses;
 
+#if true
 			var subMeshCount = submeshes.Length;
 			mesh.subMeshCount = subMeshCount;
+			var Descriptors = new SubMeshDescriptor[subMeshCount];
 			for (int i = 0; i < subMeshCount; i++)
 			{
-				mesh.SetIndices(submeshes[i].GetTriangles(),MeshTopology.Triangles,i);
+                mesh.SetIndices(submeshes[i].GetTriangles(),MeshTopology.Triangles,i);
 			}
+#else
+			// TODO: Gather all the triangles and vertexes here into a native arrays and then set them all at once.
+			int[] triangles = new int[0];
+
+            mesh.Clear();
+
+            mesh.SetVertexBufferParams(vertices.Length, GetVertexLayout());
+            mesh.SetVertexBufferData(vertices, 0, 0, vertexCount);
+
+            mesh.SetIndexBufferParams(indexCount, IndexFormat.UInt32);
+            mesh.SetIndexBufferData(meshData.Indices.AsArray(), 0, 0, indexCount);
+            mesh.SetIndexBufferData(triangles,0,0, triangles.Length, MeshUpdateFlags.DontValidateIndices);
+			mesh.SetIndexBufferParams(triangles.Length, UnityEngine.Rendering.IndexFormat.UInt32);
+
+            var subMeshCount = submeshes.Length;
+            mesh.subMeshCount = subMeshCount;
+            var Descriptors = new SubMeshDescriptor[subMeshCount];
+            for (int i = 0; i < subMeshCount; i++)
+            {
+                Descriptors[i] = new SubMeshDescriptor(0, submeshes[i].GetTriangles().Length, MeshTopology.Triangles);
+            }
+            mesh.SetSubMeshes(Descriptors, 0, subMeshCount,MeshUpdateFlags.DontValidateIndices);
+#endif            
+			//SubMeshDescriptor subMeshDescriptor = new SubMeshDescriptor(0, submeshes[i].GetTriangles().Length, MeshTopology.Triangles);
+			//mesh.SetSubMesh(i, subMeshDescriptor);
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
-#region Blendshape
+			#region Blendshape
 			mesh.ClearBlendShapes();
 			if (blendShapes != null && blendShapes.Length > 0)
 			{
@@ -847,6 +881,22 @@ namespace UMA
 				cloth.coefficients = clothSkinning;
 			}
 		}
+
+        private VertexAttributeDescriptor[] GetVertexLayout()
+        {
+			List<VertexAttributeDescriptor> list = new List<VertexAttributeDescriptor>();
+			list.Add(new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 4, stream: 0));
+			list.Add(new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 4, stream: 1));
+			list.Add(new VertexAttributeDescriptor(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, stream: 2));
+		//	list.Add(new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.Float32, 4, stream: 3));
+			list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 4, stream: 4));
+			list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord1, VertexAttributeFormat.Float32, 4, stream: 5));
+		//	list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord2, VertexAttributeFormat.Float32, 4, stream: 6));
+		//	list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord3, VertexAttributeFormat.Float32, 4, stream: 7));
+			list.Add(new VertexAttributeDescriptor(VertexAttribute.BlendWeight, VertexAttributeFormat.Float32, 4, stream: 8));
+			list.Add(new VertexAttributeDescriptor(VertexAttribute.BlendIndices, VertexAttributeFormat.Float32, 4, stream: 9));
+			return list.ToArray();
+        }
 
         private void SetBoneWeightsFromMeshData(Mesh mesh)
         {
@@ -954,9 +1004,8 @@ namespace UMA
 			mesh.subMeshCount = subMeshCount;
 			for (int i = 0; i < subMeshCount; i++)
 			{
-				NativeArray<int> triangles = submeshes[i].GetTriangles();
-				mesh.SetIndices(triangles, MeshTopology.Triangles, i);
-				triangles.Dispose();
+                int[] tris = submeshes[i].getBaseTriangles();
+                mesh.SetTriangles(tris, i);
 			}
 			return mesh;
 		}

@@ -79,7 +79,7 @@ namespace UMA
             }
         }
 
-        public static void UpdateSlot(SlotDataAsset slot)
+        public static void UpdateSlot(SlotDataAsset slot, bool doItAll = true)
         {
             if (slot == null)
             {
@@ -103,7 +103,15 @@ namespace UMA
                             {
                                 if (sd.asset == slot)
                                 {
+                                    if (doItAll)
+                                    {
                                     dca.GenerateSingleUMA();
+                                    }
+                                    else
+                                    {
+                                        dca.GenerateSingleUMA(true);
+                                    }
+                                    dca.ForceUpdate(false,false,true);
                                     break;
                                 }
                             }

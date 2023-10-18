@@ -128,6 +128,7 @@ namespace UMA.CharacterSystem.Editors
                 thisRecipesProp.InsertArrayElementAtIndex(newArrayElIndex);
                 thisRecipesProp.serializedObject.ApplyModifiedProperties();
                 thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_recipeName").stringValue = tempRecipeAsset.name;
+                thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_enabledInDefaultWardrobe").boolValue = true;
                 int compatibleRacesArraySize = tempRecipeAsset.compatibleRaces.Count;
                 thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_compatibleRaces").arraySize = compatibleRacesArraySize;
                 for (int cr = 0; cr < compatibleRacesArraySize; cr++)
@@ -221,13 +222,34 @@ namespace UMA.CharacterSystem.Editors
                 warningStyle.contentOffset = new Vector2(0, -2f);
                 //can we make these validate to the compatible races is upto date?
                 thisDCA.preloadWardrobeRecipes.GetRecipesForRace();
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Enable All"))
+                {
+                    for (int i = 0; i < thisRecipesProp.arraySize; i++)
+                    {
+                        SerializedProperty thisElement = thisRecipesProp.GetArrayElementAtIndex(i);
+                        thisElement.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue = true;
+                        changed = true;
+                    }
+                }
+                if (GUILayout.Button("Disable All"))
+                {
+                    for (int i = 0; i < thisRecipesProp.arraySize; i++)
+                    {
+                        SerializedProperty thisElement = thisRecipesProp.GetArrayElementAtIndex(i);
+                        thisElement.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue = false;
+                        changed = true;
+                    }
+                }
+                GUILayout.EndHorizontal();
+
                 for (int i = 0; i < thisRecipesProp.arraySize; i++)
                 {
                    // var valRBut = new Rect((textFieldWidth + 18f), (valR.yMax + padding), 20f, EditorGUIUtility.singleLineHeight);
                    // valR = new Rect(valR.xMin, (valR.yMax + padding), textFieldWidth, EditorGUIUtility.singleLineHeight);
                     SerializedProperty thisElement = thisRecipesProp.GetArrayElementAtIndex(i);
                     GUILayout.BeginHorizontal();
-                    EditorGUI.BeginDisabledGroup(true);
                     int compatibleRacesArraySize = thisElement.FindPropertyRelative("_compatibleRaces").arraySize;
                     string compatibleRaces = "";
                     for (int cr = 0; cr < compatibleRacesArraySize; cr++)
@@ -257,10 +279,29 @@ namespace UMA.CharacterSystem.Editors
                             recipeIsLive = UMAContext.Instance.HasRecipe(recipeName);
                         }
 
-                       // if (!recipeIsLive)
-                       //     valR.width = valR.width - 25f;
+                        string prequel = "";
 
-                        EditorGUILayout.TextField("[" + recipeslot + "] " + recipeName + " (" + compatibleRaces + ")",GUILayout.ExpandWidth(true));
+                       if (recipe._enabledInDefaultWardrobe)
+                        {
+                            EditorGUI.BeginDisabledGroup(false);
+                            prequel = "+";
+                            var currentWardrobe = thisDCA.WardrobeRecipes;
+                            var values = currentWardrobe.Values;
+                            foreach (var rcp in values)
+                            {
+                                if (rcp.name == recipeName)
+                                {
+                                    prequel = "*";
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            prequel = "-";
+                            EditorGUI.BeginDisabledGroup(true);
+                        }
+                        EditorGUILayout.TextField($"{prequel}[{recipeslot}] { recipeName}  ({ compatibleRaces} )",GUILayout.ExpandWidth(true));
                     }
                     else
                     {
@@ -283,6 +324,19 @@ namespace UMA.CharacterSystem.Editors
 								UMAAssetIndexer.Instance.EvilAddAsset(foundRecipe.GetType(), foundRecipe);
 						}
 					}
+                    if (GUILayout.Button("0/1",GUILayout.Width(30)))
+                    {
+                        if (recipe._enabledInDefaultWardrobe)
+                        {
+                            recipe._enabledInDefaultWardrobe = false;
+                        }
+                        else
+                        {
+                            recipe._enabledInDefaultWardrobe = true;
+                        }
+                        changed = true;
+                    }
+
                     if (recipe._recipe != null)
                     {
                         if (GUILayout.Button("Ping", GUILayout.Width(40)))

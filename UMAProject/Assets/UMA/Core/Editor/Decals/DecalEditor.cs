@@ -7,6 +7,11 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+
+/// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/// Are we missing                 // SkinnedMeshAligner.AlignBindPose(prefabMesh, resultingSkinnedMesh);
+/// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 namespace UMA
 {
     public class DecalEditor : IEditorScene

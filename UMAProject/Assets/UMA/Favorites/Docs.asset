@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a21b01507d5987b4689b5f16296f8eb8, type: 3}
+  m_Name: Docs
+  m_EditorClassIdentifier: 
+  Favorites:
+  - path: Assets/UMA/Getting Started.pdf
+    GUID: f2e8c8d5b48eba54f824e1a6a6a5eb5a
+    name: Getting Started
+    asset: {fileID: 102900000, guid: f2e8c8d5b48eba54f824e1a6a6a5eb5a, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMA Documentation.pdf
+    GUID: bbdfae08c9471eb448d221eea7438364
+    name: UMA Documentation
+    asset: {fileID: 102900000, guid: bbdfae08c9471eb448d221eea7438364, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/UMAContentCreation.pdf
+    GUID: 2ab5a83e02b653c48ac39da9f7d87ef8
+    name: UMAContentCreation
+    asset: {fileID: 102900000, guid: 2ab5a83e02b653c48ac39da9f7d87ef8, type: 3}
+    favoriteList: {fileID: 11400000}
+  - path: Assets/UMA/Whats New in UMA.txt
+    GUID: 4a2b4f5d99601dc4496f8fd6838ed034
+    name: Whats New in UMA
+    asset: {fileID: 4900000, guid: 4a2b4f5d99601dc4496f8fd6838ed034, type: 3}
+    favoriteList: {fileID: 11400000}
+  exPanded: 1

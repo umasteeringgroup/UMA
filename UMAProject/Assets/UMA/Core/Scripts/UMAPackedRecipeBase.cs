@@ -223,6 +223,7 @@ namespace UMA
 			public bool isTransformed;
 			public Vector3 scale;
 			public float rotation;
+			public int[] blendModes;
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 			public PackedOverlaySubstanceData[] data;
 #endif
@@ -367,12 +368,17 @@ namespace UMA
 			public short[] colors;
 			public string[] ShaderParms;
 			public bool alwaysUpdate;
+			public bool isBaseColor;
 
 			public PackedOverlayColorDataV3()
 			{
 				name = "";
 				colors = new short[0];
 				ShaderParms = new string[0];
+#if UNITY_EDITOR
+				alwaysUpdate = false;
+                isBaseColor = false;
+#endif
 			}
 
 			public PackedOverlayColorDataV3(OverlayColorData colorData)
@@ -401,6 +407,9 @@ namespace UMA
                 {
 					alwaysUpdate = colorData.PropertyBlock.alwaysUpdate;
                 }
+#if UNITY_EDITOR
+				isBaseColor = colorData.isBaseColor;
+#endif
 				if (colorData.HasProperties)
                 {
 					ShaderParms = new string[colorData.PropertyBlock.shaderProperties.Count];
@@ -423,6 +432,9 @@ namespace UMA
 					int channelCount = colors.Length / 8;
 					overlayColorData.channelMask = new Color[channelCount];
 					overlayColorData.channelAdditiveMask = new Color[channelCount];
+#if UNITY_EDITOR
+					overlayColorData.isBaseColor = isBaseColor;
+#endif
 					int colorIndex = 0;
 					for (int channel = 0; channel < channelCount; channel++)
 					{
@@ -612,7 +624,12 @@ namespace UMA
 						tempPackedOverlay.isTransformed = overlayData.instanceTransformed;
 						tempPackedOverlay.scale = overlayData.Scale;
 						tempPackedOverlay.rotation = overlayData.Rotation;
+						tempPackedOverlay.blendModes = new int[overlayData.GetOverlayBlendsLength()];
 
+						for (int b=0;b< overlayData.GetOverlayBlendsLength(); b++)
+						{
+							tempPackedOverlay.blendModes[b] = (int)overlayData.GetOverlayBlend(b);
+                        }
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 						if (overlayData.isProcedural && (overlayData.proceduralData != null))
@@ -951,6 +968,15 @@ namespace UMA
                                 overlayData.colorData = colorData[packedOverlay.colorIdx].Duplicate();
                                 overlayData.colorData.name = OverlayColorData.UNSHARED;
                             }
+
+							if (packedOverlay.blendModes != null)
+							{
+                                overlayData.SetOverlayBlendsLength(packedOverlay.blendModes.Length);
+								for (int blendModeIdx = 0; blendModeIdx < packedOverlay.blendModes.Length; blendModeIdx++)
+								{
+                                    overlayData.SetOverlayBlend(blendModeIdx, (OverlayDataAsset.OverlayBlend)packedOverlay.blendModes[blendModeIdx]);
+                                }
+							}
 
                             if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material))
                                 overlayData.EnsureChannels(overlayData.asset.material.channels.Length);

@@ -68,19 +68,24 @@ namespace UMA
 		public static PipelineType DetectPipeline() {
 			if(GraphicsSettings.renderPipelineAsset != null) {
 				// SRP
-				var srpType = GraphicsSettings.renderPipelineAsset.GetType().ToString();
-				if(srpType.Contains("HDRenderPipelineAsset")) {
+				var srpType = GraphicsSettings.currentRenderPipeline.GetType().ToString();
+				if(srpType.Contains("HDRender")) {
 					return PipelineType.HDPipeline;
-				} else if(srpType.Contains("UniversalRenderPipelineAsset")) {
+				} else if(srpType.Contains("Universal")) {
 					return PipelineType.UniversalPipeline;
-				} else
-					return PipelineType.Unsupported;
-			}
+                }
+                else
+                {
+                    return PipelineType.Unsupported;
+                }
+            }
 			// no SRP
 			return PipelineType.BuiltInPipeline;
 		}
-	
-		public static Material GetDefaultDiffuseMaterial()
+
+
+
+        public static Material GetDefaultDiffuseMaterial()
 		{
 			var pipe = DetectPipeline();
 #if UNITY_EDITOR
@@ -89,7 +94,18 @@ namespace UMA
 				return AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
 			}
 #endif
-            return new Material(Shader.Find("Lit"));
+            if (pipe == PipelineType.HDPipeline)
+            {
+                return new Material(Shader.Find("HDRP/Lit"));
+            }
+            else if (pipe == PipelineType.UniversalPipeline)
+            {
+                return new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            }
+            else
+            {
+                return new Material(Shader.Find("Standard"));
+            }
         }
 
 		public static string TranslatedSRPTextureName(string BuiltinName) {
