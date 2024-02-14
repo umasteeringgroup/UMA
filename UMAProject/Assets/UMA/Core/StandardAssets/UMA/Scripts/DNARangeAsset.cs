@@ -99,8 +99,10 @@ namespace UMA
 			for (int i = 0; i < originalNames.Count; i++)
 			{
 				if (replacingNames.Contains(originalNames[i]))
-					matchingIndexes.Add(i, replacingNames.IndexOf(originalNames[i]));
-			}
+                {
+                    matchingIndexes.Add(i, replacingNames.IndexOf(originalNames[i]));
+                }
+            }
 			return matchingIndexes;
 		}
 
@@ -129,16 +131,18 @@ namespace UMA
 		public bool ContainsDNARange(int index, string name)
 		{
 			if (dnaConverter == null)
-				return false;
+            {
+                return false;
+            }
 
-			//UMA 2.8 FixDNAPrefabs: why was this only working with DynamicUMADna?
-			/*if (dnaConverter.DNAType == typeof(DynamicUMADna)) {
+            //UMA 2.8 FixDNAPrefabs: why was this only working with DynamicUMADna?
+            /*if (dnaConverter.DNAType == typeof(DynamicUMADna)) {
 				if (((IDynamicDNAConverter)dnaConverter).dnaAsset.Names.Length > index) {
 					if (Regex.Replace (((IDynamicDNAConverter)dnaConverter).dnaAsset.Names [index], "( )+", "") == Regex.Replace (name, "( )+", ""))
 						return true;
 				}
 			}*/
-			string[] names = new string[0];
+            string[] names = new string[0];
 			if (dnaConverter.DNAType == typeof(DynamicUMADna))
 			{
 				names = ((IDynamicDNAConverter)dnaConverter).dnaAsset.Names;
@@ -166,9 +170,11 @@ namespace UMA
 		public bool ContainsDNARange(string name)
 		{
 			if (dnaConverter == null)
-				return false;
+            {
+                return false;
+            }
 
-			string[] names = new string[0];
+            string[] names = new string[0];
 			if (dnaConverter.DNAType == typeof(DynamicUMADna))
 			{
 				names = ((IDynamicDNAConverter)dnaConverter).dnaAsset.Names;
@@ -183,8 +189,10 @@ namespace UMA
 				//Dont bother with the regex
 				//if (Regex.Replace(names[i], "( )+", "") == Regex.Replace(name, "( )+", ""))
 				if(names[i] == name)
-					return true;
-			}
+                {
+                    return true;
+                }
+            }
 
 			return false;
 		}
@@ -197,9 +205,11 @@ namespace UMA
 		public int IndexForDNAName(string name)
 		{
 			if (dnaConverter == null)
-				return -1;
+            {
+                return -1;
+            }
 
-			string[] names = new string[0];
+            string[] names = new string[0];
 			if (dnaConverter.DNAType == typeof(DynamicUMADna))
 			{
 				names = ((IDynamicDNAConverter)dnaConverter).dnaAsset.Names;
@@ -214,8 +224,10 @@ namespace UMA
 				//Dont bother with the regex
 				//if (Regex.Replace(names[i], "( )+", "") == Regex.Replace(name, "( )+", ""))
 				if(names[i] == name)
-					return i;
-			}
+                {
+                    return i;
+                }
+            }
 
 			return -1;
 		}
@@ -225,8 +237,11 @@ namespace UMA
 			float rangeMin = means[index] - spreads[index];
 			float rangeMax = means[index] + spreads[index];
 			if (value < rangeMin || value > rangeMax)
-				return false;
-			return true;
+            {
+                return false;
+            }
+
+            return true;
 		}
 
 
@@ -234,9 +249,11 @@ namespace UMA
 		{
 			Dictionary<string, DnaSetter> dna = new Dictionary<string, DnaSetter>();
 
-			foreach (UMADnaBase db in umaData.GetAllDna())
+            UMADnaBase[] array = umaData.GetAllDna();
+            for (int i1 = 0; i1 < array.Length; i1++)
 			{
-				string Category = dcb.DisplayValue; 
+                UMADnaBase db = array[i1];
+                string Category = dcb.DisplayValue; 
 
 				for (int i = 0; i < db.Count; i++)
 				{
@@ -269,13 +286,17 @@ namespace UMA
 		public void RandomizeDNA(UMAData data)
 		{
 			if (dnaConverter == null)
-				return;
+            {
+                return;
+            }
 
-			UMADnaBase dna = data.GetDna(dnaConverter.DNATypeHash);
+            UMADnaBase dna = data.GetDna(dnaConverter.DNATypeHash);
 			if (dna == null)
-				return;
+            {
+                return;
+            }
 
-			int entryCount = dna.Count;
+            int entryCount = dna.Count;
 
 
 			for(int i=0;i<means.Length;i++)
@@ -291,22 +312,30 @@ namespace UMA
 		public void RandomizeDNAGaussian(UMAData data)
 		{
 			if (dnaConverter == null)
-				return;
+            {
+                return;
+            }
 
-			UMADnaBase dna = data.GetDna(dnaConverter.DNATypeHash);
+            UMADnaBase dna = data.GetDna(dnaConverter.DNATypeHash);
 			if (dna == null)
-				return;
-			
-			int entryCount = dna.Count;
+            {
+                return;
+            }
+
+            int entryCount = dna.Count;
 			
 			if (values == null)
-				values = new float[entryCount];
-			
-			for (int i = 0; i < entryCount; i++)
+            {
+                values = new float[entryCount];
+            }
+
+            for (int i = 0; i < entryCount; i++)
 			{
 				if (i < means.Length)
-					values[i] = UMAUtils.GaussianRandom(means[i], deviations[i]);
-			}
+                {
+                    values[i] = UMAUtils.GaussianRandom(means[i], deviations[i]);
+                }
+            }
 			
 			dna.Values = values;
 		}

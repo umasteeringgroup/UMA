@@ -45,8 +45,11 @@ namespace UMA.Examples
 			{
 				string thePath = AssetDatabase.GUIDToAssetPath(guid);
 				if (thePath.ToLower().Contains("female"))
-					continue;
-				path = thePath;
+                {
+                    continue;
+                }
+
+                path = thePath;
 				break;
 			}
 			if (string.IsNullOrEmpty(path))
@@ -61,8 +64,12 @@ namespace UMA.Examples
 		{
 #if UNITY_EDITOR
 			string[] assets = AssetDatabase.FindAssets("female_unified t:Model");
-			if (assets.Length < 1) return;
-			string thePath = AssetDatabase.GUIDToAssetPath(assets[0]);
+			if (assets.Length < 1)
+            {
+                return;
+            }
+
+            string thePath = AssetDatabase.GUIDToAssetPath(assets[0]);
 			SetBaseMesh(thePath);
 #endif
 		}
@@ -70,8 +77,12 @@ namespace UMA.Examples
 		{
 #if UNITY_EDITOR
 			var assetPath = EditorUtility.OpenFilePanel("Select Asset", "Assets", "fbx");
-			if (string.IsNullOrEmpty(assetPath)) return;
-			SetBaseMesh(assetPath);
+			if (string.IsNullOrEmpty(assetPath))
+            {
+                return;
+            }
+
+            SetBaseMesh(assetPath);
 #endif
 		}
 #if UNITY_EDITOR
@@ -113,8 +124,12 @@ namespace UMA.Examples
 		{
 #if UNITY_EDITOR
 			var assetPath = EditorUtility.OpenFilePanel("Select Asset", "Assets", "fbx");
-			if (string.IsNullOrEmpty(assetPath)) return;
-			SetSlotMesh(assetPath);
+			if (string.IsNullOrEmpty(assetPath))
+            {
+                return;
+            }
+
+            SetSlotMesh(assetPath);
 #endif
 		}
 

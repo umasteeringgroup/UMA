@@ -20,7 +20,9 @@ public class UMAMountedItemSample : MonoBehaviour
     public void MountSword()
     {
         if (string.IsNullOrEmpty(InstantiatedItemName))
+        {
             return;
+        }
 
         var item = GetItemIfMounted(swordPrefab,InstantiatedItemName);
         if (item == null)
@@ -34,8 +36,10 @@ public class UMAMountedItemSample : MonoBehaviour
     public void UnMountSword()
     {
         if (string.IsNullOrEmpty(InstantiatedItemName))
+        {
             return;
-        
+        }
+
         var item = GetItemIfMounted(swordPrefab,InstantiatedItemName);
         if (item != null)
         {
@@ -50,7 +54,9 @@ public class UMAMountedItemSample : MonoBehaviour
         {
             // Don't mount more than once.
             if (item.gameObject.name == Name)
+            {
                 return item.gameObject;
+            }
         }
         return null;
     }

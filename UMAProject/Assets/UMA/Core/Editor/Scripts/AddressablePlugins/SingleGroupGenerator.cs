@@ -91,6 +91,39 @@ namespace UMA
                     LogText("Processing recipe: " + uwr.name + " Label: " + uwr.AssignedLabel);
 
                     EditorUtility.DisplayProgressBar("Generating", "processing recipe: " + uwr.name , pos);
+
+
+                    IUMAIndexOptions options = uwr as IUMAIndexOptions;
+                    if (options != null && options.LabelLocalFiles)
+                    {
+                        // Get the asset items for the recipe from the local directory, not the index
+                        // if it doesn't exist in the local directory, then get it from the index
+                        List<AssetItem> items = UMAAssetIndexer.Instance.GetAssetItems(uwr, false);
+                        foreach (AssetItem ai in items)
+                        {
+                            // Local items do not get default labels.
+                            // instead, they only get the label of the wardrobe recipe they are in.
+                            string label = uwr.AssignedLabel;
+                            // get the recipe path.
+                            // search for the asset in the recipe path, including children.
+                            // if it exists, then add the label to the asset.
+
+                            string path = AssetDatabase.GetAssetPath(ai.Item.GetInstanceID());
+                            string filename = System.IO.Path.GetFileName(path);
+                            string basePath = System.IO.Path.GetDirectoryName(path);
+
+                            Debug.Log("Looking for asset: " + filename + " in path: " + basePath);
+                            AssetItem ai2 = GetLocalAssetItemIfExist(basePath, filename, ai._Type.Name, ai);
+
+                            if (ai._SerializedItem.GetInstanceID() != ai2._SerializedItem.GetInstanceID())
+                            {
+                                AddressableItems[ai].Add(uwr.AssignedLabel);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Get the asset items for the recipe from the index
                     List<AssetItem> items = Index.GetAssetItems(uwr, true);
                     foreach (AssetItem ai in items)
                     {
@@ -102,6 +135,8 @@ namespace UMA
                         AddressableItems[ai].Add(uwr.AssignedLabel);
                         AddressableItems[ai].AddRange(ExtraLabels);
                     }
+                    }
+
                     if (IncludeRecipes)
                     {
                         AssetItem RecipeItem = UMAAssetIndexer.Instance.GetRecipeItem(uwr);
@@ -263,6 +298,30 @@ namespace UMA
                 EditorUtility.ClearProgressBar();
                 UMAAssetIndexer.Instance.ForceSave();
             }
+        }
+
+        AssetItem GetLocalAssetItemIfExist(string path, string name, string typename, AssetItem defaultItem)
+        {
+            // We need to use the EvilName of the asset item to get the correct asset item.
+            string evilName = defaultItem.EvilName;
+
+            var guids = AssetDatabase.FindAssets("t:" + typename, new string[] { path });
+            foreach (string guid in guids)
+            {
+                string p = AssetDatabase.GUIDToAssetPath(guid);
+                var o = AssetDatabase.LoadAssetAtPath(p, defaultItem._Type);
+                if (o != null)
+                {
+                    var thisEvilName = AssetItem.GetEvilName(o);
+                    if (thisEvilName == evilName)
+                    {
+                        Debug.Log("found local asset: " + p);
+                        AssetItem localItem = new AssetItem(defaultItem._Type, o.name, p, o);
+                        return localItem;
+                    }
+                }
+            }
+            return defaultItem;
         }
 
         public bool Prepare()

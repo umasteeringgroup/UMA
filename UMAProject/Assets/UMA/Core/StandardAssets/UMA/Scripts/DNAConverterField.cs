@@ -18,8 +18,11 @@ namespace UMA {
 			get {
 				Validate();
 				if (_converter == null)
-					return null;
-				return _converter as IDNAConverter;
+                {
+                    return null;
+                }
+
+                return _converter as IDNAConverter;
 			}
 			set { _converter = value as UnityEngine.Object; }
 		}

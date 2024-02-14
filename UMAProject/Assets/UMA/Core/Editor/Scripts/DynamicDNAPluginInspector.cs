@@ -199,9 +199,11 @@ namespace UMA.Editors
 		public float GetInspectorHeight()
 		{
 			if (!Init())
-				return 0f;
-			//the foldout height
-			float height = EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing * 2);
+            {
+                return 0f;
+            }
+            //the foldout height
+            float height = EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing * 2);
 			//plus some space at the bottom
 			height += EditorGUIUtility.standardVerticalSpacing * 2;
 			//help height
@@ -218,9 +220,11 @@ namespace UMA.Editors
 			if (_isExpanded)
 			{
 				if (_converterElementsProp == null)
-					_converterElementsProp = FindConvertersListProperty();
+                {
+                    _converterElementsProp = FindConvertersListProperty();
+                }
 
-				_converterElementsList = CachedReorderableList.GetListDrawer(_converterElementsProp, DrawElementsListHeaderCallback, GetElementsListEntryHeightCallback, DrawElementsListEntryCallback, DrawElementsListFooterCallback, ElementsListOnAddCallback, ElementsListOnRemoveCallback);
+                _converterElementsList = CachedReorderableList.GetListDrawer(_converterElementsProp, DrawElementsListHeaderCallback, GetElementsListEntryHeightCallback, DrawElementsListEntryCallback, DrawElementsListFooterCallback, ElementsListOnAddCallback, ElementsListOnRemoveCallback);
 				var masterWeightProp = serializedObject.FindProperty("masterWeight");
 				//always draw MasterWeight
 				_converterElementsList.headerHeight = (EditorGUI.GetPropertyHeight(masterWeightProp) + (EditorGUIUtility.standardVerticalSpacing * 3));
@@ -244,14 +248,18 @@ namespace UMA.Editors
 		public void DrawInspectorGUI(Rect position)
 		{
 			if (!Init())
-				return;
+            {
+                return;
+            }
 
-			serializedObject.Update();
+            serializedObject.Update();
 
 			if (_converterElementsProp == null)
-				_converterElementsProp = FindConvertersListProperty();
+            {
+                _converterElementsProp = FindConvertersListProperty();
+            }
 
-			position = DrawPluginFoldout(position, "");
+            position = DrawPluginFoldout(position, "");
 			if (_isExpanded)
 			{
 				position = DrawPluginHelp(position);
@@ -293,9 +301,11 @@ namespace UMA.Editors
 		public override void OnInspectorGUI()
 		{
 			if (!Init())
-				return;
+            {
+                return;
+            }
 
-			serializedObject.Update();
+            serializedObject.Update();
 
 			_converterElementsProp = FindConvertersListProperty();
 
@@ -338,9 +348,11 @@ namespace UMA.Editors
 		public virtual void OnInspectorForDNAGUI(string dnaName)
 		{
 			if (!Init())
-				return;
+            {
+                return;
+            }
 
-			serializedObject.Update();
+            serializedObject.Update();
 
 			_converterElementsProp = FindConvertersListProperty();
 
@@ -357,11 +369,13 @@ namespace UMA.Editors
 					//var indexesForDNA = _target.IndexesForDNA(dnaName);
 					int[] indexesForDNA = new int[0];
 					if (_target.IndexesForDnaNames.ContainsKey(dnaName))
-						indexesForDNA = _target.IndexesForDnaNames[dnaName].ToArray();
+                    {
+                        indexesForDNA = _target.IndexesForDnaNames[dnaName].ToArray();
+                    }
 
-					//It doesn't make sense to be drawing a reorderable list here because we are not showing the whole list
-					//so pinch the style and just draw the relevant elements
-					GUILayout.BeginVertical(_entryBackgroundStyle);
+                    //It doesn't make sense to be drawing a reorderable list here because we are not showing the whole list
+                    //so pinch the style and just draw the relevant elements
+                    GUILayout.BeginVertical(_entryBackgroundStyle);
 
 					if (indexesForDNA.Length > 0)
 					{
@@ -451,8 +465,11 @@ namespace UMA.Editors
 					}
 					var count = 0;
 					if (_target.IndexesForDnaNames.ContainsKey(forDNA))
-						count = _target.IndexesForDnaNames[forDNA].Count;
-					var label = new GUIContent("[" + target.name + "] using '" + forDNA + "' (" + count + ")");
+                    {
+                        count = _target.IndexesForDnaNames[forDNA].Count;
+                    }
+
+                    var label = new GUIContent("[" + target.name + "] using '" + forDNA + "' (" + count + ")");
 					_pluginFoldoutStyle.fixedWidth = foldoutRect.width;
 					_isExpandedForDNA[forDNA] = EditorGUI.Foldout(foldoutRect, _isExpandedForDNA[forDNA], label, true, _pluginFoldoutStyle);
 				}
@@ -508,17 +525,21 @@ namespace UMA.Editors
 			importRect = new Rect(toolsRect.xMin, toolsRect.yMin, toolsRect.width / 2f, toolsRect.height);
 			helpRect = new Rect(importRect.xMax, toolsRect.yMin, importRect.width, toolsRect.height);
 			if (_target.PluginHelp == "")
-				helpIcon.tooltip = "There is no help for this plugin.";
+            {
+                helpIcon.tooltip = "There is no help for this plugin.";
+            }
 
-			if (forDNA == "")
+            if (forDNA == "")
 			{
 				EditorGUI.BeginChangeCheck();
 				_importToolsExpanded = GUI.Toggle(importRect, _importToolsExpanded, importIcon, _importStyle);
 				if (EditorGUI.EndChangeCheck())
 				{
 					if (_importToolsExpanded)
-						_isExpanded = true;
-				}
+                    {
+                        _isExpanded = true;
+                    }
+                }
 				//Draw help toggle (disabled if theres no help)
 				EditorGUI.BeginDisabledGroup(_target.PluginHelp == "");
 				_helpExpanded = GUI.Toggle(helpRect, _helpExpanded, helpIcon, _helpStyle);
@@ -703,12 +724,17 @@ namespace UMA.Editors
 			for (int i = 0; i < _cachedArrayElementsByIndex.Count; i++)
 			{
 				if (_cachedArrayElementsByIndex[i].inSearch != true)
-					continue;
-				prevExpanded = _cachedArrayElementsByIndex[i].element.isExpanded;
+                {
+                    continue;
+                }
+
+                prevExpanded = _cachedArrayElementsByIndex[i].element.isExpanded;
 				_cachedArrayElementsByIndex[i].element.isExpanded = true;
 				if (_cachedArrayElementsByIndex[i].element.isExpanded != prevExpanded)
-					GetElementsListEntryHeightCallback(i, true);
-			}
+                {
+                    GetElementsListEntryHeightCallback(i, true);
+                }
+            }
 			_isExpanded = true;
 			serializedObject.ApplyModifiedProperties();
 		}
@@ -719,12 +745,17 @@ namespace UMA.Editors
 			for (int i = 0; i < _cachedArrayElementsByIndex.Count; i++)
 			{
 				if (_cachedArrayElementsByIndex[i].inSearch != true)
-					continue;
-				prevExpanded = _cachedArrayElementsByIndex[i].element.isExpanded;
+                {
+                    continue;
+                }
+
+                prevExpanded = _cachedArrayElementsByIndex[i].element.isExpanded;
 				_cachedArrayElementsByIndex[i].element.isExpanded = false;
 				if (_cachedArrayElementsByIndex[i].element.isExpanded != prevExpanded)
-					GetElementsListEntryHeightCallback(i, true);
-			}
+                {
+                    GetElementsListEntryHeightCallback(i, true);
+                }
+            }
 		}
 
 		private void Delete()
@@ -782,9 +813,11 @@ namespace UMA.Editors
 		protected virtual void DrawElementsSearch(Rect rect)
 		{
 			if (_elementSearchField == null)
-				_elementSearchField = new UnityEditor.IMGUI.Controls.SearchField();
-			//var searchRect = new Rect(rect.xMin, rect.yMax - (EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing)), rect.width, (EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing)));
-			elementSearchString = _elementSearchField.OnToolbarGUI(rect, elementSearchString);
+            {
+                _elementSearchField = new UnityEditor.IMGUI.Controls.SearchField();
+            }
+            //var searchRect = new Rect(rect.xMin, rect.yMax - (EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing)), rect.width, (EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing)));
+            elementSearchString = _elementSearchField.OnToolbarGUI(rect, elementSearchString);
 		}
 
 		/// <summary>
@@ -796,15 +829,24 @@ namespace UMA.Editors
 		protected virtual bool HandleElementSearch(int index)
 		{
 			if (_elementSearchString == "")
-				return true;
-			CacheArrayElementsByIndex();
+            {
+                return true;
+            }
+
+            CacheArrayElementsByIndex();
 			if (_cachedArrayElementsByIndex[index].element.displayName.IndexOf(_elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
-				return true;
-			else if (_target.GetPluginEntryLabel(_cachedArrayElementsByIndex[index].element, serializedObject, index).text.IndexOf(_elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
-				return true;
-			else
-				return false;
-		}
+            {
+                return true;
+            }
+            else if (_target.GetPluginEntryLabel(_cachedArrayElementsByIndex[index].element, serializedObject, index).text.IndexOf(_elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
 		public void DNANamesPopup(Rect position, SerializedProperty property, string selected)
 		{
@@ -821,8 +863,10 @@ namespace UMA.Editors
 				if (EditorGUI.EndChangeCheck())
 				{
 					if (selectedIndex != 0)
-						property.stringValue = names[selectedIndex];
-				}
+                    {
+                        property.stringValue = names[selectedIndex];
+                    }
+                }
 
 			}
 		}
@@ -839,8 +883,10 @@ namespace UMA.Editors
 			if (selectedIndex == -1)
 			{
 				if (!string.IsNullOrEmpty(selected))
-					ret.Insert(0, selected);//This is a bit confusing it needs to show as (missing)
-			}
+                {
+                    ret.Insert(0, selected);//This is a bit confusing it needs to show as (missing)
+                }
+            }
 			selectedIndex = ret.IndexOf(selected);
 			return ret;
 		}
@@ -956,20 +1002,28 @@ namespace UMA.Editors
 			//So cache the heights and only recalculate them if anything changes
 			CacheArrayElementsByIndex();
 			if (_cachedArrayElementsByIndex[index].inSearch == null)
-				_cachedArrayElementsByIndex[index].inSearch = HandleElementSearch(index);
+            {
+                _cachedArrayElementsByIndex[index].inSearch = HandleElementSearch(index);
+            }
 
-			if(_cachedArrayElementsByIndex[index].inSearch == false)
-				return 0f;
+            if (_cachedArrayElementsByIndex[index].inSearch == false)
+            {
+                return 0f;
+            }
 
-			if (_cachedArrayElementsByIndex[index].height == -1 || recalculateHeight)
+            if (_cachedArrayElementsByIndex[index].height == -1 || recalculateHeight)
 			{
 				var entry = _cachedArrayElementsByIndex[index].element;
 
 				if (!entry.isExpanded)
-					_cachedArrayElementsByIndex[index].height = _target.GetPluginEntryHeight(serializedObject, index, entry) + (EditorGUIUtility.standardVerticalSpacing * 3);
-				else
-					_cachedArrayElementsByIndex[index].height = _target.GetPluginEntryHeight(serializedObject, index, entry) + (EditorGUIUtility.standardVerticalSpacing * 7);
-			}
+                {
+                    _cachedArrayElementsByIndex[index].height = _target.GetPluginEntryHeight(serializedObject, index, entry) + (EditorGUIUtility.standardVerticalSpacing * 3);
+                }
+                else
+                {
+                    _cachedArrayElementsByIndex[index].height = _target.GetPluginEntryHeight(serializedObject, index, entry) + (EditorGUIUtility.standardVerticalSpacing * 7);
+                }
+            }
 			return _cachedArrayElementsByIndex[index].height;
 		}
 
@@ -982,16 +1036,20 @@ namespace UMA.Editors
 			CacheArrayElementsByIndex();
 
 			if (_cachedArrayElementsByIndex[index].inSearch == false)
-				return;
+            {
+                return;
+            }
 
-			var entry = _cachedArrayElementsByIndex[index].element;
+            var entry = _cachedArrayElementsByIndex[index].element;
 
 			//dragging is disabled if any search filtering has been done but keep the list in the same position on x
 			if (_elementSearchString != "")
-				rect.xMin += 14f;
+            {
+                rect.xMin += 14f;
+            }
 
-			//background for the elements header
-			var labelRect = new Rect(rect.xMin, rect.yMin + 2, rect.width, rect.height);
+            //background for the elements header
+            var labelRect = new Rect(rect.xMin, rect.yMin + 2, rect.width, rect.height);
 			EditorGUI.LabelField(labelRect, "", EditorStyles.toolbar);
 			
 			//background for the entry if its expanded

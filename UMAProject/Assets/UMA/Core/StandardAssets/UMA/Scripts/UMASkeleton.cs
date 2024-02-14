@@ -55,9 +55,10 @@ namespace UMA
 				{
 					boneHashDataLookup = new Dictionary<int, BoneData>();
 #if UNITY_EDITOR
-					foreach (BoneData tData in boneHashDataBackup)
+                    for (int i = 0; i < boneHashDataBackup.Count; i++)
 					{
-						boneHashDataLookup.Add(tData.boneNameHash, tData);
+                        BoneData tData = boneHashDataBackup[i];
+                        boneHashDataLookup.Add(tData.boneNameHash, tData);
 					}
 #endif
 				}
@@ -98,8 +99,12 @@ namespace UMA
 		public virtual void BeginSkeletonUpdate()
 		{
 			frame++;
-			if (frame < 0) frame = 0;
-			updating = true;
+			if (frame < 0)
+            {
+                frame = 0;
+            }
+
+            updating = true;
 		}
 
 		/// <summary>
@@ -137,9 +142,11 @@ namespace UMA
 		private void AddBonesRecursive(Transform transform)
 		{
 			if (transform.tag == UMAContextBase.IgnoreTag)
-				return;
+            {
+                return;
+            }
 
-			var hash = UMAUtils.StringToHash(transform.name);
+            var hash = UMAUtils.StringToHash(transform.name);
 			var parentHash = transform.parent != null ? UMAUtils.StringToHash(transform.parent.name) : 0;
 			BoneData data = new BoneData()
 			{
@@ -160,8 +167,10 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
-			}
+                {
+                    Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+                }
+            }
 
 			for (int i = 0; i < transform.childCount; i++)
 			{
@@ -229,8 +238,10 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
-			}
+                {
+                    Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+                }
+            }
 		}
 
 		/// <summary>
@@ -259,8 +270,10 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
-			}
+                {
+                    Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+                }
+            }
 		}
 
 		/// <summary>
@@ -718,8 +731,10 @@ namespace UMA
 		public virtual void EnsureBone(UMATransform umaTransform)
 		{
 			if (boneHashData.ContainsKey(umaTransform.hash) == false)
-				AddBone(umaTransform);
-		}
+            {
+                AddBone(umaTransform);
+            }
+        }
 
 		/// <summary>
 		/// Ensures all bones are properly initialized and parented.
@@ -741,8 +756,10 @@ namespace UMA
 					else
 					{
 						if (Debug.isDebugBuild)
-							Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
-					}
+                        {
+                            Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
+                        }
+                    }
 				}
 			}
 		}

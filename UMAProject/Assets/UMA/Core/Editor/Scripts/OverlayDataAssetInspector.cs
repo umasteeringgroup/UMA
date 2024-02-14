@@ -60,9 +60,11 @@ namespace UMA.Editors
 		{
 			OverlayDataAsset od = target as OverlayDataAsset;
 			if (od.lastActionTime == 0)
-				od.lastActionTime = Time.realtimeSinceStartup;
+            {
+                od.lastActionTime = Time.realtimeSinceStartup;
+            }
 
-			od.ValidateBlendList();
+            od.ValidateBlendList();
 			serializedObject.Update();
 
 			EditorGUI.BeginChangeCheck();
@@ -81,11 +83,15 @@ namespace UMA.Editors
 				_channels = tempObj.FindProperty("channels");
 
 				if (_channels == null)
-					EditorGUILayout.HelpBox("Channels not found!", MessageType.Error);
-				else
-					textureChannelCount = _channels.arraySize;
+                {
+                    EditorGUILayout.HelpBox("Channels not found!", MessageType.Error);
+                }
+                else
+                {
+                    textureChannelCount = _channels.arraySize;
+                }
 
-				od.textureFoldout = GUIHelper.FoldoutBar(od.textureFoldout, "Texture Channels");
+                od.textureFoldout = GUIHelper.FoldoutBar(od.textureFoldout, "Texture Channels");
 
 				if (od.textureFoldout)
 				{
@@ -129,16 +135,22 @@ namespace UMA.Editors
 					for (int i = 0; i < _textureList.arraySize; i++)
 					{
 						if (_textureList.GetArrayElementAtIndex(i).objectReferenceValue == null)
-							allValid = false;
-					}
+                        {
+                            allValid = false;
+                        }
+                    }
 					if (!allValid)
-						EditorGUILayout.HelpBox("Not all textures in Texture List set. This overlay will only work as an additional overlay in a recipe", MessageType.Warning);
-				}
+                    {
+                        EditorGUILayout.HelpBox("Not all textures in Texture List set. This overlay will only work as an additional overlay in a recipe", MessageType.Warning);
+                    }
+                }
 			}
 			else
-				EditorGUILayout.HelpBox("No UMA Material selected!", MessageType.Warning);
+            {
+                EditorGUILayout.HelpBox("No UMA Material selected!", MessageType.Warning);
+            }
 
-			GUILayout.Space(20f);
+            GUILayout.Space(20f);
 			od.additionalFoldout = GUIHelper.FoldoutBar(od.additionalFoldout, "Additional Parameters");
 			if (od.additionalFoldout)
 			{

@@ -54,8 +54,9 @@ namespace UMA
 
                     if (_srpMaterialLookup.Count == 0)
                     {
-                        foreach (var srpMat in srpMaterials)
+                        for (int i = 0; i < srpMaterials.Count; i++)
                         {
+                            SRPMaterial srpMat = srpMaterials[i];
                             _srpMaterialLookup.Add(srpMat.SRP, srpMat.material);
                         }
                     }

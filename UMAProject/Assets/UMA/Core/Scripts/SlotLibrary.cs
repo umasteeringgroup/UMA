@@ -127,10 +127,18 @@ namespace UMA
 	#if UNITY_EDITOR
 				foreach (var path in UnityEditor.AssetDatabase.GetAllAssetPaths())
 				{
-					if (!path.EndsWith(".asset")) continue;
-					var slot = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(SlotDataAsset)) as SlotDataAsset;
-					if (slot == null) continue;
-					if (slot.nameHash == nameHash)
+					if (!path.EndsWith(".asset"))
+                    {
+                        continue;
+                    }
+
+                    var slot = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(SlotDataAsset)) as SlotDataAsset;
+					if (slot == null)
+                    {
+                        continue;
+                    }
+
+                    if (slot.nameHash == nameHash)
 					{
 						throw new UMAResourceNotFoundException("SlotLibrary: Unable to find: " + slot.slotName);
 					}

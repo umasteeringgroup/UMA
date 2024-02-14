@@ -60,6 +60,9 @@ namespace UMA
 		[Tooltip("Automatically set blendshapes based on race")]
 		public bool autoSetRaceBlendshapes = false;
 
+		[Tooltip("Allow read on generated mesh data. Will increase memory usage.")]
+		public bool AllowReadFromMesh = false;
+
 		[NonSerialized]
 		public long ElapsedTicks;
 		[NonSerialized]
@@ -303,9 +306,10 @@ namespace UMA
                 }
 
 
-				foreach(var child in childlist)
+                for (int i = 0; i < childlist.Count; i++)
 				{
-					SaveBonesRecursively(child,holder);
+                    Transform child = childlist[i];
+                    SaveBonesRecursively(child,holder);
 				}
 			}
         }
@@ -429,18 +433,20 @@ namespace UMA
 				{
 					RaceData[] races = UMAContextBase.Instance.GetAllRaces();
 					raceNames = new HashSet<string>();
-					foreach (RaceData r in races)
+                    for (int i = 0; i < races.Length; i++)
 					{
-						raceNames.Add(r.raceName);
+                        RaceData r = races[i];
+                        raceNames.Add(r.raceName);
 					}
 				}
 
 
 				if (raceNames != null && raceNames.Count > 0)
 				{
-					foreach (SkinnedMeshRenderer smr in renderers)
+                    for (int i1 = 0; i1 < renderers.Length; i1++)
 					{
-						if (smr.sharedMesh.blendShapeCount > 0)
+                        SkinnedMeshRenderer smr = renderers[i1];
+                        if (smr.sharedMesh.blendShapeCount > 0)
 						{
 							for (int i = 0; i < smr.sharedMesh.blendShapeCount;i++)
 							{

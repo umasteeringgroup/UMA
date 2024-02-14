@@ -121,11 +121,16 @@ namespace UMA.Editors
 			private void UpdateFoldouts()
 			{
 				if (!OpenSlots.ContainsKey("wardrobeSets"))
-					OpenSlots.Add("wardrobeSets", true);
-				if (!OpenSlots.ContainsKey("arbitraryRecipes"))
-					OpenSlots.Add("arbitraryRecipes", true);
+                {
+                    OpenSlots.Add("wardrobeSets", true);
+                }
 
-				for (int i = 0; i < _compatibleRaces.Count; i++)
+                if (!OpenSlots.ContainsKey("arbitraryRecipes"))
+                {
+                    OpenSlots.Add("arbitraryRecipes", true);
+                }
+
+                for (int i = 0; i < _compatibleRaces.Count; i++)
 				{
 					bool open = i == 0 ? true : false;
 					if (!OpenSlots.ContainsKey(_compatibleRaces[i]))
@@ -277,8 +282,10 @@ namespace UMA.Editors
 					}
 					GUIHelper.EndVerticalPadded(10);
 					if (AddRecipesDropAreaGUI(ref recipesAddErrMsg, dropArea, _arbitraryRecipes))
-						changed = true;
-				}
+                    {
+                        changed = true;
+                    }
+                }
 				return changed;
 			}
 			// Drop area for Arbitrary Wardrobe recipes
@@ -334,8 +341,10 @@ namespace UMA.Editors
 								if (tempRecipeAsset)
 								{
 									if (AddIfWardrobeRecipe(tempRecipeAsset, recipes))
-										changed = true;
-									else
+                                    {
+                                        changed = true;
+                                    }
+                                    else
 									{
 										allAdded = false;
 									}
@@ -350,10 +359,14 @@ namespace UMA.Editors
 							}
 						}
 						if (!allAdded)
-							errorMsg = "Some of the recipes you tried to add were not Wardrobe recipes";
-						else
-							errorMsg = "";
-					}
+                        {
+                            errorMsg = "Some of the recipes you tried to add were not Wardrobe recipes";
+                        }
+                        else
+                        {
+                            errorMsg = "";
+                        }
+                    }
 				}
 				return changed;
 			}
@@ -372,17 +385,20 @@ namespace UMA.Editors
 			private void RecursiveScanFoldersForAssets(string path, List<string> recipes)
 			{
 				var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
-				foreach (var assetFile in assetFiles)
+                for (int i = 0; i < assetFiles.Length; i++)
 				{
-					var tempRecipeAsset = AssetDatabase.LoadAssetAtPath(assetFile, typeof(UMARecipeBase)) as UMARecipeBase;
+                    string assetFile = assetFiles[i];
+                    var tempRecipeAsset = AssetDatabase.LoadAssetAtPath(assetFile, typeof(UMARecipeBase)) as UMARecipeBase;
 					if (tempRecipeAsset)
 					{
 						AddIfWardrobeRecipe(tempRecipeAsset, recipes);
 					}
 				}
-				foreach (var subFolder in System.IO.Directory.GetDirectories(path))
+                string[] array = System.IO.Directory.GetDirectories(path);
+                for (int i = 0; i < array.Length; i++)
 				{
-					RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'), recipes);
+                    string subFolder = array[i];
+                    RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'), recipes);
 				}
 			}
 		}
@@ -421,13 +437,17 @@ namespace UMA.Editors
 			}
 			//wardrobe collection also has a 'cover image' field
 			if (DrawCoverImagesUI(TargetType))
-				doUpdate = true;
+            {
+                doUpdate = true;
+            }
 
-			//CompatibleRaces drop area
-			if (DrawCompatibleRacesUI(TargetType))
-				doUpdate = true;
+            //CompatibleRaces drop area
+            if (DrawCompatibleRacesUI(TargetType))
+            {
+                doUpdate = true;
+            }
 
-			EditorGUILayout.Space();
+            EditorGUILayout.Space();
 			//Draw the Wardrobe slot field as a WardrobeCollection Group text field.
 			EditorGUILayout.HelpBox("When a collection is placed on an avatar it replaces any other collections belonging to this group and unloads that collections recipes", MessageType.Info);
             var newWardrobeSlot = EditorGUILayout.DelayedTextField("Collection Group", wardrobeSlot);

@@ -49,8 +49,10 @@ namespace UMA.Editors
 			//we only want to show the 'BlendFactor' option in the dropdown if this is the alpha channel
 			//TODO: Is the Alpha channel adjustment type *ever* anything other than 'BlendFactor'? If not, just dont show the dropdown for the channel
 			if(isAlpha)
-				EditorGUI.PropertyField(adjTypeRect, adjustmentTypeProp, adjLabel);
-			else
+            {
+                EditorGUI.PropertyField(adjTypeRect, adjustmentTypeProp, adjLabel);
+            }
+            else
 			{
 				if (_adjPopupNamesGUI.Count == 0)
 				{
@@ -136,8 +138,11 @@ namespace UMA.Editors
 				var colorChannelsHeight = (EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing) * 4;
 				float previewToolsHeight = (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
 				if (_previewProp.isExpanded)
-					previewToolsHeight = ((EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 4) +9f;
-				return colorChannelsHeight + previewToolsHeight + EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing * 4);
+                {
+                    previewToolsHeight = ((EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 4) +9f;
+                }
+
+                return colorChannelsHeight + previewToolsHeight + EditorGUIUtility.singleLineHeight + (EditorGUIUtility.standardVerticalSpacing * 4);
 			}
 			return EditorGUIUtility.singleLineHeight;
 		}
@@ -317,21 +322,33 @@ namespace UMA.Editors
 			if (useDNAValue)
 			{
 				if (adjustmentType.enumNames[adjustmentType.enumValueIndex].IndexOf("Absolute") > -1 && adjustmentType.enumNames[adjustmentType.enumValueIndex].IndexOf("Additive") == -1)
-					return Mathf.Lerp(currentColor, Mathf.Clamp(dnaValue * multiplier, 0f, 1f), Mathf.Clamp(dnaValue, 0f, 1f));
-				else if (adjustmentType.enumNames[adjustmentType.enumValueIndex].IndexOf("BlendFactor") > -1)
-					return Mathf.Clamp(dnaValue * multiplier, 0f, 1f);
-				else
-					return Mathf.Lerp(0f, dnaValue * multiplier, Mathf.Abs(dnaValue));
-			}
+                {
+                    return Mathf.Lerp(currentColor, Mathf.Clamp(dnaValue * multiplier, 0f, 1f), Mathf.Clamp(dnaValue, 0f, 1f));
+                }
+                else if (adjustmentType.enumNames[adjustmentType.enumValueIndex].IndexOf("BlendFactor") > -1)
+                {
+                    return Mathf.Clamp(dnaValue * multiplier, 0f, 1f);
+                }
+                else
+                {
+                    return Mathf.Lerp(0f, dnaValue * multiplier, Mathf.Abs(dnaValue));
+                }
+            }
 			else
 			{
 				if (adjustmentType.enumNames[adjustmentType.enumValueIndex].IndexOf("Absolute") > -1 && adjustmentType.enumNames[adjustmentType.enumValueIndex].IndexOf("Additive") == -1)
-					return Mathf.Lerp(currentColor, value, Mathf.Clamp(dnaValue, 0f, 1f));
-				else if (adjustmentType.enumNames[adjustmentType.enumValueIndex].IndexOf("BlendFactor") > -1)
-					return Mathf.Lerp(0f, value, Mathf.Abs(dnaValue));
-				else
-					return Mathf.Lerp(0f, adjustValue, Mathf.Abs(dnaValue));
-			}
+                {
+                    return Mathf.Lerp(currentColor, value, Mathf.Clamp(dnaValue, 0f, 1f));
+                }
+                else if (adjustmentType.enumNames[adjustmentType.enumValueIndex].IndexOf("BlendFactor") > -1)
+                {
+                    return Mathf.Lerp(0f, value, Mathf.Abs(dnaValue));
+                }
+                else
+                {
+                    return Mathf.Lerp(0f, adjustValue, Mathf.Abs(dnaValue));
+                }
+            }
 		}
 	}
 

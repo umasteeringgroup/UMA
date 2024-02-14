@@ -242,10 +242,15 @@ namespace UMA.Editors
 				{
 					EditorGUILayout.HelpBox("There were the following issues when trying to add your graph:", MessageType.None);
 					if (nameError != "")
-						EditorGUILayout.HelpBox(nameError, MessageType.Error);
-					if (graphError != "")
-						EditorGUILayout.HelpBox(graphError, MessageType.Error);
-				}
+                    {
+                        EditorGUILayout.HelpBox(nameError, MessageType.Error);
+                    }
+
+                    if (graphError != "")
+                    {
+                        EditorGUILayout.HelpBox(graphError, MessageType.Error);
+                    }
+                }
 				else if (addSuccess != "")
 				{
 					EditorGUILayout.HelpBox(addSuccess, MessageType.Info);
@@ -301,8 +306,11 @@ namespace UMA.Editors
 			EditorGUILayout.Space();
 			EditorGUILayout.PropertyField(exampleEvaluatorProp);
 			if (EditorGUI.EndChangeCheck())
-				serializedObject.ApplyModifiedProperties();
-			EditorGUI.BeginDisabledGroup(true);
+            {
+                serializedObject.ApplyModifiedProperties();
+            }
+
+            EditorGUI.BeginDisabledGroup(true);
 			EditorGUILayout.FloatField(new GUIContent("Evaluated Result!"), _target.EvaluateDemo());
 			EditorGUI.EndDisabledGroup();
 			EditorGUI.indentLevel--;

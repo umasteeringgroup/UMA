@@ -132,9 +132,11 @@ namespace UMA.Examples
 	                r.angularDrag = SwingAngularDrag;
 
 	                if (FreezePositions)
-	                  r.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezePositionZ;
+                    {
+                        r.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezePositionZ;
+                    }
 
-	                SphereCollider sc = t.gameObject.AddComponent<SphereCollider>();
+                    SphereCollider sc = t.gameObject.AddComponent<SphereCollider>();
 	                sc.radius = SwingRadius;
 					sc.gameObject.layer = BoneLayer;
 
@@ -177,9 +179,11 @@ namespace UMA.Examples
 	        go.layer = 8; // our ragdoll layer
 
 	        if (go.GetComponent<Rigidbody>() != null)
-	            return t;
+            {
+                return t;
+            }
 
-	        Rigidbody r = go.AddComponent<Rigidbody>();
+            Rigidbody r = go.AddComponent<Rigidbody>();
 	        r.isKinematic = true;
 	        r.useGravity = false;
 	        r.maxAngularVelocity = 4;

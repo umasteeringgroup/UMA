@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 using UMA;
-using UMA.AssetBundles;
 
 namespace UMA.CharacterSystem.Examples
 {
@@ -44,20 +43,16 @@ namespace UMA.CharacterSystem.Examples
 		[HideInInspector]
 		public UMAContextBase context;
 
-		//This is a ditionary of asset bundles that were loaded into the library. This can be queried to store a list of active assetBundles that might be useful to preload etc
-		public Dictionary<string, List<string>> assetBundlesUsedDict = new Dictionary<string, List<string>>();
-
-		private bool allResourcesScanned = false;
-
 		void Awake()
 		{
 			if (Instance == null)
 			{
 				Instance = this;
 				if (makePersistent)
-					DontDestroyOnLoad(this.gameObject);
-
-			}
+                {
+                    DontDestroyOnLoad(this.gameObject);
+                }
+            }
 			else if (Instance != this)
 			{
 				if (Instance.makePersistent)
@@ -70,11 +65,13 @@ namespace UMA.CharacterSystem.Examples
 				}
 			}
 			if (initializeOnAwake)
-				if (!initialized && !updating)
+            {
+                if (!initialized && !updating)
 				{
 					Init();
 				}
-		}
+            }
+        }
 
 		void Start()
 		{
@@ -82,9 +79,10 @@ namespace UMA.CharacterSystem.Examples
 			{
 				Instance = this;
 				if (makePersistent)
-					DontDestroyOnLoad(this.gameObject);
-
-			}
+                {
+                    DontDestroyOnLoad(this.gameObject);
+                }
+            }
 			else if (Instance != this)
 			{
 				if (Instance.makePersistent)
@@ -119,45 +117,14 @@ namespace UMA.CharacterSystem.Examples
 
 			if (Application.isPlaying)
 			{
-				StartCoroutine(StartGatherCoroutine());
+				//StartCoroutine(StartGatherCoroutine());
 			}
 
 			initialized = true;
 			updating = false;
 		}
 
-		IEnumerator StartGatherCoroutine()
-		{
-			if (DynamicAssetLoader.Instance == null)
-			{
-				if (Debug.isDebugBuild)
-					Debug.LogWarning("WardrobeCollectionLibrary requires an instance of DynamicAssetLoader to gather collection assets");
-				yield break;
-			}
-			while (!DynamicAssetLoader.Instance.isInitialized)
-			{
-				yield return null;
-			}
-			GatherCollections();
-		}
 
-		/// <summary>
-		/// Gets ALL the Wardrobe collections that are listed in the AssetBundleIndex (if dynamicallyAddFromAssetbundles), regardless of whether the bundles has been downloaded yet or not
-		/// </summary>
-		/// <param name="filename"></param>
-		/// <param name="bundleToGather"></param>
-		private void GatherCollections(string filename = "", string bundleToGather = "")
-		{
-			if (allResourcesScanned && filename == "" && bundleToGather == "")
-				return;
-
-			if (bundleToGather == "" && filename == "")
-				allResourcesScanned = true;
-
-			var assetBundleToGather = bundleToGather != "" ? bundleToGather : assetBundlesForCollectionsToSearch;
-
-			DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, true, assetBundleToGather, resourcesCollectionsFolder, null, filename, AddCollectionsFromDAL, true);
-		}
 
 		public void AddCollectionsFromDAL(UMAWardrobeCollection[] uwcs)
 		{
@@ -167,11 +134,15 @@ namespace UMA.CharacterSystem.Examples
 		//TODO maybe we should start indexing on GUID?
 		public void AddCollections(UMAWardrobeCollection[] uwcs, string filename = "")
 		{
-			foreach (UMAWardrobeCollection uwc in uwcs)
+            for (int i = 0; i < uwcs.Length; i++)
 			{
-				if (uwc == null)
-					continue;
-				if (filename == "" || (filename != "" && filename.Trim() == uwc.name))
+                UMAWardrobeCollection uwc = uwcs[i];
+                if (uwc == null)
+                {
+                    continue;
+                }
+
+                if (filename == "" || (filename != "" && filename.Trim() == uwc.name))
 				{
 					if (!collectionIndex.ContainsKey(uwc.name))
 					{

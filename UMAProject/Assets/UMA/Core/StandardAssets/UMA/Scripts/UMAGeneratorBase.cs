@@ -163,9 +163,10 @@ namespace UMA
 					parameters = new AnimatorControllerParameter[animator.parameterCount];
 					Array.Copy(animator.parameters, parameters, animator.parameterCount);
 
-					foreach (AnimatorControllerParameter param in parameters)
+                    for (int i = 0; i < parameters.Length; i++)
 					{
-						switch (param.type)
+                        AnimatorControllerParameter param = parameters[i];
+                        switch (param.type)
 						{
 							case AnimatorControllerParameterType.Bool:
 								param.defaultBool = animator.GetBool(param.nameHash);
@@ -231,9 +232,10 @@ namespace UMA
 				}
 				if (parameters != null)
 				{
-					foreach (AnimatorControllerParameter param in parameters)
+                    for (int i = 0; i < parameters.Length; i++)
 					{
-						if (!animator.IsParameterControlledByCurve(param.nameHash))
+                        AnimatorControllerParameter param = parameters[i];
+                        if (!animator.IsParameterControlledByCurve(param.nameHash))
 						{
 							switch (param.type)
 							{
@@ -379,9 +381,10 @@ namespace UMA
             }
 
             Dictionary<String, String> bones = new Dictionary<String, String>();
-			foreach (var sb in description.skeleton)
+            for (int i = 0; i < description.skeleton.Length; i++)
 			{
-				if (Debug.isDebugBuild)
+                SkeletonBone sb = description.skeleton[i];
+                if (Debug.isDebugBuild)
                 {
                     Debug.Log(sb.name);
                 }
@@ -393,9 +396,10 @@ namespace UMA
                 Debug.Log("----");
             }
 
-            foreach (var hb in description.human)
+            for (int i = 0; i < description.human.Length; i++)
 			{
-				string boneName;
+                HumanBone hb = description.human[i];
+                string boneName;
 				if (bones.TryGetValue(hb.boneName, out boneName))
 				{
 					if (Debug.isDebugBuild)

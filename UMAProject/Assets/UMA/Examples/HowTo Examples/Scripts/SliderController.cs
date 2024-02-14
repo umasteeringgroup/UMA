@@ -38,8 +38,15 @@ public class SliderController : MonoBehaviour
 
     public void SetDNA(float Value)
     {
-        if (Avatar == null) Avatar = FindAvatar();
-        if (Avatar == null) return;
+        if (Avatar == null)
+        {
+            Avatar = FindAvatar();
+        }
+
+        if (Avatar == null)
+        {
+            return;
+        }
 
         // Set the DNA on the Avatar.
         // Case must match.

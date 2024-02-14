@@ -13,10 +13,16 @@ namespace UMA.Examples
 		{
 
 			if (string.IsNullOrEmpty(dnaToTweak))
-				return;
-			if (customizer == null)
-				return;
-			customizer.PerformDNAChange(dnaToTweak, newValue);
+            {
+                return;
+            }
+
+            if (customizer == null)
+            {
+                return;
+            }
+
+            customizer.PerformDNAChange(dnaToTweak, newValue);
 		}
 	}
 }

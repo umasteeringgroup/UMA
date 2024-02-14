@@ -26,8 +26,10 @@ namespace UMA
 					if (editors[i].GetType() == typeof(DynamicDNAConverterControllerInspector))
 					{
 						if (editors[i].target == property.objectReferenceValue)
-							DynamicDNAConverterControllerInspector.SetLivePopupEditor(editors[i] as DynamicDNAConverterControllerInspector);
-					}
+                        {
+                            DynamicDNAConverterControllerInspector.SetLivePopupEditor(editors[i] as DynamicDNAConverterControllerInspector);
+                        }
+                    }
 				}
 			}
 		}

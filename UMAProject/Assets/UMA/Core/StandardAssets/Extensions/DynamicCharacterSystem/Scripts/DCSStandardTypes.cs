@@ -101,13 +101,17 @@ namespace UMA.CharacterSystem
 		public void Add(string race)
 		{
 			if (!Contains(race))
-				sets.Add(new WardrobeSet(race));
-		}
+            {
+                sets.Add(new WardrobeSet(race));
+            }
+        }
 		public void Add(string race, List<WardrobeSettings> settings)
 		{
 			if (!Contains(race))
-				sets.Add(new WardrobeSet(race, settings));
-		}
+            {
+                sets.Add(new WardrobeSet(race, settings));
+            }
+        }
 
 		public void Remove(string race)
 		{
@@ -141,8 +145,11 @@ namespace UMA.CharacterSystem
 			for (int i = 0; i < sets.Count; i++)
 			{
 				if (forRace != "" && sets[i].targetRace != forRace)
-					continue;
-				for (int si = 0; si < sets[i].wardrobeSet.Count; si++)
+                {
+                    continue;
+                }
+
+                for (int si = 0; si < sets[i].wardrobeSet.Count; si++)
 				{
 					if (sets[i].wardrobeSet[si].recipe != "")
 					{

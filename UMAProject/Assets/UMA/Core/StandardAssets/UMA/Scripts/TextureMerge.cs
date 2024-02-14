@@ -71,6 +71,7 @@ namespace UMA
                     if (textureMergeRects[i].mat == null)
                     {
                         textureMergeRects[i].mat = new Material(material);
+						textureMergeRects[i].mat.name = material.name + "_" + i;
                     }
 
                     textureMergeRects[i].advancedBlending = false;
@@ -215,8 +216,11 @@ namespace UMA
 		private void DrawRect(ref TextureMergeRect tr, bool sharperFitTextures)//, Material overrideMat = null)
 		{
 			if (tr.tex == null)
-				return;
-			if (tr.transform)
+            {
+                return;
+            }
+
+            if (tr.transform)
 			{
 				// rotate texture here?
 				GL.PushMatrix();
@@ -239,7 +243,7 @@ namespace UMA
 
 			if (tr.channelType == UMAMaterial.ChannelType.DiffuseTexture)
 			{
-				Debug.Log($"Drawing = {tr.textureType} with texture {tr.mat.mainTexture.name} and shader {tr.mat.shader.name}");
+				// Debug.Log($"Drawing = {tr.textureType} with texture {tr.mat.mainTexture.name} and shader {tr.mat.shader.name}");
 			}
 
 			Graphics.DrawTexture(tr.rect, tr.tex, tr.mat);		
@@ -252,45 +256,60 @@ namespace UMA
 		public void PostProcess(RenderTexture destination, UMAMaterial.ChannelType channelType)
 		{
 			if (channelType == UMAMaterial.ChannelType.DiffuseTexture && diffusePostProcesses.Count == 0)
+            {
                 return;
-			if (channelType == UMAMaterial.ChannelType.NormalMap && normalPostProcesses.Count == 0)
-				return;
-            if (channelType == UMAMaterial.ChannelType.Texture && dataPostProcesses.Count == 0)
-				return;
-			if (channelType == UMAMaterial.ChannelType.DetailNormalMap && detailNormalPostProcesses.Count == 0)
-                return;
+            }
 
-			var source = RenderTexture.GetTemporary(destination.width, destination.height, 0, destination.format, RenderTextureReadWrite.Linear);
+            if (channelType == UMAMaterial.ChannelType.NormalMap && normalPostProcesses.Count == 0)
+            {
+                return;
+            }
+
+            if (channelType == UMAMaterial.ChannelType.Texture && dataPostProcesses.Count == 0)
+            {
+                return;
+            }
+
+            if (channelType == UMAMaterial.ChannelType.DetailNormalMap && detailNormalPostProcesses.Count == 0)
+            {
+                return;
+            }
+
+            var source = RenderTexture.GetTemporary(destination.width, destination.height, 0, destination.format, RenderTextureReadWrite.Linear);
 
 			switch (channelType)
 			{
 				case UMAMaterial.ChannelType.NormalMap:
-					foreach (UMAPostProcess postProcess in normalPostProcesses)
+                    for (int i = 0; i < normalPostProcesses.Count; i++)
 					{
-						Graphics.Blit(destination, source);
+                        UMAPostProcess postProcess = normalPostProcesses[i];
+                        Graphics.Blit(destination, source);
 						postProcess.Process(source, destination);
 					}
 					break;
 				case UMAMaterial.ChannelType.Texture:
-					foreach (UMAPostProcess postProcess in dataPostProcesses)
-					{
-						Graphics.Blit(destination, source);
-						postProcess.Process(source, destination);
-					}
+					for (int i = 0; i < dataPostProcesses.Count; i++)
+                    {
+                        UMAPostProcess postProcess = dataPostProcesses[i];
+                        Graphics.Blit(destination, source);
+                        postProcess.Process(source, destination);
+                    }
 					break;
 				case UMAMaterial.ChannelType.DiffuseTexture:
-					foreach (UMAPostProcess postProcess in diffusePostProcesses)
-					{
-						Graphics.Blit(destination, source);
-						postProcess.Process(source, destination);
-					}
+					for (int i = 0; i < diffusePostProcesses.Count; i++)
+                    {
+                        UMAPostProcess postProcess = diffusePostProcesses[i];
+                        Graphics.Blit(destination, source);
+                        postProcess.Process(source, destination);
+                    }
 					break;
 				case UMAMaterial.ChannelType.DetailNormalMap:
-					foreach (UMAPostProcess postProcess in detailNormalPostProcesses)
-					{
-						Graphics.Blit(destination, source);
-						postProcess.Process(source, destination);
-					}
+					for (int i = 0; i < detailNormalPostProcesses.Count; i++)
+                    {
+                        UMAPostProcess postProcess = detailNormalPostProcesses[i];
+                        Graphics.Blit(destination, source);
+                        postProcess.Process(source, destination);
+                    }
 					break;
 			}
 			RenderTexture.active = null;
@@ -305,13 +324,18 @@ namespace UMA
 		internal void EnsureCapacity(int moduleCount)
 		{
 			if (textureMergeRects != null && textureMergeRects.Length > moduleCount)
-				return;
+            {
+                return;
+            }
 
-			var oldTextureMerge = textureMergeRects;
+            var oldTextureMerge = textureMergeRects;
 			var newLength = 100;
-			while (newLength < moduleCount) newLength *= 2;
+			while (newLength < moduleCount)
+            {
+                newLength *= 2;
+            }
 
-			textureMergeRects = new TextureMerge.TextureMergeRect[newLength];
+            textureMergeRects = new TextureMerge.TextureMergeRect[newLength];
 			int idx = 0;
 			if (oldTextureMerge != null)
 			{
@@ -323,14 +347,18 @@ namespace UMA
 			for (; idx < newLength; idx++)
 			{
 				textureMergeRects[idx].mat = new Material(material);
+				textureMergeRects[idx].mat.name = material.name + "_" + idx;
 			}
 		}
 
 		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType)
 		{
 			if (source.isNoTextures)
-				return;
-			camBackgroundColor = source.GetMultiplier(0, textureType);
+            {
+                return;
+            }
+
+            camBackgroundColor = source.GetMultiplier(0, textureType);
 			camBackgroundColor.a = 0.0f;
 
 			if (textureType >= source.baseOverlay.textureList.Length)
@@ -386,16 +414,21 @@ namespace UMA
 		public void SetupModule(UMAData.GeneratedMaterial atlas, int idx, int textureType)
 		{
 			var atlasElement = atlas.materialFragments[idx];
-			if (atlasElement.isRectShared) return;
+			if (atlasElement.isRectShared)
+            {
+                return;
+            }
 
-			height = Mathf.FloorToInt(atlas.cropResolution.y);
+            height = Mathf.FloorToInt(atlas.cropResolution.y);
 			SetupModule(atlasElement, textureType);
 			resolutionScale = atlas.resolutionScale * atlasElement.slotData.overlayScale;
 
 			if (atlasElement.overlays == null)
-				return;
+            {
+                return;
+            }
 
-			for (int i2 = 0; i2 < atlasElement.overlays.Length; i2++)
+            for (int i2 = 0; i2 < atlasElement.overlays.Length; i2++)
 			{
 				SetupOverlay(atlasElement, i2, textureType);
 			}
@@ -403,12 +436,27 @@ namespace UMA
 
 		private void SetupOverlay(UMAData.MaterialFragment source, int OverlayIndex, int textureType)
 		{
-			if (source.overlays[OverlayIndex] == null) return;
-			if (textureType >= source.overlays[OverlayIndex].textureList.Length) return;
-			if (source.overlays[OverlayIndex].textureList[textureType] == null) return;
-			if (source.isNoTextures) return;
+			if (source.overlays[OverlayIndex] == null)
+            {
+                return;
+            }
 
-			Rect overlayRect;
+            if (textureType >= source.overlays[OverlayIndex].textureList.Length)
+            {
+                return;
+            }
+
+            if (source.overlays[OverlayIndex].textureList[textureType] == null)
+            {
+                return;
+            }
+
+            if (source.isNoTextures)
+            {
+                return;
+            }
+
+            Rect overlayRect;
 
 			if (source.rects[OverlayIndex].width != 0)
 			{
@@ -447,14 +495,15 @@ namespace UMA
 			{
 				return DiffuseBlendModeShaders[0].Combiner;
 			}
-			foreach (var s in DiffuseBlendModeShaders)
-			{
-				if ((int)s.BlendMode == (int)blendmode)
-				{
-					isAdvanced = true;
-					return s.Combiner;
-				}
-			}
+			for (int i = 0; i < DiffuseBlendModeShaders.Count; i++)
+            {
+                var s = DiffuseBlendModeShaders[i];
+                if ((int)s.BlendMode == (int)blendmode)
+                {
+                    isAdvanced = true;
+                    return s.Combiner;
+                }
+            }
 			return diffuseShader;
 		}
 
@@ -467,8 +516,9 @@ namespace UMA
             {
                 return shaderList[0].Combiner;
             }
-            foreach (var s in shaderList)
+            for (int i = 0; i < shaderList.Count; i++)
             {
+                var s = shaderList[i];
                 if ((int)s.BlendMode == (int)blendmode)
                 {
                     isAdvanced = true;

@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UMA;
-using UMA.AssetBundles;
 
 namespace UMA.CharacterSystem.Examples
 {

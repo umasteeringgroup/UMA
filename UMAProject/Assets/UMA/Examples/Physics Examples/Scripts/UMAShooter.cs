@@ -28,9 +28,10 @@ namespace UMA.Dynamics.Examples
 			if (Input.GetKeyDown(KeyCode.Escape))
             {
 				UMAPhysicsAvatar[] components = GameObject.FindObjectsOfType<UMAPhysicsAvatar>();
-				foreach(var player in components)
+                for (int i = 0; i < components.Length; i++)
                 {
-					if (player.ragdolled)
+                    UMAPhysicsAvatar player = components[i];
+                    if (player.ragdolled)
                     {
 						player.ragdolled = false;
 					}
@@ -114,11 +115,15 @@ namespace UMA.Dynamics.Examples
 						//find the RagdollHelper component and activate ragdolling
 						UMAPhysicsAvatar player = avatar.GetComponent<UMAPhysicsAvatar>();
 						if(player == null)
-							player = avatar.GetComponentInChildren<UMAPhysicsAvatar>();
-						
-						if(player)
-							player.ragdolled=false;
-					}
+                        {
+                            player = avatar.GetComponentInChildren<UMAPhysicsAvatar>();
+                        }
+
+                        if (player)
+                        {
+                            player.ragdolled=false;
+                        }
+                    }
 				}
 				
 			}
@@ -139,8 +144,11 @@ namespace UMA.Dynamics.Examples
 						//find the RagdollHelper component and activate ragdolling
 						UMAPhysicsAvatar player = avatar.GetComponent<UMAPhysicsAvatar>();
 						if(player == null)
-							player = avatar.GetComponentInChildren<UMAPhysicsAvatar>();
-						if(player)
+                        {
+                            player = avatar.GetComponentInChildren<UMAPhysicsAvatar>();
+                        }
+
+                        if (player)
 						{
 							StartCoroutine(TimedRagdoll(hit));
 						}

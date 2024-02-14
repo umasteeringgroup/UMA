@@ -83,8 +83,10 @@ namespace UMA.Editors
 								foreach(DynamicCharacterAvatar dca in dcas) 
 								{
 									if (dca.editorTimeGeneration)
-										dca.GenerateSingleUMA();
-								}
+                                    {
+                                        dca.GenerateSingleUMA();
+                                    }
+                                }
 							}
 						}
 					}

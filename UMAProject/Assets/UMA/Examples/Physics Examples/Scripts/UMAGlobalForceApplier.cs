@@ -22,11 +22,18 @@ namespace UMA.Examples
 	    /// </summary>
 	    public void Update()
 	    {
-	        if (MovementTracker == null) return; // wait for this to be setup before applying forces.
-	        if (!ApplyGlobalForces) return;
+	        if (MovementTracker == null)
+            {
+                return; // wait for this to be setup before applying forces.
+            }
 
-	        // Calculate global movement
-	        Vector3 Force = (parentPosLastFrame - MovementTracker.position) * ForceMultiplier;
+            if (!ApplyGlobalForces)
+            {
+                return;
+            }
+
+            // Calculate global movement
+            Vector3 Force = (parentPosLastFrame - MovementTracker.position) * ForceMultiplier;
 	        float Magnitude = Force.magnitude;
 
 	        // small movements don't add force

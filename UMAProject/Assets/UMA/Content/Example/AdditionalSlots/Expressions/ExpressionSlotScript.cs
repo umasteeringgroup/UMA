@@ -24,9 +24,11 @@ namespace UMA.PoseTools
 			if (expressionSet == null)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("Couldn't add Expressions to Race: " + umaData.umaRecipe.raceData.raceName, umaData.gameObject);
+                {
+                    Debug.LogError("Couldn't add Expressions to Race: " + umaData.umaRecipe.raceData.raceName, umaData.gameObject);
+                }
 
-				return;
+                return;
 			}
 			var expressionPlayer = umaData.GetComponent<UMAExpressionPlayer>();
 			if (expressionPlayer == null)
@@ -41,8 +43,10 @@ namespace UMA.PoseTools
             }
 			expressionPlayer.expressionSet = expressionSet;
 			expressionPlayer.umaData = umaData;
-			foreach (var hash in expressionSet.GetAnimatedBoneHashes())
+			var boneHashes = expressionSet.GetAnimatedBoneHashes();
+			for (int i=0; i< boneHashes.Length; i++)
 			{
+				var hash = boneHashes[i];
 				umaData.skeleton.SetAnimatedBoneHierachy(hash);
 			}
 		}

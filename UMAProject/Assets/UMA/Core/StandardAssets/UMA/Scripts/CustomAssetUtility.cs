@@ -31,8 +31,9 @@ namespace UMA
             string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + name + ".prefab");
 
             GameObject go = new GameObject(name);
-            foreach (System.Type t in types)
+            for (int i = 0; i < types.Length; i++)
             {
+                System.Type t = types[i];
                 go.AddComponent(t);
             }
 #if UNITY_2018_3_OR_NEWER
@@ -121,8 +122,11 @@ namespace UMA
 
 	        AssetDatabase.SaveAssets();
 			if(selectCreatedAsset)
-				Selection.activeObject = asset;
-			return asset;
+            {
+                Selection.activeObject = asset;
+            }
+
+            return asset;
 	    }
 
 		/// <summary>
@@ -148,9 +152,11 @@ namespace UMA
 			string assetName = baseName;
 
 			if (AddTypeToName)
-				assetName = baseName + " " + typeof(T).Name;
+            {
+                assetName = baseName + " " + typeof(T).Name;
+            }
 
-			assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
+            assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
 			return assetPathAndName;
 		}
 	}

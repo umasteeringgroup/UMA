@@ -16,11 +16,16 @@ namespace UMA
     /// </summary>
     [System.Serializable]
     [PreferBinarySerialization]
-    public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider
+    public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider, IUMAIndexOptions
     {
         public string slotName;
         [System.NonSerialized]
         public int nameHash;
+
+        public bool forceKeep = false;
+        public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
+
+
 #if UNITY_EDITOR
         [Tooltip("This is only used when updating the slot with drag and drop below. It is not used at runtime nor is it included in the build")]
         public SkinnedMeshRenderer normalReferenceMesh;
@@ -121,25 +126,18 @@ namespace UMA
 
                 int bonePos = 0;
                 int bone = 0;
-                foreach (byte WeightCount in slot.meshData.ManagedBonesPerVertex)
+                for (int i = 0; i < slot.meshData.ManagedBonesPerVertex.Length; i++)
                 {
+                    byte WeightCount = slot.meshData.ManagedBonesPerVertex[i];
                     theirBonePositionInBoneWeights.Add(bone, bonePos);
                     theirBoneIndexByName.Add(slot.meshData.umaBones[bone].name, bone);
                     bonePos += slot.meshData.ManagedBonesPerVertex[bone];
                     bone++;
                 }
 
-                /*				bonePos = 0;
-                                bone = 0;
-                                foreach (byte WeightCount in meshData.ManagedBonesPerVertex)
-                                {
-                                    ourBonePositionInBoneWeights.Add(bone, bonePos);
-                                    bonePos += meshData.ManagedBonesPerVertex[bone];
-                                    bone++;
-                                }*/
-
-                foreach (WeldPoint p in thisWeld.WeldPoints)
+                for (int i = 0; i < thisWeld.WeldPoints.Count; i++)
                 {
+                    WeldPoint p = thisWeld.WeldPoints[i];
                     ourWeldPoints.Add(p.ourVertex, p);
                 }
 
@@ -196,8 +194,9 @@ namespace UMA
 
                 int boneIndex = 0;
                 boneWeld newBoneWeights = new boneWeld();
-                foreach (boneWeld bw in BoneWelds)
+                for (int i = 0; i < BoneWelds.Count; i++)
                 {
+                    boneWeld bw = BoneWelds[i];
                     meshData.ManagedBonesPerVertex[boneIndex] = (byte)bw.Count;
                     newBoneWeights.AddRange(bw);
                 }
@@ -423,6 +422,9 @@ namespace UMA
             }
         }
 
+        private bool labelLocalFiles = false;
+        public bool LabelLocalFiles { get { return labelLocalFiles; } set { labelLocalFiles = value; } }
+
         public void LoadFromIndex()
         {
             material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(materialName);
@@ -496,8 +498,9 @@ namespace UMA
             if (SlotObject != null)
             {
                 HookupObjectEvents();
-                foreach (var ih in EventHookups)
+                for (int i = 0; i < EventHookups.Count; i++)
                 {
+                    IUMAEventHookup ih = EventHookups[i];
                     ih.Begun(umaData);
                 }
             }
@@ -507,8 +510,9 @@ namespace UMA
         {
             if (SlotObject != null)
             {
-                foreach (var ih in EventHookups)
+                for (int i = 0; i < EventHookups.Count; i++)
                 {
+                    IUMAEventHookup ih = EventHookups[i];
                     ih.Completed(umaData, this.SlotObject);
                 }
             }
@@ -527,8 +531,9 @@ namespace UMA
                 var Behaviors = SlotObject.GetComponents<MonoBehaviour>();
                 Debug.Log($"There are {Behaviors.Length} components");
 
-                foreach (var mb in Behaviors)
+                for (int i = 0; i < Behaviors.Length; i++)
                 {
+                    MonoBehaviour mb = Behaviors[i];
                     if (mb is IUMAEventHookup)
                     {
                         Debug.Log("SDA Hooking up events");

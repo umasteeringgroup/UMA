@@ -161,10 +161,15 @@ namespace UMA
 			if (!_initialized)
 			{
 				if (!string.IsNullOrEmpty(_dnaName))
-					_dnaNameHash = UMAUtils.StringToHash(_dnaName);
-				else
-					_dnaNameHash = -1;
-				_multiplier = 1f;
+                {
+                    _dnaNameHash = UMAUtils.StringToHash(_dnaName);
+                }
+                else
+                {
+                    _dnaNameHash = -1;
+                }
+
+                _multiplier = 1f;
 				_initialized = true;
 			}
 		}

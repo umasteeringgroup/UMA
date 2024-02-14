@@ -20,25 +20,42 @@ namespace UMA
 		{
 
 			if( dnaType == typeof(UMADnaHumanoid) )
-				return UMADnaHumanoid.GetNames();
+            {
+                return UMADnaHumanoid.GetNames();
+            }
 
-			if( dnaType == typeof(UMADnaTutorial) )
-				return UMADnaTutorial.GetNames();
+            if ( dnaType == typeof(UMADnaTutorial) )
+            {
+                return UMADnaTutorial.GetNames();
+            }
 
-			if( dnaType == typeof(DynamicUMADna) )
-				return DynamicUMADna.GetNames();
+            if ( dnaType == typeof(DynamicUMADna) )
+            {
+                return DynamicUMADna.GetNames();
+            }
 
-			return new string[0];
+            return new string[0];
 		}
 
 		public static System.Type GetType(System.String className)
 		{
 
-			if( "UMADnaHumanoid" == className ) return typeof(UMADnaHumanoid);	
-			if( "UMADnaTutorial" == className ) return typeof(UMADnaTutorial);	
-			if( "DynamicUMADna" == className ) return typeof(DynamicUMADna);	
+			if( "UMADnaHumanoid" == className )
+            {
+                return typeof(UMADnaHumanoid);
+            }
 
-			return null;
+            if ( "UMADnaTutorial" == className )
+            {
+                return typeof(UMADnaTutorial);
+            }
+
+            if ( "DynamicUMADna" == className )
+            {
+                return typeof(DynamicUMADna);
+            }
+
+            return null;
 		}
 
 		public static System.Type[] GetTypes()
@@ -56,13 +73,21 @@ namespace UMA
 		{
 
 			if( dnaType == typeof(UMADnaHumanoid))
-				return UMADnaHumanoid.LoadInstance(data);
-			if( dnaType == typeof(UMADnaTutorial))
-				return UMADnaTutorial.LoadInstance(data);
-			if( dnaType == typeof(DynamicUMADna))
-				return DynamicUMADna.LoadInstance(data);
+            {
+                return UMADnaHumanoid.LoadInstance(data);
+            }
 
-			return null;
+            if ( dnaType == typeof(UMADnaTutorial))
+            {
+                return UMADnaTutorial.LoadInstance(data);
+            }
+
+            if ( dnaType == typeof(DynamicUMADna))
+            {
+                return DynamicUMADna.LoadInstance(data);
+            }
+
+            return null;
 		}
 
 		public static System.String SaveInstance(UMADnaBase instance)
@@ -70,13 +95,21 @@ namespace UMA
 			System.Type dnaType = instance.GetType();
 
 			if( dnaType == typeof(UMADnaHumanoid))
-				return UMADnaHumanoid.SaveInstance(instance as UMADnaHumanoid);
-			if( dnaType == typeof(UMADnaTutorial))
-				return UMADnaTutorial.SaveInstance(instance as UMADnaTutorial);
-			if( dnaType == typeof(DynamicUMADna))
-				return DynamicUMADna.SaveInstance(instance as DynamicUMADna);
+            {
+                return UMADnaHumanoid.SaveInstance(instance as UMADnaHumanoid);
+            }
 
-			return null;
+            if ( dnaType == typeof(UMADnaTutorial))
+            {
+                return UMADnaTutorial.SaveInstance(instance as UMADnaTutorial);
+            }
+
+            if ( dnaType == typeof(DynamicUMADna))
+            {
+                return DynamicUMADna.SaveInstance(instance as DynamicUMADna);
+            }
+
+            return null;
 		}
 
 	}

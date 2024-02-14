@@ -24,6 +24,7 @@ namespace UMA.Controls
 		public int IsAddrCount;
 		public int Keepcount;
 		public int IgnoreCount;
+        public int totalCount;
 
 
 		// detail item

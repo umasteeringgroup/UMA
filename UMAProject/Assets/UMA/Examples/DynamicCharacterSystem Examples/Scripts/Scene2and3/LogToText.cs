@@ -50,8 +50,11 @@ namespace UMA.CharacterSystem.Examples
 					{
 						buffer.Length = 0;
 						for (int i = lines.Length - 65; i < lines.Length; i++)
-							buffer.AppendFormat("{0}", lines[i]);
-						text = buffer.ToString();
+                        {
+                            buffer.AppendFormat("{0}", lines[i]);
+                        }
+
+                        text = buffer.ToString();
 					}
 					GetComponent<Text>().text = text;
 				}

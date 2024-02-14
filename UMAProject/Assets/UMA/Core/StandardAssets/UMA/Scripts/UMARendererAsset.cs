@@ -58,7 +58,9 @@ namespace UMA
         public void ApplySettingsToRenderer(SkinnedMeshRenderer smr)
         {
             if(!string.IsNullOrEmpty(RendererName))
+            {
                 smr.name = RendererName;
+            }
 
             smr.gameObject.layer = _Layer;
 #if UNITY_2018_3_OR_NEWER
@@ -81,7 +83,7 @@ namespace UMA
         /// <param name="renderer"></param>
         static public void ResetRenderer(SkinnedMeshRenderer renderer)
         {
-            renderer.gameObject.layer = 0;
+            // renderer.gameObject.layer = 0;
 #if UNITY_2018_3_OR_NEWER
             renderer.renderingLayerMask = 1;
             renderer.rendererPriority = 0;

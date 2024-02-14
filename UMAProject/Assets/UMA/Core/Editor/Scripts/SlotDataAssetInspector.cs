@@ -153,6 +153,35 @@ namespace UMA.Editors
 				}
 			}
 			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Validate"))
+			{
+			    foreach (var t in targets)
+				{
+                    var slotDataAsset = t as SlotDataAsset;
+                    if (slotDataAsset != null)
+					{
+                        slotDataAsset.ValidateMeshData();
+                    }
+                }
+            }
+			if (GUILayout.Button("Clear Errors"))
+			{
+				foreach (var t in targets)
+				{
+                    var slotDataAsset = t as SlotDataAsset;
+                    if (slotDataAsset != null)
+					{
+                        slotDataAsset.Errors = "";
+                        EditorUtility.SetDirty(slotDataAsset);
+                    }
+                }
+			}
+			GUILayout.EndHorizontal();
+			if (!string.IsNullOrEmpty(targetAsset.Errors))
+			{
+                EditorGUILayout.HelpBox($"Errors: {targetAsset.Errors}", MessageType.Error);
+            }
 			if ((target as SlotDataAsset).isWildCardSlot)
 			{
 				EditorGUILayout.HelpBox("This is a wildcard slot", MessageType.Info);
@@ -161,9 +190,13 @@ namespace UMA.Editors
 			EditorGUILayout.LabelField($"UtilitySlot: " + targetAsset.isUtilitySlot);
 			 
 			if (slot.isWildCardSlot)
-				Editor.DrawPropertiesExcluding(serializedObject, WildcardSlotFields);
-			else
-				Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
+            {
+                Editor.DrawPropertiesExcluding(serializedObject, WildcardSlotFields);
+            }
+            else
+            {
+                Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
+            }
 
             GUILayout.Space(10);
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
@@ -338,7 +371,9 @@ namespace UMA.Editors
         {
             GameObject obj = DropAreaGUI(dropArea);
             if (obj != null)
+            {
                 AddAnimatedBone(obj.name);
+            }
         }
 
 		private void UpdateSlotDropAreaGUI(Rect dropArea)
@@ -354,8 +389,10 @@ namespace UMA.Editors
 					EditorUtility.DisplayDialog("Complete", "Update completed","OK");
 				}
 				else
-					EditorUtility.DisplayDialog("Error", "No skinned mesh renderer found!", "Ok");
-			}
+                {
+                    EditorUtility.DisplayDialog("Error", "No skinned mesh renderer found!", "Ok");
+                }
+            }
 
 		}
 

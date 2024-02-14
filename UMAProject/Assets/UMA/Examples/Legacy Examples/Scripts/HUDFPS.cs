@@ -59,12 +59,18 @@ namespace UMA.Examples
                 fpsTextOutput.text = format;
 
                 if (fps < 30)
+                {
                     fpsTextOutput.material.color = Color.yellow;
+                }
                 else
                 if (fps < 10)
+                {
                     fpsTextOutput.material.color = Color.red;
+                }
                 else
+                {
                     fpsTextOutput.material.color = Color.green;
+                }
                 //	DebugConsole.Log(format,level);
                 timeleft = updateInterval;
                 accum = 0.0F;

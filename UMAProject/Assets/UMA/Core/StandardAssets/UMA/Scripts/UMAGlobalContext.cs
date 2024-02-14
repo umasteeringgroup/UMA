@@ -356,8 +356,11 @@ namespace UMA
 		{
 			bool found = UMAAssetIndexer.Instance.HasAsset<UMAWardrobeRecipe>(Name);
 			if (!found)
-				found = UMAAssetIndexer.Instance.HasAsset<UMAWardrobeCollection>(Name);
-			return found;
+            {
+                found = UMAAssetIndexer.Instance.HasAsset<UMAWardrobeCollection>(Name);
+            }
+
+            return found;
 		}
 
 		/// <summary>

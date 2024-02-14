@@ -114,10 +114,14 @@ namespace UMA.Editors
 			get
 			{
 				if (_livePopupEditor != null)
-					return _livePopupEditor.changed;
-				else
-					return false;
-			}
+                {
+                    return _livePopupEditor.changed;
+                }
+                else
+                {
+                    return false;
+                }
+            }
 		}
 
 		#endregion
@@ -248,11 +252,15 @@ namespace UMA.Editors
 				{
 					changed = true;
 					if (_livePopupEditor != null && _livePopupEditor == this)
-						OnLivePopupEditorChange.Invoke();
-				}
+                    {
+                        OnLivePopupEditorChange.Invoke();
+                    }
+                }
 				else
-					changed = false;
-			}
+                {
+                    changed = false;
+                }
+            }
 
 			EditorGUILayout.Space();
 
@@ -283,17 +291,21 @@ namespace UMA.Editors
 				if (EditorGUI.EndChangeCheck())
 				{
 					if (dnaAssetProp.objectReferenceValue != null)
-						_dnaAsset = dnaAssetProp.objectReferenceValue as DynamicUMADnaAsset;
-					else
-						_dnaAsset = null;
-					//TODO in the ConverterBehaviour editor we cleared the DNA on the avatar.umaData (if we are in play mode and inspecting using customizer)
-					//we could probably do with doing the same here
-					/*
+                    {
+                        _dnaAsset = dnaAssetProp.objectReferenceValue as DynamicUMADnaAsset;
+                    }
+                    else
+                    {
+                        _dnaAsset = null;
+                    }
+                    //TODO in the ConverterBehaviour editor we cleared the DNA on the avatar.umaData (if we are in play mode and inspecting using customizer)
+                    //we could probably do with doing the same here
+                    /*
 					 //force the Avatar to update its dna and dnaconverter dictionaries
 						umaData.umaRecipe.ClearDna();
 						umaData.umaRecipe.ClearDNAConverters();
 					*/
-				}
+                }
 				GUIHelper.EndVerticalPadded(3);
 			}
 
@@ -424,15 +436,19 @@ namespace UMA.Editors
 							plugin = _target.GetPlugin(pi);
 
 							if (plugin == null)
-								continue;
+                            {
+                                continue;
+                            }
 
-							//make a space like the other view
-							if(pi > 0)
-								GUILayout.Space(EditorGUIUtility.standardVerticalSpacing *2);
+                            //make a space like the other view
+                            if (pi > 0)
+                            {
+                                GUILayout.Space(EditorGUIUtility.standardVerticalSpacing *2);
+                            }
 
-							//tell the plugin to draw its entry for this dna name, plugins might use more than one dna name so its up to their drawers to sort out what to draw
-							//the general idea is that if this dna name appears anywhere in the plugin, then it should draw the relevant entry
-							_pluginsEditors[plugin].OnInspectorForDNAGUI(activeNamesToDraw[i]);
+                            //tell the plugin to draw its entry for this dna name, plugins might use more than one dna name so its up to their drawers to sort out what to draw
+                            //the general idea is that if this dna name appears anywhere in the plugin, then it should draw the relevant entry
+                            _pluginsEditors[plugin].OnInspectorForDNAGUI(activeNamesToDraw[i]);
 						}
 
 						GUILayout.EndVertical();
@@ -481,9 +497,11 @@ namespace UMA.Editors
 			var plugin = _target.GetPlugin(index);
 
 			if (plugin == null)
-				return 0f;
+            {
+                return 0f;
+            }
 
-			return _pluginsEditors[plugin].GetInspectorHeight();
+            return _pluginsEditors[plugin].GetInspectorHeight();
 		}
 
 		private void DrawConverterListEntryCallback(Rect rect, int index, bool isActive, bool isFocused)
@@ -491,9 +509,11 @@ namespace UMA.Editors
 			var plugin = _target.GetPlugin(index);
 
 			if (plugin == null)
-				return;
+            {
+                return;
+            }
 
-			var prevIndent = EditorGUI.indentLevel;
+            var prevIndent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
 
 			_pluginsEditors[plugin].DrawInspectorGUI(rect);
@@ -553,10 +573,12 @@ namespace UMA.Editors
 
 				//add the actual entries
 				for (int i = 0; i < _availablePlugins.Count; i++)
-					AddMenuItemForAddConvertersPopup(popupMenu, _availablePlugins[i]);
+                {
+                    AddMenuItemForAddConvertersPopup(popupMenu, _availablePlugins[i]);
+                }
 
-				// display the menu
-				popupMenu.DropDown(addPopupRect);
+                // display the menu
+                popupMenu.DropDown(addPopupRect);
 			}
 
 			EditorGUI.BeginDisabledGroup(_pluginToAdd == null);
@@ -611,12 +633,18 @@ namespace UMA.Editors
 		private List<string> DrawDNASearchArea(Rect position, List<string> namesList)
 		{
 			if (_dnaSearchField == null)
-				_dnaSearchField = new UnityEditor.IMGUI.Controls.SearchField();
-			_DNASearchString = _dnaSearchField.OnToolbarGUI(position, _DNASearchString);
+            {
+                _dnaSearchField = new UnityEditor.IMGUI.Controls.SearchField();
+            }
+
+            _DNASearchString = _dnaSearchField.OnToolbarGUI(position, _DNASearchString);
 
 			if (String.IsNullOrEmpty(_DNASearchString))
-				return namesList;
-			List<string> filteredNames = new List<string>();
+            {
+                return namesList;
+            }
+
+            List<string> filteredNames = new List<string>();
 			//loop backwards over the list so we can remove stuff without out of range shiz
 			for (int i = namesList.Count - 1; i >= 0; i--)
 			{
@@ -636,8 +664,10 @@ namespace UMA.Editors
 		public static void SetLivePopupEditor(DynamicDNAConverterControllerInspector liveDDCCEditor)
 		{
 			if (Application.isPlaying)
-				_livePopupEditor = liveDDCCEditor;
-		}
+            {
+                _livePopupEditor = liveDDCCEditor;
+            }
+        }
 
 
 		//Id really like this to show 'Choose DNA Name' in the field and 'None' as the 'Un-Choose' option in the list

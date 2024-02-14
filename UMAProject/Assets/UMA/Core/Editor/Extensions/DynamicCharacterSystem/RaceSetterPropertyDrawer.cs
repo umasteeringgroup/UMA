@@ -26,9 +26,10 @@ namespace UMA.CharacterSystem.Editors
             {
 				return;
             }
-			foreach (RaceData race in raceDataArray)
+            for (int i = 0; i < raceDataArray.Length; i++)
 			{
-				if (race != null && race.raceName != "RaceDataPlaceholder")
+                RaceData race = raceDataArray[i];
+                if (race != null && race.raceName != "RaceDataPlaceholder")
 				{
 					foundRaces.Add(race);
 					foundRaceNames.Add(race.raceName);
@@ -89,12 +90,15 @@ namespace UMA.CharacterSystem.Editors
 					RaceName.stringValue = foundRaceNames[newrIndex];
 					//somehow if the app is playing this already works- and doing it here makes it not work
 					if (!EditorApplication.isPlaying)
-						property.serializedObject.ApplyModifiedProperties();
-				}
+                    {
+                        property.serializedObject.ApplyModifiedProperties();
+                    }
+                }
 			}
 
 			EditorGUI.EndProperty();
 			EditorGUILayout.BeginHorizontal();
+			/*
 			if (GUILayout.Button("Ping Race",GUILayout.Width(90)))
             {
 				RaceData theRace = foundRaces[newrIndex];
@@ -102,8 +106,8 @@ namespace UMA.CharacterSystem.Editors
                 {
 					EditorGUIUtility.PingObject(theRace);
                 }
-            }
-			if (GUILayout.Button("Insp Race"))
+            }*/
+			if (GUILayout.Button("Inspect Race"))
 			{
 				RaceData theRace = foundRaces[newrIndex];
 				if (theRace != null)
@@ -111,14 +115,16 @@ namespace UMA.CharacterSystem.Editors
 					InspectorUtlity.InspectTarget(theRace);
 				}
 			}
-			if (GUILayout.Button("Insp Base Recipe"))
+			if (GUILayout.Button("Inspect Base Recipe"))
 			{
 				RaceData theRace = foundRaces[newrIndex];
 				if (theRace != null)
 				{
 					if (theRace.baseRaceRecipe != null)
-						InspectorUtlity.InspectTarget(theRace.baseRaceRecipe);
-				}
+                    {
+                        InspectorUtlity.InspectTarget(theRace.baseRaceRecipe);
+                    }
+                }
 			}
 			EditorGUILayout.EndHorizontal();
 		}

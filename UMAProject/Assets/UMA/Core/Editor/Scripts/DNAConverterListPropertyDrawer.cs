@@ -19,8 +19,11 @@ namespace UMA.Editors
 				var h = (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
 				var convertersProp = property.FindPropertyRelative("_converters");
 				for (int i = 0; i < convertersProp.arraySize; i++)
-					h += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
-				h += (EditorGUIUtility.standardVerticalSpacing);
+                {
+                    h += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
+                }
+
+                h += (EditorGUIUtility.standardVerticalSpacing);
 				return h + dropAreaHeight;
 			}
 			else
@@ -157,8 +160,10 @@ namespace UMA.Editors
 						for (int i = 0; i < converterListProp.arraySize; i++)
 						{
 							if (converterListProp.GetArrayElementAtIndex(i).objectReferenceValue == IDCObj as UnityEngine.Object)
-								canAdd = false;
-						}
+                            {
+                                canAdd = false;
+                            }
+                        }
 						if (canAdd)
 						{
 							converterListProp.arraySize++;

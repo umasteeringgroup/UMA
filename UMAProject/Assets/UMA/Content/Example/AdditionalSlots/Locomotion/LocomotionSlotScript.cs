@@ -13,7 +13,9 @@ namespace UMA.Examples
 		{
 			var locomotion = umaData.GetComponent<Locomotion>();
 			if (locomotion == null)
-				umaData.gameObject.AddComponent<Locomotion>();
-		}
+            {
+                umaData.gameObject.AddComponent<Locomotion>();
+            }
+        }
 	}
 }

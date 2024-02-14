@@ -19,6 +19,8 @@ namespace UMA
         private static bool showIndexedTypes = false;
         private static bool showUnindexedTypes = true;
 		public  static string umaDefaultLabel = "UMA_Default";
+        public const string umaDefaultTags = "Head,Hair,Torso,Legs,Feet,Hands,Smooshable,Unsmooshable";
+
 
 		private const string umaDefaultLabelKey = "UMA_DEFAULTLABEL";
 		private const string umaHotkeyWord = "UMA_HOTKEYS";
@@ -26,6 +28,7 @@ namespace UMA
 		private const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
 		private const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
 		private const string DefineSymbol_BurstCompile = "UMA_BURSTCOMPILE";
+		private const string DefineSymbol_UMAAlwaysGetAddressableItems = "UMA_ALWAYSGETADDR_NO_PROD";
 		//private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
 		public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
 		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
@@ -37,6 +40,7 @@ namespace UMA
 		public const string ConfigToggle_StripUmaMaterials = "UMA_SHAREDGROUP_STRIPUMAMATERIALS";
 		public const string ConfigToggle_PostProcessAllAssets = "UMA_POSTPROCESS_ALL_ASSETS";
 		public const string ConfigToggle_IndexAutoRepair = "UMA_INDEX_AUTOREPAIR";
+        public const string umaDefaultTagsKey = "UMA_TAGS";
 		private static string DNALocation = "UMA/";
 
         static UMAEditorUtilities()
@@ -67,8 +71,10 @@ namespace UMA
 				else
 				{
 					if(Debug.isDebugBuild)
-						Debug.LogWarning("Unable to load texture icon");
-				}
+                    {
+                        Debug.LogWarning("Unable to load texture icon");
+                    }
+                }
 
 				showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
 				showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
@@ -117,6 +123,23 @@ namespace UMA
 			}
 			string umaloc = PlayerPrefs.GetString(umaLocation);
 			string newUmaLoc = EditorGUILayout.DelayedTextField("Relative UMA Location", umaloc);
+
+
+            if (!PlayerPrefs.HasKey(umaDefaultTagsKey))
+            {
+                PlayerPrefs.SetString(umaDefaultTagsKey, umaDefaultTags);
+            }
+
+            string tags = PlayerPrefs.GetString(umaDefaultTagsKey);
+
+
+            string newTags = EditorGUILayout.DelayedTextField("Tag Lookup Values", tags);
+
+            if (tags != newTags)
+            {
+                PlayerPrefs.SetString(umaDefaultTagsKey, newTags);
+            }
+
 			if (umaloc != newUmaLoc)
 			{
 				PlayerPrefs.SetString(umaLocation, newUmaLoc);
@@ -128,9 +151,13 @@ namespace UMA
                 showIndexedTypes = newshowIndexedTypes;
                 EditorPrefs.SetBool("BoolUMAShowTypes", showIndexedTypes);
                 if (showIndexedTypes)
+                {
                     EditorApplication.projectWindowItemOnGUI += DrawItems;
+                }
                 else
+                {
                     EditorApplication.projectWindowItemOnGUI -= DrawItems;
+                }
             }
 
 			ConfigToggle(ConfigToggle_PostProcessAllAssets, "Postprocess All Assets", "When assets in unity are moved, this will fix their paths in the index. This can be very slow.", false);
@@ -153,7 +180,7 @@ namespace UMA
 			DefineSymbolToggle(defineSymbols, DefineSymbol_BurstCompile, "Use Burst Compile", "This activates the burst compiler for UMA.");
 			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
 			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables.");
-
+			DefineSymbolToggle(defineSymbols, DefineSymbol_UMAAlwaysGetAddressableItems, "Always Get Addressable Items", "This forces the addressable system to always load items in the editor. Should NEVER be turned on in a production build!");
 			/* bool prevuseAsmDef = IsAsmdef(defineSymbols, DefineSymbol_AsmDef);
 			bool useAsmDef = DefineSymbolToggle(defineSymbols, DefineSymbol_AsmDef, "Use Asmdef", "This activates the internal ASMDEF for UMA.");
 			if (prevuseAsmDef != useAsmDef)
@@ -235,6 +262,11 @@ namespace UMA
             {
                 EditorApplication.RepaintProjectWindow();
             }
+        }
+
+        public static string[] GetDefaultTags()
+        {
+            return PlayerPrefs.GetString(umaDefaultTagsKey, umaDefaultTags).Split(',');
         }
 
 		public static string GetDefaultAddressableLabel()
@@ -332,8 +364,15 @@ namespace UMA
 
         private static void DrawItems(string guid, Rect selectionRect)
         {
-            if (!showIndexedTypes) return;
-            if (UMAAssetIndexer.Instance == null) return;
+            if (!showIndexedTypes)
+            {
+                return;
+            }
+
+            if (UMAAssetIndexer.Instance == null)
+            {
+                return;
+            }
 
             AssetItem ai = UMAAssetIndexer.Instance.FromGuid(guid);
             if (ai != null)
@@ -555,11 +594,15 @@ namespace UMA
             allDefines.AddRange(definesString.Split(';'));
 
 			if (allDefines.Contains(umaHotkeyWord))
-				allDefines.Remove(umaHotkeyWord);
-			else
-				allDefines.Add(umaHotkeyWord);
+            {
+                allDefines.Remove(umaHotkeyWord);
+            }
+            else
+            {
+                allDefines.Add(umaHotkeyWord);
+            }
 
-			PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
 		}
       
 		/// <summary>
@@ -646,12 +689,16 @@ namespace UMA
 			if (File.Exists(assetPath))
 			{
 				if (EditorUtility.DisplayDialog("File Already Exists!", "An asset at that location already exists! Overwrite it?", "Yes", "Cancel"))
-					doCreate = true;
-			}
+                {
+                    doCreate = true;
+                }
+            }
 			else
-				doCreate = true;
+            {
+                doCreate = true;
+            }
 
-			if(doCreate)
+            if (doCreate)
 			{
 				CreateRecipe(assetPath, sd, od, sd.name, true);
 				Debug.Log("Recipe created at: " + assetPath);
@@ -664,19 +711,28 @@ namespace UMA
 		public static void Fill(this bool[] array, bool value, int count = 0, int threshold = 32)
 		{
 			if (threshold <= 0)
-				throw new ArgumentException("threshold");
+            {
+                throw new ArgumentException("threshold");
+            }
 
-			if (count == 0) count = array.Length;
+            if (count == 0)
+            {
+                count = array.Length;
+            }
 
-			int current_size = 0, keep_looping_up_to = Math.Min(count, threshold);
+            int current_size = 0, keep_looping_up_to = Math.Min(count, threshold);
 
 			while (current_size < keep_looping_up_to)
-				array[current_size++] = value;
+            {
+                array[current_size++] = value;
+            }
 
-			for (int at_least_half = (count + 1) >> 1; current_size < at_least_half; current_size <<= 1)
-				Array.Copy(array, 0, array, current_size, current_size);
+            for (int at_least_half = (count + 1) >> 1; current_size < at_least_half; current_size <<= 1)
+            {
+                Array.Copy(array, 0, array, current_size, current_size);
+            }
 
-			Array.Copy(array, 0, array, current_size, count - current_size);
+            Array.Copy(array, 0, array, current_size, count - current_size);
 		}
 		public static System.Type[] GetAllDerivedTypes(this System.AppDomain aAppDomain, System.Type aType)
         {
@@ -688,7 +744,9 @@ namespace UMA
                 foreach (var type in types)
                 {
                     if (type.IsSubclassOf(aType))
+                    {
                         result.Add(type);
+                    }
                 }
             }
             return result.ToArray();

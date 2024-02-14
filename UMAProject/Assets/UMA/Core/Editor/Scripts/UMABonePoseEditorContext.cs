@@ -117,9 +117,12 @@ namespace UMA.PoseTools
 
 		private static void FindMirroredTransforms(Transform transform, Dictionary<Transform, MirrorData> mirrors)
 		{
-			if (transform == null) return;
+			if (transform == null)
+            {
+                return;
+            }
 
-			MirrorData mirror;
+            MirrorData mirror;
 			// Current transform has a mirror, check children
 			if (mirrors.TryGetValue(transform, out mirror))
 			{
@@ -141,8 +144,12 @@ namespace UMA.PoseTools
 							{
 								Transform childB = mirror.transformB.GetChild(j);
 								Vector3 childBpos = childB.localPosition;
-								if (childBpos != Vector3.zero) continue;
-								if (childB.name == childA.name)
+								if (childBpos != Vector3.zero)
+                                {
+                                    continue;
+                                }
+
+                                if (childB.name == childA.name)
 								{
 									longestMatch = childA.name.Length;
 									bestIndex = j;
@@ -222,9 +229,12 @@ namespace UMA.PoseTools
 				{
 					Transform childA = transform.GetChild(i);
 					Vector3 childApos = childA.localPosition;
-					if (childApos == Vector3.zero) continue;
+					if (childApos == Vector3.zero)
+                    {
+                        continue;
+                    }
 
-					for (int j = i + 1; j < transform.childCount; j++)
+                    for (int j = i + 1; j < transform.childCount; j++)
 					{
 						Transform childB = transform.GetChild(j);
 						Vector3 childBpos = childB.localPosition;

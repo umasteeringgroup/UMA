@@ -60,14 +60,19 @@ namespace UMA.CharacterSystem
 			{
 				//we maybe adding recipes for races we have not downloaded yet so make sure DCS has a place for them in its index
 				if (forRace != "")
-					UMAContext.Instance.EnsureRaceKey(forRace);
-				else
-					foreach (string race in compatibleRaces)
+                {
+                    UMAContext.Instance.EnsureRaceKey(forRace);
+                }
+                else
+                {
+                    for (int i = 0; i < compatibleRaces.Count; i++)
 					{
-						UMAContext.Instance.EnsureRaceKey(race);
+                        string race = compatibleRaces[i];
+                        UMAContext.Instance.EnsureRaceKey(race);
 					}
+                }
 
-				for (int i = 0; i < thisRecipeNames.Count; i++)
+                for (int i = 0; i < thisRecipeNames.Count; i++)
 				{
 					UMAContext.Instance.GetRecipe(thisRecipeNames[i], true);
 				}
@@ -88,8 +93,11 @@ namespace UMA.CharacterSystem
 			if(thisContext == null)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogWarning("Getting the WardrobeSet from a WardrobeCollection requires a valid UMAContextBase in the scene");
-				return new List<WardrobeSettings>();
+                {
+                    Debug.LogWarning("Getting the WardrobeSet from a WardrobeCollection requires a valid UMAContextBase in the scene");
+                }
+
+                return new List<WardrobeSettings>();
 			}
 			var thisRace = UMAContext.Instance.GetRace(race);
 			return GetRacesWardrobeSet(thisRace);
@@ -191,8 +199,10 @@ namespace UMA.CharacterSystem
 			{
 				var packedRecipe = PackedLoadDCSInternal(context);
 				if(packedRecipe != null)
-				   UnpackRecipe(umaRecipe, packedRecipe, context);
-			}
+                {
+                    UnpackRecipe(umaRecipe, packedRecipe, context);
+                }
+            }
 		}
 		#endregion
 

@@ -82,9 +82,11 @@ namespace UMA.Examples
 			DnaPanel = GameObject.Find("DnaEditorPanel");
 
 			if (DnaPanel == null || DnaPanel.activeSelf == false)
-				return;
+            {
+                return;
+            }
 
-			HeightSlider = GameObject.Find("HeightSlider").GetComponent<Slider>();
+            HeightSlider = GameObject.Find("HeightSlider").GetComponent<Slider>();
             UpperMuscleSlider = GameObject.Find("UpperMuscleSlider").GetComponent<Slider>();
             UpperWeightSlider = GameObject.Find("UpperWeightSlider").GetComponent<Slider>();
             LowerMuscleSlider = GameObject.Find("LowerMuscleSlider").GetComponent<Slider>();
@@ -166,7 +168,9 @@ namespace UMA.Examples
 
             // Don't raycast if the editor is open
             if (umaData != null)
+            {
                 return;
+            }
 
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
@@ -217,7 +221,9 @@ namespace UMA.Examples
         private void SetCamera(bool show)
         {
 			if (DnaPanel == null)
-				return;
+            {
+                return;
+            }
 
             if (show)
             {
@@ -234,9 +240,15 @@ namespace UMA.Examples
             else
             {
                 if (cameraTrack != null)
+                {
                     cameraTrack.target = baseTarget;
+                }
+
                 if (orbitor != null)
+                {
                     orbitor.target = baseTarget;
+                }
+
                 DnaPanel.SetActive(false);
                 DnaHide.gameObject.SetActive(false);
                 umaData = null;
@@ -320,57 +332,60 @@ namespace UMA.Examples
             EyeSizeSlider.value = umaDna.eyeSize;
             EyeRotationSlider.value = umaDna.eyeRotation;
             LowCheekPosSlider.value = umaDna.lowCheekPosition;
-            if (umaTutorialDna != null) EyeSpacingSlider.value = umaTutorialDna.eyeSpacing;
+            if (umaTutorialDna != null)
+            {
+                EyeSpacingSlider.value = umaTutorialDna.eyeSpacing;
+            }
         }
 
         // Slider callbacks 
-        public void OnHeightChange() { if (umaDna != null) umaDna.height = HeightSlider.value; UpdateUMAShape(); }
-        public void OnUpperMuscleChange() { if (umaDna != null) umaDna.upperMuscle = UpperMuscleSlider.value; UpdateUMAShape(); }
-        public void OnUpperWeightChange() { if (umaDna != null) umaDna.upperWeight = UpperWeightSlider.value; UpdateUMAShape(); }
-        public void OnLowerMuscleChange() { if (umaDna != null) umaDna.lowerMuscle = LowerMuscleSlider.value; UpdateUMAShape(); }
-        public void OnLowerWeightChange() { if (umaDna != null) umaDna.lowerWeight = LowerWeightSlider.value; UpdateUMAShape(); }
-        public void OnArmLengthChange() { if (umaDna != null) umaDna.armLength = ArmLengthSlider.value; UpdateUMAShape(); }
-        public void OnForearmLengthChange() { if (umaDna != null) umaDna.forearmLength = ForearmLengthSlider.value; UpdateUMAShape(); }
-        public void OnLegSeparationChange() { if (umaDna != null) umaDna.legSeparation = LegSeparationSlider.value; UpdateUMAShape(); }
-        public void OnHandSizeChange() { if (umaDna != null) umaDna.handsSize = HandSizeSlider.value; UpdateUMAShape(); }
-        public void OnFootSizeChange() { if (umaDna != null) umaDna.feetSize = FeetSizeSlider.value; UpdateUMAShape(); }
-        public void OnLegSizeChange() { if (umaDna != null) umaDna.legsSize = LegSizeSlider.value; UpdateUMAShape(); }
-        public void OnArmWidthChange() { if (umaDna != null) umaDna.armWidth = ArmWidthSlider.value; UpdateUMAShape(); }
-        public void OnForearmWidthChange() { if (umaDna != null) umaDna.forearmWidth = ForearmWidthSlider.value; UpdateUMAShape(); }
-        public void OnBreastSizeChange() { if (umaDna != null) umaDna.breastSize = BreastSlider.value; UpdateUMAShape(); }
-        public void OnBellySizeChange() { if (umaDna != null) umaDna.belly = BellySlider.value; UpdateUMAShape(); }
-        public void OnWaistSizeChange() { if (umaDna != null) umaDna.waist = WaistSizeSlider.value; UpdateUMAShape(); }
-        public void OnGluteusSizeChange() { if (umaDna != null) umaDna.gluteusSize = GlueteusSizeSlider.value; UpdateUMAShape(); }
-        public void OnHeadSizeChange() { if (umaDna != null) umaDna.headSize = HeadSizeSlider.value; UpdateUMAShape(); }
-        public void OnHeadWidthChange() { if (umaDna != null) umaDna.headWidth = HeadWidthSlider.value; UpdateUMAShape(); }
-        public void OnNeckThicknessChange() { if (umaDna != null) umaDna.neckThickness = NeckThickSlider.value; UpdateUMAShape(); }
-        public void OnEarSizeChange() { if (umaDna != null) umaDna.earsSize = EarSizeSlider.value; UpdateUMAShape(); }
-        public void OnEarPositionChange() { if (umaDna != null) umaDna.earsPosition = EarPositionSlider.value; UpdateUMAShape(); }
-        public void OnEarRotationChange() { if (umaDna != null) umaDna.earsRotation = EarRotationSlider.value; UpdateUMAShape(); }
-        public void OnNoseSizeChange() { if (umaDna != null) umaDna.noseSize = NoseSizeSlider.value; UpdateUMAShape(); }
-        public void OnNoseCurveChange() { if (umaDna != null) umaDna.noseCurve = NoseCurveSlider.value; UpdateUMAShape(); }
-        public void OnNoseWidthChange() { if (umaDna != null) umaDna.noseWidth = NoseWidthSlider.value; UpdateUMAShape(); }
-        public void OnNoseInclinationChange() { if (umaDna != null) umaDna.noseInclination = NoseInclinationSlider.value; UpdateUMAShape(); }
-        public void OnNosePositionChange() { if (umaDna != null) umaDna.nosePosition = NosePositionSlider.value; UpdateUMAShape(); }
-        public void OnNosePronouncedChange() { if (umaDna != null) umaDna.nosePronounced = NosePronuncedSlider.value; UpdateUMAShape(); }
-        public void OnNoseFlattenChange() { if (umaDna != null) umaDna.noseFlatten = NoseFlattenSlider.value; UpdateUMAShape(); }
-        public void OnChinSizeChange() { if (umaDna != null) umaDna.chinSize = ChinSizeSlider.value; UpdateUMAShape(); }
-        public void OnChinPronouncedChange() { if (umaDna != null) umaDna.chinPronounced = ChinPronouncedSlider.value; UpdateUMAShape(); }
-        public void OnChinPositionChange() { if (umaDna != null) umaDna.chinPosition = ChinPositionSlider.value; UpdateUMAShape(); }
-        public void OnMandibleSizeChange() { if (umaDna != null) umaDna.mandibleSize = MandibleSizeSlider.value; UpdateUMAShape(); }
-        public void OnJawSizeChange() { if (umaDna != null) umaDna.jawsSize = JawSizeSlider.value; UpdateUMAShape(); }
-        public void OnJawPositionChange() { if (umaDna != null) umaDna.jawsPosition = JawPositionSlider.value; UpdateUMAShape(); }
-        public void OnCheekSizeChange() { if (umaDna != null) umaDna.cheekSize = CheekSizeSlider.value; UpdateUMAShape(); }
-        public void OnCheekPositionChange() { if (umaDna != null) umaDna.cheekPosition = CheekPositionSlider.value; UpdateUMAShape(); }
-        public void OnCheekLowPronouncedChange() { if (umaDna != null) umaDna.lowCheekPronounced = lowCheekPronSlider.value; UpdateUMAShape(); }
-        public void OnForeheadSizeChange() { if (umaDna != null) umaDna.foreheadSize = ForeHeadSizeSlider.value; UpdateUMAShape(); }
-        public void OnForeheadPositionChange() { if (umaDna != null) umaDna.foreheadPosition = ForeHeadPositionSlider.value; UpdateUMAShape(); }
-        public void OnLipSizeChange() { if (umaDna != null) umaDna.lipsSize = LipSizeSlider.value; UpdateUMAShape(); }
-        public void OnMouthSizeChange() { if (umaDna != null) umaDna.mouthSize = MouthSlider.value; UpdateUMAShape(); }
-        public void OnEyeSizechange() { if (umaDna != null) umaDna.eyeSize = EyeSizeSlider.value; UpdateUMAShape(); }
-        public void OnEyeRotationChange() { if (umaDna != null) umaDna.eyeRotation = EyeRotationSlider.value; UpdateUMAShape(); }
-        public void OnLowCheekPositionChange() { if (umaDna != null) umaDna.lowCheekPosition = LowCheekPosSlider.value; UpdateUMAShape(); }
-        public void OnEyeSpacingChange() { if (umaTutorialDna != null) umaTutorialDna.eyeSpacing = EyeSpacingSlider.value; UpdateUMAShape(); }
+        public void OnHeightChange() { if (umaDna != null) { umaDna.height = HeightSlider.value; } UpdateUMAShape(); }
+        public void OnUpperMuscleChange() { if (umaDna != null) { umaDna.upperMuscle = UpperMuscleSlider.value; } UpdateUMAShape(); }
+        public void OnUpperWeightChange() { if (umaDna != null) { umaDna.upperWeight = UpperWeightSlider.value; } UpdateUMAShape(); }
+        public void OnLowerMuscleChange() { if (umaDna != null) { umaDna.lowerMuscle = LowerMuscleSlider.value; } UpdateUMAShape(); }
+        public void OnLowerWeightChange() { if (umaDna != null) { umaDna.lowerWeight = LowerWeightSlider.value; } UpdateUMAShape(); }
+        public void OnArmLengthChange() { if (umaDna != null) { umaDna.armLength = ArmLengthSlider.value; } UpdateUMAShape(); }
+        public void OnForearmLengthChange() { if (umaDna != null) { umaDna.forearmLength = ForearmLengthSlider.value; } UpdateUMAShape(); }
+        public void OnLegSeparationChange() { if (umaDna != null) { umaDna.legSeparation = LegSeparationSlider.value; } UpdateUMAShape(); }
+        public void OnHandSizeChange() { if (umaDna != null) { umaDna.handsSize = HandSizeSlider.value; } UpdateUMAShape(); }
+        public void OnFootSizeChange() { if (umaDna != null) { umaDna.feetSize = FeetSizeSlider.value; } UpdateUMAShape(); }
+        public void OnLegSizeChange() { if (umaDna != null) { umaDna.legsSize = LegSizeSlider.value; } UpdateUMAShape(); }
+        public void OnArmWidthChange() { if (umaDna != null) { umaDna.armWidth = ArmWidthSlider.value; } UpdateUMAShape(); }
+        public void OnForearmWidthChange() { if (umaDna != null) { umaDna.forearmWidth = ForearmWidthSlider.value; } UpdateUMAShape(); }
+        public void OnBreastSizeChange() { if (umaDna != null) { umaDna.breastSize = BreastSlider.value; } UpdateUMAShape(); }
+        public void OnBellySizeChange() { if (umaDna != null) { umaDna.belly = BellySlider.value; } UpdateUMAShape(); }
+        public void OnWaistSizeChange() { if (umaDna != null) { umaDna.waist = WaistSizeSlider.value; } UpdateUMAShape(); }
+        public void OnGluteusSizeChange() { if (umaDna != null) { umaDna.gluteusSize = GlueteusSizeSlider.value; } UpdateUMAShape(); }
+        public void OnHeadSizeChange() { if (umaDna != null) { umaDna.headSize = HeadSizeSlider.value; } UpdateUMAShape(); }
+        public void OnHeadWidthChange() { if (umaDna != null) { umaDna.headWidth = HeadWidthSlider.value; } UpdateUMAShape(); }
+        public void OnNeckThicknessChange() { if (umaDna != null) { umaDna.neckThickness = NeckThickSlider.value; } UpdateUMAShape(); }
+        public void OnEarSizeChange() { if (umaDna != null) { umaDna.earsSize = EarSizeSlider.value; } UpdateUMAShape(); }
+        public void OnEarPositionChange() { if (umaDna != null) { umaDna.earsPosition = EarPositionSlider.value; } UpdateUMAShape(); }
+        public void OnEarRotationChange() { if (umaDna != null) { umaDna.earsRotation = EarRotationSlider.value; } UpdateUMAShape(); }
+        public void OnNoseSizeChange() { if (umaDna != null) { umaDna.noseSize = NoseSizeSlider.value; } UpdateUMAShape(); }
+        public void OnNoseCurveChange() { if (umaDna != null) { umaDna.noseCurve = NoseCurveSlider.value; } UpdateUMAShape(); }
+        public void OnNoseWidthChange() { if (umaDna != null) { umaDna.noseWidth = NoseWidthSlider.value; } UpdateUMAShape(); }
+        public void OnNoseInclinationChange() { if (umaDna != null) { umaDna.noseInclination = NoseInclinationSlider.value; } UpdateUMAShape(); }
+        public void OnNosePositionChange() { if (umaDna != null) { umaDna.nosePosition = NosePositionSlider.value; } UpdateUMAShape(); }
+        public void OnNosePronouncedChange() { if (umaDna != null) { umaDna.nosePronounced = NosePronuncedSlider.value; } UpdateUMAShape(); }
+        public void OnNoseFlattenChange() { if (umaDna != null) { umaDna.noseFlatten = NoseFlattenSlider.value; } UpdateUMAShape(); }
+        public void OnChinSizeChange() { if (umaDna != null) { umaDna.chinSize = ChinSizeSlider.value; } UpdateUMAShape(); }
+        public void OnChinPronouncedChange() { if (umaDna != null) { umaDna.chinPronounced = ChinPronouncedSlider.value; } UpdateUMAShape(); }
+        public void OnChinPositionChange() { if (umaDna != null) { umaDna.chinPosition = ChinPositionSlider.value; } UpdateUMAShape(); }
+        public void OnMandibleSizeChange() { if (umaDna != null) { umaDna.mandibleSize = MandibleSizeSlider.value; } UpdateUMAShape(); }
+        public void OnJawSizeChange() { if (umaDna != null) { umaDna.jawsSize = JawSizeSlider.value; } UpdateUMAShape(); }
+        public void OnJawPositionChange() { if (umaDna != null) { umaDna.jawsPosition = JawPositionSlider.value; } UpdateUMAShape(); }
+        public void OnCheekSizeChange() { if (umaDna != null) { umaDna.cheekSize = CheekSizeSlider.value; } UpdateUMAShape(); }
+        public void OnCheekPositionChange() { if (umaDna != null) { umaDna.cheekPosition = CheekPositionSlider.value; } UpdateUMAShape(); }
+        public void OnCheekLowPronouncedChange() { if (umaDna != null) { umaDna.lowCheekPronounced = lowCheekPronSlider.value; } UpdateUMAShape(); }
+        public void OnForeheadSizeChange() { if (umaDna != null) { umaDna.foreheadSize = ForeHeadSizeSlider.value; } UpdateUMAShape(); }
+        public void OnForeheadPositionChange() { if (umaDna != null) { umaDna.foreheadPosition = ForeHeadPositionSlider.value; } UpdateUMAShape(); }
+        public void OnLipSizeChange() { if (umaDna != null) { umaDna.lipsSize = LipSizeSlider.value; } UpdateUMAShape(); }
+        public void OnMouthSizeChange() { if (umaDna != null) { umaDna.mouthSize = MouthSlider.value; } UpdateUMAShape(); }
+        public void OnEyeSizechange() { if (umaDna != null) { umaDna.eyeSize = EyeSizeSlider.value; } UpdateUMAShape(); }
+        public void OnEyeRotationChange() { if (umaDna != null) { umaDna.eyeRotation = EyeRotationSlider.value; } UpdateUMAShape(); }
+        public void OnLowCheekPositionChange() { if (umaDna != null) { umaDna.lowCheekPosition = LowCheekPosSlider.value; } UpdateUMAShape(); }
+        public void OnEyeSpacingChange() { if (umaTutorialDna != null) { umaTutorialDna.eyeSpacing = EyeSpacingSlider.value; } UpdateUMAShape(); }
 
 		public void PerformDNAChange(string dnaName, float dnaValue)
 		{

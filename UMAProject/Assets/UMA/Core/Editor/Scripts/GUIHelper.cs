@@ -21,11 +21,16 @@ namespace UMA.Editors
 		{
 			get {
 				if (_helpIcon != null)
-					return _helpIcon;
-				//Sometimes editor styles is not set up when we ask for this
-				if (EditorStyles.label == null)
-					return new Texture2D(16,16);
-				_helpIcon = EditorGUIUtility.FindTexture("_Help");
+                {
+                    return _helpIcon;
+                }
+                //Sometimes editor styles is not set up when we ask for this
+                if (EditorStyles.label == null)
+                {
+                    return new Texture2D(16,16);
+                }
+
+                _helpIcon = EditorGUIUtility.FindTexture("_Help");
 				return _helpIcon;
 			}
 		}
@@ -35,10 +40,16 @@ namespace UMA.Editors
 			get
 			{
 				if (_iconLabel != null)
-					return _iconLabel;
-				if (EditorStyles.label == null)
-					return new GUIStyle();
-				_iconLabel = new GUIStyle(EditorStyles.label);
+                {
+                    return _iconLabel;
+                }
+
+                if (EditorStyles.label == null)
+                {
+                    return new GUIStyle();
+                }
+
+                _iconLabel = new GUIStyle(EditorStyles.label);
 				_iconLabel.fixedHeight = 18f;
 				_iconLabel.contentOffset = new Vector2(-4.0f, 0f);
 				return _iconLabel;
@@ -50,11 +61,16 @@ namespace UMA.Editors
 			get
 			{
 				if (_inspectIcon != null)
-					return _inspectIcon;
-				//Check EditorStyles has been set up
-				if (EditorStyles.label == null)
-					return new Texture2D(16, 16);
-				_inspectIcon = EditorGUIUtility.FindTexture("ViewToolOrbit");
+                {
+                    return _inspectIcon;
+                }
+                //Check EditorStyles has been set up
+                if (EditorStyles.label == null)
+                {
+                    return new Texture2D(16, 16);
+                }
+
+                _inspectIcon = EditorGUIUtility.FindTexture("ViewToolOrbit");
 				return _inspectIcon;
 			}
 		}
@@ -64,8 +80,11 @@ namespace UMA.Editors
 			get
 			{
 				if (_inspectContent != null && _inspectIcon != null)
-					return _inspectContent;
-				_inspectContent = new GUIContent("", "Inspect");
+                {
+                    return _inspectContent;
+                }
+
+                _inspectContent = new GUIContent("", "Inspect");
 				_inspectContent.image = inspectIcon;
 				return _inspectContent;
 			}
@@ -76,11 +95,16 @@ namespace UMA.Editors
 			get
 			{
 				if (_inspectStyle != null)
-					return _inspectStyle;
-				//Check EditorStyles is set up
-				if (EditorStyles.miniButton == null)
-					return new GUIStyle();
-				_inspectStyle = new GUIStyle(EditorStyles.miniButton);
+                {
+                    return _inspectStyle;
+                }
+                //Check EditorStyles is set up
+                if (EditorStyles.miniButton == null)
+                {
+                    return new GUIStyle();
+                }
+
+                _inspectStyle = new GUIStyle(EditorStyles.miniButton);
 				_inspectStyle.contentOffset = new Vector2(0f, 0f);
 				_inspectStyle.padding = new RectOffset(0, 0, 0, 0);
 				_inspectStyle.margin = new RectOffset(0, 0, 0, 0);
@@ -108,9 +132,11 @@ namespace UMA.Editors
 		public static void BeginVerticalPadded(float padding, Color backgroundColor, GUIStyle theStyle = null)
 		{
 			if (theStyle == null)
-				theStyle = EditorStyles.textField;
+            {
+                theStyle = EditorStyles.textField;
+            }
 
-			GUI.color = backgroundColor;
+            GUI.color = backgroundColor;
 			GUILayout.BeginHorizontal(theStyle);
 			GUI.color = Color.white;
 
@@ -273,10 +299,17 @@ namespace UMA.Editors
 			foldout = EditorGUILayout.Foldout(foldout, content, true);
 
 			move = 0;
-			if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move--;
-			if (GUILayout.Button("\u25BC", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move++;
+			if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+            {
+                move--;
+            }
 
-			pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            if (GUILayout.Button("\u25BC", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+            {
+                move++;
+            }
+
+            pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 		}
@@ -288,10 +321,17 @@ namespace UMA.Editors
 			foldout = EditorGUILayout.Foldout(foldout, content,true);
 
 			move = 0;
-			if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move--;
-			if (GUILayout.Button("\u25BC", EditorStyles.miniButton, GUILayout.ExpandWidth(false))) move++;
+			if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+            {
+                move--;
+            }
 
-			delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            if (GUILayout.Button("\u25BC", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+            {
+                move++;
+            }
+
+            delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 		}
 
@@ -326,10 +366,16 @@ namespace UMA.Editors
 			GUIStyle toolbarStyle = toolbarStyleOverride;
 			GUIStyle labelStyle = labelStyleOverride;
 			if (toolbarStyle == null)
-				toolbarStyle = EditorStyles.toolbar;
-			if (labelStyle == null)
-				labelStyle = EditorStyles.foldout;
-			var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
+            {
+                toolbarStyle = EditorStyles.toolbar;
+            }
+
+            if (labelStyle == null)
+            {
+                labelStyle = EditorStyles.foldout;
+            }
+
+            var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
 			var helpGUI= new GUIContent("", "Show Help");
 			helpGUI.image = helpIcon;
 			Event current = Event.current;
@@ -405,8 +451,10 @@ namespace UMA.Editors
 				{
 					var inspectorWindow = InspectorUtlity.InspectTarget(property.objectReferenceValue);
 					if (onCreateWindowCallback != null)
-						onCreateWindowCallback(inspectorWindow);
-				}
+                    {
+                        onCreateWindowCallback(inspectorWindow);
+                    }
+                }
 			}
 			EditorGUI.EndProperty();
 		}

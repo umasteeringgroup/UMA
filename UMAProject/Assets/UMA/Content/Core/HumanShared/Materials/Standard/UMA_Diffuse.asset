@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: UMA_Diffuse
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: 6daa63a87e11b124297f7d5ff30b374c, type: 2}
+  _material: {fileID: 2100000, guid: 6daa63a87e11b124297f7d5ff30b374c, type: 2}
+  srpMaterials: []
+  secondPass: {fileID: 0}
   materialType: 1
   channels:
-  - channelType: 0
+  - channelType: 2
     textureFormat: 0
-    materialPropertyName: _MainTex
+    materialPropertyName: _Albedo
     sourceTextureName: 
     Compression: 0
     DownSample: 0

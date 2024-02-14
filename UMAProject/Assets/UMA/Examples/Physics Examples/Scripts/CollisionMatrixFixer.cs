@@ -14,8 +14,11 @@ namespace UMA.Examples
 			for (int i = 8; i < 32; i++)
 			{
 				if (i != _defaultRagdollLayer)
-					Physics.IgnoreLayerCollision(_defaultRagdollLayer, i, true);
-				Physics.IgnoreLayerCollision(_noCollisionLayer, i, true);
+                {
+                    Physics.IgnoreLayerCollision(_defaultRagdollLayer, i, true);
+                }
+
+                Physics.IgnoreLayerCollision(_noCollisionLayer, i, true);
 			}
 			Physics.IgnoreLayerCollision(_defaultRagdollLayer, _defaultRagdollLayer, false);
 		}
@@ -26,9 +29,17 @@ namespace UMA.Examples
 			_defaultRagdollLayer = LayerMask.NameToLayer("Ragdoll");
 			_noCollisionLayer = LayerMask.NameToLayer("NoCollisions");
 			// if not found, use the defaults.
-			if (_defaultRagdollLayer == -1) _defaultRagdollLayer = 8;
-			if (_noCollisionLayer == -1) _noCollisionLayer = 10;
-			FixLayers();
+			if (_defaultRagdollLayer == -1)
+            {
+                _defaultRagdollLayer = 8;
+            }
+
+            if (_noCollisionLayer == -1)
+            {
+                _noCollisionLayer = 10;
+            }
+
+            FixLayers();
 		}
 	}
 }

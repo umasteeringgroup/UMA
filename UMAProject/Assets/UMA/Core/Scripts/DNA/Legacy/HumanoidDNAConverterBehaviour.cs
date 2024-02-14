@@ -90,9 +90,11 @@ namespace UMA
 		public override void Prepare()
 		{
 			if (builtHashes)
-				return;
-			
-			headAdjustHash = UMAUtils.StringToHash("HeadAdjust");
+            {
+                return;
+            }
+
+            headAdjustHash = UMAUtils.StringToHash("HeadAdjust");
 			neckAdjustHash = UMAUtils.StringToHash("NeckAdjust");
 			leftOuterBreastHash = UMAUtils.StringToHash("LeftOuterBreast");
 			rightOuterBreastHash = UMAUtils.StringToHash("RightOuterBreast");

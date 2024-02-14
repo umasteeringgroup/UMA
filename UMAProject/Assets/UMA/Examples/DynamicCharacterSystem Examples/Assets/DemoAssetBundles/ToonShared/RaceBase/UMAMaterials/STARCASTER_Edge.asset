@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: STARCASTER_Edge
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: f8639524095142e45bd71dd43b5e5c03, type: 2}
-  materialType: 1
+  _material: {fileID: 2100000, guid: f8639524095142e45bd71dd43b5e5c03, type: 2}
+  srpMaterials: []
+  secondPass: {fileID: 0}
+  materialType: 8
   channels:
-  - channelType: 0
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 
@@ -24,7 +26,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 1
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: 
@@ -32,7 +34,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 0
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _MetallicGlossMap
     sourceTextureName: 
@@ -49,3 +51,5 @@ MonoBehaviour:
     ColorName: 
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

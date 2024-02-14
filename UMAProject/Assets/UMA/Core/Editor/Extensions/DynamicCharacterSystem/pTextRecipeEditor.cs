@@ -51,21 +51,36 @@ namespace UMA.Editors
 			_toolbarIndex = GUILayout.Toolbar(_toolbarIndex, toolbar);
 			_LastToolBar = _toolbarIndex;
 			if (dnaEditor != null && slotEditor != null)
-				switch (_toolbarIndex)
+            {
+                switch (_toolbarIndex)
 				{
 					case 0:
-						if (!dnaEditor.IsValid) return false;
-						else if (dnaEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty))
-							return true;
-						else
-							return changed;
-					case 1:
+						if (!dnaEditor.IsValid)
+                        {
+                            return false;
+                        }
+                        else if (dnaEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return changed;
+                        }
+
+                    case 1:
 						if (slotEditor.OnGUI(target.name, ref _dnaDirty, ref _textureDirty, ref _meshDirty))
-							return true;
-						else
-							return changed;
-				}
-			return changed;
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return changed;
+                        }
+                }
+            }
+
+            return changed;
 		}
 
 		protected bool AreListsEqual<T>(List<T> x, List<T> y)
@@ -104,9 +119,11 @@ namespace UMA.Editors
 				standardRaceData = _recipe.raceData;
 			}
 			if (standardRaceData == null)
-				return false;
-			//This enables us to create a new recipe using the Editor menu command but also add DNA to it based on the set race's converters
-			var currentDNA = _recipe.GetAllDna();
+            {
+                return false;
+            }
+            //This enables us to create a new recipe using the Editor menu command but also add DNA to it based on the set race's converters
+            var currentDNA = _recipe.GetAllDna();
 			//we also need current slots because GetAllDna returns a zero length array if _recipe.slotdatalist == null
 			SlotData[] currentSlots = _recipe.GetAllSlots();
 			bool couldAddDNA = false;
@@ -114,21 +131,25 @@ namespace UMA.Editors
 			if (currentDNA.Length == 0 && currentSlots != null)
 			{
 				var thisDNAConverterList = standardRaceData.dnaConverterList;
-				foreach (IDNAConverter DnaConverter in thisDNAConverterList)
+                for (int i = 0; i < thisDNAConverterList.Length; i++)
 				{
-					if (DnaConverter != null)
+                    IDNAConverter DnaConverter = thisDNAConverterList[i];
+                    if (DnaConverter != null)
 					{
 						if(DnaConverter.DNATypeHash != 0)
-							couldAddDNA = true;
-					}
+                        {
+                            couldAddDNA = true;
+                        }
+                    }
 				}
 				if (couldAddDNA)
 				{
 					if (GUILayout.Button("Add DNA"))
 					{
-						foreach (IDNAConverter DnaConverter in thisDNAConverterList)
+                        for (int i = 0; i < thisDNAConverterList.Length; i++)
 						{
-							if (DnaConverter != null)
+                            IDNAConverter DnaConverter = thisDNAConverterList[i];
+                            if (DnaConverter != null)
 							{
 								DNAConvertersAdded = true;
 								//the recipe already has the DNAConverter, it just doesn't have the values it requires to show the output in the DNA tab of the recipe
@@ -162,9 +183,11 @@ namespace UMA.Editors
 				standardRaceData = _recipe.raceData;
 			}
 			if (standardRaceData == null)
-				return false;
+            {
+                return false;
+            }
 
-			var currentDNA = _recipe.GetAllDna();
+            var currentDNA = _recipe.GetAllDna();
 			//we also need current slots because GetAllDna returns a zero length array if _recipe.slotdatalist == null
 			SlotData[] currentSlots = _recipe.GetAllSlots();
 			bool DNAConvertersModified = false;
@@ -233,15 +256,20 @@ namespace UMA.Editors
 								// Keep trying to find a new home for DNA values until they have all been set
 								dnaImported += ((DynamicUMADnaBase)currentDNA[j]).ImportUMADnaValues(currentDNA[i]);
 								if (dnaImported >= dnaToImport)
-									break;
-							}
+                                {
+                                    break;
+                                }
+                            }
 						}
 
 						if (dnaImported > 0)
 						{
 							if(_recipe.GetDna(currentDNA[i].DNATypeHash) != null)
-								_recipe.RemoveDna(currentDNA[i].DNATypeHash);
-							DNAConvertersModified = true;
+                            {
+                                _recipe.RemoveDna(currentDNA[i].DNATypeHash);
+                            }
+
+                            DNAConvertersModified = true;
 						}
 					}
 				}
@@ -266,8 +294,10 @@ namespace UMA.Editors
 						if (!foundMatch)
 						{
 							if (_recipe.dnaValues.Contains(currentDNA[i]))
-								_recipe.RemoveDna(currentDNA[i].DNATypeHash);
-						}
+                            {
+                                _recipe.RemoveDna(currentDNA[i].DNATypeHash);
+                            }
+                        }
 					}
 					currentDNA = newCurrentDna.ToArray();
 					DNAConvertersModified = true;
@@ -291,8 +321,11 @@ namespace UMA.Editors
 				EditorGUI.EndDisabledGroup();
 
 				if (ActiveWardrobeSetField == null)
-					ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
-				activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
+                {
+                    ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
+                }
+
+                activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);
 				//draws a button to 'Add DNA' when a new 'standard' recipe is created
 				if (AddDNAButtonUI())
 				{

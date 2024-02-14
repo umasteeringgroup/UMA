@@ -92,8 +92,12 @@ namespace UMA
 			uMAData.skeleton.RemoveBone(UMAUtils.StringToHash(transform.name));
 			foreach(Transform t in transform)
 			{
-				if (Exceptions.Contains(t)) continue;
-				RecursivelyRemoveChildBones(t,Exceptions);
+				if (Exceptions.Contains(t))
+                {
+                    continue;
+                }
+
+                RecursivelyRemoveChildBones(t,Exceptions);
 			}
 		}
 		

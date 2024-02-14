@@ -55,8 +55,11 @@ namespace UMA
 			}
 
 			if (GUILayout.Button("Close"))
-				Close();
-			EditorGUILayout.EndHorizontal();
+            {
+                Close();
+            }
+
+            EditorGUILayout.EndHorizontal();
 		}
 
 		private void CreatePoseSet(string fileName)

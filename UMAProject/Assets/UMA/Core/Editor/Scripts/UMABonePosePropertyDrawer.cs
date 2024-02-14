@@ -26,8 +26,10 @@ namespace UMA.PoseTools
 					if (editors[i].GetType() == typeof(UMABonePoseEditor))
 					{
 						if(editors[i].target == property.objectReferenceValue)
-							UMABonePoseEditor.SetLivePopupEditor(editors[i] as UMABonePoseEditor);
-					}
+                        {
+                            UMABonePoseEditor.SetLivePopupEditor(editors[i] as UMABonePoseEditor);
+                        }
+                    }
 				}
 			}
 		}

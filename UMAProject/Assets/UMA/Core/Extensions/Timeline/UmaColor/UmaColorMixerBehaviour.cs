@@ -29,12 +29,16 @@ namespace UMA.Timeline
             bool colorUpdated = false;
 
             if (inputCount <= 0)
+            {
                 return;
+            }
 
             UmaColorBehaviour firstBehaviour = ((ScriptPlayable<UmaColorBehaviour>)playable.GetInput(0)).GetBehaviour();
             Color finalColor = Color.black;
             if( avatar.GetColor(firstBehaviour.sharedColorName) != null)
+            {
                 finalColor = avatar.GetColor(firstBehaviour.sharedColorName).color;
+            }
 
             elapsedTime += info.deltaTime;
 
@@ -56,7 +60,9 @@ namespace UMA.Timeline
             }
 
             if (colorUpdated)
+            {
                 avatar.UpdateColors(true);
+            }
         }
     }
 }

@@ -36,6 +36,7 @@ namespace UMA.Editors
 				SerializedProperty umaBoneCount = PropertyCheck(property, "umaBoneCount");
 				SerializedProperty rootBoneName = PropertyCheck(property, "RootBoneName");
 				SerializedProperty blendshapes = PropertyCheck(property, "blendShapes");
+				SerializedProperty bones = PropertyCheck(property, "umaBones");
 
 				EditorGUILayout.LabelField( "Vertex Count", vertexCount.intValue.ToString());
 				EditorGUILayout.LabelField("Normals Count", normals.arraySize.ToString());
@@ -51,8 +52,8 @@ namespace UMA.Editors
 				EditorGUILayout.LabelField("RootBoneName", rootBoneName.stringValue);
 				EditorGUILayout.LabelField("BlendShape Count", blendshapes.arraySize.ToString());
 				EditorGUILayout.PropertyField( blendshapes, true );
-
-				EditorGUI.indentLevel--;
+				EditorGUILayout.PropertyField(bones, true);
+                EditorGUI.indentLevel--;
 			}
 
 			//EditorGUI.EndProperty();
@@ -62,8 +63,11 @@ namespace UMA.Editors
 		{
 			SerializedProperty prop = property.FindPropertyRelative(relativeName);
 			if (prop == null)
-				Debug.LogError(string.Format("{0} property not found!", relativeName));
-			return prop;
+            {
+                Debug.LogError(string.Format("{0} property not found!", relativeName));
+            }
+
+            return prop;
 		}
 	}
 }

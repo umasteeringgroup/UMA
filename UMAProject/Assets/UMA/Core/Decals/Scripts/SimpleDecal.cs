@@ -49,7 +49,9 @@ namespace UMA
         public void SaveDecal(string Name, string newAssetPath, bool addToLibrary, SkinnedMeshRenderer smr, DecalDefinition decal,GameObject marker1, Scene editScene,GameObject Root)
         {
             if (newAssetPath.StartsWith(Application.dataPath))
+            {
                 newAssetPath = "Assets"+ newAssetPath.Substring(Application.dataPath.Length);
+            }
 
             string meshPath = Path.Combine(newAssetPath, Name + "_Mesh.asset");
             string prefabPath = Path.Combine(newAssetPath, Name+".prefab");
@@ -231,7 +233,10 @@ namespace UMA
             foreach(Plane p in planes)
             {
                 float dist = p.GetDistanceToPoint(vert);
-                if (dist < 0.0f) return false;
+                if (dist < 0.0f)
+                {
+                    return false;
+                }
             }
             return true;
         }
@@ -270,7 +275,9 @@ namespace UMA
 
 
                     if (TriangleIntersects(tri, triangles,  bakedMesh, smr, planes, worldPoint))
+                    {
                         isAffected = true;
+                    }
 
                     //if (insideVertexes.Contains(triangles[tri])) isAffected = true;
                     //if (insideVertexes.Contains(triangles[tri+1])) isAffected = true;
@@ -327,12 +334,35 @@ namespace UMA
                 float b1dist = b1.GetDistanceToPoint(worldvert);
 
 
-                if (u1dist < 0) backu1count++;
-                if (u2dist < 0) backu2count++;
-                if (v1dist < 0) backv1count++;
-                if (v2dist < 0) backv2count++;
-                if (f1dist < 0) backf1count++;
-                if (b1dist < 0) backb1count++;
+                if (u1dist < 0)
+                {
+                    backu1count++;
+                }
+
+                if (u2dist < 0)
+                {
+                    backu2count++;
+                }
+
+                if (v1dist < 0)
+                {
+                    backv1count++;
+                }
+
+                if (v2dist < 0)
+                {
+                    backv2count++;
+                }
+
+                if (f1dist < 0)
+                {
+                    backf1count++;
+                }
+
+                if (b1dist < 0)
+                {
+                    backb1count++;
+                }
             }
 
 
@@ -340,12 +370,20 @@ namespace UMA
             // Calculate plane from verts. 
             // if ALL vertexes are "too far", then do not include
 
-            if (backu1count == 3 || backu2count == 3) 
+            if (backu1count == 3 || backu2count == 3)
+            {
                 return false;
-            if (backv1count == 3 || backv2count == 3) 
+            }
+
+            if (backv1count == 3 || backv2count == 3)
+            {
                 return false;
+            }
+
             if (backb1count == 3 || backf1count == 3)
+            {
                 return false;
+            }
 
             // Get the triangle in world space
             Vector3 t1 = transform.TransformPoint(bakedMesh.vertices[triangles[tri]]);
@@ -461,7 +499,10 @@ namespace UMA
                     Matrix4x4 posMat = new Matrix4x4();
                     posMat.SetTRS(pos.localPosition, Quaternion.identity /*pos.localRotation*/, Vector3.one);
                     if (invert)
+                    {
                         posMat = posMat.inverse;
+                    }
+
                     mat = mat * posMat;
                 }
                 else
@@ -477,7 +518,10 @@ namespace UMA
                     Matrix4x4 globalMat = new Matrix4x4();
                     globalMat.SetTRS(global.localPosition, Quaternion.identity/*global.localRotation*/, Vector3.one);
                     if (invert)
+                    {
                         globalMat = globalMat.inverse;
+                    }
+
                     mat = mat * globalMat;
                 }
                 else
@@ -494,7 +538,10 @@ namespace UMA
                     Matrix4x4 rootmat = new Matrix4x4();
                     rootmat.SetTRS(Vector3.zero, root.localRotation, Vector3.one);
                     if (invert)
+                    {
                         rootmat = rootmat.inverse;
+                    }
+
                     mat = mat * rootmat;
                 }
                 else

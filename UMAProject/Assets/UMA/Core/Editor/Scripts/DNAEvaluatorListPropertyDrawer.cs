@@ -59,16 +59,20 @@ namespace UMA.Editors
 			set {
 				_defaultGraph = value;
 				if (_defaultGraph != null)
-					_manuallyConfigured = true;
-			}
+                {
+                    _manuallyConfigured = true;
+                }
+            }
 		}
 
 		private void Init()
 		{
 			if (initialized)
-				return;
+            {
+                return;
+            }
 
-			if (!_manuallyConfigured)
+            if (!_manuallyConfigured)
 			{
 				if (this.fieldInfo != null)
 				{
@@ -85,9 +89,11 @@ namespace UMA.Editors
 			_aggregationLabelStyle.alignment = TextAnchor.MiddleLeft;
 
 			if (ROLDefaults == null)
-				ROLDefaults = new ReorderableList.Defaults();
+            {
+                ROLDefaults = new ReorderableList.Defaults();
+            }
 
-			initialized = true;
+            initialized = true;
 
 		}
 
@@ -104,9 +110,11 @@ namespace UMA.Editors
 
 				if(_labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawExpandedWithLabel 
 					|| _labelOption == DNAEvaluatorList.ConfigAttribute.LabelOptions.drawLabelAsFoldout)
-					h = (EditorGUIUtility.singleLineHeight + (_padding)) * 3;
+                {
+                    h = (EditorGUIUtility.singleLineHeight + (_padding)) * 3;
+                }
 
-				if (dnaEvalListProp.arraySize > 0)
+                if (dnaEvalListProp.arraySize > 0)
 				{
 					//we only show the aggregation method if there is more than one and that makes the footer higher
 					if(dnaEvalListProp.arraySize > 1)
@@ -114,8 +122,10 @@ namespace UMA.Editors
 						h += _padding * 3;
 					}
 					for (int i = 0; i < dnaEvalListProp.arraySize; i++)
-						h += EditorGUIUtility.singleLineHeight + (_padding * 2)+1f;
-				}
+                    {
+                        h += EditorGUIUtility.singleLineHeight + (_padding * 2)+1f;
+                    }
+                }
 				else
 				{
 					h += EditorGUIUtility.singleLineHeight + (_padding);
@@ -139,11 +149,15 @@ namespace UMA.Editors
 
 			var aggregationProp = property.FindPropertyRelative(AGGREGATIONMETHODPROPERTY);
 			if (aggregationProp.enumValueIndex == 1)//Cumulative
-				drawCalcOption = true;
-			else
-				drawCalcOption = false;
+            {
+                drawCalcOption = true;
+            }
+            else
+            {
+                drawCalcOption = false;
+            }
 
-			DrawReorderableList(position, property, label);
+            DrawReorderableList(position, property, label);
 
 			EditorGUI.EndProperty();
 		}

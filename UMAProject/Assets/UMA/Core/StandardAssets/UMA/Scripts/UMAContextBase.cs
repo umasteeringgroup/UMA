@@ -237,8 +237,10 @@ namespace UMA
 			{
 				var contextGO = GameObject.Find("UMAContext");
 				if (contextGO != null)
-					Instance = contextGO.GetComponent<UMAContextBase>();
-			}
+                {
+                    Instance = contextGO.GetComponent<UMAContextBase>();
+                }
+            }
 			if (Instance == null)
 			{
 				Instance = Component.FindObjectOfType<UMAContextBase>();

@@ -100,8 +100,10 @@ namespace UMA
 				for (int i = 0; i < presetLibs.Length; i++)
 				{
 					if (presetLibs[i]._customGraphTooltips.Count > 0)
-					_customsTooltips.AddRange(presetLibs[i]._customGraphTooltips);
-				}
+                    {
+                        _customsTooltips.AddRange(presetLibs[i]._customGraphTooltips);
+                    }
+                }
 				return _customsTooltips;
 			}
 		}
@@ -147,14 +149,18 @@ namespace UMA
 			foreach(KeyValuePair<DNAEvaluationGraph, string> kp in DNAEvaluationGraph.Defaults)
 			{
 				if (kp.Key.GraphMatches(graph))
-					return kp.Value;
-			}
+                {
+                    return kp.Value;
+                }
+            }
 			var _allCustomPresets = AllCustomGraphPresets;
 			for (int i = 0; i < _allCustomPresets.Count; i++)
 			{
 				if (_allCustomPresets[i].GraphMatches(graph))
-					return AllCustomGraphTooltips[i];
-			}
+                {
+                    return AllCustomGraphTooltips[i];
+                }
+            }
 			return ret;
 		}
 
@@ -167,8 +173,10 @@ namespace UMA
 			for (int i = 0; i < presetLibs.Length; i++)
 			{
 				if (presetLibs[i].AddNewPreset(graph, name, tooltip))
-					break;
-			}
+                {
+                    break;
+                }
+            }
 		}
 		/// <summary>
 		/// Add a new preset to this assets DNAEvaluatorPresets list
@@ -409,8 +417,11 @@ namespace UMA
 				path = path.Replace("/" + Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
 			}
 			if (path.IndexOf("/Editor") < 0)
-				path += "/Editor";
-			path += "/New DNAEvaluatorPresetLibrary.asset";
+            {
+                path += "/Editor";
+            }
+
+            path += "/New DNAEvaluatorPresetLibrary.asset";
 			UMA.CustomAssetUtility.CreateAsset<DNAEvaluationGraphPresetLibrary>(path);
 		}
 #endif

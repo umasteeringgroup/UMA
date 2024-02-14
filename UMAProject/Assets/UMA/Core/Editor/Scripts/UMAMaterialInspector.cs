@@ -230,8 +230,9 @@ namespace UMA.Editors
                         {
                             int selection = EditorGUILayout.Popup(0, _shaderProperties, GUILayout.MinWidth(100), GUILayout.MaxWidth(200));
                             if (selection > 0)
+                            {
                                 materialPropertyName.stringValue = _shaderProperties[selection];
-                                
+                            }
                         }
                         EditorGUILayout.EndHorizontal();
 
@@ -240,7 +241,9 @@ namespace UMA.Editors
                         if( source.material != null )
                         {
                             if (!source.material.HasProperty(materialPropertyName.stringValue) && !NonShaderProperty.boolValue)
+                            {
                                 EditorGUILayout.HelpBox("This name is not found in the shader! Are you sure it is correct?", MessageType.Warning);
+                            }
                         }
 
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("ConvertRenderTexture"), new GUIContent("Convert RenderTexture", "Convert the Render Texture to a Texture2D (so it can be compressed)"));
@@ -275,14 +278,18 @@ namespace UMA.Editors
         {
             int count = ShaderUtil.GetPropertyCount(shader);
             if (count <= 0)
+            {
                 return null;
+            }
 
             List<string> texProperties = new List<string>();
             texProperties.Add("Select");
             for (int i = 0; i < count; i++)
             {
                 if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
+                {
                     texProperties.Add(ShaderUtil.GetPropertyName(shader, i));
+                }
             }
 
             return texProperties.ToArray();
@@ -298,10 +305,14 @@ namespace UMA.Editors
             {
                 OverlayDataAsset overlay = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(AssetDatabase.GUIDToAssetPath(guids[i]));
                 if (overlay == null)
+                {
                     continue;
+                }
 
-                if(UMAMaterial.Equals(overlay.material, target as UMAMaterial))
+                if (UMAMaterial.Equals(overlay.material, target as UMAMaterial))
+                {
                     selectedAssets.Add(overlay);
+                }
             }
 
             if (selectedAssets.Count > 0)

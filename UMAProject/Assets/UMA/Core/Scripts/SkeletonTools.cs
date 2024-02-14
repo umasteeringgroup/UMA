@@ -12,8 +12,11 @@ namespace UMA
 			if (transforms.Length != 2)
 			{
 				if(Debug.isDebugBuild)
-					Debug.LogError("To Compare Skeletons you need to select two characters in your hierarchy.");
-				return;
+                {
+                    Debug.LogError("To Compare Skeletons you need to select two characters in your hierarchy.");
+                }
+
+                return;
 			}
 
 			var root1 = LocateRoot(transforms[0]);
@@ -33,32 +36,47 @@ namespace UMA
 			if (RecursiveFindBone(rootIterator, raceRoot) == null)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("Race root: " + raceRoot.name + " not found in the slot hierarchy");
-				failure++;
+                {
+                    Debug.LogError("Race root: " + raceRoot.name + " not found in the slot hierarchy");
+                }
+
+                failure++;
 			}
 		}
 
 		private static Transform RecursiveFindBone(Transform bone, Transform raceRoot)
 		{
-			if (bone.name == raceRoot.name) return bone;
-			for(int i = 0; i < bone.childCount; i++)
+			if (bone.name == raceRoot.name)
+            {
+                return bone;
+            }
+
+            for (int i = 0; i < bone.childCount; i++)
 			{
 				var result = RecursiveFindBone(bone.GetChild(i), raceRoot);
 				if (result != null)
-					return result;
-			}
+                {
+                    return result;
+                }
+            }
 			return null;
 		}
 
 		public static Transform RecursiveFindBone(Transform bone, string Name)
 		{
-			if (bone.name == Name) return bone;
-			for (int i = 0; i < bone.childCount; i++)
+			if (bone.name == Name)
+            {
+                return bone;
+            }
+
+            for (int i = 0; i < bone.childCount; i++)
 			{
 				var result = RecursiveFindBone(bone.GetChild(i), Name);
 				if (result != null)
-					return result;
-			}
+                {
+                    return result;
+                }
+            }
 			return null;
 		}
 
@@ -68,20 +86,26 @@ namespace UMA
 			{
 				failure++;
 				if (Debug.isDebugBuild)
-					Debug.LogError("Scale on " + race.name + " differs by " + (race.localScale - slot.localScale), slot);
-			}
+                {
+                    Debug.LogError("Scale on " + race.name + " differs by " + (race.localScale - slot.localScale), slot);
+                }
+            }
 			if ((race.localPosition - slot.localPosition).sqrMagnitude > 0.0001f)
 			{
 				failure++;
 				if (Debug.isDebugBuild)
-					Debug.LogError("Position on " + race.name + " differs by " + (race.localPosition - slot.localPosition), slot);
-			}
+                {
+                    Debug.LogError("Position on " + race.name + " differs by " + (race.localPosition - slot.localPosition), slot);
+                }
+            }
 			if (race.localRotation != slot.localRotation)
 			{
 				failure++;
 				if (Debug.isDebugBuild)
-					Debug.LogError("Rotation on " + race.name + " differs by " + Quaternion.Angle(race.localRotation, slot.localRotation) + " degrees", slot);
-			}
+                {
+                    Debug.LogError("Rotation on " + race.name + " differs by " + Quaternion.Angle(race.localRotation, slot.localRotation) + " degrees", slot);
+                }
+            }
 			for (int i = 0; i < race.childCount; i++)
 			{
 				var raceChild = race.GetChild(i);
@@ -94,10 +118,15 @@ namespace UMA
 				{
 					failure++;
 					if (Debug.isDebugBuild)
-						Debug.LogError("Bone is missing: " + raceChild.name + " on bone: " + slot.name, slot);
-				}
-				if (failure >= 50) return;
-			}
+                    {
+                        Debug.LogError("Bone is missing: " + raceChild.name + " on bone: " + slot.name, slot);
+                    }
+                }
+				if (failure >= 50)
+                {
+                    return;
+                }
+            }
 		}
 
 		public static Transform LocateRoot(Transform parent)
@@ -105,8 +134,12 @@ namespace UMA
 			for (int i = 0; i < parent.childCount; i++)
 			{
 				var child = parent.GetChild(i);
-				if (child.childCount == 0) continue;
-				return child;
+				if (child.childCount == 0)
+                {
+                    continue;
+                }
+
+                return child;
 			}
 			return null;
 		}

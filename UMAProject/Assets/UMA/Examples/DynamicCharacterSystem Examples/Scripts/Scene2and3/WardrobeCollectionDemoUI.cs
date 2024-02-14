@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections;
 using UMA;
-using UMA.AssetBundles;
 
 namespace UMA.CharacterSystem.Examples
 {
@@ -30,20 +29,26 @@ namespace UMA.CharacterSystem.Examples
 		public void GenerateCollectionButtons()
 		{
 			if (WardrobeCollectionLibrary.Instance == null)
-				return;
+            {
+                return;
+            }
 
-			//clear any existing buttons
-			foreach (Transform child in transform)
+            //clear any existing buttons
+            foreach (Transform child in transform)
 			{
 				Destroy(child.gameObject);
 			}
 			var currentAvatarRace = "";
 			if (thisCustomizer.Avatar != null)
-				currentAvatarRace = thisCustomizer.Avatar.activeRace.name;
-			foreach (UMAWardrobeCollection uwc in WardrobeCollectionLibrary.Instance.collectionList)
+            {
+                currentAvatarRace = thisCustomizer.Avatar.activeRace.name;
+            }
+
+            for (int i = 0; i < WardrobeCollectionLibrary.Instance.collectionList.Count; i++)
 			{
-				//dont create a button if the collection is not compatible with the currentAvatar Race
-				if (uwc.compatibleRaces.Contains(currentAvatarRace) || currentAvatarRace == "" || uwc.compatibleRaces.Count == 0)
+                UMAWardrobeCollection uwc = WardrobeCollectionLibrary.Instance.collectionList[i];
+                //dont create a button if the collection is not compatible with the currentAvatar Race
+                if (uwc.compatibleRaces.Contains(currentAvatarRace) || currentAvatarRace == "" || uwc.compatibleRaces.Count == 0)
 				{
 					var thisBtn = GameObject.Instantiate(collectionButtonPrefab);
 					var thisBtnCtrl = thisBtn.GetComponent<WardrobeCollectionDemoBtn>();
@@ -69,8 +74,11 @@ namespace UMA.CharacterSystem.Examples
 				{
 					//show a messagebox- but for now
 					if (Debug.isDebugBuild)
-						Debug.LogWarning("This wardrobe collection was not compatible with that avatar");
-					return;
+                    {
+                        Debug.LogWarning("This wardrobe collection was not compatible with that avatar");
+                    }
+
+                    return;
 				}
 				//if not show a message otherwise load the recipe
 				var thisContext = thisCustomizer.Avatar.context != null ? thisCustomizer.Avatar.context : UMAContextBase.FindInstance();

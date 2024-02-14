@@ -67,19 +67,26 @@ namespace UMA.Editors
 				SetCurrentDnaTypeHashes();
             }
 			if (_currentDnaTypeHashes.Length == 0 || currentRecipe == null || currentRecipe.raceData == null)
-				return false;
-			UMADnaBase[] allDna = currentRecipe.GetAllDna();
+            {
+                return false;
+            }
+
+            UMADnaBase[] allDna = currentRecipe.GetAllDna();
 			for (int i = 0; i < allDna.Length; i++)
 			{
 				bool found = false;
 				for (int ii = 0; ii < _currentDnaTypeHashes.Length; ii++)
 				{
 					if (_currentDnaTypeHashes[ii] == allDna[i].DNATypeHash)
-						found = true;
-				}
+                    {
+                        found = true;
+                    }
+                }
 				if (!found)
-					return false;
-			}
+                {
+                    return false;
+                }
+            }
 			return true;
 		}
 
@@ -102,12 +109,15 @@ namespace UMA.Editors
 					GUIHelper.EndCollapsableGroup();
                 }
 				if (dnaEditor != null)
-					if (!CheckCurrentDNATypeHashes())
+                {
+                    if (!CheckCurrentDNATypeHashes())
 					{
 						dnaEditor = new DNAMasterEditor(_recipe);
 						SetCurrentDnaTypeHashes();
 					}
-				base.OnInspectorGUI();
+                }
+
+                base.OnInspectorGUI();
 			}
 			else
             {

@@ -16,8 +16,9 @@ namespace UMA.CharacterSystem
 
             string[] words = str.Split(sep,StringSplitOptions.RemoveEmptyEntries);
             StringBuilder sb = new StringBuilder();
-            foreach(string word in words)
+            for (int i = 0; i < words.Length; i++)
             {
+                string word = words[i];
                 if (word.Length > 2)
                 {
                     string s1 = word.Substring(0, 1).ToUpper();
@@ -44,8 +45,11 @@ namespace UMA.CharacterSystem
 					sb.Append('|');
 				}
 				if (i == 0)
-					c = char.ToUpper(c);
-				sb.Append(c);
+                {
+                    c = char.ToUpper(c);
+                }
+
+                sb.Append(c);
 			}
 			return sb.ToString().Split('|');
 		}
@@ -61,7 +65,10 @@ namespace UMA.CharacterSystem
                     sb.Append('/');
                 }
                 if (i == 0)
+                {
                     c = char.ToUpper(c);
+                }
+
                 sb.Append(c);
             }
             return sb.ToString();
@@ -79,8 +86,11 @@ namespace UMA.CharacterSystem
                               sb.Append(' ');
                         }
                         if (i==0)
-                              c = char.ToUpper(c);
-                        sb.Append(c);
+                {
+                    c = char.ToUpper(c);
+                }
+
+                sb.Append(c);
                   }
                   return sb.ToString();
             }
