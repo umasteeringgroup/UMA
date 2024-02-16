@@ -376,9 +376,9 @@ namespace UMA.Editors
 
 			if (geometry != null)
 			{
-                InspectorUtlity.InspectTarget(obj);
-                //Selection.activeGameObject = obj;
-				if (focusObject)
+                Selection.activeGameObject = obj;
+                //InspectorUtlity.InspectTarget(obj);
+                if (focusObject)
 				{
 					SceneView.lastActiveSceneView.FrameSelected(true);
 				}

@@ -247,17 +247,21 @@ namespace UMA.PoseTools
                 umaData.skeleton.SetRotation(headHash, headRotation);
             }
 
-            if (gazeWeight > 0f)
-			{
-				if (umaData.animator != null)
-				{
-					umaData.animator.SetLookAtPosition(gazeTarget);
-					umaData.animator.SetLookAtWeight(gazeWeight);
-				}
-			}
 		}
 
-		void LateUpdate()
+        private void OnAnimatorIK(int layerIndex)
+        {
+            if (gazeWeight > 0f)
+            {
+                if (umaData.animator != null)
+                {
+                    umaData.animator.SetLookAtPosition(gazeTarget);
+                    umaData.animator.SetLookAtWeight(gazeWeight);
+                }
+            }
+        }
+
+        void LateUpdate()
 		{
 			if (!processing)
             {
