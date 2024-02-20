@@ -1702,6 +1702,10 @@ namespace UMA
                     {
                         sd.material = Instance.GetAsset<UMAMaterial>(sd.materialName);
                     }
+                    else
+                    {
+                        Debug.LogError("Material name is null on slot: " + sd.name+" Unable to load material!");
+                    }
                 }
             }
             else if (result is OverlayDataAsset)

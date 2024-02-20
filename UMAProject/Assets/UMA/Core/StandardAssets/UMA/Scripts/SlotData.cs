@@ -565,6 +565,10 @@ namespace UMA
                 if (asset.material == null)
                 {
                     asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
+                    if (asset.material == null)
+                    {
+                        Debug.LogError("Unable to load material " + asset.materialName + " for slot " + asset.slotName);
+                    }
                 }
 
                 if (material == null)

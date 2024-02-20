@@ -547,7 +547,7 @@ namespace UMA.Editors
 
             Rect WinRect = new Rect(SceneView.lastActiveSceneView.position.width - (WindowWidth + Margin), SceneView.lastActiveSceneView.position.height - (WindowHeight + Margin),WindowWidth, WindowHeight);
 
-            GUI.Window(1,WinRect, SceneWindow, "UMA Mesh Hide Geometry Selector");
+            GUI.Window(1,WinRect,   SceneWindow, "UMA Mesh Hide Geometry Selector");
 #endif
             DrawNextLabel("Left click and drag to area select");
             DrawNextLabel("Hold SHIFT while dragging to paint");
