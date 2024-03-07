@@ -266,8 +266,38 @@ namespace UMA
 
         public static string[] GetDefaultTags()
         {
-            return PlayerPrefs.GetString(umaDefaultTagsKey, umaDefaultTags).Split(',');
+			var defaultTags = PlayerPrefs.GetString(umaDefaultTagsKey, umaDefaultTags);
+			if (string.IsNullOrEmpty(defaultTags))
+			{
+				defaultTags = "Head,Hair,Torso,Legs,Feet,Hands,Smooshable,Unsmooshable";
+			}
+			var tagsArray = defaultTags.Split(',');
+			if (tagsArray.Length == 0)
+			{
+                tagsArray = new string[] { "Head", "Hair", "Torso", "Legs", "Feet", "Hands", "Smooshable", "Unsmooshable" };
+            }
+			return tagsArray;
         }
+
+		public static string[] GetDefaultBaseTags()
+		{
+			string[] strings = GetDefaultTags();
+			string[] baseTags = new string[strings.Length];
+			// trim everything past the last slash
+			for (int i = 0; i < strings.Length; i++)
+			{
+				string[] split = strings[i].Split('/');
+				if (split.Length > 1)
+				{
+					baseTags[i] = split[split.Length-1];
+                }
+                else
+				{
+					baseTags[i] = strings[i];
+                }
+            }
+			return baseTags;
+		}
 
 		public static string GetDefaultAddressableLabel()
 		{

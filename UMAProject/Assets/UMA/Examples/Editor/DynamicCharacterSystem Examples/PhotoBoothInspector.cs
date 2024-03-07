@@ -77,7 +77,7 @@ namespace UMA.CharacterSystem.Examples
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("autoPhotosEnabled"));
 			if (autoPhotosEnabled)
 			{
-				//EditorGUILayout.PropertyField(serializedObject.FindProperty("addUnderwearToBasePhoto"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("addUnderwearToBasePhoto"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("overwriteExistingPhotos"));
 				if (Application.isPlaying)
                 {

@@ -2810,6 +2810,20 @@ namespace UMA.CharacterSystem
             return dna;
         }
 
+        public void SetDNA(string DNAName, float value, bool rebuild = false)
+        {
+
+            var dna = GetDNA();
+            if (dna.ContainsKey(DNAName))
+            {
+                dna[DNAName].Set(value);
+            }
+            if (rebuild)
+            { 
+                ForceUpdate(true); 
+            }
+        }
+
         public UMADnaBase[] GetAllDNA()
         {
             return umaData.GetAllDna();
@@ -4881,13 +4895,15 @@ namespace UMA.CharacterSystem
                         continue;
                     }
                     var ovl = checkSlot.GetOverlay(0);
-                    if (ovl.overlayName == replacedSlot.GetOverlay(0).overlayName)
+                    var replacedOvl = replacedSlot.GetOverlay(0);
+
+                    if (ovl != null && replacedOvl != null && ovl.overlayName == replacedSlot.GetOverlay(0).overlayName)
                     {
                         checkSlot.SetOverlayList(ReplacedOverlays);
                     }
                 }
             }
-                        }
+        }
 
 
 

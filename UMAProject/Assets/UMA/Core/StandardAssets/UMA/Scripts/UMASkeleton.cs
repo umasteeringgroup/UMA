@@ -334,11 +334,22 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Gets the game object for a transform in the skeleton.
+		/// Gets the transform for a bone in the skeleton using the bone name.
 		/// </summary>
-		/// <returns>The game object or null, if not found.</returns>
-		/// <param name="nameHash">Name hash.</param>
-		public virtual GameObject GetBoneGameObject(int nameHash)
+		/// <param name="boneName"></param>
+		/// <returns></returns>
+        public virtual Transform GetBoneTransform(string boneName)
+        {
+			int nameHash = UMAUtils.StringToHash(boneName);
+			return GetBoneTransform(nameHash);
+        }
+
+        /// <summary>
+        /// Gets the game object for a transform in the skeleton.
+        /// </summary>
+        /// <returns>The game object or null, if not found.</returns>
+        /// <param name="nameHash">Name hash.</param>
+        public virtual GameObject GetBoneGameObject(int nameHash)
 		{
 			BoneData res;
 			if (boneHashData.TryGetValue(nameHash, out res))
@@ -352,6 +363,17 @@ namespace UMA
 			}
 			return null;
 		}
+
+		/// <summary>
+		/// Get the game object for a bone in the skeleton using the bone name.
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		public virtual GameObject GetBoneGameObject(string name)
+		{
+            int nameHash = UMAUtils.StringToHash(name);
+			return GetBoneGameObject(nameHash);
+        }
 
 
 		public List<KeyValuePair<int,string>> GetBoneHashNames()

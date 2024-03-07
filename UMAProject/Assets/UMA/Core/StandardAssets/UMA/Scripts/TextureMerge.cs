@@ -363,7 +363,7 @@ namespace UMA
 
 			if (textureType >= source.baseOverlay.textureList.Length)
 			{
-				Debug.LogWarning("Out of range (" + textureType + ") on base overlay: " + source.overlayData[0].overlayName + " on slot: " + source.slotData.slotName);
+				Debug.Log("Out of range (" + textureType + ") on base overlay: " + source.overlayData[0].overlayName + " on slot: " + source.slotData.slotName);
 				return;
 			}
 			textureMergeRect.tex = source.baseOverlay.textureList[textureType];

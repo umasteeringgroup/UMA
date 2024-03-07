@@ -5,35 +5,50 @@ EditorUserSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 4
   m_ConfigSettings:
-    RecentlyUsedScenePath-0:
-      value: 224247031146466e202f4307082252001a120b65002d21312e305d16fae13928eee225a6d2171e7c1a0dfd39440a0e30fe4a444bc00e18021717bd3d1df004533cc00bcd1fdb5109c51008d7
+    RecentlyUsedSceneGuid-0:
+      value: 5a055202570c5a025b0d087312270e44434f4d7d7e2c22602f7a1c62b5b8316c
       flags: 0
-    RecentlyUsedScenePath-1:
+    RecentlyUsedSceneGuid-1:
+      value: 5702570357515a5e580c0824137a0d44144f4c2c2f7073317d7b1e63b3e33568
+      flags: 0
+    RecentlyUsedScenePath-0:
       value: 224247031146466e202f4307082252001a120b651c203f23242a0e73c7f83535f2eb33faa81933332d0aaf191c3f0c2ffe0f471ef8021e12
       flags: 0
-    RecentlyUsedScenePath-2:
+    RecentlyUsedScenePath-1:
       value: 224247031146466e202f4307082252001a120b651c203f23242a0e73c7f83535f2eb33faa8083e3b3d0de33021260032e2060c45e305031f08
       flags: 0
-    RecentlyUsedScenePath-3:
+    RecentlyUsedScenePath-2:
       value: 224247031146466e202f4307082252001a120b6518212b3521201336a2c52c39eff73aeca80f121d7936e63101320831f74a2c13f7061a071440e80018eb09
       flags: 0
-    RecentlyUsedScenePath-4:
+    RecentlyUsedScenePath-3:
       value: 224247031146466e202f4307082252001a120b65002d21312e305d16fae13928eee225a6d2171e7c1a0dfd39441a0432fd4a444bc50e18021002f41414fb503019c40ac419dc1a0ed85709c0c409c8
       flags: 0
-    RecentlyUsedScenePath-5:
+    RecentlyUsedScenePath-4:
       value: 224247031146466e202f4307082252001a120b650127333e39201334cde23e3de1f325a9c2223e31290eea7329311431e603070cd909000e121aee2b09fe1d031dc02bc61fc61a52de1715dad4
       flags: 0
-    RecentlyUsedScenePath-6:
+    RecentlyUsedScenePath-5:
       value: 224247031146466e202f43011f315a5f3313113e233a69032e2c1336f1af1b2ee7f53ae8fe1b33353e0cea2e4a2b0f36e613
       flags: 0
-    RecentlyUsedScenePath-7:
+    RecentlyUsedScenePath-6:
       value: 224247031146466e202f4307082252001a120b65042731042269382be3ed2434e7f479c1e82d7f283642cc330a2d152de7091d4bf7050e4b1d01fc0a51fe503732e458c308c7125cca590cdcc81bd0e19bc3dae3ccf2
       flags: 0
-    RecentlyUsedScenePath-8:
+    RecentlyUsedScenePath-7:
       value: 224247031146466e202f4307082252001a120b65042731042269382be3ed2434e7f479c1e82d7f283642da2f017e007fc106000ff3194a1f1e4efe011feb021c1d853ceb3b860a12c20d05
+      flags: 0
+    RecentlyUsedScenePath-8:
+      value: 3350570d04520c48420d032f5e295d1f190310642e2d3224283b5020eae1303df0f479dae6372f303c11a00f073b0f3abc1f0702e212
       flags: 0
     RecentlyUsedScenePath-9:
       value: 224247031146466e202f4307082252001a120b650831283120201e10eae12639e1f333fbd4232c283c0faf191c3f0c2ffe0f1a44c3262b4b352dce4e35fa1d1c518858f613c50f10ce592fcbd908c1adc0d8ddfec1
+      flags: 0
+    UnityEditor.ShaderGraph.Blackboard:
+      value: 18135939215a0a5004000b0e15254b524c030a3f2964643d120d1230e9e93a3fd6e826abbd2e2d293c4ead313b08042de6030a0afa240c0d020be94c4ba75e435d8715fa32c70d15d11612dacc11fee5d3c5d1fe9ab1b1968889f6a4a2a6bba8a2a6f7abf3fcab8ce8a2c182a6d8c2869bd1f5dc8e9c9b97ea9c819ffcca90898d86d598899ac5
+      flags: 0
+    UnityEditor.ShaderGraph.FloatingWindowsLayout2:
+      value: 181344140043005e1a220d3b1f364b524c0c5a27130c293326201334cee5322ca0bd30e8eb293a707b0fd0180b3d0a36fc0d3d04e649500d1002ee0b5dbd1d2c27c00ad113cb1e10e41f1addc80993b98d9884a69ae6d8f0d1cda9e8fbfefaf9f9dea3fdb9ade882f0f8b0e8f69b9e979993e19094929a90ef9e93de81e0dbc9dc94dfcd9b9f9a8188dff5c3f1c3f4f7c4f5f4c4c6f1cafcc8d2deab22e9fe3232293eeceaeeeed7ede83cd42328d3dd6f6a9b
+      flags: 0
+    UnityEditor.ShaderGraph.InspectorWindow:
+      value: 18135939215a0a5004000b0e15254b524c030a3f2964643d120d1230e9e93a3fd6e826abbd2e2d293c4ead313b08042de6030a0afa240c0d020be94c4bac445d47934e934c9f464f934b4f9c994f9da1d8e9fce5cae2fdd7d0cba1fedbf6e8ebf0e5e7a1fbf1ad8ef9fcade2fb9192949492e29d9f9e8585b7ede2daa4d69089c2949d9483d4888b97ddeccfbbd2fdf0c5f3eac0c3f3cffecbcac5e631e7ff367b7a
       flags: 0
     vcSharedLogLevel:
       value: 0d5e400f0650
@@ -43,9 +58,13 @@ EditorUserSettings:
   m_VCDebugCmd: 0
   m_VCDebugOut: 0
   m_SemanticMergeMode: 2
+  m_DesiredImportWorkerCount: 5
+  m_StandbyImportWorkerCount: 2
+  m_IdleImportWorkerShutdownDelay: 60000
   m_VCShowFailedCheckout: 1
   m_VCOverwriteFailedCheckoutAssets: 1
   m_VCProjectOverlayIcons: 1
   m_VCHierarchyOverlayIcons: 1
   m_VCOtherOverlayIcons: 1
   m_VCAllowAsyncUpdate: 0
+  m_ArtifactGarbageCollection: 1

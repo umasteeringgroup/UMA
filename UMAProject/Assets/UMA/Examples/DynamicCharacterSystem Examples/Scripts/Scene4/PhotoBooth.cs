@@ -86,10 +86,10 @@ namespace UMA.CharacterSystem.Examples
 		}
         void CheckInspector()
         {
-            if (inspector == null)
-            {
-                inspector = PopUpAssetInspector.Create(this);
-            }
+           // if (inspector == null)
+           // {
+           //     inspector = PopUpAssetInspector.Create(this);
+           // }
         }
 
         private void Update()

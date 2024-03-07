@@ -29,13 +29,16 @@ MonoBehaviour:
   wardrobeSlot: Hair
   Appended: 0
   Hides: []
-  HideTags: []
+  HideTags:
+  - Head
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
   OverrideDNA:
     PreloadValues: []
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"FemalePonyTail","scale":100,"copyIdx":-1,"overlays":[{"id":"FemalePonyTail_Overlay","colorIdx":0,"rect":[0,0,0,0],"data":[]}]},{"id":"FemalePonyTail_1","scale":100,"copyIdx":-1,"overlays":[{"id":"PonyTail_Scrunchie_Overlay","colorIdx":1,"rect":[0,0,0,0],"data":[]}]}],"colors":[],"fColors":[{"name":"Hair","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"HairAccent","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":2,"race":"","packedDna":[]}'
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"FemalePonyTail","scale":100,"copyIdx":-1,"overlays":[{"id":"FemalePonyTail_Overlay","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":0.0,"y":0.0,"z":0.0},"rotation":0.0,"blendModes":[0,0],"Tags":[],"tiling":[false,false],"uvOverride":0}],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0},{"id":"FemalePonyTail_1","scale":100,"copyIdx":-1,"overlays":[{"id":"PonyTail_Scrunchie_Overlay","colorIdx":1,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":0.0,"y":0.0,"z":0.0},"rotation":0.0,"blendModes":[0,0,0],"Tags":[],"tiling":[false,false,false],"uvOverride":0}],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0}],"colors":[],"fColors":[{"name":"Hair","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"isBaseColor":false},{"name":"HairAccent","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"isBaseColor":false}],"sharedColorCount":2,"race":"HumanFemale","packedDna":[],"uvOverride":0}'
+  forceKeep: 0
+  labelLocalFiles: 0
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

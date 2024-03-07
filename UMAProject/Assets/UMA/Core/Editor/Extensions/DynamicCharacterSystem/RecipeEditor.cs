@@ -247,7 +247,6 @@ namespace UMA.Editors
             {
                 UMAUpdateProcessor.UpdateRecipe(target as UMATextRecipe);
             }
-            Debug.Log("Updated recipe " + recipeBase.name);
         }
 
         protected override void Rebuild()

@@ -6,6 +6,8 @@ using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
 using UnityEditorInternal;
+using Sirenix.Reflection.Editor;
+using System.IO;
 
 namespace UMA.Editors
 {
@@ -446,7 +448,7 @@ namespace UMA.Editors
 				labelRect.x = dropArea.width + padding + 20f;
 				labelRect.width = 85f;
 				labelRect.height = EditorGUIUtility.singleLineHeight;
-				labelRect.y = dropArea.y + EditorGUIUtility.singleLineHeight;
+				labelRect.y = dropArea.y - EditorGUIUtility.singleLineHeight;
 				
 				Rect DDRect = labelRect;
 				Rect SpriteRect = labelRect;
@@ -581,7 +583,7 @@ namespace UMA.Editors
 		private bool ShowHidetags;
 		private bool ShowSuppressSlots;
 		private bool ShowOverrideDNA;
-		private ReorderableList hideTagsList;
+		private ReorderableList hideTagsList = null;
 		private bool hideTagsListInitialized = false;
 
 		private RaceData lastRace;
@@ -667,21 +669,160 @@ namespace UMA.Editors
 			}
 		}
 
-
-		private void InitHideTagsList()
+/*
+		private string[] defaultTags;
+		private ReorderableList InitTagsList(string fieldName)
 		{
-			var HideTagsProperty = serializedObject.FindProperty("HideTags");
-			hideTagsList = new ReorderableList(serializedObject, HideTagsProperty, true, true, true, true);
-			hideTagsList.drawHeaderCallback = (Rect rect) => {
-				EditorGUI.LabelField(rect, "Hide Tags");
-			};
-			hideTagsList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => {
-				var element = hideTagsList.serializedProperty.GetArrayElementAtIndex(index);
+			defaultTags = UMAEditorUtilities.GetDefaultTags();
+			// Get the dropdown list of hide tags
+			// 
+			var arrayProperty = serializedObject.FindProperty(fieldName);
+            //var HideTagsProperty = serializedObject.FindProperty("HideTags");
+            var tagsList = new ReorderableList(serializedObject, arrayProperty, true, true, false, false);
+			tagsList.drawHeaderCallback = (Rect rect) =>
+			{
+                // You know what would be nice?
+                // if GUILayout.BeginArea worked here. It doesn't, and while reported and acknowledged,
+                // it's not going to be fixed. 
+                // So we have to do this the hard way.
+
+                float width1 = 56;
+                float width3 = 44;  // Add button
+                float width4 = 20;  // + button
+				float width5 = 44;  // Clear button
+				float width6 = 44;  // load button
+				float width7 = 44;  // save button
+                float width2 = rect.width - (width1 + width3 + width4 + width5 + width6 + width7);
+
+                float pos1 = 0;
+				float pos2 = pos1 + width1;
+				float pos3 = pos2 + width2;
+				float pos4 = pos3 + width3;
+				float pos5 = pos4 + width4;
+				float pos6 = pos5 + width5;
+				float pos7 = pos6 + width6;
+
+				Rect ctrl = new Rect(rect.x, rect.y, rect.width - 20, rect.height);
+
+				Rect labelrect = new Rect(rect.x+pos1, rect.y, width1, rect.height);
+				Rect dropdownrect = new Rect(rect.x + pos2, rect.y, width2, rect.height); 
+				Rect adddropdownrect = new Rect(rect.x+pos3, rect.y, width3 , rect.height);  
+				Rect addBlankrect = new Rect(rect.x + pos4, rect.y, width4, rect.height);  
+				Rect clearRect = new Rect(rect.x + pos5, rect.y, width5, rect.height);  
+				Rect loadRect = new Rect(rect.x + pos6, rect.y, width6, rect.height);  
+				Rect saveRect = new Rect(rect.x + pos7, rect.y, width7, rect.height);  
+
+				EditorGUI.LabelField(labelrect, "Select");
+				//ctrl.x += rect.width - 20;
+				//ctrl.width = 20;
+
+				if (defaultTags.Length > 0)
+				{
+					selectedTag = Mathf.Clamp(selectedTag, 0, defaultTags.Length - 1);
+                    selectedTag = EditorGUI.Popup(dropdownrect,selectedTag, defaultTags);
+
+                    if (GUI.Button(adddropdownrect, "Add", EditorStyles.miniButton))
+					{
+						string currentTag = defaultTags[selectedTag];
+                        var arraySizeProp = arrayProperty.FindPropertyRelative("Array.size");
+
+						bool found = false;
+                        for (var i = 0; i < arraySizeProp.intValue; i++)
+                        {
+							string val = arrayProperty.GetArrayElementAtIndex(i).stringValue;
+							if (val == currentTag)
+							{
+								found = true;
+								break;
+							}
+                        }
+
+                        // Add the tag to the list if it's not already there
+                        if (!found)
+						{
+							// 
+                            arrayProperty.InsertArrayElementAtIndex(arrayProperty.arraySize);
+                            arrayProperty.GetArrayElementAtIndex(arrayProperty.arraySize - 1).stringValue = currentTag;
+                        }
+					}
+
+					if (GUI.Button(clearRect, "Clear", EditorStyles.miniButton))
+					{
+                        arrayProperty.ClearArray();
+                    }
+					if (GUI.Button(loadRect, "Load", EditorStyles.miniButton))
+					{
+                        string fname = EditorUtility.OpenFilePanel("Load", "", "txt");
+                        {
+                            if (!string.IsNullOrEmpty(fname))
+                            {
+								var tags = File.ReadAllLines(fname);
+								arrayProperty.ClearArray();
+								for (int i = 0; i < tags.Length; i++)
+								{
+                                    arrayProperty.InsertArrayElementAtIndex(i);
+                                    arrayProperty.GetArrayElementAtIndex(i).stringValue = tags[i];
+                                }
+								GUI.changed = true;
+                            }
+                        }
+                        serializedObject.ApplyModifiedProperties();
+                        GUIUtility.ExitGUI(); // This is necessary to prevent a crash in Unity
+                    }
+					if (GUI.Button(saveRect, "Save", EditorStyles.miniButton))
+					{
+                        string fname = EditorUtility.SaveFilePanel("Save", "", "Tags", "txt");
+                        {
+                            if (!string.IsNullOrEmpty(fname))
+                            {
+								string[] tags = new string[arrayProperty.arraySize];
+								for (int i = 0; i < arrayProperty.arraySize; i++)
+								{
+									tags[i] = arrayProperty.GetArrayElementAtIndex(i).stringValue;
+								}
+								File.WriteAllLines(fname, tags);
+							}
+                        }
+						serializedObject.ApplyModifiedProperties();
+						GUIUtility.ExitGUI(); // This is necessary to prevent a crash in Unity
+                    }
+                    if (GUI.Button(addBlankrect, "+", EditorStyles.miniButton))
+                    {
+                        arrayProperty.InsertArrayElementAtIndex(arrayProperty.arraySize);
+                        // Sometimes, Unity will set the value to the last added element, so we need to set it to an empty string
+                        arrayProperty.GetArrayElementAtIndex(arrayProperty.arraySize - 1).stringValue = "";
+                    }
+                }
+                else
+				{ 
+					GUI.Label(ctrl, "Add defaults in prefs");
+                    if (GUI.Button(addBlankrect, "+", EditorStyles.miniButton))
+                    {
+                        arrayProperty.InsertArrayElementAtIndex(arrayProperty.arraySize);
+                        // Sometimes, Unity will set the value to the last added element, so we need to set it to an empty string
+                        arrayProperty.GetArrayElementAtIndex(arrayProperty.arraySize - 1).stringValue = "";
+                    }
+                }
+            };
+
+			tagsList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
+			{
+				if (tagsList.serializedProperty.arraySize <= index)
+					return;
+				var element = tagsList.serializedProperty.GetArrayElementAtIndex(index);
+				if (element == null)
+					return;
 				rect.y += 2;
-				element.stringValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), element.stringValue);
+				element.stringValue = EditorGUI.TextField(new Rect(rect.x, rect.y, rect.width - 22, EditorGUIUtility.singleLineHeight), element.stringValue);
+				// draw the remove button
+				if (GUI.Button(new Rect(rect.x + rect.width - 20, rect.y, 20, EditorGUIUtility.singleLineHeight), "x"))
+				{
+					tagsList.serializedProperty.DeleteArrayElementAtIndex(index);
+				}
 			};
-			hideTagsListInitialized = true;
-		}
+			tagsList.footerHeight = 0;
+			return tagsList;
+		} */
 
 		protected virtual bool DrawWardrobeSlotsFields(Type TargetType, bool ShowHelp = false)
 		{
@@ -1227,9 +1368,9 @@ namespace UMA.Editors
 			#endregion
 
 			#region HideTags UI
-			if (!hideTagsListInitialized)
+			if (hideTagsList == null)
 			{
-				InitHideTagsList();
+				hideTagsList = GUIHelper.InitTagsList("HideTags",serializedObject);
 			}
 
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
@@ -1240,6 +1381,7 @@ namespace UMA.Editors
 			{
                 GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
 
+				/*
                 doUpdate |= DoTagSelector(hideTags);
                 if (doUpdate)
                 {
@@ -1247,6 +1389,7 @@ namespace UMA.Editors
                     serializedObject.ApplyModifiedProperties();
                     serializedObject.Update();
                 }
+				*/
 				EditorGUI.BeginChangeCheck();
 				hideTagsList.DoLayoutList();
                 GUIHelper.EndVerticalPadded(10);

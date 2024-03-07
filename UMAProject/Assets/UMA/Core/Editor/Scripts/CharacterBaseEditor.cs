@@ -521,6 +521,78 @@ namespace UMA.Editors
 
         public static string[] RaceNames = null;
 
+
+        public static void DoRaceGUI(ref bool Changed, SlotData slotData)
+        {
+            if (slotData.Races == null)
+            {
+                slotData.Races = new string[0];
+            }
+            if (true)
+            {
+                GUILayout.Space(10);
+                GUILayout.Label("Only add for these Races:");
+                // do the race matches here.
+                if (RaceNames == null)
+                {
+                    List<string> theRaceNames = new List<string>();
+                    RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+                    foreach (RaceData race in races)
+                    {
+                        if (race != null)
+                        {
+                            theRaceNames.Add(race.raceName);
+                        }
+                    }
+                    RaceNames = theRaceNames.ToArray();
+                }
+                GUILayout.BeginHorizontal();
+                if (!SlotEditor.SelectedRace.ContainsKey(slotData.slotName))
+                {
+                    SlotEditor.SelectedRace.Add(slotData.slotName, 0);
+                }
+
+                SlotEditor.SelectedRace[slotData.slotName] = EditorGUILayout.Popup(SlotEditor.SelectedRace[slotData.slotName], RaceNames, GUILayout.ExpandWidth(true));
+                if (GUILayout.Button("Add Race"))
+                {
+                    // Add the selected race name if it's not already there.
+                    string theRace = RaceNames[SlotEditor.SelectedRace[slotData.slotName]];
+                    List<string> Races = new List<string>(slotData.Races);
+                    if (!Races.Contains(theRace))
+                    {
+                        Races.Add(theRace);
+                        slotData.Races = Races.ToArray();
+                        Changed = true;
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                DoTagsDisplay(ref slotData.Races, ref Changed);
+
+                EditorGUI.BeginChangeCheck();
+                slotData.isSwapSlot = EditorGUILayout.Toggle("This is a swap slot", slotData.isSwapSlot);
+                if (slotData.isSwapSlot)
+                {
+                    EditorGUILayout.HelpBox("A Swap slot will only be added if there is a slot with the below tag already in the recipe. If there is no slot with the tag then this slot will not be added.", MessageType.Info);
+                    string newSwapTag = CharacterBaseEditor.DoTagSelector(slotData.swapTag);
+                    if (!string.IsNullOrEmpty(newSwapTag))
+                    {
+                        slotData.swapTag = newSwapTag;
+                        Changed = true;
+                    }
+                    slotData.swapTag = EditorGUILayout.DelayedTextField("Swap slot(s) with this tag", slotData.swapTag);
+                }
+                else
+                {
+                    slotData.swapTag = "";
+                }
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Changed = true;
+                }
+            }
+        }
+
         const string focusctrl = "TheButtonThatNeedsToFocusSoTheTextInTheTextBoxDisappears";
         public static string DoTagsGUI(ref bool Changed, string TempTag, SlotData slotData)
         {
@@ -546,6 +618,7 @@ namespace UMA.Editors
                 {
                     GUILayout.Label("Edit tags for this slot:");
                 }
+                
                 string newTag = CharacterBaseEditor.DoTagSelector(slotData.asset.tags);
                 if (!string.IsNullOrEmpty(newTag))
                 {
@@ -560,6 +633,7 @@ namespace UMA.Editors
                 {
                     slotData.Races = new string[0];
                 }
+                
                 GUILayout.BeginHorizontal();
                 TempTag = EditorGUILayout.TextField(TempTag, GUILayout.ExpandWidth(true));
                 GUI.SetNextControlName(focusctrl);
@@ -605,6 +679,7 @@ namespace UMA.Editors
                 GUILayout.EndHorizontal();
 
                 DoTagsDisplay(ref slotData.tags, ref Changed);
+                
                 //				if (slotData.asset.isWildCardSlot)
                 if (true)
                 {
@@ -1278,6 +1353,9 @@ namespace UMA.Editors
         private readonly List<OverlayData> _overlayData = new List<OverlayData>();
         private readonly List<OverlayEditor> _overlayEditors = new List<OverlayEditor>();
         private readonly string _name;
+        public UnityEditorInternal.ReorderableList SlotTagsList = null;
+        private List<string> backingTags = new List<string>();
+        private static Dictionary<string, bool> _foldout = new Dictionary<string, bool>();
 
         public SlotData Slot { get { return _slotData; } }
 
@@ -1516,7 +1594,41 @@ namespace UMA.Editors
                 {
                     TemporarySlotTags.Add(_slotData.slotName, "");
                 }
-                TemporarySlotTags[_slotData.slotName] = TagsEditor.DoTagsGUI(ref changed, TemporarySlotTags[_slotData.slotName], _slotData);
+                if (!_foldout.ContainsKey(_slotData.slotName))
+                {
+                    _foldout.Add(_slotData.slotName, false);
+                }
+                GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+                GUILayout.Space(10); _foldout[_slotData.slotName] = EditorGUILayout.Foldout(_foldout[_slotData.slotName], "Matching Criteria");
+                GUILayout.EndHorizontal();
+                if (_foldout[_slotData.slotName])
+                {
+                    GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+                    if (_slotData.asset.isWildCardSlot)
+                    {
+                        GUILayout.Label("Match Tags:");
+                    }
+                    else
+                    {
+                        GUILayout.Label("Edit tags for this slot:");
+                    }
+                    if (SlotTagsList == null)
+                    {
+                        backingTags = new List<string>(_slotData.tags);
+                        SlotTagsList = GUIHelper.InitGenericTagsList(backingTags);
+                    }
+                    SlotTagsList.DoLayoutList();
+                    if (GUI.changed)
+                    {
+                        _slotData.tags = backingTags.ToArray();
+                        changed = true;
+                    }
+                    TagsEditor.DoRaceGUI(ref changed, _slotData);
+                    GUIHelper.EndVerticalPadded(10);
+                }
+                //TemporarySlotTags[_slotData.slotName] = TagsEditor.DoTagsGUI(ref changed, TemporarySlotTags[_slotData.slotName], _slotData);
+
+
                 #endregion
 
                 if (sharedOverlays)

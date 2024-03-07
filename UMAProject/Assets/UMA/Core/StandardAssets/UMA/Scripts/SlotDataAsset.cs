@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
+
 
 #if UNITY_EDITOR
 using System.Text;
@@ -61,7 +63,8 @@ namespace UMA
         public List<Welding> Welds = new List<Welding>();
 
 
-		public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals)
+
+        public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals, float weldDistance)
         {
             Welding thisWeld = new Welding();
 
@@ -75,27 +78,28 @@ namespace UMA
                     Vector3 DestVert = slot.meshData.vertices[Dest];
                     Vector3 Srcvert = meshData.vertices[Src];
                     float Len = (DestVert - Srcvert).magnitude;
-                    if (Len < Vector3.kEpsilon)
+                    if (Len < weldDistance)
                     {
                         bool misMatch = false;
                         float Normaldiff = (meshData.normals[Src] - slot.meshData.normals[Dest]).magnitude;
                         if (Normaldiff > Vector3.kEpsilon)
                         {
                             thisWeld.MisMatchCount++;
-                            if (CopyNormals)
-                            {
-                                meshData.normals[Src] = slot.meshData.normals[Dest];
-                                if (meshData.tangents != null && slot.meshData.tangents != null)
-                                {
-                                    meshData.tangents[Src] = slot.meshData.tangents[Dest];
-                                }
-                                if (AverageNormals)
-                                {
-                                    meshData.normals[Src] = (slot.meshData.normals[Dest] + meshData.normals[Src]).normalized;
-                                }
-                            }
                             misMatch = true;
                         }
+                        if (CopyNormals)
+                        {
+                            meshData.normals[Src] = slot.meshData.normals[Dest];
+                            if (meshData.tangents != null && slot.meshData.tangents != null)
+                            {
+                                meshData.tangents[Src] = slot.meshData.tangents[Dest];
+                            }
+                            if (AverageNormals)
+                            {
+                                meshData.normals[Src] = (slot.meshData.normals[Dest] + meshData.normals[Src]).normalized;
+                            }
+                        }
+
                         WeldPoint wp = new WeldPoint(Src, Dest, slot.meshData.normals[Dest], misMatch);
                         thisWeld.WeldPoints.Add(wp);
                     }
@@ -262,7 +266,12 @@ namespace UMA
         }
 
         public ReorderableList tagList { get; set; }
+        public List<string> backingTags { get; set; }
         public bool eventsFoldout { get; set; } = false;
+        public bool tagsFoldout { get; set; } = false;
+        public bool smooshFoldout { get; set; } = false;
+        public bool welldingFoldout { get; set; } = false;
+
 #endif
 
         public UMARendererAsset RendererAsset { get { return _rendererAsset; } }

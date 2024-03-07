@@ -1,9 +1,11 @@
+#undef DEBUG
 using UnityEngine;
 using System.Collections;
 using System;
 using CopyTextureSupport = UnityEngine.Rendering.CopyTextureSupport;
 using GraphicsDeviceType = UnityEngine.Rendering.GraphicsDeviceType;
 using System.Collections.Generic;
+
 
 namespace UMA
 {
@@ -414,7 +416,9 @@ namespace UMA
 
         private static void SetChannelTexture(UMAData umaData, int textureChannelNumber, int overlayNumber, Material mat, OverlayData overlay0)
         {
+#if DEBUG
             Debug.Log("Setting channel texture" + textureChannelNumber + " overlay " + overlayNumber + " on " + mat.name);
+#endif
             var theTex = overlay0.GetTexture(textureChannelNumber);
             var overlayOverrides = (umaData.GetTextureOverrides(overlay0.overlayName));
             var umaMaterial = overlay0.asset.material;
@@ -498,7 +502,7 @@ namespace UMA
 
         private static void SetMaterialTexture(UMAData.GeneratedMaterial generatedMaterial, SlotData slotData, int textureType, Texture tempTexture)
         {
-            Debug.Log($"Set Material Texture {tempTexture.name} on Material {generatedMaterial.material.name} for slot {slotData.asset.name} textureType {textureType}");
+            // Debug.Log($"Set Material Texture {tempTexture.name} on Material {generatedMaterial.material.name} for slot {slotData.asset.name} textureType {textureType}");
             tempTexture.wrapMode = TextureWrapMode.Repeat;
             tempTexture.anisoLevel = slotData.material.AnisoLevel;
             tempTexture.mipMapBias = slotData.material.MipMapBias;

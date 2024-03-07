@@ -398,6 +398,21 @@ namespace UMA
             }
         }
 
+		public void EnsureChannelsExact(int ChannelCount)
+		{
+			if (channelMask == null)
+			{
+				channelMask = new Color[ChannelCount];
+				channelAdditiveMask = new Color[ChannelCount];
+			}
+
+            if (channelMask.Length != ChannelCount)
+			{
+                Array.Resize(ref channelMask, ChannelCount);
+                Array.Resize(ref channelAdditiveMask, ChannelCount);
+            }
+        }
+
 		public void AssignTo(OverlayColorData dest)
 		{
 			if (name != null)

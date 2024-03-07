@@ -1,4 +1,4 @@
-
+﻿
 using UnityEngine;
 using System.IO;
 using System;
@@ -249,7 +249,7 @@ namespace UMA
             CleanupUMAS(scene);
         }
 
-        private static void RebuildUMAS(Scene scene)
+	    public static void RebuildUMAS(Scene scene)
         {
             GameObject[] sceneObjs = scene.GetRootGameObjects();
             for (int i = 0; i < sceneObjs.Length; i++)

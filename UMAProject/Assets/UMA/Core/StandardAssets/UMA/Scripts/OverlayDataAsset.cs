@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System;
 using UnityEngine.Rendering;
+using UnityEditorInternal;
 
 namespace UMA
 {
@@ -22,6 +23,10 @@ namespace UMA
 		public bool doSave { get; set; } = false;
 		public bool additionalFoldout { get; set; } = false;
 		public bool textureFoldout { get; set; } = false;
+		public bool tagsFoldout { get; set; } = false;
+		public bool occlusionFoldout { get; set; } = false;
+
+		public ReorderableList tagsList;
 #endif
 		public enum OverlayType
 		{

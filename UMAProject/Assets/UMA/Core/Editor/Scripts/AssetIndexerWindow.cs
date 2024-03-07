@@ -1429,7 +1429,17 @@ namespace UMA.Controls
                     {
                         if (uwr.compatibleRaces.Contains(race.raceName))
                         {
-                            selectedItems.Add(ai);
+                            if (filterBySlot)
+                            {
+                                if (uwr.wardrobeSlot == filterSlot)
+                                {
+                                    selectedItems.Add(ai);
+                                }
+                            }
+                            else
+                            {
+                                selectedItems.Add(ai);
+                            }
                         }
                     }
                 }
@@ -1547,15 +1557,33 @@ namespace UMA.Controls
 
         void SelectByAssetItems(List<AssetItem> items, bool recalculate = true)
         {
+            Dictionary<Type,List<AssetItem>> indexedItems = new Dictionary<Type, List<AssetItem>>();
+
+            for (int i = 0;i < items.Count; i++)
+            {
+                if (!indexedItems.ContainsKey(items[i]._Type))
+                {
+                    indexedItems.Add(items[i]._Type, new List<AssetItem>());
+                }
+                indexedItems[items[i]._Type].Add(items[i]);
+            }
+
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
             foreach (AssetTreeElement ate in treeElements)
             {
-                if (ate.ai != null && items.Contains(ate.ai))
+                if (ate.ai != null && indexedItems.ContainsKey(ate.ai._Type))
                 {
-                    ate.Checked = true;
+                    if (indexedItems[ate.ai._Type].Contains(ate.ai))
+                    {
+                        ate.Checked = true;
+                    }
                 }
+                //if (ate.ai != null && items.Contains(ate.ai))
+                //{
+                //    ate.Checked = true;
+                //}
             }
             if (recalculate)
             {
@@ -2009,13 +2037,24 @@ namespace UMA.Controls
                     }
                 case eLoaded.SelectedOnly:
                     {
-                        if (LoadOnly.Contains(ai))
+                        if (DoesMatchLoaded(ai))
                             return true;
                         else
                             return false;
                     }
             }
             return true;
+        }
+
+        private bool DoesMatchLoaded(AssetItem assetItem)
+        {
+            for(int i=0; i < LoadOnly.Count; i++)
+            {
+                if (LoadOnly[i] == assetItem && assetItem._Type == LoadOnly[i]._Type)
+                    return true;
+            }
+
+            return false;
         }
 
         IList<AssetTreeElement> GetData()
@@ -2232,6 +2271,11 @@ namespace UMA.Controls
         #endregion
 
         private string dots = "";
+        private bool filterBySlot = false;
+        private int selectedSlot = 0;
+        private string filterSlot = "";
+        private string[] NullArray = { "None"};
+
         void OnGUI()
         {
             if (EditorApplication.isCompiling)
@@ -2343,6 +2387,7 @@ namespace UMA.Controls
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("RaceData:");
                 umaRaceData = EditorGUILayout.ObjectField("", umaRaceData, typeof(RaceData), false, GUILayout.Width(250)) as RaceData;
+
                 if (GUILayout.Button("Add to Selection"))
                 {
                     AddToWardrobeRecipes(umaRaceData);
@@ -2361,6 +2406,18 @@ namespace UMA.Controls
                 {
                     SelectAllWardrobeRecipesForRace(umaRaceData);
                 }
+                filterBySlot = GUILayout.Toggle(filterBySlot, "Filter by Slot");
+                if (filterBySlot)
+                {
+                        selectedSlot = EditorGUILayout.Popup(selectedSlot, umaRaceData.wardrobeSlots.ToArray());
+                        filterSlot = umaRaceData.wardrobeSlots[selectedSlot];
+                }
+                else
+                {
+                    filterSlot = "";
+                    EditorGUILayout.Popup(0, NullArray);
+                }
+
                 if (GUILayout.Button("Select Base Recipe for Race"))
                 {
                     SelectBaseRecipeForRace(umaRaceData);

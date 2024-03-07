@@ -18,7 +18,7 @@ MonoBehaviour:
   - SRP: 0
     material: {fileID: 0}
   secondPass: {fileID: 0}
-  materialType: 8
+  materialType: 1
   channels:
   - channelType: 3
     textureFormat: 0

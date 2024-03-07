@@ -1,5 +1,6 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEditor;
 using UnityEditorInternal;
 using System.Collections.Generic;
@@ -82,6 +83,7 @@ namespace UMA.Editors
                 lastActionTime = Time.realtimeSinceStartup;
             }
 
+			EditorGUI.BeginChangeCheck();
             race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
 			race.umaTarget = (UMA.RaceData.UMATarget)EditorGUILayout.EnumPopup(new GUIContent("UMA Target", "The Mecanim animation rig type."), race.umaTarget);
 			race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
@@ -92,14 +94,9 @@ namespace UMA.Editors
 			EditorGUILayout.Space();
 
 			SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
-			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(dnaConverterListprop, true);
-			if(EditorGUI.EndChangeCheck()) {
-				serializedObject.ApplyModifiedProperties();
-			}
 
 			SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");
-			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(dnaRanges, true);
 			if(EditorGUI.EndChangeCheck()) {
 				serializedObject.ApplyModifiedProperties();
@@ -126,6 +123,7 @@ namespace UMA.Editors
 			try {
 				PreInspectorGUI(ref _needsUpdate);
 				if(_needsUpdate == true){
+					_needsUpdate = false;
 						DoUpdate();
 				}
 			}catch (UMAResourceNotFoundException e){
@@ -136,13 +134,17 @@ namespace UMA.Editors
 			{
 				doSave = true;
 				lastActionTime = Time.realtimeSinceStartup;
+				UMAAssetIndexer.RebuildUMAS(SceneManager.GetActiveScene());
 			}
 		}
 
 		/// <summary>
 		/// Add to this method in extender editors if you need to do anything extra when updating the data.
 		/// </summary>
-		protected virtual void DoUpdate() { }
+		protected virtual void DoUpdate() 
+		{ 		
+
+		}
 
 		#region DCS functions
 		// Drop area for Backwards Compatible Races

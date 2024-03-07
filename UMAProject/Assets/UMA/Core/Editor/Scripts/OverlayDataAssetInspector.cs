@@ -33,6 +33,7 @@ namespace UMA.Editors
 			_alphaMask = serializedObject.FindProperty("alphaMask");
 			_tags = serializedObject.FindProperty("tags");
 			_occlusionEntries = serializedObject.FindProperty("OcclusionEntries");
+			(target as OverlayDataAsset).tagsList = GUIHelper.InitTagsList("tags",serializedObject);
 
 			EditorApplication.update += DoDelayedSave;
 		}
@@ -150,18 +151,32 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("No UMA Material selected!", MessageType.Warning);
             }
 
-            GUILayout.Space(20f);
-			od.additionalFoldout = GUIHelper.FoldoutBar(od.additionalFoldout, "Additional Parameters");
+			od.additionalFoldout = GUIHelper.FoldoutBar(od.additionalFoldout, "Alpha mask Parameters");
 			if (od.additionalFoldout)
 			{
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				EditorGUILayout.HelpBox("The alpha mask is optional. If it is not set the texture[0].alpha is used instead.", MessageType.Info);
 				EditorGUILayout.PropertyField(_alphaMask);
-				EditorGUILayout.PropertyField(_tags, true);
-				EditorGUILayout.PropertyField(_occlusionEntries, true);
 				GUIHelper.EndVerticalPadded(10);
 			}
 
-			serializedObject.ApplyModifiedProperties();
+			od.tagsFoldout = GUIHelper.FoldoutBar(od.tagsFoldout, "Tags");
+			if (od.tagsFoldout)
+			{
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+                // EditorGUILayout.PropertyField(_tags, true);
+                (target as OverlayDataAsset).tagsList.DoLayoutList();
+                GUIHelper.EndVerticalPadded(10);
+			}
+
+			od.occlusionFoldout = GUIHelper.FoldoutBar(od.occlusionFoldout, "Occlusion");
+			if (od.occlusionFoldout)
+			{
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				EditorGUILayout.PropertyField(_occlusionEntries, true);
+				GUIHelper.EndVerticalPadded(10);
+			}
+            serializedObject.ApplyModifiedProperties();
 			if (EditorGUI.EndChangeCheck())
 			{
 				od.lastActionTime = Time.realtimeSinceStartup;

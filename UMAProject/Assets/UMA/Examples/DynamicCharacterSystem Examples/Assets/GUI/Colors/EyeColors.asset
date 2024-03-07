@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 534edf300d8929243a0d291e413e2f0b, type: 3}
+  m_Name: EyeColors
+  m_EditorClassIdentifier: 
+  channelCount: 2
+  copyColorName: 0
+  sharedColorName: Eyes
+  colors:
+  - name: Black
+    channelMask:
+    - {r: 0, g: 0, b: 0, a: 1}
+    - {r: 0.6226415, g: 0.050907757, b: 0.050907757, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+  - name: Brown
+    channelMask:
+    - {r: 0.0754717, g: 0.032021612, b: 0.018986585, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+  - name: Amber
+    channelMask:
+    - {r: 0.33962262, g: 0.10086161, b: 0, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+  - name: Hazel
+    channelMask:
+    - {r: 0.4245283, g: 0.29790178, b: 0.16286932, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+  - name: Green
+    channelMask:
+    - {r: 0.18747368, g: 0.5, b: 0.007861584, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+  - name: Blue
+    channelMask:
+    - {r: 0.044499747, g: 0.484891, b: 0.7075472, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+  - name: Silver
+    channelMask:
+    - {r: 0.764151, g: 0.764151, b: 0.764151, a: 1}
+    - {r: 0, g: 0, b: 0, a: 0}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
