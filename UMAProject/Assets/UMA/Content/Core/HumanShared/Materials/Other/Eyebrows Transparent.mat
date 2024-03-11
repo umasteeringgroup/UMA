@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -10,7 +10,12 @@ Material:
   m_Name: Eyebrows Transparent
   m_Shader: {fileID: -6465566751694194690, guid: 96a1ea1a3b1dec0409673d0de0d94900,
     type: 3}
-  m_ShaderKeywords: _ALPHABLEND_ON _GLOSSYREFLECTIONS_OFF _NORMALMAP _SPECULARHIGHLIGHTS_OFF
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _ALPHABLEND_ON
+  - _GLOSSYREFLECTIONS_OFF
+  - _NORMALMAP
+  - _SPECULARHIGHLIGHTS_OFF
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -156,6 +161,7 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _BackRimStrength: 0.05769229
     - _BackRimWidth: 0.96153843
@@ -175,7 +181,7 @@ Material:
     - _EdgeLength: 5
     - _EmissionLM: 0
     - _EmissionScaleUI: 0
-    - _EmissiveModulation: 1
+    - _EmissiveModulation: 0
     - _FrontRimStrength: 3.8461556
     - _FrontRimWidth: 0.25
     - _Gloss: 0.38552243
@@ -183,7 +189,7 @@ Material:
     - _Glossiness: 0.5
     - _GlossyReflections: 0
     - _Metallic: 0
-    - _MetallicModulation: 1
+    - _MetallicModulation: 0
     - _Mode: 2
     - _NormalStrength0: 1
     - _NormalStrength1: 1
@@ -198,7 +204,7 @@ Material:
     - _ScatteringOffset: 0.6730769
     - _ScatteringPower: 1.6923077
     - _Shininess: 0.00018430292
-    - _SmoothnessModulation: 1
+    - _SmoothnessModulation: 0.326
     - _SmoothnessTextureChannel: 0
     - _SpecIntensity: 7.6923065
     - _SpecRoughness: 0.875
@@ -223,7 +229,7 @@ Material:
     - _UVSec: 0
     - _ZWrite: 0
     m_Colors:
-    - _Add0_0: {r: 0, g: 0, b: 0, a: 0}
+    - _Add0_0: {r: 0.6981132, g: 0.149282, b: 0.149282, a: 0}
     - _Add0_1: {r: 0, g: 0, b: 0, a: 0}
     - _Add0_2: {r: 0, g: 0, b: 0, a: 0}
     - _Add1_0: {r: 0, g: 0, b: 0, a: 0}

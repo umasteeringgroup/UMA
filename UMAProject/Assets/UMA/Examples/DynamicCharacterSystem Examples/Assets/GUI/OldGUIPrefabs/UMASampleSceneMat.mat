@@ -8,9 +8,9 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMASampleSceneMat
-  m_Shader: {fileID: -6465566751694194690, guid: b498c9514de2c6849b9f2561db4570d2,
-    type: 3}
-  m_ValidKeywords: []
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ValidKeywords:
+  - _GLOSSYREFLECTIONS_OFF
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -34,7 +34,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 7a70889d930f0c4439c40d8e6c89cf5c, type: 3}
+        m_Texture: {fileID: 2800000, guid: f8b2a4c840685104d963ee001cbdbfe6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap1:
@@ -79,11 +79,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 7, y: 7}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Texture: {fileID: 2800000, guid: f8b2a4c840685104d963ee001cbdbfe6, type: 3}
+        m_Scale: {x: 7, y: 7}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
@@ -112,18 +112,18 @@ Material:
     m_Ints: []
     m_Floats:
     - _BumpScale: 1
-    - _ColorModulation: 1.416
+    - _ColorModulation: 0.84
     - _CullMode: 2
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DoubleSidedNormalMode: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
-    - _Glossiness: 0.5
-    - _GlossyReflections: 1
-    - _HalfLambertStrength: 2.15
+    - _Glossiness: 0
+    - _GlossyReflections: 0
+    - _HalfLambertStrength: 0
     - _Metallic: 0
-    - _MetallicModulation: 1
+    - _MetallicModulation: 0
     - _Mode: 0
     - _NormalStrength0: 1
     - _NormalStrength1: 1
@@ -132,9 +132,9 @@ Material:
     - _OcclusionStrength: 1
     - _OverlayCount: 0
     - _Parallax: 0.02
-    - _RimLightPower: 4
+    - _RimLightPower: 2.96
     - _RimLightingModulation: 0
-    - _SmoothnessModulation: 1
+    - _SmoothnessModulation: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -170,12 +170,12 @@ Material:
     - _Add3_1: {r: 0, g: 0, b: 0, a: 0}
     - _Add3_2: {r: 0, g: 0, b: 0, a: 0}
     - _BlueColor0: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.092, g: 0.14530668, b: 0.29245278, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GreenColor0: {r: 1, g: 1, b: 1, a: 1}
     - _RedColor0: {r: 1, g: 1, b: 1, a: 1}
     - _RimLightColor: {r: 0.3555556, g: 0.6277778, b: 1, a: 1}
-    - _Tint0_0: {r: 0.39450574, g: 0.42680034, b: 0.5754717, a: 1}
+    - _Tint0_0: {r: 0.23745102, g: 0.30360985, b: 0.6509434, a: 1}
     - _Tint0_1: {r: 1, g: 1, b: 1, a: 1}
     - _Tint0_2: {r: 1, g: 1, b: 1, a: 1}
     - _Tint1_0: {r: 1, g: 1, b: 1, a: 1}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace UMA.PoseTools
 {
+    /*
     /// <summary>
     /// UMA expression set. Groups poses for expression player channels.
     /// </summary>
@@ -188,5 +189,5 @@ namespace UMA.PoseTools
             }
             return res;
         }
-    }
+    } */
 }

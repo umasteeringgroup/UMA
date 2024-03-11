@@ -375,7 +375,7 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
         if (button != null)
         {
             Image image = button.GetComponent<Image>();
-            image.color = new Color(1.0f, 1.0f, 1.0f, 0.75f);
+            image.color = new Color(0f, 0.003f, 0.25f, 1f);
         }
     }
 
@@ -384,7 +384,7 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
         if (button != null)
         {
             Image image = button.GetComponent<Image>();
-            image.color = new Color(1.0f, 1.0f, 1.0f, 0.40f);
+            image.color = new Color(0f, 0f, 0f, 0.35f);
         }
     }
 

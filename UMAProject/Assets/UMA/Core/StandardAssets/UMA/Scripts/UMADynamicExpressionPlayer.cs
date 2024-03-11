@@ -12,6 +12,7 @@ using UnityEngine;
 
 namespace UMA.PoseTools
 {
+	/*
 	/// <summary>
 	/// UMA specific expression player.
 	/// </summary>
@@ -632,5 +633,5 @@ namespace UMA.PoseTools
 			}
 		}
 #endif
-	}
+	} */
 }
