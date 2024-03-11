@@ -270,6 +270,8 @@ namespace UMA.ShaderPackager
 #if USING_URP
       target = SRPTarget.URP;
 #endif
+            UnityVersion maxFound = UnityVersion.Min;
+
             string s = null;
             for (int i = 0; i < entries.Count; i++)
             {
@@ -278,6 +280,12 @@ namespace UMA.ShaderPackager
                 {
                     continue;
                 }
+                if (e.UnityVersionMax > maxFound)
+                {
+                    maxFound = e.UnityVersionMax;
+                    s = e.shaderSrc;
+                }
+            
                 // default init state..
                 if (e.UnityVersionMax == UnityVersion.Min && e.UnityVersionMin == UnityVersion.Min)
                 {
@@ -285,10 +293,6 @@ namespace UMA.ShaderPackager
                 }
                 if (curVersion >= e.UnityVersionMin && curVersion <= e.UnityVersionMax)
                 {
-                    if (s != null)
-                    {
-                        Debug.LogWarning("Found multiple possible entries for unity version of shader");
-                    }
                     s = e.shaderSrc;
                 }
             }
