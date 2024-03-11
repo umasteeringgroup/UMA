@@ -4715,11 +4715,13 @@ namespace UMA.CharacterSystem
                     {
                         if (Debug.isDebugBuild)
                         {
-                        Debug.Log("Null recipe in additional serialized recipes");
+                            Debug.Log("Null recipe in additional serialized recipes");
+                        }
                     }
                 }
+                // compress the umaData.umaRecipe.slotDataList
+                umaData.umaRecipe.Compress();
             }
-        }
         }
 
         /// <summary>

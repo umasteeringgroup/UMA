@@ -1850,6 +1850,23 @@ namespace UMA
 				return newRecipe;
 			}
 
+			public void Compress()
+			{
+				List<SlotData> slots = new List<SlotData>();
+				for (int i = 0; i < slotDataList.Length; i++)
+				{
+					if (slotDataList[i] != null)
+					{
+						slots.Add(slotDataList[i]);
+					}
+				}
+				slotDataList = slots.ToArray();
+				//DynamicUMADna:: This is a good place to compress the dnaValues list
+				//DynamicUMADna:: This is a good place to compress the slotDataList
+				//DynamicUMADna:: This is a good place to compress the sharedColors
+			}
+
+
 			/// <summary>
 			/// Combine additional recipe with current data.
 			/// </summary>
