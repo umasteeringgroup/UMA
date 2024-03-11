@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using Sirenix.Utilities.Editor;
 
 namespace UMA
 {

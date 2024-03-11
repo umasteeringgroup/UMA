@@ -6,7 +6,6 @@ using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
 using UnityEditorInternal;
-using Sirenix.Reflection.Editor;
 using System.IO;
 
 namespace UMA.Editors
