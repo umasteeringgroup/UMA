@@ -2,7 +2,10 @@ using UnityEngine;
 using System.Collections;
 using System;
 using UnityEngine.Rendering;
+#if UNITY_EDITOR
 using UnityEditorInternal;
+#endif
+
 
 namespace UMA
 {

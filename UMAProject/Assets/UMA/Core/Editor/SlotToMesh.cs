@@ -4,7 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using UMA;
 using UMA.Editors;
+using Unity.Collections;
 using UnityEditor;
+using UnityEditor.Graphs;
+using UnityEditor.MemoryProfiler;
 using UnityEngine;
 using UnityEngine.WSA;
 
@@ -97,6 +100,60 @@ public class SlotToMesh : EditorWindow
         }
     }
 
+    public static BoneWeight[] ConvertBoneweight1(BoneWeight1[] weights, byte[] bonesPerVertex)
+    {
+        List<BoneWeight> bones = new List<BoneWeight>();
+
+        int boneIndex = 0;
+        for(int i=0;i < bonesPerVertex.Length; i++)
+        {
+            int bonecount = bonesPerVertex[boneIndex];
+            BoneWeight bw = new BoneWeight();
+            for (int j = 0; j < bonecount; j++)
+            {
+                if (j == 0)
+                {
+                    bw.boneIndex0 = weights[boneIndex].boneIndex;
+                    bw.weight0 = weights[boneIndex].weight;
+                }
+                if (j == 1)
+                {
+                    bw.boneIndex1 = weights[boneIndex].boneIndex;
+                    bw.weight1 = weights[boneIndex].weight;
+                }
+                if (j == 2)
+                {
+                    bw.boneIndex2 = weights[boneIndex].boneIndex;
+                    bw.weight2 = weights[boneIndex].weight;
+                }
+                if (j == 3)
+                {
+                    bw.boneIndex3 = weights[boneIndex].boneIndex;
+                    bw.weight3 = weights[boneIndex].weight;
+                }
+                boneIndex ++;
+            }
+        }
+        return bones.ToArray();
+    }
+
+    public static BoneWeight[] ConvertBoneweights(UMABoneWeight[] umaBones)
+    {
+        BoneWeight[] boneWeights = new BoneWeight[umaBones.Length];
+        for (int i = 0; i < umaBones.Length; i++)
+        {
+            boneWeights[i].boneIndex0 = umaBones[i].boneIndex0;
+            boneWeights[i].boneIndex1 = umaBones[i].boneIndex1;
+            boneWeights[i].boneIndex2 = umaBones[i].boneIndex2;
+            boneWeights[i].boneIndex3 = umaBones[i].boneIndex3;
+            boneWeights[i].weight0 = umaBones[i].weight0;
+            boneWeights[i].weight1 = umaBones[i].weight1;
+            boneWeights[i].weight2 = umaBones[i].weight2;
+            boneWeights[i].weight3 = umaBones[i].weight3;
+        }
+        return boneWeights;
+    }
+
     public static Mesh ConvertSlotToMesh(SlotDataAsset slot)
     {
         Mesh mesh = new Mesh();
@@ -105,6 +162,18 @@ public class SlotToMesh : EditorWindow
         mesh.normals = slot.meshData.normals;
         mesh.tangents = slot.meshData.tangents;
         mesh.subMeshCount = slot.meshData.subMeshCount;
+        if (slot.meshData.boneWeights != null && slot.meshData.boneWeights.Length > 0)
+        {
+            mesh.boneWeights = ConvertBoneweights(slot.meshData.boneWeights);
+        }
+        else
+        {
+            mesh.boneWeights = ConvertBoneweight1(slot.meshData.ManagedBoneWeights, slot.meshData.ManagedBonesPerVertex);
+            var unityBonesPerVertex = new NativeArray<byte>(slot.meshData.ManagedBonesPerVertex, Allocator.Temp);
+            var unityBoneWeights = new NativeArray<BoneWeight1>(slot.meshData.ManagedBoneWeights, Allocator.Temp);
+            mesh.SetBoneWeights(unityBonesPerVertex,unityBoneWeights);
+        }
+        
         for (int i = 0; i < slot.meshData.subMeshCount; i++)
         {
             var tris = GetTriangles(slot.meshData, i);

@@ -8,7 +8,7 @@ namespace UMA.Editors
 	[CustomPropertyDrawer(typeof(UMAMeshData))]
 	public class UMAMeshDataPropertyDrawer : PropertyDrawer
 	{
-		private bool foldout = false;
+		public static bool foldout = false;
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
@@ -18,8 +18,8 @@ namespace UMA.Editors
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			//EditorGUI.BeginProperty(position, label, property);
-
-			foldout = EditorGUILayout.Foldout(foldout, "MeshData");
+			foldout = EditorGUILayout.Foldout(foldout, "MeshData"); // weird. Unity things this changes the object now. Changed Foldout to static, and reset the changed value to false.
+			GUI.changed = false;
 			if (foldout)
 			{
 				EditorGUI.indentLevel++;

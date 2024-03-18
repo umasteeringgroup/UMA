@@ -1,0 +1,18 @@
+{
+    "name": "UMAXNode",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f4cb6d2c24715bd4884385645277f011",
+        "GUID:9cf69526e1660aa45bc90c9b4ea11bc2",
+        "GUID:5c2adf75cf0e415438cf7a359d21d301"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

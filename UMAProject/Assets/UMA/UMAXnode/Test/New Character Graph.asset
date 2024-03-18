@@ -1,0 +1,593 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8784445781866066587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd4f0972ca74dc4e970606de32ef21a, type: 3}
+  m_Name: Referenced Avatar
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -840, y: -344}
+  ports:
+    keys:
+    - output
+    values:
+    - _fieldName: output
+      _node: {fileID: -8784445781866066587}
+      _typeQualifiedName: System.String, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: Value1
+        node: {fileID: 5917159030052385729}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  avatar: {fileID: 0}
+  field: 0
+  output: 
+--- !u!114 &-8220556991168076446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c99505d69d58f134f919cf20f12926ec, type: 3}
+  m_Name: Race
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -488, y: -712}
+  ports:
+    keys:
+    - output
+    values:
+    - _fieldName: output
+      _node: {fileID: -8220556991168076446}
+      _typeQualifiedName: UMA.RaceData, UMA_Core, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Race
+        node: {fileID: -7108125407020816258}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  race: {fileID: 0}
+  output: {fileID: 0}
+--- !u!114 &-7108125407020816258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Character Output
+  m_EditorClassIdentifier: UMAXnodeEditor::CharacterOutputNode
+  graph: {fileID: 11400000}
+  position: {x: -200, y: -648}
+  ports:
+    keys:
+    - Race
+    - Slot
+    values:
+    - _fieldName: Race
+      _node: {fileID: -7108125407020816258}
+      _typeQualifiedName: RaceNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: output
+        node: {fileID: -8220556991168076446}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Slot
+      _node: {fileID: -7108125407020816258}
+      _typeQualifiedName: SlotNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Mesh
+        node: {fileID: 5917159030052385729}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  destination: 3
+  Race: {fileID: 0}
+  Slot: {fileID: 0}
+--- !u!114 &-6459232956473921399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fd67460fa776a746a9cfc3de605e54d, type: 3}
+  m_Name: Overlay
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -1144, y: -456}
+  ports:
+    keys:
+    - Colors
+    - Tags
+    - Overlay
+    values:
+    - _fieldName: Colors
+      _node: {fileID: -6459232956473921399}
+      _typeQualifiedName: System.Collections.Generic.List`1[[UMA.OverlayColorData,
+        UMA_Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], mscorlib,
+        Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+      connections: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Tags
+      _node: {fileID: -6459232956473921399}
+      _typeQualifiedName: System.Collections.Generic.List`1[[System.String, mscorlib,
+        Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib,
+        Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+      connections: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Overlay
+      _node: {fileID: -6459232956473921399}
+      _typeQualifiedName: OverlayNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Texture 1
+        node: {fileID: 4350866441770083714}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  OverlayData: {fileID: 11400000, guid: 07908c48b4fc24542bd91f7d94e4a4f7, type: 2}
+  Colors: []
+  Tags: []
+  Overlay: {fileID: 0}
+--- !u!114 &-4810919827992056589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6c37078523ecdf408997a033fae6fc1, type: 3}
+  m_Name: Character
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -88, y: -696}
+  ports:
+    keys: []
+    values: []
+--- !u!114 &-4727403387313597106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fd67460fa776a746a9cfc3de605e54d, type: 3}
+  m_Name: Overlay
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -1144, y: -664}
+  ports:
+    keys:
+    - Tags
+    - Colors
+    - Overlay
+    values:
+    - _fieldName: Tags
+      _node: {fileID: -4727403387313597106}
+      _typeQualifiedName: System.Collections.Generic.List`1[[System.String, mscorlib,
+        Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib,
+        Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+      connections: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Colors
+      _node: {fileID: -4727403387313597106}
+      _typeQualifiedName: System.Collections.Generic.List`1[[UMA.OverlayColorData,
+        UMA_Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], mscorlib,
+        Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+      connections: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Overlay
+      _node: {fileID: -4727403387313597106}
+      _typeQualifiedName: OverlayNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Texture 0
+        node: {fileID: 4350866441770083714}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  OverlayData: {fileID: 11400000, guid: 2e3a65a362388e54baa4800463a97eb9, type: 2}
+  Colors:
+  - name: 
+    channelMask: []
+    channelAdditiveMask: []
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 1
+    isBaseColor: 1
+  - name: 
+    channelMask: []
+    channelAdditiveMask: []
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+  - name: 
+    channelMask: []
+    channelAdditiveMask: []
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+  Tags: []
+  Overlay: {fileID: 0}
+--- !u!114 &-3749417527036266220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04eb0bb4da053d34dbf586b9b0706509, type: 3}
+  m_Name: Mesh
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -840, y: -744}
+  ports:
+    keys:
+    - Texture
+    - Texture 0
+    - Mesh
+    values:
+    - _fieldName: Texture
+      _node: {fileID: -3749417527036266220}
+      _typeQualifiedName: OverlayNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 2
+      _dynamic: 0
+    - _fieldName: Texture 0
+      _node: {fileID: -3749417527036266220}
+      _typeQualifiedName: OverlayNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Overlay
+        node: {fileID: 5672789562687159728}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 2
+      _dynamic: 1
+    - _fieldName: Mesh
+      _node: {fileID: -3749417527036266220}
+      _typeQualifiedName: MeshNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Mesh1
+        node: {fileID: 5917159030052385729}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  Texture: {fileID: 0}
+  Mesh: {fileID: 0}
+  slotData: {fileID: 11400000, guid: 6b8d84d3d68be9146899e780a8c296fb, type: 2}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64e47d340907d5945af7cec4284e6aaa, type: 3}
+  m_Name: New Character Graph
+  m_EditorClassIdentifier: 
+  nodes:
+  - {fileID: -4727403387313597106}
+  - {fileID: -6459232956473921399}
+  - {fileID: -3749417527036266220}
+  - {fileID: 5672789562687159728}
+  - {fileID: 4350866441770083714}
+  - {fileID: 5917159030052385729}
+  - {fileID: -8784445781866066587}
+  - {fileID: 3297094095792407596}
+  - {fileID: -7108125407020816258}
+  - {fileID: -8220556991168076446}
+--- !u!114 &3297094095792407596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea4ef91ded3866a4e81cee7bb9148dbe, type: 3}
+  m_Name: String Constant
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -840, y: -216}
+  ports:
+    keys:
+    - output
+    values:
+    - _fieldName: output
+      _node: {fileID: 3297094095792407596}
+      _typeQualifiedName: System.String, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: Value2
+        node: {fileID: 5917159030052385729}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  value: HumanMale
+  output: 
+--- !u!114 &4350866441770083714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04eb0bb4da053d34dbf586b9b0706509, type: 3}
+  m_Name: Mesh
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -840, y: -552}
+  ports:
+    keys:
+    - Texture
+    - Mesh
+    - Texture 0
+    - Texture 1
+    values:
+    - _fieldName: Texture
+      _node: {fileID: 4350866441770083714}
+      _typeQualifiedName: OverlayNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 2
+      _dynamic: 0
+    - _fieldName: Mesh
+      _node: {fileID: 4350866441770083714}
+      _typeQualifiedName: MeshNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Mesh2
+        node: {fileID: 5917159030052385729}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Texture 0
+      _node: {fileID: 4350866441770083714}
+      _typeQualifiedName: OverlayNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Overlay
+        node: {fileID: -4727403387313597106}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 2
+      _dynamic: 1
+    - _fieldName: Texture 1
+      _node: {fileID: 4350866441770083714}
+      _typeQualifiedName: OverlayNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Overlay
+        node: {fileID: -6459232956473921399}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 2
+      _dynamic: 1
+  Texture: {fileID: 0}
+  Mesh: {fileID: 0}
+  slotData: {fileID: 11400000, guid: caa8e18369f17f5488e9bff59a0d46b0, type: 2}
+--- !u!114 &5672789562687159728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fd67460fa776a746a9cfc3de605e54d, type: 3}
+  m_Name: Overlay
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -1144, y: -872}
+  ports:
+    keys:
+    - Colors
+    - Tags
+    - Overlay
+    values:
+    - _fieldName: Colors
+      _node: {fileID: 5672789562687159728}
+      _typeQualifiedName: System.Collections.Generic.List`1[[UMA.OverlayColorData,
+        UMA_Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]], mscorlib,
+        Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+      connections: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Tags
+      _node: {fileID: 5672789562687159728}
+      _typeQualifiedName: System.Collections.Generic.List`1[[System.String, mscorlib,
+        Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib,
+        Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+      connections: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Overlay
+      _node: {fileID: 5672789562687159728}
+      _typeQualifiedName: OverlayNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Texture 0
+        node: {fileID: -3749417527036266220}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  OverlayData: {fileID: 11400000, guid: 2c4ecf1627276e74292e6455114acb04, type: 2}
+  Colors: []
+  Tags: []
+  Overlay: {fileID: 0}
+--- !u!114 &5917159030052385729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5637ba2db8151648ba67e3d904909d8, type: 3}
+  m_Name: Mesh Decision
+  m_EditorClassIdentifier: 
+  graph: {fileID: 11400000}
+  position: {x: -488, y: -488}
+  ports:
+    keys:
+    - Mesh1
+    - Mesh2
+    - Mesh
+    - Value1
+    - Value2
+    values:
+    - _fieldName: Mesh1
+      _node: {fileID: 5917159030052385729}
+      _typeQualifiedName: MeshNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Mesh
+        node: {fileID: -3749417527036266220}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Mesh2
+      _node: {fileID: 5917159030052385729}
+      _typeQualifiedName: MeshNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Mesh
+        node: {fileID: 4350866441770083714}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Mesh
+      _node: {fileID: 5917159030052385729}
+      _typeQualifiedName: MeshNode, UMAXnodeEditor, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      connections:
+      - fieldName: Slot
+        node: {fileID: -7108125407020816258}
+        reroutePoints: []
+      _direction: 1
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Value1
+      _node: {fileID: 5917159030052385729}
+      _typeQualifiedName: System.String, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: output
+        node: {fileID: -8784445781866066587}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+    - _fieldName: Value2
+      _node: {fileID: 5917159030052385729}
+      _typeQualifiedName: System.String, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+      connections:
+      - fieldName: output
+        node: {fileID: 3297094095792407596}
+        reroutePoints: []
+      _direction: 0
+      _connectionType: 0
+      _typeConstraint: 0
+      _dynamic: 0
+  Mesh1: {fileID: 0}
+  Mesh2: {fileID: 0}
+  Mesh: {fileID: 0}
+  Value1: 
+  Evaluator: 0
+  Value2: 

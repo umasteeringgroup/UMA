@@ -7,6 +7,7 @@ using UnityEditor.Animations;
 using System.IO;
 using System.Text.RegularExpressions;
 using UMA.PoseTools;
+using UnityEditor.Build;
 
 namespace UMA
 {
@@ -29,8 +30,10 @@ namespace UMA
 		private const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
 		private const string DefineSymbol_BurstCompile = "UMA_BURSTCOMPILE";
 		private const string DefineSymbol_UMAAlwaysGetAddressableItems = "UMA_ALWAYSGETADDR_NO_PROD";
-		//private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
-		public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
+        private const string DefineSymbol_GLTFExport = "UMA_GLTF";
+
+        //private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
+        public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
 		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
 		public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
 
@@ -91,9 +94,22 @@ namespace UMA
 
 
 
+        public static NamedBuildTarget CurrentNamedBuildTarget
+        {
+            get
+            {
+#if UNITY_SERVER
+                    return NamedBuildTarget.Server;
+#else
+                BuildTarget buildTarget = EditorUserBuildSettings.activeBuildTarget;
+                BuildTargetGroup targetGroup = BuildPipeline.GetBuildTargetGroup(buildTarget);
+                NamedBuildTarget namedBuildTarget = NamedBuildTarget.FromBuildTargetGroup(targetGroup);
+                return namedBuildTarget;
+#endif
+            }
+        }
 
-
-		private class MyPrefSettingsProvider : SettingsProvider
+        private class MyPrefSettingsProvider : SettingsProvider
 		{
 			public MyPrefSettingsProvider(string path, SettingsScope scopes = SettingsScope.User)
 			: base(path, scopes)
@@ -163,7 +179,6 @@ namespace UMA
 			ConfigToggle(ConfigToggle_PostProcessAllAssets, "Postprocess All Assets", "When assets in unity are moved, this will fix their paths in the index. This can be very slow.", false);
 			ConfigToggle(ConfigToggle_LeanMeanSceneFiles, "Clean/Regen on Save", "When using edit-time UMA's the geometry is stored in scene files. Enabling this cleans them up before saving, and regenerates after saving, making your scene files squeaky clean.", true);
 			ConfigToggle(ConfigToggle_IndexAutoRepair, "Auto Repair Index", "When enabled, the index will be repaired automatically when items are not found. This can be slow, so it is recommended to only enable this if you have a team of artists checking in work simultaneously.", false);
-
 			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.Space();
 			GUILayout.BeginHorizontal();
@@ -177,10 +192,30 @@ namespace UMA
 
 			var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
 
-			DefineSymbolToggle(defineSymbols, DefineSymbol_BurstCompile, "Use Burst Compile", "This activates the burst compiler for UMA.");
-			DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
-			DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables.");
-			DefineSymbolToggle(defineSymbols, DefineSymbol_UMAAlwaysGetAddressableItems, "Always Get Addressable Items", "This forces the addressable system to always load items in the editor. Should NEVER be turned on in a production build!");
+			var BurstChanged = DefineSymbolToggle(defineSymbols, DefineSymbol_BurstCompile, "Use Burst Compile", "This activates the burst compiler for UMA.");
+			bool changed = DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
+			changed |= DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables.");
+			changed |= DefineSymbolToggle(defineSymbols, DefineSymbol_UMAAlwaysGetAddressableItems, "Always Get Addressable Items", "This forces the addressable system to always load items in the editor. Should NEVER be turned on in a production build!");
+			changed |= DefineSymbolToggle(defineSymbols, DefineSymbol_GLTFExport, "Enable GLTF Export (future)", "Future: This activates the GLTF Exporter for UMA. You must install the package first");
+			changed |= BurstChanged;
+
+			if (BurstChanged)
+			{
+                if (IsAsmdef(defineSymbols, DefineSymbol_BurstCompile))
+				{
+                    EditorUtility.DisplayDialog("Burst Compile", "You have enabled Burst Compile. You will need to restart Unity to complete the process.", "OK");
+                    File.Copy("Assets/UMA/Core/UMA_CORE_BURST.dat", "Assets/UMA/Core/UMA_Core.asmdef", true);
+                }
+                else
+				{
+                    EditorUtility.DisplayDialog("Burst Compile", "You have disabled Burst Compile. You will need to restart Unity to complete the process.", "OK");
+					// copy the asmdef file for No BurstCompile into place
+					File.Copy("Assets/UMA/Core/UMA_CORE_NOBURST.dat", "Assets/UMA/Core/UMA_Core.asmdef", true);
+                }
+            }
+			
+
+			
 			/* bool prevuseAsmDef = IsAsmdef(defineSymbols, DefineSymbol_AsmDef);
 			bool useAsmDef = DefineSymbolToggle(defineSymbols, DefineSymbol_AsmDef, "Use Asmdef", "This activates the internal ASMDEF for UMA.");
 			if (prevuseAsmDef != useAsmDef)
@@ -205,11 +240,13 @@ namespace UMA
 #endif
 			if (EditorGUI.EndChangeCheck())
 			{
-				PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
-			}
+				Debug.Log("Saving define symbols");
+				//PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
+                PlayerSettings.SetScriptingDefineSymbols(CurrentNamedBuildTarget, string.Join(";", defineSymbols));
+            }
 
 
-			GUI.enabled =
+            GUI.enabled =
 #if UMA_ADDRESSABLES
 				true;
 #else
@@ -325,7 +362,11 @@ namespace UMA
 
 		public static bool IsAddressable()
 		{
+#if UMA_ALWAYSADDRESSABLE
+            return true;
+#else
 			return GetConfigValue(DefineSymbol_Addressables, false);
+#endif
 		}
 
 		public static bool IsAutoRepairIndex()
@@ -375,20 +416,29 @@ namespace UMA
 			if(defineSymbol == DefineSymbol_Addressables) {
 				if(!defineSymbols.Contains(defineSymbol)) {
 					defineSymbols.Add(defineSymbol);
-				}
+				}			
 				EditorGUILayout.Toggle(new GUIContent(text, tooltip), true);
-				return true;
+				return false;
 			}
 #endif
+
 			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), defineSymbols.Contains(defineSymbol)))
 			{
-				defineSymbols.Add(defineSymbol);
+                if (defineSymbols.Contains(defineSymbol))
+                {
+                    return false;
+                }
+                defineSymbols.Add(defineSymbol);
 				return true;
 			}
 			else
 			{
+				if (!defineSymbols.Contains(defineSymbol))
+				{
+                    return false;
+                }
 				defineSymbols.Remove(defineSymbol);
-				return false;
+				return true;
 			}
 		}
 

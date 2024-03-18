@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
-#if UMA_BURSTCOMPILER
+
+#if UMA_BURSTCOMPILE
 using Unity.Burst;
 #endif
 #if UNITY_2019_3_OR_NEWER

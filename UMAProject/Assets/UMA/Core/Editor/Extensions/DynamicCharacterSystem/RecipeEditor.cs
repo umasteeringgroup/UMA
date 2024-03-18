@@ -236,13 +236,13 @@ namespace UMA.Editors
 
         protected override void DoUpdate()
         {
+            _needsUpdate = false;
             var recipeBase = (UMARecipeBase)target;
             recipeBase.Save(_recipe, UMAContextBase.Instance);
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssetIfDirty(recipeBase);
 			_rebuildOnLayout = true;
 
-            _needsUpdate = false; 
             if (target is UMATextRecipe)
             {
                 UMAUpdateProcessor.UpdateRecipe(target as UMATextRecipe);

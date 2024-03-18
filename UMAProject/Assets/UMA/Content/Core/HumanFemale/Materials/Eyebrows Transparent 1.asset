@@ -20,7 +20,7 @@ MonoBehaviour:
   channels:
   - channelType: 0
     textureFormat: 0
-    materialPropertyName: _Albedo
+    materialPropertyName: _MainTex
     sourceTextureName: 
     Compression: 0
     DownSample: 0
@@ -28,7 +28,7 @@ MonoBehaviour:
     NonShaderTexture: 0
   - channelType: 1
     textureFormat: 0
-    materialPropertyName: _NormalMask
+    materialPropertyName: _BumpMap
     sourceTextureName: 
     Compression: 0
     DownSample: 0
