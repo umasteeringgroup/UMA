@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Text;
 using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelector
@@ -18,7 +16,6 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
 
     [Header("UMA")]
     public DynamicCharacterAvatar avatar;
-    public bool showConsole = false;
     
 	[Header("GUI Prefabs")]
 	public GameObject ColorSelector;
@@ -27,8 +24,6 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
     public GameObject GridContainer;
     public GameObject Item;
     public GameObject ItemContainer;
-    public GameObject InfoText;
-    public GameObject LogLabel;
 	
 
     [Header("Camera Animation")]
@@ -42,7 +37,6 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
 
     public float lerpSpeed = 1.0f;
     public AnimationCurve lerpCurve;
-
 
     [Header("Test")]
     public List<string> Labels = new List<string>();
@@ -75,7 +69,6 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
     [Header("Containers")]
     public GameObject DNAContainer;
     public GameObject ItemsContainer;
-    public GameObject LogDetailContainer;
 
 
 
@@ -86,17 +79,12 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
     public GameObject HairButton;
     public GameObject BackButton;
 
-    private List<string> ConsoleLog = new List<string>();
-    private List<string> PendingLog = new List<string>();
+
 
     private void Start()
     {
-        mainCameraTransform = Camera.main.transform;
-        Application.logMessageReceived += HandleLog;
-        ShowInfo();
+                mainCameraTransform = Camera.main.transform;
     }
-
-
 
     // Update is called once per frame
     void Update()
@@ -111,23 +99,8 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
             }
             mainCameraTransform.position = Vector3.Lerp(LerpStart, lerpTo, lerpCurve.Evaluate(lerpPos));
         }
-        if (PendingLog.Count > 0)
-        {
-            List<string> tempLog = new List<string>();
-            tempLog.AddRange(PendingLog);
-            PendingLog.Clear();
-            foreach (string log in tempLog)
-            {
-                ShowLogItem(log);
-            }
-        }
     }
 
-    void HandleLog(string logString, string stackTrace, LogType type)
-    {
-        ConsoleLog.Add(logString);
-        PendingLog.Add(logString);
-    }
 
     #region EventHandlers
     public void SetColor(string ColorName, OverlayColorData color)
@@ -231,7 +204,7 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
         return result.Split(' ');
     }
 
-    private void CleanContainer(GameObject container)
+    private void SetupCategory(GameObject container, List<SharedColorTable> colorTables, List<string> DNA, List<UMAWardrobeRecipe> items)
     {
         if (container != null)
         {
@@ -239,15 +212,6 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
             {
                 Destroy(child.gameObject);
             }
-        }
-    }
-
-
-    private void SetupCategory(GameObject container, List<SharedColorTable> colorTables, List<string> DNA, List<UMAWardrobeRecipe> items)
-    {
-        CleanContainer(container);
-        if (container != null)
-        {
             // add the color selectors
             foreach (SharedColorTable colorTable in colorTables)
             {
@@ -421,64 +385,6 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
         }
     }
 
-    public void ShowInfo()
-    {
-        DeactivateButtons();
-        CleanContainer(DNAContainer);
-        if (InfoText != null)
-        { 
-            Instantiate(InfoText, DNAContainer.transform);
-        }
-        ShowLog();
-        ActivateButton(BackButton);
-    }
-
-    private void ShowLogItem(string logtext)
-    {
-        if (!showConsole)
-        {
-            return;
-        }
-        GameObject log = Instantiate(LogLabel, ItemsContainer.transform);
-        Text logText = log.GetComponent<Text>();
-        logText.text = logtext;
-
-        Button button = log.GetComponentInChildren<Button>();
-        if (button != null)
-        {
-            button.onClick.AddListener(OnLogitemClick);
-        }
-    }
-
-    private void ShowLogDetail(string log)
-    {
-        Text text = LogDetailContainer.GetComponentInChildren<Text>();
-        if (text != null)
-        {
-            text.text = log;
-        }
-    }
-
-    private void ShowLog()
-    {
-        CleanContainer(ItemsContainer);
-        foreach (string log in ConsoleLog)
-        {
-            ShowLogItem(log);
-        }
-        PendingLog.Clear();
-    }
-
-    public void OnLogitemClick()
-    {
-        Text clicked = EventSystem.current.currentSelectedGameObject.GetComponent<Text>();
-        if (clicked != null)
-        {
-            string log = clicked.text;
-            ShowLogDetail(log);
-        }
-    }
-
     public void OnFaceClick()
     {
         DeactivateButtons();
@@ -523,23 +429,12 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
 
     public void OnBackClick()
     {
-        ShowInfo();
-    }
-    #endregion
-
-    #region Scrolling
-    public void DoDrag(BaseEventData eventData)
-    {
-        GameObject parent = avatar.transform.parent.gameObject;
-
-        // rotate the parent object base on mouse input
-        PointerEventData pointerData = eventData as PointerEventData;
-        if (pointerData != null)
+        DeactivateButtons();
+        if(BodyPos != null)
         {
-            parent.transform.Rotate(Vector3.up, -pointerData.delta.x);
+            StartLerp(BodyPos, "", 0.0f);
         }
-
-
+        ActivateButton(BackButton);
     }
     #endregion
 }

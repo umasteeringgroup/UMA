@@ -293,8 +293,36 @@ namespace UMA.Editors
 			GUILayout.EndHorizontal();
 		}
 
+        public static void FoldoutBarButton(ref bool foldout, string content, List<string> buttons, out List<bool> pressed, out int move, out bool delete)
+        {
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            GUILayout.Space(10);
+            foldout = EditorGUILayout.Foldout(foldout, content, true);
 
-		public static void FoldoutBarButton(ref bool foldout, string content, string button, out bool pressed, out int move, out bool delete)
+            pressed = new List<bool>();
+            for (int i = 0; i < buttons.Count; i++)
+            {
+                pressed.Add(GUILayout.Button(buttons[i], EditorStyles.miniButton, GUILayout.ExpandWidth(false)));
+            }
+//            pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+//            pressed2 = GUILayout.Button(button2, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+
+            move = 0;
+            if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+            {
+                move--;
+            }
+
+            if (GUILayout.Button("\u25BC", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+            {
+                move++;
+            }
+
+            delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+
+        public static void FoldoutBarButton(ref bool foldout, string content, string button, out bool pressed, out int move, out bool delete)
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);

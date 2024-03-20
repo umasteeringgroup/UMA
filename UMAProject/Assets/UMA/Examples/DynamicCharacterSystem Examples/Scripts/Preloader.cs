@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 #if UMA_ADDRESSABLES
 using UnityEngine.AddressableAssets;
@@ -9,44 +10,89 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 public class Preloader : MonoBehaviour
 {
+#if UMA_ADDRESSABLES
+    [Header("Addressable Labels to preload")]
     public List<string> Labels;
+#else
+    [Header("The preloader requres addressables to run")]
+    public List<string> Labels = new List<string>();
+#endif
+    [Header("Loading Slider to update")]
     public Slider LoadingSlider;
+    [Header("Object to activate on completion")]
+    public GameObject ActivateOnCompletion;
+
 #if UMA_ADDRESSABLES
     private AsyncOperationHandle op;
 #endif
     // Start is called before the first frame update
-    void Start()
+    async void Start()
     {
 #if UMA_ADDRESSABLES
+        StartCoroutine(Initialize());
+#else
+        if (ActivateOnCompletion != null)
+        {
+            ActivateOnCompletion.SetActive(true);
+        }
+#endif
+    }
+
+    private void PreloadLogger(string s)
+    {
+        Debug.Log($"{Time.realtimeSinceStartup} Message: {s} ");
+    }
+
+
+    private IEnumerator Initialize()
+    {
+        yield return new WaitForSeconds(1);
+        PreloadLogger("Starting Initialize");
+        InitAddressables();
+    }
+
+    private async void InitAddressables()
+    {
+#if UMA_ADDRESSABLES
+        PreloadLogger("Initializing Addressables");
+        op = Addressables.InitializeAsync();
+        await op.Task;
+        PreloadLogger($"Addressables Initialized");
+
         op = Addressables.DownloadDependenciesAsync(Labels, Addressables.MergeMode.Union, false);
         op.Completed += Op_Completed;
-        //await op.Task;
+        PreloadLogger("Downloading Dependencies completed" );
 #else
-        Debug.Log("Addressables is not defined.");
-        Text t = LoadingSlider.gameObject.GetComponentInChildren<Text>();
-        t.text = "Sample requires addressables to run.";
+        LoadingSlider.gameObject.SetActive(false);
 #endif
     }
 
 #if UMA_ADDRESSABLES
-void Update()
+    void Update()
     {
-        LoadingSlider.value = op.PercentComplete;
-        Text t = LoadingSlider.gameObject.GetComponentInChildren<Text>();
-        t.text = op.Status.ToString();
+        if (LoadingSlider.isActiveAndEnabled && op.IsValid())
+        {
+            LoadingSlider.value = op.PercentComplete;
+            Text t = LoadingSlider.gameObject.GetComponentInChildren<Text>();
+            t.text = op.Status.ToString() + " " + op.PercentComplete.ToString("P") + " Complete";
+        }
     }
 
-private void Op_Completed(AsyncOperationHandle obj)
+    private void Op_Completed(AsyncOperationHandle obj)
     {
         if (obj.Status == AsyncOperationStatus.Succeeded)
         {
-            LoadingSlider.gameObject.SetActive(false);
+            if (ActivateOnCompletion != null)
+            {
+                ActivateOnCompletion.SetActive(true);
+            }
         }
         else
         {
-            Text t = LoadingSlider.gameObject.GetComponentInChildren<Text>();
-            t.text = obj.Status.ToString();
+            Debug.Log("Preloader error: " + obj.Status);
         }
+        LoadingSlider.gameObject.SetActive(false);
+        Addressables.Release(obj);
     }
 #endif
 }

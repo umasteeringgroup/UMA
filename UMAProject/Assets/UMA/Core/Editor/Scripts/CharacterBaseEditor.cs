@@ -1,6 +1,7 @@
 #define UNITY_EDITOR
 #if UNITY_EDITOR
 
+using Codice.Client.Common.GameUI;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1914,6 +1915,8 @@ namespace UMA.Editors
 
         public bool OnGUI()
         {
+            List<string> buttons = new List<string>() { "Inspect","Material" };
+            List<bool> pressed = new List<bool>() { false, false };
             bool delete;
             bool select;
 
@@ -1925,13 +1928,23 @@ namespace UMA.Editors
             {
                 matName = _overlayData.asset.material.name;
             }
-            GUIHelper.FoldoutBarButton(ref _foldout, $"{_overlayData.asset.overlayName} ( {matName})", "inspect", out select, out move, out delete);
 
-            if (select)
+            int queue = _overlayData.asset.material.material.renderQueue;
+          
+            GUIHelper.FoldoutBarButton(ref _foldout, $"{_overlayData.asset.overlayName} ( {matName} Q:{queue})", buttons,out pressed, out move, out delete);
+
+            if (pressed[0])
             {
                 EditorGUIUtility.PingObject(_overlayData.asset.GetInstanceID());
                 InspectorUtlity.InspectTarget(_overlayData.asset);
             }
+
+            if (pressed[1])
+            {
+                EditorGUIUtility.PingObject(_overlayData.asset.material.material.GetInstanceID());
+                InspectorUtlity.InspectTarget(_overlayData.asset.material.material);
+            }
+
 
             OverlayExpanded[_overlayData.overlayName] = _foldout;
             Delete = delete;
