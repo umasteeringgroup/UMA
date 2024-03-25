@@ -370,7 +370,7 @@ namespace UMA
 			public string[] ShaderParms;
 			public bool alwaysUpdate;
 			public bool isBaseColor;
-
+			public int displayColor;
 			public PackedOverlayColorDataV3()
 			{
 				name = "";
@@ -404,6 +404,8 @@ namespace UMA
 						colors[colorIndex++] = (short)Mathf.FloorToInt(additiveMaskColor.a * 255f);
 					}
 				}
+				Color32 color32 = colorData.color;
+				displayColor = color32.r | (color32.g << 8) | (color32.b << 16) | (color32.a << 24);
 				if (colorData.HasPropertyBlock)
                 {
 					alwaysUpdate = colorData.PropertyBlock.alwaysUpdate;
@@ -433,6 +435,7 @@ namespace UMA
 					int channelCount = colors.Length / 8;
 					overlayColorData.channelMask = new Color[channelCount];
 					overlayColorData.channelAdditiveMask = new Color[channelCount];
+				    overlayColorData.displayColor = new Color32((byte)(displayColor & 0xFF), (byte)((displayColor >> 8) & 0xFF), (byte)((displayColor >> 16) & 0xFF), (byte)((displayColor >> 24) & 0xFF));
 #if UNITY_EDITOR
 					overlayColorData.isBaseColor = isBaseColor;
 #endif

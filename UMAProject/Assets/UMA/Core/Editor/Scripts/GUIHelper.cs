@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine.Events;
 using System.IO;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 
 namespace UMA.Editors
 {
@@ -304,8 +305,8 @@ namespace UMA.Editors
             {
                 pressed.Add(GUILayout.Button(buttons[i], EditorStyles.miniButton, GUILayout.ExpandWidth(false)));
             }
-//            pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
-//            pressed2 = GUILayout.Button(button2, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            //            pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            //            pressed2 = GUILayout.Button(button2, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
 
             move = 0;
             if (GUILayout.Button("\u25B2", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))

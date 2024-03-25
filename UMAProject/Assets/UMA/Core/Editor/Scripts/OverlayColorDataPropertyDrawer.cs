@@ -56,6 +56,8 @@ namespace UMA.Editors
 			var mask = property.FindPropertyRelative("channelMask");
 			var additive = property.FindPropertyRelative("channelAdditiveMask");
 			var propblock = property.FindPropertyRelative("propertyBlock");
+			var displayColor = property.FindPropertyRelative("displayColor");
+
 			EditorGUILayout.BeginHorizontal();
 			name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
 			if (!name.isExpanded)
@@ -68,6 +70,7 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
                 EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
+				EditorGUILayout.PropertyField(displayColor);
 
                 if (ocd != null)
 				{
@@ -158,12 +161,14 @@ namespace UMA.Editors
 							//color didn't have a metallic gloss channel so show button to add one?
 						}
 					}
-				//	if (ocd.HasProperties)
-				//	{
-				//		EditorGUILayout.LabelField("Has Properties");
-				//	}
-			}
-			EditorGUILayout.Space();
+                EditorGUILayout.PropertyField(displayColor);
+
+                //	if (ocd.HasProperties)
+                //	{
+                //		EditorGUILayout.LabelField("Has Properties");
+                //	}
+            }
+            EditorGUILayout.Space();
 			EditorGUI.EndProperty();
 		}
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
