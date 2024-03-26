@@ -55,6 +55,7 @@ namespace UMA.CharacterSystem
         public UMADataEvent RecipeUpdated;
         public UMADataWardrobeEvent WardrobeAdded;
         public UMADataWardrobeEvent WardrobeRemoved;
+        public UMACharacterEvent CharacterStart = new UMACharacterEvent();
         public UMADataEvent BuildCharacterBegun = new UMADataEvent();
         public UMASlotsEvent SlotsHidden = new UMASlotsEvent();
         public UMARecipesEvent WardrobeSuppressed= new UMARecipesEvent();
@@ -554,6 +555,11 @@ namespace UMA.CharacterSystem
             InitializeAvatar();
 
             SetBlendshapeSettings();
+
+            if (CharacterStart != null)
+            {
+                CharacterStart.Invoke(this);
+            }
 
             if (animationController == null)
             {

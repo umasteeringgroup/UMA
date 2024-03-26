@@ -34,6 +34,35 @@ namespace UMA
         }
     }
 
+    /// <summary>
+    /// An event that happens when a generic UMACharacterAvatar is processed
+    /// </summary>
+    public class UMACharacterEvent : UnityEvent<DynamicCharacterAvatar>
+    {
+        public UMACharacterEvent()
+        {
+        }
+
+        public UMACharacterEvent(UMACharacterEvent source)
+        {
+            for (int i = 0; i < source.GetPersistentEventCount(); i++)
+            {
+                var target = source.GetPersistentTarget(i);
+                AddListener(target, UnityEventBase.GetValidMethodInfo(target, source.GetPersistentMethodName(i), new Type[] { typeof(DynamicCharacterAvatar) }));
+            }
+        }
+
+        public void AddAction(Action<DynamicCharacterAvatar> action)
+        {
+            this.AddListener(action.Target, action.Method);
+        }
+
+        public void RemoveAction(Action<DynamicCharacterAvatar> action)
+        {
+            this.RemoveListener(action.Target, action.Method);
+        }
+    }
+
 	/// <summary>
 	/// UMA event occuring on UMA data.
 	/// </summary>
