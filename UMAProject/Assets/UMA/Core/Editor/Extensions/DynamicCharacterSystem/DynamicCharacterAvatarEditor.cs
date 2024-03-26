@@ -142,7 +142,7 @@ namespace UMA.CharacterSystem.Editors
 				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
 				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
 				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController","forceSlotMaterials", "defaultRendererAsset","forceRebindAnimator",
-				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored","WardrobeAdded","WardrobeRemoved","BuildCharacterBegun","SlotsHidden","WardrobeSuppressed",
+				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterStart","CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored","WardrobeAdded","WardrobeRemoved","BuildCharacterBegun","SlotsHidden","WardrobeSuppressed",
 				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA","alwaysRebuildSkeleton", "umaRecipe"});
             if (EditorGUI.EndChangeCheck())
             {
@@ -704,6 +704,7 @@ namespace UMA.CharacterSystem.Editors
             if (CharacterCreated.isExpanded)
             {
                 BeginVerticalPadded();
+                SerializedProperty CharacterStart = serializedObject.FindProperty("CharacterStart");
                 SerializedProperty CharacterBegun = serializedObject.FindProperty("CharacterBegun");
                 SerializedProperty CharacterUpdated = serializedObject.FindProperty("CharacterUpdated");
                 SerializedProperty CharacterDestroyed = serializedObject.FindProperty("CharacterDestroyed");
@@ -718,6 +719,8 @@ namespace UMA.CharacterSystem.Editors
                 SerializedProperty SlotsHidden = serializedObject.FindProperty("SlotsHidden");
                 SerializedProperty WardrobeSuppressed = serializedObject.FindProperty("WardrobeSuppressed");
 
+                EditorGUILayout.HelpBox("CharacterStart is called in the character Start method, after Initialization, but before auto building.", MessageType.Info);
+                EditorGUILayout.PropertyField(CharacterStart);
                 EditorGUILayout.HelpBox("CharacterBegun is called when the character is starting the build process", MessageType.Info);
                 EditorGUILayout.PropertyField(CharacterBegun);
                 EditorGUILayout.HelpBox("CharacterCreated is called after the character has completed generation the first time. It is only called once.", MessageType.Info);
