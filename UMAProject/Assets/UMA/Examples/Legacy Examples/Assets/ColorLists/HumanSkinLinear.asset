@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -12,45 +13,102 @@ MonoBehaviour:
   m_Name: HumanSkinLinear
   m_EditorClassIdentifier: 
   channelCount: 1
+  copyColorName: 1
   sharedColorName: Skin
   colors:
   - name: Skin
     channelMask:
-    - {r: .933823526, g: .879839838, b: .830828309, a: 1}
+    - {r: 0.9716981, g: 0.85905826, b: 0.84947187, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
-    - {r: .933823526, g: .841482997, b: .830828309, a: 1}
+    - {r: 0.9716981, g: 0.85905826, b: 0.84947187, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
-    - {r: .801470578, g: .791797638, b: .760218441, a: 1}
+    - {r: 0.9339623, g: 0.7828495, b: 0.7724279, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
-    - {r: .757352948, g: .701434791, b: .601427317, a: 1}
+    - {r: 0.75686276, g: 0.65599066, b: 0.6, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
-    - {r: .669117689, g: .637358367, b: .580558002, a: 1}
+    - {r: 0.6886792, g: 0.5471709, b: 0.5175922, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
-    - {r: .566176474, g: .551246881, b: .524545848, a: 1}
+    - {r: 0.5661765, g: 0.5512469, b: 0.52454585, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
-    - {r: .441176474, g: .423278838, b: .41522491, a: 1}
+    - {r: 0.44117647, g: 0.42327884, b: 0.4152249, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
-    - {r: .742647052, g: .680885375, b: .633434236, a: 1}
+    - {r: 0.74264705, g: 0.6808854, b: 0.63343424, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}

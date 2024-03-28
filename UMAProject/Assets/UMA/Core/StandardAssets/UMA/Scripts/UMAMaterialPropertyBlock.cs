@@ -669,6 +669,31 @@ namespace UMA
         public bool alwaysUpdate;
         public static string[] PropertyTypeStrings = new string[0];
         public static List<Type> availableTypes = new List<Type>();
+        public string[] GetPropertyStrings()
+        {
+            List<string> strings = new List<string>();
+            foreach(UMAProperty p in shaderProperties)
+            {
+                if (p != null)
+                {
+                    strings.Add(p.ToString());
+                }
+            }
+            return strings.ToArray();
+        }
+
+        public void SetPropertyStrings(string[] strings)
+        {
+            shaderProperties = new List<UMAProperty>();
+            foreach (string s in strings)
+            {
+                UMAProperty p = UMAProperty.FromString(s);
+                if (p != null)
+                {
+                    shaderProperties.Add(p);
+                }
+            }
+        }
 
         /// <summary>
         /// Make sure the class is initialized

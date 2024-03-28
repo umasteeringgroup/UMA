@@ -2,20 +2,22 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Diffuse
-  m_Shader: {fileID: -6465566751694194690, guid: 96a1ea1a3b1dec0409673d0de0d94900,
-    type: 3}
-  m_ShaderKeywords: _ALPHAPREMULTIPLY_ON
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_ValidKeywords:
+  - _ALPHATEST_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
+  m_CustomRenderQueue: 2450
+  stringTagMap:
+    RenderType: TransparentCutout
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
@@ -156,22 +158,36 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SpecGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _BumpScale: 1
+    - _BumpStrength: 0.4
     - _ColorModulation: 1
     - _CullMode: 0
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DoubleSidedNormalMode: 1
-    - _DstBlend: 10
+    - _DstBlend: 0
     - _EmissiveModulation: 1
+    - _FadeFactor: 2
     - _GlossMapScale: 1
     - _Glossiness: 0.145
     - _GlossyReflections: 1
     - _HalfLambertStrength: 1
+    - _MaskClipValue: 0.7
     - _Metallic: 0
+    - _MetallicAdd: 0
     - _MetallicModulation: 1
-    - _Mode: 3
+    - _MetallicStrength: 0.5
+    - _Mode: 1
     - _NormalStrength0: 1
     - _NormalStrength1: 1
     - _NormalStrength2: 1
@@ -179,7 +195,9 @@ Material:
     - _OcclusionStrength: 1
     - _OverlayCount: 0
     - _Parallax: 0.02
+    - _SmoothnessAdd: 0
     - _SmoothnessModulation: 1
+    - _SmoothnessStrength: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -199,7 +217,8 @@ Material:
     - _UseTiling1: 0
     - _UseTiling2: 0
     - _UseTiling3: 0
-    - _ZWrite: 0
+    - _ZWrite: 1
+    - __dirty: 1
     m_Colors:
     - _Add0_0: {r: 0, g: 0, b: 0, a: 0}
     - _Add0_1: {r: 0, g: 0, b: 0, a: 0}
@@ -228,6 +247,7 @@ Material:
     - _RedColor1: {r: 1, g: 1, b: 1, a: 1}
     - _RedColor2: {r: 1, g: 1, b: 1, a: 1}
     - _RedColor3: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _Tint0_0: {r: 1, g: 1, b: 1, a: 1}
     - _Tint0_1: {r: 1, g: 1, b: 1, a: 1}
     - _Tint0_2: {r: 1, g: 1, b: 1, a: 1}

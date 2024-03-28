@@ -1057,13 +1057,17 @@ namespace UMA.CharacterSystem
             List<SharedColorDef> Colors = new List<SharedColorDef>();
 
             var CurrentColors = characterColors.Colors;
+            
 
             for (int i1 = 0; i1 < CurrentColors.Count; i1++)
             {
                 ColorValue col = CurrentColors[i1];
                 SharedColorDef scd = new SharedColorDef(col.name, col.channelCount);
                 List<ColorDef> colorchannels = new List<ColorDef>();
-
+                if (col.HasProperties)
+                {
+                    scd.shaderParms = col.PropertyBlock.GetPropertyStrings();
+                }
                 for (int i = 0; i < col.channelCount; i++)
                 {
                     if (skipColorDefaults)
@@ -1112,7 +1116,7 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-            if (resetColors && activeRace.data != null)
+            if (resetColors && activeRace != null && activeRace.data != null)
             {
                 characterColors.Colors.Clear();
                 List<OverlayColorData> colors = activeRace.data.GetDefaultColors();
@@ -1150,6 +1154,11 @@ namespace UMA.CharacterSystem
                         ocd.channelMask[def.chan] = ColorDef.ToColor(def.mCol);
                         ocd.channelAdditiveMask[def.chan] = ColorDef.ToColor(def.aCol);
                     }
+                    if (sc.shaderParms != null)
+                    {
+                        ocd.PropertyBlock = new UMAMaterialPropertyBlock();
+                        ocd.PropertyBlock.SetPropertyStrings(sc.shaderParms);
+                    }
                 }
                 else
                 {
@@ -1159,6 +1168,11 @@ namespace UMA.CharacterSystem
                         ColorDef def = sc.channels[i];
                         nocd.channelMask[def.chan] = ColorDef.ToColor(def.mCol);
                         nocd.channelAdditiveMask[def.chan] = ColorDef.ToColor(def.aCol);
+                    }
+                    if (sc.shaderParms != null)
+                    {
+                        nocd.PropertyBlock = new UMAMaterialPropertyBlock();
+                        nocd.PropertyBlock.SetPropertyStrings(sc.shaderParms);
                     }
                     characterColors.SetRawColor(sc.name, nocd);
                 }

@@ -20,7 +20,7 @@ MonoBehaviour:
   channels:
   - channelType: 2
     textureFormat: 0
-    materialPropertyName: _Albedo
+    materialPropertyName: _MainTex
     sourceTextureName: 
     Compression: 0
     DownSample: 0

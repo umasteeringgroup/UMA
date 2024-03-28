@@ -105,6 +105,11 @@ namespace UMA.CharacterSystem.Editors
 
             EditorGUI.BeginChangeCheck();
             showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
+            thisDCA.userInformation = EditorGUILayout.TextField("User Information", thisDCA.userInformation);
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("User Information: This is a field for you to put any information you want to store with the character. It is not used by the system in any way.", MessageType.Info);
+            }
             if (EditorGUI.EndChangeCheck())
             {
                 serializedObject.ApplyModifiedProperties();
@@ -135,19 +140,20 @@ namespace UMA.CharacterSystem.Editors
                 EndVerticalPadded();
             }
 
-            EditorGUI.BeginChangeCheck();
-			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide","BundleCheck", "loadBlendShapes","loadOnlyUsedBlendshapes","loadBlendshapeNormals","loadBlendshapeTangents","loadAllFrames","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers","rawAvatar","RecreateAnimatorOnRaceChange",
-				/* Editor Only Fields */ "editorTimeGeneration",
-                "characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar","KeepAnimatorController","keepPredefinedDNA",
-				/*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
-				/*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
-				/*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController","forceSlotMaterials", "defaultRendererAsset","forceRebindAnimator",
-				/*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterStart","CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored","WardrobeAdded","WardrobeRemoved","BuildCharacterBegun","SlotsHidden","WardrobeSuppressed",
-				/*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA","alwaysRebuildSkeleton", "umaRecipe"});
-            if (EditorGUI.EndChangeCheck())
-            {
-                serializedObject.ApplyModifiedProperties();
-            }
+ //           EditorGUI.BeginChangeCheck();
+ //
+//			Editor.DrawPropertiesExcluding(serializedObject, new string[] { "hide","BundleCheck", "loadBlendShapes","loadOnlyUsedBlendshapes","loadBlendshapeNormals","loadBlendshapeTangents","loadAllFrames","activeRace","defaultChangeRaceOptions","cacheCurrentState", "rebuildSkeleton", "preloadWardrobeRecipes", "raceAnimationControllers","rawAvatar","RecreateAnimatorOnRaceChange",
+//				/* Editor Only Fields */ "editorTimeGeneration",
+//                "characterColors","BoundsOffset","_buildCharacterEnabled","keepAvatar","KeepAnimatorController","keepPredefinedDNA",
+				///*LoadOtions fields*/ "defaultLoadOptions", "loadPathType", "loadPath", "loadFilename", "loadString", "loadFileOnStart", "waitForBundles", /*"buildAfterLoad",*/
+				///*SaveOptions fields*/ "defaultSaveOptions", "savePathType","savePath", "saveFilename", "makeUniqueFilename","ensureSharedColors", 
+				///*Moved into AdvancedOptions*/"context","umaData","umaRecipe", "umaAdditionalRecipes","umaGenerator", "animationController","forceSlotMaterials", "defaultRendererAsset","forceRebindAnimator",
+				///*Moved into CharacterEvents*/"CharacterCreated", "CharacterBegun", "CharacterStart","CharacterUpdated", "CharacterDestroyed", "CharacterDnaUpdated", "RecipeUpdated", "AnimatorStateSaved", "AnimatorStateRestored","WardrobeAdded","WardrobeRemoved","BuildCharacterBegun","SlotsHidden","WardrobeSuppressed",
+				///*PlaceholderOptions fields*/"showPlaceholder", "previewModel", "customModel", "customRotation", "previewColor", "AtlasResolutionScale","DelayUnload","predefinedDNA","alwaysRebuildSkeleton", "umaRecipe"});
+  //          if (EditorGUI.EndChangeCheck())
+  //          {
+  //              serializedObject.ApplyModifiedProperties();
+  //          }
             //The base DynamicAvatar properties- get these early because changing the race changes someof them
             SerializedProperty context = serializedObject.FindProperty("context");
             SerializedProperty umaData = serializedObject.FindProperty("umaData");
@@ -243,28 +249,31 @@ namespace UMA.CharacterSystem.Editors
                         }
                     }
                 }
-                if (GUILayout.Button("Save Legacy File"))
+                if (GUILayout.Button("Save AvatarDef"))
                 {
-                    string fileName = EditorUtility.SaveFilePanel("Save Legacy File", "", "", "crs");
+                    string fileName = EditorUtility.SaveFilePanel("Save Avatar Definition File", "", "", "umaDef");
                     if (!string.IsNullOrEmpty(fileName))
                     {
                         try
                         {
-                            string charstr = thisDCA.GetCurrentRecipe(false);
+                            string charstr = thisDCA.GetAvatarDefinition(false, false).ToCompressedString("|");
                             System.IO.File.WriteAllText(fileName, charstr);
                         }
                         catch (Exception ex)
                         {
                             Debug.LogException(ex);
-                            EditorUtility.DisplayDialog("Error", "Error writing preset file: " + ex.Message, "OK");
+                            EditorUtility.DisplayDialog("Error", "Error writing avatar definition file: " + ex.Message, "OK");
                         }
                     }
                 }
+                EditorGUILayout.EndHorizontal();
                 if (GUILayout.Button("Regen"))
                 {
                     UpdateCharacter();
                 }
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.EndHorizontal();
+
                 if (EditorApplication.isPlayingOrWillChangePlaymode)
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -498,6 +507,12 @@ namespace UMA.CharacterSystem.Editors
                                 AddSingleDNA(s);
                             }
                         }
+                    }
+                    if (GUILayout.Button("Clear"))
+                    {
+                        thisDCA.predefinedDNA.Clear();
+                        GenerateSingleUMA();
+                        Repaint();
                     }
                     GUILayout.EndHorizontal();
 

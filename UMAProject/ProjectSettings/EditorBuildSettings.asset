@@ -6,9 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/UMA/Examples/UMARenderer Examples/UMA Demo - UMARendererAssets.unity
-    guid: 8adbad897b68e2e4a97febcaf21ec259
-  - enabled: 1
     path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Simple
       Setup.unity
     guid: 43ce2d3e5bdfc924b84fc85a02c01ca0

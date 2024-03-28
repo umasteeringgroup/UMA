@@ -37,17 +37,27 @@ public struct ColorDef
 }
 
 [Serializable]
+public struct ShaderParmDef
+{
+    public string name;
+    public int type;
+    public uint value;   // could be a float, int, or color
+}
+
+[Serializable]
 public struct SharedColorDef
 {
     public string name;
     public int count;
     public ColorDef[] channels;
+    public string[] shaderParms;
 
     public SharedColorDef(string Name, int ChannelCount)
     {
         name = Name;
         count = ChannelCount;
         channels = new ColorDef[0];
+        shaderParms = new string[0];
     }
 
     public void SetChannels(ColorDef[] Channels)
@@ -104,6 +114,16 @@ public struct AvatarDefinition
             OverlayColorData col = CurrentColors[i1];
             SharedColorDef scd = new SharedColorDef(col.name, col.channelCount);
             List<ColorDef> colorchannels = new List<ColorDef>();
+
+            if (col.PropertyBlock != null)
+            {
+                List<string> shaderParms = new List<string>();
+                foreach (UMAProperty prop in col.PropertyBlock.shaderProperties)
+                {
+                    string property = prop.ToString();
+                }
+                scd.shaderParms = shaderParms.ToArray();
+            }
 
             for (int i = 0; i < col.channelCount; i++)
             {
@@ -227,6 +247,15 @@ public struct AvatarDefinition
                     }
                     theString.Append(';');
                 }
+                if (scd.shaderParms != null)
+                {
+                    for (int i2 = 0; i2 < scd.shaderParms.Length; i2++)
+                    {
+                        theString.Append("P:");
+                        theString.Append(Base64Encode(scd.shaderParms[i2]));
+                        theString.Append(';');
+                    }
+                }
                 theString.Append(seperator);
             }
         }
@@ -281,6 +310,7 @@ public struct AvatarDefinition
                     if (SharedColor.Length > 1)
                     {
                         SharedColorDef scd = new SharedColorDef();
+                        List<string> ShaderParms = new List<string>();
                         splitter[0] = ',';
                         string[] maincol = SharedColor[0].Split(splitter, StringSplitOptions.RemoveEmptyEntries);
                         if (maincol.Length > 1)
@@ -297,6 +327,13 @@ public struct AvatarDefinition
                                 {
                                     for (int i1 = 0; i1 < ColorDefs.Length; i1++)
                                     {
+                                        if (String.IsNullOrEmpty(ColorDefs[i1]))
+                                            continue;
+                                        if (ColorDefs[i1][0] == 'P')
+                                        {
+                                            ShaderParms.Add(Base64Decode(ColorDefs[i1].Substring(2)));
+                                            continue;
+                                        }
                                         string c = ColorDefs[i1];
                                         splitter[0] = ',';
                                         string[] vals = c.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
@@ -315,6 +352,7 @@ public struct AvatarDefinition
 
                             }
                             scd.channels = theColors.ToArray();
+                            scd.shaderParms = ShaderParms.ToArray();
                             Colors.Add(scd);
                         }
                     }
@@ -358,6 +396,18 @@ public struct AvatarDefinition
     {
         return FromCompressedString(Encoding.ASCII.GetString(asciiString));
     }
+    public static string Base64Encode(string plainText)
+    {
+        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+        return System.Convert.ToBase64String(plainTextBytes);
+    }
+
+    public static string Base64Decode(string base64EncodedData)
+    {
+        var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
+        return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+    }
+
 }
 
 [Serializable]

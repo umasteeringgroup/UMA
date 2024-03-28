@@ -124,7 +124,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BumpScale: 0.8
+    - _BumpScale: 0.55
     - _CullMode: 2
     - _CurveBias: 0.005
     - _Cutoff: 0.5
