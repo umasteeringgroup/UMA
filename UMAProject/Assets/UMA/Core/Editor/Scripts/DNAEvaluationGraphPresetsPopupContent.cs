@@ -56,8 +56,10 @@ namespace UMA.Editors
 				entrysHeightCalc = (entryHeight * DNAEvaluationGraphPresetLibrary.AllGraphPresets.Count) + (padding * 2f);
 				entrysHeightCalc += (EditorGUIUtility.singleLineHeight * 2f) + (padding * 2f);
 				if (entrysHeightCalc > maxHeight)
-					entrysHeightCalc = maxHeight;
-			}
+                {
+                    entrysHeightCalc = maxHeight;
+                }
+            }
 			else
 			{
 				entrysHeightCalc = minHeight;
@@ -138,7 +140,9 @@ namespace UMA.Editors
 		public override void OnClose()
 		{
 			if (OnSelected != null)
-				OnSelected(_selectedPreset, property);
-		}
+            {
+                OnSelected(_selectedPreset, property);
+            }
+        }
 	}
 }

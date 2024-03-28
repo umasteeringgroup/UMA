@@ -33,6 +33,7 @@ Shader "UMA/Hair Fade Cutout"
 		#include "UnityPBSLighting.cginc"
 		#include "Lighting.cginc"
 		#pragma target 3.0
+		#pragma shader_feature_local _ENVIRONMENTREFLECTIONS_OFF
 		struct Input
 		{
 			float2 uv_texcoord;
@@ -113,6 +114,7 @@ Shader "UMA/Hair Fade Cutout"
 			#pragma multi_compile_shadowcaster
 			#pragma multi_compile UNITY_PASS_SHADOWCASTER
 			#pragma skip_variants FOG_LINEAR FOG_EXP FOG_EXP2
+			#pragma shader_feature_local _ENVIRONMENTREFLECTIONS_OFF
 			# include "HLSLSupport.cginc"
 			#include "UnityCG.cginc"
 			#include "Lighting.cginc"

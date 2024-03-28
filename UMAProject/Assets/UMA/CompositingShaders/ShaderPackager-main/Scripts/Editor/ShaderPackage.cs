@@ -10,54 +10,54 @@ using UnityEditor;
 
 namespace UMA.ShaderPackager
 {
-   public class ShaderPackage : ScriptableObject
-   {
-      public enum SRPTarget
-      {
-         Standard,
-         URP,
-         HDRP
-      }
+    public class ShaderPackage : ScriptableObject
+    {
+        public enum SRPTarget
+        {
+            Standard,
+            URP,
+            HDRP
+        }
 
-      public enum UnityVersion
-      {
-         Min = 0,
-         Unity2018_4 = 20184,
-         Unity2019_1 = 20191,
-         Unity2019_2 = 20192,
-         Unity2019_3 = 20193,
-         Unity2019_4 = 20194,
-         Unity2020_1 = 20201,
-         Unity2020_2 = 20202,
-         Unity2020_3 = 20203,
-         Unity2021_1 = 20211,
-         Unity2021_2 = 20212,
-         Unity2021_3 = 20213,
-         Unity2022_1 = 20221,
-         Unity2022_2 = 20222,
-         Unity2022_3 = 20223,
-         Max = 30000
-      }
+        public enum UnityVersion
+        {
+            Min = 0,
+            Unity2018_4 = 20184,
+            Unity2019_1 = 20191,
+            Unity2019_2 = 20192,
+            Unity2019_3 = 20193,
+            Unity2019_4 = 20194,
+            Unity2020_1 = 20201,
+            Unity2020_2 = 20202,
+            Unity2020_3 = 20203,
+            Unity2021_1 = 20211,
+            Unity2021_2 = 20212,
+            Unity2021_3 = 20213,
+            Unity2022_1 = 20221,
+            Unity2022_2 = 20222,
+            Unity2022_3 = 20223,
+            Max = 30000
+        }
 
-      [System.Serializable]
-      public class Entry
-      {
-         public SRPTarget srpTarget = SRPTarget.Standard;
-         public UnityVersion UnityVersionMin = UnityVersion.Min;
-         public UnityVersion UnityVersionMax = UnityVersion.Max;
-         public Shader shader;
-         public string shaderSrc;
-      }
+        [System.Serializable]
+        public class Entry
+        {
+            public SRPTarget srpTarget = SRPTarget.Standard;
+            public UnityVersion UnityVersionMin = UnityVersion.Min;
+            public UnityVersion UnityVersionMax = UnityVersion.Max;
+            public Shader shader;
+            public string shaderSrc;
+        }
 
-      public List<Entry> entries = new List<Entry>();
+        public List<Entry> entries = new List<Entry>();
 #if __BETTERSHADERS__
       public Shader betterShader;
       public string betterShaderPath;
       public JBooth.BetterShaders.OptionOverrides optionOverrides;
 #endif
 
-      public void Pack(bool warnErrors)
-      {
+        public void Pack(bool warnErrors)
+        {
 #if __BETTERSHADERS__
          if (betterShader != null)
          {
@@ -189,8 +189,9 @@ namespace UMA.ShaderPackager
          }
 #endif
 
-         foreach (var e in entries)
-         {
+            for (int i = 0; i < entries.Count; i++)
+            {
+                Entry e = entries[i];
                 if (e.shader)
                 {
 #if __BETTERSHADERS__
@@ -204,44 +205,44 @@ namespace UMA.ShaderPackager
                         break;
                     }
                 }
-            if (e.UnityVersionMax == ShaderPackage.UnityVersion.Min && e.UnityVersionMin == ShaderPackage.UnityVersion.Min)
-            {
-               e.UnityVersionMax = ShaderPackage.UnityVersion.Max;
+                if (e.UnityVersionMax == ShaderPackage.UnityVersion.Min && e.UnityVersionMin == ShaderPackage.UnityVersion.Min)
+                {
+                    e.UnityVersionMax = ShaderPackage.UnityVersion.Max;
+                }
+                if (e.shader != null)
+                {
+                    var path = AssetDatabase.GetAssetPath(e.shader);
+                    e.shaderSrc = System.IO.File.ReadAllText(path);
+                }
             }
-            if (e.shader != null)
-            {
-               var path = AssetDatabase.GetAssetPath(e.shader);
-               e.shaderSrc = System.IO.File.ReadAllText(path);
-            }
-         }
-      }
+        }
 
-      public string GetShaderSrc()
-      {
-         UnityVersion curVersion = UnityVersion.Min;
+        public string GetShaderSrc()
+        {
+            UnityVersion curVersion = UnityVersion.Min;
 #if UNITY_2018_4_OR_NEWER
-         curVersion = UnityVersion.Unity2018_4;
+            curVersion = UnityVersion.Unity2018_4;
 #endif
 #if UNITY_2019_1_OR_NEWER
-         curVersion = UnityVersion.Unity2019_1;
+            curVersion = UnityVersion.Unity2019_1;
 #endif
 #if UNITY_2019_2_OR_NEWER
-         curVersion = UnityVersion.Unity2019_2;
+            curVersion = UnityVersion.Unity2019_2;
 #endif
 #if UNITY_2019_3_OR_NEWER
-         curVersion = UnityVersion.Unity2019_3;
+            curVersion = UnityVersion.Unity2019_3;
 #endif
 #if UNITY_2019_4_OR_NEWER
-         curVersion = UnityVersion.Unity2019_4;
+            curVersion = UnityVersion.Unity2019_4;
 #endif
 #if UNITY_2020_1_OR_NEWER
-      curVersion = UnityVersion.Unity2020_1;
+            curVersion = UnityVersion.Unity2020_1;
 #endif
 #if UNITY_2020_2_OR_NEWER
-      curVersion = UnityVersion.Unity2020_2;
+            curVersion = UnityVersion.Unity2020_2;
 #endif
 #if UNITY_2020_3_OR_NEWER
-      curVersion = UnityVersion.Unity2020_3;
+            curVersion = UnityVersion.Unity2020_3;
 #endif
 #if UNITY_2021_1_OR_NEWER
       curVersion = UnityVersion.Unity2021_1;
@@ -262,33 +263,40 @@ namespace UMA.ShaderPackager
       curVersion = UnityVersion.Unity2022_3;
 #endif
 
-         SRPTarget target = SRPTarget.Standard;
+            SRPTarget target = SRPTarget.Standard;
 #if USING_HDRP
       target = SRPTarget.HDRP;
 #endif
 #if USING_URP
       target = SRPTarget.URP;
 #endif
-         string s = null;
-         foreach (var e in entries)
-         {
-            if (target != e.srpTarget)
-               continue;
-            // default init state..
-            if (e.UnityVersionMax == UnityVersion.Min && e.UnityVersionMin == UnityVersion.Min)
+            UnityVersion maxFound = UnityVersion.Min;
+
+            string s = null;
+            for (int i = 0; i < entries.Count; i++)
             {
-               e.UnityVersionMax = UnityVersion.Max;
+                Entry e = entries[i];
+                if (target != e.srpTarget)
+                {
+                    continue;
+                }
+                if (e.UnityVersionMax > maxFound)
+                {
+                    maxFound = e.UnityVersionMax;
+                    s = e.shaderSrc;
+                }
+            
+                // default init state..
+                if (e.UnityVersionMax == UnityVersion.Min && e.UnityVersionMin == UnityVersion.Min)
+                {
+                    e.UnityVersionMax = UnityVersion.Max;
+                }
+                if (curVersion >= e.UnityVersionMin && curVersion <= e.UnityVersionMax)
+                {
+                    s = e.shaderSrc;
+                }
             }
-            if (curVersion >= e.UnityVersionMin && curVersion <= e.UnityVersionMax)
-            {
-               if (s != null)
-               {
-                  Debug.LogWarning("Found multiple possible entries for unity version of shader");
-               }
-               s = e.shaderSrc;
-            }
-         }
-         return s;
-      }
-   }
+            return s;
+        }
+    }
 }

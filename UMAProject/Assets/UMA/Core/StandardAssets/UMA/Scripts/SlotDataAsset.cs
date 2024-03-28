@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
+
 
 #if UNITY_EDITOR
 using System.Text;
@@ -16,11 +18,16 @@ namespace UMA
     /// </summary>
     [System.Serializable]
     [PreferBinarySerialization]
-    public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider
+    public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider, IUMAIndexOptions
     {
         public string slotName;
         [System.NonSerialized]
         public int nameHash;
+
+        public bool forceKeep = false;
+        public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
+
+
 #if UNITY_EDITOR
         [Tooltip("This is only used when updating the slot with drag and drop below. It is not used at runtime nor is it included in the build")]
         public SkinnedMeshRenderer normalReferenceMesh;
@@ -56,7 +63,8 @@ namespace UMA
         public List<Welding> Welds = new List<Welding>();
 
 
-		public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals)
+
+        public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals, float weldDistance)
         {
             Welding thisWeld = new Welding();
 
@@ -70,27 +78,28 @@ namespace UMA
                     Vector3 DestVert = slot.meshData.vertices[Dest];
                     Vector3 Srcvert = meshData.vertices[Src];
                     float Len = (DestVert - Srcvert).magnitude;
-                    if (Len < Vector3.kEpsilon)
+                    if (Len < weldDistance)
                     {
                         bool misMatch = false;
                         float Normaldiff = (meshData.normals[Src] - slot.meshData.normals[Dest]).magnitude;
                         if (Normaldiff > Vector3.kEpsilon)
                         {
                             thisWeld.MisMatchCount++;
-                            if (CopyNormals)
-                            {
-                                meshData.normals[Src] = slot.meshData.normals[Dest];
-                                if (meshData.tangents != null && slot.meshData.tangents != null)
-                                {
-                                    meshData.tangents[Src] = slot.meshData.tangents[Dest];
-                                }
-                                if (AverageNormals)
-                                {
-                                    meshData.normals[Src] = (slot.meshData.normals[Dest] + meshData.normals[Src]).normalized;
-                                }
-                            }
                             misMatch = true;
                         }
+                        if (CopyNormals)
+                        {
+                            meshData.normals[Src] = slot.meshData.normals[Dest];
+                            if (meshData.tangents != null && slot.meshData.tangents != null)
+                            {
+                                meshData.tangents[Src] = slot.meshData.tangents[Dest];
+                            }
+                            if (AverageNormals)
+                            {
+                                meshData.normals[Src] = (slot.meshData.normals[Dest] + meshData.normals[Src]).normalized;
+                            }
+                        }
+
                         WeldPoint wp = new WeldPoint(Src, Dest, slot.meshData.normals[Dest], misMatch);
                         thisWeld.WeldPoints.Add(wp);
                     }
@@ -121,25 +130,18 @@ namespace UMA
 
                 int bonePos = 0;
                 int bone = 0;
-                foreach (byte WeightCount in slot.meshData.ManagedBonesPerVertex)
+                for (int i = 0; i < slot.meshData.ManagedBonesPerVertex.Length; i++)
                 {
+                    byte WeightCount = slot.meshData.ManagedBonesPerVertex[i];
                     theirBonePositionInBoneWeights.Add(bone, bonePos);
                     theirBoneIndexByName.Add(slot.meshData.umaBones[bone].name, bone);
                     bonePos += slot.meshData.ManagedBonesPerVertex[bone];
                     bone++;
                 }
 
-                /*				bonePos = 0;
-                                bone = 0;
-                                foreach (byte WeightCount in meshData.ManagedBonesPerVertex)
-                                {
-                                    ourBonePositionInBoneWeights.Add(bone, bonePos);
-                                    bonePos += meshData.ManagedBonesPerVertex[bone];
-                                    bone++;
-                                }*/
-
-                foreach (WeldPoint p in thisWeld.WeldPoints)
+                for (int i = 0; i < thisWeld.WeldPoints.Count; i++)
                 {
+                    WeldPoint p = thisWeld.WeldPoints[i];
                     ourWeldPoints.Add(p.ourVertex, p);
                 }
 
@@ -196,8 +198,9 @@ namespace UMA
 
                 int boneIndex = 0;
                 boneWeld newBoneWeights = new boneWeld();
-                foreach (boneWeld bw in BoneWelds)
+                for (int i = 0; i < BoneWelds.Count; i++)
                 {
+                    boneWeld bw = BoneWelds[i];
                     meshData.ManagedBonesPerVertex[boneIndex] = (byte)bw.Count;
                     newBoneWeights.AddRange(bw);
                 }
@@ -263,7 +266,12 @@ namespace UMA
         }
 
         public ReorderableList tagList { get; set; }
+        public List<string> backingTags { get; set; }
         public bool eventsFoldout { get; set; } = false;
+        public bool tagsFoldout { get; set; } = false;
+        public bool smooshFoldout { get; set; } = false;
+        public bool welldingFoldout { get; set; } = false;
+
 #endif
 
         public UMARendererAsset RendererAsset { get { return _rendererAsset; } }
@@ -423,6 +431,9 @@ namespace UMA
             }
         }
 
+        private bool labelLocalFiles = false;
+        public bool LabelLocalFiles { get { return labelLocalFiles; } set { labelLocalFiles = value; } }
+
         public void LoadFromIndex()
         {
             material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(materialName);
@@ -496,8 +507,9 @@ namespace UMA
             if (SlotObject != null)
             {
                 HookupObjectEvents();
-                foreach (var ih in EventHookups)
+                for (int i = 0; i < EventHookups.Count; i++)
                 {
+                    IUMAEventHookup ih = EventHookups[i];
                     ih.Begun(umaData);
                 }
             }
@@ -507,8 +519,9 @@ namespace UMA
         {
             if (SlotObject != null)
             {
-                foreach (var ih in EventHookups)
+                for (int i = 0; i < EventHookups.Count; i++)
                 {
+                    IUMAEventHookup ih = EventHookups[i];
                     ih.Completed(umaData, this.SlotObject);
                 }
             }
@@ -527,8 +540,9 @@ namespace UMA
                 var Behaviors = SlotObject.GetComponents<MonoBehaviour>();
                 Debug.Log($"There are {Behaviors.Length} components");
 
-                foreach (var mb in Behaviors)
+                for (int i = 0; i < Behaviors.Length; i++)
                 {
+                    MonoBehaviour mb = Behaviors[i];
                     if (mb is IUMAEventHookup)
                     {
                         Debug.Log("SDA Hooking up events");

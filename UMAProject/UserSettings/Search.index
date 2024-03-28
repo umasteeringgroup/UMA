@@ -1,0 +1,17 @@
+{
+    "name": "Assets",
+    "type": "asset",
+    "roots": [
+        "Assets"
+    ],
+    "includes": [],
+    "excludes": [],
+    "options": {
+        "disabled": false,
+        "types": true,
+        "properties": true,
+        "extended": true,
+        "dependencies": false
+    },
+    "baseScore": 999
+}

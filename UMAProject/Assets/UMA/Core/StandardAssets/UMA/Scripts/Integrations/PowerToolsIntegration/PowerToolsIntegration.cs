@@ -10,11 +10,16 @@ namespace UMA.Integrations
 		{
 			if (powerPackPersistance == null)
 			{
-				foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+                System.Reflection.Assembly[] array = System.AppDomain.CurrentDomain.GetAssemblies();
+                for (int i = 0; i < array.Length; i++)
 				{
-					powerPackPersistance = assembly.GetType("UMA.PowerTools.PowerPackPersistance");
-					if (powerPackPersistance != null) break;
-				}
+                    System.Reflection.Assembly assembly = array[i];
+                    powerPackPersistance = assembly.GetType("UMA.PowerTools.PowerPackPersistance");
+					if (powerPackPersistance != null)
+                    {
+                        break;
+                    }
+                }
 			}
 			return powerPackPersistance;
 		}
@@ -23,11 +28,16 @@ namespace UMA.Integrations
 		{
 			if (umaEditorAvatarType == null)
 			{
-				foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+                System.Reflection.Assembly[] array = System.AppDomain.CurrentDomain.GetAssemblies();
+                for (int i = 0; i < array.Length; i++)
 				{
-					umaEditorAvatarType = assembly.GetType("UMA.PowerTools.UMAEditorAvatar");
-					if (umaEditorAvatarType != null) break;
-				}
+                    System.Reflection.Assembly assembly = array[i];
+                    umaEditorAvatarType = assembly.GetType("UMA.PowerTools.UMAEditorAvatar");
+					if (umaEditorAvatarType != null)
+                    {
+                        break;
+                    }
+                }
 			}
 			return umaEditorAvatarType;
 		}

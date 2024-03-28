@@ -24,7 +24,7 @@ MonoBehaviour:
     _updateBounds: 1
     _tightenBounds: 1
     _adjustBounds: 1
-    _scale: 0.88
+    _scale: 1
     _bone: Position
     _scaleBoneHash: -1084586333
     _headRatio: 7.5

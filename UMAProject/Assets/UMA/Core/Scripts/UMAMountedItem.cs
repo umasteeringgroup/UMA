@@ -61,7 +61,9 @@ public class UMAMountedItem : MonoBehaviour
         {
             Initialize();
             if (avatar == null)
+            {
                 return false;
+            }
         }
         MountPoint = FindOrCreateMountpoint(avatar.umaData);
         SetMountTransform();
@@ -73,7 +75,10 @@ public class UMAMountedItem : MonoBehaviour
     {
         Transform BoneTransform = SkeletonTools.RecursiveFindBone(avatar.gameObject.transform, BoneName);
         if (BoneTransform == null)
+        {
             return null;
+        }
+
         foreach (Transform child in BoneTransform)
         {
             if (child.name == ID)
@@ -149,7 +154,9 @@ public class UMAMountedItem : MonoBehaviour
         if (avatar == null)
         {
             if (!Initialize())
+            {
                 return;
+            }
         }
         if (MountPoint != null)
         {

@@ -2,7 +2,7 @@ using UnityEditor;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(SharedColorTable))]
+//	[CustomEditor(typeof(SharedColorTable))]
 	public class SharedColorTableEditor : Editor 
 	{
 	}

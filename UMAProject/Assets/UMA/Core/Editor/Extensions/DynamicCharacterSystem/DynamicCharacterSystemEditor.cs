@@ -36,8 +36,10 @@ namespace UMA.CharacterSystem.Editors
 				recipeInBundleToFind = EditorGUILayout.TextField (recipeInBundleToFind);
 				if (GUILayout.Button ("Find Recipes's AssetBundle")) {
 					if (recipeInBundleToFind != "")
-						dCharacterSystem.GetOriginatingAssetBundle (recipeInBundleToFind);
-				}
+                    {
+                        dCharacterSystem.GetOriginatingAssetBundle (recipeInBundleToFind);
+                    }
+                }
 			}
 		}
 	}

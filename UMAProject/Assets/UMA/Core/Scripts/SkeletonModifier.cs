@@ -131,8 +131,10 @@ namespace UMA.CharacterSystem
 			this._valuesZ = new spVal(importedModifier._valuesZ);
 			this._umaDNA = importedModifier._umaDNA;//dont think this should have ever been serialized
 			if (doUpgrade)
-				UpgradeToDNAEvaluators();
-		}
+            {
+                UpgradeToDNAEvaluators();
+            }
+        }
 		//When happy get rid of this and do it via ISerializationCallbacks instead
 		public void UpgradeToDNAEvaluators()
 		{
@@ -391,8 +393,11 @@ namespace UMA.CharacterSystem
 				public float GetUmaDNAValue(string DNATypeName, UMADnaBase umaDnaIn)
 				{
 					if (umaDnaIn == null)
-						return 0.5f;
-					DynamicUMADnaBase umaDna = (DynamicUMADnaBase)umaDnaIn;
+                    {
+                        return 0.5f;
+                    }
+
+                    DynamicUMADnaBase umaDna = (DynamicUMADnaBase)umaDnaIn;
 					float val = 0.5f;
 					if (DNATypeName == "None" || umaDna == null)
 					{
@@ -420,32 +425,50 @@ namespace UMA.CharacterSystem
 							if (!string.IsNullOrEmpty(modifiers[i].DNATypeName) && modifiers[i].modifier.ToString().IndexOf("DNA") > -1)
 							{
 								if ((i + 1) < modifiers.Count && modifiers[i + 1].modifier.ToString().IndexOf("DNA") < 0)
-									accessoryMod = modifiers[i + 1];
+                                {
+                                    accessoryMod = modifiers[i + 1];
+                                }
 
-								if (modifiers[i].modifier == spValModifier.spValModifierType.AddDNA)
-									calcOption = DNAEvaluator.CalcOption.Add;
-								else if (modifiers[i].modifier == spValModifier.spValModifierType.DivideDNA)
-									calcOption = DNAEvaluator.CalcOption.Divide;
-								else if (modifiers[i].modifier == spValModifier.spValModifierType.MultiplyDNA)
-									calcOption = DNAEvaluator.CalcOption.Multiply;
-								else if (modifiers[i].modifier == spValModifier.spValModifierType.SubtractDNA)
-									calcOption = DNAEvaluator.CalcOption.Subtract;
+                                if (modifiers[i].modifier == spValModifier.spValModifierType.AddDNA)
+                                {
+                                    calcOption = DNAEvaluator.CalcOption.Add;
+                                }
+                                else if (modifiers[i].modifier == spValModifier.spValModifierType.DivideDNA)
+                                {
+                                    calcOption = DNAEvaluator.CalcOption.Divide;
+                                }
+                                else if (modifiers[i].modifier == spValModifier.spValModifierType.MultiplyDNA)
+                                {
+                                    calcOption = DNAEvaluator.CalcOption.Multiply;
+                                }
+                                else if (modifiers[i].modifier == spValModifier.spValModifierType.SubtractDNA)
+                                {
+                                    calcOption = DNAEvaluator.CalcOption.Subtract;
+                                }
 
-								if(accessoryMod != null)
+                                if (accessoryMod != null)
 								{
 									if (accessoryMod.modifier == spValModifier.spValModifierType.Multiply)
-										multiplier = accessoryMod.modifierValue;
-									else if (accessoryMod.modifier == spValModifier.spValModifierType.Divide)
-										multiplier = (1f / accessoryMod.modifierValue);
-									//otherwise we are stuffed- you can do add/subtract by using a different evaluator but I'm not gonna do that here
-									else
-										multiplier = 1f;
-								}
+                                    {
+                                        multiplier = accessoryMod.modifierValue;
+                                    }
+                                    else if (accessoryMod.modifier == spValModifier.spValModifierType.Divide)
+                                    {
+                                        multiplier = (1f / accessoryMod.modifierValue);
+                                    }
+                                    //otherwise we are stuffed- you can do add/subtract by using a different evaluator but I'm not gonna do that here
+                                    else
+                                    {
+                                        multiplier = 1f;
+                                    }
+                                }
 								_modifyingDNA.Add(new DNAEvaluator(modifiers[i].DNATypeName, DNAEvaluationGraph.Default, multiplier, calcOption));
 							}
 							if (accessoryMod != null)
-								i++;
-						}
+                            {
+                                i++;
+                            }
+                        }
 					}
 					_modifyingDNA.aggregationMethod = DNAEvaluatorList.AggregationMethodOpts.Cumulative;
 					_modifiers.Clear();

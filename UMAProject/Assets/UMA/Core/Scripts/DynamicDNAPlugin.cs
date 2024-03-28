@@ -99,8 +99,11 @@ namespace UMA
 			get
 			{
 				if (_converterController != null)
-					return _converterController.DNAAsset;
-				return null;
+                {
+                    return _converterController.DNAAsset;
+                }
+
+                return null;
 			}
 		}
 
@@ -246,10 +249,14 @@ namespace UMA
 			if(entry != null)
 			{
 				if (entry.isExpanded)
-					return EditorGUI.GetPropertyHeight(entry, true);
-				else
-					return EditorGUIUtility.singleLineHeight;
-			}
+                {
+                    return EditorGUI.GetPropertyHeight(entry, true);
+                }
+                else
+                {
+                    return EditorGUIUtility.singleLineHeight;
+                }
+            }
 			return EditorGUIUtility.singleLineHeight;
 		}
 
@@ -373,16 +380,24 @@ namespace UMA
 		private static void CompilePluginTypesList()
 		{
 			var list = new List<Type>();
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            System.Reflection.Assembly[] array = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < array.Length; i++)
 			{
-				try
+                System.Reflection.Assembly assembly = array[i];
+                try
 				{
 					if (assembly != null)
 					{
-						foreach (var type in assembly.GetTypes())
+                        Type[] array1 = assembly.GetTypes();
+                        for (int i1 = 0; i1 < array1.Length; i1++)
 						{
-							if (type.IsAbstract) continue;
-							if (PluginDerivesFromBase(type))
+                            Type type = array1[i1];
+                            if (type.IsAbstract)
+                            {
+                                continue;
+                            }
+
+                            if (PluginDerivesFromBase(type))
 							{
 								list.Add(type);
 							}
@@ -488,16 +503,20 @@ namespace UMA
 					return _DNAForWeight.Evaluate(umaDna);
 				}
 				else
-					return _globalWeight;
-			}
+                {
+                    return _globalWeight;
+                }
+            }
 
 			//TODO check if this still screws up the incoming dnas values
 			public UMADnaBase GetWeightedDNA(UMADnaBase incomingDna)
 			{
 				if (_masterWeightType == MasterWeightType.UseGlobalValue)
-					return incomingDna;
+                {
+                    return incomingDna;
+                }
 
-				var masterWeight = GetWeight(incomingDna);
+                var masterWeight = GetWeight(incomingDna);
 				var weightedDNA = new DynamicUMADna();
 				if (masterWeight > 0)
 				{

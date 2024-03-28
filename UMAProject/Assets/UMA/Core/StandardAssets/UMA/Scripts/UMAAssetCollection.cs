@@ -14,9 +14,11 @@ namespace UMA
 		public virtual void AddToContext(UMAContextBase context)
 		{
 			if (context == null)
-				return;
+            {
+                return;
+            }
 
-			if (overlayData.Length > 0)
+            if (overlayData.Length > 0)
 			{
 #if UNITY_EDITOR
 				UnityEditor.Undo.RecordObject(context, "Added overlays from asset collection");

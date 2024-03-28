@@ -27,8 +27,10 @@ namespace UMA.Editors
 				return GetDeepPropertyValue(src.GetType().GetProperty(Split[0]).GetValue(src, null), RemainingProperty);
 			}
 			else
-				return src.GetType().GetProperty(propName).GetValue(src, null);
-		}
+            {
+                return src.GetType().GetProperty(propName).GetValue(src, null);
+            }
+        }
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
@@ -54,15 +56,21 @@ namespace UMA.Editors
 			var mask = property.FindPropertyRelative("channelMask");
 			var additive = property.FindPropertyRelative("channelAdditiveMask");
 			var propblock = property.FindPropertyRelative("propertyBlock");
+			var displayColor = property.FindPropertyRelative("displayColor");
+
 			EditorGUILayout.BeginHorizontal();
 			name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
 			if (!name.isExpanded)
-				name.stringValue = EditorGUILayout.TextField(new GUIContent(""), name.stringValue);
-			EditorGUILayout.EndHorizontal();
+            {
+                name.stringValue = EditorGUILayout.TextField(new GUIContent(""), name.stringValue);
+            }
+
+            EditorGUILayout.EndHorizontal();
 			if (name.isExpanded)
 			{
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
                 EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
+				EditorGUILayout.PropertyField(displayColor);
 
                 if (ocd != null)
 				{
@@ -120,8 +128,11 @@ namespace UMA.Editors
                     {
 						if (UMAMaterialPropertyBlockDrawer.OnGUI(ocd.PropertyBlock))
                         {
-							EditorUtility.SetDirty(dca);
-							AssetDatabase.SaveAssets();
+							if (dca != null)
+							{
+                                EditorUtility.SetDirty(dca);
+                                AssetDatabase.SaveAssets();
+                            }
                         }
 					}
 					else
@@ -142,18 +153,22 @@ namespace UMA.Editors
 					{
 						EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0), new GUIContent("BaseColor"));
 						if (additive.arraySize >= 3)
-							EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(2), new GUIContent("Metallic/Gloss", "Color is metallicness (Black is not metallic), Alpha is glossiness (Black is not glossy)"));
-						else
+                    {
+                        EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(2), new GUIContent("Metallic/Gloss", "Color is metallicness (Black is not metallic), Alpha is glossiness (Black is not glossy)"));
+                    }
+                    else
 						{
 							//color didn't have a metallic gloss channel so show button to add one?
 						}
 					}
-				//	if (ocd.HasProperties)
-				//	{
-				//		EditorGUILayout.LabelField("Has Properties");
-				//	}
-			}
-			EditorGUILayout.Space();
+                EditorGUILayout.PropertyField(displayColor);
+
+                //	if (ocd.HasProperties)
+                //	{
+                //		EditorGUILayout.LabelField("Has Properties");
+                //	}
+            }
+            EditorGUILayout.Space();
 			EditorGUI.EndProperty();
 		}
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

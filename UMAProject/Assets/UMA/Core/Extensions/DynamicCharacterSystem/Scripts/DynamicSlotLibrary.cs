@@ -90,12 +90,22 @@ namespace UMA.CharacterSystem
 
         public void UpdateDynamicSlotLibrary(int? nameHash = null)
         {
-                DynamicAssetLoader.Instance.AddAssets<SlotDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, nameHash, "", AddSlotAssets);
+            var Slots = UMAAssetIndexer.Instance.GetAllAssets<SlotDataAsset>();
+            if (nameHash != null)
+            {
+                Slots.RemoveAll(x => x.nameHash != nameHash);
+            }
+            AddSlotAssets(Slots.ToArray());
+               // DynamicAssetLoader.Instance.AddAssets<SlotDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, nameHash, "", AddSlotAssets);
         }
 
         public void UpdateDynamicSlotLibrary(string slotName)
         {
-                DynamicAssetLoader.Instance.AddAssets<SlotDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, null, slotName, AddSlotAssets);
+            var Slots = UMAAssetIndexer.Instance.GetAllAssets<SlotDataAsset>();
+
+            Slots.RemoveAll(x => x.slotName != slotName);
+            AddSlotAssets(Slots.ToArray());
+                //DynamicAssetLoader.Instance.AddAssets<SlotDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, null, slotName, AddSlotAssets);
         }
 
 

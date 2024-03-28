@@ -26,14 +26,18 @@ public class UMAMountObject : MonoBehaviour
     void OnEnable()
     {
         if (_umaData == null)
+        {
             _umaData = gameObject.GetComponent<UMAData>();
+        }
 
         for (int i = 0; i < mountInfos.Length; i++)
         {
             if (nameMap.ContainsKey(mountInfos[i].objPrefab.name))
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogWarning("ObjPrefab already added! " + mountInfos[i].objPrefab.name);
+                }
             }
             nameMap.Add(mountInfos[i].objPrefab.name, i);
         }
@@ -42,13 +46,19 @@ public class UMAMountObject : MonoBehaviour
     private bool IsValid()
     {
         if (_umaData == null)
+        {
             return false;
+        }
 
         if (mountInfos == null)
+        {
             return false;
+        }
 
         if (mountInfos.Length <= 0)
+        {
             return false;
+        }
 
         return true;
     }
@@ -82,24 +92,32 @@ public class UMAMountObject : MonoBehaviour
         else
         {
             if (Debug.isDebugBuild)
+            {
                 Debug.LogWarning(name + " not found in list!");
+            }
         }
     }
 
     public void MountObject(int index)
     {
         if (_umaData == null)
+        {
             _umaData = gameObject.GetComponent<UMAData>();
+        }
 
         if (!IsValid())
+        {
             return;
+        }
 
         GameObject boneObj = null;
 
         boneObj = _umaData.GetBoneGameObject(mountInfos[index].boneName);
 
         if (boneObj == null)
+        {
             return;
+        }
 
         Transform objTransform = boneObj.transform.Find(mountInfos[index].objPrefab.name);
         if (objTransform == null)
@@ -126,22 +144,30 @@ public class UMAMountObject : MonoBehaviour
         else
         {
             if (Debug.isDebugBuild)
+            {
                 Debug.LogWarning(name + " not found in list!");
+            }
         }
     }
 
     public void UnMountObject(int index)
     {
         if (_umaData == null)
+        {
             _umaData = gameObject.GetComponent<UMAData>();
+        }
 
         if (!IsValid())
+        {
             return;
+        }
 
         GameObject boneObj = _umaData.GetBoneGameObject(mountInfos[index].boneName);
 
         if (boneObj == null)
+        {
             return;
+        }
 
         Transform objTransform = boneObj.transform.Find(mountInfos[index].objPrefab.name);
         if (objTransform != null)

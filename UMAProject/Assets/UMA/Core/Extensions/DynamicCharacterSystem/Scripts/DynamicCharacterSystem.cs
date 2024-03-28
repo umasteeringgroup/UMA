@@ -77,22 +77,28 @@ namespace UMA.CharacterSystem
 			{
 				//we need to check that this is not null- the user may not have downloaded it yet
 				if (possibleRaces[i] == null)
-					continue;
-				if (possibleRaces[i].raceName == "RaceDataPlaceholder")
-					continue;
-				if (Recipes.ContainsKey(possibleRaces[i].raceName))
+                {
+                    continue;
+                }
+
+                if (possibleRaces[i].raceName == "RaceDataPlaceholder")
+                {
+                    continue;
+                }
+
+                if (Recipes.ContainsKey(possibleRaces[i].raceName))
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogWarning("Warning: multiple races found for key:" + possibleRaces[i].raceName);
-				}
+                    {
+                        Debug.LogWarning("Warning: multiple races found for key:" + possibleRaces[i].raceName);
+                    }
+                }
 				else
 				{
 					Recipes.Add(possibleRaces[i].raceName, new Dictionary<string, List<UMATextRecipe>>());
 				}
 			}
 
-			GatherCharacterRecipes();
-			GatherRecipeFiles();
 			initialized = true;
 			isInitializing = false;
 		}
@@ -172,67 +178,28 @@ namespace UMA.CharacterSystem
 						}
 					}
 				}
-				GatherCharacterRecipes("", bundleToGather);
-				GatherRecipeFiles("", bundleToGather);
 			}
 		}
 
-		private void GatherCharacterRecipes(string filename = "", string bundleToGather = "")
-		{
-			var assetBundleToGather = bundleToGather != "" ? bundleToGather : assetBundlesForCharactersToSearch;
-			//DCS may do this before DAL has downloaded the AssetBundleIndex so in that case we want to turn 'downloadAssetsEnabled' off 
-			if (DynamicAssetLoader.Instance != null)
-			{
-				bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
-				DynamicAssetLoader.Instance.AddAssets<TextAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesCharactersFolder, null, filename, AddCharacterRecipes);
-			}
-		}
 
 		private void AddCharacterRecipes(TextAsset[] characterRecipes)
 		{
-			foreach (TextAsset characterRecipe in characterRecipes)
+            for (int i = 0; i < characterRecipes.Length; i++)
 			{
-				if (!CharacterRecipes.ContainsKey(characterRecipe.name))
-					CharacterRecipes.Add(characterRecipe.name, characterRecipe.text);
-				else
-					CharacterRecipes[characterRecipe.name] = characterRecipe.text;
-			}
+                TextAsset characterRecipe = characterRecipes[i];
+                if (!CharacterRecipes.ContainsKey(characterRecipe.name))
+                {
+                    CharacterRecipes.Add(characterRecipe.name, characterRecipe.text);
+                }
+                else
+                {
+                    CharacterRecipes[characterRecipe.name] = characterRecipe.text;
+                }
+            }
 			//This doesn't actually seem to do anything apart from slow things down- maybe we can hook into the UMAGarbage collection rate and do this at the same time? Or just after?
 			//StartCoroutine(CleanFilesFromResourcesAndBundles());
 		}
 
-		private void GatherRecipeFiles(string filename = "", string bundleToGather = "")
-		{
-			var assetBundleToGather = bundleToGather != "" ? bundleToGather : assetBundlesForRecipesToSearch;
-			//DCS may do this before DAL has downloaded the AssetBundleIndex so in that case we want to turn 'downloadAssetsEnabled' off 
-			if (DynamicAssetLoader.Instance != null)
-			{
-				bool downloadAssetsEnabledNow = DynamicAssetLoader.Instance.isInitialized ? downloadAssetsEnabled : false;
-				//if we are only adding stuff from a downloaded assetbundle, dont search resources
-				bool dynamicallyAddFromResourcesNow = bundleToGather == "" ? dynamicallyAddFromResources : false;
-				bool found = false;
-				DynamicAssetLoader.Instance.debugOnFail = false;
-
-				found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
-				if ((!found && filename != "") || (filename == "" && (Application.isPlaying == false || addAllRecipesFromDownloadedBundles || bundleToGather == "")))//The WardrobeSetMasterEditor asks DCS to get all collections, but normally collections are only requested by name
-					found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(ref assetBundlesUsedDict, dynamicallyAddFromResourcesNow, dynamicallyAddFromAssetBundles, downloadAssetsEnabledNow, assetBundleToGather, resourcesRecipesFolder, null, filename, AddRecipesFromAB);
-				if (!found && filename != "")
-				{
-					if (Debug.isDebugBuild)
-						Debug.LogWarning("[DynamicCharacterSystem] could not find " + filename + " in Resources or any AssetBundles. Do you need to rebuild your UMAResources Index or AssetBundles?");
-				}
-				DynamicAssetLoader.Instance.debugOnFail = true;
-
-			}
-		}
-
-
-		/*IEnumerator CleanFilesFromResourcesAndBundles()
-        {
-            yield return null;
-            Resources.UnloadUnusedAssets();
-            yield break;
-        }*/
 
 		public void AddRecipesFromAB(UMATextRecipe[] uparts)
 		{
@@ -242,14 +209,17 @@ namespace UMA.CharacterSystem
 		public void AddRecipe(UMATextRecipe upart)
 		{
 			if (upart != null)
-				AddRecipes(new UMATextRecipe[] { upart });
-		}
+            {
+                AddRecipes(new UMATextRecipe[] { upart });
+            }
+        }
 		//This could be private I think- TODO confirm
 		public void AddRecipes(UMATextRecipe[] uparts, string filename = "")
 		{
-			foreach (UMATextRecipe u in uparts)
+            for (int i1 = 0; i1 < uparts.Length; i1++)
 			{
-				if (filename == "" || (filename != "" && filename.Trim() == u.name))
+                UMATextRecipe u = uparts[i1];
+                if (filename == "" || (filename != "" && filename.Trim() == u.name))
 				{
 					var thisWardrobeSlot = u.wardrobeSlot;
 					if (u.GetType() == typeof(UMAWardrobeCollection))
@@ -261,20 +231,21 @@ namespace UMA.CharacterSystem
 							if (RecipeIndex.ContainsKey(u.name))
 							{
 								if (Debug.isDebugBuild)
-									Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
-								RecipeIndex.Remove(u.name);
-							}
-							else if (!DynamicAssetLoader.Instance.downloadingAssetsContains(u.name))
-							{
-								continue;
+                                {
+                                    Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
+                                }
+
+                                RecipeIndex.Remove(u.name);
 							}
 						}
 						thisWardrobeSlot = "WardrobeCollection";
 					}
 					//we might be refreshing so check its not already there
 					if (!RecipeIndex.ContainsKey(u.name))
-						RecipeIndex.Add(u.name, u);
-					else
+                    {
+                        RecipeIndex.Add(u.name, u);
+                    }
+                    else
 					{
 						RecipeIndex[u.name] = u;
 					}
@@ -293,23 +264,24 @@ namespace UMA.CharacterSystem
 										if (Recipes[u.compatibleRaces[i]]["WardrobeCollection"].Contains(u))
 										{
 											if (Debug.isDebugBuild)
-												Debug.LogWarning("DCS removed " + u.name + " from Recipes");
-											Recipes[u.compatibleRaces[i]]["WardrobeCollection"].Remove(u);
+                                            {
+                                                Debug.LogWarning("DCS removed " + u.name + " from Recipes");
+                                            }
+
+                                            Recipes[u.compatibleRaces[i]]["WardrobeCollection"].Remove(u);
 											if (RecipeIndex.ContainsKey(u.name))
 											{
 												if (Debug.isDebugBuild)
-													Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
-												RecipeIndex.Remove(u.name);
+                                                {
+                                                    Debug.LogWarning("DCS removed " + u.name + " from RecipeIndex");
+                                                }
+
+                                                RecipeIndex.Remove(u.name);
 											}
 											continue;
 										}
 									}
 								}
-								if (DynamicAssetLoader.Instance != null)
-									if (!DynamicAssetLoader.Instance.downloadingAssetsContains(u.name))
-									{
-										continue;
-									}
 							}
 						}
 						//When recipes that are compatible with multiple races are downloaded we may not have all the races actually downloaded
@@ -348,8 +320,11 @@ namespace UMA.CharacterSystem
 							//11012017 Dont trigger backwards compatible races to download
 							RaceData raceKeyRace = context.GetRace(racekey);
 							if (raceKeyRace == null)
-								continue;
-							if (raceKeyRace.IsCrossCompatibleWith(u.compatibleRaces[i]) && (raceKeyRace.wardrobeSlots.Contains(thisWardrobeSlot) || thisWardrobeSlot == "WardrobeCollection"))
+                            {
+                                continue;
+                            }
+
+                            if (raceKeyRace.IsCrossCompatibleWith(u.compatibleRaces[i]) && (raceKeyRace.wardrobeSlots.Contains(thisWardrobeSlot) || thisWardrobeSlot == "WardrobeCollection"))
                             {
 								Dictionary<string, List<UMATextRecipe>> RaceRecipes = Recipes[racekey];
 								if (!RaceRecipes.ContainsKey(thisWardrobeSlot))
@@ -393,7 +368,6 @@ namespace UMA.CharacterSystem
 			{
 				if (dynamicallyAdd)
 				{
-					GatherRecipeFiles(filename);
 					if (RecipeIndex.ContainsKey(filename))
 					{
 						foundRecipe = RecipeIndex[filename];
@@ -411,8 +385,10 @@ namespace UMA.CharacterSystem
 		{
 			string originatingAssetBundle = "";
 			if (assetBundlesUsedDict.Count == 0)
-				return originatingAssetBundle;
-			else
+            {
+                return originatingAssetBundle;
+            }
+            else
 			{
 				foreach (KeyValuePair<string, List<string>> kp in assetBundlesUsedDict)
 				{
@@ -426,13 +402,17 @@ namespace UMA.CharacterSystem
 			if (originatingAssetBundle == "")
 			{
 				if (Debug.isDebugBuild)
-					Debug.Log(recipeName + " was not found in any loaded AssetBundle");
-			}
+                {
+                    Debug.Log(recipeName + " was not found in any loaded AssetBundle");
+                }
+            }
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.Log("originatingAssetBundle for " + recipeName + " was " + originatingAssetBundle);
-			}
+                {
+                    Debug.Log("originatingAssetBundle for " + recipeName + " was " + originatingAssetBundle);
+                }
+            }
 			return originatingAssetBundle;
 		}
 
@@ -448,9 +428,10 @@ namespace UMA.CharacterSystem
 			{
 				if (Recipes[race].ContainsKey(slot))
 				{
-					foreach (UMATextRecipe utr in Recipes[race][slot])
+                    for (int i = 0; i < Recipes[race][slot].Count; i++)
 					{
-						recipeNamesForRaceSlot.Add(utr.name);
+                        UMATextRecipe utr = Recipes[race][slot][i];
+                        recipeNamesForRaceSlot.Add(utr.name);
 					}
 				}
 			}
@@ -467,38 +448,17 @@ namespace UMA.CharacterSystem
 			{
 				if (Recipes[race].ContainsKey(slot))
 				{
-					foreach (UMATextRecipe utr in Recipes[race][slot])
+                    for (int i = 0; i < Recipes[race][slot].Count; i++)
 					{
-						recipesForRaceSlot.Add(utr);
+                        UMATextRecipe utr = Recipes[race][slot][i];
+                        recipesForRaceSlot.Add(utr);
 					}
 				}
 			}
 			return recipesForRaceSlot;
 		}
 
-		/// <summary>
-		/// Checks if a given recipe name is available from the dynamic libraries (used by Recipe Editor because of Standard Assets)
-		/// </summary>
-		/// <param name="recipeName"></param>
-		/// <returns></returns>
-		public override bool CheckRecipeAvailability(string recipeName)
-		{
-			if (Application.isPlaying)
-				return true;
-			bool searchResources = true;
-			bool searchAssetBundles = true;
-			string resourcesFolderPath = "";
-			string assetBundlesToSearch = "";
-			bool found = false;
-			DynamicAssetLoader.Instance.debugOnFail = false;
-			found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-			if (!found)
-				found = DynamicAssetLoader.Instance.AddAssets<UMATextRecipe>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-			if (!found)
-				found = DynamicAssetLoader.Instance.AddAssets<UMAWardrobeCollection>(searchResources, searchAssetBundles, true, assetBundlesToSearch, resourcesFolderPath, null, recipeName, null);
-			DynamicAssetLoader.Instance.debugOnFail = true;
-			return found;
-		}
+	
 		/// <summary>
 		/// Use GetRecipe unless your calling script resides in StandardAssets. Returns the recipe of the given filename from the dictionary as an UMARecipeBase
 		/// </summary>

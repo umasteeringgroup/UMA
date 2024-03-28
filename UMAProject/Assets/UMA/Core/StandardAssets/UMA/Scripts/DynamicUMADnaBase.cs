@@ -50,9 +50,11 @@ namespace UMA
 		protected static void InitializeDynamicDNADictionary()
 		{
 			if (DynamicDNADictionary != null)
-				return;
+            {
+                return;
+            }
 
-			DynamicDNADictionary = new Dictionary<string, DynamicUMADnaAsset>();
+            DynamicDNADictionary = new Dictionary<string, DynamicUMADnaAsset>();
 
 			List<DynamicUMADnaAsset> AllDNA;// = UMAContext.Instance.GetAllDNA();
 
@@ -63,11 +65,12 @@ namespace UMA
 			else
             {
 				AllDNA = UMAContext.Instance.GetAllDNA();
-			} 
+			}
 
-			foreach (DynamicUMADnaAsset uda in AllDNA)
+            for (int i = 0; i < AllDNA.Count; i++)
 			{
-				if (uda != null)
+                DynamicUMADnaAsset uda = AllDNA[i];
+                if (uda != null)
 				{
                         DynamicDNADictionary.Add(uda.name, uda);
 				}
@@ -105,8 +108,10 @@ namespace UMA
 			if (DynamicDNADictionary.ContainsKey(asset.name))
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogWarning("DynamicDNADictionary already contained DNA asset " + asset.name);
-			}
+                {
+                    Debug.LogWarning("DynamicDNADictionary already contained DNA asset " + asset.name);
+                }
+            }
 			else
 			{
 				DynamicDNADictionary.Add(asset.name, asset);
@@ -144,8 +149,10 @@ namespace UMA
 			if (_dnaAsset == null)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogWarning("DynamicUMADnaBase could not find DNAAsset " + dnaAssetName + "!");
-			}
+                {
+                    Debug.LogWarning("DynamicUMADnaBase could not find DNAAsset " + dnaAssetName + "!");
+                }
+            }
 			/*
 			InitializeDynamicDNADictionary();
 
@@ -164,9 +171,13 @@ namespace UMA
 			{
 				dnaAsset = foundAssets[0];
 				if (DynamicDNADictionary.ContainsKey(dnaAssetName))
-					DynamicDNADictionary[dnaAssetName] = dnaAsset;
-				else
-					DynamicDNADictionary.Add(dnaAsset.name, dnaAsset);
+                {
+                    DynamicDNADictionary[dnaAssetName] = dnaAsset;
+                }
+                else
+                {
+                    DynamicDNADictionary.Add(dnaAsset.name, dnaAsset);
+                }
             }
 		}
 

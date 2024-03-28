@@ -28,7 +28,10 @@ namespace UMA.CharacterSystem
             {
                 Color = DCA.GetColor(ColorName);
                 if (Color == null)
+                {
                     Color = new OverlayColorData(3);
+                }
+
                 DCA.SetColor(ColorName, Color, false);
             }
         }
@@ -37,7 +40,10 @@ namespace UMA.CharacterSystem
         void Update()
         {
             if (DCA == null)
+            {
                 return;
+            }
+
             bool done = false;
             float FadeVal = Time.deltaTime / time;
 

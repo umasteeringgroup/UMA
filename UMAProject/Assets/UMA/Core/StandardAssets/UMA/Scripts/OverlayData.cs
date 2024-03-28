@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using static UMA.OverlayDataAsset;
+using System;
 
 namespace UMA
 {
@@ -15,15 +16,25 @@ namespace UMA
 		/// <summary>
 		/// The asset contains the immutable portions of the overlay.
 		/// </summary>
-		public OverlayDataAsset asset;
+		public OverlayDataAsset asset; 
 		/// <summary>
 		/// Destination rectangle for drawing overlay textures.
 		/// </summary>
 		public Rect rect;
 
-		public bool Tiling; // Only works for composite materials. 
+		public bool[] tiling; // Only works for composite materials. 
+
+		public int UVSet; // Only works for composite materials.
 
         public bool Supressed = false;
+
+		[System.NonSerialized]
+		public SlotData mergedFromSlot;
+
+        /// <summary>
+        /// This instance specific tags. Loaded from the recipe, or from the asset at assignment time.
+        /// </summary>
+        public string[] tags;
 
 #if UNITY_EDITOR
 		public Vector2 editorReferenceTextureSize = Vector2.zero;
@@ -61,9 +72,11 @@ namespace UMA
 			get
 			{
 				if (asset.alphaMask != null)
-					return asset.alphaMask;
-				
-				#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
+                {
+                    return asset.alphaMask;
+                }
+
+#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 				if (this.isProcedural)
 				{
 					if ((generatedTextures == null) || (generatedTextures.Length != asset.textureCount))
@@ -75,9 +88,9 @@ namespace UMA
 
 					return generatedTextures[0];
 				}
-                #endif
+#endif
 
-				return asset.textureList[0];
+                return asset.textureList[0];
 			}
 		}
 		public Texture[] textureArray
@@ -104,7 +117,7 @@ namespace UMA
 
 		private OverlayBlend[] blendOverrides;
 
-		public Vector4 GetUV()
+		public Vector4 GetUV(float referenceWidth, float referenceHeight)
 		{
 			Vector4 uv = new Vector4(0,0, 1, 1);
 
@@ -116,10 +129,10 @@ namespace UMA
 			{
 				if (asset.textureList.Length > 0 && asset.textureList[0] != null)
 				{
-                    uv.x = rect.x / asset.textureList[0].width;
-					uv.y = rect.y / asset.textureList[0].height;
-                    uv.z = rect.width / asset.textureList[0].width;
-                    uv.w = rect.height / asset.textureList[0].height;
+                    uv.x = rect.x / referenceWidth;
+					uv.y = rect.y / referenceHeight;
+                    uv.z = rect.width / referenceWidth;
+                    uv.w = rect.height / referenceHeight;
                 }
             }
 			else
@@ -127,6 +140,19 @@ namespace UMA
 				uv = new Vector4(rect.x, rect.y, rect.width, rect.height);
 			}
 			return uv;
+		}
+
+		public int ChannelCount
+		{
+			get
+			{
+                if (asset == null)
+                {
+                    return 0;
+                }
+
+                return asset.textureCount;
+            }
 		}
 
 		public OverlayBlend[] textureBlendArray
@@ -162,8 +188,15 @@ namespace UMA
 		/// <param name="overlayBlend"></param>
         public void SetOverlayBlend(int ChannelNumber, OverlayBlend overlayBlend)
         {
-            if (asset.textureList == null) return;
-            if (ChannelNumber >= asset.textureList.Length) return;
+            if (asset.textureList == null)
+            {
+                return;
+            }
+
+            if (ChannelNumber >= asset.textureList.Length)
+            {
+                return;
+            }
 
             if (blendOverrides == null || blendOverrides.Length != asset.textureList.Length)
             {
@@ -207,31 +240,32 @@ namespace UMA
 			return null;
         }
 
+        public bool HasTag(string tag)
+        {
+            if (tags == null)
+            {
+                return false;
+            }
+            for (int i = 0; i < tags.Length; i++)
+            {
+                if (tags[i] == tag)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
 		public int pixelCount
 		{
 			get
 			{
-#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
-				if (this.isProcedural)
-				{
-					ProceduralMaterial material = asset.material.material as ProceduralMaterial;
-					if (material.HasProceduralProperty(proceduralSizeProperty))
-					{
-						Vector4 size = material.GetProceduralVector(proceduralSizeProperty);
-						return (2 << Mathf.FloorToInt(size.x)) * (2 << Mathf.FloorToInt(size.y));
-					}
-					else
-					{
-						if (Debug.isDebugBuild)
-							Debug.LogWarning("Unable to determine size for procedural material " + material.name);
-						return 0;
-					}
-				}
-#endif
-
 				if (asset.textureList == null || asset.textureList.Length == 0 || asset.textureList[0] == null)
-					return 0;
-				return asset.textureList[0].width * asset.textureList[0].height;
+                {
+                    return 0;
+                }
+
+                return asset.textureList[0].width * asset.textureList[0].height;
 			}
 		}
 
@@ -276,9 +310,20 @@ namespace UMA
 			res.instanceTransformed = instanceTransformed;
 			res.Rotation = Rotation;
 			res.Scale = Scale;
+            if (tags == null)
+            {
+                res.tags = new string[0];
+            }
+            else
+            {
+                res.tags = tags.Length > 0 ? (string[])tags.Clone() : new string[0];
+            }
 			if (colorData != null)
-				res.colorData = colorData.Duplicate();
-			if (blendOverrides != null)
+            {
+                res.colorData = colorData.Duplicate();
+            }
+
+            if (blendOverrides != null)
 			{
                 res.blendOverrides = new OverlayBlend[blendOverrides.Length];
                 for (int i = 0; i < blendOverrides.Length; i++)
@@ -302,14 +347,23 @@ namespace UMA
 			if (asset == null)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("Overlay Data Asset is NULL!");
+                {
+                    Debug.LogError("Overlay Data Asset is NULL!");
+                }
 
-				return;
+                return;
 			}
 
 			this.asset = asset;
 			this.rect = asset.rect;
-
+            if (asset.tags == null)
+            {
+                this.tags = new string[0];
+            }
+            else
+            {
+                this.tags = asset.tags.Length > 0 ? (string[])asset.tags.Clone() : new string[0];
+            }
 			Validate();
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
@@ -328,8 +382,12 @@ namespace UMA
             {
 				return;
             }
-			if (isEmpty)  return;
-			if (asset.material == null)
+			if (isEmpty)
+            {
+                return;
+            }
+
+            if (asset.material == null)
 			{
 				asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
 				if (asset.material == null)
@@ -384,13 +442,18 @@ namespace UMA
 			}
 
 			if (isEmpty)
-				return true;
+            {
+                return true;
+            }
 
-			if (asset.textureCount != targetMaterial.channels.Length)
+            if (asset.textureCount != targetMaterial.channels.Length)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.overlayName));
-				valid = false;
+                {
+                    Debug.LogError(string.Format("Overlay '{0}' doesn't have the right number of channels", asset.overlayName));
+                }
+
+                valid = false;
 			}
 			else
 			{
@@ -399,19 +462,27 @@ namespace UMA
                 {
                 }
 				// All channels must be initialized by the base overlay, only channel 0 in others
-				else for (int i = 0; i < targetMaterial.channels.Length; i++)
+				else
+                {
+                    for (int i = 0; i < targetMaterial.channels.Length; i++)
                 {
                     if ((asset.textureList[i] == null) && (targetMaterial.channels[i].channelType != UMAMaterial.ChannelType.MaterialColor))
                     {
 						if (Debug.isDebugBuild)
-							Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
-                        valid = false;
+                            {
+                                Debug.LogError(string.Format("Overlay '{0}' missing required texture in channel {1}", asset.overlayName, i));
+                            }
+
+                            valid = false;
                     }
 
                     if (!isBaseOverlay)
-                        break;
+                        {
+                            break;
+                        }
+                    }
                 }
-			}
+            }
 
 			if (colorData.channelMask.Length < targetMaterial.channels.Length)
 			{
@@ -444,9 +515,11 @@ namespace UMA
 			var resUnsigned = 0f;
 			var resList = new List<float>();
 			if (colorComponentAdjusters.Count == 0)
-				return resUnsigned;
-			//for each adjuster calculate how much difference it wants to make to the color
-			for (int i = 0; i < colorComponentAdjusters.Count; i++)
+            {
+                return resUnsigned;
+            }
+            //for each adjuster calculate how much difference it wants to make to the color
+            for (int i = 0; i < colorComponentAdjusters.Count; i++)
 			{
 				if (colorComponentAdjusters[i].channel == channel && colorComponentAdjusters[i].colorComponent == component && colorComponentAdjusters[i].Additive == additive)
 				{
@@ -706,13 +779,43 @@ namespace UMA
 		{
 			return base.GetHashCode();
 		}
-		#endregion
 
-		#region SPECIAL TYPES
-		/// <summary>
-		/// Color Component Adjusters are used by dna to adjust colors independently of shared colors, for things like temporary color effects and fading NormalMaps in and out
-		/// </summary>
-		public class ColorComponentAdjuster
+        public bool IsTextureTiled(int t)
+        {
+			if (tiling == null)
+			{
+				  return false;
+			}
+			if (t >= tiling.Length)
+			{
+				return false;
+			}
+			return tiling[t];
+        }
+
+        public void SetTextureTiling(int t, bool v)
+        {
+			if (t<0)
+			{
+				return;
+			}
+
+            if (tiling == null)
+			{
+				tiling = new bool[asset.textureCount];
+			}
+			if (t < tiling.Length)
+			{
+				tiling[t] = v;
+			}
+        }
+        #endregion
+
+        #region SPECIAL TYPES
+        /// <summary>
+        /// Color Component Adjusters are used by dna to adjust colors independently of shared colors, for things like temporary color effects and fading NormalMaps in and out
+        /// </summary>
+        public class ColorComponentAdjuster
 		{
 			public enum AdjustmentType
 			{

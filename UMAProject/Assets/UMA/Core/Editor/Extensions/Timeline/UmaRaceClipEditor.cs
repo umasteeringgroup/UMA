@@ -24,7 +24,9 @@ namespace UMA.Editors
             {
                 raceOptions[i] = races[i].raceName;
                 if (raceToChangeTo.stringValue == raceOptions[i])
+                {
                     selectedIndex = i;
+                }
             }
         }
 

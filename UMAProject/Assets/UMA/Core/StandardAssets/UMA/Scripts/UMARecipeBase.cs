@@ -35,10 +35,14 @@ namespace UMA
 			get
 			{
 				if (string.IsNullOrEmpty(label))
-					return name;
-				else
-					return label;
-			}
+                {
+                    return name;
+                }
+                else
+                {
+                    return label;
+                }
+            }
 		}
 		[Tooltip("This will be skipped when generating Addressable Groups. This can result in duplicate assets.")]
 		public bool resourcesOnly;
@@ -89,9 +93,10 @@ namespace UMA
 			{
 				var formats = new List<Type>(20);
 				var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-				foreach (var assembly in assemblies)
+                for (int i1 = 0; i1 < assemblies.Length; i1++)
 				{
-					var types = assembly.GetTypes();
+                    System.Reflection.Assembly assembly = assemblies[i1];
+                    var types = assembly.GetTypes();
 					for (int i = 0; i < types.Length; i++)
 					{
 						var type = types[i];
@@ -113,10 +118,15 @@ namespace UMA
 		/// <param name="typeNameHash">Name hash.</param>
 		public static Type FindRecipeFormat(int typeNameHash)
 		{
-			foreach(var format in GetRecipeFormats())
+            Type[] array = GetRecipeFormats();
+            for (int i = 0; i < array.Length; i++)
 			{
-				if (UMAUtils.StringToHash(format.Name) == typeNameHash) return format;
-			}
+                Type format = array[i];
+                if (UMAUtils.StringToHash(format.Name) == typeNameHash)
+                {
+                    return format;
+                }
+            }
 			return null;
 		}
 	}

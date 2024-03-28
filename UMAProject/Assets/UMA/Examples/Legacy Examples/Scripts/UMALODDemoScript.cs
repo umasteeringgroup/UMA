@@ -19,8 +19,10 @@ namespace UMA.Examples
 		void Start()
 		{
 			if (crowd == null)
-				crowd = GetComponent<UMACrowd>();
-		}
+            {
+                crowd = GetComponent<UMACrowd>();
+            }
+        }
 
 		void Update()
 		{

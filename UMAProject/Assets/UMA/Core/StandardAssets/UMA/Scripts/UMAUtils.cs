@@ -171,8 +171,10 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogWarning("Could not load " + searchName);
-			}
+                {
+                    Debug.LogWarning("Could not load " + searchName);
+                }
+            }
 			return null;
 		}
 #endif
@@ -228,8 +230,11 @@ namespace UMA
 		public static void DestroyAvatar(Avatar obj)
 		{
 			if (obj == null)
-				return;
-			int DestroyInstance = obj.GetInstanceID();
+            {
+                return;
+            }
+
+            int DestroyInstance = obj.GetInstanceID();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
 				return;
@@ -255,8 +260,11 @@ namespace UMA
 		{
 #if UNITY_EDITOR
 			if (obj == null)
-				return;
-			int DestroyInstance = obj.GetInstanceID();
+            {
+                return;
+            }
+
+            int DestroyInstance = obj.GetInstanceID();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
 				return;	
@@ -338,10 +346,17 @@ namespace UMA
 
 			// Set the active size of the given List
 			int newSize = size;
-			if (newSize < 0) newSize = 0;
-			if (newSize > list.Capacity) newSize = list.Capacity;
+			if (newSize < 0)
+            {
+                newSize = 0;
+            }
 
-			fieldInfo.SetValue(list, newSize);
+            if (newSize > list.Capacity)
+            {
+                newSize = list.Capacity;
+            }
+
+            fieldInfo.SetValue(list, newSize);
 		}
 	}
 }

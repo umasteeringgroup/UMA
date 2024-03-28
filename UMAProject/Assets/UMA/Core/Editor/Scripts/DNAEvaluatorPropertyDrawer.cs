@@ -73,9 +73,11 @@ namespace UMA.Editors
 		private void Init()
 		{
 			if (initialized)
-				return;
+            {
+                return;
+            }
 
-			if (!_manuallyConfigured)
+            if (!_manuallyConfigured)
 			{
 				if (this.fieldInfo != null)
 				{
@@ -113,28 +115,44 @@ namespace UMA.Editors
 				EditorGUI.indentLevel++;
 				position = EditorGUI.IndentedRect(position);
 				if (!_alwaysExpanded)
-					position.yMin = position.yMin + EditorGUIUtility.singleLineHeight;
-				else
-					position.yMin += 2f;
-				position.xMin -= 15f;//make it the same width as a reorderable list
+                {
+                    position.yMin = position.yMin + EditorGUIUtility.singleLineHeight;
+                }
+                else
+                {
+                    position.yMin += 2f;
+                }
+
+                position.xMin -= 15f;//make it the same width as a reorderable list
 				if (_drawLabels)
 				{
 					//can we draw this so it looks like the header of a reorderable List?
 					if (current.type == EventType.Repaint)
-						reorderableListDefaults.headerBackground.Draw(position, GUIContent.none, false, false, false, false);
-					var rect1 = new Rect(position.xMin + 6f, position.yMin + 1f, position.width - 12f, position.height);
+                    {
+                        reorderableListDefaults.headerBackground.Draw(position, GUIContent.none, false, false, false, false);
+                    }
+
+                    var rect1 = new Rect(position.xMin + 6f, position.yMin + 1f, position.width - 12f, position.height);
 					if (_alwaysExpanded)
-						position = DoLabelsInline(rect1, label);
-					else
-						position = DoLabelsInline(rect1, DNANAMELABEL);
-					position.xMin -= 6f;
+                    {
+                        position = DoLabelsInline(rect1, label);
+                    }
+                    else
+                    {
+                        position = DoLabelsInline(rect1, DNANAMELABEL);
+                    }
+
+                    position.xMin -= 6f;
 					position.width += 6f;
 					position.yMin -= 1f;
 					position.height -= 3f;
 				}
 				if (current.type == EventType.Repaint)
-					reorderableListDefaults.boxBackground.Draw(position, GUIContent.none, false, false, false, false);
-				var rect2 = new Rect(position.xMin + 6f, position.yMin + 3f, position.width - 12f, position.height);
+                {
+                    reorderableListDefaults.boxBackground.Draw(position, GUIContent.none, false, false, false, false);
+                }
+
+                var rect2 = new Rect(position.xMin + 6f, position.yMin + 3f, position.width - 12f, position.height);
 				DoFieldsInline(rect2, property);
 				EditorGUI.indentLevel--;
 			}
@@ -150,11 +168,16 @@ namespace UMA.Editors
 		public Rect DoLabelsInline(Rect position, GUIContent label1, GUIContent label2 = null, GUIContent label3 = null)
 		{
 			if (label2 == null)
-				label2 = new GUIContent(EVALUATORLABEL, GetChildTooltip(EVALUATORPROPERTY));
-			if (label3 == null)
-				label3 = new GUIContent(MULTIPLIERLABEL, GetChildTooltip(MULTIPLIERPROPERTY));
+            {
+                label2 = new GUIContent(EVALUATORLABEL, GetChildTooltip(EVALUATORPROPERTY));
+            }
 
-			var prevIndent = EditorGUI.indentLevel;
+            if (label3 == null)
+            {
+                label3 = new GUIContent(MULTIPLIERLABEL, GetChildTooltip(MULTIPLIERPROPERTY));
+            }
+
+            var prevIndent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
 
 			Rect calcOptionRect = Rect.zero;
@@ -226,18 +249,24 @@ namespace UMA.Editors
 			}
 			EditorGUI.BeginChangeCheck();
 			if (_dynamicDNAPlugin == null)
-				EditorGUI.PropertyField(dnaNameRect, dnaNameProp, GUIContent.none);
-			else
+            {
+                EditorGUI.PropertyField(dnaNameRect, dnaNameProp, GUIContent.none);
+            }
+            else
 			{
 				DynamicDNAConverterControllerInspector.DNANamesPopup(dnaNameRect, dnaNameProp, dnaNameProp.stringValue, _dynamicDNAPlugin.converterController.DNAAsset);
 			}
 			if (EditorGUI.EndChangeCheck())
 			{
 				if (!string.IsNullOrEmpty(dnaNameProp.stringValue))
-					dnaNameHashProp.intValue = UMAUtils.StringToHash(dnaNameProp.stringValue);
-				else
-					dnaNameHashProp.intValue = -1;
-			}
+                {
+                    dnaNameHashProp.intValue = UMAUtils.StringToHash(dnaNameProp.stringValue);
+                }
+                else
+                {
+                    dnaNameHashProp.intValue = -1;
+                }
+            }
 			EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(dnaNameProp.stringValue));
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.PropertyField(evaluatorRect, evaluatorProp, GUIContent.none);
@@ -271,13 +300,19 @@ namespace UMA.Editors
 			if (property.isExpanded || _alwaysExpanded)
 			{
 				if (_drawLabels)
-					return EditorGUIUtility.singleLineHeight * (_alwaysExpanded ? 2f : 3f) + (_padding * 4f) + 6f;
-				else
-					return EditorGUIUtility.singleLineHeight * (_alwaysExpanded ? 1f : 2f) + (_padding * 4f);
-			}
+                {
+                    return EditorGUIUtility.singleLineHeight * (_alwaysExpanded ? 2f : 3f) + (_padding * 4f) + 6f;
+                }
+                else
+                {
+                    return EditorGUIUtility.singleLineHeight * (_alwaysExpanded ? 1f : 2f) + (_padding * 4f);
+                }
+            }
 			else
-				return EditorGUI.GetPropertyHeight(property, true);
-		}
+            {
+                return EditorGUI.GetPropertyHeight(property, true);
+            }
+        }
 
 		/// <summary>
 		/// if this property is in a DynamicDNAPlugin this will find it so we can use its DNAAsset etc

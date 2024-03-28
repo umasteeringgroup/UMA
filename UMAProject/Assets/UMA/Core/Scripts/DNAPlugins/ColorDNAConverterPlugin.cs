@@ -58,9 +58,11 @@ namespace UMA
 					for (int ci = 0; ci < _colorSets[i].UsedDNANames.Count; ci++)
 					{
 						if (!dict.ContainsKey(_colorSets[i].UsedDNANames[ci]))
-							dict.Add(_colorSets[i].UsedDNANames[ci], new List<int>());
+                        {
+                            dict.Add(_colorSets[i].UsedDNANames[ci], new List<int>());
+                        }
 
-						dict[_colorSets[i].UsedDNANames[ci]].Add(i);
+                        dict[_colorSets[i].UsedDNANames[ci]].Add(i);
 					}
 				}
 				return dict;
@@ -97,9 +99,11 @@ namespace UMA
 			}
 
 			if(_dnaAppliedTo.Contains(umaData.gameObject))
-				return;
+            {
+                return;
+            }
 
-			UMADnaBase activeDNA = umaData.GetDna(dnaTypeHash);
+            UMADnaBase activeDNA = umaData.GetDna(dnaTypeHash);
 			if (activeDNA == null)
 			{
 				Debug.LogError("Could not get DNA values for: " + this.name);
@@ -108,15 +112,20 @@ namespace UMA
 			var masterWeightCalc = masterWeight.GetWeight(activeDNA);
 
 			if (masterWeightCalc == 0f)
-				return;
+            {
+                return;
+            }
 
-			bool needsUpdate = false;
+            bool needsUpdate = false;
 
 			for(int i = 0; i < _colorSets.Length; i++)
 			{
 				if (_colorSets[i].modifyingDNA.UsedDNANames.Count == 0 || string.IsNullOrEmpty(_colorSets[i].targetName))
-					continue;
-				var targetOverlays = new List<OverlayData>();
+                {
+                    continue;
+                }
+
+                var targetOverlays = new List<OverlayData>();
 				for (int si = 0; si < umaData.umaRecipe.slotDataList.Length; si++)
 				{
 					var overlays = umaData.umaRecipe.slotDataList[si].GetOverlayList();
@@ -128,16 +137,23 @@ namespace UMA
 							if ((overlays[oi].colorData.IsASharedColor && overlays[oi].colorData.name == _colorSets[i].targetName) || overlays[oi].overlayName == _colorSets[i].targetName)
 							{
 								if(!targetOverlays.Contains(overlays[oi]))
-								targetOverlays.Add(overlays[oi]);
-							}
+                                {
+                                    targetOverlays.Add(overlays[oi]);
+                                }
+                            }
 						}
 					}
 				}
 				if (targetOverlays.Count == 0)
-					continue;
-				if (_colorSets[i].EvaluateAndApplyAdjustments(activeDNA, masterWeightCalc, targetOverlays))
-					needsUpdate = true;
-			}
+                {
+                    continue;
+                }
+
+                if (_colorSets[i].EvaluateAndApplyAdjustments(activeDNA, masterWeightCalc, targetOverlays))
+                {
+                    needsUpdate = true;
+                }
+            }
 
 			if (needsUpdate)
 			{
@@ -176,14 +192,26 @@ namespace UMA
 			{
 				List<string> usedColorProps = new List<string>();
 				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("R").FindPropertyRelative("enable").boolValue == true)
-					usedColorProps.Add("R");
-				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("G").FindPropertyRelative("enable").boolValue == true)
-					usedColorProps.Add("G");
-				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("B").FindPropertyRelative("enable").boolValue == true)
-					usedColorProps.Add("B");
-				if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("A").FindPropertyRelative("enable").boolValue == true)
-					usedColorProps.Add("A");
-				var usedColorComponents = string.Join(", ", usedColorProps.ToArray());
+                {
+                    usedColorProps.Add("R");
+                }
+
+                if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("G").FindPropertyRelative("enable").boolValue == true)
+                {
+                    usedColorProps.Add("G");
+                }
+
+                if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("B").FindPropertyRelative("enable").boolValue == true)
+                {
+                    usedColorProps.Add("B");
+                }
+
+                if (entry.FindPropertyRelative("colorModifier").FindPropertyRelative("A").FindPropertyRelative("enable").boolValue == true)
+                {
+                    usedColorProps.Add("A");
+                }
+
+                var usedColorComponents = string.Join(", ", usedColorProps.ToArray());
 				usedColorComponents = string.IsNullOrEmpty(usedColorComponents) ? "" : "Components: [" + usedColorComponents + "]";
 				return new GUIContent("("+ entry.FindPropertyRelative("mode").enumNames[entry.FindPropertyRelative("mode").enumValueIndex] + ") "+ entry.FindPropertyRelative("targetName").stringValue + " - Texture: [" + entry.FindPropertyRelative("textureChannel").intValue + "] "+ usedColorComponents);
 			}
@@ -266,10 +294,15 @@ namespace UMA
 						rCurr = colorModifier.R.Additive ? ocd.channelAdditiveMask[textureChannel].r : ocd.channelMask[textureChannel].r;
 						rAdj = colorModifier.R.EvaluateAdjustment(dnaVal, rCurr);
 						if (colorModifier.R.Absolute)
-							rAdj = Mathf.Lerp(rCurr, rAdj, masterWeight);
-						else
-							rAdj = rAdj * masterWeight;
-						if ((colorModifier.R.Absolute && rAdj != 0 && rAdj != rCurr) || (!colorModifier.R.Absolute && rAdj != rCurr))
+                        {
+                            rAdj = Mathf.Lerp(rCurr, rAdj, masterWeight);
+                        }
+                        else
+                        {
+                            rAdj = rAdj * masterWeight;
+                        }
+
+                        if ((colorModifier.R.Absolute && rAdj != 0 && rAdj != rCurr) || (!colorModifier.R.Absolute && rAdj != rCurr))
 						{
 							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 0, rAdj, colorModifier.R.adjustmentType));
 							adjusted = true;
@@ -280,10 +313,15 @@ namespace UMA
 						gCurr = colorModifier.G.Additive ? ocd.channelAdditiveMask[textureChannel].g : ocd.channelMask[textureChannel].g;
 						gAdj = colorModifier.G.EvaluateAdjustment(dnaVal, gCurr);
 						if (colorModifier.G.Absolute)
-							gAdj = Mathf.Lerp(gCurr, gAdj, masterWeight);
-						else
-							gAdj = gAdj * masterWeight;
-						if ((colorModifier.G.Absolute && gAdj != 0 && gAdj != gCurr) || (!colorModifier.G.Absolute && gAdj != gCurr))
+                        {
+                            gAdj = Mathf.Lerp(gCurr, gAdj, masterWeight);
+                        }
+                        else
+                        {
+                            gAdj = gAdj * masterWeight;
+                        }
+
+                        if ((colorModifier.G.Absolute && gAdj != 0 && gAdj != gCurr) || (!colorModifier.G.Absolute && gAdj != gCurr))
 						{
 							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 1, gAdj, colorModifier.G.adjustmentType));
 							adjusted = true;
@@ -294,10 +332,15 @@ namespace UMA
 						bCurr = colorModifier.B.Additive ? ocd.channelAdditiveMask[textureChannel].b : ocd.channelMask[textureChannel].b;
 						bAdj = colorModifier.B.EvaluateAdjustment(dnaVal, bCurr);
 						if (colorModifier.B.Absolute)
-							bAdj = Mathf.Lerp(bCurr, bAdj, masterWeight);
-						else
-							bAdj = bAdj * masterWeight;
-						if ((colorModifier.B.Absolute && bAdj != 0 && bAdj != bCurr) || (!colorModifier.B.Absolute && bAdj != bCurr))
+                        {
+                            bAdj = Mathf.Lerp(bCurr, bAdj, masterWeight);
+                        }
+                        else
+                        {
+                            bAdj = bAdj * masterWeight;
+                        }
+
+                        if ((colorModifier.B.Absolute && bAdj != 0 && bAdj != bCurr) || (!colorModifier.B.Absolute && bAdj != bCurr))
 						{
 							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 2, bAdj, colorModifier.B.adjustmentType));
 							adjusted = true;
@@ -308,12 +351,19 @@ namespace UMA
 						aCurr = colorModifier.A.Additive ? ocd.channelAdditiveMask[textureChannel].a : ocd.channelMask[textureChannel].a;
 						aAdj = colorModifier.A.EvaluateAdjustment(dnaVal, aCurr);
 						if (colorModifier.A.Absolute)
-							aAdj = Mathf.Lerp(aCurr, aAdj, masterWeight);
-						else if(colorModifier.A.adjustmentType == AdjustmentType.BlendFactor)//BlendFactor is different and only used on the alpha channel
-							aAdj = Mathf.Lerp(aCurr, aAdj * masterWeight, masterWeight);
-						else
-							aAdj = aAdj * masterWeight;
-						if ((colorModifier.A.Absolute && aAdj != 0 && aAdj != aCurr) || (!colorModifier.A.Absolute && aAdj != aCurr))
+                        {
+                            aAdj = Mathf.Lerp(aCurr, aAdj, masterWeight);
+                        }
+                        else if(colorModifier.A.adjustmentType == AdjustmentType.BlendFactor)//BlendFactor is different and only used on the alpha channel
+                        {
+                            aAdj = Mathf.Lerp(aCurr, aAdj * masterWeight, masterWeight);
+                        }
+                        else
+                        {
+                            aAdj = aAdj * masterWeight;
+                        }
+
+                        if ((colorModifier.A.Absolute && aAdj != 0 && aAdj != aCurr) || (!colorModifier.A.Absolute && aAdj != aCurr))
 						{
 							targetOverlays[oi].colorComponentAdjusters.Add(new OverlayData.ColorComponentAdjuster(textureChannel, 3, aAdj, colorModifier.A.adjustmentType));
 							adjusted = true;
@@ -366,49 +416,73 @@ namespace UMA
 				public float Evaluate(float dnaValue, float current)
 				{
 					if (!enable)
-						return current;
+                    {
+                        return current;
+                    }
 
-					float newVal = current;
+                    float newVal = current;
 					if (useDNAValue)
 					{
 						if (adjustmentType == AdjustmentType.Absolute || adjustmentType == AdjustmentType.AbsoluteAdditive)
-							newVal = dnaValue * multiplier;
-						else //AdjustmentType.Adjust
-							newVal = Mathf.Clamp(current + (dnaValue * multiplier), 0, 1f);
-					}
+                        {
+                            newVal = dnaValue * multiplier;
+                        }
+                        else //AdjustmentType.Adjust
+                        {
+                            newVal = Mathf.Clamp(current + (dnaValue * multiplier), 0, 1f);
+                        }
+                    }
 					else
 					{
 						if (adjustmentType == AdjustmentType.Absolute || adjustmentType == AdjustmentType.AbsoluteAdditive)
-							newVal = value;
-						else //AdjustmentType.Adjust
-							newVal = Mathf.Clamp(current + adjustValue, 0, 1f);
-					}
+                        {
+                            newVal = value;
+                        }
+                        else //AdjustmentType.Adjust
+                        {
+                            newVal = Mathf.Clamp(current + adjustValue, 0, 1f);
+                        }
+                    }
 					return Mathf.Lerp(current, newVal, dnaValue);
 				}
 
 				public float EvaluateAdjustment(float dnaValue, float currentColor)
 				{
 					if (!enable)
-						return 0f;
+                    {
+                        return 0f;
+                    }
 
-					if (useDNAValue)
+                    if (useDNAValue)
 					{
 						if (Absolute)
-							return Mathf.Lerp(currentColor, Mathf.Clamp(dnaValue * multiplier, 0f, 1f), Mathf.Clamp(dnaValue, 0f, 1f));
-						else if (adjustmentType == AdjustmentType.BlendFactor)
-							return Mathf.Clamp(dnaValue * multiplier, 0f, 1f);
-						else
-							return Mathf.Lerp(0f, dnaValue * multiplier, Mathf.Abs(dnaValue));
-					}
+                        {
+                            return Mathf.Lerp(currentColor, Mathf.Clamp(dnaValue * multiplier, 0f, 1f), Mathf.Clamp(dnaValue, 0f, 1f));
+                        }
+                        else if (adjustmentType == AdjustmentType.BlendFactor)
+                        {
+                            return Mathf.Clamp(dnaValue * multiplier, 0f, 1f);
+                        }
+                        else
+                        {
+                            return Mathf.Lerp(0f, dnaValue * multiplier, Mathf.Abs(dnaValue));
+                        }
+                    }
 					else
 					{
 						if (Absolute)
-							return Mathf.Lerp(currentColor, value, Mathf.Clamp(dnaValue, 0f, 1f));
-						else if (adjustmentType == AdjustmentType.BlendFactor)
-							return Mathf.Lerp(0f, value, Mathf.Abs(dnaValue));
-						else
-							return Mathf.Lerp(0f, adjustValue, Mathf.Abs(dnaValue));
-					}
+                        {
+                            return Mathf.Lerp(currentColor, value, Mathf.Clamp(dnaValue, 0f, 1f));
+                        }
+                        else if (adjustmentType == AdjustmentType.BlendFactor)
+                        {
+                            return Mathf.Lerp(0f, value, Mathf.Abs(dnaValue));
+                        }
+                        else
+                        {
+                            return Mathf.Lerp(0f, adjustValue, Mathf.Abs(dnaValue));
+                        }
+                    }
 
 				}
 			}

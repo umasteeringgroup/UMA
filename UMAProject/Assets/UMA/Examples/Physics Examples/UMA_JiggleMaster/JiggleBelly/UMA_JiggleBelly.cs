@@ -63,20 +63,27 @@ namespace UMA.Examples
 		void OnEnable()
 		{
 			if (_avatar != null)
-				_avatar.CharacterUpdated.AddListener(AvatarUpdated);
-		}
+            {
+                _avatar.CharacterUpdated.AddListener(AvatarUpdated);
+            }
+        }
 		void OnDisable()
 		{
 			if (_avatar != null)
-				_avatar.CharacterUpdated.RemoveListener(AvatarUpdated);
-		}
+            {
+                _avatar.CharacterUpdated.RemoveListener(AvatarUpdated);
+            }
+        }
 
 		void Init()
 		{
 			_avatar = GetComponent<DynamicCharacterAvatar>();
-			if (_avatar == null) return;
+			if (_avatar == null)
+            {
+                return;
+            }
 
-			_dna = _avatar.GetDNA();
+            _dna = _avatar.GetDNA();
 			_initialized = false;
 			_skeleton = GetSkeleton(_avatar.activeRace.name);
 			//Check if current skeleton is supported by jigglebone recipe and only run this code if the avatar has changed
@@ -227,19 +234,35 @@ namespace UMA.Examples
 				float xStretch;
 				float yStretch;
 				float zStretch;
-				if (_boneAxis.x == 0) xStretch = 1 + (-stretchMag * _bellySideStretch);
-				else xStretch = 1 + (stretchMag * _bellyFrontStretch);
+				if (_boneAxis.x == 0)
+                {
+                    xStretch = 1 + (-stretchMag * _bellySideStretch);
+                }
+                else
+                {
+                    xStretch = 1 + (stretchMag * _bellyFrontStretch);
+                }
 
+                if (_boneAxis.y == 0)
+                {
+                    yStretch = 1 + (-stretchMag * _bellySideStretch);
+                }
+                else
+                {
+                    yStretch = 1 + (stretchMag * _bellyFrontStretch);
+                }
 
-				if (_boneAxis.y == 0) yStretch = 1 + (-stretchMag * _bellySideStretch);
-				else yStretch = 1 + (stretchMag * _bellyFrontStretch);
+                if (_boneAxis.z == 0)
+                {
+                    zStretch = 1 + (-stretchMag * _bellySideStretch);
+                }
+                else
+                {
+                    zStretch = 1 + (stretchMag * _bellyFrontStretch);
+                }
 
-
-				if (_boneAxis.z == 0) zStretch = 1 + (-stretchMag * _bellySideStretch);
-				else zStretch = 1 + (stretchMag * _bellyFrontStretch);
-
-				// Set the bone scale
-				_monitoredBone.localScale = new Vector3(xStretch, yStretch, zStretch) * _anatomyScaleFactor;
+                // Set the bone scale
+                _monitoredBone.localScale = new Vector3(xStretch, yStretch, zStretch) * _anatomyScaleFactor;
 			}
 
 		}

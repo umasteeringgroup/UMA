@@ -23,7 +23,9 @@ namespace UMA.Examples
         void SetWardrobe(bool active)
         {
             if (wardrobeRecipe == null)
+            {
                 return;
+            }
 
             if (active)
             {

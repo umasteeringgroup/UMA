@@ -47,8 +47,12 @@ namespace UMA
 		/// <param name="path">File path.</param>
 		public static void EnsurePath(string path)
 		{
-			if (System.IO.Directory.Exists(path)) return;
-			System.IO.Directory.CreateDirectory(path);
+			if (System.IO.Directory.Exists(path))
+            {
+                return;
+            }
+
+            System.IO.Directory.CreateDirectory(path);
 		}
 
 		public static string staticFullPath;
@@ -86,11 +90,15 @@ namespace UMA
 			}
 
 			if (fullPath)
-				settingsFolderPath = staticFullPath;
-			else
-				settingsFolderPath = staticRelativePath; 
+            {
+                settingsFolderPath = staticFullPath;
+            }
+            else
+            {
+                settingsFolderPath = staticRelativePath;
+            }
 
-			if (editorOnly)
+            if (editorOnly)
 			{
 				settingsFolderPath = Path.Combine(settingsFolderPath, "InEditor");
 			}
@@ -99,10 +107,16 @@ namespace UMA
 				settingsFolderPath = Path.Combine(settingsFolderPath, Path.Combine("InGame", "Resources"));
 			}
 			if (!Directory.Exists(settingsFolderPath))
-				Directory.CreateDirectory(settingsFolderPath);
-			if (fullPath)
-				settingsFolderPath = Path.GetFullPath(settingsFolderPath);
-			return settingsFolderPath;
+            {
+                Directory.CreateDirectory(settingsFolderPath);
+            }
+
+            if (fullPath)
+            {
+                settingsFolderPath = Path.GetFullPath(settingsFolderPath);
+            }
+
+            return settingsFolderPath;
 		}
 	}
 }

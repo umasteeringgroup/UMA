@@ -75,29 +75,37 @@ namespace UMA.Dynamics.Examples
 				// because that interferes with step climbing amongst other annoyances
 				if (Physics.Raycast(myTransform.position, -Vector3.up, out hit, rayDistance)) {
 					if (Vector3.Angle(hit.normal, Vector3.up) > slideLimit)
-						sliding = true;
-				}
+                    {
+                        sliding = true;
+                    }
+                }
 				// However, just raycasting straight down from the center can fail when on steep slopes
 				// So if the above raycast didn't catch anything, raycast down from the stored ControllerColliderHit point instead
 				else {
 					Physics.Raycast(contactPoint + Vector3.up, -Vector3.up, out hit);
 					if (Vector3.Angle(hit.normal, Vector3.up) > slideLimit)
-						sliding = true;
-				}
+                    {
+                        sliding = true;
+                    }
+                }
 				
 				// If we were falling, and we fell a vertical distance greater than the threshold, run a falling damage routine
 				if (falling) {
 					falling = false;
 					if (myTransform.position.y < fallStartLevel - fallingDamageThreshold)
-						FallingDamageAlert (fallStartLevel - myTransform.position.y);
-				}
+                    {
+                        FallingDamageAlert (fallStartLevel - myTransform.position.y);
+                    }
+                }
 				
 				// If running isn't on a toggle, then use the appropriate speed depending on whether the run button is down
 				if (!toggleRun)
-					speed = Input.GetKey(KeyCode.LeftShift)? runSpeed : walkSpeed;
-				
-				// If sliding (and it's allowed), or if we're on an object tagged "Slide", get a vector pointing down the slope we're on
-				if ( (sliding && slideWhenOverSlopeLimit) || (slideOnTaggedObjects && hit.collider.tag == "Slide") ) {
+                {
+                    speed = Input.GetKey(KeyCode.LeftShift)? runSpeed : walkSpeed;
+                }
+
+                // If sliding (and it's allowed), or if we're on an object tagged "Slide", get a vector pointing down the slope we're on
+                if ( (sliding && slideWhenOverSlopeLimit) || (slideOnTaggedObjects && hit.collider.tag == "Slide") ) {
 					Vector3 hitNormal = hit.normal;
 					moveDirection = new Vector3(hitNormal.x, -hitNormal.y, hitNormal.z);
 					Vector3.OrthoNormalize (ref hitNormal, ref moveDirection);
@@ -113,8 +121,10 @@ namespace UMA.Dynamics.Examples
 				
 				// Jump! But only if the jump button has been released and player has been grounded for a given number of frames
 				if (!Input.GetButton("Jump"))
-					jumpTimer++;
-				else if (jumpTimer >= antiBunnyHopFactor) {
+                {
+                    jumpTimer++;
+                }
+                else if (jumpTimer >= antiBunnyHopFactor) {
 					moveDirection.y = jumpSpeed;
 					jumpTimer = 0;
 				}
@@ -145,8 +155,10 @@ namespace UMA.Dynamics.Examples
 			// If the run button is set to toggle, then switch between walk/run speed. (We use Update for this...
 			// FixedUpdate is a poor place to use GetButtonDown, since it doesn't necessarily run every frame and can miss the event)
 			if (toggleRun && grounded && Input.GetButtonDown("Run"))
-				speed = (speed == walkSpeed? runSpeed : walkSpeed);
-		}
+            {
+                speed = (speed == walkSpeed? runSpeed : walkSpeed);
+            }
+        }
 
 		// Store point that we're in contact with for use in FixedUpdate if needed
 		void OnControllerColliderHit (ControllerColliderHit hit) {

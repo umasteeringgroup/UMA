@@ -21,8 +21,11 @@ namespace UMA.Examples
 			foreach (var componentName in disableComponentNames)
 			{
 				var behavior = (data.animator.GetComponent(componentName) as Behaviour);
-				if (behavior != null) behavior.enabled = false;
-			}
+				if (behavior != null)
+                {
+                    behavior.enabled = false;
+                }
+            }
 		}
 	}
 }

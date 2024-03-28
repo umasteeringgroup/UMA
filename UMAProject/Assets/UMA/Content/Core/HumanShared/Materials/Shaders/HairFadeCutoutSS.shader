@@ -31,6 +31,7 @@ Shader "UMA/Hair Fade Cutout (Single Sided)"
 		#include "UnityPBSLighting.cginc"
 		#include "Lighting.cginc"
 		#pragma target 3.0
+	    #pragma shader_feature_local _ENVIRONMENTREFLECTIONS_OFF
 		struct Input
 		{
 			float2 uv_texcoord;

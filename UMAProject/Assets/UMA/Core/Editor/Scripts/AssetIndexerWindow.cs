@@ -33,6 +33,7 @@ namespace UMA.Controls
         UMAMaterial umaMaterial;
         RaceData umaRaceData;
         OverlayDataAsset umaOverlay;
+        SlotDataAsset umaSlot;
         MeshHideAsset AddedMHA = null;
 
         private GenericMenu FileMenu
@@ -205,9 +206,12 @@ namespace UMA.Controls
             // ***********************************************************************************
             AddMenuItemWithCallback(FileMenu, "Rebuild From Project", () =>
             {
+                UAI.SaveKeeps();
                 UAI.Clear();
                 UAI.BuildStringTypes();
                 UAI.AddEverything(false);
+                UAI.RestoreKeeps();
+                UAI.ForceSave();
                 Resources.UnloadUnusedAssets();
                 m_Initialized = false;
                 Repaint();
@@ -215,9 +219,12 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Rebuild From Project (include text assets)", () =>
             {
+                UAI.SaveKeeps();
                 UAI.Clear();
                 UAI.BuildStringTypes();
                 UAI.AddEverything(true);
+                UAI.RestoreKeeps();
+                UAI.ForceSave();
                 Resources.UnloadUnusedAssets();
                 m_Initialized = false;
                 Repaint();
@@ -538,6 +545,20 @@ namespace UMA.Controls
                 return;
             });
 
+            AddMenuItemWithCallback(ItemsMenu, "Add Ignore Flag to Selected Items", () =>
+            {
+                MarkIgnore(true);
+                Repaint();
+                return;
+            });
+
+            AddMenuItemWithCallback(ItemsMenu, "Clear Ignore Flag from Selected Items", () =>
+            {
+                MarkIgnore(false);
+                Repaint();
+                return;
+            });
+
             ItemsMenu.AddSeparator("");
 
             AddMenuItemWithCallback(ItemsMenu, "Apply selected races to selected wardrobe recipes", () =>
@@ -569,6 +590,15 @@ namespace UMA.Controls
                 return;
             });
 
+            ItemsMenu.AddSeparator("");
+
+            AddMenuItemWithCallback(ItemsMenu,"Recount Types", () =>
+            {
+                RecountTypes();
+                m_Initialized = false;
+                Repaint();
+                return;
+            });
 
 
             AddMenuItemWithCallback(ItemsMenu, "Permanently delete Selected", () =>
@@ -1399,7 +1429,17 @@ namespace UMA.Controls
                     {
                         if (uwr.compatibleRaces.Contains(race.raceName))
                         {
-                            selectedItems.Add(ai);
+                            if (filterBySlot)
+                            {
+                                if (uwr.wardrobeSlot == filterSlot)
+                                {
+                                    selectedItems.Add(ai);
+                                }
+                            }
+                            else
+                            {
+                                selectedItems.Add(ai);
+                            }
                         }
                     }
                 }
@@ -1499,19 +1539,56 @@ namespace UMA.Controls
             RecountTypes();
         }
 
-        void SelectByAssetItems(List<AssetItem> items)
+        void MarkIgnore(bool IgnoreFlag)
         {
+            var treeElements = new List<AssetTreeElement>();
+            TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+
+            foreach (AssetTreeElement tr in treeElements)
+            {
+                if (tr.ai != null && tr.Checked)
+                {
+                    tr.ai.Ignore = IgnoreFlag;
+                }
+            }
+            UMAAssetIndexer.Instance.ForceSave();
+            RecountTypes();
+        }
+
+        void SelectByAssetItems(List<AssetItem> items, bool recalculate = true)
+        {
+            Dictionary<Type,List<AssetItem>> indexedItems = new Dictionary<Type, List<AssetItem>>();
+
+            for (int i = 0;i < items.Count; i++)
+            {
+                if (!indexedItems.ContainsKey(items[i]._Type))
+                {
+                    indexedItems.Add(items[i]._Type, new List<AssetItem>());
+                }
+                indexedItems[items[i]._Type].Add(items[i]);
+            }
+
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
             foreach (AssetTreeElement ate in treeElements)
             {
-                if (ate.ai != null && items.Contains(ate.ai))
+                if (ate.ai != null && indexedItems.ContainsKey(ate.ai._Type))
                 {
-                    ate.Checked = true;
+                    if (indexedItems[ate.ai._Type].Contains(ate.ai))
+                    {
+                        ate.Checked = true;
+                    }
                 }
+                //if (ate.ai != null && items.Contains(ate.ai))
+                //{
+                //    ate.Checked = true;
+                //}
             }
-            treeView.RecalcTypeChecks();
+            if (recalculate)
+            {
+                treeView.RecalcTypeChecks();
+            }
         }
 
         void FixupTextureChannels(UMAMaterial material)
@@ -1548,6 +1625,28 @@ namespace UMA.Controls
             }
             AssetDatabase.SaveAssets();
         }
+
+        void SelectMaterial(UMAMaterial material)
+        {
+            var treeElements = new List<AssetTreeElement>();
+            TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+            foreach (AssetTreeElement ate in treeElements)
+            {
+                if (ate.type == typeof(UMAMaterial))
+                {
+                    if (ate.ai != null)
+                    {
+                        UMAMaterial um = ate.ai.Item as UMAMaterial;
+                        if (um.name == material.name)
+                        {
+                            ate.Checked = true;
+                        }
+                    }
+                }
+                treeView.RecalcTypeChecks();
+            }
+        }
+
 
         void SelectByMaterial(UMAMaterial material, Type assetType)
         {
@@ -1623,19 +1722,33 @@ namespace UMA.Controls
                 ate.IsAddrCount = 0;
                 ate.Keepcount = 0;
                 ate.IgnoreCount = 0;
+                ate.totalCount = 0;
                 if (t.hasChildren)
                 {
                     foreach (TreeElement c in t.children)
                     {
                         AssetItem ai = (c as AssetTreeElement).ai;
                         if (ai.IsResource)
+                        {
                             ate.IsResourceCount++;
+                        }
+
                         if (ai.IsAlwaysLoaded)
+                        {
                             ate.Keepcount++;
+                        }
+
                         if (ai.IsAddressable)
+                        {
                             ate.IsAddrCount++;
+                        }
+
                         if (ai.Ignore)
+                        {
                             ate.IgnoreCount++;
+                        }
+
+                        ate.totalCount++;
                     }
                 }
             }
@@ -1783,9 +1896,9 @@ namespace UMA.Controls
             EditorUtility.ClearProgressBar();
         }
 
-#endregion
+        #endregion
 
-#region GUI Rectangles
+        #region GUI Rectangles
         int sidePanelWidth = 300;
 
         float positionwidth
@@ -1864,9 +1977,9 @@ namespace UMA.Controls
                 return toolbar;
             }
         }
-#endregion
+        #endregion
 
-#region GUI
+        #region GUI
         void InitIfNeeded()
         {
             if (!m_Initialized)
@@ -1924,13 +2037,24 @@ namespace UMA.Controls
                     }
                 case eLoaded.SelectedOnly:
                     {
-                        if (LoadOnly.Contains(ai))
+                        if (DoesMatchLoaded(ai))
                             return true;
                         else
                             return false;
                     }
             }
             return true;
+        }
+
+        private bool DoesMatchLoaded(AssetItem assetItem)
+        {
+            for(int i=0; i < LoadOnly.Count; i++)
+            {
+                if (LoadOnly[i] == assetItem && assetItem._Type == LoadOnly[i]._Type)
+                    return true;
+            }
+
+            return false;
         }
 
         IList<AssetTreeElement> GetData()
@@ -1998,6 +2122,9 @@ namespace UMA.Controls
                                 ate.Keepcount++;
                             if (ai.IsAddressable)
                                 ate.IsAddrCount++;
+                            if (ai.Ignore)
+                                ate.IgnoreCount++;
+                            ate.totalCount ++;
                         }
                     }
 
@@ -2032,7 +2159,7 @@ namespace UMA.Controls
             }
         }
 
-#region DragDrop
+        #region DragDrop
         private void DragDropAdd(Rect dropArea)
         {
 
@@ -2141,9 +2268,14 @@ namespace UMA.Controls
                 }
             }
         }
-#endregion
+        #endregion
 
         private string dots = "";
+        private bool filterBySlot = false;
+        private int selectedSlot = 0;
+        private string filterSlot = "";
+        private string[] NullArray = { "None"};
+
         void OnGUI()
         {
             if (EditorApplication.isCompiling)
@@ -2184,12 +2316,15 @@ namespace UMA.Controls
         bool _materialFoldout;
         bool _raceFoldout;
         bool _recipeFoldout;
+        bool _OverlayFoldout;
+        bool _SlotFoldout;
         Rect _rect;
         Vector3 _scale;
         float _rotation;
         bool _rectLimit;
         bool _overlayLimit;
         Rect _rectCheck;
+        int _channelType;
         
         void ShowSidebar()
         {
@@ -2236,6 +2371,14 @@ namespace UMA.Controls
                 {
                     FixupTextureChannels(umaMaterial);
                 }
+                GUILayout.BeginHorizontal();
+
+                _channelType = EditorGUILayout.Popup(_channelType, System.Enum.GetNames(typeof(UMAMaterial.ChannelType)));
+                if (GUILayout.Button("Sel by channel type"))
+                {
+                    SelectByChannelType(_channelType);
+                }
+                GUILayout.EndHorizontal();
                 GUIHelper.EndVerticalPadded(10);
             }
             _raceFoldout = EditorGUILayout.Foldout(_raceFoldout, "Races");
@@ -2244,6 +2387,7 @@ namespace UMA.Controls
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("RaceData:");
                 umaRaceData = EditorGUILayout.ObjectField("", umaRaceData, typeof(RaceData), false, GUILayout.Width(250)) as RaceData;
+
                 if (GUILayout.Button("Add to Selection"))
                 {
                     AddToWardrobeRecipes(umaRaceData);
@@ -2262,6 +2406,18 @@ namespace UMA.Controls
                 {
                     SelectAllWardrobeRecipesForRace(umaRaceData);
                 }
+                filterBySlot = GUILayout.Toggle(filterBySlot, "Filter by Slot");
+                if (filterBySlot)
+                {
+                        selectedSlot = EditorGUILayout.Popup(selectedSlot, umaRaceData.wardrobeSlots.ToArray());
+                        filterSlot = umaRaceData.wardrobeSlots[selectedSlot];
+                }
+                else
+                {
+                    filterSlot = "";
+                    EditorGUILayout.Popup(0, NullArray);
+                }
+
                 if (GUILayout.Button("Select Base Recipe for Race"))
                 {
                     SelectBaseRecipeForRace(umaRaceData);
@@ -2311,9 +2467,198 @@ namespace UMA.Controls
                 GUIHelper.EndVerticalPadded(10);
             }
 
+            _OverlayFoldout = EditorGUILayout.Foldout(_OverlayFoldout, "Overlays");
+            if (_OverlayFoldout)
+            {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+                GUILayout.Label("OverlayDataAsset:");
+                umaOverlay = EditorGUILayout.ObjectField("", umaOverlay, typeof(OverlayDataAsset), false, GUILayout.Width(250)) as OverlayDataAsset;
+                if (GUILayout.Button("Select Recipes with Overlay"))
+                {
+                    SelectWithOverlay(umaOverlay);
+                }
+                if (GUILayout.Button("Select Overlays with selected materials"))
+                {
+                    SelectOverlaysWithMaterials();
+                }
+
+                if (GUILayout.Button("Find Overlays with invalid textures"))
+                {
+                    FindOverlaysWithInvalidTextures();
+                }
+                GUIHelper.EndVerticalPadded(10);
+            }
+
+            _SlotFoldout = EditorGUILayout.Foldout(_SlotFoldout, "Slots");
+            if (_SlotFoldout)
+            {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+                GUILayout.Label("SlotDataAsset:");
+                umaSlot = EditorGUILayout.ObjectField("", umaSlot, typeof(SlotDataAsset), false, GUILayout.Width(250)) as SlotDataAsset;
+
+                if (GUILayout.Button("Select Recipes with Slot"))
+                {
+                    SelectWithSlot(umaSlot);
+                }
+                if (GUILayout.Button("Select Slots with selected materials"))
+                {
+                    SelectSlotsWithMaterials();
+                }
+                if (GUILayout.Button("Find Slots with invalid meshes"))
+                {
+                    FindSlotsWithInvalidMeshes();
+                }
+                if (GUILayout.Button("Select all clipping slots "))
+                {
+                    SelectClippingSlots();
+                }
+                if (GUILayout.Button("Select all smooshable slots "))
+                {
+                    SelectSmooshableSlots();
+                }
+                GUIHelper.EndVerticalPadded(10);
+            }
             GUILayout.EndScrollView();
         }
 
+        private void SelectSmooshableSlots()
+        {
+            List<AssetItem> items = new List<AssetItem>();
+
+            var slots = UAI.GetAssetItems<SlotDataAsset>();
+            for(int i=0;i<slots.Count;i++)
+            {
+                if (slots[i] != null && (slots[i].Item as SlotDataAsset).isSmooshable)
+                {
+                    items.Add(slots[i]);
+                }
+            }
+
+            SelectByAssetItems(items);
+        }
+
+        private void SelectClippingSlots()
+        {
+            List<AssetItem> items = new List<AssetItem>();
+
+            var slots = UAI.GetAssetItems<SlotDataAsset>();
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i] != null && (slots[i].Item as SlotDataAsset).isClippingPlane)
+                {
+                    items.Add(slots[i]);
+                }
+            }
+
+            SelectByAssetItems(items);
+        }
+
+        private void FindSlotsWithInvalidMeshes()
+        {
+            List<AssetItem> items = new List<AssetItem>();
+
+            var slots = UAI.GetAssetItems<SlotDataAsset>();
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i] != null)
+                {
+                    var s = slots[i].Item as SlotDataAsset;
+                    if (s.meshData != null)
+                    {
+                        s.ValidateMeshData();
+                        if (!string.IsNullOrEmpty(s.Errors))
+                        {
+                            items.Add(slots[i]);
+                        }
+                    }
+                }
+            }
+            SelectByAssetItems(items);
+        }
+
+        private List<AssetItem> GetSelectedMaterials()
+        {
+            List<AssetTreeElement> selectedElements = GetSelectedElements();
+            List<AssetItem> selectedMaterials = new List<AssetItem>();
+
+            for(int i=0;i<selectedElements.Count;i++)
+            {
+                if (selectedElements[i].ai != null && selectedElements[i].ai._Type == typeof(UMAMaterial))
+                {
+                    selectedMaterials.Add(selectedElements[i].ai);
+                }
+            }
+            return selectedMaterials;
+        }
+
+        private void SelectSlotsWithMaterials()
+        {
+            var mats = GetSelectedMaterials();
+            SelectByAssetItems(mats);
+        }
+
+        private void SelectWithSlot(SlotDataAsset umaSlot)
+        {
+            List<AssetItem> items = new List<AssetItem>();
+            items.Add(UAI.GetAssetItem<SlotDataAsset>(umaSlot.slotName));
+            SelectByAssetItems(items);
+        }
+
+        private void FindOverlaysWithInvalidTextures()
+        {
+            List<AssetItem> badItems = new List<AssetItem>(); 
+            var ovls = UAI.GetAssetItems<OverlayDataAsset>();
+            for (int i = 0; i < ovls.Count; i++)
+            {
+                if (ovls[i] != null)
+                {
+                    var o = ovls[i].Item as OverlayDataAsset;
+
+                    if (o != null)
+                    {
+                        for (int j = 0; j < o.textureList.Length; j++)
+                        {
+                            if (o.textureList[j] == null)
+                            {
+                                badItems.Add(ovls[i]);
+                            }
+                        }
+                    }
+                }
+            }
+            SelectByAssetItems(badItems);
+        }
+
+        private void SelectOverlaysWithMaterials()
+        {
+            var mats = GetSelectedMaterials();
+
+            SelectByAssetItems(mats);
+        }
+
+        private void SelectWithOverlay(OverlayDataAsset umaOverlay)
+        {
+            List<AssetItem> items = new List<AssetItem>();
+            items.Add(UAI.GetAssetItem<OverlayDataAsset>(umaOverlay.overlayName));
+            SelectByAssetItems(items);
+        }
+
+        private void SelectByChannelType(int channelType)
+        {
+            var mats = UAI.GetAllAssets<UMAMaterial>();
+            for (int i = 0; i < mats.Count; i++)
+            {
+
+                for (int j = 0; j < mats[i].channels.Length; j++)
+                {
+                    if (mats[i].channels[j].channelType == (UMAMaterial.ChannelType)channelType)
+                    {
+                        SelectMaterial(mats[i]);
+                        break;
+                    }
+                }
+            }
+        }
 
         void MenuBar(Rect rect)
 		{

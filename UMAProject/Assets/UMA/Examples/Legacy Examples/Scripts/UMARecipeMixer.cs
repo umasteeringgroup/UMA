@@ -64,9 +64,11 @@ namespace UMA.Examples
 			{
 				RecipeSection section = recipeSections[i];
 				if ((section.recipes == null) || (section.recipes.Length == 0))
-					continue;
+                {
+                    continue;
+                }
 
-				switch (section.selectionRule)
+                switch (section.selectionRule)
 				{
 					case SelectionType.IncludeNone:
 						break;

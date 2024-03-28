@@ -11,6 +11,7 @@ namespace UMA
         bool boneInfoFoldout = false;
         bool humanInfoFoldout = false;
         bool mecanimInfoFoldout = false;
+        List<bool> foldouts = new List<bool>();
 
         UmaTPose source;
 
@@ -23,7 +24,9 @@ namespace UMA
         public override void OnInspectorGUI()
         {
             if (source == null)
+            {
                 return;
+            }
 
             //base.DrawDefaultInspector();
             mecanimInfoFoldout = EditorGUILayout.Foldout(mecanimInfoFoldout, "Mecanim Adjustments");
@@ -57,6 +60,14 @@ namespace UMA
                 EditorGUILayout.HelpBox("Bone Info is empty!", MessageType.Error);
             }
 
+            if (foldouts.Count != source.humanInfo.Length)
+            {
+                foldouts.Clear();
+                for (int i = 0; i < source.humanInfo.Length; i++)
+                {
+                    foldouts.Add(false);
+                }
+            }
 
             humanInfoFoldout = EditorGUILayout.Foldout(humanInfoFoldout, "Human Info");
             if (source.humanInfo != null)
@@ -67,10 +78,36 @@ namespace UMA
                     EditorGUI.indentLevel++;
                     for (int i = 0; i < source.humanInfo.Length; i++)
                     {
-                        EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.LabelField(source.humanInfo[i].humanName);
-                        EditorGUILayout.LabelField(source.humanInfo[i].boneName);
-                        EditorGUILayout.EndHorizontal();
+                        //EditorGUILayout.BeginHorizontal();
+                        foldouts[i]  = EditorGUILayout.Foldout(foldouts[i], $"{source.humanInfo[i].humanName} -> {source.humanInfo[i].boneName}");
+                        // EditorGUILayout.LabelField(source.humanInfo[i].humanName);
+                        // EditorGUILayout.LabelField(source.humanInfo[i].boneName);
+                        if (foldouts[i])
+                        {
+                            UMA.Editors.GUIHelper.BeginVerticalPadded();
+                            EditorGUI.BeginChangeCheck();
+                            EditorGUILayout.LabelField("humanName", source.humanInfo[i].humanName);
+                            source.humanInfo[i].boneName = EditorGUILayout.DelayedTextField("boneName", source.humanInfo[i].boneName);
+                            EditorGUILayout.LabelField("limits");
+                            EditorGUI.indentLevel ++;
+                            source.humanInfo[i].limit.useDefaultValues = EditorGUILayout.Toggle("useDefault", source.humanInfo[i].limit.useDefaultValues);
+                            if (!source.humanInfo[i].limit.useDefaultValues)
+                            {
+                                source.humanInfo[i].limit.axisLength = EditorGUILayout.FloatField("axisLength", source.humanInfo[i].limit.axisLength);
+                                source.humanInfo[i].limit.min = EditorGUILayout.Vector3Field("min", source.humanInfo[i].limit.min, GUILayout.ExpandWidth(false));
+                                source.humanInfo[i].limit.max = EditorGUILayout.Vector3Field("max", source.humanInfo[i].limit.max, GUILayout.ExpandWidth(false));
+                                source.humanInfo[i].limit.center = EditorGUILayout.Vector3Field("center", source.humanInfo[i].limit.center, GUILayout.ExpandWidth(false));
+                            }
+                            EditorGUI.indentLevel--;
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                serializedObject.ApplyModifiedProperties();
+                                source.Serialize();
+                                EditorUtility.SetDirty(source);
+                            }
+                            UMA.Editors.GUIHelper.EndVerticalPadded();
+                        }
+                       // EditorGUILayout.EndHorizontal();
                     }
                     EditorGUI.indentLevel--;
                 }

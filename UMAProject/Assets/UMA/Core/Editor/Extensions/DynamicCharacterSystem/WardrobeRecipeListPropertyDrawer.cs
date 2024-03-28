@@ -46,8 +46,11 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
 				if (evt.type != EventType.Layout)
-					Event.current.Use();//stops the Mismatched LayoutGroup errors
-				return;
+                {
+                    Event.current.Use();//stops the Mismatched LayoutGroup errors
+                }
+
+                return;
 			}
 
 			if (evt.type == EventType.DragUpdated)
@@ -148,9 +151,10 @@ namespace UMA.CharacterSystem.Editors
 			List<Object> droppedItems = new List<Object>();
 
 			var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
-			foreach (var assetFile in assetFiles)
+            for (int i = 0; i < assetFiles.Length; i++)
 			{
-				var tempRecipe = AssetDatabase.LoadAssetAtPath(assetFile, typeof(UMAWardrobeRecipe)) as UMAWardrobeRecipe;
+                string assetFile = assetFiles[i];
+                var tempRecipe = AssetDatabase.LoadAssetAtPath(assetFile, typeof(UMAWardrobeRecipe)) as UMAWardrobeRecipe;
 				if (tempRecipe)
 				{
 					droppedItems.Add(tempRecipe);
@@ -160,9 +164,11 @@ namespace UMA.CharacterSystem.Editors
 			{
 				ProcessDropeedRecipes(thisRecipesProp, droppedItems.ToArray());
 			}
-			foreach (var subFolder in System.IO.Directory.GetDirectories(path))
+            string[] array = System.IO.Directory.GetDirectories(path);
+            for (int i = 0; i < array.Length; i++)
 			{
-				RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'), thisRecipesProp);
+                string subFolder = array[i];
+                RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'), thisRecipesProp);
 			}
 		}
 
@@ -321,8 +327,10 @@ namespace UMA.CharacterSystem.Editors
 						{
 							//the _recipe value is no longer serialized so we need to get it from AssetDatabase
 							if (foundRecipe != null)
-								UMAAssetIndexer.Instance.EvilAddAsset(foundRecipe.GetType(), foundRecipe);
-						}
+                            {
+                                UMAAssetIndexer.Instance.EvilAddAsset(foundRecipe.GetType(), foundRecipe);
+                            }
+                        }
 					}
                     if (GUILayout.Button("0/1",GUILayout.Width(30)))
                     {
@@ -376,9 +384,10 @@ namespace UMA.CharacterSystem.Editors
 			var foundWardrobeGUIDS = AssetDatabase.FindAssets("t:UMAWardrobeRecipe " + recipeName);
 			if (foundWardrobeGUIDS.Length > 0)
 			{
-				foreach (string guid in foundWardrobeGUIDS)
+                for (int i = 0; i < foundWardrobeGUIDS.Length; i++)
 				{
-					var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeRecipe>(AssetDatabase.GUIDToAssetPath(guid));
+                    string guid = foundWardrobeGUIDS[i];
+                    var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeRecipe>(AssetDatabase.GUIDToAssetPath(guid));
 					if (tempAsset.name == recipeName)
 					{
 						foundRecipe = tempAsset;
@@ -392,9 +401,10 @@ namespace UMA.CharacterSystem.Editors
 				var foundWardrobeCollectionGUIDS = AssetDatabase.FindAssets("t:UMAWardrobeCollection " + recipeName);
 				if (foundWardrobeCollectionGUIDS.Length > 0)
 				{
-					foreach (string guid in foundWardrobeCollectionGUIDS)
+                    for (int i = 0; i < foundWardrobeCollectionGUIDS.Length; i++)
 					{
-						var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeCollection>(AssetDatabase.GUIDToAssetPath(guid));
+                        string guid = foundWardrobeCollectionGUIDS[i];
+                        var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeCollection>(AssetDatabase.GUIDToAssetPath(guid));
 						if (tempAsset.name == recipeName)
 						{
 							foundRecipe = tempAsset;

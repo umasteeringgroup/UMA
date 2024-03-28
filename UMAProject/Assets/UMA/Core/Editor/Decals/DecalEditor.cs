@@ -242,7 +242,9 @@ namespace UMA
                 foreach (DecalDefinition d in decalManager.Decals)
                 {
                     if (d.DecalMeshObject != null)
-                    GameObject.DestroyImmediate(d.DecalMeshObject);
+                    {
+                        GameObject.DestroyImmediate(d.DecalMeshObject);
+                    }
                 }
                 decalManager.Decals.Clear();
             }
@@ -295,7 +297,9 @@ namespace UMA
         void SceneWindow(int WindowID)
         {
             if (decalIndicator == null)
+            {
                 return;
+            }
 
             float val = decalIndicator.transform.localScale.x;
 
@@ -435,7 +439,9 @@ namespace UMA
                     if (cd.material.name == decalMaterial.name)
                     {
                         if (cd.InitialIndex > MaxIndex)
+                        {
                             MaxIndex = cd.InitialIndex;
+                        }
                     }
                 }
 
@@ -572,8 +578,15 @@ namespace UMA
             for (int i = 0; i < theMesh.subMeshCount; i++)
             {
                 var smd = theMesh.GetSubMesh(i);
-                if (hit.triangleIndex < smd.indexStart) continue;
-                if (hit.triangleIndex >= (smd.indexStart + (smd.indexCount/3))) continue;
+                if (hit.triangleIndex < smd.indexStart)
+                {
+                    continue;
+                }
+
+                if (hit.triangleIndex >= (smd.indexStart + (smd.indexCount/3)))
+                {
+                    continue;
+                }
 
                 // should fall through for only ONE submesh.
                 int[] tris = theMesh.GetTriangles(i);
@@ -678,7 +691,11 @@ namespace UMA
                 int boneNum = b.boneIndex;
                 int boneHash = UMAUtils.StringToHash(boneNames[boneNum]);
 
-                if (!boneDictionary.ContainsKey(boneHash)) boneDictionary.Add(boneHash, 0.0f);
+                if (!boneDictionary.ContainsKey(boneHash))
+                {
+                    boneDictionary.Add(boneHash, 0.0f);
+                }
+
                 boneDictionary[boneHash] += b.weight * percentage;
 
 #endif
@@ -703,7 +720,9 @@ namespace UMA
                 RaycastHit hit;
                 PhysicsScene physcene = PhysicsSceneExtensions.GetPhysicsScene(sceneView.CurrentScene);
                 if (!physcene.Raycast(ray.origin, ray.direction, out hit, 512.0f, LayerMask.GetMask("Player")))
+                {
                     return;
+                }
 
                 if (decalIndicator != null)
                 {
@@ -783,9 +802,14 @@ namespace UMA
             foreach (Transform t in root.transform)
             {
                 if (t.name == "Sphere")
+                {
                     PlanesMarker = t.gameObject;
+                }
+
                 if (t.name == "VertexMarker")
+                {
                     VertexMarker = t.gameObject;
+                }
             }
 
             if (decalIndicator != null)

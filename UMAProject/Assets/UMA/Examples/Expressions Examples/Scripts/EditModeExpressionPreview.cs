@@ -14,24 +14,42 @@ namespace UMA.PoseTools
 
 		void OnRenderObject()
 		{
-			if (expressionSet == null) return;
-			if (skeleton == null) return;
+			if (expressionSet == null)
+            {
+                return;
+            }
 
-			expressionSet.RestoreBones(skeleton);
+            if (skeleton == null)
+            {
+                return;
+            }
+
+            expressionSet.RestoreBones(skeleton);
 		}
 
 		void Update()
 		{
-			if (expressionSet == null) return;
-			if (skeletonRoot == null) return;
-			if (expressionPlayer == null)
+			if (expressionSet == null)
+            {
+                return;
+            }
+
+            if (skeletonRoot == null)
+            {
+                return;
+            }
+
+            if (expressionPlayer == null)
 			{
 				expressionPlayer = gameObject.GetComponent<ExpressionPlayer>();
 				if (expressionPlayer == null)
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogWarning("Couldn't find expression player to preview!");
-					return;
+                    {
+                        Debug.LogWarning("Couldn't find expression player to preview!");
+                    }
+
+                    return;
 				}
 			}
 
@@ -58,9 +76,12 @@ namespace UMA.PoseTools
 					weight = -weight;
 					pose = expressionSet.posePairs[i].inverse;
 				}
-				if (pose == null) continue;
+				if (pose == null)
+                {
+                    continue;
+                }
 
-				pose.ApplyPose(skeleton, weight);
+                pose.ApplyPose(skeleton, weight);
 			}
 		}
 	}

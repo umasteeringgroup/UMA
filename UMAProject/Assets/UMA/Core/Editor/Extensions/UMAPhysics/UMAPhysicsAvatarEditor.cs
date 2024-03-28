@@ -53,8 +53,10 @@ namespace UMA.Dynamics.Editors
 			for (int i = 8; i < 32; i++)
 			{
 				if (i != ragdollLayer.intValue)
-					Physics.IgnoreLayerCollision(ragdollLayer.intValue, i, true);
-			}
+                {
+                    Physics.IgnoreLayerCollision(ragdollLayer.intValue, i, true);
+                }
+            }
 
 			Physics.IgnoreLayerCollision(ragdollLayer.intValue, ragdollLayer.intValue, false);
 		}

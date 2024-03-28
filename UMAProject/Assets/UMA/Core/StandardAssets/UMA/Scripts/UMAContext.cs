@@ -111,10 +111,6 @@ namespace UMA
 
 		public override RaceData GetRaceWithUpdate(int nameHash, bool allowUpdate)
 		{
-			if (raceLibrary is DynamicRaceLibrary)
-			{
-				return (raceLibrary as DynamicRaceLibrary).GetRace(nameHash, allowUpdate);
-			}
 			return raceLibrary.GetRace(nameHash);
 		}
 
@@ -129,10 +125,6 @@ namespace UMA
 
 		public override RaceData[] GetAllRacesBase()
 		{
-			if (raceLibrary is DynamicRaceLibrary)
-			{
-				return (raceLibrary as DynamicRaceLibrary).GetAllRacesBase();
-			}
 			return raceLibrary.GetAllRaces();
 		}
 
@@ -206,12 +198,16 @@ namespace UMA
 		public override bool HasSlot(string name)
 		{
 			if (slotLibrary.HasSlot(name))
-				return true;
-			else
+            {
+                return true;
+            }
+            else
 			{
 				if (UMAAssetIndexer.Instance.GetAssetItem<SlotDataAsset>(name) != null)
-					return true;
-			}
+                {
+                    return true;
+                }
+            }
 
 			return false;
 		}
@@ -223,12 +219,16 @@ namespace UMA
 		public override bool HasSlot(int nameHash)
 		{
 			if (slotLibrary.HasSlot(nameHash))
-				return true;
-			else
+            {
+                return true;
+            }
+            else
 			{
 				if (UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(nameHash) != null)
-					return true;
-			}
+                {
+                    return true;
+                }
+            }
 
 			return false;
 		}
@@ -356,8 +356,11 @@ namespace UMA
 		public override string GetCharacterRecipe(string filename)
 		{
 			if (dynamicCharacterSystem.CharacterRecipes.ContainsKey(filename))
-				return dynamicCharacterSystem.CharacterRecipes[filename];
-			return "";
+            {
+                return dynamicCharacterSystem.CharacterRecipes[filename];
+            }
+
+            return "";
 		}
 
 		public override List<string> GetRecipeFiles()
@@ -370,8 +373,11 @@ namespace UMA
 		public override bool HasRecipe(string Name)
 		{
 			if (dynamicCharacterSystem == null)
-				return false;
-			return dynamicCharacterSystem.RecipeIndex.ContainsKey(Name);
+            {
+                return false;
+            }
+
+            return dynamicCharacterSystem.RecipeIndex.ContainsKey(Name);
 		}
 
 		/// <summary>

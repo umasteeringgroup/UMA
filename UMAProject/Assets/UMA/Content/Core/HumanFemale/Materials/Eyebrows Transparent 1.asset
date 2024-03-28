@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: Eyebrows Transparent 1
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: 0ef6f9decdc3afb4c8c48dfc2d99713e, type: 2}
+  _material: {fileID: 2100000, guid: 0ef6f9decdc3afb4c8c48dfc2d99713e, type: 2}
+  srpMaterials: []
+  secondPass: {fileID: 0}
   materialType: 1
   channels:
   - channelType: 0
@@ -39,3 +41,5 @@ MonoBehaviour:
   shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

@@ -27,8 +27,11 @@ namespace UMA.Editors
 			try
 			{
 				if (_m_SerializedObject == null)
-					_m_SerializedObject = typeof(ReorderableList).GetField("m_SerializedObject", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-				_m_SerializedObject.SetValue(this, obj);
+                {
+                    _m_SerializedObject = typeof(ReorderableList).GetField("m_SerializedObject", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                }
+
+                _m_SerializedObject.SetValue(this, obj);
 			}
 			catch
 			{
@@ -51,10 +54,17 @@ namespace UMA.Editors
 														  ReorderableList.ChangedCallbackDelegate onChangedCallback = null, ReorderableList.ReorderCallbackDelegate onReorderCallback = null, ReorderableList.CanRemoveCallbackDelegate onCanRemoveCallback = null,
 														  ReorderableList.AddDropdownCallbackDelegate onAddDropdownCallback = null)
 		{
-			if (property == null) throw new System.ArgumentNullException("property");
-			if (!property.isArray) throw new System.ArgumentException("SerializedProperty must be a property for an Array or List", "property");
+			if (property == null)
+            {
+                throw new System.ArgumentNullException("property");
+            }
 
-			int hash = GetPropertyHash(property);
+            if (!property.isArray)
+            {
+                throw new System.ArgumentException("SerializedProperty must be a property for an Array or List", "property");
+            }
+
+            int hash = GetPropertyHash(property);
 			CachedReorderableList lst;
 			if (_lstCache.TryGetValue(hash, out lst))
 			{
@@ -82,17 +92,25 @@ namespace UMA.Editors
 
 		public static int GetPropertyHash(SerializedProperty property)
 		{
-			if (property == null) throw new System.ArgumentNullException("property");
-			if (property.serializedObject.targetObject == null)
-				return 0;
+			if (property == null)
+            {
+                throw new System.ArgumentNullException("property");
+            }
 
-			var spath = property.propertyPath;
+            if (property.serializedObject.targetObject == null)
+            {
+                return 0;
+            }
+
+            var spath = property.propertyPath;
 
 			int num = property.serializedObject.targetObject.GetInstanceID() ^ spath.GetHashCode();
 			if (property.propertyType == SerializedPropertyType.ObjectReference)
-				num ^= property.objectReferenceInstanceIDValue;
+            {
+                num ^= property.objectReferenceInstanceIDValue;
+            }
 
-			return num;
+            return num;
 		}
 
 		#endregion

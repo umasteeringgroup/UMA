@@ -99,7 +99,10 @@ public class InteractiveUMAWindow : SceneView
         CameraMode currentMode = this.cameraMode;
 
         if (currentMode.drawMode == newMode)
+        {
             return;
+        }
+
         cameraMode = SceneView.GetBuiltinCameraMode(newMode);
     }
 
@@ -250,7 +253,9 @@ public class InteractiveUMAWindow : SceneView
     public Ray GUIPointToWorldRay(Vector2 position, float startZ = float.NegativeInfinity)
     {
         if (float.IsNegativeInfinity(startZ))
+        {
             startZ = camera.nearClipPlane;
+        }
 
         Vector2 screenPixelPos = GUIPointToScreenPixelCoordinate(position);
         Rect viewport = camera.pixelRect;

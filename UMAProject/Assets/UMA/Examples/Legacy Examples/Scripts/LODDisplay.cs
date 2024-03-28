@@ -34,7 +34,9 @@ namespace UMA.Examples
             else
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogWarning("No LOD Display prefab set on " + gameObject.name);
+                }
             }
         }
 

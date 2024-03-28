@@ -1,5 +1,6 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEditor;
 using UnityEditorInternal;
 using System.Collections.Generic;
@@ -45,9 +46,10 @@ namespace UMA.Editors
 		{
 			EditorApplication.update -= DoDelayedSave;
 			if (EditorUMAContextBase != null)
-				DestroyEditorUMAContextBase();
-
-		}
+            {
+                DestroyEditorUMAContextBase();
+            }
+        }
 
 		void DoDelayedSave()
 		{
@@ -77,9 +79,12 @@ namespace UMA.Editors
 		public override void OnInspectorGUI()
 		{
 			if (lastActionTime == 0)
-				lastActionTime = Time.realtimeSinceStartup;
+            {
+                lastActionTime = Time.realtimeSinceStartup;
+            }
 
-			race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
+			EditorGUI.BeginChangeCheck();
+            race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
 			race.umaTarget = (UMA.RaceData.UMATarget)EditorGUILayout.EnumPopup(new GUIContent("UMA Target", "The Mecanim animation rig type."), race.umaTarget);
 			race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
 			race.TPose = EditorGUILayout.ObjectField(new GUIContent("T-Pose", "The UMA T-Pose asset can be created by selecting the race fbx and choosing the Extract T-Pose dropdown. Only needs to be done once per race."), race.TPose, typeof(UmaTPose), false) as UmaTPose;
@@ -89,14 +94,9 @@ namespace UMA.Editors
 			EditorGUILayout.Space();
 
 			SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
-			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(dnaConverterListprop, true);
-			if(EditorGUI.EndChangeCheck()) {
-				serializedObject.ApplyModifiedProperties();
-			}
 
 			SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");
-			EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(dnaRanges, true);
 			if(EditorGUI.EndChangeCheck()) {
 				serializedObject.ApplyModifiedProperties();
@@ -123,6 +123,7 @@ namespace UMA.Editors
 			try {
 				PreInspectorGUI(ref _needsUpdate);
 				if(_needsUpdate == true){
+					_needsUpdate = false;
 						DoUpdate();
 				}
 			}catch (UMAResourceNotFoundException e){
@@ -133,13 +134,17 @@ namespace UMA.Editors
 			{
 				doSave = true;
 				lastActionTime = Time.realtimeSinceStartup;
+				UMAAssetIndexer.RebuildUMAS(SceneManager.GetActiveScene());
 			}
 		}
 
 		/// <summary>
 		/// Add to this method in extender editors if you need to do anything extra when updating the data.
 		/// </summary>
-		protected virtual void DoUpdate() { }
+		protected virtual void DoUpdate() 
+		{ 		
+
+		}
 
 		#region DCS functions
 		// Drop area for Backwards Compatible Races
@@ -165,8 +170,11 @@ namespace UMA.Editors
 					AddRaceDataAsset(tempRaceDataAsset, crossCompatibilitySettingsData);
 				}
 				if (Event.current.type != EventType.Layout)
-					Event.current.Use();//stops the Mismatched LayoutGroup errors
-				return;
+                {
+                    Event.current.Use();//stops the Mismatched LayoutGroup errors
+                }
+
+                return;
 			}
 			if (evt.type == EventType.DragUpdated)
 			{
@@ -224,15 +232,19 @@ namespace UMA.Editors
 		private void AddRaceDataAsset(RaceData raceDataAsset, SerializedProperty crossCompatibilitySettingsData)
 		{
 			if (raceDataAsset.raceName == serializedObject.FindProperty("raceName").stringValue)
-				return;
+            {
+                return;
+            }
 
-			bool found = false;
+            bool found = false;
 			for (int i = 0; i < crossCompatibilitySettingsData.arraySize; i++)
 			{
 				var ccRaceName = crossCompatibilitySettingsData.GetArrayElementAtIndex(i).FindPropertyRelative("ccRace").stringValue;
 				if (ccRaceName == raceDataAsset.raceName)
-					found = true;
-			}
+                {
+                    found = true;
+                }
+            }
 			if (!found)
 			{
 				crossCompatibilitySettingsData.InsertArrayElementAtIndex(crossCompatibilitySettingsData.arraySize);
@@ -309,8 +321,10 @@ namespace UMA.Editors
 			{
 				var cc = race.GetCrossCompatibleRaces();
 				if (cc.Count > 0)
-					serializedObject.Update();
-			}
+                {
+                    serializedObject.Update();
+                }
+            }
 #pragma warning restore 618
 			SerializedProperty _crossCompatibilitySettings = serializedObject.FindProperty("_crossCompatibilitySettings");
 			SerializedProperty _crossCompatibilitySettingsData = _crossCompatibilitySettings.FindPropertyRelative("settingsData");
@@ -372,8 +386,11 @@ namespace UMA.Editors
 						//this could be missing- we should show that
 						var label = ccRaceName;
 						if (GetCompatibleRaceData(ccRaceName) == null)
-							label += " (missing)";
-						GUIHelper.FoldoutBar(ref _BCFoldouts[i], label, out del);
+                        {
+                            label += " (missing)";
+                        }
+
+                        GUIHelper.FoldoutBar(ref _BCFoldouts[i], label, out del);
 						if (del)
 						{
 							crossCompatibleSettingsToDelete.Add(i);
@@ -490,8 +507,10 @@ namespace UMA.Editors
 							for (int ccsd = 0; ccsd < thisCCSettings.arraySize; ccsd++)
 							{
 								if (DrawCCUISetting(ccsd, thisCCSettings, ccSlotsNamesList))
-									serializedObject.ApplyModifiedProperties();
-							}
+                                {
+                                    serializedObject.ApplyModifiedProperties();
+                                }
+                            }
 
 						}
 						else

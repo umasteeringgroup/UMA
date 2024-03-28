@@ -33,10 +33,16 @@ namespace UMA.CharacterSystem
 		{
 			recipeType = "DynamicCharacterAvatar";
 			if (customSaveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.useDefaults))
-				customSaveOptions = dca.defaultSaveOptions;
-			if (recipeName == "")
-				recipeName = dca.gameObject.name;
-			recipeString = JsonUtility.ToJson(new DCSPackRecipe(dca, recipeName, "DynamicCharacterAvatar", customSaveOptions));
+            {
+                customSaveOptions = dca.defaultSaveOptions;
+            }
+
+            if (recipeName == "")
+            {
+                recipeName = dca.gameObject.name;
+            }
+
+            recipeString = JsonUtility.ToJson(new DCSPackRecipe(dca, recipeName, "DynamicCharacterAvatar", customSaveOptions));
 		}
 
 		#endregion
@@ -52,8 +58,11 @@ namespace UMA.CharacterSystem
 		private bool CopyFromUTR(UMATextRecipe recipeToCopyFrom)
 		{
 			if (recipeToCopyFrom.recipeType != "DynamicCharacterAvatar" || recipeToCopyFrom.GetType() != typeof(UMATextRecipe))
-				return false;
-			recipeType = "DynamicCharacterAvatar";
+            {
+                return false;
+            }
+
+            recipeType = "DynamicCharacterAvatar";
 			var recipeModel = JsonUtility.FromJson<DCSPackRecipe>(recipeToCopyFrom.recipeString);
 			recipeModel.packedRecipeType = "DynamicCharacterAvatar";
 			recipeString = JsonUtility.ToJson(recipeModel);
@@ -73,16 +82,22 @@ namespace UMA.CharacterSystem
 			if ((recipeString != null) && (recipeString.Length > 0))
 			{
 				if (RecipeHasWardrobeSet(recipeString))
-					activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
-				else
+                {
+                    activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
+                }
+                else
 				{
 					if (Debug.isDebugBuild)
-						Debug.LogWarning("[UMADynamicCharacterAvatar] recipe did not have wardrobe set");
-				}
+                    {
+                        Debug.LogWarning("[UMADynamicCharacterAvatar] recipe did not have wardrobe set");
+                    }
+                }
 				var packedRecipe = PackedLoadDCSInternal(context);
 				if (packedRecipe != null)
-				   UnpackRecipe(umaRecipe, packedRecipe, context);
-			}
+                {
+                    UnpackRecipe(umaRecipe, packedRecipe, context);
+                }
+            }
 		}
 		/*we are not going to have a create menu option for DynamicCharacterAvatar recipes I dont think
 	#if UNITY_EDITOR

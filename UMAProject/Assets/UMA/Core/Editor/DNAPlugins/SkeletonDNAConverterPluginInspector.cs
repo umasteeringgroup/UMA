@@ -63,8 +63,11 @@ namespace UMA.Editors
 			{
 				thisSkelEl = _cachedArrayElementsByIndex[i].element;
 				if (thisModObj == null)
-					thisModObj = thisSkelEl.serializedObject;
-				expandMain = false;
+                {
+                    thisModObj = thisSkelEl.serializedObject;
+                }
+
+                expandMain = false;
 				thisSkeModProp = thisSkelEl.FindPropertyRelative("_property").enumNames[thisSkelEl.FindPropertyRelative("_property").enumValueIndex];
 				if (thisSkeModProp != "")
 				{
@@ -74,22 +77,29 @@ namespace UMA.Editors
 						thisSkelEl.FindPropertyRelative("_valuesY").isExpanded = thisSkelEl.FindPropertyRelative("_valuesY").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 0f;
 						thisSkelEl.FindPropertyRelative("_valuesZ").isExpanded = thisSkelEl.FindPropertyRelative("_valuesZ").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 0f;
 						if (thisSkelEl.FindPropertyRelative("_valuesX").isExpanded || thisSkelEl.FindPropertyRelative("_valuesY").isExpanded || thisSkelEl.FindPropertyRelative("_valuesZ").isExpanded)
-							expandMain = true;
-					}
+                        {
+                            expandMain = true;
+                        }
+                    }
 					if (thisSkeModProp == "Scale")
 					{
 						thisSkelEl.FindPropertyRelative("_valuesX").isExpanded = thisSkelEl.FindPropertyRelative("_valuesX").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 1f;
 						thisSkelEl.FindPropertyRelative("_valuesY").isExpanded = thisSkelEl.FindPropertyRelative("_valuesY").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 1f;
 						thisSkelEl.FindPropertyRelative("_valuesZ").isExpanded = thisSkelEl.FindPropertyRelative("_valuesZ").FindPropertyRelative("_val").FindPropertyRelative("_value").floatValue != 1f;
 						if (thisSkelEl.FindPropertyRelative("_valuesX").isExpanded || thisSkelEl.FindPropertyRelative("_valuesY").isExpanded || thisSkelEl.FindPropertyRelative("_valuesZ").isExpanded)
-							expandMain = true;
-					}
+                        {
+                            expandMain = true;
+                        }
+                    }
 				}
 				thisSkelEl.isExpanded = expandMain;
 			}
 			if (thisModObj != null)
-				thisModObj.ApplyModifiedProperties();
-			CacheArrayElementsByIndex(true);
+            {
+                thisModObj.ApplyModifiedProperties();
+            }
+
+            CacheArrayElementsByIndex(true);
 		}
 
 		private void ResetInitialValuesToDefaults()
@@ -103,8 +113,11 @@ namespace UMA.Editors
 				{
 					thisSkelEl = _cachedArrayElementsByIndex[i].element;
 					if (thisModObj == null)
-						thisModObj = thisSkelEl.serializedObject;
-					thisSkeModProp = thisSkelEl.FindPropertyRelative("_property").enumNames[thisSkelEl.FindPropertyRelative("_property").enumValueIndex];
+                    {
+                        thisModObj = thisSkelEl.serializedObject;
+                    }
+
+                    thisSkeModProp = thisSkelEl.FindPropertyRelative("_property").enumNames[thisSkelEl.FindPropertyRelative("_property").enumValueIndex];
 					if (thisSkeModProp != "")
 					{
 						if (thisSkeModProp == "Position" || thisSkeModProp == "Rotation")
@@ -122,8 +135,11 @@ namespace UMA.Editors
 					}
 				}
 				if (thisModObj != null)
-					thisModObj.ApplyModifiedProperties();
-				CacheArrayElementsByIndex(true);
+                {
+                    thisModObj.ApplyModifiedProperties();
+                }
+
+                CacheArrayElementsByIndex(true);
 			}
 		}
 
@@ -135,22 +151,33 @@ namespace UMA.Editors
 			EditorGUI.BeginChangeCheck();
 			_searchFilterType =(searchFilterTypeOpts)EditorGUI.EnumPopup(searchTypeRect, _searchFilterType);
 			if (EditorGUI.EndChangeCheck())
-				CacheArrayElementsByIndex(true);
-		}
+            {
+                CacheArrayElementsByIndex(true);
+            }
+        }
 
 		protected override bool HandleElementSearch(int index)
 		{
 			if (elementSearchString == "" && (_searchFilterType == searchFilterTypeOpts.BoneName || _searchFilterType == searchFilterTypeOpts.DNA))
-				return true;
-			if (_searchFilterType == searchFilterTypeOpts.BoneName || _searchFilterType == searchFilterTypeOpts.AdjustBones || _searchFilterType == searchFilterTypeOpts.NonAdjustBones)
+            {
+                return true;
+            }
+
+            if (_searchFilterType == searchFilterTypeOpts.BoneName || _searchFilterType == searchFilterTypeOpts.AdjustBones || _searchFilterType == searchFilterTypeOpts.NonAdjustBones)
 			{
 				if (_searchFilterType == searchFilterTypeOpts.AdjustBones &&
 					_cachedArrayElementsByIndex[index].element.displayName.IndexOf("Adjust", StringComparison.CurrentCultureIgnoreCase) == -1)
-					return false;
-				if (_searchFilterType == searchFilterTypeOpts.NonAdjustBones &&
+                {
+                    return false;
+                }
+
+                if (_searchFilterType == searchFilterTypeOpts.NonAdjustBones &&
 					_cachedArrayElementsByIndex[index].element.displayName.IndexOf("Adjust", StringComparison.CurrentCultureIgnoreCase) > -1)
-					return false;
-				return base.HandleElementSearch(index);
+                {
+                    return false;
+                }
+
+                return base.HandleElementSearch(index);
 			}
 			else
 			{
@@ -159,12 +186,21 @@ namespace UMA.Editors
 					var thisSkelEl = _cachedArrayElementsByIndex[index].element;
 					string thisProperty = thisSkelEl.FindPropertyRelative("_property").enumNames[thisSkelEl.FindPropertyRelative("_property").enumValueIndex];
 					if (_searchFilterType == searchFilterTypeOpts.PositionModifiers && thisProperty.IndexOf("Position", StringComparison.CurrentCultureIgnoreCase) == -1)
-						return false;
-					if (_searchFilterType == searchFilterTypeOpts.RotationModifiers && thisProperty.IndexOf("Rotation", StringComparison.CurrentCultureIgnoreCase) == -1)
-						return false;
-					if (_searchFilterType == searchFilterTypeOpts.ScaleModifiers && thisProperty.IndexOf("Scale", StringComparison.CurrentCultureIgnoreCase) == -1)
-						return false;
-					return base.HandleElementSearch(index);
+                    {
+                        return false;
+                    }
+
+                    if (_searchFilterType == searchFilterTypeOpts.RotationModifiers && thisProperty.IndexOf("Rotation", StringComparison.CurrentCultureIgnoreCase) == -1)
+                    {
+                        return false;
+                    }
+
+                    if (_searchFilterType == searchFilterTypeOpts.ScaleModifiers && thisProperty.IndexOf("Scale", StringComparison.CurrentCultureIgnoreCase) == -1)
+                    {
+                        return false;
+                    }
+
+                    return base.HandleElementSearch(index);
 				}
 				else 
 				{
@@ -175,15 +211,18 @@ namespace UMA.Editors
 					SerializedProperty thisMod;
 					//int modsi;
 					bool _continue = true;
-					foreach (string xyz in XYZ)
+                    for (int i = 0; i < XYZ.Length; i++)
 					{
-						mods = thisSkelEl.FindPropertyRelative("_values" + xyz).FindPropertyRelative("_val").FindPropertyRelative("_modifyingDNA").FindPropertyRelative("_dnaEvaluators");
+                        string xyz = XYZ[i];
+                        mods = thisSkelEl.FindPropertyRelative("_values" + xyz).FindPropertyRelative("_val").FindPropertyRelative("_modifyingDNA").FindPropertyRelative("_dnaEvaluators");
 						for (int mi = 0; mi < mods.arraySize; mi++)
 						{
 							thisMod = mods.GetArrayElementAtIndex(mi);
 							if (thisMod.FindPropertyRelative("_dnaName").stringValue.IndexOf(elementSearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
-								_continue = false;
-						}
+                            {
+                                _continue = false;
+                            }
+                        }
 					}
 					if (_continue)
 					{
@@ -235,8 +274,11 @@ namespace UMA.Editors
 			string warningMessage = CanAddBoneForProp();
 			GUIContent addBtnGUI = new GUIContent("Add", "Choose the bone name and property to add first");
 			if (warningMessage != "")
-				addBtnGUI.image = _warningIcon;
-			addBtnGUI.tooltip = warningMessage;
+            {
+                addBtnGUI.image = _warningIcon;
+            }
+
+            addBtnGUI.tooltip = warningMessage;
 			EditorGUI.BeginDisabledGroup(warningMessage != "");
 			if (GUI.Button(addBtnRect,addBtnGUI))
 			{
@@ -253,8 +295,11 @@ namespace UMA.Editors
 		private string CanAddBoneForProp()
 		{
 			if (_chosenBoneNameToAdd == "")
-				return "";
-			_chosenBoneHashToAdd = UMAUtils.StringToHash(_chosenBoneNameToAdd);
+            {
+                return "";
+            }
+
+            _chosenBoneHashToAdd = UMAUtils.StringToHash(_chosenBoneNameToAdd);
 			for (int i = 0; i < _cachedArrayElementsByIndex.Count; i++)
 			{
 				var thisSkelMod = _cachedArrayElementsByIndex[i].element;

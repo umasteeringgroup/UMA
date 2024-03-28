@@ -62,9 +62,11 @@ namespace UMA
 			}
 	 
 			if (newNode.height == 0)
-				return newNode;
-	 
-			int numRectanglesToProcess = freeRectangles.Count;
+            {
+                return newNode;
+            }
+
+            int numRectanglesToProcess = freeRectangles.Count;
 			for(int i = 0; i < numRectanglesToProcess; ++i) {
 				if (SplitFreeNode(freeRectangles[i], ref newNode)) {
 					freeRectangles.RemoveAt(i);
@@ -102,9 +104,11 @@ namespace UMA
 				}
 	 
 				if (bestRectIndex == -1)
-					return;
-	 
-				PlaceRect(bestNode);
+                {
+                    return;
+                }
+
+                PlaceRect(bestNode);
 				rects.RemoveAt(bestRectIndex);
 			}
 		}
@@ -151,9 +155,11 @@ namespace UMA
 		public float Occupancy() {
 			ulong usedSurfaceArea = 0;
 			for(int i = 0; i < usedRectangles.Count; ++i)
-				usedSurfaceArea += (uint)usedRectangles[i].width * (uint)usedRectangles[i].height;
-	 
-			return (float)usedSurfaceArea / (binWidth * binHeight);
+            {
+                usedSurfaceArea += (uint)usedRectangles[i].width * (uint)usedRectangles[i].height;
+            }
+
+            return (float)usedSurfaceArea / (binWidth * binHeight);
 		}
 	 
 		Rect FindPositionForNewNodeBottomLeft(int width, int height, ref int bestY, ref int bestX) {
@@ -322,24 +328,37 @@ namespace UMA
 		/// Returns 0 if the two intervals i1 and i2 are disjoint, or the length of their overlap otherwise.
 		int CommonIntervalLength(int i1start, int i1end, int i2start, int i2end) {
 			if (i1end < i2start || i2end < i1start)
-				return 0;
-			return Mathf.Min(i1end, i2end) - Mathf.Max(i1start, i2start);
+            {
+                return 0;
+            }
+
+            return Mathf.Min(i1end, i2end) - Mathf.Max(i1start, i2start);
 		}
 	 
 		int ContactPointScoreNode(int x, int y, int width, int height) {
 			int score = 0;
 	 
 			if (x == 0 || x + width == binWidth)
-				score += height;
-			if (y == 0 || y + height == binHeight)
-				score += width;
-	 
-			for(int i = 0; i < usedRectangles.Count; ++i) {
+            {
+                score += height;
+            }
+
+            if (y == 0 || y + height == binHeight)
+            {
+                score += width;
+            }
+
+            for (int i = 0; i < usedRectangles.Count; ++i) {
 				if (usedRectangles[i].x == x + width || usedRectangles[i].x + usedRectangles[i].width == x)
-					score += CommonIntervalLength((int)usedRectangles[i].y, (int)usedRectangles[i].y + (int)usedRectangles[i].height, y, y + height);
-				if (usedRectangles[i].y == y + height || usedRectangles[i].y + usedRectangles[i].height == y)
-					score += CommonIntervalLength((int)usedRectangles[i].x, (int)usedRectangles[i].x + (int)usedRectangles[i].width, x, x + width);
-			}
+                {
+                    score += CommonIntervalLength((int)usedRectangles[i].y, (int)usedRectangles[i].y + (int)usedRectangles[i].height, y, y + height);
+                }
+
+                if (usedRectangles[i].y == y + height || usedRectangles[i].y + usedRectangles[i].height == y)
+                {
+                    score += CommonIntervalLength((int)usedRectangles[i].x, (int)usedRectangles[i].x + (int)usedRectangles[i].width, x, x + width);
+                }
+            }
 			return score;
 		}
 	 
@@ -379,9 +398,11 @@ namespace UMA
 			// Test with SAT if the rectangles even intersect.
 			if (usedNode.x >= freeNode.x + freeNode.width || usedNode.x + usedNode.width <= freeNode.x ||
 				usedNode.y >= freeNode.y + freeNode.height || usedNode.y + usedNode.height <= freeNode.y)
-				return false;
-	 
-			if (usedNode.x < freeNode.x + freeNode.width && usedNode.x + usedNode.width > freeNode.x) {
+            {
+                return false;
+            }
+
+            if (usedNode.x < freeNode.x + freeNode.width && usedNode.x + usedNode.width > freeNode.x) {
 				// New node at the top side of the used node.
 				if (usedNode.y > freeNode.y && usedNode.y < freeNode.y + freeNode.height) {
 					Rect newNode = freeNode;
@@ -420,7 +441,8 @@ namespace UMA
 	 
 		void PruneFreeList() {
 			for(int i = 0; i < freeRectangles.Count; ++i)
-				for(int j = i+1; j < freeRectangles.Count; ++j) {
+            {
+                for (int j = i+1; j < freeRectangles.Count; ++j) {
 					if (IsContainedIn(freeRectangles[i], freeRectangles[j])) {
 						freeRectangles.RemoveAt(i);
 						--i;
@@ -431,7 +453,8 @@ namespace UMA
 						--j;
 					}
 				}
-		}
+            }
+        }
 	 
 		bool IsContainedIn(Rect a, Rect b) {
 			return a.x >= b.x && a.y >= b.y 

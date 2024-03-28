@@ -56,7 +56,10 @@ namespace UMA
             {
                 foreach (UMAProperty up in umpb.shaderProperties)
                 {
-                    if (up == null) continue;
+                    if (up == null)
+                    {
+                        continue;
+                    }
 
                     GUIHelper.BeginVerticalIndented(3, new Color(0.75f, 0.75f, 1f));
                     if (dark) 
@@ -71,9 +74,10 @@ namespace UMA
                     }
 
                     if (up.OnGUI())
+                    {
                         delme = up;
+                    }
 
-                     
                     GUIHelper.EndVerticalPadded(5);
 
                     GUIHelper.EndVerticalIndented();

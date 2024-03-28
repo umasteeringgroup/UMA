@@ -37,17 +37,27 @@ public struct ColorDef
 }
 
 [Serializable]
+public struct ShaderParmDef
+{
+    public string name;
+    public int type;
+    public uint value;   // could be a float, int, or color
+}
+
+[Serializable]
 public struct SharedColorDef
 {
     public string name;
     public int count;
     public ColorDef[] channels;
+    public string[] shaderParms;
 
     public SharedColorDef(string Name, int ChannelCount)
     {
         name = Name;
         count = ChannelCount;
         channels = new ColorDef[0];
+        shaderParms = new string[0];
     }
 
     public void SetChannels(ColorDef[] Channels)
@@ -99,14 +109,29 @@ public struct AvatarDefinition
     {
         List<SharedColorDef> newColors = new List<SharedColorDef>();
 
-        foreach (var col in CurrentColors)
+        for (int i1 = 0; i1 < CurrentColors.Length; i1++)
         {
+            OverlayColorData col = CurrentColors[i1];
             SharedColorDef scd = new SharedColorDef(col.name, col.channelCount);
             List<ColorDef> colorchannels = new List<ColorDef>();
 
+            if (col.PropertyBlock != null)
+            {
+                List<string> shaderParms = new List<string>();
+                foreach (UMAProperty prop in col.PropertyBlock.shaderProperties)
+                {
+                    string property = prop.ToString();
+                }
+                scd.shaderParms = shaderParms.ToArray();
+            }
+
             for (int i = 0; i < col.channelCount; i++)
             {
-                if (col.isDefault(i)) continue;
+                if (col.isDefault(i))
+                {
+                    continue;
+                }
+
                 Color Mask = col.channelMask[i];
                 Color Additive = col.channelAdditiveMask[i];
                 colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
@@ -141,8 +166,9 @@ public struct AvatarDefinition
     public void SetDNA(UMAPredefinedDNA dna)
     {
         List<DnaDef> defs = new List<DnaDef>();
-        foreach(var d in dna.PreloadValues)
+        for (int i = 0; i < dna.PreloadValues.Count; i++)
         {
+            DnaValue d = dna.PreloadValues[i];
             defs.Add(new DnaDef(d.Name, d.Value));
         }
         Dna = defs.ToArray();
@@ -189,8 +215,9 @@ public struct AvatarDefinition
         if (Wardrobe != null)
         {
             theString.Append("W:");
-            foreach (string w in Wardrobe)
+            for (int i = 0; i < Wardrobe.Length; i++)
             {
+                string w = Wardrobe[i];
                 theString.Append(w);
                 theString.Append(",");
             }
@@ -199,15 +226,17 @@ public struct AvatarDefinition
 
         if (Colors != null)
         {
-            foreach(SharedColorDef scd in Colors)
+            for (int i = 0; i < Colors.Length; i++)
             {
+                SharedColorDef scd = Colors[i];
                 theString.Append("C:");
                 theString.Append(scd.name);
                 theString.Append(',');
                 theString.Append(scd.count);
                 theString.Append('=');
-                foreach (ColorDef c in scd.channels)
+                for (int i1 = 0; i1 < scd.channels.Length; i1++)
                 {
+                    ColorDef c = scd.channels[i1];
                     theString.Append(c.chan);
                     theString.Append(',');
                     theString.Append(c.mCol.ToString("X"));
@@ -218,6 +247,15 @@ public struct AvatarDefinition
                     }
                     theString.Append(';');
                 }
+                if (scd.shaderParms != null)
+                {
+                    for (int i2 = 0; i2 < scd.shaderParms.Length; i2++)
+                    {
+                        theString.Append("P:");
+                        theString.Append(Base64Encode(scd.shaderParms[i2]));
+                        theString.Append(';');
+                    }
+                }
                 theString.Append(seperator);
             }
         }
@@ -225,8 +263,9 @@ public struct AvatarDefinition
         if (Dna != null)
         {
             theString.Append("D:");
-            foreach(DnaDef d in Dna)
+            for (int i = 0; i < Dna.Length; i++)
             {
+                DnaDef d = Dna[i];
                 theString.Append(d.Name);
                 theString.Append('=');
                 theString.Append(d.val.ToString("X"));
@@ -245,9 +284,14 @@ public struct AvatarDefinition
         string[] SplitLines = compressed.Split(splitter);
         List<SharedColorDef> Colors = new List<SharedColorDef>();
 
-        foreach (string s in SplitLines)
+        for (int i = 0; i < SplitLines.Length; i++)
         {
-            if (String.IsNullOrEmpty(s)) continue;
+            string s = SplitLines[i];
+            if (String.IsNullOrEmpty(s))
+            {
+                continue;
+            }
+
             switch (s[0])
             {
                 case 'R':
@@ -266,6 +310,7 @@ public struct AvatarDefinition
                     if (SharedColor.Length > 1)
                     {
                         SharedColorDef scd = new SharedColorDef();
+                        List<string> ShaderParms = new List<string>();
                         splitter[0] = ',';
                         string[] maincol = SharedColor[0].Split(splitter, StringSplitOptions.RemoveEmptyEntries);
                         if (maincol.Length > 1)
@@ -280,8 +325,16 @@ public struct AvatarDefinition
                             {
                                 if (ColorDefs.Length > 0)
                                 {
-                                    foreach (string c in ColorDefs)
+                                    for (int i1 = 0; i1 < ColorDefs.Length; i1++)
                                     {
+                                        if (String.IsNullOrEmpty(ColorDefs[i1]))
+                                            continue;
+                                        if (ColorDefs[i1][0] == 'P')
+                                        {
+                                            ShaderParms.Add(Base64Decode(ColorDefs[i1].Substring(2)));
+                                            continue;
+                                        }
+                                        string c = ColorDefs[i1];
                                         splitter[0] = ',';
                                         string[] vals = c.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
                                         if (vals.Length == 2)
@@ -299,6 +352,7 @@ public struct AvatarDefinition
 
                             }
                             scd.channels = theColors.ToArray();
+                            scd.shaderParms = ShaderParms.ToArray();
                             Colors.Add(scd);
                         }
                     }
@@ -310,8 +364,9 @@ public struct AvatarDefinition
                     if (Dna.Length > 0)
                     {
                         List<DnaDef> theDna = new List<DnaDef>();
-                        foreach (string d in Dna)
+                        for (int i1 = 0; i1 < Dna.Length; i1++)
                         {
+                            string d = Dna[i1];
                             splitter[0] = '=';
                             string[] dnaval = d.Split(splitter, StringSplitOptions.RemoveEmptyEntries);
                             if (dnaval.Length > 1)
@@ -341,6 +396,18 @@ public struct AvatarDefinition
     {
         return FromCompressedString(Encoding.ASCII.GetString(asciiString));
     }
+    public static string Base64Encode(string plainText)
+    {
+        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+        return System.Convert.ToBase64String(plainTextBytes);
+    }
+
+    public static string Base64Decode(string base64EncodedData)
+    {
+        var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
+        return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+    }
+
 }
 
 [Serializable]

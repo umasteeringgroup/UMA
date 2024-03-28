@@ -10,6 +10,7 @@ namespace UMA
 	{
 		public UMAContextBase context;
 		public UMAData umaData;
+		[Tooltip("The default renderer asset to use for this avatar. This lets you set parameters for the generated SkinnedMeshRenderer")]
 		public UMARendererAsset defaultRendererAsset; // this can be null if no default renderers need to be applied.
 
 		/// <summary>
@@ -83,14 +84,41 @@ namespace UMA
 				umaData.umaGenerator = umaGenerator;
 			}
 			
-			if (CharacterCreated != null) umaData.CharacterCreated = CharacterCreated;
-			if (CharacterBegun != null) umaData.CharacterBegun = CharacterBegun;
-			if (CharacterDestroyed != null) umaData.CharacterDestroyed = CharacterDestroyed;
-			if (CharacterUpdated != null) umaData.CharacterUpdated = CharacterUpdated;
-			if (CharacterDnaUpdated != null) umaData.CharacterDnaUpdated = CharacterDnaUpdated;
-			if (AnimatorStateSaved != null) umaData.AnimatorStateSaved = AnimatorStateSaved;
-			if (AnimatorStateRestored != null) umaData.AnimatorStateRestored = AnimatorStateRestored;
-		}
+			if (CharacterCreated != null)
+            {
+                umaData.CharacterCreated = CharacterCreated;
+            }
+
+            if (CharacterBegun != null)
+            {
+                umaData.CharacterBegun = CharacterBegun;
+            }
+
+            if (CharacterDestroyed != null)
+            {
+                umaData.CharacterDestroyed = CharacterDestroyed;
+            }
+
+            if (CharacterUpdated != null)
+            {
+                umaData.CharacterUpdated = CharacterUpdated;
+            }
+
+            if (CharacterDnaUpdated != null)
+            {
+                umaData.CharacterDnaUpdated = CharacterDnaUpdated;
+            }
+
+            if (AnimatorStateSaved != null)
+            {
+                umaData.AnimatorStateSaved = AnimatorStateSaved;
+            }
+
+            if (AnimatorStateRestored != null)
+            {
+                umaData.AnimatorStateRestored = AnimatorStateRestored;
+            }
+        }
 
 		/// <summary>
 		/// Load a UMA recipe into the avatar.
@@ -107,8 +135,12 @@ namespace UMA
 		/// <param name="umaAdditionalRecipes">Additional recipes.</param>
 		public virtual void Load(UMARecipeBase umaRecipe, params UMARecipeBase[] umaAdditionalRecipes)
 		{
-			if (umaRecipe == null) return;
-			if (umaData == null)
+			if (umaRecipe == null)
+            {
+                return;
+            }
+
+            if (umaData == null)
 			{
 				Initialize();
 			}

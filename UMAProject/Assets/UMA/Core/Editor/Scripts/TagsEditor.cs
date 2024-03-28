@@ -49,8 +49,12 @@ namespace UMA
             foreach(TypePair t in UMAEditorUtilities.FriendlyNames)
             {
                 var objs = Resources.FindObjectsOfTypeAll(t.Key);
-                if (objs == null) continue;
-                foreach(var o in objs)
+                if (objs == null)
+                {
+                    continue;
+                }
+
+                foreach (var o in objs)
                 {
                     Items.Enqueue(new ProcessItem(t, o, pFunc));
                 }

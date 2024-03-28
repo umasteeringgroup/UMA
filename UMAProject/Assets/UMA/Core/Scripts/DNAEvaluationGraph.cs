@@ -81,13 +81,21 @@ namespace UMA
 			//if the two instance are the same as one another 
 			//rather than whether two curves have the same keys so...
 			if (this._graph == null && animCurve == null)
-				return true;
-			if (this._graph == null && animCurve != null)
-				return false;
-			if (this._graph != null && animCurve == null)
-				return false;
+            {
+                return true;
+            }
 
-			if (this._graph.keys.Length == animCurve.keys.Length)
+            if (this._graph == null && animCurve != null)
+            {
+                return false;
+            }
+
+            if (this._graph != null && animCurve == null)
+            {
+                return false;
+            }
+
+            if (this._graph.keys.Length == animCurve.keys.Length)
 			{
 				if (this._graph.keys.Length == 0 && animCurve.keys.Length == 0)
 				{
@@ -106,8 +114,10 @@ namespace UMA
 					}
 				}
 				if (matchingKeys == this._graph.keys.Length)
-					return true;
-			}
+                {
+                    return true;
+                }
+            }
 			return false;
 		}
 
@@ -154,15 +164,21 @@ namespace UMA
 		private static int Compare(object x, object y)
 		{
 			if (((System.Object)x) == null && ((System.Object)y) == null)
-				return 1;
+            {
+                return 1;
+            }
 
-			if (((System.Object)x) == null && ((System.Object)y) != null)
-				return 0;
+            if (((System.Object)x) == null && ((System.Object)y) != null)
+            {
+                return 0;
+            }
 
-			if (((System.Object)x) != null && ((System.Object)y) == null)
-				return 0;
+            if (((System.Object)x) != null && ((System.Object)y) == null)
+            {
+                return 0;
+            }
 
-			var xo = (x as DNAEvaluationGraph);
+            var xo = (x as DNAEvaluationGraph);
 
 			var yo = (y as DNAEvaluationGraph);
 
@@ -189,8 +205,11 @@ namespace UMA
 							}
 						}
 						if (matchingKeys == xo._graph.keys.Length)
-							return 1;
-						return 0;
+                        {
+                            return 1;
+                        }
+
+                        return 0;
 					}
 					return 0;
 				}
@@ -483,8 +502,10 @@ namespace UMA
 				get { return _evaluationGraph._graph; }
 				set {
 					if (value == null)
-						_evaluationGraph._graph = value;
-					else
+                    {
+                        _evaluationGraph._graph = value;
+                    }
+                    else
 					{
 						_evaluationGraph._graph = new AnimationCurve(value.keys);
 					}

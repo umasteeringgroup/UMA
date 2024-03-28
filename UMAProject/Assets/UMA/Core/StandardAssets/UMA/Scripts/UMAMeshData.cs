@@ -145,30 +145,42 @@ namespace UMA
 			deltaVertices = new Vector3[vertexCount];
 
 			if (hasNormals)
-				deltaNormals = new Vector3[vertexCount];
-			else
-				deltaNormals = new Vector3[0];
+            {
+                deltaNormals = new Vector3[vertexCount];
+            }
+            else
+            {
+                deltaNormals = new Vector3[0];
+            }
 
-			if (hasTangents)
-				deltaTangents = new Vector3[vertexCount];
-			else
-				deltaTangents = new Vector3[0];
-		}
+            if (hasTangents)
+            {
+                deltaTangents = new Vector3[vertexCount];
+            }
+            else
+            {
+                deltaTangents = new Vector3[0];
+            }
+        }
 
 		public bool HasNormals()
 		{
 			if (deltaNormals != null && deltaNormals.Length > 0)
-				return true;
+            {
+                return true;
+            }
 
-			return false;
+            return false;
 		}
 
 		public bool HasTangents()
 		{
 			if (deltaTangents != null && deltaTangents.Length > 0)
-				return true;
+            {
+                return true;
+            }
 
-			return false;
+            return false;
 		}
 
 		/// <summary>
@@ -585,21 +597,29 @@ namespace UMA
 					sharedMesh.GetBlendShapeFrameVertices(shapeIndex, frameIndex, deltaVertices, deltaNormals, deltaTangents);
 
 					if (!UMABlendFrame.isAllZero(deltaNormals))
-						hasNormals = true;
+                    {
+                        hasNormals = true;
+                    }
 
-					if (!UMABlendFrame.isAllZero(deltaTangents))
-						hasTangents = true;
+                    if (!UMABlendFrame.isAllZero(deltaTangents))
+                    {
+                        hasTangents = true;
+                    }
 
-					blendShapes [shapeIndex].frames [frameIndex] = new UMABlendFrame ();
+                    blendShapes [shapeIndex].frames [frameIndex] = new UMABlendFrame ();
 					blendShapes[shapeIndex].frames[frameIndex].frameWeight = sharedMesh.GetBlendShapeFrameWeight( shapeIndex, frameIndex );
 
 					blendShapes[shapeIndex].frames[frameIndex].deltaVertices = deltaVertices;
 					if (hasNormals)
-						blendShapes[shapeIndex].frames[frameIndex].deltaNormals = deltaNormals;
-					if (hasTangents)
-						blendShapes[shapeIndex].frames[frameIndex].deltaTangents = deltaTangents;
+                    {
+                        blendShapes[shapeIndex].frames[frameIndex].deltaNormals = deltaNormals;
+                    }
 
-				}
+                    if (hasTangents)
+                    {
+                        blendShapes[shapeIndex].frames[frameIndex].deltaTangents = deltaTangents;
+                    }
+                }
 			}
 #endregion
 		}
@@ -629,9 +649,10 @@ namespace UMA
 			rootBone = FindRoot(rootBone, bones);
 			
 			var requiredBones = new Dictionary<Transform, UMATransform>();
-			foreach (var bone in bones)
+            for (int i = 0; i < bones.Length; i++)
 			{
-				if (bone == null)    
+                Transform bone = bones[i];
+                if (bone == null)    
                 {
 					if (Debug.isDebugBuild)
                     {
@@ -647,16 +668,24 @@ namespace UMA
 					continue;
                 }
 				lastBone = bone;
-				if (requiredBones.ContainsKey(bone)) continue;
-				var boneIterator = bone.parent;
+				if (requiredBones.ContainsKey(bone))
+                {
+                    continue;
+                }
+
+                var boneIterator = bone.parent;
 				var boneIteratorChild = bone;
 				var boneHash = UMAUtils.StringToHash(boneIterator.name);
 				var childHash = UMAUtils.StringToHash(boneIteratorChild.name);
 				while (boneIteratorChild != rootBone)
 				{
 					requiredBones.Add(boneIteratorChild, new UMATransform(boneIteratorChild, childHash, boneHash));
-					if (requiredBones.ContainsKey(boneIterator)) break;
-					boneIteratorChild = boneIterator;
+					if (requiredBones.ContainsKey(boneIterator))
+                    {
+                        break;
+                    }
+
+                    boneIteratorChild = boneIterator;
 					boneIterator = boneIterator.parent;
 					childHash = boneHash;
 					boneHash = UMAUtils.StringToHash(boneIterator.name);
@@ -707,9 +736,11 @@ namespace UMA
 			}
 				
 			while (rootBone.parent != null)
-				rootBone = rootBone.parent;
+            {
+                rootBone = rootBone.parent;
+            }
 
-			return RecursiveFindBone(rootBone, RootBoneName);
+            return RecursiveFindBone(rootBone, RootBoneName);
 		}
 
 		/// <summary>
@@ -843,12 +874,16 @@ namespace UMA
 						Vector3[] deltaTangents = blendShapes[shapeIndex].frames[frameIndex].deltaTangents;
 
 						if (UMABlendFrame.isAllZero(deltaNormals))
-							deltaNormals = null;
+                        {
+                            deltaNormals = null;
+                        }
 
-						if (UMABlendFrame.isAllZero(deltaTangents))
-							deltaTangents = null;
+                        if (UMABlendFrame.isAllZero(deltaTangents))
+                        {
+                            deltaTangents = null;
+                        }
 
-						mesh.AddBlendShapeFrame(name, frameWeight, deltaVertices, deltaNormals, deltaTangents);
+                        mesh.AddBlendShapeFrame(name, frameWeight, deltaVertices, deltaNormals, deltaTangents);
 					}
 				}
 			}
@@ -1056,9 +1091,10 @@ namespace UMA
 			List<BoneWeight1> oldWeights = new List<BoneWeight1>(boneWeights.Length);
 			List<byte> oldBonesPerVertex = new List<byte>(boneWeights.Length);
 
-			foreach(UMABoneWeight bw in boneWeights)
+            for (int i = 0; i < boneWeights.Length; i++)
             {
-				byte BonesPerVertex = 0;
+                UMABoneWeight bw = boneWeights[i];
+                byte BonesPerVertex = 0;
 				float totWeight = bw.weight0 + bw.weight1 + bw.weight2 + bw.weight3;
 				if (bw.weight0 > 0.0f)
                 {
@@ -1125,9 +1161,10 @@ namespace UMA
 
 		public void FreeBoneWeights()
         {
-			foreach(var sm in submeshes)
+            for (int i = 0; i < submeshes.Length; i++)
             {
-				if (sm.nativeTriangles.IsCreated)
+                SubMeshTriangles sm = submeshes[i];
+                if (sm.nativeTriangles.IsCreated)
                 {
                     sm.nativeTriangles.Dispose();
                 }
@@ -1457,7 +1494,10 @@ namespace UMA
 			}
 			if (colors32 != null && colors32.Length != vertices.Length)
 			{
-				errors.Append("; colors32 length of " + colors32.Length + " != vertexCount (" + vertexCount + ")");
+				if (colors32.Length != 0)
+				{
+					errors.Append("; colors32 length of " + colors32.Length + " != vertexCount (" + vertexCount + ")");
+				}
 			}
 			if (uv != null && uv.Length != vertices.Length)
 			{
@@ -1465,21 +1505,33 @@ namespace UMA
 			}
 			if (uv2 != null && uv2.Length != vertices.Length)
 			{
-				errors.Append("; uv2 length of " + uv2.Length + " != vertexCount (" + vertexCount + ")");
+				if (uv2.Length != 0)
+				{
+                    errors.Append("; uv2 length of " + uv2.Length + " != vertexCount (" + vertexCount + ")");
+                }
 			}
 			if (ManagedBonesPerVertex != null && ManagedBonesPerVertex.Length != vertices.Length)
 			{
 				errors.Append("; ManagedBonesPerVertex length of " + ManagedBonesPerVertex.Length + " != vertexCount (" + vertexCount + ")");
 			}
 
-			if (ManagedBoneWeights != null)
+            if (ManagedBoneWeights != null)
             {
-				foreach(BoneWeight1 bw in ManagedBoneWeights)
+                for (int i = 0; i < ManagedBoneWeights.Length; i++)
                 {
-					if (bw.boneIndex >= bones.Length)
-                    {
-						errors.Append("; Boneweight references invalid bone index "+bw.boneIndex);
+                    BoneWeight1 bw = ManagedBoneWeights[i];
+					if (bw == null)
+					{
+						errors.Append("; ManagedBoneWeights["+i+"] is null");
 						break;
+					}
+					if (bones != null)
+					{
+                        if (bw.boneIndex >= bones.Length)
+                        {
+                            errors.Append("; Boneweight references invalid bone index " + bw.boneIndex);
+                            break;
+                        }
                     }
                 }
             }
@@ -1504,14 +1556,20 @@ namespace UMA
 					for (int i = 0; i < submeshes.Length; i++)
 					{
 						SubMeshTriangles smt = submeshes[i];
-						foreach(int tri in smt.GetTriangles())
-                        {
-							if (tri >= vertexCount)
-                            {
-								errors.Append("; triangle "+tri+" out of bounds on submesh " + i);
-								break;
-                            }
-                        }
+						if (smt.nativeTriangles != null && smt.nativeTriangles.IsCreated)
+						{
+							var tris = smt.GetTriangles();
+							var tri = 0;
+							for (int j = 0; i < tris.Length; i++)
+							{
+								tri = tris[j];
+								if (tri >= vertexCount)
+								{
+									errors.Append("; triangle " + tri + " out of bounds on submesh " + i);
+									break;
+								}
+							}
+						}
 					}
 				}
 			}

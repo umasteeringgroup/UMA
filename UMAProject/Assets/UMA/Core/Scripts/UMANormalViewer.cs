@@ -65,7 +65,9 @@ public class UMANormalViewer : MonoBehaviour
     void OnDrawGizmos()
     {
         if (!Selection.Contains(this))
+        {
             OnDrawNormals(false);
+        }
     }
 
 

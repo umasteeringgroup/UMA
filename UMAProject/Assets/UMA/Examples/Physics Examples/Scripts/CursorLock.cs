@@ -8,8 +8,10 @@ namespace UMA.Dynamics.Examples
 		void OnApplicationFocus(bool hasFocus )
 		{
 			if( hasFocus )
-				LockMouse ();
-		}
+            {
+                LockMouse ();
+            }
+        }
 
 		void LockMouse()
 		{

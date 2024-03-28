@@ -15,9 +15,12 @@ namespace UMA
     {
         public DynamicCharacterAvatar avatar;
         public Dictionary<string, UMAUVAttachedItem> attachedItems = new Dictionary<string, UMAUVAttachedItem>();
-        public SkinnedMeshRenderer skin;
         public List<UMAUVAttachedItem> pendingAttachedItemsList = new List<UMAUVAttachedItem>();
         private UMAData umaData;
+		public Dictionary<string, UMAUVAttachedItem> attachedItemLookup = new Dictionary<string, UMAUVAttachedItem>();
+
+		// events
+		public event System.Action<UMAData> UmaUvAttachedItemManagerUpdated;
 
         public void Start()
         {
@@ -62,69 +65,85 @@ namespace UMA
             pendingAttachedItemsList.Clear();
         }
 
-        // This is updated. Now we need to find the slot for each one, and process it 
         public void UMAUpdated(UMAData umaData)
         {
-            Debug.Log("Manager UMAUpdated");
-            // step one:
-            // Remove all recipes, except ones that are in this update. These will be in the 
-            // "pendingAttachedItemsList".
+            //********************************************************
+            // get all currently attached items, both active and inactive.
+            // index them so we can find them.
+            UMAUVAttachedItemPreprocessor uMAUVAttachedItemPreprocessor = umaData.gameObject.GetComponent<UMAUVAttachedItemPreprocessor>();
+            Dictionary<string, UMAUVAttachedItem> indexedAttachedItems = new Dictionary<string, UMAUVAttachedItem>();
 
-            List<UMAUVAttachedItem> saveAttachedItems = new List<UMAUVAttachedItem>();
-
-            // save the items that we already have, and then remove them
-            // so we only have unused items in the list
-            foreach(UMAUVAttachedItem item in pendingAttachedItemsList)
+            UMAUVAttachedItem[] currentlyAttachedItems = GetComponentsInChildren<UMAUVAttachedItem>(true);
+            for (int i = 0; i < currentlyAttachedItems.Length; i++)
             {
-                if (attachedItems.ContainsKey(item.sourceSlotName))
-                {
-                    saveAttachedItems.Add(item);
-                    attachedItems.Remove(item.sourceSlotName);
+                UMAUVAttachedItem item = currentlyAttachedItems[i];
+                indexedAttachedItems.Add(item.sourceSlotName, item);
+            }
+            //********************************************************
+
+            // Get all the hidden items. Manually call setup on them. They will be added to the
+            // pendingAttachedItemsList with prefabStatus = ShouldBeDeactivated.
+            // (all non-hidden items should be on the pendingAttachedItemsList with prefabStatus = ShouldBeActivated already
+            //  this happens in the OnDnaAppliedBootstrapper function in UMAUVAttachedItemLauncher.cs )
+            for (int i = 0; i < uMAUVAttachedItemPreprocessor.launchers.Count; i++)
+            {
+                UMAUVAttachedItemLauncher ul = uMAUVAttachedItemPreprocessor.launchers[i];
+                ul.Setup(umaData, true);
+            }
+
+
+            // these are the items that should be active.
+            for (int i = 0; i < pendingAttachedItemsList.Count; i++)
+            {
+                UMAUVAttachedItem item = pendingAttachedItemsList[i];
+                // items in pending list should either be active or inactive.
+                if (indexedAttachedItems.ContainsKey(item.sourceSlotName))
+                {                
+                    indexedAttachedItems.Remove(item.sourceSlotName);
                 }
             }
 
-            // the items that we don't have are left in attachedItems. 
-            // These need to be destroyed. 
-            // TODO: Ask anthony should we destroy and recreate them?
-            foreach(var uv in attachedItems.Values)
-            {
-                uv.CleanUp();
-            }
-            attachedItems.Clear();  
 
-            // Add the items back to the list.
-            foreach(var item in saveAttachedItems)
-            {
-                attachedItems.Add(item.sourceSlotName, item);
-            }
-            foreach(var item in pendingAttachedItemsList)
-            {
-                if (!attachedItems.ContainsKey(item.sourceSlotName))
-                {
-                    attachedItems[item.sourceSlotName] = item;
-                }
-            }
+            // any items left in indexedAttachedItems should be destroyed -
+            // they are not currently in the recipe, or they have been hidden or suppressed.
 
-            // find the slot in the recipe.
-            // find the overlay in the recipe
-            // calculate the new UV coordinates (in case it changed).
-            // Loop through the vertexes, and find the one with the closest UV.
-            skin = umaData.GetRenderer(0);
-            var slots = umaData.umaRecipe.GetIndexedSlotsByTag();
-
-            foreach(var item in attachedItems.Values)
+            // Items that are in AttachedItems, but should not exist, should be destroyed.
+            foreach (var ai in indexedAttachedItems.Values)
             {
+                ai.prefabStatus = UMAUVAttachedItem.PrefabStatus.ShouldBeDeleted;
+                pendingAttachedItemsList.Add(ai);
+            }
+			attachedItemLookup.Clear();
+
+            //********************************************************
+            // Now go through all the slots we know about - the unhidden, the hidden, and the leftovers that should be deleted.
+            // and process all of them.
+            // The activating, deactivating, and deleting will happen in the ProcessSlot function.
+            var slots = umaData.umaRecipe.GetFirsIndexedSlotsByTag();
+            for (int i = 0; i < pendingAttachedItemsList.Count; i++)
+            {
+                UMAUVAttachedItem item = pendingAttachedItemsList[i];
                 if (slots.ContainsKey(item.slotName))
                 {
                     item.ProcessSlot(umaData, slots[item.slotName], avatar);
                 }
+                else
+                {
+                    item.ProcessSlot(umaData, null, avatar);
+                }
+				attachedItemLookup.Add(item.sourceSlotName, item);
             }
+			UmaUvAttachedItemManagerUpdated?.Invoke(umaData); 
         }
+
 
         public void LateUpdate()
         {
 			if(umaData == null)
-				return;
+            {
+                return;
+            }
+
             SkinnedMeshRenderer skin = umaData.GetRenderer(0);
             foreach(UMAUVAttachedItem item in attachedItems.Values)
             {
@@ -132,11 +151,11 @@ namespace UMA
             }
         }
 
-        public void AddAttachedItem(UMAData umaData, UMAUVAttachedItemLauncher uMAUVAttachedItemLauncher)
+        public void AddAttachedItem(UMAData umaData, UMAUVAttachedItemLauncher uMAUVAttachedItemLauncher, bool Activate)
         {
             Debug.Log("Adding attached item: " + uMAUVAttachedItemLauncher.sourceSlot.slotName);
             UMAUVAttachedItem uvai = new UMAUVAttachedItem();
-            uvai.Setup(umaData, uMAUVAttachedItemLauncher);
+            uvai.Setup(umaData, uMAUVAttachedItemLauncher,Activate);
             pendingAttachedItemsList.Add(uvai);
             Debug.Log($"Pending list count {pendingAttachedItemsList.Count}");
         }

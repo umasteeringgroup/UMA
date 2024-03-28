@@ -18,13 +18,9 @@ MonoBehaviour:
   DisplayValue: High Tops - White
   compatibleRaces:
   - HumanFemale
-  - HumanFemaleDCS
   - HumanFemaleHighPoly
   wardrobeRecipeThumbs:
   - race: HumanFemale
-    filename: 
-    thumb: {fileID: 0}
-  - race: HumanFemaleDCS
     filename: 
     thumb: {fileID: 0}
   - race: HumanFemaleHighPoly
@@ -41,7 +37,9 @@ MonoBehaviour:
   MeshHideAssets: []
   OverrideDNA:
     PreloadValues: []
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"FemaleTallShoes","scale":100,"copyIdx":-1,"overlays":[{"id":"TallShoes_White","colorIdx":0,"rect":[0,0,0,0],"data":[]}]}],"colors":[],"fColors":[{"name":"-","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":0,"race":"","packedDna":[]}'
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"FemaleTallShoes","scale":100,"copyIdx":-1,"overlays":[{"id":"TallShoes_White","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":0.0,"y":0.0,"z":0.0},"rotation":0.0,"blendModes":[0,0,0],"Tags":[],"tiling":[false,false,false],"uvOverride":0}],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0}],"colors":[],"fColors":[{"name":"-","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":0,"race":"HumanFemale","packedDna":[],"uvOverride":0}'
+  forceKeep: 0
+  labelLocalFiles: 0
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

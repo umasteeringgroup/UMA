@@ -77,17 +77,21 @@ namespace UMA.CharacterSystem.Examples
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("autoPhotosEnabled"));
 			if (autoPhotosEnabled)
 			{
-				//EditorGUILayout.PropertyField(serializedObject.FindProperty("addUnderwearToBasePhoto"));
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("addUnderwearToBasePhoto"));
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("overwriteExistingPhotos"));
 				if (Application.isPlaying)
-					EditorGUILayout.HelpBox("Auto photos is enabled. A photo for each wardrobe item will be generated. Select the destination folder, and press 'Take Photo'", MessageType.Info);
-			}
+                {
+                    EditorGUILayout.HelpBox("Auto photos is enabled. A photo for each wardrobe item will be generated. Select the destination folder, and press 'Take Photo'", MessageType.Info);
+                }
+            }
 			else
 			{
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("textureToPhoto"));
 				if (Application.isPlaying)
-					EditorGUILayout.HelpBox("Auto photos is disabled. Select the destination folder, add the wardrobe item, and select the texture you want to take. The press 'Take Photo'.", MessageType.Info);
-			}
+                {
+                    EditorGUILayout.HelpBox("Auto photos is disabled. Select the destination folder, add the wardrobe item, and select the texture you want to take. The press 'Take Photo'.", MessageType.Info);
+                }
+            }
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("photoName"));
 			
 			if (Application.isPlaying)

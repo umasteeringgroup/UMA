@@ -121,8 +121,11 @@ namespace UMA.Dynamics.Examples
 		{		
 			Rigidbody rb = GetComponent<Rigidbody>();	
 			if (rb)
-				rb.freezeRotation = true;
-			originalRotation = transform.localRotation;
+            {
+                rb.freezeRotation = true;
+            }
+
+            originalRotation = transform.localRotation;
 			parentRotation = transform.parent.localRotation;
 		}
 		

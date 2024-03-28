@@ -40,9 +40,12 @@ namespace UMA
 
 		override public void AddRace(RaceData race)
 		{
-			if (race == null) return;
+			if (race == null)
+            {
+                return;
+            }
 
-			ValidateDictionary();
+            ValidateDictionary();
 			for (int i = 0; i < raceElementList.Length; i++)
 			{
 				if (raceElementList[i].raceName == race.raceName)
@@ -62,9 +65,11 @@ namespace UMA
 		public override RaceData HasRace(string raceName)
 		{
 			if ((raceName == null) || (raceName.Length == 0))
-				return null;
+            {
+                return null;
+            }
 
-			ValidateDictionary();
+            ValidateDictionary();
 			RaceData res;
 			if (!raceDictionary.TryGetValue(raceName, out res))
 			{
@@ -76,9 +81,11 @@ namespace UMA
 		public override RaceData HasRace(int raceHash)
 		{
 			if (raceHash == 0)
-				return null;
+            {
+                return null;
+            }
 
-			ValidateDictionary();
+            ValidateDictionary();
 
 			foreach (string name in raceDictionary.Keys)
 			{
@@ -96,9 +103,11 @@ namespace UMA
 		override public RaceData GetRace(string raceName)
 		{
 			if ((raceName == null) || (raceName.Length == 0))
-				return null;
+            {
+                return null;
+            }
 
-			ValidateDictionary();
+            ValidateDictionary();
 			RaceData res;
 			if (!raceDictionary.TryGetValue(raceName, out res))
 			{
@@ -110,9 +119,11 @@ namespace UMA
 		override public RaceData GetRace(int raceHash)
 		{
 			if (raceHash == 0)
-				return null;
+            {
+                return null;
+            }
 
-			ValidateDictionary();
+            ValidateDictionary();
 
 			foreach (string name in raceDictionary.Keys) {
 				int hash = UMAUtils.StringToHash(name);

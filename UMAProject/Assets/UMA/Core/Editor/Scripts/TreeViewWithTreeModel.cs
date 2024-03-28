@@ -48,9 +48,11 @@ namespace UMA.Controls
 		void ModelChanged ()
 		{
 			if (treeChanged != null)
-				treeChanged ();
+            {
+                treeChanged ();
+            }
 
-			Reload ();
+            Reload ();
 		}
 
 		protected override TreeViewItem BuildRoot()
@@ -74,8 +76,10 @@ namespace UMA.Controls
 			else
 			{
 				if (m_TreeModel.root.hasChildren)
-					AddChildrenRecursive(m_TreeModel.root, 0, m_Rows);
-			}
+                {
+                    AddChildrenRecursive(m_TreeModel.root, 0, m_Rows);
+                }
+            }
 
 			// We still need to setup the child parent information for the rows since this 
 			// information is used by the TreeView internal logic (navigation, dragging etc)
@@ -108,14 +112,19 @@ namespace UMA.Controls
 		void Search(T searchFromThis, string search, List<TreeViewItem> result)
 		{
 			if (string.IsNullOrEmpty(search))
-				throw new ArgumentException("Invalid search: cannot be null or empty", "search");
+            {
+                throw new ArgumentException("Invalid search: cannot be null or empty", "search");
+            }
 
-			const int kItemDepth = 0; // tree is flattened when searching
+            const int kItemDepth = 0; // tree is flattened when searching
 
 			Stack<T> stack = new Stack<T>();
 			foreach (var element in searchFromThis.children)
-				stack.Push((T)element);
-			while (stack.Count > 0)
+            {
+                stack.Push((T)element);
+            }
+
+            while (stack.Count > 0)
 			{
 				T current = stack.Pop();
 				// Matches search?

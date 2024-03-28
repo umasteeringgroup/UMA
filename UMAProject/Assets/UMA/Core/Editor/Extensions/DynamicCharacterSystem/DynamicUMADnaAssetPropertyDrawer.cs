@@ -26,8 +26,10 @@ namespace UMA.CharacterSystem.Editors
 					if (editors[i].GetType() == typeof(DynamicUMADnaAssetEditor))
 					{
 						if (editors[i].target == property.objectReferenceValue)
-							DynamicUMADnaAssetEditor.SetLivePopupEditor(editors[i] as DynamicUMADnaAssetEditor);
-					}
+                        {
+                            DynamicUMADnaAssetEditor.SetLivePopupEditor(editors[i] as DynamicUMADnaAssetEditor);
+                        }
+                    }
 				}
 			}
 		}

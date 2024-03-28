@@ -1,17 +1,16 @@
 #define UNITY_EDITOR
 #if UNITY_EDITOR
 
+using Codice.Client.Common.GameUI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using UMA.CharacterSystem;
+using UMA.Controls;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using UMA;
-using UMA.Controls;
-using System.IO;
-using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
@@ -523,6 +522,78 @@ namespace UMA.Editors
 
         public static string[] RaceNames = null;
 
+
+        public static void DoRaceGUI(ref bool Changed, SlotData slotData)
+        {
+            if (slotData.Races == null)
+            {
+                slotData.Races = new string[0];
+            }
+            if (true)
+            {
+                GUILayout.Space(10);
+                GUILayout.Label("Only add for these Races:");
+                // do the race matches here.
+                if (RaceNames == null)
+                {
+                    List<string> theRaceNames = new List<string>();
+                    RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+                    foreach (RaceData race in races)
+                    {
+                        if (race != null)
+                        {
+                            theRaceNames.Add(race.raceName);
+                        }
+                    }
+                    RaceNames = theRaceNames.ToArray();
+                }
+                GUILayout.BeginHorizontal();
+                if (!SlotEditor.SelectedRace.ContainsKey(slotData.slotName))
+                {
+                    SlotEditor.SelectedRace.Add(slotData.slotName, 0);
+                }
+
+                SlotEditor.SelectedRace[slotData.slotName] = EditorGUILayout.Popup(SlotEditor.SelectedRace[slotData.slotName], RaceNames, GUILayout.ExpandWidth(true));
+                if (GUILayout.Button("Add Race"))
+                {
+                    // Add the selected race name if it's not already there.
+                    string theRace = RaceNames[SlotEditor.SelectedRace[slotData.slotName]];
+                    List<string> Races = new List<string>(slotData.Races);
+                    if (!Races.Contains(theRace))
+                    {
+                        Races.Add(theRace);
+                        slotData.Races = Races.ToArray();
+                        Changed = true;
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                DoTagsDisplay(ref slotData.Races, ref Changed);
+
+                EditorGUI.BeginChangeCheck();
+                slotData.isSwapSlot = EditorGUILayout.Toggle("This is a swap slot", slotData.isSwapSlot);
+                if (slotData.isSwapSlot)
+                {
+                    EditorGUILayout.HelpBox("A Swap slot will only be added if there is a slot with the below tag already in the recipe. If there is no slot with the tag then this slot will not be added.", MessageType.Info);
+                    string newSwapTag = CharacterBaseEditor.DoTagSelector(slotData.swapTag);
+                    if (!string.IsNullOrEmpty(newSwapTag))
+                    {
+                        slotData.swapTag = newSwapTag;
+                        Changed = true;
+                    }
+                    slotData.swapTag = EditorGUILayout.DelayedTextField("Swap slot(s) with this tag", slotData.swapTag);
+                }
+                else
+                {
+                    slotData.swapTag = "";
+                }
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Changed = true;
+                }
+            }
+        }
+
         const string focusctrl = "TheButtonThatNeedsToFocusSoTheTextInTheTextBoxDisappears";
         public static string DoTagsGUI(ref bool Changed, string TempTag, SlotData slotData)
         {
@@ -548,6 +619,12 @@ namespace UMA.Editors
                 {
                     GUILayout.Label("Edit tags for this slot:");
                 }
+                
+                string newTag = CharacterBaseEditor.DoTagSelector(slotData.asset.tags);
+                if (!string.IsNullOrEmpty(newTag))
+                {
+                    Changed |= AddSlotTag(newTag, slotData);
+                }
                 //EditorGUILayout.HelpBox("Tags GUI here...", MessageType.Info);
                 if (slotData.tags == null)
                 {
@@ -557,6 +634,7 @@ namespace UMA.Editors
                 {
                     slotData.Races = new string[0];
                 }
+                
                 GUILayout.BeginHorizontal();
                 TempTag = EditorGUILayout.TextField(TempTag, GUILayout.ExpandWidth(true));
                 GUI.SetNextControlName(focusctrl);
@@ -569,13 +647,7 @@ namespace UMA.Editors
                 {
                     if (!string.IsNullOrWhiteSpace(TempTag))
                     {
-                        var tagList = new List<string>(slotData.tags);
-                        if (!tagList.Contains(TempTag))
-                        {
-                            tagList.Add(TempTag);
-                            slotData.tags = tagList.ToArray();
-                            Changed = true;
-                        }
+                        Changed |= AddSlotTag(TempTag, slotData);
                     }
                 }
                 if (GUILayout.Button("Clear"))
@@ -608,6 +680,7 @@ namespace UMA.Editors
                 GUILayout.EndHorizontal();
 
                 DoTagsDisplay(ref slotData.tags, ref Changed);
+                
                 //				if (slotData.asset.isWildCardSlot)
                 if (true)
                 {
@@ -655,6 +728,12 @@ namespace UMA.Editors
                     if (slotData.isSwapSlot)
                     {
                         EditorGUILayout.HelpBox("A Swap slot will only be added if there is a slot with the below tag already in the recipe. If there is no slot with the tag then this slot will not be added.", MessageType.Info);
+                        string newSwapTag = CharacterBaseEditor.DoTagSelector(slotData.swapTag);
+                        if (!string.IsNullOrEmpty(newSwapTag))
+                        {
+                            slotData.swapTag = newSwapTag;
+                            Changed = true;
+                        }
                         slotData.swapTag = EditorGUILayout.DelayedTextField("Swap slot(s) with this tag", slotData.swapTag);
                     }
                     else
@@ -669,6 +748,20 @@ namespace UMA.Editors
                 GUIHelper.EndVerticalPadded(10);
             }
             return TempTag;
+        }
+
+        private static bool AddSlotTag(string TempTag, SlotData slotData)
+        {
+            bool Changed = false;
+            var tagList = new List<string>(slotData.tags);
+            if (!tagList.Contains(TempTag))
+            {
+                tagList.Add(TempTag);
+                slotData.tags = tagList.ToArray();
+                Changed = true;
+            }
+
+            return Changed;
         }
 
         public static int DoTagsDisplay(ref string[] tags, ref bool changed)
@@ -1261,6 +1354,9 @@ namespace UMA.Editors
         private readonly List<OverlayData> _overlayData = new List<OverlayData>();
         private readonly List<OverlayEditor> _overlayEditors = new List<OverlayEditor>();
         private readonly string _name;
+        public UnityEditorInternal.ReorderableList SlotTagsList = null;
+        private List<string> backingTags = new List<string>();
+        private static Dictionary<string, bool> _foldout = new Dictionary<string, bool>();
 
         public SlotData Slot { get { return _slotData; } }
 
@@ -1499,7 +1595,41 @@ namespace UMA.Editors
                 {
                     TemporarySlotTags.Add(_slotData.slotName, "");
                 }
-                TemporarySlotTags[_slotData.slotName] = TagsEditor.DoTagsGUI(ref changed, TemporarySlotTags[_slotData.slotName], _slotData);
+                if (!_foldout.ContainsKey(_slotData.slotName))
+                {
+                    _foldout.Add(_slotData.slotName, false);
+                }
+                GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+                GUILayout.Space(10); _foldout[_slotData.slotName] = EditorGUILayout.Foldout(_foldout[_slotData.slotName], "Matching Criteria");
+                GUILayout.EndHorizontal();
+                if (_foldout[_slotData.slotName])
+                {
+                    GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+                    if (_slotData.asset.isWildCardSlot)
+                    {
+                        GUILayout.Label("Match Tags:");
+                    }
+                    else
+                    {
+                        GUILayout.Label("Edit tags for this slot:");
+                    }
+                    if (SlotTagsList == null)
+                    {
+                        backingTags = new List<string>(_slotData.tags);
+                        SlotTagsList = GUIHelper.InitGenericTagsList(backingTags);
+                    }
+                    SlotTagsList.DoLayoutList();
+                    if (GUI.changed)
+                    {
+                        _slotData.tags = backingTags.ToArray();
+                        changed = true;
+                    }
+                    TagsEditor.DoRaceGUI(ref changed, _slotData);
+                    GUIHelper.EndVerticalPadded(10);
+                }
+                //TemporarySlotTags[_slotData.slotName] = TagsEditor.DoTagsGUI(ref changed, TemporarySlotTags[_slotData.slotName], _slotData);
+
+
                 #endregion
 
                 if (sharedOverlays)
@@ -1538,6 +1668,14 @@ namespace UMA.Editors
                         _recipe.MergeSlot(newSlot, false);
                         _dnaDirty = true;
                         _textureDirty = true;
+                        _meshDirty = true;
+                        changed = true;
+                    }
+
+                    int remapUV = EditorGUILayout.Popup("Remap UV to Main", _slotData.UVSet, new string[] { "None", "UV Set 1", "UV Set 2", "UV Set 3" });
+                    if (remapUV != _slotData.UVSet)
+                    {
+                        _slotData.UVSet = remapUV;
                         _meshDirty = true;
                         changed = true;
                     }
@@ -1725,34 +1863,6 @@ namespace UMA.Editors
                 _textures[i] = new TextureEditor(overlayData.textureArray[i], i, overlayData);
             }
 
-#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
-			if (overlayData.isProcedural)
-			{
-				ProceduralMaterial material = _overlayData.asset.material.material as ProceduralMaterial;
-
-				_descriptions = material.GetProceduralPropertyDescriptions();
-				_properties = new ProceduralPropertyEditor[overlayData.proceduralData.Length];
-				for (int i = 0; i < overlayData.proceduralData.Length; i++)
-				{
-					ProceduralPropertyDescription description = null;
-					for (int j = 0; j < _descriptions.Length; j++)
-					{
-						if (_descriptions[j].name == overlayData.proceduralData[i].name)
-						{
-							description = _descriptions[j];
-							break;
-						}
-					}
-
-					_properties[i] = new ProceduralPropertyEditor(overlayData.proceduralData[i], description);
-				}
-			}
-			else
-			{
-				_properties = null;
-			}
-#endif
-
             BuildColorEditors();
 
         }
@@ -1805,18 +1915,36 @@ namespace UMA.Editors
 
         public bool OnGUI()
         {
+            List<string> buttons = new List<string>() { "Inspect","Material" };
+            List<bool> pressed = new List<bool>() { false, false };
             bool delete;
             bool select;
 
             _foldout = OverlayExpanded[_overlayData.overlayName];
 
-            GUIHelper.FoldoutBarButton(ref _foldout, _overlayData.asset.overlayName + "(" + _overlayData.asset.material.name + ")", "inspect", out select, out move, out delete);
 
-            if (select)
+            string matName = "Unknown";
+            if (_overlayData.asset.material != null)
+            {
+                matName = _overlayData.asset.material.name;
+            }
+
+            int queue = _overlayData.asset.material.material.renderQueue;
+          
+            GUIHelper.FoldoutBarButton(ref _foldout, $"{_overlayData.asset.overlayName} ( {matName} Q:{queue})", buttons,out pressed, out move, out delete);
+
+            if (pressed[0])
             {
                 EditorGUIUtility.PingObject(_overlayData.asset.GetInstanceID());
                 InspectorUtlity.InspectTarget(_overlayData.asset);
             }
+
+            if (pressed[1])
+            {
+                EditorGUIUtility.PingObject(_overlayData.asset.material.material.GetInstanceID());
+                InspectorUtlity.InspectTarget(_overlayData.asset.material.material);
+            }
+
 
             OverlayExpanded[_overlayData.overlayName] = _foldout;
             Delete = delete;
@@ -1865,7 +1993,7 @@ namespace UMA.Editors
                     }
                 }
             }
-            if (_slotData.asset.material != null)
+            if (_slotData.asset.material != null && _overlayData.asset.material != null)
             {
                 if (_overlayData.asset.material.name != _slotData.material.name)
                 {
@@ -1904,11 +2032,32 @@ namespace UMA.Editors
             changed |= OnColorGUI();
 
 
+            // do tags gui here
+            //
             // Edit the transformations
+            changed |= OnTagsGUI();
+
             bool originalInstanceTransformed = _overlayData.instanceTransformed;
             float originalRotation = _overlayData.Rotation;
             Vector3 originalScale = _overlayData.Scale;
 
+            if (_overlayData.asset.material != null && _overlayData.asset.material.materialType == UMAMaterial.MaterialType.UseExistingTextures)
+            {
+                int useUV = EditorGUILayout.Popup("UV Set for this overlay", _overlayData.UVSet, new string[] { "No Change", "UV Set 1", "UV Set 2", "UV Set 3" });
+                if (useUV != _overlayData.UVSet)
+                {
+                    _overlayData.UVSet = useUV;
+                    changed = true;
+                }
+            }
+            else
+            {
+                if (_overlayData.UVSet != 0) 
+                {
+                    _overlayData.UVSet = 0;
+                    changed = true;
+                }
+            }
             _overlayData.instanceTransformed = GUILayout.Toggle(_overlayData.instanceTransformed, "Transform");
             if (_overlayData.instanceTransformed)
             {
@@ -1979,78 +2128,6 @@ namespace UMA.Editors
 
 
 
-#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
-			// Edit the procedural properties
-			if (_overlayData.isProcedural)
-			{
-				GUILayout.BeginVertical();
-				GUILayout.Label("Procedural Settings");
-				EditorGUI.indentLevel++;
-
-				List<string> propertyList = new List<string>(_descriptions.Length);
-				foreach (ProceduralPropertyDescription description in _descriptions)
-				{
-					// "Internal" substance properties begin with a '$'
-					if (description.label.StartsWith("$"))
-						continue;
-					
-					propertyList.Add(description.label);
-
-					// Only collect propoerties that aren't already set
-					for (int i = 0; i < _overlayData.proceduralData.Length; i++)
-					{
-						if (_overlayData.proceduralData[i].name == description.name)
-						{
-							propertyList.Remove(description.label);
-							break;
-						}
-					}
-				}
-				string[] propertyArray = propertyList.ToArray();
-
-				GUILayout.BeginHorizontal();
-				_selectedProperty = EditorGUILayout.Popup(_selectedProperty, propertyArray);
-
-				EditorGUI.BeginDisabledGroup(_selectedProperty >= propertyArray.Length);
-				if (GUILayout.Button("Add", EditorStyles.miniButton, GUILayout.Width(40)))
-				{
-					string propertyLabel = propertyArray[_selectedProperty];
-					ProceduralPropertyDescription description = null;
-					for (int i = 0; i < _descriptions.Length; i++)
-					{
-						if (_descriptions[i].label == propertyLabel)
-						{
-							description = _descriptions[i];
-							break;
-						}
-					}
-
-					if (description != null)
-					{
-						OverlayData.OverlayProceduralData newProperty = new OverlayData.OverlayProceduralData();
-						newProperty.name = description.name;
-						newProperty.type = description.type;
-
-						ArrayUtility.Add(ref _overlayData.proceduralData, newProperty);
-						ArrayUtility.Add(ref _properties, new ProceduralPropertyEditor(newProperty, description));
-
-						_selectedProperty = 0;
-						changed = true;
-					}
-				}
-				EditorGUI.EndDisabledGroup();
-
-				GUILayout.EndHorizontal();
-
-				foreach (var property in _properties)
-				{
-					changed |= property.OnGUI();
-				}
-
-				EditorGUI.indentLevel--;
-				GUILayout.EndVertical();
-			}
-#endif
 
             // Edit the textures
             GUILayout.Label("Textures");
@@ -2066,6 +2143,13 @@ namespace UMA.Editors
             {
                 changed |= texture.OnBlendGUI();
             }
+            if (_overlayData.asset.material != null && _overlayData.asset.material.materialType == UMAMaterial.MaterialType.UseExistingTextures)
+            {
+                foreach (var texture in _textures)
+                {
+                    changed |= texture.OnTileGUI();
+                }
+            }
             GUILayout.EndHorizontal();
 
 
@@ -2073,6 +2157,57 @@ namespace UMA.Editors
 
             GUIHelper.EndVerticalPadded(10);
 
+            return changed;
+        }
+        
+                private bool OnTagsGUI()
+        {
+            bool changed = false;
+            if (_overlayData.tags == null)
+            {
+                _overlayData.tags = new string[0];
+            }
+
+            if (_overlayData.tags.Length == 0)
+            {
+                EditorGUILayout.HelpBox("No tags defined for this overlay", MessageType.Info);
+            }
+
+            string newTag = CharacterBaseEditor.DoTagSelector(_overlayData.tags);
+            if (!string.IsNullOrWhiteSpace(newTag))
+            {
+                changed = true;
+                Array.Resize(ref _overlayData.tags, _overlayData.tags.Length + 1);
+                _overlayData.tags[_overlayData.tags.Length - 1] = newTag;
+            }
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Tags");
+            if (GUILayout.Button("Add Empty"))
+            {
+                Array.Resize(ref _overlayData.tags, _overlayData.tags.Length + 1);
+                _overlayData.tags[_overlayData.tags.Length - 1] = "";
+                changed = true;
+            }
+            GUILayout.EndHorizontal();
+
+            int deleted = -1;
+            for (int i = 0; i < _overlayData.tags.Length; i++)
+            {
+                GUILayout.BeginHorizontal();
+                _overlayData.tags[i] = EditorGUILayout.TextField(_overlayData.tags[i]);
+                if (GUILayout.Button("X", GUILayout.Width(22)))
+                {
+                    deleted = i;
+                }
+                GUILayout.EndHorizontal();
+            }
+            if (deleted != -1)
+            {
+                changed = true;
+                List<string> tags = new List<string>(_overlayData.tags);
+                tags.RemoveAt(deleted);
+                _overlayData.tags = tags.ToArray();
+            }
             return changed;
         }
 
@@ -2318,6 +2453,21 @@ namespace UMA.Editors
             return changed;
 
         }
+
+        public bool OnTileGUI()
+        {
+            bool changed = false;
+            InitEditor();
+            var currentTile = _overlay.IsTextureTiled(_channel);
+            var newTile = (bool) EditorGUILayout.ToggleLeft("Tile", currentTile, GUILayout.Width(100));
+            RestoreEditor();
+            if (currentTile != newTile)
+            {
+                _overlay.SetTextureTiling(_channel, newTile);
+                changed = true;
+            }
+            return changed;
+        }
     }
 
     public class ColorEditor
@@ -2475,6 +2625,8 @@ namespace UMA.Editors
         protected SlotMasterEditor slotEditor;
         protected bool InitialResourcesOnlyFlag;
 
+        public static int selectedTag = 0;
+
         protected bool NeedsReenable()
         {
             if (dnaEditor == null || dnaEditor.NeedsReenable())
@@ -2536,6 +2688,70 @@ namespace UMA.Editors
 
         bool? editBustedRecipe = null;
 
+        public static string[] DefaultTags
+        {
+            get
+            {
+                return UMAEditorUtilities.GetDefaultTags();
+            }
+        }
+
+        public static string DoTagSelector(string[] tagsField)
+        {
+            List<string> tags = new List<string>(tagsField);
+            bool changed = DoTagSelector(tags);
+
+            if (changed)
+            {
+                return tags[tags.Count- 1];
+            }
+            return "";
+        }
+
+        public static string DoTagSelector(string tagField)
+        {
+            List<string> tags = new List<string>();
+            bool changed = DoTagSelector(tags);
+
+            if (changed)
+            {
+                return tags[0];
+            }
+            return ""; 
+        }
+
+
+        public static bool DoTagSelector(List<string> tagsField)
+        {
+            bool changed = false;
+            if (DefaultTags != null && DefaultTags.Length > 0)
+            {
+                if (selectedTag < 0 || selectedTag >= DefaultTags.Length)
+                {
+                    selectedTag = 0;
+                }
+
+                GUILayout.BeginHorizontal();
+                selectedTag = EditorGUILayout.Popup(selectedTag, DefaultTags);
+                string currentTag = DefaultTags[selectedTag];
+                if (GUILayout.Button("Add Tag", GUILayout.Width(80)))
+                {
+                    if (!tagsField.Contains(currentTag))
+                    {
+                        tagsField.Add(currentTag);
+                        changed = true;
+                    }
+                }
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.Label("No tags found");
+            }
+
+            return changed;
+        }
+
         public override void OnInspectorGUI()
         {
             GUILayout.Label(_description);
@@ -2544,6 +2760,7 @@ namespace UMA.Editors
 
             if (!_AutomaticUpdates)
             {
+                EditorGUILayout.HelpBox("Automatic Updates are disabled. You will need to click the 'Save Recipe' button to save any changes you make.", MessageType.Warning);
                 if (GUILayout.Button("Save Recipe"))
                 {
                     _needsUpdate = true;
@@ -2552,10 +2769,11 @@ namespace UMA.Editors
             }
 
 
-            //scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none, GUILayout.MinHeight(600), GUILayout.MaxHeight(_lastScrollMax));
+           // scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
 
             if (target as UMATextRecipe != null)
             {
+                bool changed = false;
                 UMATextRecipe theRecipe = target as UMATextRecipe;
 #if UMA_ADDRESSABLES
 				if(!serializedObject.isEditingMultipleObjects) 
@@ -2596,6 +2814,25 @@ namespace UMA.Editors
 				}
 					GUI.enabled = wasEnabled; 
 				} 
+                EditorGUILayout.HelpBox("Checking ForceKeep will set the keep flag on the item", MessageType.Info);
+                bool oldForceKeep = theRecipe.forceKeep;
+                theRecipe.forceKeep = EditorGUILayout.Toggle("Force Keep", theRecipe.forceKeep);
+                if (oldForceKeep != theRecipe.forceKeep)
+                {
+                    changed = true;
+                }
+                bool oldLabelLocalFiles = theRecipe.labelLocalFiles;
+                EditorGUILayout.HelpBox("If you check Label Local Files, then the contents will be looked up locally, not from the index. Use this when you are substituting recipes for branding, etc.", MessageType.Info);
+                theRecipe.labelLocalFiles = EditorGUILayout.Toggle("Label Local Files", theRecipe.labelLocalFiles);
+                if (oldLabelLocalFiles != theRecipe.labelLocalFiles)
+                {
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    DoUpdate();
+                }
 #endif
             }
             if (_errorMessage != null)
@@ -2651,6 +2888,15 @@ namespace UMA.Editors
                     DoUpdate();
                     _needsUpdate = false;
                     _forceUpdate = false;
+                }
+                else
+                {
+                    if (_needsUpdate)
+                    {
+                        var recipeBase = (UMARecipeBase)target;
+                        recipeBase.Save(_recipe, UMAContextBase.Instance);
+                        EditorUtility.SetDirty(target);
+                    }
                 }
             }
             catch (UMAResourceNotFoundException e)

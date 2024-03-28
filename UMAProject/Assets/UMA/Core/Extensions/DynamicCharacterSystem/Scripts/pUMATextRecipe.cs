@@ -51,27 +51,40 @@ namespace UMA
 		public virtual void ConvertToType(string typeName)
 		{
 			if (Debug.isDebugBuild)
-				Debug.Log("Tried to convert to " + typeName);
-			foreach (Type t in Assembly.GetAssembly(typeof(UMATextRecipe)).GetTypes())
+            {
+                Debug.Log("Tried to convert to " + typeName);
+            }
+
+            Type[] array = Assembly.GetAssembly(typeof(UMATextRecipe)).GetTypes();
+            for (int i = 0; i < array.Length; i++)
 			{
-				if (t.Name == typeName)
+                Type t = array[i];
+                if (t.Name == typeName)
 				{
 					if (Debug.isDebugBuild)
-						Debug.Log("found matching type");
-					MethodInfo ConvertMethod = t.GetMethod("ConvertFromUTR", BindingFlags.Instance | BindingFlags.NonPublic);
+                    {
+                        Debug.Log("found matching type");
+                    }
+
+                    MethodInfo ConvertMethod = t.GetMethod("ConvertFromUTR", BindingFlags.Instance | BindingFlags.NonPublic);
 					if (ConvertMethod != null)
 					{
 						if (Debug.isDebugBuild)
-							Debug.Log("Found Convert method");
-						var newT = ScriptableObject.CreateInstance(t);
+                        {
+                            Debug.Log("Found Convert method");
+                        }
+
+                        var newT = ScriptableObject.CreateInstance(t);
 						ConvertMethod.Invoke(newT, new object[] { this, true });
 						break;
 					}
 					else
 					{
 						if (Debug.isDebugBuild)
-							Debug.Log("No convert method found in type " + t.Name);
-					}
+                        {
+                            Debug.Log("No convert method found in type " + t.Name);
+                        }
+                    }
 				}
 			}
 		}
@@ -101,10 +114,11 @@ namespace UMA
 			Sprite foundSprite = null;
 			if (wardrobeRecipeThumbs.Count > 0)
 			{
-				foreach (WardrobeRecipeThumb wdt in wardrobeRecipeThumbs)
+                for (int i = 0; i < wardrobeRecipeThumbs.Count; i++)
 				{
-					//Set a default when the first option with a value is found
-					if (foundSprite == null && wdt.thumb != null)
+                    WardrobeRecipeThumb wdt = wardrobeRecipeThumbs[i];
+                    //Set a default when the first option with a value is found
+                    if (foundSprite == null && wdt.thumb != null)
 					{
 						foundSprite = wdt.thumb;
 					}
@@ -135,21 +149,27 @@ namespace UMA
 		public static List<WardrobeSettings> GenerateWardrobeSet(Dictionary<string, List<UMATextRecipe>> addlRecipes, params string[] slotsToSave)
 		{
 			if (addlRecipes == null)
-				return null;
-			var wardrobeSet = new List<WardrobeSettings>();
+            {
+                return null;
+            }
+
+            var wardrobeSet = new List<WardrobeSettings>();
 			if (addlRecipes.Count == 0)
-				return wardrobeSet;
+            {
+                return wardrobeSet;
+            }
 
-
-			if (slotsToSave.Length > 0)
+            if (slotsToSave.Length > 0)
 			{
-				foreach (string s in slotsToSave)
+                for (int i = 0; i < slotsToSave.Length; i++)
 				{
-					if (addlRecipes.ContainsKey(s))
+                    string s = slotsToSave[i];
+                    if (addlRecipes.ContainsKey(s))
 					{
-						foreach (UMATextRecipe utr in addlRecipes[s])
+                        for (int i1 = 0; i1 < addlRecipes[s].Count; i1++)
 						{
-							if (utr != null)
+                            UMATextRecipe utr = addlRecipes[s][i1];
+                            if (utr != null)
 							{
 								wardrobeSet.Add(new WardrobeSettings(s, utr.name));
 								continue;
@@ -163,9 +183,10 @@ namespace UMA
 			{
 				foreach (KeyValuePair<string, List<UMATextRecipe>> kp in addlRecipes)
 				{
-					foreach (UMATextRecipe utr in kp.Value)
+                    for (int i = 0; i < kp.Value.Count; i++)
 					{
-						wardrobeSet.Add(new WardrobeSettings(utr.wardrobeSlot, utr.name));
+                        UMATextRecipe utr = kp.Value[i];
+                        wardrobeSet.Add(new WardrobeSettings(utr.wardrobeSlot, utr.name));
 					}
 				}
 			}
@@ -176,15 +197,22 @@ namespace UMA
 		public static List<WardrobeSettings> GenerateWardrobeSet(Dictionary<string, UMATextRecipe> wardrobeRecipes, params string[] slotsToSave)
 		{
 			if (wardrobeRecipes == null)
-				return null;
-			var wardrobeSet = new List<WardrobeSettings>();
+            {
+                return null;
+            }
+
+            var wardrobeSet = new List<WardrobeSettings>();
 			if (wardrobeRecipes.Count == 0)
-				return wardrobeSet;
-			if (slotsToSave.Length > 0)
+            {
+                return wardrobeSet;
+            }
+
+            if (slotsToSave.Length > 0)
 			{
-				foreach (string s in slotsToSave)
+                for (int i = 0; i < slotsToSave.Length; i++)
 				{
-					if (wardrobeRecipes.ContainsKey(s))
+                    string s = slotsToSave[i];
+                    if (wardrobeRecipes.ContainsKey(s))
 					{
 						UMATextRecipe utr = wardrobeRecipes[s];
 						if (utr != null)
@@ -199,8 +227,10 @@ namespace UMA
 			else
 			{
 				foreach (KeyValuePair<string, UMATextRecipe> kp in wardrobeRecipes)
-					wardrobeSet.Add(new WardrobeSettings(kp.Key, kp.Value.name));
-			}
+                {
+                    wardrobeSet.Add(new WardrobeSettings(kp.Key, kp.Value.name));
+                }
+            }
 			return wardrobeSet;
 		}
 
@@ -216,9 +246,11 @@ namespace UMA
 			var typeInRecipe = GetRecipesType(recipeString);
 			recipeType = typeInRecipe != "Standard" ? typeInRecipe : recipeType;
 			if (RecipeHasWardrobeSet(recipeString))
-				activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
-			//if its an old UMARecipe there wont be an activeWardrobeSet field
-			if (activeWardrobeSet == null)
+            {
+                activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
+            }
+            //if its an old UMARecipe there wont be an activeWardrobeSet field
+            if (activeWardrobeSet == null)
 			{
 				recipeType = "Standard";
 				base.Load(umaRecipe, context);
@@ -256,16 +288,20 @@ namespace UMA
 		public static DCSUniversalPackRecipe PackedLoadDCS(UMAContextBase context, string recipeToUnpack, UMATextRecipe targetUTR = null)
 		{
 			if ((recipeToUnpack == null) || (recipeToUnpack.Length == 0))
-				return new DCSUniversalPackRecipe();
-			//first use the DCSRecipeChecker to check if this is a DCS recipe
-			var typeInRecipe = GetRecipesType(recipeToUnpack);
+            {
+                return new DCSUniversalPackRecipe();
+            }
+            //first use the DCSRecipeChecker to check if this is a DCS recipe
+            var typeInRecipe = GetRecipesType(recipeToUnpack);
 			var targetRecipeType = typeInRecipe != "Standard" ? typeInRecipe : (targetUTR != null ? targetUTR.recipeType : "Standard");
 			if (targetUTR != null)
 			{
 				targetUTR.recipeType = targetRecipeType;
 				if (RecipeHasWardrobeSet(recipeToUnpack))
-					targetUTR.activeWardrobeSet = GetRecipesWardrobeSet(recipeToUnpack);
-			}
+                {
+                    targetUTR.activeWardrobeSet = GetRecipesWardrobeSet(recipeToUnpack);
+                }
+            }
 			//Right now the only recipeType that uses the DCSModel is "DynamicCharacterAvatar"
 			DCSUniversalPackRecipe thisUnpackedUniversal = null;
 			if (targetRecipeType == "DynamicCharacterAvatar" || targetRecipeType == "WardrobeCollection")
@@ -279,9 +315,11 @@ namespace UMA
 				thisUnpackedUniversal = new DCSUniversalPackRecipe(thisUnpacked);
 			}
 			if (RecipeHasWardrobeSet(recipeToUnpack))
-				thisUnpackedUniversal.wardrobeSet = GetRecipesWardrobeSet(recipeToUnpack);
+            {
+                thisUnpackedUniversal.wardrobeSet = GetRecipesWardrobeSet(recipeToUnpack);
+            }
 
-			return thisUnpackedUniversal;
+            return thisUnpackedUniversal;
 		}
 
 		//TODO: once everyone has their recipes updated remove this- we only want UMATextRecipes to save as 'Standard'
@@ -291,8 +329,11 @@ namespace UMA
 		public void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context, Dictionary<string, UMATextRecipe> wardrobeRecipes, bool backwardsCompatible = true)
 		{
 			if (wardrobeRecipes.Count > 0)
-				activeWardrobeSet = GenerateWardrobeSet(wardrobeRecipes);
-			recipeType = backwardsCompatible ? "Standard" : "DynamicCharacterAvatar";
+            {
+                activeWardrobeSet = GenerateWardrobeSet(wardrobeRecipes);
+            }
+
+            recipeType = backwardsCompatible ? "Standard" : "DynamicCharacterAvatar";
 			Save(umaRecipe, context);
 		}
 
@@ -317,11 +358,14 @@ namespace UMA
 				var packedRecipeToSave = new DCSUniversalPackRecipe(packedRecipe);//this gets us a recipe with all the standard stuff plus our extra fields
 																				//so now we can save the wardrobeSet into it if it existed
 				if (activeWardrobeSet != null)
-					if (activeWardrobeSet.Count > 0)
+                {
+                    if (activeWardrobeSet.Count > 0)
 					{
 						packedRecipeToSave.wardrobeSet = activeWardrobeSet;
 					}
-				recipeString = JsonUtility.ToJson(packedRecipeToSave);
+                }
+
+                recipeString = JsonUtility.ToJson(packedRecipeToSave);
 			}
 		}
 
@@ -352,10 +396,14 @@ namespace UMA
 				get
 				{
 					if (wardrobeSet.Count > 0)
-						return wardrobeSet;
-					else
-						return wardrobeRecipesJson;
-				}
+                    {
+                        return wardrobeSet;
+                    }
+                    else
+                    {
+                        return wardrobeRecipesJson;
+                    }
+                }
 			}
 		}
 
@@ -369,8 +417,11 @@ namespace UMA
 		public static string GetRecipesType(string recipeString)
 		{
 			if (String.IsNullOrEmpty(recipeString))
-				return "Standard";
-			return JsonUtility.FromJson<DCSRecipeChecker>(recipeString).packedRecipeType;
+            {
+                return "Standard";
+            }
+
+            return JsonUtility.FromJson<DCSRecipeChecker>(recipeString).packedRecipeType;
 		}
 		/// <summary>
 		/// Check if the given recipe string has any wardrobeSet data
@@ -380,8 +431,11 @@ namespace UMA
 		public static bool RecipeHasWardrobeSet(string recipeString)
 		{
 			if (String.IsNullOrEmpty(recipeString))
-				return false;
-			return JsonUtility.FromJson<DCSRecipeChecker>(recipeString).checkedWardrobeSet.Count > 0;
+            {
+                return false;
+            }
+
+            return JsonUtility.FromJson<DCSRecipeChecker>(recipeString).checkedWardrobeSet.Count > 0;
 		}
 		/// <summary>
 		/// Get the wardrobeSet data from the given recipe string
@@ -391,8 +445,11 @@ namespace UMA
 		public static List<WardrobeSettings> GetRecipesWardrobeSet(string recipeString)
 		{
 			if (String.IsNullOrEmpty(recipeString))
-				return null;
-			return JsonUtility.FromJson<DCSRecipeChecker>(recipeString).checkedWardrobeSet;
+            {
+                return null;
+            }
+
+            return JsonUtility.FromJson<DCSRecipeChecker>(recipeString).checkedWardrobeSet;
 		}
 
 		[System.Serializable]
@@ -462,8 +519,11 @@ namespace UMA
 				name = recipeName;
 				race = dcaToSave.activeRace.racedata.raceName;
 				if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveDNA))
-					dna = GetPackedDNA(recipeToSave);
-				if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveColors))
+                {
+                    dna = GetPackedDNA(recipeToSave);
+                }
+
+                if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveColors))
 				{
 					characterColors = new List<PackedOverlayColorDataV3>();
 					for (int i = 0; i < recipeToSave.sharedColors.Length; i++)
@@ -472,12 +532,17 @@ namespace UMA
 					}
 				}
 				if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveWardrobe))
-					wardrobeSet = GenerateWardrobeSet(dcaToSave.WardrobeRecipes, dcaToSave.WardrobeCollections, dcaToSave.AdditiveRecipes, slotsToSave);
-				if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveAnimator))
+                {
+                    wardrobeSet = GenerateWardrobeSet(dcaToSave.WardrobeRecipes, dcaToSave.WardrobeCollections, dcaToSave.AdditiveRecipes, slotsToSave);
+                }
+
+                if (saveOptions.HasFlagSet(DynamicCharacterAvatar.SaveOptions.saveAnimator))
 				{
 					if (dcaToSave.animationController != null)
-						raceAnimatorController = (dcaToSave.animationController.name);
-				}
+                    {
+                        raceAnimatorController = (dcaToSave.animationController.name);
+                    }
+                }
 			}
 			/// <summary>
 			/// Converts standard UMA Pack Recipe data into this data model, either when loading an old recipe, or when the RecipeEditor is saving a DCS recipe asset
@@ -496,8 +561,10 @@ namespace UMA
 				characterColors = new List<PackedOverlayColorDataV3>(umaPackRecipe.fColors);
 				//if this is coming from the Recipe Editor then it will need wardrobe settings- but it cant send them- however they will be in the activeWardrobeSet field
 				if (wardrobeSetToSave != null)
-					wardrobeSet = wardrobeSetToSave;
-			}
+                {
+                    wardrobeSet = wardrobeSetToSave;
+                }
+            }
 			#endregion
 		}
 
@@ -532,8 +599,10 @@ namespace UMA
 								_sharedColors = colorData;
 							}
 							else
-								_sharedColors = new OverlayColorData[0];
-						}//PackedOverlayColorDataV3
+                            {
+                                _sharedColors = new OverlayColorData[0];
+                            }
+                        }//PackedOverlayColorDataV3
 						else if (colors != null)
 						{
 							if (colors.Length > 0)
@@ -547,8 +616,10 @@ namespace UMA
 								_sharedColors = colorData;
 							}
 							else
-								_sharedColors = new OverlayColorData[0];
-						}
+                            {
+                                _sharedColors = new OverlayColorData[0];
+                            }
+                        }
 						else
 						{
 							_sharedColors = new OverlayColorData[0];

@@ -21,9 +21,11 @@ namespace UMA.Examples
 		private static Texture2D PersistLookupTexture (string assetName, Texture2D tex)
 		{
 			if (!System.IO.Directory.Exists (kDirectoryName))
-				System.IO.Directory.CreateDirectory (kDirectoryName);	
+            {
+                System.IO.Directory.CreateDirectory (kDirectoryName);
+            }
 
-			string assetPath = System.IO.Path.Combine (kDirectoryName, assetName + "." + kExtensionName);
+            string assetPath = System.IO.Path.Combine (kDirectoryName, assetName + "." + kExtensionName);
 			bool newAsset = !System.IO.File.Exists (assetPath);
 			
 			System.IO.File.WriteAllBytes (assetPath, tex.EncodeToPNG());
@@ -40,9 +42,11 @@ namespace UMA.Examples
 			texSettings.textureCompression = TextureImporterCompression.Uncompressed;                             
 			texSettings.wrapMode = TextureWrapMode.Clamp;
 			if (newAsset)
-				AssetDatabase.ImportAsset (assetPath, ImportAssetOptions.ForceUpdate);
-			
-			AssetDatabase.Refresh ();
+            {
+                AssetDatabase.ImportAsset (assetPath, ImportAssetOptions.ForceUpdate);
+            }
+
+            AssetDatabase.Refresh ();
 			
 			Texture2D newTex = AssetDatabase.LoadAssetAtPath (assetPath, typeof(Texture2D)) as Texture2D;		
 			return newTex;
@@ -51,38 +55,53 @@ namespace UMA.Examples
 		private void PersistLookupTexture ()
 		{
 			BRDFLookupTexture l = target as BRDFLookupTexture;
-			if (!l) return;
-			
-			Material m = FindCompatibleMaterial (l);
+			if (!l)
+            {
+                return;
+            }
+
+            Material m = FindCompatibleMaterial (l);
 			
 			string assetName = (m ? m.name : l.gameObject.name) + kLookupTexturePropertyName;
 			Texture2D persistentTexture = PersistLookupTexture (assetName, l.lookupTexture);
 			
 			if (m)
-				m.SetTexture (kLookupTexturePropertyName, persistentTexture);
-		}
+            {
+                m.SetTexture (kLookupTexturePropertyName, persistentTexture);
+            }
+        }
 		
 		static Material FindCompatibleMaterial (BRDFLookupTexture l)
 		{
 			Renderer r = l.gameObject.GetComponent<Renderer>();
-			if (!r) return null;
-			
-			Material m = r.sharedMaterial;
+			if (!r)
+            {
+                return null;
+            }
+
+            Material m = r.sharedMaterial;
 			if (m && m.HasProperty (kLookupTexturePropertyName))
-				return m;
-			
-			return null;
+            {
+                return m;
+            }
+
+            return null;
 		}
 
 		public void OnEnable ()
 		{
 			BRDFLookupTexture l = target as BRDFLookupTexture;
-			if (!l) return;
-			
-			string path = AssetDatabase.GetAssetPath (l.lookupTexture);
+			if (!l)
+            {
+                return;
+            }
+
+            string path = AssetDatabase.GetAssetPath (l.lookupTexture);
 			if (path == "")
-				changed = true;
-		}
+            {
+                changed = true;
+            }
+        }
 		
 		public void OnDisable ()
 		{
@@ -150,8 +169,11 @@ namespace UMA.Examples
 			l.fastPreview = EditorGUILayout.Toggle ("Fast Preview", l.fastPreview);
 			GUILayout.FlexibleSpace();
 			if (GUILayout.Button (previewRGB? "RGB": "Alpha", "MiniButton", GUILayout.MinWidth(38)))
-				previewRGB = !previewRGB;
-			GUILayout.EndHorizontal();
+            {
+                previewRGB = !previewRGB;
+            }
+
+            GUILayout.EndHorizontal();
 			
 			if (changed || !l.lookupTexture)
 			{
@@ -166,10 +188,14 @@ namespace UMA.Examples
 				else
 				{
 					if (l.fastPreview)
-						l.Preview ();
-					else
-						l.Bake ();
-				}
+                    {
+                        l.Preview ();
+                    }
+                    else
+                    {
+                        l.Bake ();
+                    }
+                }
 				GUILayout.EndHorizontal ();
 			}
 			
@@ -179,13 +205,19 @@ namespace UMA.Examples
 			r.width -= kTexturePreviewBorder * 2;
 			r.height -= kTexturePreviewBorder * 2;
 			if (previewRGB)
-				EditorGUI.DrawPreviewTexture (r, l.lookupTexture);
-			else
-				EditorGUI.DrawTextureAlpha (r, l.lookupTexture);
+            {
+                EditorGUI.DrawPreviewTexture (r, l.lookupTexture);
+            }
+            else
+            {
+                EditorGUI.DrawTextureAlpha (r, l.lookupTexture);
+            }
 
-			// save preview to disk
-			if (GUI.changed && changed && l.lookupTexture && l.fastPreview)
-				PersistLookupTexture ();
-		}
+            // save preview to disk
+            if (GUI.changed && changed && l.lookupTexture && l.fastPreview)
+            {
+                PersistLookupTexture ();
+            }
+        }
 	}
 }

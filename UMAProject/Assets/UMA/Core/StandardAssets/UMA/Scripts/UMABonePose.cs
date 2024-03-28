@@ -66,9 +66,10 @@ namespace UMA.PoseTools
 				poses = new PoseBone[0];
 			}
 
-			foreach (PoseBone pose in poses)
+            for (int i = 0; i < poses.Length; i++)
 			{
-				if (pose.hash == 0)
+                PoseBone pose = poses[i];
+                if (pose.hash == 0)
 				{
 					pose.hash = UMAUtils.StringToHash(pose.bone);
 				}
@@ -120,8 +121,11 @@ namespace UMA.PoseTools
 			if (tweenWeights.Length != tweenCount)
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("Tween pose / weight mismatch!");
-				return weight;
+                {
+                    Debug.LogError("Tween pose / weight mismatch!");
+                }
+
+                return weight;
 			}
 
 			// weight <= first tween weight
@@ -173,8 +177,11 @@ namespace UMA.PoseTools
 			if ((poses == null) || (umaSkeleton == null))
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("Missing poses or skeleton!");
-				return;
+                {
+                    Debug.LogError("Missing poses or skeleton!");
+                }
+
+                return;
 			}
 
 			if ((tweenPoses != null) && (tweenPoses.Length > 0) && (weight < 1f))
@@ -187,9 +194,10 @@ namespace UMA.PoseTools
 				return;
 			}
 
-			foreach (PoseBone pose in poses)
+            for (int i = 0; i < poses.Length; i++)
 			{
-				umaSkeleton.Morph(pose.hash, pose.position, pose.scale, pose.rotation, weight);
+                PoseBone pose = poses[i];
+                umaSkeleton.Morph(pose.hash, pose.position, pose.scale, pose.rotation, weight);
 			}
 		}
 

@@ -44,8 +44,10 @@ namespace UMA
 				for(int i = 0; i < _dnaEvaluators.Count; i++)
 				{
 					if (!string.IsNullOrEmpty(_dnaEvaluators[i].dnaName))
-						ret.Add(_dnaEvaluators[i].dnaName);
-				}
+                    {
+                        ret.Add(_dnaEvaluators[i].dnaName);
+                    }
+                }
 				return ret;
 			}
 		}
@@ -107,8 +109,10 @@ namespace UMA
 				return GetAggregateValueNew(umaDna, startingValue);
 			}
 			else
-				return startingValue;
-		}
+            {
+                return startingValue;
+            }
+        }
 
 		private float GetAggregateValueNew(UMADnaBase dna, float result = 0f)
 		{
@@ -125,8 +129,10 @@ namespace UMA
 					}
 				}
 				if (aveCount > 0)
-					result = result / aveCount;
-			}
+                {
+                    result = result / aveCount;
+                }
+            }
 			else if (_aggregationMethod == AggregationMethodOpts.Maximum)
 			{
 				for (int i = 0; i < _dnaEvaluators.Count; i++)
@@ -136,8 +142,10 @@ namespace UMA
 					{
 						tempResult = _dnaEvaluators[i].Evaluate(dna);
 						if (tempResult > result)
-							result = tempResult;
-					}
+                        {
+                            result = tempResult;
+                        }
+                    }
 				}
 			}
 			else if (_aggregationMethod == AggregationMethodOpts.Minimum)
@@ -149,8 +157,10 @@ namespace UMA
 					{
 						tempResult = _dnaEvaluators[i].Evaluate(dna);
 						if (tempResult < result)
-							result = tempResult;
-					}
+                        {
+                            result = tempResult;
+                        }
+                    }
 				}
 			}
 			else if (aggregationMethod == AggregationMethodOpts.Cumulative)
@@ -162,14 +172,22 @@ namespace UMA
 					{
 						tempResult = _dnaEvaluators[i].Evaluate(dna);
 						if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Add)
-							result += tempResult;
-						else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Subtract)
-							result -= tempResult;
-						else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Multiply)
-							result *= tempResult;
-						else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Divide && tempResult != 0)
-							result /= tempResult;
-					}
+                        {
+                            result += tempResult;
+                        }
+                        else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Subtract)
+                        {
+                            result -= tempResult;
+                        }
+                        else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Multiply)
+                        {
+                            result *= tempResult;
+                        }
+                        else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Divide && tempResult != 0)
+                        {
+                            result /= tempResult;
+                        }
+                    }
 				}
 			}
 			return result;
@@ -203,8 +221,10 @@ namespace UMA
 					for (int i = 0; i < vals.Count; i++)
 					{
 						if (vals[i] < result)
-							result = vals[i];
-					}
+                        {
+                            result = vals[i];
+                        }
+                    }
 				}
 			}
 			if(_aggregationMethod == AggregationMethodOpts.Maximum)
@@ -215,8 +235,10 @@ namespace UMA
 					for (int i = 0; i < vals.Count; i++)
 					{
 						if (vals[i] > result)
-							result = vals[i];
-					}
+                        {
+                            result = vals[i];
+                        }
+                    }
 				}
 			}
 			return result;

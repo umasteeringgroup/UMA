@@ -16,26 +16,26 @@ using System.IO;
 
 namespace UMA.ShaderPackager
 {
-   [ScriptedImporter(0, ShaderPackageImporter.k_FileExtension)]
-   public class ShaderPackageImporter : ScriptedImporter
-   {
-      public const string k_FileExtension = ".umaShaderPack";
+    [ScriptedImporter(0, ShaderPackageImporter.k_FileExtension)]
+    public class ShaderPackageImporter : ScriptedImporter
+    {
+        public const string k_FileExtension = ".umaShaderPack";
 
-      public override void OnImportAsset(AssetImportContext ctx)
-      {
-         
-         string fileContent = File.ReadAllText(ctx.assetPath);
-         var package = ObjectFactory.CreateInstance<ShaderPackage>();
+        public override void OnImportAsset(AssetImportContext ctx)
+        {
 
-         if (!string.IsNullOrEmpty(fileContent))
-         {
-            EditorJsonUtility.FromJsonOverwrite(fileContent, package);
-         }
+            string fileContent = File.ReadAllText(ctx.assetPath);
+            var package = ObjectFactory.CreateInstance<ShaderPackage>();
 
-         if (package.entries == null)
-         {
-            package.entries = new List<ShaderPackage.Entry>();
-         }
+            if (!string.IsNullOrEmpty(fileContent))
+            {
+                EditorJsonUtility.FromJsonOverwrite(fileContent, package);
+            }
+
+            if (package.entries == null)
+            {
+                package.entries = new List<ShaderPackage.Entry>();
+            }
 
 #if __BETTERSHADERS__
          if (package.betterShader != null)
@@ -44,7 +44,7 @@ namespace UMA.ShaderPackager
          }
 #endif
 
-         package.Pack(false);
+            package.Pack(false);
 
 #if __BETTERSHADERS__
          if (package.betterShader != null)
@@ -54,28 +54,29 @@ namespace UMA.ShaderPackager
          
 #endif
 
-         foreach (var e in package.entries)
-         {
-            if (e.shader != null)
+            for (int i = 0; i < package.entries.Count; i++)
             {
-               ctx.DependsOnSourceAsset(AssetDatabase.GetAssetPath(e.shader));
+                ShaderPackage.Entry e = package.entries[i];
+                if (e.shader != null)
+                {
+                    ctx.DependsOnSourceAsset(AssetDatabase.GetAssetPath(e.shader));
+                }
             }
-         }
-         
-         string shaderSrc = package.GetShaderSrc();
-         if (shaderSrc == null)
-         {
-            Debug.LogError("No Shader for this platform and SRP provided");
-            // maybe make an error shader here?
-            return;
-         }
-         
-         Shader shader = ShaderUtil.CreateShaderAsset(ctx, shaderSrc, false);
 
-         ctx.AddObjectToAsset("MainAsset", shader);
-         ctx.SetMainObject(shader);
-      }
+            string shaderSrc = package.GetShaderSrc();
+            if (shaderSrc == null)
+            {
+                Debug.LogError("No Shader for this platform and SRP provided");
+                // maybe make an error shader here?
+                return;
+            }
+
+            Shader shader = ShaderUtil.CreateShaderAsset(ctx, shaderSrc, false);
+
+            ctx.AddObjectToAsset("MainAsset", shader);
+            ctx.SetMainObject(shader);
+        }
 
 
-   }
+    }
 }

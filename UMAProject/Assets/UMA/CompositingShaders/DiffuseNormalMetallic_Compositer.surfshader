@@ -1,0 +1,429 @@
+BEGIN_OPTIONS
+   ShaderName "UMA/Compositing/Diffuse_Normal_Metallic_Compositer"
+   Stackable "False"
+   DisableGBufferPass "True" // disable gbuffer pass
+   Workflow "Metallic"
+END_OPTIONS
+
+BEGIN_PROPERTIES
+
+    [BetterHeader(Material Specific)]
+	_OverlayCount ("OverlayCount", Float) = 0
+	_ColorModulation ("Color Modulation", Range(0,2)) = 1
+	_MetallicModulation ("Metallic Level", Range(0,2)) = 1
+	_SmoothnessModulation ("Smoothness Level", Range(0,2)) = 1
+    _HalfLambertStrength ("Lambert(0), HalfLambert(1)", Range(0,4)) = 1
+    _UseTiling99 ("Use Tiling", Float) = 0
+	[BetterHeader(Rim Lighting)]
+    _RimLightingModulation ("Rim Lighting Level", Float) = 0
+	_RimLightColor("Rim Light Color", Color) = (1,1,1,1)
+	_RimLightPower("Rim Light Power", Range(0.5, 12)) = 4
+   // _EmissiveModulation ("Emissive Level", Range(0,2)) = 1
+
+    [Enum(Off,0,Front,1,Back,2)]_CullMode("Culling Mode", Float) = 2
+    [Enum(Flip, 0, Mirror, 1, None, 2)] _DoubleSidedNormalMode("Double sided normal mode", Float) = 1
+
+    [GroupRollout(Base Overlay)]
+    [Group(Base Overlay)][NoScaleOffset]_BaseMap("BaseMap", 2D) = "white" {}
+    //[Message(A _BumpMap is encoded as follows R Normal_X G Normal_Y B Metallic_Level A Smoothness_Level)] 
+    [BetterHeader(Normal Mask)]
+    [Group(Base Overlay)][NoScaleOffset]_BumpMap("_BumpMap", 2D) = "bump" {}
+    [Group(Base Overlay)][NoScaleOffset]_MetallicGlossMap("_MetallicGlossMap", 2D) = "black" {}
+
+    // no AlphaMask for the base.
+    [Group(Base Overlay)]_Tile0_0 ("Tile0_0", Float) = 1
+    [Group(Base Overlay)]_Tile0_1 ("Tile0_1", Float) = 1
+    [Group(Base Overlay)]_Tile0_2 ("Tile0_2", Float) = 1
+    [Group(Base Overlay)]_NormalStrength0("Normal Strength 0", Range(0,2)) = 1
+	[Group(Base Overlay)]_RedColor0   ("RedColor", Color) = (1, 1, 1, 1)
+	[Group(Base Overlay)]_GreenColor0 ("GreenColor", Color) = (1, 1, 1, 1)
+	[Group(Base Overlay)]_BlueColor0  ("BlueColor", Color) = (1, 1, 1, 1)
+    [Group(Base Overlay)]_Tint0_0 ("Tint 0_0",Color) = (1,1,1,1)
+    [Group(Base Overlay)]_Tint0_1 ("Tint 0_1",Color) = (1,1,1,1)
+    [Group(Base Overlay)]_Tint0_2 ("Tint 0_2",Color) = (1,1,1,1)
+    [Group(Base Overlay)]_Add0_0 ("Add 0_0",Color) = (0,0,0,0)
+    [Group(Base Overlay)]_Add0_1 ("Add 0_1",Color) = (0,0,0,0)
+    [Group(Base Overlay)]_Add0_2 ("Add 0_2",Color) = (0,0,0,0)
+ 
+    [GroupRollout(Overlay 1)]
+    [Group(Overlay 1)][NoScaleOffset]_BaseMap1("BaseMap1", 2D) = "white" {}
+    [Group(Overlay 1)][NoScaleOffset]_BumpMap1("_BumpMap1", 2D) = "bump" {}
+    [Group(Overlay 1)][NoScaleOffset]_MetallicGlossMap1("_MetallicGlossMap1", 2D) = "black" {}
+    [Group(Overlay 1)][NoScaleOffset]_AlphaMask1("Mask1", 2D) = "white" {} 
+    [Group(Overlay 1)]_UseTiling1 ("Use Tiling 1", Float) = 0
+    [Group(Overlay 1)]_Tile1_0 ("Tile1_0", Float) = 1
+    [Group(Overlay 1)]_Tile1_1 ("Tile1_1", Float) = 1
+    [Group(Overlay 1)]_Tile1_2 ("Tile1_2", Float) = 1
+    [Group(Overlay 1)]_NormalStrength1("Normal Strength 1", Range(0,2)) = 1
+    [Group(Overlay 1)]_Tint1_0 ("Tint 1_0",Color) = (1,1,1,1)
+    [Group(Overlay 1)]_Tint1_1 ("Tint 1_1",Color) = (1,1,1,1)
+    [Group(Overlay 1)]_Tint1_2 ("Tint 1_2",Color) = (1,1,1,1)
+    [Group(Overlay 1)]_Add1_0 ("Add 1_0",Color) = (0,0,0,0)
+    [Group(Overlay 1)]_Add1_1 ("Add 1_1",Color) = (0,0,0,0)
+    [Group(Overlay 1)]_Add1_2 ("Add 1_2",Color) = (0,0,0,0)
+
+    [Group(Overlay 1)]_UV_Offset1 ("UV Offset 1",Vector) = (0,0,1,1)   
+
+    [GroupRollout(Overlay 2)]
+    [Group(Overlay 2)][NoScaleOffset]_BaseMap2("BaseMap2", 2D) = "white" {}
+    [Group(Overlay 2)][NoScaleOffset]_BumpMap2("_BumpMap2", 2D) = "bump" {}
+    [Group(Overlay 2)][NoScaleOffset]_MetallicGlossMap2("_MetallicGlossMap2", 2D) = "black" {}
+    [Group(Overlay 2)][NoScaleOffset]_AlphaMask2("Mask2", 2D) = "white" {} 
+    [Group(Overlay 1)]_UseTiling2 ("Use Tiling 2", Float) = 0
+    [Group(Overlay 2)]_Tile2_0 ("Tile2_0", Float) = 1
+    [Group(Overlay 2)]_Tile2_1 ("Tile2_1", Float) = 1
+    [Group(Overlay 2)]_Tile2_2 ("Tile2_2", Float) = 1
+    [Group(Overlay 2)]_NormalStrength2("Normal Strength 2", Range(0,2)) = 1
+    [Group(Overlay 2)]_Tint2_0 ("Tint 2_0",Color) = (1,1,1,1)
+    [Group(Overlay 2)]_Tint2_1 ("Tint 2_1",Color) = (1,1,1,1)
+    [Group(Overlay 2)]_Tint2_2 ("Tint 2_2",Color) = (1,1,1,1)
+    [Group(Overlay 2)]_Add2_0 ("Add 2_0",Color) = (0,0,0,0)
+    [Group(Overlay 2)]_Add2_1 ("Add 2_1",Color) = (0,0,0,0)
+    [Group(Overlay 2)]_Add2_2 ("Add 2_2",Color) = (0,0,0,0)
+
+    [Group(Overlay 1)]_UV_Offset2 ("UV Offset 2",Vector) = (0,0,1,1)   
+
+    // Overlay 3
+    [GroupRollout(Overlay 3)]
+    [Group(Overlay 3)][NoScaleOffset]_BaseMap3("BaseMap3", 2D) = "white" {}
+    [Group(Overlay 3)][NoScaleOffset]_BumpMap3("_BumpMap3", 2D) = "bump" {}
+    [Group(Overlay 3)][NoScaleOffset]_MetallicGlossMap3("_MetallicGlossMap3", 2D) = "black" {}   
+    [Group(Overlay 3)][NoScaleOffset]_AlphaMask3("Mask3", 2D) = "white" {} 
+
+    [Group(Overlay 3)]_UseTiling3 ("Use Tiling 3", Float) = 0
+    [Group(Overlay 3)]_Tile3_0 ("Tile3_0", Float) = 1
+    [Group(Overlay 3)]_Tile3_1 ("Tile3_1", Float) = 1
+    [Group(Overlay 3)]_Tile3_2 ("Tile3_2", Float) =1
+
+    [Group(Overlay 3)]_NormalStrength3("Normal Strength 3", Range(0,2)) = 1
+    [Group(Overlay 3)]_Tint3_0 ("Tint 3_0",Color) = (1,1,1,1)
+    [Group(Overlay 3)]_Tint3_1 ("Tint 3_1",Color) = (1,1,1,1)
+    [Group(Overlay 3)]_Tint3_2 ("Tint 3_2",Color) = (1,1,1,1)
+    [Group(Overlay 3)]_Add3_0 ("Add 3_0",Color) = (0,0,0,0)
+    [Group(Overlay 3)]_Add3_1 ("Add 3_1",Color) = (0,0,0,0)
+    [Group(Overlay 3)]_Add3_2 ("Add 3_2",Color) = (0,0,0,0)
+
+    [Group(Overlay 1)]_UV_Offset3 ("UV Offset 3",Vector) = (0,0,1,1)   
+END_PROPERTIES
+
+BEGIN_PASS("All")
+   Cull [_CullMode]
+END_PASS
+
+// Any variables you want to have in the per material CBuffer go here.
+BEGIN_CBUFFER
+
+    half  _OverlayCount;
+	half  _ColorModulation;
+	half  _SmoothnessModulation;
+	half  _MetallicModulation;
+    half  _EmissiveModulation;
+    half _HalfLambertStrength;
+    float _DoubleSidedNormalMode;
+    half3 _RimLightColor;
+	half  _RimLightPower;
+    float _RimLightingModulation;
+    // These should ALL BE IN ARRAYS!!!!!
+    // But unity will not save/restore arrays on appdomain reload,NOR CAN YOU EDIT THEM IN THE INSPECTOR -  so properties on materials are LOST
+    // unless you write your own save/restore routine. But there are no events to know when they are lost or will be lost!!!!
+    // so until I can write a utility to save/restore these, but only in edit time, this is what they will be.
+    half  _Tile0_0;
+    half  _Tile0_1; 
+    half  _Tile0_2;
+	half4 _RedColor0;
+	half4 _GreenColor0;
+	half4 _BlueColor0;
+    half _NormalStrength0;
+    half4 _Tint0_0;
+    half4 _Tint0_1;
+    half4 _Tint0_2;
+    half4 _Add0_0;
+    half4 _Add0_1;
+    half4 _Add0_2;
+    half4 _HasTextures0;
+
+    half  _Tile1_0;
+    half  _Tile1_1;
+    half  _Tile1_2;
+    half _NormalStrength1;
+    half4 _Tint1_0;
+    half4 _Tint1_1;
+    half4 _Tint1_2;
+    half4 _Add1_0;
+    half4 _Add1_1;
+    half4 _Add1_2;
+    half4 _HasTextures1;
+    half4 _UV_Offset1;
+    half  _UseTiling1;
+
+    half  _Tile2_0;
+    half  _Tile2_1;
+    half  _Tile2_2;
+    half _NormalStrength2;
+    half4 _Tint2_0;
+    half4 _Tint2_1;
+    half4 _Tint2_2;
+    half4 _Add2_0;
+    half4 _Add2_1;
+    half4 _Add2_2;
+    half4 _HasTextures2;
+    half4 _UV_Offset2;
+    half  _UseTiling2;
+
+    half  _Tile3_0;
+    half  _Tile3_1;
+    half  _Tile3_2;
+    half _NormalStrength3;
+    half4 _Tint3_0;
+    half4 _Tint3_1;
+    half4 _Tint3_2;
+    half4 _Add3_0;
+    half4 _Add3_1;
+    half4 _Add3_2;
+    half4 _HasTextures3;
+
+    half4 _UV_Offset3;
+    half  _UseTiling3;
+END_CBUFFER
+
+// if you are writing a subshader, any defines that should be set on the main
+// shader are defined here
+//BEGIN_DEFINES
+//	#define _SIMPLELIT 1	// compile as SimpleLit shader in URP, or as BlinPhong in standard
+//END_DEFINES
+
+// All code goes here
+BEGIN_CODE
+
+   TEXTURE2D(_BaseMap);
+   SAMPLER(sampler_BaseMap);
+   TEXTURE2D(_BumpMap);
+   TEXTURE2D(_MetallicGlossMap);
+
+
+   TEXTURE2D(_BaseMap1);
+   TEXTURE2D(_BumpMap1);
+   TEXTURE2D(_AlphaMask1);
+   TEXTURE2D(_MetallicGlossMap1);
+
+   TEXTURE2D(_BaseMap2);
+   TEXTURE2D(_BumpMap2);
+   TEXTURE2D(_AlphaMask2);
+   TEXTURE2D(_MetallicGlossMap2);
+
+   TEXTURE2D(_BaseMap3);
+   TEXTURE2D(_BumpMap3);
+   TEXTURE2D(_AlphaMask3);
+   TEXTURE2D(_MetallicGlossMap3); 
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+      // Base Overlay always exists.   Uses Textures 0,1,2 (2 is not currently used)
+      float2 auv = d.texcoord0.xy * _Tile0_0;
+      float2 nuv = d.texcoord0.xy * _Tile0_1;
+      float2 cuv = d.texcoord0.xy * _Tile0_2;
+
+	  half4 mask = (SAMPLE_TEXTURE2D(_MetallicGlossMap,sampler_BaseMap,cuv) * _Tint0_2) + _Add0_2;
+	  half4 base_c = (SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, auv) * _Tint0_0)+_Add0_0;
+
+	  half4 basepackednormal = (SAMPLE_TEXTURE2D(_BumpMap, sampler_BaseMap,nuv) * _Tint0_1) + _Add0_1;
+	  half3 base_n = UnpackScaleNormal(basepackednormal,_NormalStrength0);
+
+	  half base_smooth = mask.a;
+	  half base_Metallic = mask.r;
+
+      o.Alpha = base_c.a; 
+
+      
+ 	  if (_OverlayCount > 1)
+	  {         
+          float2 auv;
+
+          // Adjust UV Coordinates for tiling or offset
+          if (_UseTiling1) 
+          { 
+              auv = d.texcoord0.xy * _Tile1_0;   
+          }
+          else
+          {
+              auv = (d.texcoord0.xy - _UV_Offset1.xy ) / _UV_Offset1.zw; 
+          }
+
+          if ((_UseTiling1 == 0.0f && auv.x >= 0.0f && auv.x <= 1.0f && auv.y >= 0.0f && auv.y <= 1.0f) || _UseTiling1 == 1.0f)
+          {             
+              half alpha = SAMPLE_TEXTURE2D(_AlphaMask1, sampler_BaseMap, auv).a;
+              half oneminus = 1.0f - alpha;
+
+	          half4 add_c = (SAMPLE_TEXTURE2D(_BaseMap1, sampler_BaseMap, auv) * _Tint1_0) + _Add1_0;
+
+              float2 cuv;
+              if (_UseTiling1) 
+              { 
+                 cuv = d.texcoord0.xy * _Tile1_2;            
+              }
+              else
+              {
+                 cuv = auv; 
+              }
+	          half4 addmask = (SAMPLE_TEXTURE2D(_MetallicGlossMap1,sampler_BaseMap, cuv) * _Tint1_2) + _Add1_2;
+		      base_c = (add_c * alpha) + (base_c * oneminus);
+
+              float2 nuv;
+              if (_UseTiling1) 
+              { 
+                 nuv = d.texcoord0.xy * _Tile1_1;            
+              }
+              else
+              {
+                 nuv = auv; 
+              }
+	          half4 addpackednormal = (SAMPLE_TEXTURE2D(_BumpMap1, sampler_BaseMap,nuv) * _Tint1_1) + _Add1_1;
+	          half3 add_n = UnpackScaleNormal(addpackednormal,_NormalStrength1);
+		      base_n = (add_n * alpha) + (base_n * oneminus);
+		      base_smooth = (addmask.a * alpha) + (base_smooth * oneminus);
+		      base_Metallic = (addmask.r * alpha) + (base_Metallic * oneminus);
+          }
+ 	  }
+
+
+	  if (_OverlayCount > 2)
+	  {
+          float2 auv;
+
+          // Adjust UV Coordinates for tiling or offset
+          if (_UseTiling2) 
+          { 
+              auv = d.texcoord0.xy * _Tile2_0;   
+          }
+          else
+          {
+              auv = (d.texcoord0.xy - _UV_Offset2.xy ) / _UV_Offset2.zw; 
+          }
+
+          if ((_UseTiling2 == 0.0f && auv.x >= 0.0f && auv.x <= 1.0f && auv.y >= 0.0f && auv.y <= 1.0f) || _UseTiling2 == 1.0f)
+          {             
+              half alpha = SAMPLE_TEXTURE2D(_AlphaMask2, sampler_BaseMap, auv).a;
+              half oneminus = 1.0f - alpha;
+
+	          half4 add_c = (SAMPLE_TEXTURE2D(_BaseMap2, sampler_BaseMap, auv)* _Tint2_0) + _Add2_0;
+
+              // Adjust CUV
+              float2 cuv;
+
+              if (_UseTiling2) 
+              { 
+                     cuv = d.texcoord0.xy * _Tile2_2;            
+              }
+              else
+              {
+                     cuv = auv; 
+              }
+              half4 addmask = SAMPLE_TEXTURE2D(_MetallicGlossMap2,sampler_BaseMap, cuv);
+		      base_c = (add_c * alpha) + (base_c * oneminus);
+
+              // Adjust NUV
+              float2 nuv;
+                if (_UseTiling2) 
+                { 
+                         nuv = d.texcoord0.xy * _Tile2_1;            
+                }
+                else
+                {
+                         nuv = auv; 
+                }
+
+	          half4 addpackednormal = (SAMPLE_TEXTURE2D(_BumpMap2, sampler_BaseMap,nuv) * _Tint2_1) + _Add2_1;
+	          half3 add_n = UnpackScaleNormal(addpackednormal,_NormalStrength2);
+		      base_n = (add_n * alpha) + (base_n * oneminus);
+		      base_smooth = (addmask.a * alpha) + (base_smooth * oneminus);
+		      base_Metallic = (addmask.r * alpha) + (base_Metallic * oneminus);
+          }
+ 	  }
+       
+	  if (_OverlayCount > 3)
+	  {
+          float2 auv;
+          // Adjust UV Coordinates for tiling or offset
+          if (_UseTiling3) 
+          { 
+              auv = d.texcoord0.xy * _Tile3_0;   
+          }
+          else
+          {
+              auv = (d.texcoord0.xy - _UV_Offset3.xy ) / _UV_Offset3.zw; 
+          }
+
+
+          if ((_UseTiling3 == 0.0f && auv.x >= 0.0f && auv.x <= 1.0f && auv.y >= 0.0f && auv.y <= 1.0f) || _UseTiling3 == 1.0f)
+          {   
+              half alpha = SAMPLE_TEXTURE2D(_AlphaMask3, sampler_BaseMap, auv).a;
+              half oneminus = 1.0f - alpha;
+
+	          half4 add_c = (SAMPLE_TEXTURE2D(_BaseMap3, sampler_BaseMap, auv)* _Tint3_0) + _Add3_0;
+
+              // Adjust CUV
+              float2 cuv;
+              if (_UseTiling3) 
+              { 
+                       cuv = d.texcoord0.xy * _Tile3_2;            
+              }
+              else
+              {
+                       cuv = auv; 
+              }
+	          half4 addmask = SAMPLE_TEXTURE2D(_MetallicGlossMap3,sampler_BaseMap, cuv);
+		      base_c = (add_c * alpha) + (base_c * oneminus);
+
+              // Adjust NUV
+              float2 nuv;
+              if (_UseTiling3) 
+                { 
+                         nuv = d.texcoord0.xy * _Tile3_1;            
+                }
+                else
+                {
+                         nuv = auv; 
+                }
+
+	          half4 addpackednormal = (SAMPLE_TEXTURE2D(_BumpMap1, sampler_BaseMap,nuv) * _Tint3_1) + _Add3_1;
+	          half3 add_n = UnpackScaleNormal(addpackednormal,_NormalStrength2);
+
+		      base_n = (add_n * alpha) + (base_n * oneminus);
+		      base_smooth = (addmask.a * alpha) + (base_smooth * oneminus);
+		      base_Metallic = (addmask.r * alpha) + (base_Metallic * oneminus);
+          }
+ 	  } 
+	  
+      o.Albedo = base_c * _ColorModulation;
+	  o.Normal = base_n;
+	  o.Metallic = base_Metallic * _MetallicModulation;
+	  o.Smoothness = base_smooth * _SmoothnessModulation;
+
+      if (_DoubleSidedNormalMode == 0)
+      {
+         o.Normal *= d.isFrontFace ? 1 : -1;
+      }
+      else if (_DoubleSidedNormalMode == 1)
+      {
+		 o.Normal.z *= d.isFrontFace ? 1 : -1;
+      }
+
+
+	 float3 lightDir;
+     float3 lightColor;
+	 GetSun(lightDir, lightColor);
+	 float3 normalDirection = TangentToWorldSpace(d, o.Normal);
+	 float atten = 1.0;
+	 float lambert = dot(normalDirection, lightDir);
+
+     lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
+     o.Albedo *= atten * lightColor * lambert;
+     if (_RimLightingModulation>0) 
+     { 
+	    float rim = 1.0 - saturate(dot(d.tangentSpaceViewDir, o.Normal)); 
+	    o.Emission += (pow(rim, _RimLightPower) * _RimLightColor) * _RimLightingModulation;  
+      }
+	}
+
+END_CODE
+

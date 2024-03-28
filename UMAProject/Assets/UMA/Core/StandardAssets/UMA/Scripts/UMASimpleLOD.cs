@@ -75,8 +75,10 @@ namespace UMA.Examples
 			{
 				_umaData = GetComponent<UMAData>();
 				if (_umaData != null)
-					_umaData.CharacterCreated.AddListener(CharacterCreated);
-			}
+                {
+                    _umaData.CharacterCreated.AddListener(CharacterCreated);
+                }
+            }
 		}
 
 		public void CharacterCreated(UMAData umaData)
@@ -106,9 +108,11 @@ namespace UMA.Examples
         public void Update()
 		{
 			if (!initialized)
-				return;
+            {
+                return;
+            }
 
-			if (Time.time > NextTime)
+            if (Time.time > NextTime)
 			{
                 DoLODCheck(_umaData);
 				NextTime = Time.time + MinCheck;
@@ -124,24 +128,31 @@ namespace UMA.Examples
 		public bool PerformLodCheck()
 		{
 			if (_umaData == null)
-				_umaData = gameObject.GetComponent<UMAData>();
+            {
+                _umaData = gameObject.GetComponent<UMAData>();
+            }
 
-			if (_umaData == null)
-				return false;
+            if (_umaData == null)
+            {
+                return false;
+            }
 
-			if (_umaData.umaRecipe == null)
-				return false;
+            if (_umaData.umaRecipe == null)
+            {
+                return false;
+            }
 
-			if (lodDistance < 0)
+            if (lodDistance < 0)
 			{ 
 				return false;
 			}
 
 			if (Camera.main == null)
-				return false;
+            {
+                return false;
+            }
 
-
-			Transform _cameraTransform = Camera.main.transform;
+            Transform _cameraTransform = Camera.main.transform;
 
 			if (_cameraTransform == null)
 			{
@@ -287,9 +298,11 @@ namespace UMA.Examples
 			bool changedSlots = false;
 
 			if (_umaData.umaRecipe.slotDataList == null)
-				return false;
+            {
+                return false;
+            }
 
-			for (int i = 0; i < _umaData.umaRecipe.slotDataList.Length; i++)
+            for (int i = 0; i < _umaData.umaRecipe.slotDataList.Length; i++)
 			{
 				var slot = _umaData.umaRecipe.slotDataList[i];
 				if (slot != null)

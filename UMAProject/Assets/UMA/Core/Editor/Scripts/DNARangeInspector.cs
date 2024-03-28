@@ -92,8 +92,10 @@ namespace UMA.Editors
 			for(int i = 0; i < originalNames.Count; i++)
 			{
 				if (replacingNames.Contains(originalNames[i]))
-					matchingIndexes.Add(i, replacingNames.IndexOf(originalNames[i]));
-			}
+                {
+                    matchingIndexes.Add(i, replacingNames.IndexOf(originalNames[i]));
+                }
+            }
 			return matchingIndexes;
 		}
 
@@ -189,8 +191,11 @@ namespace UMA.Editors
 				for (int i = 0; i < entryCount; i++)
 				{
 					if (i > dnaRange.means.Length -1)
-						break;
-					float currentMin = dnaRange.means[i] - dnaRange.spreads[i];
+                    {
+                        break;
+                    }
+
+                    float currentMin = dnaRange.means[i] - dnaRange.spreads[i];
 					float currentMax = dnaRange.means[i] + dnaRange.spreads[i];
 					float min = currentMin;
 					float max = currentMax;

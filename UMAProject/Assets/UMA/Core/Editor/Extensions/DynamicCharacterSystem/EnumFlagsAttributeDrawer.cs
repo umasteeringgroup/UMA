@@ -15,8 +15,11 @@ namespace UMA.CharacterSystem.Editors
 			int namesIntModifier = 1;
 			//check if there is a 'none' value at the second position too because we dont want that either- not a very elegant solution...
 			if (prop.enumNames[1] == "none")
-				namesIntModifier = 2;
-			bool[] buttons = new bool[prop.enumNames.Length - namesIntModifier];
+            {
+                namesIntModifier = 2;
+            }
+
+            bool[] buttons = new bool[prop.enumNames.Length - namesIntModifier];
 			
 			if (label != GUIContent.none)
 			{

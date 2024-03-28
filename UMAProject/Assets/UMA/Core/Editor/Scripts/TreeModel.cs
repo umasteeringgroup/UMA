@@ -44,13 +44,17 @@ namespace UMA.Controls
 		void Init (IList<T> data)
 		{
 			if (data == null)
-				throw new ArgumentNullException("data", "Input data is null. Ensure input is a non-null list.");
+            {
+                throw new ArgumentNullException("data", "Input data is null. Ensure input is a non-null list.");
+            }
 
-			m_Data = data;
+            m_Data = data;
 			if (m_Data.Count > 0)
-				m_Root = TreeElementUtility.ListToTree(data);
+            {
+                m_Root = TreeElementUtility.ListToTree(data);
+            }
 
-			m_MaxID = m_Data.Max(e => e.id);
+            m_MaxID = m_Data.Max(e => e.id);
 		}
 
 		public int GenerateUniqueID ()
@@ -114,10 +118,14 @@ namespace UMA.Controls
 		public void RemoveElements (IList<T> elements)
 		{
 			foreach (var element in elements)
-				if (element == m_Root)
-					throw new ArgumentException("It is not allowed to remove the root element");
-		
-			var commonAncestors = TreeElementUtility.FindCommonAncestorsWithinList (elements);
+            {
+                if (element == m_Root)
+                {
+                    throw new ArgumentException("It is not allowed to remove the root element");
+                }
+            }
+
+            var commonAncestors = TreeElementUtility.FindCommonAncestorsWithinList (elements);
 
 			foreach (var element in commonAncestors)
 			{
@@ -133,16 +141,26 @@ namespace UMA.Controls
 		public void AddElements (IList<T> elements, TreeElement parent, int insertPosition)
 		{
 			if (elements == null)
-				throw new ArgumentNullException("elements", "elements is null");
-			if (elements.Count == 0)
-				throw new ArgumentNullException("elements", "elements Count is 0: nothing to add");
-			if (parent == null)
-				throw new ArgumentNullException("parent", "parent is null");
+            {
+                throw new ArgumentNullException("elements", "elements is null");
+            }
 
-			if (parent.children == null)
-				parent.children = new List<TreeElement>();
+            if (elements.Count == 0)
+            {
+                throw new ArgumentNullException("elements", "elements Count is 0: nothing to add");
+            }
 
-			parent.children.InsertRange(insertPosition, elements.Cast<TreeElement> ());
+            if (parent == null)
+            {
+                throw new ArgumentNullException("parent", "parent is null");
+            }
+
+            if (parent.children == null)
+            {
+                parent.children = new List<TreeElement>();
+            }
+
+            parent.children.InsertRange(insertPosition, elements.Cast<TreeElement> ());
 			foreach (var element in elements)
 			{
 				element.parent = parent;
@@ -158,15 +176,21 @@ namespace UMA.Controls
 		public void AddRoot (T root)
 		{
 			if (root == null)
-				throw new ArgumentNullException("root", "root is null");
+            {
+                throw new ArgumentNullException("root", "root is null");
+            }
 
-			if (m_Data == null)
-				throw new InvalidOperationException("Internal Error: data list is null");
+            if (m_Data == null)
+            {
+                throw new InvalidOperationException("Internal Error: data list is null");
+            }
 
-			if (m_Data.Count != 0)
-				throw new InvalidOperationException("AddRoot is only allowed on empty data list");
+            if (m_Data.Count != 0)
+            {
+                throw new InvalidOperationException("AddRoot is only allowed on empty data list");
+            }
 
-			root.id = GenerateUniqueID ();
+            root.id = GenerateUniqueID ();
 			root.depth = -1;
 			m_Data.Add (root);
 		}
@@ -174,14 +198,21 @@ namespace UMA.Controls
 		public void AddElement (T element, TreeElement parent, int insertPosition)
 		{
 			if (element == null)
-				throw new ArgumentNullException("element", "element is null");
-			if (parent == null)
-				throw new ArgumentNullException("parent", "parent is null");
-		
-			if (parent.children == null)
-				parent.children = new List<TreeElement> ();
+            {
+                throw new ArgumentNullException("element", "element is null");
+            }
 
-			parent.children.Insert (insertPosition, element);
+            if (parent == null)
+            {
+                throw new ArgumentNullException("parent", "parent is null");
+            }
+
+            if (parent.children == null)
+            {
+                parent.children = new List<TreeElement> ();
+            }
+
+            parent.children.Insert (insertPosition, element);
 			element.parent = parent;
 
 			TreeElementUtility.UpdateDepthValues(parent);
@@ -193,28 +224,36 @@ namespace UMA.Controls
 		public void MoveElements(TreeElement parentElement, int insertionIndex, List<TreeElement> elements)
 		{
 			if (insertionIndex < 0)
-				throw new ArgumentException("Invalid input: insertionIndex is -1, client needs to decide what index elements should be reparented at");
+            {
+                throw new ArgumentException("Invalid input: insertionIndex is -1, client needs to decide what index elements should be reparented at");
+            }
 
-			// Invalid reparenting input
-			if (parentElement == null)
-				return;
+            // Invalid reparenting input
+            if (parentElement == null)
+            {
+                return;
+            }
 
-			// We are moving items so we adjust the insertion index to accomodate that any items above the insertion index is removed before inserting
-			if (insertionIndex > 0)
-				insertionIndex -= parentElement.children.GetRange(0, insertionIndex).Count(elements.Contains);
+            // We are moving items so we adjust the insertion index to accomodate that any items above the insertion index is removed before inserting
+            if (insertionIndex > 0)
+            {
+                insertionIndex -= parentElement.children.GetRange(0, insertionIndex).Count(elements.Contains);
+            }
 
-			// Remove draggedItems from their parents
-			foreach (var draggedItem in elements)
+            // Remove draggedItems from their parents
+            foreach (var draggedItem in elements)
 			{
 				draggedItem.parent.children.Remove(draggedItem);	// remove from old parent
 				draggedItem.parent = parentElement;					// set new parent
 			} 
 
 			if (parentElement.children == null)
-				parentElement.children = new List<TreeElement>();
+            {
+                parentElement.children = new List<TreeElement>();
+            }
 
-			// Insert dragged items under new parent
-			parentElement.children.InsertRange(insertionIndex, elements);
+            // Insert dragged items under new parent
+            parentElement.children.InsertRange(insertionIndex, elements);
 
 			TreeElementUtility.UpdateDepthValues (root);
 			TreeElementUtility.TreeToList (m_Root, m_Data);
@@ -225,7 +264,9 @@ namespace UMA.Controls
 		void Changed ()
 		{
 			if (modelChanged != null)
-				modelChanged ();
-		}
+            {
+                modelChanged ();
+            }
+        }
 	}
 }

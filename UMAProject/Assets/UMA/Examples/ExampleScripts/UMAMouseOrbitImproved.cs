@@ -111,10 +111,12 @@ namespace UMA.Examples
         {
             Transform t = target;
             if (dstTarget != null)
+            {
                 t = dstTarget;
+            }
 
             //if (!string.IsNullOrEmpty(TargetBone))
-            if(TargetBone >= 0)
+            if (TargetBone >= 0)
             {
                 if (dstTarget != null)
                 {
@@ -132,8 +134,10 @@ namespace UMA.Examples
 					{
 						var bone = umaData.skeleton.GetBoneGameObject(Animator.StringToHash(boneName));
 						if(bone != null)
-							t = bone.transform;
-					}
+                        {
+                            t = bone.transform;
+                        }
+                    }
                 }
 
                 if (t == null)
@@ -142,7 +146,10 @@ namespace UMA.Examples
                     {
                         Transform rendTrans = dstTarget.Find("UMARenderer");
                         if(rendTrans == null)
+                        {
                             return dstTarget.position;
+                        }
+
                         Renderer rend = rendTrans.GetComponent<Renderer>();
                         float height = rend.bounds.size.y;
                         distance = (height / 2) * 1.75f;
@@ -152,7 +159,10 @@ namespace UMA.Examples
                     {
                         Transform rendTrans = target.Find("UMARenderer");
                         if(rendTrans == null)
+                        {
                             return target.position;
+                        }
+
                         Renderer rend = rendTrans.GetComponent<Renderer>();
                         float height = rend.bounds.size.y;
                         distance = (height / 2) * 1.75f;
@@ -168,7 +178,10 @@ namespace UMA.Examples
         void LateUpdate()
         {
             if (switchingTarget || target == null)
+            {
                 return;
+            }
+
             UpdatePos();
         }
 
@@ -256,9 +269,15 @@ namespace UMA.Examples
         {
             // These must be "while" loops. It's possible at low framerate that we have moved more than 360 degrees.
             while (angle < -360F)
+            {
                 angle += 360F;
+            }
+
             while (angle > 360F)
+            {
                 angle -= 360F;
+            }
+
             return Mathf.Clamp(angle, min, max);
         }
     }

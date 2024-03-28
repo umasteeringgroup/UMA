@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: UMA_Mesh_Hair_DoubleSided
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: 8146edb8bb821c34f956f820090a2adb, type: 2}
-  secondPass: {fileID: 2100000, guid: 9cbdf960da83ce848b6fa53141ca2fe7, type: 2}
-  materialType: 8
+  _material: {fileID: 2100000, guid: dfa6f3056d5614f40998ac56a797d454, type: 2}
+  srpMaterials: []
+  secondPass: {fileID: 0}
+  materialType: 2
   channels:
-  - channelType: 3
+  - channelType: 0
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 
@@ -25,17 +26,9 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 3
+  - channelType: 0
     textureFormat: 0
     materialPropertyName: _BumpMap
-    sourceTextureName: 
-    Compression: 0
-    DownSample: 0
-    ConvertRenderTexture: 0
-    NonShaderTexture: 0
-  - channelType: 3
-    textureFormat: 0
-    materialPropertyName: _MetallicGlossMap
     sourceTextureName: 
     Compression: 0
     DownSample: 0
