@@ -521,6 +521,11 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
         SetupCategory(DNAContainer, HairColors, HairDNA, HairItems);    
     }
 
+    public void OnRaceClick(string raceName)
+    {
+        avatar.ChangeRace(raceName);
+    }
+
     public void OnBackClick()
     {
         ShowInfo();
