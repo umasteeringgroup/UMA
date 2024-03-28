@@ -1,9 +1,6 @@
 #define USING_BAKEMESH
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using UMA;
 using UMA.CharacterSystem;
 using Unity.Collections;
 using UnityEngine;

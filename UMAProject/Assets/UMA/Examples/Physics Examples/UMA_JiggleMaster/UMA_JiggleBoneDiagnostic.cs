@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 //Based on jiggle bone code from Michael Cook (Fishypants), Adapted for UMA by Phil Taylor (DankP3).
 //
@@ -16,8 +14,9 @@ using UnityEngine;
 //	============================================================
 
 
-namespace UMA.Examples {
-	public class UMA_JiggleBoneDiagnostic : MonoBehaviour {
+namespace UMA.Examples
+{
+    public class UMA_JiggleBoneDiagnostic : MonoBehaviour {
 		public bool debugMode = true;
 
 		// Target and dynamic positions

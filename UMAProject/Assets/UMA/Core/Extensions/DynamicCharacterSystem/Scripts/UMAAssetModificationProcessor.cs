@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using UMA;
 
 namespace UMA.CharacterSystem
 {

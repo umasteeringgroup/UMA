@@ -1,14 +1,13 @@
 using UnityEngine;
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 using System.Collections.Generic;
 
 
 namespace UMA.CharacterSystem
 {
-	//Because this is a class for user generated content it is marked as partial so it can be extended without modifying the underlying code
-	public partial class UMAWardrobeCollection : UMATextRecipe
+    //Because this is a class for user generated content it is marked as partial so it can be extended without modifying the underlying code
+    public partial class UMAWardrobeCollection : UMATextRecipe
 	{
 		[Tooltip("Cover images for the collection as a whole. Use these for a promotional images for this collection, presenting the goodies inside.")]
 		public List<Sprite> coverImages = new List<Sprite>();

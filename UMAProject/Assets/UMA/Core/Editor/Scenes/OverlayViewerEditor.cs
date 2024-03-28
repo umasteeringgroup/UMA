@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UMA.Editors;
 using UnityEditor;
@@ -8,11 +7,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace UMA
-{ 
-	/// <summary>
-	/// This editor is used for the UI in the inspector to edit overlays. It uses the OverlayViewer component.
-	/// </summary>
-	[CustomEditor(typeof(OverlayViewer))]
+{
+    /// <summary>
+    /// This editor is used for the UI in the inspector to edit overlays. It uses the OverlayViewer component.
+    /// </summary>
+    [CustomEditor(typeof(OverlayViewer))]
 	public class OverlayViewerEditor : Editor
 	{
 		private ReorderableList overlayDataList;

@@ -6,15 +6,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using UMA;
-using UMA.CharacterSystem;
 using UnityEngine.Experimental.Rendering;
 
 namespace UMA.CharacterSystem.Examples
 {
-	//UPDATED For CharacterSystem.
-	//Takes photos of the character based on the Wardrobe slots.
-	//HUGE MemoryLeak or infinite loop in this somewhere...
+    //UPDATED For CharacterSystem.
+    //Takes photos of the character based on the Wardrobe slots.
+    //HUGE MemoryLeak or infinite loop in this somewhere...
     [ExecuteInEditMode]
 	public class PhotoBooth : MonoBehaviour
 	{

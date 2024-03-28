@@ -3,11 +3,10 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using UMA.Editors;
-using UMA.PoseTools;
 
 namespace UMA.CharacterSystem.Editors
 {
-	[CustomPropertyDrawer(typeof(DynamicCharacterAvatar.RaceSetter))]
+    [CustomPropertyDrawer(typeof(DynamicCharacterAvatar.RaceSetter))]
 	public class RaceSetterPropertyDrawer : PropertyDrawer
 	{
 

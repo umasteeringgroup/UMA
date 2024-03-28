@@ -1,12 +1,11 @@
 using UnityEngine;
-using System.Collections;
 
 namespace UMA
 {
-	/// <summary>
-	/// Example DNA converter behaviour. Only adjusts distance between eyes.
-	/// </summary>
-	public class TutorialDNAConverterBehaviour : DnaConverterBehaviour
+    /// <summary>
+    /// Example DNA converter behaviour. Only adjusts distance between eyes.
+    /// </summary>
+    public class TutorialDNAConverterBehaviour : DnaConverterBehaviour
 	{
 		public TutorialDNAConverterBehaviour()
 	    {

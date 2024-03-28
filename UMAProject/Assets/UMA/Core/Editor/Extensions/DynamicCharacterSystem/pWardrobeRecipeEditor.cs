@@ -6,11 +6,10 @@ using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
 using UnityEditorInternal;
-using System.IO;
 
 namespace UMA.Editors
 {
-	public partial class RecipeEditor
+    public partial class RecipeEditor
 	{
 		private Dictionary<string,RaceData> _compatibleRaceDatas = new Dictionary<string,RaceData>();
 

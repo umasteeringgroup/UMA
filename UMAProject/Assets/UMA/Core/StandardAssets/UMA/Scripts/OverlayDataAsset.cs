@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using System;
 using UnityEngine.Rendering;
 #if UNITY_EDITOR
 using UnityEditorInternal;
@@ -9,10 +8,10 @@ using UnityEditorInternal;
 
 namespace UMA
 {
-	/// <summary>
-	/// Contains the immutable data shared between overlays of the same type.
-	/// </summary>
-	[PreferBinarySerialization]
+    /// <summary>
+    /// Contains the immutable data shared between overlays of the same type.
+    /// </summary>
+    [PreferBinarySerialization]
 	[System.Serializable]
 	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver, IUMAIndexOptions
 	{

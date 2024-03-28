@@ -1,16 +1,10 @@
 using UnityEngine;
 using UnityEditor;
-using System.Linq;
-using UMA;
 using UMA.CharacterSystem;
-using System.Text.RegularExpressions;
-using System.Reflection;
-using System.Collections;
-using UnityEditor.UIElements;
 
 namespace UMA.Editors
 {
-	[CustomPropertyDrawer(typeof(OverlayColorData),true)]
+    [CustomPropertyDrawer(typeof(OverlayColorData),true)]
 	public class OverlayColorDataPropertyDrawer : PropertyDrawer
 	{
 		GUIContent Modulate = new GUIContent("Multiplier");

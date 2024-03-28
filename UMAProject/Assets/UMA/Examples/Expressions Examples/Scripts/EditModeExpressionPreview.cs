@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace UMA.PoseTools
 {
-	[ExecuteInEditMode]
+    [ExecuteInEditMode]
 	public class EditModeExpressionPreview : MonoBehaviour
 	{
 		public ExpressionPlayer expressionPlayer;

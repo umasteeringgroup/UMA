@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;
 
@@ -9,7 +7,7 @@ using UnityEngine;
 
 namespace UMA
 {
-	public class UMABoneCleaner : MonoBehaviour
+    public class UMABoneCleaner : MonoBehaviour
 	{
 		private List<string> KillBones = new List<string>();
 		private List<Transform> AllExceptions = new List<Transform>();

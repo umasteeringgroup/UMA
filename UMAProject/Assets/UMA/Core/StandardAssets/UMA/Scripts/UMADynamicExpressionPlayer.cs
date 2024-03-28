@@ -3,16 +3,11 @@
 //	Author: 	Eli Curtz
 //	Copyright:	(c) 2013 Eli Curtz
 //	============================================================
-using System.Collections.Generic;
-using UMA.CharacterSystem;
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
-using UnityEngine;
-
 namespace UMA.PoseTools
 {
-	/*
+    /*
 	/// <summary>
 	/// UMA specific expression player.
 	/// </summary>

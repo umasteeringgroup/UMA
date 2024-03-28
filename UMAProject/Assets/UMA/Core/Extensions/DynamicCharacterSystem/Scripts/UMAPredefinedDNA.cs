@@ -1,14 +1,11 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using UnityEngine;
 #if UNITY_EDITOR
-using UnityEditor; //todo: ifdef this
 #endif
 namespace UMA
 {
-	[Serializable]
+    [Serializable]
 	public class DnaValue
 	{
 		public string Name;

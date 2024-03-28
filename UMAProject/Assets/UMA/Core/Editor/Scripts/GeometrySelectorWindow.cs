@@ -1,10 +1,8 @@
 using UnityEngine;
 using UnityEditor;
-using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
-using System;
 
 namespace UMA.Editors
 {

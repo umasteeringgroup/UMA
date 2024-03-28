@@ -1,23 +1,10 @@
-using UnityEngine;
-using System.IO;
-using System;
-using System.Collections.Generic;
-using UMA.CharacterSystem;
-
 #if UMA_ADDRESSABLES
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
 #endif
-using PackSlot = UMA.UMAPackedRecipeBase.PackedSlotDataV3;
-using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
-using RaceRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>>;
-using System.Linq;
-using System.Text;
 
 #if UNITY_EDITOR
-using UnityEditor;
-using UnityEditor.Animations;
 #if UMA_ADDRESSABLES
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;

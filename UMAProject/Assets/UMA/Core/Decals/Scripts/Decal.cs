@@ -1,11 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UMA;
-using Unity.Collections;
-using UnityEngine;
-using static UMA.UMAData;
-
 
 #if Projected_Decals
 // List<RendererFragment> 

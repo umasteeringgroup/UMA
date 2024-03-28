@@ -2,16 +2,13 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Rendering;
-using System.Runtime.ExceptionServices;
-using System;
-using System.Runtime.CompilerServices;
 
 namespace UMA
 {
-	/// <summary>
-	/// Default mesh combiner for UMA UMAMeshdata from slots.
-	/// </summary>
-	public class UMADefaultMeshCombiner : UMAMeshCombiner
+    /// <summary>
+    /// Default mesh combiner for UMA UMAMeshdata from slots.
+    /// </summary>
+    public class UMADefaultMeshCombiner : UMAMeshCombiner
 	{
 		protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
 		protected List<UMAData.GeneratedMaterial> combinedMaterialList;

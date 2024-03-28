@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEditor;
 
 namespace UMA.Controls
 {
 
-	/// <summary>
-	/// TreeElementUtility and TreeElement are useful helper classes for backend tree data structures.
-	/// This is used by the global library, but can be used for any tree view.
-	/// </summary>
-	public static class TreeElementUtility
+    /// <summary>
+    /// TreeElementUtility and TreeElement are useful helper classes for backend tree data structures.
+    /// This is used by the global library, but can be used for any tree view.
+    /// </summary>
+    public static class TreeElementUtility
 	{
 		public static void TreeToList<T>(T root, IList<T> result) where T : TreeElement
 		{

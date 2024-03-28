@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UMA;
+﻿using System.Collections.Generic;
 using UMA.CharacterSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;

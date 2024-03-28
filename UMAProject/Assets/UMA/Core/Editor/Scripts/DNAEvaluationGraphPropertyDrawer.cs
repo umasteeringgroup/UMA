@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
-using UnityEditorInternal;
 
 namespace UMA.Editors
 {
-	[CustomPropertyDrawer(typeof(DNAEvaluationGraph), true)]
+    [CustomPropertyDrawer(typeof(DNAEvaluationGraph), true)]
 	public class DNAEvaluationGraphPropertyDrawer : PropertyDrawer
 	{
 

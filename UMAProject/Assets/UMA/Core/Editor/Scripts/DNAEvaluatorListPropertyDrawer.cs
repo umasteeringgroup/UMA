@@ -1,13 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
 
 namespace UMA.Editors
 {
-	[CustomPropertyDrawer(typeof(DNAEvaluatorList), true)]
+    [CustomPropertyDrawer(typeof(DNAEvaluatorList), true)]
 	public class DNAEvaluatorListPropertyDrawer : PropertyDrawer
 	{
 

@@ -9,20 +9,19 @@ using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System.Collections;
 
 namespace UMA.PoseTools
 {
-	/// <summary>
-	/// Base class for expression player. Defines animated channels and gaze variables.
-	/// </summary>
-	/// <remarks>
-	/// The expression player channels are based loosely upon those from Jason Osipa's
-	/// Stop Staring: Facial Modeling and Animation Done Right
-	/// ISBN-13: 978-0470609903
-	/// They could be implemented with either bone animation or blendshapes.
-	/// </remarks>
-	public class ExpressionPlayer : MonoBehaviour
+    /// <summary>
+    /// Base class for expression player. Defines animated channels and gaze variables.
+    /// </summary>
+    /// <remarks>
+    /// The expression player channels are based loosely upon those from Jason Osipa's
+    /// Stop Staring: Facial Modeling and Animation Done Right
+    /// ISBN-13: 978-0470609903
+    /// They could be implemented with either bone animation or blendshapes.
+    /// </remarks>
+    public class ExpressionPlayer : MonoBehaviour
 	{
 		/// <summary>
 		/// Enable procedural blinking.

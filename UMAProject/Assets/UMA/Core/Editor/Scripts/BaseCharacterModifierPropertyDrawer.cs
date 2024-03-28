@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
 namespace UMA
 {
-	[CustomPropertyDrawer(typeof(BaseCharacterModifier),true)]
+    [CustomPropertyDrawer(typeof(BaseCharacterModifier),true)]
 	public class BaseCharacterModifierPropertyDrawer : PropertyDrawer
 	{
 		BaseCharacterModifier _target;

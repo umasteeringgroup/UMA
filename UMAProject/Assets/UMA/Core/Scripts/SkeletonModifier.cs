@@ -1,14 +1,12 @@
 ﻿using UnityEngine;
-using UnityEngine.Events;
 using System;
 using System.Collections.Generic;
-using UMA.PoseTools;
 using UnityEngine.Serialization;
 
 namespace UMA.CharacterSystem
 {
-	//To enable us to change how this works in the future I just went the whole hog and changed all the public fields to private with public property get/setters
-	[Serializable]
+    //To enable us to change how this works in the future I just went the whole hog and changed all the public fields to private with public property get/setters
+    [Serializable]
 	public class SkeletonModifier
 	{
 		public enum SkeletonPropType { Position, Rotation, Scale }

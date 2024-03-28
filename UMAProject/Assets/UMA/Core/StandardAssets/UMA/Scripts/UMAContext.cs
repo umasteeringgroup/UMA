@@ -1,13 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UMA.CharacterSystem;
 
 namespace UMA
 {
-	/// <summary>
-	/// Gloal container for various UMA objects in the scene.
-	/// </summary>
-	public class UMAContext : UMAContextBase
+    /// <summary>
+    /// Gloal container for various UMA objects in the scene.
+    /// </summary>
+    public class UMAContext : UMAContextBase
 	{
 		/// <summary>
 		/// The race library.

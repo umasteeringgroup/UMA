@@ -1,9 +1,8 @@
-﻿using UMA;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UMA.Examples
 {
-	public class UMALODDemoScript : MonoBehaviour
+    public class UMALODDemoScript : MonoBehaviour
 	{
 		public int characterCount;
 		public float range;

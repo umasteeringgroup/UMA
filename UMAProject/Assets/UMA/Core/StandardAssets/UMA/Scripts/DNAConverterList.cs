@@ -1,14 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UMA
 {
-	/// <summary>
-	/// A list that can hold both DnaConverterBahviours (legacy) and DynamicDNAConverterControllers or any other type that impliments IDNAConverter interface
-	/// It returns entries as IDNAConverters
-	/// </summary>
-	[System.Serializable]
+    /// <summary>
+    /// A list that can hold both DnaConverterBahviours (legacy) and DynamicDNAConverterControllers or any other type that impliments IDNAConverter interface
+    /// It returns entries as IDNAConverters
+    /// </summary>
+    [System.Serializable]
 	public class DNAConverterList
 	{
 		//Hmmm not sure this Object list is going to work because in 'Debug Mode' you can anything you like in there

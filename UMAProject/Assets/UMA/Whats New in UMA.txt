@@ -1,4 +1,27 @@
 What's new in UMA 2.13b
+New Simple Setup scene
+Fixed Mesh Hide Asset editor
+Fixed Layer goofup
+Added UMAMaterialAnimator (animate shader parms on overlays)
+Reworked DynamicCharacterAvatar Inspector, added helper buttons, reconfigured layout logically (?)
+Saved Material Properties along with colors in AvatarDefinition
+Removed DynamicAssetLoader and old AssetBundle code which was no longer working
+Fixed null ref possible in BoneVisualizer
+Changed all runtime foreach to standard for(,,) code
+Fixed gaze in UMAExpressionPlayer
+Made shader properties work correctly with Compositing Shaders
+Added/Fixed UMAUVAttachedItem
+Added "Force Keep" to indexed items (will never be orphaned)
+Fixed "Use Root Folder" in slot builder
+Allow editing of bone Mappings in UMAMeshData
+Added integrated tags editor to recipes, slots, overlays
+Added Validation to slotdataasset inspector.
+Added "UMA_INSTALLED" symbol so other assets can detect UMA installation at compile time.
+Updated textures, shaders (Still waiting on realistic textures)
+Removed null slots during slot merge in recipes
+Fixed some UI issues in inspectors due to 2022.3 update
+Added DisplayColor to Shared Colors (overlaycolordata)
+Added new events to DCA
 
 You can now enable/disable default wardrobe recipes without removing them from the list in the customization section.
 The currently equipped wardrobe recipe is marked with a * in the list.

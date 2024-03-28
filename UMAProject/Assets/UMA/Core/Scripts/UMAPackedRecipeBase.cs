@@ -1,15 +1,13 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
-using System.Runtime.CompilerServices;
-using UMA.CharacterSystem;
 
 namespace UMA
 {
-	/// <summary>
-	/// Base class for serializing recipes as "packed" int/byte based data.
-	/// </summary>
-	public abstract class UMAPackedRecipeBase : UMARecipeBase
+    /// <summary>
+    /// Base class for serializing recipes as "packed" int/byte based data.
+    /// </summary>
+    public abstract class UMAPackedRecipeBase : UMARecipeBase
 	{
 		/// <summary>
 		/// Load data into the specified UMA recipe.

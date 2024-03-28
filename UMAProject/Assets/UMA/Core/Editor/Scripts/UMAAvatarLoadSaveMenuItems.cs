@@ -1,16 +1,14 @@
 using UnityEngine;
 using UnityEditor;
-using UMA;
 using UMA.CharacterSystem;
 using System.Collections.Generic;
 using System.IO;
 using UMA.Examples;
 using UMA.PoseTools;
-using static UMA.UMAPackedRecipeBase;
 
 namespace UMA.Editors
 {
-	public class UMAAvatarLoadSaveMenuItems : Editor
+    public class UMAAvatarLoadSaveMenuItems : Editor
 	{
 		[UnityEditor.MenuItem("GameObject/UMA/Save Mecanim Avatar to Asset (runtime only)")]
 		[MenuItem("UMA/Runtime/Save Selected Avatars Mecanim Avatar to Asset", priority = 1)]

@@ -1,14 +1,13 @@
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA
 {
-	/// <summary>
-	/// Overlay color data.
-	/// </summary>
-	[System.Serializable]
+    /// <summary>
+    /// Overlay color data.
+    /// </summary>
+    [System.Serializable]
 	public class OverlayColorData :  System.IEquatable<OverlayColorData>
 	{
 		public static int currentinstance = 0;

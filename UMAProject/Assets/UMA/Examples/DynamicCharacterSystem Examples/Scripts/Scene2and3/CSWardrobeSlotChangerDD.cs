@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 
 namespace UMA.CharacterSystem.Examples
 {
-	public class CSWardrobeSlotChangerDD : MonoBehaviour
+    public class CSWardrobeSlotChangerDD : MonoBehaviour
 	{
 		public string wardrobeSlotToChange;
 

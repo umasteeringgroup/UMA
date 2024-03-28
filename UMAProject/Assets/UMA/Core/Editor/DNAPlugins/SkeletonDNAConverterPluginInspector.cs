@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEditor.IMGUI.Controls;
 using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(SkeletonDNAConverterPlugin), true)]
+    [CustomEditor(typeof(SkeletonDNAConverterPlugin), true)]
 	public class SkeletonDNAConverterPluginInspector : DynamicDNAPluginInspector
 	{
 		private enum searchFilterTypeOpts { 

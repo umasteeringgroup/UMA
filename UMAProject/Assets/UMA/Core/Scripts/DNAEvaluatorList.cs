@@ -1,15 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UMA
 {
-	//A dna evaluator list evaluates multiple dna at the same time according to each entrys evaluation graph.
-	//the results are then combined together according to the 'aggregationMethod' option.
-	//This provides huge flexibility when determining how different dna values interract with each other when they are affecting
-	//a blendshape or bone pose for example.
-	//You can generally treat this like a list of evaluators, but you can call Evaluate on it directly to get the aggregated result
-	[System.Serializable]
+    //A dna evaluator list evaluates multiple dna at the same time according to each entrys evaluation graph.
+    //the results are then combined together according to the 'aggregationMethod' option.
+    //This provides huge flexibility when determining how different dna values interract with each other when they are affecting
+    //a blendshape or bone pose for example.
+    //You can generally treat this like a list of evaluators, but you can call Evaluate on it directly to get the aggregated result
+    [System.Serializable]
 	public class DNAEvaluatorList
 	{
 		public enum AggregationMethodOpts

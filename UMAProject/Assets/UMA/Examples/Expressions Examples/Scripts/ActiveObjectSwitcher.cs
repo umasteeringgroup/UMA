@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace UMA.PoseTools
 {
-	public class ActiveObjectSwitcher : MonoBehaviour
+    public class ActiveObjectSwitcher : MonoBehaviour
 	{
 		public GameObject[] objects = new GameObject[0];
 		public GameObject activeObj = null;

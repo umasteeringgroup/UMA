@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using UMA;
-using UnityEditor;
-using UnityEngine;
-using UMA.CharacterSystem;
-
-#if UMA_ADDRESSABLES
+﻿#if UMA_ADDRESSABLES
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 

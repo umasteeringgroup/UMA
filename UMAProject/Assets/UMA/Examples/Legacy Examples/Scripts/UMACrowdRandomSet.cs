@@ -1,11 +1,9 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using UMA;
 
 namespace UMA.Examples
 {
-	public class UMACrowdRandomSet : ScriptableObject 
+    public class UMACrowdRandomSet : ScriptableObject 
 	{
 		public CrowdRaceData data;
 

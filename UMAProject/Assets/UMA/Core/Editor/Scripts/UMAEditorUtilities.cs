@@ -6,7 +6,6 @@ using UMA.CharacterSystem;
 using UnityEditor.Animations;
 using System.IO;
 using System.Text.RegularExpressions;
-using UMA.PoseTools;
 using UnityEditor.Build;
 
 namespace UMA

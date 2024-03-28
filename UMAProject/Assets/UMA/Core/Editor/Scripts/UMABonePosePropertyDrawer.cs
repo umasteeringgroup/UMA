@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using UMA.Editors;
 
 namespace UMA.PoseTools
 {
-	[CustomPropertyDrawer(typeof(UMABonePose),true)]
+    [CustomPropertyDrawer(typeof(UMABonePose),true)]
 	public class UMABonePosePropertyDrawer : PropertyDrawer
 	{
 		static EditorWindow inspectorPopup;

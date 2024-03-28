@@ -1,15 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
-using UMA;
 using UnityEditorInternal;
 
 namespace UMA.Editors
 {
-	[CustomPropertyDrawer(typeof(DNAEvaluator), true)]
+    [CustomPropertyDrawer(typeof(DNAEvaluator), true)]
 	public class DNAEvaluatorPropertyDrawer : PropertyDrawer
 	{
 		private const string CALCOPTIONPROPERTY = "_calcOption";

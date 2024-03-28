@@ -1,12 +1,11 @@
 using UnityEngine;
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 
 namespace UMA.CharacterSystem
 {
-	//Because this is a class for user generated content it is marked as partial so it can be extended without modifying the underlying code
-	public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
+    //Because this is a class for user generated content it is marked as partial so it can be extended without modifying the underlying code
+    public partial class UMADynamicCharacterAvatarRecipe : UMATextRecipe
 	{
 		//if we ditched the additional fields in UMATextRecipe this would need
 		/*[SerializeField]

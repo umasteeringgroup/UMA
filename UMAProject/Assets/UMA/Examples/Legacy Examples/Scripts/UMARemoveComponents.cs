@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace UMA.Examples
 {
-	/// <summary>
-	/// Removes or disables components during character update callback.
-	/// </summary>
-	public class UMARemoveComponents : MonoBehaviour
+    /// <summary>
+    /// Removes or disables components during character update callback.
+    /// </summary>
+    public class UMARemoveComponents : MonoBehaviour
 	{
 		public string[] removeComponentNames;
 		public string[] disableComponentNames;

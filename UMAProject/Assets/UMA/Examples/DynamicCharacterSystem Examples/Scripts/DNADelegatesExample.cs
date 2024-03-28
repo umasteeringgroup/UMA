@@ -1,11 +1,8 @@
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using UMA;
 
 namespace UMA.CharacterSystem.Examples
 {
-	public class DNADelegatesExample : MonoBehaviour
+    public class DNADelegatesExample : MonoBehaviour
 	{
 
 		public DynamicCharacterAvatar targetAvatar;

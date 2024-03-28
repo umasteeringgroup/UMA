@@ -5,11 +5,10 @@ using UMA.PoseTools;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using UMA.CharacterSystem;
 
 namespace UMA
 {
-	[System.Serializable]
+    [System.Serializable]
 	public class BonePoseDNAConverterPlugin : DynamicDNAPlugin
 	{
 

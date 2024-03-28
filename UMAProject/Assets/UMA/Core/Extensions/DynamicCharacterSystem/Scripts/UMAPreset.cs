@@ -1,11 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System;
-using UnityEngine;
+﻿using System;
 
 namespace UMA.CharacterSystem
 {
-	[Serializable]
+    [Serializable]
 	public class UMAPreset
 	{
 		public UMAPredefinedDNA PredefinedDNA;

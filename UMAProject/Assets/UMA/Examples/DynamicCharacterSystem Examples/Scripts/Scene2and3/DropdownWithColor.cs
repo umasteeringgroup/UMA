@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.UI.CoroutineTween;
 
 // @cond doxygen ignore
 namespace UnityEngine.UI

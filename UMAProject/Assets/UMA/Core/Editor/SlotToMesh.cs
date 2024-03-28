@@ -1,15 +1,8 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UMA;
-using UMA.Editors;
 using Unity.Collections;
 using UnityEditor;
-using UnityEditor.Graphs;
-using UnityEditor.MemoryProfiler;
 using UnityEngine;
-using UnityEngine.WSA;
 
 public class SlotToMesh : EditorWindow
 {

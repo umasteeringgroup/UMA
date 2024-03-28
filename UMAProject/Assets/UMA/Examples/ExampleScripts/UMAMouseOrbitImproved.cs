@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
 //Added to detect whether the pointer is over a UI element...
 using UnityEngine.EventSystems;

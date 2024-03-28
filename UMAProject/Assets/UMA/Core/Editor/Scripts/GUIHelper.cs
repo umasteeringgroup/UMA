@@ -4,11 +4,10 @@ using UnityEditor;
 using UnityEngine.Events;
 using System.IO;
 using System.Collections.Generic;
-using UnityEngine.Rendering;
 
 namespace UMA.Editors
 {
-	public static class GUIHelper
+    public static class GUIHelper
 	{
 
 		private static Texture _helpIcon;

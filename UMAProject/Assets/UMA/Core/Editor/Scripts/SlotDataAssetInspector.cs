@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditorInternal;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(SlotDataAsset))]
+    [CustomEditor(typeof(SlotDataAsset))]
 	[CanEditMultipleObjects]
 	public class SlotDataAssetInspector : Editor
 	{

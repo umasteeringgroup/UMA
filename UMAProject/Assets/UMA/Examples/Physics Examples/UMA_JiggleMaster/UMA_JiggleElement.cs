@@ -1,10 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace UMA.Examples{
+namespace UMA.Examples
+{
 
-	[System.Serializable]
+    [System.Serializable]
 	public class JiggleElement {
 
 		public Transform Bone;

@@ -1,13 +1,12 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.Events;
 
 namespace UMA.PoseTools
 {
-	/// <summary>
-	/// Auxillary slot which adds an UMAExpressionPlayer to a newly created character.
-	/// </summary>
-	public class ExpressionSlotScript : MonoBehaviour 
+    /// <summary>
+    /// Auxillary slot which adds an UMAExpressionPlayer to a newly created character.
+    /// </summary>
+    public class ExpressionSlotScript : MonoBehaviour 
 	{
 		public void OnCharacterBegun(UMAData umaData)
 		{

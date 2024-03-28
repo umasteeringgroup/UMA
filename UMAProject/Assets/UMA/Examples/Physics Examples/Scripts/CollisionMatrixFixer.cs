@@ -1,10 +1,9 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 // @cond doxygen ignore
 namespace UMA.Examples
 {
-	public class CollisionMatrixFixer : MonoBehaviour 
+    public class CollisionMatrixFixer : MonoBehaviour 
 	{
 		static int _defaultRagdollLayer = 8;
 		static int _noCollisionLayer = 10;

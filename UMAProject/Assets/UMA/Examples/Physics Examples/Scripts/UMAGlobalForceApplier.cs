@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UMA.Examples
 {
-	public class UMAGlobalForceApplier : MonoBehaviour
+    public class UMAGlobalForceApplier : MonoBehaviour
 	{
 	    // The following are properties for the Swinger.
 	    public float MinGlobalForce = 0.1f;                          // The smallest amoount of force applied during movement

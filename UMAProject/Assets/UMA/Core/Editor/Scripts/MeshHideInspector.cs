@@ -4,16 +4,15 @@ using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
-using UMA.CharacterSystem;
 using Unity.Collections;
 using static UMA.UMAUtils;
 
 namespace UMA.Editors
 {
-	//OnPreviewGUI
-	//http://timaksu.com/post/126337219047/spruce-up-your-custom-unity-inspectors-with-a
-	//
-	[CustomEditor(typeof(MeshHideAsset))]
+    //OnPreviewGUI
+    //http://timaksu.com/post/126337219047/spruce-up-your-custom-unity-inspectors-with-a
+    //
+    [CustomEditor(typeof(MeshHideAsset))]
 	public class MeshHideInspector : Editor 
 	{
 		private Mesh _meshPreview;

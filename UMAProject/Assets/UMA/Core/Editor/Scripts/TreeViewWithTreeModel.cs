@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -9,7 +8,7 @@ using UnityEngine;
 namespace UMA.Controls
 {
 
-	internal class TreeViewItem<T> : TreeViewItem where T : TreeElement
+    internal class TreeViewItem<T> : TreeViewItem where T : TreeElement
 	{
 		public T data { get; set; }
 

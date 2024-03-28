@@ -1,11 +1,9 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using UMA;
 
 namespace UMA.Examples
 {
-	public class UMACrowd : MonoBehaviour
+    public class UMACrowd : MonoBehaviour
 	{
 		public UMACrowdRandomSet[] randomPool;
 		public UMAGeneratorBase generator;

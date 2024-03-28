@@ -1,11 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
-using UMA;
 
 namespace UMA.CharacterSystem.Examples
 {
-	public class WardrobeCollectionDemoBtn : MonoBehaviour
+    public class WardrobeCollectionDemoBtn : MonoBehaviour
 	{
 
 		public WardrobeCollectionDemoUI thisUI;

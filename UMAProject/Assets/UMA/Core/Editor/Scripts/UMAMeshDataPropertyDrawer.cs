@@ -1,11 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 namespace UMA.Editors
 {
-	[CustomPropertyDrawer(typeof(UMAMeshData))]
+    [CustomPropertyDrawer(typeof(UMAMeshData))]
 	public class UMAMeshDataPropertyDrawer : PropertyDrawer
 	{
 		public static bool foldout = false;

@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using UMA.Editors;
 
 namespace UMA.CharacterSystem.Editors
 {
-	[CustomPropertyDrawer(typeof(DynamicUMADnaAsset))]
+    [CustomPropertyDrawer(typeof(DynamicUMADnaAsset))]
 	public class DynamicUMADnaAssetPropertyDrawer : PropertyDrawer
 	{
 		static EditorWindow inspectorPopup;

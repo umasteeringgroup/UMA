@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace UMA.Dynamics.Examples
 {
-	public class CursorLock : MonoBehaviour
+    public class CursorLock : MonoBehaviour
 	{
 		void OnApplicationFocus(bool hasFocus )
 		{

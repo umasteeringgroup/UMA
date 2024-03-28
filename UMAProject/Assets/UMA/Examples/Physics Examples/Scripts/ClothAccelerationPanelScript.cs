@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using UMA.CharacterSystem;
 
 // @cond doxygen ignore
 namespace UMA.Examples
 {
-	public class ClothAccelerationPanelScript : MonoBehaviour 
+    public class ClothAccelerationPanelScript : MonoBehaviour 
 	{
 	    public DynamicCharacterAvatar avatar;
 	    public Slider xSlider;

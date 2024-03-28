@@ -16,13 +16,11 @@ using PackSlot = UMA.UMAPackedRecipeBase.PackedSlotDataV3;
 using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
 using RaceRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>>;
 using System.Linq;
-using System.Text;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
-using UMA;
 using UnityEngine.SceneManagement;
 #endif
 

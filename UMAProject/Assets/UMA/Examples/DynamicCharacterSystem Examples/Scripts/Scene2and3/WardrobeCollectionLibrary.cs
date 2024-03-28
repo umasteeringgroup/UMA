@@ -1,19 +1,16 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
-using UMA;
 
 namespace UMA.CharacterSystem.Examples
 {
-	/// <summary>
-	/// Gets a list of all the available 'UMAWardrobeCollection' assets that are available in Resources and (optionally) in any available assetBundles
-	/// Primarly used for creating a GUI for 'Wardrobe Collections' that are available for users to (down)load and apply to their characters.
-	/// Once a collection asset has been (down)loaded it is added to the DynamicCharacterSystem dictionaries as a 'FullOutfit' for any races it is compatible with
-	/// </summary>
-	public class WardrobeCollectionLibrary : MonoBehaviour
+    /// <summary>
+    /// Gets a list of all the available 'UMAWardrobeCollection' assets that are available in Resources and (optionally) in any available assetBundles
+    /// Primarly used for creating a GUI for 'Wardrobe Collections' that are available for users to (down)load and apply to their characters.
+    /// Once a collection asset has been (down)loaded it is added to the DynamicCharacterSystem dictionaries as a 'FullOutfit' for any races it is compatible with
+    /// </summary>
+    public class WardrobeCollectionLibrary : MonoBehaviour
 	{
 		public static WardrobeCollectionLibrary Instance = null;
 

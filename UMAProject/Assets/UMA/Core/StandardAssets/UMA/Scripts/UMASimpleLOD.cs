@@ -1,12 +1,11 @@
 using UnityEngine;
-using UMA;
 using UMA.CharacterSystem;
 using System;
 using System.Collections.Generic;
 
 namespace UMA.Examples
 {
-	public class UMASimpleLOD : MonoBehaviour
+    public class UMASimpleLOD : MonoBehaviour
 	{
 		[Tooltip("The distance to step to another LOD")]
 		[Range(0.01f, 100f)]

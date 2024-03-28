@@ -1,12 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
-using UMA.Controls;
 using UMA;
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
 using UMA.Editors;
-using System.IO;
 
 public class AssetIndexerFilterEditor : EditorWindow
 {

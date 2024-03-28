@@ -1,10 +1,9 @@
 using System;
-using UnityEngine;
 
 
 namespace UMA.Controls
 {
-	public enum Amount
+    public enum Amount
 	{
 		NotSet = -1,
 		None,
