@@ -1,5 +1,7 @@
 ﻿#if UMA_ADDRESSABLES
 #if !UMA_NOASMDEF
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;

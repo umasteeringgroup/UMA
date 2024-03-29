@@ -1,6 +1,8 @@
 ﻿#if UMA_BURSTCOMPILE
+using UMA;
 using Unity.Collections;
 using Unity.Jobs;
+using UnityEngine;
 
 
 public class RecalculationSlot : MonoBehaviour

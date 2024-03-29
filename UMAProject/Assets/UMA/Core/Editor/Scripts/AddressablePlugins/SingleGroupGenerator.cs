@@ -1,6 +1,12 @@
 ﻿#if UMA_ADDRESSABLES
+using System;
+using System.Collections.Generic;
+using System.Text;
+using UMA.CharacterSystem;
+using UnityEditor;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
+using UnityEngine;
 
 
 namespace UMA
