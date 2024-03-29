@@ -2,6 +2,7 @@
 using System.Text;
 using UMA;
 using UMA.CharacterSystem;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -87,6 +88,8 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
 
     private List<string> ConsoleLog = new List<string>();
     private List<string> PendingLog = new List<string>();
+    private GameObject currentButton;
+    private string currentInfoText;
 
     private void Start()
     {
@@ -425,11 +428,27 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
         DeactivateButtons();
         CleanContainer(DNAContainer);
         if (InfoText != null)
-        { 
+        {
+            Text t = InfoText.GetComponent<Text>();
+
+            if (t != null)
+            {
+                if (string.IsNullOrEmpty(currentInfoText))
+                {
+                    currentInfoText = t.text; 
+                }
+                t.text = TranslateMacros(currentInfoText);
+            }
             Instantiate(InfoText, DNAContainer.transform);
         }
         ShowLog();
         ActivateButton(BackButton);
+    }
+
+    private string TranslateMacros(string text)
+    {
+        string result = text.Replace("{racename}", avatar.activeRace.name);
+        return result;
     }
 
     private void ShowLogItem(string logtext)
@@ -523,6 +542,7 @@ public class NewUMAGUI : MonoBehaviour, IDNASelector, IColorSelector, IItemSelec
     public void OnRaceClick(string raceName)
     {
         avatar.ChangeRace(raceName);
+        ShowInfo(); // clears the UI of the other races items.
     }
 
     public void OnBackClick()

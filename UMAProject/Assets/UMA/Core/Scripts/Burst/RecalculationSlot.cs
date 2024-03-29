@@ -1,17 +1,18 @@
-﻿#if UMA_BURSTCOMPILE
-using UMA;
+﻿using UMA;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
-
-public class RecalculationSlot : MonoBehaviour
+namespace UMA
 {
-    public float angle = 60f;
-    public string blendShapeNameStartsWith = "";
-
-    public void Recalculate(UMAData umaDATA)
+    public class RecalculationSlot : MonoBehaviour
     {
+        public float angle = 60f;
+        public string blendShapeNameStartsWith = "";
+
+        public void Recalculate(UMAData umaDATA)
+        {
+#if UMA_BURSTCOMPILE
         Transform theRenderer = umaDATA.gameObject.transform.Find("UMARenderer");
         GameObject rendererGameObject = theRenderer.gameObject;
         SkinnedMeshRenderer smr = rendererGameObject.GetComponent<SkinnedMeshRenderer>();
@@ -67,5 +68,7 @@ public class RecalculationSlot : MonoBehaviour
         }
 
     }
-}
 #endif
+        }
+    }
+}
