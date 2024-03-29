@@ -20,6 +20,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Jobs;
 using Unity.Burst;
+using UnityEngine;
 
 public static class MeshUtilities
 {

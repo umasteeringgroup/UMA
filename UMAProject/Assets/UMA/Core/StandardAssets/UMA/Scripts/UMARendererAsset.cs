@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using Unity.Collections;
+
 #if UMA_BURSTCOMPILE
 using Unity.Jobs;
 #endif

@@ -11,6 +11,12 @@ using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UMA;
 using UnityEngine.Profiling;
+using System.Collections.Generic;
+using UnityEditor;
+using UMA.CharacterSystem;
+using UnityEngine;
+using System;
+using System.Text;
 #endif
 #endif
 
