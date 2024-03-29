@@ -1915,7 +1915,6 @@ namespace UMA.Editors
             List<string> buttons = new List<string>() { "Inspect","Material" };
             List<bool> pressed = new List<bool>() { false, false };
             bool delete;
-            bool select;
 
             _foldout = OverlayExpanded[_overlayData.overlayName];
 
@@ -2770,9 +2769,9 @@ namespace UMA.Editors
 
             if (target as UMATextRecipe != null)
             {
-                bool changed = false;
                 UMATextRecipe theRecipe = target as UMATextRecipe;
 #if UMA_ADDRESSABLES
+                bool changed = false;
 				if(!serializedObject.isEditingMultipleObjects) 
 				{  
 					bool wasEnabled = GUI.enabled; 

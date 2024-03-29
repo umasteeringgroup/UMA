@@ -3824,8 +3824,6 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
-            SetBlendshapeSettings();
-
             overrideDNA.Clear();
 
             if (activeRace.racedata == null)
@@ -3860,6 +3858,7 @@ namespace UMA.CharacterSystem
                     CurrentDNA = umaData.umaRecipe.GetDefinedDna();
                 }
                 umaData.userInformation = userInformation;
+                SetBlendshapeSettings();
             }
             if (DNAIsValid(CurrentDNA) == false)
             {
@@ -4294,7 +4293,7 @@ namespace UMA.CharacterSystem
             {
                 InitializeAvatar();
             }
-
+            SetBlendshapeSettings();
             umaData.defaultRendererAsset = defaultRendererAsset;
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
             umaData.atlasResolutionScale = this.AtlasResolutionScale;

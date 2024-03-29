@@ -188,9 +188,10 @@ namespace UMA
 
             _SerializedItem = GetItem();
             return _SerializedItem;
-#endif
+#else
             // This function does nothing in a build.
             return null;
+#endif
         }
 
         public static  string TranslatedName(string Name)
