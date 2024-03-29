@@ -1,11 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 namespace UMA.Dynamics.Examples
 {
-	[CustomEditor(typeof(ClothHelper))]
+    [CustomEditor(typeof(ClothHelper))]
 	public class ClothHelperEditor : Editor
 	{
 

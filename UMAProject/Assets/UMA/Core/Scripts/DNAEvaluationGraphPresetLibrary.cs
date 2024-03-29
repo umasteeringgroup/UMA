@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -7,23 +6,23 @@ using System.IO;
 #endif
 namespace UMA
 {
-	//This is an editor only asset that stores a list of preset DNAEvaluationGraphs, its similar to an AnimationCurve Preset Library.
-	//A DNAEvaluationGraph field works kind of like an enum of animationCurves and in its popup it shows the presets defined here, 
-	//rather like the 'Options' cog in an AnimationCurve editor. This is to make it possible for the user to easily set 'sane' values for their DNAEvaluationGraphs.
-	//
-	//I really wanted the options that show in the dropdown of choices to also have tooltips to explain what they do, but I didn't want the 
-	//actual field to contain that data, so this handles that too
-	//
-	//The values from the items in this library are used to set the keyframes in the DNAEvaluationGraph's graph value in the same way that an 
-	//a curve in an AnimationCurve preset library, is used to set the keyframes for an AnimationCurve, the actual presets are not referenced.
-	//This is so that this script/asset does not need to be in the build for a DNAEvaluationGraph field to work, under the hood DNAEvaluationGraph is just a name (string) and graph(AnimationCurve)
-	//There is a slight downside to this in that 'editing' a preset here wont change the values of any field that appears to be using it, we could make that happen though if its deemed necessary.
-	//
-	//I decided to make it possible to create more than one of these libraries because its better if the user doesn't edit one that might in future come with UMA
-	//because if they update UMA it will get overridden and they'd loose any of their custom graphs.
-	//I chose not to just have an animationCurve field because its really not very easy to understand how the curve works on the incoming dna value
+    //This is an editor only asset that stores a list of preset DNAEvaluationGraphs, its similar to an AnimationCurve Preset Library.
+    //A DNAEvaluationGraph field works kind of like an enum of animationCurves and in its popup it shows the presets defined here, 
+    //rather like the 'Options' cog in an AnimationCurve editor. This is to make it possible for the user to easily set 'sane' values for their DNAEvaluationGraphs.
+    //
+    //I really wanted the options that show in the dropdown of choices to also have tooltips to explain what they do, but I didn't want the 
+    //actual field to contain that data, so this handles that too
+    //
+    //The values from the items in this library are used to set the keyframes in the DNAEvaluationGraph's graph value in the same way that an 
+    //a curve in an AnimationCurve preset library, is used to set the keyframes for an AnimationCurve, the actual presets are not referenced.
+    //This is so that this script/asset does not need to be in the build for a DNAEvaluationGraph field to work, under the hood DNAEvaluationGraph is just a name (string) and graph(AnimationCurve)
+    //There is a slight downside to this in that 'editing' a preset here wont change the values of any field that appears to be using it, we could make that happen though if its deemed necessary.
+    //
+    //I decided to make it possible to create more than one of these libraries because its better if the user doesn't edit one that might in future come with UMA
+    //because if they update UMA it will get overridden and they'd loose any of their custom graphs.
+    //I chose not to just have an animationCurve field because its really not very easy to understand how the curve works on the incoming dna value
 
-	[System.Serializable]
+    [System.Serializable]
 	public sealed class DNAEvaluationGraphPresetLibrary : ScriptableObject
 	{
 

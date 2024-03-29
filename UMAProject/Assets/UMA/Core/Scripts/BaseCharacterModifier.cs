@@ -1,19 +1,18 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace UMA
 {
-	/// <summary>
-	/// Deals with base modifications to the character, user can enable scale, height, radius, mass and bounds modifications.
-	/// </summary>
-	//This replaces the fields and methods in DynamicDNAConverterBehaviour pre-DynamicDNAPlugins. 
-	//The available modifications are the same but each kind can be enabled or disabled for more granular control
-	//The method for getting the character height is now based solely on the resulting bone structure of the mechanim bones (for humanoid characters)
-	//so it no longer assumes certain dna or bones are available
-	//the adjustment numbers should now be considered to be more like 'padding' since none of them (apart from 'Head Ratio') are actually required in order to perform any calculations
-	[System.Serializable]
+    /// <summary>
+    /// Deals with base modifications to the character, user can enable scale, height, radius, mass and bounds modifications.
+    /// </summary>
+    //This replaces the fields and methods in DynamicDNAConverterBehaviour pre-DynamicDNAPlugins. 
+    //The available modifications are the same but each kind can be enabled or disabled for more granular control
+    //The method for getting the character height is now based solely on the resulting bone structure of the mechanim bones (for humanoid characters)
+    //so it no longer assumes certain dna or bones are available
+    //the adjustment numbers should now be considered to be more like 'padding' since none of them (apart from 'Head Ratio') are actually required in order to perform any calculations
+    [System.Serializable]
 	public class BaseCharacterModifier
 	{
 		#region FIELDS

@@ -1,16 +1,14 @@
 ﻿//Based on jiggle bone code from Michael Cook (Fishypants), Adapted for UMA by Phil Taylor (DankP3).
 
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UMA;
 using UMA.CharacterSystem;
 
 namespace UMA.Examples
 {
 
-	public class UMA_JiggleBelly : MonoBehaviour
+    public class UMA_JiggleBelly : MonoBehaviour
 	{
 
 		//TODO, need to distinguish between male and female; need to calculate vectors for male rig; need to assign male and female vectors as required.

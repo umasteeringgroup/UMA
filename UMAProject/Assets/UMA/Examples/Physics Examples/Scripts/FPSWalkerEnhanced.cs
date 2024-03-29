@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace UMA.Dynamics.Examples
 {
-	[RequireComponent (typeof (CharacterController))]
+    [RequireComponent (typeof (CharacterController))]
 	public class FPSWalkerEnhanced: MonoBehaviour
 	{
 		public float walkSpeed = 6.0f;

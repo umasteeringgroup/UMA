@@ -1,13 +1,10 @@
 #define UNITY_EDITOR
 #if UNITY_EDITOR
 
-using Codice.Client.Common.GameUI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using UMA.CharacterSystem;
-using UMA.Controls;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;

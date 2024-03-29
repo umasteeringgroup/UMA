@@ -1,10 +1,8 @@
 ﻿using UnityEditor;
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using TypePair = System.Collections.Generic.KeyValuePair<System.Type, string>;
 using System.Diagnostics;
-using System;
 
 // Simple Editor Script that fills a bar in the given seconds.
 namespace UMA

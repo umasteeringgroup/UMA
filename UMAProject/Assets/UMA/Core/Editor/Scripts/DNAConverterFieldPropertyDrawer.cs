@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 namespace UMA.Editors
 {
-	//Draws a dummy field that will take any object that uses the IDNAConverter interface (DNAConverterBehaviours - legacy prefabs- and DNAConverterControllers- the new ScriptableObjects)
-	[CustomPropertyDrawer(typeof(DNAConverterField), true)]
+    //Draws a dummy field that will take any object that uses the IDNAConverter interface (DNAConverterBehaviours - legacy prefabs- and DNAConverterControllers- the new ScriptableObjects)
+    [CustomPropertyDrawer(typeof(DNAConverterField), true)]
 	public class DNAConverterFieldPropertyDrawer : PropertyDrawer
 	{
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

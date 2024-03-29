@@ -15,7 +15,6 @@
  *          don't get back to you just go ahead and use it anyway!
  */
 
-using UnityEngine;
 #if UMA_BURSTCOMPILE
 using Unity.Collections;
 using Unity.Mathematics;

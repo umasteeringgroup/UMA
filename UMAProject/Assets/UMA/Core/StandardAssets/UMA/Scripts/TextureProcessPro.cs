@@ -1,9 +1,7 @@
 #undef DEBUG
 using UnityEngine;
-using System.Collections;
 using System;
 using CopyTextureSupport = UnityEngine.Rendering.CopyTextureSupport;
-using GraphicsDeviceType = UnityEngine.Rendering.GraphicsDeviceType;
 using System.Collections.Generic;
 
 

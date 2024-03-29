@@ -1,11 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
 namespace UMA.Editors
 {
-	[CustomPropertyDrawer(typeof(ColorDNAConverterPlugin.DNAColorSet.DNAColorComponent))]
+    [CustomPropertyDrawer(typeof(ColorDNAConverterPlugin.DNAColorSet.DNAColorComponent))]
 	public class ColorDNAConverterDNAColorComponentDrawer : PropertyDrawer
 	{
 		private float enableWidth = 30f;

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -9,7 +8,7 @@ using AdjustmentType = UMA.OverlayData.ColorComponentAdjuster.AdjustmentType;
 
 namespace UMA
 {
-	public class ColorDNAConverterPlugin : DynamicDNAPlugin
+    public class ColorDNAConverterPlugin : DynamicDNAPlugin
 	{
 
 		#region FIELDS

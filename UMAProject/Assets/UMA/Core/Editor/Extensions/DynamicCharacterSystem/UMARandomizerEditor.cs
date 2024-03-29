@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
@@ -7,7 +6,7 @@ using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(UMARandomizer))]
+    [CustomEditor(typeof(UMARandomizer))]
 	public class UMARandomizerEditor : Editor
 	{
 

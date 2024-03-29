@@ -5,14 +5,13 @@
 //	============================================================
 using UMA.CharacterSystem;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace UMA.PoseTools
 {
-	/// <summary>
-	/// UMA specific expression player.
-	/// </summary>
-	[ExecuteInEditMode]
+    /// <summary>
+    /// UMA specific expression player.
+    /// </summary>
+    [ExecuteInEditMode]
 	public class UMAExpressionPlayer : ExpressionPlayer
 	{
 		/// <summary>

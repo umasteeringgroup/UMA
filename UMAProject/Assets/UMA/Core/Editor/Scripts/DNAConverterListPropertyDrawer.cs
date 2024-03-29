@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
 namespace UMA.Editors
 {
-	//Draws a 'DropList' that will accept objects that use the IDNAConverter interface (DNAConverterBehaviours - legacy prefabs- and DNAConverterControllers- the new ScriptableObjects)
-	[CustomPropertyDrawer(typeof(DNAConverterList), true)]
+    //Draws a 'DropList' that will accept objects that use the IDNAConverter interface (DNAConverterBehaviours - legacy prefabs- and DNAConverterControllers- the new ScriptableObjects)
+    [CustomPropertyDrawer(typeof(DNAConverterList), true)]
 	public class DNAConverterListPropertyDrawer : PropertyDrawer
 	{
 		private float dropAreaHeight = 50f;

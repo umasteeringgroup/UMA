@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UMA.Examples
 {
-	public class UMADnaTweaker : MonoBehaviour
+    public class UMADnaTweaker : MonoBehaviour
 	{
 		public string dnaToTweak;
 		public UMACustomization customizer;

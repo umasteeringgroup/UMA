@@ -1,10 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UMA.Dynamics;
 
 namespace UMA.Dynamics.Examples
 {
-	public class UMAShooter : MonoBehaviour
+    public class UMAShooter : MonoBehaviour
 	{
 		//Declare a member variables for distributing the impacts over several frames
 		float impactEndTime=0;

@@ -1,16 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UMA;
+﻿using UnityEngine;
 
 namespace UMA
 {
-	//A DNAEvaluator performs an math evaluation on an incoming dna value.
-	//All over the place in our code we change the incoming dna value from its standard 0 -> 1 range to a -0.5 -> 0.5 range
-	//but then in Morphset new code was needed in order to change the value into a value that could be used for 'PoseOne' or 'PoseZero'
-	//The whole idea of DNAEvaluator (and its corresoponding DNAEvaluationGraph) is to rid us of the need to make new code every time 
-	//we need to perform a different math calculation on a dna value (and to give this flexibility to users as well)
-	[System.Serializable]
+    //A DNAEvaluator performs an math evaluation on an incoming dna value.
+    //All over the place in our code we change the incoming dna value from its standard 0 -> 1 range to a -0.5 -> 0.5 range
+    //but then in Morphset new code was needed in order to change the value into a value that could be used for 'PoseOne' or 'PoseZero'
+    //The whole idea of DNAEvaluator (and its corresoponding DNAEvaluationGraph) is to rid us of the need to make new code every time 
+    //we need to perform a different math calculation on a dna value (and to give this flexibility to users as well)
+    [System.Serializable]
 	public sealed class DNAEvaluator : ISerializationCallbackReceiver
 	{
 		//This is used with the Cumulative option in DNAEvaluatorList. Each line can be added/subtracted etc from the previous one

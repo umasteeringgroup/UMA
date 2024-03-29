@@ -1,12 +1,11 @@
 ﻿#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(DNARangeAsset))]
+    [CustomEditor(typeof(DNARangeAsset))]
 	public class DNARangeInspector : Editor 
 	{
 	    [MenuItem("Assets/Create/UMA/DNA/Legacy/DNA Range Asset")]

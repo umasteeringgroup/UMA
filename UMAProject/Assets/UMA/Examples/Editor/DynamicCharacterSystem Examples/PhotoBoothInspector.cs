@@ -1,16 +1,10 @@
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
-using System.IO;
-using UMA;
-using UMA.CharacterSystem;
-using UnityEngine.UIElements;
-using UMA.Editors; 
+using UMA.Editors;
 
-namespace UMA.CharacterSystem.Examples 
+namespace UMA.CharacterSystem.Examples
 {
-	[CustomEditor(typeof(PhotoBooth), true)]
+    [CustomEditor(typeof(PhotoBooth), true)]
 	public class PhotoBoothEditor : Editor
 	{
 		protected PhotoBooth thisPB;

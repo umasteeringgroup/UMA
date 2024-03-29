@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UMA;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(DNAEvaluationGraphPresetLibrary))]
+    [CustomEditor(typeof(DNAEvaluationGraphPresetLibrary))]
 	public class DNAEvaluationGraphPresetLibraryInspector : Editor
 	{
 

@@ -1,13 +1,12 @@
-﻿using System.Collections;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
 
 namespace UMA
 {
-	// A Random DNA 
-	[Serializable]
+    // A Random DNA 
+    [Serializable]
 	public class RandomDNA
 	{
 		public string DnaName;

@@ -1,12 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
-using System.Collections;
-using UMA;
 
 namespace UMA.CharacterSystem.Examples
 {
-	public class WardrobeCollectionDemoUI : MonoBehaviour
+    public class WardrobeCollectionDemoUI : MonoBehaviour
 	{
 
 		public TestCustomizerDD thisCustomizer;

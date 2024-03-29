@@ -1,7 +1,6 @@
 using UnityEngine;
-using System.Collections;
- 
- public static class TransformDeepChildExtension
+
+public static class TransformDeepChildExtension
  {
      //Breadth-first search
 	 public static Transform FindDeepChild(this Transform aParent, string aName)

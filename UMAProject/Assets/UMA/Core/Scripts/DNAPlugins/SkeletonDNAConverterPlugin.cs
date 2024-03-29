@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -8,7 +7,7 @@ using UMA.CharacterSystem;
 
 namespace UMA
 {
-	public class SkeletonDNAConverterPlugin : DynamicDNAPlugin
+    public class SkeletonDNAConverterPlugin : DynamicDNAPlugin
 	{
 		#region FIELDS
 

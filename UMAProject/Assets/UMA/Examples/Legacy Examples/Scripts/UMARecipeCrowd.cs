@@ -3,11 +3,10 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 #endif
-using UMA;
 
 namespace UMA.Examples
 {
-	public class UMARecipeCrowd : MonoBehaviour
+    public class UMARecipeCrowd : MonoBehaviour
 	{
 		public UMAContextBase context;
 		public UMAGeneratorBase generator;

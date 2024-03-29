@@ -1,15 +1,14 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System;
 using static UMA.UMAData;
 
 namespace UMA
 {
-	/// <summary>
-	/// Utility class for generating texture atlases
-	/// </summary>
-	public class UMAGeneratorPro
+    /// <summary>
+    /// Utility class for generating texture atlases
+    /// </summary>
+    public class UMAGeneratorPro
 	{
 		private struct PackSize
 		{

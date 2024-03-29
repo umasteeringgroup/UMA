@@ -1,11 +1,10 @@
 using UnityEngine;
-using System.Collections;
 using System.Text;
 using UnityEngine.UI;
 
 namespace UMA.CharacterSystem.Examples
 {
-	public class LogToText : MonoBehaviour
+    public class LogToText : MonoBehaviour
 	{
 		StringBuilder buffer = new StringBuilder();
 		bool changed;

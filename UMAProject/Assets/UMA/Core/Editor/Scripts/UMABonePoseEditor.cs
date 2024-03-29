@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEditor.IMGUI.Controls;
-using UMA.CharacterSystem;
-using System;
 using UMA.Editors;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -10,7 +8,7 @@ using System.Collections.Generic;
 
 namespace UMA.PoseTools
 {
-	public class BoneTreeView : TreeView
+    public class BoneTreeView : TreeView
 	{
 		public TreeViewItem RootNode;
 		public int NodeCount;

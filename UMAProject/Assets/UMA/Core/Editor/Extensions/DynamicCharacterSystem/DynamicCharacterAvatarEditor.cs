@@ -4,11 +4,10 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using System;
 using UMA.Editors;
-using UMA.CharacterSystem;
 
 namespace UMA.CharacterSystem.Editors
 {
-	[CustomEditor(typeof(DynamicCharacterAvatar), true)]
+    [CustomEditor(typeof(DynamicCharacterAvatar), true)]
 	public partial class DynamicCharacterAvatarEditor : Editor
 	{		
 		public static bool showHelp = false;

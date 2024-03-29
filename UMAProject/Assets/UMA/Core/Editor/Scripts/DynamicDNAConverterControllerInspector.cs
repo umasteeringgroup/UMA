@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -10,7 +9,7 @@ using UnityEngine.Events;
 namespace UMA.Editors
 {
 
-	[CustomEditor(typeof(DynamicDNAConverterController),true)]
+    [CustomEditor(typeof(DynamicDNAConverterController),true)]
 	public class DynamicDNAConverterControllerInspector : Editor
 	{
 

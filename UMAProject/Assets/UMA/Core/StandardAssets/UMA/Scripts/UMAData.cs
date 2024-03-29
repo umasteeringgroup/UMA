@@ -2,11 +2,10 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using UnityEngine.Events;
 
 namespace UMA
 {
-	public class BlendShapeData
+    public class BlendShapeData
 	{
 		public float value;
 		public bool isBaked;

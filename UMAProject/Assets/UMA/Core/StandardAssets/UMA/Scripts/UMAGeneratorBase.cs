@@ -1,14 +1,13 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
-using Object = UnityEngine.Object;
 
 namespace UMA
 {
-	/// <summary>
-	/// Base class for UMA character generators.
-	/// </summary>
-	public abstract class UMAGeneratorBase : MonoBehaviour
+    /// <summary>
+    /// Base class for UMA character generators.
+    /// </summary>
+    public abstract class UMAGeneratorBase : MonoBehaviour
 	{
 		public enum FitMethod {DecreaseResolution, BestFitSquare };
 

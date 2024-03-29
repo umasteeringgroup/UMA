@@ -1,21 +1,19 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using UnityEngine.Serialization;
-using UMA.CharacterSystem;
 
 namespace UMA
 {
-	/// <summary>
-	/// Data for a UMA "race".
-	/// </summary>
-	/// <remarks>
-	/// A "race" in UMA is nothing more than a specific TPose and set of DNA
-	/// converters. For example there are RaceData entries for Male Humans and
-	/// Female Humans, because they have slightly different TPoses and gender
-	/// specific DNA converters, despite sharing the same DNA types.
-	/// </remarks>
-	[PreferBinarySerialization]
+    /// <summary>
+    /// Data for a UMA "race".
+    /// </summary>
+    /// <remarks>
+    /// A "race" in UMA is nothing more than a specific TPose and set of DNA
+    /// converters. For example there are RaceData entries for Male Humans and
+    /// Female Humans, because they have slightly different TPoses and gender
+    /// specific DNA converters, despite sharing the same DNA types.
+    /// </remarks>
+    [PreferBinarySerialization]
 	[Serializable]
 	public partial class RaceData : ScriptableObject, INameProvider
 	{

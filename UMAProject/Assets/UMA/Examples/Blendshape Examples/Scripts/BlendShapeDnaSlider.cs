@@ -1,13 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-using UMA;
-using UMA.CharacterSystem;
 
 namespace UMA.Examples
 {
-	public class BlendShapeDnaSlider : MonoBehaviour
+    public class BlendShapeDnaSlider : MonoBehaviour
 	{
 		public int dnaTypeHash = 386317366;
 		public string dnaName = "";

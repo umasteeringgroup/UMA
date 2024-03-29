@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using UMA;
 using System.Collections.Generic;
 
 namespace UMA.CharacterSystem.Editors

@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using UMA;
 using UnityEngine;
 
 namespace UMA.Examples
 {
-	/// <summary>
-	/// Slot recipe script intended for runtime set up of character joints to simulate a physics based pony tail.
-	/// </summary>
-	public class PonytailSlotScript : MonoBehaviour
+    /// <summary>
+    /// Slot recipe script intended for runtime set up of character joints to simulate a physics based pony tail.
+    /// </summary>
+    public class PonytailSlotScript : MonoBehaviour
 	{
 		public bool UseSwayBone;
 	    // Properties to setup the Swing chain

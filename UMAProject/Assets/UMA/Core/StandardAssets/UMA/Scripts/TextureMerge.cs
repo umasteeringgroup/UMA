@@ -1,18 +1,16 @@
 #define UMA_ADVANCED_BLENDMODES
 
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
 using System;
-using System.Data;
 
 namespace UMA
 {
-	/// <summary>
-	/// Utility class that sets up materials for atlasing.
-	/// </summary>
-	[ExecuteInEditMode]
+    /// <summary>
+    /// Utility class that sets up materials for atlasing.
+    /// </summary>
+    [ExecuteInEditMode]
 	[CreateAssetMenu(menuName = "UMA/Rendering/TextureMerge")]
 	public class TextureMerge : ScriptableObject
 	{

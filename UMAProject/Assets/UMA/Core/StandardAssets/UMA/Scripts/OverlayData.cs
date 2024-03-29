@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using static UMA.OverlayDataAsset;
@@ -7,10 +6,10 @@ using System;
 
 namespace UMA
 {
-	/// <summary>
-	/// Overlay data contains the textures and material properties for building atlases.
-	/// </summary>
-	[System.Serializable]
+    /// <summary>
+    /// Overlay data contains the textures and material properties for building atlases.
+    /// </summary>
+    [System.Serializable]
 	public class OverlayData : System.IEquatable<OverlayData>
 	{
 		/// <summary>

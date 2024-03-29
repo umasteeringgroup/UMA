@@ -1,10 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace UMA
+﻿namespace UMA
 {
-	public interface IDNAConverter
+    public interface IDNAConverter
 	{
 		System.Type DNAType { get; }
 

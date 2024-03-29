@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEngine.UI;
 
 #if UNITY_EDITOR
@@ -8,7 +7,7 @@ using UnityEditor;
 
 namespace UMA.Examples
 {
-	public class UMASlotVerifyWizard : MonoBehaviour
+    public class UMASlotVerifyWizard : MonoBehaviour
 	{
 		GameObject RaceGO = null;
 		SkinnedMeshRenderer RaceSMR = null;

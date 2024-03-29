@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.Dynamics;
-using UnityEngine.Profiling;
 using Unity.Collections;
 using UnityEngine.Serialization;
 using System.Text;
@@ -15,7 +14,7 @@ using UnityEngine.Rendering;
 
 namespace UMA
 {
-	[Serializable]
+    [Serializable]
     /// <summary>
     /// UMA version of Unity mesh triangle data.
     /// </summary>

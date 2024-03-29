@@ -1,11 +1,10 @@
 using UnityEngine;
 using UnityEditor;
 //using System.Linq;
-using System.Collections.Generic;
 
 namespace UMA.Editors
 {
-	[CustomEditor(typeof(UMAMountedItem))]
+    [CustomEditor(typeof(UMAMountedItem))]
 	[CanEditMultipleObjects]
 	public class UMAMountedItemEditor : Editor
 	{

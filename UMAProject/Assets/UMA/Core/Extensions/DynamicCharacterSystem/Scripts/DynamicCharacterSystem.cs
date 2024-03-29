@@ -1,12 +1,11 @@
 using UnityEngine;
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 using System.Collections.Generic;
 
 namespace UMA.CharacterSystem
 {
-	public class DynamicCharacterSystem : DynamicCharacterSystemBase
+    public class DynamicCharacterSystem : DynamicCharacterSystemBase
 	{
 		public Dictionary<string, UMATextRecipe> RecipeIndex = new Dictionary<string, UMATextRecipe>();
 		public Dictionary<string, Dictionary<string, List<UMATextRecipe>>> Recipes = new Dictionary<string, Dictionary<string, List<UMATextRecipe>>>();

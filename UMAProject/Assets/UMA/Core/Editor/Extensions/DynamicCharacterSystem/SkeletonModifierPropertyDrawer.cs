@@ -1,11 +1,10 @@
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace UMA.CharacterSystem.Editors
 {
-	[CustomPropertyDrawer(typeof(SkeletonModifier))]
+    [CustomPropertyDrawer(typeof(SkeletonModifier))]
 	public class SkeletonModifierPropertyDrawer : PropertyDrawer
 	{
 		float padding = 4f;

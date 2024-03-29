@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UMA;
-#if UMA_BURSTCOMPILE
+﻿#if UMA_BURSTCOMPILE
 using Unity.Collections;
 using Unity.Jobs;
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -8,11 +7,11 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UMA.Editors
 {
-	//This is a pretty sophisticated editor but *Dont Worry* this editor will pretty much handle any plugin that descends from
-	//DynamicDNAPlugin as is. You dont have to make an inspector like this of your own.
-	//There are plenty of protected virtual methods and fields you can override if you do need to add
-	//specific functionality though (see SkeletonModifiersDNAConverterPluginInspector for an example)
-	[CustomEditor(typeof(DynamicDNAPlugin), true)]
+    //This is a pretty sophisticated editor but *Dont Worry* this editor will pretty much handle any plugin that descends from
+    //DynamicDNAPlugin as is. You dont have to make an inspector like this of your own.
+    //There are plenty of protected virtual methods and fields you can override if you do need to add
+    //specific functionality though (see SkeletonModifiersDNAConverterPluginInspector for an example)
+    [CustomEditor(typeof(DynamicDNAPlugin), true)]
 	public class DynamicDNAPluginInspector : Editor
 	{
 		#region FIELDS

@@ -5,12 +5,11 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using UMA;
 using UMA.Examples;
 
 namespace UMA.CharacterSystem.Examples
 {
-	public class TestCustomizerDD : MonoBehaviour
+    public class TestCustomizerDD : MonoBehaviour
 	{
 		//SharedColorTableItem makes it possible to have more color tables than just skin/hair/cloth
 		//So a slot has a shared color name and this iterates over the shared color tables to see if a table with that name exists

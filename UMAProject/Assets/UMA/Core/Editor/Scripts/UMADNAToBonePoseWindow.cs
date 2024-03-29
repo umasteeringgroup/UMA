@@ -8,11 +8,10 @@
 
 using UnityEngine;
 using UnityEditor;
-using UMA;
 
 namespace UMA.PoseTools
 {
-	public class UMADNAToBonePoseWindow : EditorWindow
+    public class UMADNAToBonePoseWindow : EditorWindow
 	{
 		public UMAData sourceUMA;
 		public UnityEngine.Object outputFolder;

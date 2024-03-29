@@ -1,20 +1,18 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UMA;
 
 namespace UMA
 {
 
-	//A dna evaluaton graph is used so that we dont need to hard code things like the math calcs for PoseOne and PoseZero in a MorphDNASet
-	//we can use a linear animation graph and that can do that evaluation for us based on the incoming dna value. 
-	//Basically there is no need to hard code other behaviours now just because you need the dna interpreted differently.
+    //A dna evaluaton graph is used so that we dont need to hard code things like the math calcs for PoseOne and PoseZero in a MorphDNASet
+    //we can use a linear animation graph and that can do that evaluation for us based on the incoming dna value. 
+    //Basically there is no need to hard code other behaviours now just because you need the dna interpreted differently.
 
-	//The incoming dna value is the horizontal axis on the graph and what it returns is the value on the vertical axis at that point.
-	//this class defines the graph class and provides lots of handy defaults in the same way Color does with Color.red, Color.blue etc
-	//Theres loads of help in the instance of DNAEvaluationGraphPresetLibrary in the project that hopefully makes it really clear.
+    //The incoming dna value is the horizontal axis on the graph and what it returns is the value on the vertical axis at that point.
+    //this class defines the graph class and provides lots of handy defaults in the same way Color does with Color.red, Color.blue etc
+    //Theres loads of help in the instance of DNAEvaluationGraphPresetLibrary in the project that hopefully makes it really clear.
 
-	[System.Serializable]
+    [System.Serializable]
 	public sealed class DNAEvaluationGraph : System.IEquatable<DNAEvaluationGraph>
 	{
 

@@ -1,20 +1,17 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 #if UNITY_EDITOR
 using UnityEditor;
-using System.IO;
 #endif
-using UMA.CharacterSystem;
 
 namespace UMA
 {
-	//The DynamicDNAConverterController manages the list Converters (aka DynamicDNAPlugins) the user has decided to use.
-	//It is a Scriptable Object, and as Converters are added to it, it creates instances of those and stores them inside itself
-	//this is so all the assets this needs are packaged up with it UMA3 style.
-	//This asset reploaces DynamicDNAConverterBehaviour and applies the converters to the avatar
-	[System.Serializable]
+    //The DynamicDNAConverterController manages the list Converters (aka DynamicDNAPlugins) the user has decided to use.
+    //It is a Scriptable Object, and as Converters are added to it, it creates instances of those and stores them inside itself
+    //this is so all the assets this needs are packaged up with it UMA3 style.
+    //This asset reploaces DynamicDNAConverterBehaviour and applies the converters to the avatar
+    [System.Serializable]
 	public class DynamicDNAConverterController : ScriptableObject, IDNAConverter, IDynamicDNAConverter
 	{
 

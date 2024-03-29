@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UMA.CharacterSystem;
+﻿using UMA.CharacterSystem;
 using UnityEngine;
 
 public class UMAMountedItemSample : MonoBehaviour

@@ -1,11 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 namespace UMA
 {
-	[CustomPropertyDrawer(typeof(DynamicDNAPlugin.MasterWeight),true)]
+    [CustomPropertyDrawer(typeof(DynamicDNAPlugin.MasterWeight),true)]
 	public class DynamicDNAPluginMasterWeightDrawer : PropertyDrawer
 	{
 

@@ -2,12 +2,11 @@ using UnityEngine;
 using System.Collections.Generic;
 
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 
 namespace UMA.CharacterSystem
 {
-	public partial class UMAWardrobeRecipe : UMATextRecipe
+    public partial class UMAWardrobeRecipe : UMATextRecipe
 	{
 		[SerializeField]
 		[Tooltip("For tracking incompatible items. Not automatic.")]
