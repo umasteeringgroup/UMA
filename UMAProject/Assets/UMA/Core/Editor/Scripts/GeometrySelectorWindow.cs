@@ -74,20 +74,12 @@ namespace UMA.Editors
            // Tools.current = Tool.None;
            // Tools.hidden = true;
             EditorApplication.LockReloadAssemblies();
-#if UNITY_2019_1_OR_NEWER
-            SceneView.duringSceneGui += this.OnSceneGUI;
-#else
-            SceneView.onSceneGUIDelegate += this.OnSceneGUI;
-#endif
+            SceneView.duringSceneGui += this.DoSceneGUI;
         }
 
         private void OnDisable()
         {
-#if UNITY_2019_1_OR_NEWER
-            SceneView.duringSceneGui -= this.OnSceneGUI;
-#else
-            SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
-#endif
+            SceneView.duringSceneGui -= this.DoSceneGUI;
             CleanUp();
         }
 
@@ -532,21 +524,12 @@ namespace UMA.Editors
                 SceneView.FrameLastActiveSceneView();            
         }
 
-        void OnSceneGUI(SceneView scene)
+        void DoSceneGUI(SceneView scene)
         {
-            const float WindowHeight = 140;
-            const float WindowWidth = 380;
-            const float Margin = 40;
-
             ResetLabelStart();
 
             Handles.BeginGUI();
-#if !UNITY_2021_2_OR_NEWER
-
-            Rect WinRect = new Rect(SceneView.lastActiveSceneView.position.width - (WindowWidth + Margin), SceneView.lastActiveSceneView.position.height - (WindowHeight + Margin),WindowWidth, WindowHeight);
-
-            GUI.Window(1,WinRect,   SceneWindow, "UMA Mesh Hide Geometry Selector");
-#endif
+ 
             DrawNextLabel("Left click and drag to area select");
             DrawNextLabel("Hold SHIFT while dragging to paint");
             DrawNextLabel("Hold CTRL while dragging to paint inverse");

@@ -58,9 +58,11 @@ namespace UMA
         [SerializeField] private bool _RecalculateNormals = false;
         [Tooltip("The angle to use when recalculating normals.")]
         [SerializeField] private float _NormalAngle = 60f;
+#if UMA_BURSTCOMPILE
         [Tooltip("The name of the blendshape to use when recalculating normals.")]
         [SerializeField] private string blendShapeNameStartsWith = "";
-        #endregion
+#endif
+#endregion
 
         /// <summary>
         /// Sets the Skinned Mesh Renderer to the values on this UMA Renderer Asset.

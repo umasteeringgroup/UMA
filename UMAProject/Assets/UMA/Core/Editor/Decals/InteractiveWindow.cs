@@ -105,7 +105,7 @@ public class InteractiveUMAWindow : SceneView
         cameraMode = SceneView.GetBuiltinCameraMode(newMode);
     }
 
-    protected override void OnGUI()
+    protected override void OnSceneGUI()
     {
         InitializeIfNeeded();
         if (bsToggled == null)
@@ -131,7 +131,7 @@ public class InteractiveUMAWindow : SceneView
                 FrameSelected();
             }
         } 
-        base.OnGUI();
+        base.OnSceneGUI();
     }
 
    
@@ -223,7 +223,7 @@ public class InteractiveUMAWindow : SceneView
             base.OnEnable();
             titleContent = new GUIContent(WindowName);
             EditorApplication.playModeStateChanged += EditorChanged;
-            CompilationPipeline.assemblyCompilationStarted += CompilationPipeline_assemblyCompilationStarted;
+            CompilationPipeline.compilationStarted += CompilationPipeline_assemblyCompilationStarted;
             duringSceneGui += InteractiveUMAWindow_duringSceneGui;             
         }
         catch (Exception) { };
@@ -297,7 +297,7 @@ public class InteractiveUMAWindow : SceneView
     }
 
 
-    private void CompilationPipeline_assemblyCompilationStarted(string obj)
+    private void CompilationPipeline_assemblyCompilationStarted(object obj)
     {
         CloseCleanup();
     }
@@ -327,7 +327,7 @@ public class InteractiveUMAWindow : SceneView
                 EditorSceneManager.ClosePreviewScene(s);
             }
             EditorApplication.playModeStateChanged -= EditorChanged;
-            CompilationPipeline.assemblyCompilationStarted -= CompilationPipeline_assemblyCompilationStarted;
+            CompilationPipeline.compilationStarted -= CompilationPipeline_assemblyCompilationStarted;
             duringSceneGui -= InteractiveUMAWindow_duringSceneGui;
         }
     }
