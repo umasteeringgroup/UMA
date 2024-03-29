@@ -18,14 +18,10 @@ MonoBehaviour:
   DisplayValue: Mystic Robe Shoes
   compatibleRaces:
   - HumanMale
-  - HumanMaleDCS
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
-    thumb: {fileID: 21300000, guid: 5ba8be9f4723c964e9937c9ea7d657ea, type: 3}
-  - race: HumanMaleDCS
-    filename: 
-    thumb: {fileID: 0}
+    thumb: {fileID: 21300000, guid: 011fcbcb1bb123647b1068ea622e1ddc, type: 3}
   wardrobeSlot: Feet
   Appended: 0
   Hides:
@@ -36,9 +32,11 @@ MonoBehaviour:
   MeshHideAssets: []
   OverrideDNA:
     PreloadValues: []
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[]},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[]},{"id":"M_Freebie
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0},{"id":"M_Freebie
     Robeset Boots_Slot","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Freebie Robeset
-    Boots","colorIdx":2,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":1.0},"rotation":0.0}],"Tags":[],"Races":[]}],"colors":[],"fColors":[{"name":"Shirt","colors":[106,4,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[]},{"name":"ShirtAccent","colors":[232,8,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[]},{"name":"Shoes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[]}],"sharedColorCount":3,"race":"","packedDna":[]}'
+    Boots","colorIdx":2,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":1.0},"rotation":0.0,"blendModes":[0,0,0],"Tags":[],"tiling":[false,false,false],"uvOverride":0}],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0}],"colors":[],"fColors":[{"name":"Shirt","colors":[106,4,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"isBaseColor":false,"displayColor":-64406},{"name":"ShirtAccent","colors":[232,8,8,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"isBaseColor":false,"displayColor":-16250648},{"name":"Shoes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":3,"race":"HumanMale","packedDna":[],"uvOverride":0}'
+  forceKeep: 0
+  labelLocalFiles: 0
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

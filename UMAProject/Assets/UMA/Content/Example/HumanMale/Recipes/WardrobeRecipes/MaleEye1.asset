@@ -18,14 +18,10 @@ MonoBehaviour:
   DisplayValue: Alligator Eyes
   compatibleRaces:
   - HumanMale
-  - HumanMaleDCS
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
     thumb: {fileID: 21300000, guid: c13828597679d0b48bdf3f20d5462564, type: 3}
-  - race: HumanMaleDCS
-    filename: 
-    thumb: {fileID: 0}
   wardrobeSlot: Eyes
   Appended: 0
   Hides: []
@@ -35,7 +31,9 @@ MonoBehaviour:
   MeshHideAssets: []
   OverrideDNA:
     PreloadValues: []
-  recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"MaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"Alligator_eye_adjust","colorIdx":0,"rect":[64,64,128,128]}]}],"colors":[],"fColors":[{"name":"Eyes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0},{"id":"MaleEyes","scale":100,"copyIdx":-1,"overlays":[{"id":"Alligator_eye_adjust","colorIdx":0,"rect":[64.0,64.0,128.0,128.0],"isTransformed":false,"scale":{"x":1.0,"y":1.0,"z":1.0},"rotation":0.0,"blendModes":[0,0,0],"Tags":[],"tiling":[false,false,false],"uvOverride":0}],"Tags":["Eyes","Head"],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0}],"colors":[],"fColors":[{"name":"Eyes","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":1,"race":"HumanMale","packedDna":[],"uvOverride":0}'
+  forceKeep: 0
+  labelLocalFiles: 0
   IncompatibleRecipes: []
   UserField: 
-  replaces: 
+  replaces: Nothing

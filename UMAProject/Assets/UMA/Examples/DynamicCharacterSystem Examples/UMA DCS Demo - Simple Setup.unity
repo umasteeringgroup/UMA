@@ -10395,7 +10395,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 740322064}
   m_HandleRect: {fileID: 740322063}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -14180,7 +14180,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 651379022}
   m_HandleRect: {fileID: 651379021}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -16495,27 +16495,36 @@ MonoBehaviour:
   - armWidth
   - forearmWidth
   - armLength
-  FaceItems: []
+  FaceItems:
+  - {fileID: 11400000, guid: 518535e4bd613dc458a460be75d97327, type: 2}
+  - {fileID: 11400000, guid: 8ea99475ea1aac141b787fc5dc6cc824, type: 2}
+  - {fileID: 11400000, guid: 667840f679650844dbfbd6f3a4134998, type: 2}
   HairItems:
+  - {fileID: 11400000, guid: aba961e2f47032e41a87472b6a41306a, type: 2}
   - {fileID: 11400000, guid: 75611b25b76dfcd4facf747f35d19f26, type: 2}
-  - {fileID: 11400000, guid: aba961e2f47032e41a87472b6a41306a, type: 2}
   - {fileID: 11400000, guid: 8e67f8d6f30659a4d9202b2e6b8809b1, type: 2}
-  - {fileID: 11400000, guid: aba961e2f47032e41a87472b6a41306a, type: 2}
   - {fileID: 11400000, guid: d5470e7076173334fbd1b341e385bef0, type: 2}
   - {fileID: 11400000, guid: 4acc51a73e0e5884eb7e770d8f803e81, type: 2}
   - {fileID: 11400000, guid: bc2ac8c776a97fa46a5a1a9455599f2c, type: 2}
   - {fileID: 11400000, guid: cbac10d2bc6792c43b0d89e71534cf77, type: 2}
+  - {fileID: 11400000, guid: 53a236a7ccb00374dbbed2f13dc8509d, type: 2}
+  - {fileID: 11400000, guid: 967f84b71a1548d4580a76c279ec5389, type: 2}
+  - {fileID: 11400000, guid: bdae23dff0f3d3648882f2f087840fef, type: 2}
   LegsItems:
   - {fileID: 11400000, guid: 8ea3bcf334fb01b4ebab82092aa4ff46, type: 2}
-  - {fileID: 11400000, guid: ef2ae1fcf6ddfb64ab18b01bc95ae558, type: 2}
   - {fileID: 11400000, guid: 5bbd4dc2ec713f24a84512ef4f9ffe00, type: 2}
-  - {fileID: 11400000, guid: c6a22e687d55ee144965d37c94a9b11d, type: 2}
-  - {fileID: 11400000, guid: 28f0400d1cc90bf4888a2561c3a1146e, type: 2}
-  - {fileID: 11400000, guid: b26c5d9ed90bf6c43a9eec921b777004, type: 2}
   - {fileID: 11400000, guid: 3046b99fd67ac974f9fec45d5142a925, type: 2}
   - {fileID: 11400000, guid: f0eac0526ff3dbe479868042322ab1b2, type: 2}
   - {fileID: 11400000, guid: ed308ddf64a50d74aae73e4097381fc1, type: 2}
   - {fileID: 11400000, guid: 71e3ef35d8b941d4ab538b01f57dbb79, type: 2}
+  - {fileID: 11400000, guid: 5bbd4dc2ec713f24a84512ef4f9ffe00, type: 2}
+  - {fileID: 11400000, guid: c6a22e687d55ee144965d37c94a9b11d, type: 2}
+  - {fileID: 11400000, guid: ef2ae1fcf6ddfb64ab18b01bc95ae558, type: 2}
+  - {fileID: 11400000, guid: b26c5d9ed90bf6c43a9eec921b777004, type: 2}
+  - {fileID: 11400000, guid: 28f0400d1cc90bf4888a2561c3a1146e, type: 2}
+  - {fileID: 11400000, guid: 20c9259364a58404eb9049b15587fbcd, type: 2}
+  - {fileID: 11400000, guid: 30e281266b43fb3488fed1067f6e21f8, type: 2}
+  - {fileID: 11400000, guid: d8b50bc7ad0e08e4cb785c7ccc1e9c81, type: 2}
   BodyItems:
   - {fileID: 11400000, guid: 5abbc2ec892f7cf478a31da209981941, type: 2}
   - {fileID: 11400000, guid: f47ce9b8a0d9ecd48a39ef3f5c2447a6, type: 2}
@@ -16523,6 +16532,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: eaf6bd26b53c0ad4b80f876eddac0a32, type: 2}
   - {fileID: 11400000, guid: 71eeedfda6722ba44b45329112036e92, type: 2}
   - {fileID: 11400000, guid: be7c02d6f94052348a3fc382a4ff26dc, type: 2}
+  - {fileID: 11400000, guid: 2f138c428389dac489ae6bd6303bf89f, type: 2}
+  - {fileID: 11400000, guid: 11f0bbd571f26364eb2d7adfa0f7da7b, type: 2}
+  - {fileID: 11400000, guid: 482902fa7ec699847b936bfbab3a8181, type: 2}
+  - {fileID: 11400000, guid: d40e65714e237a3499a2eada8f3411c6, type: 2}
   DNAContainer: {fileID: 216598468}
   ItemsContainer: {fileID: 915054296}
   LogDetailContainer: {fileID: 2030230704}
@@ -20212,7 +20225,6 @@ MonoBehaviour:
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
-      - HumanMaleDCS
     - _recipeName: TallShoes_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
