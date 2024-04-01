@@ -13,11 +13,11 @@ namespace UMA
 			if (rigid == null)
 			{
 				rigid = umaData.gameObject.AddComponent<Rigidbody>();
-			}
-			rigid.constraints = RigidbodyConstraints.FreezeRotation;
-			rigid.mass = umaData.characterMass;
+                rigid.constraints = RigidbodyConstraints.FreezeRotation;
+                rigid.mass = umaData.characterMass;
+            }
 
-			CapsuleCollider capsule = umaData.gameObject.GetComponent<CapsuleCollider>();
+            CapsuleCollider capsule = umaData.gameObject.GetComponent<CapsuleCollider>();
 			BoxCollider box = umaData.gameObject.GetComponent<BoxCollider>();
 
 			if(umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
