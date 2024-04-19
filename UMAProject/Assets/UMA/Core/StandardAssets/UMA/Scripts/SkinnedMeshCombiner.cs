@@ -326,8 +326,8 @@ namespace UMA
                         UMABlendShape ubs = sourceShapes[j];
                         string shapeName = ubs.shapeName;// source.meshData.blendShapes[shapeIndex].shapeName;
 
-						//If we aren't loading all blendshapes and we don't find the blendshape name in the list of explicit blendshapes to combine, then skip to the next one.
-						if (!blendShapeSettings.loadAllBlendShapes && !blendShapeSettings.blendShapes.ContainsKey(shapeName))
+						// load only the blendshapes that are in the filtered list, if any are set.
+						if (blendShapeSettings.filteredBlendshapes.Count > 0 && (!blendShapeSettings.filteredBlendshapes.Contains(shapeName)))
                         {
                             continue;
                         }

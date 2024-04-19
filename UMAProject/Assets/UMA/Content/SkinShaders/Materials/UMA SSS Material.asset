@@ -18,7 +18,7 @@ MonoBehaviour:
   secondPass: {fileID: 0}
   materialType: 2
   channels:
-  - channelType: 0
+  - channelType: 4
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 

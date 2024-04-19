@@ -14,10 +14,10 @@ namespace UMA
 	public class BlendShapeSettings
 	{
 		public bool ignoreBlendShapes = false; //switch for the skinnedmeshcombiner to skip all blendshapes or not.
-		public bool loadAllBlendShapes = true; //switch for whether to load all blendshapes found on umaMeshData or only ones found in the blendshape dictionary
         public bool loadAllFrames = true;
         public bool loadNormals = true;
         public bool loadTangents = true;
+		public HashSet<string> filteredBlendshapes = new HashSet<string>();
 		public Dictionary<string, BlendShapeData> blendShapes = new Dictionary<string, BlendShapeData>();
 	}
 
@@ -2180,17 +2180,8 @@ namespace UMA
                 {
                     continue;
                 }
-				if (this.blendShapeSettings.loadAllBlendShapes && renderer.sharedMesh != null)
+				if (renderer.sharedMesh != null)
 				{
-					for (int i = 0; i < renderer.sharedMesh.blendShapeCount; i++)
-					{
-						if (renderer.GetBlendShapeWeight(i) != 0.0f)
-						{
-							renderer.SetBlendShapeWeight(i, 0.0f);
-						}
-					}
-
-
 					if (destroyRenderer)
 					{
 						// need to kill cloth first if it exists.
@@ -2202,6 +2193,16 @@ namespace UMA
 						UMAUtils.DestroySceneObject(renderer.sharedMesh);
 						UMAUtils.DestroySceneObject(renderer);
 					}
+					else
+					{
+                        for (int i = 0; i < renderer.sharedMesh.blendShapeCount; i++)
+                        {
+                            if (renderer.GetBlendShapeWeight(i) != 0.0f)
+                            {
+                                renderer.SetBlendShapeWeight(i, 0.0f);
+                            }
+                        }
+                    }
 				}
 			}
 		}

@@ -770,17 +770,11 @@ MonoBehaviour:
     - DnaName: noseFlatten
       MinValue: 0.21621622
       MaxValue: 0.8558558
-    - DnaName: chinSize
-      MinValue: 0
-      MaxValue: 1
-    - DnaName: jawsSize
-      MinValue: 0.3243243
-      MaxValue: 0.6216216
     raceData: {fileID: 11400000, guid: a88284a0175502f459c5496bda675fb1, type: 2}
     GuiFoldout: 1
     ColorsFoldout: 1
     WardrobeFoldout: 0
-    DnaFoldout: 0
+    DnaFoldout: 1
     Delete: 0
     AddColorTable: 0
     DnaChanged: 1

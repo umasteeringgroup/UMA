@@ -602,9 +602,7 @@ namespace UMA.CharacterSystem.Editors
             if (showBlendshapes)
             {
                 EditorGUI.BeginChangeCheck();
-                BeginVerticalPadded();
                 ShowBlendshapesGUI(thisDCA);
-                EndVerticalPadded();
                 if (EditorGUI.EndChangeCheck())
                 {
                     serializedObject.ApplyModifiedProperties();
@@ -934,11 +932,20 @@ namespace UMA.CharacterSystem.Editors
 
             void ShowBlendshapesGUI(DynamicCharacterAvatar thisDCA)
             {
+                BeginVerticalPadded();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("loadOnlyUsedBlendshapes"));
+                // EditorGUILayout.PropertyField(serializedObject.FindProperty("loadOnlyUsedBlendshapes"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendshapeNormals"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendshapeTangents"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("loadAllFrames"));
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(20);
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("forceKeepBlendshapes"));
+                GUILayout.Space(20);
+                GUILayout.EndHorizontal();
+
+                EndVerticalPadded();
+
             }
 
             void ShowAnimatorGUI(DynamicCharacterAvatar thisDCA)

@@ -15,6 +15,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
 using UnityEngine.SceneManagement;
+using Sirenix.Utilities;
 
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -119,6 +120,10 @@ namespace UMA.CharacterSystem
         public bool loadBlendshapeTangents = true;
         [Tooltip("If true, then all frames of the blendshapes will be loaded. If false, only the LAST frame will be loaded.")]
         public bool loadAllFrames = true;
+        [Tooltip("List of blendshapes that should always be kept, even if they would otherwise be optimized out.")]
+        public List<string> forceKeepBlendshapes = new List<string>();
+        [Tooltip("Limit the blendshapes to only those in this list. If empty, all blendshapes will be loaded. This can be set automatically when loading an Avatar Definition if you pass true to 'Limit Blendshapes to DNA'")]
+        private HashSet<string> blendShapes = new HashSet<string>();
 
         [Tooltip("If true, will reuse the mecanim avatar if it exists.")]
         public bool keepAvatar;
@@ -621,7 +626,7 @@ namespace UMA.CharacterSystem
             umaData.blendShapeSettings.loadTangents = loadBlendshapeTangents;
             umaData.blendShapeSettings.loadNormals = loadBlendshapeNormals;
             umaData.blendShapeSettings.loadAllFrames = loadAllFrames;
-            umaData.blendShapeSettings.loadAllBlendShapes = !loadOnlyUsedBlendshapes;
+            umaData.blendShapeSettings.filteredBlendshapes = blendShapes;
         }
 
         List<GameObject> GetRenderers(GameObject parent)
@@ -1206,16 +1211,16 @@ namespace UMA.CharacterSystem
             }
         }
 
-        private void PreloadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe, bool resetDNA, bool resetWardrobe, bool resetColors)
+        private void PreloadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe, bool resetDNA, bool resetWardrobe, bool resetColors, bool optimizeBlendShapes)
         {
             RacePreset = adf.RaceName;
             LoadColors(adf, resetColors);
             LoadWardrobe(adf, loadDefaultWardrobe, resetWardrobe);
 
-            PreloadDNA(adf, resetDNA);
+            PreloadDNA(adf, resetDNA, optimizeBlendShapes);
         }
 
-        private void PreloadDNA(AvatarDefinition adf, bool resetDNA)
+        private void PreloadDNA(AvatarDefinition adf, bool resetDNA, bool optimizeBlendshapes)
         {
             if (resetDNA)
             {
@@ -1238,13 +1243,61 @@ namespace UMA.CharacterSystem
                     predefinedDNA.AddDNA(d.Name, d.Value);
                 }
             }
+            if (optimizeBlendshapes && loadBlendShapes)
+            {
+                SetFilteredBlendshapes(adf.Dna);
+            }
         }
 
-        public void LoadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true)
+        private void SetFilteredBlendshapes(DnaDef[] dna)
+        {
+            if (activeRace.data == null)
+            {
+                return;
+            }
+            Dictionary<string, List<string>> DnaToBlendshapes = activeRace.data.GetDNAToBlendShapes();
+
+            blendShapes.Clear();
+            blendShapes.AddRange(forceKeepBlendshapes);
+
+            for(int i=0;i<dna.Length;i++)
+            {
+                DnaDef d = dna[i];
+
+                if (d.Value > 0.4999f && d.Value < 0.502f)
+                {
+                    continue;
+                }
+                
+                if (DnaToBlendshapes.ContainsKey(d.Name))
+                {
+                    List<string> bshapes = DnaToBlendshapes[d.Name];
+                    for (int i1 = 0; i1 < bshapes.Count; i1++)
+                    {
+                        string bshape = bshapes[i1];
+                        if (!blendShapes.Contains(bshape))
+                        {
+                            blendShapes.Add(bshape);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Load the avatar definition into the character
+        /// </summary>
+        /// <param name="adf">Avatar Definition to load</param>
+        /// <param name="loadDefaultWardrobe">load the default wardrobe before loading wardrobe</param>
+        /// <param name="ResetDNA">Reset DNA to default values before loading</param>
+        /// <param name="ResetWardrobe">Reset Wardrobe</param>
+        /// <param name="ResetColors">Reset colors</param>
+        /// <param name="optimizeBlendShapes">Force only used Blendshapes to load</param>
+        public void LoadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true, bool optimizeBlendShapes = false)
         {
             if (umaData == null)
             {
-                PreloadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors);
+                PreloadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors, optimizeBlendShapes);
                 return;
             }
 
@@ -1257,20 +1310,20 @@ namespace UMA.CharacterSystem
             LoadColors(adf, ResetColors);
             WardrobeRecipes.Clear();
             LoadWardrobe(adf, loadDefaultWardrobe, ResetWardrobe);
-            PreloadDNA(adf, ResetDNA);
+            PreloadDNA(adf, ResetDNA, optimizeBlendShapes);
         }
 
-        public void LoadAvatarDefinition(string adfstring, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true)
+        public void LoadAvatarDefinition(string adfstring, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true, bool optimizeBlendShapes = false)
         {
             if (adfstring.StartsWith("AA*"))
             {
                 AvatarDefinition adf = AvatarDefinition.FromCompressedString(adfstring);
-                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors);
+                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors, optimizeBlendShapes);
             }
             else
             {
                 AvatarDefinition adf = JsonUtility.FromJson<AvatarDefinition>(adfstring);
-                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors);
+                LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors,optimizeBlendShapes);
             }
         }
         #endregion
@@ -2389,7 +2442,11 @@ namespace UMA.CharacterSystem
                 {
                     if (ucd.PropertyBlock != null && ucd.PropertyBlock.alwaysUpdate)
                     {
-                        characterColors.SetColor(ucd.name, ucd);
+                        characterColors.SetRawColor(ucd.name, ucd);
+                    }
+                    if (ucd.PropertyBlock != null && ucd.PropertyBlock.alwaysUpdateParms)
+                    {
+                        characterColors.SetRawColorParms(ucd.name, ucd);
                     }
                 }
             }
@@ -5793,6 +5850,20 @@ namespace UMA.CharacterSystem
                     Colors.Add(new ColorValue(name, c));
                 }
             }
+
+            public void SetRawColorParms(string name, OverlayColorData c)
+            {
+                ColorValue cv = GetColorValue(name);
+                if (cv != null)
+                {
+                    cv.AssignFrom(c,true);
+                }
+                else
+                {
+                    SetRawColor(name,c);
+                }
+            }
+
 
             public void SetRawColor(string name, OverlayColorData c)
             {

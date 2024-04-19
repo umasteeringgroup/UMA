@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mesh_Hair_DoubleSided
-  m_Shader: {fileID: 4800000, guid: d56eff61c40904d78becb18c718ce22e, type: 3}
+  m_Shader: {fileID: 4800000, guid: df1858593cdb6774987239ad9df87d98, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _ALPHATEST_ON
@@ -58,18 +58,26 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _TangentMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _texcoord:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Anisotropy: 1
     - _BumpScale: 0.35
     - _BumpStrength: 0.344
     - _Cutoff: 0.65
     - _DetailNormalMapScale: 1
+    - _Distortion: 1
     - _DstBlend: 0
     - _FadeFactor: 0.899
+    - _Fresnel: 1
+    - _FresnelDamp: 1
     - _Glossiness: 0.334
     - _MaskClipValue: 0.374
     - _Metallic: 0.686
@@ -78,7 +86,9 @@ Material:
     - _Mode: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _Power: 1
     - _Richness: 0.721
+    - _Scale: 1
     - _SmoothnessAdd: 0.07
     - _SmoothnessStrength: 0
     - _SrcBlend: 1

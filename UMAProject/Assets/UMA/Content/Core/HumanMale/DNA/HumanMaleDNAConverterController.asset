@@ -17,7 +17,7 @@ MonoBehaviour:
   - {fileID: 114475921622480812}
   - {fileID: 114181452766340640}
   _overallModifiers:
-    _adjustScale: 1
+    _adjustScale: 0
     _adjustHeight: 1
     _adjustRadius: 1
     _adjustMass: 1
@@ -91,10 +91,140 @@ MonoBehaviour:
       _initialized: 1
   _converterController: {fileID: 11400000}
   _poseDNAConverters:
-  - _poseToApply: {fileID: 11400000, guid: 730a617429c7a9b4ab1cb46f94fdbf4f, type: 2}
+  - _poseToApply: {fileID: 11400000, guid: 9cef2a4a284502a47a1f476fd12006be, type: 2}
+    _startingPoseWeight: 0
+    _modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: bodyFitness
+        _dnaNameHash: -1379254163
+        _evaluator:
+          _name: OneZeroZero
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: -2
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 0.5
+              value: 0
+              inSlope: -2
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 1
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+  - _poseToApply: {fileID: 11400000, guid: ef6e26a07163fe949a2543a5da963fe5, type: 2}
     _startingPoseWeight: 1
     _modifyingDNA:
-      _dnaEvaluators: []
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: bodyFitness
+        _dnaNameHash: -1379254163
+        _evaluator:
+          _name: ZeroOneZero
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 0.5
+              value: 1
+              inSlope: 2
+              outSlope: -2
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 1
+              value: 0
+              inSlope: -2
+              outSlope: 1
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+        _multiplier: 1
+        _initialized: 1
+      _aggregationMethod: 0
+  - _poseToApply: {fileID: 11400000, guid: a12733777f479d84486d6b40b98ea37f, type: 2}
+    _startingPoseWeight: 0
+    _modifyingDNA:
+      _dnaEvaluators:
+      - _calcOption: 0
+        _dnaName: bodyFitness
+        _dnaNameHash: -1379254163
+        _evaluator:
+          _name: ZeroZeroOne
+          _graph:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 0
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 0.5
+              value: 0
+              inSlope: 0
+              outSlope: 2
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 1
+              value: 1
+              inSlope: 2
+              outSlope: 0
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+        _multiplier: 1
+        _initialized: 1
       _aggregationMethod: 0
 --- !u!114 &114475921622480812
 MonoBehaviour:

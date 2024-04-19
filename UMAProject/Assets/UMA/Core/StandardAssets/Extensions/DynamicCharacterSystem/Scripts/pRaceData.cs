@@ -4,6 +4,7 @@ using UnityEditor;
 #endif
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UMA
 {
@@ -79,6 +80,40 @@ namespace UMA
             packedRecipe = (baseRaceRecipe as UMATextRecipe).PackedLoad(UMAContextBase.Instance);
 
 			return packedRecipe;
+		}
+
+		private Dictionary<string,List<string>> _usedBlendshapeNames = null;
+
+		public Dictionary<string, List<string>> GetDNAToBlendShapes()
+		{
+			if (_usedBlendshapeNames != null)
+			{
+                return _usedBlendshapeNames;
+            }
+			_usedBlendshapeNames = new Dictionary<string, List<string>>();
+			for(int i=0; i< dnaConverterList.Length; i++)
+			{
+				var plugins = dnaConverterList[i].GetPlugins();
+				for (int j=0;j< plugins.Count; j++)
+				{
+					if (plugins[j] is BlendshapeDNAConverterPlugin)
+					{
+						var plugin = plugins[j] as BlendshapeDNAConverterPlugin;
+						plugin.blendshapeDNAConverters.ForEach((converter) =>
+						{
+							converter.UsedDNANames.ForEach((name) =>
+							{
+								if (_usedBlendshapeNames.ContainsKey(name) == false)
+								{
+                                    _usedBlendshapeNames.Add(name, new List<string>());
+                                }
+							_usedBlendshapeNames[name].Add(converter.blendshapeToApply);
+                            });
+                        });
+					}
+				}
+            }
+			return _usedBlendshapeNames;
 		}
 
 		public Dictionary<string, float> GetDefaultDNA()

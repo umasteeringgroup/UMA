@@ -666,6 +666,7 @@ namespace UMA
     {
         // If this is checked, the color will always update the 
         public bool alwaysUpdate;
+        public bool alwaysUpdateParms;
         public static string[] PropertyTypeStrings = new string[0];
         public static List<Type> availableTypes = new List<Type>();
         public string[] GetPropertyStrings()

@@ -367,6 +367,7 @@ namespace UMA
 			public short[] colors;
 			public string[] ShaderParms;
 			public bool alwaysUpdate;
+			public bool alwaysUpdateParms;
 			public bool isBaseColor;
 			public int displayColor;
 			public PackedOverlayColorDataV3()
@@ -407,6 +408,7 @@ namespace UMA
 				if (colorData.HasPropertyBlock)
                 {
 					alwaysUpdate = colorData.PropertyBlock.alwaysUpdate;
+					alwaysUpdateParms = colorData.PropertyBlock.alwaysUpdateParms;
                 }
 #if UNITY_EDITOR
 				isBaseColor = colorData.isBaseColor;
@@ -454,6 +456,7 @@ namespace UMA
                     {
 						overlayColorData.PropertyBlock = new UMAMaterialPropertyBlock();
 						overlayColorData.PropertyBlock.alwaysUpdate = alwaysUpdate; 
+						overlayColorData.PropertyBlock.alwaysUpdateParms = alwaysUpdateParms;
 						for(int i=0;i<ShaderParms.Length;i++)
                         {
 							overlayColorData.PropertyBlock.shaderProperties.Add(UMAProperty.FromString(ShaderParms[i]));

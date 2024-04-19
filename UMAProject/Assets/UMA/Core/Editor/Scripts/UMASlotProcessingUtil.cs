@@ -66,7 +66,7 @@ namespace UMA.Editors
 
 			//CountBoneweights(resultingMesh);
 
-			string meshAssetName = path + '/' + mesh.name + ".asset";
+			string meshAssetName = path + '/' + mesh.name + "_TempMesh.asset";
 
 			AssetDatabase.CreateAsset(resultingMesh, meshAssetName );
 
@@ -100,7 +100,7 @@ namespace UMA.Editors
 				//CountBoneweights(resultingMesh);
             }
 
-			string SkinnedName = path + '/' + assetName + "_Skinned.prefab";
+			string SkinnedName = path + '/' + assetName + "_TempSkinned.prefab";
 
 #if UNITY_2018_3_OR_NEWER
             var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName);
@@ -197,10 +197,10 @@ namespace UMA.Editors
 				//CountBoneweights(resultingMesh);
 			}
 
-			string theMesh = slotFolder + '/' + assetName + '/' + slotMesh.name + ".asset";
+			string theMesh = slotFolder + '/' + assetName + '/' + slotMesh.name + "_TempMesh.asset";
             if (useRootFolder)
             {
-                theMesh = slotFolder + '/' + slotMesh.name + ".asset";
+                theMesh = slotFolder + '/' + slotMesh.name + "_TempMesh.asset";
             }
 			if (binarySerialization)
 			{
@@ -256,11 +256,11 @@ namespace UMA.Editors
 				//CountBoneweights(resultingMesh);
 			}
 
-			string SkinnedName = slotFolder + '/' + assetName + '/' + assetName + "_Skinned.prefab";
+			string SkinnedName = slotFolder + '/' + assetName + '/' + assetName + "_TempSkinned.prefab";
 
             if (useRootFolder)
             {
-                SkinnedName = slotFolder + '/' + assetName + "_Skinned.prefab";
+                SkinnedName = slotFolder + '/' + assetName + "_TempSkinned.prefab";
             }
 
 #if UNITY_2018_3_OR_NEWER

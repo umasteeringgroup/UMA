@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using UnityEngine.Serialization;
 using System.Collections.Generic;
+using System.IO.Pipes;
 
 namespace UMA
 {
@@ -23,16 +24,66 @@ namespace UMA
         [SerializeField]
         [FormerlySerializedAs("material")]
         private Material _material;
+        [SerializeField]
+        [FormerlySerializedAs("secondPass")]
+        private Material _secondPass;
 
         [Serializable]
         public struct SRPMaterial
         {
+            [Tooltip("The SRP this material is used for.")]
             public UMAUtils.PipelineType SRP;
+            [Tooltip("The material to use for this SRP. If 'Use Existing Textures' is set, this is the first pass material.")]
             public Material material;
+            [Tooltip("Used as a second pass when 'Use Existing Textures' is set. Leave null for most cases.")]
+            public Material secondPass;
+            [Tooltip("The keywords to use for this material")]
+            public List<string> alternateKeywords;
+            private Dictionary<string, string> _alternateKeywordsLookup;
+            public SRPMaterial(UMAUtils.PipelineType SRP, Material material, Material secondPass, List<string> alternateKeywords)
+            {
+                this.SRP = SRP;
+                this.material = material;
+                this.secondPass = secondPass;
+                this.alternateKeywords = alternateKeywords;
+                _alternateKeywordsLookup = new Dictionary<string, string>();
+                for (int i = 0; i < alternateKeywords.Count; i++)
+                {
+                    _alternateKeywordsLookup.Add(alternateKeywords[i], alternateKeywords[i]);
+                }
+            }
         };
 
         public List<SRPMaterial> srpMaterials = new List<SRPMaterial>();
-        private Dictionary<UMAUtils.PipelineType, Material> _srpMaterialLookup = new Dictionary<UMAUtils.PipelineType, Material>();
+        private Dictionary<UMAUtils.PipelineType, SRPMaterial> _srpMaterialLookup = new Dictionary<UMAUtils.PipelineType, SRPMaterial>();
+        
+        public SRPMaterial CreateSRPMaterial(UMAUtils.PipelineType SRP)
+        {
+            List<string> _alternateKeywords = new List<string>();
+            foreach(var chan in this.channels)
+            {
+                _alternateKeywords.Add(chan.materialPropertyName);
+            }
+            return new SRPMaterial(SRP, _material,_secondPass, _alternateKeywords);
+        }
+
+        private void SetupMaterialLookup(UMAUtils.PipelineType pipe)
+        {
+            if (_srpMaterialLookup.Count == 0)
+            {
+                for (int i = 0; i < srpMaterials.Count; i++)
+                {
+                    SRPMaterial srpMat = srpMaterials[i];
+                    _srpMaterialLookup.Add(srpMat.SRP, srpMat);
+                }
+            }
+            if (!_srpMaterialLookup.ContainsKey(pipe))
+            {
+                srpMaterials.Add(CreateSRPMaterial(pipe));
+                _srpMaterialLookup.Add(pipe, srpMaterials[srpMaterials.Count - 1]);
+            }
+        }
+
 
         public Material  material
         {
@@ -41,45 +92,37 @@ namespace UMA
                 var pipe = UMAUtils.DetectPipeline();   
                 if (_srpMaterialLookup.ContainsKey(pipe))
                 {
-                    return _srpMaterialLookup[pipe];
+                    return _srpMaterialLookup[pipe].material;
                 }
                 else
                 {
-                    // NO SrpMaterials in the list, so just return the material
-                    if (srpMaterials.Count == 0)
-                    {
-                        _srpMaterialLookup.Add(pipe, _material);
-                        return _material;
-                    }
-
-                    if (_srpMaterialLookup.Count == 0)
-                    {
-                        for (int i = 0; i < srpMaterials.Count; i++)
-                        {
-                            SRPMaterial srpMat = srpMaterials[i];
-                            _srpMaterialLookup.Add(srpMat.SRP, srpMat.material);
-                        }
-                    }
-                    if (_srpMaterialLookup.ContainsKey(pipe))
-                    {
-                        return _srpMaterialLookup[pipe];
-                    }
-                    else
-                    {
-                        // Just stick the default material in there.
-                        _srpMaterialLookup.Add(pipe, _material);
-                        return _material;
-                    }
+                    SetupMaterialLookup(pipe);
+                    return _srpMaterialLookup[pipe].material;
                 }
             }
             set { _material = value; }
         }
 
-
+        public Material secondPass
+        {
+            get
+            {
+                var pipe = UMAUtils.DetectPipeline();
+                if (_srpMaterialLookup.ContainsKey(pipe))
+                {
+                    return _srpMaterialLookup[pipe].secondPass;
+                }
+                else
+                {
+                    SetupMaterialLookup(pipe);
+                    return _srpMaterialLookup[pipe].secondPass;
+                }
+            }
+        }
 
 
         [Tooltip("Used as a second pass when 'Use Existing Textures' is set. Leave null for most cases.")]
-        public Material secondPass;
+        //public Material secondPass;
 
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels;

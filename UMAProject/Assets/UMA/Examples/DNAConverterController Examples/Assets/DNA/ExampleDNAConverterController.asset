@@ -13703,7 +13703,7 @@ MonoBehaviour:
         _multiplier: 0.75
         _initialized: 1
       _aggregationMethod: 0
-  - _poseToApply: {fileID: 11400000, guid: 730a617429c7a9b4ab1cb46f94fdbf4f, type: 2}
+  - _poseToApply: {fileID: 11400000, guid: ef6e26a07163fe949a2543a5da963fe5, type: 2}
     _startingPoseWeight: 1
     _modifyingDNA:
       _dnaEvaluators:

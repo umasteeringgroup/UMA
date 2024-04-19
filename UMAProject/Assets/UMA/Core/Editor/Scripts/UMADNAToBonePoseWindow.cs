@@ -145,7 +145,7 @@ namespace UMA.PoseTools
 
 				if (!LocalTransformsMatch(transformPreDNA, transformPostDNA))
 				{
-					bonePose.AddBone(transformPreDNA, transformPostDNA.localPosition, transformPostDNA.localRotation, transformPostDNA.localScale);
+					bonePose.AddBone(transformPreDNA, transformPostDNA.localPosition, transformPostDNA.localRotation, transformPostDNA.localScale,"");
 				}
 			}
 

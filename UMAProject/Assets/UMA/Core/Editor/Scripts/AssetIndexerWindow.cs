@@ -2368,6 +2368,10 @@ namespace UMA.Controls
                 {
                     FixupTextureChannels(umaMaterial);
                 }
+                if (GUILayout.Button("Select unused materials"))
+                {
+                    SelectUnusedMaterials();
+                }
                 GUILayout.BeginHorizontal();
 
                 _channelType = EditorGUILayout.Popup(_channelType, System.Enum.GetNames(typeof(UMAMaterial.ChannelType)));
@@ -2516,6 +2520,63 @@ namespace UMA.Controls
                 GUIHelper.EndVerticalPadded(10);
             }
             GUILayout.EndScrollView();
+        }
+
+        private void SelectUnusedMaterials()
+        {
+            List<AssetItem> materials = new List<AssetItem>();
+
+            var slots = UAI.GetAssetItems<SlotDataAsset>();
+            var overlays = UAI.GetAssetItems<OverlayDataAsset>();
+            var materialsList = UAI.GetAssetItems<UMAMaterial>();
+
+            for (int materialIndex = 0; materialIndex < materialsList.Count; materialIndex++)
+            {
+                AssetItem ai = materialsList[materialIndex];
+                UMAMaterial uMAMaterial = ai.Item as UMAMaterial;
+                bool found = false;
+                for(int i=0;i<slots.Count;i++)
+                {
+                    if (slots[i] != null && slots[i].Item != null)
+                    {
+                        SlotDataAsset slot = slots[i].Item as SlotDataAsset;
+                        if (slot.material != null && slot.material.name == uMAMaterial.name)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                // now check overlays
+                if (!found)
+                {
+                    for (int i = 0; i < overlays.Count; i++)
+                    {
+                        if (overlays[i] != null && overlays[i].Item != null)
+                        {
+                            OverlayDataAsset overlay = overlays[i].Item as OverlayDataAsset;
+                            if (overlay.material != null && overlay.material.name == uMAMaterial.name)
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!found)
+                {
+                    materials.Add(ai);
+                }
+            }
+
+            if (materials.Count > 0)
+            {
+                SelectByAssetItems(materials);
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("No Unused Materials", "No unused materials found", "OK");
+            }
         }
 
         private void SelectSmooshableSlots()
