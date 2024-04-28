@@ -1,4 +1,4 @@
-Shader "UMA/AtlasDiffuseShader_Subtract" {
+Shader "UMA/Atlas/AtlasDiffuseShader_Subtract" {
 Properties {
 	_Color ("Main Color", Color) = (1,1,1,1)
 	_AdditiveColor ("Additive Color", Color) = (0,0,0,0)

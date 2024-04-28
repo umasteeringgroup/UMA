@@ -45,10 +45,6 @@ namespace UMA.Editors
 		void OnDestroy()
 		{
 			EditorApplication.update -= DoDelayedSave;
-			if (EditorUMAContextBase != null)
-            {
-                DestroyEditorUMAContextBase();
-            }
         }
 
 		void DoDelayedSave()
@@ -64,17 +60,7 @@ namespace UMA.Editors
 			}
 		}
 
-		private void DestroyEditorUMAContextBase()
-		{
-			if (EditorUMAContextBase != null)
-			{
-				foreach (Transform child in EditorUMAContextBase.transform)
-				{
-					DestroyImmediate(child.gameObject);
-				}
-				DestroyImmediate(EditorUMAContextBase);
-			}
-		}
+
 
 		public override void OnInspectorGUI()
 		{
@@ -98,8 +84,13 @@ namespace UMA.Editors
 
 			SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");
 			EditorGUILayout.PropertyField(dnaRanges, true);
-			if(EditorGUI.EndChangeCheck()) {
-				serializedObject.ApplyModifiedProperties();
+			/* tags GUI */
+			SerializedProperty tags = serializedObject.FindProperty("tags");
+			EditorGUILayout.PropertyField(tags, true);
+			if(EditorGUI.EndChangeCheck())
+			{
+                serializedObject.ApplyModifiedProperties();
+				_needsUpdate = true;
 			}
 
 			foreach (var field in race.GetType().GetFields())
@@ -114,6 +105,7 @@ namespace UMA.Editors
 						if (EditorGUI.EndChangeCheck())
 						{
 							serializedObject.ApplyModifiedProperties();
+							_needsUpdate = true;
 						}
 						break;
 					}
@@ -360,11 +352,7 @@ namespace UMA.Editors
 					//we need an uptodate list of the slots in THIS races base recipe
 					baseSlotsList.Clear();
 					baseSlotsNamesList.Clear();
-					//editing a race will require a context too because we need to get the base recipes and their slots
-					if (UMAContextBase.Instance == null)
-					{
-						// EditorUMAContextBase = UMAContextBase.CreateEditorContext();
-					}
+
 					UMAData.UMARecipe thisBaseRecipe = (baseRaceRecipe.objectReferenceValue as UMARecipeBase).GetCachedRecipe(UMAContextBase.Instance);
 					SlotData[] thisBaseSlots = thisBaseRecipe.GetAllSlots();
 					foreach (SlotData slot in thisBaseSlots)

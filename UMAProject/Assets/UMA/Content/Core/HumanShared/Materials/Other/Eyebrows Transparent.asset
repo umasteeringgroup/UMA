@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   translateSRP: 1
   _material: {fileID: 2100000, guid: 0ef6f9decdc3afb4c8c48dfc2d99713e, type: 2}
-  srpMaterials: []
-  secondPass: {fileID: 0}
+  _secondPass: {fileID: 0}
+  srpMaterials:
+  - SRP: 1
+    material: {fileID: 2100000, guid: 0ef6f9decdc3afb4c8c48dfc2d99713e, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
   materialType: 1
   channels:
   - channelType: 0
     textureFormat: 0
-    materialPropertyName: _MainTex
+    materialPropertyName: _BaseMap
     sourceTextureName: 
     Compression: 0
     DownSample: 0

@@ -8,16 +8,16 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Diffuse
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
-  m_ValidKeywords:
+  m_Shader: {fileID: -6465566751694194690, guid: 8a54ef3abfb59b84aae1622a7c566cb3,
+    type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords:
   - _ALPHATEST_ON
-  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2450
-  stringTagMap:
-    RenderType: TransparentCutout
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
@@ -195,6 +195,9 @@ Material:
     - _OcclusionStrength: 1
     - _OverlayCount: 0
     - _Parallax: 0.02
+    - _RimLightPower: 4
+    - _RimLightingModulation: 0
+    - _Smoothness: 0
     - _SmoothnessAdd: 0
     - _SmoothnessModulation: 1
     - _SmoothnessStrength: 0.5
@@ -247,6 +250,7 @@ Material:
     - _RedColor1: {r: 1, g: 1, b: 1, a: 1}
     - _RedColor2: {r: 1, g: 1, b: 1, a: 1}
     - _RedColor3: {r: 1, g: 1, b: 1, a: 1}
+    - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _Tint0_0: {r: 1, g: 1, b: 1, a: 1}
     - _Tint0_1: {r: 1, g: 1, b: 1, a: 1}

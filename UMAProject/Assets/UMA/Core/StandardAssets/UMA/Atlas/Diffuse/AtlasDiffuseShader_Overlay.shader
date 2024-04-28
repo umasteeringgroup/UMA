@@ -5,7 +5,7 @@
 //	Author: 	Joen Joensen (@UnLogick)
 //	============================================================
 
-Shader "UMA/AtlasDiffuseShader_Overlay" {
+Shader "UMA/Atlas/AtlasDiffuseShader_Overlay" {
 Properties {
 	_Color ("Main Color", Color) = (1,1,1,1)
 	_AdditiveColor ("Additive Color", Color) = (0,0,0,0)

@@ -2333,7 +2333,26 @@ namespace UMA.Controls
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("Mesh Hide Asset:");
-                AddedMHA = EditorGUILayout.ObjectField("", AddedMHA, typeof(MeshHideAsset), false, GUILayout.Width(250)) as MeshHideAsset;
+                GUILayout.BeginHorizontal();
+                AddedMHA = EditorGUILayout.ObjectField("", AddedMHA, typeof(MeshHideAsset), false, GUILayout.Width(175)) as MeshHideAsset;
+                if (GUILayout.Button("Selected", GUILayout.Width(75)))
+                {
+                    var o = GetSelectedAssets(typeof(MeshHideAsset)).FirstOrDefault();
+                    if (o != null)
+                    {
+                        AddedMHA = o.Item as MeshHideAsset;
+                    }
+                    else
+                    {
+                        // try the project selection?
+                        UnityEngine.Object[] objs = Selection.GetFiltered(typeof(MeshHideAsset), SelectionMode.Assets);
+                        if (objs.Length > 0)
+                        {
+                            AddedMHA = objs[0] as MeshHideAsset;
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
                 if (GUILayout.Button("Add to selected recipes"))
                 {
                     UpdateMeshHideAssets();
@@ -2341,6 +2360,18 @@ namespace UMA.Controls
                 if (GUILayout.Button("Remove from selected recipes"))
                 {
                     RemoveMeshHideAssets();
+                }
+                if (GUILayout.Button("Select recipes with Mesh Hide"))
+                {
+                    SelectByMeshHide(AddedMHA);
+                }
+                if (GUILayout.Button("Find broken Mesh Hide Assets"))
+                {
+                    FindBrokenMeshHideAssets();
+                }
+                if (GUILayout.Button("Select unused Mesh Hide Assets"))
+                {
+                    SelectUnusedMeshHideAssets();
                 }
 
                 GUIHelper.EndVerticalPadded(10);
@@ -2350,7 +2381,26 @@ namespace UMA.Controls
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("UMA Material:");
-                umaMaterial = EditorGUILayout.ObjectField("", umaMaterial, typeof(UMAMaterial), false, GUILayout.Width(250)) as UMAMaterial;
+                GUILayout.BeginHorizontal();
+                umaMaterial = EditorGUILayout.ObjectField("", umaMaterial, typeof(UMAMaterial), false, GUILayout.Width(175)) as UMAMaterial;
+                if (GUILayout.Button("Selected",GUILayout.Width(75)))
+                {
+                    var o = GetSelectedAssets(typeof(UMAMaterial)).FirstOrDefault();
+                    if (o != null)
+                    {
+                        umaMaterial = o.Item as UMAMaterial;
+                    }
+                    else
+                    {
+                        // try the project selection?
+                        UnityEngine.Object[] objs = Selection.GetFiltered(typeof(UMAMaterial), SelectionMode.Assets);
+                        if (objs.Length > 0)
+                        {
+                            umaMaterial = objs[0] as UMAMaterial;
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
                 if (GUILayout.Button("Apply to Selection"))
                 {
                     UpdateMaterials();
@@ -2387,8 +2437,26 @@ namespace UMA.Controls
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("RaceData:");
-                umaRaceData = EditorGUILayout.ObjectField("", umaRaceData, typeof(RaceData), false, GUILayout.Width(250)) as RaceData;
-
+                GUILayout.BeginHorizontal();
+                umaRaceData = EditorGUILayout.ObjectField("", umaRaceData, typeof(RaceData), false, GUILayout.Width(175)) as RaceData;
+                if (GUILayout.Button("Selected", GUILayout.Width(75)))
+                {
+                    var o = GetSelectedAssets(typeof(RaceData)).FirstOrDefault();
+                    if (o != null)
+                    {
+                        umaRaceData = o.Item as RaceData;
+                    }
+                    else
+                    {
+                        // try the project selection?
+                        UnityEngine.Object[] objs = Selection.GetFiltered(typeof(RaceData), SelectionMode.Assets);
+                        if (objs.Length > 0)
+                        {
+                            umaRaceData = objs[0] as RaceData;
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
                 if (GUILayout.Button("Add to Selection"))
                 {
                     AddToWardrobeRecipes(umaRaceData);
@@ -2457,7 +2525,7 @@ namespace UMA.Controls
                 _overlayLimit = EditorGUILayout.ToggleLeft("Only where Overlay = ", _overlayLimit, GUILayout.ExpandWidth(false));
                 if (_overlayLimit)
                 {
-                    umaOverlay = EditorGUILayout.ObjectField("", umaOverlay, typeof(OverlayDataAsset), false, GUILayout.Width(250)) as OverlayDataAsset;
+                    umaOverlay = EditorGUILayout.ObjectField("", umaOverlay, typeof(OverlayDataAsset), false, GUILayout.Width(175)) as OverlayDataAsset;
                 }
 
                 if (GUILayout.Button("Update Transforms"))
@@ -2473,7 +2541,26 @@ namespace UMA.Controls
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("OverlayDataAsset:");
-                umaOverlay = EditorGUILayout.ObjectField("", umaOverlay, typeof(OverlayDataAsset), false, GUILayout.Width(250)) as OverlayDataAsset;
+                GUILayout.BeginHorizontal();
+                umaOverlay = EditorGUILayout.ObjectField("", umaOverlay, typeof(OverlayDataAsset), false, GUILayout.Width(175)) as OverlayDataAsset;
+                if (GUILayout.Button("Selected", GUILayout.Width(75)))
+                {
+                    var o = GetSelectedAssets(typeof(OverlayDataAsset)).FirstOrDefault();
+                    if (o != null)
+                    {
+                        umaOverlay = o.Item as OverlayDataAsset;
+                    }
+                    else
+                    {
+                        // try the project selection?
+                        UnityEngine.Object[] objs = Selection.GetFiltered(typeof(OverlayDataAsset), SelectionMode.Assets);
+                        if (objs.Length > 0)
+                        {
+                            umaOverlay = objs[0] as OverlayDataAsset;
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
                 if (GUILayout.Button("Select Recipes with Overlay"))
                 {
                     SelectWithOverlay(umaOverlay);
@@ -2495,7 +2582,27 @@ namespace UMA.Controls
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("SlotDataAsset:");
-                umaSlot = EditorGUILayout.ObjectField("", umaSlot, typeof(SlotDataAsset), false, GUILayout.Width(250)) as SlotDataAsset;
+                GUILayout.BeginHorizontal();
+                umaSlot = EditorGUILayout.ObjectField("", umaSlot, typeof(SlotDataAsset), false, GUILayout.Width(175)) as SlotDataAsset;
+                if (GUILayout.Button("Selected", GUILayout.Width(75)))
+                {
+                    var o = GetSelectedAssets(typeof(SlotDataAsset)).FirstOrDefault();
+                    if (o != null)
+                    {
+                        umaSlot = o.Item as SlotDataAsset;
+                    }
+                    else
+                    {
+                        // try the project selection?
+                        UnityEngine.Object[] objs = Selection.GetFiltered(typeof(SlotDataAsset), SelectionMode.Assets);
+                        if (objs.Length > 0)
+                        {
+                            umaSlot = objs[0] as SlotDataAsset;
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
+
 
                 if (GUILayout.Button("Select Recipes with Slot"))
                 {
@@ -2520,6 +2627,133 @@ namespace UMA.Controls
                 GUIHelper.EndVerticalPadded(10);
             }
             GUILayout.EndScrollView();
+        }
+
+        private void SelectUnusedMeshHideAssets()
+        {
+            var MHAS = UAI.GetAssetItems<MeshHideAsset>();
+            var NotUsed = new List<AssetItem>();
+            var recipes = UAI.GetAssetItems<UMAWardrobeRecipe>();
+
+
+            foreach (var mha in MHAS)
+            {
+                bool found = false;
+                var item = mha.Item as MeshHideAsset;
+                foreach (var recipe in recipes)
+                {
+                    var wr = recipe.Item as UMAWardrobeRecipe;
+                    if (wr.MeshHideAssets.Contains(item))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    NotUsed.Add(mha);
+                }
+            }
+            if (NotUsed.Count > 0)
+            {
+                SelectByAssetItems(NotUsed);
+                EditorUtility.DisplayDialog("Utilities", $"{NotUsed.Count} unused Mesh Hide Assets found", "OK");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Utilities", "No unused Mesh Hide Assets found", "OK");
+            }
+        }
+
+        private void SelectByMeshHide(MeshHideAsset addedMHA)
+        {
+            List<AssetItem> items = new List<AssetItem>();
+
+            var recipes = UAI.GetAssetItems<UMAWardrobeRecipe>();
+
+            foreach(var recipe in recipes)
+            {
+                UMAWardrobeRecipe wr = recipe.Item as UMAWardrobeRecipe;
+                if (wr != null)
+                {
+                    foreach(var meshHide in wr.MeshHideAssets)
+                    {
+                        if (meshHide == addedMHA)
+                        {
+                            items.Add(recipe);
+                            break;
+                        }
+                    }
+                }
+            }
+
+
+            if (items.Count == 0) 
+            {
+                EditorUtility.DisplayDialog("No Recipes Found", "No recipes found for selected Mesh Hide Asset", "OK");
+                return;
+            }
+            SelectByAssetItems(items);
+        }
+
+        private void FindBrokenMeshHideAssets()
+        {
+            var MHAS = UAI.GetAssetItems<MeshHideAsset>();
+            if (MHAS == null || MHAS.Count == 0)
+            {
+                EditorUtility.DisplayDialog("No Mesh Hide Assets", "No Mesh Hide Assets found in library", "OK");
+                return;
+            }
+            int errors = 0;
+            for(int i=0;i<MHAS.Count;i++)
+            {
+                var item = MHAS[i].Item as MeshHideAsset;
+                if (item.AssetSlotName == null || item.AssetSlotName.Length == 0)
+                {
+                    errors++;
+                    SelectByAssetItems(new List<AssetItem>() { MHAS[i] });
+                    Debug.Log("MHAERR No Slot on asset: " + MHAS[i]._Name);
+                    continue;
+                }
+                if (item.AssetSlotName.Length > 0)
+                {
+                    var assetItem = UAI.GetAssetItem<SlotDataAsset>(item.AssetSlotName);
+
+                    if (assetItem == null)
+                    {
+                        errors++;
+                        SelectByAssetItems(new List<AssetItem>() { MHAS[i] });
+                        Debug.Log($"MHAERR Slot '{item.AssetSlotName}' not found: " + MHAS[i]._Name);
+                        continue;
+                    }
+                    SlotDataAsset slot =assetItem.Item as SlotDataAsset;
+
+                    if (item.SubmeshCount != slot.meshData.subMeshCount)
+                    {
+                        errors++;
+                        SelectByAssetItems(new List<AssetItem>() { MHAS[i] });
+                        Debug.Log("MHAERR Submesh count mismatch: " + MHAS[i]._Name);
+                        continue;
+                    }
+                    for(int sm=0;sm<item.triangleFlags.Length;sm++)
+                    {
+                        if (item.triangleFlags[sm].Length != slot.meshData.submeshes[sm].getBaseTriangles().Length/3)
+                        {
+                            errors++;
+                            SelectByAssetItems(new List<AssetItem>() { MHAS[i] });
+                            Debug.Log($"MHAERR Submesh {sm} triangle count mismatch: " + MHAS[i]._Name);
+                        }
+                    }
+                }
+            }
+            if (errors == 0) 
+            {
+                EditorUtility.DisplayDialog("No Errors", "No errors found in Mesh Hide Assets", "OK");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Errors Found", $"{errors} error(s) found in Mesh Hide Assets. These assets were selected in the library. Please review the console log for details.", "OK");
+            }
         }
 
         private void SelectUnusedMaterials()

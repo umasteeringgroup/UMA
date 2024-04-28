@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -15,11 +16,14 @@ namespace UMA.Controls
 		const float kToggleWidth = 18f;
 		public bool showControls = true;
 		public AssetIndexerWindow owningWindow;
+		private static GUIContent pingIcon = null;
+		private static GUIContent inspectIcon = null;
 
 		enum AssetColumns
 		{
 			Selection,
 			Name,
+			Actions,
 			Type,
 			IsResource,
 			IsAddressable,
@@ -28,10 +32,10 @@ namespace UMA.Controls
 			Labels,
 			Ignore,
 			Always,
-			Buttons
-		}
+            Buttons
+        }
 
-		public enum SortOption
+        public enum SortOption
 		{
 			Name,
 			Group
@@ -45,7 +49,11 @@ namespace UMA.Controls
 			SortOption.Name,
 			SortOption.Name,
 			SortOption.Name,
-			SortOption.Group,
+			SortOption.Name,
+            SortOption.Name,
+            SortOption.Name,
+            SortOption.Name,
+            SortOption.Group,
 			SortOption.Name,
 			SortOption.Name,
 			SortOption.Name
@@ -254,6 +262,9 @@ namespace UMA.Controls
 				}
 				break;
 
+					case AssetColumns.Actions:
+					break;
+
 				case AssetColumns.IsAddressable:
 				{
 					GUI.Label(cellRect, ate.IsAddrCount.ToString());
@@ -278,7 +289,7 @@ namespace UMA.Controls
 					string QualifiedName = item.data.type.AssemblyQualifiedName;
 					if (UMAAssetIndexer.Instance.IsAdditionalIndexedType(QualifiedName))
 					{
-						if (GUI.Button(cellRect, "Remove this Type", EditorStyles.toolbarButton))
+						if (GUI.Button(cellRect, "Del Type", EditorStyles.toolbarButton))
 						{
 							UMAAssetIndexer.Instance.RemoveType(item.data.type);
 							List<AssetTreeElement> RemoveMe = new List<AssetTreeElement>();
@@ -319,16 +330,44 @@ namespace UMA.Controls
 			switch (column)
 			{
 				case AssetColumns.Selection:
-				{
-					// EditorGUI.Toggle(cellRect, item.data.ai._SerializedItem != null);
-					bool newVal = EditorGUI.Toggle(cellRect, element.Checked);
-					if (newVal != element.Checked)
 					{
-						element.Checked = newVal;
-						RecalcTypeChecks(element.type);
+
+
+						// EditorGUI.Toggle(cellRect, item.data.ai._SerializedItem != null);
+						bool newVal = EditorGUI.Toggle(cellRect, element.Checked);
+						if (newVal != element.Checked)
+						{
+							element.Checked = newVal;
+							RecalcTypeChecks(element.type);
+						}
+						if (pingIcon == null)
+						{
+                            InitIcons();
+                        }
+
 					}
-				}
 				break;
+
+				case AssetColumns.Actions:
+					{
+						Rect rect = cellRect;
+						rect.width = 22;
+						rect.height = 22;
+
+						if (GUI.Button(rect, inspectIcon))
+						{
+							UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
+							InspectorUtlity.InspectTarget(o);
+						}
+                        rect.x += 30;
+                        if (GUI.Button(rect, pingIcon))
+                        {
+                            UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
+                            EditorGUIUtility.PingObject(o);
+                        }
+
+                    }
+                    break;
 
 				case AssetColumns.Type:
 				{
@@ -437,11 +476,11 @@ namespace UMA.Controls
 					Rect ButtonRect = new Rect(cellRect);
 					ButtonRect.width = BtnWidth;
 
-					if(GUI.Button(ButtonRect,"Inspect",EditorStyles.toolbarButton))
-					{
-						UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
-						InspectorUtlity.InspectTarget(o);
-					}
+					//if(GUI.Button(ButtonRect,"Inspect",EditorStyles.toolbarButton))
+					//{
+					//	UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
+					//	InspectorUtlity.InspectTarget(o);
+					//}
 					/*
 					ButtonRect.x = ButtonRect.x + BtnWidth;
 					if (item.data.ai._SerializedItem == null)
@@ -491,13 +530,13 @@ namespace UMA.Controls
 						}
 					}
 #endif
-					ButtonRect.x = ButtonRect.x + ButtonRect.width;
-					ButtonRect.width = 32;
-					if (GUI.Button(ButtonRect,"Ping", EditorStyles.toolbarButton))
-					{
-						UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
-						EditorGUIUtility.PingObject(o);
-					}
+					//ButtonRect.x = ButtonRect.x + ButtonRect.width;
+					//ButtonRect.width = 32;
+					//if (GUI.Button(ButtonRect,"Ping", EditorStyles.toolbarButton))
+					//{
+					//	UnityEngine.Object o = AssetDatabase.LoadMainAssetAtPath(ai._Path);
+					//	EditorGUIUtility.PingObject(o);
+					//}
 
 					ButtonRect.x = ButtonRect.x + 32;
 					ButtonRect.width = kToggleWidth;
@@ -583,6 +622,18 @@ namespace UMA.Controls
 			return true;
 		}
 
+		public static void InitIcons()
+		{
+			if (pingIcon == null)
+			{
+				pingIcon = EditorGUIUtility.IconContent("d_Selectable Icon","|Select the item in the project view");
+			}
+			if (inspectIcon == null)
+			{
+                inspectIcon = EditorGUIUtility.IconContent("d_search_icon","|Inspect the item in a popup inspector");
+            }
+		}
+
 		public static MultiColumnHeaderState CreateDefaultMultiColumnHeaderState(float treeViewWidth)
 		{
 			var columns = new[]
@@ -595,7 +646,7 @@ namespace UMA.Controls
 					sortingArrowAlignment = TextAlignment.Right,
 					width = 30,
 					minWidth = 30,
-					maxWidth = 60,
+					maxWidth = 30,
 					autoResize = false,
 					allowToggleVisibility = true
 				},
@@ -605,12 +656,24 @@ namespace UMA.Controls
 					headerTextAlignment = TextAlignment.Left,
 					sortedAscending = true,
 					sortingArrowAlignment = TextAlignment.Center,
-					width = 150,
-					minWidth = 60,
+					width = 160,
+					minWidth = 130,
 					autoResize = false,
 					allowToggleVisibility = false
 				},
-				new MultiColumnHeaderState.Column
+                new MultiColumnHeaderState.Column
+                {
+                    headerContent = new GUIContent("Action", "Actions"),
+                    headerTextAlignment = TextAlignment.Center,
+                    sortedAscending = true,
+                    sortingArrowAlignment = TextAlignment.Right,
+                    width = 60,
+                    minWidth = 60,
+                    maxWidth = 60,
+                    autoResize = false,
+                    allowToggleVisibility = true
+                },
+                new MultiColumnHeaderState.Column
 				{
 					headerContent = new GUIContent("Type"),
 					headerTextAlignment = TextAlignment.Left,

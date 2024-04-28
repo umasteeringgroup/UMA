@@ -5,7 +5,7 @@
 //	Author: 	Joen Joensen (@UnLogick)
 //	============================================================
 
-Shader "UMA/AtlasDiffuseShader_ColorDodge" {
+Shader "UMA/Atlas/AtlasDiffuseShader_ColorDodge" {
 Properties {
 	_Color ("Main Color", Color) = (1,1,1,1)
 	_AdditiveColor ("Additive Color", Color) = (0,0,0,0)

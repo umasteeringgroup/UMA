@@ -13,12 +13,20 @@ MonoBehaviour:
   m_Name: UMAToon_Fade_Diffuse_Normal
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: 0e7954264ddc98043858c786f551a409, type: 2}
+  _material: {fileID: 2100000, guid: 0e7954264ddc98043858c786f551a409, type: 2}
+  _secondPass: {fileID: 0}
+  srpMaterials:
+  - SRP: 1
+    material: {fileID: 2100000, guid: 0e7954264ddc98043858c786f551a409, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
   materialType: 2
   channels:
   - channelType: 3
     textureFormat: 0
-    materialPropertyName: _MainTex
+    materialPropertyName: _BaseMap
     sourceTextureName: 
     Compression: 0
     DownSample: 0
@@ -39,3 +47,5 @@ MonoBehaviour:
   shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

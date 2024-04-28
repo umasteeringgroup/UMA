@@ -1,0 +1,87 @@
+BEGIN_OPTIONS
+   ShaderName "UMA/Diffuse_Alpha"
+   Stackable "False"
+   DisableGBufferPass "True" // disable gbuffer pass
+   Workflow "Metallic"
+   Queue "Transparent"
+   Alpha "Blend"
+END_OPTIONS
+
+BEGIN_PROPERTIES
+
+    [BetterHeader(Material Specific)]
+	_Color ("Main Color", Color) = (1, 1, 1, 1)
+	_ColorModulation ("Color Modulation", Range(0,2)) = 1
+	_Metallic ("Metallic", Range(0,1)) = 0
+	_Smoothness ("Smoothness", Range(0,1)) = 0
+	[BetterHeader(Lighting Adjustment)]
+    [Toggle]_UseHalfLambert ("Use Half Lambert", Float) = 0
+    _HalfLambertStrength ("Lambert(0), HalfLambert(1)", Range(0,4)) = 1
+    _RimLightingModulation ("Rim Lighting Level", Float) = 0
+	_RimLightColor("Rim Light Color", Color) = (1,1,1,1)
+	_RimLightPower("Rim Light Power", Range(0.5, 12)) = 4
+	_AlphaModulation("Alpha Modulation", Range(0,2)) = 1
+    [Enum(Off,0,Front,1,Back,2)]_CullMode("Culling Mode", Float) = 2
+
+    [BetterHeader(Textures)]
+    [NoScaleOffset]_BaseMap("BaseMap", 2D) = "white" {}
+END_PROPERTIES
+
+BEGIN_PASS("All")
+   Cull [_CullMode]
+END_PASS
+
+// Any variables you want to have in the per material CBuffer go here.
+BEGIN_CBUFFER
+    half4 _Color;
+	half  _ColorModulation;
+	half  _Smoothness;
+	half  _Metallic;
+    half _HalfLambertStrength;
+    half3 _RimLightColor;
+	half  _RimLightPower;
+    float _RimLightingModulation;
+	half _AlphaModulation;
+	half _UseHalfLambert;
+END_CBUFFER
+
+
+// All code goes here
+BEGIN_CODE
+
+   TEXTURE2D(_BaseMap);
+   SAMPLER(sampler_BaseMap);
+
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+      float2 auv = d.texcoord0.xy;
+
+	  half4 base_c = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, auv);
+      o.Alpha = base_c.a * _AlphaModulation * _Color.a;
+      o.Albedo = base_c * _ColorModulation * _Color.rgb;
+	  o.Metallic = _Metallic;
+	  o.Smoothness = _Smoothness;
+
+     if (_UseHalfLambert) 
+     {
+		 float3 lightDir;
+		 float3 lightColor;
+		 GetSun(lightDir, lightColor);
+		 float3 normalDirection = TangentToWorldSpace(d, o.Normal);
+		 float atten = 1.0;
+		 float lambert = dot(normalDirection, lightDir);
+
+		 lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
+		 o.Albedo *= atten * lightColor * lambert;
+	  }
+
+      if (_RimLightingModulation>0) 
+      { 
+	     float rim = 1.0 - saturate(dot(d.tangentSpaceViewDir, o.Normal)); 
+	     o.Emission += (pow(rim, _RimLightPower) * _RimLightColor) * _RimLightingModulation;  
+      }
+   }
+
+END_CODE
+

@@ -129,6 +129,9 @@ namespace UMA.PoseTools
 
 				if (umaData.animator != null && umaData.animator.avatar != null)
 				{
+					jawHash = 0;
+					neckHash = 0;
+					headHash = 0;
 					animator = umaData.animator;
 					jaw = animator.GetBoneTransform(HumanBodyBones.Jaw);
 					if (jaw != null)

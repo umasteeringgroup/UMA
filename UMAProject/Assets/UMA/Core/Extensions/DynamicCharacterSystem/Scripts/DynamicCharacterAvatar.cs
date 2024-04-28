@@ -15,7 +15,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
 using UnityEngine.SceneManagement;
-using Sirenix.Utilities;
 
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -1258,9 +1257,15 @@ namespace UMA.CharacterSystem
             Dictionary<string, List<string>> DnaToBlendshapes = activeRace.data.GetDNAToBlendShapes();
 
             blendShapes.Clear();
-            blendShapes.AddRange(forceKeepBlendshapes);
 
-            for(int i=0;i<dna.Length;i++)
+            blendShapes.Clear();
+            for (int i = 0; i < forceKeepBlendshapes.Count; i++)
+            {
+                blendShapes.Add(forceKeepBlendshapes[i]);
+            }
+
+
+            for (int i=0;i<dna.Length;i++)
             {
                 DnaDef d = dna[i];
 
