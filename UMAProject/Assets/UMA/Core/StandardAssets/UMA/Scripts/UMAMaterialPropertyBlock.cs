@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using System.Globalization;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -10,10 +11,10 @@ using UnityEditor;
 namespace UMA
 {
     [Serializable]
-    public abstract class UMAProperty 
+    public abstract class UMAProperty
     {
         public static string precision = "F4";
-        public static string splitter =  ";" ;
+        public static string splitter = ";";
 
         public static string vectorprecision = "{0:F4},{1:F4},{2:F4},{3:F4}";
         public static char[] vectorsplitter = { ',' }; // needs to correspond to the format string above.
@@ -26,7 +27,7 @@ namespace UMA
         {
             char[] split = { splitter[0] };
 
-            string[] str  = serializedString.Split(split,StringSplitOptions.RemoveEmptyEntries);
+            string[] str = serializedString.Split(split, StringSplitOptions.RemoveEmptyEntries);
 
             if (str.Length < 3)
             {
@@ -38,9 +39,9 @@ namespace UMA
             switch (str[0])
             {
                 case "Float":
-                    return new UMAFloatProperty() {Value = Convert.ToSingle(str[1]), name = str[2] };
+                    return new UMAFloatProperty() { Value = Convert.ToSingle(str[1], CultureInfo.InvariantCulture), name = str[2] };
                 case "Int":
-                    return new UMAIntProperty() { Value = Convert.ToInt32(str[1]), name = str[2] };
+                    return new UMAIntProperty() { Value = Convert.ToInt32(str[1], CultureInfo.InvariantCulture), name = str[2] };
                 case "Color":
                     Color c = Color.white;
                     ColorUtility.TryParseHtmlString(str[1], out c);
@@ -48,10 +49,10 @@ namespace UMA
                     return new UMAColorProperty() { Value = c, name = str[2] };
                 case "Vector":
                     string[] vector = str[1].Split(vectorsplitter);
-                    float x = Convert.ToSingle(vector[0]);
-                    float y = Convert.ToSingle(vector[1]);
-                    float z = Convert.ToSingle(vector[2]);
-                    float w = Convert.ToSingle(vector[3]);
+                    float x = Convert.ToSingle(vector[0], CultureInfo.InvariantCulture);
+                    float y = Convert.ToSingle(vector[1], CultureInfo.InvariantCulture);
+                    float z = Convert.ToSingle(vector[2], CultureInfo.InvariantCulture);
+                    float w = Convert.ToSingle(vector[3], CultureInfo.InvariantCulture);
                     return new UMAVectorProperty() { Value = new Vector4(x, y, z, w), name = str[2] };
                 /// The rest of these are only programmable at runtime.
                 case "VectorArray":
@@ -80,9 +81,9 @@ namespace UMA
 #if UNITY_EDITOR
         public virtual bool OnGUI()
         {
-            GUILayout.Label("Parameter Type: "+GetType().ToString());
+            GUILayout.Label("Parameter Type: " + GetType().ToString());
             EditorGUILayout.BeginHorizontal();
-            name = EditorGUILayout.DelayedTextField("Shader Property",name);
+            name = EditorGUILayout.DelayedTextField("Shader Property", name);
             if (GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
             {
                 EditorGUILayout.EndHorizontal();
@@ -115,7 +116,7 @@ namespace UMA
 
         public override string ToString()
         {
-            return "Float" + splitter + Value.ToString(precision)+ splitter + name;
+            return "Float" + splitter + Value.ToString(precision, CultureInfo.InvariantCulture) + splitter + name;
         }
 
 
@@ -145,7 +146,7 @@ namespace UMA
         }
         public override string ToString()
         {
-            return "Color"+splitter+"#"+ColorUtility.ToHtmlStringRGBA(Value) + splitter + name;
+            return "Color" + splitter + "#" + ColorUtility.ToHtmlStringRGBA(Value) + splitter + name;
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
@@ -191,7 +192,7 @@ namespace UMA
         }
         public override string ToString()
         {
-            return "Vector" + splitter + string.Format(vectorprecision, Value.x, Value.y, Value.z, Value.w) + ";" + name;
+            return "Vector" + splitter + string.Format(CultureInfo.InvariantCulture, vectorprecision, Value.x, Value.y, Value.z, Value.w) + ";" + name;
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
@@ -326,7 +327,7 @@ namespace UMA
 
         public override string ToString()
         {
-            return "Int"+splitter+Value.ToString() + splitter + name+"***";
+            return "Int" + splitter + Value.ToString(CultureInfo.InvariantCulture) + splitter + name + "***";
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
@@ -405,7 +406,7 @@ namespace UMA
 
         public override void Apply(Material mpb)
         {
-            mpb.SetBuffer(name,Value);
+            mpb.SetBuffer(name, Value);
         }
         public override UMAProperty Clone()
         {
@@ -430,7 +431,7 @@ namespace UMA
     public class UMAConstantComputeBufferProperty : UMAProperty
     {
         public ComputeBuffer Value;
-        public int offset; 
+        public int offset;
         public int size;
 
         public override void Apply(Material mpb)
@@ -439,7 +440,7 @@ namespace UMA
         }
         public override UMAProperty Clone()
         {
-            return new UMAConstantComputeBufferProperty() { name = this.name, Value = this.Value , offset = this.offset, size = this.size};
+            return new UMAConstantComputeBufferProperty() { name = this.name, Value = this.Value, offset = this.offset, size = this.size };
         }
         public override string ToString()
         {
@@ -459,7 +460,7 @@ namespace UMA
     /// <summary>
     /// due to serialization, we need a holder class
     /// </summary>
-    [Serializable] 
+    [Serializable]
     public class PropertyHolder
     {
         public UMAFloatProperty p11;
@@ -521,7 +522,7 @@ namespace UMA
     }
 
     [Serializable]
-    public class UMAMaterialPropertyBlock :  ISerializationCallbackReceiver 
+    public class UMAMaterialPropertyBlock : ISerializationCallbackReceiver
     {
         // If this is checked, the color will always update the 
         public bool alwaysUpdate;
@@ -592,13 +593,13 @@ namespace UMA
             if (shaderProperties != null)
             {
                 serializedProperties = new List<PropertyHolder>();
-                foreach(UMAProperty up in shaderProperties)
+                foreach (UMAProperty up in shaderProperties)
                 {
                     if (up != null)
                         serializedProperties.Add(new PropertyHolder(up));
                 }
             }
-            
+
         }
 
         /// <summary>
@@ -612,7 +613,7 @@ namespace UMA
                 foreach (PropertyHolder p in serializedProperties)
                 {
                     AddProperty(p.property);
-                    
+
                 }
             }
         }
