@@ -10,15 +10,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
-  m_Name: UMA SSS Material 1
+  m_Name: UMA_Hair_Aniso
   m_EditorClassIdentifier: 
-  translateSRP: 0
-  _material: {fileID: 2100000, guid: abff9986cf3b4fc4681d96078854c09c, type: 2}
-  srpMaterials: []
-  secondPass: {fileID: 0}
-  materialType: 2
+  translateSRP: 1
+  _material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
+  _secondPass: {fileID: 0}
+  srpMaterials:
+  - SRP: 1
+    material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
+  - SRP: 2
+    material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
+  - SRP: 3
+    material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
+  materialType: 1
   channels:
-  - channelType: 4
+  - channelType: 0
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 
@@ -29,30 +47,6 @@ MonoBehaviour:
   - channelType: 1
     textureFormat: 0
     materialPropertyName: _BumpMap
-    sourceTextureName: 
-    Compression: 0
-    DownSample: 0
-    ConvertRenderTexture: 0
-    NonShaderTexture: 0
-  - channelType: 0
-    textureFormat: 0
-    materialPropertyName: _MetallicGlossMap
-    sourceTextureName: 
-    Compression: 0
-    DownSample: 0
-    ConvertRenderTexture: 0
-    NonShaderTexture: 0
-  - channelType: 0
-    textureFormat: 0
-    materialPropertyName: _OcclusionMap
-    sourceTextureName: 
-    Compression: 0
-    DownSample: 0
-    ConvertRenderTexture: 0
-    NonShaderTexture: 0
-  - channelType: 0
-    textureFormat: 0
-    materialPropertyName: _ThicknessMap
     sourceTextureName: 
     Compression: 0
     DownSample: 0

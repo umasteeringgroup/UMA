@@ -462,6 +462,17 @@ namespace UMA
         public string[] Races;
 
         /// <summary>
+        /// These are the vertexes in local space to the character mesh.
+        /// This can be different from the slot vertexes depending on the modeller, how it
+        /// was exported, and whether the transform was applied. What a pain.
+        /// This is calculated once and cached. Currently, it is only used for hair smooshing.
+        /// but we may find other uses for it, like with decals or the Mesh Hide editor.
+        /// This data *could* be serialized, but for now, it is not. TODO: serialize it, and generate it during
+        /// the slot build process.
+        [System.NonSerialized]
+        public Vector3[] TransformedLocalVertexes;
+
+        /// <summary>
         /// Callback event when character update begins.
         /// </summary>
         public UMADataEvent CharacterBegun;

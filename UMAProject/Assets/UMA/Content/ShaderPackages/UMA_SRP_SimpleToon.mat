@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_SRP_SimpleToon
-  m_Shader: {fileID: -6465566751694194690, guid: 1559dd2ebbee20c48b54c2e41bd14845,
+  m_Shader: {fileID: -6465566751694194690, guid: 845800f878272594b92276504d40ca89,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
@@ -76,9 +76,9 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OutlineWidth: 8.3
+    - _OutlineWidth: 7.8
     - _Parallax: 0.02
-    - _RimLightPower: 8.77
+    - _RimLightPower: 7.32
     - _RimLightingModulation: 0
     - _Smoothness: 0
     - _SmoothnessTextureChannel: 0

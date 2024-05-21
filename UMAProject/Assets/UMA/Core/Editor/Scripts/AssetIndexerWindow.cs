@@ -443,14 +443,7 @@ namespace UMA.Controls
             // ***********************************************************************************
             AddMenuItemWithCallback(ItemsMenu, "Select All", () =>
             {
-                var treeElements = new List<AssetTreeElement>();
-                TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
-                foreach (AssetTreeElement ate in treeElements)
-                {
-                    ate.Checked = true;
-                }
-                treeView.RecalcTypeChecks();
-                Repaint();
+                SelectAll();
                 return;
             });
 
@@ -463,14 +456,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(ItemsMenu, "Clear Selection", () =>
             {
-                var treeElements = new List<AssetTreeElement>();
-                TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
-                foreach (AssetTreeElement ate in treeElements)
-                {
-                    ate.Checked = false;
-                }
-                treeView.RecalcTypeChecks();
-                Repaint();
+                ClearSelection();
                 return;
             });
 
@@ -628,6 +614,29 @@ namespace UMA.Controls
 
         }
 
+        private void ClearSelection()
+        {
+            var treeElements = new List<AssetTreeElement>();
+            TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+            foreach (AssetTreeElement ate in treeElements)
+            {
+                ate.Checked = false;
+            }
+            treeView.RecalcTypeChecks();
+            Repaint();
+        }
+
+        private void SelectAll()
+        {
+            var treeElements = new List<AssetTreeElement>();
+            TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+            foreach (AssetTreeElement ate in treeElements)
+            {
+                ate.Checked = true;
+            }
+            treeView.RecalcTypeChecks();
+            Repaint();
+        }
 
         private Dictionary<int, AssetTreeElement> GetAllItems()
         {
@@ -2326,9 +2335,21 @@ namespace UMA.Controls
         void ShowSidebar()
         {
             GUILayout.Label("Utilities Panel", EditorStyles.toolbarButton,GUILayout.ExpandWidth(true));
+            GUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("Sel None"))
+            {
+                ClearSelection();
+            }
+            if (GUILayout.Button("Sel All"))
+            {
+                SelectAll();
+            }
+            GUILayout.EndHorizontal();
+
             GUILayout.BeginScrollView(sideBarPosition,false,true);
 
-            _meshHideFoldout = EditorGUILayout.Foldout(_meshHideFoldout, "Mesh Hide Assets");
+            _meshHideFoldout = EditorGUILayout.Foldout(_meshHideFoldout, "Mesh Hide Assetz");
             if (_meshHideFoldout)
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));

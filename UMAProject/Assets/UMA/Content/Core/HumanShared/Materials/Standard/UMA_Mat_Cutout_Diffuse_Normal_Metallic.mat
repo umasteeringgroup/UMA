@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Cutout_Diffuse_Normal_Metallic
-  m_Shader: {fileID: -6465566751694194690, guid: 363c26bce6d95c143a8ac6d179d0217c,
+  m_Shader: {fileID: -6465566751694194690, guid: 29a5769127ec3494b916662d265737e1,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -67,6 +67,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaClip: 0
     - _BumpScale: 1
     - _ColorModulation: 1
     - _CullMode: 2

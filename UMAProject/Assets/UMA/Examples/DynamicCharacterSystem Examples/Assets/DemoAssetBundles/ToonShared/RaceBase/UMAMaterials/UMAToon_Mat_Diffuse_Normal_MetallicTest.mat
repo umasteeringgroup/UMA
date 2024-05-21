@@ -8,13 +8,14 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMAToon_Mat_Diffuse_Normal_MetallicTest
-  m_Shader: {fileID: -6465566751694194690, guid: 363c26bce6d95c143a8ac6d179d0217c,
+  m_Shader: {fileID: -6465566751694194690, guid: e2c95817ac413714c8f36b80020c9867,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _EMISSION
   - _METALLICGLOSSMAP
   - _NORMALMAP
+  - _USEHALFLAMBERT_ON
   m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -76,7 +77,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _HalfLambertStrength: 1
+    - _HalfLambertStrength: 5
     - _Metallic: 0
     - _MetallicModulation: 1
     - _Mode: 0
@@ -90,7 +91,8 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
-    - _UseHalfLambert: 0
+    - _UberTile: 1
+    - _UseHalfLambert: 1
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

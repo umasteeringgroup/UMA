@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: SSS SRP Material
-  m_Shader: {fileID: -6465566751694194690, guid: 1908ccde0a576f44b87f91b383fdea72,
+  m_Shader: {fileID: -6465566751694194690, guid: e2c95817ac413714c8f36b80020c9867,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -146,6 +146,7 @@ Material:
     - _HalfLambertStrength: 4.5
     - _InvertThickness: 1
     - _Metallic: 0.24
+    - _MetallicModulation: 1
     - _Mode: 0
     - _NormalDistortion: 1
     - _NormalStrength: 0.7
@@ -179,8 +180,10 @@ Material:
     - _ThicknessUVSource: 0
     - _TranslucentPower: 1
     - _UVSec: 0
+    - _UberTile: 1
     - _UseAlphaToMask: 0
     - _UseCutout: 0
+    - _UseHalfLambert: 0
     - _UseSkinScattering: 1
     - _WrappingFactor: 1
     - _WrappingPowerFactor: 1

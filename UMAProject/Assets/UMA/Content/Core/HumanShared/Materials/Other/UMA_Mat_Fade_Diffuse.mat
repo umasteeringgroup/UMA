@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Fade_Diffuse
-  m_Shader: {fileID: -6465566751694194690, guid: 3821891150a094b459504294dd53ce94,
+  m_Shader: {fileID: -6465566751694194690, guid: de90b6ff34ca64449b132b66875423ed,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -87,6 +87,7 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 5
     - _UVSec: 0
+    - _UseHalfLambert: 0
     - _ZWrite: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

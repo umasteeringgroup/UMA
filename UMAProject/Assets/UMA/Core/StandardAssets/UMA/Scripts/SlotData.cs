@@ -67,6 +67,7 @@ namespace UMA
         public int vertexOffset;
         public Rect UVArea;
         public bool tempHidden;
+        public bool isDisabled = false;
         public bool   UVRemapped
         {
             get
@@ -313,6 +314,7 @@ namespace UMA
             res.overSmoosh = overSmoosh;
             res.swapTag = swapTag;
             res.isSwapSlot = isSwapSlot;
+            res.isDisabled = isDisabled;
 
             res.smooshInvertX = smooshInvertX;
             res.smooshInvertY = smooshInvertY;

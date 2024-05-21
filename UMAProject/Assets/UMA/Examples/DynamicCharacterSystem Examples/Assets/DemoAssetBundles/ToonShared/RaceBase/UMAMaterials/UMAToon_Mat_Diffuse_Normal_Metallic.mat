@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMAToon_Mat_Diffuse_Normal_Metallic
-  m_Shader: {fileID: -6465566751694194690, guid: 363c26bce6d95c143a8ac6d179d0217c,
+  m_Shader: {fileID: -6465566751694194690, guid: e2c95817ac413714c8f36b80020c9867,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -78,24 +78,28 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _HalfLambertStrength: 8
+    - _HalfLambertStrength: 4
     - _Metallic: 0
     - _MetallicModulation: 1
     - _Mode: 0
     - _NormalStrength: 1
     - _OcclusionStrength: 1
+    - _OutlineWidth: 3
     - _Parallax: 0.02
     - _RimLightPower: 4.94
     - _RimLightingModulation: 0
+    - _Smoothness: 0
     - _SmoothnessModulation: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
+    - _UberTile: 1
     - _UseHalfLambert: 1
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

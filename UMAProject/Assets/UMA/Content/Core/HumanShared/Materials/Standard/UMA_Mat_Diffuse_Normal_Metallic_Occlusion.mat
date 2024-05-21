@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Diffuse_Normal_Metallic_Occlusion
-  m_Shader: {fileID: -6465566751694194690, guid: 9436ca68914688a4c811c1675d980618,
+  m_Shader: {fileID: -6465566751694194690, guid: 067f98d61f2fae04b9241b2c7c0ff6a4,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:

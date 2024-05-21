@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Diffuse_Normal_Specular_Occlusion
-  m_Shader: {fileID: -6465566751694194690, guid: 28b24992a14713f4997554753e0bbcad,
+  m_Shader: {fileID: -6465566751694194690, guid: 6d6d9b8824e29a148a9f4412299bcaaf,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:

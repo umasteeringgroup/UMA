@@ -342,115 +342,115 @@ namespace UMA
                         //If our dictionary contains the shape name, which it should
                         if (blendShapeNames.ContainsKey(shapeName))
 						{
-                            if (blendShapeSettings.loadAllFrames)
-                            {
-							//UMABlendShape[] sourceBlendShapes = source.meshData.blendShapes;
-                                int currentShape = blendShapeNames[shapeName].index;
-
-                                if (blendShapes[currentShape].frames.Length != ubs.frames.Length)
+							if (blendShapeSettings.loadAllFrames)
 							{
-								if (Debug.isDebugBuild)
-                                {
-                                    Debug.LogError("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
-                                }
+								//UMABlendShape[] sourceBlendShapes = source.meshData.blendShapes;
+								int currentShape = blendShapeNames[shapeName].index;
 
-                                break;
+								if (blendShapes[currentShape].frames.Length != ubs.frames.Length)
+								{
+									if (Debug.isDebugBuild)
+									{
+										Debug.LogError("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
+									}
+
+									break;
+								}
+
+								for (int frameIndex = 0; frameIndex < ubs.frames.Length; frameIndex++)
+								{
+									bool normalsCopied = false;
+									bool tangentsCopied = false;
+									Array.Copy(ubs.frames[frameIndex].deltaVertices, 0, blendShapes[currentShape].frames[frameIndex].deltaVertices, vertexIndex, sourceVertexCount);
+
+									Vector3[] sourceDeltaNormals = ubs.frames[frameIndex].deltaNormals;
+									Vector3[] sourceDeltaTangents = ubs.frames[frameIndex].deltaTangents;
+
+									//if out dictionary says at least one source has normals or tangents and the current source has normals or tangents then copy them.
+									if (blendShapeNames[shapeName].hasNormals && sourceDeltaNormals.Length > 0)
+									{
+										if (blendShapes[currentShape].frames[0].deltaNormals == null || blendShapes[currentShape].frames[0].deltaNormals.Length == sourceVertexCount)
+										{
+											blendShapes[currentShape].frames[0].deltaNormals = new Vector3[sourceVertexCount];
+										}
+										Array.Copy(sourceDeltaNormals, 0, blendShapes[currentShape].frames[frameIndex].deltaNormals, vertexIndex, sourceVertexCount);
+										normalsCopied = true;
+									}
+
+									if (blendShapeNames[shapeName].hasTangents && sourceDeltaTangents.Length > 0)
+									{
+										if (blendShapes[currentShape].frames[0].deltaTangents == null || blendShapes[currentShape].frames[0].deltaTangents.Length == sourceVertexCount)
+										{
+											blendShapes[currentShape].frames[0].deltaTangents = new Vector3[sourceVertexCount];
+										}
+										tangentsCopied = true;
+										Array.Copy(sourceDeltaTangents, 0, blendShapes[currentShape].frames[frameIndex].deltaTangents, vertexIndex, sourceVertexCount);
+									}
+
+									if (!normalsCopied)
+									{
+										blendShapes[currentShape].frames[frameIndex].deltaNormals = new Vector3[0];
+									}
+									if (!tangentsCopied)
+									{
+										blendShapes[currentShape].frames[frameIndex].deltaTangents = new Vector3[0];
+									}
+								}
 							}
-
-							for (int frameIndex = 0; frameIndex < ubs.frames.Length; frameIndex++)
+							else
 							{
-                                    bool normalsCopied = false;
-                                    bool tangentsCopied = false;
-                                    Array.Copy(ubs.frames[frameIndex].deltaVertices, 0, blendShapes[currentShape].frames[frameIndex].deltaVertices, vertexIndex, sourceVertexCount);
+								int currentShape = blendShapeNames[shapeName].index;
+								int lastFrame = ubs.frames.Length - 1;
+								bool normalsCopied = false;
+								bool tangentsCopied = false;
 
-								Vector3[] sourceDeltaNormals = ubs.frames[frameIndex].deltaNormals;
-								Vector3[] sourceDeltaTangents = ubs.frames[frameIndex].deltaTangents;
+								if (blendShapes[currentShape].frames != null && blendShapes[currentShape].frames.Length > 1)
+								{
+									blendShapes[currentShape].frames = new UMABlendFrame[1];
+								}
 
-								//if out dictionary says at least one source has normals or tangents and the current source has normals or tangents then copy them.
-								if (blendShapeNames[shapeName].hasNormals && sourceDeltaNormals.Length > 0)
-                                {
-                                        if (blendShapes[currentShape].frames[0].deltaNormals == null || blendShapes[currentShape].frames[0].deltaNormals.Length == sourceVertexCount)
-                                        {
-                                            blendShapes[currentShape].frames[0].deltaNormals = new Vector3[sourceVertexCount];
-                                        }
-                                        Array.Copy(sourceDeltaNormals, 0, blendShapes[currentShape].frames[frameIndex].deltaNormals, vertexIndex, sourceVertexCount);
-                                        normalsCopied = true;
-                                }
+								blendShapes[currentShape].frames = new UMABlendFrame[1];
 
-                                if (blendShapeNames[shapeName].hasTangents && sourceDeltaTangents.Length > 0)
-                                {
-                                        if (blendShapes[currentShape].frames[0].deltaTangents == null || blendShapes[currentShape].frames[0].deltaTangents.Length == sourceVertexCount)
-                                        {
-                                            blendShapes[currentShape].frames[0].deltaTangents = new Vector3[sourceVertexCount];
-                                        }
-                                        tangentsCopied = true;
-                                        Array.Copy(sourceDeltaTangents, 0, blendShapes[currentShape].frames[frameIndex].deltaTangents, vertexIndex, sourceVertexCount);
-                                    }
+								Array.Copy(ubs.frames[lastFrame].deltaVertices, 0, blendShapes[currentShape].frames[0].deltaVertices, vertexIndex, sourceVertexCount);
 
-                                    if (!normalsCopied)
-                                    {
-                                        blendShapes[currentShape].frames[frameIndex].deltaNormals = new Vector3[0];
-                                    }
-                                    if (!tangentsCopied)
-                                    {
-                                        blendShapes[currentShape].frames[frameIndex].deltaTangents = new Vector3[0];
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                int currentShape = blendShapeNames[shapeName].index;
-                                int lastFrame = ubs.frames.Length - 1;
-                                bool normalsCopied = false;
-                                bool tangentsCopied = false;
+								if (blendShapeSettings.loadNormals && blendShapeNames[shapeName].hasNormals)
+								{
+									Vector3[] sourceDeltaNormals = ubs.frames[lastFrame].deltaNormals;
+									if (sourceDeltaNormals.Length > 0)
+									{
+										normalsCopied = true;
+										if (blendShapes[currentShape].frames[0].deltaNormals == null || blendShapes[currentShape].frames[0].deltaNormals.Length == sourceVertexCount)
+										{
+											blendShapes[currentShape].frames[0].deltaNormals = new Vector3[sourceVertexCount];
+										}
+										Array.Copy(sourceDeltaNormals, 0, blendShapes[currentShape].frames[0].deltaNormals, vertexIndex, sourceVertexCount);
+									}
 
-                                if (blendShapes[currentShape].frames != null && blendShapes[currentShape].frames.Length > 1)
-                                {
-                                    blendShapes[currentShape].frames = new UMABlendFrame[1];
-                                }
+								}
 
-                                blendShapes[currentShape].frames = new UMABlendFrame[1];
+								if (blendShapeSettings.loadTangents && blendShapeNames[shapeName].hasTangents)
+								{
+									Vector3[] sourceDeltaTangents = ubs.frames[lastFrame].deltaTangents;
+									if (sourceDeltaTangents.Length > 0)
+									{
+										tangentsCopied = true;
+										if (blendShapes[currentShape].frames[0].deltaTangents == null || blendShapes[currentShape].frames[0].deltaTangents.Length == sourceVertexCount)
+										{
+											blendShapes[currentShape].frames[0].deltaTangents = new Vector3[sourceVertexCount];
+										}
+										Array.Copy(sourceDeltaTangents, 0, blendShapes[currentShape].frames[0].deltaTangents, vertexIndex, sourceVertexCount);
+									}
+								}
 
-                                Array.Copy(ubs.frames[lastFrame].deltaVertices, 0, blendShapes[currentShape].frames[0].deltaVertices, vertexIndex, sourceVertexCount);
-
-                                if (blendShapeSettings.loadNormals && blendShapeNames[shapeName].hasNormals)
-                                {
-                                    Vector3[] sourceDeltaNormals = ubs.frames[lastFrame].deltaNormals;
-                                    if (sourceDeltaNormals.Length > 0)
-                                    {
-                                        normalsCopied = true;
-                                        if (blendShapes[currentShape].frames[0].deltaNormals == null || blendShapes[currentShape].frames[0].deltaNormals.Length == sourceVertexCount)
-                                        {
-                                            blendShapes[currentShape].frames[0].deltaNormals = new Vector3[sourceVertexCount];
-                                        }
-                                        Array.Copy(sourceDeltaNormals, 0, blendShapes[currentShape].frames[0].deltaNormals, vertexIndex, sourceVertexCount);
-                                    }
-
-                                }
-
-                                if (blendShapeSettings.loadTangents && blendShapeNames[shapeName].hasTangents)
-                                {
-                                    Vector3[] sourceDeltaTangents = ubs.frames[lastFrame].deltaTangents;
-                                    if (sourceDeltaTangents.Length > 0)
-                                    {
-                                        tangentsCopied = true;
-                                        if (blendShapes[currentShape].frames[0].deltaTangents == null || blendShapes[currentShape].frames[0].deltaTangents.Length == sourceVertexCount)
-                                        {
-                                            blendShapes[currentShape].frames[0].deltaTangents = new Vector3[sourceVertexCount];
-                                        }
-                                        Array.Copy(sourceDeltaTangents, 0, blendShapes[currentShape].frames[0].deltaTangents, vertexIndex, sourceVertexCount);
-                                    }
-                                }
-
-                                if (!normalsCopied)
-                                {
-                                    blendShapes[currentShape].frames[0].deltaNormals = new Vector3[0];
-                                }
-                                if (!tangentsCopied)
-                                {
-                                    blendShapes[currentShape].frames[0].deltaTangents = new Vector3[0];
-                                }
-                            }
+								if (!normalsCopied)
+								{
+									blendShapes[currentShape].frames[0].deltaNormals = new Vector3[0];
+								}
+								if (!tangentsCopied)
+								{
+									blendShapes[currentShape].frames[0].deltaTangents = new Vector3[0];
+								}
+							}
 						}
 						else
 						{

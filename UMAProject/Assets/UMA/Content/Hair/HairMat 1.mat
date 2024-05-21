@@ -8,8 +8,10 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: HairMat 1
-  m_Shader: {fileID: -6465566751694194690, guid: f6ace2105e9985f4b91f3a7bbe920940,
+  m_Shader: {fileID: -6465566751694194690, guid: 8b6ed7fef664d3547a898fe1f5df5bbc,
     type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _ALPHABLEND_ON
@@ -23,6 +25,7 @@ Material:
   stringTagMap:
     Keep: Keep
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -31,7 +34,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: ef1ad9f8e5c727b40a0836c37b78df41, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
@@ -98,13 +101,31 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ThicknessMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaClip: 0.5
     - _AlphaMod: 2
+    - _AlphaModulation: 1
     - _BillboardKwToggle: 0
     - _BillboardShadowFade: 0.5
     - _BumpScale: 1
@@ -125,6 +146,7 @@ Material:
     - _GlossyReflections: 1
     - _HalfLambertStrength: 1
     - _HueVariationKwToggle: 0
+    - _InvertThickness: 0
     - _MaskClipValue: 0.5
     - _Metallic: 0
     - _MetallicAdd: 0
@@ -137,6 +159,10 @@ Material:
     - _OcclusionStrength: 1
     - _OverlayCount: 0
     - _Parallax: 0.02
+    - _RimLightPower: 4
+    - _RimLightingModulation: 0
+    - _SSSLevel: 0.3
+    - _Smoothness: 0
     - _SmoothnessAdd: 0
     - _SmoothnessModulation: 1
     - _SmoothnessStrength: 0.5
@@ -152,6 +178,7 @@ Material:
     - _UVSec: 0
     - _UseDetail: 0
     - _UseEmission: 0
+    - _UseHalfLambert: 0
     - _UseMaskMap: 0
     - _WindQuality: 0
     - _ZWrite: 0
@@ -166,6 +193,8 @@ Material:
     - _GreenColor0: {r: 1, g: 1, b: 1, a: 1}
     - _HueVariationColor: {r: 1, g: 0.5, b: 0, a: 0.1}
     - _RedColor0: {r: 1, g: 1, b: 1, a: 1}
+    - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SSSColor: {r: 1, g: 0.39999998, b: 0.39999998, a: 1}
     - _SubsurfaceColor: {r: 1, g: 1, b: 1, a: 1}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
     - _Tint0_0: {r: 1, g: 1, b: 1, a: 1}

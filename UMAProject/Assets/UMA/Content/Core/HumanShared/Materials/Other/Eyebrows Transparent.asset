@@ -15,13 +15,7 @@ MonoBehaviour:
   translateSRP: 1
   _material: {fileID: 2100000, guid: 0ef6f9decdc3afb4c8c48dfc2d99713e, type: 2}
   _secondPass: {fileID: 0}
-  srpMaterials:
-  - SRP: 1
-    material: {fileID: 2100000, guid: 0ef6f9decdc3afb4c8c48dfc2d99713e, type: 2}
-    secondPass: {fileID: 0}
-    alternateKeywords:
-    - _MainTex
-    - _BumpMap
+  srpMaterials: []
   materialType: 1
   channels:
   - channelType: 0
@@ -32,19 +26,13 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 1
-    textureFormat: 0
-    materialPropertyName: _BumpMap
-    sourceTextureName: 
-    Compression: 0
-    DownSample: 0
-    ConvertRenderTexture: 0
-    NonShaderTexture: 0
   MipMapBias: 0
   AnisoLevel: 1
   MatFilterMode: 1
   Compression: 0
-  shaderParms: []
+  shaderParms:
+  - ParameterName: 
+    ColorName: 
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
   MaterialName: 

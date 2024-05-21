@@ -210,6 +210,7 @@ namespace UMA
             public bool isSwapSlot;
             public string swapTag;
 			public int uvOverride;
+			public bool isDisabled;
 		}
 
         [System.Serializable]
@@ -596,6 +597,7 @@ namespace UMA
                     tempPackedSlotData.swapTag = umaRecipe.slotDataList[i].swapTag;
                     tempPackedSlotData.isSwapSlot = umaRecipe.slotDataList[i].isSwapSlot;
 					tempPackedSlotData.uvOverride = umaRecipe.slotDataList[i].UVSet;
+					tempPackedSlotData.isDisabled = umaRecipe.slotDataList[i].isDisabled;
 
 					bool copiedOverlays = false;
 					for (int i2 = 0; i2 < i; i2++)
@@ -975,6 +977,7 @@ namespace UMA
                     tempSlotData.isSwapSlot = packedSlot.isSwapSlot;
                     tempSlotData.swapTag = packedSlot.swapTag;
 					tempSlotData.UVSet = packedSlot.uvOverride;
+					tempSlotData.isDisabled = packedSlot.isDisabled;
 
                     umaRecipe.slotDataList[i] = tempSlotData;
 

@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Eyebrows Transparent
-  m_Shader: {fileID: -6465566751694194690, guid: 3821891150a094b459504294dd53ce94,
+  m_Shader: {fileID: -6465566751694194690, guid: de90b6ff34ca64449b132b66875423ed,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -242,6 +242,7 @@ Material:
     - _TranslucencyPower: 9.038462
     - _TranslucencyRadius: 0.65384614
     - _UVSec: 0
+    - _UberTile: 1
     - _UseHalfLambert: 0
     - _ZWrite: 0
     m_Colors:
@@ -262,7 +263,7 @@ Material:
     - _BlueColor1: {r: 1, g: 1, b: 1, a: 1}
     - _BlueColor2: {r: 1, g: 1, b: 1, a: 1}
     - _BlueColor3: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.43137258, g: 0.43137258, b: 0.43137258, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColorUI: {r: 1, g: 1, b: 1, a: 1}
     - _GreenColor0: {r: 1, g: 1, b: 1, a: 1}

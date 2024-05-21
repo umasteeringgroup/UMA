@@ -4636,8 +4636,12 @@ namespace UMA.CharacterSystem
             }
         }
 
+        public bool debugVertexes = true;
+
         public void SmooshSlotPhysics(UMAData umaData, SlotDataAsset SmooshMe, SlotDataAsset SmooshPlane, SlotDataAsset SmooshTarget, bool invertX, bool invertY, bool invertZ, bool invertDist, float smooshDistance, float overSmoosh)
         {
+            int smooshCount = 0;
+            int unsmooshCount = 0;
             if (SmooshMe == null || SmooshPlane == null || SmooshTarget == null)
             {
                 return;
@@ -4706,9 +4710,77 @@ namespace UMA.CharacterSystem
                     sourceVertexes = umaData.VertexOverrides[SmooshMe.slotName];
                 }
 
+                Vector3 min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                Vector3 max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+                Vector3 SmooshMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                Vector3 SmooshMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+                if (debugVertexes)
+                {
+                    foreach(Vector3 v in SmooshPlane.meshData.vertices)
+                    {
+                        if (v.x < SmooshMin.x)
+                        {
+                            SmooshMin.x = v.x;
+                        }
+                        if (v.y < SmooshMin.y)
+                        {
+                            SmooshMin.y = v.y;
+                        }
+                        if (v.z < SmooshMin.z)
+                        {
+                            SmooshMin.z = v.z;
+                        }
+                        if (v.x > SmooshMax.x)
+                        {
+                            SmooshMax.x = v.x;
+                        }
+                        if (v.y > SmooshMax.y)
+                        {
+                            SmooshMax.y = v.y;
+                        }
+                        if (v.z > SmooshMax.z)
+                        {
+                            SmooshMax.z = v.z;
+                        }
+                    }
+                }
+
                 for (int i = 0; i < newVerts.Length; i++)
                 {
-                    Vector3 currentVert = sourceVertexes[i];
+                    // 
+                    Vector3 currentVert = sourceVertexes[i]; 
+
+                    if (debugVertexes)
+                    {
+                        if (currentVert.x < min.x)
+                        {
+                            min.x = currentVert.x;
+                        }
+                        if (currentVert.y < min.y)
+                        {
+                            min.y = currentVert.y;
+                        }
+                        if (currentVert.z < min.z)
+                        {
+                            min.z = currentVert.z;
+                        }
+                        if (currentVert.x > max.x)
+                        {
+                            max.x = currentVert.x;
+                        }
+                        if (currentVert.y > max.y)
+                        {
+                            max.y = currentVert.y;
+                        }
+                        if (currentVert.z > max.z)
+                        {
+                            max.z = currentVert.z;
+                        }
+                    }
+
+
 
                     float dist = p.GetDistanceToPoint(currentVert);
                     if (invertDist)
@@ -4724,10 +4796,21 @@ namespace UMA.CharacterSystem
                         {
                             newVector = currentVert;
                         }
+                        smooshCount++;
+                    }
+                    else
+                    {
+                        unsmooshCount++;
                     }
 
                    newVector = SmooshMe.smooshOffset + newVector;
                    newVerts[i].Set(newVector.x * SmooshMe.smooshExpand.x, newVector.y * SmooshMe.smooshExpand.y, newVector.z * SmooshMe.smooshExpand.z);
+                }
+                if (debugVertexes)
+                {
+                    DrawBox("HairBounds", min, max, Color.red);
+                    DrawBox("PlaneBounds", SmooshMin, SmooshMax, Color.blue);
+                    Debug.LogWarning("Smooshed " + smooshCount + " verts. Unsmooshed: "+unsmooshCount);
                 }
                 umaData.AddVertexOverride(SmooshMe, newVerts);
             }
@@ -4737,6 +4820,19 @@ namespace UMA.CharacterSystem
             }
         }
 
+
+        public void DrawBox(string boxName, Vector3 Min, Vector3 Max, Color c)
+        {
+            GameObject DebugBox = GameObject.Find(boxName);
+
+            Vector3 center = (Max + Min) * 0.5f;
+            Vector3 size = Max - Min;
+            if (DebugBox != null)
+            {
+                DebugBox.transform.localScale = size;
+                DebugBox.transform.position = center;
+            }
+        }
 
         void UpdateBounds()
         {
@@ -5020,8 +5116,7 @@ namespace UMA.CharacterSystem
                 }
                 else
                 {
-                    sd.tempHidden = false;
-                    for(int j=0; j<sd.GetOverlayList().Count; j++)
+                    for (int j=0; j<sd.GetOverlayList().Count; j++)
                     {
                         OverlayData od = sd.GetOverlay(j);
                         if (od.mergedFromSlot != null && od.mergedFromSlot.isSwapSlot)
@@ -5087,7 +5182,7 @@ namespace UMA.CharacterSystem
                     }
                 }
 
-                if (sd.tempHidden)
+                if (sd.tempHidden || sd.isDisabled)
                 {
                     HiddenSlots.Add(sd);
                     continue;

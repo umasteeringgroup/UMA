@@ -92,7 +92,7 @@ namespace UMA.Editors
                     textureChannelCount = _channels.arraySize;
                 }
 
-                od.textureFoldout = GUIHelper.FoldoutBar(od.textureFoldout, "Texture Channels");
+                od.textureFoldout = GUIHelper.FoldoutBar(od.textureFoldout, $"Texture Channels ({textureChannelCount}) Material Channels ({_textureList.arraySize})");
 
 				if (od.textureFoldout)
 				{
@@ -127,7 +127,7 @@ namespace UMA.Editors
 
 				if ( _textureList.arraySize != textureChannelCount)
 				{
-					EditorGUILayout.HelpBox("Overlay Texture count and UMA Material channel count don't match!", MessageType.Error);
+					EditorGUILayout.HelpBox($"Overlay Texture count {_textureList.arraySize} and UMA Material channel count {textureChannelCount} don't match!", MessageType.Error);
 				}
 
 				if (!_textureList.hasMultipleDifferentValues)

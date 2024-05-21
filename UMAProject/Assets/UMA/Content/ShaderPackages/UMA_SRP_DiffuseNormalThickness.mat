@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_SRP_DiffuseNormalThickness
-  m_Shader: {fileID: -6465566751694194690, guid: 1908ccde0a576f44b87f91b383fdea72,
+  m_Shader: {fileID: -6465566751694194690, guid: e8f35cbadc0030a4f8eeb6c246e72bbd,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []

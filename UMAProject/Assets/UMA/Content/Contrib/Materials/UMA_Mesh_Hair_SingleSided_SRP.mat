@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mesh_Hair_SingleSided_SRP
-  m_Shader: {fileID: -6465566751694194690, guid: cf6bfc06685ba5f47bdeac1e10a04d71,
+  m_Shader: {fileID: -6465566751694194690, guid: 29a5769127ec3494b916662d265737e1,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:

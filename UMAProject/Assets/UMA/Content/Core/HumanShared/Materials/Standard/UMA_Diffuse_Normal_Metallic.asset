@@ -20,7 +20,7 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: 2db8991bb8fd75f4eb02f3ee57a55f37, type: 2}
     secondPass: {fileID: 0}
     alternateKeywords:
-    - _MainTex
+    - _BaseMap
     - _BumpMap
     - _MetallicGlossMap
   materialType: 1

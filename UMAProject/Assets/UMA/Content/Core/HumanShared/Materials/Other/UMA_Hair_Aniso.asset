@@ -16,29 +16,23 @@ MonoBehaviour:
   _material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
   _secondPass: {fileID: 0}
   srpMaterials:
-  - SRP: 1
-    material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
-    secondPass: {fileID: 0}
-    alternateKeywords:
-    - _MainTex
-    - _BumpMap
   - SRP: 2
-    material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
+    material: {fileID: 2100000, guid: 30499738961245147bde8442b561c869, type: 2}
     secondPass: {fileID: 0}
     alternateKeywords:
-    - _MainTex
+    - _BaseMap
     - _BumpMap
   - SRP: 3
-    material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
+    material: {fileID: 2100000, guid: 30499738961245147bde8442b561c869, type: 2}
     secondPass: {fileID: 0}
     alternateKeywords:
-    - _MainTex
+    - _BaseMap
     - _BumpMap
   materialType: 1
   channels:
   - channelType: 0
     textureFormat: 0
-    materialPropertyName: _MainTex
+    materialPropertyName: _BaseMap
     sourceTextureName: 
     Compression: 0
     DownSample: 0

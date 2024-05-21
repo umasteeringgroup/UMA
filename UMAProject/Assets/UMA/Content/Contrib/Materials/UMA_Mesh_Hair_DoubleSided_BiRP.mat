@@ -70,7 +70,7 @@ Material:
     m_Floats:
     - _Anisotropy: 1
     - _BumpScale: 0.35
-    - _BumpStrength: 0.124
+    - _BumpStrength: 0.531
     - _Cutoff: 0.65
     - _DetailNormalMapScale: 1
     - _Distortion: 1

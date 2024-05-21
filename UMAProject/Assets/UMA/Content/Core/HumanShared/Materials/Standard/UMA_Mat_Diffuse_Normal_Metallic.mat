@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Diffuse_Normal_Metallic
-  m_Shader: {fileID: -6465566751694194690, guid: 363c26bce6d95c143a8ac6d179d0217c,
+  m_Shader: {fileID: -6465566751694194690, guid: e2c95817ac413714c8f36b80020c9867,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -154,6 +154,7 @@ Material:
     - _Tile3_1: 1
     - _Tile3_2: 1
     - _UVSec: 0
+    - _UberTile: 1
     - _UseHalfLambert: 0
     - _UseTiling1: 0
     - _UseTiling2: 0

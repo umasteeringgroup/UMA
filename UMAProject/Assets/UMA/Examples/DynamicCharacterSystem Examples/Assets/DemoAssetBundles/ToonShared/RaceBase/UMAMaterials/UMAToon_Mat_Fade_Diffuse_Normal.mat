@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMAToon_Mat_Fade_Diffuse_Normal
-  m_Shader: {fileID: -6465566751694194690, guid: 48e9e562651b9064e9f7a3f297c0738e,
+  m_Shader: {fileID: -6465566751694194690, guid: ab87b81d084dd6047b63be46465e63c2,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:

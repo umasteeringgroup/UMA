@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using System.Globalization;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -48,9 +50,9 @@ namespace UMA
             switch (str[0])
             {
                 case "Float":
-                    return new UMAFloatProperty() {Value = Convert.ToSingle(str[1]), name = str[2] };
+                    return new UMAFloatProperty() {Value = Convert.ToSingle(str[1], CultureInfo.InvariantCulture), name = str[2] };
                 case "Int":
-                    return new UMAIntProperty() { Value = Convert.ToInt32(str[1]), name = str[2] };
+                    return new UMAIntProperty() { Value = Convert.ToInt32(str[1],CultureInfo.InvariantCulture), name = str[2] };
                 case "Color":
                     Color c = Color.white;
                     ColorUtility.TryParseHtmlString(str[1], out c);
@@ -58,10 +60,10 @@ namespace UMA
                     return new UMAColorProperty() { Value = c, name = str[2] };
                 case "Vector":
                     string[] vector = str[1].Split(vectorsplitter);
-                    float x = Convert.ToSingle(vector[0]);
-                    float y = Convert.ToSingle(vector[1]);
-                    float z = Convert.ToSingle(vector[2]);
-                    float w = Convert.ToSingle(vector[3]);
+                    float x = Convert.ToSingle(vector[0], CultureInfo.InvariantCulture);
+                    float y = Convert.ToSingle(vector[1], CultureInfo.InvariantCulture);
+                    float z = Convert.ToSingle(vector[2], CultureInfo.InvariantCulture);
+                    float w = Convert.ToSingle(vector[3], CultureInfo.InvariantCulture);
                     return new UMAVectorProperty() { Value = new Vector4(x, y, z, w), name = str[2] };
                 /// The rest of these are only programmable at runtime.
                 case "VectorArray":
@@ -129,7 +131,7 @@ namespace UMA
 
         public override string ToString()
         {
-            return "Float" + splitter + Value.ToString(precision)+ splitter + name;
+            return "Float" + splitter + Value.ToString(precision, CultureInfo.InvariantCulture) + splitter + name;
         }
 
 
@@ -213,7 +215,7 @@ namespace UMA
         }
         public override string ToString()
         {
-            return "Vector" + splitter + string.Format(vectorprecision, Value.x, Value.y, Value.z, Value.w) + ";" + name;
+            return "Vector" + splitter + string.Format(CultureInfo.InvariantCulture,vectorprecision, Value.x, Value.y, Value.z, Value.w) + ";" + name;
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
@@ -364,7 +366,7 @@ namespace UMA
 
         public override string ToString()
         {
-            return "Int"+splitter+Value.ToString() + splitter + name+"***";
+            return "Int"+splitter+Value.ToString(CultureInfo.InvariantCulture) + splitter + name+"***";
         }
 #if UNITY_EDITOR
         public override bool OnGUI()

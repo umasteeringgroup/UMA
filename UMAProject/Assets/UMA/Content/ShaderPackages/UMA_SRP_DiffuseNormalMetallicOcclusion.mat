@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_SRP_DiffuseNormalMetallicOcclusion
-  m_Shader: {fileID: -6465566751694194690, guid: 8a54ef3abfb59b84aae1622a7c566cb3,
+  m_Shader: {fileID: -6465566751694194690, guid: 067f98d61f2fae04b9241b2c7c0ff6a4,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
@@ -68,18 +68,22 @@ Material:
     - _CullMode: 2
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
+    - _DoubleSidedNormalMode: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _HalfLambertStrength: 1
     - _Metallic: 0
+    - _MetallicModulation: 1
     - _Mode: 0
+    - _NormalStrength: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _RimLightPower: 4
     - _RimLightingModulation: 0
     - _Smoothness: 0
+    - _SmoothnessModulation: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

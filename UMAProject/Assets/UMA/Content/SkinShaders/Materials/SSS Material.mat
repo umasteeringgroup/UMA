@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: SSS Material 1
+  m_Name: SSS Material
   m_Shader: {fileID: 4800000, guid: dd867f0212ded544396217ac461f949c, type: 3}
   m_ValidKeywords:
   - _METALLICGLOSSMAP
@@ -133,7 +133,7 @@ Material:
     - _DetailIntensity: 1
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _GlossMapScale: 0.81
+    - _GlossMapScale: 0.531
     - _Glossiness: 0
     - _GlossyReflections: 1
     - _Metallic: 0
@@ -154,7 +154,7 @@ Material:
     - _SecondUVSource: 0
     - _SkinDetailTiling: 1
     - _Smoothness: 0.7
-    - _SmoothnessFromAlbedo: 0
+    - _SmoothnessFromAlbedo: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

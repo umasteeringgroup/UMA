@@ -71,16 +71,19 @@ namespace UMA.Editors
                 serializedObject.ApplyModifiedProperties();
                 source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.BuiltInPipeline));
                 serializedObject.Update();
+                source.SetupSRP(true);
             }
             if (GUILayout.Button("Force save Materials"))
             {
                 serializedObject.ApplyModifiedProperties();
+                source.SetupSRP(true);
                 EditorUtility.SetDirty(target);
                 AssetDatabase.SaveAssetIfDirty(target);
             }
             if (GUILayout.Button("Refresh Materials"))
             {
                 serializedObject.Update();
+                source.SetupSRP(true);
             }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
@@ -92,12 +95,14 @@ namespace UMA.Editors
                 source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.UniversalPipeline));
                 source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.HDPipeline));
                 serializedObject.Update();
+                source.SetupSRP(true);
             }
             if (GUILayout.Button("Clear SRP Materials"))
             {
                 serializedObject.ApplyModifiedProperties();
                 source.srpMaterials.Clear();
                 serializedObject.Update();
+                source.SetupSRP(true);
             }
             GUILayout.EndHorizontal();
 
@@ -108,7 +113,7 @@ namespace UMA.Editors
             }
             if (MatType == UMAMaterial.MaterialType.UseExistingTextures)
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("secondPass"), new GUIContent("Second Pass", "The Unity Material for a second pass. Usually NULL."));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("_secondPass"), new GUIContent("Second Pass", "The Unity Material for a second pass. Usually NULL."));
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("translateSRP"), new GUIContent("Translate SRP", "When checked, this will automatically translate the UMAMaterial property names to URP/HDRP names (ie - _MainTex becomes _BaseMap etc.)"));
 
@@ -171,14 +176,27 @@ namespace UMA.Editors
             bool wasChanged = serializedObject.ApplyModifiedProperties();
             if (wasChanged)
             {
+                serializedObject.ApplyModifiedProperties();
+                source.SetupSRP(true);
                 UMAMaterial.MaterialType NewMatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
                 if (MatType != NewMatType)
                 {
                     if (NewMatType != UMAMaterial.MaterialType.UseExistingTextures)
                     {
                         // second Pass only used for UseExistingTextures
-                        var secondPassProperty = serializedObject.FindProperty("secondPass");
+                        var secondPassProperty = serializedObject.FindProperty("_secondPass");
                         secondPassProperty.SetValue<Object>(null);
+                        if (MatType == UMAMaterial.MaterialType.UseExistingTextures)
+                        {
+                            var list = serializedObject.FindProperty("channels");
+                            for (int i = 0; i < list.arraySize; i++)
+                            {
+                                SerializedProperty channel = list.GetArrayElementAtIndex(i);
+                                var channelProperty = channel.FindPropertyRelative("channelType");
+                                channelProperty.intValue = (int)UMAMaterial.ChannelType.Texture;
+                            }
+                            serializedObject.ApplyModifiedProperties();
+                        }
                     }
                     if (NewMatType == UMAMaterial.MaterialType.UseExistingMaterial)
                     {
