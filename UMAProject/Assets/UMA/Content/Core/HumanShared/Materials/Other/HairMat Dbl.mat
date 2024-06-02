@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: HairMat Dbl
-  m_Shader: {fileID: -6465566751694194690, guid: cf6bfc06685ba5f47bdeac1e10a04d71,
+  m_Shader: {fileID: -6465566751694194690, guid: 29a5769127ec3494b916662d265737e1,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -92,7 +92,7 @@ Material:
     - _BumpScale: 0.2
     - _BumpStrength: 0.238
     - _ColorModulation: 1.24
-    - _CullMode: 2
+    - _CullMode: 0
     - _Cutoff: 0.368
     - _DetailNormalMapScale: 1
     - _DiffuseScatteringBias: 0.5

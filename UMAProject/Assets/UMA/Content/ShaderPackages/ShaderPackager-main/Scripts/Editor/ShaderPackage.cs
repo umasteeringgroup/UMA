@@ -35,7 +35,7 @@ namespace UMA.ShaderPackager
             Unity2022_1 = 20221,
             Unity2022_2 = 20222,
             Unity2022_3 = 20223,
-            Max = 30000
+            Max = 90000
         }
 
         [System.Serializable]
