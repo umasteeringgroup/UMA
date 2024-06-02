@@ -89,8 +89,8 @@ Material:
     - _Power: 1
     - _Richness: 0.721
     - _Scale: 1
-    - _SmoothnessAdd: 0.07
-    - _SmoothnessStrength: 0.4
+    - _SmoothnessAdd: 0
+    - _SmoothnessStrength: 0.144
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1

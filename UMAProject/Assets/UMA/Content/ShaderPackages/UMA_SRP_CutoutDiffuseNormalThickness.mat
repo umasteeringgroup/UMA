@@ -11,7 +11,8 @@ Material:
   m_Shader: {fileID: -6465566751694194690, guid: 43ca6112e855a9541b779c634be7003e,
     type: 3}
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _USEHALFLAMBERT_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -69,7 +70,7 @@ Material:
     m_Floats:
     - _AlphaClip: 0
     - _BumpScale: 1
-    - _ColorModulation: 1
+    - _ColorModulation: 1.447
     - _CullMode: 2
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
@@ -80,22 +81,22 @@ Material:
     - _GlossyReflections: 1
     - _HalfLambertStrength: 3.57
     - _InvertThickness: 1
-    - _Metallic: 0
+    - _Metallic: 0.058
     - _MetallicModulation: 1
     - _Mode: 0
     - _NormalStrength: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _RimLightPower: 2.91
+    - _RimLightPower: 1.34
     - _RimLightingModulation: 0.05
-    - _SSSLevel: 0.79
+    - _SSSLevel: 1
     - _Smoothness: 0
-    - _SmoothnessModulation: 0.361
+    - _SmoothnessModulation: 0.518
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
-    - _UseHalfLambert: 0
+    - _UseHalfLambert: 1
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

@@ -10,8 +10,6 @@ Material:
   m_Name: UMA_Mesh_Hair_DoubleSided_Cutout
   m_Shader: {fileID: -6465566751694194690, guid: 8b6ed7fef664d3547a898fe1f5df5bbc,
     type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _ALPHATEST_ON
@@ -23,7 +21,6 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -102,7 +99,7 @@ Material:
     - _MaskClipValue: 0.561
     - _Metallic: 0.686
     - _MetallicAdd: 0.306
-    - _MetallicModulation: 0.25
+    - _MetallicModulation: 0
     - _MetallicStrength: 0
     - _Mode: 1
     - _NormalStrength: 1
@@ -112,7 +109,7 @@ Material:
     - _RimLightPower: 4
     - _RimLightingModulation: 0
     - _SmoothnessAdd: 0.303
-    - _SmoothnessModulation: 0.1
+    - _SmoothnessModulation: 0.03
     - _SmoothnessStrength: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1

@@ -126,7 +126,7 @@ namespace UMA
                 _meshCollider.hideFlags = HideFlags.HideInInspector;
             }
 
-            if( GraphicsSettings.renderPipelineAsset == null )
+            if( GraphicsSettings.defaultRenderPipeline == null )
             {
                 _Shader = Shader.Find("Standard");
             }

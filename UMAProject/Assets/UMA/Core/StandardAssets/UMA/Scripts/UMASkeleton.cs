@@ -410,7 +410,13 @@ namespace UMA
 			return boneNames;
 		}
 
-		public virtual void Set(int nameHash, Vector3 position, Vector3 scale, Quaternion rotation)
+		public bool isValid()
+        {
+			if (rootBoneHash == 0) return false;
+			return true;
+        }
+
+        public virtual void Set(int nameHash, Vector3 position, Vector3 scale, Quaternion rotation)
 		{
 			BoneData db;
 			if (boneHashData.TryGetValue(nameHash, out db))

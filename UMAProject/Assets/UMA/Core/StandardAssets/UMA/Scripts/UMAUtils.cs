@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine.Rendering;
+using Sirenix.OdinInspector.Editor.TypeSearch;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -65,13 +67,18 @@ namespace UMA
 		/// Returns the type of renderpipeline that is currently running
 		/// </summary>
 		/// <returns></returns>
-		public static PipelineType DetectPipeline() {
-			if(GraphicsSettings.renderPipelineAsset != null) {
+		public static PipelineType DetectPipeline()
+		{
+			if (GraphicsSettings.currentRenderPipeline != null)
+			{
 				// SRP
 				var srpType = GraphicsSettings.currentRenderPipeline.GetType().ToString();
-				if(srpType.Contains("HDRender")) {
+				if (srpType.Contains("HDRender"))
+				{
 					return PipelineType.HDPipeline;
-				} else if(srpType.Contains("Universal")) {
+				}
+				else if (srpType.Contains("Universal"))
+				{
 					return PipelineType.UniversalPipeline;
                 }
                 else
@@ -83,6 +90,26 @@ namespace UMA
 			return PipelineType.BuiltInPipeline;
 		}
 
+        public static void UDIMAdjustUV(Vector2[] dest, Vector2[] src)
+        {
+			if (src == null || dest == null)
+			{
+                return;
+            }
+            if (src.Length == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < src.Length; i++)
+            {
+                float x = Mathf.Abs(src[i].x);
+                float y = Mathf.Abs(src[i].y);
+
+                dest[i].x = x - (int)x;
+                dest[i].y = y - (int)y;
+            }
+        }
 
 
         public static Material GetDefaultDiffuseMaterial()

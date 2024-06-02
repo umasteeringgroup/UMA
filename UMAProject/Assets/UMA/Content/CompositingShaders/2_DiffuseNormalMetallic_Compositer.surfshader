@@ -1,5 +1,5 @@
 BEGIN_OPTIONS
-   ShaderName "UMA/Compositing/Diffuse_Normal_Metallic_Compositer"
+   ShaderName "UMA/Compositing2/Diffuse_Normal_Metallic_Compositer"
    Stackable "False"
    DisableGBufferPass "True" // disable gbuffer pass
    Workflow "Metallic"
@@ -198,12 +198,14 @@ BEGIN_CODE
    TEXTURE2D(_BaseMap);
    SAMPLER(sampler_BaseMap);
    TEXTURE2D(_BumpMap);
+   SAMPLER(sampler_BumpMap);
    TEXTURE2D(_MetallicGlossMap);
 
 
    TEXTURE2D(_BaseMap1);
    TEXTURE2D(_BumpMap1);
    TEXTURE2D(_AlphaMask1);
+   SAMPLER(sampler_AlphaMask1);
    TEXTURE2D(_MetallicGlossMap1);
 
    TEXTURE2D(_BaseMap2);
@@ -226,7 +228,7 @@ BEGIN_CODE
 	  half4 mask = (SAMPLE_TEXTURE2D(_MetallicGlossMap,sampler_BaseMap,cuv) * _Tint0_2) + _Add0_2;
 	  half4 base_c = (SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, auv) * _Tint0_0)+_Add0_0;
 
-	  half4 basepackednormal = (SAMPLE_TEXTURE2D(_BumpMap, sampler_BaseMap,nuv) * _Tint0_1) + _Add0_1;
+	  half4 basepackednormal = (SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap,nuv) * _Tint0_1) + _Add0_1;
 	  half3 base_n = UnpackScaleNormal(basepackednormal,_NormalStrength0);
 
 	  half base_smooth = mask.a;
@@ -251,7 +253,7 @@ BEGIN_CODE
 
           if ((_UseTiling1 == 0.0f && auv.x >= 0.0f && auv.x <= 1.0f && auv.y >= 0.0f && auv.y <= 1.0f) || _UseTiling1 == 1.0f)
           {             
-              half alpha = SAMPLE_TEXTURE2D(_AlphaMask1, sampler_BaseMap, auv).a;
+              half alpha = SAMPLE_TEXTURE2D(_AlphaMask1, sampler_AlphaMask1, auv).a;
               half oneminus = 1.0f - alpha;
 
 	          half4 add_c = (SAMPLE_TEXTURE2D(_BaseMap1, sampler_BaseMap, auv) * _Tint1_0) + _Add1_0;
@@ -277,7 +279,7 @@ BEGIN_CODE
               {
                  nuv = auv; 
               }
-	          half4 addpackednormal = (SAMPLE_TEXTURE2D(_BumpMap1, sampler_BaseMap,nuv) * _Tint1_1) + _Add1_1;
+	          half4 addpackednormal = (SAMPLE_TEXTURE2D(_BumpMap1, sampler_BumpMap,nuv) * _Tint1_1) + _Add1_1;
 	          half3 add_n = UnpackScaleNormal(addpackednormal,_NormalStrength1);
 		      base_n = (add_n * alpha) + (base_n * oneminus);
 		      base_smooth = (addmask.a * alpha) + (base_smooth * oneminus);
@@ -302,7 +304,7 @@ BEGIN_CODE
 
           if ((_UseTiling2 == 0.0f && auv.x >= 0.0f && auv.x <= 1.0f && auv.y >= 0.0f && auv.y <= 1.0f) || _UseTiling2 == 1.0f)
           {             
-              half alpha = SAMPLE_TEXTURE2D(_AlphaMask2, sampler_BaseMap, auv).a;
+              half alpha = SAMPLE_TEXTURE2D(_AlphaMask2, sampler_AlphaMask1, auv).a;
               half oneminus = 1.0f - alpha;
 
 	          half4 add_c = (SAMPLE_TEXTURE2D(_BaseMap2, sampler_BaseMap, auv)* _Tint2_0) + _Add2_0;
@@ -332,7 +334,7 @@ BEGIN_CODE
                          nuv = auv; 
                 }
 
-	          half4 addpackednormal = (SAMPLE_TEXTURE2D(_BumpMap2, sampler_BaseMap,nuv) * _Tint2_1) + _Add2_1;
+	          half4 addpackednormal = (SAMPLE_TEXTURE2D(_BumpMap2, sampler_BumpMap,nuv) * _Tint2_1) + _Add2_1;
 	          half3 add_n = UnpackScaleNormal(addpackednormal,_NormalStrength2);
 		      base_n = (add_n * alpha) + (base_n * oneminus);
 		      base_smooth = (addmask.a * alpha) + (base_smooth * oneminus);
@@ -356,7 +358,7 @@ BEGIN_CODE
 
           if ((_UseTiling3 == 0.0f && auv.x >= 0.0f && auv.x <= 1.0f && auv.y >= 0.0f && auv.y <= 1.0f) || _UseTiling3 == 1.0f)
           {   
-              half alpha = SAMPLE_TEXTURE2D(_AlphaMask3, sampler_BaseMap, auv).a;
+              half alpha = SAMPLE_TEXTURE2D(_AlphaMask3, sampler_AlphaMask1, auv).a;
               half oneminus = 1.0f - alpha;
 
 	          half4 add_c = (SAMPLE_TEXTURE2D(_BaseMap3, sampler_BaseMap, auv)* _Tint3_0) + _Add3_0;
@@ -385,7 +387,7 @@ BEGIN_CODE
                          nuv = auv; 
                 }
 
-	          half4 addpackednormal = (SAMPLE_TEXTURE2D(_BumpMap1, sampler_BaseMap,nuv) * _Tint3_1) + _Add3_1;
+	          half4 addpackednormal = (SAMPLE_TEXTURE2D(_BumpMap3, sampler_BumpMap,nuv) * _Tint3_1) + _Add3_1;
 	          half3 add_n = UnpackScaleNormal(addpackednormal,_NormalStrength2);
 
 		      base_n = (add_n * alpha) + (base_n * oneminus);

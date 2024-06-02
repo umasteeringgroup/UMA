@@ -57,49 +57,49 @@ namespace UMA
 		public UMARendererAsset defaultRendererAsset { get; set; }
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
-        public List<SlotTracker> slotTrackers = new List<SlotTracker>();
+		public List<SlotTracker> slotTrackers = new List<SlotTracker>();
 		private List<UMASavedItem> savedItems = new List<UMASavedItem>();
-        public string userInformation = "";
+		public string userInformation = "";
 
 		public void AddSavedItem(Transform transform)
-        {
-			savedItems.Add(new UMASavedItem(UMAUtils.StringToHash(transform.parent.name),transform));
+		{
+			savedItems.Add(new UMASavedItem(UMAUtils.StringToHash(transform.parent.name), transform));
 		}
 
 		public void RestoreSavedItems()
-        {
-            for (int i = 0; i < savedItems.Count; i++)
-            {
-                UMASavedItem usi = savedItems[i];
-                Transform parent = skeleton.GetBoneTransform(usi.ParentBoneNameHash);
+		{
+			for (int i = 0; i < savedItems.Count; i++)
+			{
+				UMASavedItem usi = savedItems[i];
+				Transform parent = skeleton.GetBoneTransform(usi.ParentBoneNameHash);
 				if (parent != null)
-                {
-					usi.Object.SetParent(parent,false);
-                }
-            }
+				{
+					usi.Object.SetParent(parent, false);
+				}
+			}
 			savedItems.Clear();
-        }
+		}
 
 		//TODO Change these get functions to getter properties?
 		public SkinnedMeshRenderer GetRenderer(int idx)
 		{
 			if (renderers != null && idx < renderers.Length)
-            {
-                return renderers[idx];
-            }
+			{
+				return renderers[idx];
+			}
 
-            return null;
+			return null;
 		}
 
 		public int GetRendererIndex(SkinnedMeshRenderer renderer)
 		{
-			for(int i = 0; i < renderers.Length; i++)
+			for (int i = 0; i < renderers.Length; i++)
 			{
 				if (renderer == renderers[i])
-                {
-                    return i;
-                }
-            }
+				{
+					return i;
+				}
+			}
 
 			return -1;
 		}
@@ -107,9 +107,9 @@ namespace UMA
 		public UMARendererAsset GetRendererAsset(int idx)
 		{
 			if (idx >= rendererAssets.Length)
-            {
+			{
 				return null;
-            }
+			}
 			return rendererAssets[idx];
 		}
 
@@ -133,35 +133,35 @@ namespace UMA
 			rendererAssets = assets;
 		}
 
-		public bool AreRenderersEqual( List<UMARendererAsset> rendererList )
+		public bool AreRenderersEqual(List<UMARendererAsset> rendererList)
 		{
 			if (renderers.Length != rendererList.Count)
-            {
-                return false;
-            }
-
-            if (rendererAssets == null)
-            {
+			{
 				return false;
-            }
-			for(int i = 0; i < rendererAssets.Length; i++)
+			}
+
+			if (rendererAssets == null)
+			{
+				return false;
+			}
+			for (int i = 0; i < rendererAssets.Length; i++)
 			{
 				if (rendererAssets[i] != rendererList[i])
-                {
-                    return false;
-                }
-            }
+				{
+					return false;
+				}
+			}
 			return true;
 		}
 
 		public void ResetRendererSettings(int idx)
 		{
 			if (idx < 0 || idx >= renderers.Length)
-            {
-                return;
-            }
+			{
+				return;
+			}
 
-            UMARendererAsset.ResetRenderer(renderers[idx]);
+			UMARendererAsset.ResetRenderer(renderers[idx]);
 		}
 
 		[NonSerialized]
@@ -198,39 +198,39 @@ namespace UMA
 		public UmaTPose OverrideTpose = null;
 
 		// key: OverlayName, Channel
-        public Dictionary<string, Dictionary<int, Texture>> TextureOverrides = new Dictionary<string, Dictionary<int, Texture>>();
+		public Dictionary<string, Dictionary<int, Texture>> TextureOverrides = new Dictionary<string, Dictionary<int, Texture>>();
 		public Dictionary<string, Vector3[]> VertexOverrides = new Dictionary<string, Vector3[]>();
 		public Dictionary<string, Vector2[]> UVOverrides = new Dictionary<string, Vector2[]>();
 
 		public void ClearOverrides()
-        {
+		{
 			OverrideTpose = null;
 			UVOverrides = new Dictionary<string, Vector2[]>();
 			VertexOverrides = new Dictionary<string, Vector3[]>();
 
-            if (TextureOverrides != null)
-            {
-			foreach(var kp in TextureOverrides.Values)
-            {
-				foreach(var tex in kp.Values)
-                {
-					if (tex != null)
+			if (TextureOverrides != null)
+			{
+				foreach (var kp in TextureOverrides.Values)
+				{
+					foreach (var tex in kp.Values)
 					{
-						UnityEngine.Object.DestroyImmediate(tex, false);
+						if (tex != null)
+						{
+							UnityEngine.Object.DestroyImmediate(tex, false);
+						}
 					}
-                }
-            }
-            }
-            TextureOverrides = new Dictionary<string, Dictionary<int, Texture>>();
-        }
+				}
+			}
+			TextureOverrides = new Dictionary<string, Dictionary<int, Texture>>();
+		}
 
 		public void AddOverrideTPose(UmaTPose thePose)
-        {
+		{
 			OverrideTpose = thePose;
-        }
+		}
 
 		public void AddUVOverride(SlotDataAsset theSlot, Vector2[] theUV)
-        {
+		{
 			if (UVOverrides.ContainsKey(theSlot.slotName))
 			{
 				UVOverrides[theSlot.slotName] = theUV;
@@ -241,86 +241,86 @@ namespace UMA
 			}
 		}
 
-		public void AddVertexOverride(SlotDataAsset theSlot,Vector3[] theVerts)
-        {
+		public void AddVertexOverride(SlotDataAsset theSlot, Vector3[] theVerts)
+		{
 			if (VertexOverrides.ContainsKey(theSlot.slotName))
-            {
+			{
 				VertexOverrides[theSlot.slotName] = theVerts;
-            }
+			}
 			else
-            {
+			{
 				VertexOverrides.Add(theSlot.slotName, theVerts);
-            }
-        }
+			}
+		}
 
 		public void RemoveVertexOverride(SlotDataAsset theSlot)
 		{
 			if (VertexOverrides.ContainsKey(theSlot.slotName))
 			{
-                VertexOverrides.Remove(theSlot.slotName);
-            }	
+				VertexOverrides.Remove(theSlot.slotName);
+			}
 		}
 
 		public void AddTextureOverride(string OverlayName, int Channel, Texture2D theTexture)
-        {
+		{
 			// string theKey = OverlayOverideKey(OverlayName, Channel);
 			if (!TextureOverrides.ContainsKey(OverlayName))
 			{
-                TextureOverrides.Add(OverlayName, new Dictionary<int, Texture>());
+				TextureOverrides.Add(OverlayName, new Dictionary<int, Texture>());
 			}
 
-            Dictionary<int, Texture> ChannelDictionary = TextureOverrides[OverlayName];
+			Dictionary<int, Texture> ChannelDictionary = TextureOverrides[OverlayName];
 			if (ChannelDictionary.ContainsKey(Channel))
-            {
-                Texture tex = ChannelDictionary[Channel];
+			{
+				Texture tex = ChannelDictionary[Channel];
 				UnityEngine.Object.DestroyImmediate(tex, false);
 				ChannelDictionary.Remove(Channel);
 			}
 			ChannelDictionary.Add(Channel, theTexture);
-        }
+		}
 
-        /// <summary>
-        /// Remove the texture override for the given overlay and channel.
-        /// If you need the texture destroyed, do it yourself. It will NOT be destroyed
-        /// automatically.
-        /// </summary>
-        /// <param name="OverlayName"></param>
-        /// <param name="Channel"></param>
-        public void RemoveTextureOverride(string OverlayName, int Channel)
-        {
-            if (TextureOverrides.ContainsKey(OverlayName))
-            {
-                Dictionary<int, Texture> ChannelDictionary = TextureOverrides[OverlayName];
-                if (ChannelDictionary != null && ChannelDictionary.ContainsKey(Channel))
-                {
-                    // DO NOT destroy the texture here!!!
-                    Texture tex = ChannelDictionary[Channel];
-                    ChannelDictionary.Remove(Channel);
-                }
-            }
-        }
+		/// <summary>
+		/// Remove the texture override for the given overlay and channel.
+		/// If you need the texture destroyed, do it yourself. It will NOT be destroyed
+		/// automatically.
+		/// </summary>
+		/// <param name="OverlayName"></param>
+		/// <param name="Channel"></param>
+		public void RemoveTextureOverride(string OverlayName, int Channel)
+		{
+			if (TextureOverrides.ContainsKey(OverlayName))
+			{
+				Dictionary<int, Texture> ChannelDictionary = TextureOverrides[OverlayName];
+				if (ChannelDictionary != null && ChannelDictionary.ContainsKey(Channel))
+				{
+					// DO NOT destroy the texture here!!!
+					Texture tex = ChannelDictionary[Channel];
+					ChannelDictionary.Remove(Channel);
+				}
+			}
+		}
 
-        public bool hasOverrides()
-        {
-            return TextureOverrides.Count > 0;
-        }
+		public bool hasOverrides()
+		{
+			return TextureOverrides.Count > 0;
+		}
 
-        public void LogOverrides()
-        {
-            foreach(var t in TextureOverrides)
-            {
-                Debug.Log(t.Key + " " + t.Value[0].name);
-            }
-        }
+		public void LogOverrides()
+		{
+			foreach (var t in TextureOverrides)
+			{
+				Debug.Log(t.Key + " " + t.Value[0].name);
+			}
+		}
 
 		public Dictionary<int, Texture> GetTextureOverrides(string OverlayName)
-        {
+		{
 			if (TextureOverrides.ContainsKey(OverlayName))
-            {
-                return TextureOverrides[OverlayName];
-            }
+			{
+				return TextureOverrides[OverlayName];
+			}
 
-            return null;
+			return null;
 		}
 
 
@@ -344,14 +344,53 @@ namespace UMA
 		/// </summary>
 		public bool isAtlasDirty;
 
-        public BlendShapeSettings blendShapeSettings = new BlendShapeSettings();
+		/// <summary>
+		/// Can the mesh be read after creation?
+		/// </summary>
+		public bool markNotReadable = true;
+		/// <summary>
+		/// Should the mesh use dynamic buffers?
+		/// </summary>
+		public bool markDynamic = false;
+
+		public BlendShapeSettings blendShapeSettings = new BlendShapeSettings();
 
 		public RuntimeAnimatorController animationController;
 
 		private Dictionary<int, int> animatedBonesTable;
 
+		public void CheckSkeletonSetup()
+		{
+			if (skeleton != null)
+			{
+				if (skeleton.isValid())
+                {
+                    return;
+                }
+            }
 
-		public void SetupSkeleton()
+			Transform globalTransform = umaRoot.transform.Find("Global");
+			if (!globalTransform)
+			{
+				GameObject newGlobal = new GameObject("Global");
+				newGlobal.transform.parent = umaRoot.transform;
+				newGlobal.transform.localPosition = Vector3.zero;
+				if (umaRecipe.raceData.FixupRotations)
+				{
+					newGlobal.transform.localRotation = Quaternion.Euler(90f, 90f, 0f);
+				}
+				else
+				{
+					newGlobal.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+				}
+				globalTransform = newGlobal.transform;
+			}
+			skeleton = new UMASkeleton(globalTransform);
+		}
+
+	
+
+        public void SetupSkeleton()
 		{
 			Transform rootTransform = gameObject.transform.Find("Root");
 			if (rootTransform)

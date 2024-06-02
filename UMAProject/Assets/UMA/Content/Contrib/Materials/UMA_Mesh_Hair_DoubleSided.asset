@@ -26,7 +26,7 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: 9cbdf960da83ce848b6fa53141ca2fe7, type: 2}
     secondPass: {fileID: 2100000, guid: 8146edb8bb821c34f956f820090a2adb, type: 2}
     alternateKeywords:
-    - _MainTex
+    - _BaseMap
     - _BumpMap
   materialType: 8
   channels:

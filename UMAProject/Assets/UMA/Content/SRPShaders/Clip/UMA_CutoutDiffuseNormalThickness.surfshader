@@ -119,7 +119,7 @@ BEGIN_CODE
      { 
         base_thick = 1.0 - base_thick;
      }
-     o.Emission = DotClamped(lightDir, o.Normal) * _SSSColor * base_thick * _SSSLevel;
+     o.Emission = max(0.0h,dot(lightDir, o.Normal)) * _SSSColor * base_thick * _SSSLevel;
 
      if (_RimLightingModulation>0) 
      { 

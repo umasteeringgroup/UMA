@@ -27,7 +27,7 @@ namespace UMA
 		private SlotData TempSlot;
 		private UMAGeneratorStub ugb;
 		private OverlayData TempOverlay;
-		private UMAGeneratorCoroutine activeGeneratorCoroutine;
+		private UMAGeneratorPro activeGenerator;
 		private OverlayData BaseOverlay = null;
 		private Dictionary<int, OverlayData> AdditionalOverlays = new Dictionary<int, OverlayData>();
 
@@ -55,7 +55,7 @@ namespace UMA
 			ugb = overlayViewer.gameObject.GetComponent<UMAGeneratorStub>();
 			TempSlot = new SlotData(overlayViewer.SlotDataAsset);
 			rawImage = overlayViewer.ImageViewer;
-			activeGeneratorCoroutine = new UMAGeneratorCoroutine();
+			activeGenerator = new UMAGeneratorPro();
 
 			SetupGenerator();
 
@@ -177,11 +177,9 @@ namespace UMA
 			TextureProcessBaseCoroutine textureProcessCoroutine;
 			textureProcessCoroutine = new TextureProcessPROCoroutine();
 			textureProcessCoroutine.Prepare(TempUMAData, TempUMAData.umaGenerator);
-			activeGeneratorCoroutine.Prepare(TempUMAData.umaGenerator, TempUMAData, textureProcessCoroutine, false, 1);
 			try
 			{
-				bool workDone = activeGeneratorCoroutine.Work();
-
+				activeGenerator.ProcessTexture(TempUMAData.umaGenerator,TempUMAData,false,1);
                 rawImage.texture = GetMainTexture(TempUMAData.generatedMaterials.materials[0].material);
                 //Debug.Log("Workdone is " + workDone);
                 rawImage.material = null;

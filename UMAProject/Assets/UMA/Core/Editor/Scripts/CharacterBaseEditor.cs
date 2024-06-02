@@ -1638,6 +1638,13 @@ namespace UMA.Editors
 
                 #endregion
 
+                EditorGUILayout.HelpBox("Expand Along Normal is used to expand the slot along the normal of the mesh. This is useful for offsetting to address zfighting issues. In micrometers", MessageType.Info);
+                
+                _slotData.expandAlongNormal = EditorGUILayout.DelayedIntField("Expand Along Normal", _slotData.expandAlongNormal);
+                if (GUI.changed)
+                {
+                    changed = true;
+                }
                 if (sharedOverlays)
                 {
                     List<OverlayData> ovr = GetOverlays();

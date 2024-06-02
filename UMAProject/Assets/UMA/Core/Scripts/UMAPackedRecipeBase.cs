@@ -211,6 +211,8 @@ namespace UMA
             public string swapTag;
 			public int uvOverride;
 			public bool isDisabled;
+		    public int expandAlongNormal; // Fixed point expansion along normals. divided by 10,000,000
+	
 		}
 
         [System.Serializable]
@@ -598,6 +600,7 @@ namespace UMA
                     tempPackedSlotData.isSwapSlot = umaRecipe.slotDataList[i].isSwapSlot;
 					tempPackedSlotData.uvOverride = umaRecipe.slotDataList[i].UVSet;
 					tempPackedSlotData.isDisabled = umaRecipe.slotDataList[i].isDisabled;
+                    tempPackedSlotData.expandAlongNormal = umaRecipe.slotDataList[i].expandAlongNormal;
 
 					bool copiedOverlays = false;
 					for (int i2 = 0; i2 < i; i2++)
@@ -978,6 +981,8 @@ namespace UMA
                     tempSlotData.swapTag = packedSlot.swapTag;
 					tempSlotData.UVSet = packedSlot.uvOverride;
 					tempSlotData.isDisabled = packedSlot.isDisabled;
+                    tempSlotData.expandAlongNormal = packedSlot.expandAlongNormal;
+
 
                     umaRecipe.slotDataList[i] = tempSlotData;
 

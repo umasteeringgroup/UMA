@@ -62,6 +62,12 @@ namespace UMA
 
         public void SetupSRP(bool forceSetup = false)
         {
+#if UNITY_EDITOR
+            if (Application.isPlaying == false)
+            {
+                srpSetup = false;
+            }
+#endif
             if (forceSetup || srpSetup == false)
             {
                 srpSetup = true;

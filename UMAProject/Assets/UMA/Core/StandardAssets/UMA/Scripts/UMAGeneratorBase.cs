@@ -209,11 +209,15 @@ namespace UMA
                     return;
                 }
 
-                if (animator == false)
+                if (animator == null)
                 {
                     return;
                 }
 
+				if (animator.isActiveAndEnabled == false) {
+					return;
+				}
+					
                 if (animator.layerCount == stateHashes.Length)
 				{
 					for (int i = 0; i < animator.layerCount; i++)

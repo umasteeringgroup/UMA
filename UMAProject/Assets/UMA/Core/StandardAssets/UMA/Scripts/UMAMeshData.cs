@@ -519,9 +519,9 @@ namespace UMA
 		/// Initialize UMA mesh data from Unity mesh.
 		/// </summary>
 		/// <param name="renderer">Source renderer.</param>
-		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer)
+		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer, bool udimAdjustment = false)
 		{
-			RetrieveDataFromUnityMesh(renderer.sharedMesh);
+			RetrieveDataFromUnityMesh(renderer.sharedMesh, udimAdjustment);
 
 			UpdateBones(renderer.rootBone, renderer.bones);
 		}
@@ -530,7 +530,7 @@ namespace UMA
 		/// Initialize UMA mesh data from Unity mesh.
 		/// </summary>
 		/// <param name="sharedMesh">Source mesh.</param>
-		public void RetrieveDataFromUnityMesh(Mesh sharedMesh)
+		public void RetrieveDataFromUnityMesh(Mesh sharedMesh, bool udimAdjustment = false)
 		{
 			bindPoses = sharedMesh.bindposes;
 #if USE_NATIVE_ARRAYS
@@ -565,6 +565,13 @@ namespace UMA
 			{
 				submeshes[i].SetTriangles(sharedMesh.GetTriangles(i));
 			}
+			if (udimAdjustment)
+			{
+                UMAUtils.UDIMAdjustUV(uv, sharedMesh.uv);
+                UMAUtils.UDIMAdjustUV(uv2, sharedMesh.uv2);
+                UMAUtils.UDIMAdjustUV(uv3, sharedMesh.uv3);
+                UMAUtils.UDIMAdjustUV(uv4, sharedMesh.uv4);
+            }
             //SubMeshDescriptor subMeshDescriptor = new SubMeshDescriptor(0, submeshes[i].GetTriangles().Length, MeshTopology.Triangles);
             //mesh.SetSubMesh(i, subMeshDescriptor);
             //Create the blendshape data on the slot asset from the unity mesh

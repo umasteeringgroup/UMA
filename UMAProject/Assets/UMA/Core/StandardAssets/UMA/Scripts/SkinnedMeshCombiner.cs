@@ -232,7 +232,15 @@ namespace UMA
                 // source.meshData.sl
                 int sourceVertexCount = source.meshData.vertices.Length;
 				BuildBoneWeights(source.meshData, nativeBoneWeights, nativeBonesPerVertex, vertexIndex, boneWeightIndex, sourceVertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
+
+                if (source.slotData.expandAlongNormal > 0)
+                {
+                    ArrayCopyandExpand(source.meshData, source.slotData.expandAlongNormal, ref vertices, vertexIndex, sourceVertexCount);
+                }
+                else
+                {
 				Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, sourceVertexCount);
+                }
 
 				if (has_normals)
 				{
@@ -602,6 +610,19 @@ namespace UMA
 			}
 			target.boneNameHashes = bonesList.ToArray();
 		}
+
+#if UMA_BURSTCOMPILE
+        [BurstCompile]
+#endif
+        private static void ArrayCopyandExpand(UMAMeshData meshData, int expandAlongNormal, ref Vector3[] vertices, int vertexIndex, int sourceVertexCount)
+        {
+            float expandAlongNormalF = ((float)expandAlongNormal)/1000000f;
+            for (int i = vertexIndex; i < vertexIndex + sourceVertexCount; i++)
+            {
+                Vector3 v = meshData.vertices[i - vertexIndex];
+                vertices[i] = v + (meshData.normals[i - vertexIndex] * expandAlongNormalF);
+            }
+        }
 
 		public static UMAMeshData ShallowInstanceMesh(UMAMeshData source, BitArray[] triangleMask = null)
 		{

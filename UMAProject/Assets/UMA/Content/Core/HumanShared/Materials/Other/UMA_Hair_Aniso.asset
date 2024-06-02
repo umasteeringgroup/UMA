@@ -32,7 +32,7 @@ MonoBehaviour:
   channels:
   - channelType: 0
     textureFormat: 0
-    materialPropertyName: _BaseMap
+    materialPropertyName: _MainTex
     sourceTextureName: 
     Compression: 0
     DownSample: 0

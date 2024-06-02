@@ -1,19 +1,16 @@
 BEGIN_OPTIONS
-   ShaderName "UMA/Compositing/Albedo_PackedMap_ColorMask"
+   ShaderName "UMA/Compositing/Albedo_NormalMask_ColorMask_Cutout"
    Stackable "False"
    DisableGBufferPass "True" // disable gbuffer pass
    Workflow "Metallic"
+   Tags { "RenderType" = "Opaque" "Queue" = "Geometry+100" }
 END_OPTIONS
 
-    //Just so I'm completely clear, it looks to me that your main materials has two textures - an Albedo (with Alpha), and a Packed Map. 
-    // The PackedMap has Smoothness/NormalY/Occlusion/NormalX.  Metallic is not mapped, but instead taken from a range (0-1).  
-    // Smoothness/normals need to be scalable.   The emission material has an additional emission texture, and it needs to be scalable also.
-
-    // Packed Format
-    // R = Smooth
+    // MaskedNormal format
+    // R = Normal X
     // G = Normal Y
-    // B = Occlusion
-    // A = Normal X
+    // B = Metallic
+    // A = Smooth
 
     // ColorMask format
     // R = Amount to colorize using the _RedColor value
@@ -29,6 +26,7 @@ BEGIN_PROPERTIES
 	_MetallicModulation ("Metallic Level", Range(0,2)) = 1
 	_SmoothnessModulation ("Smoothness Level", Range(0,2)) = 1
     _EmissiveModulation ("Emissive Level", Range(0,2)) = 1
+    _Cutoff("Alpha Cutoff", Range(0,1)) = 0.5
 
     [Enum(Off,0,Front,1,Back,2)]_CullMode("Culling Mode", Float) = 2
     [Enum(Flip, 0, Mirror, 1, None, 2)] _DoubleSidedNormalMode("Double sided normal mode", Float) = 1
@@ -136,6 +134,7 @@ BEGIN_CBUFFER
 	half  _SmoothnessModulation;
 	half  _MetallicModulation;
     half  _EmissiveModulation;
+    half  _Cutoff;
 
     float _DoubleSidedNormalMode;
 
@@ -220,12 +219,14 @@ BEGIN_CODE
    TEXTURE2D(_Albedo);
    SAMPLER(sampler_Albedo);
    TEXTURE2D(_NormalMask);
+   SAMPLER(sampler_NormalMask);
    TEXTURE2D(_ColorMask);
 
 
    TEXTURE2D(_Albedo1);
    TEXTURE2D(_NormalMask1);
    TEXTURE2D(_AlphaMask1);
+   SAMPLER(sampler_AlphaMask1);
    TEXTURE2D(_ColorMask1);
 
    TEXTURE2D(_Albedo2);
@@ -288,14 +289,20 @@ BEGIN_CODE
 
       base_c = base_c * ColorizeRGB(base_c, mask, _RedColor0, _GreenColor0, _BlueColor0);
 
-	  half4 basepackednormal = (SAMPLE_TEXTURE2D(_NormalMask, sampler_Albedo,nuv) * _Tint0_1) + _Add0_1;
+	  half4 basepackednormal = (SAMPLE_TEXTURE2D(_NormalMask, sampler_NormalMask,nuv) * _Tint0_1) + _Add0_1;
 	  half3 base_n = UMAUnpackScaleNormal(basepackednormal,_NormalStrength0);
 
 	  half base_smooth = basepackednormal.a;
 	  half base_Metallic = basepackednormal.b;
       half base_Emissive = mask.a;
 
-      o.Alpha = base_c.a; 
+      o.Alpha = base_c.a;
+
+      // if we're not opaque enough, discard the pixel
+      if (o.Alpha<_Cutoff) 
+      { 
+          discard;
+      }
 
       // There are IF/ELSE comments in here
       // that I want to stay to remind me that I
@@ -305,7 +312,7 @@ BEGIN_CODE
           float2 auv = d.texcoord0.xy * _Tile1_0;
 
           // IF HASALPHAMASK
-          half alpha = SAMPLE_TEXTURE2D(_AlphaMask1, sampler_Albedo, auv).a;
+          half alpha = SAMPLE_TEXTURE2D(_AlphaMask1, sampler_AlphaMask1, auv).a;
           half oneminus = 1.0f - alpha;
           // ELSE
           // alpha = 1.0f
@@ -322,7 +329,7 @@ BEGIN_CODE
 
           // IF HASNORMAL
           float2 nuv = d.texcoord0.xy * _Tile1_1;
-	      half4 addpackednormal = (SAMPLE_TEXTURE2D(_NormalMask1, sampler_Albedo,nuv) * _Tint1_1) + _Add1_1;
+	      half4 addpackednormal = (SAMPLE_TEXTURE2D(_NormalMask1, sampler_NormalMask,nuv) * _Tint1_1) + _Add1_1;
 	      half3 add_n = UMAUnpackScaleNormal(addpackednormal,_NormalStrength1);
 		  base_n = (add_n * alpha) + (base_n * oneminus);
 		  base_smooth = (addpackednormal.a * alpha) + (base_smooth * oneminus);
@@ -337,7 +344,7 @@ BEGIN_CODE
           float2 auv = d.texcoord0.xy * _Tile2_0;
 
           // IF HASALPHAMASK
-          half alpha = SAMPLE_TEXTURE2D(_AlphaMask2, sampler_Albedo, auv).a;
+          half alpha = SAMPLE_TEXTURE2D(_AlphaMask2, sampler_AlphaMask1, auv).a;
           half oneminus = 1.0f - alpha;
           // ELSE
           // alpha = 1.0f
@@ -356,7 +363,7 @@ BEGIN_CODE
 
           // IF HASNORMAL
           float2 nuv = d.texcoord0.xy * _Tile2_1;
-	      half4 addpackednormal = (SAMPLE_TEXTURE2D(_NormalMask2, sampler_Albedo,nuv) * _Tint2_1) + _Add2_1;
+	      half4 addpackednormal = (SAMPLE_TEXTURE2D(_NormalMask2, sampler_NormalMask,nuv) * _Tint2_1) + _Add2_1;
 	      half3 add_n = UMAUnpackScaleNormal(addpackednormal,_NormalStrength2);
 		  base_n = (add_n * alpha) + (base_n * oneminus);
 		  base_smooth = (addpackednormal.a * alpha) + (base_smooth * oneminus);
@@ -370,7 +377,7 @@ BEGIN_CODE
           float2 auv = d.texcoord0.xy * _Tile3_0;
 
           // IF HASALPHAMASK
-          half alpha = SAMPLE_TEXTURE2D(_AlphaMask3, sampler_Albedo, auv).a;
+          half alpha = SAMPLE_TEXTURE2D(_AlphaMask3, sampler_AlphaMask1, auv).a;
           half oneminus = 1.0f - alpha;
           // ELSE
           // alpha = 1.0f
@@ -389,7 +396,7 @@ BEGIN_CODE
 
           // IF HASNORMAL
           float2 nuv = d.texcoord0.xy * _Tile3_1;
-	      half4 addpackednormal = (SAMPLE_TEXTURE2D(_NormalMask1, sampler_Albedo,nuv) * _Tint3_1) + _Add3_1;
+	      half4 addpackednormal = (SAMPLE_TEXTURE2D(_NormalMask1, sampler_NormalMask,nuv) * _Tint3_1) + _Add3_1;
 	      half3 add_n = UMAUnpackScaleNormal(addpackednormal,_NormalStrength2);
 
 		  base_n = (add_n * alpha) + (base_n * oneminus);

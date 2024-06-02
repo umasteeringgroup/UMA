@@ -94,6 +94,7 @@ BEGIN_CODE
    TEXTURE2D(_BaseMap);
    SAMPLER(sampler_BaseMap);
    TEXTURE2D(_BumpMap);
+   SAMPLER(sampler_BumpMap);
    TEXTURE2D(_MetallicGlossMap);
 
 	void SurfaceFunction(inout Surface o, ShaderData d)
@@ -106,7 +107,7 @@ BEGIN_CODE
 	  half4 base_c = (SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, auv) * _Tint0_0)+_Add0_0;
       half4 mask = SAMPLE_TEXTURE2D(_MetallicGlossMap,sampler_BaseMap,cuv);
 
-	  half4 basepackednormal = (SAMPLE_TEXTURE2D(_BumpMap, sampler_BaseMap,nuv) * _Tint0_1) + _Add0_1;
+	  half4 basepackednormal = (SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap,nuv) * _Tint0_1) + _Add0_1;
 	  half3 base_n = UnpackScaleNormal(basepackednormal,_NormalStrength0);
 
 	  half base_smooth = mask.a;

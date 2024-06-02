@@ -13,6 +13,10 @@ namespace UMA
     {
         public Vector2 uVLocation;
         public Vector2 uvUp;
+		// Debugging
+		public Vector2 uvInAtlas;
+		public Rect uvArea;
+
         public string slotName;
         public Quaternion rotation;
         public Vector3 normalAdjust;
@@ -117,8 +121,12 @@ namespace UMA
                 var smd = mesh.GetSubMesh(subMeshNumber);
                 int maxVert = slotData.asset.meshData.vertexCount + slotData.vertexOffset;
 
-                using (var dataArray = Mesh.AcquireReadOnlyMeshData(mesh))
-                {
+				using(var dataArray = Mesh.AcquireReadOnlyMeshData(mesh)) {
+
+					// slotData.ConvertToAtlasUV(uVLocation);\
+					this.uvInAtlas = UVInAtlas;
+					this.uvArea = slotData.UVArea;
+
                     Mesh.MeshData dat = dataArray[0];
                     var allUVS = new NativeArray<Vector2>(mesh.vertexCount, Allocator.Temp);
                     var allNormals = new NativeArray<Vector3>(mesh.vertexCount, Allocator.Temp);
@@ -264,9 +272,10 @@ namespace UMA
             {
                 float thisDist = Mathf.Abs((allUVS[i] - UV).magnitude);
                 float upDist = Mathf.Abs((allUVS[i]-UvUp).magnitude);
-                if (thisDist < shortestDistance)
-                {
                     Vector3 restPos = slotData.asset.meshData.vertices[i - slotData.vertexOffset];
+
+				if(thisDist < shortestDistance) 
+				{
                     verts.InitialPosition = new Vector3(restPos.x, restPos.z, restPos.y);
                     verts.positionVertex = i;
                     shortestDistance = thisDist;

@@ -587,7 +587,7 @@ namespace UMA
             return "SlotData: " + slotName;
         }
 
-        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName)
+        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment=false)
         {
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;

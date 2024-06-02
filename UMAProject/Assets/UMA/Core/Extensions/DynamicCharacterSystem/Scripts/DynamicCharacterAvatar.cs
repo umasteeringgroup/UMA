@@ -108,6 +108,10 @@ namespace UMA.CharacterSystem
         [NonSerialized]
         public bool lastHide;
 
+        [Tooltip("When this is true, the meshcombiner will upload the data and the mesh will no longer be readable. Set this to false if you use a 3rd party asset that needs to read the mesh data.")]
+        public bool markNotReadable = true;
+        [Tooltip("When this is true, the meshcombiner will mark the mesh as dynamic. This will slightly decrease build time and slightly increase rendering.")]
+        public bool markDynamic = true;
         [Tooltip("If true, then the meshcombiner will merge blendshapes found on slots that are part of this umaData")]
         public bool loadBlendShapes = false;
 
@@ -469,7 +473,7 @@ namespace UMA.CharacterSystem
                             DestroyImmediate(go);
                         }
                     }
-                    ud.umaRoot = null;
+                   // ud.umaRoot = null;
                 }
             }
 
@@ -485,7 +489,7 @@ namespace UMA.CharacterSystem
                     GameObject go = Cleaners[i];
                     DestroyImmediate(go);
                 }
-               ud.umaRoot = null;
+               //ud.umaRoot = null;
            }
 #endif
 
@@ -557,7 +561,7 @@ namespace UMA.CharacterSystem
             AddCharacterStateCache("NULL");
             InitializeAvatar();
 
-            SetBlendshapeSettings();
+            SetUMADataOptions();
 
             if (CharacterStart != null)
             {
@@ -610,7 +614,7 @@ namespace UMA.CharacterSystem
 #endif
         }
 
-        private void SetBlendshapeSettings()
+        private void SetUMADataOptions()
         {
             if (umaData == null)
             {
@@ -626,6 +630,8 @@ namespace UMA.CharacterSystem
             umaData.blendShapeSettings.loadNormals = loadBlendshapeNormals;
             umaData.blendShapeSettings.loadAllFrames = loadAllFrames;
             umaData.blendShapeSettings.filteredBlendshapes = blendShapes;
+            umaData.markNotReadable = markNotReadable;
+            umaData.markDynamic = markDynamic;
         }
 
         List<GameObject> GetRenderers(GameObject parent)
@@ -3920,7 +3926,7 @@ namespace UMA.CharacterSystem
                     CurrentDNA = umaData.umaRecipe.GetDefinedDna();
                 }
                 umaData.userInformation = userInformation;
-                SetBlendshapeSettings();
+                SetUMADataOptions();
             }
             if (DNAIsValid(CurrentDNA) == false)
             {
@@ -3941,6 +3947,10 @@ namespace UMA.CharacterSystem
             {
                 foreach (UMATextRecipe utr in WardrobeRecipes.Values)
                 {
+					if (utr.disabled) { 
+						continue; 
+					}
+
                     if (utr.OverrideDNA != null && utr.OverrideDNA.Count > 0)
                     {
                         overrideDNA.AddRange(utr.OverrideDNA);
@@ -3975,7 +3985,10 @@ namespace UMA.CharacterSystem
                 for (int i = 0; i < allRecipes.Count; i++)
                 {
                     UMATextRecipe utr = allRecipes[i];
-                    // don't gather hides from suppresed slots...
+					if(utr.disabled) {
+						continue;
+					}
+					// don't gather hides from suppresed slots...
                     if (SuppressSlotsStrings.Contains(utr.wardrobeSlot))
                     {
                         continue;
@@ -4024,6 +4037,7 @@ namespace UMA.CharacterSystem
                     if (WardrobeRecipes.ContainsKey(ws))
                     {
                         UMATextRecipe utr = WardrobeRecipes[ws];
+                        if (utr.disabled) { continue; }
                         //we can use the race data here to filter wardrobe slots
                         //if checking a backwards compatible race we also need to check the race has a compatible wardrobe slot, 
                         //since while a race can be backwards compatible it does not *have* to have all the same wardrobeslots as the race it is compatible with
@@ -4052,7 +4066,9 @@ namespace UMA.CharacterSystem
                             }
                             else
                             {
+								if(!utr.disabled) {
                                 Recipes.Add(utr);
+                            }
                             }
                             if (utr.Hides.Count > 0)
                             {
@@ -4089,6 +4105,7 @@ namespace UMA.CharacterSystem
                     UMATextRecipe utr = (UMATextRecipe)umaAdditionalRecipes[i];
                     if (utr)
                     {
+                        if (utr.disabled) { continue; }
                         if (utr.Hides.Count > 0)
                         {
                             for (int i1 = 0; i1 < utr.Hides.Count; i1++)
@@ -4355,7 +4372,7 @@ namespace UMA.CharacterSystem
             {
                 InitializeAvatar();
             }
-            SetBlendshapeSettings();
+            SetUMADataOptions();
             umaData.defaultRendererAsset = defaultRendererAsset;
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
             umaData.atlasResolutionScale = this.AtlasResolutionScale;
@@ -4858,9 +4875,12 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-            foreach (Transform child in gameObject.transform)
+            if (!activeRace.isValid)
             {
-                UMAUtils.DestroySceneObject(child.gameObject);
+                foreach (Transform child in gameObject.transform)
+                {
+                    UMAUtils.DestroySceneObject(child.gameObject);
+                }
             }
             ClearSlots();
             umaRecipe = null;
@@ -5248,8 +5268,9 @@ namespace UMA.CharacterSystem
                     SlotData wc = WildCards[i];
                     for (int i1 = 0; i1 < NewSlots.Count; i1++)
                     {
-                        SlotData sd = NewSlots[i1];
-                        if (sd.tags != null && sd.tags.Length > 0)
+						// Only stick an overlay on it if it has tags and a mesh
+						SlotData sd = NewSlots[i1];
+						if(sd.tags != null && sd.tags.Length > 0 && sd.asset.meshData != null && sd.asset.meshData.subMeshCount > 0)
                         {
                             if (sd.HasTag(wc.tags))
                             {

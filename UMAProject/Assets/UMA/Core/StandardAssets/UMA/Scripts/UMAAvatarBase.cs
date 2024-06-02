@@ -208,8 +208,8 @@ namespace UMA
 				umaData.CleanAvatar();
 				if (DestroyRoot)
 				{
-				UMAUtils.DestroySceneObject(umaData.umaRoot);
-				umaData.umaRoot = null;
+					UMAUtils.DestroySceneObject(umaData.umaRoot);
+					umaData.umaRoot = null;
 					umaData.skeleton = null;
 				}
 				umaData.SetRenderers(null);

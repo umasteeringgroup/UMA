@@ -62,8 +62,13 @@ BEGIN_CODE
    TEXTURE2D(_BaseMap);
    SAMPLER(sampler_BaseMap);
    TEXTURE2D(_BumpMap);
+   SAMPLER(sampler_BumpMap);
    TEXTURE2D(_ThicknessMap);
 
+    inline half UMADotClamped (half3 a, half3 b)
+    {
+        return max(0.0h, dot(a, b));
+    }
 
 	void SurfaceFunction(inout Surface o, ShaderData d)
 	{
@@ -73,7 +78,7 @@ BEGIN_CODE
 
 	  half4 mask = SAMPLE_TEXTURE2D(_ThicknessMap,sampler_BaseMap,cuv);
 	  half4 base_c = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, auv);
-	  half4 basepackednormal = SAMPLE_TEXTURE2D(_BumpMap, sampler_BaseMap,nuv);
+	  half4 basepackednormal = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap,nuv);
 	  half3 base_n = UnpackScaleNormal(basepackednormal,_NormalStrength);
 
 	  half base_smooth = mask.a;
@@ -110,7 +115,9 @@ BEGIN_CODE
      }
      float fakeLum = dot(o.Albedo, float3(0.299, 0.587, 0.114));
      o.Albedo += (base_thick * _SSSColor * _SSSLevel * fakeLum);
-     o.Emission = DotClamped(lightDir, o.Normal) * _SSSColor * base_thick * _SSSGlow;
+
+     
+     o.Emission = max(0.0h, dot(lightDir, o.Normal)) * _SSSColor * base_thick * _SSSGlow;
 
      if (_RimLightingModulation>0) 
      { 

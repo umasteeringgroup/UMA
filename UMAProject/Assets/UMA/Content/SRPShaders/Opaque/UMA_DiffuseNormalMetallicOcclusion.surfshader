@@ -55,6 +55,7 @@ BEGIN_CODE
    TEXTURE2D(_BaseMap);
    SAMPLER(sampler_BaseMap);
    TEXTURE2D(_BumpMap);
+   SAMPLER(sampler_BumpMap);
    TEXTURE2D(_MetallicGlossMap);
    TEXTURE2D(_OcclusionMap);
 
@@ -67,7 +68,7 @@ BEGIN_CODE
 
 	  half4 mask = SAMPLE_TEXTURE2D(_MetallicGlossMap,sampler_BaseMap,cuv);
 	  half4 base_c = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, auv);
-	  half4 basepackednormal = SAMPLE_TEXTURE2D(_BumpMap, sampler_BaseMap,nuv);
+	  half4 basepackednormal = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap,nuv);
 	  half3 base_n = UnpackScaleNormal(basepackednormal,_NormalStrength);
       half4 base_occlusion = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_BaseMap, auv);
 

@@ -16,7 +16,6 @@ namespace UMA
 
 		private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
-		private UMAGeneratorCoroutine activeGeneratorCoroutine;
 		public UMAMeshCombiner meshCombiner;
 		private HashSet<string> raceNames;
 
@@ -54,9 +53,6 @@ namespace UMA
 		public bool collectGarbage = true;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
-		[Tooltip("Generates a single UMA immediately with no coroutines. This is the fastest possible path.")]
-		public bool NoCoroutines=true;
-
 		[Tooltip("Automatically set blendshapes based on race")]
 		public bool autoSetRaceBlendshapes = false;
 
@@ -74,12 +70,10 @@ namespace UMA
 
         public virtual void OnEnable()
 		{
-			activeGeneratorCoroutine = null;
 		}
 
 		public virtual void Awake()
 		{
-			activeGeneratorCoroutine = null;
 
 			if (atlasResolution == 0)
             {
@@ -205,9 +199,6 @@ namespace UMA
 		public void RebuildAllRenderTextures()
 		{
 			var activeUmaData = umaData;
-			var storedGeneratorCoroutine = activeGeneratorCoroutine;
-
-
 			var iteratorNode = cleanUmas.First;
 			while (iteratorNode != null)
 			{
@@ -216,7 +207,6 @@ namespace UMA
 			}
 
 			umaData = activeUmaData;
-			activeGeneratorCoroutine = storedGeneratorCoroutine;
 		}
 
 		private void RebuildRenderTexture(UMAData data)
@@ -224,30 +214,8 @@ namespace UMA
 			var rt = data.GetFirstRenderTexture();
 			if (rt != null && !rt.IsCreated())
 			{
-				if (NoCoroutines)
-				{
-					UMAGeneratorPro ugp = new UMAGeneratorPro();
-					ugp.ProcessTexture(this, umaData, true, InitialScaleFactor);
-					TextureChanged++;
-                }
-                else
-				{
-					umaData = data;
-					TextureProcessBaseCoroutine textureProcessCoroutine;
-					textureProcessCoroutine = new TextureProcessPROCoroutine();
-					textureProcessCoroutine.Prepare(data, this);
-
-					activeGeneratorCoroutine = new UMAGeneratorCoroutine();
-					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, true, InitialScaleFactor);
-
-					while (!activeGeneratorCoroutine.Work())
-                    {
-                        ;
-                    }
-
-                    activeGeneratorCoroutine = null; 
-				}
-
+				UMAGeneratorPro ugp = new UMAGeneratorPro();
+				ugp.ProcessTexture(this, umaData, true, InitialScaleFactor);
 				TextureChanged++;
 			}
 		}
@@ -524,8 +492,9 @@ namespace UMA
         }
 
 
-		public virtual bool HandleDirtyUpdate(UMAData data)
+		public virtual bool OldHandleDirtyUpdate(UMAData data)
 		{
+            /*
 			UMAContextBase.IgnoreTag = ignoreTag;
 			if (data == null)
             {
@@ -618,7 +587,8 @@ namespace UMA
 			}
 
 			UMAReady();
-			return true;
+			*/
+            return true;
 		}
 
 		public virtual void OnDirtyUpdate()
@@ -626,49 +596,34 @@ namespace UMA
 			try
 			{
 				if (umaDirtyList.Count < 1)
-                {
-                    return;
-                }
-
-                if (NoCoroutines)
-                {
-					UMAData umaData = umaDirtyList[0];
-					try
-					{
-						GenerateSingleUMA(umaDirtyList[0], true);
-					}
-					catch (Exception ex)
-                    {
-						if (Debug.isDebugBuild)
-                        {
-							Debug.LogException(ex);
-                        }
-                    }
-					umaDirtyList.RemoveAt(0);
-					umaData.MoveToList(cleanUmas);
-					umaData = null;
+				{
 					return;
-                }
-				if (HandleDirtyUpdate(umaDirtyList[0]))
-				{
-					umaDirtyList.RemoveAt(0);
-					umaData.MoveToList(cleanUmas);
-					umaData = null;
 				}
-				else if (fastGeneration && HandleDirtyUpdate(umaDirtyList[0]))
+
+				UMAData umaData = umaDirtyList[0];
+				try
 				{
-					umaDirtyList.RemoveAt(0);
-					umaData.MoveToList(cleanUmas);
-					umaData = null;
+					GenerateSingleUMA(umaDirtyList[0], true);
 				}
+				catch (Exception ex)
+				{
+					if (Debug.isDebugBuild)
+					{
+						Debug.LogException(ex);
+					}
+				}
+				umaDirtyList.RemoveAt(0);
+				umaData.MoveToList(cleanUmas);
+				umaData = null;
+				return;
 			}
 			catch (Exception ex)
 			{
 				if (Debug.isDebugBuild)
-                {
-                    UnityEngine.Debug.LogException(ex);
-                }
-            }
+				{
+					UnityEngine.Debug.LogException(ex);
+				}
+			}
 		}
 
 		private void UpdateUMAMesh(bool updatedAtlas)

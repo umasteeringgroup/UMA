@@ -127,9 +127,13 @@ namespace UMA.Examples
 	                r.maxAngularVelocity = 4;
 	                r.maxDepenetrationVelocity = 3;
 	                r.mass = SwingMass;
+#if UNITY_6000_0_OR_NEWER
+	                r.linearDamping = SwingDrag; // Why rename these?
+	                r.angularDamping = SwingAngularDrag;
+#else	                
 	                r.drag = SwingDrag;
 	                r.angularDrag = SwingAngularDrag;
-
+#endif
 	                if (FreezePositions)
                     {
                         r.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezePositionZ;
@@ -188,8 +192,13 @@ namespace UMA.Examples
 	        r.maxAngularVelocity = 4;
 	        r.maxDepenetrationVelocity = 3;
 	        r.mass = AnchorMass;
+#if UNITY_6000_0_OR_NEWER
+	        r.linearDamping = SwingDrag;
+	        r.angularDamping = SwingAngularDrag;
+#else	        
 	        r.drag = SwingDrag;
 	        r.angularDrag = SwingAngularDrag;
+#endif	        
 	        r.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezePositionZ| RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
 
 	        SphereCollider sc = t.gameObject.AddComponent<SphereCollider>();

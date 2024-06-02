@@ -43,6 +43,9 @@ namespace UMA
 		[SerializeField]
 		public UMAPredefinedDNA OverrideDNA = new UMAPredefinedDNA();
 
+		[SerializeField]
+		public bool disabled = false;
+
 
 #if UNITY_EDITOR
 		/// <summary>
