@@ -226,61 +226,10 @@ namespace UMA
             {
                 return;
             }
-
-            GameObject holder = null;
-
-			foreach(Transform t in umaData.gameObject.transform)
-            {
-				if (t.name == "Holder")
-                {
-					holder = t.gameObject;
-                }
-            }
-
-			if (holder == null)
-            {
-				holder = new GameObject("Holder");
-				holder.tag = UMAContextBase.IgnoreTag;
-				holder.SetActive(false);
-				holder.transform.parent = umaData.gameObject.transform;
-			}
-			// walk through all the bones.
-			// if the tag has UMAContextBase.IgnoreTag, then 
-			// copy the transform
-			// copy the hash of the bone it came from  
-			// save the object by changing the parent.
-			// the parent object should be disabled so the children don't render.
-			// continue.
-			SaveBonesRecursively(umaData.umaRoot.transform, holder.transform);
-		}
-
-		public void SaveBonesRecursively(Transform bone, Transform holder)
-        {
-            List<Transform> childlist = new List<Transform>();
-
-			if (bone.CompareTag(UMAContextBase.IgnoreTag))
-			{
-				if (bone.parent != null)
-                {
-					umaData.AddSavedItem(bone);
-					bone.SetParent(holder, false);
-                }
-			}
-			else
-			{
-                foreach(Transform child in bone)
-                {
-                    childlist.Add(child);
-                }
-
-
-                for (int i = 0; i < childlist.Count; i++)
-				{
-                    Transform child = childlist[i];
-                    SaveBonesRecursively(child,holder);
-				}
-			}
+			umaData.SaveMountedItems();
         }
+
+
 
 
 		public bool GenerateSingleUMA(UMAData data, bool fireEvents)
@@ -305,7 +254,6 @@ namespace UMA
                 {
                     SaveMountedItems(umaData);
                 }
-
                 DestroyImmediate(umaData.umaRoot, false);
 				umaData.umaRoot = null;
 				umaData.RebuildSkeleton = false;

@@ -721,6 +721,10 @@ namespace UMA.CharacterSystem
                     GameObject go = PrefabUtility.GetOutermostPrefabInstanceRoot(this.gameObject);
                     UnityEditor.PrefabUtility.UnpackPrefabInstance(go, UnityEditor.PrefabUnpackMode.OutermostRoot, UnityEditor.InteractionMode.AutomatedAction);
                 }
+                if (umaData != null)
+                {
+                    umaData.SaveMountedItems();
+                }
                 CleanupGeneratedData();
                 activeRace.SetRaceData();
                 if (activeRace.racedata != null)
@@ -749,6 +753,7 @@ namespace UMA.CharacterSystem
                     ugb.InitialScaleFactor = oldScaleFactor;
                     ugb.atlasResolution = oldAtlasResolution;
                     ugb.Clear();
+                    umaData.RestoreSavedItems();
                 }
             }
         }
@@ -762,8 +767,8 @@ namespace UMA.CharacterSystem
                 var go = Cleaners[i];
                 DestroyImmediate(go);
             }
-            DestroyImmediate(umaData);
-            umaData = null;
+            //DestroyImmediate(umaData);
+            //umaData = null;
             ClearSlots();
         }
 #endif

@@ -1034,7 +1034,11 @@ namespace UMA.CharacterSystem.Editors
 
                     DynamicCharacterAvatar dca = target as DynamicCharacterAvatar;
 
-                    CleanupGeneratedData(rebuild);
+                    if (dca.umaData != null)
+                    {
+                        dca.umaData.SaveMountedItems();
+                    }
+                    CleanupGeneratedData(rebuild,false);
 
                     dca.activeRace.SetRaceData();
                     if (dca.activeRace.racedata == null)
@@ -1074,10 +1078,11 @@ namespace UMA.CharacterSystem.Editors
                         UMAMountedItem mi = mountedItems[i];
                         mi.ResetMountPoint();
                     }
+                    dca.umaData.RestoreSavedItems();
                 }
             }
 
-            void CleanupGeneratedData(bool clear)
+            void CleanupGeneratedData(bool clear, bool killUMAData=true)
             {
                 if (Application.isPlaying)
                 {
@@ -1091,8 +1096,11 @@ namespace UMA.CharacterSystem.Editors
                     GameObject go = Cleaners[i];
                     DestroyImmediate(go);
                 }
-                DestroyImmediate(thisDCA.umaData);
-                thisDCA.umaData = null;
+                if (killUMAData)
+                {
+                    DestroyImmediate(thisDCA.umaData);
+                    thisDCA.umaData = null;
+                }
                 thisDCA.ClearSlots();
             }
 

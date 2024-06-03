@@ -23,14 +23,16 @@ namespace UMA
 
 	public class UMASavedItem
     {
-		public int ParentBoneNameHash;
+		public string ParentBoneName;
+        public int ParentBoneNameHash;
 		public Transform Object;
 		public Quaternion rotation;
 		public Vector3 position;
 		public Vector3 scale;
-		public UMASavedItem(int hash, Transform obj)
+		public UMASavedItem(string boneName, int hash, Transform obj)
         {
-			ParentBoneNameHash = hash;
+			ParentBoneName = boneName;
+            ParentBoneNameHash = hash;
 			Object = obj;
 			rotation = obj.localRotation;
 			position = obj.localPosition;
@@ -50,6 +52,7 @@ namespace UMA
 	/// </summary>
 	public class UMAData : MonoBehaviour
 	{
+		const string HolderObjectName = "UMA_MI_Holder";
 		//TODO improve/cleanup the relationship between renderers and rendererAssets
 		[SerializeField]
 		private SkinnedMeshRenderer[] renderers;
@@ -58,12 +61,82 @@ namespace UMA
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
 		public List<SlotTracker> slotTrackers = new List<SlotTracker>();
-		private List<UMASavedItem> savedItems = new List<UMASavedItem>();
+		public List<UMASavedItem> savedItems = new List<UMASavedItem>();
 		public string userInformation = "";
 
-		public void AddSavedItem(Transform transform)
+
+        public void SaveMountedItems()
+        {
+            GameObject holder = null;
+
+            foreach (Transform t in gameObject.transform)
+            {
+                if (t.name == HolderObjectName)
+                {
+                    holder = t.gameObject;
+                }
+            }
+
+            if (holder == null)
+            {
+				string ignoreTag = UMAContextBase.IgnoreTag;
+                if (string.IsNullOrEmpty(ignoreTag))
+                {
+                    ignoreTag = "UMAIgnore";
+                }
+            
+                holder = new GameObject(HolderObjectName);
+                holder.tag = ignoreTag;
+                holder.SetActive(false);
+                holder.transform.parent = gameObject.transform;
+            }
+            // walk through all the bones.
+            // if the tag has UMAContextBase.IgnoreTag, then 
+            // copy the transform
+            // copy the hash of the bone it came from  
+            // save the object by changing the parent.
+            // the parent object should be disabled so the children don't render.
+            // continue.
+            SaveBonesRecursively(umaRoot.transform, holder.transform);
+        }
+
+        public void SaveBonesRecursively(Transform bone, Transform holder)
+        {
+			string ignoreTag = UMAContextBase.IgnoreTag;
+
+			if (string.IsNullOrEmpty(ignoreTag))
+			{
+				ignoreTag = "UMAIgnore";
+            }
+
+            List<Transform> childlist = new List<Transform>();
+
+            if (bone.CompareTag(ignoreTag))
+            {
+                if (bone.parent != null)
+                {
+                    AddSavedItem(bone);
+                    bone.SetParent(holder, false);
+                }
+            }
+            else
+            {
+                foreach (Transform child in bone)
+                {
+                    childlist.Add(child);
+                }
+
+
+                for (int i = 0; i < childlist.Count; i++)
+                {
+                    Transform child = childlist[i];
+                    SaveBonesRecursively(child, holder);
+                }
+            }
+        }
+        public void AddSavedItem(Transform transform)
 		{
-			savedItems.Add(new UMASavedItem(UMAUtils.StringToHash(transform.parent.name), transform));
+			savedItems.Add(new UMASavedItem(transform.parent.name,UMAUtils.StringToHash(transform.parent.name), transform));
 		}
 
 		public void RestoreSavedItems()
@@ -76,6 +149,10 @@ namespace UMA
 				{
 					usi.Object.SetParent(parent, false);
 				}
+				else
+				{
+					usi.Object.SetParent(umaRoot.transform, false);
+                }
 			}
 			savedItems.Clear();
 		}
