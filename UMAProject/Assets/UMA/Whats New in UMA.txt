@@ -15,8 +15,9 @@ Added search to find all recipes that use a specific Mesh Hide Asset
 Added ability to use the selected asset (in the library or the project) as the asset used by the utilities.
 Added ability to select unused Mesh Hide Assets in the library
 Ability to filter default recipes to current race
-
-
+Added helpful filters to recipes in customization section
+Added dropdown to select recipes in customization section
+Added materials for all SRP pipelines to the default UMAMaterials
 
 What's new in UMA 2.13b
 New Simple Setup scene

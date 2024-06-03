@@ -119,7 +119,6 @@ namespace UMA
             }
         } */
 
-        private bool debug_reset = true;
 
         public Material  material
         {
