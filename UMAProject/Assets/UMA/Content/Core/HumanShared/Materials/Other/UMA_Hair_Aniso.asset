@@ -17,13 +17,13 @@ MonoBehaviour:
   _secondPass: {fileID: 0}
   srpMaterials:
   - SRP: 2
-    material: {fileID: 2100000, guid: 30499738961245147bde8442b561c869, type: 2}
+    material: {fileID: 2100000, guid: 836ba1c96b1a93a4c8e7ff58ffb68a11, type: 2}
     secondPass: {fileID: 0}
     alternateKeywords:
     - _BaseMap
     - _BumpMap
   - SRP: 3
-    material: {fileID: 2100000, guid: 30499738961245147bde8442b561c869, type: 2}
+    material: {fileID: 2100000, guid: 836ba1c96b1a93a4c8e7ff58ffb68a11, type: 2}
     secondPass: {fileID: 0}
     alternateKeywords:
     - _BaseMap

@@ -8,7 +8,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: HairMat Aniso SRP
-  m_Shader: {fileID: 4800000, guid: def76a94c229c2a4dae4e0ec3bcd8cca, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 877e0087dcad7a441a4b23b3ab3f8a48,
+    type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _ALPHATEST_ON
