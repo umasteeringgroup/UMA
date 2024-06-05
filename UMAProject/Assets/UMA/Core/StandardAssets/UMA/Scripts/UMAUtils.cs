@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine.Rendering;
-using Sirenix.OdinInspector.Editor.TypeSearch;
 
 #if UNITY_EDITOR
 using UnityEditor;

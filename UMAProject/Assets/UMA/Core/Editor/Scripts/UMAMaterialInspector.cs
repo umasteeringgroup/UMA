@@ -76,14 +76,12 @@ namespace UMA.Editors
             if (GUILayout.Button("Force save Materials"))
             {
                 serializedObject.ApplyModifiedProperties();
-                source.SetupSRP(true);
                 EditorUtility.SetDirty(target);
                 AssetDatabase.SaveAssetIfDirty(target);
             }
             if (GUILayout.Button("Refresh Materials"))
             {
                 serializedObject.Update();
-                source.SetupSRP(true);
             }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
@@ -95,14 +93,12 @@ namespace UMA.Editors
                 source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.UniversalPipeline));
                 source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.HDPipeline));
                 serializedObject.Update();
-                source.SetupSRP(true);
             }
             if (GUILayout.Button("Clear SRP Materials"))
             {
                 serializedObject.ApplyModifiedProperties();
                 source.srpMaterials.Clear();
                 serializedObject.Update();
-                source.SetupSRP(true);
             }
             GUILayout.EndHorizontal();
 

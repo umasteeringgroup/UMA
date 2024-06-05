@@ -3,6 +3,7 @@
 // Copyright (c)2021 Jason Booth
 //////////////////////////////////////////////////////
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -18,7 +19,7 @@ namespace UMA.ShaderPackager
     [ScriptedImporter(0, ShaderPackageImporter.k_FileExtension)]
     public class ShaderPackageImporter : ScriptedImporter
     {
-        public const string k_FileExtension = ".umaShaderPack";
+      public const string k_FileExtension = ".umaShaderPack";
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
@@ -53,9 +54,8 @@ namespace UMA.ShaderPackager
          
 #endif
 
-            for (int i = 0; i < package.entries.Count; i++)
+         foreach (var e in package.entries)
             {
-                ShaderPackage.Entry e = package.entries[i];
                 if (e.shader != null)
                 {
                     ctx.DependsOnSourceAsset(AssetDatabase.GetAssetPath(e.shader));
@@ -65,7 +65,7 @@ namespace UMA.ShaderPackager
             string shaderSrc = package.GetShaderSrc();
             if (shaderSrc == null)
             {
-                Debug.LogError($"Error: {package.name} - No Shader for this platform and SRP provided");
+            Debug.LogError("No Shader for this platform and SRP provided");
                 // maybe make an error shader here?
                 return;
             }

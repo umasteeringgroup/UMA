@@ -21,7 +21,6 @@ namespace UMA
         public enum CompressionSettings { None, Fast, HighQuality };
         public bool translateSRP;
         private bool srpSetup = false;
-        public bool AutoSetSRPMaterials = true;
 
         [SerializeField]
         [FormerlySerializedAs("material")]
@@ -80,23 +79,6 @@ namespace UMA
                     {
                         _material = srpMaterials[i].material;
                         _secondPass = srpMaterials[i].secondPass;
-                        if (channels.Length != srpMaterials[i].alternateKeywords.Count)
-                        {
-                            List<MaterialChannel> newChannels = new List<MaterialChannel>();
-                            newChannels.AddRange(channels);
-                            if (newChannels.Count > srpMaterials[i].alternateKeywords.Count)
-                            {
-                                newChannels.RemoveRange(srpMaterials[i].alternateKeywords.Count, newChannels.Count - srpMaterials[i].alternateKeywords.Count);
-                            }
-                            else
-                            {
-                                for (int j = newChannels.Count; j < srpMaterials[i].alternateKeywords.Count; j++)
-                                {
-                                    newChannels.Add(new MaterialChannel());
-                                }
-                            }
-                            channels = newChannels.ToArray();
-                        }
                         for (int j = 0; j < srpMaterials[i].alternateKeywords.Count; j++)
                         {
                             channels[j].materialPropertyName = srpMaterials[i].alternateKeywords[j];
@@ -142,12 +124,20 @@ namespace UMA
         {
             get 
             {
-                if (AutoSetSRPMaterials)
-                {
-                    SetupSRP();
-                }
-
+                SetupSRP();
                 return _material;
+                /*
+
+                var pipe = UMAUtils.DetectPipeline();   
+                if (_srpMaterialLookup.ContainsKey(pipe))
+                {
+                    return _srpMaterialLookup[pipe].material;
+                }
+                else
+                {
+                    SetupMaterialLookup(pipe);
+                    return _srpMaterialLookup[pipe].material;
+                } */
             }
             set { _material = value; }
         }
@@ -157,10 +147,7 @@ namespace UMA
 
             get
             {
-                if (AutoSetSRPMaterials)
-                {
-                    SetupSRP();
-                }
+                SetupSRP();
                 return _secondPass;
                 /*
                 var pipe = UMAUtils.DetectPipeline();

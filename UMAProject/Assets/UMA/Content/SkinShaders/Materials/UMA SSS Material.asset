@@ -25,6 +25,20 @@ MonoBehaviour:
     - _MetallicGlossMap
     - _OcclusionMap
     - _ThicknessMap
+  - SRP: 2
+    material: {fileID: 2100000, guid: abff9986cf3b4fc4681d96078854c09c, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+    - _MetallicGlossMap
+  - SRP: 3
+    material: {fileID: 2100000, guid: abff9986cf3b4fc4681d96078854c09c, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+    - _MetallicGlossMap
   materialType: 1
   channels:
   - channelType: 0

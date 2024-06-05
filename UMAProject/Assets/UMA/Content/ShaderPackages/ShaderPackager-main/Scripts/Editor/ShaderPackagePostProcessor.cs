@@ -21,9 +21,8 @@ namespace UMA.ShaderPackager
 
         static void RegisterShaders(string[] paths)
         {
-            for (int i = 0; i < paths.Length; i++)
+         foreach (var assetPath in paths)
             {
-                string assetPath = paths[i];
                 if (!assetPath.EndsWith(ShaderPackageImporter.k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
                 {
                     continue;
@@ -40,10 +39,8 @@ namespace UMA.ShaderPackager
                     }
                 }
 
-                UnityEngine.Object[] array = AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath);
-                for (int i1 = 0; i1 < array.Length; i1++)
+            foreach (var obj in AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath))
                 {
-                    UnityEngine.Object obj = array[i1];
                     if (obj is Shader)
                     {
                         Shader s = obj as Shader;

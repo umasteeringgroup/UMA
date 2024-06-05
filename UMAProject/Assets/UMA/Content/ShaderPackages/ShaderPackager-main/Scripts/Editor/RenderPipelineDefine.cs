@@ -6,13 +6,9 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Collections.Generic;
-
-using UnityEngine;
 using UnityEditor;
-
-using UnityEditor.PackageManager;
-using UnityEditor.PackageManager.Requests;
 
 #if UNITY_2019_3_OR_NEWER
 
@@ -23,87 +19,50 @@ namespace UMA.ShaderPackager
 {
     public static class RenderPipelineDefine
    {
+      private const string HDRP_PACKAGE = "HDRenderPipelineAsset";
+      private const string URP_PACKAGE = "UniversalRenderPipelineAsset";
 
-      private const string HDRP_PACKAGE = "com.unity.render-pipelines.high-definition";
-      private const string URP_PACKAGE = "com.unity.render-pipelines.universal";
+      public static bool IsHDRP { get; private set; }
+      public static bool IsURP { get; private set; }
+      public static bool IsStandardRP { get; private set; }
 
-      private const string TAG_HDRP = "USING_HDRP";
-      private const string TAG_URP = "USING_URP";
-
-
-
-
-
-      private static ListRequest request;
       [UnityEditor.Callbacks.DidReloadScripts]
       private static void OnScriptsReloaded()
       {
-         request = Client.List(true);
-         EditorApplication.update -= ListProgress;
-         EditorApplication.update += ListProgress;
-      }
+         IsHDRP = DoesTypeExist(HDRP_PACKAGE);
+         IsURP = DoesTypeExist(URP_PACKAGE);
 
-      private static void ListProgress()
+         if (!(IsHDRP || IsURP))
       {
-         if (request.IsCompleted)
-         {
-            if (request.Status == StatusCode.Success)
-            {
-               // Find out what packages are installed
-               var packagesList = request.Result.ToList();
-
-               ///Debug.Log("List of offline Unity packages:\n\n" + String.Join("\n", packagesList.Select(x => x.name)) + "\n\n");
-
-               bool hasHDRP = packagesList.Find(x => x.name.Contains(HDRP_PACKAGE)) != null;
-               bool hasURP = packagesList.Find(x => x.name.Contains(URP_PACKAGE)) != null;
-
-
-               DefinePreProcessors(hasHDRP, hasURP);
-            }
-            else
-            {
-               Debug.Log(request.Error.message);
-            }
-
-            EditorApplication.update -= ListProgress;
-         }
-      }
-
-
-      private static void DefinePreProcessors(bool defineHDRP, bool defineURP)
-      {
-
-         string originalDefineSymbols;
-         string newDefineSymbols;
-
-         List<string> defined;
-         //List<BuildTargetGroup> avaliablePlatforms = Enum.GetValues(typeof(BuildTargetGroup)).Cast<BuildTargetGroup>().ToList();
-         BuildTargetGroup platform = EditorUserBuildSettings.selectedBuildTargetGroup;
-
-         string log = string.Empty;
-
-         // foreach(var platform in avaliablePlatforms)
-         originalDefineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(platform);
-         defined = originalDefineSymbols.Split(';').Where(x => !String.IsNullOrWhiteSpace(x)).ToList();
-
-
-         Action<bool, string> AppendRemoveTag = (stat, tag) =>
-         {
-            if (stat && !defined.Contains(tag))
-               defined.Add(tag);
-            else if (!stat && defined.Contains(tag))
-               defined.Remove(tag);
-         };
-
-         AppendRemoveTag(defineHDRP, TAG_HDRP);
-         AppendRemoveTag(defineURP, TAG_URP);
-
-         newDefineSymbols = string.Join(";", defined);
-         if (originalDefineSymbols != newDefineSymbols)
-         {
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(platform, newDefineSymbols);
+            IsStandardRP = true;
          }
 
+      }
+
+      public static bool DoesTypeExist(string className)
+            {
+         var foundType = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
+                          from type in GetTypesSafe(assembly)
+                          where type.Name == className
+                          select type).FirstOrDefault();
+
+         return foundType != null;
+         }
+
+      public static IEnumerable<Type> GetTypesSafe(System.Reflection.Assembly assembly)
+      {
+         Type[] types;
+
+         try
+         {
+            types = assembly.GetTypes();
+         }
+         catch (ReflectionTypeLoadException e)
+         {
+            types = e.Types;
+         }
+
+         return types.Where(x => x != null);
       }
 
 

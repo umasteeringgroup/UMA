@@ -647,6 +647,10 @@ namespace UMA
         /// <returns></returns>
         public AssetItem GetAssetItem<T>(string Name)
         {
+            if (string.IsNullOrEmpty(Name))
+            {
+                return null;
+            }
 #if UMA_INDEX_LC
             Name = Name.ToLower();
 #endif

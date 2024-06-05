@@ -2492,6 +2492,14 @@ namespace UMA.Controls
                 {
                     RemoveRaceFromWardrobeRecipes(umaRaceData);
                 }
+                if (GUILayout.Button("Select slots for race"))
+                {
+                    SelectSlotsByRace(umaRaceData);
+                }
+                if (GUILayout.Button("Select overlays for race"))
+                {
+                    SelectOverlaysByRace(umaRaceData);
+                }
                 if (GUILayout.Button("Select Wardrobe Recipes for Race"))
                 {
                     SelectAllWardrobeRecipesForRace(umaRaceData);

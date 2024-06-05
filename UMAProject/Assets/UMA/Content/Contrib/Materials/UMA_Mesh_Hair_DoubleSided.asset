@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: UMA_Mesh_Hair_DoubleSided
   m_EditorClassIdentifier: 
   translateSRP: 1
+  AutoSetSRPMaterials: 1
   _material: {fileID: 2100000, guid: 9f64d6a59b10e1a4db966cf484f49622, type: 2}
   _secondPass: {fileID: 0}
   srpMaterials:
@@ -25,6 +26,12 @@ MonoBehaviour:
   - SRP: 2
     material: {fileID: 2100000, guid: 9cbdf960da83ce848b6fa53141ca2fe7, type: 2}
     secondPass: {fileID: 2100000, guid: 8146edb8bb821c34f956f820090a2adb, type: 2}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+  - SRP: 3
+    material: {fileID: 2100000, guid: 8146edb8bb821c34f956f820090a2adb, type: 2}
+    secondPass: {fileID: 0}
     alternateKeywords:
     - _BaseMap
     - _BumpMap

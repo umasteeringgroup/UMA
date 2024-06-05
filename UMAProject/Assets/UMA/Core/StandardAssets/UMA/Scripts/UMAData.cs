@@ -90,14 +90,17 @@ namespace UMA
                 holder.SetActive(false);
                 holder.transform.parent = gameObject.transform;
             }
-            // walk through all the bones.
-            // if the tag has UMAContextBase.IgnoreTag, then 
-            // copy the transform
-            // copy the hash of the bone it came from  
-            // save the object by changing the parent.
-            // the parent object should be disabled so the children don't render.
-            // continue.
-            SaveBonesRecursively(umaRoot.transform, holder.transform);
+			// walk through all the bones.
+			// if the tag has UMAContextBase.IgnoreTag, then 
+			// copy the transform
+			// copy the hash of the bone it came from  
+			// save the object by changing the parent.
+			// the parent object should be disabled so the children don't render.
+			// continue.
+			if (umaRoot != null)
+			{
+				SaveBonesRecursively(umaRoot.transform, holder.transform);
+			}
         }
 
         public void SaveBonesRecursively(Transform bone, Transform holder)

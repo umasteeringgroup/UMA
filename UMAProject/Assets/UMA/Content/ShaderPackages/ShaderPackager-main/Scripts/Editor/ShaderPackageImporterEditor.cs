@@ -3,6 +3,7 @@
 // Copyright (c)2021 Jason Booth
 //////////////////////////////////////////////////////
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -15,7 +16,7 @@ using UnityEditor.Experimental.AssetImporters;
 using System.IO;
 
 
-namespace JBooth.ShaderPackager
+namespace UMA.ShaderPackager
 {
     [CustomEditor(typeof(ShaderPackageImporter))]
     [CanEditMultipleObjects]
@@ -128,10 +129,8 @@ namespace JBooth.ShaderPackager
         static void CreateMenuItemShaderPackage()
         {
             string directoryPath = "Assets";
-            Object[] array = Selection.GetFiltered(typeof(Object), SelectionMode.Assets);
-            for (int i = 0; i < array.Length; i++)
+         foreach (Object obj in Selection.GetFiltered(typeof(Object), SelectionMode.Assets))
             {
-                Object obj = array[i];
                 directoryPath = AssetDatabase.GetAssetPath(obj);
                 if (!string.IsNullOrEmpty(directoryPath) && File.Exists(directoryPath))
                 {
@@ -141,14 +140,9 @@ namespace JBooth.ShaderPackager
             }
             directoryPath = directoryPath.Replace("\\", "/");
             if (directoryPath.Length > 0 && directoryPath[directoryPath.Length - 1] != '/')
-            {
                 directoryPath += "/";
-            }
-
             if (string.IsNullOrEmpty(directoryPath))
-            {
                 directoryPath = "Assets/";
-            }
 
             var fileName = string.Format("New ShaderPackage{0}", ShaderPackageImporter.k_FileExtension);
             directoryPath = AssetDatabase.GenerateUniqueAssetPath(directoryPath + fileName);
