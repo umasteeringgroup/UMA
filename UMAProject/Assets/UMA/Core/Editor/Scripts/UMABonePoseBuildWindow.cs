@@ -470,7 +470,7 @@ namespace UMA.PoseTools
 								(bone.localRotation != rotation) ||
 								(bone.localScale != scale))
 							{
-								bonePose.AddBone(bone, position, rotation, scale);
+								bonePose.AddBone(bone, position, rotation, scale,"");
 							}
 						}
 

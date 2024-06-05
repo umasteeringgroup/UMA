@@ -5,7 +5,7 @@
 //	Author: 	Joen Joensen (@UnLogick)
 //	============================================================
 
-Shader "UMA/AtlasShaderNormal_Lighten" {
+Shader "UMA/Atlas/AtlasShaderNormal_Lighten" {
 Properties {
 	_Color ("Main Color", Color) = (1,1,1,1)
 	_AdditiveColor ("Additive Color", Color) = (0,0,0,0)

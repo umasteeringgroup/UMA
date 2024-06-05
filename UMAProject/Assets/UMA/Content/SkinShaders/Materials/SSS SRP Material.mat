@@ -1,0 +1,203 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SSS SRP Material
+  m_Shader: {fileID: -6465566751694194690, guid: e2c95817ac413714c8f36b80020c9867,
+    type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _
+  - _METALLICGLOSSMAP
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AO:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Albedo:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BRDF:
+        m_Texture: {fileID: 2800000, guid: 777d4a97dda93184980a90195afc5456, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BRDFTex:
+        m_Texture: {fileID: 2800000, guid: 438762e23bc56bf4188ce947bf60e0e3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BentNormal:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: fc9ae852b7d50e9488f1a6a37f706a41, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Cavity:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailBumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormal:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: d03b3b0a9f509bc45aa0629f22ce32fc, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 2800000, guid: d03b3b0a9f509bc45aa0629f22ce32fc, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 2800000, guid: d03b3b0a9f509bc45aa0629f22ce32fc, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OverlayMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SmoothnessMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ThicknessMap:
+        m_Texture: {fileID: 2800000, guid: d03b3b0a9f509bc45aa0629f22ce32fc, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texcoord2:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _BumpScale: 0.55
+    - _ColorModulation: 1.6
+    - _CullMode: 2
+    - _CurveBias: 0.005
+    - _Cutoff: 0.5
+    - _Cutout: 0.5
+    - _DetailBumpMapScale: 1
+    - _DetailIntensity: 1
+    - _DetailNormalMapScale: 1
+    - _DoubleSidedNormalMode: 1
+    - _DstBlend: 0
+    - _GlossMapScale: 0.81
+    - _Glossiness: 0
+    - _GlossyReflections: 1
+    - _HalfLambertStrength: 4.5
+    - _InvertThickness: 1
+    - _Metallic: 0.24
+    - _MetallicModulation: 1
+    - _Mode: 0
+    - _NormalDistortion: 1
+    - _NormalStrength: 0.7
+    - _OcclusionStrength: 0.07
+    - _OcclusionUVSource: 0
+    - _Parallax: 0.02
+    - _Rim: 3.22
+    - _RimLightPower: 4
+    - _RimLightingModulation: 0
+    - _RimPower: 3.22
+    - _SSSAmbient: 0.1
+    - _SSSDist: 7.62
+    - _SSSGlow: 0.3
+    - _SSSIntensity: 0
+    - _SSSLevel: 0.306
+    - _SSSPow: 6.03
+    - _SSSShadow: 1
+    - _Scale: 1
+    - _ScatteringByAlbedo: 1
+    - _SecondUVSource: 0
+    - _SkinDetailTiling: 1
+    - _Smoothness: 0.7
+    - _SmoothnessFromAlbedo: 0
+    - _SmoothnessModulation: 0.39
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _Thickness: 1
+    - _ThicknessMapInvert: 1
+    - _ThicknessMapPower: 1
+    - _ThicknessUVSource: 0
+    - _TranslucentPower: 1
+    - _UVSec: 0
+    - _UberTile: 1
+    - _UseAlphaToMask: 0
+    - _UseCutout: 0
+    - _UseHalfLambert: 0
+    - _UseSkinScattering: 1
+    - _WrappingFactor: 1
+    - _WrappingPowerFactor: 1
+    - _ZWrite: 1
+    - __dirty: 1
+    m_Colors:
+    - _AlbedoTinting: {r: 1, g: 1, b: 1, a: 0}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
+    - _OverlayColor: {r: 1, g: 1, b: 1, a: 1}
+    - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SSSCol: {r: 1, g: 0.1660024, b: 0, a: 1}
+    - _SSSColor: {r: 1, g: 0.39999998, b: 0.39999998, a: 1}
+    - _SecondarySpecLobeColor: {r: 1, g: 1, b: 1, a: 0}
+    - _SpecTint: {r: 1, g: 1, b: 1, a: 0}
+    - _SubSurfaceColor: {r: 1, g: 0.5804797, b: 0.37846017, a: 1}
+  m_BuildTextureStacks: []

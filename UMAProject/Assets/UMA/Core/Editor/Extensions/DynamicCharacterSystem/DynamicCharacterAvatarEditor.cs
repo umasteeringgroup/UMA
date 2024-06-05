@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using System;
 using UMA.Editors;
+using UMA.CharacterSystem;
 
 namespace UMA.CharacterSystem.Editors
 {
@@ -317,12 +318,13 @@ namespace UMA.CharacterSystem.Editors
                 }
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
+                // wtf not working? EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultRendererAsset"));
+                thisDCA.defaultRendererAsset = (UMARendererAsset)EditorGUILayout.ObjectField("Default Renderer Asset", thisDCA.defaultRendererAsset, typeof(UMARendererAsset), false);
                 if (EditorGUI.EndChangeCheck())
                 {
                     serializedObject.ApplyModifiedProperties();
                     UpdateCharacter();
                 }
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultRendererAsset"));
 
 
                 //******************************************************************
@@ -602,9 +604,7 @@ namespace UMA.CharacterSystem.Editors
             if (showBlendshapes)
             {
                 EditorGUI.BeginChangeCheck();
-                BeginVerticalPadded();
                 ShowBlendshapesGUI(thisDCA);
-                EndVerticalPadded();
                 if (EditorGUI.EndChangeCheck())
                 {
                     serializedObject.ApplyModifiedProperties();
@@ -785,7 +785,8 @@ namespace UMA.CharacterSystem.Editors
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("forceSlotMaterials"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("AtlasResolutionScale"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("BoundsOffset"));
-
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("markNotReadable"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("markDynamic"));
 
                 if (EditorGUI.EndChangeCheck())
                 {
@@ -870,22 +871,42 @@ namespace UMA.CharacterSystem.Editors
                     EditorGUI.indentLevel++;
                     Dictionary<string, UMATextRecipe> currentWardrobe = thisDCA.WardrobeRecipes;
 
+                    bool editTimeUpdateNeeded = false;
                     foreach (KeyValuePair<string, UMATextRecipe> item in currentWardrobe)
                     {
+						string prepend = "*";
+						if(item.Value.disabled)
+							prepend = "-";
                         GUILayout.BeginHorizontal();
                         EditorGUI.BeginDisabledGroup(true);
-                        EditorGUILayout.LabelField(item.Key, GUILayout.Width(88.0f));
+						EditorGUILayout.LabelField(prepend + item.Key, GUILayout.Width(88.0f));
                         EditorGUILayout.TextField(item.Value.DisplayValue + " (" + item.Value.name + ")");
                         EditorGUI.EndDisabledGroup();
                         if (GUILayout.Button("Inspect", EditorStyles.toolbarButton, GUILayout.Width(52)))
                         {
                             InspectorUtlity.InspectTarget(item.Value);
                         }
+						if (GUILayout.Button("0/1", EditorStyles.toolbarButton, GUILayout.Width(32))) 
+						{
+							item.Value.disabled = !item.Value.disabled;
+                            if (Application.isPlaying)
+                            {
+                                thisDCA.BuildCharacter(true);
+                            }
+                            else
+                            {
+                                editTimeUpdateNeeded = true;
+                            }
+						}
                         if (GUILayout.Button("X", EditorStyles.toolbarButton, GUILayout.Width(18)))
                         {
                             DeleteMe = item.Key;
                         }
                         GUILayout.EndHorizontal();
+                    }
+                    if (editTimeUpdateNeeded)
+                    {
+                        UpdateCharacter();
                     }
 
                     if (!string.IsNullOrEmpty(DeleteMe))
@@ -934,11 +955,20 @@ namespace UMA.CharacterSystem.Editors
 
             void ShowBlendshapesGUI(DynamicCharacterAvatar thisDCA)
             {
+                BeginVerticalPadded();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendShapes"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("loadOnlyUsedBlendshapes"));
+                // EditorGUILayout.PropertyField(serializedObject.FindProperty("loadOnlyUsedBlendshapes"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendshapeNormals"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("loadBlendshapeTangents"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("loadAllFrames"));
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(20);
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("forceKeepBlendshapes"));
+                GUILayout.Space(20);
+                GUILayout.EndHorizontal();
+
+                EndVerticalPadded();
+
             }
 
             void ShowAnimatorGUI(DynamicCharacterAvatar thisDCA)
@@ -1004,7 +1034,11 @@ namespace UMA.CharacterSystem.Editors
 
                     DynamicCharacterAvatar dca = target as DynamicCharacterAvatar;
 
-                    CleanupGeneratedData(rebuild);
+                    if (dca.umaData != null)
+                    {
+                        dca.umaData.SaveMountedItems();
+                    }
+                    CleanupGeneratedData(rebuild,false);
 
                     dca.activeRace.SetRaceData();
                     if (dca.activeRace.racedata == null)
@@ -1044,10 +1078,11 @@ namespace UMA.CharacterSystem.Editors
                         UMAMountedItem mi = mountedItems[i];
                         mi.ResetMountPoint();
                     }
+                    dca.umaData.RestoreSavedItems();
                 }
             }
 
-            void CleanupGeneratedData(bool clear)
+            void CleanupGeneratedData(bool clear, bool killUMAData=true)
             {
                 if (Application.isPlaying)
                 {
@@ -1061,8 +1096,11 @@ namespace UMA.CharacterSystem.Editors
                     GameObject go = Cleaners[i];
                     DestroyImmediate(go);
                 }
-                DestroyImmediate(thisDCA.umaData);
-                thisDCA.umaData = null;
+                if (killUMAData)
+                {
+                    DestroyImmediate(thisDCA.umaData);
+                    thisDCA.umaData = null;
+                }
                 thisDCA.ClearSlots();
             }
 

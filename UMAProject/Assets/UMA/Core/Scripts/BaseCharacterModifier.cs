@@ -459,7 +459,9 @@ namespace UMA
 						//Classically a human is apprx 7.5 heads tall, but we only know the height to the base of the head bone
 						//usually head bone is actually usually in line with the lips, making the base of the chin, 1/3rd down the neck
 						//so if we have the optional neck bone use that to estimate the base of the chin
-						chinHeight = skeleton.GetRelativePosition(_mechanimBoneDict["Head"]).y;
+						int boneHash = _mechanimBoneDict["Head"];
+						var pos = skeleton.GetRelativePosition(boneHash);
+                        chinHeight = pos.y;
 						if (skeleton.BoneExists(_mechanimBoneDict["Neck"]))
 						{
 							chinHeight = skeleton.GetRelativePosition(_mechanimBoneDict["Neck"]).y + (((skeleton.GetRelativePosition(_mechanimBoneDict["Head"]).y - skeleton.GetRelativePosition(_mechanimBoneDict["Neck"]).y) / 3f) * 2f);

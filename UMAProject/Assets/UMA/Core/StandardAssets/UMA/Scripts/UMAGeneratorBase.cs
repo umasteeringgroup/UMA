@@ -209,11 +209,15 @@ namespace UMA
                     return;
                 }
 
-                if (animator == false)
+                if (animator == null)
                 {
                     return;
                 }
 
+				if (animator.isActiveAndEnabled == false) {
+					return;
+				}
+					
                 if (animator.layerCount == stateHashes.Length)
 				{
 					for (int i = 0; i < animator.layerCount; i++)
@@ -364,7 +368,11 @@ namespace UMA
 			{
 				case RaceData.UMATarget.Humanoid:
 					umaTPose.DeSerialize();
-					animator.avatar = CreateAvatar(umaData, umaTPose);
+					var avatar = CreateAvatar(umaData, umaTPose);
+					if (avatar != null)
+					{
+                        animator.avatar = avatar;
+                    }
 					break;
 				case RaceData.UMATarget.Generic:
 					animator.avatar = CreateGenericAvatar(umaData);
@@ -431,10 +439,18 @@ namespace UMA
 			umaTPose.DeSerialize();
 			HumanDescription description = CreateHumanDescription(umaData, umaTPose);
 			//DebugLogHumanAvatar(umaData.gameObject, description);
-			Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
-			CreatedAvatars.Add(res.GetInstanceID());
-			res.name = umaData.name;
-			return res;
+			try
+			{
+				Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
+				CreatedAvatars.Add(res.GetInstanceID());
+				res.name = umaData.name;
+				return res;
+			}
+            catch (Exception ex)
+			{
+                Debug.LogError("Error creating avatar: " + ex.Message);
+                return null;
+            }
 		}
 
 		/// <summary>

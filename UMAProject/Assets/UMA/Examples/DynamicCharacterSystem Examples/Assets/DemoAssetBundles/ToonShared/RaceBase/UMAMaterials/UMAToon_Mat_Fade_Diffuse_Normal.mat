@@ -8,22 +8,27 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMAToon_Mat_Fade_Diffuse_Normal
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
-  m_ValidKeywords:
+  m_Shader: {fileID: -6465566751694194690, guid: ab87b81d084dd6047b63be46465e63c2,
+    type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords:
   - _ALPHABLEND_ON
   - _EMISSION
   - _NORMALMAP
-  m_InvalidKeywords: []
+  - _USEHALFLAMBERT_ON
   m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3000
-  stringTagMap:
-    RenderType: Transparent
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 2800000, guid: f47823afcb9e35f46958d6d6ae36d824, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -62,23 +67,35 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaModulation: 1
     - _BumpScale: 1
+    - _ColorModulation: 1.6
+    - _CullMode: 2
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
+    - _DoubleSidedNormalMode: 1
     - _DstBlend: 10
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _HalfLambertStrength: 4
     - _Metallic: 0
+    - _MetallicModulation: 1
     - _Mode: 2
+    - _NormalStrength: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _RimLightPower: 4
+    - _RimLightingModulation: 0
+    - _SmoothnessModulation: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 5
     - _UVSec: 0
+    - _UseHalfLambert: 1
     - _ZWrite: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

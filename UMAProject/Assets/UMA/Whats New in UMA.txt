@@ -1,3 +1,24 @@
+Whats new
+------
+Updated Bonepose editor - filtering, bone visualization options, resets bone pose to neutral on selection.
+Added utility in global library to select unused materials (for cleanup)
+Added option in material property block to ONLY update properties, and not the colors.
+Changed temporary object names to avoid overwriting existing objects.
+Added option to load only blendshapes that are used on the character.
+Added "force keep blendshapes" to the DCA, so you can keep blendshapes that you want to keep.
+Fixed some bugs in the color loading where it would not load the shader parameters correctly.
+Added some additional 
+Made material keywords SRP specific, so you can have different keywords for different SRP pipelines.
+Added warnings for bad parameters in header of umamaterial channels
+Added utility to search for broken/mismatched mesh hide assets in the library (have to add the MHA to the library though)
+Added search to find all recipes that use a specific Mesh Hide Asset
+Added ability to use the selected asset (in the library or the project) as the asset used by the utilities.
+Added ability to select unused Mesh Hide Assets in the library
+Ability to filter default recipes to current race
+Added helpful filters to recipes in customization section
+Added dropdown to select recipes in customization section
+Added materials for all SRP pipelines to the default UMAMaterials
+
 What's new in UMA 2.13b
 New Simple Setup scene
 Fixed Mesh Hide Asset editor

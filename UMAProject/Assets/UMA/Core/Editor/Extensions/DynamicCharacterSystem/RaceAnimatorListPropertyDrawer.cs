@@ -206,7 +206,8 @@ namespace UMA.CharacterSystem.Editors
 			if (thisDCA != null)
 			{
 				defaultController = thisDCA.raceAnimationControllers.defaultAnimationController != null ? thisDCA.raceAnimationControllers.defaultAnimationController : (thisDCA.animationController != null ? thisDCA.animationController : null);
-				if (defaultController.name == racName)
+
+				if (defaultController != null && defaultController.name == racName)
                 {
                     return true;
                 }
@@ -226,7 +227,8 @@ namespace UMA.CharacterSystem.Editors
 				{
                     string guid = foundWardrobeGUIDS[i];
                     var tempAsset = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(AssetDatabase.GUIDToAssetPath(guid));
-					if (tempAsset.name == animatorName)
+				
+					if (tempAsset != null && tempAsset.name == animatorName)
 					{
 						foundAnimator = tempAsset;
 						break;

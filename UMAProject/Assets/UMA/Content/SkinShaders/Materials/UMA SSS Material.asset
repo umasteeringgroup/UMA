@@ -13,10 +13,33 @@ MonoBehaviour:
   m_Name: UMA SSS Material
   m_EditorClassIdentifier: 
   translateSRP: 0
-  _material: {fileID: 2100000, guid: abff9986cf3b4fc4681d96078854c09c, type: 2}
-  srpMaterials: []
-  secondPass: {fileID: 0}
-  materialType: 2
+  _material: {fileID: 2100000, guid: 5c6dd6ed5e185c742a48649027e86903, type: 2}
+  _secondPass: {fileID: 0}
+  srpMaterials:
+  - SRP: 1
+    material: {fileID: 2100000, guid: 5c6dd6ed5e185c742a48649027e86903, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
+    - _MetallicGlossMap
+    - _OcclusionMap
+    - _ThicknessMap
+  - SRP: 2
+    material: {fileID: 2100000, guid: abff9986cf3b4fc4681d96078854c09c, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+    - _MetallicGlossMap
+  - SRP: 3
+    material: {fileID: 2100000, guid: abff9986cf3b4fc4681d96078854c09c, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+    - _MetallicGlossMap
+  materialType: 1
   channels:
   - channelType: 0
     textureFormat: 0
@@ -26,7 +49,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 1
+  - channelType: 0
     textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: 

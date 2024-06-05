@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using System.Linq;
 
 namespace UMA
@@ -38,6 +39,7 @@ namespace UMA
         public bool ClipPlaneFoldout;
         public bool isDeleted;
 #endif
+        public int expandAlongNormal = 0; // 8 digits of fixed point resolution. Multiply by 0.00001f to get the float value.
 
 #if !NOSMOOSH
 
@@ -67,6 +69,7 @@ namespace UMA
         public int vertexOffset;
         public Rect UVArea;
         public bool tempHidden;
+        public bool isDisabled = false;
         public bool   UVRemapped
         {
             get
@@ -188,6 +191,7 @@ namespace UMA
             smooshDistance = 0.001f;
             smooshInvertY = true;
             smooshInvertDist = true;
+            expandAlongNormal = 0;
         }
 
 
@@ -313,6 +317,8 @@ namespace UMA
             res.overSmoosh = overSmoosh;
             res.swapTag = swapTag;
             res.isSwapSlot = isSwapSlot;
+            res.isDisabled = isDisabled;
+            res.expandAlongNormal = expandAlongNormal;
 
             res.smooshInvertX = smooshInvertX;
             res.smooshInvertY = smooshInvertY;

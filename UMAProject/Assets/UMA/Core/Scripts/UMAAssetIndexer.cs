@@ -647,6 +647,10 @@ namespace UMA
         /// <returns></returns>
         public AssetItem GetAssetItem<T>(string Name)
         {
+            if (string.IsNullOrEmpty(Name))
+            {
+                return null;
+            }
 #if UMA_INDEX_LC
             Name = Name.ToLower();
 #endif
@@ -1700,10 +1704,6 @@ namespace UMA
                     if (!string.IsNullOrEmpty(sd.materialName))
                     {
                         sd.material = Instance.GetAsset<UMAMaterial>(sd.materialName);
-                    }
-                    else
-                    {
-                        Debug.LogError("Material name is null on slot: " + sd.name+" Unable to load material!");
                     }
                 }
             }

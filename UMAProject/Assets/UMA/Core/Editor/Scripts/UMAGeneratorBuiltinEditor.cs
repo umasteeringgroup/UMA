@@ -59,7 +59,6 @@ namespace UMA.Editors
 
 			GUILayout.Space(20);
 			EditorGUILayout.LabelField("Advanced Configuration", centeredLabel);
-			EditorGUILayout.PropertyField(NoCoroutines);
 			EditorGUILayout.PropertyField(textureMerge);
 			EditorGUILayout.PropertyField(meshCombiner);
 

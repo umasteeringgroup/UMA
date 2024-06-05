@@ -33,6 +33,10 @@ namespace UMA
 			{
 				umaData.SetupSkeleton();
 			}
+			else
+			{
+				umaData.CheckSkeletonSetup();
+			}
 			#endregion
 			if (umaData.umaRoot != null)
 			{
@@ -75,7 +79,7 @@ namespace UMA
                             rendererAsset = umaData.defaultRendererAsset;
                         }
 
-                        renderers[i] = MakeRenderer(i, globalTransform, rendererAsset);
+                        renderers[i] = MakeRenderer(i, umaData, globalTransform, rendererAsset);
 					}
 
 					if (oldRenderers != null)
@@ -104,7 +108,7 @@ namespace UMA
             }
 		}
 
-		private SkinnedMeshRenderer MakeRenderer(int i, Transform rootBone, UMARendererAsset rendererAsset = null)
+		private SkinnedMeshRenderer MakeRenderer(int i, UMAData umaData, Transform rootBone, UMARendererAsset rendererAsset = null)
 		{
 			GameObject newSMRGO = new GameObject(i == 0 ? "UMARenderer" : ("UMARenderer " + i));
 			newSMRGO.transform.parent = umaData.transform;
@@ -116,7 +120,11 @@ namespace UMA
 			var newRenderer = newSMRGO.AddComponent<SkinnedMeshRenderer>();
 			newRenderer.enabled = false;
 			newRenderer.sharedMesh = new Mesh();
-			newRenderer.sharedMesh.MarkDynamic();
+			if (umaData.markDynamic)
+            {
+                newRenderer.sharedMesh.MarkDynamic();
+            }
+
 #if UMA_32BITBUFFERS
 			newRenderer.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 #endif
@@ -227,6 +235,11 @@ namespace UMA
 				
 				for(int i=0;i<combinedMaterialList.Count;i++)
                 {
+					if (i >= renderer.sharedMesh.subMeshCount) 
+					{
+						Debug.LogWarning("Submesh count mismatch between generated materials and renderer mesh. This can happen if you have overlays applied to a utility (non-mesh) slot somehow. This can cause the wrong materials to be applied to the mesh.");
+						break;
+					}
 					var cm = combinedMaterialList[i];
 					materials.Add(cm.material);
 					submeshes.Add(renderer.sharedMesh.GetSubMesh(i));
@@ -261,7 +274,7 @@ namespace UMA
 				//renderers[currentRendererIndex].sharedMaterials = materials;
 				renderers[currentRendererIndex].sharedMaterials = materials.ToArray();
 				renderers[currentRendererIndex].sharedMesh.SetSubMeshes(submeshes.ToArray(), MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
-                renderers[currentRendererIndex].sharedMesh.UploadMeshData(true);
+                renderers[currentRendererIndex].sharedMesh.UploadMeshData(umaData.markNotReadable);
             }
 
             umaData.umaRecipe.ClearDNAConverters();

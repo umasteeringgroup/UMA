@@ -35,6 +35,7 @@ namespace UMA.PoseTools
 			public Vector3 position;
 			public Quaternion rotation;
 			public Vector3 scale;
+			public string category;
 		}
 
 		/// <summary>
@@ -94,7 +95,7 @@ namespace UMA.PoseTools
 		/// <param name="position">Position.</param>
 		/// <param name="rotation">Rotation.</param>
 		/// <param name="scale">Scale.</param>
-		public void AddBone(Transform bone, Vector3 position, Quaternion rotation, Vector3 scale)
+		public void AddBone(Transform bone, Vector3 position, Quaternion rotation, Vector3 scale, string category)
 		{
 			PoseBone pose = new PoseBone();
 			pose.bone = bone.name;
@@ -104,6 +105,7 @@ namespace UMA.PoseTools
 			pose.scale = new Vector3(scale.x / bone.localScale.x,
 									scale.y / bone.localScale.y,
 									scale.z / bone.localScale.z);
+			pose.category = category;
 
 			ArrayUtility.Add(ref poses, pose);
 		}

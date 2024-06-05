@@ -14,10 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   translateSRP: 1
   _material: {fileID: 2100000, guid: 9ae673dab7af9db43afeb2f193929cd2, type: 2}
+  _secondPass: {fileID: 0}
   srpMaterials:
-  - SRP: 0
-    material: {fileID: 0}
-  secondPass: {fileID: 0}
+  - SRP: 2
+    material: {fileID: 2100000, guid: 9ae673dab7af9db43afeb2f193929cd2, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
+    - _MetallicGlossMap
+  - SRP: 3
+    material: {fileID: 2100000, guid: 9ae673dab7af9db43afeb2f193929cd2, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
+    - _MetallicGlossMap
   materialType: 1
   channels:
   - channelType: 3

@@ -1470,6 +1470,14 @@ namespace UMA.Editors
                 GUILayout.EndHorizontal();
             }
 
+            bool disabled = _slotData.isDisabled;
+            _slotData.isDisabled = EditorGUILayout.Toggle("Disabled", _slotData.isDisabled);
+
+            if (disabled != _slotData.isDisabled)
+            {
+                changed = true;
+            }
+
             if (_slotData.asset.isClippingPlane)
             {
                 EditorGUILayout.HelpBox("This slot is a clipping plane. It will not be rendered in the scene.", MessageType.Info);
@@ -1630,6 +1638,13 @@ namespace UMA.Editors
 
                 #endregion
 
+                EditorGUILayout.HelpBox("Expand Along Normal is used to expand the slot along the normal of the mesh. This is useful for offsetting to address zfighting issues. In micrometers", MessageType.Info);
+                
+                _slotData.expandAlongNormal = EditorGUILayout.DelayedIntField("Expand Along Normal", _slotData.expandAlongNormal);
+                if (GUI.changed)
+                {
+                    changed = true;
+                }
                 if (sharedOverlays)
                 {
                     List<OverlayData> ovr = GetOverlays();
@@ -1913,21 +1928,22 @@ namespace UMA.Editors
 
         public bool OnGUI()
         {
-            List<string> buttons = new List<string>() { "Inspect","Material" };
-            List<bool> pressed = new List<bool>() { false, false };
+            List<string> buttons = new List<string>() { "Inspect","Mat","UMat" };
+            List<bool> pressed = new List<bool>() { false, false, false };
             bool delete;
 
             _foldout = OverlayExpanded[_overlayData.overlayName];
 
 
+            int queue = 0;
             string matName = "Unknown";
             if (_overlayData.asset.material != null)
             {
                 matName = _overlayData.asset.material.name;
+                queue = _overlayData.asset.material.material.renderQueue;
             }
 
-            int queue = _overlayData.asset.material.material.renderQueue;
-          
+
             GUIHelper.FoldoutBarButton(ref _foldout, $"{_overlayData.asset.overlayName} ( {matName} Q:{queue})", buttons,out pressed, out move, out delete);
 
             if (pressed[0])
@@ -1940,6 +1956,12 @@ namespace UMA.Editors
             {
                 EditorGUIUtility.PingObject(_overlayData.asset.material.material.GetInstanceID());
                 InspectorUtlity.InspectTarget(_overlayData.asset.material.material);
+            }
+
+            if (pressed[2])
+            {
+                EditorGUIUtility.PingObject(_overlayData.asset.material.GetInstanceID());
+                InspectorUtlity.InspectTarget(_overlayData.asset.material);
             }
 
 
@@ -2657,10 +2679,10 @@ namespace UMA.Editors
         {
             if (_needsUpdate)
             {
-                if (EditorUtility.DisplayDialog("Unsaved Changes", "Save changes made to the recipe?", "Save", "Discard"))
-                {
+                //if (EditorUtility.DisplayDialog("Unsaved Changes", "Save changes made to the recipe?", "Save", "Discard"))
+                //{
                     DoUpdate();
-                }
+                //}
 
                 _needsUpdate = false;
                 _forceUpdate = false;

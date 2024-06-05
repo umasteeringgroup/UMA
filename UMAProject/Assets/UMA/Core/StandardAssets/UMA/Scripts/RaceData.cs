@@ -19,6 +19,7 @@ namespace UMA
 	{
 	    public string raceName;
 		public List<string> KeepBoneNames = new List<string>();
+		public List<string> tags = new List<string>();
 
         #region INameProvider
         public string GetAssetName()
@@ -51,6 +52,12 @@ namespace UMA
 			}
 			return Names;
 		}
+
+		public bool HasTag(string tag)
+		{
+            return tags.Contains(tag);
+        }
+
 
 		public void ResetDNA()
 		{

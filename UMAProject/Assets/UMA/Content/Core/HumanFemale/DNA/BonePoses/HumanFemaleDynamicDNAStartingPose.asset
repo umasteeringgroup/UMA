@@ -110,9 +110,9 @@ MonoBehaviour:
     scale: {x: 1.01, y: 1, z: 1}
   - bone: Head
     hash: 130111906
-    position: {x: 0, y: 0, z: -0.006}
-    rotation: {x: 0, y: -0.017452406, z: 0, w: 0.9998477}
-    scale: {x: 1.0039216, y: 1.0039216, z: 1.0039216}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
   - bone: LeftOuterBreast
     hash: 361754685
     position: {x: -0.000019608065, y: 0.00007843226, z: 0}
@@ -253,5 +253,10 @@ MonoBehaviour:
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 0.92, y: 0.94, z: 0.94}
+  - bone: HeadAdjust
+    hash: -423229038
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
   tweenPoses: []
   tweenWeights: []

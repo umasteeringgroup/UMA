@@ -37,6 +37,7 @@ namespace UMA
     /// <summary>
     /// An event that happens when a generic UMACharacterAvatar is processed
     /// </summary>
+    [Serializable]
     public class UMACharacterEvent : UnityEvent<DynamicCharacterAvatar>
     {
         public UMACharacterEvent()

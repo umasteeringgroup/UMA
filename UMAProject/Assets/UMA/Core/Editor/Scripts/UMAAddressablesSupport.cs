@@ -620,7 +620,11 @@ namespace UMA
             {
                 ClearAddressableFlags(t);
             }
-
+            if (AddressableUtility.AddressableSettings == null)
+            {
+                Debug.LogError("Addressable settings not found!");
+                return;
+            }
             AddressableAssetGroup sharedGroup = AddressableUtility.AddressableSettings.FindGroup(SharedGroupName);
             if (sharedGroup == null)
             {

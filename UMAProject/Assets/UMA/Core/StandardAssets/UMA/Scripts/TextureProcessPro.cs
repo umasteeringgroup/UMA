@@ -323,6 +323,10 @@ namespace UMA
 
         public static void SetCompositingProperties(UMAData.GeneratedMaterial generatedMaterial, Material material, UMAData.MaterialFragment fragment)
         {
+            if (fragment == null ||fragment.baseOverlay == null || fragment.baseOverlay.textureList == null || fragment.overlays == null)
+            {
+                return;
+            }
             int numChannels = fragment.baseOverlay.textureList.Length;
             int numOverlays = 1 + fragment.overlays.Length;
 
