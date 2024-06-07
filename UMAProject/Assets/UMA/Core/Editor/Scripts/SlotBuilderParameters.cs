@@ -12,6 +12,7 @@ namespace UMA.Editors
         public bool binarySerialization;
         public bool useRootFolder;
         public bool nameByMaterial;
+        public bool keepAllBones;
 
         public string stripBones;
         public string rootBone;

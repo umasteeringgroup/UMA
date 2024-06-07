@@ -163,17 +163,16 @@ namespace UMA.Editors
 			Transform[] bones = resultingSkinnedMesh.bones;
 			List<int> KeepBoneIndexes = new List<int>();
 
-			for(int i=0;i<bones.Length;i++)
+
+            int j = 0;
+            for (int i = 0; i < bones.Length; i++)
             {
-				Transform t = bones[i];
-				foreach(string keep in sbp.keepList)
+                Transform _bone = bones[i];
+                if (sbp.keepList.Contains(_bone.name) || sbp.keepAllBones)
                 {
-					if (t.name.Contains(keep))
-                    {
-						KeepBoneIndexes.Add(i);
-						break; // only add to keeplist once.
-                    }
+                    KeepBoneIndexes.Add(j);
                 }
+                j++;
             }
 
 			Mesh resultingMesh;

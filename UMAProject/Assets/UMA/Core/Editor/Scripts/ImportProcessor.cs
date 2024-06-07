@@ -90,18 +90,22 @@ namespace UMA
         {
             // Open tag manager
             SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            EnsureTag("UMAIgnore", tagManager);
+            EnsureTag("UMAKeepChain", tagManager);
+        }
+
+        private static void EnsureTag(string s, SerializedObject tagManager)
+        {
             SerializedProperty tagsProp = tagManager.FindProperty("tags");
 
-            // Adding a Tag
-            string s = "UMAIgnore";
 
             // First check if it is not already present
             for (int i = 0; i < tagsProp.arraySize; i++)
             {
                 SerializedProperty t = tagsProp.GetArrayElementAtIndex(i);
-                if (t.stringValue.Equals(s)) 
-                { 
-                    return; 
+                if (t.stringValue.Equals(s))
+                {
+                    return;
                 }
             }
 

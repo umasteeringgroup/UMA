@@ -43,11 +43,14 @@ namespace UMA
 		[Tooltip("UMA will ignore items with this tag when rebuilding the skeleton.")]
 		public string ignoreTag = "UMAIgnore";
 
-		[NonSerialized]
+		[Tooltip("UMA will keep items with this tag when rebuilding the skeleton. Any new bone created during the build process will be replaced with the previous copy, keeping components and references intact.")]
+		public string keepTag = "UMAKeepChain";
+
+        [NonSerialized]
 		public bool FreezeTime;
 
 		public bool SaveAndRestoreIgnoredItems;
-
+		 
 		protected OverlayData _defaultOverlayData;
 		public OverlayData defaultOverlaydata
 		{

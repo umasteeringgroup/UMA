@@ -293,7 +293,7 @@ namespace UMA.Editors
                 globalTransform = _umaData.umaRoot.transform.Find ("Global");
                 if (globalTransform != null) 
                 {
-                    _umaData.skeleton = new UMASkeleton (globalTransform);
+                    _umaData.skeleton = new UMASkeleton (globalTransform,_umaData.umaGenerator);
                 }
             }
         }

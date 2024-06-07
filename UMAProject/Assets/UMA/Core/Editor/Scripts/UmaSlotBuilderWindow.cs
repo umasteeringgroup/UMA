@@ -63,6 +63,7 @@ namespace UMA.Editors
 		private bool boneListInitialized;
 		public string BoneStripper;
 		private bool useRootFolder=false;
+		public bool keepAllBones = false;
 
         string GetAssetFolder()
 		{
@@ -161,8 +162,10 @@ namespace UMA.Editors
             calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
             udimAdjustment = EditorGUILayout.Toggle("Adjust for UDIM", udimAdjustment);
             EditorGUILayout.EndHorizontal();
+			EditorGUILayout.BeginHorizontal();
             useRootFolder = EditorGUILayout.Toggle("Write to Root Folder", useRootFolder);
-
+            keepAllBones = EditorGUILayout.Toggle("Keep All Bones", keepAllBones);
+            EditorGUILayout.EndHorizontal();
             BoneStripper = EditorGUILayout.TextField("Strip from Bones:", BoneStripper);
 			boneList.DoLayoutList();
 			GUIHelper.EndVerticalPadded(10);
@@ -178,13 +181,14 @@ namespace UMA.Editors
 			GUILayout.Label("Single Slot Processing", EditorStyles.boldLabel);
 
 			var newslotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-			if (newslotMesh != slotMesh)
-			{
-				errmsg = "";
-				slotMesh = newslotMesh;
-			}
+            if (newslotMesh != slotMesh)
+            {
+                errmsg = "";
+                slotMesh = newslotMesh;
+                slotName = newslotMesh.name;
+            }
 
-			slotName = EditorGUILayout.TextField("Slot Name", slotName);
+            slotName = EditorGUILayout.TextField("Slot Name", slotName);
 
 
 
@@ -430,6 +434,7 @@ namespace UMA.Editors
             sbp.material = material;
             sbp.udimAdjustment = udimAdjustment;
             sbp.useRootFolder = false;
+			sbp.keepAllBones = keepAllBones;
 
             SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(sbp);
 			slot.tags = Tags.ToArray();

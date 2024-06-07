@@ -143,7 +143,6 @@ namespace UMA
 
 		public override void Work()
 		{
-			UMAContextBase.IgnoreTag = ignoreTag;
 			if (!IsIdle())
 			{
                 // forceGarbageCollect is incremented every time the mesh/rig is built.
@@ -238,8 +237,7 @@ namespace UMA
             System.Diagnostics.Stopwatch gstopWatch = System.Diagnostics.Stopwatch.StartNew();
             gstopWatch.Start();
 #endif
-            UMAContextBase.IgnoreTag = ignoreTag;
-			if (data == null)
+            if (data == null)
             {
                 return true;
             }
