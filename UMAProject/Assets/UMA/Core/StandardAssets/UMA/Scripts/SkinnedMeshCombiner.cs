@@ -322,6 +322,77 @@ namespace UMA
 					}
 				}
 
+
+                if (has_blendShapes)
+                {
+                    if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length > 0)
+                    {
+                        int sourceBlendShapeLength = source.meshData.blendShapes.Length;
+                        for (int shapeIndex = 0; shapeIndex < sourceBlendShapeLength; shapeIndex++)
+                        {
+                            string shapeName = source.meshData.blendShapes[shapeIndex].shapeName;
+
+                            //If we aren't loading all blendshapes and we don't find the blendshape name in the list of explicit blendshapes to combine, then skip to the next one.
+                            if (blendShapeSettings.ignoreBlendShapes && !blendShapeSettings.blendShapes.ContainsKey(shapeName))
+                                continue;
+
+                            #region BlendShape Baking
+                            if (BakeBlendShape(blendShapeSettings.blendShapes, source.meshData.blendShapes[shapeIndex], ref vertexIndex, vertices, normals, tangents, has_normals, has_tangents))
+                                continue; //If we baked this blendshape, then continue to the next one and skip adding the regular blendshape.
+                            #endregion
+
+                            //If our dictionary contains the shape name, which it should
+                            if (blendShapeNames.ContainsKey(shapeName))
+                            {
+                                UMABlendShape[] sourceBlendShapes = source.meshData.blendShapes;
+                                int i = blendShapeNames[shapeName].index;
+
+                                if (blendShapes[i].frames.Length != sourceBlendShapes[shapeIndex].frames.Length)
+                                {
+                                    if (Debug.isDebugBuild)
+                                        Debug.LogError("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
+                                    break;
+                                }
+
+                                for (int frameIndex = 0; frameIndex < sourceBlendShapes[shapeIndex].frames.Length; frameIndex++)
+                                {
+                                    Array.Copy(sourceBlendShapes[shapeIndex].frames[frameIndex].deltaVertices, 0, blendShapes[i].frames[frameIndex].deltaVertices, vertexIndex, sourceVertexCount);
+
+                                    Vector3[] sourceDeltaNormals = sourceBlendShapes[shapeIndex].frames[frameIndex].deltaNormals;
+                                    Vector3[] sourceDeltaTangents = sourceBlendShapes[shapeIndex].frames[frameIndex].deltaTangents;
+
+									if (blendShapeSettings.loadNormals)
+									{
+										//if out dictionary says at least one source has normals or tangents and the current source has normals or tangents then copy them.
+										if (blendShapeNames[shapeName].hasNormals && sourceDeltaNormals.Length > 0)
+											Array.Copy(sourceDeltaNormals, 0, blendShapes[i].frames[frameIndex].deltaNormals, vertexIndex, sourceVertexCount);
+									}
+									else
+									{
+                                        blendShapes[i].frames[frameIndex].deltaNormals = new Vector3[0];
+                                    }
+
+									if (blendShapeSettings.loadTangents)
+									{
+										if (blendShapeNames[shapeName].hasTangents && sourceDeltaTangents.Length > 0)
+											Array.Copy(sourceDeltaTangents, 0, blendShapes[i].frames[frameIndex].deltaTangents, vertexIndex, sourceVertexCount);
+									}
+                                    else
+                                    {
+                                        blendShapes[i].frames[frameIndex].deltaTangents = new Vector3[0];
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (Debug.isDebugBuild)
+                                    Debug.LogError("BlendShape " + shapeName + " not found in dictionary!");
+                            }
+                        }
+                    }
+                }
+
+#if false
 				if (has_blendShapes) 
 				{
 					// calculate the group of blendshapes
@@ -377,7 +448,7 @@ namespace UMA
 									//if out dictionary says at least one source has normals or tangents and the current source has normals or tangents then copy them.
 									if (blendShapeNames[shapeName].hasNormals && sourceDeltaNormals.Length > 0)
 									{
-										if (blendShapes[currentShape].frames[0].deltaNormals == null || blendShapes[currentShape].frames[0].deltaNormals.Length == sourceVertexCount)
+										if (blendShapes[currentShape].frames[0].deltaNormals == null || blendShapes[currentShape].frames[0].deltaNormals.Length != sourceVertexCount)
 										{
 											blendShapes[currentShape].frames[0].deltaNormals = new Vector3[sourceVertexCount];
 										}
@@ -387,7 +458,7 @@ namespace UMA
 
 									if (blendShapeNames[shapeName].hasTangents && sourceDeltaTangents.Length > 0)
 									{
-										if (blendShapes[currentShape].frames[0].deltaTangents == null || blendShapes[currentShape].frames[0].deltaTangents.Length == sourceVertexCount)
+										if (blendShapes[currentShape].frames[0].deltaTangents == null || blendShapes[currentShape].frames[0].deltaTangents.Length != sourceVertexCount)
 										{
 											blendShapes[currentShape].frames[0].deltaTangents = new Vector3[sourceVertexCount];
 										}
@@ -412,22 +483,27 @@ namespace UMA
 								bool normalsCopied = false;
 								bool tangentsCopied = false;
 
-								if (blendShapes[currentShape].frames != null && blendShapes[currentShape].frames.Length > 1)
+                                if (blendShapes[currentShape].frames.Length != ubs.frames.Length)
+                                {
+                                    if (Debug.isDebugBuild)
 								{
-									blendShapes[currentShape].frames = new UMABlendFrame[1];
+                                        Debug.LogError("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
 								}
 
-								blendShapes[currentShape].frames = new UMABlendFrame[1];
+                                    break; 
+                                }
 
 								Array.Copy(ubs.frames[lastFrame].deltaVertices, 0, blendShapes[currentShape].frames[0].deltaVertices, vertexIndex, sourceVertexCount);
 
+								try
+								{
 								if (blendShapeSettings.loadNormals && blendShapeNames[shapeName].hasNormals)
 								{
 									Vector3[] sourceDeltaNormals = ubs.frames[lastFrame].deltaNormals;
 									if (sourceDeltaNormals.Length > 0)
 									{
 										normalsCopied = true;
-										if (blendShapes[currentShape].frames[0].deltaNormals == null || blendShapes[currentShape].frames[0].deltaNormals.Length == sourceVertexCount)
+											if (blendShapes[currentShape].frames[0].deltaNormals == null || blendShapes[currentShape].frames[0].deltaNormals.Length != sourceVertexCount)
 										{
 											blendShapes[currentShape].frames[0].deltaNormals = new Vector3[sourceVertexCount];
 										}
@@ -435,6 +511,11 @@ namespace UMA
 									}
 
 								}
+								}
+								catch(Exception ex)
+                                {
+                                    Debug.LogError("Error copying normals for blendshape " + shapeName + " " + ex.Message);
+                                }
 
 								if (blendShapeSettings.loadTangents && blendShapeNames[shapeName].hasTangents)
 								{
@@ -442,7 +523,7 @@ namespace UMA
 									if (sourceDeltaTangents.Length > 0)
 									{
 										tangentsCopied = true;
-										if (blendShapes[currentShape].frames[0].deltaTangents == null || blendShapes[currentShape].frames[0].deltaTangents.Length == sourceVertexCount)
+										if (blendShapes[currentShape].frames[0].deltaTangents == null || blendShapes[currentShape].frames[0].deltaTangents.Length != sourceVertexCount)
 										{
 											blendShapes[currentShape].frames[0].deltaTangents = new Vector3[sourceVertexCount];
 										}
@@ -470,6 +551,7 @@ namespace UMA
 
 					}
 				}
+				#endif
 				if (has_clothSkinning)
 				{
 					localClothVertices.Clear();

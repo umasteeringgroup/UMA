@@ -417,19 +417,25 @@ namespace UMA.CharacterSystem.Editors
                     for (int cr = 0; cr < compatibleRacesArraySize; cr++)
                     {
                         string race = thisElement.FindPropertyRelative("_compatibleRaces").GetArrayElementAtIndex(cr).stringValue;
-                        compatibleRaces = compatibleRaces +race;
-                        if (thisDCA.activeRace.data.IsCrossCompatibleWith(race)) 
+                        compatibleRaces = compatibleRaces + race;
+                        if (thisDCA.activeRace != null)
                         {
-                            compatible = true;
-                        }
-                        if (race == thisDCA.activeRace.name)
-                        {
-                            compatible = true;
-                        }
+                            if (thisDCA.activeRace.data != null)
+                            {
+                                if (thisDCA.activeRace.data.IsCrossCompatibleWith(race))
+                                {
+                                    compatible = true;
+                                }
+                                if (race == thisDCA.activeRace.name)
+                                {
+                                    compatible = true;
+                                }
 
-                        if (cr < compatibleRacesArraySize - 1)
-                        {
-                            compatibleRaces = compatibleRaces + ", ";
+                                if (cr < compatibleRacesArraySize - 1)
+                                {
+                                    compatibleRaces = compatibleRaces + ", ";
+                                }
+                            }
                         }
                     }
 
