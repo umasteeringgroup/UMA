@@ -754,8 +754,9 @@ namespace UMA
 		/// </summary>
 		/// <param name="renderer">Target renderer.</param>
 		/// <param name="skeleton">Skeleton.</param>
-		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton, UMAData.UMARecipe recipe)
+		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton, UMAData umaData)
 		{
+			var recipe = umaData.umaRecipe;
 			if (renderer == null)
 			{
 				if (Debug.isDebugBuild)
@@ -869,7 +870,15 @@ namespace UMA
 						break;
 					}
 
-					for (int frameIndex = 0; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
+					int frameIndex = 0;
+
+					//if (blendshapeS)
+					if (!umaData.blendShapeSettings.loadAllFrames)
+					{
+						frameIndex = blendShapes[shapeIndex].frames.Length - 1;
+                    }
+
+					for (; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
 					{
 						//There might be an extreme edge case where someone has the same named blendshapes on different meshes that end up on different renderers.
 						string name = blendShapes[shapeIndex].shapeName;
@@ -889,7 +898,14 @@ namespace UMA
                             deltaTangents = null;
                         }
 
+						try
+						{
                         mesh.AddBlendShapeFrame(name, frameWeight, deltaVertices, deltaNormals, deltaTangents);
+						}
+						catch(Exception ex)
+						{
+                            Debug.LogError("Error adding blendshape frame: " + ex.Message);
+                        }
 					}
 				}
 			}

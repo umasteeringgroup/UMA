@@ -29,16 +29,18 @@ namespace UMA
 		public Quaternion rotation;
 		public Vector3 position;
 		public Vector3 scale;
-		public UMASavedItem(string boneName, int hash, Transform obj)
+		public bool replaceExisting = false;
+        public UMASavedItem(string boneName, int hash, Transform obj, bool replaceExisting)
         {
-			ParentBoneName = boneName;
+            ParentBoneName = boneName;
             ParentBoneNameHash = hash;
-			Object = obj;
-			rotation = obj.localRotation;
-			position = obj.localPosition;
-			scale = obj.localScale;
+            Object = obj;
+            rotation = obj.localRotation;
+            position = obj.localPosition;
+            scale = obj.localScale;
+            this.replaceExisting = replaceExisting;
         }
-	}
+    }
 
     public struct SlotTracker
     {
@@ -79,7 +81,7 @@ namespace UMA
 
             if (holder == null)
             {
-				string ignoreTag = UMAContextBase.IgnoreTag;
+				string ignoreTag = umaGenerator.ignoreTag;
                 if (string.IsNullOrEmpty(ignoreTag))
                 {
                     ignoreTag = "UMAIgnore";
@@ -99,26 +101,19 @@ namespace UMA
 			// continue.
 			if (umaRoot != null)
 			{
-				SaveBonesRecursively(umaRoot.transform, holder.transform);
+				SaveBonesRecursively(umaRoot.transform, holder.transform, umaGenerator.ignoreTag, umaGenerator.keepTag);
 			}
         }
 
-        public void SaveBonesRecursively(Transform bone, Transform holder)
+        public void SaveBonesRecursively(Transform bone, Transform holder, string ignoreTag, string keepTag)
         {
-			string ignoreTag = UMAContextBase.IgnoreTag;
-
-			if (string.IsNullOrEmpty(ignoreTag))
-			{
-				ignoreTag = "UMAIgnore";
-            }
-
             List<Transform> childlist = new List<Transform>();
 
-            if (bone.CompareTag(ignoreTag))
+            if (bone.CompareTag(ignoreTag) || bone.CompareTag(keepTag))
             {
                 if (bone.parent != null)
                 {
-                    AddSavedItem(bone);
+                    AddSavedItem(bone,bone.CompareTag(keepTag));
                     bone.SetParent(holder, false);
                 }
             }
@@ -133,13 +128,13 @@ namespace UMA
                 for (int i = 0; i < childlist.Count; i++)
                 {
                     Transform child = childlist[i];
-                    SaveBonesRecursively(child, holder);
+                    SaveBonesRecursively(child, holder, umaGenerator.ignoreTag, umaGenerator.keepTag);
                 }
             }
         }
-        public void AddSavedItem(Transform transform)
+        public void AddSavedItem(Transform transform, bool replace)
 		{
-			savedItems.Add(new UMASavedItem(transform.parent.name,UMAUtils.StringToHash(transform.parent.name), transform));
+			savedItems.Add(new UMASavedItem(transform.parent.name,UMAUtils.StringToHash(transform.parent.name), transform, replace));
 		}
 
 		public void RestoreSavedItems()
@@ -148,6 +143,15 @@ namespace UMA
 			{
 				UMASavedItem usi = savedItems[i];
 				Transform parent = skeleton.GetBoneTransform(usi.ParentBoneNameHash);
+				if (usi.replaceExisting)
+				{
+					var newBone = skeleton.GetBoneTransform(usi.Object.name);
+					if (newBone.gameObject.GetInstanceID() != usi.Object.gameObject.GetInstanceID())
+					{
+                        skeleton.ReplaceBone(usi);
+						DestroyImmediate(newBone);
+                    }
+				}
 				if (parent != null)
 				{
 					usi.Object.SetParent(parent, false);
@@ -155,7 +159,7 @@ namespace UMA
 				else
 				{
 					usi.Object.SetParent(umaRoot.transform, false);
-                }
+				}
 			}
 			savedItems.Clear();
 		}
@@ -465,7 +469,7 @@ namespace UMA
 				}
 				globalTransform = newGlobal.transform;
 			}
-			skeleton = new UMASkeleton(globalTransform);
+			skeleton = new UMASkeleton(globalTransform,umaGenerator);
 		}
 
 	
@@ -512,7 +516,7 @@ namespace UMA
 				}
 				globalTransform = newGlobal.transform;
 			}
-			skeleton = new UMASkeleton(globalTransform);
+			skeleton = new UMASkeleton(globalTransform,umaGenerator);
 		}
 
 		public void ResetAnimatedBones()

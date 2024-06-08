@@ -184,7 +184,7 @@ namespace UMA
 						var Blendshapes = SkinnedMeshCombiner.GetBlendshapeSources(tempMesh, umaData.umaRecipe);
 						tempMesh.blendShapes = Blendshapes.ToArray();
                     }
-					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData.umaRecipe);
+					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
                     var inst = combinedMeshList[0];
                     inst.slotData.vertexOffset = 0;
                     inst.slotData.submeshIndex = 0;
@@ -207,7 +207,7 @@ namespace UMA
 						RecalculateUV(umaMesh);
 					}
 
-					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData.umaRecipe);
+					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
 #if NO_BAD_BUFFERS
 					umaMesh.ReleaseSharedBuffers();
 #endif

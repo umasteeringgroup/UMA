@@ -24,7 +24,7 @@ public class Preloader : MonoBehaviour
     private AsyncOperationHandle op;
 #endif
     // Start is called before the first frame update
-    async void Start()
+    public void Start()
     {
 #if UMA_ADDRESSABLES
         StartCoroutine(Initialize());

@@ -8,8 +8,9 @@ namespace UMA.PoseTools
 		public ExpressionPlayer expressionPlayer;
 		public UMAExpressionSet expressionSet;
 		public Transform skeletonRoot;
+		public UMAGeneratorBase umaGenerator;
 
-		protected UMASkeleton skeleton;
+        protected UMASkeleton skeleton;
 
 		void OnRenderObject()
 		{
@@ -52,9 +53,30 @@ namespace UMA.PoseTools
 				}
 			}
 
+			if (umaGenerator == null)
+			{
+                UMAContextBase uc = UMAContextBase.Instance;
+
+                if (uc == null)
+                {
+					Debug.LogWarning("Couldn't find UMA Context to preview!");
+                    return;
+                }
+                umaGenerator = uc.gameObject.GetComponentInChildren<UMAGeneratorBase>();
+
+                if (umaGenerator == null)
+				{
+                    if (Debug.isDebugBuild)
+					{
+                        Debug.LogWarning("Couldn't find UMA Generator to preview!");
+                    }
+                    return;
+                }
+            }
+
 			if (skeleton == null)
 			{
-				skeleton = new UMASkeleton(skeletonRoot);
+				skeleton = new UMASkeleton(skeletonRoot,umaGenerator);
 			}
 
 			expressionSet.RestoreBones(skeleton);
