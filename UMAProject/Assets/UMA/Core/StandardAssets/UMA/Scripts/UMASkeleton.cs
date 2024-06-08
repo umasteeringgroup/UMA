@@ -796,5 +796,24 @@ namespace UMA
 		{
 			return boneHashData[nameHash].boneTransform.localRotation;
 		}
-	}
+
+        internal void ReplaceBone(UMASavedItem usi)
+        {
+			ReplaceBoneRecursively(usi.Object);
+        }
+
+		internal void ReplaceBoneRecursively(Transform transform)
+		{
+            int nameHash = UMAUtils.StringToHash(transform.name);
+			BoneData bd = GetBone(nameHash);
+			if (bd != null)
+			{
+                bd.boneTransform = transform;
+            }
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                ReplaceBoneRecursively(transform.GetChild(i));
+            }
+        }
+    }
 }

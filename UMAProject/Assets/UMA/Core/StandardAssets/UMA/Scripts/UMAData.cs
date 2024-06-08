@@ -145,20 +145,20 @@ namespace UMA
 				Transform parent = skeleton.GetBoneTransform(usi.ParentBoneNameHash);
 				if (usi.replaceExisting)
 				{
-                    // find the existing object and replace it.
-                    // update the transform to match the saved transform.
-                    // usi.Object.SetParent(parent, false);
+					var newBone = skeleton.GetBoneTransform(usi.Object.name);
+					if (newBone.gameObject.GetInstanceID() != usi.Object.gameObject.GetInstanceID())
+					{
+                        skeleton.ReplaceBone(usi);
+						DestroyImmediate(newBone);
+                    }
+				}
+				if (parent != null)
+				{
+					usi.Object.SetParent(parent, false);
 				}
 				else
 				{
-					if (parent != null)
-					{
-						usi.Object.SetParent(parent, false);
-					}
-					else
-					{
-						usi.Object.SetParent(umaRoot.transform, false);
-					}
+					usi.Object.SetParent(umaRoot.transform, false);
 				}
 			}
 			savedItems.Clear();
