@@ -5624,7 +5624,6 @@ namespace UMA.CharacterSystem
                 }
                 if (string.IsNullOrEmpty(name))
                 {
-                    Debug.Log("Got a null race...");
                     return;
                 }
                 _theRaceData = thisContext.GetRace(name);

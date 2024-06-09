@@ -21,9 +21,10 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
+#endif
+
 using UnityEngine.SceneManagement;
 using System.Text;
-#endif
 
 
 namespace UMA
