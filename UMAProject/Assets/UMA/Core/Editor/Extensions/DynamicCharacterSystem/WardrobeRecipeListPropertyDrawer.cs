@@ -280,7 +280,7 @@ namespace UMA.CharacterSystem.Editors
                         changed = true;
                     }
                 }
-                if (GUILayout.Button("Add all Available"))
+                if (GUILayout.Button("Add all"))
                 {
                     var availableRecipes = thisDCA.AvailableRecipes;
                     foreach (var slot in availableRecipes.Keys)
@@ -294,6 +294,11 @@ namespace UMA.CharacterSystem.Editors
                             }
                         }
                     }
+                }
+                if (GUILayout.Button("Remove disabled"))
+                {
+                    RemoveDisabled(thisRecipesProp);
+                    changed = true;
                 }
                 GUILayout.EndHorizontal();
 
@@ -362,6 +367,11 @@ namespace UMA.CharacterSystem.Editors
                     SetupDropdown(thisDCA.activeRace.name);
 
                     ToggleAll = GUILayout.Toggle(ToggleAll, "Toggle", GUILayout.ExpandWidth(true));
+
+                    if (GUILayout.Button("Sort by Slot", GUILayout.Width(100)))
+                    {
+                        SortBySlot(thisRecipesProp);
+                    }
                    
                     int added = -1;
                     EditorGUILayout.LabelField("Add Item", GUILayout.Width(60));
@@ -561,6 +571,36 @@ namespace UMA.CharacterSystem.Editors
             }
            EditorGUI.EndProperty();
         }
+
+        private void SortBySlot(SerializedProperty thisRecipesProp)
+        {
+            // Sort the list by slot
+            List<DynamicCharacterAvatar.WardrobeRecipeListItem> sortedList = new List<DynamicCharacterAvatar.WardrobeRecipeListItem>();
+            for (int i = 0; i < thisRecipesProp.arraySize; i++)
+            {
+               sortedList.Add(thisDCA.preloadWardrobeRecipes.recipes[i]);
+            }
+
+            sortedList.Sort((x, y) => x._recipe.wardrobeSlot.CompareTo(y._recipe.wardrobeSlot));
+            thisDCA.preloadWardrobeRecipes.recipes = sortedList;
+            changed = true;
+            thisRecipesProp.serializedObject.Update();
+        }
+
+        private void RemoveDisabled(SerializedProperty thisRecipesProp)
+        {
+            // For each recipe in the list, if it is disabled, remove it.
+            for (int i = thisRecipesProp.arraySize - 1; i >= 0; i--)
+            {
+                SerializedProperty thisElement = thisRecipesProp.GetArrayElementAtIndex(i);
+                if (!thisElement.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue)
+                {
+                    thisRecipesProp.DeleteArrayElementAtIndex(i);
+                    changed = true;
+                }
+            }
+        }
+
         /// <summary>
         /// with wardobeRecipes, DynamicCharacterSystem does not have a list of refrenced recipes like the other libraries
         /// so the only way to get them is from DynamicAssetLoader (which is how DCS gets them) 
@@ -568,9 +608,9 @@ namespace UMA.CharacterSystem.Editors
         /// </summary>
         /// <param name="recipeName"></param>
         /// <returns></returns>
-		/// 
+        /// 
 
-		private UMARecipeBase FindMissingRecipe(string recipeName)
+        private UMARecipeBase FindMissingRecipe(string recipeName)
 		{
 			UMARecipeBase foundRecipe = null;
 			//the following will find things like femaleHair1 if 'maleHair1' is the recipe name

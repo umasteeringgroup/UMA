@@ -149,7 +149,7 @@ namespace UMA
 					if (newBone.gameObject.GetInstanceID() != usi.Object.gameObject.GetInstanceID())
 					{
                         skeleton.ReplaceBone(usi);
-						DestroyImmediate(newBone);
+						DestroyImmediate(newBone.gameObject);
                     }
 				}
 				if (parent != null)

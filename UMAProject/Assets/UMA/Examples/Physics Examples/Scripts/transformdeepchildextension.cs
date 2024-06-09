@@ -1,29 +1,32 @@
 using UnityEngine;
 
-public static class TransformDeepChildExtension
- {
-     //Breadth-first search
-	 public static Transform FindDeepChild(this Transform aParent, string aName)
-	 {
-		if (aParent == null)
+namespace UMA
+{
+    public static class TransformDeepChildExtension
+    {
+        //Breadth-first search
+        public static Transform FindDeepChild(this Transform aParent, string aName)
         {
-            return null;
-        }
+            if (aParent == null)
+            {
+                return null;
+            }
 
-        var result = aParent.Find(aName);
-		 if (result != null)
-        {
-            return result;
-        }
-
-        foreach (Transform child in aParent)
-		 {
-			 result = child.FindDeepChild(aName);
-			 if (result != null)
+            var result = aParent.Find(aName);
+            if (result != null)
             {
                 return result;
             }
+
+            foreach (Transform child in aParent)
+            {
+                result = child.FindDeepChild(aName);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            return null;
         }
-		 return null;
-	 }
- }
+    }
+}
