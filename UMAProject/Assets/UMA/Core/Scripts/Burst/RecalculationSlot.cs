@@ -66,8 +66,6 @@ namespace UMA
             tangents.Dispose();
             triangles.Dispose();
         }
-
-    }
 #endif
         }
     }
