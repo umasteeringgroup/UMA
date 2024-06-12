@@ -411,7 +411,6 @@ public struct AvatarDefinition
                     // Unpack Colors
                     splitter[0] = '>';
                     string[] SharedColor = s.Substring(2).Trim().Split(splitter, StringSplitOptions.RemoveEmptyEntries);
-                    string[] NoRemove = s.Substring(2).Trim().Split(splitter);//, StringSplitOptions.RemoveEmptyEntries);
                     if (SharedColor.Length > 1)
                     {
                         SharedColorDef scd = new SharedColorDef();
