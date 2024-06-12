@@ -169,7 +169,6 @@ namespace UMA
 			{
 				CleanupNativeArrays();
 
-				//Debug.Log("Creating native arrays in mesh combiner");
 				nativeBoneWeights = new NativeArray<BoneWeight1>(boneWeightCount, Allocator.Persistent);
 				nativeBonesPerVertex = new NativeArray<byte>(vertexCount, Allocator.Persistent);
 			}
@@ -226,7 +225,6 @@ namespace UMA
                 bonesList.Clear();
             }
 
-			Debug.Log("Processing " + sources.Length + " sources");
             for (int k = 0; k < sources.Length; k++)
 			{
                 CombineInstance source = sources[k];
@@ -323,10 +321,9 @@ namespace UMA
 					}
 				}
 
-				Debug.Log("Processing blendshape " + source.meshData.SlotName + " has_blendshaps = "+has_blendShapes);
                 if (has_blendShapes)
                 {
-                    //if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length > 0)
+                    if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length > 0)
                     {
                         List<UMABlendShape> sourceShapes = GetBlendshapeSources(source.meshData, recipe);
                         int sourceBlendShapeLength = sourceShapes.Count;
@@ -334,12 +331,10 @@ namespace UMA
                         {
 							UMABlendShape ubs = sourceShapes[shapeIndex];
                             string shapeName = ubs.shapeName;
-                            Debug.Log("Processing blendshape " + shapeName + " on " + source.meshData.SlotName);
 
                             //If we aren't loading all blendshapes and we don't find the blendshape name in the list of explicit blendshapes to combine, then skip to the next one.
                             if (blendShapeSettings.ignoreBlendShapes && !blendShapeSettings.blendShapes.ContainsKey(shapeName))
                             {
-								Debug.Log("Skipping blendshape " + shapeName + " on " + source.meshData.SlotName);
                                 continue;
                             }
 
@@ -358,10 +353,10 @@ namespace UMA
 
                                 if (blendShapes[i].frames.Length != ubs.frames.Length)
                                 {
-                                    //if (Debug.isDebugBuild)
-                                    //{
+                                    if (Debug.isDebugBuild)
+                                    {
                                         Debug.LogError("SkinnedMeshCombiner: mesh blendShape frame counts don't match!");
-                                   //}
+                                    }
 
                                     break;
                                 }
@@ -401,10 +396,10 @@ namespace UMA
                             }
                             else
                             {
-                                //if (Debug.isDebugBuild)
-                               // {
+                                if (Debug.isDebugBuild)
+                                {
                                     Debug.LogError("BlendShape " + shapeName + " not found in dictionary!");
-                                //}
+                                }
                             }
                         }
                     }

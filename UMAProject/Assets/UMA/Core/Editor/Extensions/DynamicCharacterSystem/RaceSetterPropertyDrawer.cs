@@ -42,8 +42,17 @@ namespace UMA.CharacterSystem.Editors
 				}
 			}
 		}
-		private void CheckRaceDataLists()
+
+		float lastTime = 0.0f;
+        private void CheckRaceDataLists()
 		{
+			float currentTime = Time.realtimeSinceStartup;
+			if (currentTime - lastTime < 5.0f)
+			{
+				lastTime = currentTime;
+                return;
+            }
+
 			if (UMAContext.Instance == null)
             {
 				var raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
@@ -66,6 +75,8 @@ namespace UMA.CharacterSystem.Editors
 			}
 		}
 
+		
+		
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			CheckRaceDataLists();

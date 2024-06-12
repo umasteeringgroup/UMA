@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: UMAToon_Fade_Diffuse_Normal_Metalic
   m_EditorClassIdentifier: 
   translateSRP: 1
+  AutoSetSRPMaterials: 1
   _material: {fileID: 2100000, guid: 347d9e2e7deca3e49abfd487b93d7af9, type: 2}
   _secondPass: {fileID: 0}
   srpMaterials:
@@ -20,7 +21,7 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: 347d9e2e7deca3e49abfd487b93d7af9, type: 2}
     secondPass: {fileID: 0}
     alternateKeywords:
-    - _MainTex
+    - _BaseMap
     - _BumpMap
     - _MetallicGlossMap
   materialType: 1

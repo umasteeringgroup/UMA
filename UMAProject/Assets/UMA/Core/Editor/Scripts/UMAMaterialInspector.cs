@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace UMA.Editors
 {
@@ -307,10 +308,16 @@ namespace UMA.Editors
                         EditorGUILayout.PropertyField( materialPropertyName, new GUIContent("Material Property Name", "The name of the property this texture corresponds to in the shader used by this material."), GUILayout.MinWidth(300));
                         if (_shaderProperties != null)
                         {
+                            string oldValue = materialPropertyName.stringValue;
                             int selection = EditorGUILayout.Popup(0, _shaderProperties, GUILayout.MinWidth(100), GUILayout.MaxWidth(200));
+                            if (oldValue != materialPropertyName.stringValue) 
+                            {
+                                UpdateCurrentSRP(i, materialPropertyName.stringValue, serializedObject);
+                            }
                             if (selection > 0)
                             {
                                 materialPropertyName.stringValue = _shaderProperties[selection];
+                                UpdateCurrentSRP(i, _shaderProperties[selection],serializedObject);
                             }
                         }
                         EditorGUILayout.EndHorizontal();
@@ -350,6 +357,23 @@ namespace UMA.Editors
                     GUILayout.Space(8);
                 }
                 GUIHelper.EndVerticalPadded(10);
+            }
+        }
+
+        private void UpdateCurrentSRP(int i, string v, SerializedObject sobj)
+        {
+            // Update the current SRP property name from the array
+            UMAMaterial source = target as UMAMaterial;
+            if (source.srpMaterials != null)
+            {
+                foreach (UMAMaterial.SRPMaterial srpMaterial in source.srpMaterials)
+                {
+                    if (srpMaterial.SRP == UMAUtils.CurrentPipeline)
+                    {
+                        srpMaterial.alternateKeywords[i] = v;
+                        sobj.Update();
+                    }
+                }
             }
         }
 

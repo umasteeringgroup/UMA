@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: UMAToon_Fade_Diffuse_Normal
   m_EditorClassIdentifier: 
   translateSRP: 1
+  AutoSetSRPMaterials: 1
   _material: {fileID: 2100000, guid: 0e7954264ddc98043858c786f551a409, type: 2}
   _secondPass: {fileID: 0}
   srpMaterials:
@@ -20,7 +21,7 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: 0e7954264ddc98043858c786f551a409, type: 2}
     secondPass: {fileID: 0}
     alternateKeywords:
-    - _MainTex
+    - _BaseMap
     - _BumpMap
   materialType: 2
   channels:
