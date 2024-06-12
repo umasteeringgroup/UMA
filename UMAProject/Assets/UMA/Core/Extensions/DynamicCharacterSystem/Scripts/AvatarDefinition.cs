@@ -233,7 +233,7 @@ public struct AvatarDefinition
                 theString.Append(scd.name);
                 theString.Append(',');
                 theString.Append(scd.count);
-                theString.Append('=');
+                theString.Append('>');
                 for (int i1 = 0; i1 < scd.channels.Length; i1++)
                 {
                     ColorDef c = scd.channels[i1];
@@ -409,8 +409,9 @@ public struct AvatarDefinition
                     break;
                 case 'C':
                     // Unpack Colors
-                    splitter[0] = '=';
+                    splitter[0] = '>';
                     string[] SharedColor = s.Substring(2).Trim().Split(splitter, StringSplitOptions.RemoveEmptyEntries);
+                    string[] NoRemove = s.Substring(2).Trim().Split(splitter);//, StringSplitOptions.RemoveEmptyEntries);
                     if (SharedColor.Length > 1)
                     {
                         SharedColorDef scd = new SharedColorDef();
