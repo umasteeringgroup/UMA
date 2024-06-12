@@ -261,6 +261,21 @@ namespace UMA
 		}
 #endif
 
+        public List<string> GetTexturePropertyNames()
+        {
+            List<string> names = new List<string>();
+
+
+            foreach (MaterialChannel channel in channels)
+            {
+                if (channel.channelType == ChannelType.Texture || channel.channelType == ChannelType.TintedTexture || channel.channelType == ChannelType.DiffuseTexture)
+                {
+                    names.Add(channel.materialPropertyName);
+                }
+            }
+            return names;
+        }
+
         private bool isGeneratedTextures
         {
             get
