@@ -502,7 +502,7 @@ namespace UMA.Controls
 					*/
 #if UMA_ADDRESSABLES
 
-					if (ai.Item is UMATextRecipe)
+					if (ai._Type == typeof(UMATextRecipe))
 					{
 						UMATextRecipe recipe = ai.Item as UMATextRecipe;
 

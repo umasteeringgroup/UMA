@@ -323,7 +323,7 @@ namespace UMA
 
                 if (has_blendShapes)
                 {
-                    if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length > 0)
+                    //if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length > 0)
                     {
                         List<UMABlendShape> sourceShapes = GetBlendshapeSources(source.meshData, recipe);
                         int sourceBlendShapeLength = sourceShapes.Count;
