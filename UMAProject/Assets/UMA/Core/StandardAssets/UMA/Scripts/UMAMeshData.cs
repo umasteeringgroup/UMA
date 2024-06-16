@@ -211,7 +211,74 @@ namespace UMA
 			return true;
 #endif
 		}
-	}
+#if UNITY_EDITOR
+		public UMABlendFrame Duplicate()
+		{
+			UMABlendFrame uMABlendFrame = new UMABlendFrame();
+            uMABlendFrame.frameWeight = frameWeight;
+
+            uMABlendFrame.deltaVertices = new Vector3[deltaVertices.Length];
+            for (int i = 0; i < deltaVertices.Length; i++)
+            {
+                uMABlendFrame.deltaVertices[i] = deltaVertices[i];
+
+            }
+
+            if (deltaNormals != null)
+            {
+                uMABlendFrame.deltaNormals = new Vector3[deltaNormals.Length];
+                for (int i = 0; i < deltaNormals.Length; i++)
+                {
+                    uMABlendFrame.deltaNormals[i] = deltaNormals[i];
+                }
+
+            }
+
+            if (deltaTangents != null)
+            {
+                uMABlendFrame.deltaTangents = new Vector3[deltaTangents.Length];
+                for (int i = 0; i < deltaTangents.Length; i++)
+                {
+                    uMABlendFrame.deltaTangents[i] = deltaTangents[i];
+                }
+            }
+            return uMABlendFrame;
+        }
+
+		public UMABlendFrame DuplicateAndTranslate(Dictionary<int, int> NewVertstoOurVerts, int NumNewVerts)
+		{
+            UMABlendFrame uMABlendFrame = new UMABlendFrame();
+            uMABlendFrame.frameWeight = frameWeight;
+
+            uMABlendFrame.deltaVertices = new Vector3[NumNewVerts];
+            for (int i = 0; i < NumNewVerts; i++)
+            {
+                uMABlendFrame.deltaVertices[i] = deltaVertices[NewVertstoOurVerts[i]];
+            }
+
+			if (deltaNormals != null && deltaNormals.Length > 0)
+			{
+                uMABlendFrame.deltaNormals = new Vector3[NumNewVerts];
+                for (int i = 0; i < NumNewVerts; i++)
+				{
+					uMABlendFrame.deltaNormals[i] = deltaNormals[NewVertstoOurVerts[i]];
+                }
+            }
+
+            if (deltaTangents != null && deltaTangents.Length > 0)
+            {
+                uMABlendFrame.deltaTangents = new Vector3[NumNewVerts];
+                for (int i = 0; i < NumNewVerts; i++)
+                {
+                    uMABlendFrame.deltaTangents[i] = deltaTangents[NewVertstoOurVerts[i]];
+                }
+            }
+
+            return uMABlendFrame;
+        }
+#endif
+
+    }
 
 	[Serializable]
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -219,12 +286,39 @@ namespace UMA
 	{
 		public string shapeName;
 		public UMABlendFrame[] frames;
-	}
 
-	/// <summary>
-	/// UMA version of Unity mesh data.
-	/// </summary>
-	[Serializable]
+#if UNITY_EDITOR
+		public UMABlendShape Duplicate()
+		{
+            UMABlendShape newShape = new UMABlendShape();
+			newShape.shapeName = shapeName;
+            newShape.frames = new UMABlendFrame[frames.Length];
+            for (int i = 0; i < frames.Length; i++)
+            {
+                newShape.frames[i] = frames[i].Duplicate();
+            }
+			return newShape;
+        }
+
+		public UMABlendShape DuplicateAndTranslate(Dictionary<int,int> newVertsToOurverts)
+        {
+            UMABlendShape newShape = new UMABlendShape();
+            newShape.shapeName = shapeName;
+            newShape.frames = new UMABlendFrame[frames.Length];
+            for (int i = 0; i < frames.Length; i++)
+            {
+
+				newShape.frames[i] = frames[i].DuplicateAndTranslate(newVertsToOurverts, newVertsToOurverts.Count);
+            }
+            return newShape;
+        }
+#endif
+    }
+
+    /// <summary>
+    /// UMA version of Unity mesh data.
+    /// </summary>
+    [Serializable]
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public class UMAMeshData
 	{

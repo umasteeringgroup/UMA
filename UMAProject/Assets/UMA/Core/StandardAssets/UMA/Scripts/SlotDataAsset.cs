@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using Mono.Cecil;
+using System;
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using System.Text;
 using UnityEditorInternal;
 #endif
 using UnityEngine;
 using UnityEngine.Serialization;
-
-using boneWeld = System.Collections.Generic.List<UnityEngine.BoneWeight1>;
 
 namespace UMA
 {
@@ -17,6 +17,7 @@ namespace UMA
     [PreferBinarySerialization]
     public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider, IUMAIndexOptions
     {
+        public enum BlendshapeCopyMode { None, ClearAndReplace, UpdateAndAdd, AddNewOnly }
         public string slotName;
         [System.NonSerialized]
         public int nameHash;
@@ -59,15 +60,149 @@ namespace UMA
 
         public List<Welding> Welds = new List<Welding>();
 
+        public Dictionary<int, int> TheirVertexToOurVertex = new Dictionary<int, int>();
+        public Dictionary<int,int> OurVertextoTheirVertex = new Dictionary<int, int>();
+        public Dictionary<int,int> TheirBonesToOurBones = new Dictionary<int, int>();
+        public Dictionary<int, int> OurBonesToTheirBones = new Dictionary<int, int>();
+        public Dictionary<int, List<BoneWeight1>> TheirBoneWeights = new Dictionary<int, List<BoneWeight1>>();
+        public Dictionary<int, List<BoneWeight1>> OurBoneWeights = new Dictionary<int, List<BoneWeight1>>();
+
+        public int FindOurBone(string boneName)
+        {
+            for (int i = 0; i < meshData.umaBones.Length; i++)
+            {
+                if (meshData.umaBones[i].name == boneName)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
 
 
-        public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals, float weldDistance)
+        public void BUildOurAndTheirBoneWeights(SlotDataAsset theirSlot)
+        {
+            OurBoneWeights.Clear();
+            TheirBoneWeights.Clear();
+            // Loop through all the boneweights, and build a dictionary of bone indexes to weights.
+
+            int VertexPos = 0;
+            for(int ourVertex=0; ourVertex< meshData.vertices.Length;ourVertex++)
+            {
+                OurBoneWeights.Add(ourVertex, new List<BoneWeight1>());
+                for(int i=0; i < meshData.ManagedBonesPerVertex[ourVertex]; i++, VertexPos++)
+                {
+                    OurBoneWeights[ourVertex].Add(meshData.ManagedBoneWeights[VertexPos]);
+                }
+            }
+
+            VertexPos = 0;
+            for(int theirVertex = 0; theirVertex < theirSlot.meshData.vertices.Length; theirVertex++)
+            {
+                TheirBoneWeights.Add(theirVertex, new List<BoneWeight1>());
+                for(int i=0; i < theirSlot.meshData.ManagedBonesPerVertex[theirVertex]; i++, VertexPos++)
+                {
+                    TheirBoneWeights[theirVertex].Add(theirSlot.meshData.ManagedBoneWeights[VertexPos]);
+                }
+            }
+        }
+
+        public void BuildBoneLookups(SlotDataAsset theirSlot)
+        {
+            TheirBonesToOurBones.Clear();
+            for (int i = 0; i < theirSlot.meshData.umaBones.Length; i++)
+            {
+                string theirBoneName = theirSlot.meshData.umaBones[i].name;
+                int ourBoneIndex = FindOurBone(theirBoneName);
+                if (ourBoneIndex == -1)
+                {
+                    Debug.LogError($"Could not find bone {theirBoneName} in our bones");
+                    return;
+                }
+                TheirBonesToOurBones.Add(i, ourBoneIndex);
+            }
+
+            OurBonesToTheirBones.Clear();
+            for (int i = 0; i < meshData.umaBones.Length; i++)
+            {
+                string ourBoneName = meshData.umaBones[i].name;
+                int theirBoneIndex = theirSlot.FindOurBone(ourBoneName);
+                if (theirBoneIndex == -1)
+                {
+                    Debug.LogError($"Could not find bone {ourBoneName} in their bones");
+                    return;
+                }
+                OurBonesToTheirBones.Add(i, theirBoneIndex);
+            }
+        }
+
+        public void BuildVertexLookups(SlotDataAsset theirSlot)
+        {
+            TheirVertexToOurVertex.Clear();
+            for (int Thiers = 0; Thiers < theirSlot.meshData.vertices.Length; Thiers++)
+            {
+                float Closest = float.MaxValue;
+                int ClosestOurs = -1;
+                for (int ours = 0; ours < meshData.vertices.Length; ours++)
+                {
+                    float Len = (theirSlot.meshData.vertices[Thiers] - meshData.vertices[ours]).magnitude;
+                    if (Len < Closest)
+                    {
+                        Closest = Len;
+                        ClosestOurs = ours;
+                    }
+                }
+                TheirVertexToOurVertex.Add(Thiers, ClosestOurs);
+            }
+
+            OurVertextoTheirVertex.Clear();
+            for (int ours = 0; ours < meshData.vertices.Length; ours++)
+            {
+                float Closest = float.MaxValue;
+                int ClosestTheirs = -1;
+                for (int Thiers = 0; Thiers < theirSlot.meshData.vertices.Length; Thiers++)
+                {
+                    float Len = (theirSlot.meshData.vertices[Thiers] - meshData.vertices[ours]).magnitude;
+                    if (Len < Closest)
+                    {
+                        Closest = Len;
+                        ClosestTheirs = Thiers;
+                    }
+                }
+                OurVertextoTheirVertex.Add(ours, ClosestTheirs);
+            }
+
+        }
+
+        public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals, float weldDistance, BlendshapeCopyMode bscopyMode )
         {
             Welding thisWeld = new Welding();
 
 
             thisWeld.MisMatchCount = 0;
             thisWeld.WeldedToSlot = slot.slotName;
+
+
+            // managed Boneweights 
+            // public BoneWeight1[] ManagedBoneWeights;
+            // public byte[] ManagedBonesPerVertex;
+
+            // ManagedBonesPerVertex is a byte array that contains the number of bones that affect each vertex.
+            // ManagedBoneWeights is a BoneWeight1 array that contains the bone index and weight for each bone that affects each vertex.
+
+            // to convert the boneweights, we need to match each of our vertexes to the source vertexes.
+            // and then match the source bones to our bones.
+            // then we can copy the boneweights from the source to our boneweights, but using our bone indexes.
+            // Each of our vertexes must have a matching set of boneweights.  
+            // Any of the bones in the source mesh (not our mesh) that are weighted must have a corresponding bone in our mesh.
+            // But non-weighted bones in the source mesh do not need to be in our mesh.
+
+            // So go through, and map our vertexes to the closest vertex in their mesh. Then build a reverse lookup for the vertexes.
+            // the go through all the mapped bones, and build a reverse lookup for the bones.
+            // Then build a new boneweight array, using our vertexes and bone indexes, but their weights.
+
+
+
             for (int Dest = 0; Dest < slot.meshData.vertices.Length; Dest++)
             {
                 for (int Src = 0; Src < meshData.vertices.Length; Src++)
@@ -108,115 +243,114 @@ namespace UMA
                 EnsureBoneWeights();
                 slot.EnsureBoneWeights();
 
-                Dictionary<int, int> theirBonePositionInBoneWeights = new Dictionary<int, int>();
-                //Dictionary<int, int> ourBonePositionInBoneWeights = new Dictionary<int, int>();
-                Dictionary<int, WeldPoint> ourWeldPoints = new Dictionary<int, WeldPoint>();
-                //Dictionary<int,string> theirBoneNames = new Dictionary<int,string>();
-                Dictionary<string, int> theirBoneIndexByName = new Dictionary<string, int>();
-                //Dictionary<string,int> ourBoneIndexes = new Dictionary<string,int>();
+                BuildVertexLookups(slot);
+                BuildBoneLookups(slot);
+                BUildOurAndTheirBoneWeights(slot);
 
-                /*for(int i=0;i<slot.meshData.umaBones.Length;i++)
+                Dictionary<int,List<BoneWeight1>> NewBoneWeights = new Dictionary<int,List<BoneWeight1>>();
+
+                for (int ourVertex = 0; ourVertex < meshData.ManagedBonesPerVertex.Length;ourVertex++)
                 {
-					theirBoneNames.Add(i, slot.meshData.umaBones[i].name);
-                }
-
-				for (int i=0;i<meshData.umaBones.Length;i++)
-                {
-					ourBoneIndexes.Add(meshData.umaBones[i].name, i);
-                }*/
-
-                int bonePos = 0;
-                int bone = 0;
-                for (int i = 0; i < slot.meshData.ManagedBonesPerVertex.Length; i++)
-                {
-                    byte WeightCount = slot.meshData.ManagedBonesPerVertex[i];
-                    theirBonePositionInBoneWeights.Add(bone, bonePos);
-                    theirBoneIndexByName.Add(slot.meshData.umaBones[bone].name, bone);
-                    bonePos += slot.meshData.ManagedBonesPerVertex[bone];
-                    bone++;
-                }
-
-                for (int i = 0; i < thisWeld.WeldPoints.Count; i++)
-                {
-                    WeldPoint p = thisWeld.WeldPoints[i];
-                    ourWeldPoints.Add(p.ourVertex, p);
-                }
-
-
-
-                List<boneWeld> BoneWelds = new List<boneWeld>();
-                int ourBonePos = 0;
-                boneWeld b = new boneWeld();
-                for (int i = 0; i < meshData.ManagedBonesPerVertex.Length; i++)
-                {
-
-                    if (ourWeldPoints.ContainsKey(i))
+                    bool found = false;
+                    int theirVertex = OurVertextoTheirVertex[ourVertex];
+                    List<BoneWeight1> CurrentWeights = new List<BoneWeight1>();
+                    if (TheirBoneWeights.ContainsKey(theirVertex))
                     {
-                        WeldPoint p = ourWeldPoints[i];
-                        // 
-
-                        // copy translated bones and weights and BonesPerVertex.
-                        // get bone name
-                        // find new bone index
-                        // get THEIR bone index for OUR bone name.
-                        // Add the weights for THEIR bone index to our BoneWeights, but use OUR INDEX
-
-                        string ourBoneName = meshData.umaBones[i].name;
-                        int translatedBoneIndex = theirBoneIndexByName[ourBoneName];
-                        int theirBonePos = theirBonePositionInBoneWeights[translatedBoneIndex];
-
-                        // get the number of weights for their bone.
-                        int weightcount = slot.meshData.ManagedBonesPerVertex[translatedBoneIndex];
-
-                        for (int bpi = 0; bpi < weightcount; bpi++)
+                        var theirBones = TheirBoneWeights[theirVertex];
+                        for (int i = 0; i < theirBones.Count; i++)
                         {
-                            BoneWeight1 bw = new BoneWeight1();
-                            bw.boneIndex = i; // this is in "our" bonespace
-                            bw.weight = meshData.ManagedBoneWeights[bpi + theirBonePos].weight;
-                            b.Add(bw);
-                        }
+                            BoneWeight1 bw = theirBones[i];
+                            if (!TheirBonesToOurBones.ContainsKey(bw.boneIndex))
+                            {
+                                found = false;
+                                break;
+                            }
+                            found = true;
+                            int ourBone = TheirBonesToOurBones[bw.boneIndex];
 
-                        // advance through our bone weights
-                        ourBonePos += meshData.ManagedBonesPerVertex[i];
+                            BoneWeight1 newBW = new BoneWeight1();
+                            newBW.boneIndex = ourBone;
+                            newBW.weight = bw.weight;
+                            CurrentWeights.Add(newBW);
+                        }
+                    }
+
+                    // if we found all of them, use those boneweights.
+                    if (found)
+                    {
+                        NewBoneWeights.Add(ourVertex, CurrentWeights);
                     }
                     else
                     {
-                        for (int bpi = 0; bpi < meshData.ManagedBonesPerVertex[i]; bpi++)
-                        {
-                            BoneWeight1 bw = new BoneWeight1();
-                            bw.boneIndex = i;
-                            bw.weight = meshData.ManagedBoneWeights[ourBonePos].weight;
-                            b.Add(bw);
-                            ourBonePos++;
-                        }
+                        // if we didn't find all of them, use the boneweights we already have.
+                        List<BoneWeight1> oldWeights = OurBoneWeights[ourVertex];
+                        NewBoneWeights.Add(ourVertex, oldWeights);
                     }
                 }
-                // copy bonewelds to bone arrays
-
-                int boneIndex = 0;
-                boneWeld newBoneWeights = new boneWeld();
-                for (int i = 0; i < BoneWelds.Count; i++)
+                List<BoneWeight1> allNewWeights = new List<BoneWeight1>();
+                // now save all the boneweights.
+                for (int ourVertex = 0; ourVertex < meshData.ManagedBonesPerVertex.Length;ourVertex++)
                 {
-                    boneWeld bw = BoneWelds[i];
-                    meshData.ManagedBonesPerVertex[boneIndex] = (byte)bw.Count;
-                    newBoneWeights.AddRange(bw);
+                    int numWeights = meshData.ManagedBonesPerVertex[ourVertex];
+                    List<BoneWeight1> weights = NewBoneWeights[ourVertex];
+                    allNewWeights.AddRange(weights);
+                    meshData.ManagedBonesPerVertex[ourVertex] = (byte)weights.Count;
                 }
-
-                meshData.ManagedBoneWeights = newBoneWeights.ToArray();
-                meshData.boneWeights = null;
+                meshData.ManagedBoneWeights = allNewWeights.ToArray();
             }
 
+            if (bscopyMode != BlendshapeCopyMode.None)
+            {
+                CopyBlendShapes(slot, bscopyMode);
+            }
 
-            //for (int i=0;i<Welds.Count;i++)
-            //{
-            //	if (Welds[i].WeldedToSlot == slot.slotName)
-            //    {
-            //		Welds[i] = thisWeld;
-            //		return thisWeld.WeldPoints.Count;
-            //    }
-            // }
-            //Welds.Add(thisWeld);
             return thisWeld;
+        }
+
+        int FindBlendshape(string Name)
+        {
+            for(int i=0;i< meshData.blendShapes.Length; i++)
+            {
+                if (meshData.blendShapes[i].shapeName == Name)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private void CopyBlendShapes(SlotDataAsset slot, BlendshapeCopyMode bscopyMode)
+        {
+            BuildVertexLookups(slot);
+            if (bscopyMode == BlendshapeCopyMode.ClearAndReplace)
+            {
+                meshData.blendShapes = new UMABlendShape[0];
+            }
+
+            for (int i = 0; i < slot.meshData.blendShapes.Length; i++)
+            {
+                string newBlendshapeName = slot.meshData.blendShapes[i].shapeName;
+                int foundBlendshape = FindBlendshape(newBlendshapeName);
+                // if we are only adding new ones, and it already exists, then just skip it.
+                if (bscopyMode == BlendshapeCopyMode.AddNewOnly && foundBlendshape != -1)
+                {
+                    continue;
+                }
+
+                if (foundBlendshape != -1)
+                {
+                    // if we are updating and adding, then update the existing one if it exists.
+                    meshData.blendShapes[foundBlendshape] = slot.meshData.blendShapes[i].DuplicateAndTranslate(OurVertextoTheirVertex);
+                }
+                else
+                {
+                    // Doesn't exist, so add it.
+                    var shapes = new List<UMABlendShape>();
+                    shapes.AddRange(meshData.blendShapes);
+                    shapes.Add(slot.meshData.blendShapes[i].DuplicateAndTranslate(OurVertextoTheirVertex));
+                    meshData.blendShapes = shapes.ToArray();
+                }
+            }
         }
 
         public bool HasErrors
