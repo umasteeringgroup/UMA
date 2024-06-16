@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.SceneManagement;
 
 #if UMA_ADDRESSABLES
 public class UMAAddressablesBuildWindow : EditorWindow
@@ -37,7 +38,21 @@ public class UMAAddressablesBuildWindow : EditorWindow
 
     private void OnGUI()
     {
+        string errorMessage = "";
         EditorGUILayout.LabelField("UMA Addressables Build Sample");
+        for(int i=0; i< SceneManager.sceneCount; i++)
+        {
+            Scene s = SceneManager.GetSceneAt(i);
+            if (s.isDirty)
+            {
+                errorMessage += $"Scene {s.name} is dirty\n";
+            }
+        }
+        if (!string.IsNullOrEmpty(errorMessage))
+        {
+            errorMessage = "Please save all scenes before building to avoid a mid-build dialog!\n" + errorMessage;
+            EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
+        }
         EditorGUILayout.Space(20);
         dev = EditorGUILayout.Toggle("Development Build", dev);
         AppName = EditorGUILayout.TextField("App Name", AppName);

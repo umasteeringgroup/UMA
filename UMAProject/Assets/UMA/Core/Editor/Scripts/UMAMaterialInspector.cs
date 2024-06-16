@@ -155,6 +155,11 @@ namespace UMA.Editors
                 }
                 else
                 {
+                    int channelCount = serializedObject.FindProperty("channels").arraySize;
+                    if (channelCount != (target as UMAMaterial).channels.Length)
+                    {
+                        serializedObject.ApplyModifiedProperties();
+                    }
                     DrawChannelList(serializedObject.FindProperty("channels"), (UMAMaterial.MaterialType)materialTypeProperty.intValue);
                 }
 
@@ -221,6 +226,10 @@ namespace UMA.Editors
         public bool IsChannelValid(int channel)
         {
             UMAMaterial source = target as UMAMaterial;
+            if (channel >= source.channels.Length)
+            {
+                return false;
+            }
             var matchan = source.channels[channel];
 
             if (!string.IsNullOrEmpty(matchan.materialPropertyName) && source.material != null)

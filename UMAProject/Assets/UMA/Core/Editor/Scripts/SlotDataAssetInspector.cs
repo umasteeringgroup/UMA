@@ -9,7 +9,8 @@ namespace UMA.Editors
 	[CanEditMultipleObjects]
 	public class SlotDataAssetInspector : Editor
 	{
-		static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCardSlot","Races","smooshOffset", "smooshExpand", "Welds"};
+
+        static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCardSlot","Races","smooshOffset", "smooshExpand", "Welds"};
 		static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "animatedBoneNames", "_slotDNA", "meshData", "subMeshIndex","Welds" };
 		SerializedProperty slotName;
 		SerializedProperty CharacterBegun;
@@ -28,7 +29,8 @@ namespace UMA.Editors
 
         bool CopyNormals;
 		bool CopyBoneWeights;
-		bool AverageNormals;
+        UMA.SlotDataAsset.BlendshapeCopyMode blendshapeCopyMode;
+        bool AverageNormals;
         float weldDistance = 0.0001f;
 
 		private int selectedRaceIndex = -1;
@@ -128,7 +130,7 @@ namespace UMA.Editors
 		{
 			if (sda != null)
 			{
-				lastWeld = slot.CalculateWelds(sda, CopyNormals, CopyBoneWeights, AverageNormals, Vector3.kEpsilon);
+				lastWeld = slot.CalculateWelds(sda, CopyNormals, CopyBoneWeights, AverageNormals, Vector3.kEpsilon, SlotDataAsset.BlendshapeCopyMode.None);
 			}
 		}
 
@@ -305,6 +307,7 @@ namespace UMA.Editors
                 CopyBoneWeights = EditorGUILayout.Toggle("Copy Boneweights", CopyBoneWeights);
                 CopyNormals = EditorGUILayout.Toggle("Copy Normals", CopyNormals);
                 AverageNormals = EditorGUILayout.Toggle("Average Normals", AverageNormals);
+                blendshapeCopyMode = (UMA.SlotDataAsset.BlendshapeCopyMode)EditorGUILayout.EnumPopup("Blendshape Copy Mode", blendshapeCopyMode);
                 GUILayout.Box("Warning! averaging normals will update both slots!", GUILayout.ExpandWidth(true));
 
                 if (WeldToSlot == null)
@@ -313,7 +316,7 @@ namespace UMA.Editors
                 }
                 if (GUILayout.Button("Perform Weld"))
                 {
-                    lastWeld = slot.CalculateWelds(WeldToSlot, CopyNormals, CopyBoneWeights, AverageNormals, weldDistance);
+                    lastWeld = slot.CalculateWelds(WeldToSlot, CopyNormals, CopyBoneWeights, AverageNormals, weldDistance, blendshapeCopyMode);
                     forceUpdate = true;
                 }
                 if (WeldToSlot == null)
