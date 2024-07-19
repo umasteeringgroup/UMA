@@ -127,14 +127,12 @@ public struct AvatarDefinition
 
             for (int i = 0; i < col.channelCount; i++)
             {
-                if (col.isDefault(i))
+                if (!col.isDefault(i))
                 {
-                    continue;
+                    Color Mask = col.channelMask[i];
+                    Color Additive = col.channelAdditiveMask[i];
+                    colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
                 }
-
-                Color Mask = col.channelMask[i];
-                Color Additive = col.channelAdditiveMask[i];
-                colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
             }
             if (colorchannels.Count > 0)
             {
@@ -446,13 +444,17 @@ public struct AvatarDefinition
 
         string[] encodedColors = s.Split(new char[] { '<' }, StringSplitOptions.RemoveEmptyEntries);
 
+        for(int i= 0; i < encodedColors.Length; i++)
+        {
+            UnpackAColor(colors, encodedColors[i]);
+        }
 
         return colors.ToArray();
     }
 
-    private static void UnpackAColor(char[] splitter, List<SharedColorDef> Colors, string s)
+    private static void UnpackAColor(List<SharedColorDef> Colors, string s)
     {
-        splitter[0] = '>';
+        char[] splitter = { '>' };
         string[] SharedColor = s.Substring(2).Trim().Split(splitter, StringSplitOptions.RemoveEmptyEntries);
         if (SharedColor.Length > 1)
         {

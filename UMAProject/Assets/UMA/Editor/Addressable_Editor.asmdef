@@ -1,9 +1,9 @@
 {
     "name": "Addressable_Editor",
+    "rootNamespace": "",
     "references": [
         "Unity.Addressables.Editor",
-        "Unity.ResourceManager",
-        ""
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [
         "Editor"

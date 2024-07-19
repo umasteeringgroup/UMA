@@ -63,20 +63,20 @@ namespace UMA.Editors
 			if (name.isExpanded)
 			{
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
-                EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
+				EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
 				EditorGUILayout.PropertyField(displayColor);
 
-                if (ocd != null)
+				if (ocd != null)
 				{
 					string Name = property.FindPropertyRelative("name").stringValue;
 					int ChannelCount = EditorGUILayout.IntSlider(Channels, ocd.channelCount, 0, 16);
 					if (ChannelCount != ocd.channelCount)
 					{
 						ocd.SetChannels(ChannelCount);
-                        if (dca != null)
-                        {
-                            EditorUtility.SetDirty(dca);
-                        }
+						if (dca != null)
+						{
+							EditorUtility.SetDirty(dca);
+						}
 					}
 				}
 
@@ -117,22 +117,22 @@ namespace UMA.Editors
 					GUILayout.Space(5);
 				}
 				if (ocd != null)
-                {
+				{
 					if (ocd.PropertyBlock != null)
-                    {
+					{
 						if (UMAMaterialPropertyBlockDrawer.OnGUI(ocd.PropertyBlock))
-                        {
+						{
 							if (dca != null)
 							{
-                                EditorUtility.SetDirty(dca);
-                                AssetDatabase.SaveAssets();
-                            }
-                        }
+								EditorUtility.SetDirty(dca);
+								AssetDatabase.SaveAssets();
+							}
+						}
 					}
 					else
-                    {
+					{
 						if (GUILayout.Button("Add Properties Block"))
-                        {
+						{
 							ocd.PropertyBlock = new UMAMaterialPropertyBlock();
 							EditorUtility.SetDirty(dca);
 							AssetDatabase.SaveAssets();
@@ -143,25 +143,17 @@ namespace UMA.Editors
 			}
 			else
 			{
-					if (mask.arraySize > 0)
-					{
-						EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0), new GUIContent("BaseColor"));
-						if (additive.arraySize >= 3)
-                    {
-                        EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(2), new GUIContent("Metallic/Gloss", "Color is metallicness (Black is not metallic), Alpha is glossiness (Black is not glossy)"));
-                    }
-                    else
-						{
-							//color didn't have a metallic gloss channel so show button to add one?
-						}
-					}
-                EditorGUILayout.PropertyField(displayColor);
+				if (mask.arraySize > 0)
+				{
+					EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0), new GUIContent("BaseColor"));
+				}
+				EditorGUILayout.PropertyField(displayColor);
 
-                //	if (ocd.HasProperties)
-                //	{
-                //		EditorGUILayout.LabelField("Has Properties");
-                //	}
-            }
+				//	if (ocd.HasProperties)
+				//	{
+				//		EditorGUILayout.LabelField("Has Properties");
+				//	}
+			}
             EditorGUILayout.Space();
 			EditorGUI.EndProperty();
 		}

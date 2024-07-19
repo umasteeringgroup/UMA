@@ -424,14 +424,28 @@ namespace UMA
                     UMAMaterial.ShaderParms parm = ugm.umaMaterial.shaderParms[j];
                     if (material.HasProperty(parm.ParameterName))
                     {
-                        for (int i = 0; i < umaData.umaRecipe.sharedColors.Length; i++)
-                        {
-                            OverlayColorData ocd = umaData.umaRecipe.sharedColors[i];
-                            if (ocd.name == parm.ColorName)
+						if (umaData.umaRecipe != null)
+						{
+							if (umaData.umaRecipe.sharedColors != null)
+							{
+								for (int i = 0; i < umaData.umaRecipe.sharedColors.Length; i++)
+								{
+									OverlayColorData ocd = umaData.umaRecipe.sharedColors[i];
+									if (ocd.name == parm.ColorName)
+									{
+										material.SetColor(parm.ParameterName, ocd.color);
+										break;
+									}
+								}
+							}
+							else
                             {
-                                material.SetColor(parm.ParameterName, ocd.color);
-                                break;
+                                Debug.LogWarning("UMAData.UMARecipe.sharedColors is null");
                             }
+                        }
+						else
+						{
+                            Debug.LogWarning("UMAData.UMARecipe is null");
                         }
                     }
                 }

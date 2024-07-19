@@ -87,12 +87,12 @@ namespace UMA
 		{
 			if (Channel <= channelCount)
 			{
-				if (channelMask[Channel] == Color.white)
+				uint multiply = ColorDef.ToUInt(channelMask[Channel]);
+				uint additive = ColorDef.ToUInt(channelAdditiveMask[Channel]);
+
+				if (multiply == 0xffffffff && additive == 0)
 				{
-					if (channelAdditiveMask[Channel] == EmptyAdditive)
-					{
-						return true;
-					}
+					return true;
 				}
 			}
 			return false;

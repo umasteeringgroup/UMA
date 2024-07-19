@@ -41,7 +41,15 @@ namespace UMA.Dynamics.Examples
 				AudioSource src = gameObject.GetComponent<AudioSource>();
 				if (src != null)
                 {
-					src.PlayOneShot(Bang);
+					Debug.Log("Playing Bang");
+					if (Bang != null)
+					{
+						src.PlayOneShot(Bang, 1.0f);
+					}
+					else
+                    {
+						Debug.Log("Bang is null");
+                    }
                 }
 				//Get a ray going from the camera through the mouse cursor
 				Ray ray = currentCamera.ScreenPointToRay (new Vector3(Screen.width/2,Screen.height/2,0));
