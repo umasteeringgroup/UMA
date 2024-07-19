@@ -230,7 +230,7 @@ namespace UMA
                 CombineInstance source = sources[k];
                 // source.meshData.sl
                 int sourceVertexCount = source.meshData.vertices.Length;
-				BuildBoneWeights(source.meshData, nativeBoneWeights, nativeBonesPerVertex, vertexIndex, boneWeightIndex, sourceVertexCount, source.meshData.boneNameHashes, source.meshData.bindPoses, bonesCollection, bindPoses, bonesList);
+				BuildBoneWeights(source.meshData, nativeBoneWeights, nativeBonesPerVertex, vertexIndex, boneWeightIndex, bonesCollection, bindPoses, bonesList);
 
                 if (source.slotData.expandAlongNormal > 0)
                 {
@@ -238,7 +238,7 @@ namespace UMA
                 }
                 else
                 {
-				Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, sourceVertexCount);
+					Array.Copy(source.meshData.vertices, 0, vertices, vertexIndex, sourceVertexCount);
                 }
 
 				if (has_normals)
@@ -1022,9 +1022,14 @@ namespace UMA
             }
 		} */
 
-		private static void BuildBoneWeights(UMAMeshData data, NativeArray<BoneWeight1> dest, NativeArray<byte> destBonesPerVertex, int destIndex, int destBoneweightIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
+
+        private static void BuildBoneWeights(UMAMeshData data, NativeArray<BoneWeight1> dest, NativeArray<byte> destBonesPerVertex, int destIndex, int destBoneweightIndex, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
 		{
-			int[] boneMapping = new int[bones.Length];
+			var bones = data.boneNameHashes;
+			var bindPoses = data.bindPoses;
+			int count = data.vertices.Length;
+
+            int[] boneMapping = new int[bones.Length];
 
 			for (int i = 0; i < boneMapping.Length; i++)
 			{
@@ -1047,8 +1052,15 @@ namespace UMA
 				dest[i + destBoneweightIndex] = b;
 			}
 #else
-			NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
-			NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneweightIndex, data.ManagedBoneWeights.Length);
+			try
+			{
+				NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
+				NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneweightIndex, data.ManagedBoneWeights.Length);
+			}
+			catch 
+			{
+                Debug.LogError("Error copying bone weights");
+            }
 
 			BoneWeight1 b = new BoneWeight1();
 			for (int i = 0; i < data.ManagedBoneWeights.Length; i++)

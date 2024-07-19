@@ -188,6 +188,10 @@ namespace UMA.Editors
 				resultingMesh = (Mesh)GameObject.Instantiate(resultingSkinnedMesh.sharedMesh);
 				//CountBoneweights(resultingMesh);
 			}
+			if (sbp.calculateTangents)
+			{
+				resultingMesh.RecalculateTangents();
+            }
 
 			var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh,KeepBoneIndexes);
 			if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
@@ -307,7 +311,7 @@ namespace UMA.Editors
 				var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
 				additionalSlot.slotName = theSlotName;//  string.Format("{0}_{1}", slotName, i);
 				additionalSlot.material = sbp.material;
-				additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone,sbp.udimAdjustment);
+				additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone,sbp.udimAdjustment, i);
 
                 string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + "_slot.asset";
                 if (sbp.useRootFolder)

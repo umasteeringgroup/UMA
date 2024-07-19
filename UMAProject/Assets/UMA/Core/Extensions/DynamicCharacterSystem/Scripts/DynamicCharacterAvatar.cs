@@ -1013,7 +1013,7 @@ namespace UMA.CharacterSystem
         /// <param name="skipRaceDefaults">Skip DNA default values on the race. You should pass this if you create from a prefab or from code each time.</param>
         /// <param name="skipColorDefaults">Skip default colors. If you do this, any shared color default values in a recipe should be default values to avoid issues.</param>
         /// <returns></returns>
-        public AvatarDefinition GetAvatarDefinition(bool skipRaceDefaults, bool skipColorDefaults = false)
+        public AvatarDefinition GetAvatarDefinition(bool skipRaceDefaults, bool skipColorDefaults = true)
         {
             RaceData r = activeRace.data;
 
@@ -1086,14 +1086,13 @@ namespace UMA.CharacterSystem
                 {
                     if (skipColorDefaults)
                     {
-                        if (col.isDefault(i))
+                        if (!col.isDefault(i))
                         {
-                            continue;
+                            Color Mask = col.channelMask[i];
+                            Color Additive = col.channelAdditiveMask[i];
+                            colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
                         }
                     }
-                    Color Mask = col.channelMask[i];
-                    Color Additive = col.channelAdditiveMask[i];
-                    colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
                 }
                 if (colorchannels.Count > 0)
                 {
@@ -5786,17 +5785,18 @@ namespace UMA.CharacterSystem
                         ConvertOldFieldsToNew();
                     }
 
-                    EnsureChannels(3);
-                    return channelAdditiveMask[2];
+                    if (channelAdditiveMask.Length >= 3)
+                    {
+                        return channelAdditiveMask[2];
+                    }
+                    return new Color(0, 0, 0, 0);
                 }
                 set
                 {
-                    if (channelAdditiveMask.Length < 3)
+                    if (channelAdditiveMask.Length >= 3)
                     {
-                        EnsureChannels(3);
+                        channelAdditiveMask[2] = value;
                     }
-
-                    channelAdditiveMask[2] = value;
                 }
             }
 

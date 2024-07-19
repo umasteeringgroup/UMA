@@ -15,14 +15,15 @@ namespace UMA.Editors
 		SerializedProperty fastGeneration;
 		SerializedProperty garbageCollectionRate;
 		SerializedProperty processAllPending;
-		SerializedProperty NoCoroutines;
 		SerializedProperty EditorInitialScaleFactor;
 		SerializedProperty editorAtlasResolution;
 		SerializedProperty collectGarbage;
+		SerializedProperty defaultRendererAsset;
+        SerializedProperty defaultOverlayAsset;
 
 
 #pragma warning disable 0108
-		public override void OnEnable()
+        public override void OnEnable()
 		{
 			base.OnEnable();
 			textureMerge = serializedObject.FindProperty("textureMerge");
@@ -32,14 +33,15 @@ namespace UMA.Editors
 			processAllPending = serializedObject.FindProperty("processAllPending");
 			fastGeneration = serializedObject.FindProperty("fastGeneration");
 			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
-			NoCoroutines = serializedObject.FindProperty("NoCoroutines");
 			EditorInitialScaleFactor = serializedObject.FindProperty("editorInitialScaleFactor");
 			editorAtlasResolution = serializedObject.FindProperty("editorAtlasResolution");
 			collectGarbage = serializedObject.FindProperty("collectGarbage");
-		}
+            defaultRendererAsset = serializedObject.FindProperty("defaultRendererAsset");
+            defaultOverlayAsset = serializedObject.FindProperty("defaultOverlayAsset");
+        }
 #pragma warning restore 0108
 
-		public override void OnInspectorGUI()
+        public override void OnInspectorGUI()
 		{
 			base.OnInspectorGUI();
 
@@ -59,7 +61,11 @@ namespace UMA.Editors
 
 			GUILayout.Space(20);
 			EditorGUILayout.LabelField("Advanced Configuration", centeredLabel);
-			EditorGUILayout.PropertyField(textureMerge);
+			EditorGUILayout.HelpBox("The default renderer asset is used to set rendering parameters for the generated SkinnedMeshRenderer. This is only used if no other renderer asset is specified on the character, slot, or renderer manager.", MessageType.None);
+			EditorGUILayout.PropertyField(defaultRendererAsset);
+			EditorGUILayout.HelpBox("The default overlay asset is used when an overay is not specified on a slot. This is for testing only.", MessageType.None);
+            EditorGUILayout.PropertyField(defaultOverlayAsset);
+            EditorGUILayout.PropertyField(textureMerge);
 			EditorGUILayout.PropertyField(meshCombiner);
 
 			var generator = target as UMAGeneratorBuiltin;

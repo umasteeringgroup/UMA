@@ -351,20 +351,23 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
             }
-            if (GUILayout.Button("Save AvatarDef"))
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                string fileName = EditorUtility.SaveFilePanel("Save Avatar Definition File", "", "", "umaDef");
-                if (!string.IsNullOrEmpty(fileName))
+                if (GUILayout.Button("Save AvatarDef"))
                 {
-                    try
+                    string fileName = EditorUtility.SaveFilePanel("Save Avatar Definition File", "", "", "adf");
+                    if (!string.IsNullOrEmpty(fileName))
                     {
-                        string charstr = thisDCA.GetAvatarDefinition(false, false).ToCompressedString("|");
-                        System.IO.File.WriteAllText(fileName, charstr);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                        EditorUtility.DisplayDialog("Error", "Error writing avatar definition file: " + ex.Message, "OK");
+                        try
+                        {
+                            string charstr = thisDCA.GetAvatarDefinition(false, true).ToCompressedString("|");
+                            System.IO.File.WriteAllText(fileName, charstr);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogException(ex);
+                            EditorUtility.DisplayDialog("Error", "Error writing avatar definition file: " + ex.Message, "OK");
+                        }
                     }
                 }
             }
@@ -373,8 +376,7 @@ namespace UMA.CharacterSystem.Editors
             {
                 UpdateCharacter();
             }
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.EndHorizontal();
+
 
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
@@ -386,7 +388,7 @@ namespace UMA.CharacterSystem.Editors
                     {
                         try
                         {
-                            AvatarDefinition adf = thisDCA.GetAvatarDefinition(false, false);
+                            AvatarDefinition adf = thisDCA.GetAvatarDefinition(false, true);
                             string charstr = adf.ToCompressedString("|");
                             System.IO.File.WriteAllText(fileName, charstr);
                         }
@@ -1115,6 +1117,10 @@ namespace UMA.CharacterSystem.Editors
                 {
                     SerializedProperty currentColor = newCharacterColors.GetArrayElementAtIndex(i);
                     // What a hack. 
+                    if (i >= thisDCA.characterColors._colors.Count)
+                    {
+                        break;
+                    }
                     var col = thisDCA.characterColors._colors[i];
                     if (col == null)
                     {

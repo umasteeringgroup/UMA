@@ -1,6 +1,4 @@
-﻿using Mono.Cecil;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using System.Text;
 using UnityEditorInternal;
@@ -79,37 +77,161 @@ namespace UMA
             return -1;
         }
 
+        /*
+        private static void BuildBoneWeights(UMAMeshData data, NativeArray<BoneWeight1> dest, NativeArray<byte> destBonesPerVertex, int destIndex, int destBoneweightIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
+        {
+            int[] boneMapping = new int[bones.Length];
 
-        public void BUildOurAndTheirBoneWeights(SlotDataAsset theirSlot)
+            for (int i = 0; i < boneMapping.Length; i++)
+            {
+                boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+            }
+        }
+
+        private static int TranslateBoneIndex(int index, int[] bonesHashes, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
+        {
+            var boneTransform = bonesHashes[index];
+            BoneIndexEntry entry;
+            if (bonesCollection.TryGetValue(boneTransform, out entry))
+            {
+                for (int i = 0; i < entry.Count; i++)
+                {
+                    var res = entry[i];
+                    if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index]))
+                    {
+                        return res;
+                    }
+                }
+                var idx = bindPosesList.Count;
+                entry.AddIndex(idx);
+                bindPosesList.Add(bindPoses[index]);
+                bonesList.Add(boneTransform);
+                return idx;
+            }
+            else
+            {
+                var idx = bindPosesList.Count;
+                bonesCollection.Add(boneTransform, new BoneIndexEntry() { index = idx });
+                bindPosesList.Add(bindPoses[index]);
+                bonesList.Add(boneTransform);
+                return idx;
+            }
+        } */
+
+        public void BuildOurAndTheirBoneWeights(SlotDataAsset theirSlot)
         {
             OurBoneWeights.Clear();
             TheirBoneWeights.Clear();
             // Loop through all the boneweights, and build a dictionary of bone indexes to weights.
 
-            int VertexPos = 0;
+            int BoneWeightPos = 0;
             for(int ourVertex=0; ourVertex< meshData.vertices.Length;ourVertex++)
             {
                 OurBoneWeights.Add(ourVertex, new List<BoneWeight1>());
-                for(int i=0; i < meshData.ManagedBonesPerVertex[ourVertex]; i++, VertexPos++)
+                for(int i=0; i < meshData.ManagedBonesPerVertex[ourVertex]; i++)
                 {
-                    OurBoneWeights[ourVertex].Add(meshData.ManagedBoneWeights[VertexPos]);
+                    OurBoneWeights[ourVertex].Add(meshData.ManagedBoneWeights[BoneWeightPos]);
+                    BoneWeightPos++;
                 }
             }
 
-            VertexPos = 0;
+            BoneWeightPos = 0;
             for(int theirVertex = 0; theirVertex < theirSlot.meshData.vertices.Length; theirVertex++)
             {
                 TheirBoneWeights.Add(theirVertex, new List<BoneWeight1>());
-                for(int i=0; i < theirSlot.meshData.ManagedBonesPerVertex[theirVertex]; i++, VertexPos++)
+                for(int i=0; i < theirSlot.meshData.ManagedBonesPerVertex[theirVertex]; i++)
                 {
-                    TheirBoneWeights[theirVertex].Add(theirSlot.meshData.ManagedBoneWeights[VertexPos]);
+                    TheirBoneWeights[theirVertex].Add(theirSlot.meshData.ManagedBoneWeights[BoneWeightPos]);
+                    BoneWeightPos++;
                 }
             }
         }
+        
+        public struct boneInfo
+        {
+            public int boneIndex;
+            public int hash;
+            public string name;
+        }
+
+        List<boneInfo> ourboneInfos = new List<boneInfo>();
+        List<boneInfo> theirboneInfos = new List<boneInfo>();
+
+        public Dictionary<int,boneInfo> ourHashToName = new Dictionary<int, boneInfo>();
+        public Dictionary<int, boneInfo> theirHashToName = new Dictionary<int, boneInfo>();
+
+
+        public string FindName(int hash, UMAMeshData data)
+        {
+            for(int i=0;i<data.umaBones.Length;i++)
+            {
+                string name = data.umaBones[i].name;
+                if (UMAUtils.StringToHash(name) == hash)
+                {
+                    return name;
+                }
+            }
+            return "unknown"; 
+        }
+        public void BuildBoneHashLookups(UMAMeshData data, Dictionary<int, boneInfo> boneInfos, List<boneInfo> boneInfoList)
+        {
+            boneInfos.Clear();
+            boneInfoList.Clear();
+            for (int i=0;i<data.boneNameHashes.Length; i++)
+            {
+                boneInfo bi = new boneInfo();
+                bi.boneIndex = i;
+                bi.hash = data.boneNameHashes[i];
+                bi.name = FindName(bi.hash, data);
+                boneInfos.Add(bi.boneIndex, bi);
+                boneInfoList.Add(bi);
+            }
+        }
+
 
         public void BuildBoneLookups(SlotDataAsset theirSlot)
         {
+            BuildBoneHashLookups(theirSlot.meshData,theirHashToName, theirboneInfos);
+            BuildBoneHashLookups(this.meshData, ourHashToName,ourboneInfos);
+
+
             TheirBonesToOurBones.Clear();
+
+            for(int i=0;i<ourboneInfos.Count; i++)
+            {
+                boneInfo ourBone = ourboneInfos[i];
+                for(int j=0;j<theirboneInfos.Count;j++)
+                {
+                    boneInfo theirBone = theirboneInfos[j];
+                    if (ourBone.hash == theirBone.hash)
+                    {
+                        TheirBonesToOurBones.Add(j, i);
+                    }
+                }
+            }
+
+            OurBonesToTheirBones.Clear();
+            for (int i = 0; i < theirboneInfos.Count; i++)
+            {
+                boneInfo theirBone = theirboneInfos[i];
+                for (int j = 0; j < ourboneInfos.Count; j++)
+                {
+                    boneInfo ourBone = ourboneInfos[j];
+                    if (ourBone.hash == theirBone.hash)
+                    {
+                        OurBonesToTheirBones.Add(j, i);
+                    }
+                }
+            }
+
+
+
+
+
+            /*
+
+
+
             for (int i = 0; i < theirSlot.meshData.umaBones.Length; i++)
             {
                 string theirBoneName = theirSlot.meshData.umaBones[i].name;
@@ -133,7 +255,7 @@ namespace UMA
                     return;
                 }
                 OurBonesToTheirBones.Add(i, theirBoneIndex);
-            }
+            } */
         }
 
         public void BuildVertexLookups(SlotDataAsset theirSlot)
@@ -174,13 +296,13 @@ namespace UMA
 
         }
 
-        public Welding CalculateWelds(SlotDataAsset slot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals, float weldDistance, BlendshapeCopyMode bscopyMode )
+        public Welding CalculateWelds(SlotDataAsset sourceSlot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals, float weldDistance, BlendshapeCopyMode bscopyMode )
         {
             Welding thisWeld = new Welding();
 
 
             thisWeld.MisMatchCount = 0;
-            thisWeld.WeldedToSlot = slot.slotName;
+            thisWeld.WeldedToSlot = sourceSlot.slotName;
 
 
             // managed Boneweights 
@@ -203,17 +325,17 @@ namespace UMA
 
 
 
-            for (int Dest = 0; Dest < slot.meshData.vertices.Length; Dest++)
+            for (int Dest = 0; Dest < sourceSlot.meshData.vertices.Length; Dest++)
             {
                 for (int Src = 0; Src < meshData.vertices.Length; Src++)
                 {
-                    Vector3 DestVert = slot.meshData.vertices[Dest];
-                    Vector3 Srcvert = meshData.vertices[Src];
-                    float Len = (DestVert - Srcvert).magnitude;
+                    Vector3 TheirVert = sourceSlot.meshData.vertices[Dest];
+                    Vector3 ourVert = meshData.vertices[Src];
+                    float Len = (TheirVert - ourVert).magnitude;
                     if (Len < weldDistance)
                     {
                         bool misMatch = false;
-                        float Normaldiff = (meshData.normals[Src] - slot.meshData.normals[Dest]).magnitude;
+                        float Normaldiff = (meshData.normals[Src] - sourceSlot.meshData.normals[Dest]).magnitude;
                         if (Normaldiff > Vector3.kEpsilon)
                         {
                             thisWeld.MisMatchCount++;
@@ -221,18 +343,18 @@ namespace UMA
                         }
                         if (CopyNormals)
                         {
-                            meshData.normals[Src] = slot.meshData.normals[Dest];
-                            if (meshData.tangents != null && slot.meshData.tangents != null)
+                            meshData.normals[Src] = sourceSlot.meshData.normals[Dest];
+                            if (meshData.tangents != null && sourceSlot.meshData.tangents != null)
                             {
-                                meshData.tangents[Src] = slot.meshData.tangents[Dest];
+                                meshData.tangents[Src] = sourceSlot.meshData.tangents[Dest];
                             }
                             if (AverageNormals)
                             {
-                                meshData.normals[Src] = (slot.meshData.normals[Dest] + meshData.normals[Src]).normalized;
+                                meshData.normals[Src] = (sourceSlot.meshData.normals[Dest] + meshData.normals[Src]).normalized;
                             }
                         }
 
-                        WeldPoint wp = new WeldPoint(Src, Dest, slot.meshData.normals[Dest], misMatch);
+                        WeldPoint wp = new WeldPoint(Src, Dest, sourceSlot.meshData.normals[Dest], misMatch);
                         thisWeld.WeldPoints.Add(wp);
                     }
                 }
@@ -240,23 +362,33 @@ namespace UMA
 
             if (CopyBoneWeights)
             {
+                int foundcount = 0;
+                int notfoundcount = 0;
                 EnsureBoneWeights();
-                slot.EnsureBoneWeights();
+                sourceSlot.EnsureBoneWeights();
 
-                BuildVertexLookups(slot);
-                BuildBoneLookups(slot);
-                BUildOurAndTheirBoneWeights(slot);
+                BuildVertexLookups(sourceSlot);
+                BuildBoneLookups(sourceSlot);
+                BuildOurAndTheirBoneWeights(sourceSlot);
 
                 Dictionary<int,List<BoneWeight1>> NewBoneWeights = new Dictionary<int,List<BoneWeight1>>();
 
                 for (int ourVertex = 0; ourVertex < meshData.ManagedBonesPerVertex.Length;ourVertex++)
                 {
+
                     bool found = false;
                     int theirVertex = OurVertextoTheirVertex[ourVertex];
+                    if (theirVertex == 1785)
+                    {
+                        Debug.Log("RightEar hash is " + UMAUtils.StringToHash("RightEar"));
+                        Debug.Log("Breakpoint");
+                    }
                     List<BoneWeight1> CurrentWeights = new List<BoneWeight1>();
                     if (TheirBoneWeights.ContainsKey(theirVertex))
                     {
+                        var ourBones = OurBoneWeights[ourVertex];
                         var theirBones = TheirBoneWeights[theirVertex];
+
                         for (int i = 0; i < theirBones.Count; i++)
                         {
                             BoneWeight1 bw = theirBones[i];
@@ -279,12 +411,14 @@ namespace UMA
                     if (found)
                     {
                         NewBoneWeights.Add(ourVertex, CurrentWeights);
+                        foundcount++;
                     }
                     else
                     {
                         // if we didn't find all of them, use the boneweights we already have.
                         List<BoneWeight1> oldWeights = OurBoneWeights[ourVertex];
                         NewBoneWeights.Add(ourVertex, oldWeights);
+                        notfoundcount++;
                     }
                 }
                 List<BoneWeight1> allNewWeights = new List<BoneWeight1>();
@@ -296,12 +430,13 @@ namespace UMA
                     allNewWeights.AddRange(weights);
                     meshData.ManagedBonesPerVertex[ourVertex] = (byte)weights.Count;
                 }
+                Debug.Log($"Old weights {meshData.ManagedBoneWeights.Length} new weights is {allNewWeights.Count} Found {foundcount} boneweights, and {notfoundcount} boneweights were not found.");
                 meshData.ManagedBoneWeights = allNewWeights.ToArray();
             }
 
             if (bscopyMode != BlendshapeCopyMode.None)
             {
-                CopyBlendShapes(slot, bscopyMode);
+                CopyBlendShapes(sourceSlot, bscopyMode);
             }
 
             return thisWeld;
@@ -721,12 +856,12 @@ namespace UMA
             return "SlotData: " + slotName;
         }
 
-        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment=false)
+        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment=false, int submeshIndex=-1)
         {
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;
             meshData.RootBoneName = rootBoneName;
-            meshData.RetrieveDataFromUnityMesh(meshRenderer);
+            meshData.RetrieveDataFromUnityMesh(meshRenderer,submeshIndex,udimAdjustment);
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
@@ -736,7 +871,7 @@ namespace UMA
         {
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;
-            meshData.RetrieveDataFromUnityMesh(meshRenderer);
+            meshData.RetrieveDataFromUnityMesh(meshRenderer.sharedMesh,false);
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif

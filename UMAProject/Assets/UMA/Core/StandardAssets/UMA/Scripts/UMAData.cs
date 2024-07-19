@@ -718,7 +718,7 @@ namespace UMA
 
 		public bool Validate()
 		{
-			if (Application.isBatchMode)
+            if (Application.isBatchMode)
             {
                 return true;
             }
@@ -734,7 +734,12 @@ namespace UMA
                 valid = false;
 			}
 
-			if (_umaRecipe == null)
+            if (defaultRendererAsset == null && umaGenerator != null)
+            {
+                defaultRendererAsset = umaGenerator.defaultRendererAsset;
+            }
+
+            if (_umaRecipe == null)
 			{
 				if (Debug.isDebugBuild)
                 {
