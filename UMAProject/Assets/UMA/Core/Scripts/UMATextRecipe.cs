@@ -29,32 +29,39 @@ namespace UMA
 		/// <param name="context">Context.</param>
 		public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContextBase context = null)
 		{
-            if ((recipeString == null) || (recipeString.Length == 0))
+			if ((recipeString == null) || (recipeString.Length == 0))
+			{
+				return new UMAPackRecipe();
+			}
+            var rcpe = JsonUtility.FromJson<UMAPackRecipe>(recipeString);
+            try
             {
-                return new UMAPackRecipe();
-            }
-            var rcpe =JsonUtility.FromJson<UMAPackRecipe>(recipeString);
-            if (string.IsNullOrEmpty(rcpe.race))
-            {
-                for (int i = 0; i < compatibleRaces.Count; i++)
-                {
-                    string s = this.compatibleRaces[i];
-                    if (UMAAssetIndexer.Instance.HasAsset<RaceData>(s))
-                    {
-                        rcpe.race = s;
-                        break;
-                    }
-                }
-            }
+				if (string.IsNullOrEmpty(rcpe.race))
+				{
+					for (int i = 0; i < compatibleRaces.Count; i++)
+					{
+						string s = this.compatibleRaces[i];
+						if (UMAAssetIndexer.Instance.HasAsset<RaceData>(s))
+						{
+							rcpe.race = s;
+							break;
+						}
+					}
+				}
+			}
+			catch (UMAResourceNotFoundException e)
+			{
+				Debug.LogError($"UMAResourceNotFoundException on recipe {umaRecipe.raceData.raceName} file {umaRecipe.raceData.name}: {e.Message}");
+			}
             return rcpe;
-		}
+        }
 
-		/// <summary>
-		/// Serialize recipeString data into packed recipe.
-		/// </summary>
-		/// <param name="packedRecipe">Packed recipe.</param>
-		/// <param name="context">Context.</param>
-		public override void PackedSave(UMAPackedRecipeBase.UMAPackRecipe packedRecipe, UMAContextBase context)
+        /// <summary>
+        /// Serialize recipeString data into packed recipe.
+        /// </summary>
+        /// <param name="packedRecipe">Packed recipe.</param>
+        /// <param name="context">Context.</param>
+        public override void PackedSave(UMAPackedRecipeBase.UMAPackRecipe packedRecipe, UMAContextBase context)
 		{
 			recipeString = JsonUtility.ToJson(packedRecipe);
 		}

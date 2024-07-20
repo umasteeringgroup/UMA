@@ -1181,7 +1181,6 @@ namespace UMA
 		/// </summary>
 		public void LoadBoneWeights()
 		{
-			Debug.LogWarning("Loading Boneweights for " + SlotName + " (" + boneWeights.Length + " bone weights)");
 			// it's at least this big
 			List<BoneWeight1> oldWeights = new List<BoneWeight1>(boneWeights.Length);
 			List<byte> oldBonesPerVertex = new List<byte>(boneWeights.Length);

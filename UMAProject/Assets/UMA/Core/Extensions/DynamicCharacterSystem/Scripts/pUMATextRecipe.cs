@@ -3,6 +3,7 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
+using System.Linq.Expressions;
 
 namespace UMA
 {
@@ -245,31 +246,42 @@ namespace UMA
 		/// <param name="context">Context.</param>
 		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context = null)
 		{
-			//This check can be removed in future- If we set the recipeType properly from now on we should not need to do this check
-			var typeInRecipe = GetRecipesType(recipeString);
-			recipeType = typeInRecipe != "Standard" ? typeInRecipe : recipeType;
-			if (RecipeHasWardrobeSet(recipeString))
-            {
-                activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
+			try
+			{
+				//This check can be removed in future- If we set the recipeType properly from now on we should not need to do this check
+				var typeInRecipe = GetRecipesType(recipeString);
+				recipeType = typeInRecipe != "Standard" ? typeInRecipe : recipeType;
+				if (RecipeHasWardrobeSet(recipeString))
+				{
+					activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
+				}
+				//if its an old UMARecipe there wont be an activeWardrobeSet field
+				if (activeWardrobeSet == null)
+				{
+					recipeType = "Standard";
+					base.Load(umaRecipe, context);
+					return;
+				}
+				//if it has a wardrobeSet or was saved using the DCSPackRecipe Model
+				if (activeWardrobeSet.Count > 0 || (recipeType == "DynamicCharacterAvatar" /*|| recipeType == "WardrobeCollection"*/))
+				{
+					var packedRecipe = PackedLoadDCSInternal(context/*, recipeString*/);
+					UnpackRecipe(umaRecipe, packedRecipe, context);
+				}
+				else //we can use standard UMALoading
+				{
+					base.Load(umaRecipe, context);
+				}
+			}
+			catch (UMAResourceNotFoundException e)
+			{
+                Debug.LogError($"UMAResourceNotFoundException on recipe {this.name} race {umaRecipe.raceData.raceName} file {umaRecipe.raceData.name}: {e.Message}"); 
             }
-            //if its an old UMARecipe there wont be an activeWardrobeSet field
-            if (activeWardrobeSet == null)
-			{
-				recipeType = "Standard";
-				base.Load(umaRecipe, context);
-				return;
-			}
-			//if it has a wardrobeSet or was saved using the DCSPackRecipe Model
-			if (activeWardrobeSet.Count > 0 || (recipeType == "DynamicCharacterAvatar" /*|| recipeType == "WardrobeCollection"*/))
-			{
-				var packedRecipe = PackedLoadDCSInternal(context/*, recipeString*/);
-			   UnpackRecipe(umaRecipe, packedRecipe, context);
-			}
-			else //we can use standard UMALoading
-			{
-				base.Load(umaRecipe, context);
-			}
-		}
+            catch (Exception e)
+            {
+                Debug.LogError("Error loading recipe: " + name + " " + e.Message);
+            }
+        }
 
 		/// <summary>
 		/// Internal call to static PackedLoadDCS which uses the assets string and object and returns a DCSUniversalPackRecipe data model that can be used by any UMA

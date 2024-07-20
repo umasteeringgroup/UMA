@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace UMA
 {
@@ -954,7 +955,13 @@ namespace UMA
                 {
                     var tempSlotData = context.InstantiateSlot(packedSlot.id);
 					if (tempSlotData == null)
+					{
+						if (Debug.isDebugBuild)
+						{
+							throw new UMAResourceNotFoundException("Slot " + packedSlot.id + " not found in context. Skipping.");
+                        }
 						continue;
+					}
 					if (packedSlot.Tags != null)
                     {
                         tempSlotData.tags = packedSlot.Tags.Clone() as string[];
@@ -988,10 +995,12 @@ namespace UMA
 
                     if (packedSlot.copyIdx == -1)
                     {
-                        for (int i2 = 0; i2 < packedSlot.overlays.Length; i2++)
-                        {
-                            PackedOverlayDataV3 packedOverlay = packedSlot.overlays[i2];
-                            OverlayData overlayData = context.InstantiateOverlay(packedOverlay.id);
+						for (int i2 = 0; i2 < packedSlot.overlays.Length; i2++)
+						{
+							PackedOverlayDataV3 packedOverlay = packedSlot.overlays[i2];
+
+							OverlayData overlayData = context.InstantiateOverlay(packedOverlay.id);
+
                             overlayData.rect = new Rect(
                                 packedOverlay.rect[0],
                                 packedOverlay.rect[1],

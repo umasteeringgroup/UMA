@@ -27,9 +27,10 @@ MonoBehaviour:
   MeshHideAssets: []
   OverrideDNA:
     PreloadValues: []
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"woman-haircard_4_tie","scale":100,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0}],"colors":[],"fColors":[],"sharedColorCount":0,"race":"","packedDna":[],"uvOverride":0}'
+  disabled: 0
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"woman-haircard_4_tie","scale":100,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0,"isDisabled":false,"expandAlongNormal":0}],"colors":[],"fColors":[],"sharedColorCount":0,"race":"","packedDna":[],"uvOverride":0}'
   forceKeep: 0
   labelLocalFiles: 0
   IncompatibleRecipes: []
   UserField: 
-  replaces: 
+  replaces: Nothing
