@@ -88,19 +88,19 @@ namespace UMA
 
 				var thisHash = (_skeletonModifiers[i].hash != 0) ? _skeletonModifiers[i].hash : UMAUtils.StringToHash(_skeletonModifiers[i].hashName);
 
-				//check skeleton has the bone we want to change
-				if (!skeleton.HasBone(thisHash))
+
+
+                //check skeleton has the bone we want to change
+                if (!skeleton.HasBone(thisHash))
 				{
-					//Debug.LogWarning("You were trying to apply skeleton modifications to a bone that didn't exist (" + _skeletonModifiers[i].hashName + ") on " + umaData.gameObject.name);
 					continue;
 				}
-
-				//With these ValueX.x is the calculated value and ValueX.y is min and ValueX.z is max
-				var thisValueX = _skeletonModifiers[i].CalculateValueX(umaDna);
+                    //With these ValueX.x is the calculated value and ValueX.y is min and ValueX.z is max
+                var thisValueX = _skeletonModifiers[i].CalculateValueX(umaDna);
 				var thisValueY = _skeletonModifiers[i].CalculateValueY(umaDna);
 				var thisValueZ = _skeletonModifiers[i].CalculateValueZ(umaDna);
 
-				if (_skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Position)
+                if (_skeletonModifiers[i].property == SkeletonModifier.SkeletonPropType.Position)
 				{
 					skeleton.SetPositionRelative(thisHash,
 						new Vector3(

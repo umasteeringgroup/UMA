@@ -283,7 +283,13 @@ namespace UMA
 				PlayerPrefs.SetString(umaDefaultLabelKey, newUmaLabel);
 			}
 			GUILayout.Label("Note: If you include recipes or other items, you will need to manually load them using LoadLabelList!", EditorStyles.miniLabel);
-			ConfigToggle(ConfigToggle_StripUmaMaterials, "Strip UMAMaterials", "In some versions of Unity, using an SRP can cause each bundle to include the compiled shaders. This will stop that from happening.", false);
+			ConfigToggle(ConfigToggle_StripUmaMaterials, "Strip UMAMaterials", "In some versions of Unity, using an SRP can cause each bundle to include the compiled shaders. This will stop that from happening.",
+#if UMA_ALWAYS_STRIP_MATERIALS //VES added
+				true
+#else
+				false
+#endif
+			);
 			ConfigToggle(ConfigToggle_IncludeRecipes, "Include Recipes", "Include recipes in shared group generation",
 #if UMA_ALWAYS_INCLUDE_RECIPES //VES added
 				true
@@ -394,6 +400,11 @@ namespace UMA
 				value = true;
 			}
 #endif
+#if UMA_ALWAYS_STRIP_MATERIALS //VES added
+			if(toggleId == ConfigToggle_StripUmaMaterials) {
+				value = true;
+			}
+#endif
 			//TODO: obviously not the right place!
 			EditorPrefs.SetBool(toggleId, value);
 		}
@@ -402,6 +413,11 @@ namespace UMA
 		{
 #if UMA_ALWAYS_INCLUDE_RECIPES //VES added
 			if(toggleId == ConfigToggle_IncludeRecipes) {
+				return true;
+			}
+#endif
+#if UMA_ALWAYS_STRIP_MATERIALS //VES added
+			if(toggleId == ConfigToggle_StripUmaMaterials) {
 				return true;
 			}
 #endif

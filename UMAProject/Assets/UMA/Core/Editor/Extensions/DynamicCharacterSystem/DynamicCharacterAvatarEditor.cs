@@ -210,7 +210,7 @@ namespace UMA.CharacterSystem.Editors
             defaultChangeRaceOptions.isExpanded = EditorGUILayout.Foldout(defaultChangeRaceOptions.isExpanded, new GUIContent("Race Change Options", "The default options for when the Race is changed. These can be overidden when calling 'ChangeRace' directly."));
             if (defaultChangeRaceOptions.isExpanded)
             {
-                wasChanged = DoRaceChangeOptionsGUI(wasChanged, defaultChangeRaceOptions);
+                wasChanged |= DoRaceChangeOptionsGUI(wasChanged, defaultChangeRaceOptions);
             }
 
 
@@ -421,9 +421,12 @@ namespace UMA.CharacterSystem.Editors
                 EditorGUILayout.EndHorizontal();
             }
             EditorGUI.BeginChangeCheck();
+				bool wasEnabled = GUI.enabled; //VES added
+				if(wasEnabled && PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) != null) { //VES added, checks if in prefab
+					GUI.enabled = false; //VES added (we don't want anyone generating the character in the patient prefabs as it breaks inheritance, and we setup patients via code)
+				}
             EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
-            // wtf not working? EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultRendererAsset"));
-            thisDCA.defaultRendererAsset = (UMARendererAsset)EditorGUILayout.ObjectField("Default Renderer Asset", thisDCA.defaultRendererAsset, typeof(UMARendererAsset), false);
+				GUI.enabled = wasEnabled; //VES added
             if (EditorGUI.EndChangeCheck())
             {
                 wasChanged = true;
@@ -520,6 +523,7 @@ namespace UMA.CharacterSystem.Editors
                     {
                         AddSingleDNA(theDna);
                         serializedObject.Update();
+                        wasChanged = true;
                     }
                 }
                 if (GUILayout.Button("Add All"))
@@ -531,6 +535,7 @@ namespace UMA.CharacterSystem.Editors
                             AddSingleDNA(s);
                         }
                     }
+                    wasChanged = true;
                 }
                 if (GUILayout.Button("Clear"))
                 {
@@ -549,7 +554,12 @@ namespace UMA.CharacterSystem.Editors
                     {
                         GUILayout.BeginHorizontal();
                         GUILayout.Label(ObjectNames.NicifyVariableName(pd.Name), GUILayout.Width(100));
-                        pd.Value = GUILayout.HorizontalSlider(pd.Value, 0.0f, 1.0f);
+                        float newValue = GUILayout.HorizontalSlider(pd.Value, 0.0f, 1.0f);
+                        if (newValue != pd.Value)
+                        {
+                            pd.Value = newValue;
+                            wasChanged = true;
+                        }
 
                         bool delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
                         if (delete)
@@ -1148,14 +1158,21 @@ namespace UMA.CharacterSystem.Editors
 
             if (EditorGUI.EndChangeCheck())
             {
+                serializedObject.ApplyModifiedProperties();
+                bool updated = thisDCA.characterColors.RemoveDeletedItems();               
+                serializedObject.Update();
+
+
                 if (n_newArraySize != n_origArraySize)
                 {
+                    updated = true;
                     SetNewColorCount(n_newArraySize);//this is not prompting a save so mark the scene dirty...
-                    if (!Application.isPlaying)
-                    {
-                        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-                    }
                 }
+                if (updated & (!Application.isPlaying))
+                {
+                    EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                }
+
                 serializedObject.ApplyModifiedProperties();
                 if (Application.isPlaying)
                 {

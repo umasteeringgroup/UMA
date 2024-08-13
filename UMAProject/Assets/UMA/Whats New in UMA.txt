@@ -1,114 +1,57 @@
-Whats new
-------
-Updated Bonepose editor - filtering, bone visualization options, resets bone pose to neutral on selection.
-Added utility in global library to select unused materials (for cleanup)
-Added option in material property block to ONLY update properties, and not the colors.
-Changed temporary object names to avoid overwriting existing objects.
-Added option to load only blendshapes that are used on the character.
-Added "force keep blendshapes" to the DCA, so you can keep blendshapes that you want to keep.
-Fixed some bugs in the color loading where it would not load the shader parameters correctly.
-Added some additional 
-Made material keywords SRP specific, so you can have different keywords for different SRP pipelines.
-Added warnings for bad parameters in header of umamaterial channels
-Added utility to search for broken/mismatched mesh hide assets in the library (have to add the MHA to the library though)
-Added search to find all recipes that use a specific Mesh Hide Asset
-Added ability to use the selected asset (in the library or the project) as the asset used by the utilities.
-Added ability to select unused Mesh Hide Assets in the library
-Ability to filter default recipes to current race
-Added helpful filters to recipes in customization section
-Added dropdown to select recipes in customization section
-Added materials for all SRP pipelines to the default UMAMaterials
+Release 2.13
 
-What's new in UMA 2.13b
-New Simple Setup scene
-Fixed Mesh Hide Asset editor
-Fixed Layer goofup
-Added UMAMaterialAnimator (animate shader parms on overlays)
-Reworked DynamicCharacterAvatar Inspector, added helper buttons, reconfigured layout logically (?)
-Saved Material Properties along with colors in AvatarDefinition
-Removed DynamicAssetLoader and old AssetBundle code which was no longer working
-Fixed null ref possible in BoneVisualizer
-Changed all runtime foreach to standard for(,,) code
-Fixed gaze in UMAExpressionPlayer
-Made shader properties work correctly with Compositing Shaders
-Added/Fixed UMAUVAttachedItem
-Added "Force Keep" to indexed items (will never be orphaned)
-Fixed "Use Root Folder" in slot builder
-Allow editing of bone Mappings in UMAMeshData
-Added integrated tags editor to recipes, slots, overlays
-Added Validation to slotdataasset inspector.
-Added "UMA_INSTALLED" symbol so other assets can detect UMA installation at compile time.
-Updated textures, shaders (Still waiting on realistic textures)
-Removed null slots during slot merge in recipes
-Fixed some UI issues in inspectors due to 2022.3 update
-Added DisplayColor to Shared Colors (overlaycolordata)
-Added new events to DCA
+This update has 2 years of production usage. This includes numerous speed improvements, 
+many bug fixes and stability improvements. There are way too many to list all, but here are the hightlights:
 
-You can now enable/disable default wardrobe recipes without removing them from the list in the customization section.
-The currently equipped wardrobe recipe is marked with a * in the list.
-Enabled recipes are marked with a plus sign.
-Disabled recipes are marked with a minus sign.
-The Hair Smoosher has been updated and bugs fixed.
-Clipping Plane offset - It will now allow you to tune the plane points on the clipping plane slot.
-You can now scale and offset the smooshed hair to help adjust for different polygon densities on the hair slot.
-Overlays can now have Photoshop-style blend modes applied to them. This allows for more control over how the overlay is blended with the underlying texture.
-Blends are specified on the individual texture channel on the overlay.  
-Supported blend modes are: Normal, Multiply, Screen, Overlay, Darken, Lighten, Color Dodge, Color Burn, Hard Light, Soft Light, and Subtract.
-Drag and drop support for merging recipes into other recipes, with slots/overlays/colors/options.
-Mesh Hide asset editor can now export occlusion data to a texture, and load and apply occlusion data from a texture.
-Fixed bug in Addressable preloader where it would not ask to load additive recipes, causing those not to work at all when using addressables.
-Added new compositing shader for Diffuse/Normal/Metallic workflow, so you can drop it in most recipes.
-Added favorites window so you can add whatever favorites you want
-Colors can now be marked as "base colors" in the customization window, and filtered to those colors.
-Added option to "average normals" on the slot welder.
-Added ability on DCA to "force suppress" slots or overlays based on tag. For example, if you want to remove an eyebrow overlay off the face if you have used replacement texture for the face that already contains them.
-Added preference to use the Burst Compiler to speed up mesh generation. Requires the burst compiler to be installed.
-Added option to tile overlays when using the Keep Textures mode.
-Added additional sanity checking in various functions for those times when things are going so well. :)
-Disabled index healing (even when enabled in preferences) when playing in the editor
-Added option to trigger various rebuild types in the editor, not just a full rebuild.
-Added "Second pass" material to UMAMaterial. When present, will duplicate the submesh, and draw the submesh a second time with the second material. This is useful for simulating multi-pass in URP.
-Added option to UMAMaterial to specify alternate materials for different SRP pipelines.
-ConvertRenderTexture is now off by default on mobile.
-Fixed various leaks/bugs in MeshHideAsset Inspector.
+New features:
 
+Updated Skins
+Speed improvements switching to native arrays in various places
+New Materials used
+Compatibility across Built-in, URP and HDRP
+New "Simple Setup" scene to customize as a base character editor
+Many Blendshape fixes and changes
+Reorganized inspectors, greatly enhanced Avatar inspector, including:
+Ability to add multiple recipes, enable disable them, filter them.
+Ability to add DNA in editor
+Able to set "base" colors in color editor
+Get directly to race, race recipe, DNA Converters, and Boneposes
+New compositing textures to lower VRAM usage
+Faster building
+Greatly enhanced utilities in the global library
+Dynamic compression for hair, based on clipping plane(s)
+Filters to limit asset searches to ease library rebuild
+Photoshop style blend modes for combining textures
+Material animator
+New HumanBoy/HumanGirl races (compatible with HumanMale, HumanFemale)
+Favorites window
+New attachment options to ease holding items.
+Significantly smaller bundles when using Addressables (removes material references and slot references where not required)
+Added Addressable Build sample to show how to build smallest bundles and rebuild/label items in build script to address various issues with larger art teams.
+Ability to recalculate normals during build
+Added Burst support
+Fixed man multi-culture issues with strings
+Fixed AvatarDefinition to save Shader Parameter blocks with colors
+Lowered size of AvatarDefinition String
+Enable/disable slots in recipe editor for testing
+Added integrated tags editor into recipe editors
+Ability to match/hide by tags, simplifying process drastically
+Drag and drop recipe merging
+Fixed photobooth to work with SRPs
 
-What's new in UMA 2.13a4
+New Tools:
 
+Texture combiner - for combining texture channels
+Normal Viewer - see where the normals are after combining
+Convert slots to meshes
+Welding - Tools to copy vertex normals, bone weights from slots to match pieces together, or update weighting on slots without changing vertex count or order.
 
-New compositing shaders for the Keep Textures mode that composite textures on the fly. This allows for faster UMA building, and less memory usage. The masked shader also lets you recolor portions of the mesh without having to have multiple overlays. It also allows you to tile in detail textures for higher realism.
-Compositing shaders reworked to allow setting parameters from every overlay in the overlay chain. This allows for more control over the compositing shaders.
-UV Attached Items: Slots can be attached to UV locations on the model.
-Hair Smoosher:  A clipping plane slot is used to define the place where hair is conformed to the head. This is to stop hair from poking through hats.
-New slot events: SlotBeginProcessing, SlotProcessed. These events are called when a slot is being processed, and can be used to add custom processing to slots.
-Swap Slots: Conditional slot replacements. Slots can be swapped out in a recipe by tag. For example, if you have a hat that can't use the hair smoosher, you can include "hat hair" with the hat, and swap out any existing hair that is tagged with the tag provided. For example, you might want to swap and "long hair" for the hat hair, but not any short or bald hair.
-Asset Index: The index will now attempt to repair itself if it becomes corrupted, or you have asked it for a slot that doesn't exist.
-Asset Index: Added function to remove slot references from MeshHideAssets. This is usefult to save memory when building addressables.
-Asset Index: new PrepareBuild() function for use in your build scripts to force the index to be rebuilt, fix all references, etc. Note: You will still need to call the SingleGroupGenerator to generate labels after this function is complete.
-DynamicCharacterAvatar: You can specity to keep the predefined DNA ("KeepPredefinedDNA"), so it is always loaded when the character is built.
-DynamicCharacterAvatar: Added SetSlot(string) function to set a slot by name. Does not need the slot specified.
-Texture Combiner Utility: Reworked to make it easier to use.
+For asset creators/developers
 
-Many, many bug fixes and improvements.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Multi-SRP compatiblity on materials.
+Multi-SRP materials shipped with UMA.
+Added "Second pass material" to UMAMaterial to emulate mult-pass shaders
+Override textures, bones, and vertexes by character (helpful for 3rd party avatar tools).
+New Material Types - to use existing textures, or use existing materials - these modes are useful for customizable characters without generating rendertextures (much faster, but less customizable).
+Meshcombiner tracks where every slot is inside the generated mesh, so you can get to the vertexes directly if needed. Also tracks where textures are placed in the Atlas.
+This will likely be the last major release of UMA 2 (bugfix releases are of course possible), with all future enhancements going into UMA 3, which will retain asset compatibility.

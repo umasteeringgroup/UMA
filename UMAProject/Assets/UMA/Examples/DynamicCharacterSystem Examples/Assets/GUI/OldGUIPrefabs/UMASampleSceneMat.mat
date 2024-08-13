@@ -180,7 +180,7 @@ Material:
     - _Add3_1: {r: 0, g: 0, b: 0, a: 0}
     - _Add3_2: {r: 0, g: 0, b: 0, a: 0}
     - _BlueColor0: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0, g: 0, b: 0.45882353, a: 1}
+    - _Color: {r: 0.59748423, g: 0.59748423, b: 0.59748423, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GreenColor0: {r: 1, g: 1, b: 1, a: 1}
     - _RedColor0: {r: 1, g: 1, b: 1, a: 1}

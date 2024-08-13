@@ -1093,6 +1093,12 @@ namespace UMA.CharacterSystem
                             colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
                         }
                     }
+					else 
+					{
+						Color Mask = col.channelMask[i];
+						Color Additive = col.channelAdditiveMask[i];
+						colorchannels.Add(new ColorDef(i, ColorDef.ToUInt(Mask), ColorDef.ToUInt(Additive)));
+					}
                 }
                 if (colorchannels.Count > 0)
                 {
@@ -3018,7 +3024,9 @@ namespace UMA.CharacterSystem
                 }
                 if (controllerToUse == null)
                 {
+#if UNITY_DEBUG
                     Debug.LogError("Unable to find animator! This will not be good.");
+#endif
                 }
             }
             //changing the animationController in 5.6 resets the rotation of this game object
@@ -5894,6 +5902,40 @@ namespace UMA.CharacterSystem
                     SetColor(ocd.name, ocd);
                 }
             }
+
+#if UNITY_EDITOR
+            public bool RemoveDeletedItems()
+            {
+                List<ColorValue> newColors = new List<ColorValue>();
+                for (int i = 0; i < Colors.Count; i++)
+                {
+                    ColorValue cv = Colors[i];
+                    if (cv == null)
+                    {
+                        continue;
+                    }
+                    if (cv.Name == null)
+                    {
+                        continue;
+                    }
+                    if (cv.Color == null)
+                    {
+                        continue;
+                    }
+                    if (cv.deleteThis)
+                    {
+                        continue;
+                    }
+                    newColors.Add(cv);
+                }
+                if (Colors.Count != newColors.Count)
+                {
+                    Colors = newColors;
+                    return true;
+                }
+                return false;
+            }
+#endif
 
             public ColorValueList(List<ColorValue> colorValueList)
             {

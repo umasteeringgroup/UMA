@@ -25,6 +25,7 @@ namespace UMA
 		public bool foldout;
 		public bool showAdvanced;
 		public bool isBaseColor = false;
+		public bool deleteThis = false;
 #endif
         public Color displayColor = Color.white;
 

@@ -65,6 +65,12 @@ namespace UMA
                         List<string> recipes = wc.wardrobeCollection.GetAllRecipeNamesInCollection();
                         foreach (string recipe in recipes)
                         {
+#if UMA_VES
+                        if (VesUmaLabelMaker.DO_NOT_INCLUDE_LABELS.Contains(label))
+                        {   //VES added
+                            continue;
+                        }
+#endif
                             if (RecipeExtraLabels.ContainsKey(recipe) == false)
                             {
                                 RecipeExtraLabels.Add(recipe, new List<string>());
@@ -77,6 +83,12 @@ namespace UMA
                 float inc = 1.0f / Recipes.Count;
                 foreach (UMAPackedRecipeBase uwr in Recipes)
                 {
+#if UMA_VES
+                    if (VesUmaLabelMaker.DO_NOT_INCLUDE_LABELS.Contains(uwr.AssignedLabel))
+                    { //VES added
+                        continue;
+                    }
+#endif
                     List<string> ExtraLabels = new List<string>();
 
                     if (RecipeExtraLabels.ContainsKey(uwr.name))
@@ -121,17 +133,17 @@ namespace UMA
                     else
                     {
                         // Get the asset items for the recipe from the index
-                    List<AssetItem> items = Index.GetAssetItems(uwr, true);
-                    foreach (AssetItem ai in items)
-                    {
-                        if (AddressableItems.ContainsKey(ai) == false)
+                        List<AssetItem> items = Index.GetAssetItems(uwr, true);
+                        foreach (AssetItem ai in items)
                         {
-                            AddressableItems.Add(ai, new List<string>());
-                            AddressableItems[ai].Add(DefaultAddressableLabel);
+                            if (AddressableItems.ContainsKey(ai) == false)
+                            {
+                                AddressableItems.Add(ai, new List<string>());
+                                AddressableItems[ai].Add(DefaultAddressableLabel);
+                            }
+                            AddressableItems[ai].Add(uwr.AssignedLabel);
+                            AddressableItems[ai].AddRange(ExtraLabels);
                         }
-                        AddressableItems[ai].Add(uwr.AssignedLabel);
-                        AddressableItems[ai].AddRange(ExtraLabels);
-                    }
                     }
 
                     if (IncludeRecipes)

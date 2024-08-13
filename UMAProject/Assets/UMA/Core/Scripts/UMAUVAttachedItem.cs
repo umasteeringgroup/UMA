@@ -1,6 +1,9 @@
 #define USING_BAKEMESH
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using UMA;
 using UMA.CharacterSystem;
 using Unity.Collections;
 using UnityEngine;
@@ -41,6 +44,9 @@ namespace UMA
         public bool InitialFound = false;
         public float DistanceFromBone = 0.0f;
         public float InitialDistanceFromBone = 0.0f;
+		[Tooltip("The UV set to use for the attached item")]
+		[Range(0, 3)]
+        public int UVSet = 0;
 
         public enum PrefabStatus
         {
@@ -79,16 +85,13 @@ namespace UMA
             }
         }
 
-        public void Setup(UMAData umaData, UMAUVAttachedItemLauncher bootstrap, bool Activate)
-        {
-            if (tempMesh == null)
-            {
+		public void Setup(UMAData umaData, UMAUVAttachedItemLauncher bootstrap, bool Activate) {
+			if(tempMesh == null) {
                 tempMesh = new Mesh();
                 uvVerts = new UVVerts();
                 subMeshNumber = -1;
                 blendshapeAdjusters.Clear();
-                for (int i = 0; i < bootstrap.blendshapeAdjusters.Count; i++) {
-                    UMAUVAttachedItemBlendshapeAdjuster bsa = bootstrap.blendshapeAdjusters[i];
+				foreach(var bsa in bootstrap.blendshapeAdjusters) {
                     blendshapeAdjusters.Add(new UMAUVAttachedItemBlendshapeAdjuster(bsa));
 				}
 
@@ -102,15 +105,14 @@ namespace UMA
                 boneName = bootstrap.boneName;
                 sourceSlotName = bootstrap.sourceSlot.slotName;
                 useMostestBone = bootstrap.useMostestBone;
+                UVSet = bootstrap.UVSet;
                 this.umaData = umaData;
             }
             this.prefabStatus = Activate ? PrefabStatus.ShouldBeActivated : PrefabStatus.ShouldBeDeactivated;
         }
 
-        public void ProcessSlot(UMAData umaData, SlotData slotData, DynamicCharacterAvatar avatar)
-        {
-            if (slotData != null)
-            {
+		public void ProcessSlot(UMAData umaData, SlotData slotData, DynamicCharacterAvatar avatar) {
+			if(slotData != null) {
                 Debug.Log($"Processing slot {slotData.slotName}");
                 Vector2 UVInAtlas = slotData.ConvertToAtlasUV(uVLocation);
                 Vector2 UvUpInAtlas = slotData.ConvertToAtlasUV(uvUp);
@@ -132,7 +134,7 @@ namespace UMA
                     var allNormals = new NativeArray<Vector3>(mesh.vertexCount, Allocator.Temp);
                     var allVerts = new NativeArray<Vector3>(mesh.vertexCount, Allocator.Temp);
 
-                    dat.GetUVs(0, allUVS);
+                    dat.GetUVs(UVSet, allUVS);
                     dat.GetNormals(allNormals);
                     dat.GetVertices(allVerts);
                     uvVerts = FindVert(slotData, maxVert, UVInAtlas, UvUpInAtlas, allUVS);
@@ -140,37 +142,28 @@ namespace UMA
                     triangle = FindTriangle(uvVerts.positionVertex, dat, mesh);
                     mostestBone = GetMostestBone(uvVerts.positionVertex, mesh, smr);
                 }
-                prefabStatus = PrefabStatus.ShouldBeActivated;
-            }
-            else
-            {
-                // either should be deleted, or should be deactivated.
-                Debug.Log($"Processing hidden slot {slotName}");
+			} else {
                 uvVerts = new UVVerts();
                 triangle.Clear();
                 mostestBone = null;
             }
 
             // No prefab, and should be deleted. So we are done.
-            if (prefabInstance == null && prefabStatus == PrefabStatus.ShouldBeDeleted)
-            {
+			if(prefabInstance == null && prefabStatus == PrefabStatus.ShouldBeDeleted) {
                 return;
             }
 
-            if (prefabInstance == null)
-            {
+			if(prefabInstance == null) {
                 Debug.Log("Creating prefab");
-                if (useMostestBone)
-                {
+				if(useMostestBone) {
                     prefabInstance = GameObject.Instantiate(prefab, mostestBone);
-                }
-                else
-                {
+					prefabInstance.name = $"MB_{this.sourceSlotName} {prefab.name}";
+				} else {
                     prefabInstance = GameObject.Instantiate(prefab, umaData.gameObject.transform);
+					prefabInstance.name = $"NMB_{this.sourceSlotName} {prefab.name}";
                 }
             }
-            switch(prefabStatus)
-            {
+			switch(prefabStatus) {
                 case PrefabStatus.ShouldBeActivated:
                     prefabInstance.SetActive(true);
                     break;
@@ -261,27 +254,24 @@ namespace UMA
             return weights;
         }
 
-        private UVVerts FindVert(SlotData slotData, int maxVert, Vector2 UV, Vector2 UvUp, NativeArray<Vector2> allUVS)
-        {
+
+		private UVVerts FindVert(SlotData slotData, int maxVert, Vector2 UV, Vector2 UvUp, NativeArray<Vector2> allUVS) {
             UVVerts verts = new UVVerts();
             verts.positionVertex = slotData.vertexOffset;
             float shortestDistance =   Mathf.Abs((allUVS[slotData.vertexOffset] - UV).magnitude);
             float shortestUpDistance = Mathf.Abs((allUVS[slotData.vertexOffset] - UvUp).magnitude);
 
-            for (int i = slotData.vertexOffset + 1; i < maxVert; i++)
-            {
+			for(int i = slotData.vertexOffset + 1; i < maxVert; i++) {
                 float thisDist = Mathf.Abs((allUVS[i] - UV).magnitude);
                 float upDist = Mathf.Abs((allUVS[i]-UvUp).magnitude);
                     Vector3 restPos = slotData.asset.meshData.vertices[i - slotData.vertexOffset];
 
-				if(thisDist < shortestDistance) 
-				{
+				if(thisDist < shortestDistance) {
                     verts.InitialPosition = new Vector3(restPos.x, restPos.z, restPos.y);
                     verts.positionVertex = i;
                     shortestDistance = thisDist;
                 }
-                if (upDist < shortestUpDistance)
-                {
+				if(upDist < shortestUpDistance) {
                     verts.upVertex = i;
                     shortestUpDistance = upDist;
                 }
@@ -299,14 +289,9 @@ namespace UMA
 		private Vector3 LerpVector(Vector3 a, Vector3 b, float t) 
 		{
 			if (Mathf.Approximately(t, 0f))
-            {
                 return a;
-            }
-
             if (Mathf.Approximately(t, 1f))
-            {
                 return b;
-            }
 
             Vector3 result = new Vector3();
 			result.x = Mathf.Lerp(a.x, b.x, t);
@@ -318,14 +303,9 @@ namespace UMA
 		private Vector3 LerpAngle(Vector3 a, Vector3 b, float t) 
 		{
 			if(Mathf.Approximately(t, 0f))
-            {
                 return a;
-            }
-
             if (Mathf.Approximately(t, 1f))
-            {
                 return b;
-            }
 
             Vector3 result = new Vector3();
 			result.x = Mathf.LerpAngle(a.x, b.x, t);
@@ -359,9 +339,8 @@ namespace UMA
 						Vector3 newTranslation = new Vector3(translation.x, translation.y, translation.z);
 #if true
 
-                        for (int i = 0; i < blendshapeAdjusters.Count; i++) 
+						foreach (var bsAdjust in blendshapeAdjusters) 
 						{
-                            UMAUVAttachedItemBlendshapeAdjuster bsAdjust = blendshapeAdjusters[i];
                             if (string.IsNullOrEmpty(bsAdjust.RaceName) || bsAdjust.RaceName == avatar.activeRace.name) 
 								{
 								SkinnedMeshRenderer smr = avatar.umaData.GetRenderer(0);
