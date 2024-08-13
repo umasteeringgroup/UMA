@@ -1,13 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 namespace UMA.Editors
 {
-	//Draws the popup you see whenever a DNAEvaluationGraph field is clicked.
-	//calls on DNAEvaluationGraphPresetLibrary to get the tooltips so these dont have to be stored along with the field
-	public class DNAEvaluationGraphPopupContent : PopupWindowContent
+    //Draws the popup you see whenever a DNAEvaluationGraph field is clicked.
+    //calls on DNAEvaluationGraphPresetLibrary to get the tooltips so these dont have to be stored along with the field
+    public class DNAEvaluationGraphPopupContent : PopupWindowContent
 	{
 
 		private DNAEvaluationGraph _selectedPreset;
@@ -56,8 +54,10 @@ namespace UMA.Editors
 				entrysHeightCalc = (entryHeight * DNAEvaluationGraphPresetLibrary.AllGraphPresets.Count) + (padding * 2f);
 				entrysHeightCalc += (EditorGUIUtility.singleLineHeight * 2f) + (padding * 2f);
 				if (entrysHeightCalc > maxHeight)
-					entrysHeightCalc = maxHeight;
-			}
+                {
+                    entrysHeightCalc = maxHeight;
+                }
+            }
 			else
 			{
 				entrysHeightCalc = minHeight;
@@ -138,7 +138,9 @@ namespace UMA.Editors
 		public override void OnClose()
 		{
 			if (OnSelected != null)
-				OnSelected(_selectedPreset, property);
-		}
+            {
+                OnSelected(_selectedPreset, property);
+            }
+        }
 	}
 }

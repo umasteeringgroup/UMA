@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 
 namespace UMA.CharacterSystem.Examples
 {
@@ -13,8 +12,10 @@ namespace UMA.CharacterSystem.Examples
         public void loadThisFile()
         {
             //make sure no others are clicked...
-            foreach(Button but in this.gameObject.transform.parent.GetComponentsInChildren<Button>())
+            Button[] array = this.gameObject.transform.parent.GetComponentsInChildren<Button>();
+            for (int i = 0; i < array.Length; i++)
             {
+                Button but = array[i];
                 but.interactable = false;
             }
             customizerScript.LoadListedFile(filename, filepath);

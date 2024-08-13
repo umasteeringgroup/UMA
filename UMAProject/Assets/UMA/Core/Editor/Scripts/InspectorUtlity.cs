@@ -1,5 +1,3 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.Reflection;
@@ -42,17 +40,21 @@ public static class InspectorUtlity
 		// Finally revert back to the previous selection so that other inspectors continue to inspect whatever they were inspecting...
 		Selection.activeObject = prevSelection;
 		if (revertProjectSelection)
-			EditorGUIUtility.PingObject(prevSelection);
-		return inspectorInstance;
+        {
+            EditorGUIUtility.PingObject(prevSelection);
+        }
+
+        return inspectorInstance;
 	}
-	/// <summary>
-	/// Returns an array of editors for the specified inspectorWindow. 
-	/// CAUTION: This will now return the correct array straight after InspectTarget is called.
-	/// You need to wait for the inspector windows to repaint, and/or keep checking this array until it contains the expected editor for the expected target
-	/// </summary>
-	/// <param name="inspectorWindow"></param>
-	/// <returns></returns>
-	public static Editor[] GetInspectorsEditors(EditorWindow inspectorWindow)
+
+    /// <summary>
+    /// Returns an array of editors for the specified inspectorWindow. 
+    /// CAUTION: This will now return the correct array straight after InspectTarget is called.
+    /// You need to wait for the inspector windows to repaint, and/or keep checking this array until it contains the expected editor for the expected target
+    /// </summary>
+    /// <param name="inspectorWindow"></param>
+    /// <returns></returns>
+    public static Editor[] GetInspectorsEditors(EditorWindow inspectorWindow)
 	{
 		Editor[] editors = new Editor[0];
 		var inspectorType = typeof(Editor).Assembly.GetType("UnityEditor.InspectorWindow");

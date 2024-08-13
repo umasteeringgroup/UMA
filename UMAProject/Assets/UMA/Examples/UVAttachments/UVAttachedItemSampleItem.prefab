@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2895802341509255895
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2953363470303112973}
+  - component: {fileID: 2595418417575999124}
+  m_Layer: 0
+  m_Name: UVAttachedItemSampleItem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2953363470303112973
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2895802341509255895}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2595418417575999124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2895802341509255895}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf3a9089ca65da14187588905c30c05c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  avatar: {fileID: 0}
+  uVLocation: {x: 0.7, y: 0.95}
+  uVUp: {x: 0, y: 0}
+  slotName: AttachHead
+  rotation: {x: 0, y: 0, z: 0, w: 0}
+  normalAdjust: {x: 0, y: 0, z: 90}
+  translation: {x: 0, y: 0, z: 0}
+  prefab: {fileID: 2831124469306501628, guid: c907cdc99aa137242907608c884a6764, type: 3}
+  boneName: 
+  sourceSlot:
+    asset: {fileID: 11400000, guid: 50c2c84e0828ab649b57226e7e17b498, type: 2}
+    overlayScale: 1
+    tags: []
+    Races: []
+    blendShapeTargetSlot: 
+    BlendshapeFoldout: 0
+    isDeleted: 0
+    skinnedMeshRenderer: 0
+    submeshIndex: 0
+    vertexOffset: 0
+    UVArea:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 1
+      height: 1
+    altMaterial: {fileID: 0}
+    BlendshapeSlotNames: []
+    Suppressed: 0
+    dontSerialize: 0
+    rendererAsset: {fileID: 0}
+  useMostestBone: 1
+  VertexNumber: 0
+  subMeshNumber: 0
+  triangle: 
+  skin: {fileID: 0}
+  worldTransform: 0

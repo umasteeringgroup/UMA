@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using UMA.CharacterSystem;
 
 // @cond doxygen ignore
 namespace UMA.Examples
 {
-	public class ClothAccelerationPanelScript : MonoBehaviour 
+    public class ClothAccelerationPanelScript : MonoBehaviour 
 	{
 	    public DynamicCharacterAvatar avatar;
 	    public Slider xSlider;
@@ -19,17 +18,23 @@ namespace UMA.Examples
 	    public void UpdateClothAcceleration()
 	    {
 	        if (avatar == null)
-	            return;
+            {
+                return;
+            }
 
-	        if (xSlider == null || ySlider == null || zSlider == null)
-	            return;
+            if (xSlider == null || ySlider == null || zSlider == null)
+            {
+                return;
+            }
 
-	        if (m_Cloth == null)
+            if (m_Cloth == null)
 	        {
 	            m_Cloth = avatar.GetComponentInChildren<Cloth>();
 	            if (m_Cloth == null)
-	                return;
-	        }
+                {
+                    return;
+                }
+            }
 
 	        acceleration.x = xSlider.value;
 	        acceleration.y = ySlider.value;

@@ -106,7 +106,7 @@ namespace UMA.PoseTools
 		void OnGUI()
 		{
 
-			sourceSkeleton = EditorGUILayout.ObjectField("Rig Prefab", sourceSkeleton, typeof(Transform), true) as Transform;
+			sourceSkeleton = EditorGUILayout.ObjectField("Base Prefab", sourceSkeleton, typeof(Transform), true) as Transform;
 
 			poseFolder = EditorGUILayout.ObjectField("Pose Folder", poseFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 			EnforceFolder(ref poseFolder);
@@ -114,7 +114,7 @@ namespace UMA.PoseTools
 			EditorGUILayout.Space();
 
 			// Single pose from skeleton
-			if (skelOpen = EditorGUILayout.Foldout(skelOpen, "Rig Source"))
+			if (skelOpen = EditorGUILayout.Foldout(skelOpen, "Pose Source"))
 			{
 				EditorGUI.indentLevel++;
 				poseSkeleton = EditorGUILayout.ObjectField("Pose Rig", poseSkeleton, typeof(Transform), false) as Transform;
@@ -470,7 +470,7 @@ namespace UMA.PoseTools
 								(bone.localRotation != rotation) ||
 								(bone.localScale != scale))
 							{
-								bonePose.AddBone(bone, position, rotation, scale);
+								bonePose.AddBone(bone, position, rotation, scale,"");
 							}
 						}
 

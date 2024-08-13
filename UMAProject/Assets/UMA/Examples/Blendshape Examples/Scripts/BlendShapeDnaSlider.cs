@@ -1,13 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-using UMA;
-using UMA.CharacterSystem;
 
 namespace UMA.Examples
 {
-	public class BlendShapeDnaSlider : MonoBehaviour
+    public class BlendShapeDnaSlider : MonoBehaviour
 	{
 		public int dnaTypeHash = 386317366;
 		public string dnaName = "";
@@ -36,16 +32,20 @@ namespace UMA.Examples
 				}
 
 				if(dnaEntryIndex >= 0)
-					slider.value = dna.GetValue(dnaEntryIndex);
+                {
+                    slider.value = dna.GetValue(dnaEntryIndex);
+                }
             }
 		}
 
 		public void SetMorph(float value)
 		{
 			if (dna == null)
-				dna = data.GetDna(dnaTypeHash);
+            {
+                dna = data.GetDna(dnaTypeHash);
+            }
 
-			if (dna != null)
+            if (dna != null)
 			{
 				dna.SetValue(dnaEntryIndex, value);
 				data.Dirty(true, false, false);
@@ -55,19 +55,25 @@ namespace UMA.Examples
 		public void BakeMorph( bool isBaked )
 		{
 			if (dna == null)
-				dna = data.GetDna(dnaTypeHash);
+            {
+                dna = data.GetDna(dnaTypeHash);
+            }
 
-			if (dna != null && dnaEntryIndex >= 0)
+            if (dna != null && dnaEntryIndex >= 0)
 			{				
 				data.SetBlendShapeData(dnaName, isBaked, true);
 
 				if (statusText != null)
 				{
 					if( isBaked )
-						statusText.text = "(Baked)";
-					else
-						statusText.text = "(Unbaked)";
-				}
+                    {
+                        statusText.text = "(Baked)";
+                    }
+                    else
+                    {
+                        statusText.text = "(Unbaked)";
+                    }
+                }
 			}
         }
 	}

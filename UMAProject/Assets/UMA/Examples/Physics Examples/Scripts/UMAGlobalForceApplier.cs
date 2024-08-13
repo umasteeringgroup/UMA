@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UMA.Examples
 {
-	public class UMAGlobalForceApplier : MonoBehaviour
+    public class UMAGlobalForceApplier : MonoBehaviour
 	{
 	    // The following are properties for the Swinger.
 	    public float MinGlobalForce = 0.1f;                          // The smallest amoount of force applied during movement
@@ -22,11 +20,18 @@ namespace UMA.Examples
 	    /// </summary>
 	    public void Update()
 	    {
-	        if (MovementTracker == null) return; // wait for this to be setup before applying forces.
-	        if (!ApplyGlobalForces) return;
+	        if (MovementTracker == null)
+            {
+                return; // wait for this to be setup before applying forces.
+            }
 
-	        // Calculate global movement
-	        Vector3 Force = (parentPosLastFrame - MovementTracker.position) * ForceMultiplier;
+            if (!ApplyGlobalForces)
+            {
+                return;
+            }
+
+            // Calculate global movement
+            Vector3 Force = (parentPosLastFrame - MovementTracker.position) * ForceMultiplier;
 	        float Magnitude = Force.magnitude;
 
 	        // small movements don't add force

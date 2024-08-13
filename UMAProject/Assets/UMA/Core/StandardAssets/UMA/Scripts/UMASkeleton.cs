@@ -55,9 +55,10 @@ namespace UMA
 				{
 					boneHashDataLookup = new Dictionary<int, BoneData>();
 #if UNITY_EDITOR
-					foreach (BoneData tData in boneHashDataBackup)
+                    for (int i = 0; i < boneHashDataBackup.Count; i++)
 					{
-						boneHashDataLookup.Add(tData.boneNameHash, tData);
+                        BoneData tData = boneHashDataBackup[i];
+                        boneHashDataLookup.Add(tData.boneNameHash, tData);
 					}
 #endif
 				}
@@ -79,12 +80,12 @@ namespace UMA
 		/// Initializes a new UMASkeleton from a transform hierarchy.
 		/// </summary>
 		/// <param name="rootBone">Root transform.</param>
-		public UMASkeleton(Transform rootBone)
+		public UMASkeleton(Transform rootBone, UMAGeneratorBase umaGenerator)
 		{
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
 			this.boneHashData = new Dictionary<int, BoneData>();
 			BeginSkeletonUpdate();
-			AddBonesRecursive(rootBone);
+			AddBonesRecursive(rootBone, umaGenerator);
 			EndSkeletonUpdate();
 		}
 
@@ -98,8 +99,12 @@ namespace UMA
 		public virtual void BeginSkeletonUpdate()
 		{
 			frame++;
-			if (frame < 0) frame = 0;
-			updating = true;
+			if (frame < 0)
+            {
+                frame = 0;
+            }
+
+            updating = true;
 		}
 
 		/// <summary>
@@ -134,12 +139,14 @@ namespace UMA
 			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
 		}
 
-		private void AddBonesRecursive(Transform transform)
+		private void AddBonesRecursive(Transform transform, UMAGeneratorBase umaGenerator)
 		{
-			if (transform.tag == UMAContextBase.IgnoreTag)
-				return;
+			if (transform.tag == umaGenerator.ignoreTag)
+            {
+                return;
+            }
 
-			var hash = UMAUtils.StringToHash(transform.name);
+            var hash = UMAUtils.StringToHash(transform.name);
 			var parentHash = transform.parent != null ? UMAUtils.StringToHash(transform.parent.name) : 0;
 			BoneData data = new BoneData()
 			{
@@ -160,13 +167,15 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
-			}
+                {
+                    Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+                }
+            }
 
 			for (int i = 0; i < transform.childCount; i++)
 			{
 				var child = transform.GetChild(i);
-				AddBonesRecursive(child);
+				AddBonesRecursive(child, umaGenerator);
 			}
 		}
 
@@ -229,8 +238,10 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
-			}
+                {
+                    Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+                }
+            }
 		}
 
 		/// <summary>
@@ -259,8 +270,10 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
-			}
+                {
+                    Debug.LogError("AddBone: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+                }
+            }
 		}
 
 		/// <summary>
@@ -321,23 +334,60 @@ namespace UMA
 		}
 
 		/// <summary>
-		/// Gets the game object for a transform in the skeleton.
+		/// Gets the transform for a bone in the skeleton using the bone name.
 		/// </summary>
-		/// <returns>The game object or null, if not found.</returns>
-		/// <param name="nameHash">Name hash.</param>
-		public virtual GameObject GetBoneGameObject(int nameHash)
+		/// <param name="boneName"></param>
+		/// <returns></returns>
+        public virtual Transform GetBoneTransform(string boneName)
+        {
+			int nameHash = UMAUtils.StringToHash(boneName);
+			return GetBoneTransform(nameHash);
+        }
+
+        /// <summary>
+        /// Gets the game object for a transform in the skeleton.
+        /// </summary>
+        /// <returns>The game object or null, if not found.</returns>
+        /// <param name="nameHash">Name hash.</param>
+        public virtual GameObject GetBoneGameObject(int nameHash)
 		{
 			BoneData res;
 			if (boneHashData.TryGetValue(nameHash, out res))
 			{
 				res.accessedFrame = frame;
 				if (res.boneTransform == null)
-                {
+				{
 					return null;
-                }
+				}
 				return res.boneTransform.gameObject;
 			}
 			return null;
+		}
+
+		/// <summary>
+		/// Get the game object for a bone in the skeleton using the bone name.
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		public virtual GameObject GetBoneGameObject(string name)
+		{
+            int nameHash = UMAUtils.StringToHash(name);
+			return GetBoneGameObject(nameHash);
+        }
+
+
+		public List<KeyValuePair<int,string>> GetBoneHashNames()
+        {
+			List<KeyValuePair<int, string>> bhn = new List<KeyValuePair<int, string>>();
+
+			foreach (KeyValuePair<int,BoneData> kp in boneHashData)
+            {
+				int Hash = kp.Key;
+				string Name = kp.Value.boneTransform.gameObject.name;
+				KeyValuePair<int, string> kvp = new KeyValuePair<int, string>(Hash, Name);
+				bhn.Add(kvp);
+            }
+			return bhn;
 		}
 
 		protected virtual IEnumerable<int> GetBoneHashes()
@@ -360,7 +410,13 @@ namespace UMA
 			return boneNames;
 		}
 
-		public virtual void Set(int nameHash, Vector3 position, Vector3 scale, Quaternion rotation)
+		public bool isValid()
+        {
+			if (rootBoneHash == 0) return false;
+			return true;
+        }
+
+        public virtual void Set(int nameHash, Vector3 position, Vector3 scale, Quaternion rotation)
 		{
 			BoneData db;
 			if (boneHashData.TryGetValue(nameHash, out db))
@@ -703,8 +759,10 @@ namespace UMA
 		public virtual void EnsureBone(UMATransform umaTransform)
 		{
 			if (boneHashData.ContainsKey(umaTransform.hash) == false)
-				AddBone(umaTransform);
-		}
+            {
+                AddBone(umaTransform);
+            }
+        }
 
 		/// <summary>
 		/// Ensures all bones are properly initialized and parented.
@@ -726,8 +784,10 @@ namespace UMA
 					else
 					{
 						if (Debug.isDebugBuild)
-							Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
-					}
+                        {
+                            Debug.LogError("EnsureBoneHierarchy: " + entry.umaTransform.name + " parent not found in dictionary!");
+                        }
+                    }
 				}
 			}
 		}
@@ -736,5 +796,24 @@ namespace UMA
 		{
 			return boneHashData[nameHash].boneTransform.localRotation;
 		}
-	}
+
+        internal void ReplaceBone(UMASavedItem usi)
+        {
+			ReplaceBoneRecursively(usi.Object);
+        }
+
+		internal void ReplaceBoneRecursively(Transform transform)
+		{
+            int nameHash = UMAUtils.StringToHash(transform.name);
+			BoneData bd = GetBone(nameHash);
+			if (bd != null)
+			{
+                bd.boneTransform = transform;
+            }
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                ReplaceBoneRecursively(transform.GetChild(i));
+            }
+        }
+    }
 }

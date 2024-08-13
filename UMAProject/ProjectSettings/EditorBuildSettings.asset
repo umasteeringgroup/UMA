@@ -6,12 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/UMA/Examples/Legacy Examples/UMA Core Demo - Crowd.unity
-    guid: 9b44dc91378f85c44903d70e9b805efe
-  - enabled: 1
     path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Simple
       Setup.unity
     guid: 43ce2d3e5bdfc924b84fc85a02c01ca0
   m_configObjects:
-    com.unity.addressableassets: {fileID: 11400000, guid: ed6b5b26391af004b8212d64b1b84256,
+    com.unity.addressableassets: {fileID: 11400000, guid: 0cc48df618d571e47b01318437103d1e,
       type: 2}

@@ -45,8 +45,12 @@ namespace UMA.Dynamics.Editors
 					{
 						EditorGUILayout.PropertyField (list.GetArrayElementAtIndex (i).FindPropertyRelative ("colliderType"));
 						int type = list.GetArrayElementAtIndex (i).FindPropertyRelative ("colliderType").enumValueIndex;
-						if( type == 0 )	EditorGUILayout.HelpBox("Box Colliders can not be used to affect cloth.", MessageType.Warning );
-						EditorGUILayout.PropertyField (list.GetArrayElementAtIndex (i).FindPropertyRelative ("colliderCentre"));
+						if( type == 0 )
+                        {
+                            EditorGUILayout.HelpBox("Box Colliders can not be used to affect cloth.", MessageType.Warning );
+                        }
+
+                        EditorGUILayout.PropertyField (list.GetArrayElementAtIndex (i).FindPropertyRelative ("colliderCentre"));
 
 						if (type == 0) {
 							//Box Collider only

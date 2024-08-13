@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 namespace UMA.Editors
 {
-	//Draws a dummy field that will take any object that uses the IDNAConverter interface (DNAConverterBehaviours - legacy prefabs- and DNAConverterControllers- the new ScriptableObjects)
-	[CustomPropertyDrawer(typeof(DNAConverterField), true)]
+    //Draws a dummy field that will take any object that uses the IDNAConverter interface (DNAConverterBehaviours - legacy prefabs- and DNAConverterControllers- the new ScriptableObjects)
+    [CustomPropertyDrawer(typeof(DNAConverterField), true)]
 	public class DNAConverterFieldPropertyDrawer : PropertyDrawer
 	{
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -35,9 +33,11 @@ namespace UMA.Editors
 			EditorGUIUtility.SetIconSize(new Vector2(12f, 12f));
 			DynamicDNAConverterController converterControllerObject = null;
 			if(property.objectReferenceValue != null)
-				converterControllerObject = property.objectReferenceValue.GetType() == typeof(DynamicDNAConverterController) ? property.objectReferenceValue as DynamicDNAConverterController : null;
+            {
+                converterControllerObject = property.objectReferenceValue.GetType() == typeof(DynamicDNAConverterController) ? property.objectReferenceValue as DynamicDNAConverterController : null;
+            }
 
-			var dummyFieldStyle = new GUIStyle(EditorStyles.objectField);//could be objectFieldMiniThumb
+            var dummyFieldStyle = new GUIStyle(EditorStyles.objectField);//could be objectFieldMiniThumb
 			dummyFieldStyle.normal.background = null;
 
 			var labelPos = new Rect(position.xMin, position.yMin, EditorGUIUtility.labelWidth, position.height);
@@ -64,9 +64,11 @@ namespace UMA.Editors
 			System.Type fieldType = typeof(DynamicDNAConverterController);
 
 			if (property.objectReferenceValue != null)
-				fieldType = property.objectReferenceValue.GetType();
+            {
+                fieldType = property.objectReferenceValue.GetType();
+            }
 
-			GUIContent typeContent = EditorGUIUtility.ObjectContent(property.objectReferenceValue, fieldType);
+            GUIContent typeContent = EditorGUIUtility.ObjectContent(property.objectReferenceValue, fieldType);
 
 			if (property.objectReferenceValue == null)
 			{

@@ -1,9 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
+﻿using UnityEditor;
 
-namespace UMA.Editors 
+namespace UMA.Editors
 {
     [CustomEditor(typeof(UMAGeneratorGLIB))]
     public class UMAGeneratorGlibEditor : UMAGeneratorBuiltinEditor

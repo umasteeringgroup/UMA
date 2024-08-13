@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
-using UMA;
 
 namespace UMA.Editors
 {
@@ -13,7 +10,6 @@ namespace UMA.Editors
         SerializedProperty convertRenderTexture;
         SerializedProperty convertMipMaps;
         SerializedProperty atlasResolution;
-        SerializedProperty defaultOverlayAsset;
         SerializedProperty AtlasOverflowFitMethod;
         SerializedProperty FitPercentageDecrease;
         SerializedProperty SharperFitTextures;
@@ -29,7 +25,6 @@ namespace UMA.Editors
             convertRenderTexture = serializedObject.FindProperty("convertRenderTexture");
             convertMipMaps = serializedObject.FindProperty("convertMipMaps");
             atlasResolution = serializedObject.FindProperty("atlasResolution");
-            defaultOverlayAsset = serializedObject.FindProperty("defaultOverlayAsset");
             AtlasOverflowFitMethod = serializedObject.FindProperty("AtlasOverflowFitMethod");
             FitPercentageDecrease = serializedObject.FindProperty("FitPercentageDecrease");
             SharperFitTextures = serializedObject.FindProperty("SharperFitTextures");
@@ -55,7 +50,6 @@ namespace UMA.Editors
             EditorGUILayout.PropertyField(convertRenderTexture);
             EditorGUILayout.PropertyField(convertMipMaps);
             EditorGUILayout.IntPopup(atlasResolution, atlasLabels, atlasValues );
-            EditorGUILayout.PropertyField(defaultOverlayAsset);
 
             serializedObject.ApplyModifiedProperties();
         }

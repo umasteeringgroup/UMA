@@ -1,14 +1,11 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using UMA;
 
 namespace UMA.Examples
 {
-	/// <summary>
-	/// Merges multiple recipe fragments into a complete UMA recipe.
-	/// </summary>
-	public class UMARecipeMixer : MonoBehaviour
+    /// <summary>
+    /// Merges multiple recipe fragments into a complete UMA recipe.
+    /// </summary>
+    public class UMARecipeMixer : MonoBehaviour
 	{
 		/// <summary>
 		/// Options for recipe fragmentss to include from each section.
@@ -64,9 +61,11 @@ namespace UMA.Examples
 			{
 				RecipeSection section = recipeSections[i];
 				if ((section.recipes == null) || (section.recipes.Length == 0))
-					continue;
+                {
+                    continue;
+                }
 
-				switch (section.selectionRule)
+                switch (section.selectionRule)
 				{
 					case SelectionType.IncludeNone:
 						break;

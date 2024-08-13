@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
 namespace UMA.Editors
 {
-	//Draws a 'DropList' that will accept objects that use the IDNAConverter interface (DNAConverterBehaviours - legacy prefabs- and DNAConverterControllers- the new ScriptableObjects)
-	[CustomPropertyDrawer(typeof(DNAConverterList), true)]
+    //Draws a 'DropList' that will accept objects that use the IDNAConverter interface (DNAConverterBehaviours - legacy prefabs- and DNAConverterControllers- the new ScriptableObjects)
+    [CustomPropertyDrawer(typeof(DNAConverterList), true)]
 	public class DNAConverterListPropertyDrawer : PropertyDrawer
 	{
 		private float dropAreaHeight = 50f;
@@ -19,8 +18,11 @@ namespace UMA.Editors
 				var h = (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
 				var convertersProp = property.FindPropertyRelative("_converters");
 				for (int i = 0; i < convertersProp.arraySize; i++)
-					h += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
-				h += (EditorGUIUtility.standardVerticalSpacing);
+                {
+                    h += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
+                }
+
+                h += (EditorGUIUtility.standardVerticalSpacing);
 				return h + dropAreaHeight;
 			}
 			else
@@ -157,8 +159,10 @@ namespace UMA.Editors
 						for (int i = 0; i < converterListProp.arraySize; i++)
 						{
 							if (converterListProp.GetArrayElementAtIndex(i).objectReferenceValue == IDCObj as UnityEngine.Object)
-								canAdd = false;
-						}
+                            {
+                                canAdd = false;
+                            }
+                        }
 						if (canAdd)
 						{
 							converterListProp.arraySize++;

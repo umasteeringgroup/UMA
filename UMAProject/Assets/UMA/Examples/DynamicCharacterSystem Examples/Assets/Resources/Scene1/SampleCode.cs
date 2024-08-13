@@ -37,6 +37,8 @@ namespace UMA.CharacterSystem.Examples
         public bool PreloadAndUnload;
         public Slider TestSlider;
         public UMAWardrobeCollection CollectionToAdd;
+        public bool UseHighresModels;
+
 
 		private List<RaceData> races;
 
@@ -86,23 +88,26 @@ namespace UMA.CharacterSystem.Examples
             Avatar.gameObject.SetActive(true);
             if (RaceDropdown != null)
             {
-
+                int i = 0;
+                int found = 0;
                 RaceDropdown.options.Clear();
-                foreach (RaceData race in races)
+                for (int i1 = 0; i1 < races.Count; i1++)
                 {
+                    RaceData race = races[i1];
+                    if (race.raceName == Avatar.activeRace.name)
+                    {
+                        found = i;
+                    }
+
                     RaceDropdown.options.Add(new Dropdown.OptionData(race.raceName));
+                    i++;
                 }
+                RaceDropdown.value = found;
             }
 #endif
         }
 
-        private void Update()
-        {
-            if (Input.GetKey(KeyCode.C))
-            {
-                ChangeSex();
-            }
-        }
+
 
 #if UMA_ADDRESSABLES
         private void Recipes_Loaded(UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<IList<Object>> obj)
@@ -144,11 +149,20 @@ namespace UMA.CharacterSystem.Examples
         {
             int index = System.Convert.ToInt32(value);
             List<UMATextRecipe> theRecipes = Avatar.AvailableRecipes["Legs"];
-            if (theRecipes.Count == 0) return;
-            if (theRecipes.Count >= TestSlider.maxValue) 
+            if (theRecipes.Count == 0)
+            {
+                return;
+            }
+
+            if (theRecipes.Count >= TestSlider.maxValue)
+            {
                 TestSlider.maxValue = theRecipes.Count - 1;
+            }
+
             if (index > (theRecipes.Count - 1))
+            {
                 index = theRecipes.Count - 1;
+            }
 
             Avatar.SetSlot(theRecipes[index]);
             Avatar.BuildCharacter();
@@ -174,10 +188,25 @@ namespace UMA.CharacterSystem.Examples
 		/// </summary>
 		private void Cleanup()
         {
-			if (GeneralHelpText != null) GeneralHelpText.SetActive(false);
-			if (DnaHelpText != null) DnaHelpText.SetActive(false);
-			if (WardrobeHelpText != null) WardrobeHelpText.SetActive(false);
-			if (ColorsHelpText != null) ColorsHelpText.SetActive(false);
+			if (GeneralHelpText != null)
+            {
+                GeneralHelpText.SetActive(false);
+            }
+
+            if (DnaHelpText != null)
+            {
+                DnaHelpText.SetActive(false);
+            }
+
+            if (WardrobeHelpText != null)
+            {
+                WardrobeHelpText.SetActive(false);
+            }
+
+            if (ColorsHelpText != null)
+            {
+                ColorsHelpText.SetActive(false);
+            }
 
             foreach (Transform t in SlotPanel.transform)
             {
@@ -268,19 +297,26 @@ namespace UMA.CharacterSystem.Examples
         {
             Cleanup();
 
-            foreach(UMA.OverlayColorData ocd in Avatar.CurrentSharedColors )
+            for (int i = 0; i < Avatar.CurrentSharedColors.Length; i++)
             {
+                OverlayColorData ocd = Avatar.CurrentSharedColors[i];
                 GameObject go = GameObject.Instantiate(ColorPrefab);
                 AvailableColorsHandler ch = go.GetComponent<AvailableColorsHandler>();
 
                 SharedColorTable currColors = ClothingColor;
 
                 if (ocd.name.ToLower() == "skin")
+                {
                     currColors = SkinColor;
+                }
                 else if (ocd.name.ToLower() == "hair")
+                {
                     currColors = HairColor;
+                }
                 else if (ocd.name.ToLower() == "eyes")
+                {
                     currColors = EyesColor;
+                }
 
                 ch.Setup(Avatar, ocd.name, WardrobePanel,currColors);
 
@@ -424,8 +460,9 @@ namespace UMA.CharacterSystem.Examples
         public void ToggleUpdateBounds()
         {
             SkinnedMeshRenderer[] sm = FindObjectsOfType<SkinnedMeshRenderer>();
-            foreach(SkinnedMeshRenderer smr in sm)
+            for (int i = 0; i < sm.Length; i++)
             {
+                SkinnedMeshRenderer smr = sm[i];
                 smr.updateWhenOffscreen = !smr.updateWhenOffscreen;
             }
         }
@@ -447,7 +484,11 @@ namespace UMA.CharacterSystem.Examples
                 {
                     //Get a random recipe from the slot, and apply it
                     int min = -1;
-                    if (SlotName == "Legs") min = 0; // Don't allow pants removal in random test
+                    if (SlotName == "Legs")
+                    {
+                        min = 0; // Don't allow pants removal in random test
+                    }
+
                     int rnd = Random.Range(min, cnt);
                     if (rnd == -1)
                     {

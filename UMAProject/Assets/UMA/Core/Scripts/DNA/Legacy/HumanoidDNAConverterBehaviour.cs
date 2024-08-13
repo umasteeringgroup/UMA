@@ -1,15 +1,12 @@
-using UnityEngine;
-using System.Collections;
-
 namespace UMA
 {
-	/// <summary>
-	/// Base class for Humanoid DNA converters.
-	/// </summary>
-	/// <remarks>
-	/// Holds hash values for all the bones used in the default UMA humanoid rig.
-	/// </remarks>
-	public class HumanoidDNAConverterBehaviour : DnaConverterBehaviour 
+    /// <summary>
+    /// Base class for Humanoid DNA converters.
+    /// </summary>
+    /// <remarks>
+    /// Holds hash values for all the bones used in the default UMA humanoid rig.
+    /// </remarks>
+    public class HumanoidDNAConverterBehaviour : DnaConverterBehaviour 
 	{
 		static bool builtHashes = false;
 		static protected int headAdjustHash;
@@ -90,9 +87,11 @@ namespace UMA
 		public override void Prepare()
 		{
 			if (builtHashes)
-				return;
-			
-			headAdjustHash = UMAUtils.StringToHash("HeadAdjust");
+            {
+                return;
+            }
+
+            headAdjustHash = UMAUtils.StringToHash("HeadAdjust");
 			neckAdjustHash = UMAUtils.StringToHash("NeckAdjust");
 			leftOuterBreastHash = UMAUtils.StringToHash("LeftOuterBreast");
 			rightOuterBreastHash = UMAUtils.StringToHash("RightOuterBreast");

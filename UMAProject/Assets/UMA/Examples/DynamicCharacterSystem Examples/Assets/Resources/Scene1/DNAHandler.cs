@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
-using UMA.CharacterSystem;
 
 namespace UMA.CharacterSystem.Examples
 {
@@ -48,13 +46,13 @@ namespace UMA.CharacterSystem.Examples
             GameObject go = GameObject.Instantiate(DnaPrefab);
             DNASliderHandler dsh = go.GetComponent<DNASliderHandler>();
             dsh.Setup(DNA, Avatar);
-            go.transform.SetParent(SelectionPanel.transform);
+            go.transform.SetParent(SelectionPanel.transform,false);
         }
 
         private void AddLabel(string theText)
         {
             GameObject go = GameObject.Instantiate(LabelPrefab);
-            go.transform.SetParent(SelectionPanel.transform);
+            go.transform.SetParent(SelectionPanel.transform, false);
             Text txt = go.GetComponentInChildren<Text>();
             txt.text = theText;
         }

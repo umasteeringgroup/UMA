@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine.Rendering;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace UMA
 {
 	/// <summary>
@@ -62,21 +66,73 @@ namespace UMA
 		/// Returns the type of renderpipeline that is currently running
 		/// </summary>
 		/// <returns></returns>
-		public static PipelineType DetectPipeline() {
-			if(GraphicsSettings.renderPipelineAsset != null) {
+		public static PipelineType DetectPipeline()
+		{
+			if (GraphicsSettings.currentRenderPipeline != null)
+			{
 				// SRP
-				var srpType = GraphicsSettings.renderPipelineAsset.GetType().ToString();
-				if(srpType.Contains("HDRenderPipelineAsset")) {
+				var srpType = GraphicsSettings.currentRenderPipeline.GetType().ToString();
+				if (srpType.Contains("HDRender"))
+				{
 					return PipelineType.HDPipeline;
-				} else if(srpType.Contains("UniversalRenderPipelineAsset")) {
+				}
+				else if (srpType.Contains("Universal"))
+				{
 					return PipelineType.UniversalPipeline;
-				} else
-					return PipelineType.Unsupported;
-			}
+                }
+                else
+                {
+                    return PipelineType.Unsupported;
+                }
+            }
 			// no SRP
 			return PipelineType.BuiltInPipeline;
 		}
-	
+
+        public static void UDIMAdjustUV(Vector2[] dest, Vector2[] src)
+        {
+			if (src == null || dest == null)
+			{
+                return;
+            }
+            if (src.Length == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < src.Length; i++)
+            {
+                float x = Mathf.Abs(src[i].x);
+                float y = Mathf.Abs(src[i].y);
+
+                dest[i].x = x - (int)x;
+                dest[i].y = y - (int)y;
+            }
+        }
+
+
+        public static Material GetDefaultDiffuseMaterial()
+		{
+			var pipe = DetectPipeline();
+#if UNITY_EDITOR
+			if (pipe != PipelineType.UniversalPipeline && pipe != PipelineType.HDPipeline)
+			{
+				return AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+			}
+#endif
+            if (pipe == PipelineType.HDPipeline)
+            {
+                return new Material(Shader.Find("HDRP/Lit"));
+            }
+            else if (pipe == PipelineType.UniversalPipeline)
+            {
+                return new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            }
+            else
+            {
+                return new Material(Shader.Find("Standard"));
+            }
+        }
 
 		public static string TranslatedSRPTextureName(string BuiltinName) {
 			if (CurrentPipeline == PipelineType.NotSet) {
@@ -141,8 +197,10 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogWarning("Could not load " + searchName);
-			}
+                {
+                    Debug.LogWarning("Could not load " + searchName);
+                }
+            }
 			return null;
 		}
 #endif
@@ -198,8 +256,11 @@ namespace UMA
 		public static void DestroyAvatar(Avatar obj)
 		{
 			if (obj == null)
-				return;
-			int DestroyInstance = obj.GetInstanceID();
+            {
+                return;
+            }
+
+            int DestroyInstance = obj.GetInstanceID();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
 				return;
@@ -225,8 +286,11 @@ namespace UMA
 		{
 #if UNITY_EDITOR
 			if (obj == null)
-				return;
-			int DestroyInstance = obj.GetInstanceID();
+            {
+                return;
+            }
+
+            int DestroyInstance = obj.GetInstanceID();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
 				return;	
@@ -308,10 +372,17 @@ namespace UMA
 
 			// Set the active size of the given List
 			int newSize = size;
-			if (newSize < 0) newSize = 0;
-			if (newSize > list.Capacity) newSize = list.Capacity;
+			if (newSize < 0)
+            {
+                newSize = 0;
+            }
 
-			fieldInfo.SetValue(list, newSize);
+            if (newSize > list.Capacity)
+            {
+                newSize = list.Capacity;
+            }
+
+            fieldInfo.SetValue(list, newSize);
 		}
 	}
 }

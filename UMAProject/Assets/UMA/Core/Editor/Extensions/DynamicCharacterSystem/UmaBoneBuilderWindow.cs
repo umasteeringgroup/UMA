@@ -1,15 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UMA;
 using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
-	/// <summary>
-	///  This editor tool is used for generating the bone objects on a race so that they can be referenced in the editor.
-	/// </summary>
+    /// <summary>
+    ///  This editor tool is used for generating the bone objects on a race so that they can be referenced in the editor.
+    /// </summary>
     public class UmaBoneBuilderWindow : EditorWindow 
     {
         public GameObject umaObject;
@@ -90,13 +88,17 @@ namespace UMA.Editors
 
             //prevent being able to set set a prefab in the bone builder.  It will not work.
             if (newUmaObj != null && EditorUtility.IsPersistent(newUmaObj))
+            {
                 newUmaObj = null;
+            }
 
             if (newUmaObj != umaObject)
             {
                 umaObject = newUmaObj;
-                if(newUmaObj != null)    
-                    _avatar = umaObject.GetComponent<DynamicCharacterAvatar>();                    
+                if(newUmaObj != null)
+                {
+                    _avatar = umaObject.GetComponent<DynamicCharacterAvatar>();
+                }
             }
 
             if (umaObject != null && _avatar == null)
@@ -105,8 +107,9 @@ namespace UMA.Editors
                 baseRecipe = EditorGUILayout.ObjectField("Base Recipe", baseRecipe, typeof(UMARecipeBase), false) as UMARecipeBase;
             }
             else
+            {
                 baseRecipe = null;
-            
+            }
 
             removeUMAData = EditorGUILayout.Toggle(new GUIContent("Remove UMAData", "A recipe and UMAData is created during the bone generation process, checking this will remove it at the end of the process. (Recommended)"), removeUMAData);
 
@@ -128,7 +131,9 @@ namespace UMA.Editors
                 }
 
                 if (_avatar != null)
+                {
                     baseRecipe = _avatar.activeRace.data.baseRaceRecipe;
+                }
 
                 if (baseRecipe == null)
                 {
@@ -142,7 +147,11 @@ namespace UMA.Editors
                 EnsureRoot ();
                 CreateBoneTransforms ();
                 InitializeAnimator ();
-                if( removeUMAData ) Cleanup();
+                if( removeUMAData )
+                {
+                    Cleanup();
+                }
+
                 Debug.Log ("Completed!");
 				this.Close();
             }
@@ -151,21 +160,31 @@ namespace UMA.Editors
         private void InitializeUMAData()
         {
             if (umaObject == null)
+            {
                 return;
+            }
 
             if (baseRecipe == null)
+            {
                 return;
+            }
 
             //Adds the umaData component
             if (_umaData == null)
+            {
                 _umaData = umaObject.AddComponent<UMAData>();
+            }
 
             if (_umaData == null)
+            {
                 return;
+            }
 
             //Create a new recipe objects
             if ( _umaData.umaRecipe == null)
+            {
                 _umaData.umaRecipe = new UMAData.UMARecipe ();
+            }
 
             baseRecipe.Load(_umaData.umaRecipe, UMAContextBase.Instance);
             Debug.Log ("UMAData initialization successful!");
@@ -174,9 +193,11 @@ namespace UMA.Editors
         private void InitializeAnimator()
         {
             if (umaObject == null)
+            {
                 return;
+            }
 
-			UMAContextBase uc = UMAContextBase.Instance;
+            UMAContextBase uc = UMAContextBase.Instance;
 
 			if (uc == null)
 			{
@@ -186,9 +207,11 @@ namespace UMA.Editors
 
 			_animator = umaObject.gameObject.GetComponent<Animator> ();
             if (_animator == null)
+            {
                 _animator = umaObject.gameObject.AddComponent<Animator> ();
+            }
 
-			var umaTransform = umaObject.transform;
+            var umaTransform = umaObject.transform;
 			var oldParent = umaTransform.parent;
 			var originalRot = umaTransform.localRotation;
 			var originalPos = umaTransform.localPosition;
@@ -223,7 +246,9 @@ namespace UMA.Editors
                     for (int j = 0; j < _umaData.umaRecipe.slotDataList [i].asset.meshData.umaBoneCount; j++) {
                         UMATransform bone = _umaData.umaRecipe.slotDataList [i].asset.meshData.umaBones [j];
                         if (!boneDict.ContainsKey (bone.name))
+                        {
                             boneDict.Add (bone.name, bone);
+                        }
                     }
                 }
             }
@@ -249,7 +274,9 @@ namespace UMA.Editors
                     _umaData.umaRoot = newRoot;
                 } 
                 else
+                {
                     _umaData.umaRoot = _umaData.gameObject.transform.Find ("Root").gameObject;
+                }
 
                 if (_umaData.umaRoot.transform.Find ("Global") == null) 
                 {
@@ -266,7 +293,7 @@ namespace UMA.Editors
                 globalTransform = _umaData.umaRoot.transform.Find ("Global");
                 if (globalTransform != null) 
                 {
-                    _umaData.skeleton = new UMASkeleton (globalTransform);
+                    _umaData.skeleton = new UMASkeleton (globalTransform,_umaData.umaGenerator);
                 }
             }
         }
@@ -283,7 +310,9 @@ namespace UMA.Editors
         private void Cleanup()
         {
             if( _umaData )
+            {
                 DestroyImmediate(_umaData);
+            }
         }
     }
 }

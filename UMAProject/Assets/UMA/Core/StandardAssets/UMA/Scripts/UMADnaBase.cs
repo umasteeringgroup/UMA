@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace UMA
 {
@@ -38,8 +38,11 @@ namespace UMA
 				}
 			get {
 					if (dnaTypeHash == 0)
-						dnaTypeHash = UMAUtils.StringToHash(GetType().Name);
-					return dnaTypeHash;
+                {
+                    dnaTypeHash = UMAUtils.StringToHash(GetType().Name);
+                }
+
+                return dnaTypeHash;
 				}
 		}
 	}

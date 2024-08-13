@@ -1,10 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UMA.Dynamics;
 
 namespace UMA.Dynamics.Examples
 {
-	public class UMAShooter : MonoBehaviour
+    public class UMAShooter : MonoBehaviour
 	{
 		//Declare a member variables for distributing the impacts over several frames
 		float impactEndTime=0;
@@ -28,9 +27,10 @@ namespace UMA.Dynamics.Examples
 			if (Input.GetKeyDown(KeyCode.Escape))
             {
 				UMAPhysicsAvatar[] components = GameObject.FindObjectsOfType<UMAPhysicsAvatar>();
-				foreach(var player in components)
+                for (int i = 0; i < components.Length; i++)
                 {
-					if (player.ragdolled)
+                    UMAPhysicsAvatar player = components[i];
+                    if (player.ragdolled)
                     {
 						player.ragdolled = false;
 					}
@@ -41,7 +41,15 @@ namespace UMA.Dynamics.Examples
 				AudioSource src = gameObject.GetComponent<AudioSource>();
 				if (src != null)
                 {
-					src.PlayOneShot(Bang);
+					Debug.Log("Playing Bang");
+					if (Bang != null)
+					{
+						src.PlayOneShot(Bang, 1.0f);
+					}
+					else
+                    {
+						Debug.Log("Bang is null");
+                    }
                 }
 				//Get a ray going from the camera through the mouse cursor
 				Ray ray = currentCamera.ScreenPointToRay (new Vector3(Screen.width/2,Screen.height/2,0));
@@ -114,11 +122,15 @@ namespace UMA.Dynamics.Examples
 						//find the RagdollHelper component and activate ragdolling
 						UMAPhysicsAvatar player = avatar.GetComponent<UMAPhysicsAvatar>();
 						if(player == null)
-							player = avatar.GetComponentInChildren<UMAPhysicsAvatar>();
-						
-						if(player)
-							player.ragdolled=false;
-					}
+                        {
+                            player = avatar.GetComponentInChildren<UMAPhysicsAvatar>();
+                        }
+
+                        if (player)
+                        {
+                            player.ragdolled=false;
+                        }
+                    }
 				}
 				
 			}
@@ -139,8 +151,11 @@ namespace UMA.Dynamics.Examples
 						//find the RagdollHelper component and activate ragdolling
 						UMAPhysicsAvatar player = avatar.GetComponent<UMAPhysicsAvatar>();
 						if(player == null)
-							player = avatar.GetComponentInChildren<UMAPhysicsAvatar>();
-						if(player)
+                        {
+                            player = avatar.GetComponentInChildren<UMAPhysicsAvatar>();
+                        }
+
+                        if (player)
 						{
 							StartCoroutine(TimedRagdoll(hit));
 						}

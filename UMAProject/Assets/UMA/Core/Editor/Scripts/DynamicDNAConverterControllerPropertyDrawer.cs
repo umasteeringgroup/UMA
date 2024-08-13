@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using UMA.Editors;
 
 namespace UMA
 {
-	[CustomPropertyDrawer(typeof(DynamicDNAConverterController), true)]
+    [CustomPropertyDrawer(typeof(DynamicDNAConverterController), true)]
 	public class DynamicDNAConverterControllerPropertyDrawer : PropertyDrawer
 	{
 		static EditorWindow inspectorPopup;
@@ -26,8 +24,10 @@ namespace UMA
 					if (editors[i].GetType() == typeof(DynamicDNAConverterControllerInspector))
 					{
 						if (editors[i].target == property.objectReferenceValue)
-							DynamicDNAConverterControllerInspector.SetLivePopupEditor(editors[i] as DynamicDNAConverterControllerInspector);
-					}
+                        {
+                            DynamicDNAConverterControllerInspector.SetLivePopupEditor(editors[i] as DynamicDNAConverterControllerInspector);
+                        }
+                    }
 				}
 			}
 		}

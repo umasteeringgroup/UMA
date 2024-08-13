@@ -1,26 +1,25 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using UnityEngine.Serialization;
-using UMA.CharacterSystem;
 
 namespace UMA
 {
-	/// <summary>
-	/// Data for a UMA "race".
-	/// </summary>
-	/// <remarks>
-	/// A "race" in UMA is nothing more than a specific TPose and set of DNA
-	/// converters. For example there are RaceData entries for Male Humans and
-	/// Female Humans, because they have slightly different TPoses and gender
-	/// specific DNA converters, despite sharing the same DNA types.
-	/// </remarks>
-	[PreferBinarySerialization]
+    /// <summary>
+    /// Data for a UMA "race".
+    /// </summary>
+    /// <remarks>
+    /// A "race" in UMA is nothing more than a specific TPose and set of DNA
+    /// converters. For example there are RaceData entries for Male Humans and
+    /// Female Humans, because they have slightly different TPoses and gender
+    /// specific DNA converters, despite sharing the same DNA types.
+    /// </remarks>
+    [PreferBinarySerialization]
 	[Serializable]
-	public partial class RaceData : ScriptableObject, INameProvider, ISerializationCallbackReceiver
+	public partial class RaceData : ScriptableObject, INameProvider
 	{
 	    public string raceName;
 		public List<string> KeepBoneNames = new List<string>();
+		public List<string> tags = new List<string>();
 
         #region INameProvider
         public string GetAssetName()
@@ -33,53 +32,6 @@ namespace UMA
         }
 		#endregion
 
-		//UMA 2.8 FixDNAPrefabs: made the old fields 'legacy'  and turned them into properties that use the new DNAConverterListField
-		#region OBSOLETE FIELDS AND PROPERTIES and METHODS
-		/// <summary>
-		/// The set of DNA converters for modifying characters of this race.
-		/// </summary>
-		[Tooltip("The List of Dna Converter components on prefab gameobjects that store the DNA converter instance data.")]
-		[FormerlySerializedAs("dnaConverterList")]
-		[SerializeField]
-		private DnaConverterBehaviour[] _dnaConverterListLegacy = new DnaConverterBehaviour[0];
-
-		[System.Obsolete("UMA 2.8+ - RaceData.raceDictionary is obsolete use GetConverters or dnaConverterList instead", false)]
-		public Dictionary<Type, DNAConvertDelegate> raceDictionary = new Dictionary<Type, DNAConvertDelegate>();
-
-		//UMA2.8+ multiple converters can use the same DNA now
-		[System.Obsolete("UMA 2.8+ - RaceData.GetConverter is obsolete because lots of converters can use the same DNA names now (DNAAsset). Use GetConverters or dnaConverterList instead", false)]
-		public IDNAConverter GetConverter(UMADnaBase DNA)
-		{
-			/*foreach (DnaConverterBehaviour dcb in _dnaConverterList)
-			{
-				if (dcb.DNATypeHash == DNA.DNATypeHash)
-					return dcb;
-			}*/
-			for(int i = 0; i < _dnaConverterList.Count; i++)
-			{
-				if (_dnaConverterList[i].DNATypeHash == DNA.DNATypeHash)
-					return _dnaConverterList[i];
-			}
-			return null;
-		}
-
-		//UMA 2.8 FixDNAPrefabs: Swaps the legacy converter (DnaConverterBehaviour Prefab) for the new DNAConverterController
-		/// <summary>
-		/// Replaces a legacy DnaConverterBehaviour Prefab with a new DynamicDNAConverterController
-		/// </summary>
-		/// <returns>returns true if any converters were replaced.</returns>
-		public bool UpgradeFromLegacy(DnaConverterBehaviour oldConverter, DynamicDNAConverterController newConverter)
-		{
-			if (_dnaConverterList.Contains(oldConverter))
-			{
-				if (_dnaConverterList.Replace(oldConverter, newConverter))
-					return true;
-			}
-			return false;
-		}
-
-		#endregion
-
 		[SerializeField]
 		[Tooltip("The list of DNA Converters that this race uses. These are usually DynamicDNAConverterController assets.")]
 		private DNAConverterList _dnaConverterList = new DNAConverterList();
@@ -89,9 +41,10 @@ namespace UMA
 		{
 			List<string> Names = new List<string>();
 
-			foreach(IDNAConverter converter in dnaConverterList)
+            for (int i = 0; i < dnaConverterList.Length; i++)
             {
-				if (converter is IDynamicDNAConverter)
+                IDNAConverter converter = dnaConverterList[i];
+                if (converter is IDynamicDNAConverter)
 				{
 					var asset = ((IDynamicDNAConverter)converter).dnaAsset;
 					Names.AddRange(asset.Names);
@@ -100,11 +53,18 @@ namespace UMA
 			return Names;
 		}
 
+		public bool HasTag(string tag)
+		{
+            return tags.Contains(tag);
+        }
+
+
 		public void ResetDNA()
 		{
-			foreach (IDNAConverter converter in dnaConverterList)
+            for (int j = 0; j < dnaConverterList.Length; j++)
 			{
-				if (converter is DynamicDNAConverterController)
+                IDNAConverter converter = dnaConverterList[j];
+                if (converter is DynamicDNAConverterController)
 				{
 					var c = converter as DynamicDNAConverterController;
 					for (int i=0;i<c.PluginCount;i++)
@@ -119,25 +79,15 @@ namespace UMA
 		/// <summary>
 		/// Returns the list of DNA Converters that this race uses. These are usually DynamicDNAConverterController assets
 		/// </summary>
-		public IDNAConverter[] dnaConverterList
+		public DynamicDNAConverterController[] dnaConverterList
 		{
 			get { return _dnaConverterList.ToArray(); }
 			set { _dnaConverterList = new DNAConverterList(value); }
 		}
 
-		/// <summary>
-		/// Returns any dna converters on the Race that use the given DNA
-		/// </summary>
-		/// <param name="DNA"></param>
-		public IDNAConverter[] GetConverters(UMADnaBase DNA)
+		public DynamicDNAConverterController[] GetConverters(UMADnaBase DNA)
 		{
-			var ret = new List<IDNAConverter>();
-			for(int i = 0; i < _dnaConverterList.Count; i++)
-			{
-				if (_dnaConverterList[i].DNATypeHash == DNA.DNATypeHash)
-					ret.Add(_dnaConverterList[i]);
-			}
-			return ret.ToArray();
+			return _dnaConverterList.ToArray();
 		}
 
 		/// <summary>
@@ -146,7 +96,7 @@ namespace UMA
 		/// <param name="converter"></param>
 		public void AddConverter(IDNAConverter converter)
 		{
-			_dnaConverterList.Add(converter);
+			_dnaConverterList.Add(converter as DynamicDNAConverterController);
 		}
 
 		/// <summary>
@@ -203,9 +153,11 @@ namespace UMA
 			if ((umaTarget == UMATarget.Humanoid) && (TPose == null))
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("Humanoid UMA target missing required TPose data!");
+                {
+                    Debug.LogError("Humanoid UMA target missing required TPose data!");
+                }
 
-				valid = false;
+                valid = false;
 			}
 			
 			return valid;
@@ -214,54 +166,19 @@ namespace UMA
 		#pragma warning disable 618
 	    public void UpdateDictionary()
 	    {
-			//UMA2.8+ OBSOLETE CODE
-	        raceDictionary.Clear();
-	        for (int i = 0; i < _dnaConverterListLegacy.Length; i++)
-	        {
-	            if (_dnaConverterListLegacy[i])
-	            {
-					_dnaConverterListLegacy[i].Prepare();
-	                if (!raceDictionary.ContainsKey(_dnaConverterListLegacy[i].DNAType))
-	                {
-	                    raceDictionary.Add(_dnaConverterListLegacy[i].DNAType, _dnaConverterListLegacy[i].ApplyDnaAction);
-	                }
-	            }
-	        }
 			//UMA2.8+ call Prepare() on the elements in _dnaConverterList now.
 			for (int i = 0; i < _dnaConverterList.Count; i++)
 			{
-#if UNITY_EDITOR
-				//Do we do update nagging here?
-				if (_dnaConverterList[i] is UMA.CharacterSystem.DynamicDNAConverterBehaviour)
-				{
-					(_dnaConverterList[i] as UMA.CharacterSystem.DynamicDNAConverterBehaviour).DoUpgradeNag(this);
-				}
-#endif
-				_dnaConverterList[i].Prepare();
+				if (_dnaConverterList[i] != null)
+                {
+                    _dnaConverterList[i].Prepare();
+                }
+                else
+                {
+					Debug.LogWarning($"Null converter list on race: {raceName} object {this.name} ");
+                }
 			}
 	    }
 #pragma warning restore 618
-
-		#region ISERIALIZATIONCALLBACKRECIEVER
-
-		public void OnBeforeSerialize()
-		{
-			//do nothing
-		}
-
-		/// <summary>
-		/// Converts DnaConverterBehaviour[] _dnaConverterListLegacy to  DNAConverterList _dnaConverterList to preserve legacy data
-		/// </summary>
-		public void OnAfterDeserialize()
-		{
-			if(_dnaConverterListLegacy.Length > 0 && _dnaConverterList.Length == 0)
-			{
-				for (int i = 0; i < _dnaConverterListLegacy.Length; i++)
-					_dnaConverterList.Add(_dnaConverterListLegacy[i] as IDNAConverter);
-			}
-			//Clear _dnaConverterListLegacy?
-		}
-
-		#endregion
 	}
 }

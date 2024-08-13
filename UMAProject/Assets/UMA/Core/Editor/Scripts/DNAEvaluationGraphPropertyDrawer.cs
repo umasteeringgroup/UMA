@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
-using UnityEditorInternal;
 
 namespace UMA.Editors
 {
-	[CustomPropertyDrawer(typeof(DNAEvaluationGraph), true)]
+    [CustomPropertyDrawer(typeof(DNAEvaluationGraph), true)]
 	public class DNAEvaluationGraphPropertyDrawer : PropertyDrawer
 	{
 
@@ -38,8 +35,11 @@ namespace UMA.Editors
 		private void Init()
 		{
 			if (initialized)
-				return;
-			if(graphLabelStyle == null)
+            {
+                return;
+            }
+
+            if (graphLabelStyle == null)
 			{
 				graphLabelStyle = new GUIStyle(EditorStyles.centeredGreyMiniLabel);
 				graphLabelStyle.normal.textColor = Color.white;
@@ -143,8 +143,11 @@ namespace UMA.Editors
 				var prevEnabled = GUI.enabled;
 				GUI.enabled = true;
 				if (_popupContent == null)
-					_popupContent = new DNAEvaluationGraphPopupContent();
-				_popupContent.width = overlayRect.width;
+                {
+                    _popupContent = new DNAEvaluationGraphPopupContent();
+                }
+
+                _popupContent.width = overlayRect.width;
 				_popupContent.selectedPreset = new DNAEvaluationGraph(_helper.Target);
 				_popupContent.property = property;
 				_popupContent.OnSelected = PopupCallback;
@@ -190,9 +193,10 @@ namespace UMA.Editors
 			if (GUI.Button(overlayRect, new GUIContent(dnaGraph.name, tooltip), graphLabelStyle))
 			{
 				if (callback != null)
-					callback(dnaGraph);
-
-			}
+                {
+                    callback(dnaGraph);
+                }
+            }
 		}
 
 		private void AddDefaultValues()

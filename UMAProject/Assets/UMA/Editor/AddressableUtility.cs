@@ -1,11 +1,9 @@
-﻿using System.Collections;
+﻿#if UMA_ADDRESSABLES
+#if !UMA_NOASMDEF
 using System.Collections.Generic;
 using UnityEditor;
-#if UMA_ADDRESSABLES
-#if !UMA_NOASMDEF
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace UMA
@@ -50,7 +48,9 @@ namespace UMA
             foreach (AddressableAssetEntry entry in allEntries)
             {
                 if (entry.labels.Contains(label))
+                {
                     return true;
+            }
             }
 
             return false;
@@ -67,8 +67,6 @@ namespace UMA
 
             foreach (var group in AddressableSettings.groups)
             {
-                if (group.HasSchema<PlayerDataGroupSchema>())
-                    continue;
 
                 foreach (AddressableAssetEntry e in group.entries)
                 {
@@ -92,8 +90,11 @@ namespace UMA
 
             foreach (var group in AddressableSettings.groups)
             {
-                if (group.HasSchema<PlayerDataGroupSchema>())
+                if (group == null)
+                {
                     continue;
+                }
+
 
                 foreach (AddressableAssetEntry e in group.entries)
                 {

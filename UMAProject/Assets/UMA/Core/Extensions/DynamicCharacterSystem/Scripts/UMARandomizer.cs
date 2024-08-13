@@ -1,13 +1,12 @@
-﻿using System.Collections;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
 
 namespace UMA
 {
-	// A Random DNA 
-	[Serializable]
+    // A Random DNA 
+    [Serializable]
 	public class RandomDNA
 	{
 		public string DnaName;
@@ -71,8 +70,11 @@ namespace UMA
 			get
 			{
 				if (WardrobeSlot != null)
-					return WardrobeSlot.wardrobeSlot;
-				return _slotName;
+                {
+                    return WardrobeSlot.wardrobeSlot;
+                }
+
+                return _slotName;
 			}
 		}
 #if UNITY_EDITOR
@@ -88,8 +90,11 @@ namespace UMA
             {
 				string slot = "";
 				if (WardrobeSlot != null)
-					slot = WardrobeSlot.name;
-				return SlotName + slot;
+                {
+                    slot = WardrobeSlot.name;
+                }
+
+                return SlotName + slot;
             }
         }
 #endif
@@ -108,9 +113,10 @@ namespace UMA
 				UMAPackedRecipeBase.UMAPackRecipe upr = slot.PackedLoad();
 
 				List<string> cols = new List<string>();
-				foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd in upr.fColors)
+                for (int i = 0; i < upr.fColors.Length; i++)
 				{
-					if (pcd.name.Trim() != "-")
+                    UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd = upr.fColors[i];
+                    if (pcd.name.Trim() != "-")
 					{
 						cols.Add(pcd.name);
 					}
@@ -151,9 +157,10 @@ namespace UMA
 		public UMAPredefinedDNA GetRandomDNA()
 		{
 			UMAPredefinedDNA theDNA = new UMAPredefinedDNA();
-			foreach(RandomDNA rd in this.RandomDna)
+            for (int i = 0; i < RandomDna.Count; i++)
 			{
-				theDNA.AddDNA(rd.DnaName, UnityEngine.Random.Range(rd.MinValue, rd.MaxValue));
+                RandomDNA rd = this.RandomDna[i];
+                theDNA.AddDNA(rd.DnaName, UnityEngine.Random.Range(rd.MinValue, rd.MaxValue));
 			}
 			return theDNA;
 		}
@@ -161,9 +168,10 @@ namespace UMA
 		public Dictionary<string, List<RandomWardrobeSlot>> GetRandomSlots()
 		{
 			Dictionary<string, List<RandomWardrobeSlot>> RandomSlots = new Dictionary<string, List<RandomWardrobeSlot>>();
-			foreach (RandomWardrobeSlot rws in RandomWardrobeSlots)
+            for (int i = 0; i < RandomWardrobeSlots.Count; i++)
 			{
-				string wslot = rws.SlotName;//rws.WardrobeSlot.wardrobeSlot;
+                RandomWardrobeSlot rws = RandomWardrobeSlots[i];
+                string wslot = rws.SlotName;//rws.WardrobeSlot.wardrobeSlot;
 				if (!RandomSlots.ContainsKey(wslot))
 				{
 					RandomSlots.Add(wslot, new List<RandomWardrobeSlot>());
@@ -179,18 +187,20 @@ namespace UMA
 			UMAPackedRecipeBase.UMAPackRecipe upr = utr.PackedLoad();
 
 			List<string> cols = new List<string>();
-			foreach (UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd in upr.fColors)
+            for (int i = 0; i < upr.fColors.Length; i++)
 			{
-				if (pcd.name.Trim() != "-")
+                UMAPackedRecipeBase.PackedOverlayColorDataV3 pcd = upr.fColors[i];
+                if (pcd.name.Trim() != "-")
 				{
 					cols.Add(pcd.name);
 				}
 			}
 
 			List<RandomColors> newColors = new List<RandomColors>();
-			foreach (string s in cols)
+            for (int i = 0; i < cols.Count; i++)
 			{
-				RandomColors rcs = new RandomColors(s, null);
+                string s = cols[i];
+                RandomColors rcs = new RandomColors(s, null);
 				newColors.Add(rcs);
 			}
 			return newColors;
@@ -200,22 +210,12 @@ namespace UMA
 		public void SetupDNA(RaceData rc)
 		{
 			List<string> DNAList = new List<string>();
-			foreach (IDNAConverter cvt in rc.dnaConverterList)
+            for (int i = 0; i < rc.dnaConverterList.Length; i++)
 			{
-				if (cvt.DNAType == typeof(DynamicUMADna))
+                IDNAConverter cvt = rc.dnaConverterList[i];
+                if (cvt.DNAType == typeof(DynamicUMADna))
 				{
 					DNAList.AddRange(((IDynamicDNAConverter)cvt).dnaAsset.Names);
-				}
-				else
-				{
-					if (cvt is DnaConverterBehaviour)
-					{
-						var legacyDNA = (cvt as DnaConverterBehaviour).DNAType.GetConstructor(System.Type.EmptyTypes).Invoke(null) as UMADnaBase;
-						if (legacyDNA != null)
-						{
-							DNAList.AddRange(legacyDNA.Names);
-						}
-					}
 				}
 			}
 			PossibleDNA = DNAList.ToArray();
@@ -268,19 +268,29 @@ namespace UMA
 
 		public RandomAvatar GetRandomAvatar()
 		{
-			if (RandomAvatars.Count == 1) return RandomAvatars[0];
-			if (RandomAvatars.Count == 0) return null;
-			int total = 0;
+			if (RandomAvatars.Count == 1)
+            {
+                return RandomAvatars[0];
+            }
 
-			// find the total number of chances.
-			foreach(RandomAvatar ra in RandomAvatars )
+            if (RandomAvatars.Count == 0)
+            {
+                return null;
+            }
+
+            int total = 0;
+
+            // find the total number of chances.
+            for (int i = 0; i < RandomAvatars.Count; i++)
 			{
-				total += ra.Chance;
+                RandomAvatar ra = RandomAvatars[i];
+                total += ra.Chance;
 			}
 
-			foreach (RandomAvatar ra in RandomAvatars)
+            for (int i = 0; i < RandomAvatars.Count; i++)
 			{
-				int rval = UnityEngine.Random.Range(0, total);
+                RandomAvatar ra = RandomAvatars[i];
+                int rval = UnityEngine.Random.Range(0, total);
 
 				if (rval < ra.Chance)
 				{

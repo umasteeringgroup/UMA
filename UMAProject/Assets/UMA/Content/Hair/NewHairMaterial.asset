@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
+  m_Name: NewHairMaterial
+  m_EditorClassIdentifier: 
+  translateSRP: 0
+  AutoSetSRPMaterials: 1
+  _material: {fileID: 2100000, guid: ae26229ac700db548bbdc6973cb29d39, type: 2}
+  _secondPass: {fileID: 0}
+  srpMaterials:
+  - SRP: 2
+    material: {fileID: 2100000, guid: 9cbdf960da83ce848b6fa53141ca2fe7, type: 2}
+    secondPass: {fileID: 2100000, guid: 8146edb8bb821c34f956f820090a2adb, type: 2}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+  - SRP: 3
+    material: {fileID: 2100000, guid: 9cbdf960da83ce848b6fa53141ca2fe7, type: 2}
+    secondPass: {fileID: 2100000, guid: 8146edb8bb821c34f956f820090a2adb, type: 2}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+  materialType: 4
+  channels: []
+  MipMapBias: 0
+  AnisoLevel: 8
+  MatFilterMode: 2
+  Compression: 0
+  shaderParms:
+  - ParameterName: _Color
+    ColorName: Hair
+  MaskWithCurrentColor: 0
+  maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

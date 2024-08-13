@@ -53,15 +53,19 @@ namespace UMA.Editors
 		public bool addToGlobalLibrary;
 		public bool binarySerialization;
 		public bool calcTangents=true;
-		public string errmsg = "";
+		public bool udimAdjustment = true;
+        public string errmsg = "";
 		public List<string> Tags = new List<string>();
 		public bool showTags;
-		public bool nameAfterMaterial=true;
+		public bool nameAfterMaterial=false;
 		public List<BoneName> KeepBones = new List<BoneName>();
 		private ReorderableList boneList;
 		private bool boneListInitialized;
+		public string BoneStripper;
+		private bool useRootFolder=false;
+		public bool keepAllBones = false;
 
-		string GetAssetFolder()
+        string GetAssetFolder()
 		{
 			int index = slotName.LastIndexOf('/');
 			if( index > 0 )
@@ -115,10 +119,12 @@ namespace UMA.Editors
 		private void InitBoneList()
 		{
 			boneList = new ReorderableList(KeepBones,typeof(BoneName), true, true, true, true);
-			boneList.drawHeaderCallback = (Rect rect) => {
+            boneList.drawHeaderCallback = (Rect rect) =>
+            {
 				EditorGUI.LabelField(rect, "Keep Bones Containing");
 			};
-			boneList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => {
+            boneList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
+            {
 				rect.y += 2;
 				KeepBones[index].strValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), KeepBones[index].strValue);
 			};
@@ -152,7 +158,15 @@ namespace UMA.Editors
 			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
 			addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
 			EditorGUILayout.EndHorizontal();
-			calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
+			EditorGUILayout.BeginHorizontal();
+            calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
+            udimAdjustment = EditorGUILayout.Toggle("Adjust for UDIM", udimAdjustment);
+            EditorGUILayout.EndHorizontal();
+			EditorGUILayout.BeginHorizontal();
+            useRootFolder = EditorGUILayout.Toggle("Write to Root Folder", useRootFolder);
+            keepAllBones = EditorGUILayout.Toggle("Keep All Bones", keepAllBones);
+            EditorGUILayout.EndHorizontal();
+            BoneStripper = EditorGUILayout.TextField("Strip from Bones:", BoneStripper);
 			boneList.DoLayoutList();
 			GUIHelper.EndVerticalPadded(10);
 			DoDragDrop();
@@ -167,13 +181,14 @@ namespace UMA.Editors
 			GUILayout.Label("Single Slot Processing", EditorStyles.boldLabel);
 
 			var newslotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-			if (newslotMesh != slotMesh)
-			{
-				errmsg = "";
-				slotMesh = newslotMesh;
-			}
+            if (newslotMesh != slotMesh)
+            {
+                errmsg = "";
+                slotMesh = newslotMesh;
+                slotName = newslotMesh.name;
+            }
 
-			slotName = EditorGUILayout.TextField("Slot Name", slotName);
+            slotName = EditorGUILayout.TextField("Slot Name", slotName);
 
 
 
@@ -190,7 +205,7 @@ namespace UMA.Editors
 					{
 						if (v.x > 1.0f || v.x < 0.0f || v.y > 1.0f || v.y < 0.0f)
 						{
-							errmsg = "UV Coordinates are out of range and will likely have issues with atlassed materials. Textures should not be tiled unless using non-atlassed materials.";
+							errmsg = "UV Coordinates are out of range and will likely have issues with atlassed materials. Textures should not be tiled unless using non-atlassed materials. If this slot is using UDIMs, please check the box to adjust for UDIM in the slot options.";
 							break;
 						}
 					}
@@ -282,10 +297,14 @@ namespace UMA.Editors
             if (slotMesh != null)
             {
                 if (slotMesh.localBounds.size.x > 10.0f || slotMesh.localBounds.size.y > 10.0f || slotMesh.localBounds.size.z > 10.0f)
+                {
                     EditorGUILayout.HelpBox("This slot's size is very large. It's import scale may be incorrect!", MessageType.Warning);
+                }
 
                 if (slotMesh.localBounds.size.x < 0.01f || slotMesh.localBounds.size.y < 0.01f || slotMesh.localBounds.size.z < 0.01f)
+                {
                     EditorGUILayout.HelpBox("This slot's size is very small. It's import scale may be incorrect!", MessageType.Warning);
+                }
 
                 if (slotName == null || slotName == "")
                 {
@@ -318,12 +337,18 @@ namespace UMA.Editors
 
         private SlotDataAsset CreateSlot()
 		{
-			if(slotName == null || slotName == ""){
+            if (slotName == null || slotName == "")
+            {
 				Debug.LogError("slotName must be specified.");
 				return null;
 			}
 
 			SlotDataAsset sd = CreateSlot_Internal();
+            if (sd == null)
+            {
+                return null;
+            }
+
 			UMAUpdateProcessor.UpdateSlot(sd);
 			return sd;
 		}
@@ -358,7 +383,7 @@ namespace UMA.Editors
 			
 			if (material == null)
 			{
-				Debug.LogWarning("No UMAMaterial specified, you need to specify that later.");
+				Debug.LogError("No UMAMaterial specified! You must specify an UMAMaterial to build a slot.");
 				return null;
 			}
 
@@ -379,8 +404,39 @@ namespace UMA.Editors
             {
 				KeepList.Add(b.strValue);
             }
+			if (!string.IsNullOrEmpty(BoneStripper))
+			{
+				int stripCount = 0;
+				foreach (Transform t in slotMesh.bones)
+				{
+					if (t.name.Contains(BoneStripper))
+					{
+						t.name = t.name.Replace(BoneStripper, "");
+						stripCount++;
+					}
+				}
+				Debug.Log("Stripped " + stripCount + " Bones");
+			}
 
-			SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(AssetDatabase.GetAssetPath(slotFolder), GetAssetFolder(), GetAssetName(),GetSlotName(slotMesh),nameAfterMaterial, slotMesh, material, normalReferenceMesh,KeepList, RootBone, binarySerialization,calcTangents);
+            SlotBuilderParameters sbp = new SlotBuilderParameters();
+            sbp.calculateTangents = calcTangents;
+            sbp.binarySerialization = binarySerialization;
+            sbp.nameByMaterial = nameAfterMaterial;
+            sbp.stripBones = BoneStripper;
+            sbp.rootBone = RootBone;
+            sbp.assetName = GetAssetName();
+            sbp.slotName = GetSlotName(slotMesh);
+            sbp.assetFolder = GetAssetFolder();
+            sbp.slotFolder = AssetDatabase.GetAssetPath(slotFolder);
+            sbp.keepList = KeepList;
+            sbp.slotMesh = slotMesh;
+            sbp.seamsMesh = normalReferenceMesh;
+            sbp.material = material;
+            sbp.udimAdjustment = udimAdjustment;
+            sbp.useRootFolder = false;
+			sbp.keepAllBones = keepAllBones;
+
+            SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(sbp);
 			slot.tags = Tags.ToArray();
 			return slot;
 		}

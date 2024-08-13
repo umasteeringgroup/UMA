@@ -13,10 +13,26 @@ MonoBehaviour:
   m_Name: UMA_Hair_Std
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: 9ae673dab7af9db43afeb2f193929cd2, type: 2}
+  _material: {fileID: 2100000, guid: 9ae673dab7af9db43afeb2f193929cd2, type: 2}
+  _secondPass: {fileID: 0}
+  srpMaterials:
+  - SRP: 2
+    material: {fileID: 2100000, guid: 9ae673dab7af9db43afeb2f193929cd2, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
+    - _MetallicGlossMap
+  - SRP: 3
+    material: {fileID: 2100000, guid: 9ae673dab7af9db43afeb2f193929cd2, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
+    - _MetallicGlossMap
   materialType: 1
   channels:
-  - channelType: 4
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 
@@ -24,7 +40,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 1
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: 
@@ -32,7 +48,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 0
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _MetallicGlossMap
     sourceTextureName: 
@@ -47,3 +63,5 @@ MonoBehaviour:
   shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

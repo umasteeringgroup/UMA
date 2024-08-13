@@ -1,11 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UMA.Dynamics;
 
 namespace UMA
-{	
-	public class UMAPhysicsSlotDefinition : MonoBehaviour 
+{
+    public class UMAPhysicsSlotDefinition : MonoBehaviour 
 	{
 		//See UMAPhysicsSlotDefinitionEditor for how these are displayed
 		[HideInInspector]

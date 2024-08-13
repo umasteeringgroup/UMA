@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using UMA;
 using UMA.CharacterSystem;
 using Unity.Collections;
@@ -148,9 +147,10 @@ public class UMARenderTextureMover : MonoBehaviour
         trackedItems.Clear();
         List<RenderTextureSource> textureSources = GetRenderTextures(umaData);
         Debug.Log("RenderTextures found: " + textureSources.Count); // get rid of this after testing.
-        foreach (RenderTextureSource rts in textureSources)
+        for (int i = 0; i < textureSources.Count; i++)
         {
-                MoveRenderTexture(umaData, rts);
+            RenderTextureSource rts = textureSources[i];
+            MoveRenderTexture(umaData, rts);
         }
     }
 

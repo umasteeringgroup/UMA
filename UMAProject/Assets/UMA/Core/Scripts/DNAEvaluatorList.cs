@@ -1,15 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UMA
 {
-	//A dna evaluator list evaluates multiple dna at the same time according to each entrys evaluation graph.
-	//the results are then combined together according to the 'aggregationMethod' option.
-	//This provides huge flexibility when determining how different dna values interract with each other when they are affecting
-	//a blendshape or bone pose for example.
-	//You can generally treat this like a list of evaluators, but you can call Evaluate on it directly to get the aggregated result
-	[System.Serializable]
+    //A dna evaluator list evaluates multiple dna at the same time according to each entrys evaluation graph.
+    //the results are then combined together according to the 'aggregationMethod' option.
+    //This provides huge flexibility when determining how different dna values interract with each other when they are affecting
+    //a blendshape or bone pose for example.
+    //You can generally treat this like a list of evaluators, but you can call Evaluate on it directly to get the aggregated result
+    [System.Serializable]
 	public class DNAEvaluatorList
 	{
 		public enum AggregationMethodOpts
@@ -44,8 +43,10 @@ namespace UMA
 				for(int i = 0; i < _dnaEvaluators.Count; i++)
 				{
 					if (!string.IsNullOrEmpty(_dnaEvaluators[i].dnaName))
-						ret.Add(_dnaEvaluators[i].dnaName);
-				}
+                    {
+                        ret.Add(_dnaEvaluators[i].dnaName);
+                    }
+                }
 				return ret;
 			}
 		}
@@ -107,8 +108,10 @@ namespace UMA
 				return GetAggregateValueNew(umaDna, startingValue);
 			}
 			else
-				return startingValue;
-		}
+            {
+                return startingValue;
+            }
+        }
 
 		private float GetAggregateValueNew(UMADnaBase dna, float result = 0f)
 		{
@@ -125,8 +128,10 @@ namespace UMA
 					}
 				}
 				if (aveCount > 0)
-					result = result / aveCount;
-			}
+                {
+                    result = result / aveCount;
+                }
+            }
 			else if (_aggregationMethod == AggregationMethodOpts.Maximum)
 			{
 				for (int i = 0; i < _dnaEvaluators.Count; i++)
@@ -136,8 +141,10 @@ namespace UMA
 					{
 						tempResult = _dnaEvaluators[i].Evaluate(dna);
 						if (tempResult > result)
-							result = tempResult;
-					}
+                        {
+                            result = tempResult;
+                        }
+                    }
 				}
 			}
 			else if (_aggregationMethod == AggregationMethodOpts.Minimum)
@@ -149,8 +156,10 @@ namespace UMA
 					{
 						tempResult = _dnaEvaluators[i].Evaluate(dna);
 						if (tempResult < result)
-							result = tempResult;
-					}
+                        {
+                            result = tempResult;
+                        }
+                    }
 				}
 			}
 			else if (aggregationMethod == AggregationMethodOpts.Cumulative)
@@ -162,14 +171,22 @@ namespace UMA
 					{
 						tempResult = _dnaEvaluators[i].Evaluate(dna);
 						if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Add)
-							result += tempResult;
-						else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Subtract)
-							result -= tempResult;
-						else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Multiply)
-							result *= tempResult;
-						else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Divide && tempResult != 0)
-							result /= tempResult;
-					}
+                        {
+                            result += tempResult;
+                        }
+                        else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Subtract)
+                        {
+                            result -= tempResult;
+                        }
+                        else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Multiply)
+                        {
+                            result *= tempResult;
+                        }
+                        else if (_dnaEvaluators[i].calcOption == DNAEvaluator.CalcOption.Divide && tempResult != 0)
+                        {
+                            result /= tempResult;
+                        }
+                    }
 				}
 			}
 			return result;
@@ -203,8 +220,10 @@ namespace UMA
 					for (int i = 0; i < vals.Count; i++)
 					{
 						if (vals[i] < result)
-							result = vals[i];
-					}
+                        {
+                            result = vals[i];
+                        }
+                    }
 				}
 			}
 			if(_aggregationMethod == AggregationMethodOpts.Maximum)
@@ -215,8 +234,10 @@ namespace UMA
 					for (int i = 0; i < vals.Count; i++)
 					{
 						if (vals[i] > result)
-							result = vals[i];
-					}
+                        {
+                            result = vals[i];
+                        }
+                    }
 				}
 			}
 			return result;

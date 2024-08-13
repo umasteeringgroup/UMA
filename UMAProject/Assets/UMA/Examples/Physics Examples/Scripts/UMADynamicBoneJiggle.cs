@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA;
@@ -24,9 +23,10 @@ public class UMADynamicBoneJiggle : MonoBehaviour
 		AddBoneJiggle(umaData, rootBone, cleaner);
 		if (AdditionalBones != null)
         {
-			foreach(string s in AdditionalBones)
+            for (int i = 0; i < AdditionalBones.Length; i++)
             {
-				if (!string.IsNullOrEmpty(s))
+                string s = AdditionalBones[i];
+                if (!string.IsNullOrEmpty(s))
 				{
 					rootBone = SkeletonTools.RecursiveFindBone(umaData.umaRoot.transform, s);
 					AddBoneJiggle(umaData, rootBone, cleaner);
@@ -67,9 +67,10 @@ public class UMADynamicBoneJiggle : MonoBehaviour
 				jiggleBone = rootBone.gameObject.AddComponent<SwayRootBone>();
 			}
 
-			foreach (string exception in exceptions)
+            for (int i = 0; i < exceptions.Count; i++)
 			{
-				exclusionList.Add(SkeletonTools.RecursiveFindBone(umaData.gameObject.transform,exception));
+                string exception = exceptions[i];
+                exclusionList.Add(SkeletonTools.RecursiveFindBone(umaData.gameObject.transform,exception));
 			}
 
 			jiggleBone.Exclusions = exclusionList;
@@ -81,9 +82,11 @@ public class UMADynamicBoneJiggle : MonoBehaviour
 		if (deleteBoneWithSlot)
 		{
 			if(cleaner == null)
-				cleaner = umaData.gameObject.AddComponent<UMABoneCleaner>();
-			
-			UMAJiggleBoneListing listing = new UMAJiggleBoneListing();
+            {
+                cleaner = umaData.gameObject.AddComponent<UMABoneCleaner>();
+            }
+
+            UMAJiggleBoneListing listing = new UMAJiggleBoneListing();
 			listing.boneName = jiggleBoneName;
 			listing.carrierSlot = slotToWatch;
 			

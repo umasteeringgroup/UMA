@@ -1,24 +1,36 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace UMA
 {
-	/// <summary>
-	/// Auxillary slot which adds a CapsuleCollider and Rigidbody to a newly created character.
-	/// </summary>
-	public class CapsuleColliderSlotScript : MonoBehaviour
+    /// <summary>
+    /// Auxillary slot which adds a CapsuleCollider and Rigidbody to a newly created character.
+    /// </summary>
+    public class CapsuleColliderSlotScript : MonoBehaviour
 	{
+		public bool overrideMass = false;
+		public bool overrideConstraints = false;
+		public bool overrideDimensions = true;
+
 		public void OnDnaApplied(UMAData umaData)
 		{
 			var rigid = umaData.gameObject.GetComponent<Rigidbody>();
 			if (rigid == null)
 			{
 				rigid = umaData.gameObject.AddComponent<Rigidbody>();
-			}
-			rigid.constraints = RigidbodyConstraints.FreezeRotation;
-			rigid.mass = umaData.characterMass;
+                rigid.constraints = RigidbodyConstraints.FreezeRotation;
+                rigid.mass = umaData.characterMass;
+            }
 
-			CapsuleCollider capsule = umaData.gameObject.GetComponent<CapsuleCollider>();
+            if ( overrideConstraints)
+            {
+				rigid.constraints = RigidbodyConstraints.FreezeRotation;
+            }
+			if (overrideMass)
+			{
+				rigid.mass = umaData.characterMass;
+			}
+
+            CapsuleCollider capsule = umaData.gameObject.GetComponent<CapsuleCollider>();
 			BoxCollider box = umaData.gameObject.GetComponent<BoxCollider>();
 
 			if(umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
@@ -32,10 +44,13 @@ namespace UMA
 					Destroy(box);
 				}
 
-				capsule.radius = umaData.characterRadius;
-				capsule.height = umaData.characterHeight;
-				capsule.center = new Vector3(0, capsule.height / 2, 0);
-			}
+				if (overrideDimensions)
+				{
+                    capsule.radius = umaData.characterRadius;
+                    capsule.height = umaData.characterHeight;
+                    capsule.center = new Vector3(0, capsule.height / 2, 0);
+                }
+            }
 			else
 			{
 				if (box == null)
@@ -52,8 +67,11 @@ namespace UMA
 				var umaRenderer = umaData.GetRenderer(0);
 				if (umaRenderer != null)
 				{
-					box.size = umaRenderer.bounds.size;
-					box.center = umaRenderer.bounds.center;
+					if (overrideDimensions)
+					{
+                        box.size = umaRenderer.bounds.size;
+                        box.center = umaRenderer.bounds.center;
+                    }
 				}
 			}
 		}

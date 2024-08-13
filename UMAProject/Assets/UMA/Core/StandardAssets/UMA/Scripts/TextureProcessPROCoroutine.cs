@@ -29,7 +29,10 @@ namespace UMA
             {
                 fastPath = (umaGenerator as UMAGenerator).fastGeneration;
             }
-            if (umaData.atlasResolutionScale <= 0) umaData.atlasResolutionScale = 1f;
+            if (umaData.atlasResolutionScale <= 0)
+            {
+                umaData.atlasResolutionScale = 1f;
+            }
         }
 
         protected override void Start()
@@ -53,11 +56,14 @@ namespace UMA
         protected override IEnumerator workerMethod()
         {
             var textureMerge = umaGenerator.textureMerge;
-            textureMerge.RefreshMaterials(); 
+            textureMerge.RefreshMaterials();
             if (textureMerge == null)
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogError("TextureMerge is null!");
+                }
+
                 yield return null;
             }
 
@@ -89,189 +95,214 @@ namespace UMA
                         case UMAMaterial.ChannelType.DiffuseTexture:
                         case UMAMaterial.ChannelType.NormalMap:
                         case UMAMaterial.ChannelType.DetailNormalMap:
-                        {
-                            textureMerge.Reset();
-                            for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                             {
-                                textureMerge.SetupModule(generatedMaterial, i, textureType);
-                            }
-
-                            //last element for this textureType
-                            moduleCount = 0;
-
-                            int width = Mathf.FloorToInt(generatedMaterial.cropResolution.x);
-                            int height = Mathf.FloorToInt(generatedMaterial.cropResolution.y);
-
-                            if (width == 0 || height == 0)
-                            {
-                                continue;
-                            }
-
-                            //this should be restricted to >= 1 but 0 was allowed before and projects may have the umaMaterial value serialized to 0.
-                            float downSample = (slotData.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.material.channels[textureType].DownSample);
-
-                            destinationTexture = new RenderTexture(Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample), Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample), 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
-                            destinationTexture.filterMode = FilterMode.Point;
-                            destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
-                            destinationTexture.name = slotData.material.name + " Chan " + textureType + " frame: " + Time.frameCount;
-                            
-                            //Draw all the Rects here
-
-                            Color backgroundColor;
-                            UMAMaterial.ChannelType channelType = slotData.material.channels[textureType].channelType;
-
-                            if (slotData.material.MaskWithCurrentColor && (channelType == UMAMaterial.ChannelType.DiffuseTexture || channelType == UMAMaterial.ChannelType.Texture || channelType == UMAMaterial.ChannelType.TintedTexture))
-                            {
-                                backgroundColor = slotData.material.maskMultiplier * textureMerge.camBackgroundColor;
-                            }
-                            else
-                            {
-                                backgroundColor = UMAMaterial.GetBackgroundColor(slotData.material.channels[textureType].channelType);
-                            }
-
-
-                            textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor, umaGenerator.SharperFitTextures);
-                            
-                            //PostProcess
-                            textureMerge.PostProcess(destinationTexture, slotData.material.channels[textureType].channelType);
-
-                            if (umaGenerator.convertRenderTexture || slotData.material.channels[textureType].ConvertRenderTexture)
-                            {
-                                #region Convert Render Textures
-                                if (!fastPath) yield return 25;
-                                Texture2D tempTexture;
-
-                                tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps, true);
-
-                                int xblocks = destinationTexture.width / 512;
-                                int yblocks = destinationTexture.height / 512;
-                                if (xblocks == 0 || yblocks == 0 || fastPath)
+                                textureMerge.Reset();
+                                for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                                 {
-                                    RenderTexture.active = destinationTexture;
-                                    //Debug.Log("CVT-FP Activated " + destinationTexture.name);
-                                    tempTexture.ReadPixels(new Rect(0, 0, destinationTexture.width, destinationTexture.height), 0, 0, umaGenerator.convertMipMaps);
-                                    RenderTexture.active = null;
-                                   // Debug.Log("CVT-FP Cleared " + destinationTexture.name);
+                                    textureMerge.SetupModule(generatedMaterial, i, textureType);
+                                }
+
+                                //last element for this textureType
+                                moduleCount = 0;
+
+                                int width = Mathf.FloorToInt(generatedMaterial.cropResolution.x);
+                                int height = Mathf.FloorToInt(generatedMaterial.cropResolution.y);
+
+                                if (width == 0 || height == 0)
+                                {
+                                    continue;
+                                }
+
+                                //this should be restricted to >= 1 but 0 was allowed before and projects may have the umaMaterial value serialized to 0.
+                                float downSample = (slotData.material.channels[textureType].DownSample == 0) ? 1f : (1f / slotData.material.channels[textureType].DownSample);
+
+                                int ww = Mathf.FloorToInt(generatedMaterial.cropResolution.x * umaData.atlasResolutionScale * downSample);
+                                int hh = Mathf.FloorToInt(generatedMaterial.cropResolution.y * umaData.atlasResolutionScale * downSample);
+
+                                if (ww == 0 || hh == 0)
+                                {
+                                    continue;
+                                }
+
+                                destinationTexture = new RenderTexture(ww, hh, 0, slotData.material.channels[textureType].textureFormat, RenderTextureReadWrite.Linear);
+                                destinationTexture.filterMode = FilterMode.Point;
+                                destinationTexture.useMipMap = umaGenerator.convertMipMaps && !umaGenerator.convertRenderTexture;
+                                destinationTexture.name = slotData.material.name + " Chan " + textureType + " frame: " + Time.frameCount;
+
+                                //Draw all the Rects here
+
+                                Color backgroundColor;
+                                UMAMaterial.ChannelType channelType = slotData.material.channels[textureType].channelType;
+
+                                if (slotData.material.MaskWithCurrentColor && (channelType == UMAMaterial.ChannelType.DiffuseTexture || channelType == UMAMaterial.ChannelType.Texture || channelType == UMAMaterial.ChannelType.TintedTexture))
+                                {
+                                    backgroundColor = slotData.material.maskMultiplier * textureMerge.camBackgroundColor;
                                 }
                                 else
                                 {
-                                    // figures that ReadPixels works differently on OpenGL and DirectX, someday this code will break because Unity fixes this bug!
-                                    if (IsOpenGL())
+                                    backgroundColor = UMAMaterial.GetBackgroundColor(slotData.material.channels[textureType].channelType);
+                                }
+
+
+                                textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor, umaGenerator.SharperFitTextures);
+
+                                //PostProcess
+                                textureMerge.PostProcess(destinationTexture, slotData.material.channels[textureType].channelType);
+
+                                if (umaGenerator.convertRenderTexture || slotData.material.channels[textureType].ConvertRenderTexture)
+                                {
+                                    #region Convert Render Textures
+                                    if (!fastPath)
                                     {
-                                        for (int x = 0; x < xblocks; x++)
-                                        {
-                                            for (int y = 0; y < yblocks; y++)
-                                            {
-                                                RenderTexture.active = destinationTexture;
-                                               // Debug.Log("CVT-SP OGL Activated " + destinationTexture.name+" "+x+" "+y);
-                                                tempTexture.ReadPixels(new Rect(x * 512, y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
-                                                RenderTexture.active = null;
-                                               // Debug.Log("CVT-SP OGL Cleared " + destinationTexture.name + " " + x + " " + y);
-                                                yield return 8;
-                                            }
-                                        }
+                                        yield return 25;
+                                    }
+
+                                    Texture2D tempTexture;
+
+                                    tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, TextureFormat.ARGB32, umaGenerator.convertMipMaps, true);
+
+                                    int xblocks = destinationTexture.width / 512;
+                                    int yblocks = destinationTexture.height / 512;
+                                    if (xblocks == 0 || yblocks == 0 || fastPath)
+                                    {
+                                        RenderTexture.active = destinationTexture;
+                                        //Debug.Log("CVT-FP Activated " + destinationTexture.name);
+                                        tempTexture.ReadPixels(new Rect(0, 0, destinationTexture.width, destinationTexture.height), 0, 0, umaGenerator.convertMipMaps);
+                                        RenderTexture.active = null;
+                                        // Debug.Log("CVT-FP Cleared " + destinationTexture.name);
                                     }
                                     else
                                     {
-                                        for (int x = 0; x < xblocks; x++)
+                                        // figures that ReadPixels works differently on OpenGL and DirectX, someday this code will break because Unity fixes this bug!
+                                        if (IsOpenGL())
                                         {
-                                            for (int y = 0; y < yblocks; y++)
+                                            for (int x = 0; x < xblocks; x++)
                                             {
-                                               // Debug.Log("CVT-SP NOTOGL Activated " + destinationTexture.name + " " + x + " " + y);
-                                                RenderTexture.active = destinationTexture;
-                                                tempTexture.ReadPixels(new Rect(x * 512, destinationTexture.height - 512 - y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
-                                                RenderTexture.active = null;
-                                             //   Debug.Log("CVT-SP NOTOGL Cleared " + destinationTexture.name + " " + x + " " + y);
-                                                yield return 8;
+                                                for (int y = 0; y < yblocks; y++)
+                                                {
+                                                    RenderTexture.active = destinationTexture;
+                                                    // Debug.Log("CVT-SP OGL Activated " + destinationTexture.name+" "+x+" "+y);
+                                                    tempTexture.ReadPixels(new Rect(x * 512, y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
+                                                    RenderTexture.active = null;
+                                                    // Debug.Log("CVT-SP OGL Cleared " + destinationTexture.name + " " + x + " " + y);
+                                                    yield return 8;
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            for (int x = 0; x < xblocks; x++)
+                                            {
+                                                for (int y = 0; y < yblocks; y++)
+                                                {
+                                                    // Debug.Log("CVT-SP NOTOGL Activated " + destinationTexture.name + " " + x + " " + y);
+                                                    RenderTexture.active = destinationTexture;
+                                                    tempTexture.ReadPixels(new Rect(x * 512, destinationTexture.height - 512 - y * 512, 512, 512), x * 512, y * 512, umaGenerator.convertMipMaps);
+                                                    RenderTexture.active = null;
+                                                    //   Debug.Log("CVT-SP NOTOGL Cleared " + destinationTexture.name + " " + x + " " + y);
+                                                    yield return 8;
+                                                }
                                             }
                                         }
                                     }
-                                }
 
 
-                                resultingTextures[textureType] = tempTexture as Texture;
+                                    resultingTextures[textureType] = tempTexture as Texture;
 
-                                RenderTexture.active = null;
-                                //Debug.Log("CVT Final Cleared " + destinationTexture.name);
+                                    RenderTexture.active = null;
+                                    //Debug.Log("CVT Final Cleared " + destinationTexture.name);
 
-                                destinationTexture.Release();
-                                UnityEngine.GameObject.DestroyImmediate(destinationTexture);
-                                if (!fastPath) yield return 6;
-                                tempTexture = resultingTextures[textureType] as Texture2D;
-                                tempTexture.Apply();
-                                tempTexture.wrapMode = TextureWrapMode.Repeat;
-                                tempTexture.anisoLevel = slotData.material.AnisoLevel;
-                                tempTexture.mipMapBias = slotData.material.MipMapBias;
-                                tempTexture.filterMode = slotData.material.MatFilterMode;
-                                if (slotData.material.channels[textureType].Compression != UMAMaterial.CompressionSettings.None)
-                                {
-                                    tempTexture.Compress(slotData.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
-                                }
-                                resultingTextures[textureType] = tempTexture;
-                                if (!slotData.material.channels[textureType].NonShaderTexture)
-                                {
-                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
-                                }
-                                #endregion
-                            }
-                            else
-                            {
-                                destinationTexture.anisoLevel = slotData.material.AnisoLevel;
-                                destinationTexture.mipMapBias = slotData.material.MipMapBias;
-                                destinationTexture.filterMode = slotData.material.MatFilterMode;
-                                destinationTexture.wrapMode = TextureWrapMode.Repeat;
-                                resultingTextures[textureType] = destinationTexture;
-                                if (!slotData.material.channels[textureType].NonShaderTexture)
-                                {
-                                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
-                                }
-                            }
-
-                            break;
-                        }
-                        case UMAMaterial.ChannelType.MaterialColor:
-                        {
-                            if (slotData.material.channels[textureType].NonShaderTexture) break;
-                            generatedMaterial.material.SetColor(slotData.material.channels[textureType].materialPropertyName, generatedMaterial.materialFragments[0].baseColor);
-                            break;
-                        }
-                        case UMAMaterial.ChannelType.TintedTexture:
-                        {
-                            for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
-                            {
-                                var fragment = generatedMaterial.materialFragments[i];
-                                if (fragment.isRectShared) continue;
-                                for (int j = 0; j < fragment.baseOverlay.textureList.Length; j++)
-                                {
-                                    if (fragment.baseOverlay.textureList[j] != null)
+                                    destinationTexture.Release();
+                                    UnityEngine.GameObject.DestroyImmediate(destinationTexture);
+                                    if (!fastPath)
                                     {
-                                        if (!slotData.material.channels[textureType].NonShaderTexture)
-                                        {
-                                            generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
-                                        }
-                                        if (j == 0)
-                                        {
-                                            generatedMaterial.material.color = fragment.baseColor;
-                                        }
+                                        yield return 6;
+                                    }
+
+                                    tempTexture = resultingTextures[textureType] as Texture2D;
+                                    tempTexture.Apply();
+                                    tempTexture.wrapMode = TextureWrapMode.Repeat;
+                                    tempTexture.anisoLevel = slotData.material.AnisoLevel;
+                                    tempTexture.mipMapBias = slotData.material.MipMapBias;
+                                    tempTexture.filterMode = slotData.material.MatFilterMode;
+                                    if (slotData.material.channels[textureType].Compression != UMAMaterial.CompressionSettings.None)
+                                    {
+                                        tempTexture.Compress(slotData.material.channels[textureType].Compression == UMAMaterial.CompressionSettings.HighQuality);
+                                    }
+                                    resultingTextures[textureType] = tempTexture;
+                                    if (!slotData.material.channels[textureType].NonShaderTexture)
+                                    {
+                                        generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
+                                    }
+                                    #endregion
+                                }
+                                else
+                                {
+                                    destinationTexture.anisoLevel = slotData.material.AnisoLevel;
+                                    destinationTexture.mipMapBias = slotData.material.MipMapBias;
+                                    destinationTexture.filterMode = slotData.material.MatFilterMode;
+                                    destinationTexture.wrapMode = TextureWrapMode.Repeat;
+                                    resultingTextures[textureType] = destinationTexture;
+                                    if (!slotData.material.channels[textureType].NonShaderTexture)
+                                    {
+                                        generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, destinationTexture);
                                     }
                                 }
-                                foreach (var overlay in fragment.overlays)
+
+                                break;
+                            }
+                        case UMAMaterial.ChannelType.MaterialColor:
+                            {
+                                if (slotData.material.channels[textureType].NonShaderTexture)
                                 {
-                                    if (generatedMaterial.textureNameList == null)
-                                    for (int j = 0; j < overlay.textureList.Length; j++)
+                                    break;
+                                }
+
+                                generatedMaterial.material.SetColor(slotData.material.channels[textureType].materialPropertyName, generatedMaterial.materialFragments[0].baseColor);
+                                break;
+                            }
+                        case UMAMaterial.ChannelType.TintedTexture:
+                            {
+                                for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
+                                {
+                                    var fragment = generatedMaterial.materialFragments[i];
+                                    if (fragment.isRectShared)
                                     {
-                                        if (overlay.textureList[j] != null)
+                                        continue;
+                                    }
+
+                                    for (int j = 0; j < fragment.baseOverlay.textureList.Length; j++)
+                                    {
+                                        if (fragment.baseOverlay.textureList[j] != null)
                                         {
                                             if (!slotData.material.channels[textureType].NonShaderTexture)
                                             {
-                                                generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, overlay.textureList[j]);
+                                                generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, fragment.baseOverlay.textureList[j]);
+                                            }
+                                            if (j == 0)
+                                            {
+                                                generatedMaterial.material.color = fragment.baseColor;
+                                            }
+                                        }
+                                    }
+
+                                    for (int k = 0; k < fragment.overlays.Length; k++)
+                                    {
+                                        UMAData.textureData overlay = fragment.overlays[k];
+                                        for (int j = 0; j < overlay.textureList.Length; j++)
+                                        {
+                                            if (overlay.textureList[j] != null)
+                                            {
+                                                if (!slotData.material.channels[textureType].NonShaderTexture)
+                                                {
+                                                    generatedMaterial.material.SetTexture(slotData.material.channels[j].materialPropertyName, overlay.textureList[j]);
+                                                }
                                             }
                                         }
                                     }
                                 }
+                                break;
                             }
-                            break;
-                        }
                     }
                 }
                 generatedMaterial.resultingAtlasList = resultingTextures;

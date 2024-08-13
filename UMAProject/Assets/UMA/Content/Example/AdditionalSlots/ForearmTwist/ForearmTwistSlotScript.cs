@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 namespace UMA
 {
-	/// <summary>
-	/// Auxillary slot which adds a TwistBone component for the forearms of a newly created character.
-	/// </summary>
-	public class ForearmTwistSlotScript : MonoBehaviour 
+    /// <summary>
+    /// Auxillary slot which adds a TwistBone component for the forearms of a newly created character.
+    /// </summary>
+    public class ForearmTwistSlotScript : MonoBehaviour 
 	{
 		public string LeftHandBoneName = "LeftHand";
 		public string RightHandBoneName = "RightHand";
@@ -38,14 +37,20 @@ namespace UMA
 			if ((leftHand == null) || (rightHand == null) || (leftTwist == null) || (rightTwist == null))
 			{
 				if (Debug.isDebugBuild)
-					Debug.LogError("Failed to add Forearm Twist to: " + umaData.name);
-				return;
+                {
+                    Debug.LogError("Failed to add Forearm Twist to: " + umaData.name);
+                }
+
+                return;
 			}
 
-			var twist = umaData.umaRoot.AddComponent<TwistBones>();
-			twist.twistValue = 0.5f;
-			twist.twistBone = new Transform[] {leftTwist.transform, rightTwist.transform};
-			twist.refBone = new Transform[] {leftHand.transform, rightHand.transform};
+			if (umaData.gameObject.GetComponent<TwistBones>() == null)
+			{
+				var twist = umaData.gameObject.AddComponent<TwistBones>();
+				twist.twistValue = 0.5f;
+				twist.twistBone = new Transform[] { leftTwist.transform, rightTwist.transform };
+				twist.refBone = new Transform[] { leftHand.transform, rightHand.transform };
+			}
 		}
 	}
 }

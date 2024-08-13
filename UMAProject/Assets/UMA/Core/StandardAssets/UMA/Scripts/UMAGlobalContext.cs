@@ -119,7 +119,11 @@ namespace UMA
 			SlotDataAsset source = UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(name);
 			if (source == null)
 			{
-				throw new UMAResourceNotFoundException("UMAGlobalContext: Unable to find SlotDataAsset: " + name);
+				if (Debug.isDebugBuild)
+				{
+					Debug.LogError("UMAGlobalContext: Unable to find SlotDataAsset: " + name);
+				}
+				return null;
 			}
 			return new SlotData(source);
 		}
@@ -314,10 +318,19 @@ namespace UMA
 
 		public override UMATextRecipe GetRecipe(string filename, bool dynamicallyAdd = true)
 		{
-			UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMAWardrobeRecipe>(filename);
-			if (recipe == null)
-				recipe = UMAAssetIndexer.Instance.GetAsset<UMAWardrobeCollection>(filename);
-			return recipe;
+			if (UMAAssetIndexer.Instance.HasAsset<UMAWardrobeRecipe>(filename))
+			{
+				return UMAAssetIndexer.Instance.GetAsset<UMAWardrobeRecipe>(filename);
+			}
+            if (UMAAssetIndexer.Instance.HasAsset<UMATextRecipe>(filename))
+            {
+                return UMAAssetIndexer.Instance.GetAsset<UMATextRecipe>(filename);
+            }
+            if (UMAAssetIndexer.Instance.HasAsset<UMAWardrobeCollection>(filename))
+            {
+                return UMAAssetIndexer.Instance.GetAsset<UMAWardrobeCollection>(filename);
+            }
+			return null;
 		}
 
 		public override UMARecipeBase GetBaseRecipe(string filename, bool dynamicallyAdd)
@@ -343,8 +356,11 @@ namespace UMA
 		{
 			bool found = UMAAssetIndexer.Instance.HasAsset<UMAWardrobeRecipe>(Name);
 			if (!found)
-				found = UMAAssetIndexer.Instance.HasAsset<UMAWardrobeCollection>(Name);
-			return found;
+            {
+                found = UMAAssetIndexer.Instance.HasAsset<UMAWardrobeCollection>(Name);
+            }
+
+            return found;
 		}
 
 		/// <summary>

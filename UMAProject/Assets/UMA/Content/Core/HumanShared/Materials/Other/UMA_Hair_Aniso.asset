@@ -13,7 +13,21 @@ MonoBehaviour:
   m_Name: UMA_Hair_Aniso
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
+  _material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
+  _secondPass: {fileID: 0}
+  srpMaterials:
+  - SRP: 2
+    material: {fileID: 2100000, guid: 836ba1c96b1a93a4c8e7ff58ffb68a11, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+  - SRP: 3
+    material: {fileID: 2100000, guid: 836ba1c96b1a93a4c8e7ff58ffb68a11, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
   materialType: 1
   channels:
   - channelType: 0
@@ -39,3 +53,5 @@ MonoBehaviour:
   shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

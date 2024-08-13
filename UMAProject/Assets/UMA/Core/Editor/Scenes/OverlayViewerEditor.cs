@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UMA.Editors;
 using UnityEditor;
@@ -8,11 +7,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace UMA
-{ 
-	/// <summary>
-	/// This editor is used for the UI in the inspector to edit overlays. It uses the OverlayViewer component.
-	/// </summary>
-	[CustomEditor(typeof(OverlayViewer))]
+{
+    /// <summary>
+    /// This editor is used for the UI in the inspector to edit overlays. It uses the OverlayViewer component.
+    /// </summary>
+    [CustomEditor(typeof(OverlayViewer))]
 	public class OverlayViewerEditor : Editor
 	{
 		private ReorderableList overlayDataList;
@@ -28,7 +27,7 @@ namespace UMA
 		private SlotData TempSlot;
 		private UMAGeneratorStub ugb;
 		private OverlayData TempOverlay;
-		private UMAGeneratorCoroutine activeGeneratorCoroutine;
+		private UMAGeneratorPro activeGenerator;
 		private OverlayData BaseOverlay = null;
 		private Dictionary<int, OverlayData> AdditionalOverlays = new Dictionary<int, OverlayData>();
 
@@ -41,12 +40,22 @@ namespace UMA
 
 		private void Initialize(bool retry = true)
 		{
-			overlayViewer = serializedObject.targetObject as OverlayViewer;
+			if (serializedObject == null)
+            {
+                return;
+            }
+
+            if (serializedObject.targetObject == null)  // I don't even know how this is possible. Nothing is selected. But unity is doing it.
+            {
+                return;
+            }
+
+            overlayViewer = serializedObject.targetObject as OverlayViewer;
 			TempUMAData = overlayViewer.gameObject.GetComponent<UMAData>();
 			ugb = overlayViewer.gameObject.GetComponent<UMAGeneratorStub>();
 			TempSlot = new SlotData(overlayViewer.SlotDataAsset);
 			rawImage = overlayViewer.ImageViewer;
-			activeGeneratorCoroutine = new UMAGeneratorCoroutine();
+			activeGenerator = new UMAGeneratorPro();
 
 			SetupGenerator();
 
@@ -106,7 +115,6 @@ namespace UMA
 				currentOverlayProperty = null;
 				return;
 			}
-			Debug.Log("Index is " + index);
 			var element = overlayDataList.serializedProperty.GetArrayElementAtIndex(overlayDataList.index);
 			if (element.objectReferenceValue == null)
 			{
@@ -132,10 +140,11 @@ namespace UMA
 		{
 
 			if (baseOverlayProperty == null)
-				return;
+            {
+                return;
+            }
 
-
-			if (BaseOverlay == null || (BaseOverlay.asset.GetInstanceID() != (baseOverlayProperty.objectReferenceValue as OverlayDataAsset).GetInstanceID()))
+            if (BaseOverlay == null || (BaseOverlay.asset.GetInstanceID() != (baseOverlayProperty.objectReferenceValue as OverlayDataAsset).GetInstanceID()))
 			{
 				OverlayDataAsset overlayDataAsset = baseOverlayProperty.objectReferenceValue as OverlayDataAsset;
 				BaseOverlay = new OverlayData(overlayDataAsset);
@@ -146,9 +155,10 @@ namespace UMA
 			List<OverlayData> od = new List<OverlayData>();
 			od.Add(BaseOverlay);
 
-			foreach (OverlayDataAsset o in viewerobj.Overlays)
+            for (int i = 0; i < viewerobj.Overlays.Count; i++)
 			{
-				if (o != null)
+                OverlayDataAsset o = viewerobj.Overlays[i];
+                if (o != null)
 				{
 					if (!AdditionalOverlays.ContainsKey(o.GetInstanceID()))
 					{
@@ -167,22 +177,82 @@ namespace UMA
 			TextureProcessBaseCoroutine textureProcessCoroutine;
 			textureProcessCoroutine = new TextureProcessPROCoroutine();
 			textureProcessCoroutine.Prepare(TempUMAData, TempUMAData.umaGenerator);
-			activeGeneratorCoroutine.Prepare(TempUMAData.umaGenerator, TempUMAData, textureProcessCoroutine, false, 1);
 			try
 			{
-				bool workDone = activeGeneratorCoroutine.Work();
-				//Debug.Log("Workdone is " + workDone);
-				rawImage.material = TempUMAData.generatedMaterials.materials[0].material;
+				activeGenerator.ProcessTexture(TempUMAData.umaGenerator,TempUMAData,false,1);
+                rawImage.texture = GetMainTexture(TempUMAData.generatedMaterials.materials[0].material);
+                //Debug.Log("Workdone is " + workDone);
+                rawImage.material = null;
 			}
 			catch(Exception ex)
 			{
 				Debug.Log("Something has gone wrong. Reinitializing. Text of error was: "+ex.Message);
 				if (retry)
-					Initialize(false);
-			}
+                {
+                    Initialize(false);
+                }
+            }
 		}
 
-	public override void OnInspectorGUI()
+        private Texture GetMainTexture(Material material)
+        {
+
+            if (material == null)
+            {
+                return null;
+            }
+            if (material.HasProperty("_BaseMap"))
+            {
+                Texture tex = material.GetTexture("_BaseMap");
+                if (tex != null)
+                {
+                    return tex;
+                }
+            }
+            if (material.HasProperty("_BaseColorMap"))
+            {
+                Texture tex = material.GetTexture("_BaseColorMap");
+                if (tex != null)
+                {
+                    return tex;
+                }
+            }
+            if (material.HasProperty("_BaseColor"))
+            {
+                Texture tex = material.GetTexture("_BaseColor");
+                if (tex != null)
+                {
+                    return tex;
+                }
+            }
+            if (material.HasProperty("_MainTex"))
+            {
+                Texture tex = material.GetTexture("_MainTex");
+                if (tex != null)
+                {
+                    return tex;
+                }
+            }
+
+            // Just return the first texture
+            string[] texNames = material.GetTexturePropertyNames();
+            if (texNames.Length > 0)
+            {
+                for (int i = 0; i < texNames.Length; i++)
+                {
+                    string texName = texNames[i];
+                    Texture tex = material.GetTexture(texName);
+                    if (tex != null)
+                    {
+                        return tex;
+                    }
+                }
+            }
+            // No textures?
+            return Texture2D.whiteTexture;
+        }
+
+        public override void OnInspectorGUI()
 		{
 			OverlayDataAsset SelectedOverlay = null;
 
@@ -200,25 +270,39 @@ namespace UMA
 				EditorGUILayout.LabelField("Press the begin button to hide the annoying panel and start editing", EditorStyles.helpBox);
 			}
 
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Add a base overlay, then add and edit  overlays below.",EditorStyles.wordWrappedLabel);
+            EditorGUILayout.Space();
 
-			EditorGUI.BeginChangeCheck();
+            EditorGUI.BeginChangeCheck();
 			EditorGUILayout.PropertyField(baseOverlayProperty);
 
-			if (SelectedOverlay == null)
+            EditorGUILayout.Space();
+
+//            EditorGUILayout.LabelField("Select an overlay in the list to edit the overlay position. When using UV cordinates, W must be > 0 to position overlay.", EditorStyles.wordWrappedLabel);
+
+            if (SelectedOverlay == null)
 			{
-				EditorGUILayout.LabelField("Selected overlay: <None Selected>");
+				EditorGUILayout.LabelField("Selected overlay: <None Selected>. Select or add an overlay to the list below  to edit the overlay location.", EditorStyles.wordWrappedLabel);
 			}
 			else
 			{
-				EditorGUILayout.LabelField("Selected overlay: "+SelectedOverlay.overlayName);
+				EditorGUILayout.LabelField("Selected overlay: "+SelectedOverlay.overlayName+" When using UV Coordinates, W must be > 0 to position overlay.",EditorStyles.wordWrappedLabel);
 			}
 
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Add"))
 			{
+                int position = overlayDataList.index;
+                if (position < 0)
+                {
+                    position = overlayDataList.count - 1;
+                }
+
+                overlaysProperty.InsertArrayElementAtIndex(position);
 				SerializedObject obj = overlaysProperty.serializedObject;
-				var ov = obj.targetObject as OverlayViewer;
-				ov.Overlays.Add(null);
+                overlaysProperty.serializedObject.ApplyModifiedProperties();
+                overlayDataList.index = position;   
 			}
 
 			if (GUILayout.Button("Remove"))
@@ -231,7 +315,7 @@ namespace UMA
 
 					SerializedObject obj = overlaysProperty.serializedObject;
 					var ov = obj.targetObject as OverlayViewer;
-					ov.Overlays.RemoveAt(overlayDataList.index);
+                    overlaysProperty.DeleteArrayElementAtIndex(overlayDataList.index);
 					if (overlayDataList.count == 1)
 					{
 						overlayDataList.index = -1;
@@ -240,10 +324,11 @@ namespace UMA
 					{
 						overlayDataList.index--;
 					}
-				}
-			}
+                    obj.ApplyModifiedProperties();
+                }
+            }
 
-			GUILayout.EndHorizontal();
+            GUILayout.EndHorizontal();
 
 			overlayDataList.DoLayoutList();
 			if (EditorGUI.EndChangeCheck())
@@ -271,11 +356,11 @@ namespace UMA
 				{
 					ovl.rect = overlayEditor.Overlay.rect;
 					EditorUtility.SetDirty(ovl);
-					AssetDatabase.SaveAssets();
+					string path = AssetDatabase.GetAssetPath(ovl.GetInstanceID());
+					AssetDatabase.ImportAsset(path);
 					EditorUtility.DisplayDialog("Message", "Overlay '" + ovl.overlayName + "' Saved", "OK");
 				}
 			}
 		}
 	}
 }
- 

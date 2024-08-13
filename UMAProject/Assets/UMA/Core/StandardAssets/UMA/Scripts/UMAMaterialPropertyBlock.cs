@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using System.Globalization;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -19,8 +20,19 @@ namespace UMA
         public static char[] vectorsplitter = { ',' }; // needs to correspond to the format string above.
 
         public string name;
-        public abstract void Apply(Material mpb);
+        public abstract void Apply(Material mpb, int overlayNumber);
+
         public abstract UMAProperty Clone();
+
+        public string GetPropertyName(int overlayNumber)
+        {
+            if (overlayNumber < 0)
+            {
+                return name;
+            }
+
+            return $"{name}{overlayNumber}";
+        }
 
         public static UMAProperty FromString(string serializedString)
         {
@@ -38,9 +50,9 @@ namespace UMA
             switch (str[0])
             {
                 case "Float":
-                    return new UMAFloatProperty() {Value = Convert.ToSingle(str[1]), name = str[2] };
+                    return new UMAFloatProperty() {Value = Convert.ToSingle(str[1], CultureInfo.InvariantCulture), name = str[2] };
                 case "Int":
-                    return new UMAIntProperty() { Value = Convert.ToInt32(str[1]), name = str[2] };
+                    return new UMAIntProperty() { Value = Convert.ToInt32(str[1],CultureInfo.InvariantCulture), name = str[2] };
                 case "Color":
                     Color c = Color.white;
                     ColorUtility.TryParseHtmlString(str[1], out c);
@@ -48,10 +60,10 @@ namespace UMA
                     return new UMAColorProperty() { Value = c, name = str[2] };
                 case "Vector":
                     string[] vector = str[1].Split(vectorsplitter);
-                    float x = Convert.ToSingle(vector[0]);
-                    float y = Convert.ToSingle(vector[1]);
-                    float z = Convert.ToSingle(vector[2]);
-                    float w = Convert.ToSingle(vector[3]);
+                    float x = Convert.ToSingle(vector[0], CultureInfo.InvariantCulture);
+                    float y = Convert.ToSingle(vector[1], CultureInfo.InvariantCulture);
+                    float z = Convert.ToSingle(vector[2], CultureInfo.InvariantCulture);
+                    float w = Convert.ToSingle(vector[3], CultureInfo.InvariantCulture);
                     return new UMAVectorProperty() { Value = new Vector4(x, y, z, w), name = str[2] };
                 /// The rest of these are only programmable at runtime.
                 case "VectorArray":
@@ -103,9 +115,13 @@ namespace UMA
     public class UMAFloatProperty : UMAProperty
     {
         public float Value;
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetFloat(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetFloat(propName, Value);
+            }
         }
 
         public override UMAProperty Clone()
@@ -115,7 +131,7 @@ namespace UMA
 
         public override string ToString()
         {
-            return "Float" + splitter + Value.ToString(precision)+ splitter + name;
+            return "Float" + splitter + Value.ToString(precision, CultureInfo.InvariantCulture) + splitter + name;
         }
 
 
@@ -135,9 +151,13 @@ namespace UMA
     public class UMAColorProperty : UMAProperty
     {
         public Color Value;
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetColor(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetColor(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -181,9 +201,13 @@ namespace UMA
             Value.Set(vector.x, vector.y, 0.0f, 0.0f);
         }
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber=-1)
         {
-            mpb.SetVector(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetVector(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -191,7 +215,7 @@ namespace UMA
         }
         public override string ToString()
         {
-            return "Vector" + splitter + string.Format(vectorprecision, Value.x, Value.y, Value.z, Value.w) + ";" + name;
+            return "Vector" + splitter + string.Format(CultureInfo.InvariantCulture,vectorprecision, Value.x, Value.y, Value.z, Value.w) + ";" + name;
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
@@ -210,9 +234,13 @@ namespace UMA
     {
         public Vector4[] Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber=-1)
         {
-            mpb.SetVectorArray(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetVectorArray(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -242,9 +270,13 @@ namespace UMA
     {
         public Texture Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber=-1)
         {
-            mpb.SetTexture(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetTexture(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -284,9 +316,13 @@ namespace UMA
     {
         public float[] Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetFloatArray(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+        {
+                mpb.SetFloatArray(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -315,9 +351,13 @@ namespace UMA
     {
         public int Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetInt(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetInt(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -326,7 +366,7 @@ namespace UMA
 
         public override string ToString()
         {
-            return "Int"+splitter+Value.ToString() + splitter + name+"***";
+            return "Int"+splitter+Value.ToString(CultureInfo.InvariantCulture) + splitter + name+"***";
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
@@ -345,9 +385,13 @@ namespace UMA
     {
         public Matrix4x4 Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1)
         {
-            mpb.SetMatrix(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+        {
+                mpb.SetMatrix(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -372,9 +416,13 @@ namespace UMA
     {
         public Matrix4x4[] Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1 )
         {
-            mpb.SetMatrixArray(name, Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+        {
+                mpb.SetMatrixArray(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -403,9 +451,13 @@ namespace UMA
     {
         public ComputeBuffer Value;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber = -1 )
         {
-            mpb.SetBuffer(name,Value);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+            {
+                mpb.SetBuffer(propName, Value);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -433,9 +485,13 @@ namespace UMA
         public int offset; 
         public int size;
 
-        public override void Apply(Material mpb)
+        public override void Apply(Material mpb, int overlayNumber=-1)
         {
-            mpb.SetConstantBuffer(name, Value, offset, size);
+            string propName = GetPropertyName(overlayNumber);
+            if (mpb.HasProperty(propName))
+        {
+                mpb.SetConstantBuffer(propName, Value,offset,size);
+            }
         }
         public override UMAProperty Clone()
         {
@@ -483,17 +539,61 @@ namespace UMA
 
         private UMAProperty Get()
         {
-            if (propertType == "UMAConstantComputeBufferProperty") return p1;
-            if (propertType == "UMAComputeBufferProperty") return p2;
-            if (propertType == "UMAMatrixArrayProperty") return p3;
-            if (propertType == "UMAMatrixProperty") return p4;
-            if (propertType == "UMAIntProperty") return p5;
-            if (propertType == "UMAFloatArrayProperty") return p6;
-            if (propertType == "UMATextureProperty") return p7;
-            if (propertType == "UMAVectorArrayProperty") return p8;
-            if (propertType == "UMAVectorProperty") return p9;
-            if (propertType == "UMAColorProperty") return p10;
-            if (propertType == "UMAFloatProperty") return p11;
+            if (propertType == "UMAConstantComputeBufferProperty")
+            {
+                return p1;
+            }
+
+            if (propertType == "UMAComputeBufferProperty")
+            {
+                return p2;
+            }
+
+            if (propertType == "UMAMatrixArrayProperty")
+            {
+                return p3;
+            }
+
+            if (propertType == "UMAMatrixProperty")
+            {
+                return p4;
+            }
+
+            if (propertType == "UMAIntProperty")
+            {
+                return p5;
+            }
+
+            if (propertType == "UMAFloatArrayProperty")
+            {
+                return p6;
+            }
+
+            if (propertType == "UMATextureProperty")
+            {
+                return p7;
+            }
+
+            if (propertType == "UMAVectorArrayProperty")
+            {
+                return p8;
+            }
+
+            if (propertType == "UMAVectorProperty")
+            {
+                return p9;
+            }
+
+            if (propertType == "UMAColorProperty")
+            {
+                return p10;
+            }
+
+            if (propertType == "UMAFloatProperty")
+            {
+                return p11;
+            }
+
             return null;
         }
         public UMAProperty property
@@ -505,17 +605,60 @@ namespace UMA
             set
             {
                 propertType = value.GetType().Name;
-                if (value is UMAFloatProperty) p11 = value as UMAFloatProperty;
-                if (value is UMAColorProperty) p10 = value as UMAColorProperty;
-                if (value is UMAVectorProperty) p9 = value as UMAVectorProperty;
-                if (value is UMAVectorArrayProperty) p8 = value as UMAVectorArrayProperty;
-                if (value is UMATextureProperty) p7 = value as UMATextureProperty;
-                if (value is UMAFloatArrayProperty) p6 = value as UMAFloatArrayProperty;
-                if (value is UMAIntProperty) p5 = value as UMAIntProperty;
-                if (value is UMAMatrixProperty) p4 = value as UMAMatrixProperty;
-                if (value is UMAMatrixArrayProperty) p3 = value as UMAMatrixArrayProperty;
-                if (value is UMAComputeBufferProperty) p2 = value as UMAComputeBufferProperty;
-                if (value is UMAConstantComputeBufferProperty) p1 = value as UMAConstantComputeBufferProperty;
+                if (value is UMAFloatProperty)
+                {
+                    p11 = value as UMAFloatProperty;
+                }
+
+                if (value is UMAColorProperty)
+                {
+                    p10 = value as UMAColorProperty;
+                }
+
+                if (value is UMAVectorProperty)
+                {
+                    p9 = value as UMAVectorProperty;
+                }
+
+                if (value is UMAVectorArrayProperty)
+                {
+                    p8 = value as UMAVectorArrayProperty;
+                }
+
+                if (value is UMATextureProperty)
+                {
+                    p7 = value as UMATextureProperty;
+                }
+
+                if (value is UMAFloatArrayProperty)
+                {
+                    p6 = value as UMAFloatArrayProperty;
+                }
+
+                if (value is UMAIntProperty)
+                {
+                    p5 = value as UMAIntProperty;
+                }
+
+                if (value is UMAMatrixProperty)
+                {
+                    p4 = value as UMAMatrixProperty;
+                }
+
+                if (value is UMAMatrixArrayProperty)
+                {
+                    p3 = value as UMAMatrixArrayProperty;
+                }
+
+                if (value is UMAComputeBufferProperty)
+                {
+                    p2 = value as UMAComputeBufferProperty;
+                }
+
+                if (value is UMAConstantComputeBufferProperty)
+                {
+                    p1 = value as UMAConstantComputeBufferProperty;
+                }
             }
         }
     }
@@ -525,8 +668,34 @@ namespace UMA
     {
         // If this is checked, the color will always update the 
         public bool alwaysUpdate;
+        public bool alwaysUpdateParms;
         public static string[] PropertyTypeStrings = new string[0];
         public static List<Type> availableTypes = new List<Type>();
+        public string[] GetPropertyStrings()
+        {
+            List<string> strings = new List<string>();
+            foreach(UMAProperty p in shaderProperties)
+            {
+                if (p != null)
+                {
+                    strings.Add(p.ToString());
+                }
+            }
+            return strings.ToArray();
+        }
+
+        public void SetPropertyStrings(string[] strings)
+        {
+            shaderProperties = new List<UMAProperty>();
+            foreach (string s in strings)
+            {
+                UMAProperty p = UMAProperty.FromString(s);
+                if (p != null)
+                {
+                    shaderProperties.Add(p);
+                }
+            }
+        }
 
         /// <summary>
         /// Make sure the class is initialized
@@ -546,23 +715,56 @@ namespace UMA
         }
 
         // Returns a list of types to load 
-        public static List<Type> GetPropertyTypes()
+   /*     public static List<Type> GetPropertyTypes()
         {
             return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
                  .Where(x => typeof(UMAProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
                  .Select(x => x).ToList();
+        }*/
+        public static List<Type> GetPropertyTypes()
+        {
+            List<Type> theTypes = new List<Type>();
+
+            var Assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            for (int i = 0; i < Assemblies.Length; i++)
+            {
+                System.Reflection.Assembly asm = Assemblies[i];
+                try
+                {
+                    var Types = asm.GetTypes();
+                    for (int i1 = 0; i1 < Types.Length; i1++)
+                    {
+                        Type t = Types[i1];
+                        if (typeof(UMAProperty).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                        {
+                            theTypes.Add(t);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // This apparently blows up on some assemblies. 
+                }
+            }
+
+            return theTypes;
         }
 
         public void Validate()
         {
             if (shaderProperties == null)
+            {
                 shaderProperties = new List<UMAProperty>();
+            }
         }
 
         public void AddProperty(UMAProperty property)
         {
             if (shaderProperties == null)
+            {
                 shaderProperties = new List<UMAProperty>();
+            }
 
             shaderProperties.Add(property);
         }
@@ -592,10 +794,13 @@ namespace UMA
             if (shaderProperties != null)
             {
                 serializedProperties = new List<PropertyHolder>();
-                foreach(UMAProperty up in shaderProperties)
+                for (int i = 0; i < shaderProperties.Count; i++)
                 {
+                    UMAProperty up = shaderProperties[i];
                     if (up != null)
+                    {
                         serializedProperties.Add(new PropertyHolder(up));
+                    }
                 }
             }
             
@@ -609,8 +814,9 @@ namespace UMA
             if (serializedProperties != null)
             {
                 shaderProperties = new List<UMAProperty>();
-                foreach (PropertyHolder p in serializedProperties)
+                for (int i = 0; i < serializedProperties.Count; i++)
                 {
+                    PropertyHolder p = serializedProperties[i];
                     AddProperty(p.property);
                     
                 }

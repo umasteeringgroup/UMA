@@ -234,7 +234,7 @@ namespace UMA.PoseTools
 
 						if (include)
 						{
-							newPose.AddBone(source, position, rotation, scale);
+							newPose.AddBone(source, position, rotation, scale, "");
 						}
 					}
 					else

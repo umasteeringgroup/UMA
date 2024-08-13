@@ -13,10 +13,31 @@ MonoBehaviour:
   m_Name: UMA_Mesh_Hair_DoubleSided
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: dfa6f3056d5614f40998ac56a797d454, type: 2}
-  materialType: 1
+  AutoSetSRPMaterials: 1
+  _material: {fileID: 2100000, guid: 9f64d6a59b10e1a4db966cf484f49622, type: 2}
+  _secondPass: {fileID: 0}
+  srpMaterials:
+  - SRP: 1
+    material: {fileID: 2100000, guid: 9f64d6a59b10e1a4db966cf484f49622, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _MainTex
+    - _BumpMap
+  - SRP: 2
+    material: {fileID: 2100000, guid: 9cbdf960da83ce848b6fa53141ca2fe7, type: 2}
+    secondPass: {fileID: 2100000, guid: 8146edb8bb821c34f956f820090a2adb, type: 2}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+  - SRP: 3
+    material: {fileID: 2100000, guid: 8146edb8bb821c34f956f820090a2adb, type: 2}
+    secondPass: {fileID: 0}
+    alternateKeywords:
+    - _BaseMap
+    - _BumpMap
+  materialType: 8
   channels:
-  - channelType: 4
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 
@@ -24,7 +45,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 1
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: 
@@ -36,6 +57,10 @@ MonoBehaviour:
   AnisoLevel: 1
   MatFilterMode: 1
   Compression: 0
-  shaderParms: []
+  shaderParms:
+  - ParameterName: _Color
+    ColorName: Hair
   MaskWithCurrentColor: 1
   maskMultiplier: {r: 0.3773585, g: 0.3773585, b: 0.3773585, a: 1}
+  MaterialName: 
+  ShaderName: 

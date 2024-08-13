@@ -2,10 +2,11 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using UMA.Editors;
 
 namespace UMA.CharacterSystem.Editors
 {
-	[CustomPropertyDrawer(typeof(DynamicCharacterAvatar.RaceSetter))]
+    [CustomPropertyDrawer(typeof(DynamicCharacterAvatar.RaceSetter))]
 	public class RaceSetterPropertyDrawer : PropertyDrawer
 	{
 
@@ -15,6 +16,11 @@ namespace UMA.CharacterSystem.Editors
 		//When the app IS running it shows the reaces you CAN choose- i.e. the ones that are either in the build or have been downloaded.
 		public List<RaceData> foundRaces = new List<RaceData>();
 		public List<string> foundRaceNames = new List<string>();
+
+		override public float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+            return 0;
+        }
 
 		public void SetRaceLists(RaceData[] raceDataArray = null)
 		{
@@ -26,17 +32,27 @@ namespace UMA.CharacterSystem.Editors
             {
 				return;
             }
-			foreach (RaceData race in raceDataArray)
+            for (int i = 0; i < raceDataArray.Length; i++)
 			{
-				if (race != null && race.raceName != "RaceDataPlaceholder")
+                RaceData race = raceDataArray[i];
+                if (race != null && race.raceName != "RaceDataPlaceholder")
 				{
 					foundRaces.Add(race);
 					foundRaceNames.Add(race.raceName);
 				}
 			}
 		}
-		private void CheckRaceDataLists()
+
+		float lastTime = 0.0f;
+        private void CheckRaceDataLists()
 		{
+			float currentTime = Time.realtimeSinceStartup;
+			if (currentTime - lastTime < 5.0f)
+			{
+				lastTime = currentTime;
+                return;
+            }
+
 			if (UMAContext.Instance == null)
             {
 				var raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
@@ -59,15 +75,18 @@ namespace UMA.CharacterSystem.Editors
 			}
 		}
 
+		
+		
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			CheckRaceDataLists();
 
-			var RaceName = property.FindPropertyRelative("name");
+            var RaceName = property.FindPropertyRelative("name");
 			
-			string rn = RaceName.stringValue;
+			string rn = RaceName.stringValue; 
 			int rIndex = 0;
 			int newrIndex;
+			int converterCount = 0;
 			if (rn != "")
 			{
 				if (!foundRaceNames.Contains(rn))
@@ -77,11 +96,14 @@ namespace UMA.CharacterSystem.Editors
 				}
 				rIndex = foundRaceNames.IndexOf(rn) == -1 ? (foundRaceNames.IndexOf(rn + " (Not Available)") == -1 ? 0 : foundRaceNames.IndexOf(rn + " (Not Available)")) : foundRaceNames.IndexOf(rn);
 			}
-			EditorGUI.BeginProperty(position, label, property);
-			Rect contentPosition = EditorGUI.PrefixLabel(position, new GUIContent("Active Race"));
-			Rect contentPositionP = contentPosition;
+
+           // EditorGUI.BeginProperty(position, label, property);
+            GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
+
+           // Rect contentPosition = EditorGUI.PrefixLabel(position, new GUIContent("Active Race"));
+			//Rect contentPositionP = contentPosition;
 			EditorGUI.BeginChangeCheck();
-			newrIndex = EditorGUI.Popup(contentPositionP, rIndex, foundRaceNames.ToArray());
+			newrIndex = EditorGUILayout.Popup(new GUIContent("Active Race"),rIndex, foundRaceNames.ToArray());
 			if (EditorGUI.EndChangeCheck())
 			{
 				if (rIndex != newrIndex)
@@ -89,11 +111,100 @@ namespace UMA.CharacterSystem.Editors
 					RaceName.stringValue = foundRaceNames[newrIndex];
 					//somehow if the app is playing this already works- and doing it here makes it not work
 					if (!EditorApplication.isPlaying)
-						property.serializedObject.ApplyModifiedProperties();
-				}
+                    {
+                        property.serializedObject.ApplyModifiedProperties();
+                    }
+                }
 			}
 
-			EditorGUI.EndProperty();
+            RaceData theRace = foundRaces[newrIndex];
+			if (theRace != null)
+			{
+				if (theRace.dnaConverterList != null)
+				{
+                    converterCount = theRace.dnaConverterList.Length;
+                }
+			}
+
+
+			EditorGUILayout.LabelField("Inspector Tools", EditorStyles.boldLabel);
+			EditorGUILayout.BeginHorizontal();
+			/*
+			if (GUILayout.Button("Ping Race",GUILayout.Width(90)))
+            {
+				RaceData theRace = foundRaces[newrIndex];
+				if (theRace != null)
+                {
+					EditorGUIUtility.PingObject(theRace);
+                }
+            }*/
+			if (GUILayout.Button("Race"))
+			{
+				if (theRace != null)
+				{
+					InspectorUtlity.InspectTarget(theRace);
+				}
+			}
+			if (GUILayout.Button("Base Recipe"))
+			{
+				if (theRace != null)
+				{
+					if (theRace.baseRaceRecipe != null)
+                    {
+                        InspectorUtlity.InspectTarget(theRace.baseRaceRecipe);
+                    }
+                }
+			}
+			if (GUILayout.Button($"DNA Cvts ({converterCount})"))
+			{
+                if (theRace != null)
+				{
+                    if (theRace.dnaConverterList != null)
+					{
+						foreach(var dna in theRace.dnaConverterList)
+						{
+                            InspectorUtlity.InspectTarget(dna);
+                        }
+                    }
+                }
+            }
+			if (GUILayout.Button("BonePose"))
+			{
+				//UMABonePose firstPose = null;
+
+                if (theRace != null)
+                {
+                    if (theRace.dnaConverterList != null)
+                    {
+						foreach (var dna in theRace.dnaConverterList)
+						{ 
+							if (dna.PluginCount > 0)
+							{
+								foreach( var plugin in dna.GetPlugins())
+								{
+                                    if (plugin is BonePoseDNAConverterPlugin)
+									{
+										var p = plugin as BonePoseDNAConverterPlugin;
+										foreach (var bp in p.poseDNAConverters)
+										{
+											if (bp.poseToApply != null)
+											{
+												InspectorUtlity.InspectTarget(bp.poseToApply);
+                                            }
+										}
+                                        break;
+                                    }
+                                }
+							}
+						}
+                    }
+                }
+
+            }
+            EditorGUILayout.EndHorizontal();
+            GUIHelper.EndVerticalPadded(5);
+
+            //EditorGUI.EndProperty();
 		}
 	}
 }

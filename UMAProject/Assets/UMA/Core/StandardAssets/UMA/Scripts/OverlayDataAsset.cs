@@ -1,15 +1,19 @@
 using UnityEngine;
 using System.Collections;
-using System;
+using UnityEngine.Rendering;
+#if UNITY_EDITOR
+using UnityEditorInternal;
+#endif
+
 
 namespace UMA
 {
-	/// <summary>
-	/// Contains the immutable data shared between overlays of the same type.
-	/// </summary>
-	[PreferBinarySerialization]
+    /// <summary>
+    /// Contains the immutable data shared between overlays of the same type.
+    /// </summary>
+    [PreferBinarySerialization]
 	[System.Serializable]
-	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver
+	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver, IUMAIndexOptions
 	{
 		[Tooltip("The name of this overlay.")]
 		public string overlayName;
@@ -21,17 +25,38 @@ namespace UMA
 		public bool doSave { get; set; } = false;
 		public bool additionalFoldout { get; set; } = false;
 		public bool textureFoldout { get; set; } = false;
+		public bool tagsFoldout { get; set; } = false;
+		public bool occlusionFoldout { get; set; } = false;
+
+		public ReorderableList tagsList;
 #endif
 		public enum OverlayType
 		{
 			Normal = 0,
 			Cutout = 1,
 		}
+
+		public enum OverlayBlend
+		{
+			Normal = 0,
+			Multiply = BlendOp.Multiply,
+			Overlay = BlendOp.Overlay,
+			Screen = BlendOp.Screen,
+			Darken = BlendOp.Darken,
+			Lighten = BlendOp.Lighten,
+			ColorDodge = BlendOp.ColorDodge,
+			ColorBurn = BlendOp.ColorBurn,
+			SoftLight = BlendOp.SoftLight,
+			HardLight = BlendOp.HardLight,
+			Subtract = BlendOp.Subtract
+		}
+
 		/// <summary>
 		/// How should this overlay be processed.
 		/// </summary>
 		[Tooltip("Normal or Cutout overlay type. This determines whether or not to use a cutout shader during the texture merging process.")]
 		public OverlayType overlayType;
+
 		/// <summary>
 		/// Destination rectangle for drawing overlay textures.
 		/// </summary>
@@ -47,12 +72,16 @@ namespace UMA
 		/// Array of textures required for the overlay material.
 		/// </summary>
 		[Tooltip("Array of textures required for the overlay material.")]
-		public Texture[] textureList = new Texture[0];
-		/// <summary>
-		/// Use this to identify what kind of overlay this is and what it fits
-		/// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
-		/// </summary>
-		[Tooltip("Use this to identify what kind of overlay this is and what it fits.")]
+		public Texture[] textureList = new Texture[1];
+
+        [Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
+        public OverlayBlend[] overlayBlend = new OverlayBlend[1];
+
+        /// <summary>
+        /// Use this to identify what kind of overlay this is and what it fits
+        /// Eg. BaseMeshSkin, BaseMeshOverlays, GenericPlateArmor01
+        /// </summary>
+        [Tooltip("Use this to identify what kind of overlay this is and what it fits.")]
 		public string[] tags;
 
 		/// <summary>
@@ -88,8 +117,35 @@ namespace UMA
 			get
 			{
 				if (textureList == null)
-					return 0;	
-				return textureList.Length;
+                {
+                    return 0;
+                }
+
+                return textureList.Length;
+			}
+		}
+
+        public bool forceKeep = false;
+        public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
+
+        private bool labelLocalFiles = false;
+        public bool LabelLocalFiles { get { return labelLocalFiles; } set { labelLocalFiles = value; } }
+
+
+		public OverlayBlend GetBlend(int channel)
+		{
+			if (channel >= overlayBlend.Length)
+			{
+				return OverlayBlend.Normal;
+			}
+			return overlayBlend[channel];
+		}
+
+		public void ValidateBlendList()
+		{
+			if (overlayBlend.Length != textureList.Length)
+			{
+				overlayBlend = new OverlayBlend[textureList.Length];
 			}
 		}
 
@@ -121,8 +177,12 @@ namespace UMA
 				{
 					get
 					{
-						if (_instance == null) _instance = new OcclusionEntryComparer();
-						return _instance;
+						if (_instance == null)
+                        {
+                            _instance = new OcclusionEntryComparer();
+                        }
+
+                        return _instance;
 					}
 				}
 
@@ -135,10 +195,16 @@ namespace UMA
 					var yv = (yo == null) ? (int)y : yo.slotNameHash;
 
 					if (xv < yv)
-						return -1;
-					if (xv > yv)
-						return 1;
-					return 0;
+                    {
+                        return -1;
+                    }
+
+                    if (xv > yv)
+                    {
+                        return 1;
+                    }
+
+                    return 0;
 				}
 			}
 		}

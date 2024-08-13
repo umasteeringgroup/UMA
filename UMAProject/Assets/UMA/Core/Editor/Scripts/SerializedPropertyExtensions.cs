@@ -12,7 +12,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
-using UnityEngine;
 
 namespace UMA
 {
@@ -67,7 +66,6 @@ namespace UMA
             }
             else
             {
-                Debug.Log(value);
                 return SetFieldValue(fieldName, obj, value);
             }
         }

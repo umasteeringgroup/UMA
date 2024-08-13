@@ -1,20 +1,17 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 #if UNITY_EDITOR
 using UnityEditor;
-using System.IO;
 #endif
-using UMA.CharacterSystem;
 
 namespace UMA
 {
-	//The DynamicDNAConverterController manages the list Converters (aka DynamicDNAPlugins) the user has decided to use.
-	//It is a Scriptable Object, and as Converters are added to it, it creates instances of those and stores them inside itself
-	//this is so all the assets this needs are packaged up with it UMA3 style.
-	//This asset reploaces DynamicDNAConverterBehaviour and applies the converters to the avatar
-	[System.Serializable]
+    //The DynamicDNAConverterController manages the list Converters (aka DynamicDNAPlugins) the user has decided to use.
+    //It is a Scriptable Object, and as Converters are added to it, it creates instances of those and stores them inside itself
+    //this is so all the assets this needs are packaged up with it UMA3 style.
+    //This asset reploaces DynamicDNAConverterBehaviour and applies the converters to the avatar
+    [System.Serializable]
 	public class DynamicDNAConverterController : ScriptableObject, IDNAConverter, IDynamicDNAConverter
 	{
 
@@ -44,7 +41,8 @@ namespace UMA
 		[Tooltip("A 'nice name' to use when Categorizing DNASetters in the UI")]
 		private string _displayValue;
 #pragma warning restore 649
-
+		[System.NonSerialized]
+		private List<DynamicDNAPlugin> _applyDNAPostpassPlugins = new List<DynamicDNAPlugin>();
 		[System.NonSerialized]
 		private List<DynamicDNAPlugin> _applyDNAPrepassPlugins = new List<DynamicDNAPlugin>();
 		[System.NonSerialized]
@@ -75,10 +73,15 @@ namespace UMA
 			get
 			{
 				if (_dnaAsset != null)
-					return _dnaAsset.dnaTypeHash;
-				else
-					Debug.LogWarning(this.name + " did not have a DNA Asset assigned. This is required for DynamicDnaConverterControllers.");
-				return 0;
+                {
+                    return _dnaAsset.dnaTypeHash;
+                }
+                else
+                {
+                    Debug.LogWarning(this.name + " did not have a DNA Asset assigned. This is required for DynamicDnaConverterControllers.");
+                }
+
+                return 0;
 			}
 		}
 
@@ -86,6 +89,11 @@ namespace UMA
 		{
 			get { return ApplyDNAPrepass; }
 		}
+
+		public DNAConvertDelegate PostApplyDnaAction
+        {
+			get { return ApplyDNAPostpass;  }
+        }
 
 		public DNAConvertDelegate ApplyDnaAction
 		{
@@ -110,10 +118,14 @@ namespace UMA
 			get
 			{
 				if (_dnaAsset != null)
-					return _dnaAsset;
-				else
-					return null;
-			}
+                {
+                    return _dnaAsset;
+                }
+                else
+                {
+                    return null;
+                }
+            }
 			set
 			{
 				_dnaAsset = value;
@@ -151,13 +163,6 @@ namespace UMA
 		{
 			get { return _overallModifiers.scale; }
 		}
-#if UNITY_EDITOR
-		public void ImportConverterBehaviourData(DynamicDNAConverterBehaviour DCB)
-		{
-			_dnaAsset = DCB.dnaAsset;
-			_overallModifiers.ImportSettings(DCB.overallModifiers);
-		}
-#endif
 		public void Prepare()
 		{
 			if (!_prepared)
@@ -167,13 +172,22 @@ namespace UMA
 					if (_plugins[i].ApplyPass == DynamicDNAPlugin.ApplyPassOpts.Standard)
 					{
 						if (!_applyDNAPlugins.Contains(_plugins[i]))
-							_applyDNAPlugins.Add(_plugins[i]);
-					}
+                        {
+                            _applyDNAPlugins.Add(_plugins[i]);
+                        }
+                    }
 					else if (_plugins[i].ApplyPass == DynamicDNAPlugin.ApplyPassOpts.PrePass)
 					{
 						if (!_applyDNAPrepassPlugins.Contains(_plugins[i]))
 						{
 							_applyDNAPrepassPlugins.Add(_plugins[i]);
+						}
+					}
+					else if (_plugins[i].ApplyPass == DynamicDNAPlugin.ApplyPassOpts.PostPass)
+                    {
+						if (!_applyDNAPostpassPlugins.Contains(_plugins[i]))
+						{
+							_applyDNAPostpassPlugins.Add(_plugins[i]);
 						}
 					}
 				}
@@ -186,9 +200,11 @@ namespace UMA
 			bool added = false;
 
 			if (!_dnaCallbackDelegates.ContainsKey(targetDnaName))
-				_dnaCallbackDelegates.Add(targetDnaName, new List<UnityAction<string, float>>());
+            {
+                _dnaCallbackDelegates.Add(targetDnaName, new List<UnityAction<string, float>>());
+            }
 
-			if (!_dnaCallbackDelegates[targetDnaName].Contains(callback))
+            if (!_dnaCallbackDelegates[targetDnaName].Contains(callback))
 			{
 				_dnaCallbackDelegates[targetDnaName].Add(callback);
 				added = true;
@@ -228,13 +244,19 @@ namespace UMA
 		public void ApplyDNAPrepass(UMAData umaData, UMASkeleton skeleton)
 		{
 			if (!_prepared)
-				Prepare();
+            {
+                Prepare();
+            }
 
-			UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
+            UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
 			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
-			if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset && DNAAsset != null)
-				((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
-
+			if (umaDna is DynamicUMADnaBase)
+			{
+				if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset && DNAAsset != null)
+                {
+                    ((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
+                }
+            }
 			if (_applyDNAPrepassPlugins.Count > 0)
 			{
 				for (int i = 0; i < _applyDNAPrepassPlugins.Count; i++)
@@ -245,6 +267,45 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Calls ApplyDNA on all this convertersControllers plugins (aka converters) that apply dna during the pre-pass
+		/// </summary>
+		/// <param name="umaData">The umaData on the avatar</param>
+		/// <param name="skeleton">The avatars skeleton</param>
+		/// <param name="dnaTypeHash">The dnaTypeHash that this converters behaviour is using</param>
+		public void ApplyDNAPostpass(UMAData umaData, UMASkeleton skeleton)
+		{
+			if (!_prepared)
+            {
+                Prepare();
+            }
+
+            UMADnaBase umaDna = umaData.GetDna(DNATypeHash);
+			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
+			if (umaDna is DynamicUMADnaBase)
+			{
+				if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset && DNAAsset != null)
+                {
+                    ((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
+                }
+            }
+			if (_applyDNAPostpassPlugins.Count > 0)
+			{
+				for (int i = 0; i < _applyDNAPostpassPlugins.Count; i++)
+				{
+                    try
+                    {
+                        _applyDNAPostpassPlugins[i].ApplyDNA(umaData, skeleton, DNATypeHash);
+                    }
+                    catch(System.Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
+				}
+			}
+		}
+
+
+		/// <summary>
 		/// Calls ApplyDNA on all this convertersControllers plugins (aka converters) that apply dna at the standard time
 		/// </summary>
 		/// <param name="umaData">The umaData on the avatar</param>
@@ -252,7 +313,12 @@ namespace UMA
 		/// <param name="dnaTypeHash">The dnaTypeHash that this converters behaviour is using</param>
 		public void ApplyDNA(UMAData umaData, UMASkeleton skeleton)
 		{
-			UMADnaBase umaDna = null;
+            if (!_prepared)
+            {
+                Prepare();
+            }
+
+            UMADnaBase umaDna = null;
 			//reset the live scale on the overallModifiers ready for any adjustments any plugins might make
 			liveScale = -1;
 			
@@ -265,9 +331,14 @@ namespace UMA
 			//if (!asReset)
 			//{
 				umaDna = umaData.GetDna(DNATypeHash);
-				//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
+			//Make the DNAAssets match if they dont already, can happen when some parts are in bundles and others arent
+			if (umaDna is DynamicUMADnaBase)
+			{
 				if (((DynamicUMADnaBase)umaDna).dnaAsset != DNAAsset)
-					((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
+                {
+                    ((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
+                }
+            }
 			//}
 			for (int i = 0; i < _applyDNAPlugins.Count; i++)
 			{
@@ -302,13 +373,19 @@ namespace UMA
 		public void ApplyDnaCallbackDelegates(UMAData umaData)
 		{
 			if (_dnaCallbackDelegates.Count == 0)
-				return;
-			UMADnaBase umaDna;
+            {
+                return;
+            }
+
+            UMADnaBase umaDna;
 			//need to use the typehash
 			umaDna = umaData.GetDna(DNATypeHash);
 			if (umaDna.Count == 0)
-				return;
-			foreach (KeyValuePair<string, List<UnityAction<string, float>>> kp in _dnaCallbackDelegates)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, List<UnityAction<string, float>>> kp in _dnaCallbackDelegates)
 			{
 				for (int i = 0; i < kp.Value.Count; i++)
 				{
@@ -325,9 +402,11 @@ namespace UMA
 		public List<string> GetUsedDNANames(bool forceRefresh = false)
 		{
 			if (_usedDNANames.Count == 0 || forceRefresh)
-				CompileUsedDNANamesList();
+            {
+                CompileUsedDNANamesList();
+            }
 
-			return _usedDNANames;
+            return _usedDNANames;
 		}
 
 		/// <summary>
@@ -350,8 +429,10 @@ namespace UMA
 			for(int i = 0; i < _plugins.Count; i++)
 			{
 				if (_plugins[i].name == name)
-					return _plugins[i];
-			}
+                {
+                    return _plugins[i];
+                }
+            }
 			return null;
 		}
 
@@ -373,8 +454,10 @@ namespace UMA
 			for (int i = 0; i < _plugins.Count; i++)
 			{
 				if (pluginType.IsAssignableFrom(_plugins[i].GetType()))
-					pluginsOfType.Add(_plugins[i]);
-			}
+                {
+                    pluginsOfType.Add(_plugins[i]);
+                }
+            }
 			return pluginsOfType;
 		}
 
@@ -398,8 +481,11 @@ namespace UMA
 #endif
 				//ensure the new plugin is added to the _applyPlugins lists
 				if(Application.isPlaying)
-					Prepare();
-				return plugin;
+                {
+                    Prepare();
+                }
+
+                return plugin;
 			}
 			return null;
 		}
@@ -465,10 +551,16 @@ namespace UMA
 			for (int i = 0; i < thisAssets.Length; i++)
 			{
 				if (thisAssets[i] == this)
-					continue;
-				if (!DynamicDNAPlugin.IsValidPlugin(thisAssets[i]))
-					continue;
-				if (!_plugins.Contains(thisAssets[i] as DynamicDNAPlugin))
+                {
+                    continue;
+                }
+
+                if (!DynamicDNAPlugin.IsValidPlugin(thisAssets[i]))
+                {
+                    continue;
+                }
+
+                if (!_plugins.Contains(thisAssets[i] as DynamicDNAPlugin))
 				{
 					_plugins.Add(thisAssets[i] as DynamicDNAPlugin);
 					changed = true;
@@ -494,8 +586,10 @@ namespace UMA
 				foreach(KeyValuePair<string, List<int>> kp in _plugins[i].IndexesForDnaNames)
 				{
 					if (!_usedDNANames.Contains(kp.Key) && !string.IsNullOrEmpty(kp.Key))
-						_usedDNANames.Add(kp.Key);
-				}
+                    {
+                        _usedDNANames.Add(kp.Key);
+                    }
+                }
 			}
 		}
 
@@ -541,8 +635,10 @@ namespace UMA
 			for (int i = 0; i < _plugins.Count; i++)
 			{
 				if (_plugins[i].name == desiredName && (existingPlugin == null || (existingPlugin != null && existingPlugin != _plugins[i])))
-					intSuffix++;
-			}
+                {
+                    intSuffix++;
+                }
+            }
 			return desiredName + (intSuffix != 0 ? intSuffix.ToString() : "");
 		}
 

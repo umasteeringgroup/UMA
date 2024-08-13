@@ -1,20 +1,18 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UMA;
 
 namespace UMA
 {
 
-	//A dna evaluaton graph is used so that we dont need to hard code things like the math calcs for PoseOne and PoseZero in a MorphDNASet
-	//we can use a linear animation graph and that can do that evaluation for us based on the incoming dna value. 
-	//Basically there is no need to hard code other behaviours now just because you need the dna interpreted differently.
+    //A dna evaluaton graph is used so that we dont need to hard code things like the math calcs for PoseOne and PoseZero in a MorphDNASet
+    //we can use a linear animation graph and that can do that evaluation for us based on the incoming dna value. 
+    //Basically there is no need to hard code other behaviours now just because you need the dna interpreted differently.
 
-	//The incoming dna value is the horizontal axis on the graph and what it returns is the value on the vertical axis at that point.
-	//this class defines the graph class and provides lots of handy defaults in the same way Color does with Color.red, Color.blue etc
-	//Theres loads of help in the instance of DNAEvaluationGraphPresetLibrary in the project that hopefully makes it really clear.
+    //The incoming dna value is the horizontal axis on the graph and what it returns is the value on the vertical axis at that point.
+    //this class defines the graph class and provides lots of handy defaults in the same way Color does with Color.red, Color.blue etc
+    //Theres loads of help in the instance of DNAEvaluationGraphPresetLibrary in the project that hopefully makes it really clear.
 
-	[System.Serializable]
+    [System.Serializable]
 	public sealed class DNAEvaluationGraph : System.IEquatable<DNAEvaluationGraph>
 	{
 
@@ -81,13 +79,21 @@ namespace UMA
 			//if the two instance are the same as one another 
 			//rather than whether two curves have the same keys so...
 			if (this._graph == null && animCurve == null)
-				return true;
-			if (this._graph == null && animCurve != null)
-				return false;
-			if (this._graph != null && animCurve == null)
-				return false;
+            {
+                return true;
+            }
 
-			if (this._graph.keys.Length == animCurve.keys.Length)
+            if (this._graph == null && animCurve != null)
+            {
+                return false;
+            }
+
+            if (this._graph != null && animCurve == null)
+            {
+                return false;
+            }
+
+            if (this._graph.keys.Length == animCurve.keys.Length)
 			{
 				if (this._graph.keys.Length == 0 && animCurve.keys.Length == 0)
 				{
@@ -106,8 +112,10 @@ namespace UMA
 					}
 				}
 				if (matchingKeys == this._graph.keys.Length)
-					return true;
-			}
+                {
+                    return true;
+                }
+            }
 			return false;
 		}
 
@@ -154,15 +162,21 @@ namespace UMA
 		private static int Compare(object x, object y)
 		{
 			if (((System.Object)x) == null && ((System.Object)y) == null)
-				return 1;
+            {
+                return 1;
+            }
 
-			if (((System.Object)x) == null && ((System.Object)y) != null)
-				return 0;
+            if (((System.Object)x) == null && ((System.Object)y) != null)
+            {
+                return 0;
+            }
 
-			if (((System.Object)x) != null && ((System.Object)y) == null)
-				return 0;
+            if (((System.Object)x) != null && ((System.Object)y) == null)
+            {
+                return 0;
+            }
 
-			var xo = (x as DNAEvaluationGraph);
+            var xo = (x as DNAEvaluationGraph);
 
 			var yo = (y as DNAEvaluationGraph);
 
@@ -189,8 +203,11 @@ namespace UMA
 							}
 						}
 						if (matchingKeys == xo._graph.keys.Length)
-							return 1;
-						return 0;
+                        {
+                            return 1;
+                        }
+
+                        return 0;
 					}
 					return 0;
 				}
@@ -483,8 +500,10 @@ namespace UMA
 				get { return _evaluationGraph._graph; }
 				set {
 					if (value == null)
-						_evaluationGraph._graph = value;
-					else
+                    {
+                        _evaluationGraph._graph = value;
+                    }
+                    else
 					{
 						_evaluationGraph._graph = new AnimationCurve(value.keys);
 					}

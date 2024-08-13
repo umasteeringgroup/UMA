@@ -41,17 +41,29 @@ namespace UMA
 		/// </summary>
 		public void Serialize()
 		{
-			var ms = new MemoryStream();
+			if (humanInfo == null)
+            {
+                humanInfo = new HumanBone[0];
+            }
+
+            if (boneInfo == null)
+            {
+                boneInfo = new SkeletonBone[0];
+            }
+
+            var ms = new MemoryStream();
 			var bn = new BinaryWriter(ms);
 			bn.Write(boneInfo.Length);
-			foreach(var bi in boneInfo)
+            for (int i = 0; i < boneInfo.Length; i++)
 			{
-				Serialize(bn, bi);
+                SkeletonBone bi = boneInfo[i];
+                Serialize(bn, bi);
 			}
 			bn.Write(humanInfo.Length);
-			foreach (var hi in humanInfo)
+            for (int i = 0; i < humanInfo.Length; i++)
 			{
-				Serialize(bn, hi);
+                HumanBone hi = humanInfo[i];
+                Serialize(bn, hi);
 			}
 			if (extendedInfo)
 			{
@@ -100,6 +112,24 @@ namespace UMA
 				}
 			}
 		}
+
+
+		public UmaTPose Clone()
+        {
+			UmaTPose tp = new UmaTPose();
+			tp.armStretch = armStretch;
+			tp.feetSpacing = feetSpacing;
+			tp.legStretch = legStretch;
+			tp.lowerArmTwist = lowerArmTwist;
+			tp.lowerLegTwist = lowerLegTwist;
+			tp.upperArmTwist = upperArmTwist;
+			tp.upperLegTwist = upperLegTwist;
+			tp.extendedInfo = extendedInfo;
+			tp.boneInfo = (SkeletonBone[]) boneInfo.Clone();
+			tp.humanInfo = (HumanBone[])humanInfo.Clone();
+			tp.serializedChunk = (byte[])serializedChunk.Clone();
+			return tp;
+        }
 
 		private SkeletonBone DeSerializeSkeletonBone(BinaryReader br)
 		{
@@ -252,12 +282,17 @@ namespace UMA
         public string BoneNameFromHumanName(string humanName)
         {
             if (humanInfo == null)
-                return "";
-
-            foreach(HumanBone humanBone in humanInfo)
             {
+                return "";
+            }
+
+            for (int i = 0; i < humanInfo.Length; i++)
+            {
+                HumanBone humanBone = humanInfo[i];
                 if (humanBone.humanName == humanName)
+                {
                     return humanBone.boneName;
+                }
             }
             return "";
         }

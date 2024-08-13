@@ -13,7 +13,7 @@ namespace UMA.Editors
 #endif
 	    public static void CreateOverlayMenuItem()
 	    {
-	        CustomAssetUtility.CreateAsset<OverlayDataAsset>();
+	        var ovl = CustomAssetUtility.CreateAsset<OverlayDataAsset>();
 	    }
 
 

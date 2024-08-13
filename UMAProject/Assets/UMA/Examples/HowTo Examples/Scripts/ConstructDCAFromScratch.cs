@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;
@@ -22,6 +21,7 @@ public class ConstructDCAFromScratch : MonoBehaviour
     void Start()
     {
         GameObject go = new GameObject();
+        go.transform.localRotation = Quaternion.Euler(0.0f, 180.0f, 0.0f);
         var DCA = go.AddComponent<DynamicCharacterAvatar>();
 
         if (LoadFromAvatarDef)

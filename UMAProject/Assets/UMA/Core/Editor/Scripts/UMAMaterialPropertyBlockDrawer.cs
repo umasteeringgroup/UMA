@@ -1,9 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
-using System;
-using System.Linq;
 using UMA.Editors;
 
 /// <summary>
@@ -36,8 +32,12 @@ namespace UMA
             GUILayout.Label("Shader Properties",GUILayout.ExpandWidth(true));
             GUILayout.Label("Always Update",GUILayout.ExpandWidth(false));
             umpb.alwaysUpdate = GUILayout.Toggle(umpb.alwaysUpdate, "",GUILayout.ExpandWidth(false));
-
+            GUILayout.Label("Parms Only", GUILayout.ExpandWidth(false));
+            umpb.alwaysUpdateParms = GUILayout.Toggle(umpb.alwaysUpdateParms, "", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
+
+
+
             GUILayout.BeginHorizontal();
 
             TypeIndex = EditorGUILayout.Popup(TypeIndex, UMAMaterialPropertyBlock.PropertyTypeStrings);
@@ -56,7 +56,10 @@ namespace UMA
             {
                 foreach (UMAProperty up in umpb.shaderProperties)
                 {
-                    if (up == null) continue;
+                    if (up == null)
+                    {
+                        continue;
+                    }
 
                     GUIHelper.BeginVerticalIndented(3, new Color(0.75f, 0.75f, 1f));
                     if (dark) 
@@ -71,9 +74,10 @@ namespace UMA
                     }
 
                     if (up.OnGUI())
+                    {
                         delme = up;
+                    }
 
-                     
                     GUIHelper.EndVerticalPadded(5);
 
                     GUIHelper.EndVerticalIndented();

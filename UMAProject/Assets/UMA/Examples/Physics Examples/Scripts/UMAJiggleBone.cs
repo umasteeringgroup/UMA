@@ -13,7 +13,6 @@
 //	============================================================
 
 using UnityEngine;
-using System.Collections;
 
 namespace UMA
 {
@@ -99,16 +98,34 @@ namespace UMA
                 // for the 0 values, we assume those are the sides, and 1 is the direction
                 // the bone is facing
                 float xStretch;
-                if (boneAxis.x == 0) xStretch = 1 + (-stretchMag * sideStretch);
-                else xStretch = 1 + (stretchMag * frontStretch);
+                if (boneAxis.x == 0)
+                {
+                    xStretch = 1 + (-stretchMag * sideStretch);
+                }
+                else
+                {
+                    xStretch = 1 + (stretchMag * frontStretch);
+                }
 
                 float yStretch;
-                if (boneAxis.y == 0) yStretch = 1 + (-stretchMag * sideStretch);
-                else yStretch = 1 + (stretchMag * frontStretch);
+                if (boneAxis.y == 0)
+                {
+                    yStretch = 1 + (-stretchMag * sideStretch);
+                }
+                else
+                {
+                    yStretch = 1 + (stretchMag * frontStretch);
+                }
 
                 float zStretch;
-                if (boneAxis.z == 0) zStretch = 1 + (-stretchMag * sideStretch);
-                else zStretch = 1 + (stretchMag * frontStretch);
+                if (boneAxis.z == 0)
+                {
+                    zStretch = 1 + (-stretchMag * sideStretch);
+                }
+                else
+                {
+                    zStretch = 1 + (stretchMag * frontStretch);
+                }
 
                 // Set the bone scale
                 transform.localScale = new Vector3(xStretch, yStretch, zStretch);

@@ -1,10 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UMA.Dynamics.Examples
 {
-	public class ClothHelper : MonoBehaviour
+    public class ClothHelper : MonoBehaviour
 	{
 		public float distance = 0.0f;
 		public float penetration = 10.0f;

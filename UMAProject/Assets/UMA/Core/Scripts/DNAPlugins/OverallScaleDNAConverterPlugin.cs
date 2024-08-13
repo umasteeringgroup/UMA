@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
 namespace UMA
 {
-	[System.Serializable]
+    [System.Serializable]
 	public class OverallScaleDNAConverterPlugin : DynamicDNAPlugin
 	{
 
@@ -43,9 +42,11 @@ namespace UMA
 					for (int ci = 0; ci < _overallScaleModifiers[i].UsedDNANames.Count; ci++)
 					{
 						if (!dict.ContainsKey(_overallScaleModifiers[i].UsedDNANames[ci]))
-							dict.Add(_overallScaleModifiers[i].UsedDNANames[ci], new List<int>());
+                        {
+                            dict.Add(_overallScaleModifiers[i].UsedDNANames[ci], new List<int>());
+                        }
 
-						dict[_overallScaleModifiers[i].UsedDNANames[ci]].Add(i);
+                        dict[_overallScaleModifiers[i].UsedDNANames[ci]].Add(i);
 					}
 				}
 				return dict;
@@ -60,14 +61,19 @@ namespace UMA
 		public override void ApplyDNA(UMAData umaData, UMASkeleton skeleton, int dnaTypeHash)
 		{
 			if (this.converterController == null /*|| this.converterController.converterBehaviour == null*/ || _overallScaleModifiers.Count == 0)
-				return;
-			var umaDna = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
+            {
+                return;
+            }
+
+            var umaDna = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
 			//master weight determines how much we modify the converters base scale to our new value, 1 its fully overridden, 0 its left as it is
 			var masterWeightCalc = masterWeight.GetWeight(umaDna);
 			if (masterWeightCalc == 0f)
-				return;
+            {
+                return;
+            }
 
-			float baseScale = this.converterController.baseScale;
+            float baseScale = this.converterController.baseScale;
 
 			//Each modifier wants to change the base scale to its overall scale value depending on how stronly its dna(s) are applied
 			//so we need to accumulate the differences each one wants to make rather than the full value
@@ -99,8 +105,10 @@ namespace UMA
 		{
 			var thismodifier = pluginSO.FindProperty("_overallScaleModifiers").GetArrayElementAtIndex(entryIndex);
 			if (thismodifier.FindPropertyRelative("_overallScale").floatValue == 0f)
-				thismodifier.FindPropertyRelative("_overallScale").floatValue = 0.88f;//the default value for humanMale as defined in OverallScaleModifier
-		}
+            {
+                thismodifier.FindPropertyRelative("_overallScale").floatValue = 0.88f;//the default value for humanMale as defined in OverallScaleModifier
+            }
+        }
 #endif
 		#endregion
 
@@ -133,8 +141,10 @@ namespace UMA
 					for (int i = 0; i < _modifyingDNA.Count; i++)
 					{
 						if (!string.IsNullOrEmpty(_modifyingDNA[i].dnaName))
-							usedNames.Add(_modifyingDNA[i].dnaName);
-					}
+                        {
+                            usedNames.Add(_modifyingDNA[i].dnaName);
+                        }
+                    }
 					return usedNames;
 				}
 			}
@@ -142,8 +152,11 @@ namespace UMA
 			public float GetEvaluatedDNA(UMADnaBase umaDNA)
 			{
 				if (_modifyingDNA.Count > 0)
-					return _modifyingDNA.Evaluate(umaDNA);
-				return 1f;//if there is no modifying dna assume the overall scale is fully applied
+                {
+                    return _modifyingDNA.Evaluate(umaDNA);
+                }
+
+                return 1f;//if there is no modifying dna assume the overall scale is fully applied
 			}
 
 		}

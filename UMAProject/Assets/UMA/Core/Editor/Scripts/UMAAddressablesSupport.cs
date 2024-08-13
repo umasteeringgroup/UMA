@@ -1,28 +1,22 @@
-﻿using UnityEngine;
-using System.IO;
-using System;
-using System.Collections.Generic;
-using UMA.CharacterSystem;
-
 #if UMA_ADDRESSABLES
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
 #endif
-using PackSlot = UMA.UMAPackedRecipeBase.PackedSlotDataV3;
-using SlotRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>;
-using RaceRecipes = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UMA.UMATextRecipe>>>;
-using System.Linq;
-using System.Text;
 
 #if UNITY_EDITOR
-using UnityEditor;
-using UnityEditor.Animations;
 #if UMA_ADDRESSABLES
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UMA;
+using UnityEngine.Profiling;
+using System.Collections.Generic;
+using UnityEditor;
+using UMA.CharacterSystem;
+using UnityEngine;
+using System;
+using System.Text;
 #endif
 #endif
 
@@ -83,42 +77,42 @@ namespace UMA
                 EditorUtility.DisplayDialog("Warning", "Addressable Asset Settings not found", "OK");
                 return;
             }
-            List<AddressableAssetGroup> GroupsToDelete = new List<AddressableAssetGroup>();
+                List<AddressableAssetGroup> GroupsToDelete = new List<AddressableAssetGroup>();
 
-            foreach (var group in AddressableUtility.AddressableSettings.groups)
-            {
-                if (IsUMAGroup(group.name))
+                foreach (var group in AddressableUtility.AddressableSettings.groups)
                 {
-                    if (OnlyEmpty)
+                    if (IsUMAGroup(group.name))
                     {
-                        if (group.entries.Count > 0) continue;
-                    }
-                    GroupsToDelete.Add(group);
-                }
-            }
-
-            float pos = 0.0f;
-            float inc = 1.0f / GroupsToDelete.Count;
-
-            foreach (AddressableAssetGroup group in GroupsToDelete)
-            {
-                int iPos = Mathf.CeilToInt(pos);
-                EditorUtility.DisplayProgressBar("Cleanup", "Removing " + group.Name, iPos);
-                if (group.name.Contains(SharedGroupName))
-                {
-                    List<AddressableAssetEntry> ItemsToClear = new List<AddressableAssetEntry>();
-                    ItemsToClear.AddRange(group.entries);
-                    foreach (AddressableAssetEntry ae in ItemsToClear)
-                    {
-                        group.RemoveAssetEntry(ae);
+                        if (OnlyEmpty)
+                        {
+                            if (group.entries.Count > 0) continue;
+                        }
+                        GroupsToDelete.Add(group);
                     }
                 }
-                else
+
+                float pos = 0.0f;
+                float inc = 1.0f / GroupsToDelete.Count;
+
+                foreach (AddressableAssetGroup group in GroupsToDelete)
                 {
-                    AddressableUtility.AddressableSettings.RemoveGroup(group);
+                    int iPos = Mathf.CeilToInt(pos);
+                    EditorUtility.DisplayProgressBar("Cleanup", "Removing " + group.Name, iPos);
+                    if (group.name.Contains(SharedGroupName))
+                    {
+                        List<AddressableAssetEntry> ItemsToClear = new List<AddressableAssetEntry>();
+                        ItemsToClear.AddRange(group.entries);
+                        foreach (AddressableAssetEntry ae in ItemsToClear)
+                        {
+                            group.RemoveAssetEntry(ae);
+                        }
+                    }
+                    else
+                    {
+                        AddressableUtility.AddressableSettings.RemoveGroup(group);
+                    }
+                    pos += inc;
                 }
-                pos += inc;
-            }
 
             if (RemoveFlags)
             {
@@ -560,6 +554,63 @@ namespace UMA
             return ai._Type == typeof(OverlayDataAsset);
         }
 
+        /// <summary>
+        /// UMA assets must have addressable labels that specify what recipe they load with. In addition,
+        /// the materials need to be stripped from the items so we do not have duplicate shaders and duplicate
+        /// template materials loaded into the bundles (and into memory).
+        ///
+        /// You should call this in your buildscript BEFORE calling BuildPlayerContent.
+        /// 
+        ///			AddressableAssetSettings.BuildPlayerContent(out var result);
+        ///
+        /// Then after building the player content, you should call AddressablesBuildPostStep() below.
+        /// </summary>
+        public void AddressablesBuildPreStep()
+        {
+            // Clear the index, rebuild the type arrays, and then query to project for the indexed types, and
+            // add everything to the index. Do not add the text assets (only needed if loading characters from resources)
+            Debug.Log("AddressablesBuildPreStep - Rebuilding asset index.");
+            UMAAssetIndexer assetIndex = UMAAssetIndexer.Instance;
+            try
+            {
+                assetIndex.PrepareBuild();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+            Debug.Log($"AddressablesBuildPreStep - Generating UMA addressable labels.");
+
+            // Generate all UMA addressable labels by recipe. Every recipe gets a unique label, so when that
+            // recipe needs to be loaded, all bundles that contain that item are demand loaded into memory.
+            // they are unloaded when there is no active character using any of the assets.
+            UMAAddressablesSupport.Instance.GenerateAddressables(new SingleGroupGenerator { ClearMaterials = true });
+
+            // Make sure that the global library has a reference to every item that is not addressable.
+            // This ensures that they item is included in resources. (Since the items are built dynamically,
+            // they must be able to be loaded at runtime either through addressable bundles or resources).
+            Debug.Log($"AddressablesBuildPreStep - Adding UMA resource references");
+            assetIndex.AddReferences();
+        }
+
+
+        /// <summary>
+        /// This will reset the materials on the assets by looking up the materials in the library.
+        /// This needs to happen after the bundles are built.
+        /// </summary>
+        public void AddressablesBuildPostStep()
+        {
+            Debug.Log($"AddressablesBuildPostStep - Adding UMA resource references");
+            try
+            {
+                UMAAssetIndexer.Instance.PostBuildMaterialFixup();
+            }
+            catch (Exception ex)
+            {
+                Debug.Log($"AddressablesBuildPostStep - Adding UMA resource references failed with exception {ex.Message}");
+            }
+        }
+
         public void GenerateAddressables(IUMAAddressablePlugin plugin)
         {
             bool OK = plugin.Prepare();
@@ -569,7 +620,11 @@ namespace UMA
             {
                 ClearAddressableFlags(t);
             }
-
+            if (AddressableUtility.AddressableSettings == null)
+            {
+                Debug.LogError("Addressable settings not found!");
+                return;
+            }
             AddressableAssetGroup sharedGroup = AddressableUtility.AddressableSettings.FindGroup(SharedGroupName);
             if (sharedGroup == null)
             {
@@ -789,24 +844,75 @@ namespace UMA
             }
         }
 
-        public void CleanupOrphans(Type type)
+
+        public void CleanupOrphans(string message)
         {
+            int slotsRemoved = CleanupOrphans(typeof(SlotDataAsset), false, message);
+            int overlaysRemoved = CleanupOrphans(typeof(OverlayDataAsset), false, message);
+
+            if (!string.IsNullOrEmpty(message))
+            {
+              Debug.LogWarning(message + "\nRemoved " + slotsRemoved + " orphaned slots and " + overlaysRemoved + " orphaned overlays.");
+            }
+            UMAAssetIndexer.Instance.ForceSave();
+        }
+
+
+        public int CleanupOrphans(Type type, bool forceSave = true,  string msg="")
+        {
+            int count = 0;
+
             var items = UMAAssetIndexer.Instance.GetAssetDictionary(type);
 
             List<string> toRemove = new List<string>();
             foreach (KeyValuePair<string, AssetItem> pair in items)
             {
-                if (pair.Value.IsAddressable == false && pair.Value.IsResource == false)
+                // if not addressable, not resource, and not always loaded, then it's an orphan.
+                if (pair.Value.IsAddressable == false && pair.Value.IsResource == false && pair.Value.IsAlwaysLoaded == false)
                 {
                     toRemove.Add(pair.Key);
                 }
             }
 
+            long totalsize = 0;
+
             foreach (var key in toRemove)
             {
+                if (items.ContainsKey(key))
+                {
+                    var item = items[key].CacheSerializedItem();
+                    totalsize += Profiler.GetRuntimeMemorySizeLong(item);
                 items.Remove(key);
+                    Debug.Log("Removing orphaned item: " + key);
+                    count++;
             }
+            }
+            if (forceSave)
+            {
             UMAAssetIndexer.Instance.ForceSave();
+        }
+            if (!string.IsNullOrEmpty(msg))
+            {
+                Debug.Log(msg + " Removed " + toRemove.Count + " orphaned items.");
+                Debug.Log(msg + " Total size: " + totalsize + " bytes.");
+            }
+            return toRemove.Count;
+        }
+
+        public List<AssetItem>  GetOrphans(Type type)
+        {
+            var items = UMAAssetIndexer.Instance.GetAssetDictionary(type);
+            var returnval = new List<AssetItem>();
+
+            foreach (KeyValuePair<string, AssetItem> pair in items)
+            {
+                if (pair.Value.IsAddressable == false && pair.Value.IsResource == false && pair.Value.IsAlwaysLoaded == false)
+                {
+                    returnval.Add(pair.Value);
+                }
+            }
+
+            return returnval;
         }
 
         public void ReleaseReferences(Type type)

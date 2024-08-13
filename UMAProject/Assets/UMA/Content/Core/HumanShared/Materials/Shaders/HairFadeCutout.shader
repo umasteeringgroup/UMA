@@ -11,6 +11,7 @@ Shader "UMA/Hair Fade Cutout"
 	Properties
 	{
 		[HideInInspector] __dirty( "", Int ) = 1
+		_Color("Color", Color) = (1,1,1,1)
 		_MainTex("Diffuse/Alpha Map", 2D) = "white" {}
 		_MaskClipValue( "Cotout Clip Value", Range( 0 , 1) ) = 0.7
 		_BumpMap("Normal Map", 2D) = "bump" {}
@@ -33,6 +34,7 @@ Shader "UMA/Hair Fade Cutout"
 		#include "UnityPBSLighting.cginc"
 		#include "Lighting.cginc"
 		#pragma target 3.0
+		#pragma shader_feature_local _ENVIRONMENTREFLECTIONS_OFF
 		struct Input
 		{
 			float2 uv_texcoord;
@@ -51,6 +53,7 @@ Shader "UMA/Hair Fade Cutout"
 		uniform float4 _MetallicGlossMap_ST;
 		uniform float _MaskClipValue = 0.5;
 		uniform float _FadeFactor;
+		uniform float4 _Color;
 
 		void surf( Input i , inout SurfaceOutputStandard o )
 		{
@@ -58,7 +61,7 @@ Shader "UMA/Hair Fade Cutout"
 			o.Normal = UnpackScaleNormal( tex2D( _BumpMap,uv_BumpMap) ,_BumpStrength );
 			float2 uv_MainTex = i.uv_texcoord * _MainTex_ST.xy + _MainTex_ST.zw;
 			float4 tex2DNode1 = tex2D( _MainTex,uv_MainTex);
-			o.Albedo = tex2DNode1.xyz;
+			o.Albedo = tex2DNode1.xyz * _Color;
 			float2 uv_MetallicGlossMap = i.uv_texcoord * _MetallicGlossMap_ST.xy + _MetallicGlossMap_ST.zw;
 			o.Metallic = _MetallicAdd + (tex2D( _MetallicGlossMap,uv_MetallicGlossMap).x * _MetallicStrength);
 			o.Smoothness = _SmoothnessAdd + (tex2D(_MetallicGlossMap, uv_MetallicGlossMap).a * _SmoothnessStrength);
@@ -87,7 +90,7 @@ Shader "UMA/Hair Fade Cutout"
 			o.Normal = UnpackScaleNormal( tex2D( _BumpMap,uv_BumpMap) ,_BumpStrength );
 			float2 uv_MainTex = i.uv_texcoord * _MainTex_ST.xy + _MainTex_ST.zw;
 			float4 tex2DNode1 = tex2D( _MainTex,uv_MainTex);
-			o.Albedo = tex2DNode1.xyz;
+			o.Albedo = tex2DNode1.xyz * _Color;
 			float2 uv_MetallicGlossMap = i.uv_texcoord * _MetallicGlossMap_ST.xy + _MetallicGlossMap_ST.zw;
 			// o.Metallic = tex2D( _MetallicGlossMap,uv_MetallicGlossMap).x * _MetallicStrength;
 			o.Metallic = _MetallicAdd + (tex2D(_MetallicGlossMap, uv_MetallicGlossMap).x * _MetallicStrength);
@@ -113,6 +116,7 @@ Shader "UMA/Hair Fade Cutout"
 			#pragma multi_compile_shadowcaster
 			#pragma multi_compile UNITY_PASS_SHADOWCASTER
 			#pragma skip_variants FOG_LINEAR FOG_EXP FOG_EXP2
+			#pragma shader_feature_local _ENVIRONMENTREFLECTIONS_OFF
 			# include "HLSLSupport.cginc"
 			#include "UnityCG.cginc"
 			#include "Lighting.cginc"

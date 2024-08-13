@@ -57,12 +57,18 @@ namespace UMA.Editors
 			Race.baseRaceRecipe.Load(Recipe, Context);
 
 			if (Recipe == null)
-				return;
+            {
+                return;
+            }
 
-			foreach (SlotData s in Recipe.slotDataList)
+            foreach (SlotData s in Recipe.slotDataList)
 			{
-				if (s == null) continue;
-				Slots.Add(new CheckedSlot(s, true));
+				if (s == null)
+                {
+                    continue;
+                }
+
+                Slots.Add(new CheckedSlot(s, true));
 			}
 		}
 

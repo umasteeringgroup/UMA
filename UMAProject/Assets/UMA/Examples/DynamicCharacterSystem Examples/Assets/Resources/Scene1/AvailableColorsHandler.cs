@@ -1,7 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
-using UMA.CharacterSystem;
-using UMA;
 using UnityEngine.UI;
 
 namespace UMA.CharacterSystem.Examples
@@ -48,7 +45,7 @@ namespace UMA.CharacterSystem.Examples
         private void AddLabel(string theText)
         {
             GameObject go = GameObject.Instantiate(LabelPrefab);
-            go.transform.SetParent(ColorPanel.transform);
+            go.transform.SetParent(ColorPanel.transform, false);
             Text txt = go.GetComponentInChildren<Text>();
             txt.text = theText;
         }
@@ -62,7 +59,7 @@ namespace UMA.CharacterSystem.Examples
             i.color = Color.white;
             Text t = go.GetComponentInChildren<Text>();
             t.text = "<default>";
-            go.transform.SetParent(ColorPanel.transform);
+            go.transform.SetParent(ColorPanel.transform, false);
         }
 
         private void AddButton(OverlayColorData ocd)
@@ -72,7 +69,7 @@ namespace UMA.CharacterSystem.Examples
             ch.Setup(Avatar,ColorName, ocd );
             Image i = go.GetComponent<Image>();
             i.color = ocd.color;
-            go.transform.SetParent(ColorPanel.transform);
+            go.transform.SetParent(ColorPanel.transform, false);
         }
 
         private void Cleanup()

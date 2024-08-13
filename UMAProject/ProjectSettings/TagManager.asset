@@ -4,6 +4,7 @@
 TagManager:
   serializedVersion: 2
   tags:
+  - UMAKeepChain
   - UMAIgnore
   layers:
   - Default
@@ -17,8 +18,8 @@ TagManager:
   - Ragdoll
   - Player
   - NoCollisions
-  - 
-  - 
+  - HeadLayer
+  - TheMainLayer
   - 
   - 
   - 

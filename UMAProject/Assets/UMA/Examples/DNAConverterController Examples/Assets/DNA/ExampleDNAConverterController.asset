@@ -164,6 +164,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 1
       _max: 1
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: NeckAdjust
     _hash: 1605701185
     _property: 2
@@ -274,6 +276,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 1.6
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftOuterBreast
     _hash: 361754685
     _property: 2
@@ -544,6 +548,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.6
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightOuterBreast
     _hash: -1043063424
     _property: 2
@@ -814,6 +820,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.6
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftEye
     _hash: 27653119
     _property: 2
@@ -964,6 +972,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.7
       _max: 1.4
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightEye
     _hash: -2120937982
     _property: 2
@@ -1114,6 +1124,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.7
       _max: 1.4
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftEyeAdjust
     _hash: -595031702
     _property: 1
@@ -1184,6 +1196,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0
       _max: 0
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightEyeAdjust
     _hash: -734071712
     _property: 1
@@ -1254,6 +1268,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0
       _max: 0
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: Spine1Adjust
     _hash: 473121629
     _property: 2
@@ -1444,6 +1460,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.55
       _max: 1.15
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: SpineAdjust
     _hash: 1842365421
     _property: 2
@@ -1634,6 +1652,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.75
       _max: 1.35
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LowerBackBelly
     _hash: -1421416706
     _property: 2
@@ -1784,6 +1804,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.35
       _max: 1.75
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LowerBackAdjust
     _hash: -1471957022
     _property: 2
@@ -2094,6 +2116,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.85
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftTrapezius
     _hash: -1320475381
     _property: 2
@@ -2244,6 +2268,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.35
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightTrapezius
     _hash: -1174579199
     _property: 2
@@ -2394,6 +2420,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.35
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftArmAdjust
     _hash: -270431657
     _property: 2
@@ -2504,6 +2532,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.65
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightArmAdjust
     _hash: -413665443
     _property: 2
@@ -2614,6 +2644,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.65
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftForeArmAdjust
     _hash: 923803339
     _property: 2
@@ -2724,6 +2756,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.75
       _max: 1.25
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightForeArmAdjust
     _hash: -1195342688
     _property: 2
@@ -2834,6 +2868,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.75
       _max: 1.25
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftForeArmTwistAdjust
     _hash: 547566030
     _property: 2
@@ -2944,6 +2980,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.75
       _max: 1.25
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightForeArmTwistAdjust
     _hash: 758040550
     _property: 2
@@ -3054,6 +3092,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.75
       _max: 1.25
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftShoulderAdjust
     _hash: -1372013129
     _property: 2
@@ -3244,6 +3284,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.75
       _max: 1.25
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightShoulderAdjust
     _hash: 1960302077
     _property: 2
@@ -3434,6 +3476,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.75
       _max: 1.25
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftUpLegAdjust
     _hash: 898137571
     _property: 2
@@ -3704,6 +3748,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.45
       _max: 1.15
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightUpLegAdjust
     _hash: -506228642
     _property: 2
@@ -3974,6 +4020,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.45
       _max: 1.15
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftLegAdjust
     _hash: -861926788
     _property: 2
@@ -4244,6 +4292,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.45
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightLegAdjust
     _hash: -1005160586
     _property: 2
@@ -4514,6 +4564,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.45
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftGluteus
     _hash: 2044062440
     _property: 2
@@ -4664,6 +4716,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.25
       _max: 2.35
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightGluteus
     _hash: -2110033470
     _property: 2
@@ -4814,6 +4868,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.25
       _max: 2.35
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftEarAdjust
     _hash: -777059916
     _property: 2
@@ -4964,6 +5020,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.75
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightEarAdjust
     _hash: -652641090
     _property: 2
@@ -5114,6 +5172,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.75
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftEarAdjust
     _hash: -777059916
     _property: 0
@@ -5264,6 +5324,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.02
       _max: 0.02
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightEarAdjust
     _hash: -652641090
     _property: 0
@@ -5414,6 +5476,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.02
       _max: 0.02
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftEarAdjust
     _hash: -777059916
     _property: 1
@@ -5484,6 +5548,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -15
       _max: 40
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightEarAdjust
     _hash: -652641090
     _property: 1
@@ -5554,6 +5620,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -40
       _max: 15
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: NoseBaseAdjust
     _hash: -685367200
     _property: 2
@@ -5784,6 +5852,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.25
       _max: 3
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: NoseMiddleAdjust
     _hash: -1907186538
     _property: 2
@@ -6094,6 +6164,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 3
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: NoseBaseAdjust
     _hash: -685367200
     _property: 1
@@ -6164,6 +6236,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -30
       _max: 80
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: NoseBaseAdjust
     _hash: -685367200
     _property: 0
@@ -6274,6 +6348,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.025
       _max: 0.025
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: NoseMiddleAdjust
     _hash: -1907186538
     _property: 0
@@ -6384,6 +6460,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.015
       _max: 0.015
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftNoseAdjust
     _hash: 623523856
     _property: 0
@@ -6494,6 +6572,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.025
       _max: 0.025
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightNoseAdjust
     _hash: -973641869
     _property: 0
@@ -6604,6 +6684,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.025
       _max: 0.025
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: UpperLipsAdjust
     _hash: -736966710
     _property: 0
@@ -6674,6 +6756,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.0045
       _max: 0.0045
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: MandibleAdjust
     _hash: 691264956
     _property: 2
@@ -6784,6 +6868,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.4
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: MandibleAdjust
     _hash: 691264956
     _property: 0
@@ -6854,6 +6940,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.0075
       _max: 0.0075
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftLowMaxilarAdjust
     _hash: 1385644791
     _property: 0
@@ -6964,6 +7052,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.03
       _max: 0.03
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightLowMaxilarAdjust
     _hash: 459855613
     _property: 0
@@ -7074,6 +7164,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.03
       _max: 0.03
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftCheekAdjust
     _hash: -1371476741
     _property: 2
@@ -7224,6 +7316,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.35
       _max: 2.05
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightCheekAdjust
     _hash: 2048590150
     _property: 2
@@ -7374,6 +7468,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.35
       _max: 2.05
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftCheekAdjust
     _hash: -1371476741
     _property: 0
@@ -7444,6 +7540,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.03
       _max: 0.03
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightCheekAdjust
     _hash: 2048590150
     _property: 0
@@ -7514,6 +7612,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.03
       _max: 0.03
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftLowCheekAdjust
     _hash: -982498292
     _property: 0
@@ -7624,6 +7724,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.06
       _max: 0.06
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightLowCheekAdjust
     _hash: 530525254
     _property: 0
@@ -7734,6 +7836,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.06
       _max: 0.06
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: NoseTopAdjust
     _hash: 1973914600
     _property: 0
@@ -7884,6 +7988,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.015
       _max: 0.0025
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftEyebrowLowAdjust
     _hash: -87457348
     _property: 0
@@ -8034,6 +8140,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.015
       _max: 0.005
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftEyebrowMiddleAdjust
     _hash: 1573521115
     _property: 0
@@ -8184,6 +8292,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.025
       _max: 0.005
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftEyebrowUpAdjust
     _hash: -550662924
     _property: 0
@@ -8334,6 +8444,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.01
       _max: 0.005
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightEyebrowLowAdjust
     _hash: -1288301130
     _property: 0
@@ -8484,6 +8596,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.015
       _max: 0.005
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightEyebrowMiddleAdjust
     _hash: 1752310743
     _property: 0
@@ -8634,6 +8748,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.025
       _max: 0.005
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightEyebrowUpAdjust
     _hash: 1241434898
     _property: 0
@@ -8784,6 +8900,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.01
       _max: 0.005
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LipsSuperiorAdjust
     _hash: 1865332640
     _property: 2
@@ -8934,6 +9052,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LipsInferiorAdjust
     _hash: 1799356466
     _property: 2
@@ -9084,6 +9204,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftLipsSuperiorMiddleAdjust
     _hash: 1940197654
     _property: 2
@@ -9234,6 +9356,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightLipsSuperiorMiddleAdjust
     _hash: 1220922885
     _property: 2
@@ -9384,6 +9508,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftLipsInferiorAdjust
     _hash: 1599456840
     _property: 2
@@ -9534,6 +9660,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightLipsInferiorAdjust
     _hash: 1389899872
     _property: 2
@@ -9684,6 +9812,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.65
       _max: 1.5
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LipsInferiorAdjust
     _hash: 1799356466
     _property: 0
@@ -9754,6 +9884,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.1
       _max: 0.1
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftLipsAdjust
     _hash: -666615888
     _property: 0
@@ -9824,6 +9956,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.05
       _max: 0.05
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightLipsAdjust
     _hash: 949575891
     _property: 0
@@ -9894,6 +10028,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.05
       _max: 0.05
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftLipsSuperiorMiddleAdjust
     _hash: 1940197654
     _property: 0
@@ -9964,6 +10100,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.05
       _max: 0.05
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightLipsSuperiorMiddleAdjust
     _hash: 1220922885
     _property: 0
@@ -10034,6 +10172,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.05
       _max: 0.05
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftLipsInferiorAdjust
     _hash: 1599456840
     _property: 0
@@ -10144,6 +10284,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.1
       _max: 0.1
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightLipsInferiorAdjust
     _hash: 1389899872
     _property: 0
@@ -10254,6 +10396,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -0.1
       _max: 0.1
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: Position
     _hash: -1084586333
     _property: 0
@@ -10324,6 +10468,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -10
       _max: 10
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: Head
     _hash: 130111906
     _property: 2
@@ -10474,6 +10620,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftArm
     _hash: -343733542
     _property: 2
@@ -10624,6 +10772,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightArm
     _hash: 1806956327
     _property: 2
@@ -10774,6 +10924,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftForeArm
     _hash: -1984349568
     _property: 2
@@ -10924,6 +11076,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightForeArm
     _hash: 1918345642
     _property: 2
@@ -11074,6 +11228,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftHand
     _hash: -1233783956
     _property: 2
@@ -11224,6 +11380,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightHand
     _hash: 1979272496
     _property: 2
@@ -11374,6 +11532,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftFoot
     _hash: 1486391408
     _property: 2
@@ -11524,6 +11684,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightFoot
     _hash: -1693174228
     _property: 2
@@ -11674,6 +11836,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftUpLeg
     _hash: 392266736
     _property: 0
@@ -11824,6 +11988,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -10
       _max: 10
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightUpLeg
     _hash: 1971262097
     _property: 0
@@ -11974,6 +12140,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -10
       _max: 10
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LeftShoulder
     _hash: 759586984
     _property: 0
@@ -12044,6 +12212,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -10
       _max: 10
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: RightShoulder
     _hash: -167360539
     _property: 0
@@ -12114,6 +12284,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: -10
       _max: 10
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: Mandible
     _hash: 1574626840
     _property: 2
@@ -12264,6 +12436,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.35
       _max: 1.35
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: Position
     _hash: -1084586333
     _property: 2
@@ -12534,6 +12708,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 2
+    _umaDNA:
+      dnaTypeHash: 1144010748
   - _hashName: LowerBack
     _hash: -919067556
     _property: 2
@@ -12684,6 +12860,8 @@ MonoBehaviour:
           _aggregationMethod: 1
       _min: 0.5
       _max: 3
+    _umaDNA:
+      dnaTypeHash: 1144010748
 --- !u!114 &114304921582309874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12828,7 +13006,7 @@ MonoBehaviour:
               outWeight: 0.33333334
             m_PreInfinity: 2
             m_PostInfinity: 2
-            m_RotationOrder: 0
+            m_RotationOrder: 4
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
@@ -13084,7 +13262,7 @@ MonoBehaviour:
               outWeight: 0.33333334
             m_PreInfinity: 2
             m_PostInfinity: 2
-            m_RotationOrder: 0
+            m_RotationOrder: 4
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
@@ -13160,7 +13338,7 @@ MonoBehaviour:
               outWeight: 0.33333334
             m_PreInfinity: 2
             m_PostInfinity: 2
-            m_RotationOrder: 0
+            m_RotationOrder: 4
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
@@ -13521,12 +13699,12 @@ MonoBehaviour:
               outWeight: 0.33333334
             m_PreInfinity: 2
             m_PostInfinity: 2
-            m_RotationOrder: 0
+            m_RotationOrder: 4
         _multiplier: 0.75
         _initialized: 1
       _aggregationMethod: 0
-  - _poseToApply: {fileID: 11400000, guid: 5ae99fcc22c8dc84fb9af444f4831a53, type: 2}
-    _startingPoseWeight: 0
+  - _poseToApply: {fileID: 11400000, guid: ef6e26a07163fe949a2543a5da963fe5, type: 2}
+    _startingPoseWeight: 1
     _modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
@@ -13566,7 +13744,7 @@ MonoBehaviour:
               outWeight: 0.33333334
             m_PreInfinity: 2
             m_PostInfinity: 2
-            m_RotationOrder: 0
+            m_RotationOrder: 4
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
@@ -13611,7 +13789,7 @@ MonoBehaviour:
               outWeight: 0.33333334
             m_PreInfinity: 2
             m_PostInfinity: 2
-            m_RotationOrder: 0
+            m_RotationOrder: 4
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0
@@ -13714,7 +13892,7 @@ MonoBehaviour:
               outWeight: 0.33333334
             m_PreInfinity: 2
             m_PostInfinity: 2
-            m_RotationOrder: 0
+            m_RotationOrder: 4
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0

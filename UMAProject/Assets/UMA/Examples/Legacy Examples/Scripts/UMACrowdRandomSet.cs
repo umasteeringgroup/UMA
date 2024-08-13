@@ -1,11 +1,9 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using UMA;
 
 namespace UMA.Examples
 {
-	public class UMACrowdRandomSet : ScriptableObject 
+    public class UMACrowdRandomSet : ScriptableObject 
 	{
 		public CrowdRaceData data;
 
@@ -111,23 +109,41 @@ namespace UMA.Examples
 			for (int i = 0; i < race.slotElements.Length; i++)
 			{
 				var currentElement = race.slotElements[i];
-				if (!string.IsNullOrEmpty(currentElement.requirement) && !slotParts.Contains(currentElement.requirement)) continue;
-				if (!string.IsNullOrEmpty(currentElement.condition))
+				if (!string.IsNullOrEmpty(currentElement.requirement) && !slotParts.Contains(currentElement.requirement))
+                {
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(currentElement.condition))
 				{
 					if (currentElement.condition.StartsWith("!"))
 					{
-						if (Keywords.Contains(currentElement.condition.Substring(1))) continue;
-					}
+						if (Keywords.Contains(currentElement.condition.Substring(1)))
+                        {
+                            continue;
+                        }
+                    }
 					else
 					{
-						if (!Keywords.Contains(currentElement.condition)) continue;
-					}
+						if (!Keywords.Contains(currentElement.condition))
+                        {
+                            continue;
+                        }
+                    }
 				}
-				if (currentElement.possibleSlots.Length == 0) continue;
-				int randomResult = Random.Range(0, currentElement.possibleSlots.Length);
+				if (currentElement.possibleSlots.Length == 0)
+                {
+                    continue;
+                }
+
+                int randomResult = Random.Range(0, currentElement.possibleSlots.Length);
 				var slot = currentElement.possibleSlots[randomResult];
-				if (string.IsNullOrEmpty(slot.slotID)) continue;
-				slotParts.Add(slot.slotID);
+				if (string.IsNullOrEmpty(slot.slotID))
+                {
+                    continue;
+                }
+
+                slotParts.Add(slot.slotID);
 				SlotData slotData;
 				if (slot.useSharedOverlayList && slot.overlayListSource >= 0 && slot.overlayListSource < i)
 				{
@@ -147,8 +163,12 @@ namespace UMA.Examples
 					var currentOverlayElement = slot.overlayElements[overlayIdx];
 					randomResult = Random.Range(0, currentOverlayElement.possibleOverlays.Length);
 					var overlay = currentOverlayElement.possibleOverlays[randomResult];
-					if (string.IsNullOrEmpty(overlay.overlayID)) continue;
-					overlay.UpdateVersion();
+					if (string.IsNullOrEmpty(overlay.overlayID))
+                    {
+                        continue;
+                    }
+
+                    overlay.UpdateVersion();
 					slotParts.Add(overlay.overlayID);
 					Color overlayColor = Color.black;
 					var overlayData = context.InstantiateOverlay(overlay.overlayID, overlayColor);
@@ -210,8 +230,12 @@ namespace UMA.Examples
 						{
 							Vector3 color = new Vector3(overlayColor.r, overlayColor.g, overlayColor.b);
 							var len = color.magnitude;
-							if (len < 1f) len = 1f;
-							color = new Vector3(1.001f, 1.001f, 1.001f) - color;
+							if (len < 1f)
+                            {
+                                len = 1f;
+                            }
+
+                            color = new Vector3(1.001f, 1.001f, 1.001f) - color;
 							color = color.normalized* len;
 							overlayColor = new Color(color.x, color.y, color.z, overlayColor.a);
 						}

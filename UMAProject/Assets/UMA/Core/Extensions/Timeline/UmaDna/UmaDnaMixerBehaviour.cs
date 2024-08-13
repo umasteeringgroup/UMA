@@ -14,7 +14,9 @@ namespace UMA.Timeline
         {
             DynamicCharacterAvatar avatar = playerData as DynamicCharacterAvatar;
             if (avatar == null || !Application.isPlaying)
+            {
                 return;
+            }
 
             Dictionary<string, DnaSetter> allDNA = avatar.GetDNA();
 
@@ -25,8 +27,9 @@ namespace UMA.Timeline
                 ScriptPlayable<UmaDnaBehaviour> inputPlayable = (ScriptPlayable<UmaDnaBehaviour>)playable.GetInput(i);
                 UmaDnaBehaviour input = inputPlayable.GetBehaviour();
 
-                foreach (UmaDnaBehaviour.DnaTuple dna in input.dnaValues)
+                for (int i1 = 0; i1 < input.dnaValues.Count; i1++)
                 {
+                    UmaDnaBehaviour.DnaTuple dna = input.dnaValues[i1];
                     if (allDNA.ContainsKey(dna.Name))
                     {
                         float currentValue = allDNA[dna.Name].Value * (1f - inputWeight);
@@ -35,7 +38,9 @@ namespace UMA.Timeline
                 }
 
                 if (input.rebuildImmediately)
+                {
                     avatar.ForceUpdate(true, false, false);
+                }
             }
         }
     }

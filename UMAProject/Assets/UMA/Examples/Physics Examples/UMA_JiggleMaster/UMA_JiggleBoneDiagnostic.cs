@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 //Based on jiggle bone code from Michael Cook (Fishypants), Adapted for UMA by Phil Taylor (DankP3).
 //
@@ -16,8 +14,9 @@ using UnityEngine;
 //	============================================================
 
 
-namespace UMA.Examples {
-	public class UMA_JiggleBoneDiagnostic : MonoBehaviour {
+namespace UMA.Examples
+{
+    public class UMA_JiggleBoneDiagnostic : MonoBehaviour {
 		public bool debugMode = true;
 
 		// Target and dynamic positions
@@ -103,19 +102,37 @@ namespace UMA.Examples {
 				// for the 0 values, we assume those are the sides, and 1 is the direction
 				// the bone is facing
 				float xStretch;
-				if (boneAxis.x == 0) xStretch = 1 + (-stretchMag * sideStretch);
-				else xStretch = 1 + (stretchMag * frontStretch);
+				if (boneAxis.x == 0)
+                {
+                    xStretch = 1 + (-stretchMag * sideStretch);
+                }
+                else
+                {
+                    xStretch = 1 + (stretchMag * frontStretch);
+                }
 
-				float yStretch;
-				if (boneAxis.y == 0) yStretch = 1 + (-stretchMag * sideStretch);
-				else yStretch = 1 + (stretchMag * frontStretch);
+                float yStretch;
+				if (boneAxis.y == 0)
+                {
+                    yStretch = 1 + (-stretchMag * sideStretch);
+                }
+                else
+                {
+                    yStretch = 1 + (stretchMag * frontStretch);
+                }
 
-				float zStretch;
-				if (boneAxis.z == 0) zStretch = 1 + (-stretchMag * sideStretch);
-				else zStretch = 1 + (stretchMag * frontStretch);
+                float zStretch;
+				if (boneAxis.z == 0)
+                {
+                    zStretch = 1 + (-stretchMag * sideStretch);
+                }
+                else
+                {
+                    zStretch = 1 + (stretchMag * frontStretch);
+                }
 
-				// Set the bone scale
-				transform.localScale = new Vector3(xStretch, yStretch, zStretch);
+                // Set the bone scale
+                transform.localScale = new Vector3(xStretch, yStretch, zStretch);
 			}
 
 			// ==================================================

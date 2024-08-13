@@ -1,4 +1,3 @@
-﻿using System.Collections;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
 using UnityEngine;
@@ -10,6 +9,7 @@ public class ConstructDCAFromAPrefab : MonoBehaviour
     public List<UMAWardrobeRecipe> wardrobeItems;
     public Color hairColor = Color.red;
     public GameObject DCAPrefab;
+    [TextArea(3, 12)]
     public string CharacterString;
 
     // Start is called before the first frame update
@@ -47,7 +47,7 @@ public class ConstructDCAFromAPrefab : MonoBehaviour
         }
         else
         {
-            DCA.LoadFromRecipeString(CharacterString);
+            DCA.LoadAvatarDefinition(CharacterString);
             go.transform.position = new Vector3(0f, 0.5f, 0f);
             go.SetActive(true);
         }

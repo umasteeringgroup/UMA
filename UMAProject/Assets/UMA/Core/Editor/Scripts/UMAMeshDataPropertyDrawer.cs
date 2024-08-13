@@ -1,14 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 
 namespace UMA.Editors
 {
-	[CustomPropertyDrawer(typeof(UMAMeshData))]
+    [CustomPropertyDrawer(typeof(UMAMeshData))]
 	public class UMAMeshDataPropertyDrawer : PropertyDrawer
 	{
-		private bool foldout = false;
+		public static bool foldout = false;
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
@@ -18,8 +16,8 @@ namespace UMA.Editors
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			//EditorGUI.BeginProperty(position, label, property);
-
-			foldout = EditorGUILayout.Foldout(foldout, "MeshData");
+			foldout = EditorGUILayout.Foldout(foldout, "MeshData"); // weird. Unity things this changes the object now. Changed Foldout to static, and reset the changed value to false.
+			GUI.changed = false;
 			if (foldout)
 			{
 				EditorGUI.indentLevel++;
@@ -36,6 +34,7 @@ namespace UMA.Editors
 				SerializedProperty umaBoneCount = PropertyCheck(property, "umaBoneCount");
 				SerializedProperty rootBoneName = PropertyCheck(property, "RootBoneName");
 				SerializedProperty blendshapes = PropertyCheck(property, "blendShapes");
+				SerializedProperty bones = PropertyCheck(property, "umaBones");
 
 				EditorGUILayout.LabelField( "Vertex Count", vertexCount.intValue.ToString());
 				EditorGUILayout.LabelField("Normals Count", normals.arraySize.ToString());
@@ -51,8 +50,8 @@ namespace UMA.Editors
 				EditorGUILayout.LabelField("RootBoneName", rootBoneName.stringValue);
 				EditorGUILayout.LabelField("BlendShape Count", blendshapes.arraySize.ToString());
 				EditorGUILayout.PropertyField( blendshapes, true );
-
-				EditorGUI.indentLevel--;
+				EditorGUILayout.PropertyField(bones, true);
+                EditorGUI.indentLevel--;
 			}
 
 			//EditorGUI.EndProperty();
@@ -62,8 +61,11 @@ namespace UMA.Editors
 		{
 			SerializedProperty prop = property.FindPropertyRelative(relativeName);
 			if (prop == null)
-				Debug.LogError(string.Format("{0} property not found!", relativeName));
-			return prop;
+            {
+                Debug.LogError(string.Format("{0} property not found!", relativeName));
+            }
+
+            return prop;
 		}
 	}
 }

@@ -13,16 +13,20 @@ MonoBehaviour:
   m_Name: MaleAnkles_Recipe
   m_EditorClassIdentifier: 
   label: 
+  resourcesOnly: 0
   recipeType: Wardrobe
   DisplayValue: MaleAnkles
   compatibleRaces: []
   wardrobeRecipeThumbs: []
   wardrobeSlot: None
+  Appended: 0
   Hides: []
+  HideTags: []
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
-  AddressableLabel: 
+  OverrideDNA:
+    PreloadValues: []
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"MaleAnkles","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Bod
     Overlay 1","colorIdx":0,"rect":[0,0,0,0]}]}],"colors":[],"fColors":[{"name":"Skin","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":1,"race":"","packedDna":[]}'
   IncompatibleRecipes: []

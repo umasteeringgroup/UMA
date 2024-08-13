@@ -1,16 +1,16 @@
 using UnityEngine;
 using UnityEditor;
-using UMA;
 using UMA.CharacterSystem;
 using System.Collections.Generic;
 using System.IO;
 using UMA.Examples;
 using UMA.PoseTools;
-using static UMA.UMAPackedRecipeBase;
+using static UMA.UMAData;
+using UnityEngine.Experimental.Rendering;
 
 namespace UMA.Editors
 {
-	public class UMAAvatarLoadSaveMenuItems : Editor
+    public class UMAAvatarLoadSaveMenuItems : Editor
 	{
 		[UnityEditor.MenuItem("GameObject/UMA/Save Mecanim Avatar to Asset (runtime only)")]
 		[MenuItem("UMA/Runtime/Save Selected Avatars Mecanim Avatar to Asset", priority = 1)]
@@ -125,7 +125,7 @@ namespace UMA.Editors
 							}
 						}
 					}
-					string matname = Folder + "/"+CharName+"_Mat_" + Material + ".mat";
+					string matname = Folder + "/"+CharName+"_Mat_" + Material + ".mat"; 
 					CustomAssetUtility.SaveAsset<Material>(m, matname);
 					Material++;
 					// Save the material to disk?
@@ -135,6 +135,7 @@ namespace UMA.Editors
 				string meshName = Folder + "/"+CharName+"_Mesh_" + meshno + ".asset";
 				meshno++;
 				// Save Mesh to disk.
+				// smr.sharedMesh.Optimize(); This blows up some versions of Unity.
 				CustomAssetUtility.SaveAsset<Mesh>(smr.sharedMesh, meshName);
 				smr.sharedMaterials = mats;
 				smr.materials = mats;
@@ -148,9 +149,12 @@ namespace UMA.Editors
 
 			DestroyImmediate(avatar);
 			var lod = baseObject.GetComponent<UMASimpleLOD>();
-			if (lod != null) DestroyImmediate(lod);
+			if (lod != null)
+            {
+                DestroyImmediate(lod);
+            }
 
-			if (AddStandaloneDNA)
+            if (AddStandaloneDNA)
 			{
 				UMAData uda = baseObject.GetComponent<UMAData>();
 				StandAloneDNA sda = baseObject.AddComponent<UMA.StandAloneDNA>();
@@ -165,19 +169,25 @@ namespace UMA.Editors
 			else
 			{
 				var ud = baseObject.GetComponent<UMAData>();
-				if (ud != null) DestroyImmediate(ud);
-			}
+				if (ud != null)
+                {
+                    DestroyImmediate(ud);
+                }
+            }
 			var ue = baseObject.GetComponent<UMAExpressionPlayer>();
-			if (ue != null) DestroyImmediate(ue);
+			if (ue != null)
+            {
+                DestroyImmediate(ue);
+            }
 
-			baseObject.name = CharName;
+            baseObject.name = CharName;
 			string prefabName = Folder + "/"+CharName+".prefab";
 			prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
 			PrefabUtility.SaveAsPrefabAssetAndConnect(baseObject, prefabName, InteractionMode.AutomatedAction);
 		}
 
 
-		[UnityEditor.MenuItem("GameObject/UMA/Save Atlas Textures (runtime only)")]
+		[UnityEditor.MenuItem("GameObject/UMA/Save Atlas Textures")]
 		[MenuItem("CONTEXT/DynamicCharacterAvatar/Save Selected Avatars generated textures to PNG", false, 10)]
 		[MenuItem("UMA/Runtime/Save Selected Avatar Atlas Textures")]
 		public static void SaveSelectedAvatarsPNG()
@@ -209,6 +219,38 @@ namespace UMA.Editors
 			{
 				string basename = System.IO.Path.GetFileNameWithoutExtension(path);
 				string pathname = System.IO.Path.GetDirectoryName(path);
+
+                // Get the UMAMaterials for each atlas.
+
+                UMAData umaData = avatar.umaData;
+                GeneratedMaterials gmatContainer = umaData.generatedMaterials;
+
+				int i = 0;
+				foreach (var gm in gmatContainer.materials)
+				{
+					UMAMaterial umat = gm.umaMaterial;
+					Material mat = gm.skinnedMeshRenderer.sharedMaterials[gm.materialIndex];
+                    Material omat = gm.material;
+					foreach(var tex in umat.GetTexturePropertyNames())
+                    {
+                        Texture texture = mat.GetTexture(tex);
+                        if (texture != null)
+						{
+							string tname = $"{pathname}/{basename}_{i}_{umat.name}{tex}.PNG";
+							try
+							{
+								SaveTexture(texture, tname);
+							}
+                            catch  
+                            { 
+								// Not a readable texture. This is actually OK. Wish isReadable wasn't broken.
+                            }
+                        }
+                    }
+					i++;
+                }
+
+                /*
 				// save the diffuse texture
 				for (int i = 0; i < smr.materials.Length; i++)
 				{
@@ -221,10 +263,13 @@ namespace UMA.Editors
 					{
 						string texname = PathBase + tex + ".PNG";
 						Texture texture = mat.GetTexture(tex);
-						if (texture != null) SaveTexture(texture, texname);
-					}
-				}
-			}
+						if (texture != null)
+                        {
+                            SaveTexture(texture, texname);
+                        }
+                    }
+				}*/
+            }
 		}
 
 		private static void SaveTexture(Texture texture, string diffuseName, bool isNormal = false)
@@ -244,7 +289,7 @@ namespace UMA.Editors
 
 		/// <param name="normalMap"></param>
 		/// <returns></returns>
-		private static Texture2D sconvertNormalMap(Texture2D normalMap)
+		private static Texture2D SConvertNormalMap(Texture2D normalMap)
 		{
 			ComputeShader normalMapConverter = Resources.Load<ComputeShader>("Shader/NormalShader");
 			int kernel = normalMapConverter.FindKernel("NormalConverter");
@@ -264,7 +309,7 @@ namespace UMA.Editors
 			return convertedNormalMap;
 		}
 
-		private static Texture2D sconvertNormalMap(RenderTexture normalMap)
+		private static Texture2D SConvertNormalMap(RenderTexture normalMap)
 		{
 			ComputeShader normalMapConverter = Resources.Load<ComputeShader>("Shader/NormalShader");
 			int kernel = normalMapConverter.FindKernel("NormalConverter");
@@ -287,7 +332,7 @@ namespace UMA.Editors
 		private static Texture2D sconvertNormalMap2(RenderTexture rt)
 		{
 			Texture2D tex = GetRTPixels(rt);
-			Texture2D result = sconvertNormalMap(tex);
+			Texture2D result = SConvertNormalMap(tex);
 			DestroyImmediate(tex);
 			return result;
 		}
@@ -295,16 +340,21 @@ namespace UMA.Editors
 		private static Texture2D sconvertNormalMap(Texture tex)
 		{
 			if (tex is RenderTexture)
-				return sconvertNormalMap(tex as RenderTexture);
+            {
+                return SConvertNormalMap(tex as RenderTexture);
+            }
 
-			return sconvertNormalMap(tex as Texture2D);
+            return SConvertNormalMap(tex as Texture2D);
 		}
 
 		static public Texture2D GetRTPixels(RenderTexture rt)
 		{
-			/// Some goofiness ends up with the texture being too dark unless
-			/// I send it to a new render texture.
-			RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32);
+            // Remember crrently active render texture
+            RenderTexture currentActiveRT = RenderTexture.active;
+
+            /// Some goofiness ends up with the texture being too dark unless
+            /// I send it to a new render texture.
+            RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB); 
 			outputMap.enableRandomWrite = true;
 			outputMap.Create();
 			RenderTexture.active = outputMap;
@@ -312,8 +362,6 @@ namespace UMA.Editors
 			Graphics.Blit(rt, outputMap);
 
 
-			// Remember currently active render texture
-			RenderTexture currentActiveRT = RenderTexture.active;
 
 			// Set the supplied RenderTexture as the active one
 			RenderTexture.active = outputMap;
@@ -328,13 +376,31 @@ namespace UMA.Editors
 			return tex;
 		}
 
-		private static void SaveRenderTexture(RenderTexture texture, string textureName, bool isNormal = false)
+        static public void LinearSave(RenderTexture rt, string textureName)
+        {
+            // Remember crrently active render texture
+            RenderTexture currentActiveRT = RenderTexture.active;
+
+            // Set the supplied RenderTexture as the active one
+            RenderTexture.active = rt;
+
+            // Create a new Texture2D and read the RenderTexture image into it
+            Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.ARGB32, false, true);
+            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+
+            // Restore previously active render texture
+            RenderTexture.active = currentActiveRT;
+            SaveTexture2D(tex, textureName);
+            
+        }
+
+        public static void SaveRenderTexture(RenderTexture texture, string textureName, bool isNormal = false)
 		{
 			Texture2D tex;
 
 			if (isNormal)
 			{
-				tex = sconvertNormalMap(texture);
+				tex = SConvertNormalMap(texture);
 			}
 			else
 			{
@@ -345,14 +411,13 @@ namespace UMA.Editors
 
 		private static void SaveTexture2D(Texture2D texture, string textureName)
 		{
-			if (texture.isReadable)
-			{
-				byte[] data = texture.EncodeToPNG();
+            // ?? texture.isReadable seems to always return true, regardless of whether the texture is readable or not
+            // so we'll just try to encode it and see if it throws an exception
+			// This didn't use to be the case, and may be fixed in various Unity versions...
+            //if (texture.isReadable)
+            {
+                byte[] data = texture.EncodeToPNG();
 				System.IO.File.WriteAllBytes(textureName, data);
-			}
-			else
-			{
-				Debug.LogError("Texture: " + texture.name + " is not readable. Skipping.");
 			}
 		}
 
@@ -671,8 +736,10 @@ namespace UMA.Editors
 				if (UAI.IsIndexedType(type))
 				{
 					if (UAI.EvilAddAsset(type, o))
-						added++;
-				}
+                    {
+                        added++;
+                    }
+                }
 			}
 			UAI.ForceSave();
 			EditorUtility.DisplayDialog("Success", added + " item(s) added to Global Library", "OK");
@@ -714,7 +781,9 @@ namespace UMA.Editors
 			EditorGUILayout.LabelField("UMA Prefab Saver", EditorStyles.boldLabel);
 			EditorGUILayout.HelpBox("This will convert an UMA avatar into a non-UMA prefab. Once converted, it can be reused with little overhead, but all UMA functionality will be lost.", MessageType.None, false);
 			baseObject = (UMAAvatarBase)EditorGUILayout.ObjectField("UMA Avatar",baseObject, typeof(UMAAvatarBase),true);
+			EditorGUILayout.HelpBox("If you unswizzle normals (recommended) then they can be used in other applications, and UMA will automatically mark them as normal maps in the import settings.", MessageType.None);
 			UnswizzleNormalMaps = EditorGUILayout.Toggle("Unswizzle Normals", UnswizzleNormalMaps);
+			EditorGUILayout.HelpBox("Adding Standalone DNA will allow you to adjust most DNA of the character, without it being an UMA. However, it will require that you have the UMA system in the project.",MessageType.None);
 			AddStandaloneDNA = EditorGUILayout.Toggle("Add Standalone DNA", AddStandaloneDNA);
 			CharacterName = EditorGUILayout.TextField("Prefab Name", CharacterName);
 			prefabFolder = EditorGUILayout.ObjectField("Prefab Base Folder", prefabFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;

@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UMA.CharacterSystem;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
@@ -30,16 +29,23 @@ namespace UMA.CharacterSystem.Examples
 
             AddLabel(SlotName);
 			if (this.SlotName != "WardrobeCollection")
-	           AddButton("Remove", SlotName);
+            {
+                AddButton("Remove", SlotName);
+            }
 
             // Find all the wardrobe items for the current slot, and create a button for them.
-            foreach (UMATextRecipe utr in SlotRecipes)
+            for (int i = 0; i < SlotRecipes.Count; i++)
             {
+                UMATextRecipe utr = SlotRecipes[i];
                 string name;
                 if (string.IsNullOrEmpty(utr.DisplayValue))
+                {
                     name = utr.name;
+                }
                 else
+                {
                     name = utr.DisplayValue;
+                }
 
                 AddButton(name, SlotName, utr);
             }
@@ -48,7 +54,7 @@ namespace UMA.CharacterSystem.Examples
         private void AddLabel(string theText)
         {
             GameObject go = GameObject.Instantiate(LabelPrefab);
-            go.transform.SetParent(WardrobePanel.transform);
+            go.transform.SetParent(WardrobePanel.transform, false) ;
             Text txt = go.GetComponentInChildren<Text>();
             txt.text = theText;
         }
@@ -60,7 +66,7 @@ namespace UMA.CharacterSystem.Examples
             wh.Setup(Avatar, utr, SlotName,theText);
 			wh.SetColors();
 
-			go.transform.SetParent(WardrobePanel.transform);
+			go.transform.SetParent(WardrobePanel.transform,false);
         }
 
         private void Cleanup()

@@ -1,8 +1,10 @@
 fileFormatVersion: 2
 guid: 27cecc42eea01ba4080fa8703b35100f
-timeCreated: 1460045303
-licenseType: Free
+labels:
+- UMA_Slot
 NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 

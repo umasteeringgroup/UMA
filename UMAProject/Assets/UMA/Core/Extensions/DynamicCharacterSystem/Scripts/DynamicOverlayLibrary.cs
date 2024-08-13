@@ -1,6 +1,5 @@
 using UnityEngine;
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 using System.Collections.Generic;
 
@@ -92,12 +91,21 @@ namespace UMA.CharacterSystem
 
         public void UpdateDynamicOverlayLibrary(int? nameHash = null)
         {
-                DynamicAssetLoader.Instance.AddAssets<OverlayDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, nameHash, "", AddOverlayAssets);
+            var Overlays = UMAAssetIndexer.Instance.GetAllAssets<OverlayDataAsset>();
+
+            if (nameHash != null)
+            {
+                Overlays.RemoveAll(x => x.nameHash != nameHash);
+            }
+            AddOverlayAssets(Overlays.ToArray());
         }
 
         public void UpdateDynamicOverlayLibrary(string overlayName)
         {
-                DynamicAssetLoader.Instance.AddAssets<OverlayDataAsset>(ref assetBundlesUsedDict, dynamicallyAddFromResources, dynamicallyAddFromAssetBundles, downloadAssetsEnabled, assetBundleNamesToSearch, resourcesFolderPath, null, overlayName, AddOverlayAssets);
+            var Overlays = UMAAssetIndexer.Instance.GetAllAssets<OverlayDataAsset>();
+
+            Overlays.RemoveAll(x => x.overlayName != overlayName);
+            AddOverlayAssets(Overlays.ToArray());
         }
 
     #pragma warning disable 618

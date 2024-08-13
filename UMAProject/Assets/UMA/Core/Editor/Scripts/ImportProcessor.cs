@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -13,23 +12,31 @@ namespace UMA
         {
             string UMAVER = "UMA " + UmaAboutWindow.umaVersion;
             if (BuildPipeline.isBuildingPlayer || UnityEditorInternal.InternalEditorUtility.inBatchMode || Application.isPlaying)
+            {
                 return;
-
+            }
 
             if (EditorPrefs.GetString("UMA_VERSION", "0") != UmaAboutWindow.umaVersion)
-            {                
+            {
+                EnsureTags();
+                EnsureUMAIndicators();
                 UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
                 if (UAI == null)
+                {
                     return;
+                }
 
                 int chosen = EditorUtility.DisplayDialogComplex("UMA " + UmaAboutWindow.umaVersion, "New UMA version imported. The global index should be rebuilt or restored (if you made a backup). (If you don't know what this means, choose 'Rebuild Index')", "Rebuild Index", "Restore from backup", "Do nothing");
 
                 switch (chosen)
                 {
                     case 0:
+                        UAI.SaveKeeps();
                         UAI.Clear();
                         UAI.BuildStringTypes();
                         UAI.AddEverything(false);
+                        UAI.RestoreKeeps();
+                        UAI.ForceSave();
                         Resources.UnloadUnusedAssets();
                         EditorUtility.DisplayDialog(UMAVER, "Index rebuild complete", "OK");
                         break;
@@ -67,6 +74,47 @@ namespace UMA
                 }
                 EditorPrefs.SetString("UMA_VERSION", UmaAboutWindow.umaVersion);
             }
+        }
+
+        private static void EnsureUMAIndicators()
+        {
+            var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+            if (!defineSymbols.Contains("UMA_INSTALLED"))
+            {
+                defineSymbols.Add("UMA_INSTALLED");
+                PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
+            }
+        }
+
+        private static void EnsureTags()
+        {
+            // Open tag manager
+            SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            EnsureTag("UMAIgnore", tagManager);
+            EnsureTag("UMAKeepChain", tagManager);
+        }
+
+        private static void EnsureTag(string s, SerializedObject tagManager)
+        {
+            SerializedProperty tagsProp = tagManager.FindProperty("tags");
+
+
+            // First check if it is not already present
+            for (int i = 0; i < tagsProp.arraySize; i++)
+            {
+                SerializedProperty t = tagsProp.GetArrayElementAtIndex(i);
+                if (t.stringValue.Equals(s))
+                {
+                    return;
+                }
+            }
+
+            tagsProp.InsertArrayElementAtIndex(0);
+            SerializedProperty n = tagsProp.GetArrayElementAtIndex(0);
+            n.stringValue = s;
+
+            // and to save the changes
+            tagManager.ApplyModifiedProperties();
         }
     }
 }

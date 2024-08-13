@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+
 
 public class UMABoneVisualizer : MonoBehaviour
 {
@@ -19,10 +18,14 @@ public class UMABoneVisualizer : MonoBehaviour
     void Start()
     {
         if (rootNode == null || BoneMesh == null)
+        {
             Setup();
+        }
 
         if (Application.isPlaying)
+        {
             Debug.LogWarning(string.Format("The BoneVisualizer on {0} is a helper component and should be removed for a final build.", gameObject.name ));
+        }
     }
 
     /// <summary>
@@ -31,9 +34,14 @@ public class UMABoneVisualizer : MonoBehaviour
     private void Setup()
     {
         if (rootNode == null)
+        {
             rootNode = RecursiveFindBone(this.gameObject.transform, "Hips");
+        }
+
         if (BoneMesh == null)
+        {
             BoneMesh = Resources.Load<Mesh>("PlaceholderAssets/BoneMesh");
+        }
     }
 
     /// <summary>
@@ -44,13 +52,18 @@ public class UMABoneVisualizer : MonoBehaviour
     /// <returns></returns>
     private Transform RecursiveFindBone(Transform bone, string boneName)
     {
-        if (bone.name == boneName) return bone;
+        if (bone.name == boneName)
+        {
+            return bone;
+        }
 
         for (int i = 0; i < bone.childCount; i++)
         {
             var result = RecursiveFindBone(bone.GetChild(i), boneName);
             if (result != null)
+            {
                 return result;
+            }
         }
         return null;
     }
@@ -58,8 +71,10 @@ public class UMABoneVisualizer : MonoBehaviour
 	private void OnDrawGizmos()
 	{
 		if (AlwaysDrawGizmos)
-			DrawBoneGizmos();
-	}
+        {
+            DrawBoneGizmos();
+        }
+    }
 
 	/// <summary>
 	/// Draw the bones
@@ -87,7 +102,11 @@ public class UMABoneVisualizer : MonoBehaviour
 
             foreach (Transform child in childNodes)
             {
-
+                if (transform == null)
+                {
+                    Setup();
+                    return;
+                }
                 if (child == rootNode)
                 {
                     //list includes the root, if root then larger, green cube
@@ -118,10 +137,19 @@ public class UMABoneVisualizer : MonoBehaviour
                         Vector3 relativePos = child.transform.position - child.parent.transform.position;
 
                         if (relativePos.magnitude < 0.001f)
+                        {
                             continue;
+                        }
 
                         Quaternion rotation = (relativePos == Vector3.zero) ? Quaternion.identity : Quaternion.LookRotation(relativePos);
+#if UNITY_EDITOR
+                        if (child == UnityEditor.Selection.activeTransform)
+                        {
+                            Gizmos.color = Color.yellow;
+                        }
+#endif
                         Gizmos.DrawMesh(BoneMesh, child.parent.position, rotation, Scale);
+                        Gizmos.color = Color.green;
                     }
                     else
                     {
@@ -141,6 +169,8 @@ public class UMABoneVisualizer : MonoBehaviour
     public void PopulateChildren()
     {
         if (rootNode != null)
+        {
             childNodes = rootNode.GetComponentsInChildren<Transform>();
+        }
     }
 }

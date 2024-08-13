@@ -29,8 +29,10 @@ namespace UMA.Examples
 		
 		void Awake () {
 			if (!lookupTexture)
-				Bake ();
-		}
+            {
+                Bake ();
+            }
+        }
 		
 		static Color ColorRGB (int r, int g, int b) {
 			return new Color ((float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f, 0.0f);
@@ -79,7 +81,8 @@ namespace UMA.Examples
 		void TextureFunc (Texture2D tex)
 		{
 			for (int y = 0; y < tex.height; ++y)
-				for (int x = 0; x < tex.width; ++x)
+            {
+                for (int x = 0; x < tex.width; ++x)
 				{
 					float w = tex.width;
 					float h = tex.height;
@@ -91,23 +94,31 @@ namespace UMA.Examples
 					Color c = PixelFunc (NdotL, NdotH);
 					tex.SetPixel(x, y, c);
 				}
-		}
+            }
+        }
 		
 		void GenerateLookupTexture (int width, int height) {
 			Texture2D tex;
 			if (lookupTexture && lookupTexture.width == width && lookupTexture.height == height)
-				tex = lookupTexture;
-			else
-				tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
-			
-			CheckConsistency ();
+            {
+                tex = lookupTexture;
+            }
+            else
+            {
+                tex = new Texture2D(width, height, TextureFormat.ARGB32, false);
+            }
+
+            CheckConsistency ();
 			TextureFunc (tex);
 			tex.Apply();
 			tex.wrapMode = TextureWrapMode.Clamp;
 		
 			if (lookupTexture != tex)
-				DestroyImmediate (lookupTexture);
-			lookupTexture = tex;
+            {
+                DestroyImmediate (lookupTexture);
+            }
+
+            lookupTexture = tex;
 		}
 
 		public void Preview () {

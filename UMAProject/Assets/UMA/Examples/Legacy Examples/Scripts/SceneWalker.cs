@@ -76,15 +76,23 @@ namespace UMA.Examples
 		void ChangePosition(float Speed)
 		{
 			Vector3 NewPosition = transform.position + Camera.main.transform.forward * Speed * Time.deltaTime;
-			if (!flyMode) NewPosition.y = transform.position.y;
-			transform.position = NewPosition;
+			if (!flyMode)
+            {
+                NewPosition.y = transform.position.y;
+            }
+
+            transform.position = NewPosition;
 		}
 
 		void StrafePosition(float Speed)
 		{
 			Vector3 NewPosition = transform.position + Camera.main.transform.right * Speed * Time.deltaTime;
-			if (!flyMode) NewPosition.y = transform.position.y;
-			transform.position = NewPosition;
+			if (!flyMode)
+            {
+                NewPosition.y = transform.position.y;
+            }
+
+            transform.position = NewPosition;
 		}
 
 		void Start()
@@ -98,21 +106,32 @@ namespace UMA.Examples
 		{
 			// first, need to make sure it wraps correctly.
 			while (angle < 0.0F)
-				angle += 360F;
-			while (angle > 360F)
-				angle -= 360F;
-			return angle;
+            {
+                angle += 360F;
+            }
+
+            while (angle > 360F)
+            {
+                angle -= 360F;
+            }
+
+            return angle;
 		}
 
 		public static float ClampAngle(float angle, float min, float max)
 		{
 			// first, need to make sure it wraps correctly.
 			while (angle < -360F)
-				angle += 360F;
-			while (angle > 360F)
-				angle -= 360F;
-			// once it wraps, then we clamp.
-			return Mathf.Clamp(angle, min, max);
+            {
+                angle += 360F;
+            }
+
+            while (angle > 360F)
+            {
+                angle -= 360F;
+            }
+            // once it wraps, then we clamp.
+            return Mathf.Clamp(angle, min, max);
 		}
 	}
 }

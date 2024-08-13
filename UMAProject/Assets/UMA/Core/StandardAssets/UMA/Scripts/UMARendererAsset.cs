@@ -1,6 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using Unity.Collections;
+
+#if UMA_BURSTCOMPILE
+using Unity.Jobs;
+#endif
 
 namespace UMA
 {
@@ -25,6 +28,8 @@ namespace UMA
         public UnityEngine.Rendering.ShadowCastingMode CastShadows { get { return _CastShadows; } }
         public bool ReceiveShadows { get { return _ReceiveShadows; } }
         public UMAClothProperties ClothProperties { get { return _ClothProperties; } }
+        public bool RecalculateNormals { get { return _RecalculateNormals; } }
+        public float NormalAngle { get { return _NormalAngle; } }
         #endregion
 
         #region Private variables
@@ -49,7 +54,17 @@ namespace UMA
         [Header("Cloth")]
         [Tooltip("The cloth properties asset to apply to this renderer. Use this only if planning to use the cloth component with this material.")]
         [SerializeField] private UMAClothProperties _ClothProperties = null;
-        #endregion
+
+        [Header("Build Options")]
+        [Tooltip("If true, the normals will be recalculated on the mesh when it is created. Requires BURST option in preferences.")]
+        [SerializeField] private bool _RecalculateNormals = false;
+        [Tooltip("The angle to use when recalculating normals.")]
+        [SerializeField] private float _NormalAngle = 60f;
+#if UMA_BURSTCOMPILE
+        [Tooltip("The name of the blendshape to use when recalculating normals.")]
+        [SerializeField] private string blendShapeNameStartsWith = "";
+#endif
+#endregion
 
         /// <summary>
         /// Sets the Skinned Mesh Renderer to the values on this UMA Renderer Asset.
@@ -58,7 +73,9 @@ namespace UMA
         public void ApplySettingsToRenderer(SkinnedMeshRenderer smr)
         {
             if(!string.IsNullOrEmpty(RendererName))
+            {
                 smr.name = RendererName;
+            }
 
             smr.gameObject.layer = _Layer;
 #if UNITY_2018_3_OR_NEWER
@@ -73,15 +90,75 @@ namespace UMA
 #endif
             smr.shadowCastingMode = _CastShadows;
             smr.receiveShadows = _ReceiveShadows;
+#if UMA_BURSTCOMPILE
+            if (_RecalculateNormals)
+            {
+                Recalculate(smr);
+            }
+#endif
         }
 
+#if UMA_BURSTCOMPILE
+        private void Recalculate(SkinnedMeshRenderer smr)
+        {
+            if (_RecalculateNormals)
+            {
+                NativeArray<Vector3> vertices = new NativeArray<Vector3>(smr.sharedMesh.vertices, Allocator.TempJob);
+                NativeArray<Vector3> normals = new NativeArray<Vector3>(smr.sharedMesh.normals, Allocator.TempJob);
+                NativeArray<Vector2> uvs = new NativeArray<Vector2>(smr.sharedMesh.uv, Allocator.TempJob);
+                NativeArray<Vector4> tangents = new NativeArray<Vector4>(smr.sharedMesh.tangents, Allocator.TempJob);
+                NativeArray<int> triangles = new NativeArray<int>(smr.sharedMesh.triangles, Allocator.TempJob);
+                Vector3[] deltaVertices = new Vector3[vertices.Length];
+                JobHandle handle = default;
+
+                int blendShapeCount = smr.sharedMesh.blendShapeCount;
+                for (int shapeIndex = 0; shapeIndex < blendShapeCount; shapeIndex++)
+                {
+                    float weight = smr.GetBlendShapeWeight(shapeIndex);
+                    if (weight > 0f)
+                    {
+                        weight /= 100f; //bring the weight into 0-1 range.
+
+                        string blendShapeName = smr.sharedMesh.GetBlendShapeName(shapeIndex);
+                        if (blendShapeName.StartsWith(blendShapeNameStartsWith))
+                        {
+                            smr.sharedMesh.GetBlendShapeFrameVertices(shapeIndex, 0, deltaVertices, null, null);
+                            NativeArray<Vector3> blendShapeDeltaVertices = new NativeArray<Vector3>(deltaVertices, Allocator.TempJob);
+
+                            handle = MeshUtilities.BakeOneFramePositionBlendShape(vertices, blendShapeDeltaVertices, weight, handle);
+                        }
+                    }
+                }
+                handle = MeshUtilities.RecalculateNormalsTangentsJobified(vertices, normals, uvs, tangents, triangles, this.NormalAngle, handle);
+
+                handle.Complete();
+
+                //We don't need to do this if we know our mesh is a single instance!
+                //Mesh mesh = Instantiate<Mesh>(smr.sharedMesh);
+                Mesh mesh = smr.sharedMesh;
+
+                //mesh.SetVertices(vertices); //don't update the vertices if the blendshapes are going to continue...
+                mesh.SetNormals(normals);
+                mesh.SetUVs(0, uvs);
+                mesh.SetTangents(tangents);
+
+                smr.sharedMesh = mesh;
+
+                vertices.Dispose();
+                normals.Dispose();
+                uvs.Dispose();
+                tangents.Dispose();
+                triangles.Dispose();
+            }
+        }
+#endif
         /// <summary>
         /// Reset the given Skinned Mesh Renderer to default values.
         /// </summary>
         /// <param name="renderer"></param>
         static public void ResetRenderer(SkinnedMeshRenderer renderer)
         {
-            renderer.gameObject.layer = 0;
+            // renderer.gameObject.layer = 0;
 #if UNITY_2018_3_OR_NEWER
             renderer.renderingLayerMask = 1;
             renderer.rendererPriority = 0;

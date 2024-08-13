@@ -1,16 +1,14 @@
 ﻿//Based on jiggle bone code from Michael Cook (Fishypants), Adapted for UMA by Phil Taylor (DankP3).
 
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UMA;
 using UMA.CharacterSystem;
 
 namespace UMA.Examples
 {
 
-	public class UMA_JiggleBreasts : MonoBehaviour
+    public class UMA_JiggleBreasts : MonoBehaviour
 	{
 
 		//TODO, need to distinguish between male and female; need to calculate vectors for male rig; need to assign male and female vectors as required.
@@ -76,20 +74,27 @@ namespace UMA.Examples
 		void OnEnable()
 		{
 			if (_avatar != null)
-				_avatar.CharacterUpdated.AddListener(AvatarUpdated);
-		}
+            {
+                _avatar.CharacterUpdated.AddListener(AvatarUpdated);
+            }
+        }
 		void OnDisable()
 		{
 			if (_avatar != null)
-				_avatar.CharacterUpdated.RemoveListener(AvatarUpdated);
-		}
+            {
+                _avatar.CharacterUpdated.RemoveListener(AvatarUpdated);
+            }
+        }
 
 		void Init()
 		{
 			_avatar = GetComponent<DynamicCharacterAvatar>();
-			if (_avatar == null) return;
+			if (_avatar == null)
+            {
+                return;
+            }
 
-			_dna = _avatar.GetDNA();
+            _dna = _avatar.GetDNA();
 			_initialized = false;
 			_skeleton = GetSkeleton(_avatar.activeRace.name);
 			//Check if current skeleton is supported by jigglebone recipe and only run this code if the avatar has changed
@@ -279,19 +284,35 @@ namespace UMA.Examples
 				float xStretch;
 				float yStretch;
 				float zStretch;
-				if (_boneAxis.x == 0) xStretch = 1 + (-stretchMag * _sideStretch);
-				else xStretch = 1 + (stretchMag * _frontStretch);
+				if (_boneAxis.x == 0)
+                {
+                    xStretch = 1 + (-stretchMag * _sideStretch);
+                }
+                else
+                {
+                    xStretch = 1 + (stretchMag * _frontStretch);
+                }
 
+                if (_boneAxis.y == 0)
+                {
+                    yStretch = 1 + (-stretchMag * _sideStretch);
+                }
+                else
+                {
+                    yStretch = 1 + (stretchMag * _frontStretch);
+                }
 
-				if (_boneAxis.y == 0) yStretch = 1 + (-stretchMag * _sideStretch);
-				else yStretch = 1 + (stretchMag * _frontStretch);
+                if (_boneAxis.z == 0)
+                {
+                    zStretch = 1 + (-stretchMag * _sideStretch);
+                }
+                else
+                {
+                    zStretch = 1 + (stretchMag * _frontStretch);
+                }
 
-
-				if (_boneAxis.z == 0) zStretch = 1 + (-stretchMag * _sideStretch);
-				else zStretch = 1 + (stretchMag * _frontStretch);
-
-				// Set the bone scale
-				_anatomyScaleFactor = jiggler.AnatomyScaleFactor;
+                // Set the bone scale
+                _anatomyScaleFactor = jiggler.AnatomyScaleFactor;
 				_monitoredBone.localScale = new Vector3(xStretch, yStretch, zStretch) * _anatomyScaleFactor;
 			}
 

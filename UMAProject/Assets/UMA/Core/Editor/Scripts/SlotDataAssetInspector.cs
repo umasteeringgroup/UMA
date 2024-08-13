@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditorInternal;
+using System;
+using System.Text;
 
 namespace UMA.Editors
 {
@@ -9,37 +11,74 @@ namespace UMA.Editors
 	[CanEditMultipleObjects]
 	public class SlotDataAssetInspector : Editor
 	{
-		static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy","tags","isWildCardSlot","Races"};
-		static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "animatedBoneNames", "_slotDNA", "meshData", "subMeshIndex", };
+		enum SlotPreviewMode { ThisSlot, WeldSlot, BothSlots };
+
+		static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
+		static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "animatedBoneNames", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
 		SerializedProperty slotName;
 		SerializedProperty CharacterBegun;
 		SerializedProperty SlotAtlassed;
+		SerializedProperty SlotProcessed;
+		SerializedProperty SlotBeginProcessing;
 		SerializedProperty DNAApplied;
 		SerializedProperty CharacterCompleted;
 		SerializedProperty MaxLOD;
+		SerializedProperty isClippingPlane;
+		SerializedProperty smooshOffset;
+		SerializedProperty smooshExpand;
 		SlotDataAsset slot;
+		SlotDataAsset.Welding lastWeld = null;
+		SlotDataAsset WeldToSlot = null;
 
+		bool CopyNormals;
+		bool CopyBoneWeights;
+		UMA.SlotDataAsset.BlendshapeCopyMode blendshapeCopyMode;
+		bool AverageNormals;
+		float weldDistance = 0.0001f;
+		bool reConfigurePreview = false;
 
-        [MenuItem("Assets/Create/UMA/Core/Custom Slot Asset")]
-        public static void CreateCustomSlotAssetMenuItem()
-        {
-        	CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Custom");
-        }
+		private int selectedRaceIndex = -1;
+		private List<RaceData> foundRaces = new List<RaceData>();
+		private List<string> foundRaceNames = new List<string>();
+
+		public override bool HasPreviewGUI() => true;
+		MeshPreview MeshPreview;
+		Mesh meshToPreview;
+		static Vector3 previewRotation = Vector3.zero;
+		SlotPreviewMode previewMode = SlotPreviewMode.ThisSlot;
+		int previewVertex = -1;
+
+		[MenuItem("Assets/Create/UMA/Core/Custom Slot Asset")]
+		public static void CreateCustomSlotAssetMenuItem()
+		{
+			CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Custom");
+		}
 
 		[MenuItem("Assets/Create/UMA/Core/Wildcard Slot Asset")]
 		public static void CreateWildcardSlotAssetMenuItem()
 		{
-			SlotDataAsset wildcard = CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Wildcard",true);
+			SlotDataAsset wildcard = CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Wildcard", true);
 			wildcard.isWildCardSlot = true;
 			wildcard.slotName = "WildCard";
 			EditorUtility.SetDirty(wildcard);
-			AssetDatabase.SaveAssets();
+			string path = AssetDatabase.GetAssetPath(wildcard.GetInstanceID());
+			AssetDatabase.ImportAsset(path);
 			EditorUtility.DisplayDialog("UMA", "Wildcard slot created. You should first change the SlotName in the inspector, and then add it to the global library or to a scene library", "OK");
 		}
 
 		private void OnDestroy()
 		{
-			// AssetDatabase.SaveAssets();
+			// clean up
+			if (meshToPreview != null)
+			{
+				DestroyImmediate(meshToPreview);
+			}
+			meshToPreview = null;
+			if (MeshPreview != null)
+			{
+				MeshPreview.Dispose();
+				MeshPreview = null;
+			}
 		}
 
 		void OnEnable()
@@ -48,12 +87,35 @@ namespace UMA.Editors
 			CharacterBegun = serializedObject.FindProperty("CharacterBegun");
 			SlotAtlassed = serializedObject.FindProperty("SlotAtlassed");
 			DNAApplied = serializedObject.FindProperty("DNAApplied");
+			SlotProcessed = serializedObject.FindProperty("SlotProcessed");
+			SlotBeginProcessing = serializedObject.FindProperty("SlotBeginProcessing");
 			CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
 			MaxLOD = serializedObject.FindProperty("maxLOD");
+			isClippingPlane = serializedObject.FindProperty("isClippingPlane");
+			smooshExpand = serializedObject.FindProperty("smooshExpand");
+			smooshOffset = serializedObject.FindProperty("smooshOffset");
 			slot = (target as SlotDataAsset);
-			InitTagList(slot);
+			SetRaceLists();
+
+			slot.backingTags = new List<string>(slot.tags);
+			slot.tagList = GUIHelper.InitGenericTagsList(slot.backingTags);
 		}
 
+		private void OnDisable()
+		{
+			if (meshToPreview != null)
+			{
+				DestroyImmediate(meshToPreview);
+			}
+			meshToPreview = null;
+			if (MeshPreview != null)
+			{
+				MeshPreview.Dispose();
+				MeshPreview = null;
+			}
+		}
+
+		/*
 		private void InitTagList(SlotDataAsset _slotDataAsset)
 		{
 			
@@ -76,39 +138,303 @@ namespace UMA.Editors
 				rect.y += 2;
 				element.stringValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), element.stringValue);
 			};
+		} */
+
+		public void SetRaceLists()
+		{
+			UMAContextBase ubc = UMAContext.Instance;
+			if (ubc != null)
+			{
+				RaceData[] raceDataArray = ubc.GetAllRaces();
+				foundRaces.Clear();
+				foundRaceNames.Clear();
+				foundRaces.Add(null);
+				foundRaceNames.Add("None Set");
+				foreach (RaceData race in raceDataArray)
+				{
+					if (race != null && race.raceName != "RaceDataPlaceholder")
+					{
+						foundRaces.Add(race);
+						foundRaceNames.Add(race.raceName);
+					}
+				}
+			}
+		}
+
+		private void UpdateSourceAsset(SlotDataAsset sda)
+		{
+			if (sda != null)
+			{
+				lastWeld = slot.CalculateWelds(sda, CopyNormals, CopyBoneWeights, AverageNormals, Vector3.kEpsilon, SlotDataAsset.BlendshapeCopyMode.None);
+			}
 		}
 
 		public override void OnInspectorGUI()
-        {
+		{
+			if (slot == null)
+			{
+				OnEnable();
+			}
+			bool forceUpdate = false;
+			SlotDataAsset targetAsset = target as SlotDataAsset;
 			serializedObject.Update();
 
 			EditorGUI.BeginChangeCheck();
+			GUILayout.BeginHorizontal();
 			EditorGUILayout.DelayedTextField(slotName);
+			if (GUILayout.Button("Use Obj Name", GUILayout.Width(90)))
+			{
+				foreach (var t in targets)
+				{
+					var slotDataAsset = t as SlotDataAsset;
+					slotDataAsset.slotName = slotDataAsset.name;
+					EditorUtility.SetDirty(slotDataAsset);
+					GUI.changed = true;
+				}
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Validate"))
+			{
+				foreach (var t in targets)
+				{
+					var slotDataAsset = t as SlotDataAsset;
+					if (slotDataAsset != null)
+					{
+						slotDataAsset.ValidateMeshData();
+					}
+				}
+			}
+			if (GUILayout.Button("Clear Errors"))
+			{
+				foreach (var t in targets)
+				{
+					var slotDataAsset = t as SlotDataAsset;
+					if (slotDataAsset != null)
+					{
+						slotDataAsset.Errors = "";
+						EditorUtility.SetDirty(slotDataAsset);
+					}
+				}
+			}
+			GUILayout.EndHorizontal();
+			if (!string.IsNullOrEmpty(targetAsset.Errors))
+			{
+				EditorGUILayout.HelpBox($"Errors: {targetAsset.Errors}", MessageType.Error);
+			}
 			if ((target as SlotDataAsset).isWildCardSlot)
 			{
 				EditorGUILayout.HelpBox("This is a wildcard slot", MessageType.Info);
 			}
-			 
+
+			EditorGUILayout.LabelField($"UtilitySlot: " + targetAsset.isUtilitySlot);
+
 			if (slot.isWildCardSlot)
+			{
 				Editor.DrawPropertiesExcluding(serializedObject, WildcardSlotFields);
+			}
 			else
+			{
 				Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
-			GUILayout.Space(10);
-			slot.tagList.DoLayoutList();
+			}
+
+			EditorGUI.BeginChangeCheck();
+
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			slot.smooshFoldout = EditorGUILayout.Foldout(slot.smooshFoldout, "Smooshing");
+			GUILayout.EndHorizontal();
+			if (slot.smooshFoldout)
+			{
+				GUILayout.Space(10);
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				EditorGUILayout.HelpBox("Smooshing is a feature that conforms one slot to another using a clipping plane. Smoosh Offset is used to adjust the offset of the conforming vertexes to help assist conforming and fitting. Smoosh Expand expands scales the vertexes. ", MessageType.Info);
+
+				var currentTarget = target as SlotDataAsset;
+
+				forceUpdate = EditorGUI.EndChangeCheck();
+				EditorGUILayout.PropertyField(smooshOffset);
+				EditorGUILayout.PropertyField(smooshExpand);
+
+				if (GUILayout.Button("Save and Test Smoosh"))
+				{
+					UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
+					EditorUtility.SetDirty(target);
+					AssetDatabase.SaveAssetIfDirty(target);
+					string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+					AssetDatabase.ImportAsset(path);
+					forceUpdate = true;
+				}
+				GUIHelper.EndVerticalPadded(10);
+			}
 
 
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			slot.tagsFoldout = EditorGUILayout.Foldout(slot.tagsFoldout, "Tags");
+			GUILayout.EndHorizontal();
+
+			if (slot.tagsFoldout)
+			{
+				GUILayout.Space(10);
+				slot.tagList.DoLayoutList();
+				if (GUI.changed)
+				{
+					slot.tags = slot.backingTags.ToArray();
+					EditorUtility.SetDirty(slot);
+					forceUpdate = true;
+				}
+			}
+
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			(target as SlotDataAsset).eventsFoldout = EditorGUILayout.Foldout((target as SlotDataAsset).eventsFoldout, "Slot Events");
+			GUILayout.EndHorizontal();
 			if ((target as SlotDataAsset).eventsFoldout)
 			{
-				EditorGUILayout.PropertyField(CharacterBegun);   
+				EditorGUILayout.PropertyField(CharacterBegun);
 				if (!slot.isWildCardSlot)
 				{
 					EditorGUILayout.PropertyField(SlotAtlassed);
-					EditorGUILayout.PropertyField(DNAApplied); 
+					EditorGUILayout.PropertyField(DNAApplied);
+					EditorGUILayout.PropertyField(SlotBeginProcessing);
+					EditorGUILayout.PropertyField(SlotProcessed);
 				}
 				EditorGUILayout.PropertyField(CharacterCompleted);
 			}
 
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			slot.welldingFoldout = EditorGUILayout.Foldout(slot.welldingFoldout, "Welding");
+			GUILayout.EndHorizontal();
+
+			if (slot.welldingFoldout)
+			{
+				#region WELDS
+
+
+				selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
+				if (selectedRaceIndex <= 0)
+				{
+					EditorGUILayout.HelpBox("Select a slot by race quickly, or use manual selection below", MessageType.Info);
+				}
+				else
+				{
+					UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
+					foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContextBase.Instance);
+
+					foreach (SlotData sd in baseRecipe.slotDataList)
+					{
+						if (sd != null && sd.asset != null)
+						{
+							if (GUILayout.Button(string.Format("{0} ({1})", sd.asset.name, sd.slotName)))
+							{
+								// UpdateSourceAsset(sd.asset);
+								WeldToSlot = sd.asset;
+							}
+						}
+					}
+				}
+
+				GUILayout.Space(12);
+
+
+
+				WeldToSlot = EditorGUILayout.ObjectField("Drop slot here to create weld", WeldToSlot, typeof(SlotDataAsset), false) as SlotDataAsset;
+
+				weldDistance = EditorGUILayout.FloatField("Weld Distance", weldDistance);
+				CopyBoneWeights = EditorGUILayout.Toggle("Copy Boneweights", CopyBoneWeights);
+				CopyNormals = EditorGUILayout.Toggle("Copy Normals", CopyNormals);
+				AverageNormals = EditorGUILayout.Toggle("Average Normals", AverageNormals);
+				blendshapeCopyMode = (UMA.SlotDataAsset.BlendshapeCopyMode)EditorGUILayout.EnumPopup("Blendshape Copy Mode", blendshapeCopyMode);
+
+
+				GUILayout.Box("Warning! averaging normals will update both slots!", GUILayout.ExpandWidth(true));
+
+				SlotPreviewMode newPreviewMode = (SlotPreviewMode)EditorGUILayout.EnumPopup("Preview Mode", previewMode);
+				if (meshToPreview != null)
+				{
+					EditorGUILayout.BeginHorizontal();
+					EditorGUILayout.LabelField("Preview Vert", GUILayout.Width(100));
+					int newpreviewVertex = EditorGUILayout.IntSlider(previewVertex, -1, meshToPreview.vertexCount - 1);
+					if (newpreviewVertex != previewVertex)
+					{
+						previewVertex = newpreviewVertex;
+						reConfigurePreview = true;
+					}
+					if (GUILayout.Button("Dump Vert", GUILayout.Width(50)))
+					{
+						ShowDebugVertInfo(previewVertex);
+					}
+					EditorGUILayout.EndHorizontal();
+				}
+				Vector3 savedPreviewRotation = previewRotation;
+				previewRotation = EditorGUILayout.Vector3Field("Preview Rotation", previewRotation);
+				if (savedPreviewRotation != previewRotation)
+				{
+					reConfigurePreview = true;
+				}
+				if (newPreviewMode != previewMode)
+				{
+					reConfigurePreview = true;
+					previewMode = newPreviewMode;
+				}
+				if (reConfigurePreview)
+				{
+					reConfigurePreview = false;
+					if (MeshPreview != null)
+					{
+						MeshPreview.Dispose();
+						MeshPreview = null;
+					}
+					if (meshToPreview != null)
+					{
+						DestroyImmediate(meshToPreview);
+						meshToPreview = null;
+					}
+					meshToPreview = GetPreviewMesh();
+					if (meshToPreview != null)
+					{
+						MeshPreview = new MeshPreview(meshToPreview);
+					}
+					else
+					{
+						if (MeshPreview != null)
+						{
+							MeshPreview.Dispose();
+							MeshPreview = null;
+						}
+					}
+				}
+
+				if (WeldToSlot == null)
+				{
+					EditorGUI.BeginDisabledGroup(true);
+				}
+				if (GUILayout.Button("Perform Weld"))
+				{
+					lastWeld = slot.CalculateWelds(WeldToSlot, CopyNormals, CopyBoneWeights, AverageNormals, weldDistance, blendshapeCopyMode);
+					forceUpdate = true;
+				}
+				if (WeldToSlot == null)
+				{
+					EditorGUI.EndDisabledGroup();
+				}
+
+				int lastWeldCount = 0;
+				int lastWeldMismatch = 0;
+				if (lastWeld != null)
+				{
+					lastWeldCount = lastWeld.WeldPoints.Count;
+					lastWeldMismatch = lastWeld.MisMatchCount;
+				}
+
+				if (lastWeld != null)
+				{
+					GUILayout.Label($"Last Weld: {lastWeldCount} points, {lastWeld.MisMatchCount} mismatches", GUILayout.ExpandWidth(true));
+				}
+				else
+				{
+					GUILayout.Label($"Last Weld: None", GUILayout.ExpandWidth(true));
+				}
+				#endregion
+			}
 
 			foreach (var t in targets)
 			{
@@ -128,7 +454,7 @@ namespace UMA.Editors
 				}
 			}
 
-			if (!(target as SlotDataAsset).isWildCardSlot)
+			if (!slot.isWildCardSlot)
 			{
 				GUILayout.Space(20);
 				Rect updateDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
@@ -142,42 +468,144 @@ namespace UMA.Editors
 				GUILayout.Space(10);
 				AnimatedBoneDropAreaGUI(boneDropArea);
 			}
+
 			serializedObject.ApplyModifiedProperties();
-			if (EditorGUI.EndChangeCheck())
+
+			if (EditorGUI.EndChangeCheck() || forceUpdate)
 			{
 				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
-				UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset);
+				AssetDatabase.SaveAssetIfDirty(target);
+				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+				AssetDatabase.ImportAsset(path);
+				UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
 			}
+		}
+
+		private void ShowDebugVertInfo(int previewVertex)
+		{
+			StringBuilder sb = new StringBuilder();
+
+			slot.BuildVertexLookups(WeldToSlot);
+			slot.BuildOurAndTheirBoneWeights(WeldToSlot);
+			slot.BuildBoneLookups(WeldToSlot);
+
+			foreach (var bw in slot.OurBoneWeights[previewVertex])
+			{
+				string boneName = slot.meshData.umaBones[bw.boneIndex].name;
+				sb.Append($"Bone {boneName}({bw.boneIndex}): Weight {bw.weight}");
+				sb.Append(Environment.NewLine);
+			}
+			Debug.Log("Our vertex " + previewVertex + Environment.NewLine + sb.ToString());
+
+			int theirVertex = slot.OurVertextoTheirVertex[previewVertex];
+			foreach (var bw in slot.TheirBoneWeights[theirVertex])
+			{
+				string boneName = WeldToSlot.meshData.umaBones[bw.boneIndex].name;
+				sb.Append($"Bone {boneName}({bw.boneIndex}): Weight {bw.weight}");
+				sb.Append(Environment.NewLine);
+			}
+			Debug.Log("Their vertex " + theirVertex + Environment.NewLine + sb.ToString());
+
+		}
+
+        public override void OnPreviewSettings()
+        {
+			if (MeshPreview == null)
+				return;
+			try
+			{
+				MeshPreview.OnPreviewSettings();
+			}
+            catch (System.Exception)
+			{
+
+			}
+        }
+
+		private Mesh GetPreviewMesh()
+		{
+			Quaternion pRot = Quaternion.Euler(previewRotation);
+            if (previewMode == SlotPreviewMode.ThisSlot)
+			{
+				return SlotToMesh.ConvertSlotToMesh((target as SlotDataAsset),pRot, previewVertex);
+			}
+			if (previewMode == SlotPreviewMode.WeldSlot)
+			{
+                if (WeldToSlot != null)
+				{
+                    return SlotToMesh.ConvertSlotToMesh(WeldToSlot, pRot, previewVertex);
+                }
+            }
+            if (previewMode == SlotPreviewMode.BothSlots)
+			{
+				Mesh mesh = SlotToMesh.ConvertSlotToMesh((target as SlotDataAsset), pRot, previewVertex);
+                if (WeldToSlot != null)
+                {
+                    Mesh weldMesh = SlotToMesh.ConvertSlotToMesh(WeldToSlot, pRot, previewVertex);
+                    if (weldMesh != null)
+                    {
+						CombineInstance[] combine = new CombineInstance[2];
+                        combine[0].mesh = mesh;
+                        combine[1].mesh = weldMesh;
+                        Mesh combinedMesh = new Mesh();
+                        combinedMesh.CombineMeshes(combine,false,false,false);
+						DestroyImmediate(mesh);
+                        DestroyImmediate(weldMesh);
+                        return combinedMesh;
+                    }
+                }
+                return mesh;
+            }
+            return null;
+        }
+
+        public override void OnInteractivePreviewGUI(Rect r, GUIStyle background)
+		{
+            if (meshToPreview == null)
+            {
+				meshToPreview = GetPreviewMesh();
+				if (meshToPreview != null) 
+				{
+                    MeshPreview = new MeshPreview(meshToPreview);
+                }	
+            }
+			if (meshToPreview != null && MeshPreview != null)
+			{
+				MeshPreview.OnPreviewGUI(r, background);
+				GUI.Label(r, MeshPreview.GetInfoString(meshToPreview));
+            }
         }
 
         private void AnimatedBoneDropAreaGUI(Rect dropArea)
         {
             GameObject obj = DropAreaGUI(dropArea);
             if (obj != null)
-                AddAnimatedBone(obj.name);
-        }
-
-        private void UpdateSlotDropAreaGUI(Rect dropArea)
-        {
-            GameObject obj = DropAreaGUI(dropArea);
-            if (obj != null)
             {
-                SkinnedMeshRenderer skinnedMesh = obj.GetComponent<SkinnedMeshRenderer>();
-                if (skinnedMesh != null)
-                {
-                    Debug.Log("Updating SlotDataAsset with SkinnedMeshRenderer...");
-                    UpdateSlotData(skinnedMesh);
-					GUI.changed = true;
-                    Debug.Log("Update Complete!");
-                }
-                else
-                    EditorUtility.DisplayDialog("Error", "No skinned mesh renderer found!", "Ok");
+                AddAnimatedBone(obj.name);
             }
-                
         }
 
-        private GameObject DropAreaGUI(Rect dropArea)
+		private void UpdateSlotDropAreaGUI(Rect dropArea)
+		{
+			GameObject obj = DropAreaGUI(dropArea);
+			if (obj != null)
+			{
+				SkinnedMeshRenderer skinnedMesh = obj.GetComponent<SkinnedMeshRenderer>();
+				if (skinnedMesh != null)
+				{
+					UpdateSlotData(slot.normalReferenceMesh, skinnedMesh);
+					GUI.changed = true;
+					EditorUtility.DisplayDialog("Complete", "Update completed","OK");
+				}
+				else
+                {
+                    EditorUtility.DisplayDialog("Error", "No skinned mesh renderer found!", "Ok");
+                }
+            }
+
+		}
+
+		private GameObject DropAreaGUI(Rect dropArea)
 		{
 			var evt = Event.current;
 
@@ -210,7 +638,6 @@ namespace UMA.Editors
 			}
             return null;
 		}
-
 		private void AddAnimatedBone(string animatedBone)
 		{
 			var hash = UMASkeleton.StringToHash(animatedBone);
@@ -225,17 +652,17 @@ namespace UMA.Editors
 				}
 			}			
 		}
+		private void UpdateSlotData(SkinnedMeshRenderer seamsMesh, SkinnedMeshRenderer skinnedMesh)
+		{
+			SlotDataAsset slot = target as SlotDataAsset;
 
-        private void UpdateSlotData(SkinnedMeshRenderer skinnedMesh)
-        {
-            SlotDataAsset slot = target as SlotDataAsset;
+			string existingRootBone = slot.meshData.RootBoneName;
 
-            string existingRootBone = slot.meshData.RootBoneName;
-
-            UMASlotProcessingUtil.UpdateSlotData(slot, skinnedMesh, slot.material, null, existingRootBone,true);
-			AssetDatabase.SaveAssets();
+			UMASlotProcessingUtil.UpdateSlotData(slot, skinnedMesh, slot.material, seamsMesh, existingRootBone, true);
+			string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+			AssetDatabase.ImportAsset(path);
 			UMAUpdateProcessor.UpdateSlot(slot);
-        }
+		}
     }
 }
 #endif

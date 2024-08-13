@@ -1,18 +1,12 @@
 using UnityEngine;
 using UnityEditor;
-using System.Linq;
-using UMA;
 using UMA.CharacterSystem;
-using System.Text.RegularExpressions;
-using System.Reflection;
-using System.Collections;
 
 namespace UMA.Editors
 {
-	[CustomPropertyDrawer(typeof(OverlayColorData),true)]
+    [CustomPropertyDrawer(typeof(OverlayColorData),true)]
 	public class OverlayColorDataPropertyDrawer : PropertyDrawer
 	{
-		bool showAdvanced;
 		GUIContent Modulate = new GUIContent("Multiplier");
 		GUIContent Additive = new GUIContent("Additive");
 		GUIContent Channels = new GUIContent("Channel Count");
@@ -27,8 +21,10 @@ namespace UMA.Editors
 				return GetDeepPropertyValue(src.GetType().GetProperty(Split[0]).GetValue(src, null), RemainingProperty);
 			}
 			else
-				return src.GetType().GetProperty(propName).GetValue(src, null);
-		}
+            {
+                return src.GetType().GetProperty(propName).GetValue(src, null);
+            }
+        }
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
@@ -54,14 +50,41 @@ namespace UMA.Editors
 			var mask = property.FindPropertyRelative("channelMask");
 			var additive = property.FindPropertyRelative("channelAdditiveMask");
 			var propblock = property.FindPropertyRelative("propertyBlock");
+			var displayColor = property.FindPropertyRelative("displayColor");
+
 			EditorGUILayout.BeginHorizontal();
 			name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
 			if (!name.isExpanded)
-				name.stringValue = EditorGUILayout.TextField(new GUIContent(""), name.stringValue);
-			EditorGUILayout.EndHorizontal();
+            {
+                //name.stringValue = EditorGUILayout.TextField(new GUIContent(""), name.stringValue);
+                if (mask.arraySize > 0)
+                {
+					SerializedProperty colProp = mask.GetArrayElementAtIndex(0);
+					//Color c = colProp.colorValue;
+					//EditorGUILayout.ColorField(c, GUILayout.Width(120));
+					EditorGUILayout.PropertyField(colProp);
+                    //if (colProp.colorValue != c)
+					//{
+                    //    colProp.colorValue = c;
+                    //}
+                }
+				else
+                {
+					EditorGUILayout.ColorField(Color.white, GUILayout.Width(120));
+                }
+                bool delete = GUILayout.Button("X", GUILayout.Width(20));
+                if (delete)
+                {
+                    property.FindPropertyRelative("deleteThis").boolValue = true;
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
 			if (name.isExpanded)
 			{
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
+				EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
+				EditorGUILayout.PropertyField(displayColor);
 
 				if (ocd != null)
 				{
@@ -70,17 +93,23 @@ namespace UMA.Editors
 					if (ChannelCount != ocd.channelCount)
 					{
 						ocd.SetChannels(ChannelCount);
-						EditorUtility.SetDirty(dca);
+						if (dca != null)
+						{
+							EditorUtility.SetDirty(dca);
+						}
 					}
 				}
 
-				showAdvanced = EditorGUILayout.Toggle("Show Extended Ranges", showAdvanced);
+				SerializedProperty showAdvancedProperty = property.FindPropertyRelative("showAdvanced");
+				EditorGUILayout.PropertyField(showAdvancedProperty);
+				//showAdvanced = EditorGUILayout.Toggle("Show Extended Ranges", showAdvanced);
 
 				GUILayout.Space(5);
 
+
 				for (int i = 0; i < mask.arraySize; i++)
 				{
-					if (showAdvanced)
+					if (showAdvancedProperty.boolValue)
 					{
 						var channelMask = mask.GetArrayElementAtIndex(i);
 						var channelColor = ToVector4(channelMask.colorValue);
@@ -108,19 +137,22 @@ namespace UMA.Editors
 					GUILayout.Space(5);
 				}
 				if (ocd != null)
-                {
+				{
 					if (ocd.PropertyBlock != null)
-                    {
+					{
 						if (UMAMaterialPropertyBlockDrawer.OnGUI(ocd.PropertyBlock))
-                        {
-							EditorUtility.SetDirty(dca);
-							AssetDatabase.SaveAssets();
-                        }
+						{
+							if (dca != null)
+							{
+								EditorUtility.SetDirty(dca);
+								AssetDatabase.SaveAssets();
+							}
+						}
 					}
 					else
-                    {
+					{
 						if (GUILayout.Button("Add Properties Block"))
-                        {
+						{
 							ocd.PropertyBlock = new UMAMaterialPropertyBlock();
 							EditorUtility.SetDirty(dca);
 							AssetDatabase.SaveAssets();
@@ -131,31 +163,22 @@ namespace UMA.Editors
 			}
 			else
 			{
-					if (mask.arraySize > 0)
-					{
-						EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0), new GUIContent("BaseColor"));
-						if (additive.arraySize >= 3)
-							EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(2), new GUIContent("Metallic/Gloss", "Color is metallicness (Black is not metallic), Alpha is glossiness (Black is not glossy)"));
-						else
-						{
-							//color didn't have a metallic gloss channel so show button to add one?
-						}
-					}
+			//	if (mask.arraySize > 0)
+			//	{
+			//		EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0), new GUIContent("BaseColor"));
+			//	}
+			//	EditorGUILayout.PropertyField(displayColor);
+
 				//	if (ocd.HasProperties)
 				//	{
 				//		EditorGUILayout.LabelField("Has Properties");
 				//	}
 			}
-			EditorGUILayout.Space();
+            //EditorGUILayout.Space();
 			EditorGUI.EndProperty();
 		}
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			/*var name = property.FindPropertyRelative("name");
-			if (!name.isExpanded)
-			{
-				return (EditorGUIUtility.singleLineHeight * 3f) - 2f;
-			}*/
 			return -2f;
 		}
 
@@ -169,27 +192,15 @@ namespace UMA.Editors
 		{
 			return new Vector4(color.r, color.g, color.b, color.a);
 		}
-	}
+
+    }
 	public class PropertyDrawerUtility
 	{
 		public static OverlayColorData GetOverlayDataAsset(System.Reflection.FieldInfo fieldInfo, SerializedProperty property)
 		{ 
 			DynamicCharacterAvatar dca = property.serializedObject.targetObject as DynamicCharacterAvatar;
-
-
 			return new OverlayColorData();
-			/* T actualObject = null;
-			if (obj.GetType().IsArray)
-			{
-				var index = System.Convert.ToInt32(new string(property.propertyPath.Where(c => char.IsDigit(c)).ToArray()));
-				actualObject = ((T[])obj)[index];
-			}
-			else
-			{
-				actualObject = obj as T;
-			}
-			
-			return actualObject; */
+
 		}
 	}
 }

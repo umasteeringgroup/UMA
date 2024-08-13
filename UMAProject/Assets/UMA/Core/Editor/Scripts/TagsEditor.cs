@@ -1,10 +1,8 @@
 ﻿using UnityEditor;
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using TypePair = System.Collections.Generic.KeyValuePair<System.Type, string>;
 using System.Diagnostics;
-using System;
 
 // Simple Editor Script that fills a bar in the given seconds.
 namespace UMA
@@ -49,8 +47,12 @@ namespace UMA
             foreach(TypePair t in UMAEditorUtilities.FriendlyNames)
             {
                 var objs = Resources.FindObjectsOfTypeAll(t.Key);
-                if (objs == null) continue;
-                foreach(var o in objs)
+                if (objs == null)
+                {
+                    continue;
+                }
+
+                foreach (var o in objs)
                 {
                     Items.Enqueue(new ProcessItem(t, o, pFunc));
                 }

@@ -35,14 +35,22 @@ namespace UMA.Editors
 				{
 					if (DerivesFrom(dnaType, baseDnaType))
 					{
-						if (dnaType.Name == "UMADna" || dnaType.Name == "DynamicUMADnaBase") continue;
-						customData["ClassName"] = dnaType.Name;
+						if (dnaType.Name == "UMADna" || dnaType.Name == "DynamicUMADnaBase")
+                        {
+                            continue;
+                        }
+
+                        customData["ClassName"] = dnaType.Name;
 						foreach (var template in templates)
 						{
 							template.Append(customData);
 						}
-						if (dnaType.Name == "DynamicUMADna") continue;
-						foreach (var template in pageTemplates)
+						if (dnaType.Name == "DynamicUMADna")
+                        {
+                            continue;
+                        }
+
+                        foreach (var template in pageTemplates)
 						{
 							template.sb.Length = 0;
 						}
@@ -65,8 +73,12 @@ namespace UMA.Editors
 			Type parent = type.BaseType;
 			while (parent != null)
 			{
-				if (parent == baseType) return true;
-				parent = parent.BaseType;
+				if (parent == baseType)
+                {
+                    return true;
+                }
+
+                parent = parent.BaseType;
 			}
 			return false;
 		}

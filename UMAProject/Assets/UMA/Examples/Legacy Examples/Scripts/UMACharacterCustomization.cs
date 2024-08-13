@@ -1,8 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
-using System.Collections.Generic;
-using UMA;
 
 namespace UMA.Examples
 {
@@ -149,7 +146,9 @@ namespace UMA.Examples
                 myCamera.transform.position = new Vector3(0, yPos + 0.05f, -0.62f);
 
                 if (bodyArea == 2)
+                {
                     panel.Find("LowerHead/FacialHair").gameObject.SetActive(true);
+                }
             }
         }
 
@@ -168,7 +167,9 @@ namespace UMA.Examples
                 myCamera.transform.position = new Vector3(0, yPos + 0.05f, -0.62f);
 
                 if (bodyArea == 2)
+                {
                     panel.Find("LowerHead/FacialHair").gameObject.SetActive(false);
+                }
             }
         }
 
@@ -223,9 +224,13 @@ namespace UMA.Examples
                 lowHeadGO.gameObject.SetActive(true);
                 ReceiveValues();
                 if (umaData.umaRecipe.raceData.raceName == "umaDnaMale")
+                {
                     panel.Find("LowerHead/FacialHair").gameObject.SetActive(true);
+                }
                 else
+                {
                     panel.Find("LowerHead/FacialHair").gameObject.SetActive(false);
+                }
             }
         }
 

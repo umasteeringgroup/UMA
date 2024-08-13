@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UMA;
+﻿using System.Collections.Generic;
 using UMA.CharacterSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -23,7 +21,11 @@ namespace UMA
                 {
                     foreach (DynamicCharacterAvatar dca in dcas)
                     {
-                        if (dca.editorTimeGeneration == false) continue;
+                        if (dca.editorTimeGeneration == false)
+                        {
+                            continue;
+                        }
+
                         EditTimeAvatars.Add(dca);
                     }
                 }
@@ -33,6 +35,11 @@ namespace UMA
 
         public static void UpdateRecipe(UMATextRecipe recipe)
         {
+            if (recipe == null)
+            {
+                return;
+            }
+
             UMAAssetIndexer.Instance.ReleaseReference(recipe);
 
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
@@ -44,7 +51,16 @@ namespace UMA
                     var items = dca.preloadWardrobeRecipes.recipes;
                     foreach (var wi in items)
                     {
-                        if (wi == null) continue;
+                        if (wi == null)
+                        {
+                            continue;
+                        }
+
+                        if (wi._recipe == null)
+                        {
+                            continue;
+                        }
+
                         var rcp = wi._recipe;
                         if (rcp.name == recipe.name)
                         {
@@ -73,8 +89,12 @@ namespace UMA
             }
         }
 
-        public static void UpdateSlot(SlotDataAsset slot)
+        public static void UpdateSlot(SlotDataAsset slot, bool doItAll = true)
         {
+            if (slot == null)
+            {
+                return;
+            }
             // look at the slot list of any generated UMA
             UMAAssetIndexer.Instance.ReleaseReference(slot);
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
@@ -93,7 +113,15 @@ namespace UMA
                             {
                                 if (sd.asset == slot)
                                 {
+                                    if (doItAll)
+                                    {
                                     dca.GenerateSingleUMA();
+                                    }
+                                    else
+                                    {
+                                        dca.GenerateSingleUMA(true);
+                                    }
+                                    dca.ForceUpdate(false,false,true);
                                     break;
                                 }
                             }
@@ -105,6 +133,11 @@ namespace UMA
 
         public static void UpdateOverlay(OverlayDataAsset overlay)
         {
+            if (overlay == null)
+            {
+                return;
+            }
+
             UMAAssetIndexer.Instance.ReleaseReference(overlay);
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
 
@@ -131,7 +164,10 @@ namespace UMA
                                         break;
                                     }
                                 }
-                                if (hasMatchingOverlay) break;
+                                if (hasMatchingOverlay)
+                                {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -145,6 +181,11 @@ namespace UMA
 
         public static void UpdateRace(RaceData race)
         {
+            if (race == null)
+            {
+                return;
+            }
+
             UMAAssetIndexer.Instance.ReleaseReference(race);
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
 

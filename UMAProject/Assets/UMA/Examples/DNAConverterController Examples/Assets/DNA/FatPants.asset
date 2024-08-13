@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: FatPants
   m_EditorClassIdentifier: 
   dnaTypeHash: 1679084023
-  lastKnownAssetPath: Assets/UMA/Examples/DNAConverterController Examples/Assets/DNA/New
-    DynamicUMADnaAsset.asset
-  lastKnownDuplicateAssetPath: Assets/UMA/Examples/DNAConverterController Examples/Assets/DNA/New
-    DynamicUMADnaAsset 1.asset
-  lastKnownInstanceID: 0
+  lastKnownAssetPath: Assets/UMA/Examples/DNAConverterController Examples/Assets/DNA/FatPants.asset
+  lastKnownDuplicateAssetPath: Assets/UMA/Examples/DNAConverterController Examples/Assets/DNA/FatPants
+    1.asset
+  lastKnownInstanceID: 19674
   Names: []

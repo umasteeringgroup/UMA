@@ -1,17 +1,14 @@
-﻿using UnityEngine;
-using System.Collections;
-
-namespace UMA
+﻿namespace UMA
 {
-	/// <summary>
-	/// Humanoid DNA.
-	/// </summary>
-	/// <remarks>
-	/// Contains a large number of variables for the ways that the
-	/// basic UMA human models can be adjusted to create different
-	/// body shapes and sizes.
-	/// </remarks>
-	[System.Serializable]
+    /// <summary>
+    /// Humanoid DNA.
+    /// </summary>
+    /// <remarks>
+    /// Contains a large number of variables for the ways that the
+    /// basic UMA human models can be adjusted to create different
+    /// body shapes and sizes.
+    /// </remarks>
+    [System.Serializable]
 	public partial class UMADnaHumanoid : UMADna
 	{
 		public float height = 0.5f;

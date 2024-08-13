@@ -72,7 +72,9 @@ namespace UMA
             if (_sharedMesh == null)
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
+                }
 
                 return;
             }
@@ -124,7 +126,7 @@ namespace UMA
                 _meshCollider.hideFlags = HideFlags.HideInInspector;
             }
 
-            if( GraphicsSettings.renderPipelineAsset == null )
+            if( GraphicsSettings.defaultRenderPipeline == null )
             {
                 _Shader = Shader.Find("Standard");
             }
@@ -161,7 +163,9 @@ namespace UMA
             if (meshData == null)
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogError("InitializeFromMeshData: meshData is null!");
+                }
 
                 return;
             }
@@ -180,7 +184,8 @@ namespace UMA
             _sharedMesh.uv4 = meshData.uv4;
             _sharedMesh.colors32 = meshData.colors32;
 
-            _sharedMesh.SetTriangles(meshData.submeshes[meshAsset.asset.subMeshIndex].triangles, 0);
+            //_sharedMesh.SetTriangles(meshData.submeshes[meshAsset.asset.subMeshIndex].triangles, 0);
+            _sharedMesh.SetIndices(meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles(), MeshTopology.Triangles, 0);
             _sharedMesh.RecalculateBounds();
             Initialize();
         }
@@ -188,9 +193,14 @@ namespace UMA
         public void SelectAll()
         {
             if (_sharedMesh == null)
+            {
                 return;
+            }
+
             if (selectedTriangles == null)
+            {
                 return;
+            }
 
             selectedTriangles.SetAll(true);
 
@@ -200,7 +210,9 @@ namespace UMA
         public void Invert()
         {
             if (_sharedMesh == null)
+            {
                 return;
+            }
 
             selectedTriangles = selectedTriangles.Not();
 
@@ -218,7 +230,9 @@ namespace UMA
             else
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogWarning("selectedTriangles is null! Try starting editing again.");
+                }
             }
         }
 
@@ -247,12 +261,16 @@ namespace UMA
         public void UpdateFromTexture(Texture2D tex)
         {
             if (_sharedMesh == null)
+            {
                 return;
-            
+            }
+
             if (_sharedMesh.uv == null)
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogWarning("UpdateFromTexture: This mesh has no uv data!");
+                }
 
                 return;
             }
@@ -260,30 +278,36 @@ namespace UMA
             if (selectedTriangles == null)
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogWarning("UpdateFromTexture: selectedTriangles is null!");
+                }
 
                 return;
             }
 
-            for (int i = 0; i < meshAsset.asset.meshData.submeshes[0].triangles.Length; i+=3)
+            for (int i = 0; i < meshAsset.asset.meshData.submeshes[0].GetTriangles().Length; i+=3)
             {
                 bool selected = false;
                 Vector2 centerUV = new Vector2();
                 for (int k = 0; k < 3; k++)
                 {            
-                    int index = meshAsset.asset.meshData.submeshes[0].triangles[i + k];
+                    int index = meshAsset.asset.meshData.submeshes[0].GetTriangles()[i + k];
                     centerUV += meshAsset.asset.meshData.uv[index];
                     int x = Mathf.FloorToInt(meshAsset.asset.meshData.uv[index].x * tex.width);
                     int y = Mathf.FloorToInt(meshAsset.asset.meshData.uv[index].y * tex.height);
                     if (tex.GetPixel(x, y).grayscale > 0.5f)
+                    {
                         selected = true;
+                    }
                 }
 
                 centerUV = centerUV / 3;
                 int centerX = Mathf.FloorToInt(centerUV.x * tex.width);
                 int centerY = Mathf.FloorToInt(centerUV.y * tex.height);
                 if (tex.GetPixel(centerX, centerY).grayscale > 0.5f)
+                {
                     selected = true;
+                }
 
                 selectedTriangles[(i/3)] = selected;
             }
@@ -294,7 +318,9 @@ namespace UMA
         public void CreateOcclusionMesh(MeshHideAsset meshHide)
         {
             if (meshHide == null)
+            {
                 return;
+            }
 
             CreateOcclusionMesh(meshHide.asset.meshData);
 
@@ -305,7 +331,9 @@ namespace UMA
             if((bitArray.Length * 3) != triangles.Length)
             {
                 if (Debug.isDebugBuild)
+                {
                     Debug.LogError("BitArray length does not match Triangle length!");
+                }
 
                 return;
             }
@@ -327,7 +355,9 @@ namespace UMA
         public void CreateOcclusionMesh(UMAMeshData meshData)
         {
             if (meshData == null)
-                return;;
+            {
+                return;
+            };
 
             if (_occlusionMesh == null)
             {
@@ -337,8 +367,10 @@ namespace UMA
 #endif
             }
             else
+            {
                 _occlusionMesh.Clear();
-            
+            }
+
             _occlusionMesh.subMeshCount = meshData.subMeshCount;
             _occlusionMesh.vertices = meshData.vertices;
             _occlusionMesh.normals = meshData.normals;
@@ -353,7 +385,10 @@ namespace UMA
 			_occlusionMesh.subMeshCount = meshData.subMeshCount;
 
             for (int i = 0; i < meshData.subMeshCount; i++)
-                occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
+            {
+                occlusionMesh.SetIndices(meshData.submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
+               // occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
+            }     
         }
 
         public void UpdateOcclusionMesh(UMAMeshData meshData, float offset, Vector3 pos, Vector3 rot, Vector3 s)
@@ -374,7 +409,9 @@ namespace UMA
         private void UpdateOcclusionMesh(float offset, Vector3 pos, Vector3 rot, Vector3 s)
         {
             if (Mathf.Approximately(offset,0) && rot == Vector3.zero && pos == Vector3.zero && s == Vector3.one) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
-                 return;
+            {
+                return;
+            }
 
             Quaternion q = Quaternion.Euler(rot);
             Matrix4x4 m = Matrix4x4.TRS(pos, q, s);
@@ -397,10 +434,14 @@ namespace UMA
                 Gizmos.color = occlusionColor;
                 
                 if (occlusionWireframe)
+                {
                     Gizmos.DrawWireMesh(_occlusionMesh);
+                }
                 else
+                {
                     Gizmos.DrawMesh(_occlusionMesh);
-			}
+                }
+            }
 			if(visualizeNormals)
 			{
 				Matrix4x4 m = gameObject.transform.localToWorldMatrix;
