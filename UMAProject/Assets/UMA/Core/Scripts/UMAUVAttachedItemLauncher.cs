@@ -23,6 +23,9 @@ namespace UMA
         public string boneName;
         public SlotData sourceSlot;
         public bool useMostestBone;
+        [Tooltip("The UV set to use for the attached item")]
+        [Range(0, 3)]
+        public int UVSet = 0;
 
         private GameObject prefabInstance;
         public int VertexNumber;

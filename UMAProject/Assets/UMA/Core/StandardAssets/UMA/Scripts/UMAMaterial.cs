@@ -181,7 +181,7 @@ namespace UMA
         //public Material secondPass;
 
         public MaterialType materialType = MaterialType.Atlas;
-        public MaterialChannel[] channels;
+        public MaterialChannel[] channels = new MaterialChannel[0];
 
         [Range(-2.0f, 2.0f)]
         public float MipMapBias = 0.0f;

@@ -30,6 +30,7 @@ namespace UMA.Controls
         UMAMaterial umaMaterial;
         RaceData umaRaceData;
         OverlayDataAsset umaOverlay;
+        Texture2D umaTexture;
         SlotDataAsset umaSlot;
         MeshHideAsset AddedMHA = null;
 
@@ -2324,6 +2325,7 @@ namespace UMA.Controls
         bool _recipeFoldout;
         bool _OverlayFoldout;
         bool _SlotFoldout;
+        bool _TextureFoldout;
         Rect _rect;
         Vector3 _scale;
         float _rotation;
@@ -2603,7 +2605,6 @@ namespace UMA.Controls
                 {
                     FindOverlaysWithInvalidTextures();
                 }
-                GUIHelper.EndVerticalPadded(10);
             }
 
             _SlotFoldout = EditorGUILayout.Foldout(_SlotFoldout, "Slots");
@@ -2654,6 +2655,21 @@ namespace UMA.Controls
                     SelectSmooshableSlots();
                 }
                 GUIHelper.EndVerticalPadded(10);
+            }
+
+            _TextureFoldout = EditorGUILayout.Foldout(_TextureFoldout, "Textures");
+            if (_TextureFoldout)
+            {
+                umaTexture = EditorGUILayout.ObjectField("Texture: ", umaTexture, typeof(Texture2D), false) as Texture2D;
+
+                if (GUILayout.Button("Find texture in OVL"))
+                {
+                    FindOverlaysWithTexture(umaTexture);
+                }
+                if (GUILayout.Button("Find texture in UMAMaterials"))
+                {
+                    FindUMAMaterialsWithTexture(umaTexture);
+                }
             }
             GUILayout.EndScrollView();
         }
@@ -2923,6 +2939,60 @@ namespace UMA.Controls
             List<AssetItem> items = new List<AssetItem>();
             items.Add(UAI.GetAssetItem<SlotDataAsset>(umaSlot.slotName));
             SelectByAssetItems(items);
+        }
+
+        private void FindOverlaysWithTexture(Texture2D tex)
+        {
+            List<AssetItem> badItems = new List<AssetItem>();
+            var ovls = UAI.GetAssetItems<OverlayDataAsset>();
+            for (int i = 0; i < ovls.Count; i++)
+            {
+                if (ovls[i] != null)
+                {
+                    var o = ovls[i].Item as OverlayDataAsset;
+
+                    if (o != null)
+                    {
+                        for (int j = 0; j < o.textureList.Length; j++)
+                        {
+                            if (o.textureList[j].GetInstanceID() == tex.GetInstanceID())
+                            {
+                                badItems.Add(ovls[i]);
+                            }
+                        }
+                    }
+                }
+            }
+            SelectByAssetItems(badItems);
+        }
+
+        private void FindUMAMaterialsWithTexture(Texture2D tex)
+        {
+            List<AssetItem> badItems = new List<AssetItem>();
+            var umats = UAI.GetAssetItems<UMAMaterial>();
+            for (int i = 0; i < umats.Count; i++)
+            {
+                if (umats[i] != null)
+                {
+                    var u = umats[i].Item as UMAMaterial;
+
+                    if (u != null)
+                    {
+                        Material m = u.material;
+                        if (m != null)
+                        {
+                            for(int j=0; j< m.GetTexturePropertyNames().Length; j++)
+                            {
+                                if (m.GetTexture(m.GetTexturePropertyNames()[j]) == tex)
+                                {
+                                    badItems.Add(umats[i]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            SelectByAssetItems(badItems);
         }
 
         private void FindOverlaysWithInvalidTextures()

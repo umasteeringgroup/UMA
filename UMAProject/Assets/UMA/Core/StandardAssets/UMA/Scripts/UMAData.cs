@@ -663,7 +663,9 @@ namespace UMA
             }
 			if (!umaGenerator)
 			{
-				var generatorGO = GameObject.Find("UMAGenerator");
+				FindObjectOfType<UMAGeneratorBase>();
+
+				var generatorGO = GameObject.Find("UMA_GLIB");
 				if (generatorGO == null)
                 {
                     return;
@@ -673,6 +675,31 @@ namespace UMA
 			}
 			Initialize(umaGenerator);
 		}
+
+
+		public UMAGeneratorBase FindGenerator()
+		{
+            var gen = UnityEngine.Object.FindFirstObjectByType<UMAGeneratorBase>() as UMAGeneratorBase;
+			if (gen != null)
+            {
+				return gen;
+            }
+
+            // Some versions of Unity could find hidden objects, so we need to check for that.
+            if (GameObject.Find("TempUMAGenerator") != null)
+			{
+                return GameObject.Find("TempUMAGenerator").GetComponent<UMAGeneratorBase>();
+            }
+
+            // If we still can't find it, create a temporary one, and hide it.
+            GameObject temp = new GameObject("TempUMAGenerator")
+			{
+				hideFlags = HideFlags.HideAndDontSave
+            };
+
+			return temp.AddComponent<UMAGeneratorStub>();
+        }
+
 
 		public void Initialize(UMAGeneratorBase generator)
 		{
@@ -1536,7 +1563,7 @@ namespace UMA
 
 
 
-            public Dictionary<string, SlotData> GetFirsIndexedSlotsByTag()
+            public Dictionary<string, SlotData> GetFirstIndexedSlotsByTag()
             {
                 Dictionary<string, SlotData> indexedSlots = new Dictionary<string, SlotData>();
                 foreach (SlotData slotData in slotDataList)

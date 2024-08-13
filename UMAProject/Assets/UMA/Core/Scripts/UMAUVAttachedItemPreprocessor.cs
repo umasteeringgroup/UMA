@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UMA;
 using UMA.CharacterSystem;
@@ -15,30 +17,29 @@ public class UMAUVAttachedItemPreprocessor : MonoBehaviour
     void Awake()
     {
         avatar = GetComponent<DynamicCharacterAvatar>();
-        avatar.BuildCharacterBegun.AddListener(OnBuildCharacterBegun);
-        avatar.WardrobeSuppressed.AddListener(OnWardrobeSuppressed);
-        avatar.SlotsHidden.AddListener(OnSlotsHidden);
+        avatar.BuildCharacterBegun?.AddListener(OnBuildCharacterBegun);
+        avatar.WardrobeSuppressed?.AddListener(OnWardrobeSuppressed);
+        avatar.SlotsHidden?.AddListener(OnSlotsHidden);
     }
 
     /// <summary>
     /// This is called when the character is being built in BuildCharacter()
     /// </summary>
     /// <param name="umaData"></param>
-    private void OnBuildCharacterBegun(UMAData umaData)
+    public void OnBuildCharacterBegun(UMAData umaData)
     {
         launchers = new List<UMAUVAttachedItemLauncher>();
     }
 
-    /// <summary>
-    /// This is called when the character has loaded all the slots/overlays in LoadCharacter()
-    /// </summary>
-    /// <param name="hiddenSlots"></param>
-    private void OnSlotsHidden(List<SlotData> hiddenSlots)
+	/// <summary>
+	/// This is called when the character has loaded all the slots/overlays in LoadCharacter()
+	/// </summary>
+	/// <param name="hiddenSlots"></param>
+	public void OnSlotsHidden(List<SlotData> hiddenSlots)
     {
 
-        for (int i1 = 0; i1 < hiddenSlots.Count; i1++)
+        foreach (var slot in hiddenSlots)
         {
-            SlotData slot = hiddenSlots[i1];
             if (slot.asset.SlotProcessed == null)
             {
                 continue;
@@ -59,19 +60,17 @@ public class UMAUVAttachedItemPreprocessor : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// This is called when the character has loaded all the slots/overlays in LoadCharacter()
-    /// </summary>
-    /// <param name="suppressedRecipes"></param>
-    private void OnWardrobeSuppressed(List<UMATextRecipe> suppressedRecipes)
+	/// <summary>
+	/// This is called when the character has loaded all the slots/overlays in LoadCharacter()
+	/// </summary>
+	/// <param name="suppressedRecipes"></param>
+	public void OnWardrobeSuppressed(List<UMATextRecipe> suppressedRecipes)
     {
-        for (int i1 = 0; i1 < suppressedRecipes.Count; i1++)
+        foreach(var recipe in suppressedRecipes)
         {
-            UMATextRecipe recipe = suppressedRecipes[i1];
             var items = UMAAssetIndexer.Instance.GetAssetItems(recipe);
-            for (int i2 = 0; i2 < items.Count; i2++)
+            foreach(AssetItem ai in items)
             {
-                AssetItem ai = items[i2];
                 if (ai._Type == typeof(SlotDataAsset))
                 {
                     var slot = ai.Item as SlotDataAsset;

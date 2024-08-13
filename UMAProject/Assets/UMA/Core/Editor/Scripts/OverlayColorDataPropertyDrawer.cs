@@ -56,7 +56,27 @@ namespace UMA.Editors
 			name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
 			if (!name.isExpanded)
             {
-                name.stringValue = EditorGUILayout.TextField(new GUIContent(""), name.stringValue);
+                //name.stringValue = EditorGUILayout.TextField(new GUIContent(""), name.stringValue);
+                if (mask.arraySize > 0)
+                {
+					SerializedProperty colProp = mask.GetArrayElementAtIndex(0);
+					//Color c = colProp.colorValue;
+					//EditorGUILayout.ColorField(c, GUILayout.Width(120));
+					EditorGUILayout.PropertyField(colProp);
+                    //if (colProp.colorValue != c)
+					//{
+                    //    colProp.colorValue = c;
+                    //}
+                }
+				else
+                {
+					EditorGUILayout.ColorField(Color.white, GUILayout.Width(120));
+                }
+                bool delete = GUILayout.Button("X", GUILayout.Width(20));
+                if (delete)
+                {
+                    property.FindPropertyRelative("deleteThis").boolValue = true;
+                }
             }
 
             EditorGUILayout.EndHorizontal();
@@ -143,18 +163,18 @@ namespace UMA.Editors
 			}
 			else
 			{
-				if (mask.arraySize > 0)
-				{
-					EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0), new GUIContent("BaseColor"));
-				}
-				EditorGUILayout.PropertyField(displayColor);
+			//	if (mask.arraySize > 0)
+			//	{
+			//		EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0), new GUIContent("BaseColor"));
+			//	}
+			//	EditorGUILayout.PropertyField(displayColor);
 
 				//	if (ocd.HasProperties)
 				//	{
 				//		EditorGUILayout.LabelField("Has Properties");
 				//	}
 			}
-            EditorGUILayout.Space();
+            //EditorGUILayout.Space();
 			EditorGUI.EndProperty();
 		}
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

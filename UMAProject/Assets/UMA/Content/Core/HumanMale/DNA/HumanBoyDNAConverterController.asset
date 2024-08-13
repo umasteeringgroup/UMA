@@ -92,7 +92,7 @@ MonoBehaviour:
   _converterController: {fileID: 11400000}
   _poseDNAConverters:
   - _poseToApply: {fileID: 11400000, guid: ce859e2d48a3e774c997c15c3d5a60d1, type: 2}
-    _startingPoseWeight: 0
+    _startingPoseWeight: 1
     _modifyingDNA:
       _dnaEvaluators: []
       _aggregationMethod: 0
