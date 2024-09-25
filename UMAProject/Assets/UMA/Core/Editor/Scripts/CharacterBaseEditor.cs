@@ -1496,7 +1496,7 @@ namespace UMA.Editors
                     _slotData.smooshInvertY = EditorGUILayout.Toggle("Invert Smoosh Y", _slotData.smooshInvertY);
                     _slotData.smooshInvertZ = EditorGUILayout.Toggle("Invert Smoosh Z", _slotData.smooshInvertZ);
                     EditorGUILayout.HelpBox("Override Target Tag and Smooshed Tag are used to override the default tags to find the target and smooshed slots. This is useful if you have multiple clipping planes and want to use different tags for each one. By default, the target is " +
-                        " 'smooshtarget' and the smooshed slot is 'smooshable'", MessageType.Info);
+                        " 'Smooshtarget' and the smooshed slot is 'Smooshable'", MessageType.Info);
                     _slotData.smooshTargetTag = EditorGUILayout.TextField("Override Target Tag", _slotData.smooshTargetTag);
                     _slotData.smooshableTag = EditorGUILayout.TextField("Override Smooshed Tag", _slotData.smooshableTag);
 

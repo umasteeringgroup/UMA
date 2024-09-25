@@ -4488,12 +4488,12 @@ namespace UMA.CharacterSystem
 
                 if (string.IsNullOrEmpty(smooshTargetTag))
                 {
-                    smooshTargetTag = "smooshtarget";
+                    smooshTargetTag = "Smooshtarget";
                 }
 
                 if (string.IsNullOrEmpty(smooshableTag))
                 {
-                    smooshableTag = "smooshable";
+                    smooshableTag = "Smooshable";
                 }
 
                 List<SlotData> Smooshables = new List<SlotData>();

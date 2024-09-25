@@ -344,15 +344,20 @@ namespace UMA
 				//dna weight superceeds startingWeight if it exists
 				if (_modifyingDNA.UsedDNANames.Count > 0)
 				{
-					_activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
-					_livePoseWeight = _modifyingDNA.Evaluate(_activeDNA);
+                    var dna = umaData.GetDna(dnaTypeHash);
+					if (dna is DynamicUMADnaBase)
+					{
+						_activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
+						_livePoseWeight = _modifyingDNA.Evaluate(_activeDNA);
+					}
 				}
 				_livePoseWeight = _livePoseWeight * masterWeight;
 				_livePoseWeight = Mathf.Clamp(_livePoseWeight, 0f, 1f);
 
 				_poseToApply.ApplyPose(skeleton, _livePoseWeight);
+				 
 			}
-
+			
 			#endregion
 		}
 

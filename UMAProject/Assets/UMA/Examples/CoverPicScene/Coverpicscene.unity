@@ -4452,6 +4452,7 @@ GameObject:
   - component: {fileID: 596790630}
   - component: {fileID: 596790629}
   - component: {fileID: 596790633}
+  - component: {fileID: 596790634}
   m_Layer: 9
   m_Name: UMA-Elf-woman
   m_TagString: Untagged
@@ -4616,7 +4617,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   context: {fileID: 1119047824}
-  umaData: {fileID: 0}
+  umaData: {fileID: 596790634}
   defaultRendererAsset: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: 7c7a68f26d49a4046b039854e10a7751, type: 2}
   umaAdditionalRecipes: []
@@ -5671,6 +5672,75 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &596790634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596790625}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15ee0e75ac30e964b8dcd0ad5f953c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
+  userInformation: 
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  umaGenerator: {fileID: 1622264735}
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  animationController: {fileID: 0}
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
 --- !u!1 &597229520
 GameObject:
   m_ObjectHideFlags: 0
@@ -6678,7 +6748,7 @@ Transform:
   - {fileID: 153851157}
   - {fileID: 409274204}
   m_Father: {fileID: 1467156325}
-  m_RootOrder: 4
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &679532415
 MonoBehaviour:
@@ -7851,7 +7921,12 @@ PrefabInstance:
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: fitAtlas
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: convertMipMaps
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
@@ -7866,7 +7941,7 @@ PrefabInstance:
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: AtlasOverflowFitMethod
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
@@ -8205,6 +8280,7 @@ GameObject:
   - component: {fileID: 756189358}
   - component: {fileID: 756189357}
   - component: {fileID: 756189361}
+  - component: {fileID: 756189362}
   m_Layer: 9
   m_Name: UMA-Werewolf
   m_TagString: Untagged
@@ -8227,7 +8303,7 @@ Transform:
   - {fileID: 2116672950}
   - {fileID: 770674922}
   m_Father: {fileID: 1467156325}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 149.031, z: 0}
 --- !u!114 &756189357
 MonoBehaviour:
@@ -8369,7 +8445,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   context: {fileID: 1119047824}
-  umaData: {fileID: 0}
+  umaData: {fileID: 756189362}
   defaultRendererAsset: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: 7057b3bb6c38031459bffc3b43b345e3, type: 2}
   umaAdditionalRecipes: []
@@ -9451,6 +9527,75 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &756189362
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 756189353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15ee0e75ac30e964b8dcd0ad5f953c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
+  userInformation: 
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  umaGenerator: {fileID: 1622264735}
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  animationController: {fileID: 0}
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
 --- !u!1 &770674921
 GameObject:
   m_ObjectHideFlags: 0
@@ -11894,6 +12039,7 @@ GameObject:
   - component: {fileID: 976861112}
   - component: {fileID: 976861111}
   - component: {fileID: 976861115}
+  - component: {fileID: 976861116}
   m_Layer: 9
   m_Name: UMA-Goblin
   m_TagString: Untagged
@@ -11916,7 +12062,7 @@ Transform:
   - {fileID: 287636722}
   - {fileID: 587590816}
   m_Father: {fileID: 1467156325}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 159.698, z: 0}
 --- !u!114 &976861111
 MonoBehaviour:
@@ -12058,7 +12204,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   context: {fileID: 1119047824}
-  umaData: {fileID: 0}
+  umaData: {fileID: 976861116}
   defaultRendererAsset: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: 4fb63e6b6f4986f48afbfc6ff09bed9f, type: 2}
   umaAdditionalRecipes: []
@@ -12923,6 +13069,75 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &976861116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 976861107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15ee0e75ac30e964b8dcd0ad5f953c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
+  userInformation: 
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  umaGenerator: {fileID: 1622264735}
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  animationController: {fileID: 0}
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
 --- !u!1 &999883199
 GameObject:
   m_ObjectHideFlags: 0
@@ -13880,6 +14095,7 @@ GameObject:
   - component: {fileID: 1127923776}
   - component: {fileID: 1127923775}
   - component: {fileID: 1127923779}
+  - component: {fileID: 1127923780}
   m_Layer: 9
   m_Name: UMA-Troll
   m_TagString: Untagged
@@ -13902,7 +14118,7 @@ Transform:
   - {fileID: 954858069}
   - {fileID: 1793464461}
   m_Father: {fileID: 1467156325}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 194.79, z: 0}
 --- !u!114 &1127923775
 MonoBehaviour:
@@ -14044,7 +14260,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   context: {fileID: 1119047824}
-  umaData: {fileID: 0}
+  umaData: {fileID: 1127923780}
   defaultRendererAsset: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: 52132aa93024910468fe6e7ce1e450a9, type: 2}
   umaAdditionalRecipes: []
@@ -15004,6 +15220,75 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1127923780
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127923771}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15ee0e75ac30e964b8dcd0ad5f953c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
+  userInformation: 
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  umaGenerator: {fileID: 1622264735}
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  animationController: {fileID: 0}
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
 --- !u!1 &1140501597
 GameObject:
   m_ObjectHideFlags: 0
@@ -16944,6 +17229,7 @@ GameObject:
   - component: {fileID: 1438399046}
   - component: {fileID: 1438399045}
   - component: {fileID: 1438399049}
+  - component: {fileID: 1438399050}
   m_Layer: 9
   m_Name: UMA-Girl
   m_TagString: Untagged
@@ -16966,7 +17252,7 @@ Transform:
   - {fileID: 659550655}
   - {fileID: 1784146004}
   m_Father: {fileID: 1467156325}
-  m_RootOrder: 8
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &1438399045
 MonoBehaviour:
@@ -17108,7 +17394,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   context: {fileID: 1119047824}
-  umaData: {fileID: 0}
+  umaData: {fileID: 1438399050}
   defaultRendererAsset: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: b24ba5dfb8159b944a1d9a37c8ce65d8, type: 2}
   umaAdditionalRecipes: []
@@ -18108,6 +18394,75 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1438399050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1438399041}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15ee0e75ac30e964b8dcd0ad5f953c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
+  userInformation: 
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  umaGenerator: {fileID: 1622264735}
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  animationController: {fileID: 0}
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
 --- !u!1 &1445341416
 GameObject:
   m_ObjectHideFlags: 0
@@ -18421,13 +18776,13 @@ Transform:
   - {fileID: 649211466}
   - {fileID: 1678770343}
   - {fileID: 596790626}
-  - {fileID: 679532412}
   - {fileID: 756189354}
   - {fileID: 976861108}
   - {fileID: 1127923772}
   - {fileID: 1438399042}
   - {fileID: 1778863402}
   - {fileID: 4983528355912461231}
+  - {fileID: 679532412}
   m_Father: {fileID: 0}
   m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -19591,13 +19946,14 @@ GameObject:
   - component: {fileID: 1678770347}
   - component: {fileID: 1678770346}
   - component: {fileID: 1678770350}
+  - component: {fileID: 1678770351}
   m_Layer: 9
   m_Name: UMA-Boy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1678770343
 Transform:
   m_ObjectHideFlags: 0
@@ -19755,7 +20111,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   context: {fileID: 1119047824}
-  umaData: {fileID: 0}
+  umaData: {fileID: 1678770351}
   defaultRendererAsset: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: 4fb63e6b6f4986f48afbfc6ff09bed9f, type: 2}
   umaAdditionalRecipes: []
@@ -20697,6 +21053,75 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1678770351
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1678770342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15ee0e75ac30e964b8dcd0ad5f953c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
+  userInformation: 
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  umaGenerator: {fileID: 1622264735}
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  animationController: {fileID: 0}
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
 --- !u!1 &1702273898
 GameObject:
   m_ObjectHideFlags: 0
@@ -21325,6 +21750,7 @@ GameObject:
   - component: {fileID: 1778863406}
   - component: {fileID: 1778863405}
   - component: {fileID: 1778863409}
+  - component: {fileID: 1778863410}
   m_Layer: 9
   m_Name: UMA-Elf-Man
   m_TagString: Untagged
@@ -21347,7 +21773,7 @@ Transform:
   - {fileID: 1445341417}
   - {fileID: 1211157087}
   m_Father: {fileID: 1467156325}
-  m_RootOrder: 9
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 222.227, z: 0}
 --- !u!114 &1778863405
 MonoBehaviour:
@@ -21489,7 +21915,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   context: {fileID: 1119047824}
-  umaData: {fileID: 0}
+  umaData: {fileID: 1778863410}
   defaultRendererAsset: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: 52132aa93024910468fe6e7ce1e450a9, type: 2}
   umaAdditionalRecipes: []
@@ -22444,6 +22870,75 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1778863410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1778863401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15ee0e75ac30e964b8dcd0ad5f953c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
+  userInformation: 
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  umaGenerator: {fileID: 1622264735}
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  animationController: {fileID: 0}
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
 --- !u!1 &1782093553
 GameObject:
   m_ObjectHideFlags: 0
@@ -26216,6 +26711,7 @@ GameObject:
   - component: {fileID: 4983528355051440497}
   - component: {fileID: 4983528355912461232}
   - component: {fileID: 4983528355912461233}
+  - component: {fileID: 4983528355912461234}
   m_Layer: 9
   m_Name: UMA-Woman
   m_TagString: Untagged
@@ -26254,7 +26750,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   context: {fileID: 1119047824}
-  umaData: {fileID: 0}
+  umaData: {fileID: 4983528355912461234}
   defaultRendererAsset: {fileID: 0}
   umaRecipe: {fileID: 11400000, guid: d3995223b7bbc2345a73ede40763c8d4, type: 2}
   umaAdditionalRecipes: []
@@ -27236,7 +27732,7 @@ Transform:
   - {fileID: 93043416}
   - {fileID: 1930832580}
   m_Father: {fileID: 1467156325}
-  m_RootOrder: 10
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &4983528355912461232
 MonoBehaviour:
@@ -27346,6 +27842,75 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4983528355912461234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4983528355051440494}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15ee0e75ac30e964b8dcd0ad5f953c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
+  userInformation: 
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  umaGenerator: {fileID: 1622264735}
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  animationController: {fileID: 0}
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
 --- !u!1001 &5317771547659917308
 PrefabInstance:
   m_ObjectHideFlags: 0

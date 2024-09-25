@@ -226,7 +226,7 @@ namespace UMA
 
         public static bool LeanMeanSceneFiles()
         {
-            return EditorPrefs.GetBool(ConfigToggle_LeanMeanSceneFiles, true);
+            return UMASettings.CleanRegenOnSave;
         }
 
         private static void EditorSceneManager_sceneSaved(UnityEngine.SceneManagement.Scene scene)
@@ -983,6 +983,8 @@ namespace UMA
         /// </summary>
         public bool CheckIndex()
         {
+
+            var settings = UMASettings.GetOrCreateSettings();
             // Unfortunately that asmdef is not available here
             string autoconfig = "UMA_INDEX_AUTOREPAIR";
             if (EditorPrefs.GetBool(autoconfig, false))

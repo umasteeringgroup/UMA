@@ -141,7 +141,11 @@ namespace UMA
 
 		private void AddBonesRecursive(Transform transform, UMAGeneratorBase umaGenerator)
 		{
-			if (transform.tag == umaGenerator.ignoreTag)
+			if (transform == null)
+            {
+                return;
+            }
+            if (transform.tag == umaGenerator.ignoreTag)
             {
                 return;
             }

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: UMA SSS Material
   m_EditorClassIdentifier: 
   translateSRP: 0
+  AutoSetSRPMaterials: 1
   _material: {fileID: 2100000, guid: 5c6dd6ed5e185c742a48649027e86903, type: 2}
   _secondPass: {fileID: 0}
   srpMaterials:
@@ -39,7 +40,7 @@ MonoBehaviour:
     - _BaseMap
     - _BumpMap
     - _MetallicGlossMap
-  materialType: 1
+  materialType: 2
   channels:
   - channelType: 0
     textureFormat: 0

@@ -7,6 +7,7 @@ using UMA.Examples;
 using UMA.PoseTools;
 using static UMA.UMAData;
 using UnityEngine.Experimental.Rendering;
+using PlasticPipe.PlasticProtocol.Messages;
 
 namespace UMA.Editors
 {
@@ -74,9 +75,14 @@ namespace UMA.Editors
 			int meshno = 0;
 			foreach (SkinnedMeshRenderer smr in renderers)
 			{
-				Material[] mats = smr.sharedMaterials;
+				Material[] omats = smr.sharedMaterials;
+                Material[] mats = new Material[omats.Length];
+                for (int i = 0; i < omats.Length; i++)
+                {
+                    mats[i] = new Material(omats[i]);
+                }
 
-				int Material = 0;
+                int Material = 0;
 				foreach (Material m in mats)
 				{
 					// get each texture.
@@ -92,21 +98,30 @@ namespace UMA.Editors
 							Texture texture = m.GetTexture(propertyName);
 							if (texture is Texture2D || texture is RenderTexture)
 							{
-								bool isNormal = false;
 								string path = AssetDatabase.GetAssetPath(texture.GetInstanceID());
 								if (string.IsNullOrEmpty(path))
 								{
-									if (ConvertNormalMaps)
+									bool isNormal = (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"));
+
+                                    if (ConvertNormalMaps)
 									{
-										if (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"))
+										if (isNormal)
 										{
-											// texture = ConvertNormalMap(texture);
 											texture = sconvertNormalMap(texture);
-											isNormal = true;
 										}
 									}
 									string texName = Path.Combine(Folder, CharName + "_Mat_" + Material + propertyName + ".png");
-									SaveTexture(texture, texName);
+									if (texture is RenderTexture)
+                                    {
+										Debug.Log("Saving Render Texture " + texName);
+                                        LinearSave(texture as RenderTexture, texName,isNormal);
+                                    }
+                                    else
+                                    {
+										Debug.Log("Saving texture " + texName);
+                                        SaveTexture2D(texture as Texture2D, texName, isNormal);
+                                    }
+                                    //SaveTexture(texture, texName);
 									AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 									if (isNormal)
                                     {
@@ -118,15 +133,15 @@ namespace UMA.Editors
 										EditorUtility.SetDirty(importer);
 										importer.SaveAndReimport();
 									}
+                                    Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(CustomAssetUtility.UnityFriendlyPath(texName));
 
-									Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(CustomAssetUtility.UnityFriendlyPath(texName));
-									m.SetTexture(propertyName, tex);
+                                    m.SetTexture(propertyName, tex);
 								}
 							}
 						}
 					}
 					string matname = Folder + "/"+CharName+"_Mat_" + Material + ".mat"; 
-					CustomAssetUtility.SaveAsset<Material>(m, matname);
+                    CustomAssetUtility.SaveAsset<Material>(m, matname);
 					Material++;
 					// Save the material to disk?
 					// update the SMR
@@ -272,17 +287,59 @@ namespace UMA.Editors
             }
 		}
 
-		private static void SaveTexture(Texture texture, string diffuseName, bool isNormal = false)
+		// Thanks, Brooklyn!
+        private static Texture2D GetReadableTexture(Texture2D texture, bool isNormal)
+        {
+			RenderTexture tmp;
+
+            if (isNormal)
+			{
+                tmp = RenderTexture.GetTemporary(
+                texture.width,
+                texture.height,
+                0,
+                RenderTextureFormat.Default,
+                RenderTextureReadWrite.Linear);
+            }
+            else
+			{
+                tmp = RenderTexture.GetTemporary(
+                texture.width,
+                texture.height,
+                0,
+                RenderTextureFormat.Default,
+                RenderTextureReadWrite.sRGB);
+            }
+
+            Graphics.Blit(texture, tmp);
+            RenderTexture previous = RenderTexture.active;
+            RenderTexture.active = tmp;
+
+			Texture2D readableTexture = new Texture2D(texture.width, texture.height, texture.format, false, isNormal);
+            readableTexture.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
+            readableTexture.Apply();
+
+            RenderTexture.active = previous;
+            RenderTexture.ReleaseTemporary(tmp);
+
+            return readableTexture;
+        }
+
+        private static void SaveTexture(Texture texture, string diffuseName, bool isNormal = false)
 		{
 			if (texture is RenderTexture)
 			{
-				SaveRenderTexture(texture as RenderTexture, diffuseName, isNormal);
+				Debug.Log("Saving render texture: " + diffuseName);
+                SaveRenderTexture(texture as RenderTexture, diffuseName, isNormal);
 				return;
 			}
 			else if (texture is Texture2D)
 			{
-				SaveTexture2D(texture as Texture2D, diffuseName);
-				return;
+				Debug.Log("Saving readable Texture2D "+diffuseName);
+                Texture2D tex = GetReadableTexture(texture as Texture2D, isNormal);
+                SaveTexture2D(tex, diffuseName, isNormal);
+                DestroyImmediate(tex);
+                return;
 			}
 			EditorUtility.DisplayDialog("Error", "Texture is not RenderTexture or Texture2D", "OK");
 		}
@@ -341,9 +398,10 @@ namespace UMA.Editors
 		{
 			if (tex is RenderTexture)
             {
+				Debug.Log("Converting RenderTexture to NormalMap");
                 return SConvertNormalMap(tex as RenderTexture);
             }
-
+			Debug.Log("Converting Texture2D to NormalMap");
             return SConvertNormalMap(tex as Texture2D);
 		}
 
@@ -376,7 +434,7 @@ namespace UMA.Editors
 			return tex;
 		}
 
-        static public void LinearSave(RenderTexture rt, string textureName)
+        static public void LinearSave(RenderTexture rt, string textureName, bool isNormal)
         {
             // Remember crrently active render texture
             RenderTexture currentActiveRT = RenderTexture.active;
@@ -390,7 +448,7 @@ namespace UMA.Editors
 
             // Restore previously active render texture
             RenderTexture.active = currentActiveRT;
-            SaveTexture2D(tex, textureName);
+            SaveTexture2D(tex, textureName, isNormal);
             
         }
 
@@ -406,22 +464,31 @@ namespace UMA.Editors
 			{
 				tex = GetRTPixels(texture);
 			}
-			SaveTexture2D(tex, textureName);
+			SaveTexture2D(tex, textureName, isNormal);
 		}
 
-		private static void SaveTexture2D(Texture2D texture, string textureName)
+		private static Texture2D SaveTexture2D(Texture2D texture, string textureName, bool isNormal)
 		{
             // ?? texture.isReadable seems to always return true, regardless of whether the texture is readable or not
             // so we'll just try to encode it and see if it throws an exception
 			// This didn't use to be the case, and may be fixed in various Unity versions...
             //if (texture.isReadable)
-            {
-                byte[] data = texture.EncodeToPNG();
-				System.IO.File.WriteAllBytes(textureName, data);
-			}
-		}
+            //{
+            //    byte[] data = texture.EncodeToPNG();
+			//	System.IO.File.WriteAllBytes(textureName, data);
+			//}
 
-		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as UMA Preset")]
+
+
+            Texture2D convertedTexture = GetReadableTexture(texture, isNormal);
+            byte[] data = convertedTexture.EncodeToPNG();
+			DestroyImmediate(convertedTexture);
+            System.IO.File.WriteAllBytes(textureName, data);
+			Texture2D texture2D = AssetDatabase.LoadAssetAtPath<Texture2D>(CustomAssetUtility.UnityFriendlyPath(textureName));
+			return texture2D;
+        }
+
+        [UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as UMA Preset")]
 		[UnityEditor.MenuItem("GameObject/UMA/Save as UMA Preset")]
 		[MenuItem("UMA/Load and Save/Save Selected Avatar as UMA Preset", priority = 1)]
 		public static void SaveSelectedAvatarsPreset()
