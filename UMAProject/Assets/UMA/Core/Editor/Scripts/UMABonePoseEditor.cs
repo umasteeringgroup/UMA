@@ -761,7 +761,12 @@ namespace UMA.PoseTools
 			{
 				EditorGUILayout.HelpBox("Select a built UMA (DynamicCharacterAvatar, DynamicAvatar, UMAData) to enable editing and addition of new bones.", MessageType.Info);
 				sourceUMA = EditorGUILayout.ObjectField("Source UMA", sourceUMA, typeof(UMAData), true) as UMAData;
-				saveUMAData = sourceUMA;
+				if ((saveUMAData == null)|| sourceUMA.GetInstanceID() != saveUMAData.GetInstanceID() && sourceUMA != null)
+                {
+                    saveUMAData = sourceUMA;
+                    SaveWeights();
+                    ClearBonePoseWeights();
+                }
 			}
 			else
 			{

@@ -442,7 +442,7 @@ namespace UMA
 		/// <param name="renderer">Source renderer.</param>
 		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer, int submeshIndex, bool udimAdjustment = false)
 		{
-			RetrieveDataFromUnityMesh(renderer.sharedMesh, udimAdjustment);
+			RetrieveDataFromUnityMesh(renderer.sharedMesh, udimAdjustment, submeshIndex);
 
 			UpdateBones(renderer.rootBone, renderer.bones);
 		}
@@ -460,6 +460,7 @@ namespace UMA
             return ret;
         }
 
+		
         /// <summary>
         /// Initialize UMA mesh data from Unity mesh.
         /// </summary>
@@ -608,13 +609,13 @@ namespace UMA
                 }
             }
             #endregion
-        }
+        } 
 
         /// <summary>
         /// Initialize UMA mesh data from Unity mesh.
         /// </summary>
         /// <param name="sharedMesh">Source mesh.</param>
-        public void RetrieveDataFromUnityMesh(Mesh sharedMesh, bool udimAdjustment = false)
+        public void OldetrieveDataFromUnityMesh(Mesh sharedMesh, bool udimAdjustment = false)
 		{
 			bindPoses = sharedMesh.bindposes;
 #if USE_NATIVE_ARRAYS

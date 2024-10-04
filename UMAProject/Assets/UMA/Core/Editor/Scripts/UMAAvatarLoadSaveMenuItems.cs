@@ -137,6 +137,10 @@ namespace UMA.Editors
 
                                     m.SetTexture(propertyName, tex);
 								}
+								else
+								{
+									m.SetTexture(propertyName, texture);
+                                }
 							}
 						}
 					}

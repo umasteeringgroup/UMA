@@ -856,7 +856,7 @@ namespace UMA
             return "SlotData: " + slotName;
         }
 
-        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment=false, int submeshIndex=-1)
+        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment, int submeshIndex)
         {
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;
@@ -867,7 +867,7 @@ namespace UMA
 #endif
         }
 
-        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer)
+       /* public void OldpdateMeshData(SkinnedMeshRenderer meshRenderer)
         {
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;
@@ -875,7 +875,7 @@ namespace UMA
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
-        }
+        }*/
 
 
         public void OnEnable()

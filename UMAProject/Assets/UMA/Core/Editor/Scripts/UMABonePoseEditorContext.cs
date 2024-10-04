@@ -178,12 +178,15 @@ namespace UMA.PoseTools
 								newMirror.plane = mirror.plane;
 								newMirror.transformA = childA;
 								newMirror.transformB = childB;
-								mirrors.Add(childA, newMirror);
-								mirrors.Add(childB, newMirror);
-
-	//							Debug.Log("Found new named mirror: " + childA.name + " : " + childB.name);
+								if (mirrors.ContainsKey(childA) == false)
+                                {
+                                    mirrors.Add(childA, newMirror);
+                                }
+                                if (mirrors.ContainsKey(childB) == false)
+                                {
+                                    mirrors.Add(childB, newMirror);
+                                }
 							}
-
 						}
 						// Else check for a position match
 						else
@@ -262,8 +265,15 @@ namespace UMA.PoseTools
 							newMirror.plane = plane;
 							newMirror.transformA = childA;
 							newMirror.transformB = childB;
-							mirrors.Add(childA, newMirror);
-							mirrors.Add(childB, newMirror);
+
+							if (mirrors.ContainsKey(childA) == false)
+							{
+                                mirrors.Add(childA, newMirror);
+                            }
+							if (mirrors.ContainsKey(childB) == false)
+							{
+								mirrors[childB] = newMirror;
+							}
 
 //							Debug.Log("Found new branching mirror: " + childA.name + " : " + childB.name);
 						}

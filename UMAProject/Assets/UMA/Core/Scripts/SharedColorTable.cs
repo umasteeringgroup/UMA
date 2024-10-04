@@ -19,6 +19,7 @@ namespace UMA
 		[Tooltip("If true, all colors will have the same name, copied from sharedColorName")]
         public bool copyColorName = true;
         public string sharedColorName;
+		[NonReorderable]
 		public OverlayColorData[] colors;
 
 		#region ISerializationCallbackReceiver Members

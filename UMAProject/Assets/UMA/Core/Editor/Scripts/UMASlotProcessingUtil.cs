@@ -20,6 +20,7 @@ namespace UMA.Editors
         /// <param name="rootBone">Root bone.</param>
         public static void UpdateSlotData( SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents)
         {
+			int subMesh = slot.subMeshIndex;
             string path = UMAUtils.GetAssetFolder(AssetDatabase.GetAssetPath(slot));
             string assetName = slot.slotName;
 
@@ -112,7 +113,7 @@ namespace UMA.Editors
             var meshgo = skinnedResult.transform.Find(mesh.name);
             var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
 
-            slot.UpdateMeshData(finalMeshRenderer,rootBone);
+            slot.UpdateMeshData(finalMeshRenderer,rootBone, false, subMesh);
 			slot.meshData.SlotName = slot.slotName;
             var cloth = mesh.GetComponent<Cloth>();
             if (cloth != null)
@@ -281,7 +282,7 @@ namespace UMA.Editors
 			//Make sure slots get created with a name hash
 			slot.nameHash = UMAUtils.StringToHash(slot.slotName);
 			slot.material = sbp.material;
-			slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone,sbp.udimAdjustment);
+			slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone,sbp.udimAdjustment, 0);
 			var cloth = sbp.slotMesh.GetComponent<Cloth>();
 			if (cloth != null)
 			{
