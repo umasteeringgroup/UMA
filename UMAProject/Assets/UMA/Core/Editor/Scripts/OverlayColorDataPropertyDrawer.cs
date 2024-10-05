@@ -27,10 +27,15 @@ namespace UMA.Editors
         }
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-		{
+		{			
+			var name = property.FindPropertyRelative("name");
+			var mask = property.FindPropertyRelative("channelMask");
+			var additive = property.FindPropertyRelative("channelAdditiveMask");
+			var propblock = property.FindPropertyRelative("propertyBlock");
+			var displayColor = property.FindPropertyRelative("displayColor");
+			
 			OverlayColorData ocd = null;
 			DynamicCharacterAvatar dca = property.serializedObject.targetObject as DynamicCharacterAvatar;
-
 
             ocd = property.GetValue<OverlayColorData>();
 			if (ocd == null && dca != null)
@@ -46,27 +51,23 @@ namespace UMA.Editors
 			}
 
 			EditorGUI.BeginProperty(position, label, property);
-			var name = property.FindPropertyRelative("name");
-			var mask = property.FindPropertyRelative("channelMask");
-			var additive = property.FindPropertyRelative("channelAdditiveMask");
-			var propblock = property.FindPropertyRelative("propertyBlock");
-			var displayColor = property.FindPropertyRelative("displayColor");
 
 			EditorGUILayout.BeginHorizontal();
-			name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
+		    label.text = name.stringValue;
+            name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
 			if (!name.isExpanded)
             {
-                //name.stringValue = EditorGUILayout.TextField(new GUIContent(""), name.stringValue);
                 if (mask.arraySize > 0)
                 {
 					SerializedProperty colProp = mask.GetArrayElementAtIndex(0);
-					//Color c = colProp.colorValue;
-					//EditorGUILayout.ColorField(c, GUILayout.Width(120));
-					EditorGUILayout.PropertyField(colProp);
-                    //if (colProp.colorValue != c)
-					//{
-                    //    colProp.colorValue = c;
-                    //}
+
+					Color c = colProp.colorValue;
+					Color b =EditorGUILayout.ColorField(c, GUILayout.Width(200));
+					if (b != c)
+                    {
+                        colProp.colorValue = b;
+						colProp.serializedObject.ApplyModifiedProperties();
+                    }
                 }
 				else
                 {
@@ -82,13 +83,13 @@ namespace UMA.Editors
             EditorGUILayout.EndHorizontal();
 			if (name.isExpanded)
 			{
-				EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
+				EditorGUILayout.LabelField("Overlay Color Data", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
 				EditorGUILayout.PropertyField(displayColor);
 
 				if (ocd != null)
 				{
-					string Name = property.FindPropertyRelative("name").stringValue;
 					int ChannelCount = EditorGUILayout.IntSlider(Channels, ocd.channelCount, 0, 16);
 					if (ChannelCount != ocd.channelCount)
 					{
@@ -161,21 +162,8 @@ namespace UMA.Editors
 					}
 				}
 			}
-			else
-			{
-			//	if (mask.arraySize > 0)
-			//	{
-			//		EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(0), new GUIContent("BaseColor"));
-			//	}
-			//	EditorGUILayout.PropertyField(displayColor);
-
-				//	if (ocd.HasProperties)
-				//	{
-				//		EditorGUILayout.LabelField("Has Properties");
-				//	}
-			}
-            //EditorGUILayout.Space();
-			EditorGUI.EndProperty();
+			property.serializedObject.ApplyModifiedProperties();
+            EditorGUI.EndProperty();
 		}
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{

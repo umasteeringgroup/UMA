@@ -16,8 +16,7 @@ namespace UMA
 		}
 	#endif
 		public int channelCount;
-		[Tooltip("If true, all colors will have the same name, copied from sharedColorName")]
-        public bool copyColorName = true;
+		
         public string sharedColorName;
 		[NonReorderable]
 		public OverlayColorData[] colors;
@@ -36,10 +35,6 @@ namespace UMA
 				{
                     OverlayColorData color = colors[i];
                     color.EnsureChannelsExact(channelCount);
-					if (copyColorName && !string.IsNullOrEmpty(sharedColorName))
-					{
-						color.name = sharedColorName;
-					}
 				}
 			}
 		}
