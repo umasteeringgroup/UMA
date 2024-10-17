@@ -304,7 +304,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 53a236a7ccb00374dbbed2f13dc8509d, type: 2}
   - {fileID: 11400000, guid: d40e65714e237a3499a2eada8f3411c6, type: 2}
   hairColor: {r: 1, g: 0.48235294, b: 0, a: 1}
-  DCAPrefab: {fileID: 153068, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+  DCAPrefab: {fileID: 1677979374131142649, guid: a58ad37f7a11d0247810f306a865a4d8,
+    type: 3}
   CharacterString: 'AA*
 
     R:HumanFemale

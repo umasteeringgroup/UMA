@@ -2495,6 +2495,39 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
+
+            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+            {
+                SlotData slotData = umaData.umaRecipe.slotDataList[i];
+                if (slotData != null)
+                {
+                    var overlays = slotData.GetOverlayList();
+                    for (int ovl = 0; ovl < overlays.Count; ovl++)
+                    {
+                        OverlayData od = overlays[ovl];
+                        if (od != null)
+                        {
+                            if (od.colorData.HasProperties)
+                            {
+                                UMAMaterialPropertyBlock propertyBlock = od.colorData.PropertyBlock;
+
+                                for (int property = 0; property < propertyBlock.shaderProperties.Count; property++)
+                                {
+                                    var theProp = propertyBlock.shaderProperties[property] as UMAOverlayTransformProperty;
+                                    if (theProp != null)
+                                    {
+                                        od.instanceTransformed = true;
+                                        od.Translate = theProp.Translate;
+                                        od.Rotation = theProp.Rotate;
+                                        od.Scale = theProp.Scale;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if (triggerDirty)
             {
                 ForceUpdate(false, true, false);

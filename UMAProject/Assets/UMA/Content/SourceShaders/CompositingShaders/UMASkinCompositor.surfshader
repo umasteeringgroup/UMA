@@ -1,0 +1,59 @@
+
+BEGIN_OPTIONS
+
+END_OPTIONS
+
+BEGIN_PROPERTIES
+	_Tint ("Tint", Color) = (1, 1, 1, 1)
+   [NoScaleOffset]_Albedo("Albedo", 2D) = "white" {}
+   [Normal][NoScaleOffset]_Normal("Normal", 2D) = "bump" {}
+   [Toggle(_USEMASKMAP)]
+   _UseMaskMap ("Use Mask Map", Float) = 0
+   [NoScaleOffset]_Mask("Mask Map", 2D) = "black" {}
+END_PROPERTIES
+
+
+// Any variables you want to have in the per material CBuffer go here.
+BEGIN_CBUFFER
+	half4 _Tint;
+END_CBUFFER
+
+
+// if you are writing a subshader, any defines that should be set on the main
+// shader are defined here
+BEGIN_DEFINES
+   #pragma shader_feature_local _ _USEMASKMAP
+END_DEFINES
+
+
+// All code goes here
+
+BEGIN_CODE
+
+   TEXTURE2D(_Albedo);
+   SAMPLER(sampler_Albedo);
+   TEXTURE2D(_Normal);
+   SAMPLER(sampler_Normal);
+   TEXTURE2D(_Mask);
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+      float2 uv = d.texcoord0.xy;
+
+      half4 c = SAMPLE_TEXTURE2D(_Albedo, sampler_Albedo, uv);
+      o.Albedo = c.rgb * _Tint.rgb;
+		o.Normal = UnpackNormal(SAMPLE_TEXTURE2D(_Normal, sampler_Normal, uv));
+
+      #if _USEMASKMAP
+      half4 mask = SAMPLE_TEXTURE2D(_Mask, sampler_Albedo, uv);
+      o.Metallic = mask.r;
+      o.Occlusion = mask.g;
+      o.Smoothness = mask.a;
+      // half detailMask = mask.b;
+      #endif
+
+		o.Alpha = c.a;
+	}
+
+END_CODE
+

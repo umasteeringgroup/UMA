@@ -50,8 +50,8 @@ MonoBehaviour:
     _globalWeight: 1
     _DNAForWeight:
       _calcOption: 0
-      _dnaName: 
-      _dnaNameHash: 0
+      _dnaName: bodyFitness
+      _dnaNameHash: -1379254163
       _evaluator:
         _name: Raw
         _graph:

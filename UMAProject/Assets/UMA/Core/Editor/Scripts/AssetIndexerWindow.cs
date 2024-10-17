@@ -1331,7 +1331,7 @@ namespace UMA.Controls
                                 }
                                 if (setScale)
                                 {
-                                    od.Scale.Set(scale.x, scale.y, scale.z);
+                                    od.Scale.Set(scale.x, scale.y);
                                 }
                                 if (setRotation)
                                 {

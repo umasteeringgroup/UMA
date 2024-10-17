@@ -54,7 +54,7 @@ namespace UMA
 			public bool transform;
 			public float rotation;
 			public Vector3 scale;
-			public Vector3 position;
+			public Vector2 position;
 			public bool advancedBlending;
 			public int textureType;
 			public UMAMaterial.ChannelType channelType;
@@ -221,7 +221,8 @@ namespace UMA
 				GL.PushMatrix();
 
 				// rotate around the pivot
-				pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f), tr.rect.y + (tr.rect.height / 2.0f));
+				pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f) , tr.rect.y + (tr.rect.height / 2.0f) );
+				
 				Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
 
 				GL.MultMatrix(newMat);
@@ -241,6 +242,7 @@ namespace UMA
 				// Debug.Log($"Drawing = {tr.textureType} with texture {tr.mat.mainTexture.name} and shader {tr.mat.shader.name}");
 			}
 
+		
 			Graphics.DrawTexture(tr.rect, tr.tex, tr.mat);		
 			if (tr.transform)
 			{
@@ -473,7 +475,20 @@ namespace UMA
 				textureMergeRects[textureMergeRectCount].transform = true;
 				textureMergeRects[textureMergeRectCount].rotation = od.Rotation;
 				textureMergeRects[textureMergeRectCount].scale = od.Scale;
-			}
+
+                var tex = source.overlayData[0].GetTexture(0);
+				if (tex != null)
+				{
+					float xx = od.Translate.x * tex.width;
+                    float yy = od.Translate.y * tex.height;
+
+                    textureMergeRects[textureMergeRectCount].rect = new Rect(overlayRect.x + xx, overlayRect.y + yy, overlayRect.width, overlayRect.height);
+                }
+				else
+				{
+					textureMergeRects[textureMergeRectCount].position.Set(0, 0);
+				}
+            }
 			else
 			{
 				textureMergeRects[textureMergeRectCount].transform = false;

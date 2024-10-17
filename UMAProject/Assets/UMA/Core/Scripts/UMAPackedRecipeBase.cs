@@ -230,6 +230,7 @@ namespace UMA
             public string[] Tags; // Any recipe specific tags.
 			public bool[] tiling;
 			public int uvOverride;
+			public Vector2 translate;
 		}
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
@@ -650,6 +651,7 @@ namespace UMA
 
 						tempPackedOverlay.scale = overlayData.Scale;
 						tempPackedOverlay.rotation = overlayData.Rotation;
+						tempPackedOverlay.translate = new Vector2(overlayData.Translate.x, overlayData.Translate.y);
 						tempPackedOverlay.blendModes = new int[overlayData.GetOverlayBlendsLength()];
                         tempPackedOverlay.Tags = overlayData.tags.Clone() as string[];
 						tempPackedOverlay.uvOverride = overlayData.UVSet;
@@ -1008,9 +1010,10 @@ namespace UMA
                                 packedOverlay.rect[3]);
 
 							overlayData.instanceTransformed = packedOverlay.isTransformed;
-							overlayData.Scale = packedOverlay.scale;
+							overlayData.Scale = new Vector2(packedOverlay.scale.x, packedOverlay.scale.y);
 							overlayData.Rotation = packedOverlay.rotation;
-							overlayData.UVSet = packedSlot.uvOverride;
+							overlayData.Translate = new Vector2(packedOverlay.translate.x,packedOverlay.translate.y);
+                            overlayData.UVSet = packedSlot.uvOverride;
 
 							if (packedOverlay.colorIdx < umaPackRecipe.sharedColorCount)
                             {

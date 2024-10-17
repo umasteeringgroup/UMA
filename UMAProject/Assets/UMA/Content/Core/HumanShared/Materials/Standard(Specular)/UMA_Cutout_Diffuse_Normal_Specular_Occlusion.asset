@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: UMA_Cutout_Diffuse_Normal_Specular_Occlusion
   m_EditorClassIdentifier: 
   translateSRP: 1
+  AutoSetSRPMaterials: 1
   _material: {fileID: 2100000, guid: 470f9cc3b76eb664fbb8947cc9f42769, type: 2}
   _secondPass: {fileID: 0}
   srpMaterials:
@@ -20,9 +21,9 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: 470f9cc3b76eb664fbb8947cc9f42769, type: 2}
     secondPass: {fileID: 0}
     alternateKeywords:
-    - _MainTex
+    - _BaseMap
     - _BumpMap
-    - _SpecGlossMap
+    - _SpecularMap
     - _OcclusionMap
   materialType: 1
   channels:

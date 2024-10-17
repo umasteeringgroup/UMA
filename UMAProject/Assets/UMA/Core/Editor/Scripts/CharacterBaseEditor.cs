@@ -2058,7 +2058,8 @@ namespace UMA.Editors
 
             bool originalInstanceTransformed = _overlayData.instanceTransformed;
             float originalRotation = _overlayData.Rotation;
-            Vector3 originalScale = _overlayData.Scale;
+            Vector2 originalScale = _overlayData.Scale;
+            Vector2 originalTranslate = _overlayData.Translate;
 
             if (_overlayData.asset.material != null && _overlayData.asset.material.materialType == UMAMaterial.MaterialType.UseExistingTextures)
             {
@@ -2081,9 +2082,12 @@ namespace UMA.Editors
             if (_overlayData.instanceTransformed)
             {
                 GUIHelper.BeginVerticalPadded(5, new Color(1, 1, 1, 1));
-                EditorGUILayout.HelpBox("Warning: scaling and/rotation could result in writing outside the bounds of the texture on the atlas. Be sure to use only in safe areas.", MessageType.Info);
+                EditorGUILayout.HelpBox("Warning: translating, scaling or rotation could result in writing outside the bounds of the texture on the atlas. Be sure to use only in safe areas.", MessageType.Info);
                 _overlayData.Rotation = EditorGUILayout.FloatField("Rotation", _overlayData.Rotation);
-                _overlayData.Scale = EditorGUILayout.Vector3Field("Scale", _overlayData.Scale);
+                _overlayData.Scale = EditorGUILayout.Vector2Field("Scale", _overlayData.Scale);
+                EditorGUILayout.LabelField("Translation: ");
+                _overlayData.Translate.x = EditorGUILayout.Slider("X:",_overlayData.Translate.x * 100.0f, -100.0f, 100.0f) / 100.0f;
+                _overlayData.Translate.y = EditorGUILayout.Slider("Y:", _overlayData.Translate.y * 100.0f, -100.0f, 100.0f) / 100.0f;
                 GUIHelper.EndVerticalPadded(5);
             }
 
@@ -2098,6 +2102,10 @@ namespace UMA.Editors
             }
 
             if (_overlayData.Scale != originalScale)
+            {
+                changed = true;
+            }
+            if (_overlayData.Translate != originalTranslate)
             {
                 changed = true;
             }

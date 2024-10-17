@@ -33,6 +33,8 @@ namespace UMA.Editors
 			var additive = property.FindPropertyRelative("channelAdditiveMask");
 			var propblock = property.FindPropertyRelative("propertyBlock");
 			var displayColor = property.FindPropertyRelative("displayColor");
+			var colorFoldout = property.FindPropertyRelative("colorsExpanded");
+			var propertiesFoldout = property.FindPropertyRelative("propertiesExpanded");
 			
 			OverlayColorData ocd = null;
 			DynamicCharacterAvatar dca = property.serializedObject.targetObject as DynamicCharacterAvatar;
@@ -108,56 +110,68 @@ namespace UMA.Editors
 				GUILayout.Space(5);
 
 
-				for (int i = 0; i < mask.arraySize; i++)
+				colorFoldout.boolValue = EditorGUILayout.Foldout(colorFoldout.boolValue, "Colors");
+				if (colorFoldout.boolValue)
 				{
-					if (showAdvancedProperty.boolValue)
+					GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+					for (int i = 0; i < mask.arraySize; i++)
 					{
-						var channelMask = mask.GetArrayElementAtIndex(i);
-						var channelColor = ToVector4(channelMask.colorValue);
-						var newchannelColor = EditorGUILayout.Vector4Field("Multiplier (" + i + ")", channelColor);
-						if (channelColor != newchannelColor)
+						if (showAdvancedProperty.boolValue)
 						{
-							channelMask.colorValue = ToColor(newchannelColor);
-						}
-
-						var AdditiveMask = additive.GetArrayElementAtIndex(i);
-						var AdditiveColor = ToVector4(AdditiveMask.colorValue);
-						var newAdditiveColor = EditorGUILayout.Vector4Field("Additive (" + i + ")", AdditiveColor);
-						if (newAdditiveColor != AdditiveColor)
-						{
-							AdditiveMask.colorValue = ToColor(newAdditiveColor);
-						}
-					}
-					else
-					{
-						Modulate.text = "Multiplier (" + i + ")";
-						EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(i), Modulate);
-						Additive.text = "Additive (" + i + ")";
-						EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(i), Additive);
-					}
-					GUILayout.Space(5);
-				}
-				if (ocd != null)
-				{
-					if (ocd.PropertyBlock != null)
-					{
-						if (UMAMaterialPropertyBlockDrawer.OnGUI(ocd.PropertyBlock))
-						{
-							if (dca != null)
+							var channelMask = mask.GetArrayElementAtIndex(i);
+							var channelColor = ToVector4(channelMask.colorValue);
+							var newchannelColor = EditorGUILayout.Vector4Field("Multiplier (" + i + ")", channelColor);
+							if (channelColor != newchannelColor)
 							{
-								EditorUtility.SetDirty(dca);
-								AssetDatabase.SaveAssets();
+								channelMask.colorValue = ToColor(newchannelColor);
+							}
+
+							var AdditiveMask = additive.GetArrayElementAtIndex(i);
+							var AdditiveColor = ToVector4(AdditiveMask.colorValue);
+							var newAdditiveColor = EditorGUILayout.Vector4Field("Additive (" + i + ")", AdditiveColor);
+							if (newAdditiveColor != AdditiveColor)
+							{
+								AdditiveMask.colorValue = ToColor(newAdditiveColor);
 							}
 						}
-					}
-					else
-					{
-						if (GUILayout.Button("Add Properties Block"))
+						else
 						{
-							ocd.PropertyBlock = new UMAMaterialPropertyBlock();
-							EditorUtility.SetDirty(dca);
-							AssetDatabase.SaveAssets();
-							property.serializedObject.Update();
+							Modulate.text = "Multiplier (" + i + ")";
+							EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(i), Modulate);
+							Additive.text = "Additive (" + i + ")";
+							EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(i), Additive);
+						}
+						GUILayout.Space(5);
+					}
+					GUIHelper.EndVerticalPadded(3);
+				}
+
+
+				propertiesFoldout.boolValue = EditorGUILayout.Foldout(propertiesFoldout.boolValue, "Color Parameters");
+				if (propertiesFoldout.boolValue)
+				{
+					if (ocd != null)
+					{
+						if (ocd.PropertyBlock != null)
+						{
+							if (UMAMaterialPropertyBlockDrawer.OnGUI(ocd.PropertyBlock))
+							{
+								if (dca != null)
+								{
+									EditorUtility.SetDirty(dca);
+									AssetDatabase.SaveAssets();
+								}
+							}
+						}
+						else
+						{
+							if (GUILayout.Button("Add Properties Block"))
+							{
+								ocd.PropertyBlock = new UMAMaterialPropertyBlock();
+								EditorUtility.SetDirty(dca);
+								AssetDatabase.SaveAssets();
+								property.serializedObject.Update();
+							}
 						}
 					}
 				}

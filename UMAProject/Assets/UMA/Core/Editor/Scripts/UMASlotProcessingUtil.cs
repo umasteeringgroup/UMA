@@ -313,6 +313,7 @@ namespace UMA.Editors
 				additionalSlot.slotName = theSlotName;//  string.Format("{0}_{1}", slotName, i);
 				additionalSlot.material = sbp.material;
 				additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone,sbp.udimAdjustment, i);
+				//additionalSlot.subMeshIndex = i; 
 
                 string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + "_slot.asset";
                 if (sbp.useRootFolder)
