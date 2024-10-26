@@ -879,11 +879,6 @@ namespace UMA
                     UMAProperty up = shaderProperties[i];
                     if (up != null)
                     {
-                        //Debug.Log($"Adding property to serializedProperties {up.name}");
-                        if (up.GetType() == typeof(UMAOverlayTransformProperty))
-                        {
-                            Debug.Log("Would do a break here but it's not allowed.");
-                        }
                         up.stringRepresentation = up.ToString();
                         PropertyHolder ph = new PropertyHolder(up);
                         serializedProperties.Add(ph);
@@ -910,12 +905,7 @@ namespace UMA
                     }
                     //Debug.Log("Adding property to shaderProperties " + serializedProperties[i].property.name);
                     PropertyHolder p = serializedProperties[i];
-                    if (p.propertType == "UMAOverlayTransformProperty")
-                    {
-                        Debug.Log("Would do a break here but it's not allowed.");
-                    }
                     AddProperty(p.property);
-                    
                 }
             }
         }
