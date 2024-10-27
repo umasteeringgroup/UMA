@@ -12,7 +12,6 @@ BEGIN_PROPERTIES
 	_Metallic ("Metallic", Range(0,1)) = 0
 	_Smoothness ("Smoothness", Range(0,1)) = 0
 	[BetterHeader(Lighting Adjustment)]
-    _HalfLambertStrength ("Lambert(0), HalfLambert(1)", Range(0,4)) = 1
     _RimLightingModulation ("Rim Lighting Level", Float) = 0
 	_RimLightColor("Rim Light Color", Color) = (1,1,1,1)
 	_RimLightPower("Rim Light Power", Range(0.5, 12)) = 4
@@ -33,7 +32,6 @@ BEGIN_CBUFFER
 	half  _ColorModulation;
 	half  _Smoothness;
 	half  _Metallic;
-    half _HalfLambertStrength;
     half3 _RimLightColor;
 	half  _RimLightPower;
     float _RimLightingModulation;
@@ -57,15 +55,6 @@ BEGIN_CODE
 	  o.Metallic = _Metallic;
 	  o.Smoothness = _Smoothness;
 
-	 float3 lightDir;
-     float3 lightColor;
-	 GetSun(lightDir, lightColor);
-	 float3 normalDirection = TangentToWorldSpace(d, o.Normal).rgb;
-	 float atten = 1.0;
-	 float lambert = dot(normalDirection, lightDir);
-
-     lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
-     o.Albedo *= atten * lightColor * lambert;
      if (_RimLightingModulation>0) 
      { 
 	    float rim = 1.0 - saturate(dot(d.tangentSpaceViewDir, o.Normal)); 

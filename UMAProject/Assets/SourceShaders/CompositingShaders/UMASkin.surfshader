@@ -1,6 +1,6 @@
 
 BEGIN_OPTIONS
-   ShaderName "UMA/ExampleSkinShader"
+   ShaderName "UMA/ExampleSkinShader2"
    Stackable "False"
    DisableGBufferPass "True" // disable gbuffer pass
    Workflow "Metallic"
@@ -13,15 +13,30 @@ BEGIN_PROPERTIES
    [Toggle(_USEMASKMAP)]
    _UseMaskMap ("Use Mask Map", Float) = 0
    [NoScaleOffset]_Mask("Mask Map", 2D) = "black" {}
-   [Toggle(_USETHICKNESSMAP)]
-   _UseThicknessMap ("Use Thickness Map", Float) = 0
+   [Toggle]_UseThicknessMap ("Use Thickness Map", Float) = 0
+   _SSSColor ("SSS Color", Color) = (1, 1, 1, 1)
    [NoScaleOffset]_Thickness("Thickness Map", 2D) = "black" {}
+   _Metallic ("Metallic", Range(0,1)) = 0.5
+   _Occlusion ("Occlusion", Range(0,1)) = 1
+   _Smoothness ("Smoothness", Range(0,1)) = 0.5
+   _SSSLevel ("SSS Level", Range(0,2)) = 1
+   _SSSGlow ("SSS Glow", Range(0,2)) = 1
+   [Toggle]_InvertThickness ("Invert Thickness", Float) = 0
+   _SSSColor ("SSS Color", Color) = (1, 1, 1, 1)
 END_PROPERTIES
 
 
 // Any variables you want to have in the per material CBuffer go here.
 BEGIN_CBUFFER
 	half4 _Tint;
+    half _Metallic;
+    half _Occlusion;
+    half _Smoothness;
+    half4 _SSSColor;
+    half _SSSLevel;
+    half _SSSGlow;
+    half _InvertThickness;
+    half _UseThicknessMap;
 END_CBUFFER
 
 
@@ -57,12 +72,29 @@ BEGIN_CODE
       o.Occlusion = mask.g;
       o.Smoothness = mask.a;
       // half detailMask = mask.b;
+      #else
+      o.Metallic = _Metallic;
+      o.Occlusion = _Occlusion;
+      o.Smoothness = _Smoothness;
       #endif
    
-      #if _USETHICKNESSMAP
-      half4 thickness = SAMPLE_TEXTURE2D(_Thickness, sampler_Albedo,uv);
+        if (_UseThicknessMap) 
+        { 
+        
+	    float3 lightDir;
+         float3 lightColor;
+    	 GetSun(lightDir, lightColor);
 
-      #endif
+        half4 base_thick = SAMPLE_TEXTURE2D(_Thickness, sampler_Albedo,uv);
+        if (_InvertThickness) 
+        { 
+             base_thick = 1.0 - base_thick;
+        }
+        float fakeLum = dot(o.Albedo, float3(0.299, 0.587, 0.114));
+        o.Albedo += (base_thick * _SSSColor.rgb * _SSSLevel * fakeLum);
+          o.Emission = max(0.0h, dot(lightDir, o.Normal)) * _SSSColor.rgb * base_thick * _SSSGlow;
+        }
+
 	  o.Alpha = c.a;
 	}
 
