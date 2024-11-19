@@ -32,7 +32,7 @@ MonoBehaviour:
   showIndexedTypes: 0
   showUnindexedTypes: 0
   postProcessAllAssets: 0
-  useBurstCompiler: 0
+  useBurstCompiler: 1
   use32bitBuffers: 1
   useAddressables: 0
   enableGLTFExport: 0

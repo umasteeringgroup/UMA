@@ -5,14 +5,28 @@ using UnityEditor.SceneManagement;
 using System;
 using UMA.Editors;
 using UMA.CharacterSystem;
+using Codice.Client.Common.GameUI;
 
 namespace UMA.CharacterSystem.Editors
 {
     [CustomEditor(typeof(DynamicCharacterAvatar), true)]
     public class DynamicCharacterAvatarEditor : Editor
     {
+        const string vertexSelectionToolName = "VertexSelection";
+        private class VertexSelection
+        {
+            public int vertexIndexOnSlot;
+            public string slotName;
+            public Vector3 WorldPosition;
+        }
+
+        private List<VertexSelection> SelectedVertexes = new List<VertexSelection>();
+        private Mesh BakedMesh = null;
+        private GameObject VertexObject = null;
+
         public static bool showHelp = false;
         public static bool showWardrobe = false;
+        public static bool showUtils = false;
         public static bool showEditorCustomization = true;
         public static bool showPrefinedDNA = false;
         public static bool showAnimatorGUI = false;
@@ -26,6 +40,7 @@ namespace UMA.CharacterSystem.Editors
         private string cachedRace = "";
         private string[] cachedRaceDNA = { };
         private string[] rawcachedRaceDNA = { };
+        private SceneView sceneView;
 
         protected DynamicCharacterAvatar thisDCA;
         protected RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
@@ -60,7 +75,30 @@ namespace UMA.CharacterSystem.Editors
             _racePropDrawer.thisDCA = thisDCA;
             _wardrobePropDrawer.thisDCA = thisDCA;
             _animatorPropDrawer.thisDCA = thisDCA;
+
+            SceneView.duringSceneGui += DoSceneGUI;
+
         }
+
+        public void OnDisable()
+        {
+            SceneView.duringSceneGui -= DoSceneGUI;
+
+            ClearSelectedVertexes();
+            GameObject go = GameObject.Find(vertexSelectionToolName);
+            if (go != null)
+            {
+                //DestroyImmediate(go);
+                //BakedMesh = null;
+            }
+            // in case we get in a goofy state where the mesh was baked but the tool wasn't created
+            //if (BakedMesh != null)
+            //{
+            //    DestroyImmediate(BakedMesh);
+            //    BakedMesh = null;
+            //}
+        }
+    
 
         public void SetNewColorCount(int colorCount)
         {
@@ -282,7 +320,14 @@ namespace UMA.CharacterSystem.Editors
                 {
                     DoShowWardrobeGUI();
                 }
+                showUtils = EditorGUILayout.Foldout(showUtils, "Utilities");
+                if (showUtils)
+                {
+                    DoUtilitiesGUI();
+                }
             }
+
+
             if (wasChanged)
             {
                 serializedObject.ApplyModifiedProperties();
@@ -590,6 +635,317 @@ namespace UMA.CharacterSystem.Editors
             EndVerticalPadded();
 
             return wasChanged;
+        }
+
+        private static bool AllowVertexSelection;
+
+        private Color[] defaultColors = new Color[] 
+        { 
+            new Color(1.0f, 0.9f, 0.9f, 1.0f), 
+            new Color(0.9f, 1.0f, 0.9f, 1.0f), 
+            new Color(0.9f, 0.9f, 1.0f, 1.0f),
+            new Color(1.0f, 1.0f, 0.9f, 1.0f),
+            new Color(0.9f, 1.0f, 1.0f, 1.0f),
+            new Color(1.0f, 0.9f, 1.0f, 1.0f)
+        };
+
+
+        private void DoSceneGUI(SceneView sceneView)
+        {
+            if (!AllowVertexSelection)
+            {
+                return;
+            }
+
+            Event currentEvent = Event.current;
+
+            if (currentEvent.type == EventType.Repaint)
+            {
+                // Add cursor rect only when necessary
+                EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
+            }
+
+            if (currentEvent.type == EventType.MouseDown)
+            {
+                if (currentEvent.button == 0)
+                {
+                    Ray ray = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
+                    if (Physics.Raycast(ray, out RaycastHit hit))
+                    {
+                        if (hit.transform != null && hit.transform.gameObject.name == vertexSelectionToolName)
+                        {
+                            //Debug.Log("Hit the vertex editor mesh: " + hit.point);
+                            VertexSelection vs = FindVertex(hit, BakedMesh, VertexObject);
+
+                            // todo: get actual vertex index and slot.
+                            SelectedVertexes.Add(vs);// new VertexSelection() { vertexIndexOnSlot = 0, slotName = "SlotName", WorldPosition = hit.point });
+                        }
+                    }
+                }
+                else if (currentEvent.button == 1)
+                {
+                    Debug.Log("Right mouse button pressed in Scene View");
+                }
+            }
+
+            float size = 0.003f;
+            foreach (VertexSelection vs in SelectedVertexes)
+            {
+                Handles.SphereHandleCap(vs.vertexIndexOnSlot, vs.WorldPosition, Quaternion.identity, size, EventType.Repaint);
+            }
+
+            // Your custom GUI logic here
+            Handles.BeginGUI();
+            GUILayout.BeginArea(new Rect(10, 10, 200, 300), "Vertex Selection", GUI.skin.window);
+
+            foreach (VertexSelection vs in SelectedVertexes)
+            {
+                GUILayout.Label("Slot: " + vs.slotName + " Vertex: " + vs.vertexIndexOnSlot);
+            }
+
+            GUILayout.Label("This is a custom GUI element in the Scene view.");
+            if (GUILayout.Button("Disable Vertex Selection"))
+            {
+                AllowVertexSelection = false;
+                CleanupFromVertexMode();
+                SceneView.RepaintAll();
+            }
+            GUILayout.EndArea();
+            Handles.EndGUI();
+
+            // Repaint the scene view only when necessary
+            if (currentEvent.type == EventType.Repaint)
+            {
+                SceneView.RepaintAll();
+            }
+        }
+
+        private VertexSelection FindVertex(RaycastHit hit, Mesh mesh, GameObject go)
+        {
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            int triangle = hit.triangleIndex;
+
+            var tris = mesh.triangles;
+            var verts = mesh.vertices;
+
+            int i0 = tris[triangle * 3];
+            Vector3 local = go.transform.InverseTransformPoint(hit.point);
+
+            int foundVert = tris[triangle * 3];
+            float maxDist = Vector3.Distance(local, verts[foundVert]);
+
+            for (int i = 0; i < 3; i++)
+            {
+                Vector3 vert = verts[tris[triangle * 3 + i]];
+                float dist = Vector3.Distance(local, vert);
+                if (dist < maxDist)
+                {
+                    maxDist = dist;
+                    foundVert = tris[triangle * 3 + i];
+                }
+            }
+
+            // find the vertex in the slot
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var slot = slots[i];
+                if (slot.vertexOffset >= foundVert)
+                {
+                    int LocalToSlot = foundVert - slot.vertexOffset;
+                    if (LocalToSlot < slot.asset.meshData.vertexCount)
+                    {
+                        Debug.Log("Found vertex: " + foundVert + " in slot: " + slot.slotName);
+                        return new VertexSelection()
+                        {
+                            vertexIndexOnSlot = LocalToSlot,
+                            slotName = slot.slotName,
+                            WorldPosition = go.transform.TransformPoint(verts[foundVert])
+                        };
+                    }
+                }
+            }
+
+            throw new Exception("Vertex not found on slots!");
+        }
+
+        private void DoSceneGUIOld(SceneView sceneView)
+        {
+            if (!AllowVertexSelection)
+            {
+                return;
+            }
+
+            //EditorGUIUtility.AddCursorRect(sceneView.position, MouseCursor.ArrowPlus);
+            EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
+
+            if (Event.current.type == EventType.MouseDown)
+            {
+                if (Event.current.button == 0)
+                {
+                    Physics.Raycast(HandleUtility.GUIPointToWorldRay(Event.current.mousePosition), out RaycastHit hit);
+                    if (hit.transform != null && hit.transform.gameObject.name == vertexSelectionToolName)
+                    {
+                        Debug.Log("Hit the vertex editor mesh: " + hit.point);
+
+                        // todo: get actual vertex index and slot.
+                        SelectedVertexes.Add(new VertexSelection() { vertexIndexOnSlot = 0, slotName = "SlotName", WorldPosition = hit.point });
+                    }
+                }
+                else if (Event.current.button == 1)
+                {
+                    Debug.Log("Right mouse button pressed in Scene View");
+                }
+            }
+
+            float size = 0.003f;
+            foreach (VertexSelection vs in SelectedVertexes)
+            {
+                Handles.SphereHandleCap(vs.vertexIndexOnSlot, vs.WorldPosition, Quaternion.identity, size, EventType.Repaint);
+            }
+            // Your custom GUI logic here
+            Handles.BeginGUI();
+            GUILayout.BeginArea(new Rect(10, 10, 200, 300), "Vertex Selection", GUI.skin.window);
+
+           
+            foreach(VertexSelection vs in SelectedVertexes)
+            {
+                GUILayout.Label("Slot: " + vs.slotName + " Vertex: " + vs.vertexIndexOnSlot);
+            }
+
+            GUILayout.Label("This is a custom GUI element in the Scene view.");
+            if (GUILayout.Button("Disable Vertex Selection"))
+            {
+                AllowVertexSelection = false;
+                CleanupFromVertexMode();
+                SceneView.RepaintAll();
+            }
+            GUILayout.EndArea();
+
+
+            Handles.EndGUI();
+        }
+
+        private void SetVertexMaterialColors(GameObject VertexObject)
+        {
+            MeshRenderer mr = VertexObject.GetComponent<MeshRenderer>();
+            List<Material> newMaterials = new List<Material>();
+
+            if (mr != null)
+            {
+                for (int i = 0; i < mr.sharedMaterials.Length; i++)
+                {
+                    int colorNo = i % defaultColors.Length;
+                    if (mr.sharedMaterials[i] == null)
+                    {
+                        Material M = UMAUtils.GetDefaultDiffuseMaterial();
+                        if (M != null)
+                        {
+                            M.SetColor("_Color", defaultColors[colorNo]);
+                            newMaterials.Add(M);
+                        }
+                        else
+                        {
+                            Debug.LogError("No Default Material found");
+                        }
+                    }
+                }
+                mr.sharedMaterials = newMaterials.ToArray();
+            }
+            else
+            {
+                Debug.LogError("No MeshRenderer found");
+            }
+        }
+
+        private void DoUtilitiesGUI()
+        {
+            GUIHelper.BeginHorizontalPadded(10, new Color(0.75f, 0.875f, 1f));
+
+            EditorGUI.BeginChangeCheck();
+            AllowVertexSelection = EditorGUILayout.Toggle("Enable Vertex Selection", AllowVertexSelection);
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (AllowVertexSelection)
+                {
+                    SkinnedMeshRenderer smr = thisDCA.umaData.GetRenderers()[0];
+                    if (smr != null)
+                    {
+                        BakedMesh = new Mesh();
+                        BakedMesh.name = "BakedMesh";
+                        smr.BakeMesh(BakedMesh, true);
+                        GameObject go = new GameObject(vertexSelectionToolName);
+                        go.AddComponent<MeshFilter>().sharedMesh = BakedMesh;
+                        MeshRenderer renderer = go.GetComponent<MeshRenderer>();
+                        if (renderer == null)
+                        {
+                            renderer = go.AddComponent<MeshRenderer>();
+                        }
+                        // Material sharedMaterial = UMAUtils.GetDefaultDiffuseMaterial();
+                        renderer.sharedMaterials = new Material[BakedMesh.subMeshCount];
+                        go.transform.parent = thisDCA.gameObject.transform;
+                        go.transform.localPosition = Vector3.zero;
+                        go.transform.localRotation = Quaternion.identity;
+                        go.transform.localScale = Vector3.one;
+                        MeshCollider mc = go.AddComponent<MeshCollider>();
+                        mc.sharedMesh = BakedMesh;
+
+                        go.SetActive(true);
+                        smr.enabled = false;
+                        VertexObject = go;
+                        SetVertexMaterialColors(go);
+                    }
+                    else
+                    {
+                        Debug.LogError("No SkinnedMeshRenderer found");
+                    }
+                    SceneView.RepaintAll();
+                }
+                else
+                {
+                    CleanupFromVertexMode();
+                }
+            }
+
+            if (GUILayout.Button("Clear Selected Vertexes"))
+            {
+                ClearSelectedVertexes();
+                SceneView.RepaintAll();
+            }
+
+            if (GUILayout.Button("Force Rebuild"))
+            {
+                thisDCA.ForceUpdate(false, false, true);
+            }
+
+
+
+            // Edit weights of the selected vertex on the slot. 
+            // Then force rebuild the character.
+
+            GUIHelper.EndHorizontalPadded(10);
+        }
+
+        public void CleanupFromVertexMode()
+        {
+            VertexObject = GameObject.Find(vertexSelectionToolName);
+            while (VertexObject != null)
+            {
+                DestroyImmediate(VertexObject);
+                VertexObject = GameObject.Find(vertexSelectionToolName);
+            }
+
+            VertexObject = null;
+            SkinnedMeshRenderer smr = thisDCA.umaData.GetRenderers()[0];
+            if (smr != null)
+            {
+                smr.enabled = true;
+            }
+        }
+
+
+        public void ClearSelectedVertexes()
+        {
+            SelectedVertexes = new List<VertexSelection>();
         }
 
         private void DoShowWardrobeGUI()

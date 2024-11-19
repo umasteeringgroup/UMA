@@ -5,6 +5,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using Unity.Collections;
 using UMA.CharacterSystem;
+using System;
 
 namespace UMA.Editors
 {
@@ -283,7 +284,9 @@ namespace UMA.Editors
 			slot.nameHash = UMAUtils.StringToHash(slot.slotName);
 			slot.material = sbp.material;
 			slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone,sbp.udimAdjustment, 0);
-			var cloth = sbp.slotMesh.GetComponent<Cloth>();
+			TransformMeshData(slot, sbp);
+
+            var cloth = sbp.slotMesh.GetComponent<Cloth>();
 			if (cloth != null)
 			{
 				slot.meshData.RetrieveDataFromUnityCloth(cloth);
@@ -294,34 +297,36 @@ namespace UMA.Editors
                 slotPath = sbp.slotFolder + '/' + sbp.slotName + "_slot.asset";
             }
             AssetDatabase.CreateAsset(slot, slotPath);
-			for(int i = 1; i < slot.meshData.subMeshCount; i++)
+			for (int i = 1; i < slot.meshData.subMeshCount; i++)
 			{
 				string theSlotName = string.Format("{0}_{1}", sbp.slotName, i);
 
 				if (i < sbp.slotMesh.sharedMaterials.Length && sbp.nameByMaterial)
-                {
+				{
 					if (!string.IsNullOrEmpty(sbp.slotMesh.sharedMaterials[i].name))
-                    {
+					{
 						string titlecase = sbp.slotMesh.sharedMaterials[i].name.ToTitleCase();
 						if (!string.IsNullOrWhiteSpace(titlecase))
-                        {
-							theSlotName = titlecase; 
-                        }
+						{
+							theSlotName = titlecase;
+						}
 					}
-                }
+				}
 				var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
 				additionalSlot.slotName = theSlotName;//  string.Format("{0}_{1}", slotName, i);
 				additionalSlot.material = sbp.material;
-				additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone,sbp.udimAdjustment, i);
+				additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, sbp.udimAdjustment, i);
+				TransformMeshData(additionalSlot, sbp);
+
 				//additionalSlot.subMeshIndex = i; 
 
-                string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + "_slot.asset";
-                if (sbp.useRootFolder)
-                {
-                    theSlotPath = sbp.slotFolder + '/' + theSlotName + "_slot.asset";
-                }
+				string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + "_slot.asset";
+				if (sbp.useRootFolder)
+				{
+					theSlotPath = sbp.slotFolder + '/' + theSlotName + "_slot.asset";
+				}
 
-                AssetDatabase.CreateAsset(additionalSlot, theSlotPath);
+				AssetDatabase.CreateAsset(additionalSlot, theSlotPath);
 			}
 			AssetDatabase.SaveAssets();
 			AssetDatabase.DeleteAsset(SkinnedName);
@@ -329,7 +334,26 @@ namespace UMA.Editors
 			return slot;
 		}
 
-		public static void OptimizeSlotDataMesh(SkinnedMeshRenderer smr, List<int> KeepBonesList)
+		private static void TransformMeshData(SlotDataAsset slot, SlotBuilderParameters sbp)
+		{
+            var meshData = slot.meshData;
+			var Vertices = meshData.vertices;
+			Vector3[] newVerts = new Vector3[meshData.vertices.Length];
+			for (int i=0; i < Vertices.Length; i++)
+            {
+				if (sbp.rotationEnabled)
+				{
+					newVerts[i] = sbp.rotation * Vertices[i];
+				}
+				else
+				{
+					newVerts[i] = DoInversions(sbp, Vertices[i]);
+                }
+            }
+			slot.meshData.vertices = newVerts;
+        }
+
+        public static void OptimizeSlotDataMesh(SkinnedMeshRenderer smr, List<int> KeepBonesList)
 		{
             if (smr == null) return;
             var mesh = smr.sharedMesh;
@@ -418,6 +442,14 @@ namespace UMA.Editors
 				}
 			}
 			return usedBones;
+		}
+
+		private static Vector3 DoInversions(SlotBuilderParameters sbp, Vector3 inVector)
+		{
+			float x = sbp.invertX ? -inVector.x : inVector.x;
+            float y = sbp.invertY ? -inVector.y : inVector.y;
+            float z = sbp.invertZ ? -inVector.z : inVector.z;
+            return new Vector3(x, y, z);
 		}
 	}
 }

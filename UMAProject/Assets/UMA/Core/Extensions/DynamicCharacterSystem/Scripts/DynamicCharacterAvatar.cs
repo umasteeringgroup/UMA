@@ -1020,7 +1020,7 @@ namespace UMA.CharacterSystem
             Dictionary<string, DnaSetter> DefaultRaceDNA = new Dictionary<string, DnaSetter>();
             if (skipRaceDefaults)
             {
-                UMAData.UMARecipe recipe = r.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance);
+                UMAData.UMARecipe recipe = r.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance, false);
                 DefaultRaceDNA = GetDNA(recipe);
             }
 
@@ -2600,6 +2600,21 @@ namespace UMA.CharacterSystem
         private List<string> GetBodyColorNames()
         {
             List<string> bodyColorNames = new List<string>();
+            if (activeRace == null)
+            {
+                Debug.Log("No activeRace found");
+                return bodyColorNames;
+            }
+            if (activeRace.data == null)
+            {
+                Debug.Log("No raceData found for " + activeRace.name);
+                return bodyColorNames;
+            }
+            if (activeRace.data.baseRaceRecipe == null)
+            {
+                Debug.Log("No baseRaceRecipe found for " + activeRace.name);
+                return bodyColorNames;
+            }
             var baseRaceRecipeTemp = UMATextRecipe.PackedLoadDCS(context, (activeRace.data.baseRaceRecipe as UMATextRecipe).recipeString);
             for (int i = 0; i < baseRaceRecipeTemp.sharedColors.Length; i++)
             {

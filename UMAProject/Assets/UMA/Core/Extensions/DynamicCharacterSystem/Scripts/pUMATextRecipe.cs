@@ -244,7 +244,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context = null)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context = null, bool loadSlots = true)
 		{
 			try
 			{
@@ -259,7 +259,7 @@ namespace UMA
 				if (activeWardrobeSet == null)
 				{
 					recipeType = "Standard";
-					base.Load(umaRecipe, context);
+					base.Load(umaRecipe, context, loadSlots);
 					return;
 				}
 				//if it has a wardrobeSet or was saved using the DCSPackRecipe Model
@@ -270,7 +270,7 @@ namespace UMA
 				}
 				else //we can use standard UMALoading
 				{
-					base.Load(umaRecipe, context);
+					base.Load(umaRecipe, context, loadSlots);
 				}
 			}
 			catch (UMAResourceNotFoundException e)

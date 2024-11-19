@@ -14,7 +14,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void Load(UMAData.UMARecipe umaRecipe, UMAContextBase context);
+		public abstract void Load(UMAData.UMARecipe umaRecipe, UMAContextBase context, bool loadSlots = true);
 		/// <summary>
 		/// Save data from the specified umaRecipe.
 		/// </summary>
@@ -61,12 +61,12 @@ namespace UMA
 		/// </summary>
 		/// <returns>The cached recipe.</returns>
 		/// <param name="context">Context.</param>
-		public UMAData.UMARecipe GetCachedRecipe(UMAContextBase context)
+		public UMAData.UMARecipe GetCachedRecipe(UMAContextBase context, bool loadSlots = true)
 		{
 			if (!cached || umaRecipe == null)
 			{
 				umaRecipe = new UMAData.UMARecipe();
-				Load(umaRecipe, context);
+				Load(umaRecipe, context, loadSlots);
 #if !UNITY_EDITOR
 #if UMA_ADDRESSABLES
 				// don't cache addressables, as they can be unloaded.

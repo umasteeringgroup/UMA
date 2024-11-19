@@ -93,12 +93,14 @@ namespace UMA
         {
             if (slot == null)
             {
+                Debug.Log("UpdateSlot: Slot is null");
                 return;
             }
             // look at the slot list of any generated UMA
             UMAAssetIndexer.Instance.ReleaseReference(slot);
             List<DynamicCharacterAvatar> Avatars = GetSceneEditTimeAvatars();
 
+            Debug.Log($"Rebuilding {Avatars.Count} Avatars");
             foreach (DynamicCharacterAvatar dca in Avatars)
             {
                 UMAData ud = dca.gameObject.GetComponent<UMAData>();
@@ -111,11 +113,11 @@ namespace UMA
                         {
                             foreach (SlotData sd in slots)
                             {
-                                if (sd.asset == slot)
+                                if (sd.slotName == slot.slotName)
                                 {
                                     if (doItAll)
                                     {
-                                    dca.GenerateSingleUMA();
+                                        dca.GenerateSingleUMA();
                                     }
                                     else
                                     {
