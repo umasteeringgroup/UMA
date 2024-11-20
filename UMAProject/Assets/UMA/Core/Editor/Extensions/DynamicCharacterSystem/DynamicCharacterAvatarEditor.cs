@@ -16,13 +16,14 @@ namespace UMA.CharacterSystem.Editors
         private class VertexSelection
         {
             public int vertexIndexOnSlot;
-            public string slotName;
+            public SlotData slot;
             public Vector3 WorldPosition;
         }
 
         private List<VertexSelection> SelectedVertexes = new List<VertexSelection>();
         private Mesh BakedMesh = null;
         private GameObject VertexObject = null;
+        private int selectedVertex = 0;
 
         public static bool showHelp = false;
         public static bool showWardrobe = false;
@@ -652,10 +653,10 @@ namespace UMA.CharacterSystem.Editors
 
         private void DoSceneGUI(SceneView sceneView)
         {
-            if (!AllowVertexSelection)
-            {
-                return;
-            }
+         //   if (!AllowVertexSelection)
+         //   {
+         //       return;
+         //   }
 
             Event currentEvent = Event.current;
 
@@ -664,21 +665,37 @@ namespace UMA.CharacterSystem.Editors
                 // Add cursor rect only when necessary
                 EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
             }
-
             if (currentEvent.type == EventType.MouseDown)
             {
-                if (currentEvent.button == 0)
+                if (currentEvent.button == 0 && currentEvent.shift)
                 {
                     Ray ray = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
                     if (Physics.Raycast(ray, out RaycastHit hit))
                     {
+                        bool duplicateVertex = false;
                         if (hit.transform != null && hit.transform.gameObject.name == vertexSelectionToolName)
                         {
                             //Debug.Log("Hit the vertex editor mesh: " + hit.point);
                             VertexSelection vs = FindVertex(hit, BakedMesh, VertexObject);
 
-                            // todo: get actual vertex index and slot.
-                            SelectedVertexes.Add(vs);// new VertexSelection() { vertexIndexOnSlot = 0, slotName = "SlotName", WorldPosition = hit.point });
+                            for(int i=0;i<SelectedVertexes.Count; i++)
+                            {
+                                if (SelectedVertexes[i].slot.slotName == vs.slot.slotName && SelectedVertexes[i].vertexIndexOnSlot == vs.vertexIndexOnSlot)
+                                {
+                                    selectedVertex = i;
+                                    duplicateVertex = true;
+                                    Repaint();
+                                    break;
+                                }
+                            }
+
+                            if (!duplicateVertex)
+                            {
+                                // todo: get actual vertex index and slot.
+                                SelectedVertexes.Add(vs);// new VertexSelection() { vertexIndexOnSlot = 0, slotName = "SlotName", WorldPosition = hit.point });
+                                selectedVertex = SelectedVertexes.Count - 1;
+                                Repaint();// repaint the inspector to show the new vertex.
+                            }
                         }
                     }
                 }
@@ -688,22 +705,30 @@ namespace UMA.CharacterSystem.Editors
                 }
             }
 
+            Color saveColor = Handles.color;
+
             float size = 0.003f;
-            foreach (VertexSelection vs in SelectedVertexes)
+            for (int i = 0; i < SelectedVertexes.Count; i++)
             {
-                Handles.SphereHandleCap(vs.vertexIndexOnSlot, vs.WorldPosition, Quaternion.identity, size, EventType.Repaint);
+                VertexSelection vs = SelectedVertexes[i];
+                if (i == selectedVertex)
+                {
+                    Handles.color = Color.yellow;
+                }
+                else
+                {
+                    Handles.color = Color.red;
+                }
+                Handles.SphereHandleCap(i, vs.WorldPosition, Quaternion.identity, size, EventType.Repaint);
             }
+
+            Handles.color = saveColor;
 
             // Your custom GUI logic here
             Handles.BeginGUI();
             GUILayout.BeginArea(new Rect(10, 10, 200, 300), "Vertex Selection", GUI.skin.window);
 
-            foreach (VertexSelection vs in SelectedVertexes)
-            {
-                GUILayout.Label("Slot: " + vs.slotName + " Vertex: " + vs.vertexIndexOnSlot);
-            }
-
-            GUILayout.Label("This is a custom GUI element in the Scene view.");
+            EditorGUILayout.HelpBox("Hold shift and click on the Avatar to select a vertex.",MessageType.Info);
             if (GUILayout.Button("Disable Vertex Selection"))
             {
                 AllowVertexSelection = false;
@@ -725,7 +750,10 @@ namespace UMA.CharacterSystem.Editors
             var slots = thisDCA.umaData.umaRecipe.slotDataList;
             int triangle = hit.triangleIndex;
 
-            var tris = mesh.triangles;
+            var tris = mesh.triangles; VertexAdjuster ve = new VertexAdjuster();
+            ve.Setup(thisDCA);
+            InteractiveUMAWindow.Init("UMA Vertex Adjuster - EXPERIMENTAL", ve);
+ 
             var verts = mesh.vertices;
 
             int i0 = tris[triangle * 3];
@@ -745,84 +773,19 @@ namespace UMA.CharacterSystem.Editors
                 }
             }
 
-            // find the vertex in the slot
-            for (int i = 0; i < slots.Length; i++)
-            {
-                var slot = slots[i];
-                if (slot.vertexOffset >= foundVert)
-                {
-                    int LocalToSlot = foundVert - slot.vertexOffset;
-                    if (LocalToSlot < slot.asset.meshData.vertexCount)
-                    {
-                        Debug.Log("Found vertex: " + foundVert + " in slot: " + slot.slotName);
-                        return new VertexSelection()
-                        {
-                            vertexIndexOnSlot = LocalToSlot,
-                            slotName = slot.slotName,
-                            WorldPosition = go.transform.TransformPoint(verts[foundVert])
-                        };
-                    }
-                }
-            }
+            SlotData foundSlot = thisDCA.umaData.umaRecipe.FindSlotForVertex(foundVert);
 
+            if (foundSlot != null)
+            {
+                int LocalToSlot = foundVert - foundSlot.vertexOffset;
+                return new VertexSelection()
+                {
+                    vertexIndexOnSlot = LocalToSlot,
+                    slot = foundSlot,
+                    WorldPosition = go.transform.TransformPoint(verts[foundVert])
+                };
+            }
             throw new Exception("Vertex not found on slots!");
-        }
-
-        private void DoSceneGUIOld(SceneView sceneView)
-        {
-            if (!AllowVertexSelection)
-            {
-                return;
-            }
-
-            //EditorGUIUtility.AddCursorRect(sceneView.position, MouseCursor.ArrowPlus);
-            EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
-
-            if (Event.current.type == EventType.MouseDown)
-            {
-                if (Event.current.button == 0)
-                {
-                    Physics.Raycast(HandleUtility.GUIPointToWorldRay(Event.current.mousePosition), out RaycastHit hit);
-                    if (hit.transform != null && hit.transform.gameObject.name == vertexSelectionToolName)
-                    {
-                        Debug.Log("Hit the vertex editor mesh: " + hit.point);
-
-                        // todo: get actual vertex index and slot.
-                        SelectedVertexes.Add(new VertexSelection() { vertexIndexOnSlot = 0, slotName = "SlotName", WorldPosition = hit.point });
-                    }
-                }
-                else if (Event.current.button == 1)
-                {
-                    Debug.Log("Right mouse button pressed in Scene View");
-                }
-            }
-
-            float size = 0.003f;
-            foreach (VertexSelection vs in SelectedVertexes)
-            {
-                Handles.SphereHandleCap(vs.vertexIndexOnSlot, vs.WorldPosition, Quaternion.identity, size, EventType.Repaint);
-            }
-            // Your custom GUI logic here
-            Handles.BeginGUI();
-            GUILayout.BeginArea(new Rect(10, 10, 200, 300), "Vertex Selection", GUI.skin.window);
-
-           
-            foreach(VertexSelection vs in SelectedVertexes)
-            {
-                GUILayout.Label("Slot: " + vs.slotName + " Vertex: " + vs.vertexIndexOnSlot);
-            }
-
-            GUILayout.Label("This is a custom GUI element in the Scene view.");
-            if (GUILayout.Button("Disable Vertex Selection"))
-            {
-                AllowVertexSelection = false;
-                CleanupFromVertexMode();
-                SceneView.RepaintAll();
-            }
-            GUILayout.EndArea();
-
-
-            Handles.EndGUI();
         }
 
         private void SetVertexMaterialColors(GameObject VertexObject)
@@ -859,7 +822,7 @@ namespace UMA.CharacterSystem.Editors
 
         private void DoUtilitiesGUI()
         {
-            GUIHelper.BeginHorizontalPadded(10, new Color(0.75f, 0.875f, 1f));
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
             EditorGUI.BeginChangeCheck();
             AllowVertexSelection = EditorGUILayout.Toggle("Enable Vertex Selection", AllowVertexSelection);
@@ -867,6 +830,8 @@ namespace UMA.CharacterSystem.Editors
             {
                 if (AllowVertexSelection)
                 {
+                    // TODO: Create a new window, create a preview scene, show the window with the preview after moving the new VertexObject to the new scene.
+                    //
                     SkinnedMeshRenderer smr = thisDCA.umaData.GetRenderers()[0];
                     if (smr != null)
                     {
@@ -905,24 +870,112 @@ namespace UMA.CharacterSystem.Editors
                     CleanupFromVertexMode();
                 }
             }
+            int deleted = -1;
+            bool changed = false;
+            Color save = GUI.color;
 
-            if (GUILayout.Button("Clear Selected Vertexes"))
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                var sv = SelectedVertexes[i];
+                GUILayout.BeginHorizontal();
+                GUI.color = (i == selectedVertex) ? Color.yellow : Color.white;
+                // display the slot, vertexnumber.
+                // and create a button to delete sv
+                if (GUILayout.Button(sv.slot.slotName,EditorStyles.label,GUILayout.Width(220)))
+                {
+                    selectedVertex = i;
+                    changed = true;
+                }
+                if ( GUILayout.Button(sv.vertexIndexOnSlot.ToString(),EditorStyles.label,GUILayout.Width(60)))
+                {
+                    selectedVertex = i;
+                    changed = true;
+                }
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(20)))
+                {
+                    deleted = i;
+                    changed = true;
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUI.color = save;
+
+            if (deleted >= 0)
+            {
+                SelectedVertexes.RemoveAt(deleted);
+                if (deleted == selectedVertex)
+                {
+                    selectedVertex = -1;
+                }
+                changed = true;
+            }
+            if (changed) 
+            {
+                SceneView.RepaintAll();
+            }
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Clear"))
             {
                 ClearSelectedVertexes();
                 SceneView.RepaintAll();
             }
+            if (GUILayout.Button("Add to Ignore List"))
+            {
+                // Add to the ignore list of the SlotDataAsset.
+                // these vertexes will *not* be overridden by the slot vertex overrides.
+                
+            }
+            if (GUILayout.Button("Open vertex adjuster"))
+            {
+                // Open the vertex adjuster window.
+                VertexAdjuster ve = new VertexAdjuster();
+                ve.Setup(thisDCA);
+                InteractiveUMAWindow.Init("UMA Vertex Adjuster - EXPERIMENTAL", ve);
+
+            }
+
+            GUILayout.EndHorizontal();
+
+            // TODO edit the boneweights of the selected vertex.
+
+            if (selectedVertex >= 0 && selectedVertex < SelectedVertexes.Count)
+            {
+                VertexSelection vs = SelectedVertexes[selectedVertex];
+                GUILayout.Label("Selected Vertex: " + vs.slot.slotName + " " + vs.vertexIndexOnSlot);
+                GUILayout.Label($"BoneWeights {vs.slot.asset.meshData.ManagedBonesPerVertex[vs.vertexIndexOnSlot]} ");
+
+                int boneWeightOffset = vs.slot.asset.meshData.BoneWeightOffset(vs.vertexIndexOnSlot);
+                int boneWeightCount = vs.slot.asset.meshData.ManagedBonesPerVertex[vs.vertexIndexOnSlot];
+
+                for (int i=0;i<boneWeightCount; i++)
+                {
+                    GUILayout.BeginHorizontal();
+
+                    GUILayout.Label($"Bone {vs.slot.asset.meshData.ManagedBoneWeights[boneWeightOffset + i].boneIndex}",GUILayout.Width(60));
+                    vs.slot.asset.meshData.ManagedBoneWeights[boneWeightOffset + i].weight = EditorGUILayout.FloatField(vs.slot.asset.meshData.ManagedBoneWeights[boneWeightOffset + i].weight);
+                    GUILayout.EndHorizontal();
+                }
+            }
+            else
+            {
+                GUILayout.Label("No Vertex Selected");
+            }
+
+            GUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Force Rebuild"))
             {
                 thisDCA.ForceUpdate(false, false, true);
             }
-
+            GUILayout.EndHorizontal();
 
 
             // Edit weights of the selected vertex on the slot. 
             // Then force rebuild the character.
 
-            GUIHelper.EndHorizontalPadded(10);
+            GUIHelper.EndVerticalPadded(10);
         }
 
         public void CleanupFromVertexMode()

@@ -1383,6 +1383,24 @@ namespace UMA
 				}
 			}
 
+			public SlotData FindSlotForVertex(int vert)
+			{
+                // find the vertex in the slot
+                for (int i = 0; i < slotDataList.Length; i++)
+                {
+                    var slot = slotDataList[i];
+                    if (vert >= slot.vertexOffset)
+                    {
+                        int LocalToSlot = vert - slot.vertexOffset;
+                        if (LocalToSlot < slot.asset.meshData.vertexCount)
+                        {
+							return slot;
+                        }
+                    }
+                }
+				return null;
+            }
+
 			/// <summary>
 			/// Combine additional slot with current data.
 			/// </summary>

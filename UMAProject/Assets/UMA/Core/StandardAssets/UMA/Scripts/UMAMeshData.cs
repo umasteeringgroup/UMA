@@ -370,8 +370,17 @@ namespace UMA
 
 		public static Dictionary<int, NativeArray<int>> SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
 
+		public int BoneWeightOffset(int vertexIndex)
+        {
+            int offset = 0;
+            for (int i = 0; i < vertexIndex; i++)
+            {
+                offset += ManagedBonesPerVertex[i];
+            }
+            return offset;
+        }
 
-		static UMAMeshData()
+        static UMAMeshData()
 		{
 			AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
 		}
