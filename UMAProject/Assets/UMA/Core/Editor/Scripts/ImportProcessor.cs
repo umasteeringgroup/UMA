@@ -28,6 +28,9 @@ namespace UMA
                 settings.Initialized = true;
                 EnsureTags();
                 EnsureUMAIndicators();
+                EditorUtility.SetDirty(settings);
+                AssetDatabase.SaveAssetIfDirty(settings);
+
                 UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
                 if (UAI == null)
                 {

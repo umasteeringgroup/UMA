@@ -2803,44 +2803,42 @@ namespace UMA.Editors
                 UMATextRecipe theRecipe = target as UMATextRecipe;
 #if UMA_ADDRESSABLES
                 bool changed = false;
-				if(!serializedObject.isEditingMultipleObjects) 
-				{  
-					bool wasEnabled = GUI.enabled; 
-					GUI.enabled = false;  
-				string newLabel = EditorGUILayout.TextField("Alt Addressable Label", theRecipe.label);
-				if (newLabel != theRecipe.label)
-				{
-					theRecipe.label = newLabel;
-					_needsUpdate = true;
-					_forceUpdate = true;
-				}
-				// GUIContent ToggleContent = new GUIContent("Resources Only", "When checked, This recipe will be skipped when generating Addressable Groups. This can result in duplicate assets.");
-				if (theRecipe.resourcesOnly)
-				{
-					GUILayout.Label("RESOURCES ONLY: TRUE");
-					EditorGUILayout.HelpBox("Removing the Resources Only flag will instruct UMA to include this in the addressable groups. You will need to regenerate the groups, and rebuild the addressable bundles.", MessageType.Info);
-					if (GUILayout.Button("Remove Resources Only flag"))
-					{
-						theRecipe.resourcesOnly = false;
-						DoUpdate();
-						RebuildIfNeeded();
-						/* Here: Ask to rebuild the groups using the default group builder */
-					}
-				}
-				else
-				{
-					GUILayout.Label("RESOURCES ONLY: FALSE");
-					EditorGUILayout.HelpBox("Making this Resources Only will remove this recipe, and the items contained in it, from the addressable groups. This can take a few moments. Addressable bundles will need to be rebuilt after this is toggled.", MessageType.Info);
-					if (GUILayout.Button("Make this Resources Only"))
-					{
-						theRecipe.resourcesOnly = true;
-						DoUpdate();
-						/* Here: Ask to rebuild the groups using the default group builder */
-						RebuildIfNeeded();
-					}
-				}
-					GUI.enabled = wasEnabled; 
-				} 
+                if (!serializedObject.isEditingMultipleObjects)
+                {
+
+                    string newLabel = EditorGUILayout.TextField("Alt Addressable Label", theRecipe.label);
+                    if (newLabel != theRecipe.label)
+                    {
+                        theRecipe.label = newLabel;
+                        _needsUpdate = true;
+                        _forceUpdate = true;
+                    }
+                    // GUIContent ToggleContent = new GUIContent("Resources Only", "When checked, This recipe will be skipped when generating Addressable Groups. This can result in duplicate assets.");
+                    if (theRecipe.resourcesOnly)
+                    {
+                        GUILayout.Label("RESOURCES ONLY: TRUE");
+                        EditorGUILayout.HelpBox("Removing the Resources Only flag will instruct UMA to include this in the addressable groups. You will need to regenerate the groups, and rebuild the addressable bundles.", MessageType.Info);
+                        if (GUILayout.Button("Remove Resources Only flag"))
+                        {
+                            theRecipe.resourcesOnly = false;
+                            DoUpdate();
+                            RebuildIfNeeded();
+                            /* Here: Ask to rebuild the groups using the default group builder */
+                        }
+                    }
+                    else
+                    {
+                        GUILayout.Label("RESOURCES ONLY: FALSE");
+                        EditorGUILayout.HelpBox("Making this Resources Only will remove this recipe, and the items contained in it, from the addressable groups. This can take a few moments. Addressable bundles will need to be rebuilt after this is toggled.", MessageType.Info);
+                        if (GUILayout.Button("Make this Resources Only"))
+                        {
+                            theRecipe.resourcesOnly = true;
+                            DoUpdate();
+                            /* Here: Ask to rebuild the groups using the default group builder */
+                            RebuildIfNeeded();
+                        }
+                    }
+                } 
                 EditorGUILayout.HelpBox("Checking ForceKeep will set the keep flag on the item", MessageType.Info);
                 bool oldForceKeep = theRecipe.forceKeep;
                 theRecipe.forceKeep = EditorGUILayout.Toggle("Force Keep", theRecipe.forceKeep);

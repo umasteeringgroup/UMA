@@ -51,9 +51,9 @@ namespace UMA
                 LogText("Generating from recipes: " + DateTime.Now.ToString());
                 LogText("****************************************************");
                 LogText("");
-                bool IncludeRecipes = UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_IncludeRecipes, false);
-                bool IncludeOthers = UMAEditorUtilities.GetConfigValue(UMAEditorUtilities.ConfigToggle_IncludeOther, false);
-                string DefaultAddressableLabel = UMAEditorUtilities.GetDefaultAddressableLabel();
+                bool IncludeRecipes = UMASettings.AddrIncludeRecipes;
+                bool IncludeOthers = UMASettings.AddrIncludeOther;
+                string DefaultAddressableLabel = UMASettings.AddrDefaultLabel;
 
                 RecipeExtraLabels = new Dictionary<string, List<string>>();
                 

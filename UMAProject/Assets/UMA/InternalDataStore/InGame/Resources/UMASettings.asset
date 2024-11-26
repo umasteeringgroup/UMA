@@ -42,3 +42,4 @@ MonoBehaviour:
   addrDefaultLabel: UMA_Default
   addStripMaterials: 1
   addrIncludeRecipes: 0
+  addrIncludeOther: 0

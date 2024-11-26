@@ -41,6 +41,7 @@ public class UMASettings : ScriptableObject
     public string addrDefaultLabel = "UMA_Default";
     public bool addStripMaterials = true;
     public bool addrIncludeRecipes = false;
+    public bool addrIncludeOther = false;
 
     [MenuItem("Assets/Create/UMA/Core/UMASettings")]
     public static void CreateUMASettingsMenuItem()
@@ -117,7 +118,6 @@ public class UMASettings : ScriptableObject
     public static string AddrDefaultLabel { get { var settings = GetOrCreateSettings(); return settings.addrDefaultLabel; }}
     public static bool AddStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addStripMaterials; }}
     public static bool AddrIncludeRecipes { get { var settings = GetOrCreateSettings(); return settings.addrIncludeRecipes; }}
-
-
+    public static bool AddrIncludeOther { get { var settings = GetOrCreateSettings(); return settings.addrIncludeOther; } }
 }
 #endif

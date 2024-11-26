@@ -4,6 +4,7 @@ using UMA.CharacterSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+#if false
 public class HairSmoosher : MonoBehaviour
 {
     // These are temporary until we can integrate this
@@ -255,7 +256,7 @@ public class HairSmoosher : MonoBehaviour
         }
         else
         {
-            m.SetVertices(SmooshTarget.meshData.vertices);
+            m.SetVertices(SmooshTarget.meshData.GetVertices());
         }
         m.SetTriangles(SmooshTarget.meshData.submeshes[0].getBaseTriangles(), 0);
         CreateSceneParameters csp = new CreateSceneParameters(LocalPhysicsMode.Physics3D);
@@ -399,3 +400,4 @@ public class HairSmoosher : MonoBehaviour
         }
     }
 }
+#endif

@@ -363,12 +363,17 @@ namespace UMA
 		public string SlotName; // the slotname. used for debugging.
 
 
-		// They forgot the List<> method for bone weights.
+		public Vector3[] GetVertices()
+		{
+            return vertices;
+        }
+
+        // They forgot the List<> method for bone weights.
 #if USE_UNSAFE_CODE
 		static BoneWeight[] gBoneWeightsArray = new BoneWeight[MAX_VERTEX_COUNT];
 #endif
 
-		public static Dictionary<int, NativeArray<int>> SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
+        public static Dictionary<int, NativeArray<int>> SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
 
 		public int BoneWeightOffset(int vertexIndex)
         {
@@ -891,9 +896,11 @@ namespace UMA
 			mesh.triangles = new int[0];
 
 				NativeArray<Vector3> verts = new NativeArray<Vector3>(vertices, Allocator.Temp);
+				// TODO: VERTUPDATES.
 				mesh.SetVertices(verts);
 
 				SetBoneWeightsFromMeshData(mesh);                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
+
 				mesh.normals = normals;
 				mesh.tangents = tangents;
 				mesh.uv = uv;

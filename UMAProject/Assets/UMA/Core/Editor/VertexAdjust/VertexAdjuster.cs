@@ -81,8 +81,10 @@ public class VertexAdjuster : IEditorScene
     public void OnSceneGUI(InteractiveUMAWindow scene)
     {
         Event currentEvent = Event.current;
-        EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
-
+        if (sceneView != null)
+        {
+            EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
+        }
         if (currentEvent.type == EventType.MouseDown)
         {
             if (currentEvent.button == 0 && currentEvent.shift)
@@ -147,7 +149,7 @@ public class VertexAdjuster : IEditorScene
         GUILayout.BeginArea(new Rect(10, 10, 200, 300), "Vertex Selection", GUI.skin.window);
 
         EditorGUILayout.HelpBox("Hold shift and click on the Avatar to select a vertex.", MessageType.Info);
-        if (GUILayout.Button("Disable Vertex Selection"))
+        if (GUILayout.Button("Disables Vertex Selection"))
         {
             //AllowVertexSelection = false;
             //CleanupFromVertexMode();

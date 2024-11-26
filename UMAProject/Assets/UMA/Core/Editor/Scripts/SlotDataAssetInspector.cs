@@ -27,7 +27,6 @@ namespace UMA.Editors
 		SerializedProperty smooshOffset;
 		SerializedProperty smooshExpand;
 		SlotDataAsset slot;
-		SlotDataAsset.Welding lastWeld = null;
 		SlotDataAsset WeldToSlot = null;
 
 		bool CopyNormals;

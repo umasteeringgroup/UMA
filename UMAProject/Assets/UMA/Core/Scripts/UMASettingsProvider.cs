@@ -120,21 +120,26 @@ class UMASettingsProvider : SettingsProvider
         prop.boolValue = EditorGUILayout.Toggle(new GUIContent(label, tooltip), prop.boolValue);
         if (EditorGUI.EndChangeCheck())
         {
+            Debug.Log(label + " changed to " + prop.boolValue);
             m_CustomSettings.ApplyModifiedProperties();
             if (prop.boolValue)
             {
                 if (!defineSymbols.Contains(defineSymbol))
                 {
+                    Debug.Log("Adding define symbol " + defineSymbol);
                     defineSymbols.Add(defineSymbol);
                     PlayerSettings.SetScriptingDefineSymbols(CurrentNamedBuildTarget, string.Join(";", defineSymbols));
+                    AssetDatabase.SaveAssets();
                 }
             }
             else
             {
                 if (defineSymbols.Contains(defineSymbol))
                 {
+                    Debug.Log("Removing define symbol " + defineSymbol);
                     defineSymbols.Remove(defineSymbol);
                     PlayerSettings.SetScriptingDefineSymbols(CurrentNamedBuildTarget, string.Join(";", defineSymbols));
+                    AssetDatabase.SaveAssets();
                 }
             }
         }
@@ -173,10 +178,15 @@ class UMASettingsProvider : SettingsProvider
         BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
         EditorGUILayout.LabelField("Tags", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox("These tags are used by UMA to identify different types of assets", MessageType.Info);
-        DrawPropertiesExcluding(m_CustomSettings, new string[] { "UMAVersion","m_Script","Use32bitBuffers", "UseBurstCompiler", "UseAddressables", "EnableGLTFExport" ,
-            "AddrUseSharedGroup", "AddrSharedGroupName", "AddrDefaultLabel", "AddStripMaterials", "AddrIncludeRecipes", "CleanRegenOnSave", "AutoRepairIndex", "ShowIndexedTypes", "ShowUnindexedTypes", "PostProcessAllAssets" 
-            });
+        //DrawPropertiesExcluding(m_CustomSettings, new string[] { "UMAVersion","m_Script","Use32bitBuffers", "UseBurstCompiler", "UseAddressables", "EnableGLTFExport" ,
+        //    "AddrUseSharedGroup", "AddrSharedGroupName", "AddrDefaultLabel", "AddStripMaterials", "AddrIncludeRecipes", "CleanRegenOnSave", "AutoRepairIndex", "ShowIndexedTypes", "ShowUnindexedTypes", "PostProcessAllAssets" 
+        //    });
+       
+        DrawPropertiesIncluding(m_CustomSettings, new string[] { "IgnoreTag","KeepTag","tags" });
 
+
+
+        DrawPropertiesIncluding(m_CustomSettings, new string[] { "UMAVersion" });
         EndVerticalPadded(10);
 
         GUILayout.Space(10);
@@ -210,7 +220,7 @@ class UMASettingsProvider : SettingsProvider
         EditorGUILayout.HelpBox("These settings are only used if 'Use Addressables' is enabled", MessageType.Info);
         bool useAddressables = m_CustomSettings.FindProperty("useAddressables").boolValue;
         GUI.enabled = useAddressables;
-        DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrIncludeRecipes" });
+        DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrIncludeRecipes","addrIncludeOther" });
         GUI.enabled = true;
         EndVerticalPadded(10);
 

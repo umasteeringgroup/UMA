@@ -4725,7 +4725,7 @@ namespace UMA.CharacterSystem
             }
             Mesh m = new Mesh();
 
-            m.SetVertices(SmooshTarget.meshData.vertices);
+            m.SetVertices(SmooshTarget.meshData.GetVertices());
 
             int[] triangles = new int[SmooshTarget.meshData.submeshes[0].getBaseTriangles().Length];
             Array.Copy(SmooshTarget.meshData.submeshes[0].getBaseTriangles(), triangles, SmooshTarget.meshData.submeshes[0].getBaseTriangles().Length);

@@ -750,10 +750,7 @@ namespace UMA.CharacterSystem.Editors
             var slots = thisDCA.umaData.umaRecipe.slotDataList;
             int triangle = hit.triangleIndex;
 
-            var tris = mesh.triangles; VertexAdjuster ve = new VertexAdjuster();
-            ve.Setup(thisDCA);
-            InteractiveUMAWindow.Init("UMA Vertex Adjuster - EXPERIMENTAL", ve);
- 
+            var tris = mesh.triangles; 
             var verts = mesh.vertices;
 
             int i0 = tris[triangle * 3];
@@ -927,14 +924,20 @@ namespace UMA.CharacterSystem.Editors
                 // these vertexes will *not* be overridden by the slot vertex overrides.
                 
             }
-            if (GUILayout.Button("Open vertex adjuster"))
+
+            if (GUILayout.Button("Edit Vertex List"))
+            {
+                VertexEditorStage.ShowStage(thisDCA);
+            }
+
+            /*if (GUILayout.Button("Open vertex adjuster"))
             {
                 // Open the vertex adjuster window.
                 VertexAdjuster ve = new VertexAdjuster();
                 ve.Setup(thisDCA);
                 InteractiveUMAWindow.Init("UMA Vertex Adjuster - EXPERIMENTAL", ve);
 
-            }
+            }*/
 
             GUILayout.EndHorizontal();
 
