@@ -28,6 +28,16 @@ namespace UMA
 
         public string[] Races;
 
+        Dictionary<int,VertexAdjustmentCollection> adjustments = new Dictionary<int, VertexAdjustmentCollection>();
+
+        public bool hasAdjustments
+        {
+            get
+            {
+                return adjustments.Count > 0;
+            }
+        }
+
         public bool isBlendShapeSource
         {
             get { return !string.IsNullOrEmpty(blendShapeTargetSlot); }
@@ -324,6 +334,11 @@ namespace UMA
             res.smooshInvertY = smooshInvertY;
             res.smooshInvertZ = smooshInvertZ;
             res.smooshInvertDist = smooshInvertDist;
+            res.adjustments = new Dictionary<int, VertexAdjustmentCollection>(adjustments);
+            foreach(var kvp in adjustments)
+            {
+                res.adjustments[kvp.Key] = kvp.Value.Clone();
+            }
 
             return res;
         }

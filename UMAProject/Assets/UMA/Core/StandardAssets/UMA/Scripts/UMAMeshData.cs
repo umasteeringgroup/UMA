@@ -315,12 +315,54 @@ namespace UMA
 #endif
     }
 
+
+	public class MeshDetails
+	{
+		public Vector3[] vertices;
+		public Vector3[] normals;
+		public Vector4[] tangents;
+		public Color32[] colors32;
+		public Vector2[] uv;
+		public Vector2[] uv2;
+		public Vector2[] uv3;
+		public Vector2[] uv4;
+		public bool verticesModified;
+		public bool normalsModified;
+		public bool tangentsModified;
+		public bool colors32Modified;
+		public bool uvModified;
+		public bool uv2Modified;
+		public bool uv3Modified;
+		public bool uv4Modified;
+
+		public UMAMeshData ShallowCopy()
+		{
+			UMAMeshData copy = new UMAMeshData();
+			copy.vertices = vertices;
+			copy.normals = normals;
+			copy.tangents = tangents;
+			copy.colors32 = colors32;
+			copy.uv = uv;
+			copy.uv2 = uv2;
+			copy.uv3 = uv3;
+			copy.uv4 = uv4;
+			copy.verticesModified = false;
+			copy.normalsModified = false;
+			copy.tangentsModified = false;
+			copy.colors32Modified = false;
+			copy.uvModified = false;
+			copy.uv2Modified = false;
+			copy.uv3Modified = false;
+			copy.uv4Modified = false;
+			return copy;
+		}
+	}
     /// <summary>
     /// UMA version of Unity mesh data.
     /// </summary>
     [Serializable]
-	[StructLayout(LayoutKind.Sequential, Pack = 1)]
-	public class UMAMeshData
+	//[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public class UMAMeshData : MeshDetails
 	{
 		public Matrix4x4[] bindPoses;
 		public UMABoneWeight[] boneWeights;
@@ -330,14 +372,14 @@ namespace UMA
 		[NonSerialized]
 		public NativeArray<byte> unityBonesPerVertex);
 #endif
-		public Vector3[] vertices;
+		/* public Vector3[] vertices;
 		public Vector3[] normals;
 		public Vector4[] tangents;
 		public Color32[] colors32;
 		public Vector2[] uv;
 		public Vector2[] uv2;
 		public Vector2[] uv3;
-		public Vector2[] uv4;
+		public Vector2[] uv4; */
 		public UMABlendShape[] blendShapes;
 		public ClothSkinningCoefficient[] clothSkinning;
 		public Vector2[] clothSkinningSerialized;
