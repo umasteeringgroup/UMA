@@ -24,6 +24,19 @@ public class VertexEditorStage : PreviewSceneStage
     PhysicsScene phyScene;
     float HandlesSize = 0.01f;
 
+    const int VertexCollectionsWindowID = 0x1234;
+    const int VisibleSlotsWindowID = 0x1235;
+    const int SlotAdjustmentsWindowID = 0x1236;
+    const int CurrentSlotAdjustmentsWindowID = 0x1237;
+    const int TestWindowID = 0x1238;
+
+    public Vector2 scrollLocation = Vector2.zero;
+    public Rect VertexCollectionWindow = new Rect(10, 10, 200, 300);
+    public Rect VisibleSlotsWindow = new Rect(10, 310, 200, 300);
+    public Rect SlotAdjustmentsWindow = new Rect(210, 10, 200, 300);
+    public Rect CurrentSlotAdjustmentsWindow = new Rect(210, 310, 200, 300);
+    public Rect TestWindow = new Rect(200, 200, 200, 200);
+
     private class VertexSelection
     {
         public int vertexIndexOnSlot;
@@ -38,14 +51,12 @@ public class VertexEditorStage : PreviewSceneStage
         stage.titleContent.text = Selection.activeGameObject.name;
         stage.titleContent.image = EditorGUIUtility.IconContent("GameObject Icon").image;
         stage.thisDCA = DCA;
-        Debug.Log("ShowStage");
         StageUtility.GoToStage(stage, true);
     }
 
 
     protected override bool OnOpenStage()
     {
-        Debug.Log("OnOpenStage");
         base.OnOpenStage();
         //scene = EditorSceneManager.NewPreviewScene();
 
@@ -91,7 +102,6 @@ public class VertexEditorStage : PreviewSceneStage
 
     protected override void OnCloseStage()
     {
-        Debug.Log("OnCloseStage");
         Tools.hidden = false;
         DestroyImmediate(VertexObject);
         DestroyImmediate(lightingObject);
@@ -195,7 +205,6 @@ public class VertexEditorStage : PreviewSceneStage
             }
             else if (currentEvent.button == 1)
             {
-                Debug.Log("Right mouse button pressed in Scene View");
             }
         }
 
@@ -220,6 +229,97 @@ public class VertexEditorStage : PreviewSceneStage
 
         // Your custom GUI logic here
         Handles.BeginGUI();
+        VertexCollectionWindow = GUI.Window(VertexCollectionsWindowID, VertexCollectionWindow, (id) =>
+        {
+            GUILayout.Label("Vertex Collections");
+            foreach (var vs in SelectedVertexes)
+            {
+                GUILayout.Label(vs.slot.slotName + " " + vs.vertexIndexOnSlot);
+            }
+            GUI.DragWindow();
+        }, "Vertex Collections");
+
+
+        TestWindow = GUI.Window(TestWindowID, TestWindow, (id) =>
+        {
+            if (GUILayout.Button("Test Button"))
+            {
+                SelectedVertexes.Clear();
+            }
+            scrollLocation = EditorGUILayout.BeginScrollView(scrollLocation);
+            foreach (var vs in SelectedVertexes)
+            {
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label(vs.slot.slotName + " " + vs.vertexIndexOnSlot);
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.EndScrollView();
+            GUI.DragWindow();
+        }, "Test Windowz");
+
+
+
+        VisibleSlotsWindow = GUI.Window(VisibleSlotsWindowID, VisibleSlotsWindow, (id) =>
+        {
+            bool wasChanged = false;
+            //GUILayout.Label("Visible Slots");
+            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+            {
+                GUILayout.BeginHorizontal();
+                EditorGUI.BeginChangeCheck();
+                slot.isDisabled = GUILayout.Toggle(slot.isDisabled, "");
+                wasChanged = EditorGUI.EndChangeCheck();
+                GUILayout.Label(slot.slotName);
+                GUILayout.EndHorizontal();
+
+            }
+            GUI.DragWindow();
+            if (wasChanged)
+            {
+                RebuildMesh();
+            }
+        }, "Visible Slots");
+
+
+        SlotAdjustmentsWindow = GUI.Window(SlotAdjustmentsWindowID, SlotAdjustmentsWindow, (id) =>
+        {
+            GUILayout.Label("Slot Adjustments");
+            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+            {
+                GUILayout.Label(slot.slotName);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Edit"))
+                {
+                    // Show the slot adjustments window
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUI.DragWindow();
+        }, "Slot Adjustments");
+
+        CurrentSlotAdjustmentsWindow = GUI.Window(CurrentSlotAdjustmentsWindowID, CurrentSlotAdjustmentsWindow, (id) =>
+        {
+            GUILayout.Label("Current Slot Adjustments");
+            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+            {
+                if (slot.isDisabled)
+                {
+                    continue;
+                }
+                GUILayout.Label(slot.slotName);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Edit"))
+                {
+                    // Show the slot adjustments window
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUI.DragWindow();
+        }, "Current Slot Adjustments");
+
+        Handles.EndGUI();
+
+        /*
         GUILayout.BeginArea(new Rect(10, 10, 300, 300), "Vertex Selection", GUI.skin.window);
         EditorGUILayout.HelpBox("Shift-Click to add\nCtrl-Click to remove\nClick to select", MessageType.Info);
         EditorGUI.BeginChangeCheck();
@@ -244,7 +344,8 @@ public class VertexEditorStage : PreviewSceneStage
         }
         GUILayout.EndHorizontal();
         GUILayout.EndArea();
-        Handles.EndGUI();
+        */
+
 
         // Repaint the scene view only when necessary
         if (currentEvent.type == EventType.Repaint)
@@ -252,6 +353,26 @@ public class VertexEditorStage : PreviewSceneStage
             SceneView.RepaintAll();
         }
     }
+
+    private void RebuildMesh()
+    {
+        thisDCA.umaData.Dirty(false, false, true);
+        thisDCA.umaData.CharacterUpdated.AddAction(BuildCollisionMesh);
+    }
+
+    public void BuildCollisionMesh(UMAData umaData)
+    {
+        thisDCA.umaData.CharacterUpdated.RemoveAction(BuildCollisionMesh);
+        SkinnedMeshRenderer smr = thisDCA.gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
+        GameObject.DestroyImmediate(BakedMesh);
+        BakedMesh = new Mesh();
+        BakedMesh.name = "BakedMesh";
+        smr.BakeMesh(BakedMesh, true);
+        VertexObject.GetComponent<MeshFilter>().sharedMesh = BakedMesh;
+        MeshCollider mc = VertexObject.GetComponent<MeshCollider>();
+        mc.sharedMesh = BakedMesh;
+    }
+
 
     private VertexSelection FindVertex(RaycastHit hit, Mesh mesh, GameObject go)
     {
@@ -309,7 +430,6 @@ public class VertexEditorStage : PreviewSceneStage
         // This doesn't work in 2021.3
         Selection.activeObject = VertexObject;
         sceneView.FrameSelected(false, true);
-        Debug.Log("Setting needs camera setup");
         NeedsCameraSetup = false;
 
         Tools.current = Tool.None;

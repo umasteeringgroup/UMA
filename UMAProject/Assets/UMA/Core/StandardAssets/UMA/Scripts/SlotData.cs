@@ -28,13 +28,13 @@ namespace UMA
 
         public string[] Races;
 
-        Dictionary<int,VertexAdjustmentCollection> adjustments = new Dictionary<int, VertexAdjustmentCollection>();
+        public List<MeshModifier> meshModifiers = new List<MeshModifier>();
 
         public bool hasAdjustments
         {
             get
             {
-                return adjustments.Count > 0;
+                return meshModifiers.Count > 0;
             }
         }
 
@@ -334,12 +334,7 @@ namespace UMA
             res.smooshInvertY = smooshInvertY;
             res.smooshInvertZ = smooshInvertZ;
             res.smooshInvertDist = smooshInvertDist;
-            res.adjustments = new Dictionary<int, VertexAdjustmentCollection>(adjustments);
-            foreach(var kvp in adjustments)
-            {
-                res.adjustments[kvp.Key] = kvp.Value.Clone();
-            }
-
+            res.meshModifiers = new List<MeshModifier>(meshModifiers);
             return res;
         }
 

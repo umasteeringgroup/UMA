@@ -70,8 +70,6 @@ namespace UMA.Editors
 
             //Set this up after the other so we can send the popup data with it
             slotEditor = new WardrobeRecipeMasterEditor(_recipe, generatedBaseSlotOptions, generatedBaseSlotOptionsLabels);
-
-			EditorGUILayout.Space();
 			return doUpdate;
 		}
 	}

@@ -41,7 +41,10 @@ namespace UMA
         [SerializeField]
         public List<MeshHideAsset> MeshHideAssets = new List<MeshHideAsset>();
 
-		[SerializeField]
+        [SerializeField]
+        public List<MeshModifier> MeshModifiers = new List<MeshModifier>();
+
+        [SerializeField]
 		public UMAPredefinedDNA OverrideDNA = new UMAPredefinedDNA();
 
 		[SerializeField]

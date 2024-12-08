@@ -10,51 +10,182 @@ namespace UMA
 {
     public abstract class VertexAdjustmentCollection
     {
-        public abstract int Key { get; }
-        public int SerializedKey;
-        public abstract void PreprocessMeshVertices(NativeArray<Vector3> verts);
-        public abstract VertexAdjustmentCollection Clone();
-
-        public static VertexAdjustmentCollection fromstring()
+        public virtual bool SupportWeightedAdjustments
         {
-            return null;
+            get { return false; }
         }
 
-        public static void RegisterType<T>(int key) where T : VertexAdjustmentCollection
-        {
-            var type = typeof(T);
-            if (type.IsAbstract)
-            {
-                throw new System.Exception("Cannot register abstract types");
-            }
-            if (type.IsSubclassOf(typeof(VertexAdjustmentCollection)))
-            {
-                throw new System.Exception("Cannot register types that do not inherit from VertexAdjustmentCollection");
-            }
-            if (type.GetConstructor(System.Type.EmptyTypes) == null)
-            {
-                throw new System.Exception("Cannot register types that do not have a parameterless constructor");
-            }
+        public abstract void Apply(MeshDetails mesh, MeshDetails src);
+        public abstract void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale);
+    }
 
+    [Serializable]
+    public class VertexColorAdjustmentCollection: VertexAdjustmentCollection
+    {
+        [SerializeField]
+        public VertexColorAdjustment[] vertexColorAdjustments;
+
+        public override bool SupportWeightedAdjustments
+        {
+            get { return true; }
+        }
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexColorAdjustment.Apply(mesh, src, vertexColorAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexColorAdjustment.ApplyScaled(mesh, src, vertexColorAdjustments, scale);
+        }
+    }
+
+    [Serializable]
+    public class VertexDeltaAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexDeltaAdjustment[] vertexDeltaAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexDeltaAdjustment.Apply(mesh, src, vertexDeltaAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexDeltaAdjustment.ApplyScaled(mesh, src, vertexDeltaAdjustments, scale);
+        }
+    }
+
+    [Serializable]
+    public class VertexScaleAdjustmentCollection : VertexAdjustmentCollection
+    {
+        override public bool SupportWeightedAdjustments
+        {
+            get { return true; }
+        }
+
+        public VertexScaleAdjustment[] vertexScaleAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexScaleAdjustment.Apply(mesh, src, vertexScaleAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexScaleAdjustment.ApplyScaled(mesh, src, vertexScaleAdjustments, scale);
+        }
+    }
+
+    [Serializable]
+    public class VertexNormalAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexNormalAdjustment[] vertexNormalAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexNormalAdjustment.Apply(mesh, src, vertexNormalAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexNormalAdjustment.ApplyScaled(mesh, src, vertexNormalAdjustments, scale);
+        }
+    }
+
+    [Serializable]
+    public class VertexUVAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexUVAdjustment[] vertexUVAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexUVAdjustment.Apply(mesh, src, vertexUVAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexUVAdjustment.ApplyScaled(mesh, src, vertexUVAdjustments, scale);
+        }
+    }
+
+    [Serializable]
+    public class VertexBlendshapeAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexBlendshapeAdjustment[] vertexBlendshapeAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexBlendshapeAdjustment.Apply(mesh, src, vertexBlendshapeAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexBlendshapeAdjustment.ApplyScaled(mesh, src, vertexBlendshapeAdjustments, scale);
+        }
+    }
+
+    [Serializable]
+    public class VertexUserAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexUserAdjustment[] vertexUserAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexUserAdjustment.Apply(mesh, src, vertexUserAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            // Do nothing
         }
     }
 
 
     [Serializable]
-    public struct VertexColorAdjustment
+    public struct VertexColorAdjustment 
     {
         public int vertexIndex;
         public Color32 color;
+        public float weight;
+
 #if UMA_BURSTCOMPILE
 		[BurstCompile]
 #endif
-        public static void Apply(MeshDetails mesh, VertexColorAdjustment[] vertexColorAdjustments)
+        public static void Apply(MeshDetails mesh, MeshDetails original, VertexColorAdjustment[] adjustments)
         {
-            for (int i=0;i<vertexColorAdjustments.Length; i++)
+            if (!mesh.colors32Modified)
             {
-                mesh.colors32[vertexColorAdjustments[i].vertexIndex] = vertexColorAdjustments[i].color;
+                mesh.colors32 = (Color32[])original.colors32.Clone();
+                mesh.colors32Modified = true;
+            }
+            for (int i=0;i<adjustments.Length; i++)
+            {
+                mesh.colors32[adjustments[i].vertexIndex] = adjustments[i].color;
             }
         }
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails original, VertexColorAdjustment[] adjustments, float scale)
+        {
+            if (!mesh.colors32Modified)
+            {
+                mesh.colors32 = (Color32[])original.colors32.Clone();
+                mesh.colors32Modified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                int vertIndex = adjustments[i].vertexIndex;
+                Color startColor = mesh.colors32[vertIndex];
+                Color newColor = adjustments[vertIndex].color;
+                Color lerpColor = Color.Lerp(startColor, newColor, scale);
+                mesh.colors32[vertIndex] = lerpColor;
+            }
+        }
+
+
     }
 
     [Serializable]
@@ -62,9 +193,29 @@ namespace UMA
     {
         public int vertexIndex;
         public Vector3 delta;
-        public void Apply(ref NativeArray<Vector3> verts)
+        public static void Apply(MeshDetails mesh, MeshDetails src, VertexDeltaAdjustment[] adjustments)
         {
-            verts[vertexIndex] += delta;
+            if (!mesh.verticesModified)
+            {
+                mesh.vertices = (Vector3[])src.vertices.Clone();
+                mesh.verticesModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                mesh.vertices[adjustments[i].vertexIndex] += adjustments[i].delta;
+            }
+        }
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexDeltaAdjustment[] adjustments, float scale)
+        {
+            if (!mesh.verticesModified)
+            {
+                mesh.vertices = (Vector3[])src.vertices.Clone();
+                mesh.verticesModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                mesh.vertices[adjustments[i].vertexIndex] += (adjustments[i].delta * scale);
+            }
         }
     }
 
@@ -73,9 +224,31 @@ namespace UMA
     {
         public int vertexIndex;
         public float scale;
-        public void Apply(ref NativeArray<Vector3> verts)
+        public static void Apply(MeshDetails mesh, MeshDetails src, VertexScaleAdjustment[] adjustments)
         {
-            verts[vertexIndex] *= scale;
+            if (!mesh.verticesModified)
+            {
+                mesh.vertices = (Vector3[])src.vertices.Clone();
+                mesh.verticesModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                int vertIndex = adjustments[i].vertexIndex;
+                mesh.vertices[vertIndex] +=  mesh.normals[vertIndex] * adjustments[i].scale;
+            }
+        }
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexScaleAdjustment[] adjustments, float scale)
+        {
+            if (!mesh.verticesModified)
+            {
+                mesh.vertices = (Vector3[])src.vertices.Clone();
+                mesh.verticesModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                int vertIndex = adjustments[i].vertexIndex;
+                mesh.vertices[vertIndex] += mesh.normals[vertIndex] * (adjustments[i].scale * scale);
+            }
         }
     }
 
@@ -84,6 +257,52 @@ namespace UMA
     {
         public int vertexIndex;
         public Vector3 normal;
+        public Vector3 tangent;
+        public static void Apply(MeshDetails mesh, MeshDetails src, VertexNormalAdjustment[] adjustments)
+        {
+            if (!mesh.normalsModified)
+            {
+                mesh.normals = (Vector3[])src.normals.Clone();
+                mesh.normalsModified = true;
+            }
+            if (!mesh.tangentsModified)
+            {
+                mesh.tangents = (Vector4[])src.tangents.Clone();
+                mesh.tangentsModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                int vertIndex = adjustments[i].vertexIndex;
+                mesh.normals[vertIndex] = adjustments[i].normal;
+                mesh.tangents[vertIndex] = new Vector4(adjustments[i].tangent.x, adjustments[i].tangent.y, adjustments[i].tangent.z, 1);
+            }
+        }
+
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexNormalAdjustment[] adjustments, float scale)
+        {
+            if (!mesh.normalsModified)
+            {
+                mesh.normals = (Vector3[])src.normals.Clone();
+                mesh.normalsModified = true;
+            }
+            if (!mesh.tangentsModified)
+            {
+                mesh.tangents = (Vector4[])src.tangents.Clone();
+                mesh.tangentsModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                int vertIndex = adjustments[i].vertexIndex;
+                Vector3 startNormal = mesh.normals[vertIndex];
+                Vector3 newNormal = adjustments[vertIndex].normal;
+                Vector3 lerpNormal = Vector3.Lerp(startNormal, newNormal, scale);
+                mesh.normals[vertIndex] = lerpNormal;
+                Vector3 startTangent = mesh.tangents[vertIndex];
+                Vector3 newTangent = adjustments[vertIndex].tangent;
+                Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
+                mesh.tangents[vertIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
+            }
+        }
     }
 
     [Serializable]
@@ -91,6 +310,111 @@ namespace UMA
     {
         public int vertexIndex;
         public Vector2 uv;
+        public static void Apply(MeshDetails mesh, MeshDetails src, VertexUVAdjustment[] adjustments)
+        {
+            if (!mesh.uvModified)
+            {
+                mesh.uv = (Vector2[])src.uv.Clone();
+                mesh.uvModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                mesh.uv[adjustments[i].vertexIndex] = adjustments[i].uv;
+            }
+        }
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexUVAdjustment[] adjustments, float scale)
+        {
+            if (!mesh.uvModified)
+            {
+                mesh.uv = (Vector2[])src.uv.Clone();
+                mesh.uvModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                int vertIndex = adjustments[i].vertexIndex;
+                Vector2 startUV = mesh.uv[vertIndex];
+                Vector2 newUV = adjustments[vertIndex].uv;
+                Vector2 lerpUV = Vector2.Lerp(startUV, newUV, scale);
+                mesh.uv[vertIndex] = lerpUV;
+            }
+        }
+    }
+
+    [Serializable]
+    public struct VertexBlendshapeAdjustment
+    {
+        public int vertexIndex;
+        public Vector3 delta;
+        public Vector3 normal;
+        public Vector3 tangent;
+        public static void Apply(MeshDetails mesh, MeshDetails src, VertexBlendshapeAdjustment[] adjustments)
+        {
+            bool tangents = mesh.tangents != null;
+            bool normals = mesh.normals != null;
+
+            if (!mesh.verticesModified)
+            {
+                mesh.vertices = (Vector3[])src.vertices.Clone();
+                mesh.verticesModified = true;
+            }
+            if (!mesh.normalsModified && normals)
+            {
+                mesh.normals = (Vector3[])src.normals.Clone();
+                mesh.normalsModified = true;
+            }
+            if (!mesh.tangentsModified && tangents)
+            {
+                mesh.tangents = (Vector4[])src.tangents.Clone();
+                mesh.tangentsModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                int vertIndex = adjustments[i].vertexIndex;
+                mesh.vertices[vertIndex] += adjustments[i].delta;
+                if (normals) mesh.normals[vertIndex] = adjustments[i].normal;
+                if (tangents) mesh.tangents[vertIndex] = new Vector4(adjustments[i].tangent.x, adjustments[i].tangent.y, adjustments[i].tangent.z, 1);
+            }
+        }
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexBlendshapeAdjustment[] adjustments, float scale)
+        {
+            bool tangents = mesh.tangents != null;
+            bool normals = mesh.normals != null;
+
+            if (!mesh.verticesModified)
+            {
+                mesh.vertices = (Vector3[])src.vertices.Clone();
+                mesh.verticesModified = true;
+            }
+            if (!mesh.normalsModified && normals)
+            {
+                mesh.normals = (Vector3[])src.normals.Clone();
+                mesh.normalsModified = true;
+            }
+            if (!mesh.tangentsModified && tangents)
+            {
+                mesh.tangents = (Vector4[])src.tangents.Clone();
+                mesh.tangentsModified = true;
+            }
+            for (int i = 0; i < adjustments.Length; i++)
+            {
+                int vertIndex = adjustments[i].vertexIndex;
+                mesh.vertices[vertIndex] += (adjustments[i].delta * scale);
+                if (normals)
+                {
+                    Vector3 startNormal = mesh.normals[vertIndex];
+                    Vector3 newNormal = adjustments[vertIndex].normal;
+                    Vector3 lerpNormal = Vector3.Lerp(startNormal, newNormal, scale);
+                    mesh.normals[vertIndex] = lerpNormal;
+                }
+                if (tangents)
+                {
+                    Vector3 startTangent = mesh.tangents[vertIndex];
+                    Vector3 newTangent = adjustments[vertIndex].tangent;
+                    Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
+                    mesh.tangents[vertIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
+                }
+            }
+        }
     }
 
     // This is a user defined adjustment, it is up to the user to define what it does
@@ -98,33 +422,24 @@ namespace UMA
     public struct VertexUserAdjustment
     {
         public int vertexIndex;
+        public Vector3 OriginalPosition;
         public float value;
+        public static void Apply(MeshDetails mesh, MeshDetails src, VertexUserAdjustment[] adjustments)
+        {
+            // Send an event if setup. 
+            // Do something with the value
+        }
+    } 
+
+    public struct VertexGroupMember
+    {
+        public int vertexIndex;
+        public float weight;
     }
 
-    [Serializable]
-    public class VertexAdjustmentColorCollection : VertexAdjustmentCollection
+    public struct VertexGroup
     {
-        static VertexAdjustmentColorCollection()
-        { 
-            RegisterType<VertexAdjustmentColorCollection>(1001); 
-        }
-        // used to identify this collection, so we can have 0 or 1 of each type on a slot
-        public override int Key => 1001;
-
-        public override void PreprocessMeshVertices(NativeArray<Vector3> verts)
-        {
-
-        }
-
-        public override VertexAdjustmentCollection Clone()
-        {
-            return new VertexAdjustmentColorCollection();
-        }
-
-        public override string ToString()
-        {
-            SerializedKey = Key;
-            return JsonUtility.ToJson(this);
-        }
+        string Name;
+        public VertexGroupMember[] members;
     }
 }

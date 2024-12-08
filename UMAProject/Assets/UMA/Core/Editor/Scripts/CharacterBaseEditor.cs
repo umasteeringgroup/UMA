@@ -2878,6 +2878,7 @@ namespace UMA.Editors
                 //return;
                 //TODO If we can find out if the recipe has a string and we DONT have an UMAContextBase we could disable editing (so the user doesn't screw up their recipes
             }
+
             EditorGUI.BeginDisabledGroup(editBustedRecipe == false);
 
             try
@@ -2892,6 +2893,7 @@ namespace UMA.Editors
                 {
                     Rebuild();
                 }
+
 
                 if (PreInspectorGUI())
                 {
