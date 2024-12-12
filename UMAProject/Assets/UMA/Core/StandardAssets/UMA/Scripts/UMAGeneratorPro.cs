@@ -177,6 +177,7 @@ namespace UMA
 			for (int i = 0; i < slots.Length; i++)
 			{
 				SlotData slot = slots[i];
+
 				if (slot == null)
                 {
                     continue;

@@ -16,21 +16,25 @@ public class MeshModifierEditor : EditorWindow
         wnd.titleContent = new GUIContent("Mesh Modifiers");
     }*/
 
-    public static void GetOrCreateWindow(DynamicCharacterAvatar DCA)
+    public static MeshModifierEditor GetOrCreateWindow(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
     {
-        MeshModifierEditor wnd = GetWindow<MeshModifierEditor>();
-        wnd.Setup(DCA);
+        MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, "Mesh Modifiers",true);
+        wnd.Setup(DCA, vstage);
         wnd.titleContent = new GUIContent("Mesh Modifiers");
+        return wnd;
     }
 
     public DynamicCharacterAvatar thisDCA;
     public Dictionary<string,MeshModifier> SlotNameToModifiers = new Dictionary<string, MeshModifier>();
     public bool ShowVisibleSlots = false;
     public bool ShowOptions = false;
+    public VertexEditorStage vertexEditorStage;
 
-    public void Setup(DynamicCharacterAvatar DCA)
+    public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
     {
         SlotNameToModifiers.Clear();
+        vertexEditorStage = vstage;
+        // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
     }
 
     public void OnGUI()
@@ -43,28 +47,7 @@ public class MeshModifierEditor : EditorWindow
 
         EditorGUILayout.LabelField("Mesh Modifiers for " + thisDCA.name);
 
-        foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
-        {
-            MeshModifier modifier = null;
-            if (!SlotNameToModifiers.TryGetValue(slot.slotName, out modifier))
-            {
-                modifier = ScriptableObject.CreateInstance<MeshModifier>();
-                modifier.SlotName = slot.slotName;
-                SlotNameToModifiers[slot.slotName] = modifier;
-            }
 
-            EditorGUILayout.LabelField("Slot Name", modifier.SlotName);
-            EditorGUILayout.LabelField("DNA Name", modifier.DNAName);
-            EditorGUILayout.LabelField("Scale", modifier.Scale.ToString());
-
-            EditorGUILayout.LabelField("Normal Adjustments", modifier.normalAdjustments.ToString());
-            EditorGUILayout.LabelField("Color Adjustments", modifier.colorAdjustments.ToString());
-            EditorGUILayout.LabelField("Delta Adjustments", modifier.deltaAdjustments.ToString());
-            EditorGUILayout.LabelField("Scale Adjustments", modifier.scaleAdjustments.ToString());
-            EditorGUILayout.LabelField("UV Adjustments", modifier.uvAdjustments.ToString());
-            EditorGUILayout.LabelField("Blendshape Adjustments", modifier.blendshapeAdjustments.ToString());
-            EditorGUILayout.LabelField("User Adjustments", modifier.userAdjustments.ToString());
-        }
     }
 
     public void CreateGUI()
@@ -87,5 +70,13 @@ public class MeshModifierEditor : EditorWindow
         toggle.name = "toggle";
         toggle.label = "Toggle";
         root.Add(toggle);
+    }
+
+    private void OnDestroy()
+    {
+        if (vertexEditorStage != null)
+        {
+            vertexEditorStage.CloseStage();
+        }
     }
 }

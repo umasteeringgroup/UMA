@@ -3945,6 +3945,20 @@ namespace UMA.CharacterSystem
             return true;
         }
 
+        public UMATextRecipe[] GetVisibleWearables()
+        {
+            List<UMATextRecipe> visibleWearables = new List<UMATextRecipe>();
+            foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+            {
+                if (utr.wardrobeSlot != "")
+                {
+                    visibleWearables.Add(utr);
+                }
+            }
+            return visibleWearables.ToArray();
+        }
+
+
         /// <summary>
         /// Builds the character by combining the Avatar's raceData.baseRecipe with the any wardrobe recipes that have been applied to the avatar.
         /// </summary>

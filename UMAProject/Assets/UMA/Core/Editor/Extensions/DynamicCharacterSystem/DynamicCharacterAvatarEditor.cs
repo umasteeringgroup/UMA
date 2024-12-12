@@ -928,6 +928,7 @@ namespace UMA.CharacterSystem.Editors
             if (GUILayout.Button("Edit Vertex List"))
             {
                 VertexEditorStage.ShowStage(thisDCA);
+                //MeshModifierEditor.GetOrCreateWindow(thisDCA);
             }
 
             /*if (GUILayout.Button("Open vertex adjuster"))

@@ -616,22 +616,6 @@ namespace UMA.Editors
             {
                 isSelecting = true;
                 startMousePos = Event.current.mousePosition;
-
-                /*
-                int mirrorHit = -1;
-
-                int triangleHit = RayPick(isMirroring,out mirrorHit);
-
-                if (triangleHit >= 0)
-                {
-                    _Source.selectedTriangles[triangleHit] = !_Source.selectedTriangles[triangleHit];
-                    if (isMirroring && mirrorHit != -1)
-                    {
-                        // Mirror triangle should be the same as the hit triangle regardless of previous selection.
-                        _Source.selectedTriangles[mirrorHit] = _Source.selectedTriangles[triangleHit];
-                    }
-                    _Source.UpdateSelectionMesh();
-                } */
             } 
 
             if (Event.current != null && Event.current.type == EventType.MouseUp && Event.current.button == 0)

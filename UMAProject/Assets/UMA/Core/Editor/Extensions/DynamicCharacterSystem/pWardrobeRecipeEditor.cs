@@ -1072,7 +1072,7 @@ namespace UMA.Editors
 					EditorGUILayout.BeginHorizontal();
 					GUILayout.Space(10);
 					EditorGUILayout.LabelField(mm.name, GUILayout.ExpandWidth(true));
-                    GUILayout.Label($"[{mm.SlotName}]", GUILayout.Width(90.0f));
+                    //GUILayout.Label($"[{mm.SlotName}]", GUILayout.Width(90.0f));
                     if (GUILayout.Button("Inspect", GUILayout.Width(65)))
                     {
                         InspectorUtlity.InspectTarget(mm);

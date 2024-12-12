@@ -32,7 +32,7 @@ namespace UMA
         public override void OnInspectorGUI()
         {
             MeshModifier meshModifier = (MeshModifier)target;
-
+            /*
             EditorGUILayout.LabelField("Slot Name", meshModifier.SlotName);
             EditorGUILayout.LabelField("DNA Name", meshModifier.DNAName);
             EditorGUILayout.LabelField("Scale", meshModifier.Scale.ToString());
@@ -43,7 +43,7 @@ namespace UMA
             EditorGUILayout.LabelField("Scale Adjustments", meshModifier.scaleAdjustments.ToString());
             EditorGUILayout.LabelField("UV Adjustments", meshModifier.uvAdjustments.ToString());
             EditorGUILayout.LabelField("Blendshape Adjustments", meshModifier.blendshapeAdjustments.ToString());
-            EditorGUILayout.LabelField("User Adjustments", meshModifier.userAdjustments.ToString());
+            EditorGUILayout.LabelField("User Adjustments", meshModifier.userAdjustments.ToString());*/
         }
     }
 }
