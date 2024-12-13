@@ -317,7 +317,7 @@ public class VertexEditorStage : PreviewSceneStage
         }
     }
 
-    private void DrawHandles()
+    private void DrawHandles(List<VertexSelection> vertexes)
     {
         Color LastColor = Color.black;
         if (EventType.Repaint != Event.current.type)
@@ -328,30 +328,18 @@ public class VertexEditorStage : PreviewSceneStage
         Mesh mesh = GetVertexMesh();
         Material mat = GetVertexMaterial(Color.red);
 
+        Vector3[] normals = BakedMesh.normals;
 
-        for (int i = 0; i < SelectedVertexes.Count; i++)
+        for (int i = 0; i < vertexes.Count; i++)
         {
-            VertexSelection vs = SelectedVertexes[i];
+            VertexSelection vs = vertexes[i];
             int bakedIndex = vs.vertexIndexOnSlot + vs.slot.vertexOffset;
-            Vector3 bakedNormal = BakedMesh.normals[bakedIndex];
+            Vector3 bakedNormal = normals[bakedIndex]; 
             if (Vector3.Dot(bakedNormal, Camera.current.transform.forward) > 0)
             {
-                continue;
+                 continue;
             }
-#if USING_HANDLES
-            if (i == selectedVertex)
-            {
-                Handles.color = Color.yellow;
-            }
-            else
-            {
-                Handles.color = Color.red;
-            }
-//            Handles.CubeHandleCap(i, vs.WorldPosition, Quaternion.identity, HandlesSize, EventType.Repaint);
-            Handles.SphereHandleCap(i, vs.WorldPosition, Quaternion.identity, HandlesSize, EventType.Repaint);
-        Handles.color = saveColor;
 
-#else
             Matrix4x4 matrix = Matrix4x4.TRS(vs.WorldPosition, Quaternion.identity, Vector3.one * HandlesSize);
 
             Color newColor = Color.red;
@@ -369,14 +357,7 @@ public class VertexEditorStage : PreviewSceneStage
                 mat.SetPass(0);
             }
             Graphics.DrawMeshNow(mesh, matrix);
-            //Graphics.DrawMesh(mesh, matrix, mat, 0);
-#endif
         }
-
-
-
-
-        //DrawGUI();
     }
 
     private void DrawGUIWindows(SceneView sceneView)
@@ -507,6 +488,7 @@ public class VertexEditorStage : PreviewSceneStage
     {
         Debug.Log("Rectangle Select - Area: " + ScreenArea.ToString());
         var vertexes = BakedMesh.vertices;
+        var normals = BakedMesh.normals;
         for (int i = 0; i < vertexes.Length; i++)
         {
             Vector3 screenPos = HandleUtility.WorldToGUIPoint(VertexObject.transform.TransformPoint(vertexes[i]));
@@ -514,7 +496,7 @@ public class VertexEditorStage : PreviewSceneStage
             {
                 bool blocked = false;
 
-                Vector3 Normal = BakedMesh.normals[i];
+                Vector3 Normal = normals[i];
                 // if the normal is not facing the camera
                 if (Vector3.Dot(Normal, Camera.current.transform.forward) > 0)
                 {
