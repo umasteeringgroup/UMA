@@ -26,7 +26,12 @@ public class VertexEditorStage : PreviewSceneStage
     public int selectedVertex;
     private List<VertexSelection> SelectedVertexes = new List<VertexSelection>();
     PhysicsScene phyScene;
+
+    // Edit Options
     float HandlesSize = 0.01f;
+    bool  selectObscured = false;
+    bool  selectFacingAway = false;
+    // End Options
 
     const int VertexEditorToolsWindowID = 0x1234;
     const int VisibleWearablesID = 0x1235;
@@ -35,9 +40,12 @@ public class VertexEditorStage : PreviewSceneStage
     const int TestWindowID = 0x1238;
 
     public Vector2 VertexEditorScrollLocation = Vector2.zero;
-    public Vector2 VisibleWearablesLocation = Vector2.zero;
     public Rect VertexEditorToolsWindow = new Rect(10, 10, 200, 300);
+
+
+    public Vector2 VisibleWearablesLocation = Vector2.zero;
     public Rect VisibleWearablesWindow = new Rect(10, 310, 200, 300);
+
     public Rect SlotAdjustmentsWindow = new Rect(210, 10, 200, 300);
     public Rect CurrentSlotAdjustmentsWindow = new Rect(210, 310, 200, 300);
     private MeshModifierEditor modifierEditor;
@@ -177,7 +185,7 @@ public class VertexEditorStage : PreviewSceneStage
         Handles.SetCamera(sceneView.camera);
         if (!rectSelect && Event.current.alt)
         {
-            DrawHandles();
+            DrawHandles(SelectedVertexes);
             return;
         }
 
@@ -277,7 +285,7 @@ public class VertexEditorStage : PreviewSceneStage
             Handles.EndGUI();
         }
 
-        DrawHandles();
+        DrawHandles(SelectedVertexes);
 
         // Your custom GUI logic here
         DrawGUIWindows(sceneView);
@@ -364,21 +372,7 @@ public class VertexEditorStage : PreviewSceneStage
     {
         Handles.BeginGUI();
 
-        VertexEditorToolsWindow = GUI.Window(VertexEditorToolsWindowID, VertexEditorToolsWindow, (id) =>
-        {
-            GUILayout.Label("Vertex Collections");
-            GUILayout.Label("camera: " + sceneView.camera.transform.position.ToString());
-            if (GUILayout.Button("Home Camera"))
-            {
-                SceneView.lastActiveSceneView.pivot = new Vector3(0, 1, 2.5f);
-                Selection.activeObject = VertexObject;
-                sceneView.AlignViewToObject(cameraAnchor.transform);
-                sceneView.FrameSelected();
-                sceneView.AlignViewToObject(cameraAnchor.transform);
-            }
-        }, "Vertex Collections");
-
-
+        VertexEditorToolsWindow = GUI.Window(VertexEditorToolsWindowID, VertexEditorToolsWindow, DoToolsWindow, "Vertex Collections");
 
         VisibleWearablesWindow = GUI.Window(VisibleWearablesID, VisibleWearablesWindow, (id) =>
         {
@@ -469,6 +463,50 @@ public class VertexEditorStage : PreviewSceneStage
         Handles.EndGUI();
     }
 
+    public void DoToolsWindow(int ID)
+    {
+        SceneView sceneView = SceneView.lastActiveSceneView;
+        GUILayout.Label("Editor Options");
+        HandlesSize = EditorGUILayout.Slider("Handle Size", HandlesSize, 0.0f, 0.04f);
+        selectObscured = EditorGUILayout.Toggle("Select Obscured", selectObscured);
+        selectFacingAway = EditorGUILayout.Toggle("Select Facing Away", selectFacingAway);
+
+
+        if (GUILayout.Button("Clear Vertex Selection"))
+        {
+            SelectedVertexes.Clear();
+            selectedVertex = -1;
+        }
+        if (GUILayout.Button("Select All"))
+        {
+            SelectedVertexes.Clear();
+            var vertexes = BakedMesh.vertices;
+            var normals = BakedMesh.normals;
+            for (int i = 0; i < vertexes.Length; i++)
+            {
+                SlotData foundSlot = thisDCA.umaData.umaRecipe.FindSlotForVertex(i);
+                if (foundSlot != null)
+                {
+                    SelectedVertexes.Add(new VertexSelection()
+                    {
+                        vertexIndexOnSlot = i - foundSlot.vertexOffset,
+                        slot = foundSlot,
+                        WorldPosition = VertexObject.transform.TransformPoint(vertexes[i])
+                    });
+                }
+            }
+        }
+        //GUILayout.Label("camera: " + sceneView.camera.transform.position.ToString());
+        if (GUILayout.Button("Home Camera"))
+        {
+            SceneView.lastActiveSceneView.pivot = new Vector3(0, 1, 2.5f);
+            Selection.activeObject = VertexObject;
+            sceneView.AlignViewToObject(cameraAnchor.transform);
+            sceneView.FrameSelected();
+            sceneView.AlignViewToObject(cameraAnchor.transform);
+        }
+    }
+
     private Rect GetMinMax(Vector2 rectStart, Vector2 rectEnd)
     {
         float xMin = Mathf.Min(rectStart.x, rectEnd.x);
@@ -496,23 +534,30 @@ public class VertexEditorStage : PreviewSceneStage
             {
                 bool blocked = false;
 
-                Vector3 Normal = normals[i];
-                // if the normal is not facing the camera
-                if (Vector3.Dot(Normal, Camera.current.transform.forward) > 0)
+                if (!selectFacingAway)
                 {
-                    continue;
+                    Vector3 Normal = normals[i];
+                    // if the normal is not facing the camera
+                    if (Vector3.Dot(Normal, Camera.current.transform.forward) > 0)
+                    {
+                        continue;
+                    }
                 }
 
-                // do a raycast here from the camera to the vertex (expanded by the normal * 1.001)
-                Ray ray = HandleUtility.GUIPointToWorldRay(screenPos);
-                if (phyScene.Raycast(ray.origin, ray.direction, out RaycastHit hit))
+
+                if (!selectObscured)
                 {
-                    if (hit.transform != null && hit.transform.gameObject == VertexObject)
+                    // do a raycast here from the camera to the vertex (expanded by the normal * 1.001)
+                    Ray ray = HandleUtility.GUIPointToWorldRay(screenPos);
+                    if (phyScene.Raycast(ray.origin, ray.direction, out RaycastHit hit))
                     {
-                        float dist = Vector3.Distance(VertexObject.transform.TransformPoint(vertexes[i]), hit.point);
-                        if (dist > 0.001f)
+                        if (hit.transform != null && hit.transform.gameObject == VertexObject)
                         {
-                            blocked = true;
+                            float dist = Vector3.Distance(VertexObject.transform.TransformPoint(vertexes[i]), hit.point);
+                            if (dist > 0.001f)
+                            {
+                                blocked = true;
+                            }
                         }
                     }
                 }
