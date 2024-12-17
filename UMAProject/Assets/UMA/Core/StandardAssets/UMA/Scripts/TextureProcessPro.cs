@@ -187,6 +187,7 @@ namespace UMA
                                         destinationTexture = new RenderTexture(ww, hh, 0, slotData.material.channels[textureChannelNumber].textureFormat, RenderTextureReadWrite.Linear);
                                         destinationTexture.useMipMap = umaGenerator.convertMipMaps; // && !umaGenerator.convertRenderTexture;
                                     }
+                                    
                                     destinationTexture.filterMode = FilterMode.Point;
                                     destinationTexture.name = slotData.material.name + " Chan " + textureChannelNumber + " frame: " + Time.frameCount;
 
@@ -203,6 +204,7 @@ namespace UMA
                                         backgroundColor = UMAMaterial.GetBackgroundColor(slotData.material.channels[textureChannelNumber].channelType);
                                     }
 
+                                    RenderTexture.active = destinationTexture;
                                     textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor, umaGenerator.SharperFitTextures);
 
                                     //PostProcess
@@ -210,18 +212,29 @@ namespace UMA
 
                                     if (CopyRTtoTex)
                                     {
+                                        // Let it have the RenderTexture now.
+                                        SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture);
+                                        resultingTextures[textureChannelNumber] = destinationTexture;
+                                        // Now asynchronously copy and reset it
+                                        RenderTexToCPU rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, slotData.material.channels[textureChannelNumber].materialPropertyName, textureChannelNumber);
+                                        rt2cpu.DoAsyncCopy();
+
                                         #region Convert Render Textures
+                                        /*
                                         // copy the texture with mips to the Texture2D
                                         Texture2D tempTexture;
-
+                                        Debug.Log("GetRTPixels");
                                         TextureFormat texFmt = TextureFormats[destinationTexture.format];
+                                        RenderTexture.active = destinationTexture;
                                         tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, umaGenerator.convertMipMaps, true);
                                         Graphics.CopyTexture(destinationTexture, tempTexture);
+
                                         RenderTexture.ReleaseTemporary(destinationTexture);
                                         //destinationTexture.Release();
                                         //UnityEngine.GameObject.DestroyImmediate(destinationTexture);
                                         resultingTextures[textureChannelNumber] = tempTexture as Texture;
                                         SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture);
+                                        */
                                         #endregion
                                     }
                                     else

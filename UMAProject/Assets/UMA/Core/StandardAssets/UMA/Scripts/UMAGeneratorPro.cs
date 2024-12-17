@@ -165,7 +165,7 @@ namespace UMA
 			{
 				generatedMaterialLookup.Clear();
 			}
-			backUpTexture = umaData.backUpTextures();
+			//backUpTexture = umaData.backUpTextures();
 			umaData.CleanTextures();
 			generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
 			atlassedMaterials.Clear();
@@ -439,10 +439,6 @@ namespace UMA
 									}
 								}
 							}
-							else
-                            {
-                                Debug.LogWarning("UMAData.UMARecipe.sharedColors is null");
-                            }
                         }
 						else
 						{
@@ -478,10 +474,11 @@ namespace UMA
 			GenerateAtlasData();
 			OptimizeAtlas();
 
-			textureProcesser.ProcessTexture(_umaData,_umaGenerator);
 
-			CleanBackUpTextures();
- 			UpdateUV();
+            textureProcesser.ProcessTexture(_umaData,_umaGenerator);
+            // CleanBackUpTextures();
+
+            UpdateUV();
 
 			// Procedural textures were done here 
 			if (updateMaterialList)

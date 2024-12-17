@@ -8,18 +8,18 @@ using UMA.CharacterSystem;
 
 public class MeshModifierEditor : EditorWindow
 {
-   /* [MenuItem("Examples/My Editor Window")]
-    public static void ShowExample()
-    {
-        MeshModifierEditor wnd = GetWindow<MeshModifierEditor>();
-        wnd.Setup();
-        wnd.titleContent = new GUIContent("Mesh Modifiers");
-    }*/
-
     public static MeshModifierEditor GetOrCreateWindow(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
     {
         MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, "Mesh Modifiers",true);
-        wnd.Setup(DCA, vstage);
+        wnd.Setup(DCA, vstage, null);
+        wnd.titleContent = new GUIContent("Mesh Modifiers");
+        return wnd;
+    }
+
+    public static MeshModifierEditor GetOrCreateWindowFromModifier(MeshModifier modifier, DynamicCharacterAvatar DCA, VertexEditorStage vstage)
+    {
+        MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, "Mesh Modifiers", true);
+        wnd.Setup(DCA, vstage, modifier);
         wnd.titleContent = new GUIContent("Mesh Modifiers");
         return wnd;
     }
@@ -29,11 +29,21 @@ public class MeshModifierEditor : EditorWindow
     public bool ShowVisibleSlots = false;
     public bool ShowOptions = false;
     public VertexEditorStage vertexEditorStage;
+    public MeshModifier CurrentModifier = null;
 
-    public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
+    public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
     {
+        thisDCA = DCA;
         SlotNameToModifiers.Clear();
         vertexEditorStage = vstage;
+        if (modifier == null)
+        {
+            // create a new modifier?
+        }
+        else
+        {
+            CurrentModifier = modifier;
+        }
         // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
     }
 
@@ -47,29 +57,12 @@ public class MeshModifierEditor : EditorWindow
 
         EditorGUILayout.LabelField("Mesh Modifiers for " + thisDCA.name);
 
+        if (CurrentModifier != null)
+        {
+            EditorGUILayout.LabelField("Current Modifier: " + CurrentModifier.name);
+        }
 
-    }
 
-    public void CreateGUI()
-    {
-        // Each editor window contains a root VisualElement object
-        VisualElement root = rootVisualElement;
-
-        // VisualElements objects can contain other VisualElement following a tree hierarchy
-        Label label = new Label("Hello World!");
-        root.Add(label);
-
-        // Create button
-        Button button = new Button();
-        button.name = "button";
-        button.text = "Button";
-        root.Add(button);
-
-        // Create toggle
-        Toggle toggle = new Toggle();
-        toggle.name = "toggle";
-        toggle.label = "Toggle";
-        root.Add(toggle);
     }
 
     private void OnDestroy()

@@ -141,10 +141,13 @@ namespace UMA
 			return null;
 		}
 
+		public static uint WorkCount = 0;
 		public override void Work()
 		{
 			if (!IsIdle())
 			{
+                WorkCount++;
+			
                 // forceGarbageCollect is incremented every time the mesh/rig is built.
                 // it does not increment on texture changes or rig adjustments.
                 // the choice used to be "collect garbage, or build an UMA"
@@ -541,7 +544,7 @@ namespace UMA
 		{
 			try
 			{
-				if (umaDirtyList.Count < 1)
+                if (umaDirtyList.Count < 1)
 				{
 					return;
 				}
@@ -558,7 +561,7 @@ namespace UMA
 						Debug.LogException(ex);
 					}
 				}
-				umaDirtyList.RemoveAt(0);
+                umaDirtyList.RemoveAt(0);
 				umaData.MoveToList(cleanUmas);
 				umaData = null;
 				return;

@@ -42,6 +42,7 @@ namespace UMA.CharacterSystem.Editors
         private string[] cachedRaceDNA = { };
         private string[] rawcachedRaceDNA = { };
         private SceneView sceneView;
+        private MeshModifier MeshModifier = null;
 
         protected DynamicCharacterAvatar thisDCA;
         protected RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
@@ -821,6 +822,7 @@ namespace UMA.CharacterSystem.Editors
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
+            /*
             EditorGUI.BeginChangeCheck();
             AllowVertexSelection = EditorGUILayout.Toggle("Enable Vertex Selection", AllowVertexSelection);
             if (EditorGUI.EndChangeCheck())
@@ -911,9 +913,9 @@ namespace UMA.CharacterSystem.Editors
             {
                 SceneView.RepaintAll();
             }
-
+            */
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Clear"))
+            /*if (GUILayout.Button("Clear"))
             {
                 ClearSelectedVertexes();
                 SceneView.RepaintAll();
@@ -923,13 +925,15 @@ namespace UMA.CharacterSystem.Editors
                 // Add to the ignore list of the SlotDataAsset.
                 // these vertexes will *not* be overridden by the slot vertex overrides.
                 
+            } */
+
+            GUILayout.Label("MeshModifier:", GUILayout.Width(130));
+            MeshModifier = (MeshModifier)EditorGUILayout.ObjectField( MeshModifier, typeof(MeshModifier), true, GUILayout.Width(130));
+            if (GUILayout.Button("Edit"))
+            {
+                VertexEditorStage.ShowStage(thisDCA,MeshModifier);
             }
 
-            if (GUILayout.Button("Edit Vertex List"))
-            {
-                VertexEditorStage.ShowStage(thisDCA);
-                //MeshModifierEditor.GetOrCreateWindow(thisDCA);
-            }
 
             /*if (GUILayout.Button("Open vertex adjuster"))
             {

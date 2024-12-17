@@ -2326,8 +2326,13 @@ namespace UMA
 							if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
-								tempRenderTexture.Release();
-								UMAUtils.DestroySceneObject(tempRenderTexture);
+								int InstanceID = tempRenderTexture.GetInstanceID();
+								if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(InstanceID))
+								{
+									// this will be cleared up when the async call is completed.
+									tempRenderTexture.Release();
+									UMAUtils.DestroySceneObject(tempRenderTexture);
+								}
 							}
 							else
 							{
@@ -2336,9 +2341,20 @@ namespace UMA
 							generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
 						}
 					}
-				}
+					if (generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
+					{
+						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
+						generatedMaterials.materials[atlasIndex] = null;
+					}
+					else
+					{
+						//Debug.Log("Not removing material " + generatedMaterials.materials[atlasIndex].material.name);
+                        generatedMaterials.materials[atlasIndex] = null;
+                    }
+                }
 			}
-		}
+			generatedMaterials.materials.Clear();
+        }
 
 		/// <summary>
 		/// Destroy materials used to render mesh.
@@ -2380,6 +2396,7 @@ namespace UMA
 			}
 		}
 
+		/*
 		public Texture[] backUpTextures()
 		{
 			List<Texture> textureList = new List<Texture>();
@@ -2402,7 +2419,7 @@ namespace UMA
 			}
 
 			return textureList.ToArray();
-		}
+		}*/
 
 		public RenderTexture GetFirstRenderTexture()
 		{
