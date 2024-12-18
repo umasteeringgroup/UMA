@@ -15,7 +15,8 @@ namespace UMA.Editors
 		SerializedProperty fastGeneration;
 		SerializedProperty garbageCollectionRate;
 		SerializedProperty processAllPending;
-		SerializedProperty EditorInitialScaleFactor;
+        SerializedProperty MaxQueuedConversionsPerFrame;
+        SerializedProperty EditorInitialScaleFactor;
 		SerializedProperty editorAtlasResolution;
 		SerializedProperty collectGarbage;
 		SerializedProperty defaultRendererAsset;
@@ -38,6 +39,7 @@ namespace UMA.Editors
 			collectGarbage = serializedObject.FindProperty("collectGarbage");
             defaultRendererAsset = serializedObject.FindProperty("defaultRendererAsset");
             defaultOverlayAsset = serializedObject.FindProperty("defaultOverlayAsset");
+            MaxQueuedConversionsPerFrame = serializedObject.FindProperty("MaxQueuedConversionsPerFrame");
         }
 #pragma warning restore 0108
 
@@ -47,7 +49,8 @@ namespace UMA.Editors
 
 			serializedObject.Update();
 
-			EditorGUILayout.PropertyField(InitialScaleFactor);
+			EditorGUILayout.PropertyField(MaxQueuedConversionsPerFrame);
+            EditorGUILayout.PropertyField(InitialScaleFactor);
 			EditorGUILayout.PropertyField(fastGeneration);
 			EditorGUILayout.PropertyField(IterationCount);
 			EditorGUILayout.PropertyField(collectGarbage);
@@ -75,7 +78,8 @@ namespace UMA.Editors
 				EditorGUILayout.LabelField("Shape Dirty", string.Format("{0}", generator.DnaChanged));
 				EditorGUILayout.LabelField("Texture Dirty", string.Format("{0}", generator.TextureChanged));
 				EditorGUILayout.LabelField("Mesh Dirty", string.Format("{0}", generator.SlotsChanged));
-			}
+				EditorGUILayout.LabelField("Textures DL", string.Format("{0}", generator.TexturesDownloaded));
+            }
 			else {
 				if (GUILayout.Button("Rebuild all editor UMA")) {
 					Scene scene = SceneManager.GetActiveScene();

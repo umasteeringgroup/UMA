@@ -588,7 +588,6 @@ namespace UMA
 
         private string CopyBlendShapes(SlotDataAsset slot, BlendshapeCopyMode bscopyMode)
         {
-            string result = "";
             int updateCount = 0;
             int addedCount = 0;
             int skippedCount = 0;
