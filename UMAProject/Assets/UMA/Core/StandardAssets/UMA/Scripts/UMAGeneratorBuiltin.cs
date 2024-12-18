@@ -146,8 +146,6 @@ namespace UMA
 		{
 			if (!IsIdle())
 			{
-                WorkCount++;
-			
                 // forceGarbageCollect is incremented every time the mesh/rig is built.
                 // it does not increment on texture changes or rig adjustments.
                 // the choice used to be "collect garbage, or build an UMA"

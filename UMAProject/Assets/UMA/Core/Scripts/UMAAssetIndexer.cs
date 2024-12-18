@@ -1983,29 +1983,17 @@ namespace UMA
         {
             try
             {
-                if (!TypeToLookup.ContainsKey(ai._Type))
-                {
-                    Debug.LogError("Unable to get Lookup Type for Type: " + ai._Type.ToString() + " for Object " + ai._Name);
-                    return false;
-                }
-
-                System.Type theType = TypeToLookup[ai._Type];
-                Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
-
-                if (TypeDic == null)
-                {
-                    if (Debug.isDebugBuild)
-                    {
-                    Debug.Log("Unable to add asset item!. Unable to get Type Dictionary of type " + theType.ToString() + "For object " + ai._Name);
-                    }
-                    return false;
-                }
-
-                // Get out if we already have it.
-                if (TypeDic.ContainsKey(ai._Name))
+                Dictionary<string, AssetItem> TypeDic;
+                bool found = GetTypeDictionary(ai, out TypeDic);
+                if (!found)
                 {
                     return false;
                 }
+
+                /* if (AlreadyHasItem(ai, TypeDic))
+                 {
+                     return false;
+                 } */
 
                 if (ai._Name.ToLower().Contains((ai._Type.Name + "placeholder").ToLower()))
                 {
@@ -2019,10 +2007,7 @@ namespace UMA
 
                 string Key = ai._Name.ToLowerInvariant() + "." + ai._Type.ToString();
 
-                if (!LowerCaseLookup.ContainsKey(Key))
-                {
-                    LowerCaseLookup.Add(Key, ai._Name);
-                }
+                AddToLowercaseLookup(ai, Key);
 
 #if UNITY_EDITOR
                 if (string.IsNullOrWhiteSpace(ai._Name))
@@ -2045,10 +2030,7 @@ namespace UMA
 #endif
                 if (!string.IsNullOrEmpty(ai._Guid))
                 {
-                    if (!GuidTypes.ContainsKey(ai._Guid))
-                    {
-                        GuidTypes.Add(ai._Guid, ai);
-                    }
+                    AddToGUIDTypes(ai);
                 }
 #endif
                 if (ai._SerializedItem != null)
@@ -2063,6 +2045,19 @@ namespace UMA
                     }
                 }
 
+                AddToTypeDictionary(ai, TypeDic);
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogWarning("Exception in UMAAssetIndexer.AddAssetItem: " + ex.StackTrace);
+            }
+            return true;
+        }
+
+        private static void AddToTypeDictionary(AssetItem ai, Dictionary<string, AssetItem> TypeDic)
+        {
+            try
+            {
                 if (!TypeDic.ContainsKey(ai._Name))
                 {
                     TypeDic.Add(ai._Name, ai);
@@ -2075,9 +2070,92 @@ namespace UMA
             }
             catch (System.Exception ex)
             {
-                UnityEngine.Debug.LogWarning("Exception in UMAAssetIndexer.AddAssetItem: " + ex.StackTrace);
+                Debug.LogException(ex);
             }
-            return true;
+        }
+
+        private static void AddToGUIDTypes(AssetItem ai)
+        {
+            try
+            {
+            if (!GuidTypes.ContainsKey(ai._Guid))
+            {
+                GuidTypes.Add(ai._Guid, ai);
+            }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+        }
+
+        private static void AddToLowercaseLookup(AssetItem ai, string Key)
+        {
+            try
+            {
+                if (!LowerCaseLookup.ContainsKey(Key))
+                {
+                    LowerCaseLookup.Add(Key, ai._Name);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+        }
+
+        private bool AlreadyHasItem(AssetItem ai, Dictionary<string, AssetItem> typeDic)
+        {
+            try
+            {
+                // Get out if we already have it.
+                if (typeDic.ContainsKey(ai._Name))
+                {
+                    return true;
+                }
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                return false;
+            }
+        }
+
+        private bool GetTypeDictionary(AssetItem ai, out Dictionary<string, AssetItem> TypeDic)
+        {
+            try
+            {
+                TypeDic = null;
+                if (ai._Type == null)
+                {
+                    // this is an unindexed type. How did we get here?
+                    return false;
+                }
+                if (!TypeToLookup.ContainsKey(ai._Type))
+                {
+                    Debug.LogError("Unable to get Lookup Type for Type: " + ai._Type.ToString() + " for Object " + ai._Name);
+                    return false;
+                }
+
+                System.Type theType = TypeToLookup[ai._Type];
+                TypeDic = GetAssetDictionary(theType);
+                if (TypeDic == null)
+                {
+                    if (Debug.isDebugBuild)
+                    {
+                        Debug.Log("Unable to add asset item!. Unable to get Type Dictionary of type " + theType.ToString() + "For object " + ai._Name);
+                    }
+                    return false;
+                }
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                TypeDic = null;
+                return false;
+            }
         }
 
 
