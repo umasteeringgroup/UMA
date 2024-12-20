@@ -34,18 +34,15 @@ public class SRPAdjuster : MonoBehaviour
 
     private void DoUpdate()
     {
-        Debug.Log("Updating SRP Adjustments");
         UMAUtils.PipelineType pipeline = UMAUtils.DetectPipeline();
         lightAdjustment[] adjustments = null;
 
         if (pipeline == UMAUtils.PipelineType.HDPipeline)
         {
-            Debug.Log("Using HDRP Adjustments");
             adjustments = HDRPAdjustments;
         }
         else if (pipeline == UMAUtils.PipelineType.UniversalPipeline)
         {
-            Debug.Log("Using URP Adjustments");
             adjustments = URPAdjustments;
         }
 
@@ -64,10 +61,6 @@ public class SRPAdjuster : MonoBehaviour
                     adjustment.light.GetComponent<Light>().color = adjustment.color;
                 }
             }
-        }
-        else
-        {
-            Debug.Log("No adjustments found for this pipeline");
         }
     }
 }

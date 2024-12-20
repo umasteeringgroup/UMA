@@ -66,6 +66,31 @@ namespace UMA
 		public List<UMASavedItem> savedItems = new List<UMASavedItem>();
 		public string userInformation = "";
 
+		// MeshModifers are used to modify the mesh during creation.
+		// This array is built from the various recipes added during the build process.
+		private List<MeshModifier.Modifier> meshModifiers = new List<MeshModifier.Modifier>();
+        // This array is not built from the recipes. It must be set manually. It is merged into the dictionary of MeshModifiers with the recipe driven modifiers.
+        // It's general use case is for adding mesh modifiers that are not part of the normal UMA build process, such as during editing, etc.
+        public MeshModifier manualMeshModifiers;
+
+		public Dictionary<string, MeshModifier.Modifier> activeModifiers = new Dictionary<string, MeshModifier.Modifier>();
+
+		public void BuildActiveModifiers()
+		{
+			activeModifiers.Clear();
+            foreach (MeshModifier.Modifier mm in meshModifiers)
+            {
+                activeModifiers.Add(mm.SlotName, mm);
+            }
+
+            if (manualMeshModifiers != null)
+            {
+                foreach (MeshModifier.Modifier mm in manualMeshModifiers.Modifiers)
+                {
+                    activeModifiers.Add(mm.SlotName, mm);
+                }
+            }
+        }
 
         public void SaveMountedItems()
         {
@@ -2323,22 +2348,29 @@ namespace UMA
 						if (generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null)
 						{
 							Texture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex];
-							if (tempTexture is RenderTexture)
+                            generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
+
+                            if (tempTexture is RenderTexture)
 							{
 								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
 								int InstanceID = tempRenderTexture.GetInstanceID();
 								if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(InstanceID))
 								{
-									// this will be cleared up when the async call is completed.
-									tempRenderTexture.Release();
-									UMAUtils.DestroySceneObject(tempRenderTexture);
+                                    // this will be cleared up when the async call is completed.
+                                    tempTexture = null;
+									if (tempRenderTexture.IsCreated())
+									{
+										tempRenderTexture.Release();
+									}
+									Debug.Log("Destroy immed texture " + tempRenderTexture.name);
+                                    GameObject.DestroyImmediate(tempRenderTexture); 
+//                                    UMAUtils.DestroySceneObject(tempRenderTexture);
 								}
 							}
 							else
 							{
 								UMAUtils.DestroySceneObject(tempTexture);
 							}
-							generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
 						}
 					}
 					if (generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)

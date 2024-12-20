@@ -25,7 +25,6 @@ public class VertexEditorStage : PreviewSceneStage
     public bool closing = false;
     public DynamicCharacterAvatar thisDCA;
     public Mesh BakedMesh;
-    public int selectedVertex;
     private List<VertexSelection> SelectedVertexes = new List<VertexSelection>();
     PhysicsScene phyScene;
 
@@ -56,6 +55,8 @@ public class VertexEditorStage : PreviewSceneStage
     public bool painting = false;
     public Vector2 RectStart = Vector2.zero;
     public MeshModifier Currentmodifier;
+    public Type[] ModifierTypes;
+
 
     GUIStyle HelpBoxStyle;
     private class VertexSelection
@@ -63,6 +64,7 @@ public class VertexEditorStage : PreviewSceneStage
         public int vertexIndexOnSlot;
         public SlotData slot;
         public Vector3 WorldPosition;
+        public bool isActive;
     }
 
     public static VertexEditorStage ShowStage(DynamicCharacterAvatar DCA, MeshModifier modifier)
@@ -126,8 +128,30 @@ public class VertexEditorStage : PreviewSceneStage
         HelpBoxStyle = new GUIStyle(EditorStyles.miniLabel);
         HelpBoxStyle.wordWrap = true;
         //AssetDatabase.StartAssetEditing();
+        ModifierTypes = AppDomain.CurrentDomain.GetAllDerivedTypes(typeof(VertexAdjustmentCollection));
+
         return true;
     }
+
+    private List<Type> LoadTypes(Type baseType)
+    {
+        List<Type> theTypes = new List<Type>();
+        var Assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(p => !p.IsDynamic);
+
+        foreach (var asm in Assemblies)
+        {
+            var Types = asm.GetExportedTypes();
+            foreach (var t in Types)
+            {
+                if (typeof(VertexAdjustmentCollection).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                {
+                    theTypes.Add(t);
+                }
+            }
+        }
+        return theTypes;
+    }
+
 
 
     protected override void OnCloseStage()
@@ -147,6 +171,7 @@ public class VertexEditorStage : PreviewSceneStage
         if (thisDCA.editorTimeGeneration)
         {
             thisDCA.GenerateSingleUMA();
+            //thisDCA.StartCoroutine(RegenerateUMA());
         }
         if (modifierEditor != null)
         {
@@ -161,6 +186,12 @@ public class VertexEditorStage : PreviewSceneStage
             DestroyImmediate(vertexMesh);
         }
         base.OnCloseStage();
+    }
+
+    private IEnumerator RegenerateUMA()
+    {
+        yield return null;// new WaitForSeconds(0.1f);
+        thisDCA.GenerateSingleUMA();
     }
 
     private void OnSceneGUI(SceneView view)
@@ -360,9 +391,9 @@ public class VertexEditorStage : PreviewSceneStage
 
             Color newColor = Color.red;
           
-            if (i == selectedVertex)
+            if (vs.isActive)
             {
-                newColor = Color.yellow;
+                newColor = Color.green;
             }
 
 
@@ -473,7 +504,6 @@ public class VertexEditorStage : PreviewSceneStage
         if (GUILayout.Button("Clear Selection"))
         {
             SelectedVertexes.Clear();
-            selectedVertex = -1;
         }
         if (GUILayout.Button("Invert Selection"))
         {
@@ -646,8 +676,7 @@ public class VertexEditorStage : PreviewSceneStage
         for (int i = 0; i < SelectedVertexes.Count; i++)
         {
             if (SelectedVertexes[i].slot.slotName == foundSlot.slotName && SelectedVertexes[i].vertexIndexOnSlot == foundVert)
-            {
-                selectedVertex = i;
+            {                
                 return;
             }
         }
@@ -655,9 +684,9 @@ public class VertexEditorStage : PreviewSceneStage
         {
             vertexIndexOnSlot = foundVert,
             slot = foundSlot,
-            WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[foundVert + foundSlot.vertexOffset])
+            WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[foundVert + foundSlot.vertexOffset]),
+            isActive = false
         });
-        selectedVertex = SelectedVertexes.Count - 1;
     }
 
     void RemoveVertex(SlotData foundSlot, int foundVert)
@@ -667,7 +696,6 @@ public class VertexEditorStage : PreviewSceneStage
             if (SelectedVertexes[i].slot.slotName == foundSlot.slotName && SelectedVertexes[i].vertexIndexOnSlot == foundVert)
             {
                 SelectedVertexes.RemoveAt(i);
-                selectedVertex = -1;
                 return;
             }
         }
@@ -680,7 +708,6 @@ public class VertexEditorStage : PreviewSceneStage
             if (SelectedVertexes[i].slot.slotName == foundSlot.slotName && SelectedVertexes[i].vertexIndexOnSlot == foundVert)
             {
                 SelectedVertexes.RemoveAt(i);
-                selectedVertex = -1;
                 return;
             }
         }
@@ -690,12 +717,12 @@ public class VertexEditorStage : PreviewSceneStage
             slot = foundSlot,
             WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[foundVert + foundSlot.vertexOffset])
         });
-        selectedVertex = SelectedVertexes.Count - 1;
     }
 
     private bool SingleSelect(Event currentEvent)
     {
         bool found = false;
+        int selectedVertex = -1;
 
         Ray ray = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
         if (phyScene.Raycast(ray.origin, ray.direction, out RaycastHit hit))
@@ -718,8 +745,9 @@ public class VertexEditorStage : PreviewSceneStage
                     {
                         if (SelectedVertexes[i].slot.slotName == vs.slot.slotName && SelectedVertexes[i].vertexIndexOnSlot == vs.vertexIndexOnSlot)
                         {
-                            selectedVertex = i;
+                            SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
                             duplicateVertex = true;
+                            selectedVertex = i;
                             break;
                         }
                     }
@@ -730,7 +758,6 @@ public class VertexEditorStage : PreviewSceneStage
                         {
                             found = true;
                             SelectedVertexes.Add(vs);
-                            selectedVertex = SelectedVertexes.Count - 1;
                         }
                     }
                     else
@@ -739,7 +766,6 @@ public class VertexEditorStage : PreviewSceneStage
                         {
                             found = false;
                             SelectedVertexes.RemoveAt(selectedVertex);
-                            selectedVertex = -1;
                         }
                     }
                 }

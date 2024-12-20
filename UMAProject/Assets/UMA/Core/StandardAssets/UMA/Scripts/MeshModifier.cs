@@ -9,12 +9,12 @@ namespace UMA
 {
     [Serializable]
     // MeshModifier is a ScriptableObject that contains lists of VertexAdjustments.
-    // Note: This is added to recipes *by name*
+    // Note: This is added to recipes 
     public class MeshModifier : ScriptableObject
     {
         [Serializable]
         // each slot affected, will have a modifier.
-        struct Modifer
+        public struct Modifier
         {
             [Tooltip("The name of the slot this modifier is applied to.")]
             public string SlotName;
@@ -53,7 +53,12 @@ namespace UMA
 
         // There is one modifier per slot.
         // each modifier can contain multiple adjustments.
-        List<Modifer> Modifiers = new List<Modifer>();
+        List<Modifier> modifiers = new List<Modifier>();
+
+        public List<Modifier> Modifiers
+        {
+            get { return Modifiers; }
+        }
 
         // This method creates a shallow copy of the MeshDetails object, applies the adjustments, and returns the modified copy.
         public MeshDetails Process(string Slot, MeshDetails Src)

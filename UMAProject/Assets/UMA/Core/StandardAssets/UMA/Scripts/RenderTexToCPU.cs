@@ -19,6 +19,12 @@ namespace UMA
         public string textureName;
         public int textureIndex;
         public Texture2D newTexture;
+        public static int copiesEnqueued = 0;
+        public static int copiesDequeued = 0;
+        public static int unableToQueue = 0;
+        public static int misseduploads = 0;
+        public static int errorUploads = 0;
+        public static int texturesUploaded = 0;
 
         public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex)
         {
@@ -52,11 +58,21 @@ namespace UMA
             {
                 newTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, texture.mipmapCount > 0, true);
                 newTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
+#if UNITY_EDITOR
+                // We can't count on the callback due to the fact that the editor may not be playing.
+                // therefor, just run the apply during editing directly.
+                if (!Application.isPlaying)
+                {
+                    ApplyTexture();
+                    return;
+                }
+#endif
+                copiesEnqueued++;
                 QueuedCopies.Enqueue(this);
             }
             else
             {
-                Debug.LogWarning("Material is null, not copying texture to CPU");
+                unableToQueue++;
             }
         }
 
@@ -73,6 +89,7 @@ namespace UMA
             }
             while (QueuedCopies.Count > 0)
             {
+                copiesDequeued++;
                 RenderTexToCPU copy = QueuedCopies.Dequeue();
                 copy.ApplyTexture();
                 number--;
@@ -89,18 +106,21 @@ namespace UMA
             {
                 try
                 {
+
                     newTexture.Apply();
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
                     RenderTexture.ReleaseTemporary(texture);
+                    texturesUploaded++;
                 }
                 catch (System.Exception e)
                 {
-                    Debug.LogError("Error copying texture to CPU: " + e.Message);
+                    errorUploads++;
                 }
             }
             else
             {
+                misseduploads++;
                 // we made it to the application, but the material has since died.
                 // we need to clean up the texture
                 UMAUtils.DestroySceneObject(newTexture);

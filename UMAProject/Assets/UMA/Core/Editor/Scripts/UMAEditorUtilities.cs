@@ -534,9 +534,12 @@ namespace UMA
         {
             var result = new List<System.Type>();
             var assemblies = aAppDomain.GetAssemblies();
+			
             foreach (var assembly in assemblies)
             {
-                var types = assembly.GetTypes();
+				if (assembly.IsDynamic) { continue; }
+
+                var types = assembly.GetExportedTypes();
                 foreach (var type in types)
                 {
                     if (type.IsSubclassOf(aType))

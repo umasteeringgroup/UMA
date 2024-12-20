@@ -654,95 +654,20 @@ namespace UMA.CharacterSystem.Editors
 
         private void DoSceneGUI(SceneView sceneView)
         {
-         //   if (!AllowVertexSelection)
-         //   {
-         //       return;
-         //   }
-
+            // Leaving this function here so I can later add some tools to the scene view to find/rebuild/modify UMAs
+            // TODO: include all that in a project setting
             Event currentEvent = Event.current;
 
-            if (currentEvent.type == EventType.Repaint)
-            {
-                // Add cursor rect only when necessary
-                EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
-            }
-            if (currentEvent.type == EventType.MouseDown)
-            {
-                if (currentEvent.button == 0 && currentEvent.shift)
-                {
-                    Ray ray = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
-                    if (Physics.Raycast(ray, out RaycastHit hit))
-                    {
-                        bool duplicateVertex = false;
-                        if (hit.transform != null && hit.transform.gameObject.name == vertexSelectionToolName)
-                        {
-                            //Debug.Log("Hit the vertex editor mesh: " + hit.point);
-                            VertexSelection vs = FindVertex(hit, BakedMesh, VertexObject);
-
-                            for(int i=0;i<SelectedVertexes.Count; i++)
-                            {
-                                if (SelectedVertexes[i].slot.slotName == vs.slot.slotName && SelectedVertexes[i].vertexIndexOnSlot == vs.vertexIndexOnSlot)
-                                {
-                                    selectedVertex = i;
-                                    duplicateVertex = true;
-                                    Repaint();
-                                    break;
-                                }
-                            }
-
-                            if (!duplicateVertex)
-                            {
-                                // todo: get actual vertex index and slot.
-                                SelectedVertexes.Add(vs);// new VertexSelection() { vertexIndexOnSlot = 0, slotName = "SlotName", WorldPosition = hit.point });
-                                selectedVertex = SelectedVertexes.Count - 1;
-                                Repaint();// repaint the inspector to show the new vertex.
-                            }
-                        }
-                    }
-                }
-                else if (currentEvent.button == 1)
-                {
-                    Debug.Log("Right mouse button pressed in Scene View");
-                }
-            }
-
-            Color saveColor = Handles.color;
-
-            float size = 0.003f;
-            for (int i = 0; i < SelectedVertexes.Count; i++)
-            {
-                VertexSelection vs = SelectedVertexes[i];
-                if (i == selectedVertex)
-                {
-                    Handles.color = Color.yellow;
-                }
-                else
-                {
-                    Handles.color = Color.red;
-                }
-                Handles.SphereHandleCap(i, vs.WorldPosition, Quaternion.identity, size, EventType.Repaint);
-            }
-
-            Handles.color = saveColor;
-
             // Your custom GUI logic here
-            Handles.BeginGUI();
-            GUILayout.BeginArea(new Rect(10, 10, 200, 300), "Vertex Selection", GUI.skin.window);
-
-            EditorGUILayout.HelpBox("Hold shift and click on the Avatar to select a vertex.",MessageType.Info);
-            if (GUILayout.Button("Disable Vertex Selection"))
-            {
-                AllowVertexSelection = false;
-                CleanupFromVertexMode();
-                SceneView.RepaintAll();
-            }
-            GUILayout.EndArea();
-            Handles.EndGUI();
+            //Handles.BeginGUI();
+            // GUILayout.BeginArea(new Rect(10, 10, 200, 300), "Vertex Selection", GUI.skin.window);
+            //GUILayout.EndArea();
+            //Handles.EndGUI();
 
             // Repaint the scene view only when necessary
             if (currentEvent.type == EventType.Repaint)
             {
-                SceneView.RepaintAll();
+                //SceneView.RepaintAll();
             }
         }
 

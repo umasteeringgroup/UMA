@@ -68,7 +68,7 @@ namespace UMA
 		[NonSerialized]
 		public long SlotsChanged;
 		[NonSerialized]
-		public long TexturesDownloaded;
+		public long TexturesProcessed;
 
         public virtual void OnEnable()
 		{
@@ -177,7 +177,7 @@ namespace UMA
                 if (RenderTexToCPU.PendingCopies() > 0)
                 {
                     RenderTexToCPU.ApplyQueuedCopies(MaxQueuedConversionsPerFrame);
-					TexturesDownloaded += MaxQueuedConversionsPerFrame > RenderTexToCPU.PendingCopies() ? RenderTexToCPU.PendingCopies() : MaxQueuedConversionsPerFrame;
+					TexturesProcessed += MaxQueuedConversionsPerFrame > RenderTexToCPU.PendingCopies() ? RenderTexToCPU.PendingCopies() : MaxQueuedConversionsPerFrame;
                 }
 
 				if (hasPendingUMAS())

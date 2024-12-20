@@ -5,150 +5,25 @@ using System.Runtime.Remoting.Messaging;
 using UMA;
 using Unity.Collections;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UMA
 {
-    public abstract class VertexAdjustmentCollection
-    {
-        public virtual bool SupportWeightedAdjustments
-        {
-            get { return false; }
-        }
-
-        public abstract void Apply(MeshDetails mesh, MeshDetails src);
-        public abstract void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale);
-    }
-
+    #region vertexAdjustments
     [Serializable]
-    public class VertexColorAdjustmentCollection: VertexAdjustmentCollection
-    {
-        [SerializeField]
-        public VertexColorAdjustment[] vertexColorAdjustments;
-
-        public override bool SupportWeightedAdjustments
-        {
-            get { return true; }
-        }
-
-        public override void Apply(MeshDetails mesh, MeshDetails src)
-        {
-            VertexColorAdjustment.Apply(mesh, src, vertexColorAdjustments);
-        }
-
-        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
-        {
-            VertexColorAdjustment.ApplyScaled(mesh, src, vertexColorAdjustments, scale);
-        }
-    }
-
-    [Serializable]
-    public class VertexDeltaAdjustmentCollection : VertexAdjustmentCollection
-    {
-        public VertexDeltaAdjustment[] vertexDeltaAdjustments;
-
-        public override void Apply(MeshDetails mesh, MeshDetails src)
-        {
-            VertexDeltaAdjustment.Apply(mesh, src, vertexDeltaAdjustments);
-        }
-
-        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
-        {
-            VertexDeltaAdjustment.ApplyScaled(mesh, src, vertexDeltaAdjustments, scale);
-        }
-    }
-
-    [Serializable]
-    public class VertexScaleAdjustmentCollection : VertexAdjustmentCollection
-    {
-        override public bool SupportWeightedAdjustments
-        {
-            get { return true; }
-        }
-
-        public VertexScaleAdjustment[] vertexScaleAdjustments;
-
-        public override void Apply(MeshDetails mesh, MeshDetails src)
-        {
-            VertexScaleAdjustment.Apply(mesh, src, vertexScaleAdjustments);
-        }
-
-        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
-        {
-            VertexScaleAdjustment.ApplyScaled(mesh, src, vertexScaleAdjustments, scale);
-        }
-    }
-
-    [Serializable]
-    public class VertexNormalAdjustmentCollection : VertexAdjustmentCollection
-    {
-        public VertexNormalAdjustment[] vertexNormalAdjustments;
-
-        public override void Apply(MeshDetails mesh, MeshDetails src)
-        {
-            VertexNormalAdjustment.Apply(mesh, src, vertexNormalAdjustments);
-        }
-
-        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
-        {
-            VertexNormalAdjustment.ApplyScaled(mesh, src, vertexNormalAdjustments, scale);
-        }
-    }
-
-    [Serializable]
-    public class VertexUVAdjustmentCollection : VertexAdjustmentCollection
-    {
-        public VertexUVAdjustment[] vertexUVAdjustments;
-
-        public override void Apply(MeshDetails mesh, MeshDetails src)
-        {
-            VertexUVAdjustment.Apply(mesh, src, vertexUVAdjustments);
-        }
-
-        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
-        {
-            VertexUVAdjustment.ApplyScaled(mesh, src, vertexUVAdjustments, scale);
-        }
-    }
-
-    [Serializable]
-    public class VertexBlendshapeAdjustmentCollection : VertexAdjustmentCollection
-    {
-        public VertexBlendshapeAdjustment[] vertexBlendshapeAdjustments;
-
-        public override void Apply(MeshDetails mesh, MeshDetails src)
-        {
-            VertexBlendshapeAdjustment.Apply(mesh, src, vertexBlendshapeAdjustments);
-        }
-
-        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
-        {
-            VertexBlendshapeAdjustment.ApplyScaled(mesh, src, vertexBlendshapeAdjustments, scale);
-        }
-    }
-
-    [Serializable]
-    public class VertexUserAdjustmentCollection : VertexAdjustmentCollection
-    {
-        public VertexUserAdjustment[] vertexUserAdjustments;
-
-        public override void Apply(MeshDetails mesh, MeshDetails src)
-        {
-            VertexUserAdjustment.Apply(mesh, src, vertexUserAdjustments);
-        }
-
-        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
-        {
-            // Do nothing
-        }
-    }
-
-
-    [Serializable]
-    public struct VertexColorAdjustment 
+    public class VertexAdjustment
     {
         public int vertexIndex;
-        public Color32 color;
         public float weight;
+    }
+
+
+    [Serializable]
+    public class VertexColorAdjustment : VertexAdjustment
+    {
+        public Color32 color;
 
 #if UMA_BURSTCOMPILE
 		[BurstCompile]
@@ -160,7 +35,7 @@ namespace UMA
                 mesh.colors32 = (Color32[])original.colors32.Clone();
                 mesh.colors32Modified = true;
             }
-            for (int i=0;i<adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Length; i++)
             {
                 mesh.colors32[adjustments[i].vertexIndex] = adjustments[i].color;
             }
@@ -189,7 +64,7 @@ namespace UMA
     }
 
     [Serializable]
-    public struct VertexDeltaAdjustment
+    public class VertexDeltaAdjustment : VertexAdjustment
     {
         public int vertexIndex;
         public Vector3 delta;
@@ -220,7 +95,7 @@ namespace UMA
     }
 
     [Serializable]
-    public struct VertexScaleAdjustment
+    public class VertexScaleAdjustment : VertexAdjustment
     {
         public int vertexIndex;
         public float scale;
@@ -234,7 +109,7 @@ namespace UMA
             for (int i = 0; i < adjustments.Length; i++)
             {
                 int vertIndex = adjustments[i].vertexIndex;
-                mesh.vertices[vertIndex] +=  mesh.normals[vertIndex] * adjustments[i].scale;
+                mesh.vertices[vertIndex] += mesh.normals[vertIndex] * adjustments[i].scale;
             }
         }
         public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexScaleAdjustment[] adjustments, float scale)
@@ -253,7 +128,7 @@ namespace UMA
     }
 
     [Serializable]
-    public struct VertexNormalAdjustment
+    public class VertexNormalAdjustment : VertexAdjustment
     {
         public int vertexIndex;
         public Vector3 normal;
@@ -306,7 +181,7 @@ namespace UMA
     }
 
     [Serializable]
-    public struct VertexUVAdjustment
+    public class VertexUVAdjustment : VertexAdjustment
     {
         public int vertexIndex;
         public Vector2 uv;
@@ -341,7 +216,7 @@ namespace UMA
     }
 
     [Serializable]
-    public struct VertexBlendshapeAdjustment
+    public class VertexBlendshapeAdjustment : VertexAdjustment
     {
         public int vertexIndex;
         public Vector3 delta;
@@ -419,7 +294,7 @@ namespace UMA
 
     // This is a user defined adjustment, it is up to the user to define what it does
     [Serializable]
-    public struct VertexUserAdjustment
+    public class VertexUserAdjustment : VertexAdjustment
     {
         public int vertexIndex;
         public Vector3 OriginalPosition;
@@ -429,8 +304,10 @@ namespace UMA
             // Send an event if setup. 
             // Do something with the value
         }
-    } 
+    }
+    #endregion
 
+    #region VertexGroups
     public struct VertexGroupMember
     {
         public int vertexIndex;
@@ -441,5 +318,238 @@ namespace UMA
     {
         string Name;
         public VertexGroupMember[] members;
+    }
+    #endregion
+
+    public abstract class VertexAdjustmentCollection
+    {
+        public virtual bool SupportWeightedAdjustments
+        {
+            get { return false; }
+        }
+
+        public abstract void Apply(MeshDetails mesh, MeshDetails src);
+        public abstract void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale);
+#if UNITY_EDITOR
+        public abstract void DoGUI(VertexAdjustment vertAdj);
+#endif
+    }
+
+    [Serializable]
+    public class VertexColorAdjustmentCollection: VertexAdjustmentCollection
+    {
+        [SerializeField]
+        public VertexColorAdjustment[] vertexColorAdjustments;
+
+        public override bool SupportWeightedAdjustments
+        {
+            get { return true; }
+        }
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexColorAdjustment.Apply(mesh, src, vertexColorAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexColorAdjustment.ApplyScaled(mesh, src, vertexColorAdjustments, scale);
+        }
+
+#if UNITY_EDITOR
+        public override void DoGUI(VertexAdjustment vertAdj)
+        {
+            VertexColorAdjustment VA = (VertexColorAdjustment)vertAdj;
+            if (VA == null)
+                return;
+            VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
+            VA.color = EditorGUILayout.ColorField("Color", VA.color);
+        }
+#endif
+    }
+
+    [Serializable]
+    public class VertexDeltaAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexDeltaAdjustment[] vertexDeltaAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexDeltaAdjustment.Apply(mesh, src, vertexDeltaAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexDeltaAdjustment.ApplyScaled(mesh, src, vertexDeltaAdjustments, scale);
+        }
+    
+#if UNITY_EDITOR
+        public override void DoGUI(VertexAdjustment vertAdj)
+        {
+            VertexDeltaAdjustment VA = (VertexDeltaAdjustment)vertAdj;
+            if (VA == null)
+            {
+                return;
+            }
+
+            VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
+            VA.delta = EditorGUILayout.Vector3Field("Delta", VA.delta);
+        }
+#endif
+    }
+
+    [Serializable]
+    public class VertexScaleAdjustmentCollection : VertexAdjustmentCollection
+    {
+        override public bool SupportWeightedAdjustments
+        {
+            get { return true; }
+        }
+
+        public VertexScaleAdjustment[] vertexScaleAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexScaleAdjustment.Apply(mesh, src, vertexScaleAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexScaleAdjustment.ApplyScaled(mesh, src, vertexScaleAdjustments, scale);
+        }
+
+#if UNITY_EDITOR
+        public override void DoGUI(VertexAdjustment vertAdj)
+        {
+            VertexScaleAdjustment VA = (VertexScaleAdjustment)vertAdj;
+            if (VA == null)
+            {
+                return;
+            }
+
+            VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
+            VA.scale = EditorGUILayout.FloatField("Scale", VA.scale);
+        }
+#endif
+
+    }
+
+    [Serializable]
+    public class VertexNormalAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexNormalAdjustment[] vertexNormalAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexNormalAdjustment.Apply(mesh, src, vertexNormalAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexNormalAdjustment.ApplyScaled(mesh, src, vertexNormalAdjustments, scale);
+        }
+#if UNITY_EDITOR
+        public override void DoGUI(VertexAdjustment vertAdj)
+        {
+            VertexNormalAdjustment VA = (VertexNormalAdjustment)vertAdj;
+            if (VA == null)
+            {
+                return;
+            }
+
+            VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
+            VA.normal = EditorGUILayout.Vector3Field("Normal", VA.normal);
+            VA.tangent = EditorGUILayout.Vector3Field("Tangent", VA.tangent);
+        }
+#endif
+    }
+
+    [Serializable]
+    public class VertexUVAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexUVAdjustment[] vertexUVAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexUVAdjustment.Apply(mesh, src, vertexUVAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexUVAdjustment.ApplyScaled(mesh, src, vertexUVAdjustments, scale);
+        }
+#if UNITY_EDITOR
+        public override void DoGUI(VertexAdjustment vertAdj)
+        {
+            VertexUVAdjustment VA = (VertexUVAdjustment)vertAdj;
+            if (VA == null)
+            {
+                return;
+            }
+
+            VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
+            VA.uv = EditorGUILayout.Vector2Field("UV", VA.uv);
+        }
+#endif
+    }
+
+    [Serializable]
+    public class VertexBlendshapeAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexBlendshapeAdjustment[] vertexBlendshapeAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexBlendshapeAdjustment.Apply(mesh, src, vertexBlendshapeAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            VertexBlendshapeAdjustment.ApplyScaled(mesh, src, vertexBlendshapeAdjustments, scale);
+        }
+#if UNITY_EDITOR
+        public override void DoGUI(VertexAdjustment vertAdj)
+        {
+            VertexBlendshapeAdjustment VA = (VertexBlendshapeAdjustment)vertAdj;
+            if (VA == null)
+            {
+                return;
+            }
+
+            VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
+            VA.delta = EditorGUILayout.Vector3Field("Delta", VA.delta);
+            VA.normal = EditorGUILayout.Vector3Field("Normal", VA.normal);
+            VA.tangent = EditorGUILayout.Vector3Field("Tangent", VA.tangent);
+        }
+#endif
+    }
+
+    [Serializable]
+    public class VertexUserAdjustmentCollection : VertexAdjustmentCollection
+    {
+        public VertexUserAdjustment[] vertexUserAdjustments;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            VertexUserAdjustment.Apply(mesh, src, vertexUserAdjustments);
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            // Do nothing
+        }
+#if UNITY_EDITOR
+        public override void DoGUI(VertexAdjustment vertAdj)
+        {
+            VertexUserAdjustment VA = (VertexUserAdjustment)vertAdj;
+            if (VA == null)
+            {
+                return;
+            }
+
+            VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
+            VA.value = EditorGUILayout.FloatField("Value", VA.value);
+        }
+#endif
     }
 }

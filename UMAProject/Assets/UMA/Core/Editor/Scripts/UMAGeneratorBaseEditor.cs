@@ -13,6 +13,7 @@ namespace UMA.Editors
         SerializedProperty AtlasOverflowFitMethod;
         SerializedProperty FitPercentageDecrease;
         SerializedProperty SharperFitTextures;
+        public static bool showAtlasSettings = false;
 
         GUIContent[] atlasLabels = new GUIContent[] { new GUIContent("512"), new GUIContent("1024"), new GUIContent("2048"), new GUIContent("4096"), new GUIContent("8192") };
         int[] atlasValues = new int[] { 512, 1024, 2048, 4096, 8192 };
@@ -37,19 +38,23 @@ namespace UMA.Editors
             centeredLabel.alignment = TextAnchor.MiddleCenter;
 
             serializedObject.Update();
+            showAtlasSettings = EditorGUILayout.Foldout(showAtlasSettings, "Atlas Settings");
 
-            EditorGUILayout.LabelField("Basic Configuration", centeredLabel);
-            GUIHelper.BeginVerticalPadded();
-            EditorGUILayout.PropertyField(fitAtlas);
-            EditorGUILayout.PropertyField(SharperFitTextures);
-            EditorGUILayout.PropertyField(AtlasOverflowFitMethod);
-            EditorGUILayout.HelpBox("Note: Atlas Overflow parameters only work with coroutines disabled below.",MessageType.None);
-            EditorGUILayout.PropertyField(FitPercentageDecrease);
-            GUIHelper.EndVerticalPadded();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("SaveAndRestoreIgnoredItems"));
-            EditorGUILayout.PropertyField(convertRenderTexture);
-            EditorGUILayout.PropertyField(convertMipMaps);
-            EditorGUILayout.IntPopup(atlasResolution, atlasLabels, atlasValues );
+            if (showAtlasSettings)
+            {
+                EditorGUILayout.LabelField("Basic Configuration", centeredLabel);
+                GUIHelper.BeginVerticalPadded();
+                EditorGUILayout.PropertyField(fitAtlas);
+                EditorGUILayout.PropertyField(SharperFitTextures);
+                EditorGUILayout.PropertyField(AtlasOverflowFitMethod);
+                EditorGUILayout.HelpBox("Note: Atlas Overflow parameters only work with coroutines disabled below.", MessageType.None);
+                EditorGUILayout.PropertyField(FitPercentageDecrease);
+                GUIHelper.EndVerticalPadded();
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("SaveAndRestoreIgnoredItems"));
+                EditorGUILayout.PropertyField(convertRenderTexture);
+                EditorGUILayout.PropertyField(convertMipMaps);
+                EditorGUILayout.IntPopup(atlasResolution, atlasLabels, atlasValues);
+            }
 
             serializedObject.ApplyModifiedProperties();
         }
