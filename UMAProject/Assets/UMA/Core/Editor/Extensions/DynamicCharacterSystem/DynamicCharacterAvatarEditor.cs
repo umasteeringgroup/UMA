@@ -12,19 +12,6 @@ namespace UMA.CharacterSystem.Editors
     [CustomEditor(typeof(DynamicCharacterAvatar), true)]
     public class DynamicCharacterAvatarEditor : Editor
     {
-        const string vertexSelectionToolName = "VertexSelection";
-        private class VertexSelection
-        {
-            public int vertexIndexOnSlot;
-            public SlotData slot;
-            public Vector3 WorldPosition;
-        }
-
-        private List<VertexSelection> SelectedVertexes = new List<VertexSelection>();
-        private Mesh BakedMesh = null;
-        private GameObject VertexObject = null;
-        private int selectedVertex = 0;
-
         public static bool showHelp = false;
         public static bool showWardrobe = false;
         public static bool showUtils = false;
@@ -85,20 +72,6 @@ namespace UMA.CharacterSystem.Editors
         public void OnDisable()
         {
             SceneView.duringSceneGui -= DoSceneGUI;
-
-            ClearSelectedVertexes();
-            GameObject go = GameObject.Find(vertexSelectionToolName);
-            if (go != null)
-            {
-                //DestroyImmediate(go);
-                //BakedMesh = null;
-            }
-            // in case we get in a goofy state where the mesh was baked but the tool wasn't created
-            //if (BakedMesh != null)
-            //{
-            //    DestroyImmediate(BakedMesh);
-            //    BakedMesh = null;
-            //}
         }
     
 
@@ -671,78 +644,6 @@ namespace UMA.CharacterSystem.Editors
             }
         }
 
-        private VertexSelection FindVertex(RaycastHit hit, Mesh mesh, GameObject go)
-        {
-            var slots = thisDCA.umaData.umaRecipe.slotDataList;
-            int triangle = hit.triangleIndex;
-
-            var tris = mesh.triangles; 
-            var verts = mesh.vertices;
-
-            int i0 = tris[triangle * 3];
-            Vector3 local = go.transform.InverseTransformPoint(hit.point);
-
-            int foundVert = tris[triangle * 3];
-            float maxDist = Vector3.Distance(local, verts[foundVert]);
-
-            for (int i = 0; i < 3; i++)
-            {
-                Vector3 vert = verts[tris[triangle * 3 + i]];
-                float dist = Vector3.Distance(local, vert);
-                if (dist < maxDist)
-                {
-                    maxDist = dist;
-                    foundVert = tris[triangle * 3 + i];
-                }
-            }
-
-            SlotData foundSlot = thisDCA.umaData.umaRecipe.FindSlotForVertex(foundVert);
-
-            if (foundSlot != null)
-            {
-                int LocalToSlot = foundVert - foundSlot.vertexOffset;
-                return new VertexSelection()
-                {
-                    vertexIndexOnSlot = LocalToSlot,
-                    slot = foundSlot,
-                    WorldPosition = go.transform.TransformPoint(verts[foundVert])
-                };
-            }
-            throw new Exception("Vertex not found on slots!");
-        }
-
-        private void SetVertexMaterialColors(GameObject VertexObject)
-        {
-            MeshRenderer mr = VertexObject.GetComponent<MeshRenderer>();
-            List<Material> newMaterials = new List<Material>();
-
-            if (mr != null)
-            {
-                for (int i = 0; i < mr.sharedMaterials.Length; i++)
-                {
-                    int colorNo = i % defaultColors.Length;
-                    if (mr.sharedMaterials[i] == null)
-                    {
-                        Material M = UMAUtils.GetDefaultDiffuseMaterial();
-                        if (M != null)
-                        {
-                            M.SetColor("_Color", defaultColors[colorNo]);
-                            newMaterials.Add(M);
-                        }
-                        else
-                        {
-                            Debug.LogError("No Default Material found");
-                        }
-                    }
-                }
-                mr.sharedMaterials = newMaterials.ToArray();
-            }
-            else
-            {
-                Debug.LogError("No MeshRenderer found");
-            }
-        }
-
         private void DoUtilitiesGUI()
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
@@ -871,31 +772,6 @@ namespace UMA.CharacterSystem.Editors
 
             GUILayout.EndHorizontal();
 
-            // TODO edit the boneweights of the selected vertex.
-
-            if (selectedVertex >= 0 && selectedVertex < SelectedVertexes.Count)
-            {
-                VertexSelection vs = SelectedVertexes[selectedVertex];
-                GUILayout.Label("Selected Vertex: " + vs.slot.slotName + " " + vs.vertexIndexOnSlot);
-                GUILayout.Label($"BoneWeights {vs.slot.asset.meshData.ManagedBonesPerVertex[vs.vertexIndexOnSlot]} ");
-
-                int boneWeightOffset = vs.slot.asset.meshData.BoneWeightOffset(vs.vertexIndexOnSlot);
-                int boneWeightCount = vs.slot.asset.meshData.ManagedBonesPerVertex[vs.vertexIndexOnSlot];
-
-                for (int i=0;i<boneWeightCount; i++)
-                {
-                    GUILayout.BeginHorizontal();
-
-                    GUILayout.Label($"Bone {vs.slot.asset.meshData.ManagedBoneWeights[boneWeightOffset + i].boneIndex}",GUILayout.Width(60));
-                    vs.slot.asset.meshData.ManagedBoneWeights[boneWeightOffset + i].weight = EditorGUILayout.FloatField(vs.slot.asset.meshData.ManagedBoneWeights[boneWeightOffset + i].weight);
-                    GUILayout.EndHorizontal();
-                }
-            }
-            else
-            {
-                GUILayout.Label("No Vertex Selected");
-            }
-
             GUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Force Rebuild"))
@@ -909,29 +785,6 @@ namespace UMA.CharacterSystem.Editors
             // Then force rebuild the character.
 
             GUIHelper.EndVerticalPadded(10);
-        }
-
-        public void CleanupFromVertexMode()
-        {
-            VertexObject = GameObject.Find(vertexSelectionToolName);
-            while (VertexObject != null)
-            {
-                DestroyImmediate(VertexObject);
-                VertexObject = GameObject.Find(vertexSelectionToolName);
-            }
-
-            VertexObject = null;
-            SkinnedMeshRenderer smr = thisDCA.umaData.GetRenderers()[0];
-            if (smr != null)
-            {
-                smr.enabled = true;
-            }
-        }
-
-
-        public void ClearSelectedVertexes()
-        {
-            SelectedVertexes = new List<VertexSelection>();
         }
 
         private void DoShowWardrobeGUI()
