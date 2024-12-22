@@ -5,71 +5,99 @@ using UnityEditor;
 using UnityEngine.UIElements;
 using UMA;
 using UMA.CharacterSystem;
+using PlasticGui.Help;
+using UMA.Editors;
+using System;
 
-public class MeshModifierEditor : EditorWindow
+namespace UMA
 {
-    public static MeshModifierEditor GetOrCreateWindow(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
+    public class MeshModifierEditor : EditorWindow
     {
-        MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, "Mesh Modifiers",true);
-        wnd.Setup(DCA, vstage, null);
-        wnd.titleContent = new GUIContent("Mesh Modifiers");
-        return wnd;
-    }
+        public List<MeshModifier.Modifier> Modifiers = new List<MeshModifier.Modifier>();
 
-    public static MeshModifierEditor GetOrCreateWindowFromModifier(MeshModifier modifier, DynamicCharacterAvatar DCA, VertexEditorStage vstage)
-    {
-        MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, "Mesh Modifiers", true);
-        wnd.Setup(DCA, vstage, modifier);
-        wnd.titleContent = new GUIContent("Mesh Modifiers");
-        return wnd;
-    }
-
-    public DynamicCharacterAvatar thisDCA;
-    public Dictionary<string,MeshModifier> SlotNameToModifiers = new Dictionary<string, MeshModifier>();
-    public bool ShowVisibleSlots = false;
-    public bool ShowOptions = false;
-    public VertexEditorStage vertexEditorStage;
-    public MeshModifier CurrentModifier = null;
-
-    public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
-    {
-        thisDCA = DCA;
-        SlotNameToModifiers.Clear();
-        vertexEditorStage = vstage;
-        if (modifier == null)
+        public static MeshModifierEditor GetOrCreateWindow(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
         {
-            // create a new modifier?
-        }
-        else
-        {
-            CurrentModifier = modifier;
-        }
-        // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
-    }
-
-    public void OnGUI()
-    {
-        if (thisDCA == null)
-        {
-            EditorGUILayout.LabelField("No DCA selected");
-            return;
+            MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, "Mesh Modifiers", true);
+            wnd.Setup(DCA, vstage, null);
+            wnd.titleContent = new GUIContent("Mesh Modifiers");
+            return wnd;
         }
 
-        EditorGUILayout.LabelField("Mesh Modifiers for " + thisDCA.name);
-
-        if (CurrentModifier != null)
+        public static MeshModifierEditor GetOrCreateWindowFromModifier(MeshModifier modifier, DynamicCharacterAvatar DCA, VertexEditorStage vstage)
         {
-            EditorGUILayout.LabelField("Current Modifier: " + CurrentModifier.name);
+            MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, "Mesh Modifiers", true);
+            wnd.Setup(DCA, vstage, modifier);
+            wnd.titleContent = new GUIContent("Mesh Modifiers");
+            return wnd;
         }
 
+        public DynamicCharacterAvatar thisDCA;
+        public Dictionary<string, MeshModifier> SlotNameToModifiers = new Dictionary<string, MeshModifier>();
+        public bool ShowVisibleSlots = false;
+        public bool ShowOptions = false;
+        public VertexEditorStage vertexEditorStage;
+        public MeshModifier CurrentModifier = null;
+        public Type[] ModifierTypes = new Type[0];
+        public string[] ModifierTypeNames = new string[0];
+        public int selectedType = 0;
 
-    }
-
-    private void OnDestroy()
-    {
-        if (vertexEditorStage != null)
+        public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
         {
-            vertexEditorStage.CloseStage();
+            thisDCA = DCA;
+            SlotNameToModifiers.Clear();
+            vertexEditorStage = vstage;
+            ModifierTypes = AppDomain.CurrentDomain.GetAllDerivedTypes(typeof(VertexAdjustmentCollection));
+            ModifierTypeNames = new string[ModifierTypes.Length];
+            for (int i = 0; i < ModifierTypes.Length; i++)
+            {
+                ModifierTypeNames[i] = ObjectNames.NicifyVariableName(ModifierTypes[i].Name); 
+            }
+
+            if (modifier == null)
+            {
+                // create a new modifier?
+                Modifiers = new List<MeshModifier.Modifier>();
+            }
+            else
+            {
+                CurrentModifier = modifier;
+                Modifiers = modifier.Modifiers;
+            }
+            // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
+        }
+
+        public void OnGUI()
+        {
+            if (thisDCA == null)
+            {
+                EditorGUILayout.LabelField("No DCA selected");
+                return;
+            }
+
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+
+            selectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames);
+
+            EditorGUILayout.LabelField("Modifier");
+
+
+            GUIHelper.EndVerticalPadded(10);
+            EditorGUILayout.LabelField("Mesh Modifiers for " + thisDCA.name);
+
+            if (CurrentModifier != null)
+            {
+                EditorGUILayout.LabelField("Current Modifier: " + CurrentModifier.name);
+            }
+
+
+        }
+
+        private void OnDestroy()
+        {
+            if (vertexEditorStage != null)
+            {
+                vertexEditorStage.CloseStage();
+            }
         }
     }
 }

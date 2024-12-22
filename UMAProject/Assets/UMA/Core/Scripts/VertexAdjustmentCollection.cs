@@ -5,6 +5,8 @@ using System.Runtime.Remoting.Messaging;
 using UMA;
 using Unity.Collections;
 using UnityEngine;
+using JetBrains.Annotations;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -13,10 +15,12 @@ namespace UMA
 {
     #region vertexAdjustments
     [Serializable]
-    public class VertexAdjustment
+    public abstract class VertexAdjustment
     {
         public int vertexIndex;
         public float weight;
+        public abstract string Name { get; }
+        public abstract VertexAdjustmentCollection VertexAdjustmentCollection { get; }
     }
 
 
@@ -60,7 +64,21 @@ namespace UMA
             }
         }
 
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Color";
+            }
+        }
 
+        public override VertexAdjustmentCollection VertexAdjustmentCollection 
+        { 
+            get
+            {
+                return new VertexColorAdjustmentCollection();
+            }
+        }
     }
 
     [Serializable]
@@ -92,6 +110,23 @@ namespace UMA
                 mesh.vertices[adjustments[i].vertexIndex] += (adjustments[i].delta * scale);
             }
         }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Delta";
+            }
+        }
+
+        public override VertexAdjustmentCollection VertexAdjustmentCollection
+        {
+            get
+            {
+                return new VertexDeltaAdjustmentCollection();
+            }
+        }
+
     }
 
     [Serializable]
@@ -123,6 +158,22 @@ namespace UMA
             {
                 int vertIndex = adjustments[i].vertexIndex;
                 mesh.vertices[vertIndex] += mesh.normals[vertIndex] * (adjustments[i].scale * scale);
+            }
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Scale";
+            }
+        }
+
+        public override VertexAdjustmentCollection VertexAdjustmentCollection
+        {
+            get
+            {
+                return new VertexScaleAdjustmentCollection();
             }
         }
     }
@@ -178,6 +229,23 @@ namespace UMA
                 mesh.tangents[vertIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
             }
         }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Normal";
+            }
+        }
+
+        public override VertexAdjustmentCollection VertexAdjustmentCollection
+        {
+            get
+            {
+                return new VertexNormalAdjustmentCollection();
+            }
+        }
+
     }
 
     [Serializable]
@@ -211,6 +279,22 @@ namespace UMA
                 Vector2 newUV = adjustments[vertIndex].uv;
                 Vector2 lerpUV = Vector2.Lerp(startUV, newUV, scale);
                 mesh.uv[vertIndex] = lerpUV;
+            }
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex UV";
+            }
+        }
+
+        public override VertexAdjustmentCollection VertexAdjustmentCollection
+        {
+            get
+            {
+                return new VertexUVAdjustmentCollection();
             }
         }
     }
@@ -290,6 +374,23 @@ namespace UMA
                 }
             }
         }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Blendshape";
+            }
+        }
+
+        public override VertexAdjustmentCollection VertexAdjustmentCollection
+        {
+            get
+            {
+                return new VertexBlendshapeAdjustmentCollection();
+            }
+        }
+
     }
 
     // This is a user defined adjustment, it is up to the user to define what it does
@@ -303,6 +404,22 @@ namespace UMA
         {
             // Send an event if setup. 
             // Do something with the value
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex User";
+            }
+        }
+
+        public override VertexAdjustmentCollection VertexAdjustmentCollection
+        {
+            get
+            {
+                return new VertexUserAdjustmentCollection();
+            }
         }
     }
     #endregion
@@ -332,6 +449,8 @@ namespace UMA
         public abstract void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale);
 #if UNITY_EDITOR
         public abstract void DoGUI(VertexAdjustment vertAdj);
+        public abstract VertexAdjustment Create();
+        public abstract string Name { get; }
 #endif
     }
 
@@ -365,6 +484,19 @@ namespace UMA
             VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
             VA.color = EditorGUILayout.ColorField("Color", VA.color);
         }
+
+        public override VertexAdjustment Create()
+        {
+            return new VertexColorAdjustment();
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Color";
+            }
+        }
 #endif
     }
 
@@ -394,6 +526,19 @@ namespace UMA
 
             VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
             VA.delta = EditorGUILayout.Vector3Field("Delta", VA.delta);
+        }
+
+        public override VertexAdjustment Create()
+        {
+            return new VertexDeltaAdjustment();
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Delta";
+            }
         }
 #endif
     }
@@ -430,6 +575,19 @@ namespace UMA
             VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
             VA.scale = EditorGUILayout.FloatField("Scale", VA.scale);
         }
+
+        public override VertexAdjustment Create()
+        {
+            return new VertexScaleAdjustment();
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Scale";
+            }
+        }
 #endif
 
     }
@@ -461,6 +619,19 @@ namespace UMA
             VA.normal = EditorGUILayout.Vector3Field("Normal", VA.normal);
             VA.tangent = EditorGUILayout.Vector3Field("Tangent", VA.tangent);
         }
+
+        public override VertexAdjustment Create()
+        {
+            return new VertexNormalAdjustment();
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Normal";
+            }
+        }
 #endif
     }
 
@@ -489,6 +660,19 @@ namespace UMA
 
             VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
             VA.uv = EditorGUILayout.Vector2Field("UV", VA.uv);
+        }
+
+        public override VertexAdjustment Create()
+        {
+            return new VertexUVAdjustment();
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex UV";
+            }
         }
 #endif
     }
@@ -521,6 +705,19 @@ namespace UMA
             VA.normal = EditorGUILayout.Vector3Field("Normal", VA.normal);
             VA.tangent = EditorGUILayout.Vector3Field("Tangent", VA.tangent);
         }
+
+        public override VertexAdjustment Create()
+        {
+            return new VertexBlendshapeAdjustment();
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex Blendshape";
+            }
+        }
 #endif
     }
 
@@ -549,6 +746,19 @@ namespace UMA
 
             VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
             VA.value = EditorGUILayout.FloatField("Value", VA.value);
+        }
+
+        public override VertexAdjustment Create()
+        {
+            return new VertexUserAdjustment();
+        }
+
+        public override string Name
+        {
+            get
+            {
+                return "Vertex User";
+            }
         }
 #endif
     }
