@@ -76,6 +76,7 @@ namespace UMA
 
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
+            EditorGUILayout.LabelField("Select Modifier Type");
             selectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames);
 
             EditorGUILayout.LabelField("Modifier");

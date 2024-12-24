@@ -40,7 +40,7 @@ MonoBehaviour:
     - _BaseMap
     - _BumpMap
     - _MetallicGlossMap
-  materialType: 2
+  materialType: 1
   channels:
   - channelType: 0
     textureFormat: 0

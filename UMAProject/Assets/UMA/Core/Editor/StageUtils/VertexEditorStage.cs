@@ -30,8 +30,8 @@ public class VertexEditorStage : PreviewSceneStage
 
     // Edit Options
     float HandlesSize = 0.01f;
-    public Color ActiveColor = Color.green;
-    public Color InactiveColor = Color.red;
+    public Color ActiveColor = new Color32(0, 210, 0, 255);
+    public Color InactiveColor = new Color32(235, 0, 0, 255);
     bool  selectObscured = false;
     bool  selectFacingAway = false;
     private GUIStyle centeredLabel;
@@ -75,7 +75,7 @@ public class VertexEditorStage : PreviewSceneStage
         Active
     }
 
-    int currentNewVertexState = 0;
+    int currentNewVertexState = 1;
 
     private vertexState currentState;
 
@@ -556,6 +556,20 @@ public class VertexEditorStage : PreviewSceneStage
             for (int i = 0; i < SelectedVertexes.Count; i++)
             {
                 SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
+            }
+        }
+        if (GUILayout.Button("Activate all selected"))
+        {
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                SelectedVertexes[i].isActive = true;
+            }
+        }
+        if (GUILayout.Button("Deactivate all selected"))
+        {
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                SelectedVertexes[i].isActive = false;
             }
         }
         if (GUILayout.Button("Clear Selection"))
