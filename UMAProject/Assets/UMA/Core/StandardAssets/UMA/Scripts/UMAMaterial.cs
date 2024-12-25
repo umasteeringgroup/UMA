@@ -276,7 +276,7 @@ namespace UMA
             return names;
         }
 
-        private bool isGeneratedTextures
+        public bool IsGeneratedTextures
         {
             get
             {
@@ -284,9 +284,9 @@ namespace UMA
             }
         }
 
-        public bool isNoAtlas()
+        public bool IsNoAtlas()
         {
-            return materialType == MaterialType.Atlas;
+            return materialType != MaterialType.Atlas;
         }
 
         /// <summary>

@@ -40,6 +40,8 @@ namespace UMA
         public Type[] ModifierTypes = new Type[0];
         public string[] ModifierTypeNames = new string[0];
         public int selectedType = 0;
+        public VertexAdjustment templateAdjustment = null;
+        public VertexAdjustmentCollection templateVertexAdjustmentCollection = null;
 
         public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
         {
@@ -79,8 +81,33 @@ namespace UMA
             EditorGUILayout.LabelField("Select Modifier Type");
             selectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames);
 
-            EditorGUILayout.LabelField("Modifier");
+            if (templateVertexAdjustmentCollection == null || ModifierTypes[selectedType] != templateVertexAdjustmentCollection.GetType())
+            {
+                templateVertexAdjustmentCollection = (VertexAdjustmentCollection)Activator.CreateInstance(ModifierTypes[selectedType]);
+            }
 
+            EditorGUILayout.LabelField("Modifier");
+            if (templateAdjustment == null && templateVertexAdjustmentCollection != null)
+            {
+                templateAdjustment = (VertexAdjustment)Activator.CreateInstance(templateVertexAdjustmentCollection.AdjustmentType);
+            }
+            if (templateAdjustment.GetType() != templateVertexAdjustmentCollection.AdjustmentType)
+            {
+                templateAdjustment = (VertexAdjustment)Activator.CreateInstance(templateVertexAdjustmentCollection.AdjustmentType);
+            }
+            if (templateVertexAdjustmentCollection != null && templateAdjustment != null)
+            {
+                templateVertexAdjustmentCollection.DoGUI(templateAdjustment);
+            }
+            if (GUILayout.Button("Add Active Vertexes"))
+            {
+                if (CurrentModifier == null)
+                {
+                   // CurrentModifier = new MeshModifier();
+                   // Modifiers.Add(CurrentModifier);
+                }
+               // CurrentModifier.Modifiers.Add(templateVertexAdjustmentCollection);
+            }
 
             GUIHelper.EndVerticalPadded(10);
             EditorGUILayout.LabelField("Mesh Modifiers for " + thisDCA.name);

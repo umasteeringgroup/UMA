@@ -2362,7 +2362,7 @@ namespace UMA
 									{
 										tempRenderTexture.Release();
 									}
-									Debug.Log("Destroy immed texture " + tempRenderTexture.name);
+									//Debug.Log("Destroy immed texture " + tempRenderTexture.name);
                                     GameObject.DestroyImmediate(tempRenderTexture); 
 //                                    UMAUtils.DestroySceneObject(tempRenderTexture);
 								}

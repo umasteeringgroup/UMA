@@ -393,7 +393,8 @@ namespace UMA
                     continue;
                 }
 
-                if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
+				if (!generatedMaterial.umaMaterial.IsGeneratedTextures)
+                //if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
 				{
                     for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
 					{

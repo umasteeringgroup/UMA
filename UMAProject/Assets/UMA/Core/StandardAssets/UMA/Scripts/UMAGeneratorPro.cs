@@ -912,22 +912,24 @@ namespace UMA
 			{
 				var material = umaAtlasList.materials[atlasIndex];
 
-                if (material.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
-                {
-                    if (material.materialFragments != null)
-                    {
-                        for (int i = 0; i < material.materialFragments.Count; i++)
-                        {
-                            MaterialFragment fragment = material.materialFragments[i];
-                            SlotData sd = fragment.slotData;
-                            sd.skinnedMeshRenderer = 0;
-                            sd.submeshIndex = 0;
-                            sd.vertexOffset = 0;
-                            sd.UVArea.Set(0, 0, 1.0f, 1.0f);
-                        }
-                    }
-                    continue;
-                }
+				// JRRM: Test
+				//if (material.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
+				if (!material.umaMaterial.IsGeneratedTextures)
+				{
+					if (material.materialFragments != null)
+					{
+						for (int i = 0; i < material.materialFragments.Count; i++)
+						{
+							MaterialFragment fragment = material.materialFragments[i];
+							SlotData sd = fragment.slotData;
+							sd.skinnedMeshRenderer = 0;
+							sd.submeshIndex = 0;
+							sd.vertexOffset = 0;
+							sd.UVArea.Set(0, 0, 1.0f, 1.0f);
+						}
+					}
+					continue;
+				}
 
 				Vector2 finalAtlasAspect = new Vector2(umaGenerator.atlasResolution / material.cropResolution.x, umaGenerator.atlasResolution / material.cropResolution.y);
 

@@ -21,6 +21,8 @@ namespace UMA
         public float weight;
         public abstract string Name { get; }
         public abstract VertexAdjustmentCollection VertexAdjustmentCollection { get; }
+
+        public abstract VertexAdjustment ShallowCopy();
     }
 
 
@@ -79,6 +81,16 @@ namespace UMA
                 return new VertexColorAdjustmentCollection();
             }
         }
+
+        public override VertexAdjustment ShallowCopy()
+        {
+            return new VertexColorAdjustment()
+            {
+                vertexIndex = vertexIndex,
+                weight = weight,
+                color = color
+            };
+        }
     }
 
     [Serializable]
@@ -125,6 +137,16 @@ namespace UMA
             {
                 return new VertexDeltaAdjustmentCollection();
             }
+        }
+
+        public override VertexAdjustment ShallowCopy()
+        {
+            return new VertexDeltaAdjustment()
+            {
+                vertexIndex = vertexIndex,
+                weight = weight,
+                delta = delta
+            };
         }
 
     }
@@ -175,6 +197,16 @@ namespace UMA
             {
                 return new VertexScaleAdjustmentCollection();
             }
+        }
+
+        public override VertexAdjustment ShallowCopy()
+        {
+            return new VertexScaleAdjustment()
+            {
+                vertexIndex = vertexIndex,
+                weight = weight,
+                scale = scale
+            };
         }
     }
 
@@ -246,6 +278,17 @@ namespace UMA
             }
         }
 
+        public override VertexAdjustment ShallowCopy()
+        {
+            return new VertexNormalAdjustment()
+            {
+                vertexIndex = vertexIndex,
+                weight = weight,
+                normal = normal,
+                tangent = tangent
+            };
+        }
+
     }
 
     [Serializable]
@@ -296,6 +339,16 @@ namespace UMA
             {
                 return new VertexUVAdjustmentCollection();
             }
+        }
+
+        public override VertexAdjustment ShallowCopy()
+        {
+            return new VertexUVAdjustment()
+            {
+                vertexIndex = vertexIndex,
+                weight = weight,
+                uv = uv
+            };
         }
     }
 
@@ -391,6 +444,18 @@ namespace UMA
             }
         }
 
+        public override VertexAdjustment ShallowCopy()
+        {
+            return new VertexBlendshapeAdjustment()
+            {
+                vertexIndex = vertexIndex,
+                weight = weight,
+                delta = delta,
+                normal = normal,
+                tangent = tangent
+            };
+        }
+
     }
 
     // This is a user defined adjustment, it is up to the user to define what it does
@@ -420,6 +485,16 @@ namespace UMA
             {
                 return new VertexUserAdjustmentCollection();
             }
+        }
+
+        public override VertexAdjustment ShallowCopy()
+        {
+            return new VertexUserAdjustment()
+            {
+                vertexIndex = vertexIndex,
+                weight = weight,
+                value = value
+            };
         }
     }
     #endregion
@@ -451,6 +526,7 @@ namespace UMA
         public abstract void DoGUI(VertexAdjustment vertAdj);
         public abstract VertexAdjustment Create();
         public abstract string Name { get; }
+        public abstract Type AdjustmentType { get; }
 #endif
     }
 
@@ -497,6 +573,14 @@ namespace UMA
                 return "Vertex Color";
             }
         }
+
+        public override Type AdjustmentType
+        {
+            get
+            {
+                return typeof(VertexColorAdjustment);
+            }
+        }
 #endif
     }
 
@@ -538,6 +622,14 @@ namespace UMA
             get
             {
                 return "Vertex Delta";
+            }
+        }
+
+        public override Type AdjustmentType
+        {
+            get
+            {
+                return typeof(VertexDeltaAdjustment);
             }
         }
 #endif
@@ -588,6 +680,15 @@ namespace UMA
                 return "Vertex Scale";
             }
         }
+
+        public override Type AdjustmentType
+        {
+            get
+            {
+                return typeof(VertexScaleAdjustment);
+            }
+        }
+
 #endif
 
     }
@@ -632,6 +733,14 @@ namespace UMA
                 return "Vertex Normal";
             }
         }
+
+        public override Type AdjustmentType
+        {
+            get
+            {
+                return typeof(VertexNormalAdjustment);
+            }
+        }
 #endif
     }
 
@@ -672,6 +781,14 @@ namespace UMA
             get
             {
                 return "Vertex UV";
+            }
+        }
+
+        public override Type AdjustmentType
+        {
+            get
+            {
+                return typeof(VertexUVAdjustment);
             }
         }
 #endif
@@ -718,6 +835,14 @@ namespace UMA
                 return "Vertex Blendshape";
             }
         }
+
+        public override Type AdjustmentType
+        {
+            get
+            {
+                return typeof(VertexBlendshapeAdjustment);
+            }
+        }
 #endif
     }
 
@@ -758,6 +883,14 @@ namespace UMA
             get
             {
                 return "Vertex User";
+            }
+        }
+
+        public override Type AdjustmentType
+        {
+            get
+            {
+                return typeof(VertexUserAdjustment);
             }
         }
 #endif
