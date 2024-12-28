@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Road
-  m_Shader: {fileID: -6465566751694194690, guid: 7dbb57796d61e3e44baf573dadcfa669,
+  m_Shader: {fileID: -6465566751694194690, guid: e2c95817ac413714c8f36b80020c9867,
     type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -80,7 +80,7 @@ Material:
     - _Metallic: 0
     - _MetallicModulation: 1
     - _Mode: 0
-    - _NormalStrength: 1
+    - _NormalStrength: 1.083
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _RimLightPower: 4

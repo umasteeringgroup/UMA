@@ -2358,13 +2358,17 @@ namespace UMA
 								{
                                     // this will be cleared up when the async call is completed.
                                     tempTexture = null;
-									if (tempRenderTexture.IsCreated())
+									bool safe = RenderTexToCPU.SafeToFree(tempRenderTexture);
+									if (safe)
 									{
-										tempRenderTexture.Release();
-									}
-									//Debug.Log("Destroy immed texture " + tempRenderTexture.name);
-                                    GameObject.DestroyImmediate(tempRenderTexture); 
-//                                    UMAUtils.DestroySceneObject(tempRenderTexture);
+										if (tempRenderTexture.IsCreated())
+										{
+											tempRenderTexture.Release();
+										}
+										RenderTexToCPU.renderTexturesCleanedUMAData++;
+										UMAUtils.DestroySceneObject(tempRenderTexture);
+
+                                    }
 								}
 							}
 							else

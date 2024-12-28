@@ -14,8 +14,12 @@ namespace UMA
     {
         [Serializable]
         // each slot affected, will have a modifier.
-        public struct Modifier
+        public class Modifier
         {
+#if UNITY_EDITOR
+            public string ModifierName;
+#endif
+
             [Tooltip("The name of the slot this modifier is applied to.")]
             public string SlotName;
             [Tooltip("The name of the DNA this modifier gets it's scale value from. Leave blank to manually set the scale.")]
@@ -23,8 +27,7 @@ namespace UMA
             [Tooltip("The scale value, can be set manually or from a DNA value.")]
             public float Scale;
             [Tooltip("This is the list of adjustments for the current slot.")]
-            public VertexAdjustmentCollection[] adjustments;  
-               
+            public VertexAdjustmentCollection[] adjustments = new VertexAdjustmentCollection[0];
             public MeshDetails Process(MeshDetails src)
             {
                 MeshDetails Working = src.ShallowCopy();

@@ -19,6 +19,11 @@ namespace UMA
     {
         public int vertexIndex;
         public float weight;
+
+#if UNITY_EDITOR
+        public string SlotName; 
+#endif
+
         public abstract string Name { get; }
         public abstract VertexAdjustmentCollection VertexAdjustmentCollection { get; }
 

@@ -25,7 +25,7 @@ namespace UMA.Editors
 		SerializedProperty convertRenderTexture;
 		public static bool showGenerationSettings = false;
 		public static bool showAdvancedSettings = false;
-		public static bool showStatistics = false;
+		public static bool showStatistics = true;
 
 
 #pragma warning disable 0108
@@ -94,11 +94,11 @@ namespace UMA.Editors
 				{
 					EditorGUILayout.LabelField("Elapsed Time", string.Format("{0} ms", generator.ElapsedTicks / 10000));
 				}
-                else
-                {
-                    EditorGUILayout.LabelField("Elapsed Time", "N/A");
-                }
-                EditorGUILayout.LabelField("Shape Dirty", string.Format("{0}", generator.DnaChanged));
+				else
+				{
+					EditorGUILayout.LabelField("Elapsed Time", "N/A");
+				}
+				EditorGUILayout.LabelField("Shape Dirty", string.Format("{0}", generator.DnaChanged));
 				EditorGUILayout.LabelField("Texture Dirty", string.Format("{0}", generator.TextureChanged));
 				EditorGUILayout.LabelField("Mesh Dirty", string.Format("{0}", generator.SlotsChanged));
 				if (convertRenderTexture.boolValue == true)
@@ -112,20 +112,29 @@ namespace UMA.Editors
 					EditorGUILayout.LabelField("Missed Uploads", string.Format("{0}", RenderTexToCPU.misseduploads));
 					EditorGUILayout.LabelField("Error Uploads", string.Format("{0}", RenderTexToCPU.errorUploads));
 					EditorGUILayout.LabelField("Textures Uploaded", string.Format("{0}", RenderTexToCPU.texturesUploaded));
-				}
-				if (GUILayout.Button("Reset editor statistics"))
-				{
-					generator.ElapsedTicks = 0;
-					generator.DnaChanged = 0;
-					generator.TextureChanged = 0;
-					generator.SlotsChanged = 0;
-					generator.TexturesProcessed = 0;
-					RenderTexToCPU.copiesEnqueued = 0;
-					RenderTexToCPU.copiesDequeued = 0;
-					RenderTexToCPU.unableToQueue = 0;
-					RenderTexToCPU.misseduploads = 0;
-					RenderTexToCPU.errorUploads = 0;
-					RenderTexToCPU.texturesUploaded = 0;
+					EditorGUILayout.Space(10);
+					EditorGUILayout.LabelField("RenderTextures Cleaned", centeredLabel);
+					EditorGUILayout.LabelField("UMAData Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedUMAData));
+					EditorGUILayout.LabelField("Applied Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedApplied));
+					EditorGUILayout.LabelField("Not Applied Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedMissed));
+					EditorGUILayout.LabelField("Total Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedUMAData + RenderTexToCPU.renderTexturesCleanedApplied + RenderTexToCPU.renderTexturesCleanedMissed));
+                    if (GUILayout.Button("Reset editor statistics"))
+					{
+						generator.ElapsedTicks = 0;
+						generator.DnaChanged = 0;
+						generator.TextureChanged = 0;
+						generator.SlotsChanged = 0;
+						generator.TexturesProcessed = 0;
+						RenderTexToCPU.copiesEnqueued = 0;
+						RenderTexToCPU.copiesDequeued = 0;
+						RenderTexToCPU.unableToQueue = 0;
+						RenderTexToCPU.misseduploads = 0;
+						RenderTexToCPU.errorUploads = 0;
+						RenderTexToCPU.texturesUploaded = 0;
+						RenderTexToCPU.renderTexturesCleanedUMAData = 0;
+						RenderTexToCPU.renderTexturesCleanedApplied = 0;
+						RenderTexToCPU.renderTexturesCleanedMissed = 0;
+					}
 				}
 			}
 

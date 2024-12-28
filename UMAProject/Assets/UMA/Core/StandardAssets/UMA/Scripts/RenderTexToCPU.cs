@@ -6,6 +6,7 @@ using UMA;
 using static UMA.UMAData;
 using UnityEngine.Rendering;
 using System.Collections.Concurrent;
+using System.Linq;
 
 namespace UMA
 {
@@ -13,6 +14,7 @@ namespace UMA
     {
         public static Dictionary<int, RenderTexToCPU> renderTexturesToCPU = new Dictionary<int, RenderTexToCPU>();
         public static Queue<RenderTexToCPU> QueuedCopies = new Queue<RenderTexToCPU>();
+        public static Dictionary<int, RenderTexture> renderTexturesToFree = new Dictionary<int, RenderTexture>();
 
         public RenderTexture texture;
         public GeneratedMaterial generatedMaterial;
@@ -25,6 +27,9 @@ namespace UMA
         public static int misseduploads = 0;
         public static int errorUploads = 0;
         public static int texturesUploaded = 0;
+        public static int renderTexturesCleanedUMAData = 0;
+        public static int renderTexturesCleanedApplied = 0;
+        public static int renderTexturesCleanedMissed = 0;
 
         public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex)
         {
@@ -68,6 +73,7 @@ namespace UMA
                 }
 #endif
                 copiesEnqueued++;
+                renderTexturesToFree.Add(instanceID, texture);
                 QueuedCopies.Enqueue(this);
             }
             else
@@ -81,6 +87,19 @@ namespace UMA
             return QueuedCopies.Count;
         }
 
+        public static bool SafeToFree(RenderTexture tex)
+        {
+            int instanceID = tex.GetInstanceID();
+            if (renderTexturesToCPU.ContainsKey(instanceID))
+            {
+                return false;
+            }
+            if (renderTexturesToFree.ContainsKey(instanceID))
+            {
+                return false;
+            }
+            return true;
+        }
         public static void ApplyQueuedCopies(int number)
         {
             if (number <= 0)
@@ -91,6 +110,7 @@ namespace UMA
             {
                 copiesDequeued++;
                 RenderTexToCPU copy = QueuedCopies.Dequeue();
+                renderTexturesToFree.Remove(copy.texture.GetInstanceID());
                 copy.ApplyTexture();
                 number--;
                 if (number <= 0)
@@ -111,6 +131,7 @@ namespace UMA
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
                     RenderTexture.ReleaseTemporary(texture);
+                    renderTexturesCleanedApplied++;
                     texturesUploaded++;
                 }
                 catch (System.Exception e)
@@ -124,6 +145,8 @@ namespace UMA
                 // we made it to the application, but the material has since died.
                 // we need to clean up the texture
                 UMAUtils.DestroySceneObject(newTexture);
+                RenderTexture.ReleaseTemporary(texture);
+                renderTexturesCleanedMissed++;
             }
         }
     }

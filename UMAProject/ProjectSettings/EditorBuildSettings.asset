@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/UMA/Examples/Timeline Example/UMA Timeline Example.unity
+    guid: d8924a6bfa2233b4baae20a7ae560665
+  - enabled: 0
     path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Simple
       Setup.unity
     guid: 43ce2d3e5bdfc924b84fc85a02c01ca0

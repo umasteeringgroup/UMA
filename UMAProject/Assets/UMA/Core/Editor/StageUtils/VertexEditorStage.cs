@@ -1078,7 +1078,7 @@ protected override GUIContent CreateHeaderContent()
         sceneView.sceneViewState.showImageEffects = false;
         sceneView.sceneViewState.showParticleSystems = false;
         sceneView.sceneLighting = false;
-        sceneView.cameraMode = camMode;
+        //sceneView.cameraMode = camMode; // this quit working? Now gets an error that the cameraMode is not registered?
         sceneView.wantsMouseMove = true;
         sceneView.wantsMouseEnterLeaveWindow = true;
 
