@@ -1547,11 +1547,28 @@ namespace UMA
                 return null;
 			}
 
-			/// <summary>
-			/// Gets the first slot in the slotdatalist that is not null
-			/// </summary>
-			/// <returns></returns>
-			public SlotData GetFirstSlot()
+			public SlotData GetSlot(string name)
+            {
+                for (int i = 0; i < slotDataList.Length; i++)
+                {
+                    if (slotDataList[i] == null)
+                    {
+                        continue;
+                    }
+
+                    if (slotDataList[i].slotName == name)
+                    {
+                        return slotDataList[i];
+                    }
+                }
+                return null;
+            }
+
+            /// <summary>
+            /// Gets the first slot in the slotdatalist that is not null
+            /// </summary>
+            /// <returns></returns>
+            public SlotData GetFirstSlot()
 			{
 				if (slotDataList == null)
 				{

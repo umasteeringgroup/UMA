@@ -21,7 +21,7 @@ namespace UMA
         public float weight;
 
 #if UNITY_EDITOR
-        public string SlotName; 
+        public string slotName; 
 #endif
 
         public abstract string Name { get; }
@@ -94,6 +94,10 @@ namespace UMA
                 vertexIndex = vertexIndex,
                 weight = weight,
                 color = color
+#if UNITY_EDITOR
+                ,
+                slotName = slotName
+#endif
             };
         }
     }
@@ -101,7 +105,6 @@ namespace UMA
     [Serializable]
     public class VertexDeltaAdjustment : VertexAdjustment
     {
-        public int vertexIndex;
         public Vector3 delta;
         public static void Apply(MeshDetails mesh, MeshDetails src, VertexDeltaAdjustment[] adjustments)
         {
@@ -151,6 +154,10 @@ namespace UMA
                 vertexIndex = vertexIndex,
                 weight = weight,
                 delta = delta
+#if UNITY_EDITOR
+                ,
+                slotName = slotName
+#endif
             };
         }
 
@@ -159,7 +166,6 @@ namespace UMA
     [Serializable]
     public class VertexScaleAdjustment : VertexAdjustment
     {
-        public int vertexIndex;
         public float scale;
         public static void Apply(MeshDetails mesh, MeshDetails src, VertexScaleAdjustment[] adjustments)
         {
@@ -211,6 +217,10 @@ namespace UMA
                 vertexIndex = vertexIndex,
                 weight = weight,
                 scale = scale
+#if UNITY_EDITOR
+                ,
+                slotName = slotName
+#endif
             };
         }
     }
@@ -218,7 +228,6 @@ namespace UMA
     [Serializable]
     public class VertexNormalAdjustment : VertexAdjustment
     {
-        public int vertexIndex;
         public Vector3 normal;
         public Vector3 tangent;
         public static void Apply(MeshDetails mesh, MeshDetails src, VertexNormalAdjustment[] adjustments)
@@ -291,6 +300,10 @@ namespace UMA
                 weight = weight,
                 normal = normal,
                 tangent = tangent
+#if UNITY_EDITOR
+                ,
+                slotName = slotName
+#endif
             };
         }
 
@@ -299,7 +312,6 @@ namespace UMA
     [Serializable]
     public class VertexUVAdjustment : VertexAdjustment
     {
-        public int vertexIndex;
         public Vector2 uv;
         public static void Apply(MeshDetails mesh, MeshDetails src, VertexUVAdjustment[] adjustments)
         {
@@ -353,6 +365,10 @@ namespace UMA
                 vertexIndex = vertexIndex,
                 weight = weight,
                 uv = uv
+#if UNITY_EDITOR
+                ,
+                slotName = slotName
+#endif
             };
         }
     }
@@ -360,7 +376,6 @@ namespace UMA
     [Serializable]
     public class VertexBlendshapeAdjustment : VertexAdjustment
     {
-        public int vertexIndex;
         public Vector3 delta;
         public Vector3 normal;
         public Vector3 tangent;
@@ -458,6 +473,10 @@ namespace UMA
                 delta = delta,
                 normal = normal,
                 tangent = tangent
+#if UNITY_EDITOR
+                ,
+                slotName = slotName
+#endif
             };
         }
 
@@ -467,10 +486,15 @@ namespace UMA
     [Serializable]
     public class VertexUserAdjustment : VertexAdjustment
     {
-        public int vertexIndex;
-        public Vector3 OriginalPosition;
-        public float value;
+        public int value;
         public static void Apply(MeshDetails mesh, MeshDetails src, VertexUserAdjustment[] adjustments)
+        {
+            // Send an event if setup. 
+            // Do something with the value
+//            SendUserVertexEvent(umaData, updatedMesh, src, adjustments);
+        }
+
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexUserAdjustment[] adjustments, float scale)
         {
             // Send an event if setup. 
             // Do something with the value
@@ -499,6 +523,9 @@ namespace UMA
                 vertexIndex = vertexIndex,
                 weight = weight,
                 value = value
+#if UNITY_EDITOR
+                ,slotName = slotName
+#endif
             };
         }
     }
@@ -525,6 +552,8 @@ namespace UMA
             get { return false; }
         }
 
+        public VertexAdjustment[] vertexAdjustments;
+
         public abstract void Apply(MeshDetails mesh, MeshDetails src);
         public abstract void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale);
 #if UNITY_EDITOR
@@ -538,8 +567,13 @@ namespace UMA
     [Serializable]
     public class VertexColorAdjustmentCollection: VertexAdjustmentCollection
     {
-        [SerializeField]
-        public VertexColorAdjustment[] vertexColorAdjustments;
+        //[SerializeField]
+        public VertexColorAdjustment[] vertexColorAdjustments
+        {
+            get { return (VertexColorAdjustment[])vertexAdjustments; }
+            set { vertexAdjustments = value; }
+        }
+
 
         public override bool SupportWeightedAdjustments
         {
@@ -592,7 +626,11 @@ namespace UMA
     [Serializable]
     public class VertexDeltaAdjustmentCollection : VertexAdjustmentCollection
     {
-        public VertexDeltaAdjustment[] vertexDeltaAdjustments;
+        public VertexDeltaAdjustment[] vertexDeltaAdjustments
+        {
+            get { return (VertexDeltaAdjustment[])vertexAdjustments; }
+            set { vertexAdjustments = value; }
+        }
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
@@ -648,7 +686,11 @@ namespace UMA
             get { return true; }
         }
 
-        public VertexScaleAdjustment[] vertexScaleAdjustments;
+        public VertexScaleAdjustment[] vertexScaleAdjustments
+        {
+            get { return (VertexScaleAdjustment[])vertexAdjustments; }
+            set { vertexAdjustments = value; }
+        }
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
@@ -701,7 +743,11 @@ namespace UMA
     [Serializable]
     public class VertexNormalAdjustmentCollection : VertexAdjustmentCollection
     {
-        public VertexNormalAdjustment[] vertexNormalAdjustments;
+        public VertexNormalAdjustment[] vertexNormalAdjustments
+        {
+            get { return (VertexNormalAdjustment[])vertexAdjustments; }
+            set { vertexAdjustments = value; }
+        }
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
@@ -752,7 +798,11 @@ namespace UMA
     [Serializable]
     public class VertexUVAdjustmentCollection : VertexAdjustmentCollection
     {
-        public VertexUVAdjustment[] vertexUVAdjustments;
+        public VertexUVAdjustment[] vertexUVAdjustments
+        {
+            get { return (VertexUVAdjustment[])vertexAdjustments; }
+            set { vertexAdjustments = value; }
+        }
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
@@ -802,7 +852,11 @@ namespace UMA
     [Serializable]
     public class VertexBlendshapeAdjustmentCollection : VertexAdjustmentCollection
     {
-        public VertexBlendshapeAdjustment[] vertexBlendshapeAdjustments;
+        public VertexBlendshapeAdjustment[] vertexBlendshapeAdjustments
+        {
+            get { return (VertexBlendshapeAdjustment[])vertexAdjustments; }
+            set { vertexAdjustments = value; }
+        }
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
@@ -854,7 +908,11 @@ namespace UMA
     [Serializable]
     public class VertexUserAdjustmentCollection : VertexAdjustmentCollection
     {
-        public VertexUserAdjustment[] vertexUserAdjustments;
+        public VertexUserAdjustment[] vertexUserAdjustments
+        {
+            get { return (VertexUserAdjustment[])vertexAdjustments; }
+            set { vertexAdjustments = value; }
+        }
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
@@ -875,7 +933,7 @@ namespace UMA
             }
 
             VA.weight = EditorGUILayout.Slider("Weight", VA.weight, 0.0f, 1.0f);
-            VA.value = EditorGUILayout.FloatField("Value", VA.value);
+            VA.value = EditorGUILayout.IntField("Value", VA.value);
         }
 
         public override VertexAdjustment Create()

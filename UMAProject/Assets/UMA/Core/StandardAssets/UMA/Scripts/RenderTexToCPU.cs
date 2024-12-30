@@ -127,7 +127,7 @@ namespace UMA
                 try
                 {
 
-                    newTexture.Apply();
+                    newTexture.Apply(true); // TEST ONLY JRRM
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
                     RenderTexture.ReleaseTemporary(texture);

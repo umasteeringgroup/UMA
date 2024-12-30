@@ -512,7 +512,12 @@ namespace UMA.CharacterSystem.Editors
             showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Predefined DNA");
             if (showPrefinedDNA)
             {
+                EditorGUI.BeginChangeCheck();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("keepPredefinedDNA"));
+                if (EditorGUI.EndChangeCheck())
+                {
+                    wasChanged = true;
+                }
                 if (cachedRace != thisDCA.activeRace.name)
                 {
                     cachedRace = thisDCA.activeRace.name;

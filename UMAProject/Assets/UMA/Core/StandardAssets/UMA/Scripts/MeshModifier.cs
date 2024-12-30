@@ -57,7 +57,9 @@ namespace UMA
         // There is one modifier per slot.
         // each modifier can contain multiple adjustments.
         List<Modifier> modifiers = new List<Modifier>();
-
+#if UNITY_EDITOR
+        List<VertexAdjustment> unsortedAdjustments = new List<VertexAdjustment>();
+#endif
         public List<Modifier> Modifiers
         {
             get { return Modifiers; }

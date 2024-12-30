@@ -36,7 +36,7 @@ public class VertexEditorStage : PreviewSceneStage
     bool  selectFacingAway = false;
     private GUIStyle centeredLabel;
     
-    enum  selectMode { Add, Remove, Invert, Activate, Deactivate };
+    enum  selectMode { Add, Remove, InvertSelection, Activate, Deactivate };
 
     string [] selectFrom = new string[] { "All Slots"};
     int selectionSlot = 0; // 0 is all slots
@@ -733,7 +733,7 @@ public class VertexEditorStage : PreviewSceneStage
                             case selectMode.Remove:
                                 RemoveVertex(foundSlot, foundVert);
                                 break;
-                            case selectMode.Invert:
+                            case selectMode.InvertSelection:
                                 InvertVertex(foundSlot, foundVert);
                                 break;
                             case selectMode.Activate:
@@ -823,6 +823,30 @@ public class VertexEditorStage : PreviewSceneStage
         });
     }
 
+
+    public void SelectVertexes(VertexAdjustmentCollection[] unsortedAdjustments)
+    {
+        SelectedVertexes.Clear();
+        for (int i = 0; i < unsortedAdjustments.Length; i++)
+        {
+            VertexAdjustmentCollection vac = unsortedAdjustments[i];
+            for (int j = 0; j < vac.vertexAdjustments.Length; j++)
+            {
+                VertexAdjustment va = vac.vertexAdjustments[j];
+                SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(va.slotName);
+                if (slot != null)
+                {
+                    SelectedVertexes.Add(new VertexSelection()
+                    {
+                        vertexIndexOnSlot = va.vertexIndex,
+                        slot = slot,
+                        WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[va.vertexIndex + slot.vertexOffset]),
+                        isActive = true
+                    });
+                }
+            }
+        }
+    }
     private bool SingleSelect(Event currentEvent)
     {
         bool found = false;

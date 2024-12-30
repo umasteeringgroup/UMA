@@ -45,6 +45,7 @@ namespace UMA
         public VertexAdjustmentCollection templateVertexAdjustmentCollection = null;
         public GUIStyle centeredLabel = new GUIStyle();
         public Color backColor = Color.cyan;
+        public bool editingCurrent = false;
 
         public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
         {
@@ -78,6 +79,19 @@ namespace UMA
             if (thisDCA == null)
             {
                 EditorGUILayout.LabelField("No DCA selected");
+                return;
+            }
+
+            if (editingCurrent)
+            {
+                EditorGUILayout.LabelField("Editing Mesh Modifier Collection", centeredLabel);
+                if (GUILayout.Button("Return to Mesh Modifiers"))
+                {
+                    editingCurrent = false;
+                    return;
+                }
+                DrawCurrentModifier(true);
+                //DrawFilteredVertexAdjustments();
                 return;
             }
 
@@ -149,18 +163,34 @@ namespace UMA
                 }
                 else
                 {
-                    DrawCurrentModifier();
+                    DrawCurrentModifier(false);
                 }
             }
         }
 
-        private void DrawCurrentModifier()
+        private void DrawCurrentModifier(bool vertexMode)
         {
             MeshModifier.Modifier mod = Modifiers[currentModifierIndex];
             GUIHelper.BeginVerticalPadded(10, backColor);
             mod.ModifierName = EditorGUILayout.TextField("Modifier Name", mod.ModifierName);
             mod.DNAName = EditorGUILayout.TextField("DNA Name", mod.DNAName);
             mod.Scale = EditorGUILayout.FloatField("Scale", mod.Scale);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Select Vertexes"))
+            {
+                vertexEditorStage.SelectVertexes(mod.adjustments);
+            }
+            if (GUILayout.Button("Edit active"))
+            {
+                editingCurrent = true;
+            }
+            GUILayout.EndHorizontal();
+            // TODO: 
+            // Add a way to add and remove vertex adjustments
+            // Add a way to edit the vertex adjustments (display the active ones). 
+            // Add a button to select all the adjusted vertexes on the character.
+            // Add the ability to edit/filter to the "active" vertexes.
+            // The currently selected vertex to edit should be selected and flashing or something on the character.
             GUIHelper.EndVerticalPadded(10);
         }
 
