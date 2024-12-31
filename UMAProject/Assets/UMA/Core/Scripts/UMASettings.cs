@@ -13,6 +13,8 @@ public class UMASettings : ScriptableObject
 {
     public const string customSettingsPath = "Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset";
 
+    [Multiline(7)]
+    public string WarningMessage = "Warning: Please do not modify these\n settings using the inspector.\n Use the project settings instead.\n Modifying settings that need compiler\n directives set will NOT work if you\n edit them in the inspector!";
     public bool Initialized = false;
 
     [SerializeField]

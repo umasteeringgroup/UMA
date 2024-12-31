@@ -182,7 +182,7 @@ class UMASettingsProvider : SettingsProvider
         //    "AddrUseSharedGroup", "AddrSharedGroupName", "AddrDefaultLabel", "AddStripMaterials", "AddrIncludeRecipes", "CleanRegenOnSave", "AutoRepairIndex", "ShowIndexedTypes", "ShowUnindexedTypes", "PostProcessAllAssets" 
         //    });
        
-        DrawPropertiesIncluding(m_CustomSettings, new string[] { "IgnoreTag","KeepTag","tags" });
+        DrawPropertiesIncluding(m_CustomSettings, new string[] { "IgnoreTag","KeepTag", "tagLookupValues" });
 
 
 
