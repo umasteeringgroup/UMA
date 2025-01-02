@@ -17,4 +17,4 @@ void NormalCvt(uint3 id : SV_DispatchThreadID)
     normal.z = sqrt(1 - saturate(dot(normal.xy, normal.xy)));
   
     Result[id.xy] = (normal * 0.5) + 0.5;
-}
+} 
