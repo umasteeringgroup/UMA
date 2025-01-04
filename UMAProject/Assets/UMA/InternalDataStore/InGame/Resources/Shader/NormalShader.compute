@@ -1,4 +1,6 @@
 ﻿#pragma kernel NormalCvt
+// The shader is pretty simple, it reads the packed normal from the input texture, 
+// then it unpacks it and stores it in the output texture. 
 
 Texture2D<float4> Input;
 RWTexture2D<float3> Result;

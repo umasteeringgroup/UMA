@@ -35,7 +35,9 @@ public class VertexEditorStage : PreviewSceneStage
     bool  selectObscured = false;
     bool  selectFacingAway = false;
     private GUIStyle centeredLabel;
-    
+    private int currentSelected = -1;
+    float blinkSpeed = 0.2f;
+
     enum  selectMode { Add, Remove, InvertSelection, Activate, Deactivate };
 
     string [] selectFrom = new string[] { "All Slots"};
@@ -308,6 +310,7 @@ public class VertexEditorStage : PreviewSceneStage
                 }
                 else
                 {
+                    SingleSelect(currentEvent);
                     rectSelect = true;
                     RectStart = currentEvent.mousePosition - currentEvent.delta;
                 }
@@ -432,6 +435,13 @@ public class VertexEditorStage : PreviewSceneStage
                 newColor = ActiveColor;
             }
 
+            if (i == currentSelected)
+            {
+                AnimationCurve curve = AnimationCurve.EaseInOut(0,0,1,1);
+                float time = Time.fixedTime / blinkSpeed;
+                float val = curve.Evaluate(time % 1.0f);
+                newColor = Color.Lerp(newColor, Color.white, val);
+            }
 
             if (newColor != LastColor)
             {
@@ -873,32 +883,35 @@ public class VertexEditorStage : PreviewSceneStage
                     {
                         if (SelectedVertexes[i].slot.slotName == vs.slot.slotName && SelectedVertexes[i].vertexIndexOnSlot == vs.vertexIndexOnSlot)
                         {
-                            if (currentState == vertexState.AddingOnly)
+                            if (currentEvent.control || (currentEvent.shift))
                             {
-                                return false;
-                            }
+                                if (currentState == vertexState.AddingOnly)
+                                {
+                                    return false;
+                                }
 
-                            if (currentState == vertexState.unKnown)
-                            {
-                                if (SelectedVertexes[i].isActive)
+                                if (currentState == vertexState.unKnown)
                                 {
-                                    currentState = vertexState.Inactive;
+                                    if (SelectedVertexes[i].isActive)
+                                    {
+                                        currentState = vertexState.Inactive;
+                                    }
+                                    else
+                                    {
+                                        currentState = vertexState.Active;
+                                    }
+                                    SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
                                 }
                                 else
                                 {
-                                    currentState = vertexState.Active;
-                                }
-                                SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
-                            }
-                            else
-                            {
-                                if (currentState == vertexState.Active)
-                                {
-                                    SelectedVertexes[i].isActive = true;
-                                }
-                                else
-                                {
-                                    SelectedVertexes[i].isActive = false;
+                                    if (currentState == vertexState.Active)
+                                    {
+                                        SelectedVertexes[i].isActive = true;
+                                    }
+                                    else
+                                    {
+                                        SelectedVertexes[i].isActive = false;
+                                    }
                                 }
                             }
                             // SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
@@ -915,6 +928,7 @@ public class VertexEditorStage : PreviewSceneStage
                             currentState = vertexState.AddingOnly;
                             found = true;
                             SelectedVertexes.Add(vs);
+                            currentSelected = SelectedVertexes.Count - 1;
                         }
                     }
                     else
@@ -923,6 +937,17 @@ public class VertexEditorStage : PreviewSceneStage
                         {
                             found = false;
                             SelectedVertexes.RemoveAt(selectedVertex);
+                            if (currentSelected == selectedVertex)
+                            {
+                                currentSelected = -1;
+                            }
+                        }
+                        else
+                        {
+                            if (!currentEvent.shift)
+                            {
+                                currentSelected = selectedVertex;
+                            }
                         }
                     }
                 }

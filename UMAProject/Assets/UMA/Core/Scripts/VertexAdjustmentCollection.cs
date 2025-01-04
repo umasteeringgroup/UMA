@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 using UMA;
 using Unity.Collections;
 using UnityEngine;
-using JetBrains.Annotations;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -487,6 +486,7 @@ namespace UMA
     public class VertexUserAdjustment : VertexAdjustment
     {
         public int value;
+        public Vector3 initialPosition;
         public static void Apply(MeshDetails mesh, MeshDetails src, VertexUserAdjustment[] adjustments)
         {
             // Send an event if setup. 
@@ -522,9 +522,11 @@ namespace UMA
             {
                 vertexIndex = vertexIndex,
                 weight = weight,
-                value = value
+                value = value,
+                initialPosition = initialPosition
 #if UNITY_EDITOR
-                ,slotName = slotName
+                ,
+                slotName = slotName
 #endif
             };
         }
