@@ -194,9 +194,6 @@ namespace UMA
 				{
 					UMAMeshData umaMesh = new UMAMeshData();
 					umaMesh.SlotName = "CombinedMesh";
-#if NO_BAD_BUFFERS
-					umaMesh.ClaimSharedBuffers();
-#endif
 					umaMesh.subMeshCount = 0;
 					umaMesh.vertexCount = 0;
 
@@ -208,9 +205,6 @@ namespace UMA
 					}
 
 					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
-#if NO_BAD_BUFFERS
-					umaMesh.ReleaseSharedBuffers();
-#endif
 				}
 				var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
 				if (clothProperties != null)

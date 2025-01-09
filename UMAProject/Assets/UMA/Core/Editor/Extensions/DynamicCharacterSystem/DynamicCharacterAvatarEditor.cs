@@ -14,8 +14,8 @@ namespace UMA.CharacterSystem.Editors
     {
         public static bool showHelp = false;
         public static bool showWardrobe = false;
-        public static bool showUtils = false;
-        public static bool showEditorCustomization = true;
+        public static bool showUtils = true; // JRRM set false before release
+        public static bool showEditorCustomization = false; // set true before release
         public static bool showPrefinedDNA = false;
         public static bool showAnimatorGUI = false;
         public static bool showBlendshapes = false;
