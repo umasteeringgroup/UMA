@@ -245,7 +245,7 @@ namespace UMA.PoseTools
 //			ActiveEditorTracker.sharedTracker.isLocked = true;
 			EditorApplication.update += this.OnUpdate;
 #if UNITY_2019_1_OR_NEWER
-			SceneView.duringSceneGui += this.OnSceneGUI;
+			SceneView.duringSceneGui += this.DoSceneGUI;
 #else
 			SceneView.onSceneGUIDelegate += this.OnSceneGUI;
 #endif
@@ -263,7 +263,7 @@ namespace UMA.PoseTools
 		public void OnDisable()
 		{
 #if UNITY_2019_1_OR_NEWER
-			SceneView.duringSceneGui -= this.OnSceneGUI;
+			SceneView.duringSceneGui -= this.DoSceneGUI;
 #else
 			EditorApplication.update -= this.OnUpdate;
 #endif
@@ -477,7 +477,7 @@ namespace UMA.PoseTools
 			}
 		}
 
-		void OnSceneGUI(SceneView scene)
+		void DoSceneGUI(SceneView scene)
 		{
 			if (haveValidContext && haveEditTarget)
 			{

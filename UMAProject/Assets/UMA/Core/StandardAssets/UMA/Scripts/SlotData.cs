@@ -28,7 +28,7 @@ namespace UMA
 
         public string[] Races;
 
-        public List<MeshModifier> meshModifiers = new List<MeshModifier>();
+        public List<MeshModifier.Modifier> meshModifiers = new List<MeshModifier.Modifier>();
 
         public bool hasAdjustments
         {
@@ -334,7 +334,7 @@ namespace UMA
             res.smooshInvertY = smooshInvertY;
             res.smooshInvertZ = smooshInvertZ;
             res.smooshInvertDist = smooshInvertDist;
-            res.meshModifiers = new List<MeshModifier>(meshModifiers);
+            res.meshModifiers = new List<MeshModifier.Modifier>(meshModifiers);
             return res;
         }
 

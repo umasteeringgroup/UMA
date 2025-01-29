@@ -68,28 +68,78 @@ namespace UMA
 
 		// MeshModifers are used to modify the mesh during creation.
 		// This array is built from the various recipes added during the build process.
-		private List<MeshModifier.Modifier> meshModifiers = new List<MeshModifier.Modifier>();
+		private Dictionary<string,List<MeshModifier.Modifier>> meshModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
+		private Dictionary<string, List<MeshModifier.Modifier>> accumulatedModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
+
+#if UNITY_EDITOR
         // This array is not built from the recipes. It must be set manually. It is merged into the dictionary of MeshModifiers with the recipe driven modifiers.
         // It's general use case is for adding mesh modifiers that are not part of the normal UMA build process, such as during editing, etc.
-        public MeshModifier manualMeshModifiers;
+        public List<MeshModifier.Modifier> manualMeshModifiers = new List<MeshModifier.Modifier>();
+#endif
 
-		public Dictionary<string, MeshModifier.Modifier> activeModifiers = new Dictionary<string, MeshModifier.Modifier>();
+        public void ClearModifiers()
+        {
+            meshModifiers.Clear();
+			accumulatedModifiers.Clear();
+        }
 
-		public void BuildActiveModifiers()
+		public void AddMeshModifier(MeshModifier.Modifier modifier)
 		{
-			activeModifiers.Clear();
-            foreach (MeshModifier.Modifier mm in meshModifiers)
+            if (!meshModifiers.ContainsKey(modifier.SlotName))
             {
-                activeModifiers.Add(mm.SlotName, mm);
+                meshModifiers.Add(modifier.SlotName, new List<MeshModifier.Modifier>());
             }
+            meshModifiers[modifier.SlotName].Add(modifier);
+        }
 
-            if (manualMeshModifiers != null)
+        public void AddMeshModifiers(List<MeshModifier.Modifier> modifiers)
+        {
+            foreach (MeshModifier.Modifier modifier in modifiers)
             {
-                foreach (MeshModifier.Modifier mm in manualMeshModifiers.Modifiers)
+                AddMeshModifier(modifier);
+            }
+        }
+
+        public void BuildActiveModifiers()
+		{
+			if (umaRecipe == null)
+			{
+				return;
+			}
+			accumulatedModifiers.Clear();
+            // add all the existing meshModifiers to the accumulatedModifiers
+            foreach (var kvp in meshModifiers)
+            {
+                if (!accumulatedModifiers.ContainsKey(kvp.Key))
                 {
-                    activeModifiers.Add(mm.SlotName, mm);
+                    accumulatedModifiers.Add(kvp.Key, new List<MeshModifier.Modifier>());
+                }
+                accumulatedModifiers[kvp.Key].AddRange(kvp.Value);
+            }
+#if UNITY_EDITOR
+            foreach (var m in manualMeshModifiers)
+            {
+                if (!accumulatedModifiers.ContainsKey(m.SlotName))
+                {
+                    accumulatedModifiers.Add(m.SlotName, new List<MeshModifier.Modifier>());
+                }
+                accumulatedModifiers[m.SlotName].Add(m);
+            }
+#endif
+
+            // This function expects the umaRecipe to be set.
+            // and for the meshModifiers from the wardrobe recipes to be set in the meshModifiers list.
+            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
+			{
+				var slot = umaRecipe.slotDataList[i];
+				slot.meshModifiers.Clear();
+				if (accumulatedModifiers.ContainsKey(slot.slotName))
+				{
+					var modifiers = accumulatedModifiers[slot.slotName];
+                    slot.meshModifiers.AddRange(modifiers);
                 }
             }
+			
         }
 
         public void SaveMountedItems()

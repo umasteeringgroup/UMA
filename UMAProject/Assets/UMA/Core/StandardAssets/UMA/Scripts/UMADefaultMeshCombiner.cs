@@ -157,7 +157,11 @@ namespace UMA
 			EnsureUMADataSetup(umaData);
 			umaData.skeleton.BeginSkeletonUpdate();
 
-			for (currentRendererIndex = 0; currentRendererIndex < umaData.generatedMaterials.rendererAssets.Count; currentRendererIndex++)
+
+			umaData.BuildActiveModifiers();
+
+
+            for (currentRendererIndex = 0; currentRendererIndex < umaData.generatedMaterials.rendererAssets.Count; currentRendererIndex++)
 			{
                 int subMeshIndex = 0;
 				//Move umaMesh creation to with in the renderer loops
@@ -184,6 +188,7 @@ namespace UMA
 						var Blendshapes = SkinnedMeshCombiner.GetBlendshapeSources(tempMesh, umaData.umaRecipe);
 						tempMesh.blendShapes = Blendshapes.ToArray();
                     }
+					
 					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
                     var inst = combinedMeshList[0];
                     inst.slotData.vertexOffset = 0;
@@ -199,12 +204,12 @@ namespace UMA
 
 					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings,umaData.umaRecipe, currentRendererIndex );
 
-					if (updatedAtlas)
+					// Apply the modifiers before the UV is updated for the atlas.
+                    if (updatedAtlas)
 					{
 						RecalculateUV(umaMesh);
 					}
-
-					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
+                    umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
 				}
 				var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
 				if (clothProperties != null)
@@ -306,6 +311,22 @@ namespace UMA
 			}
         }
 
+		protected UMAMeshData ApplyMeshModifiers(UMAData umaData, UMAMeshData meshData, SlotData slotData)
+		{
+            if (slotData.meshModifiers != null)
+            {
+                foreach (var modifier in slotData.meshModifiers)
+                {
+                    if (modifier != null)
+                    {
+                        // Need an override to apply the mesh modifiers to the 
+                        meshData = modifier.Process( meshData);
+					}
+                }
+            }
+			return meshData;
+        }
+
         protected void BuildCombineInstances()
 		{
 			SkinnedMeshCombiner.CombineInstance combineInstance;
@@ -340,6 +361,7 @@ namespace UMA
 						combineInstance.meshData = slotData.asset.meshData;
 						combineInstance.meshData.SlotName = slotData.slotName;
 					}
+					combineInstance.meshData = ApplyMeshModifiers(umaData, combineInstance.meshData, slotData);
                     // save a copy of the slotData so we can add
                     // the vertex offsets, submeshindex to it.
                     combineInstance.slotData = slotData;

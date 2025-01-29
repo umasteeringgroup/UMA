@@ -589,8 +589,16 @@ namespace UMA
 			target.SlotName = source.SlotName;
 			target.ManagedBonesPerVertex = source.ManagedBonesPerVertex;
 			target.ManagedBoneWeights = source.ManagedBoneWeights;
+			target.colors32Modified = false;
+            target.normalsModified = false;
+            target.tangentsModified = false;
+            target.uvModified = false;
+            target.uv2Modified = false;
+            target.uv3Modified = false;
+            target.uv4Modified = false;
+			target.verticesModified = false;
 
-			if (triangleMask != null)
+            if (triangleMask != null)
 			{
 				target.submeshes = new SubMeshTriangles[source.subMeshCount];
 

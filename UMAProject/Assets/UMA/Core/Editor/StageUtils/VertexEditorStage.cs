@@ -34,15 +34,28 @@ public class VertexEditorStage : PreviewSceneStage
     float HandlesSize = 0.01f;
     public Color ActiveColor = new Color32(0, 210, 0, 255);
     public Color InactiveColor = new Color32(235, 0, 0, 255);
-    bool  selectObscured = false;
-    bool  selectFacingAway = false;
+    bool selectObscured = false;
+    bool selectFacingAway = false;
     private GUIStyle centeredLabel;
     private int currentSelected = -1;
+    public int CurrentSelected
+    {
+        get { return currentSelected; }
+        set
+        {
+            if (editorMode == MeshModifierEditor.EditorMode.VertexAdjustments)
+            {
+                currentSelected = value;
+                VertexSelection vs = GetSelectedVertex();
+                modifierEditor.Repaint();
+            }
+        }
+    }
     float blinkSpeed = 0.2f;
 
-    enum  selectMode { Add, Remove, InvertSelection, Activate, Deactivate };
+    enum selectMode { Add, Remove, InvertSelection, Activate, Deactivate };
 
-    string [] selectFrom = new string[] { "All Slots"};
+    string[] selectFrom = new string[] { "All Slots" };
     int selectionSlot = 0; // 0 is all slots
 
     selectMode currentMode = selectMode.Add;
@@ -65,6 +78,8 @@ public class VertexEditorStage : PreviewSceneStage
     public MeshModifier Currentmodifier;
     public Type[] ModifierTypes;
 
+    public List<VertexAdjustment> Adjustments = new List<VertexAdjustment>();
+
     private enum vertexState
     {
         unKnown,
@@ -85,7 +100,7 @@ public class VertexEditorStage : PreviewSceneStage
 
 
     GUIStyle HelpBoxStyle;
-    private class VertexSelection
+    public class VertexSelection
     {
         public int vertexIndexOnSlot;
         public SlotData slot;
@@ -158,10 +173,33 @@ public class VertexEditorStage : PreviewSceneStage
         stage.titleContent.image = EditorGUIUtility.IconContent("GameObject Icon").image;
         stage.thisDCA = DCA;
         stage.Currentmodifier = modifier;
-        StageUtility.GoToStage(stage, true); 
+        StageUtility.GoToStage(stage, true);
         return stage;
     }
 
+    public VertexSelection GetSelectedVertex()
+    {
+        if (currentSelected >= 0 && currentSelected < SelectedVertexes.Count)
+        {
+            return SelectedVertexes[currentSelected];
+        }
+        return null;
+    }
+
+    public void AddVertexAdjustment(VertexAdjustment adjustment)
+    {
+        Adjustments.Add(adjustment);
+    }
+
+    public List<VertexAdjustment> GetAdjustments()
+    {
+        return Adjustments;
+    }
+
+    public List<VertexAdjustment> GetVertexAdjustments()
+    {
+        return Adjustments;
+    }
 
     protected override bool OnOpenStage()
     {
@@ -172,7 +210,7 @@ public class VertexEditorStage : PreviewSceneStage
         centeredLabel.fontStyle = FontStyle.Bold;
         centeredLabel.alignment = TextAnchor.MiddleCenter;
 
-        modifierEditor = MeshModifierEditor.GetOrCreateWindowFromModifier(Currentmodifier,thisDCA, this);
+        modifierEditor = MeshModifierEditor.GetOrCreateWindowFromModifier(Currentmodifier, thisDCA, this);
         GameObject lightingObject = new GameObject("Directional Light");
         lightingObject.transform.rotation = Quaternion.Euler(50, 330, 0);
         lightingObject.AddComponent<Light>().type = LightType.Directional;
@@ -208,14 +246,14 @@ public class VertexEditorStage : PreviewSceneStage
 
         SceneManager.MoveGameObjectToScene(VertexObject, scene);
         SceneManager.MoveGameObjectToScene(lightingObject, scene);
-        SceneManager.MoveGameObjectToScene(cameraAnchor, scene);       
+        SceneManager.MoveGameObjectToScene(cameraAnchor, scene);
         Tools.hidden = true;
         SceneView.duringSceneGui += OnSceneGUI;
         NeedsCameraSetup = true;
         HelpBoxStyle = new GUIStyle(EditorStyles.miniLabel);
         HelpBoxStyle.wordWrap = true;
         //AssetDatabase.StartAssetEditing();
-
+        thisDCA.GenerateSingleUMA();
 
         return true;
     }
@@ -277,7 +315,7 @@ public class VertexEditorStage : PreviewSceneStage
 
     private IEnumerator RegenerateUMA()
     {
-        yield return null; 
+        yield return null;
         thisDCA.GenerateSingleUMA();
     }
 
@@ -296,7 +334,7 @@ public class VertexEditorStage : PreviewSceneStage
         // Adjust window positions based on the scene view size
         Rect r = SceneView.lastActiveSceneView.position;
         float width = 200;
-        float halfheight = (r.height / 2)-45;
+        float halfheight = (r.height / 2) - 45;
         float top1 = 5;
         float top2 = halfheight + 10;
         float left1 = 5;
@@ -308,9 +346,13 @@ public class VertexEditorStage : PreviewSceneStage
         VisibleWearablesWindow = new Rect(left1, top2, width, halfheight);
     }
 
+    Quaternion test = Quaternion.identity;
 
     private void DoSceneGUI(SceneView sceneView)
     {
+
+        Event currentEvent = Event.current;
+
         Handles.SetCamera(sceneView.camera);
         if (!rectSelect && Event.current.alt)
         {
@@ -318,111 +360,129 @@ public class VertexEditorStage : PreviewSceneStage
             return;
         }
 
-
-        Event currentEvent = Event.current;
-
-        string vals = $"Shift {currentEvent.shift}\nControl{currentEvent.control}\n,Alt{currentEvent.alt},Command{currentEvent.command}";
-
-        if (Event.current.type == EventType.Layout)
+        if (editAdjustment != null && editAdjustment.Gizmo != VertexAdjustmentGizmo.None)
         {
-            HandleUtility.AddDefaultControl(GUIUtility.GetControlID(GetHashCode(), FocusType.Passive));
+            DoGizmoInput();
         }
 
-        if (currentEvent.type == EventType.Repaint)
-        {
-            if (currentEvent.shift)
-            {
-                EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
-            }
-            else if (currentEvent.control)
-            {
-                EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowMinus);
-            }
-            else
-            {
-                EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.Arrow);
-            }
-        }
+        Handles.BeginGUI();
 
-        if (currentEvent.type == EventType.MouseDown)
+        if (isEditing == false)
         {
-            currentState = vertexState.unKnown;
 
-            flippedVertexes.Clear();
-            //Debug.Log("Currentevent.button = "+ currentEvent.button);
-            if (currentEvent.button == 0)
+            string vals = $"Shift {currentEvent.shift}\nControl{currentEvent.control}\n,Alt{currentEvent.alt},Command{currentEvent.command}";
+
+            if (Event.current.type == EventType.Layout)
+            {
+                HandleUtility.AddDefaultControl(GUIUtility.GetControlID(GetHashCode(), FocusType.Passive));
+            }
+
+            if (currentEvent.type == EventType.Repaint)
             {
                 if (currentEvent.shift)
                 {
-                    SingleSelect(currentEvent);
-                    rectSelect = false;
-                    painting = true;
+                    EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
                 }
                 else if (currentEvent.control)
                 {
-                    SingleSelect(currentEvent);
-                    rectSelect = false;
-                    painting = true;
+                    EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowMinus);
                 }
                 else
                 {
-                    SingleSelect(currentEvent);
-                    rectSelect = true;
-                    RectStart = currentEvent.mousePosition - currentEvent.delta;
+                    EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.Arrow);
                 }
             }
-            else if (currentEvent.button == 1)
+
+            if (currentEvent.type == EventType.MouseDown)
             {
-                rectSelect = false;
+                currentState = vertexState.unKnown;
+
+                flippedVertexes.Clear();
+                //Debug.Log("Currentevent.button = "+ currentEvent.button);
+                if (currentEvent.button == 0)
+                {
+                    if (currentEvent.shift)
+                    {
+                        SingleSelect(currentEvent);
+                        rectSelect = false;
+                        painting = true;
+                    }
+                    else if (currentEvent.control)
+                    {
+                        SingleSelect(currentEvent);
+                        rectSelect = false;
+                        painting = true;
+                    }
+                    else
+                    {
+                        SingleSelect(currentEvent);
+                        rectSelect = true;
+                        RectStart = currentEvent.mousePosition - currentEvent.delta;
+                    }
+                }
+                else if (currentEvent.button == 1)
+                {
+                    rectSelect = false;
+                }
             }
-        }
 
-        // This is to prevent the scene view from capturing the selection and doing it's own routines
-        if (currentEvent.type == EventType.MouseDrag)
-        {
-            Event.current.Use();
-            sceneView.Repaint();
-        }
 
-        if (currentEvent.type == EventType.MouseUp)// && currentEvent.button == 0)
-        {
-            painting = false;
-
-            if (rectSelect)
+            // This is to prevent the scene view from capturing the selection and doing it's own routines
+            if (currentEvent.type == EventType.MouseDrag)
             {
-                // Do the rectangle selection
-                Vector2 RectEnd = currentEvent.mousePosition;
-                Rect MinMax = GetMinMax(RectStart, RectEnd);
-                RectangleSelect(currentEvent, MinMax);
-                rectSelect = false;
-            }
-        }
-
-
-
-        if (currentEvent.type == EventType.MouseLeaveWindow)
-        {
-            if (rectSelect)
-            {
-                Vector2 RectEnd = currentEvent.mousePosition;
-                Rect MinMax = GetMinMax(RectStart, RectEnd);
-                RectangleSelect(currentEvent, MinMax);
-                rectSelect = false;
-                painting = false;
+                Event.current.Use();
                 sceneView.Repaint();
             }
+
+
+            if (currentEvent.type == EventType.MouseUp)// && currentEvent.button == 0)
+            {
+                painting = false;
+
+                if (rectSelect)
+                {
+                    // Do the rectangle selection
+                    Vector2 RectEnd = currentEvent.mousePosition;
+                    Rect MinMax = GetMinMax(RectStart, RectEnd);
+                    RectangleSelect(currentEvent, MinMax);
+                    rectSelect = false;
+                }
+            }
+
+
+
+            if (currentEvent.type == EventType.MouseLeaveWindow)
+            {
+                if (rectSelect)
+                {
+                    Vector2 RectEnd = currentEvent.mousePosition;
+                    Rect MinMax = GetMinMax(RectStart, RectEnd);
+                    RectangleSelect(currentEvent, MinMax);
+                    rectSelect = false;
+                    painting = false;
+                    sceneView.Repaint();
+                }
+            }
+
+            if (rectSelect && (currentEvent.mousePosition.x < 0 || currentEvent.mousePosition.y < 0 || currentEvent.mousePosition.x > sceneView.position.width || currentEvent.mousePosition.y > sceneView.position.height))
+            {
+                rectSelect = false;
+            }
+            if (rectSelect)
+            {
+                GUI.Box(new Rect(RectStart.x, RectStart.y, currentEvent.mousePosition.x - RectStart.x, currentEvent.mousePosition.y - RectStart.y), "");
+            }
         }
 
-        if (rectSelect && (currentEvent.mousePosition.x < 0 || currentEvent.mousePosition.y < 0 || currentEvent.mousePosition.x > sceneView.position.width || currentEvent.mousePosition.y > sceneView.position.height))
+        if (isEditing)
         {
-            rectSelect = false;
+            Rect topCenter = new Rect(0, 25, sceneView.position.width, 20);
+            GUI.Label(topCenter, "** Edit Mode **", centeredLabel);
         }
-        if (rectSelect)
-        {
-            Handles.BeginGUI();
-            GUI.Box(new Rect(RectStart.x, RectStart.y, currentEvent.mousePosition.x - RectStart.x, currentEvent.mousePosition.y - RectStart.y), "");
-            Handles.EndGUI();
-        }
+
+
+        Handles.EndGUI();
+
 
         DrawHandles(SelectedVertexes);
 
@@ -440,6 +500,23 @@ public class VertexEditorStage : PreviewSceneStage
         }
     }
 
+    private VertexAdjustment editAdjustment;
+    private VertexSelection editSelection;
+
+    public void SetActive(VertexAdjustment va)
+    {
+        editSelection = GetSelectedVertex();
+        editAdjustment = va;
+    }
+
+    public bool isEditing
+    {
+        get
+        {
+            return editAdjustment != null;
+        }
+    }
+
     private void DrawHandles(List<VertexSelection> vertexes)
     {
         Color LastColor = Color.black;
@@ -454,7 +531,7 @@ public class VertexEditorStage : PreviewSceneStage
         Vector3[] normals = BakedMesh.normals;
 
         HashSet<string> VisibleSlots = new HashSet<string>();
-        for(int i=0;i < thisDCA.umaData.umaRecipe.slotDataList.Length; i++)
+        for (int i = 0; i < thisDCA.umaData.umaRecipe.slotDataList.Length; i++)
         {
             SlotData slot = thisDCA.umaData.umaRecipe.slotDataList[i];
             if (!slot.Suppressed)
@@ -471,29 +548,29 @@ public class VertexEditorStage : PreviewSceneStage
             if (vs.suppressed) continue;
             if (!VisibleSlots.Contains(vs.slot.slotName))
             {
-                continue;   
+                continue;
             }
 
             int bakedIndex = vs.vertexIndexOnSlot + vs.slot.vertexOffset;
 
-            Vector3 bakedNormal = normals[bakedIndex]; 
+            Vector3 bakedNormal = normals[bakedIndex];
             if (Vector3.Dot(bakedNormal, Camera.current.transform.forward) > 0)
             {
-                 continue;
+                continue;
             }
 
             Matrix4x4 matrix = Matrix4x4.TRS(vs.WorldPosition, Quaternion.identity, Vector3.one * HandlesSize);
 
             Color newColor = InactiveColor;
-          
+
             if (vs.isActive)
             {
                 newColor = ActiveColor;
             }
 
-            if (i == currentSelected)
+            if (i == currentSelected && editorMode == MeshModifierEditor.EditorMode.VertexAdjustments)
             {
-                AnimationCurve curve = AnimationCurve.EaseInOut(0,0,1,1);
+                AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
                 float time = Time.fixedTime / blinkSpeed;
                 float val = curve.Evaluate(time % 1.0f);
                 newColor = Color.Lerp(newColor, Color.white, val);
@@ -507,6 +584,64 @@ public class VertexEditorStage : PreviewSceneStage
             }
             Graphics.DrawMeshNow(mesh, matrix);
         }
+
+    }
+
+    private void DoGizmoInput()
+    {
+        VertexAdjustmentGizmo gizmo = editAdjustment.Gizmo;
+
+        switch (gizmo)
+        {
+            case VertexAdjustmentGizmo.Rotate:
+                DoRotationGizmo();
+                break;
+            case VertexAdjustmentGizmo.Scale:
+                DoScaleGizmo();
+                break;
+            case VertexAdjustmentGizmo.Move:
+                DoTranslateGizmo();
+                break;
+        }
+    }
+
+    private void DoRotationGizmo()
+    {
+        // show an arrow gizmo at the editSelection.WorldPosition, pointing in the direction of the normal
+        // when the user clicks on the gizmo, show a rotation handle
+        // when the user clicks on the rotation handle, rotate the vertex around the normal
+        VertexNormalAdjustment van = editAdjustment as VertexNormalAdjustment;
+
+        if (van != null)
+        {
+            // show an arrow gizmo at the editSelection.WorldPosition, pointing in the direction of the normal
+            Handles.color = Color.red;
+            Vector3 worldRotation = VertexObject.transform.TransformVector(BakedMesh.normals[editSelection.slot.vertexOffset + editSelection.vertexIndexOnSlot]);
+            Quaternion quaternion = Quaternion.LookRotation(worldRotation) * van.rotation;
+            Handles.ArrowHandleCap(0, editSelection.WorldPosition, quaternion, 0.1f, EventType.Repaint);
+//            Handles.ArrowHandleCap(0, editSelection.WorldPosition, Quaternion.LookRotation(worldRotation), 0.1f, EventType.Repaint);
+
+            // show a rotation handle at the editSelection.WorldPosition for van.normal
+            Quaternion q = Handles.RotationHandle(van.rotation, editSelection.WorldPosition);
+            if (q != van.rotation)
+            {
+                van.rotation = q;
+                Debug.Log("Rotation changed to " + q.eulerAngles);
+            }
+            //van.SetRotation(Handles.RotationHandle(van.rotation, editSelection.WorldPosition));
+        }
+
+
+    }
+
+    private void DoScaleGizmo()
+    {
+
+    }
+
+    private void DoTranslateGizmo()
+    {
+
     }
 
     private void DrawGUIWindows(SceneView sceneView)
@@ -522,7 +657,7 @@ public class VertexEditorStage : PreviewSceneStage
             bool wasRecipeChanged = false;
             var wearables = thisDCA.GetVisibleWearables();
 
-            GUILayout.Label("Visible Wearables",EditorStyles.boldLabel);
+            GUILayout.Label("Visible Wearables", EditorStyles.boldLabel);
             foreach (var wearable in wearables)
             {
                 GUILayout.BeginHorizontal();
@@ -556,10 +691,12 @@ public class VertexEditorStage : PreviewSceneStage
             if (wasChanged)
             {
                 RebuildMesh(false);
+                modifierEditor.Repaint();
             }
             if (wasRecipeChanged)
             {
                 RebuildMesh(true);
+                modifierEditor.Repaint(); 
             }
         }, "Visibility");
 
@@ -573,6 +710,7 @@ public class VertexEditorStage : PreviewSceneStage
     private GUIStyle threeButtonStyle = new GUIStyle(EditorStyles.miniButton);
     bool doneButton = false;
     public float ToolWindowAreaHeight = 0.0f;
+    public MeshModifierEditor.EditorMode editorMode = MeshModifierEditor.EditorMode.VertexAdjustments;
 
     public void DoToolsWindow(int ID)
     {
@@ -586,14 +724,7 @@ public class VertexEditorStage : PreviewSceneStage
             ToolWindowAreaHeight = VertexEditorToolsWindow.height;
         }
         ToolsPos = GUILayout.BeginScrollView(ToolsPos);
-        GUILayout.BeginArea(new Rect(0, 0, VertexEditorToolsWindow.width - 12, ToolsPos.y+ToolWindowAreaHeight));
-
-        // show tools window height, and area height
-        GUILayout.Label("Tools Window Height: " + VertexEditorToolsWindow.height.ToString());
-        GUILayout.Label("Area Height: " + ToolWindowAreaHeight.ToString());
-        GUILayout.Label("Area Y: " + ToolsPos.y.ToString());
-
-
+        GUILayout.BeginArea(new Rect(0, 0, VertexEditorToolsWindow.width - 12, ToolsPos.y + ToolWindowAreaHeight));
         SceneView sceneView = SceneView.lastActiveSceneView;
         #region Editor Options
         GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
@@ -602,7 +733,7 @@ public class VertexEditorStage : PreviewSceneStage
         GUILayout.Label("Handle Size", GUILayout.Width(82));
         HandlesSize = EditorGUILayout.Slider(HandlesSize, 0.0f, 0.04f);
         GUILayout.EndHorizontal();
-        GUILayout.Label("Vertex Colors",centeredLabel);
+        GUILayout.Label("Vertex Colors", centeredLabel);
         GUILayout.BeginHorizontal();
         GUILayout.Label("Active", GUILayout.Width(82));
         ActiveColor = EditorGUILayout.ColorField(ActiveColor, GUILayout.Width(90));
@@ -631,7 +762,7 @@ public class VertexEditorStage : PreviewSceneStage
         GUILayout.EndHorizontal();
 
         GUILayout.BeginHorizontal();
-        GUILayout.Label("Drag Mode",GUILayout.Width(72));
+        GUILayout.Label("Drag Mode", GUILayout.Width(72));
         currentMode = (selectMode)EditorGUILayout.EnumPopup(currentMode);
         GUILayout.EndHorizontal();
 
@@ -650,7 +781,7 @@ public class VertexEditorStage : PreviewSceneStage
         if (GUILayout.Button("Save", threeButtonStyle))
         {
             // Save the vertex selections
-            SaveSelections(); 
+            SaveSelections();
         }
 
         if (GUILayout.Button("Load", threeButtonStyle))
@@ -668,27 +799,27 @@ public class VertexEditorStage : PreviewSceneStage
 
 
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Invert State",smallButtonStyle))
+        if (GUILayout.Button("Invert State", smallButtonStyle))
         {
             for (int i = 0; i < SelectedVertexes.Count; i++)
             {
                 SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
             }
         }
-        if (GUILayout.Button("Invert Selection",smallButtonStyle))
+        if (GUILayout.Button("Invert Selection", smallButtonStyle))
         {
             InvertSelection();
         }
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Activate all",smallButtonStyle))
+        if (GUILayout.Button("Activate all", smallButtonStyle))
         {
             for (int i = 0; i < SelectedVertexes.Count; i++)
             {
                 SelectedVertexes[i].isActive = true;
             }
         }
-        if (GUILayout.Button("Deactivate all",smallButtonStyle))
+        if (GUILayout.Button("Deactivate all", smallButtonStyle))
         {
             for (int i = 0; i < SelectedVertexes.Count; i++)
             {
@@ -744,10 +875,10 @@ public class VertexEditorStage : PreviewSceneStage
         }
         GUIHelper.EndVerticalPadded(5);
         GUILayout.EndArea();
-        GUILayout.Space(ToolWindowAreaHeight+10);
+        GUILayout.Space(ToolWindowAreaHeight + 10);
         GUILayout.EndScrollView();
 
-        
+
     }
 
     private void LoadSelections()
@@ -965,7 +1096,7 @@ public class VertexEditorStage : PreviewSceneStage
         for (int i = 0; i < SelectedVertexes.Count; i++)
         {
             if (SelectedVertexes[i].slot.slotName == foundSlot.slotName && SelectedVertexes[i].vertexIndexOnSlot == foundVert)
-            {                
+            {
                 return;
             }
         }
@@ -1009,29 +1140,27 @@ public class VertexEditorStage : PreviewSceneStage
     }
 
 
-    public void SelectVertexes(VertexAdjustmentCollection[] unsortedAdjustments)
+    public void SelectVertexes(VertexAdjustmentCollection unsortedAdjustments)
     {
         SelectedVertexes.Clear();
-        for (int i = 0; i < unsortedAdjustments.Length; i++)
+        VertexAdjustmentCollection vac = unsortedAdjustments;
+        for (int j = 0; j < vac.vertexAdjustments.Count; j++)
         {
-            VertexAdjustmentCollection vac = unsortedAdjustments[i];
-            for (int j = 0; j < vac.vertexAdjustments.Length; j++)
+            VertexAdjustment va = vac.vertexAdjustments[j];
+            SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(va.slotName);
+            if (slot != null)
             {
-                VertexAdjustment va = vac.vertexAdjustments[j];
-                SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(va.slotName);
-                if (slot != null)
+                SelectedVertexes.Add(new VertexSelection()
                 {
-                    SelectedVertexes.Add(new VertexSelection()
-                    {
-                        vertexIndexOnSlot = va.vertexIndex,
-                        slot = slot,
-                        WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[va.vertexIndex + slot.vertexOffset]),
-                        isActive = true
-                    });
-                }
+                    vertexIndexOnSlot = va.vertexIndex,
+                    slot = slot,
+                    WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[va.vertexIndex + slot.vertexOffset]),
+                    isActive = true
+                });
             }
         }
     }
+
     private bool SingleSelect(Event currentEvent)
     {
         bool found = false;
@@ -1103,7 +1232,8 @@ public class VertexEditorStage : PreviewSceneStage
                             currentState = vertexState.AddingOnly;
                             found = true;
                             SelectedVertexes.Add(vs);
-                            currentSelected = SelectedVertexes.Count - 1;
+                            CurrentSelected = SelectedVertexes.Count - 1;
+                            SetActive(null);
                         }
                     }
                     else
@@ -1112,16 +1242,18 @@ public class VertexEditorStage : PreviewSceneStage
                         {
                             found = false;
                             SelectedVertexes.RemoveAt(selectedVertex);
-                            if (currentSelected == selectedVertex)
+                            if (CurrentSelected == selectedVertex)
                             {
-                                currentSelected = -1;
+                                CurrentSelected = -1;
+                                SetActive(null);
                             }
                         }
                         else
                         {
                             if (!currentEvent.shift)
                             {
-                                currentSelected = selectedVertex;
+                                CurrentSelected = selectedVertex;
+                                SetActive(null);
                             }
                         }
                     }
@@ -1133,17 +1265,19 @@ public class VertexEditorStage : PreviewSceneStage
 
     public void CloseStage()
     {
+
         // This is only called from the MeshModifierEditor being closed
         // so we need to null this out so we don't try to close it again
+        thisDCA.umaData.manualMeshModifiers.Clear();
         this.modifierEditor = null;
         StageUtility.GoBackToPreviousStage();
         SceneView.RepaintAll();
 
     }
 
-    
 
-    private void RebuildMesh(bool RecipeChanged)
+
+    public void RebuildMesh(bool RecipeChanged)
     {
         UMAGeneratorBuiltin gb = thisDCA.umaData.umaGenerator as UMAGeneratorBuiltin;
         thisDCA.umaData.CharacterUpdated.AddAction(BuildCollisionMesh);
@@ -1160,7 +1294,7 @@ public class VertexEditorStage : PreviewSceneStage
             // always have to rebuild because the slots are regenerated
             thisDCA.umaData.Dirty(false, true, true); // have to rebuild materials and mesh if we drop out slots
             gb.GenerateSingleUMA(thisDCA.umaData, true);
-        }
+        } 
     }
 
     public List<string> SaveSuppressedSlots()
@@ -1219,7 +1353,7 @@ public class VertexEditorStage : PreviewSceneStage
         }
 
 
-        foreach(VertexSelection vs in SelectedVertexes)
+        foreach (VertexSelection vs in SelectedVertexes)
         {
             if (slotDict.ContainsKey(vs.slot.slotName))
             {
@@ -1276,7 +1410,7 @@ public class VertexEditorStage : PreviewSceneStage
     }
 
 
-protected override GUIContent CreateHeaderContent()
+    protected override GUIContent CreateHeaderContent()
     {
         GUIContent headerContent = new GUIContent();
         headerContent.text = "UMA Vertex Editing";
@@ -1342,7 +1476,7 @@ protected override GUIContent CreateHeaderContent()
 
     private Material vertexMaterial = null;
     private Material GetVertexMaterial(Color col)
-    { 
+    {
         if (vertexMaterial != null)
         {
             vertexMaterial.SetColor("_Color", col);
@@ -1368,7 +1502,7 @@ protected override GUIContent CreateHeaderContent()
         return vertexMesh;
     }
 
-        private void SetVertexMaterialColors(GameObject VertexObject)
+    private void SetVertexMaterialColors(GameObject VertexObject)
     {
         MeshRenderer mr = VertexObject.GetComponent<MeshRenderer>();
         List<Material> newMaterials = new List<Material>();
@@ -1398,5 +1532,10 @@ protected override GUIContent CreateHeaderContent()
         {
             Debug.LogError("No MeshRenderer found");
         }
+    }
+
+    internal void RemoveVertexAdjustment(VertexAdjustment removeMe)
+    {
+        Adjustments.Remove(removeMe);
     }
 }

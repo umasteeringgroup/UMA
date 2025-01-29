@@ -335,9 +335,9 @@ namespace UMA
 		public bool uv3Modified;
 		public bool uv4Modified;
 
-		public UMAMeshData ShallowCopy()
+		public MeshDetails ShallowCopy()
 		{
-			UMAMeshData copy = new UMAMeshData();
+			MeshDetails copy = new MeshDetails();
 			copy.vertices = vertices;
 			copy.normals = normals;
 			copy.tangents = tangents;
@@ -364,22 +364,12 @@ namespace UMA
 	//[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public class UMAMeshData : MeshDetails
 	{
+#if UNITY_EDITOR
+		public string ID = "Base";
+		public int iteration = 0;
+#endif
 		public Matrix4x4[] bindPoses;
 		public UMABoneWeight[] boneWeights;
-#if USE_NATIVE_ARRAYS
-		[NonSerialized]
-		public NativeArray<BoneWeight1> unityBoneWeights;
-		[NonSerialized]
-		public NativeArray<byte> unityBonesPerVertex);
-#endif
-		/* public Vector3[] vertices;
-		public Vector3[] normals;
-		public Vector4[] tangents;
-		public Color32[] colors32;
-		public Vector2[] uv;
-		public Vector2[] uv2;
-		public Vector2[] uv3;
-		public Vector2[] uv4; */
 		public UMABlendShape[] blendShapes;
 		public ClothSkinningCoefficient[] clothSkinning;
 		public Vector2[] clothSkinningSerialized;
@@ -1449,11 +1439,54 @@ namespace UMA
 			return newMeshData;
 		}
 
-		/// <summary>
-		/// Creates a deep copy of an UMAMeshData object.
-		/// </summary>
-		/// <returns>The new copy of the UMAMeshData</returns>
-		public UMAMeshData DeepCopy()
+
+		public UMAMeshData ShallowClearCopy()
+        {
+            UMAMeshData newMeshData = new UMAMeshData();
+
+            newMeshData.SlotName = SlotName; 
+            newMeshData.vertices = vertices;
+            newMeshData.ManagedBonesPerVertex = ManagedBonesPerVertex;
+            newMeshData.ManagedBoneWeights = ManagedBoneWeights;
+            newMeshData.bindPoses = bindPoses;
+            newMeshData.normals = normals;
+            newMeshData.tangents = tangents;
+            newMeshData.colors32 = colors32;
+            newMeshData.uv = uv;
+            newMeshData.uv2 = uv2;
+            newMeshData.uv3 = uv3;
+            newMeshData.uv4 = uv4;
+            newMeshData.blendShapes = blendShapes;
+            newMeshData.clothSkinning = clothSkinning;
+            newMeshData.clothSkinningSerialized = clothSkinningSerialized;
+            newMeshData.submeshes = submeshes;
+            newMeshData.bones = bones;
+            newMeshData.rootBone = rootBone;
+            newMeshData.umaBones = umaBones;
+            newMeshData.umaBoneCount = umaBoneCount;
+            newMeshData.rootBoneHash = rootBoneHash;
+            newMeshData.boneNameHashes = boneNameHashes;
+            newMeshData.subMeshCount = subMeshCount;
+            newMeshData.vertexCount = vertexCount;
+            newMeshData.RootBoneName = RootBoneName;
+
+
+            newMeshData.verticesModified = false;
+            newMeshData.normalsModified = false;
+            newMeshData.tangentsModified = false;
+            newMeshData.colors32Modified = false;
+            newMeshData.uvModified = false;
+            newMeshData.uv2Modified = false;
+            newMeshData.uv3Modified = false;
+            newMeshData.uv4Modified = false;
+
+            return newMeshData;
+        }
+        /// <summary>
+        /// Creates a deep copy of an UMAMeshData object.
+        /// </summary>
+        /// <returns>The new copy of the UMAMeshData</returns>
+        public UMAMeshData DeepCopy()
 		{
 			UMAMeshData newMeshData = new UMAMeshData();
 

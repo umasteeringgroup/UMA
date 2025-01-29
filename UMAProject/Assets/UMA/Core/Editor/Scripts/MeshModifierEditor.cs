@@ -9,6 +9,7 @@ using PlasticGui.Help;
 using UMA.Editors;
 using System;
 using System.Net;
+using System.Data.SqlTypes;
 
 namespace UMA
 {
@@ -46,6 +47,10 @@ namespace UMA
         public GUIStyle centeredLabel = new GUIStyle();
         public Color backColor = Color.cyan;
         public bool editingCurrent = false;
+        public GUIStyle selectedButton = new GUIStyle(EditorStyles.miniButton);
+        public GUIStyle unselectedButton = new GUIStyle(EditorStyles.miniButton);
+        public enum EditorMode { MeshModifiers, VertexAdjustments }
+        public EditorMode editorMode = EditorMode.VertexAdjustments;
 
         public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
         {
@@ -57,6 +62,7 @@ namespace UMA
             for (int i = 0; i < ModifierTypes.Length; i++)
             {
                 ModifierTypeNames[i] = ObjectNames.NicifyVariableName(ModifierTypes[i].Name); 
+                ModifierTypeNames[i] = ModifierTypeNames[i].Replace(" Collection", "");
             }
 
             if (modifier == null)
@@ -72,7 +78,16 @@ namespace UMA
             // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
             centeredLabel = EditorStyles.boldLabel;
             centeredLabel.alignment = TextAnchor.MiddleCenter;
+            selectedButton.normal.textColor = Color.white;
+            selectedButton.normal.background = new Texture2D(1, 1);
+            selectedButton.normal.background.SetPixel(0, 0, Color.blue);
+            selectedButton.normal.background.Apply();
+            unselectedButton.normal.textColor = Color.black;
+            unselectedButton.normal.background = new Texture2D(1, 1);
+            unselectedButton.normal.background.SetPixel(0, 0, Color.white);
+            unselectedButton.normal.background.Apply();
         }
+        
 
         public void OnGUI()
         {
@@ -82,6 +97,259 @@ namespace UMA
                 return;
             }
 
+            GUIStyle VertexModeStyle = unselectedButton;
+            GUIStyle MeshModifierModeStyle = unselectedButton;
+
+            if (editorMode == EditorMode.MeshModifiers)
+            {
+                MeshModifierModeStyle = selectedButton;
+            }
+            else
+            {
+                VertexModeStyle = selectedButton;
+            }
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Current Vertex", VertexModeStyle))
+            {
+                editorMode = EditorMode.VertexAdjustments;
+            }
+            if (GUILayout.Button("Bulk Add Active", MeshModifierModeStyle))
+            {
+                editorMode = EditorMode.MeshModifiers;
+                deActivateCurrentSelection();
+                vertexEditorStage.SetActive(null);
+            }
+            vertexEditorStage.editorMode = editorMode;
+            GUILayout.EndHorizontal();
+
+            if (editorMode == EditorMode.MeshModifiers)
+            {
+                DrawMeshModifiers();
+            }
+            else
+            {
+                DrawVertexAdjustments();
+            }
+        }
+
+        public void SetActive(VertexAdjustment va, bool activeState = true)
+        {
+            deActivateCurrentSelection();
+            va.active = activeState;
+            if (activeState)
+            {
+                vertexEditorStage.SetActive(va);
+            }
+            else
+            {
+                vertexEditorStage.SetActive(null);
+            }
+        }
+
+        private List<bool> ExpandList(List<bool> theList, int newSize)
+        {
+            if (theList.Count < newSize)
+            {
+                while (theList.Count < newSize)
+                {
+                    theList.Add(false);
+                }
+            }
+            return theList;
+        }
+
+        public void SetExpanded(List<bool> theList, int active)
+        {
+            for (int i = 0; i < theList.Count; i++)
+            {
+                theList[i] = false;
+            }
+            theList[active] = true;
+        }
+        //public Dictionary<int, bool> VertexFoldouts = new Dictionary<int, bool>();
+
+        public List<bool> FoldOuts = new List<bool>();
+        private VertexAdjustmentCollection templateCollection = null;
+        private void DrawVertexAdjustments()
+        {
+            int activeCount = 0;
+
+            if (vertexEditorStage.CurrentSelected < 0)
+            {
+                //Debug.Log("No vertexes selected. CurrentSelect <= 0");
+                EditorGUILayout.LabelField("No Vertexes Selected", centeredLabel);
+                EditorGUILayout.HelpBox("Please click one of the selected vertexes in the scene view to edit it. The vertex can be active or inactive.", MessageType.Info);
+                return;
+            }
+            VertexEditorStage.VertexSelection selectedVertex = vertexEditorStage.GetSelectedVertex();
+            if (selectedVertex == null)
+            {
+                EditorGUILayout.LabelField("No Vertexes Selected", centeredLabel);
+                EditorGUILayout.HelpBox("Please click one of the selected vertexes in the scene view to edit it. The vertex can be active or inactive.", MessageType.Info);
+                return;
+            }
+            if (selectedVertex.suppressed)
+            {
+                EditorGUILayout.LabelField("Vertex is suppressed", centeredLabel);
+                EditorGUILayout.HelpBox("This vertex is suppressed and cannot be edited. A vertex is suppressed when the slot it is on is hidden.", MessageType.Info);
+                return;
+            }
+            EditorGUILayout.LabelField("Add Vertexe Modifier", centeredLabel);
+
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Type", GUILayout.Width(60));
+            selectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames, GUILayout.Width(180));
+            if (selectedType >= 0)
+            {
+                if (templateCollection == null || templateCollection.GetType() != ModifierTypes[selectedType])
+                {
+                    templateCollection = (VertexAdjustmentCollection)Activator.CreateInstance(ModifierTypes[selectedType]);
+                }
+            }
+
+            if (templateVertexAdjustmentCollection == null || ModifierTypes[selectedType] != templateVertexAdjustmentCollection.GetType() && selectedType < ModifierTypes.Length)
+            {
+                templateVertexAdjustmentCollection = (VertexAdjustmentCollection)Activator.CreateInstance(ModifierTypes[selectedType]);
+            }
+            if (GUILayout.Button("Add"))
+            {
+                VertexAdjustment va = templateVertexAdjustmentCollection.Create();
+                va.vertexIndex = selectedVertex.vertexIndexOnSlot;
+                va.slotName = selectedVertex.slot.slotName;
+                va.active = true;
+                va.Init(selectedVertex.slot.asset.meshData);
+                int newSize = vertexEditorStage.GetAdjustments().Count + 1;
+                FoldOuts = ExpandList(FoldOuts, newSize);
+                SetExpanded(FoldOuts, newSize - 1);
+                vertexEditorStage.AddVertexAdjustment(va);
+                SetActive(va);
+            }
+            GUILayout.EndHorizontal();
+            if (templateCollection != null)
+            {
+                EditorGUILayout.HelpBox(templateCollection.Help, MessageType.Info);
+            }
+            if (GUILayout.Button("Rebuild with current adjustments"))
+            {
+                Dictionary<string, MeshModifier.Modifier> testModifiers = new Dictionary<string, MeshModifier.Modifier>();
+
+                foreach (VertexAdjustment va in vertexEditorStage.GetVertexAdjustments())
+                {
+                        string key = va.Name + ":" + va.slotName;
+                        if (!testModifiers.ContainsKey(key))
+                        {
+                            MeshModifier.Modifier newMod = new MeshModifier.Modifier();
+                            newMod.adjustments = va.VertexAdjustmentCollection;
+                            newMod.SlotName = va.slotName;
+                            newMod.ModifierName = va.Name;
+                            testModifiers.Add(key, newMod);
+                        }
+                        testModifiers[key].adjustments.Add(va);
+                }
+
+
+                Modifiers.Clear();
+                // convert dictionary to a list of modifiers
+                foreach (KeyValuePair<string, MeshModifier.Modifier> kvp in testModifiers)
+                {
+                    Modifiers.Add(kvp.Value);
+                }
+
+                thisDCA.umaData.manualMeshModifiers = Modifiers;
+                vertexEditorStage.RebuildMesh(false);
+            }
+            GUIHelper.EndVerticalPadded(10);
+            GUILayout.Label("Adjustments", centeredLabel);
+
+            VertexAdjustment RemoveMe = null;
+            int pos = 0;
+            var adjustments = vertexEditorStage.GetVertexAdjustments();
+            FoldOuts = ExpandList(FoldOuts, adjustments.Count);
+
+            foreach (VertexAdjustment va in adjustments)
+            {
+                if (selectedVertex.vertexIndexOnSlot != va.vertexIndex || selectedVertex.slot.slotName != va.slotName)
+                {
+                    continue;
+                }
+
+                bool delme = false;
+                FoldOuts[pos] = GUIHelper.FoldoutBarWithDelete(FoldOuts[pos], $"{va.slotName},{va.vertexIndex},{va.Name}", out delme);
+
+                if (delme)
+                {
+                    RemoveMe = va;
+                }
+
+                if (FoldOuts[pos])
+                {
+                    if (va.active)
+                    {
+                        GUIHelper.BeginVerticalPadded(10, new Color(0.9f, 0.9f, 1f));
+                        GUILayout.Label("Editor Active", centeredLabel);
+                        SetActive(va, va.Gizmo != VertexAdjustmentGizmo.None);
+                        activeCount++;
+                    }
+                    else
+                    {
+                        GUIHelper.BeginVerticalPadded(10, new Color(0.3f, 0.3f, 0.4f));
+                    }
+
+
+                    va.DoGUI();
+                    if (va.Gizmo != VertexAdjustmentGizmo.None)
+                    {
+                        if (va.active)
+                        {
+                            if (GUILayout.Button("Stop Editing"))
+                            {
+                                SetActive(va, false);
+                            }
+                        }
+                        else
+                        {
+
+                            if (GUILayout.Button("Edit in scene"))
+                            {
+                                SetActive(va);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        GUILayout.Label("No gizmo for this adjustment");
+                    }
+                    GUIHelper.EndVerticalPadded(10);
+                }
+                pos++;
+            }
+            if (activeCount == 0)
+            {
+                vertexEditorStage.SetActive(null);
+            }
+            if (RemoveMe != null)
+            {
+                vertexEditorStage.RemoveVertexAdjustment(RemoveMe);
+            }
+        }
+
+        private void deActivateCurrentSelection()
+        {
+            VertexEditorStage.VertexSelection vs = vertexEditorStage.GetSelectedVertex();
+            foreach (VertexAdjustment va in vertexEditorStage.GetVertexAdjustments())
+            {
+                if (va.slotName == vs.slot.slotName && va.vertexIndex == vs.vertexIndexOnSlot)
+                {
+                    va.active = false;
+                }
+            }
+        }
+
+        private void DrawMeshModifiers()
+        {
             if (editingCurrent)
             {
                 EditorGUILayout.LabelField("Editing Mesh Modifier Collection", centeredLabel);
@@ -99,14 +367,14 @@ namespace UMA
             {
                 MeshModifier.Modifier newMod = new MeshModifier.Modifier();
                 Modifiers.Add(newMod);
-                currentModifierIndex = Modifiers.Count -1;
+                currentModifierIndex = Modifiers.Count - 1;
             }
             if (Modifiers.Count == 0)
             {
                 EditorGUILayout.LabelField("No Mesh Modifiers collections");
                 return;
             }
-            else 
+            else
             {
                 EditorGUILayout.LabelField("Mesh Modifiers for " + thisDCA.name);
             }
@@ -136,7 +404,7 @@ namespace UMA
             }
             if (templateVertexAdjustmentCollection != null && templateAdjustment != null)
             {
-                templateVertexAdjustmentCollection.DoGUI(templateAdjustment);
+                templateAdjustment.DoGUI();
             }
             if (GUILayout.Button("Add Active Vertexes to selected set"))
             {
@@ -146,7 +414,7 @@ namespace UMA
             GUIHelper.EndVerticalPadded(10);
             EditorGUILayout.LabelField("Mesh Modifier Collections", centeredLabel);
 
-            for (int i=0;i< Modifiers.Count; i++)
+            for (int i = 0; i < Modifiers.Count; i++)
             {
                 MeshModifier.Modifier mod = Modifiers[i];
                 if (i != currentModifierIndex)

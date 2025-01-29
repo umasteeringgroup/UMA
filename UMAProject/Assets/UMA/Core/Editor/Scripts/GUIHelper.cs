@@ -275,7 +275,17 @@ namespace UMA.Editors
 			GUILayout.EndHorizontal();
 		}
 
-		public static bool FoldoutBar(bool foldout, string content)
+        public static bool FoldoutBarWithDelete(bool foldout, string content, out bool delete)
+        {
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            GUILayout.Space(10);
+            foldout = EditorGUILayout.Foldout(foldout, content, true);
+            delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            return foldout;
+        }
+
+        public static bool FoldoutBar(bool foldout, string content)
 		{
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			GUILayout.Space(10);

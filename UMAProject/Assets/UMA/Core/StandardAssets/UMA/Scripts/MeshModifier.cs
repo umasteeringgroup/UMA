@@ -18,6 +18,7 @@ namespace UMA
         {
 #if UNITY_EDITOR
             public string ModifierName;
+            public bool isTemporary = false;
 #endif
 
             [Tooltip("The name of the slot this modifier is applied to.")]
@@ -25,9 +26,32 @@ namespace UMA
             [Tooltip("The name of the DNA this modifier gets it's scale value from. Leave blank to manually set the scale.")]
             public string DNAName;
             [Tooltip("The scale value, can be set manually or from a DNA value.")]
-            public float Scale;
+            public float Scale = 1.0f;
             [Tooltip("This is the list of adjustments for the current slot.")]
-            public VertexAdjustmentCollection[] adjustments = new VertexAdjustmentCollection[0];
+            public VertexAdjustmentCollection adjustments;
+            public UMAMeshData Process(UMAMeshData src)
+            {
+                //??
+                if (adjustments == null) return src;
+
+                UMAMeshData Working = src.ShallowClearCopy();
+#if UNITY_EDITOR
+                Working.ID = "Modified";
+#endif
+                if (Scale == 0.0f)
+                {
+                    return src;
+                }
+                else if (Scale == 1.0f)
+                {
+                    adjustments.Apply(Working, src);
+                }
+                else
+                {
+                    adjustments.ApplyScaled(Working, src, Scale);
+                }
+                return Working;
+            }
             public MeshDetails Process(MeshDetails src)
             {
                 MeshDetails Working = src.ShallowCopy();
@@ -37,19 +61,12 @@ namespace UMA
                 }
                 else if (Scale == 1.0f)
                 {
-                    foreach (var adj in adjustments)
-                    {
-                        adj.Apply(Working,src);
-                    }
+                    adjustments.Apply(Working, src);
                 }
                 else
                 {
-                    foreach (var adj in adjustments)
-                    {
-                        adj.ApplyScaled(Working, src, Scale);
-                    }
+                    adjustments.ApplyScaled(Working, src, Scale);
                 }
-
                 return Working;
             }
         }
@@ -70,6 +87,7 @@ namespace UMA
         {
             foreach (var mod in Modifiers)
             {
+                // TODO: remove this check, it should be done in the editor.
                 if (mod.SlotName == Slot)
                 {
                     return mod.Process(Src);

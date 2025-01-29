@@ -4003,6 +4003,7 @@ namespace UMA.CharacterSystem
                 }
                 umaData.userInformation = userInformation;
                 SetUMADataOptions();
+                umaData.ClearModifiers();
             }
             if (DNAIsValid(CurrentDNA) == false)
             {
@@ -4120,6 +4121,16 @@ namespace UMA.CharacterSystem
                         if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
                         {
                             UMAWardrobeRecipe umr = (utr as UMAWardrobeRecipe);
+                            if (umr != null)
+                            {
+                                if (umr.MeshModifiers != null)
+                                {
+                                    for (int i1 = 0; i1 < umr.MeshModifiers.Count; i1++)
+                                    {
+                                        umaData.AddMeshModifiers(umr.MeshModifiers[i1].Modifiers);
+                                    }
+                                }
+                            }
 
                             //check if this recipe is directly or only cross compatible
                             bool utrIsCrossCompatible = (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot));
@@ -4142,9 +4153,10 @@ namespace UMA.CharacterSystem
                             }
                             else
                             {
-								if(!utr.disabled) {
-                                Recipes.Add(utr);
-                            }
+                                if (!utr.disabled)
+                                {
+                                    Recipes.Add(utr);
+                                }
                             }
                             if (utr.Hides.Count > 0)
                             {
