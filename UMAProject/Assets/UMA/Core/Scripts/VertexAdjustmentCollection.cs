@@ -143,7 +143,10 @@ namespace UMA
         {
             if (meshData.colors32 != null)
             {
-                color = meshData.colors32[vertexIndex];
+                if (meshData.colors32.Length > vertexIndex)
+                {
+                    color = meshData.colors32[vertexIndex];
+                }
             }
         }
 

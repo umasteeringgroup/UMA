@@ -74,7 +74,19 @@ namespace UMA
 #if UNITY_EDITOR
         // This array is not built from the recipes. It must be set manually. It is merged into the dictionary of MeshModifiers with the recipe driven modifiers.
         // It's general use case is for adding mesh modifiers that are not part of the normal UMA build process, such as during editing, etc.
-        public List<MeshModifier.Modifier> manualMeshModifiers = new List<MeshModifier.Modifier>();
+        
+		private List<MeshModifier.Modifier> _manualMeshModifiers = new List<MeshModifier.Modifier>();
+		public List<MeshModifier.Modifier> manualMeshModifiers 
+		{ 
+			get 
+			{ 
+				return _manualMeshModifiers; 
+			}
+            set
+            {
+                _manualMeshModifiers = value;
+            }
+        }
 #endif
 
         public void ClearModifiers()
@@ -117,7 +129,7 @@ namespace UMA
                 accumulatedModifiers[kvp.Key].AddRange(kvp.Value);
             }
 #if UNITY_EDITOR
-            foreach (var m in manualMeshModifiers)
+            foreach (var m in _manualMeshModifiers)
             {
                 if (!accumulatedModifiers.ContainsKey(m.SlotName))
                 {

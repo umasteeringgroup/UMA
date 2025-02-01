@@ -626,12 +626,9 @@ public class VertexEditorStage : PreviewSceneStage
             if (q != van.rotation)
             {
                 van.rotation = q;
-                Debug.Log("Rotation changed to " + q.eulerAngles);
             }
             //van.SetRotation(Handles.RotationHandle(van.rotation, editSelection.WorldPosition));
         }
-
-
     }
 
     private void DoScaleGizmo()

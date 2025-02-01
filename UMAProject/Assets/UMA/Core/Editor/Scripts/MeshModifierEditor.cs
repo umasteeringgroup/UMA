@@ -133,6 +133,7 @@ namespace UMA
             }
         }
 
+        VertexAdjustment activeAdjustment = null;
         public void SetActive(VertexAdjustment va, bool activeState = true)
         {
             deActivateCurrentSelection();
@@ -140,10 +141,12 @@ namespace UMA
             if (activeState)
             {
                 vertexEditorStage.SetActive(va);
+                activeAdjustment = va;
             }
             else
             {
                 vertexEditorStage.SetActive(null);
+                activeAdjustment = null;
             }
         }
 
@@ -169,8 +172,12 @@ namespace UMA
         }
         //public Dictionary<int, bool> VertexFoldouts = new Dictionary<int, bool>();
 
+        private Vector2 vertexScrollPos = new Vector2();
+
         public List<bool> FoldOuts = new List<bool>();
         private VertexAdjustmentCollection templateCollection = null;
+        private bool showFiltered = true;
+
         private void DrawVertexAdjustments()
         {
             int activeCount = 0;
@@ -182,6 +189,7 @@ namespace UMA
                 EditorGUILayout.HelpBox("Please click one of the selected vertexes in the scene view to edit it. The vertex can be active or inactive.", MessageType.Info);
                 return;
             }
+            
             VertexEditorStage.VertexSelection selectedVertex = vertexEditorStage.GetSelectedVertex();
             if (selectedVertex == null)
             {
@@ -195,7 +203,23 @@ namespace UMA
                 EditorGUILayout.HelpBox("This vertex is suppressed and cannot be edited. A vertex is suppressed when the slot it is on is hidden.", MessageType.Info);
                 return;
             }
-            EditorGUILayout.LabelField("Add Vertexe Modifier", centeredLabel);
+
+          /* GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Show All", (showFiltered == false? unselectedButton:selectedButton)))
+            {
+                showFiltered = false;
+                Repaint();
+            }
+            if (GUILayout.Button("Show Filtered", (showFiltered == true ? unselectedButton : selectedButton)))
+            {
+                showFiltered = true;
+                Repaint();
+            }
+
+            GUILayout.EndHorizontal();
+          */
+
+            EditorGUILayout.LabelField("Add Vertex Modifier", centeredLabel);
 
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
@@ -262,68 +286,58 @@ namespace UMA
                 vertexEditorStage.RebuildMesh(false);
             }
             GUIHelper.EndVerticalPadded(10);
+
+            
+
+
             GUILayout.Label("Adjustments", centeredLabel);
+
+            vertexScrollPos = EditorGUILayout.BeginScrollView(vertexScrollPos);
 
             VertexAdjustment RemoveMe = null;
             int pos = 0;
             var adjustments = vertexEditorStage.GetVertexAdjustments();
-            FoldOuts = ExpandList(FoldOuts, adjustments.Count);
+            //FoldOuts = ExpandList(FoldOuts, adjustments.Count);
+
+            if (activeAdjustment != null)
+            {
+                ShowActiveAdjustment(activeCount, activeAdjustment);
+            }
 
             foreach (VertexAdjustment va in adjustments)
             {
-                if (selectedVertex.vertexIndexOnSlot != va.vertexIndex || selectedVertex.slot.slotName != va.slotName)
-                {
-                    continue;
-                }
+                //if (showFiltered && (selectedVertex.vertexIndexOnSlot != va.vertexIndex || selectedVertex.slot.slotName != va.slotName))
+                //{
+                //    continue;
+                //}
 
                 bool delme = false;
-                FoldOuts[pos] = GUIHelper.FoldoutBarWithDelete(FoldOuts[pos], $"{va.slotName},{va.vertexIndex},{va.Name}", out delme);
+                //FoldOuts[pos] = GUIHelper.FoldoutBarWithDelete(FoldOuts[pos], $"{va.slotName},{va.vertexIndex},{va.Name}", out delme);
+                GUILayout.BeginHorizontal();
+                if (va == activeAdjustment)
+                {
+                    GUILayout.Label("(edit)", GUILayout.Width(64));
+                }
+                else
+                {
+                    GUILayout.Label(" ", GUILayout.Width(64));
+                }
+                if(GUILayout.Button($"{va.slotName},{va.vertexIndex},{va.Name}", EditorStyles.miniButtonMid, GUILayout.ExpandWidth(true)))
+                {
+                    SetActive(va, !va.active);
+                }
+                delme = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
 
                 if (delme)
                 {
                     RemoveMe = va;
                 }
 
-                if (FoldOuts[pos])
-                {
-                    if (va.active)
-                    {
-                        GUIHelper.BeginVerticalPadded(10, new Color(0.9f, 0.9f, 1f));
-                        GUILayout.Label("Editor Active", centeredLabel);
-                        SetActive(va, va.Gizmo != VertexAdjustmentGizmo.None);
-                        activeCount++;
-                    }
-                    else
-                    {
-                        GUIHelper.BeginVerticalPadded(10, new Color(0.3f, 0.3f, 0.4f));
-                    }
-
-
-                    va.DoGUI();
-                    if (va.Gizmo != VertexAdjustmentGizmo.None)
-                    {
-                        if (va.active)
-                        {
-                            if (GUILayout.Button("Stop Editing"))
-                            {
-                                SetActive(va, false);
-                            }
-                        }
-                        else
-                        {
-
-                            if (GUILayout.Button("Edit in scene"))
-                            {
-                                SetActive(va);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        GUILayout.Label("No gizmo for this adjustment");
-                    }
-                    GUIHelper.EndVerticalPadded(10);
-                }
+                //if (FoldOuts[pos])
+                //{
+                //    activeCount = ShowActiveAdjustment(activeCount, va);
+                //}
                 pos++;
             }
             if (activeCount == 0)
@@ -334,6 +348,49 @@ namespace UMA
             {
                 vertexEditorStage.RemoveVertexAdjustment(RemoveMe);
             }
+            EditorGUILayout.EndScrollView();
+        }
+
+        private int ShowActiveAdjustment(int activeCount, VertexAdjustment va)
+        {
+            if (va.active)
+            {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.9f, 0.9f, 1f));
+                GUILayout.Label("Editor Active", centeredLabel);
+                SetActive(va, va.Gizmo != VertexAdjustmentGizmo.None);
+                activeCount++;
+            }
+            else
+            {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.3f, 0.3f, 0.4f));
+            }
+
+
+            va.DoGUI();
+            if (va.Gizmo != VertexAdjustmentGizmo.None)
+            {
+                if (va.active)
+                {
+                    if (GUILayout.Button("Stop Editing"))
+                    {
+                        SetActive(va, false);
+                    }
+                }
+                else
+                {
+
+                    if (GUILayout.Button("Edit in scene"))
+                    {
+                        SetActive(va);
+                    }
+                }
+            }
+            else
+            {
+                GUILayout.Label("No gizmo for this adjustment");
+            }
+            GUIHelper.EndVerticalPadded(10);
+            return activeCount;
         }
 
         private void deActivateCurrentSelection()
