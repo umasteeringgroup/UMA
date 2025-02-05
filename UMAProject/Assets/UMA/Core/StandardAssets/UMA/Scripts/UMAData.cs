@@ -1470,7 +1470,21 @@ namespace UMA
 				}
 			}
 
-			public SlotData FindSlotForVertex(int vert)
+			public SlotData FindSlot(string slotName)
+			{
+                // find the vertex in the slot
+                for (int i = 0; i < slotDataList.Length; i++)
+                {
+                    var slot = slotDataList[i];
+                    if ( slot.slotName == slotName)
+                    {
+						return slot;
+                    }
+                }
+                return null;
+            }
+
+            public SlotData FindSlotForVertex(int vert)
 			{
                 // find the vertex in the slot
                 for (int i = 0; i < slotDataList.Length; i++)

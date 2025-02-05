@@ -15,6 +15,7 @@ namespace UMA
 {
     public class MeshModifierEditor : EditorWindow
     {
+        public bool RebuildOnChanges = false;
         public List<MeshModifier.Modifier> Modifiers = new List<MeshModifier.Modifier>();
 
         public static MeshModifierEditor GetOrCreateWindow(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
@@ -137,6 +138,7 @@ namespace UMA
         public void SetActive(VertexAdjustment va, bool activeState = true)
         {
             deActivateCurrentSelection();
+            
             va.active = activeState;
             if (activeState)
             {
@@ -256,39 +258,12 @@ namespace UMA
             {
                 EditorGUILayout.HelpBox(templateCollection.Help, MessageType.Info);
             }
+            RebuildOnChanges =  EditorGUILayout.Toggle("Rebuild on changes", RebuildOnChanges);
             if (GUILayout.Button("Rebuild with current adjustments"))
             {
-                Dictionary<string, MeshModifier.Modifier> testModifiers = new Dictionary<string, MeshModifier.Modifier>();
-
-                foreach (VertexAdjustment va in vertexEditorStage.GetVertexAdjustments())
-                {
-                        string key = va.Name + ":" + va.slotName;
-                        if (!testModifiers.ContainsKey(key))
-                        {
-                            MeshModifier.Modifier newMod = new MeshModifier.Modifier();
-                            newMod.adjustments = va.VertexAdjustmentCollection;
-                            newMod.SlotName = va.slotName;
-                            newMod.ModifierName = va.Name;
-                            testModifiers.Add(key, newMod);
-                        }
-                        testModifiers[key].adjustments.Add(va);
-                }
-
-
-                Modifiers.Clear();
-                // convert dictionary to a list of modifiers
-                foreach (KeyValuePair<string, MeshModifier.Modifier> kvp in testModifiers)
-                {
-                    Modifiers.Add(kvp.Value);
-                }
-
-                thisDCA.umaData.manualMeshModifiers = Modifiers;
-                vertexEditorStage.RebuildMesh(false);
+                DoCharacterRebuildWithUpdates();
             }
             GUIHelper.EndVerticalPadded(10);
-
-            
-
 
             GUILayout.Label("Adjustments", centeredLabel);
 
@@ -324,7 +299,7 @@ namespace UMA
                 }
                 if(GUILayout.Button($"{va.slotName},{va.vertexIndex},{va.Name}", EditorStyles.miniButtonMid, GUILayout.ExpandWidth(true)))
                 {
-                    SetActive(va, !va.active);
+                    SetActive(va,true);
                 }
                 delme = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
@@ -332,6 +307,10 @@ namespace UMA
                 if (delme)
                 {
                     RemoveMe = va;
+                    if (activeAdjustment == va)
+                    {
+                        SetActive(va,false);
+                    }
                 }
 
                 //if (FoldOuts[pos])
@@ -340,15 +319,45 @@ namespace UMA
                 //}
                 pos++;
             }
-            if (activeCount == 0)
-            {
-                vertexEditorStage.SetActive(null);
-            }
+            //if (activeCount == 0)
+            //{
+            //    vertexEditorStage.SetActive(null);
+            //}
             if (RemoveMe != null)
             {
                 vertexEditorStage.RemoveVertexAdjustment(RemoveMe);
             }
             EditorGUILayout.EndScrollView();
+        }
+
+        public void DoCharacterRebuildWithUpdates()
+        {
+            Dictionary<string, MeshModifier.Modifier> testModifiers = new Dictionary<string, MeshModifier.Modifier>();
+
+            foreach (VertexAdjustment va in vertexEditorStage.GetVertexAdjustments())
+            {
+                string key = va.Name + ":" + va.slotName;
+                if (!testModifiers.ContainsKey(key))
+                {
+                    MeshModifier.Modifier newMod = new MeshModifier.Modifier();
+                    newMod.adjustments = va.VertexAdjustmentCollection;
+                    newMod.SlotName = va.slotName;
+                    newMod.ModifierName = va.Name;
+                    testModifiers.Add(key, newMod);
+                }
+                testModifiers[key].adjustments.Add(va);
+            }
+
+
+            Modifiers.Clear();
+            // convert dictionary to a list of modifiers
+            foreach (KeyValuePair<string, MeshModifier.Modifier> kvp in testModifiers)
+            {
+                Modifiers.Add(kvp.Value);
+            }
+
+            thisDCA.umaData.manualMeshModifiers = Modifiers;
+            vertexEditorStage.RebuildMesh(false);
         }
 
         private int ShowActiveAdjustment(int activeCount, VertexAdjustment va)

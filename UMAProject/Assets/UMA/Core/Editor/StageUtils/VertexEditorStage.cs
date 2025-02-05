@@ -362,7 +362,18 @@ public class VertexEditorStage : PreviewSceneStage
 
         if (editAdjustment != null && editAdjustment.Gizmo != VertexAdjustmentGizmo.None)
         {
-            DoGizmoInput();
+            bool changed = DoGizmoInput();
+            if (changed)
+            {
+                Debug.Log("Changed");
+                modifierEditor.Repaint();
+
+                if (modifierEditor.RebuildOnChanges)
+                {
+                    Debug.Log("Rebuild");
+                    modifierEditor.DoCharacterRebuildWithUpdates();
+                }
+            }
         }
 
         Handles.BeginGUI();
@@ -587,26 +598,29 @@ public class VertexEditorStage : PreviewSceneStage
 
     }
 
-    private void DoGizmoInput()
+    private bool DoGizmoInput()
     {
+        bool changed = false;
         VertexAdjustmentGizmo gizmo = editAdjustment.Gizmo;
 
         switch (gizmo)
         {
             case VertexAdjustmentGizmo.Rotate:
-                DoRotationGizmo();
+                changed = DoRotationGizmo();
                 break;
             case VertexAdjustmentGizmo.Scale:
-                DoScaleGizmo();
+                changed = DoScaleGizmo();
                 break;
             case VertexAdjustmentGizmo.Move:
-                DoTranslateGizmo();
+                changed = DoTranslateGizmo();
                 break;
         }
+        return changed;
     }
 
-    private void DoRotationGizmo()
+    private bool DoRotationGizmo()
     {
+        bool changed = false;
         // show an arrow gizmo at the editSelection.WorldPosition, pointing in the direction of the normal
         // when the user clicks on the gizmo, show a rotation handle
         // when the user clicks on the rotation handle, rotate the vertex around the normal
@@ -614,9 +628,17 @@ public class VertexEditorStage : PreviewSceneStage
 
         if (van != null)
         {
+            if (van.bakedNormalSet == false)
+            {
+                van.bakedNormal = BakedMesh.normals[editSelection.slot.vertexOffset + editSelection.vertexIndexOnSlot];
+                van.bakedNormalSet = true;
+            }
+
+            editSelection.WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[editSelection.slot.vertexOffset + editSelection.vertexIndexOnSlot]);
             // show an arrow gizmo at the editSelection.WorldPosition, pointing in the direction of the normal
             Handles.color = Color.red;
-            Vector3 worldRotation = VertexObject.transform.TransformVector(BakedMesh.normals[editSelection.slot.vertexOffset + editSelection.vertexIndexOnSlot]);
+            Vector3 normal = van.bakedNormal;
+            Vector3 worldRotation = VertexObject.transform.TransformVector(normal/*BakedMesh.normals[editSelection.slot.vertexOffset + editSelection.vertexIndexOnSlot]*/);
             Quaternion quaternion = Quaternion.LookRotation(worldRotation) * van.rotation;
             Handles.ArrowHandleCap(0, editSelection.WorldPosition, quaternion, 0.1f, EventType.Repaint);
 //            Handles.ArrowHandleCap(0, editSelection.WorldPosition, Quaternion.LookRotation(worldRotation), 0.1f, EventType.Repaint);
@@ -626,19 +648,53 @@ public class VertexEditorStage : PreviewSceneStage
             if (q != van.rotation)
             {
                 van.rotation = q;
+                changed = true;
             }
             //van.SetRotation(Handles.RotationHandle(van.rotation, editSelection.WorldPosition));
         }
+        return changed;
     }
 
-    private void DoScaleGizmo()
+    private bool DoScaleGizmo()
     {
+        bool changed = false;
+        VertexScaleAdjustment vas = editAdjustment as VertexScaleAdjustment;
+        if (vas != null)
+        {
+            UMAData umaData = thisDCA.umaData;
+            SlotData slot = thisDCA.umaData.umaRecipe.FindSlot(vas.slotName);
 
+            if (slot == null) return false;
+
+            if (!vas.basePosSet)
+            {
+                vas.basePos = slot.asset.meshData.vertices[editSelection.vertexIndexOnSlot];
+                vas.basePosSet = true;
+            }
+            Vector3 basenormal = slot.asset.meshData.normals[editSelection.vertexIndexOnSlot];
+
+            // show an arrow gizmo at the editSelection.WorldPosition, pointing in the direction of the normal
+            Handles.color = Color.red;
+            //Vector3 normal = vas.bakedNormal;
+            Vector3 worldRotation = VertexObject.transform.TransformVector(BakedMesh.normals[editSelection.slot.vertexOffset + editSelection.vertexIndexOnSlot]);
+            Quaternion quaternion = Quaternion.LookRotation(worldRotation);
+            // Handles.ArrowHandleCap(0, editSelection.WorldPosition, quaternion, 0.1f, EventType.Repaint);
+            //Handles.ArrowHandleCap(0, editSelection.WorldPosition, Quaternion.LookRotation(worldRotation), 0.1f, EventType.Repaint);
+
+            Vector3 Scale = Vector3.one * vas.scale;
+            Vector3 newScale = Handles.ScaleHandle(Scale, editSelection.WorldPosition, Quaternion.identity, 0.1f);
+            if (Scale != newScale)
+            {
+                vas.scale = newScale.z;
+                return true;
+            }
+        }
+        return false;
     }
 
-    private void DoTranslateGizmo()
+    private bool DoTranslateGizmo()
     {
-
+        return false;
     }
 
     private void DrawGUIWindows(SceneView sceneView)
@@ -1288,6 +1344,7 @@ public class VertexEditorStage : PreviewSceneStage
                 //gb.GenerateSingleUMA(thisDCA.umaData, true);
                 RestoreSuppressedSlots(suppressed);
             }
+            Debug.Log("Generating UMA");
             // always have to rebuild because the slots are regenerated
             thisDCA.umaData.Dirty(false, true, true); // have to rebuild materials and mesh if we drop out slots
             gb.GenerateSingleUMA(thisDCA.umaData, true);

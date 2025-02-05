@@ -40,7 +40,7 @@ namespace UMA
 #if UNITY_EDITOR
         public bool active;
         public string slotName;
-        public abstract void DoGUI();
+        public abstract bool DoGUI();
         public abstract VertexAdjustmentGizmo Gizmo { get; }
         public abstract void Init(UMAMeshData meshData);
 #endif
@@ -55,7 +55,7 @@ namespace UMA
 #if UMA_BURSTCOMPILE
 		[BurstCompile]
 #endif
-        public static void Apply(MeshDetails mesh, MeshDetails original, VertexColorAdjustment[] adjustments)
+        public static void Apply(MeshDetails mesh, MeshDetails original, List<VertexAdjustment> adjustments)
         {
             if (!mesh.colors32Modified)
             {
@@ -70,26 +70,26 @@ namespace UMA
                 mesh.colors32 = (Color32[])original.colors32.Clone();
                 mesh.colors32Modified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.colors32[adjustments[i].vertexIndex] = adjustments[i].color;
+                mesh.colors32[adjustments[i].vertexIndex] = (adjustments[i] as VertexColorAdjustment).color;
             }
         }
 #if UMA_BURSTCOMPILE
 		[BurstCompile]
 #endif
-        public static void ApplyScaled(MeshDetails mesh, MeshDetails original, VertexColorAdjustment[] adjustments, float scale)
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails original, List<VertexAdjustment> adjustments, float scale)
         {
             if (!mesh.colors32Modified)
             {
                 mesh.colors32 = (Color32[])original.colors32.Clone();
                 mesh.colors32Modified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
                 int vertIndex = adjustments[i].vertexIndex;
                 Color startColor = mesh.colors32[vertIndex];
-                Color newColor = adjustments[vertIndex].color;
+                Color newColor = (adjustments[vertIndex] as VertexColorAdjustment).color;
                 Color lerpColor = Color.Lerp(startColor, newColor, scale);
                 mesh.colors32[vertIndex] = lerpColor;
             }
@@ -125,10 +125,12 @@ namespace UMA
             };
         }
 #if UNITY_EDITOR
-        public override void DoGUI()
+        public override bool DoGUI()
         {
+            EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             color = EditorGUILayout.ColorField("Color", color);
+            return EditorGUI.EndChangeCheck();
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -157,28 +159,28 @@ namespace UMA
     public class VertexDeltaAdjustment : VertexAdjustment
     {
         public Vector3 delta;
-        public static void Apply(MeshDetails mesh, MeshDetails src, VertexDeltaAdjustment[] adjustments)
+        public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             if (!mesh.verticesModified)
             {
                 mesh.vertices = (Vector3[])src.vertices.Clone();
                 mesh.verticesModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.vertices[adjustments[i].vertexIndex] += adjustments[i].delta;
+                mesh.vertices[adjustments[i].vertexIndex] += (adjustments[i] as VertexDeltaAdjustment).delta;
             }
         }
-        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexDeltaAdjustment[] adjustments, float scale)
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
         {
             if (!mesh.verticesModified)
             {
                 mesh.vertices = (Vector3[])src.vertices.Clone();
                 mesh.verticesModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.vertices[adjustments[i].vertexIndex] += (adjustments[i].delta * scale);
+                mesh.vertices[adjustments[i].vertexIndex] += ((adjustments[i] as VertexDeltaAdjustment).delta * scale);
             }
         }
 
@@ -213,10 +215,12 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
-        public override void DoGUI()
+        public override bool DoGUI()
         {
+            EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             delta = EditorGUILayout.Vector3Field("Delta", delta);
+            return EditorGUI.EndChangeCheck();
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -241,30 +245,34 @@ namespace UMA
     public class VertexScaleAdjustment : VertexAdjustment
     {
         public float scale;
-        public static void Apply(MeshDetails mesh, MeshDetails src, VertexScaleAdjustment[] adjustments)
+#if UNITY_EDITOR
+        public Vector3 basePos;
+        public bool basePosSet = false;
+#endif
+        public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             if (!mesh.verticesModified)
             {
                 mesh.vertices = (Vector3[])src.vertices.Clone();
                 mesh.verticesModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
                 int vertIndex = adjustments[i].vertexIndex;
-                mesh.vertices[vertIndex] += mesh.normals[vertIndex] * adjustments[i].scale;
+                mesh.vertices[vertIndex] += mesh.normals[vertIndex] * (adjustments[i] as VertexScaleAdjustment).scale;
             }
         }
-        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexScaleAdjustment[] adjustments, float scale)
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
         {
             if (!mesh.verticesModified)
             {
                 mesh.vertices = (Vector3[])src.vertices.Clone();
                 mesh.verticesModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
                 int vertIndex = adjustments[i].vertexIndex;
-                mesh.vertices[vertIndex] += mesh.normals[vertIndex] * (adjustments[i].scale * scale);
+                mesh.vertices[vertIndex] += mesh.normals[vertIndex] * ((adjustments[i] as VertexScaleAdjustment).scale * scale);
             }
         }
 
@@ -299,10 +307,12 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
-        public override void DoGUI()
+        public override bool DoGUI()
         {
+            EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             scale = EditorGUILayout.FloatField("Scale", scale);
+            return EditorGUI.EndChangeCheck();
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -328,6 +338,10 @@ namespace UMA
     {
         public Vector3 normal;
         public Vector3 tangent;
+#if UNITY_EDITOR
+        public Vector3 bakedNormal;
+        public bool bakedNormalSet = false;
+#endif
 
         public Quaternion rotation;
         public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
@@ -410,11 +424,18 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
-        public override void DoGUI()
+        public override bool DoGUI()
         {
+            EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
-            normal = EditorGUILayout.Vector3Field("Normal", normal);
-            tangent = EditorGUILayout.Vector3Field("Tangent", tangent);
+
+            normal = EditorGUILayout.Vector3Field("Base Normal", normal);
+            tangent = EditorGUILayout.Vector3Field("Base Tangent", tangent);
+
+            Vector3 orient = rotation.eulerAngles;
+            orient  = EditorGUILayout.Vector3Field("Rotation", orient);
+            rotation = Quaternion.Euler(orient);
+            return EditorGUI.EndChangeCheck();
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -444,30 +465,30 @@ namespace UMA
     public class VertexUVAdjustment : VertexAdjustment
     {
         public Vector2 uv;
-        public static void Apply(MeshDetails mesh, MeshDetails src, VertexUVAdjustment[] adjustments)
+        public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             if (!mesh.uvModified)
             {
                 mesh.uv = (Vector2[])src.uv.Clone();
                 mesh.uvModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.uv[adjustments[i].vertexIndex] = adjustments[i].uv;
+                mesh.uv[adjustments[i].vertexIndex] = (adjustments[i] as VertexUVAdjustment).uv;
             }
         }
-        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexUVAdjustment[] adjustments, float scale)
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
         {
             if (!mesh.uvModified)
             {
                 mesh.uv = (Vector2[])src.uv.Clone();
                 mesh.uvModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
                 int vertIndex = adjustments[i].vertexIndex;
                 Vector2 startUV = mesh.uv[vertIndex];
-                Vector2 newUV = adjustments[vertIndex].uv;
+                Vector2 newUV = (adjustments[vertIndex] as VertexUVAdjustment).uv;
                 Vector2 lerpUV = Vector2.Lerp(startUV, newUV, scale);
                 mesh.uv[vertIndex] = lerpUV;
             }
@@ -504,11 +525,12 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
-        public override void DoGUI()
+        public override bool DoGUI()
         {
-
+            EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             uv = EditorGUILayout.Vector2Field("UV", uv);
+            return EditorGUI.EndChangeCheck();
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -532,7 +554,7 @@ namespace UMA
         public Vector3 delta;
         public Vector3 normal;
         public Vector3 tangent;
-        public static void Apply(MeshDetails mesh, MeshDetails src, VertexBlendshapeAdjustment[] adjustments)
+        public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             bool tangents = mesh.tangents != null;
             bool normals = mesh.normals != null;
@@ -552,15 +574,16 @@ namespace UMA
                 mesh.tangents = (Vector4[])src.tangents.Clone();
                 mesh.tangentsModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
                 int vertIndex = adjustments[i].vertexIndex;
-                mesh.vertices[vertIndex] += adjustments[i].delta;
-                if (normals) mesh.normals[vertIndex] = adjustments[i].normal;
-                if (tangents) mesh.tangents[vertIndex] = new Vector4(adjustments[i].tangent.x, adjustments[i].tangent.y, adjustments[i].tangent.z, 1);
+                var adj = adjustments[i] as VertexBlendshapeAdjustment;
+                mesh.vertices[vertIndex] += adj.delta;
+                if (normals) mesh.normals[vertIndex] = adj.normal;
+                if (tangents) mesh.tangents[vertIndex] = new Vector4(adj.tangent.x, adj.tangent.y, adj.tangent.z, 1);
             }
         }
-        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexBlendshapeAdjustment[] adjustments, float scale)
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
         {
             bool tangents = mesh.tangents != null;
             bool normals = mesh.normals != null;
@@ -580,21 +603,22 @@ namespace UMA
                 mesh.tangents = (Vector4[])src.tangents.Clone();
                 mesh.tangentsModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
-                int vertIndex = adjustments[i].vertexIndex;
-                mesh.vertices[vertIndex] += (adjustments[i].delta * scale);
+                var adj = adjustments[i] as VertexBlendshapeAdjustment;
+                int vertIndex = adj.vertexIndex;
+                mesh.vertices[vertIndex] += (adj.delta * scale);
                 if (normals)
                 {
                     Vector3 startNormal = mesh.normals[vertIndex];
-                    Vector3 newNormal = adjustments[vertIndex].normal;
+                    Vector3 newNormal = adj.normal;
                     Vector3 lerpNormal = Vector3.Lerp(startNormal, newNormal, scale);
                     mesh.normals[vertIndex] = lerpNormal;
                 }
                 if (tangents)
                 {
                     Vector3 startTangent = mesh.tangents[vertIndex];
-                    Vector3 newTangent = adjustments[vertIndex].tangent;
+                    Vector3 newTangent = adj.tangent;
                     Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
                     mesh.tangents[vertIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
                 }
@@ -633,12 +657,14 @@ namespace UMA
             };
         }
 #if UNITY_EDITOR
-        public override void DoGUI()
+        public override bool DoGUI()
         {
+            EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             delta = EditorGUILayout.Vector3Field("Delta", delta);
             normal = EditorGUILayout.Vector3Field("Normal", normal);
             tangent = EditorGUILayout.Vector3Field("Tangent", tangent);
+            return EditorGUI.EndChangeCheck();
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -664,31 +690,31 @@ namespace UMA
     {
         public int value;
         public Vector3 initialPosition;
-        public static void Apply(MeshDetails mesh, MeshDetails src, VertexResetAdjustment[] adjustments)
+        public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             if (!mesh.verticesModified)
             {
                 mesh.vertices = (Vector3[])src.vertices.Clone();
                 mesh.verticesModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.vertices[adjustments[i].vertexIndex] = adjustments[i].initialPosition;
+                mesh.vertices[adjustments[i].vertexIndex] = (adjustments[i] as VertexResetAdjustment).initialPosition;
             }
         }
 
-        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, VertexResetAdjustment[] adjustments, float scale)
+        public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
         {
             if (!mesh.verticesModified)
             {
                 mesh.vertices = (Vector3[])src.vertices.Clone();
                 mesh.verticesModified = true;
             }
-            for (int i = 0; i < adjustments.Length; i++)
+            for (int i = 0; i < adjustments.Count; i++)
             {
                 int vertIndex = adjustments[i].vertexIndex;
                 Vector3 start = mesh.vertices[vertIndex];
-                Vector3 lerp = Vector3.Lerp(start, adjustments[i].initialPosition, scale);
+                Vector3 lerp = Vector3.Lerp(start, (adjustments[i] as VertexResetAdjustment).initialPosition, scale);
                 mesh.vertices[vertIndex] = lerp;
             }
         }
@@ -725,10 +751,12 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
-        public override void DoGUI()
+        public override bool DoGUI()
         {
+            EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             value = EditorGUILayout.IntField("Value", value);
+            return EditorGUI.EndChangeCheck();
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -798,13 +826,6 @@ namespace UMA
     [Serializable]
     public class VertexColorAdjustmentCollection: VertexAdjustmentCollection
     {
-        //[SerializeField]
-        public VertexColorAdjustment[] vertexColorAdjustments
-        {
-            get { return ((VertexColorAdjustment[])vertexAdjustments.ToArray()); }
-        }
-
-
         public override bool SupportWeightedAdjustments
         {
             get { return true; }
@@ -812,12 +833,12 @@ namespace UMA
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
-            VertexColorAdjustment.Apply(mesh, src, vertexColorAdjustments);
+            VertexColorAdjustment.Apply(mesh, src, vertexAdjustments);
         }
 
         public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
         {
-            VertexColorAdjustment.ApplyScaled(mesh, src, vertexColorAdjustments, scale);
+            VertexColorAdjustment.ApplyScaled(mesh, src, vertexAdjustments, scale);
         }
 
 #if UNITY_EDITOR
@@ -857,19 +878,15 @@ namespace UMA
     [Serializable]
     public class VertexDeltaAdjustmentCollection : VertexAdjustmentCollection
     {
-        public VertexDeltaAdjustment[] vertexDeltaAdjustments
-        {
-            get { return (VertexDeltaAdjustment[])vertexAdjustments.ToArray(); }
-        }
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
-            VertexDeltaAdjustment.Apply(mesh, src, vertexDeltaAdjustments);
+            VertexDeltaAdjustment.Apply(mesh, src, vertexAdjustments);
         }
 
         public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
         {
-            VertexDeltaAdjustment.ApplyScaled(mesh, src, vertexDeltaAdjustments, scale);
+            VertexDeltaAdjustment.ApplyScaled(mesh, src, vertexAdjustments, scale);
         }
     
 #if UNITY_EDITOR
@@ -912,19 +929,15 @@ namespace UMA
             get { return true; }
         }
 
-        public VertexScaleAdjustment[] vertexScaleAdjustments
-        {
-            get { return (VertexScaleAdjustment[])vertexAdjustments.ToArray(); }
-        }
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
-            VertexScaleAdjustment.Apply(mesh, src, vertexScaleAdjustments);
+            VertexScaleAdjustment.Apply(mesh, src, vertexAdjustments);
         }
 
         public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
         {
-            VertexScaleAdjustment.ApplyScaled(mesh, src, vertexScaleAdjustments, scale);
+            VertexScaleAdjustment.ApplyScaled(mesh, src, vertexAdjustments, scale);
         }
 
 #if UNITY_EDITOR
@@ -1011,19 +1024,15 @@ namespace UMA
     [Serializable]
     public class VertexUVAdjustmentCollection : VertexAdjustmentCollection
     {
-        public VertexUVAdjustment[] vertexUVAdjustments
-        {
-            get { return (VertexUVAdjustment[])vertexAdjustments.ToArray(); }
-        }
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
-            VertexUVAdjustment.Apply(mesh, src, vertexUVAdjustments);
+            VertexUVAdjustment.Apply(mesh, src, vertexAdjustments);
         }
 
         public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
         {
-            VertexUVAdjustment.ApplyScaled(mesh, src, vertexUVAdjustments, scale);
+            VertexUVAdjustment.ApplyScaled(mesh, src, vertexAdjustments, scale);
         }
 #if UNITY_EDITOR
 
@@ -1062,19 +1071,14 @@ namespace UMA
     [Serializable]
     public class VertexBlendshapeAdjustmentCollection : VertexAdjustmentCollection
     {
-        public VertexBlendshapeAdjustment[] vertexBlendshapeAdjustments
-        {
-            get { return (VertexBlendshapeAdjustment[])vertexAdjustments.ToArray(); }
-        }
-
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
-            VertexBlendshapeAdjustment.Apply(mesh, src, vertexBlendshapeAdjustments);
+            VertexBlendshapeAdjustment.Apply(mesh, src, vertexAdjustments);
         }
 
         public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
         {
-            VertexBlendshapeAdjustment.ApplyScaled(mesh, src, vertexBlendshapeAdjustments, scale);
+            VertexBlendshapeAdjustment.ApplyScaled(mesh, src, vertexAdjustments, scale);
         }
 #if UNITY_EDITOR
         public override VertexAdjustment Create()
@@ -1111,19 +1115,14 @@ namespace UMA
     [Serializable]
     public class VertexResetAdjustmentCollection : VertexAdjustmentCollection
     {
-        public VertexResetAdjustment[] vertexResetAdjustments
-        {
-            get { return (VertexResetAdjustment[])vertexAdjustments.ToArray(); }
-        }
-
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
-            VertexResetAdjustment.Apply(mesh, src, vertexResetAdjustments);
+            VertexResetAdjustment.Apply(mesh, src, vertexAdjustments);
         }
 
         public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
         {
-            VertexResetAdjustment.ApplyScaled(mesh, src, vertexResetAdjustments, scale);
+            VertexResetAdjustment.ApplyScaled(mesh, src, vertexAdjustments, scale);
         }
 #if UNITY_EDITOR
 
