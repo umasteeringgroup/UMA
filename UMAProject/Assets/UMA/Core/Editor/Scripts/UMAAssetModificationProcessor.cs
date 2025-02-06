@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 
@@ -13,7 +12,7 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-            if (EditorPrefs.GetBool("UMA_POSTPROCESS_ALL_ASSETS", false))
+            if (UMASettings.PostProcessAllAssets)
             {
                 // don't call if it's the indexer that's being updated!!!
                 if (UMAAssetIndexer.Instance != null)
@@ -24,4 +23,3 @@ namespace UMA.CharacterSystem
         }
     }
 }
-#endif

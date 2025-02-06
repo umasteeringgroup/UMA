@@ -62,6 +62,7 @@ namespace UMA.Editors
 				}
 			}
 
+			/*
 	        foreach (var animator in Transform.FindObjectsOfType(typeof(Animator)) as Animator[])
 	        {
 	            var asset = UmaTPose.CreateInstance<UmaTPose>();
@@ -96,7 +97,7 @@ namespace UMA.Editors
                 AssetDatabase.CreateAsset(asset, path+"/" + name + "_TPose.asset");
 	            EditorUtility.SetDirty(asset);
 	            AssetDatabase.SaveAssets();
-	        }
+	        }*/
 	    }
 	}
 }

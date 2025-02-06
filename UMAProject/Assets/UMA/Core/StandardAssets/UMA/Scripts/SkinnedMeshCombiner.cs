@@ -181,6 +181,10 @@ namespace UMA
 			Vector2[] uv3 = has_uv3 ? EnsureArrayLength(target.uv3, vertexCount) : null;
 			Vector2[] uv4 = has_uv4 ? EnsureArrayLength(target.uv4, vertexCount) : null;
 			Color32[] colors32 = has_colors32 ? EnsureArrayLength(target.colors32, vertexCount) : null;
+
+
+
+
 			UMABlendShape[] blendShapes = has_blendShapes ? new UMABlendShape[blendShapeNames.Keys.Count] : null;
 			UMATransform[] umaTransforms = EnsureArrayLength(target.umaBones, transformHierarchyCount);
 			ClothSkinningCoefficient[] clothSkinning = has_clothSkinning ? EnsureArrayLength(target.clothSkinning, vertexCount) : null;
@@ -585,8 +589,16 @@ namespace UMA
 			target.SlotName = source.SlotName;
 			target.ManagedBonesPerVertex = source.ManagedBonesPerVertex;
 			target.ManagedBoneWeights = source.ManagedBoneWeights;
+			target.colors32Modified = false;
+            target.normalsModified = false;
+            target.tangentsModified = false;
+            target.uvModified = false;
+            target.uv2Modified = false;
+            target.uv3Modified = false;
+            target.uv4Modified = false;
+			target.verticesModified = false;
 
-			if (triangleMask != null)
+            if (triangleMask != null)
 			{
 				target.submeshes = new SubMeshTriangles[source.subMeshCount];
 

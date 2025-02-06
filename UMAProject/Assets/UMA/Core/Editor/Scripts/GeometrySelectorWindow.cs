@@ -19,12 +19,12 @@ namespace UMA.Editors
         private Vector3 _occluderScale = Vector3.one;
         private bool bothDirections = false;
 
-        private bool isMirroring = false;
+        private static bool isMirroring = false;
         private bool doneEditing = false; //set to true to end editing this objects
         private bool showWireframe = true; //whether to switch to wireframe mode or not
-        private bool backfaceCull = true; 
-        private bool isSelecting = false; //is the user actively selecting
-        private bool setSelectedOn = true; //whether to set the triangles to selected or unselection when using selection box
+        private static bool backfaceCull = true;
+        private static bool isSelecting = false; //is the user actively selecting
+        private static bool setSelectedOn = true; //whether to set the triangles to selected or unselection when using selection box
         private bool cancelSave = false; // Set this to true to cancel save;
         private Vector2 startMousePos;
         private Texture2D textureMap;
@@ -611,26 +611,12 @@ namespace UMA.Editors
                 }
             }
 
-            //Single mouse click
+            //Single mouse click -- 
             if (Event.current != null && Event.current.type == EventType.MouseDown && Event.current.button == 0)
             {
                 isSelecting = true;
                 startMousePos = Event.current.mousePosition;
-                int mirrorHit = -1;
-
-                int triangleHit = RayPick(isMirroring,out mirrorHit);
-
-                if (triangleHit >= 0)
-                {
-                    _Source.selectedTriangles[triangleHit] = !_Source.selectedTriangles[triangleHit];
-                    if (isMirroring && mirrorHit != -1)
-                    {
-                        // Mirror triangle should be the same as the hit triangle regardless of previous selection.
-                        _Source.selectedTriangles[mirrorHit] = _Source.selectedTriangles[triangleHit];
-                    }
-                    _Source.UpdateSelectionMesh();
-                }
-            }
+            } 
 
             if (Event.current != null && Event.current.type == EventType.MouseUp && Event.current.button == 0)
             {

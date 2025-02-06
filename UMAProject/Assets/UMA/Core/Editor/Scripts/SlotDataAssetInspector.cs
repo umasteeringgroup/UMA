@@ -27,17 +27,17 @@ namespace UMA.Editors
 		SerializedProperty smooshOffset;
 		SerializedProperty smooshExpand;
 		SlotDataAsset slot;
-		SlotDataAsset.Welding lastWeld = null;
 		SlotDataAsset WeldToSlot = null;
 
 		bool CopyNormals;
 		bool CopyBoneWeights;
 		UMA.SlotDataAsset.BlendshapeCopyMode blendshapeCopyMode;
-		bool AverageNormals;
+		UMA.SlotDataAsset.NormalCopyMode normalCopyMode;
+        bool AverageNormals;
 		float weldDistance = 0.0001f;
 		bool reConfigurePreview = false;
-
-		private int selectedRaceIndex = -1;
+		private static string lastInfo = "";
+        private int selectedRaceIndex = -1;
 		private List<RaceData> foundRaces = new List<RaceData>();
 		private List<string> foundRaceNames = new List<string>();
 
@@ -161,13 +161,13 @@ namespace UMA.Editors
 			}
 		}
 
-		private void UpdateSourceAsset(SlotDataAsset sda)
+		/*private void UpdateSourceAsset(SlotDataAsset sda)
 		{
 			if (sda != null)
 			{
 				lastWeld = slot.CalculateWelds(sda, CopyNormals, CopyBoneWeights, AverageNormals, Vector3.kEpsilon, SlotDataAsset.BlendshapeCopyMode.None);
 			}
-		}
+		}*/
 
 		public override void OnInspectorGUI()
 		{
@@ -245,7 +245,8 @@ namespace UMA.Editors
 			GUILayout.EndHorizontal();
 			if (slot.smooshFoldout)
 			{
-				GUILayout.Space(10);
+                #region Smooshing
+                GUILayout.Space(10);
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 				EditorGUILayout.HelpBox("Smooshing is a feature that conforms one slot to another using a clipping plane. Smoosh Offset is used to adjust the offset of the conforming vertexes to help assist conforming and fitting. Smoosh Expand expands scales the vertexes. ", MessageType.Info);
 
@@ -265,10 +266,11 @@ namespace UMA.Editors
 					forceUpdate = true;
 				}
 				GUIHelper.EndVerticalPadded(10);
-			}
+                #endregion
+            }
 
 
-			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 			slot.tagsFoldout = EditorGUILayout.Foldout(slot.tagsFoldout, "Tags");
 			GUILayout.EndHorizontal();
 
@@ -301,10 +303,10 @@ namespace UMA.Editors
 			}
 
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
-			slot.welldingFoldout = EditorGUILayout.Foldout(slot.welldingFoldout, "Welding");
+			slot.utilitiesFoldout = EditorGUILayout.Foldout(slot.utilitiesFoldout, "Slot Utilities");
 			GUILayout.EndHorizontal();
 
-			if (slot.welldingFoldout)
+			if (slot.utilitiesFoldout)
 			{
 				#region WELDS
 
@@ -336,16 +338,114 @@ namespace UMA.Editors
 
 
 
-				WeldToSlot = EditorGUILayout.ObjectField("Drop slot here to create weld", WeldToSlot, typeof(SlotDataAsset), false) as SlotDataAsset;
+				WeldToSlot = EditorGUILayout.ObjectField("Source SLot", WeldToSlot, typeof(SlotDataAsset), false) as SlotDataAsset;
 
-				weldDistance = EditorGUILayout.FloatField("Weld Distance", weldDistance);
-				CopyBoneWeights = EditorGUILayout.Toggle("Copy Boneweights", CopyBoneWeights);
-				CopyNormals = EditorGUILayout.Toggle("Copy Normals", CopyNormals);
-				AverageNormals = EditorGUILayout.Toggle("Average Normals", AverageNormals);
-				blendshapeCopyMode = (UMA.SlotDataAsset.BlendshapeCopyMode)EditorGUILayout.EnumPopup("Blendshape Copy Mode", blendshapeCopyMode);
+				weldDistance = EditorGUILayout.FloatField("Max Vertex Distance", weldDistance);
+				//CopyBoneWeights = EditorGUILayout.Toggle("Copy Boneweights", CopyBoneWeights);
+				//CopyNormals = EditorGUILayout.Toggle("Copy Normals", CopyNormals);
+				//AverageNormals = EditorGUILayout.Toggle("Average Normals", AverageNormals);
 
 
+
+
+
+
+
+				if (WeldToSlot == null)
+				{
+					EditorGUI.BeginDisabledGroup(true);
+				}
+				string weldSlotName = WeldToSlot != null ? WeldToSlot.slotName : "No Slot Selected";
+				/*
+                if (GUILayout.Button("Perform Weld"))
+				{
+					lastWeld = slot.CalculateWelds(WeldToSlot, CopyNormals, CopyBoneWeights, AverageNormals, weldDistance, blendshapeCopyMode);
+					forceUpdate = true;
+				}
+
+                if (GUILayout.Button($"Clear Weld"))
+                {
+                    lastWeld = null;
+                    forceUpdate = true;
+                }*/
 				GUILayout.Box("Warning! averaging normals will update both slots!", GUILayout.ExpandWidth(true));
+
+				if (GUILayout.Button($"Copy boneweights"))
+				{
+					lastInfo = slot.CopyBoneweightsFrom(WeldToSlot);
+				}
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Normal Copy Mode", GUILayout.Width(150));
+
+				normalCopyMode = (UMA.SlotDataAsset.NormalCopyMode)EditorGUILayout.EnumPopup(normalCopyMode, GUILayout.Width(130));
+				if (GUILayout.Button($"Copy Normals"))
+				{
+					lastInfo = slot.CopyNormalsFrom(WeldToSlot, weldDistance, normalCopyMode);
+				}
+				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Blendshape Copy Mode", GUILayout.Width(150));
+				blendshapeCopyMode = (UMA.SlotDataAsset.BlendshapeCopyMode)EditorGUILayout.EnumPopup(blendshapeCopyMode, GUILayout.Width(130));
+
+				if (GUILayout.Button($"Copy Blendshapes"))
+				{
+					lastInfo = slot.CopyBlendshapesFrom(WeldToSlot, blendshapeCopyMode);
+				}
+				GUILayout.EndHorizontal();
+
+				if (!string.IsNullOrEmpty(lastInfo))
+				{
+					EditorGUILayout.HelpBox(lastInfo, MessageType.Info);
+				}
+
+				if (WeldToSlot == null)
+				{
+					EditorGUI.EndDisabledGroup();
+				}
+                #region info
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				GUILayout.Label("This mesh"); 
+
+				GUILayout.BeginHorizontal();
+                GUILayout.Label("  Vertices: ",GUILayout.Width(160));
+				GUILayout.Label($"{slot.meshData.vertices.Length}", GUILayout.Width(160));
+				GUILayout.Label("", GUILayout.ExpandWidth(true));
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("  BoneWeights: ", GUILayout.Width(160));
+                GUILayout.Label($"{slot.meshData.ManagedBoneWeights.Length}", GUILayout.Width(160));
+                GUILayout.Label("", GUILayout.ExpandWidth(true));
+                GUILayout.EndHorizontal();
+                if (WeldToSlot != null)
+                {
+					GUILayout.Space(10);
+                    GUILayout.Label("Source Mesh");
+                    GUILayout.BeginHorizontal();
+					GUILayout.Label("  Vertices: ", GUILayout.Width(160));
+                    GUILayout.Label($"{WeldToSlot.meshData.vertices.Length}", GUILayout.Width(160));
+                    GUILayout.Label("", GUILayout.ExpandWidth(true));
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("  BoneWeights: ", GUILayout.Width(160));
+                    GUILayout.Label($"{WeldToSlot.meshData.ManagedBoneWeights.Length}", GUILayout.Width(160));
+                    GUILayout.Label("", GUILayout.ExpandWidth(true));
+                    GUILayout.EndHorizontal();
+
+
+
+
+                    //GUILayout.Label("Vertices: " + WeldToSlot.meshData.vertices.Length);
+                    //GUILayout.Label("BoneWeights: " + WeldToSlot.meshData.boneWeights.Length);
+                }
+
+                GUIHelper.EndVerticalPadded(10);
+                #endregion
+
+                #region Preview
+
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
 				SlotPreviewMode newPreviewMode = (SlotPreviewMode)EditorGUILayout.EnumPopup("Preview Mode", previewMode);
 				if (meshToPreview != null)
@@ -401,42 +501,32 @@ namespace UMA.Editors
 							MeshPreview = null;
 						}
 					}
-				}
 
-				if (WeldToSlot == null)
-				{
-					EditorGUI.BeginDisabledGroup(true);
-				}
-				if (GUILayout.Button("Perform Weld"))
-				{
-					lastWeld = slot.CalculateWelds(WeldToSlot, CopyNormals, CopyBoneWeights, AverageNormals, weldDistance, blendshapeCopyMode);
-					forceUpdate = true;
-				}
-				if (WeldToSlot == null)
-				{
-					EditorGUI.EndDisabledGroup();
-				}
+					#endregion
 
-				int lastWeldCount = 0;
-				int lastWeldMismatch = 0;
-				if (lastWeld != null)
-				{
-					lastWeldCount = lastWeld.WeldPoints.Count;
-					lastWeldMismatch = lastWeld.MisMatchCount;
-				}
+					/*
+					int lastWeldCount = 0;
+					int lastWeldMismatch = 0;
+					if (lastWeld != null)
+					{
+						lastWeldCount = lastWeld.WeldPoints.Count;
+						lastWeldMismatch = lastWeld.MisMatchCount;
+					}
 
-				if (lastWeld != null)
-				{
-					GUILayout.Label($"Last Weld: {lastWeldCount} points, {lastWeld.MisMatchCount} mismatches", GUILayout.ExpandWidth(true));
+					if (lastWeld != null)
+					{
+						GUILayout.Label($"Last Weld: {lastWeldCount} points, {lastWeld.MisMatchCount} mismatches", GUILayout.ExpandWidth(true));
+					}
+					else
+					{
+						GUILayout.Label($"Last Weld: None", GUILayout.ExpandWidth(true));
+					}*/
+					#endregion
 				}
-				else
-				{
-					GUILayout.Label($"Last Weld: None", GUILayout.ExpandWidth(true));
-				}
-				#endregion
-			}
+                GUIHelper.EndVerticalPadded(10);
+            }
 
-			foreach (var t in targets)
+            foreach (var t in targets)
 			{
 				var slotDataAsset = t as SlotDataAsset;
 				if (slotDataAsset != null)

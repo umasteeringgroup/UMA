@@ -13,12 +13,15 @@ MonoBehaviour:
   m_Name: uma_mat_diffuse_normal_ao
   m_EditorClassIdentifier: 
   translateSRP: 1
-  material: {fileID: 2100000, guid: 9d7d2d6a4ae596a4989bd6728ae1131a, type: 2}
+  AutoSetSRPMaterials: 1
+  _material: {fileID: 2100000, guid: 9d7d2d6a4ae596a4989bd6728ae1131a, type: 2}
+  _secondPass: {fileID: 0}
+  srpMaterials: []
   materialType: 1
   channels:
   - channelType: 4
     textureFormat: 0
-    materialPropertyName: _MainTex
+    materialPropertyName: _BaseMap
     sourceTextureName: 
     Compression: 0
     DownSample: 0
@@ -47,3 +50,5 @@ MonoBehaviour:
   shaderParms: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
+  MaterialName: 
+  ShaderName: 

@@ -27,6 +27,15 @@ public class FPSCounter : MonoBehaviour
             _frameRateSamples = new int[_averageFromAmount];
         }
     }
+
+    private void OnGUI()
+    {
+        if (Text == null)
+        {
+            Vector2 TopLeft = new Vector2(Screen.width - 100, 10);
+            GUI.Label(new Rect(TopLeft.x, TopLeft.y, 100, 20), _currentAveraged.ToString());
+        }
+    }
     void Update()
     {
         // Sample
@@ -54,13 +63,16 @@ public class FPSCounter : MonoBehaviour
         if (updateTime <= 0.0f)
         // Assign to UI
         {
-            Text.text = _currentAveraged switch
+            if (Text != null)
             {
-                var x when x >= 0 && x < _cacheNumbersAmount => CachedNumberStrings[x],
-                var x when x >= _cacheNumbersAmount => $"> {_cacheNumbersAmount}",
-                var x when x < 0 => "< 0",
-                _ => "?"
-            };
+                Text.text = _currentAveraged switch
+                {
+                    var x when x >= 0 && x < _cacheNumbersAmount => CachedNumberStrings[x],
+                    var x when x >= _cacheNumbersAmount => $"> {_cacheNumbersAmount}",
+                    var x when x < 0 => "< 0",
+                    _ => "?"
+                };
+            }
             updateTime = updateRate;
         }
     }

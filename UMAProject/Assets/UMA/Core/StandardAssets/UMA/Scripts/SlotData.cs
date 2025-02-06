@@ -28,6 +28,16 @@ namespace UMA
 
         public string[] Races;
 
+        public List<MeshModifier.Modifier> meshModifiers = new List<MeshModifier.Modifier>();
+
+        public bool hasAdjustments
+        {
+            get
+            {
+                return meshModifiers.Count > 0;
+            }
+        }
+
         public bool isBlendShapeSource
         {
             get { return !string.IsNullOrEmpty(blendShapeTargetSlot); }
@@ -324,7 +334,7 @@ namespace UMA
             res.smooshInvertY = smooshInvertY;
             res.smooshInvertZ = smooshInvertZ;
             res.smooshInvertDist = smooshInvertDist;
-
+            res.meshModifiers = new List<MeshModifier.Modifier>(meshModifiers);
             return res;
         }
 

@@ -569,7 +569,7 @@ namespace UMA
         {
             mesh.subMeshCount = 1;
             mesh.triangles = new int[0];
-            mesh.vertices = TranslateVertices(meshData.vertices,umaData);
+            mesh.vertices = TranslateVertices(meshData.GetVertices(),umaData);
             mesh.normals = meshData.normals;
             mesh.tangents = meshData.tangents;
             mesh.uv = meshData.uv;

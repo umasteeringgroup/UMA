@@ -165,7 +165,7 @@ namespace UMA
 			{
 				generatedMaterialLookup.Clear();
 			}
-			backUpTexture = umaData.backUpTextures();
+			//backUpTexture = umaData.backUpTextures();
 			umaData.CleanTextures();
 			generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
 			atlassedMaterials.Clear();
@@ -177,6 +177,7 @@ namespace UMA
 			for (int i = 0; i < slots.Length; i++)
 			{
 				SlotData slot = slots[i];
+
 				if (slot == null)
                 {
                     continue;
@@ -438,10 +439,6 @@ namespace UMA
 									}
 								}
 							}
-							else
-                            {
-                                Debug.LogWarning("UMAData.UMARecipe.sharedColors is null");
-                            }
                         }
 						else
 						{
@@ -477,10 +474,11 @@ namespace UMA
 			GenerateAtlasData();
 			OptimizeAtlas();
 
-			textureProcesser.ProcessTexture(_umaData,_umaGenerator);
 
-			CleanBackUpTextures();
- 			UpdateUV();
+            textureProcesser.ProcessTexture(_umaData,_umaGenerator);
+            // CleanBackUpTextures();
+
+            UpdateUV();
 
 			// Procedural textures were done here 
 			if (updateMaterialList)
@@ -914,22 +912,24 @@ namespace UMA
 			{
 				var material = umaAtlasList.materials[atlasIndex];
 
-                if (material.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
-                {
-                    if (material.materialFragments != null)
-                    {
-                        for (int i = 0; i < material.materialFragments.Count; i++)
-                        {
-                            MaterialFragment fragment = material.materialFragments[i];
-                            SlotData sd = fragment.slotData;
-                            sd.skinnedMeshRenderer = 0;
-                            sd.submeshIndex = 0;
-                            sd.vertexOffset = 0;
-                            sd.UVArea.Set(0, 0, 1.0f, 1.0f);
-                        }
-                    }
-                    continue;
-                }
+				// JRRM: Test
+				//if (material.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
+				if (!material.umaMaterial.IsGeneratedTextures)
+				{
+					if (material.materialFragments != null)
+					{
+						for (int i = 0; i < material.materialFragments.Count; i++)
+						{
+							MaterialFragment fragment = material.materialFragments[i];
+							SlotData sd = fragment.slotData;
+							sd.skinnedMeshRenderer = 0;
+							sd.submeshIndex = 0;
+							sd.vertexOffset = 0;
+							sd.UVArea.Set(0, 0, 1.0f, 1.0f);
+						}
+					}
+					continue;
+				}
 
 				Vector2 finalAtlasAspect = new Vector2(umaGenerator.atlasResolution / material.cropResolution.x, umaGenerator.atlasResolution / material.cropResolution.y);
 

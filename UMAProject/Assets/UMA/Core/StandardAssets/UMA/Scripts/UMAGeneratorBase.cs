@@ -49,6 +49,9 @@ namespace UMA
 		[Tooltip("Default Renderer Asset to use for the generated SkinnedMeshRenderer")]
         public UMARendererAsset defaultRendererAsset;
 
+		public bool MultiThreadTextureConversion = true;
+		public int MaxQueuedConversionsPerFrame = 8;
+
         [NonSerialized]
 		public bool FreezeTime;
 

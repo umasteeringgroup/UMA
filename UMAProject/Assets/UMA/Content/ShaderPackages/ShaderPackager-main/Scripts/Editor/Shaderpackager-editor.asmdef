@@ -1,7 +1,9 @@
 {
     "name": "Shaderpackager-editor",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:a0792b212a555914396dda56372bbfdf"
+    ],
     "includePlatforms": [
         "Editor"
     ],

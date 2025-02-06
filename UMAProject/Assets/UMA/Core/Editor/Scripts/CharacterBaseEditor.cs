@@ -1496,7 +1496,7 @@ namespace UMA.Editors
                     _slotData.smooshInvertY = EditorGUILayout.Toggle("Invert Smoosh Y", _slotData.smooshInvertY);
                     _slotData.smooshInvertZ = EditorGUILayout.Toggle("Invert Smoosh Z", _slotData.smooshInvertZ);
                     EditorGUILayout.HelpBox("Override Target Tag and Smooshed Tag are used to override the default tags to find the target and smooshed slots. This is useful if you have multiple clipping planes and want to use different tags for each one. By default, the target is " +
-                        " 'smooshtarget' and the smooshed slot is 'smooshable'", MessageType.Info);
+                        " 'Smooshtarget' and the smooshed slot is 'Smooshable'", MessageType.Info);
                     _slotData.smooshTargetTag = EditorGUILayout.TextField("Override Target Tag", _slotData.smooshTargetTag);
                     _slotData.smooshableTag = EditorGUILayout.TextField("Override Smooshed Tag", _slotData.smooshableTag);
 
@@ -2058,7 +2058,8 @@ namespace UMA.Editors
 
             bool originalInstanceTransformed = _overlayData.instanceTransformed;
             float originalRotation = _overlayData.Rotation;
-            Vector3 originalScale = _overlayData.Scale;
+            Vector2 originalScale = _overlayData.Scale;
+            Vector2 originalTranslate = _overlayData.Translate;
 
             if (_overlayData.asset.material != null && _overlayData.asset.material.materialType == UMAMaterial.MaterialType.UseExistingTextures)
             {
@@ -2081,9 +2082,12 @@ namespace UMA.Editors
             if (_overlayData.instanceTransformed)
             {
                 GUIHelper.BeginVerticalPadded(5, new Color(1, 1, 1, 1));
-                EditorGUILayout.HelpBox("Warning: scaling and/rotation could result in writing outside the bounds of the texture on the atlas. Be sure to use only in safe areas.", MessageType.Info);
+                EditorGUILayout.HelpBox("Warning: translating, scaling or rotation could result in writing outside the bounds of the texture on the atlas. Be sure to use only in safe areas.", MessageType.Info);
                 _overlayData.Rotation = EditorGUILayout.FloatField("Rotation", _overlayData.Rotation);
-                _overlayData.Scale = EditorGUILayout.Vector3Field("Scale", _overlayData.Scale);
+                _overlayData.Scale = EditorGUILayout.Vector2Field("Scale", _overlayData.Scale);
+                EditorGUILayout.LabelField("Translation: ");
+                _overlayData.Translate.x = EditorGUILayout.Slider("X:",_overlayData.Translate.x * 100.0f, -100.0f, 100.0f) / 100.0f;
+                _overlayData.Translate.y = EditorGUILayout.Slider("Y:", _overlayData.Translate.y * 100.0f, -100.0f, 100.0f) / 100.0f;
                 GUIHelper.EndVerticalPadded(5);
             }
 
@@ -2098,6 +2102,10 @@ namespace UMA.Editors
             }
 
             if (_overlayData.Scale != originalScale)
+            {
+                changed = true;
+            }
+            if (_overlayData.Translate != originalTranslate)
             {
                 changed = true;
             }
@@ -2795,44 +2803,42 @@ namespace UMA.Editors
                 UMATextRecipe theRecipe = target as UMATextRecipe;
 #if UMA_ADDRESSABLES
                 bool changed = false;
-				if(!serializedObject.isEditingMultipleObjects) 
-				{  
-					bool wasEnabled = GUI.enabled; 
-					GUI.enabled = false;  
-				string newLabel = EditorGUILayout.TextField("Alt Addressable Label", theRecipe.label);
-				if (newLabel != theRecipe.label)
-				{
-					theRecipe.label = newLabel;
-					_needsUpdate = true;
-					_forceUpdate = true;
-				}
-				// GUIContent ToggleContent = new GUIContent("Resources Only", "When checked, This recipe will be skipped when generating Addressable Groups. This can result in duplicate assets.");
-				if (theRecipe.resourcesOnly)
-				{
-					GUILayout.Label("RESOURCES ONLY: TRUE");
-					EditorGUILayout.HelpBox("Removing the Resources Only flag will instruct UMA to include this in the addressable groups. You will need to regenerate the groups, and rebuild the addressable bundles.", MessageType.Info);
-					if (GUILayout.Button("Remove Resources Only flag"))
-					{
-						theRecipe.resourcesOnly = false;
-						DoUpdate();
-						RebuildIfNeeded();
-						/* Here: Ask to rebuild the groups using the default group builder */
-					}
-				}
-				else
-				{
-					GUILayout.Label("RESOURCES ONLY: FALSE");
-					EditorGUILayout.HelpBox("Making this Resources Only will remove this recipe, and the items contained in it, from the addressable groups. This can take a few moments. Addressable bundles will need to be rebuilt after this is toggled.", MessageType.Info);
-					if (GUILayout.Button("Make this Resources Only"))
-					{
-						theRecipe.resourcesOnly = true;
-						DoUpdate();
-						/* Here: Ask to rebuild the groups using the default group builder */
-						RebuildIfNeeded();
-					}
-				}
-					GUI.enabled = wasEnabled; 
-				} 
+                if (!serializedObject.isEditingMultipleObjects)
+                {
+
+                    string newLabel = EditorGUILayout.TextField("Alt Addressable Label", theRecipe.label);
+                    if (newLabel != theRecipe.label)
+                    {
+                        theRecipe.label = newLabel;
+                        _needsUpdate = true;
+                        _forceUpdate = true;
+                    }
+                    // GUIContent ToggleContent = new GUIContent("Resources Only", "When checked, This recipe will be skipped when generating Addressable Groups. This can result in duplicate assets.");
+                    if (theRecipe.resourcesOnly)
+                    {
+                        GUILayout.Label("RESOURCES ONLY: TRUE");
+                        EditorGUILayout.HelpBox("Removing the Resources Only flag will instruct UMA to include this in the addressable groups. You will need to regenerate the groups, and rebuild the addressable bundles.", MessageType.Info);
+                        if (GUILayout.Button("Remove Resources Only flag"))
+                        {
+                            theRecipe.resourcesOnly = false;
+                            DoUpdate();
+                            RebuildIfNeeded();
+                            /* Here: Ask to rebuild the groups using the default group builder */
+                        }
+                    }
+                    else
+                    {
+                        GUILayout.Label("RESOURCES ONLY: FALSE");
+                        EditorGUILayout.HelpBox("Making this Resources Only will remove this recipe, and the items contained in it, from the addressable groups. This can take a few moments. Addressable bundles will need to be rebuilt after this is toggled.", MessageType.Info);
+                        if (GUILayout.Button("Make this Resources Only"))
+                        {
+                            theRecipe.resourcesOnly = true;
+                            DoUpdate();
+                            /* Here: Ask to rebuild the groups using the default group builder */
+                            RebuildIfNeeded();
+                        }
+                    }
+                } 
                 EditorGUILayout.HelpBox("Checking ForceKeep will set the keep flag on the item", MessageType.Info);
                 bool oldForceKeep = theRecipe.forceKeep;
                 theRecipe.forceKeep = EditorGUILayout.Toggle("Force Keep", theRecipe.forceKeep);
@@ -2872,6 +2878,7 @@ namespace UMA.Editors
                 //return;
                 //TODO If we can find out if the recipe has a string and we DONT have an UMAContextBase we could disable editing (so the user doesn't screw up their recipes
             }
+
             EditorGUI.BeginDisabledGroup(editBustedRecipe == false);
 
             try
@@ -2886,6 +2893,7 @@ namespace UMA.Editors
                 {
                     Rebuild();
                 }
+
 
                 if (PreInspectorGUI())
                 {

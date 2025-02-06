@@ -17,7 +17,9 @@ namespace UMA
         public static string splitter =  ";" ;
 
         public static string vectorprecision = "{0:F4},{1:F4},{2:F4},{3:F4}";
+        public static string transformprecision = "{0:F4},{1:F4},{2:F4},{3:F4},{4:F4}";
         public static char[] vectorsplitter = { ',' }; // needs to correspond to the format string above.
+        public string stringRepresentation = "";
 
         public string name;
         public abstract void Apply(Material mpb, int overlayNumber);
@@ -80,6 +82,18 @@ namespace UMA
                     return new UMAComputeBufferProperty() { name = str[2] };
                 case "ConstantComputeBuffer":
                     return new UMAConstantComputeBufferProperty() { name = str[2] };
+                case "OverlayTransform":
+                    string[] transform = str[1].Split(vectorsplitter);
+
+                    float transformx = Convert.ToSingle(transform[0], CultureInfo.InvariantCulture);
+                    float transformy = Convert.ToSingle(transform[1], CultureInfo.InvariantCulture);
+                    float rotate = Convert.ToSingle(transform[2], CultureInfo.InvariantCulture);
+                    float scalex = Convert.ToSingle(transform[3], CultureInfo.InvariantCulture);
+                    float scaley = Convert.ToSingle(transform[4], CultureInfo.InvariantCulture);
+                    return new UMAOverlayTransformProperty(new Vector2(transformx, transformy), rotate, new Vector2(scalex, scaley)) { name = str[2] };
+                default:
+                    Debug.LogError("Unknown Material Property type: " + str[0]);
+                    break;
             }
             return null;
         }
@@ -110,6 +124,62 @@ namespace UMA
         }
 #endif
     }
+
+    [Serializable]
+    public class UMAOverlayTransformProperty : UMAProperty
+    {
+        public Vector2 Translate;
+        public float Rotate;
+        public Vector2 Scale = new Vector2(1, 1);
+
+        public UMAOverlayTransformProperty()
+        {
+
+        }
+
+        public UMAOverlayTransformProperty(Vector2 translate, float rotate, Vector2 scale)
+        {
+            Translate = translate;
+            Rotate = rotate;
+            Scale = scale;
+        }
+
+        public override void Apply(Material mpb, int overlayNumber)
+        {
+            // Do nothing
+        }
+        public override UMAProperty Clone()
+        {
+            return new UMAOverlayTransformProperty(Translate, Rotate, Scale)
+            {
+                name = this.name
+            };
+        }
+        public override string ToString()
+        {
+            return "OverlayTransform" + splitter + Translate.x.ToString(precision, CultureInfo.InvariantCulture) + "," + Translate.y.ToString(precision, CultureInfo.InvariantCulture) + "," + Rotate.ToString(precision, CultureInfo.InvariantCulture) + "," + Scale.x.ToString(precision, CultureInfo.InvariantCulture) + "," + Scale.y.ToString(precision, CultureInfo.InvariantCulture)+splitter+name;
+        }
+
+#if UNITY_EDITOR
+        public override bool OnGUI()
+        {
+            bool retval = base.OnGUI();
+
+            //EditorGUILayout.BeginHorizontal();
+            ///Value = EditorGUILayout.FloatField("Float Value", Value);
+            //EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.HelpBox("Warning: translating, scaling or rotation could result in writing outside the bounds of the texture on the atlas. Be sure to use only in safe areas.", MessageType.Info);
+            Rotate = EditorGUILayout.FloatField("Rotation", Rotate);
+            Scale = EditorGUILayout.Vector2Field("Scale", Scale);
+            EditorGUILayout.LabelField("Translation: ");
+            Translate.x = EditorGUILayout.Slider("UV X Offset:", Translate.x * 100.0f, -100.0f, 100.0f) / 100.0f;
+            Translate.y = EditorGUILayout.Slider("UV Y Offset:", Translate.y * 100.0f, -100.0f, 100.0f) / 100.0f;
+            return retval;
+        }
+#endif
+    }
+
 
     [Serializable]
     public class UMAFloatProperty : UMAProperty
@@ -518,6 +588,7 @@ namespace UMA
     [Serializable] 
     public class PropertyHolder
     {
+        public UMAOverlayTransformProperty p12;
         public UMAFloatProperty p11;
         public UMAColorProperty p10;
         public UMAVectorProperty p9;
@@ -594,6 +665,11 @@ namespace UMA
                 return p11;
             }
 
+            if (propertType == "UMAOverlayTransformProperty")
+            {
+                return p12;
+            }
+            Debug.Log("Unknown property type: " + propertType);
             return null;
         }
         public UMAProperty property
@@ -605,6 +681,10 @@ namespace UMA
             set
             {
                 propertType = value.GetType().Name;
+                if (value is UMAOverlayTransformProperty)
+                {
+                    p12 = value as UMAOverlayTransformProperty;
+                }
                 if (value is UMAFloatProperty)
                 {
                     p11 = value as UMAFloatProperty;
@@ -799,7 +879,9 @@ namespace UMA
                     UMAProperty up = shaderProperties[i];
                     if (up != null)
                     {
-                        serializedProperties.Add(new PropertyHolder(up));
+                        up.stringRepresentation = up.ToString();
+                        PropertyHolder ph = new PropertyHolder(up);
+                        serializedProperties.Add(ph);
                     }
                 }
             }
@@ -816,9 +898,14 @@ namespace UMA
                 shaderProperties = new List<UMAProperty>();
                 for (int i = 0; i < serializedProperties.Count; i++)
                 {
+                    if (serializedProperties[i] == null)
+                    {
+                        Debug.Log("Skipping null property");
+                        continue;
+                    }
+                    //Debug.Log("Adding property to shaderProperties " + serializedProperties[i].property.name);
                     PropertyHolder p = serializedProperties[i];
                     AddProperty(p.property);
-                    
                 }
             }
         }

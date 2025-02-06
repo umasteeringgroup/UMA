@@ -16,10 +16,21 @@ namespace UMA
                 return;
             }
 
-            if (EditorPrefs.GetString("UMA_VERSION", "0") != UmaAboutWindow.umaVersion)
+            var settings = UMASettings.GetOrCreateSettings();
+            if (settings == null)
             {
+                return;
+            }
+
+            
+            if (!settings.Initialized)
+            {
+                settings.Initialized = true;
                 EnsureTags();
                 EnsureUMAIndicators();
+                EditorUtility.SetDirty(settings);
+                AssetDatabase.SaveAssetIfDirty(settings);
+
                 UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
                 if (UAI == null)
                 {
@@ -72,7 +83,6 @@ namespace UMA
                         EditorUtility.DisplayDialog("UMA " + UmaAboutWindow.umaVersion, "You can rebuild or restore the library from the Global Library window accessable from the UMA menu above.", "OK");
                         break;
                 }
-                EditorPrefs.SetString("UMA_VERSION", UmaAboutWindow.umaVersion);
             }
         }
 

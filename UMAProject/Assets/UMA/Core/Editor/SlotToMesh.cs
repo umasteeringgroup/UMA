@@ -3,6 +3,7 @@ using UMA;
 using Unity.Collections;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class SlotToMesh : EditorWindow
 {
@@ -149,7 +150,7 @@ public class SlotToMesh : EditorWindow
 
     public static Mesh ConvertSlotToMesh(SlotDataAsset slot)
     {
-        Mesh mesh = new Mesh();
+        Mesh mesh = new Mesh()        { indexFormat = IndexFormat.UInt32};
         mesh.vertices = slot.meshData.vertices;
         mesh.uv = slot.meshData.uv;
         mesh.normals = slot.meshData.normals;
@@ -180,7 +181,8 @@ public class SlotToMesh : EditorWindow
 
     public static Mesh ConvertSlotToMesh(SlotDataAsset slot, Quaternion Rotation, int VertexHighlight)
     {
-        Mesh mesh = new Mesh();
+        Mesh mesh = new Mesh() { indexFormat = IndexFormat.UInt32 };
+
         mesh.vertices = slot.meshData.vertices;
         mesh.uv = slot.meshData.uv;
         mesh.normals = slot.meshData.normals;
@@ -216,7 +218,8 @@ public class SlotToMesh : EditorWindow
             }
             Sphere.vertices = vertices;
 
-            Mesh combinedMesh = new Mesh();
+            Mesh combinedMesh = new Mesh() { indexFormat = IndexFormat.UInt32 };
+
             CombineInstance[] combine = new CombineInstance[2];
             combine[0].mesh = mesh;
             combine[0].transform = rot;
@@ -232,7 +235,8 @@ public class SlotToMesh : EditorWindow
             CombineInstance[] combineInstances = new CombineInstance[1];
             combineInstances[0].mesh = mesh;
             combineInstances[0].transform = rot;
-            Mesh combinedMesh = new Mesh();
+            Mesh combinedMesh = new Mesh() { indexFormat = IndexFormat.UInt32 };
+
             combinedMesh.CombineMeshes(combineInstances, false, true, false);
             DestroyImmediate(mesh);
             return combinedMesh;

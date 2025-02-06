@@ -15,7 +15,8 @@ namespace UMA
     [PreferBinarySerialization]
     public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider, IUMAIndexOptions
     {
-        public enum BlendshapeCopyMode { None, ClearAndReplace, UpdateAndAdd, AddNewOnly }
+        public enum BlendshapeCopyMode {UpdateAndAdd, ClearAndReplace, AddNewOnly }
+        public enum NormalCopyMode {CopyNormals, AverageNormals }
         public string slotName;
         [System.NonSerialized]
         public int nameHash;
@@ -296,6 +297,137 @@ namespace UMA
 
         }
 
+
+        public string CopyBoneweightsFrom(SlotDataAsset sourceSlot)
+        {
+            int foundcount = 0;
+            int notfoundcount = 0;
+            EnsureBoneWeights();
+            sourceSlot.EnsureBoneWeights();
+
+            BuildVertexLookups(sourceSlot);
+            BuildBoneLookups(sourceSlot);
+            BuildOurAndTheirBoneWeights(sourceSlot);
+
+            Dictionary<int, List<BoneWeight1>> NewBoneWeights = new Dictionary<int, List<BoneWeight1>>();
+
+            for (int ourVertex = 0; ourVertex < meshData.ManagedBonesPerVertex.Length; ourVertex++)
+            {
+
+                bool found = false;
+                int theirVertex = OurVertextoTheirVertex[ourVertex];
+                if (theirVertex == 1785)
+                {
+                    Debug.Log("RightEar hash is " + UMAUtils.StringToHash("RightEar"));
+                    Debug.Log("Breakpoint");
+                }
+                List<BoneWeight1> CurrentWeights = new List<BoneWeight1>();
+                if (TheirBoneWeights.ContainsKey(theirVertex))
+                {
+                    var ourBones = OurBoneWeights[ourVertex];
+                    var theirBones = TheirBoneWeights[theirVertex];
+
+                    for (int i = 0; i < theirBones.Count; i++)
+                    {
+                        BoneWeight1 bw = theirBones[i];
+                        if (!TheirBonesToOurBones.ContainsKey(bw.boneIndex))
+                        {
+                            found = false;
+                            break;
+                        }
+                        found = true;
+                        int ourBone = TheirBonesToOurBones[bw.boneIndex];
+
+                        BoneWeight1 newBW = new BoneWeight1();
+                        newBW.boneIndex = ourBone;
+                        newBW.weight = bw.weight;
+                        CurrentWeights.Add(newBW);
+                    }
+                }
+
+                // if we found all of them, use those boneweights.
+                if (found)
+                {
+                    NewBoneWeights.Add(ourVertex, CurrentWeights);
+                    foundcount++;
+                }
+                else
+                {
+                    // if we didn't find all of them, use the boneweights we already have.
+                    List<BoneWeight1> oldWeights = OurBoneWeights[ourVertex];
+                    NewBoneWeights.Add(ourVertex, oldWeights);
+                    notfoundcount++;
+                }
+            }
+            List<BoneWeight1> allNewWeights = new List<BoneWeight1>();
+            // now save all the boneweights.
+            for (int ourVertex = 0; ourVertex < meshData.ManagedBonesPerVertex.Length; ourVertex++)
+            {
+                int numWeights = meshData.ManagedBonesPerVertex[ourVertex];
+                List<BoneWeight1> weights = NewBoneWeights[ourVertex];
+                allNewWeights.AddRange(weights);
+                meshData.ManagedBonesPerVertex[ourVertex] = (byte)weights.Count;
+            }
+            meshData.ManagedBoneWeights = allNewWeights.ToArray();
+            return $"Old weights {meshData.ManagedBoneWeights.Length} new weights is {allNewWeights.Count} Found {foundcount} boneweights, and {notfoundcount} boneweights were not found.";
+        }
+
+        public string CopyBlendshapesFrom(SlotDataAsset sourceSlot,BlendshapeCopyMode bs)
+        {
+            return CopyBlendShapes(sourceSlot, bs);
+        }
+
+        public string CopyNormalsFrom(SlotDataAsset sourceSlot, float weldDistance, NormalCopyMode nm)
+        {
+            int foundVerts = 0;
+            int unfoundVerts = 0;
+            int changedVertexes = 0;
+
+            for (int Dest = 0; Dest < sourceSlot.meshData.vertices.Length; Dest++)
+            {
+                for (int Src = 0; Src < meshData.vertices.Length; Src++)
+                {
+                    Vector3 TheirVert = sourceSlot.meshData.vertices[Dest];
+                    Vector3 ourVert = meshData.vertices[Src];
+                    float Len = (TheirVert - ourVert).magnitude;
+                    if (Len < weldDistance)
+                    {
+                        foundVerts++;
+                        float Normaldiff = (meshData.normals[Src] - sourceSlot.meshData.normals[Dest]).magnitude;
+                        if (Normaldiff != 0)
+                        {
+                            changedVertexes++;
+                            if (nm == NormalCopyMode.CopyNormals)
+                            {
+                                meshData.normals[Src] = sourceSlot.meshData.normals[Dest];
+                                if (meshData.tangents != null && sourceSlot.meshData.tangents != null)
+                                {
+                                    meshData.tangents[Src] = sourceSlot.meshData.tangents[Dest];
+                                }
+
+                            }
+                            else
+                            {
+                                meshData.normals[Src] = (sourceSlot.meshData.normals[Dest] + meshData.normals[Src]).normalized;
+                                if (meshData.tangents != null && sourceSlot.meshData.tangents != null)
+                                {
+                                    meshData.tangents[Src] = (sourceSlot.meshData.tangents[Dest] + meshData.tangents[Src]).normalized;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        unfoundVerts++;
+                    }
+                }
+            }
+
+            string result = $"Found {foundVerts} verts\n{unfoundVerts} verts were not found\n{changedVertexes} verts had different normals, and were updated.";
+            return "";
+        }
+
+        /*
         public Welding CalculateWelds(SlotDataAsset sourceSlot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals, float weldDistance, BlendshapeCopyMode bscopyMode )
         {
             Welding thisWeld = new Welding();
@@ -440,7 +572,7 @@ namespace UMA
             }
 
             return thisWeld;
-        }
+        } */
 
         int FindBlendshape(string Name)
         {
@@ -454,8 +586,12 @@ namespace UMA
             return -1;
         }
 
-        private void CopyBlendShapes(SlotDataAsset slot, BlendshapeCopyMode bscopyMode)
+        private string CopyBlendShapes(SlotDataAsset slot, BlendshapeCopyMode bscopyMode)
         {
+            int updateCount = 0;
+            int addedCount = 0;
+            int skippedCount = 0;
+
             BuildVertexLookups(slot);
             if (bscopyMode == BlendshapeCopyMode.ClearAndReplace)
             {
@@ -469,16 +605,19 @@ namespace UMA
                 // if we are only adding new ones, and it already exists, then just skip it.
                 if (bscopyMode == BlendshapeCopyMode.AddNewOnly && foundBlendshape != -1)
                 {
+                    skippedCount++;
                     continue;
                 }
 
                 if (foundBlendshape != -1)
                 {
+                    updateCount++;
                     // if we are updating and adding, then update the existing one if it exists.
                     meshData.blendShapes[foundBlendshape] = slot.meshData.blendShapes[i].DuplicateAndTranslate(OurVertextoTheirVertex);
                 }
                 else
                 {
+                    addedCount++;
                     // Doesn't exist, so add it.
                     var shapes = new List<UMABlendShape>();
                     shapes.AddRange(meshData.blendShapes);
@@ -486,6 +625,7 @@ namespace UMA
                     meshData.blendShapes = shapes.ToArray();
                 }
             }
+            return $"Updated {updateCount} blendshapes, added {addedCount} blendshapes, skipped {skippedCount} blendshapes.";
         }
 
         public bool HasErrors
@@ -536,7 +676,9 @@ namespace UMA
         public bool eventsFoldout { get; set; } = false;
         public bool tagsFoldout { get; set; } = false;
         public bool smooshFoldout { get; set; } = false;
-        public bool welldingFoldout { get; set; } = false;
+        public bool utilitiesFoldout { get; set; } = false;
+
+
 
 #endif
 
@@ -856,7 +998,7 @@ namespace UMA
             return "SlotData: " + slotName;
         }
 
-        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment=false, int submeshIndex=-1)
+        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment, int submeshIndex)
         {
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;
@@ -867,7 +1009,7 @@ namespace UMA
 #endif
         }
 
-        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer)
+       /* public void OldpdateMeshData(SkinnedMeshRenderer meshRenderer)
         {
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;
@@ -875,7 +1017,7 @@ namespace UMA
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
-        }
+        }*/
 
 
         public void OnEnable()
