@@ -29,6 +29,10 @@ namespace UMA
 
         public abstract VertexAdjustment ShallowCopy();
 
+        public abstract void Apply(MeshDetails mesh, MeshDetails src);
+
+        public abstract void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale);
+
         public VertexAdjustment()
         {
             weight = 1.0f;
@@ -52,6 +56,27 @@ namespace UMA
     {
         public Color32 color;
 
+        override public void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            if (weight != 1.0f)
+            {
+                ApplyScaled(mesh, src, 1.0f);
+            }
+            else
+            {
+                mesh.colors32[vertexIndex] = color;
+            }
+        }
+
+        override public void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            scale *= weight;
+            Color startColor = mesh.colors32[vertexIndex];
+            Color newColor = color;
+            Color lerpColor = Color.Lerp(startColor, newColor, scale);
+            mesh.colors32[vertexIndex] = lerpColor;
+        }
+
 #if UMA_BURSTCOMPILE
 		[BurstCompile]
 #endif
@@ -72,14 +97,15 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.colors32[adjustments[i].vertexIndex] = (adjustments[i] as VertexColorAdjustment).color;
+                adjustments[i].Apply(mesh, original);
+                // mesh.colors32[adjustments[i].vertexIndex] = (adjustments[i] as VertexColorAdjustment).color;
             }
         }
 #if UMA_BURSTCOMPILE
 		[BurstCompile]
 #endif
         public static void ApplyScaled(MeshDetails mesh, MeshDetails original, List<VertexAdjustment> adjustments, float scale)
-        {
+        {    
             if (!mesh.colors32Modified)
             {
                 mesh.colors32 = (Color32[])original.colors32.Clone();
@@ -87,11 +113,12 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                int vertIndex = adjustments[i].vertexIndex;
+                adjustments[i].ApplyScaled(mesh, original, scale);
+/*                int vertIndex = adjustments[i].vertexIndex;
                 Color startColor = mesh.colors32[vertIndex];
                 Color newColor = (adjustments[vertIndex] as VertexColorAdjustment).color;
                 Color lerpColor = Color.Lerp(startColor, newColor, scale);
-                mesh.colors32[vertIndex] = lerpColor;
+                mesh.colors32[vertIndex] = lerpColor; */
             }
         }
 
@@ -159,6 +186,25 @@ namespace UMA
     public class VertexDeltaAdjustment : VertexAdjustment
     {
         public Vector3 delta;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            if (weight != 1.0f)
+            {
+                ApplyScaled(mesh, src, 1.0f);
+            }
+            else
+            {
+                mesh.vertices[vertexIndex] += delta;
+            }
+        }
+
+        override public void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            scale *= weight;
+            mesh.vertices[vertexIndex] += (delta * scale);
+        }
+
         public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             if (!mesh.verticesModified)
@@ -168,7 +214,8 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.vertices[adjustments[i].vertexIndex] += (adjustments[i] as VertexDeltaAdjustment).delta;
+                adjustments[i].Apply(mesh, src);
+                //mesh.vertices[adjustments[i].vertexIndex] += (adjustments[i] as VertexDeltaAdjustment).delta;
             }
         }
         public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
@@ -180,7 +227,8 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.vertices[adjustments[i].vertexIndex] += ((adjustments[i] as VertexDeltaAdjustment).delta * scale);
+                adjustments[i].ApplyScaled(mesh, src, scale);
+                // mesh.vertices[adjustments[i].vertexIndex] += ((adjustments[i] as VertexDeltaAdjustment).delta * scale);
             }
         }
 
@@ -249,6 +297,24 @@ namespace UMA
         public Vector3 basePos;
         public bool basePosSet = false;
 #endif
+        override public void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            if (weight != 1.0f)
+            {
+                ApplyScaled(mesh, src, 1.0f);
+            }
+            else
+            {
+                mesh.vertices[vertexIndex] += mesh.normals[vertexIndex] * scale;
+            }
+        }
+
+        override public void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            scale *= weight;
+            mesh.vertices[vertexIndex] += mesh.normals[vertexIndex] * (this.scale * scale);
+        }
+
         public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             if (!mesh.verticesModified)
@@ -258,8 +324,9 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                int vertIndex = adjustments[i].vertexIndex;
-                mesh.vertices[vertIndex] += mesh.normals[vertIndex] * (adjustments[i] as VertexScaleAdjustment).scale;
+                adjustments[i].Apply(mesh, src);
+                //int vertIndex = adjustments[i].vertexIndex;
+                // mesh.vertices[vertIndex] += mesh.normals[vertIndex] * (adjustments[i] as VertexScaleAdjustment).scale;
             }
         }
         public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
@@ -271,8 +338,9 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                int vertIndex = adjustments[i].vertexIndex;
-                mesh.vertices[vertIndex] += mesh.normals[vertIndex] * ((adjustments[i] as VertexScaleAdjustment).scale * scale);
+                adjustments[i].ApplyScaled(mesh, src, scale);
+//                int vertIndex = adjustments[i].vertexIndex;
+//                mesh.vertices[vertIndex] += mesh.normals[vertIndex] * ((adjustments[i] as VertexScaleAdjustment).scale * scale);
             }
         }
 
@@ -343,6 +411,33 @@ namespace UMA
         public bool bakedNormalSet = false;
 #endif
 
+        override public void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            if (weight != 1.0f)
+            {
+                ApplyScaled(mesh, src, 1.0f);
+            }
+            else
+            {
+                mesh.normals[vertexIndex] = rotation * normal;
+                mesh.tangents[vertexIndex] = rotation * tangent;
+            }
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            scale *= weight;
+            Vector3 startNormal = mesh.normals[vertexIndex];
+            Vector3 newNormal = rotation * normal;
+            Vector3 lerpNormal = Vector3.Lerp(startNormal, newNormal, scale);
+            mesh.normals[vertexIndex] = lerpNormal;
+
+            Vector3 startTangent = mesh.tangents[vertexIndex];
+            Vector3 newTangent = rotation * tangent;
+            Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
+            mesh.tangents[vertexIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
+        }
+
         public Quaternion rotation;
         public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
@@ -358,15 +453,16 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                int vertIndex = adjustments[i].vertexIndex;
-                VertexNormalAdjustment van = adjustments[i] as VertexNormalAdjustment;
-                mesh.normals[vertIndex] = van.rotation * van.normal;
-                mesh.tangents[vertIndex] = van.rotation * van.tangent;
+                adjustments[i].Apply(mesh, src);
+                //int vertIndex = adjustments[i].vertexIndex;
+                //VertexNormalAdjustment van = adjustments[i] as VertexNormalAdjustment;
+                //mesh.normals[vertIndex] = van.rotation * van.normal;
+                //mesh.tangents[vertIndex] = van.rotation * van.tangent;
             }
         }
 
         public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
-        {
+        {            
             if (!mesh.normalsModified)
             {
                 mesh.normals = (Vector3[])src.normals.Clone();
@@ -377,9 +473,11 @@ namespace UMA
                 mesh.tangents = (Vector4[])src.tangents.Clone();
                 mesh.tangentsModified = true;
             }
+
             for (int i = 0; i < adjustments.Count; i++)
             {
-                VertexNormalAdjustment van = adjustments[i] as VertexNormalAdjustment;
+                adjustments[i].ApplyScaled(mesh, src, scale);
+                /*VertexNormalAdjustment van = adjustments[i] as VertexNormalAdjustment;
                 int vertIndex = adjustments[i].vertexIndex;
                 Vector3 startNormal = mesh.normals[vertIndex];
                 Vector3 newNormal = van.rotation * van.normal;
@@ -388,7 +486,7 @@ namespace UMA
                 Vector3 startTangent = mesh.tangents[vertIndex];
                 Vector3 newTangent = van.rotation * van.tangent;
                 Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
-                mesh.tangents[vertIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
+                mesh.tangents[vertIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);*/
             }
         }
 
@@ -465,6 +563,28 @@ namespace UMA
     public class VertexUVAdjustment : VertexAdjustment
     {
         public Vector2 uv;
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            if (weight != 1.0f)
+            {
+                ApplyScaled(mesh, src, 1.0f);
+            }
+            else
+            {
+                mesh.uv[vertexIndex] = uv;
+            }
+        }
+
+        override public void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            scale *= weight;
+            Vector2 startUV = mesh.uv[vertexIndex];
+            Vector2 newUV = uv;
+            Vector2 lerpUV = Vector2.Lerp(startUV, newUV, scale);
+            mesh.uv[vertexIndex] = lerpUV;
+        }
+
         public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             if (!mesh.uvModified)
@@ -474,7 +594,8 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.uv[adjustments[i].vertexIndex] = (adjustments[i] as VertexUVAdjustment).uv;
+                adjustments[i].Apply(mesh, src);
+                //mesh.uv[adjustments[i].vertexIndex] = (adjustments[i] as VertexUVAdjustment).uv;
             }
         }
         public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
@@ -486,11 +607,12 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                int vertIndex = adjustments[i].vertexIndex;
+                adjustments[i].ApplyScaled(mesh, src, scale);
+/*                int vertIndex = adjustments[i].vertexIndex;
                 Vector2 startUV = mesh.uv[vertIndex];
                 Vector2 newUV = (adjustments[vertIndex] as VertexUVAdjustment).uv;
                 Vector2 lerpUV = Vector2.Lerp(startUV, newUV, scale);
-                mesh.uv[vertIndex] = lerpUV;
+                mesh.uv[vertIndex] = lerpUV; */
             }
         }
 
@@ -554,6 +676,42 @@ namespace UMA
         public Vector3 delta;
         public Vector3 normal;
         public Vector3 tangent;
+
+        override public void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            if (weight != 1.0f)
+            {
+                ApplyScaled(mesh, src, 1.0f);
+            }
+            else
+            {
+                mesh.vertices[vertexIndex] += delta;
+                mesh.normals[vertexIndex] = normal;
+                mesh.tangents[vertexIndex] = new Vector4(tangent.x, tangent.y, tangent.z, 1);
+            }
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            scale *= weight;
+
+            mesh.vertices[vertexIndex] += (delta * scale);
+            if (mesh.normals != null)
+            {
+                Vector3 startNormal = mesh.normals[vertexIndex];
+                Vector3 newNormal = normal;
+                Vector3 lerpNormal = Vector3.Lerp(startNormal, newNormal, scale);
+                mesh.normals[vertexIndex] = lerpNormal;
+            }
+            if (mesh.tangents != null)
+            {
+                Vector3 startTangent = mesh.tangents[vertexIndex];
+                Vector3 newTangent = tangent;
+                Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
+                mesh.tangents[vertexIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
+            }
+        }
+
         public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             bool tangents = mesh.tangents != null;
@@ -605,7 +763,8 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                var adj = adjustments[i] as VertexBlendshapeAdjustment;
+                adjustments[i].ApplyScaled(mesh, src, scale);
+/*                var adj = adjustments[i] as VertexBlendshapeAdjustment;
                 int vertIndex = adj.vertexIndex;
                 mesh.vertices[vertIndex] += (adj.delta * scale);
                 if (normals)
@@ -621,7 +780,7 @@ namespace UMA
                     Vector3 newTangent = adj.tangent;
                     Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
                     mesh.tangents[vertIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
-                }
+                } */
             }
         }
 
@@ -690,6 +849,27 @@ namespace UMA
     {
         public int value;
         public Vector3 initialPosition;
+
+        override public void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            if (weight != 1.0f)
+            {
+                ApplyScaled(mesh, src, 1.0f);
+            }
+            else
+            {
+                mesh.vertices[vertexIndex] = initialPosition;
+            }
+        }
+
+        override public void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            scale *= weight;
+            Vector3 start = mesh.vertices[vertexIndex];
+            Vector3 lerp = Vector3.Lerp(start, initialPosition, scale);
+            mesh.vertices[vertexIndex] = lerp;
+        }
+
         public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
         {
             if (!mesh.verticesModified)
@@ -712,10 +892,11 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                int vertIndex = adjustments[i].vertexIndex;
+                adjustments[i].ApplyScaled(mesh, src, scale);
+/*                int vertIndex = adjustments[i].vertexIndex;
                 Vector3 start = mesh.vertices[vertIndex];
                 Vector3 lerp = Vector3.Lerp(start, (adjustments[i] as VertexResetAdjustment).initialPosition, scale);
-                mesh.vertices[vertIndex] = lerp;
+                mesh.vertices[vertIndex] = lerp; */
             }
         }
 

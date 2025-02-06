@@ -365,12 +365,10 @@ public class VertexEditorStage : PreviewSceneStage
             bool changed = DoGizmoInput();
             if (changed)
             {
-                Debug.Log("Changed");
                 modifierEditor.Repaint();
 
                 if (modifierEditor.RebuildOnChanges)
                 {
-                    Debug.Log("Rebuild");
                     modifierEditor.DoCharacterRebuildWithUpdates();
                 }
             }
@@ -1344,7 +1342,6 @@ public class VertexEditorStage : PreviewSceneStage
                 //gb.GenerateSingleUMA(thisDCA.umaData, true);
                 RestoreSuppressedSlots(suppressed);
             }
-            Debug.Log("Generating UMA");
             // always have to rebuild because the slots are regenerated
             thisDCA.umaData.Dirty(false, true, true); // have to rebuild materials and mesh if we drop out slots
             gb.GenerateSingleUMA(thisDCA.umaData, true);

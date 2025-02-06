@@ -311,6 +311,7 @@ namespace UMA
                     {
                         SetActive(va,false);
                     }
+
                 }
 
                 //if (FoldOuts[pos])
@@ -326,6 +327,10 @@ namespace UMA
             if (RemoveMe != null)
             {
                 vertexEditorStage.RemoveVertexAdjustment(RemoveMe);
+                if (RebuildOnChanges)
+                {
+                    DoCharacterRebuildWithUpdates();
+                }
             }
             EditorGUILayout.EndScrollView();
         }
@@ -366,7 +371,7 @@ namespace UMA
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.9f, 0.9f, 1f));
                 GUILayout.Label("Editor Active", centeredLabel);
-                SetActive(va, va.Gizmo != VertexAdjustmentGizmo.None);
+                SetActive(va, true);
                 activeCount++;
             }
             else
@@ -375,7 +380,13 @@ namespace UMA
             }
 
 
-            va.DoGUI();
+            if (va.DoGUI())
+            {
+                if (RebuildOnChanges)
+                {
+                    DoCharacterRebuildWithUpdates();
+                }
+            }
             if (va.Gizmo != VertexAdjustmentGizmo.None)
             {
                 if (va.active)
