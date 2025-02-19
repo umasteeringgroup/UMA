@@ -25,6 +25,7 @@ public class VertexEditorStage : PreviewSceneStage
     GameObject lightingObject = null;
     public bool NeedsCameraSetup = false;
     public bool closing = false;
+    public bool hasSaved = false;
     public DynamicCharacterAvatar thisDCA;
     public Mesh BakedMesh;
     private List<VertexSelection> SelectedVertexes = new List<VertexSelection>();
@@ -78,7 +79,21 @@ public class VertexEditorStage : PreviewSceneStage
     public MeshModifier Currentmodifier;
     public Type[] ModifierTypes;
 
-    public List<VertexAdjustment> Adjustments = new List<VertexAdjustment>();
+
+
+    private List<VertexAdjustment> _adjustments = new List<VertexAdjustment>();
+
+    public List<VertexAdjustment> Adjustments
+    {
+        get
+        {
+                return _adjustments;
+        }
+        set
+        {
+            _adjustments = value;
+        }
+    }
 
     private enum vertexState
     {
@@ -186,14 +201,70 @@ public class VertexEditorStage : PreviewSceneStage
         return null;
     }
 
+    public VertexSelection GetInternalSelection(VertexAdjustment va)
+    {
+        if (va == null)
+        {
+            return null;
+        }
+        var result = GetSelectedVertex();
+        if (result != null)
+        {
+            return result;
+        }
+        VertexSelection vs = new VertexSelection();
+        vs.slot = thisDCA.umaData.umaRecipe.FindSlot(va.slotName);
+        if (vs.slot == null)
+        {
+            return null;
+        }
+        vs.isActive = true;
+        vs.suppressed = false;
+        vs.vertexIndexOnSlot = va.vertexIndex;
+        vs.WorldPosition = GetWorldPosition(vs.slot,vs.vertexIndexOnSlot);
+        return vs;
+    }
+
+
+    public List<VertexSelection> GetVertexSelections()
+    {
+        return SelectedVertexes;
+    }
+
+    public List<VertexSelection> GetActiveSelectedVertexes()
+    {
+        List<VertexSelection> active = new List<VertexSelection>();
+        for (int i = 0; i < SelectedVertexes.Count; i++)
+        {
+            if (SelectedVertexes[i].isActive)
+            {
+                active.Add(SelectedVertexes[i]);
+            }
+        }
+        return active;
+    }
+
+    public int GetSelectedVertexCount()
+    {
+        return SelectedVertexes.Count;
+    }
+
+    public int GetActiveSelectedVertexCount()
+    {
+        int count = 0;
+        for (int i = 0; i < SelectedVertexes.Count; i++)
+        {
+            if (SelectedVertexes[i].isActive)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public void AddVertexAdjustment(VertexAdjustment adjustment)
     {
         Adjustments.Add(adjustment);
-    }
-
-    public List<VertexAdjustment> GetAdjustments()
-    {
-        return Adjustments;
     }
 
     public List<VertexAdjustment> GetVertexAdjustments()
@@ -211,6 +282,41 @@ public class VertexEditorStage : PreviewSceneStage
         centeredLabel.alignment = TextAnchor.MiddleCenter;
 
         modifierEditor = MeshModifierEditor.GetOrCreateWindowFromModifier(Currentmodifier, thisDCA, this);
+        if (Currentmodifier != null && Currentmodifier.Modifiers != null)
+        {
+            modifierEditor.Modifiers = Currentmodifier.EditorModifiers;
+            foreach (var newMod in modifierEditor.Modifiers)
+            {
+                // get the type of the VertexAdjustment for this collection
+                newMod.AfterLoading();
+                /*
+                Type adjType = Type.GetType(newMod.AdjustmentType);
+                Type colType = Type.GetType(newMod.CollectionType);
+                newMod.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(colType);
+                newMod.TemplateAdjustment = (VertexAdjustment)Activator.CreateInstance(adjType);
+                foreach(string json in newMod.JsonAdjustments)
+                {
+                    VertexAdjustment va = VertexAdjustment.FromJSON(json);
+                    if (va != null)
+                    {
+                        newMod.adjustments.Add(va);
+                    }
+                } */
+            }
+
+            foreach (string json in Currentmodifier.AdHocAdjustmentJSON)
+            {
+                VertexAdjustment va = VertexAdjustment.FromJSON(json);
+                if (va != null)
+                {
+                    Adjustments.Add(va);
+                }
+            }
+        }
+        else
+        {
+            modifierEditor.Modifiers = new List<MeshModifier.Modifier>();
+        }
         GameObject lightingObject = new GameObject("Directional Light");
         lightingObject.transform.rotation = Quaternion.Euler(50, 330, 0);
         lightingObject.AddComponent<Light>().type = LightType.Directional;
@@ -281,6 +387,32 @@ public class VertexEditorStage : PreviewSceneStage
 
     protected override void OnCloseStage()
     {
+        bool wasChanged = false;
+        /*if (!hasSaved)
+        {
+            if (modifierEditor != null)
+            {
+                // Modifier Editor was not closed first. Check for changes.
+                if (modifierEditor.Modifiers != null)
+                {
+                    if (modifierEditor.Modifiers.Count > 0)
+                    {
+                        wasChanged = true;
+                    }
+                    if (Adjustments.Count > 0)
+                    {
+                        wasChanged = true;
+                    }
+                }
+                if (wasChanged)
+                {
+                    if (EditorUtility.DisplayDialog("VertexEditorStage Save Changes", "Do you want to save the changes you made to the modifiers?", "Yes", "No"))
+                    {
+                        modifierEditor.SaveToAsset();
+                    }
+                }
+            }
+        }*/
         //AssetDatabase.StopAssetEditing();   
         closing = true;
         Tools.hidden = false;
@@ -293,6 +425,7 @@ public class VertexEditorStage : PreviewSceneStage
         {
             wearable.disabled = false;
         }
+        thisDCA.umaData.manualMeshModifiers = new List<MeshModifier.Modifier>();
         if (thisDCA.editorTimeGeneration)
         {
             thisDCA.GenerateSingleUMA();
@@ -369,7 +502,7 @@ public class VertexEditorStage : PreviewSceneStage
 
                 if (modifierEditor.RebuildOnChanges)
                 {
-                    modifierEditor.DoCharacterRebuildWithUpdates();
+                    modifierEditor.DoCharacterRebuild();
                 }
             }
         }
@@ -514,7 +647,7 @@ public class VertexEditorStage : PreviewSceneStage
 
     public void SetActive(VertexAdjustment va)
     {
-        editSelection = GetSelectedVertex();
+        editSelection = GetInternalSelection(va);
         editAdjustment = va;
     }
 
@@ -577,23 +710,41 @@ public class VertexEditorStage : PreviewSceneStage
                 newColor = ActiveColor;
             }
 
-            if (i == currentSelected && editorMode == MeshModifierEditor.EditorMode.VertexAdjustments)
+            if (i == currentSelected && editAdjustment == null && editorMode == MeshModifierEditor.EditorMode.VertexAdjustments)
             {
+                // do nothing right now
                 AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
                 float time = Time.fixedTime / blinkSpeed;
                 float val = curve.Evaluate(time % 1.0f);
-                newColor = Color.Lerp(newColor, Color.white, val);
-            }
-
-            if (newColor != LastColor)
-            {
-                LastColor = newColor;
+                newColor = Color.Lerp(Color.cyan, Color.white, val);
                 mat.SetColor("_Color", newColor);
                 mat.SetPass(0);
+                Graphics.DrawMeshNow(mesh, matrix);
+                LastColor = newColor;
             }
-            Graphics.DrawMeshNow(mesh, matrix);
+            else
+            {
+                if (newColor != LastColor)
+                {
+                    LastColor = newColor;
+                    mat.SetColor("_Color", newColor);
+                    mat.SetPass(0);
+                }
+                Graphics.DrawMeshNow(mesh, matrix);
+            }
         }
 
+        if (editAdjustment != null &&  editorMode == MeshModifierEditor.EditorMode.VertexAdjustments)
+        {
+            AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+            float time = Time.fixedTime / blinkSpeed;
+            float val = curve.Evaluate(time % 1.0f);
+            Color newColor = Color.Lerp(Color.cyan, Color.white, val);
+            Matrix4x4 matrix = Matrix4x4.TRS(editSelection.WorldPosition, Quaternion.identity, Vector3.one * HandlesSize);
+            mat.SetColor("_Color", newColor);
+            mat.SetPass(0);
+            Graphics.DrawMeshNow(mesh, matrix);
+        }
     }
 
     private bool DoGizmoInput()
@@ -655,7 +806,6 @@ public class VertexEditorStage : PreviewSceneStage
 
     private bool DoScaleGizmo()
     {
-        bool changed = false;
         VertexScaleAdjustment vas = editAdjustment as VertexScaleAdjustment;
         if (vas != null)
         {
@@ -734,6 +884,13 @@ public class VertexEditorStage : PreviewSceneStage
                 {
                     wasChanged = true;
                 }
+                if (slot.Suppressed && editAdjustment != null)
+                {
+                    if (editAdjustment.slotName == slot.slotName)
+                    {
+                        editAdjustment = null;
+                    }
+                }
                 GUILayout.Label(slot.slotName);
                 GUILayout.EndHorizontal();
 
@@ -756,7 +913,6 @@ public class VertexEditorStage : PreviewSceneStage
     }
 
     private Vector2 ToolsPos = new Vector2(0, 0);
-    private int testSize = 82;
     private GUIStyle smallButtonStyle = new GUIStyle(EditorStyles.miniButton);
     private GUIStyle threeButtonStyle = new GUIStyle(EditorStyles.miniButton);
     bool doneButton = false;
@@ -840,11 +996,13 @@ public class VertexEditorStage : PreviewSceneStage
             // Load the vertex selections
             SelectedVertexes.Clear();
             LoadSelections();
+            modifierEditor.Repaint();
         }
         if (GUILayout.Button("Append", threeButtonStyle))
         {
             // Append the vertex selections
             LoadSelections();
+            modifierEditor.Repaint();
         }
         GUILayout.EndHorizontal();
 
@@ -856,10 +1014,12 @@ public class VertexEditorStage : PreviewSceneStage
             {
                 SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
             }
+            modifierEditor.Repaint();
         }
         if (GUILayout.Button("Invert Selection", smallButtonStyle))
         {
             InvertSelection();
+            modifierEditor.Repaint();
         }
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
@@ -869,6 +1029,7 @@ public class VertexEditorStage : PreviewSceneStage
             {
                 SelectedVertexes[i].isActive = true;
             }
+            modifierEditor.Repaint();
         }
         if (GUILayout.Button("Deactivate all", smallButtonStyle))
         {
@@ -876,6 +1037,7 @@ public class VertexEditorStage : PreviewSceneStage
             {
                 SelectedVertexes[i].isActive = false;
             }
+            modifierEditor.Repaint();
         }
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
@@ -898,10 +1060,12 @@ public class VertexEditorStage : PreviewSceneStage
                     });
                 }
             }
+            modifierEditor.Repaint();
         }
         if (GUILayout.Button("Clear Selection", smallButtonStyle))
         {
             SelectedVertexes.Clear();
+            modifierEditor.Repaint();
         }
         GUILayout.EndHorizontal();
         GUIHelper.EndVerticalPadded(5);
@@ -1115,6 +1279,7 @@ public class VertexEditorStage : PreviewSceneStage
             }
         }
         EditorUtility.ClearProgressBar();
+        modifierEditor.Repaint();
     }
 
     void ActivateVertex(SlotData foundSlot, int foundVert)
@@ -1311,6 +1476,7 @@ public class VertexEditorStage : PreviewSceneStage
                 }
             }
         }
+        modifierEditor.Repaint();
         return found;
     }
 

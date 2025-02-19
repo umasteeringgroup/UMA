@@ -29,6 +29,7 @@ namespace UMA.CharacterSystem.Editors
         private string[] cachedRaceDNA = { };
         private string[] rawcachedRaceDNA = { };
         private SceneView sceneView;
+
         private MeshModifier MeshModifier = null;
 
         protected DynamicCharacterAvatar thisDCA;
@@ -764,6 +765,10 @@ namespace UMA.CharacterSystem.Editors
             {
                 VertexEditorStage.ShowStage(thisDCA,MeshModifier);
             }
+            if (GUILayout.Button("Create"))
+            {
+                VertexEditorStage.ShowStage(thisDCA, null);
+            }
 
 
             /*if (GUILayout.Button("Open vertex adjuster"))
@@ -777,13 +782,13 @@ namespace UMA.CharacterSystem.Editors
 
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
+            /*GUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Force Rebuild"))
             {
                 thisDCA.ForceUpdate(false, false, true);
             }
-            GUILayout.EndHorizontal();
+            GUILayout.EndHorizontal(); */
 
 
             // Edit weights of the selected vertex on the slot. 

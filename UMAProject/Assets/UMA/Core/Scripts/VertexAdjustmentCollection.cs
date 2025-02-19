@@ -23,7 +23,9 @@ namespace UMA
     {
         public int vertexIndex;
         public float weight;
-
+#if UNITY_EDITOR
+        public string _name;
+#endif
         public abstract string Name { get; }
         public abstract VertexAdjustmentCollection VertexAdjustmentCollection { get; }
 
@@ -33,11 +35,13 @@ namespace UMA
 
         public abstract void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale);
 
+
         public VertexAdjustment()
         {
             weight = 1.0f;
 #if UNITY_EDITOR
             active = false;
+            _name = Name;
 #endif
         }
 
@@ -47,8 +51,150 @@ namespace UMA
         public abstract bool DoGUI();
         public abstract VertexAdjustmentGizmo Gizmo { get; }
         public abstract void Init(UMAMeshData meshData);
+        public virtual void CopyFrom(VertexAdjustment other)
+        {
+            weight = other.weight;
+        }        
+        public abstract string ToJson();
+
+
+        // List of all classes that inherit from VertexAdjustment
+        private List<Type> vertexAdjustmentTypes = null;
+        public List<Type> VertexAdjustmentTypes
+        {
+            get
+            {
+                if (vertexAdjustmentTypes == null)
+                {
+                    vertexAdjustmentTypes = GetVertexAdjustmentTypes();
+                }
+                return vertexAdjustmentTypes;
+            }
+        }
+
+        public static List<Type> GetVertexAdjustmentTypes()
+        {
+            List<Type> types = new List<Type>();
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (type.IsSubclassOf(typeof(VertexAdjustment)))
+                    {
+                        types.Add(type);
+                    }
+                }
+            }
+            return types;
+        }
+
+        public static VertexAdjustment CreateVertexAdjustment(Type type)
+        {
+            return Activator.CreateInstance(type) as VertexAdjustment;
+        }
+
+        private static List<VertexAdjustment>  adjustmentTypes = new List<VertexAdjustment>();
+
+        public static List<VertexAdjustment> AdjustmentTypes
+        {
+            get
+            {
+                if (adjustmentTypes.Count == 0)
+                {
+                    foreach (var type in GetVertexAdjustmentTypes())
+                    {
+                        adjustmentTypes.Add(CreateVertexAdjustment(type));
+                    }
+                }
+                return adjustmentTypes;
+            }
+        }
+
+
+        //  This is a bit of a hack to allow us to create a new VertexAdjustment from a JSON string.
+        public static VertexAdjustment FromJSON(string json)
+        {
+            var baseValue = JsonUtility.FromJson<VertexAdjustmentDummy>(json);
+
+            if (baseValue == null)
+            {
+                Debug.LogError("Could not create base value from json : "+json);
+                return null;
+            }
+
+            foreach (var vtype in AdjustmentTypes)
+            {
+                if (vtype.Name == baseValue.Name)
+                {
+                    VertexAdjustment value = (VertexAdjustment)JsonUtility.FromJson(json, vtype.GetType());
+                    return value;
+                }
+            }
+            Debug.LogError("Could not find type " + baseValue.Name);
+            // ? How did we get here?
+            // Dunno. Return null.
+            return null;
+        }
+
 #endif
     }
+
+#if UNITY_EDITOR
+    [Serializable]
+    public class VertexAdjustmentDummy : VertexAdjustment
+    {
+        public override string Name
+        {
+            get
+            {
+                return _name;
+            }
+        }
+
+        public override VertexAdjustmentCollection VertexAdjustmentCollection
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        public override VertexAdjustmentGizmo Gizmo
+        {
+            get { return VertexAdjustmentGizmo.None; }
+        }
+
+        public override void Apply(MeshDetails mesh, MeshDetails src)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void ApplyScaled(MeshDetails mesh, MeshDetails src, float scale)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool DoGUI()
+        {
+            return false;
+        }
+
+        public override void Init(UMAMeshData meshData)
+        {
+             
+        }
+
+        public override VertexAdjustment ShallowCopy()
+        {
+            return null;
+        }
+
+        public override string ToJson()
+        {
+            return "";    
+        }
+    }
+#endif
 
 
     [Serializable]
@@ -84,7 +230,7 @@ namespace UMA
         {
             if (!mesh.colors32Modified)
             {
-                if (original.colors32 == null)
+                if (original.colors32 == null || mesh.colors32.Length == 0)
                 {
                     mesh.colors32 = new Color32[original.vertices.Length];
                 }
@@ -92,7 +238,6 @@ namespace UMA
                 {
                     mesh.colors32 = (Color32[])original.colors32.Clone();
                 }
-                mesh.colors32 = (Color32[])original.colors32.Clone();
                 mesh.colors32Modified = true;
             }
             for (int i = 0; i < adjustments.Count; i++)
@@ -108,7 +253,14 @@ namespace UMA
         {    
             if (!mesh.colors32Modified)
             {
-                mesh.colors32 = (Color32[])original.colors32.Clone();
+                if (original.colors32 == null || mesh.colors32.Length == 0)
+                {
+                    mesh.colors32 = new Color32[original.vertices.Length];
+                }
+                else
+                {
+                    mesh.colors32 = (Color32[])original.colors32.Clone();
+                }
                 mesh.colors32Modified = true;
             }
             for (int i = 0; i < adjustments.Count; i++)
@@ -158,6 +310,18 @@ namespace UMA
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             color = EditorGUILayout.ColorField("Color", color);
             return EditorGUI.EndChangeCheck();
+        }
+
+        public override string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
+
+        override public void CopyFrom(VertexAdjustment other)
+        {
+            base.CopyFrom(other);
+            color = (other as VertexColorAdjustment).color;
+            weight = other.weight;
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -263,12 +427,24 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+
+        public override string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
         public override bool DoGUI()
         {
             EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             delta = EditorGUILayout.Vector3Field("Delta", delta);
             return EditorGUI.EndChangeCheck();
+        }
+
+        override public void CopyFrom(VertexAdjustment other)
+        {
+            base.CopyFrom(other);
+            delta = (other as VertexDeltaAdjustment).delta;
+            weight = other.weight;
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -375,12 +551,24 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+
+        public override string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
         public override bool DoGUI()
         {
             EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             scale = EditorGUILayout.FloatField("Scale", scale);
             return EditorGUI.EndChangeCheck();
+        }
+
+        override public void CopyFrom(VertexAdjustment other)
+        {
+            base.CopyFrom(other);
+            scale = (other as VertexScaleAdjustment).scale;
+            weight = other.weight;
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -494,7 +682,7 @@ namespace UMA
         {
             get
             {
-                return "Set Normal";
+                return "Rotate Normal";
             }
         }
 
@@ -522,13 +710,18 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+
+        public override string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
         public override bool DoGUI()
         {
             EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
 
-            normal = EditorGUILayout.Vector3Field("Base Normal", normal);
-            tangent = EditorGUILayout.Vector3Field("Base Tangent", tangent);
+           /* normal = EditorGUILayout.Vector3Field("Base Normal", normal);
+            tangent = EditorGUILayout.Vector3Field("Base Tangent", tangent); */
 
             Vector3 orient = rotation.eulerAngles;
             orient  = EditorGUILayout.Vector3Field("Rotation", orient);
@@ -536,6 +729,12 @@ namespace UMA
             return EditorGUI.EndChangeCheck();
         }
 
+        public override void CopyFrom(VertexAdjustment other)
+        {
+            base.CopyFrom(other);
+            rotation = (other as VertexNormalAdjustment).rotation;
+            weight = other.weight;
+        }
         public override VertexAdjustmentGizmo Gizmo
         {
             get
@@ -647,12 +846,25 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+
+        public override string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
+
         public override bool DoGUI()
         {
             EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             uv = EditorGUILayout.Vector2Field("UV", uv);
             return EditorGUI.EndChangeCheck();
+        }
+
+        override public void CopyFrom(VertexAdjustment other)
+        {
+            base.CopyFrom(other);
+            uv = (other as VertexUVAdjustment).uv;
+            weight = other.weight;
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -816,6 +1028,11 @@ namespace UMA
             };
         }
 #if UNITY_EDITOR
+
+        public override string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
         public override bool DoGUI()
         {
             EditorGUI.BeginChangeCheck();
@@ -824,6 +1041,16 @@ namespace UMA
             normal = EditorGUILayout.Vector3Field("Normal", normal);
             tangent = EditorGUILayout.Vector3Field("Tangent", tangent);
             return EditorGUI.EndChangeCheck();
+        }
+
+        override public void CopyFrom(VertexAdjustment other)
+        {
+            base.CopyFrom(other);
+            VertexBlendshapeAdjustment vba = other as VertexBlendshapeAdjustment;
+            delta = vba.delta;
+            normal = vba.normal;
+            tangent = vba.tangent;
+            weight = other.weight;
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -932,12 +1159,25 @@ namespace UMA
         }
 
 #if UNITY_EDITOR
+        public override string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
+
         public override bool DoGUI()
         {
             EditorGUI.BeginChangeCheck();
             weight = EditorGUILayout.Slider("Weight", weight, 0.0f, 1.0f);
             value = EditorGUILayout.IntField("Value", value);
             return EditorGUI.EndChangeCheck();
+        }
+
+        override public void CopyFrom(VertexAdjustment other)
+        {
+            base.CopyFrom(other);
+            VertexResetAdjustment vra = other as VertexResetAdjustment;
+            value = vra.value;
+            weight = other.weight;
         }
 
         public override VertexAdjustmentGizmo Gizmo
@@ -971,6 +1211,7 @@ namespace UMA
     }
     #endregion
 
+    [Serializable]
     public abstract class VertexAdjustmentCollection
     {
         public virtual bool SupportWeightedAdjustments
@@ -989,6 +1230,11 @@ namespace UMA
         public void Add(VertexAdjustment adjustment)
         {
             vertexAdjustments.Add(adjustment);
+        }
+
+        public int Count()
+        {
+            return vertexAdjustments.Count;
         }
 
 #if UNITY_EDITOR
@@ -1062,6 +1308,11 @@ namespace UMA
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
+            if (mesh.colors32 == null)
+            {
+                mesh.colors32 = new Color32[src.vertices.Length];
+            }
+
             VertexDeltaAdjustment.Apply(mesh, src, vertexAdjustments);
         }
 
