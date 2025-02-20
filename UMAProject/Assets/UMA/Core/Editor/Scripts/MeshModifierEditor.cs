@@ -45,8 +45,8 @@ namespace UMA
         public GUIStyle centeredLabel = new GUIStyle();
         public Color backColor = Color.cyan;
         public bool editingCurrent = false;
-        public GUIStyle selectedButton = new GUIStyle(EditorStyles.miniButton);
-        public GUIStyle unselectedButton = new GUIStyle(EditorStyles.miniButton);
+        public GUIStyle selectedButton;
+        public GUIStyle unselectedButton;
         public enum EditorMode { MeshModifiers, VertexAdjustments }
         public EditorMode editorMode = EditorMode.VertexAdjustments;
 
@@ -76,6 +76,8 @@ namespace UMA
             // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
             centeredLabel = EditorStyles.boldLabel;
             centeredLabel.alignment = TextAnchor.MiddleCenter;
+            selectedButton = new GUIStyle(EditorStyles.miniButton);
+            unselectedButton = new GUIStyle(EditorStyles.miniButton);
             selectedButton.normal.textColor = Color.white;
             selectedButton.normal.background = new Texture2D(1, 1);
             selectedButton.normal.background.SetPixel(0, 0, Color.blue);
@@ -695,7 +697,14 @@ namespace UMA
             MeshModifier.Modifier currentModifier = Modifiers[currentModifierIndex];
             if (currentModifier == null)
                 return;
-
+            if (selectedType < 0 || selectedType >= ModifierTypes.Length)
+            {
+                return;
+            }
+            if (currentModifier.TemplateAdjustment == null)
+            {
+                currentModifier.EditorInitialize(ModifierTypes[selectedType]);
+            }
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField($"{currentModifier.TemplateAdjustment.Name} {currentModifier.ModifierName}" , centeredLabel);
             EditorGUILayout.LabelField($"{currentModifier.adjustments.vertexAdjustments.Count} vertexes",centeredLabel);

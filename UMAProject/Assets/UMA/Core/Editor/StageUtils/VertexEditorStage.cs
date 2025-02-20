@@ -913,8 +913,8 @@ public class VertexEditorStage : PreviewSceneStage
     }
 
     private Vector2 ToolsPos = new Vector2(0, 0);
-    private GUIStyle smallButtonStyle = new GUIStyle(EditorStyles.miniButton);
-    private GUIStyle threeButtonStyle = new GUIStyle(EditorStyles.miniButton);
+    private GUIStyle smallButtonStyle;
+    private GUIStyle threeButtonStyle;
     bool doneButton = false;
     public float ToolWindowAreaHeight = 0.0f;
     public MeshModifierEditor.EditorMode editorMode = MeshModifierEditor.EditorMode.VertexAdjustments;
@@ -923,6 +923,8 @@ public class VertexEditorStage : PreviewSceneStage
     {
         if (!doneButton)
         {
+            smallButtonStyle = new GUIStyle(EditorStyles.miniButton);
+            threeButtonStyle = new GUIStyle(EditorStyles.miniButton);
             smallButtonStyle.fontSize = 9;
             smallButtonStyle.fixedWidth = 82;
             threeButtonStyle.fontSize = 9;

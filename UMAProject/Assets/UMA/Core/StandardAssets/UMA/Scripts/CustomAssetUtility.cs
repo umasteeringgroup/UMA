@@ -118,7 +118,8 @@ namespace UMA
 				assetPathAndName = GetAssetPathAndName<T>(baseName, AddTypeToName);
 			}
 
-			AssetDatabase.CreateAsset(asset, assetPathAndName);
+			var existingasset = AssetDatabase.LoadAssetAtPath(assetPathAndName, typeof(T));
+            AssetDatabase.CreateAsset(asset, assetPathAndName);
 
 	        AssetDatabase.SaveAssets();
 			if(selectCreatedAsset)
@@ -156,9 +157,14 @@ namespace UMA
                 assetName = baseName + " " + typeof(T).Name;
             }
 
-            assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
-			return assetPathAndName;
-		}
-	}
+#if true
+			string thePath = path + "/" + assetName + ".asset";
+			return thePath;
+#else
+			assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + assetName + ".asset");
+            return assetPathAndName;
+#endif
+        }
+    }
 }
 #endif
