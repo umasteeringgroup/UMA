@@ -23,9 +23,8 @@ namespace UMA
     {
         public int vertexIndex;
         public float weight;
-#if UNITY_EDITOR
         public string _name;
-#endif
+ 
         public abstract string Name { get; }
         public abstract VertexAdjustmentCollection VertexAdjustmentCollection { get; }
 
@@ -39,9 +38,9 @@ namespace UMA
         public VertexAdjustment()
         {
             weight = 1.0f;
+            _name = Name;
 #if UNITY_EDITOR
             active = false;
-            _name = Name;
 #endif
         }
 
@@ -57,7 +56,7 @@ namespace UMA
         }        
         public abstract string ToJson();
 
-
+#endif
         // List of all classes that inherit from VertexAdjustment
         private List<Type> vertexAdjustmentTypes = null;
         public List<Type> VertexAdjustmentTypes
@@ -110,7 +109,6 @@ namespace UMA
             }
         }
 
-
         //  This is a bit of a hack to allow us to create a new VertexAdjustment from a JSON string.
         public static VertexAdjustment FromJSON(string json)
         {
@@ -135,11 +133,9 @@ namespace UMA
             // Dunno. Return null.
             return null;
         }
-
-#endif
     }
 
-#if UNITY_EDITOR
+
     [Serializable]
     public class VertexAdjustmentDummy : VertexAdjustment
     {
@@ -158,12 +154,12 @@ namespace UMA
                 return null;
             }
         }
-
+#if UNITY_EDITOR
         public override VertexAdjustmentGizmo Gizmo
         {
             get { return VertexAdjustmentGizmo.None; }
         }
-
+#endif
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
             throw new NotImplementedException();
@@ -174,6 +170,7 @@ namespace UMA
             throw new NotImplementedException();
         }
 
+#if UNITY_EDITOR
         public override bool DoGUI()
         {
             return false;
@@ -183,18 +180,19 @@ namespace UMA
         {
              
         }
-
+#endif
         public override VertexAdjustment ShallowCopy()
         {
             return null;
         }
-
+#if UNITY_EDITOR
         public override string ToJson()
         {
             return "";    
         }
-    }
 #endif
+    }
+
 
 
     [Serializable]

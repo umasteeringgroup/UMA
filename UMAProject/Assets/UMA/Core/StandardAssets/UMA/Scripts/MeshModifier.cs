@@ -10,7 +10,7 @@ namespace UMA
     [Serializable]
     // MeshModifier is a ScriptableObject that contains lists of VertexAdjustments.
     // Note: This is added to recipes 
-    public class MeshModifier : ScriptableObject
+    public class MeshModifier : ScriptableObject, ISerializationCallbackReceiver
     {
         [Serializable]
         // each slot affected, will have a modifier.
@@ -29,9 +29,10 @@ namespace UMA
             public string DNAName;
             [Tooltip("The scale value, can be set manually or from a DNA value.")]
             public float Scale = 1.0f;
+
             [Tooltip("This is the list of adjustments for the current slot.")]
             public VertexAdjustmentCollection adjustments;
-#if UNITY_EDITOR
+
             public string TemplateAdjustmentJSON;
             public string AdjustmentType;
             public string CollectionType;
@@ -40,15 +41,18 @@ namespace UMA
             public void EditorInitialize(Type collectionType)
             {
                 adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(collectionType);
+                CollectionType = collectionType.AssemblyQualifiedName;
+
+#if UNITY_EDITOR
                 Type adjustmentType = adjustments.AdjustmentType;
                 TemplateAdjustment = (VertexAdjustment)Activator.CreateInstance(adjustmentType);
-                CollectionType = collectionType.AssemblyQualifiedName;
                 AdjustmentType = adjustmentType.AssemblyQualifiedName;
+#endif
             }
 
             public void BeforeSaving()
             {
-
+#if UNITY_EDITOR
                 if (TemplateAdjustment != null)
                 {
                     TemplateAdjustmentJSON = JsonUtility.ToJson(TemplateAdjustment);
@@ -57,6 +61,7 @@ namespace UMA
                 {
                     TemplateAdjustmentJSON = "";
                 }
+#endif
                 JsonAdjustments.Clear();
                 foreach (var adj in adjustments.vertexAdjustments)
                 {
@@ -71,7 +76,9 @@ namespace UMA
                 Type adjType = Type.GetType(AdjustmentType);
                 Type colType = Type.GetType(CollectionType);
                 adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(colType);
+#if UNITY_EDITOR
                 TemplateAdjustment = VertexAdjustment.FromJSON(TemplateAdjustmentJSON);
+#endif
                 foreach (string json in JsonAdjustments)
                 {
                     VertexAdjustment va = VertexAdjustment.FromJSON(json);
@@ -81,8 +88,7 @@ namespace UMA
                     }
                 }
             }
-#endif
-            public UMAMeshData Process(UMAMeshData src)
+             public UMAMeshData Process(UMAMeshData src)
             {
                 //??
                 if (adjustments == null) return src;
@@ -127,6 +133,25 @@ namespace UMA
         // There is one modifier per slot.
         // each modifier can contain multiple adjustments.
         public List<Modifier> modifiers = new List<Modifier>();
+
+        public void OnBeforeSerialize()
+        {
+            foreach (var mod in modifiers)
+            {
+                mod.BeforeSaving();
+            }
+        }
+
+        public void OnAfterDeserialize()
+        {
+            foreach (var mod in modifiers)
+            {
+                if (mod.adjustments == null || mod.adjustments.vertexAdjustments == null || mod.adjustments.vertexAdjustments.Count == 0)
+                {
+                    mod.AfterLoading();
+                }
+            }
+        }
 
         public List<Modifier> Modifiers
         {
