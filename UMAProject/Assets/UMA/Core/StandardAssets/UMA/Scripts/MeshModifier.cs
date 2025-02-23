@@ -21,6 +21,7 @@ namespace UMA
             public bool isTemporary = false;
             public VertexAdjustment TemplateAdjustment; // contains the parameters for all the adjustments when adding.
             public bool manuallyModified = false;       // if true, the adjustments have been manually modified, and can't be updated from the template.
+            public bool keepAsIs = false;               // if true, this modifier does not need to be split, as it's already set up. Used internally for Blendshape Extraction.
 #endif
 
             [Tooltip("The name of the slot this modifier is applied to.")]

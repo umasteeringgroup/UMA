@@ -7,6 +7,7 @@ using UMA;
 using UMA.CharacterSystem;
 using UMA.Editors;
 using System;
+using System.Xml.Serialization;
 
 namespace UMA
 {
@@ -14,6 +15,10 @@ namespace UMA
     {
         public bool RebuildOnChanges = false;
         public List<MeshModifier.Modifier> Modifiers = new List<MeshModifier.Modifier>();
+        public List<string> BlendShapes = new List<string>();
+        public string[] strBlendShapes = new string[0];
+        public List<string> blendShapeSlots = new List<string>();
+        public List<bool> blendShapeSlotSelected = new List<bool>();
 
         public static MeshModifierEditor GetOrCreateWindow(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
         {
@@ -47,7 +52,7 @@ namespace UMA
         public bool editingCurrent = false;
         public GUIStyle selectedButton;
         public GUIStyle unselectedButton;
-        public enum EditorMode { MeshModifiers, VertexAdjustments }
+        public enum EditorMode { MeshModifiers, VertexAdjustments, Blendshapes }
         public EditorMode editorMode = EditorMode.VertexAdjustments;
 
         public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
@@ -102,14 +107,19 @@ namespace UMA
 
             GUIStyle VertexModeStyle = unselectedButton;
             GUIStyle MeshModifierModeStyle = unselectedButton;
+            GUIStyle BlendshapeStyle = unselectedButton;
 
             if (editorMode == EditorMode.MeshModifiers)
             {
                 MeshModifierModeStyle = selectedButton;
             }
-            else
+            else if (editorMode == EditorMode.VertexAdjustments)
             {
                 VertexModeStyle = selectedButton;
+            }
+            else
+            {
+                BlendshapeStyle = selectedButton;
             }
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             GUILayout.Label("Modifiers", centeredLabel);
@@ -157,6 +167,12 @@ namespace UMA
                 deActivateCurrentSelection();
                 vertexEditorStage.SetActive(null);
             }
+            if (GUILayout.Button("Extract Blendshapes", BlendshapeStyle))
+            {
+                editorMode = EditorMode.Blendshapes;
+                deActivateCurrentSelection();
+                vertexEditorStage.SetActive(null);
+            }
             vertexEditorStage.editorMode = editorMode;
             GUILayout.EndHorizontal();
 
@@ -164,9 +180,13 @@ namespace UMA
             {
                 DrawMeshModifiers();
             }
-            else
+            else if (editorMode == EditorMode.VertexAdjustments)
             {
                 DrawAdHocAdjustments();
+            }
+            else
+            {
+                DrawBlendshapeExtractor();
             }
         }
 
@@ -176,7 +196,7 @@ namespace UMA
             if (Path != "")
             {
                 string BaseName = System.IO.Path.GetFileNameWithoutExtension(Path);
-                MeshModifier meshModifier = CustomAssetUtility.CreateAsset<MeshModifier>(Path, false, BaseName, false);
+                MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(Path, false);
                 meshModifier.Modifiers = DoModifierSplit(false);
                 foreach (MeshModifier.Modifier mod in Modifiers)
                 {
@@ -237,6 +257,205 @@ namespace UMA
 
         public List<bool> FoldOuts = new List<bool>();
         private VertexAdjustmentCollection templateCollection = null;
+        private int currentBlendshape = 0;
+        private string[] dnaNames = new string[0];
+        private int currentDNA = 0;
+
+        private void DrawBlendshapeExtractor()
+        {
+            // Allow to select the blendshape
+            // Allow to select the slots to add.
+            // Allow to select the DNA to drive it (or use "Manual").
+            // foreach slot, 
+            //    extract Blendshape
+            //    create a modifier for it.
+            //    add all the vertexes which have changes from the base.
+            EditorGUILayout.HelpBox("Blendshape Extraction allows you to create a MeshModifier that acts as a Blendshape. You can assign it to DNA to vary the blendshape value", MessageType.Info);
+            if (BlendShapes.Count == 0)
+            {
+                var Renderer = thisDCA.umaData.GetRenderer(0);
+                if (Renderer == null)
+                {
+                    EditorGUILayout.HelpBox("No Renderer was found on this character", MessageType.Warning);
+                    return;
+                }
+                if (Renderer.sharedMesh.blendShapeCount < 1)
+                {
+                    EditorGUILayout.HelpBox("No blendshapes were found on this renderer! Please turn on blendshapes and reconstruct character", MessageType.Warning);
+                }
+                for (int i = 0; i < Renderer.sharedMesh.blendShapeCount; i++)
+                {
+                    string blShape = Renderer.sharedMesh.GetBlendShapeName(i);
+                    BlendShapes.Add(blShape);
+                }
+                strBlendShapes = BlendShapes.ToArray();
+
+                blendShapeSlots = new List<string>();
+                blendShapeSlotSelected = new List<bool>();
+                foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+                {
+                    if (slot != null)
+                    {
+                        blendShapeSlots.Add(slot.slotName);
+                        blendShapeSlotSelected.Add(false);
+                    }
+                }
+                var dnaList = thisDCA.activeRace.data.GetDNANames();
+                dnaList.Insert(0, "Manual");
+                dnaNames = dnaList.ToArray();
+            }
+            
+            currentBlendshape = EditorGUILayout.Popup("Select Blendshape",currentBlendshape, strBlendShapes);
+            currentDNA = EditorGUILayout.Popup("Select DNA", currentDNA, dnaNames);
+
+            GUIHelper.BeginVerticalPadded();
+            GUILayout.Label("Select Slots to extract blendshapes",centeredLabel);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Select All"))
+            {
+                for (int i = 0; i < blendShapeSlotSelected.Count; i++)
+                {
+                    blendShapeSlotSelected[i] = true;
+                }
+            }
+            if (GUILayout.Button("Clear Selection"))
+            {
+                for (int i = 0; i < blendShapeSlotSelected.Count; i++)
+                {
+                    blendShapeSlotSelected[i] = false;
+                }
+            }
+            GUILayout.EndHorizontal();
+            for (int i = 0; i < blendShapeSlots.Count; i++)
+            {
+                blendShapeSlotSelected[i] = EditorGUILayout.Toggle(blendShapeSlots[i], blendShapeSlotSelected[i]);
+            }
+            GUIHelper.EndVerticalPadded();
+            if (GUILayout.Button("Extract Blendshapes"))
+            {
+                ExtractBlendshapes(strBlendShapes[currentBlendshape],dnaNames[currentDNA],blendShapeSlotSelected,blendShapeSlots);
+            }
+            GUIHelper.BeginVerticalPadded();
+            foreach(var mod in Modifiers)
+            {
+                if (mod == null || mod.TemplateAdjustment == null)
+                {
+                    continue;
+                }
+                if (mod.TemplateAdjustment.GetType() == typeof(VertexBlendshapeAdjustment))
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label($"Blendshape: {mod.ModifierName} Slot: {mod.SlotName}");
+                    if (GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+                    {
+                        Modifiers.Remove(mod);
+                        break;
+                    }
+                    GUILayout.EndHorizontal();
+                }
+            }
+            GUIHelper.EndVerticalPadded();
+        }
+
+        private void ExtractBlendshapes(string blendShapeName, string dnaName, List<bool> selected, List<string> slots)
+        {
+            foreach (var strSlot in slots)
+            {
+                if (!selected[slots.IndexOf(strSlot)])
+                {
+                    continue;
+                }
+
+                SlotData sd = thisDCA.umaData.umaRecipe.GetSlot(strSlot);
+                if (sd == null)
+                {
+                    // ??
+                    continue;
+                }
+                if (sd.asset.meshData.blendShapes == null)
+                {
+                    continue;
+                }
+                if (sd.asset.meshData.blendShapes.Length == 0)
+                {
+                    continue;
+                }
+                UMABlendShape foundShape = null;
+
+                foreach (var bs in sd.asset.meshData.blendShapes)
+                {
+                    if (bs.shapeName == blendShapeName)
+                    {
+                        foundShape = bs;
+                        break;
+                    }
+                }
+                if (foundShape == null)
+                {
+                    continue;
+                }
+
+                // found the blendshape for this slot.
+                // if a blendShapeModifier for this already exists, delete it.
+                for (int i = 0; i < Modifiers.Count; i++)
+                {
+                    if (Modifiers[i].ModifierName == blendShapeName && Modifiers[i].SlotName == strSlot)
+                    {
+                        Modifiers.RemoveAt(i);
+                        break;
+                    }
+                }
+
+
+                int maxFrame = foundShape.frames.Length - 1;
+                UMABlendFrame frame = foundShape.frames[maxFrame];
+                if (frame != null)
+                {
+                    // create the new modifier
+                    MeshModifier.Modifier newMod = new MeshModifier.Modifier();
+                    newMod.ModifierName = blendShapeName;
+                    newMod.DNAName = dnaName;
+                    newMod.Scale = 1.0f;
+                    newMod.SlotName = strSlot;
+                    newMod.keepAsIs = true;
+                    newMod.adjustments = new VertexBlendshapeAdjustmentCollection();
+                    newMod.TemplateAdjustment = new VertexBlendshapeAdjustment();
+                    for (int i = 0; i < frame.deltaVertices.Length; i++)
+                    {
+                        if (frame.deltaVertices[i] != Vector3.zero)
+                        {
+                            VertexBlendshapeAdjustment vba = new VertexBlendshapeAdjustment();
+                            vba.vertexIndex = i;
+                            vba.slotName = strSlot;
+                            vba.vertexIndex = i;
+                            vba.delta = frame.deltaVertices[i];
+
+                            if (frame.HasTangents())
+                            {
+                                vba.tangent = frame.deltaTangents[i];
+                            }
+                            else
+                            {
+                                vba.tangent = Vector3.zero;
+                            }
+                            if (frame.HasNormals())
+                            {
+                                vba.normal = frame.deltaNormals[i];
+                            }
+                            else
+                            {
+                                vba.normal = Vector3.zero;
+                            }
+                            newMod.adjustments.Add(vba);
+                        }
+                    }
+
+                    Modifiers.Add(newMod);
+                    currentModifierIndex = Modifiers.Count - 1;
+                }
+            }
+        }
+
 
         private void DrawAdHocAdjustments()
         {
@@ -525,13 +744,19 @@ namespace UMA
 #endif
         public void SplitModifiersBySlot(List<MeshModifier.Modifier> target, MeshModifier.Modifier activeModifier)
         {
+            if (activeModifier.keepAsIs)
+            {
+                // No need to split, just add.
+                target.Add(activeModifier);
+                return;
+            }
             foreach (VertexAdjustment va in activeModifier.adjustments.vertexAdjustments)
             {
                 string key = va.slotName;
                 MeshModifier.Modifier newMod = null;
                 foreach (MeshModifier.Modifier mod in target)
                 {
-                    if (mod.SlotName == key && mod.TemplateAdjustment.GetType() == va.GetType())
+                    if (mod.SlotName == key && mod.TemplateAdjustment.GetType() == va.GetType() && mod.keepAsIs == false)
                     {
                         newMod = mod;
                         break;
@@ -540,6 +765,7 @@ namespace UMA
                 if (newMod == null)
                 {
                     newMod = new MeshModifier.Modifier();
+                    newMod.keepAsIs = false;
                     newMod.SlotName = key;
                     newMod.ModifierName = "Bulk Adjustment";
                     newMod.TemplateAdjustment = (VertexAdjustment)Activator.CreateInstance(va.GetType());

@@ -61,10 +61,13 @@ namespace UMA
 				showIndexedTypes = UMASettings.ShowIndexedTypes;
                 showUnindexedTypes = UMASettings.ShowUnindexedTypes;
 
-				UMAAssetIndexer ai = UMAAssetIndexer.Instance;
-				if (showIndexedTypes && ai != null)
+				if (showIndexedTypes)
 				{
-					EditorApplication.projectWindowItemOnGUI += DrawItems;
+                    UMAAssetIndexer ai = UMAAssetIndexer.Instance;
+					if (ai != null)
+					{
+						EditorApplication.projectWindowItemOnGUI += DrawItems;
+					}
 				}
 				ranOnce = true;
 				return;

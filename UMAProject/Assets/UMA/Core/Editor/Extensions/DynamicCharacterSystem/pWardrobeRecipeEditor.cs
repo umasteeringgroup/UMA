@@ -1028,7 +1028,6 @@ namespace UMA.Editors
 
 				EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 				MeshHideAsset deleteme = null;
-				MeshModifier deleteMeshMod = null;
 				bool deleteNulls = false;
 				GUILayout.Label("Mesh Hide Assets", EditorStyles.boldLabel);
 				int count = 0;
@@ -1066,29 +1065,40 @@ namespace UMA.Editors
 				GUILayout.Label("Mesh Modifiers", EditorStyles.boldLabel);
 
 				count = 0;
-				foreach (MeshModifier mm in recipe.MeshModifiers)
+				int delPos = -1;
+				int delCount = 0;
+                foreach (MeshModifier mm in recipe.MeshModifiers)
 				{
 					count++;
 					EditorGUILayout.BeginHorizontal();
 					GUILayout.Space(10);
-					EditorGUILayout.LabelField(mm.name, GUILayout.ExpandWidth(true));
-                    //GUILayout.Label($"[{mm.SlotName}]", GUILayout.Width(90.0f));
-                    if (GUILayout.Button("Inspect", GUILayout.Width(65)))
-                    {
-                        InspectorUtlity.InspectTarget(mm);
-                    }
+					if (mm == null)
+					{
+						EditorGUILayout.LabelField("Null Mesh Modifier", EditorStyles.miniLabel);
+					}
+					else
+					{
+						EditorGUILayout.LabelField(mm.name, GUILayout.ExpandWidth(true));
+						//GUILayout.Label($"[{mm.SlotName}]", GUILayout.Width(90.0f));
+						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
+						{
+							InspectorUtlity.InspectTarget(mm);
+						}
+					}
                     if (GUILayout.Button("X", GUILayout.Width(20.0f)))
 					{
-						deleteMeshMod = mm;
-					}
+
+						delPos = delCount;
+                    }
 					EditorGUILayout.EndHorizontal();
+					delCount++;
 				}
-				if (deleteMeshMod != null)
-				{
-					recipe.MeshModifiers.Remove(deleteMeshMod);
-					deleteMeshMod = null;
-				}
-				if (count == 0)
+
+				if (delPos > -1)
+                {
+                    recipe.MeshModifiers.RemoveAt(delPos);
+                }
+                if (count == 0)
 				{
 					GUILayout.BeginHorizontal();
 					GUILayout.Space(10);

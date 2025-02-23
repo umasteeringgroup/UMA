@@ -896,8 +896,10 @@ namespace UMA
             else
             {
                 mesh.vertices[vertexIndex] += delta;
-                mesh.normals[vertexIndex] = normal;
-                mesh.tangents[vertexIndex] = new Vector4(tangent.x, tangent.y, tangent.z, 1);
+                mesh.normals[vertexIndex] += normal;
+                mesh.tangents[vertexIndex].x += tangent.x;
+                mesh.tangents[vertexIndex].y += tangent.y;
+                mesh.tangents[vertexIndex].z += tangent.z;
             }
         }
 
@@ -908,17 +910,13 @@ namespace UMA
             mesh.vertices[vertexIndex] += (delta * scale);
             if (mesh.normals != null)
             {
-                Vector3 startNormal = mesh.normals[vertexIndex];
-                Vector3 newNormal = normal;
-                Vector3 lerpNormal = Vector3.Lerp(startNormal, newNormal, scale);
-                mesh.normals[vertexIndex] = lerpNormal;
+                mesh.normals[vertexIndex] = mesh.normals[vertexIndex] + (normal * scale);
             }
             if (mesh.tangents != null)
             {
-                Vector3 startTangent = mesh.tangents[vertexIndex];
-                Vector3 newTangent = tangent;
-                Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
-                mesh.tangents[vertexIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
+                mesh.tangents[vertexIndex].x += tangent.x * scale;
+                mesh.tangents[vertexIndex].y += tangent.y * scale;
+                mesh.tangents[vertexIndex].z += tangent.z * scale;
             }
         }
 
@@ -944,11 +942,7 @@ namespace UMA
             }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                int vertIndex = adjustments[i].vertexIndex;
-                var adj = adjustments[i] as VertexBlendshapeAdjustment;
-                mesh.vertices[vertIndex] += adj.delta;
-                if (normals) mesh.normals[vertIndex] = adj.normal;
-                if (tangents) mesh.tangents[vertIndex] = new Vector4(adj.tangent.x, adj.tangent.y, adj.tangent.z, 1);
+                adjustments[i].Apply(mesh, src);
             }
         }
         public static void ApplyScaled(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments, float scale)
@@ -974,23 +968,6 @@ namespace UMA
             for (int i = 0; i < adjustments.Count; i++)
             {
                 adjustments[i].ApplyScaled(mesh, src, scale);
-/*                var adj = adjustments[i] as VertexBlendshapeAdjustment;
-                int vertIndex = adj.vertexIndex;
-                mesh.vertices[vertIndex] += (adj.delta * scale);
-                if (normals)
-                {
-                    Vector3 startNormal = mesh.normals[vertIndex];
-                    Vector3 newNormal = adj.normal;
-                    Vector3 lerpNormal = Vector3.Lerp(startNormal, newNormal, scale);
-                    mesh.normals[vertIndex] = lerpNormal;
-                }
-                if (tangents)
-                {
-                    Vector3 startTangent = mesh.tangents[vertIndex];
-                    Vector3 newTangent = adj.tangent;
-                    Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
-                    mesh.tangents[vertIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
-                } */
             }
         }
 
