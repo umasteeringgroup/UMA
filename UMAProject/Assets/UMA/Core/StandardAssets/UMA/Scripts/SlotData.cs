@@ -204,6 +204,24 @@ namespace UMA
             expandAlongNormal = 0;
         }
 
+        /// <summary>
+        /// Gets the blendshape from the MeshData that matches the name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public UMABlendShape GetBlendshape(string name)
+        {
+            foreach (UMABlendShape ubs in asset.meshData.blendShapes)
+            {
+                if (ubs.shapeName == name)
+                {
+                    return ubs;
+                }
+
+            }
+            return null;
+        }
+
 
         public bool HasRace(string raceName)
         {

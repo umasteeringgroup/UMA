@@ -4652,7 +4652,36 @@ namespace UMA.CharacterSystem
                     umaData.umaRecipe.AddDna(ud);
                 }
             }
+            ApplyDNAToModifiers();
         }
+
+        private void ApplyDNAToModifiers()
+        {
+            var modifiers = umaData.Modifiers;
+
+            if (modifiers == null || modifiers.Count == 0)
+            {
+                return;
+            }
+            var DNA = GetDNA();
+
+            foreach (var slot in umaData.umaRecipe.slotDataList)
+            {
+                if (slot.asset != null && slot.asset.meshData != null && modifiers.ContainsKey(slot.slotName))
+                {
+                    var slotModifiers = modifiers[slot.slotName];
+
+                    foreach (var modifier in slotModifiers)
+                    {
+                        if (modifier != null && DNA.ContainsKey(modifier.DNAName))
+                        {
+                            modifier.Scale = DNA[modifier.DNAName].Value;
+                        }
+                    }
+                }
+            }
+        }
+
 
 
         public Vector3 GetDestVertPhys(Vector3 originVertex, Vector3 center, float PlaneDist, SlotDataAsset SmooshTarget, PhysicsScene ps, int vertindex, float smooshDistance, float overSmoosh)

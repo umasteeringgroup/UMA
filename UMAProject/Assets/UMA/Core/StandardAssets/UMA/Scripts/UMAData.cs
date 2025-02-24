@@ -71,11 +71,20 @@ namespace UMA
 		private Dictionary<string,List<MeshModifier.Modifier>> meshModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
 		private Dictionary<string, List<MeshModifier.Modifier>> accumulatedModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
 
-#if UNITY_EDITOR
         // This array is not built from the recipes. It must be set manually. It is merged into the dictionary of MeshModifiers with the recipe driven modifiers.
         // It's general use case is for adding mesh modifiers that are not part of the normal UMA build process, such as during editing, etc.
-        
-		private List<MeshModifier.Modifier> _manualMeshModifiers = new List<MeshModifier.Modifier>();
+
+        public Dictionary<string, List<MeshModifier.Modifier>> Modifiers
+        {
+            get
+            {
+                return meshModifiers;
+            }
+        }
+
+#if UNITY_EDITOR
+
+        private List<MeshModifier.Modifier> _manualMeshModifiers = new List<MeshModifier.Modifier>();
 		public List<MeshModifier.Modifier> manualMeshModifiers 
 		{ 
 			get 
@@ -106,6 +115,10 @@ namespace UMA
 
         public void AddMeshModifiers(List<MeshModifier.Modifier> modifiers)
         {
+			if (modifiers == null)
+			{
+				return;
+			}
             foreach (MeshModifier.Modifier modifier in modifiers)
             {
                 AddMeshModifier(modifier);
@@ -1743,6 +1756,7 @@ namespace UMA
                 }
                 return indexedSlots;
             }
+
 
             /// <summary>
             /// Are two overlay lists the same?
