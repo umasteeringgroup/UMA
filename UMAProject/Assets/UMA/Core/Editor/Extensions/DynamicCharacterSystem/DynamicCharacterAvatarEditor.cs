@@ -67,14 +67,30 @@ namespace UMA.CharacterSystem.Editors
             _animatorPropDrawer.thisDCA = thisDCA;
 
             SceneView.duringSceneGui += DoSceneGUI;
+            EditorApplication.update += DoInspectors;
+
 
         }
+
+        private List<UnityEngine.Object> InspectMe = new List<UnityEngine.Object>();
 
         public void OnDisable()
         {
+            EditorApplication.update -= DoInspectors;
             SceneView.duringSceneGui -= DoSceneGUI;
         }
-    
+
+        private void DoInspectors()
+        {
+            if (InspectMe.Count > 0)
+            {
+                for (int i = 0;i < InspectMe.Count; i++)
+                {
+                    InspectorUtlity.InspectTarget(InspectMe[i]);
+                }
+                InspectMe.Clear();
+            }
+        }
 
         public void SetNewColorCount(int colorCount)
         {
@@ -168,7 +184,7 @@ namespace UMA.CharacterSystem.Editors
             SerializedProperty thisRaceSetter = serializedObject.FindProperty("activeRace");
             Rect currentRect = EditorGUILayout.GetControlRect(false, _racePropDrawer.GetPropertyHeight(thisRaceSetter, GUIContent.none));
             EditorGUI.BeginChangeCheck();
-            _racePropDrawer.OnGUI(currentRect, thisRaceSetter, new GUIContent(thisRaceSetter.displayName));
+            InspectMe = _racePropDrawer.DoGUI(currentRect, thisRaceSetter, new GUIContent(thisRaceSetter.displayName));
             if (EditorGUI.EndChangeCheck())
             {
                 wasChanged = true;
@@ -309,6 +325,8 @@ namespace UMA.CharacterSystem.Editors
                 serializedObject.ApplyModifiedProperties();
             }
         }
+
+
 
         private bool DoRaceChangeOptionsGUI(bool wasChanged, SerializedProperty defaultChangeRaceOptions)
         {

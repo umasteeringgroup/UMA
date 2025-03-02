@@ -4,6 +4,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using UMA.Editors;
 
+
 namespace UMA.CharacterSystem.Editors
 {
     [CustomPropertyDrawer(typeof(DynamicCharacterAvatar.RaceSetter))]
@@ -75,11 +76,18 @@ namespace UMA.CharacterSystem.Editors
 			}
 		}
 
-		
-		
+		public List<Object> InspectMe = new List<Object>();
+
+
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			CheckRaceDataLists();
+			DoGUI(position, property,label);
+		}
+
+
+        public List<Object> DoGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+            CheckRaceDataLists();
 
             var RaceName = property.FindPropertyRelative("name");
 			
@@ -126,24 +134,16 @@ namespace UMA.CharacterSystem.Editors
                 }
 			}
 
-
 			EditorGUILayout.LabelField("Inspector Tools", EditorStyles.boldLabel);
 			EditorGUILayout.BeginHorizontal();
-			/*
-			if (GUILayout.Button("Ping Race",GUILayout.Width(90)))
-            {
-				RaceData theRace = foundRaces[newrIndex];
-				if (theRace != null)
-                {
-					EditorGUIUtility.PingObject(theRace);
-                }
-            }*/
+
 			if (GUILayout.Button("Race"))
 			{
 				if (theRace != null)
 				{
-					InspectorUtlity.InspectTarget(theRace);
-				}
+					//InspectorUtlity.InspectTarget(theRace);
+					InspectMe.Add(theRace);
+                }
 			}
 			if (GUILayout.Button("Base Recipe"))
 			{
@@ -151,7 +151,8 @@ namespace UMA.CharacterSystem.Editors
 				{
 					if (theRace.baseRaceRecipe != null)
                     {
-                        InspectorUtlity.InspectTarget(theRace.baseRaceRecipe);
+						InspectMe.Add(theRace.baseRaceRecipe);
+                        //InspectorUtlity.InspectTarget(theRace.baseRaceRecipe);
                     }
                 }
 			}
@@ -163,7 +164,8 @@ namespace UMA.CharacterSystem.Editors
 					{
 						foreach(var dna in theRace.dnaConverterList)
 						{
-                            InspectorUtlity.InspectTarget(dna);
+                            InspectMe.Add(dna);
+                            // InspectorUtlity.InspectTarget(dna);
                         }
                     }
                 }
@@ -189,7 +191,7 @@ namespace UMA.CharacterSystem.Editors
 										{
 											if (bp.poseToApply != null)
 											{
-												InspectorUtlity.InspectTarget(bp.poseToApply);
+												InspectMe.Add(bp.poseToApply);
                                             }
 										}
                                         break;
@@ -204,8 +206,20 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.EndHorizontal();
             GUIHelper.EndVerticalPadded(5);
 
+			 
+			return InspectMe;
+/*			if (Event.current.type == EventType.Used && InspectMe.Count > 0)
+			{
+				foreach(var obj in InspectMe)
+                {
+                    InspectorUtlity.InspectTarget(obj);
+                }
+				InspectMe.Clear();
+            }
+
+*/
             //EditorGUI.EndProperty();
-		}
+        }
 	}
 }
 #endif

@@ -1339,7 +1339,14 @@ namespace UMA
 			boneNameHashes = new int[bones.Length];
 			for (int i = 0; i < bones.Length; i++)
 			{
-				boneNameHashes[i] = UMAUtils.StringToHash(bones[i].name);
+                try
+                {
+                    boneNameHashes[i] = UMAUtils.StringToHash(bones[i].name);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error computing hash for bone {i} : " + ex.Message);
+                }
 			}
 		}
 

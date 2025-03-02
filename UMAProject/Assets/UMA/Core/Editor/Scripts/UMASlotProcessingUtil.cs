@@ -104,13 +104,12 @@ namespace UMA.Editors
 
 			string SkinnedName = path + '/' + assetName + "_TempSkinned.prefab";
 
-#if UNITY_2018_3_OR_NEWER
+			Debug.Log($"Saving prefab to {SkinnedName}");
             var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName);
-#else
-			var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(SkinnedName, newObject);
-#endif
-            GameObject.DestroyImmediate(newObject);
 
+#if false
+			GameObject.DestroyImmediate(newObject);
+#endif
             var meshgo = skinnedResult.transform.Find(mesh.name);
             var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
 
@@ -127,27 +126,27 @@ namespace UMA.Editors
 		}
 
 		public static SlotDataAsset CreateSlotData(SlotBuilderParameters sbp)
-        //public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, string slotName, bool nameByMaterial, SkinnedMeshRenderer slotMesh, UMAMaterial material, SkinnedMeshRenderer seamsMesh, List<string> KeepList, string rootBone, bool binarySerialization = false, bool calcTangents = true, string stripBones = "", bool useRootFolder = false, bool adustForUDIM)
-        {
-            if (sbp.useRootFolder)
-            {
-                if (!System.IO.Directory.Exists(sbp.slotFolder))
-                {
-                    System.IO.Directory.CreateDirectory(sbp.slotFolder);
-                }
-            }
-            else
+		//public static SlotDataAsset CreateSlotData(string slotFolder, string assetFolder, string assetName, string slotName, bool nameByMaterial, SkinnedMeshRenderer slotMesh, UMAMaterial material, SkinnedMeshRenderer seamsMesh, List<string> KeepList, string rootBone, bool binarySerialization = false, bool calcTangents = true, string stripBones = "", bool useRootFolder = false, bool adustForUDIM)
 		{
-			if (!System.IO.Directory.Exists(sbp.slotFolder + '/' + sbp.assetFolder))
+			if (sbp.useRootFolder)
 			{
-				System.IO.Directory.CreateDirectory(sbp.slotFolder + '/' + sbp.assetFolder);
+				if (!System.IO.Directory.Exists(sbp.slotFolder))
+				{
+					System.IO.Directory.CreateDirectory(sbp.slotFolder);
+				}
 			}
+			else
+			{
+				if (!System.IO.Directory.Exists(sbp.slotFolder + '/' + sbp.assetFolder))
+				{
+					System.IO.Directory.CreateDirectory(sbp.slotFolder + '/' + sbp.assetFolder);
+				}
 
-			if (!System.IO.Directory.Exists(sbp.slotFolder + '/' + sbp.assetName))
-			{
-				System.IO.Directory.CreateDirectory(sbp.slotFolder + '/' + sbp.assetName);
+				if (!System.IO.Directory.Exists(sbp.slotFolder + '/' + sbp.assetName))
+				{
+					System.IO.Directory.CreateDirectory(sbp.slotFolder + '/' + sbp.assetName);
+				}
 			}
-            }
 
 			GameObject tempGameObject = UnityEngine.Object.Instantiate(sbp.slotMesh.transform.parent.gameObject) as GameObject;
 
@@ -158,55 +157,53 @@ namespace UMA.Editors
 				if (skinnedMesh.name == sbp.slotMesh.name)
 				{
 					resultingSkinnedMesh = skinnedMesh;
-					//CountBoneweights(skinnedMesh.sharedMesh);
 				}
 			}
 
 			Transform[] bones = resultingSkinnedMesh.bones;
 			List<int> KeepBoneIndexes = new List<int>();
 
+			int startBone = sbp.keepAllBones ? 1 : 0;
+			for (int i = startBone; i < bones.Length; i++)
+			{
+				Transform t = bones[i];
+				if (sbp.keepList.Contains(t.name) || sbp.keepAllBones)
+				{
+					if (!string.IsNullOrEmpty(t.name))
+					{
+						KeepBoneIndexes.Add(i);
+					}
+				}
+			}
 
-            int j = 0;
-            for (int i = 0; i < bones.Length; i++)
-            {
-                Transform _bone = bones[i];
-                if (sbp.keepList.Contains(_bone.name) || sbp.keepAllBones)
-                {
-                    KeepBoneIndexes.Add(j);
-                }
-                j++;
-            }
 
 			Mesh resultingMesh;
 			if (sbp.seamsMesh != null)
 			{
 				resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, sbp.seamsMesh, 0.0001f, sbp.calculateTangents);
 				resultingSkinnedMesh.sharedMesh = resultingMesh;
-				//CountBoneweights(resultingMesh);
 				SkinnedMeshAligner.AlignBindPose(sbp.seamsMesh, resultingSkinnedMesh);
 			}
 			else
 			{
 				resultingMesh = (Mesh)GameObject.Instantiate(resultingSkinnedMesh.sharedMesh);
-				//CountBoneweights(resultingMesh);
 			}
 			if (sbp.calculateTangents)
 			{
 				resultingMesh.RecalculateTangents();
-            }
+			}
 
-			var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh,KeepBoneIndexes);
+			var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh, KeepBoneIndexes);
 			if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
 			{
 				resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
-				//CountBoneweights(resultingMesh);
 			}
 
 			string theMesh = sbp.slotFolder + '/' + sbp.assetName + '/' + sbp.slotMesh.name + "_TempMesh.asset";
-            if (sbp.useRootFolder)
-            {
-                theMesh = sbp.slotFolder + '/' + sbp.slotMesh.name + "_TempMesh.asset";
-            }
+			if (sbp.useRootFolder)
+			{
+				theMesh = sbp.slotFolder + '/' + sbp.slotMesh.name + "_TempMesh.asset";
+			}
 			if (sbp.binarySerialization)
 			{
 				//Work around for mesh being serialized as project format settings (text) when binary is much faster.
@@ -228,14 +225,14 @@ namespace UMA.Editors
 			for (int i = 0; i < transformList.Length; i++)
 			{
 				if (!string.IsNullOrEmpty(sbp.stripBones))
-                {
+				{
 					string bname = transformList[i].name;
 					if (bname.Contains(sbp.stripBones))
-                    {
+					{
 						bname = bname.Replace(sbp.stripBones, "");
-                    }
+					}
 					transformList[i].name = bname;
-                }
+				}
 				if (transformList[i].name == sbp.rootBone)
 				{
 					transformList[i].parent = newObject.transform;
@@ -246,58 +243,68 @@ namespace UMA.Editors
 				}
 			}
 
-			GameObject.DestroyImmediate(tempGameObject);
 			resultingSkinnedMesh = newObject.GetComponentInChildren<SkinnedMeshRenderer>();
-			//CountBoneweights(resultingSkinnedMesh.sharedMesh);
-
-			if (resultingSkinnedMesh)
+			if (resultingSkinnedMesh == null)
 			{
-				if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
-				{
-
-					resultingSkinnedMesh.bones = BuildNewReducedBonesList(resultingSkinnedMesh.bones, usedBonesDictionary);
-				}
-				resultingSkinnedMesh.sharedMesh = resultingMesh;
-				//CountBoneweights(resultingMesh);
+				Debug.Log("Skinned mesh is null!!!");
+				return null;
 			}
+
+			if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
+			{
+
+				resultingSkinnedMesh.bones = BuildNewReducedBonesList(resultingSkinnedMesh.bones, usedBonesDictionary);
+			}
+			resultingSkinnedMesh.sharedMesh = resultingMesh;
 
 			string SkinnedName = sbp.slotFolder + '/' + sbp.assetName + '/' + sbp.assetName + "_TempSkinned.prefab";
 
-            if (sbp.useRootFolder)
-            {
-                SkinnedName = sbp.slotFolder + '/' + sbp.assetName + "_TempSkinned.prefab";
-            }
+			if (sbp.useRootFolder)
+			{
+				SkinnedName = sbp.slotFolder + '/' + sbp.assetName + "_TempSkinned.prefab";
+			}
 
-#if UNITY_2018_3_OR_NEWER
-			var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName);
-#else
-			var skinnedResult = UnityEditor.PrefabUtility.CreatePrefab(SkinnedName, newObject);
-#endif
-			GameObject.DestroyImmediate(newObject);
-
+			var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName,out bool success);
+			if (!success)
+			{
+				Debug.Log($"failed saving {SkinnedName} prefab"); 
+			}
 			var meshgo = skinnedResult.transform.Find(sbp.slotMesh.name);
 			var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
+			if (finalMeshRenderer.sharedMesh == null)
+			{
+				Debug.Log("Final Mesh Renderer shareMesh is null!!!");
+				finalMeshRenderer.sharedMesh = resultingMesh;
+			}
 
 			var slot = ScriptableObject.CreateInstance<SlotDataAsset>();
 			slot.slotName = sbp.slotName;
 			//Make sure slots get created with a name hash
 			slot.nameHash = UMAUtils.StringToHash(slot.slotName);
 			slot.material = sbp.material;
-			slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone,sbp.udimAdjustment, 0);
+			try
+			{
+				slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, sbp.udimAdjustment, 0);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogException(ex);
+				return null;
+			}
 			TransformMeshData(slot, sbp);
 
-            var cloth = sbp.slotMesh.GetComponent<Cloth>();
+			var cloth = sbp.slotMesh.GetComponent<Cloth>();
 			if (cloth != null)
 			{
 				slot.meshData.RetrieveDataFromUnityCloth(cloth);
 			}
-            string slotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + sbp.slotName + "_slot.asset";
-            if (sbp.useRootFolder)
-            {
-                slotPath = sbp.slotFolder + '/' + sbp.slotName + "_slot.asset";
-            }
-            AssetDatabase.CreateAsset(slot, slotPath);
-			for (int i = 1; i < slot.meshData.subMeshCount; i++)
+			string slotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + sbp.slotName + "_slot.asset";
+			if (sbp.useRootFolder)
+			{
+				slotPath = sbp.slotFolder + '/' + sbp.slotName + "_slot.asset";
+			}
+			AssetDatabase.CreateAsset(slot, slotPath);
+			for (int i = 1; i < finalMeshRenderer.sharedMesh.subMeshCount; i++)
 			{
 				string theSlotName = string.Format("{0}_{1}", sbp.slotName, i);
 
@@ -329,12 +336,15 @@ namespace UMA.Editors
 				AssetDatabase.CreateAsset(additionalSlot, theSlotPath);
 			}
 			AssetDatabase.SaveAssets();
+			GameObject.DestroyImmediate(tempGameObject);
+			GameObject.DestroyImmediate(newObject);
+
 			AssetDatabase.DeleteAsset(SkinnedName);
 			AssetDatabase.DeleteAsset(theMesh);
 			return slot;
 		}
 
-		private static void TransformMeshData(SlotDataAsset slot, SlotBuilderParameters sbp)
+        private static void TransformMeshData(SlotDataAsset slot, SlotBuilderParameters sbp)
 		{
             var meshData = slot.meshData;
 			var Vertices = meshData.vertices;

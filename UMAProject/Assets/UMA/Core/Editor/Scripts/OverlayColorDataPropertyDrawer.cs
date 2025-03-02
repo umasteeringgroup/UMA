@@ -170,7 +170,7 @@ namespace UMA.Editors
 								ocd.PropertyBlock = new UMAMaterialPropertyBlock();
 								EditorUtility.SetDirty(dca);
 								AssetDatabase.SaveAssets();
-								property.serializedObject.Update();
+								//property.serializedObject.Update();
 							}
 						}
 					}

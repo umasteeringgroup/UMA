@@ -21,8 +21,10 @@ namespace UMA.Editors
 		int selectedsuppressed = -1;
 		private static bool showModifiers = false;
 
-		// Drop area for compatible Races
-		private void CompatibleRacesDropArea(Rect dropArea, List<string> compatibleRaces)
+
+
+        // Drop area for compatible Races
+        private void CompatibleRacesDropArea(Rect dropArea, List<string> compatibleRaces)
 		{
 			Event evt = Event.current;
 			//make the box clickable so that the user can select raceData assets from the asset selection window
@@ -1042,7 +1044,8 @@ namespace UMA.Editors
 						GUILayout.Label($"[{mha.AssetSlotName}]", GUILayout.Width(90.0f));
                         if (GUILayout.Button("Inspect", GUILayout.Width(65)))
 						{
-							InspectorUtlity.InspectTarget(mha);
+							InspectMe.Add(mha);
+							//InspectorUtlity.InspectTarget(mha);
 						}
 						if (GUILayout.Button("X", GUILayout.Width(20.0f)))
 						{
@@ -1082,7 +1085,8 @@ namespace UMA.Editors
 						//GUILayout.Label($"[{mm.SlotName}]", GUILayout.Width(90.0f));
 						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
 						{
-							InspectorUtlity.InspectTarget(mm);
+							InspectMe.Add(mm);
+                            //InspectorUtlity.InspectTarget(mm);
 						}
 					}
                     if (GUILayout.Button("X", GUILayout.Width(20.0f)))

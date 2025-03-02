@@ -96,8 +96,14 @@ namespace UMA.Editors
 			smooshOffset = serializedObject.FindProperty("smooshOffset");
 			slot = (target as SlotDataAsset);
 			SetRaceLists();
-
-			slot.backingTags = new List<string>(slot.tags);
+			if (slot.tags == null)
+			{
+				slot.backingTags = new List<string>();
+			}
+			else
+			{
+				slot.backingTags = new List<string>(slot.tags);
+			}
 			slot.tagList = GUIHelper.InitGenericTagsList(slot.backingTags);
 		}
 

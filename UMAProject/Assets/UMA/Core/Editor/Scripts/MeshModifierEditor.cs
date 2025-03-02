@@ -9,6 +9,10 @@ using UMA.Editors;
 using System;
 using System.Xml.Serialization;
 
+#if UMA_BURSTCOMPILE
+using Unity.Burst;
+#endif
+
 namespace UMA
 {
     public class MeshModifierEditor : EditorWindow
@@ -19,6 +23,14 @@ namespace UMA
         public string[] strBlendShapes = new string[0];
         public List<string> blendShapeSlots = new List<string>();
         public List<bool> blendShapeSlotSelected = new List<bool>();
+
+        bool wasAnimatorEnabled;
+        bool wasKeepAnimator;
+        bool wasRaceFixup;
+        Quaternion wasGlobalRotation = Quaternion.identity;
+        Quaternion wasRootRotation = Quaternion.identity;
+
+
 
         public static MeshModifierEditor GetOrCreateWindow(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
         {
@@ -58,6 +70,16 @@ namespace UMA
         public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
         {
             thisDCA = DCA;
+            wasKeepAnimator = DCA.KeepAnimatorController;
+            wasAnimatorEnabled = DCA.gameObject.GetComponent<Animator>().enabled;
+            wasRaceFixup = DCA.activeRace.data.FixupRotations;
+
+            Transform rootTransform = DCA.umaData.skeleton.GetRootTransform();
+            Transform globalTransform = DCA.umaData.skeleton.GetGlobalTransform();
+
+            wasGlobalRotation = globalTransform.localRotation;
+            wasRootRotation = rootTransform.localRotation;
+
             SlotNameToModifiers.Clear();
             vertexEditorStage = vstage;
             ModifierTypes = AppDomain.CurrentDomain.GetAllDerivedTypes(typeof(VertexAdjustmentCollection));
@@ -134,6 +156,10 @@ namespace UMA
             {
                 DoCharacterRebuild();
             }
+            if (GUILayout.Button("Rebuild to TPose"))
+            {
+                DoCharacterRebuild(true);
+            }
 
             if (GUILayout.Button("Reset Build"))
             {
@@ -147,6 +173,10 @@ namespace UMA
                 // save the list of modifiers to the asset.
 
                 SaveToAsset();
+            }
+            if (GUILayout.Button("Recalculate Normals"))
+            {
+                vertexEditorStage.RecalculateNormals();
             }
 
             if (IncludeBulkModifiers == false)
@@ -686,11 +716,32 @@ namespace UMA
 #if UMA_BURSTCOMPILE
         [BurstCompile(CompileSynchronously = true)]
 #endif
-        public void DoCharacterRebuild()
+        public void DoCharacterRebuild(bool forceTPose = false, bool buildCollisionMesh=true)
         {
+            if (forceTPose)
+            {
+                thisDCA.GetComponent<Animator>().enabled = false;
+                thisDCA.KeepAnimatorController = true;
+                thisDCA.activeRace.data.FixupRotations = false;
+                Transform rootTransform = thisDCA.umaData.skeleton.GetRootTransform();
+                Transform globalTransform = thisDCA.umaData.skeleton.GetGlobalTransform();
+
+                globalTransform.localRotation = Quaternion.identity;
+                rootTransform.localRotation = Quaternion.identity;
+            }
+            else
+            {
+                thisDCA.GetComponent<Animator>().enabled = wasAnimatorEnabled;
+                thisDCA.KeepAnimatorController = wasKeepAnimator;
+                thisDCA.activeRace.data.FixupRotations = wasRaceFixup;
+                Transform rootTransform = thisDCA.umaData.skeleton.GetRootTransform();
+                Transform globalTransform = thisDCA.umaData.skeleton.GetGlobalTransform();
+                globalTransform.localRotation = wasGlobalRotation;
+                rootTransform.localRotation = wasRootRotation;
+            }
             thisDCA.umaData.manualMeshModifiers = new List<MeshModifier.Modifier>();
             thisDCA.umaData.manualMeshModifiers = DoModifierSplit(true);
-            vertexEditorStage.RebuildMesh(false);
+            vertexEditorStage.RebuildMesh(forceTPose,buildCollisionMesh);
         }
 
         public void DoCharacterReset()
@@ -887,20 +938,66 @@ namespace UMA
                 meshModifier.adjustments.Add(va);
             }
         }
+        private void AddAllVertexesToCollection(MeshModifier.Modifier meshModifier)
+        {
+            vertexEditorStage.SelectAll();
+            var SelectedVertexes = vertexEditorStage.GetVertexSelections();
+
+            foreach (var se in SelectedVertexes)
+            {
+                VertexAdjustment va = CreateVertexAdjustment(se, meshModifier.adjustments);
+                meshModifier.adjustments.Add(va);
+            }
+        }
+
 
         private Vector2 ModifierScrollPos = Vector2.zero;
         private void DrawMeshModifiers()
         {
             EditorGUILayout.LabelField("Mesh Modifiers", centeredLabel);
+            if (GUILayout.Button("Extract All Normals to Reset Modifier"))
+            {
+                var saveSelections = new List<VertexEditorStage.VertexSelection>();
+                saveSelections.AddRange(vertexEditorStage.GetVertexSelections());
 
-            EditorGUILayout.LabelField("Select Modifier Type");
+                MeshModifier.Modifier newMod = new MeshModifier.Modifier();
+                newMod.EditorInitialize(typeof(VertexResetAdjustmentCollection));
+                newMod.ModifierName = FindNameForModifier(newMod.TemplateAdjustment.Name);
+                Modifiers.Add(newMod);
+                newMod.adjustments = new VertexResetAdjustmentCollection();
+                AddAllVertexesToCollection(newMod);
+
+                Mesh BakedMesh = vertexEditorStage.GetBakedMesh();
+                Vector3[] normals = BakedMesh.normals;
+                Vector4[] tangents = BakedMesh.tangents;
+
+                VertexResetAdjustmentCollection theCollection = (VertexResetAdjustmentCollection)newMod.adjustments;
+                for (int i = 0; i < theCollection.vertexAdjustments.Count; i++)
+                {
+                    SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(theCollection.vertexAdjustments[i].slotName);
+                    int vertPos = theCollection.vertexAdjustments[i].vertexIndex + slot.vertexOffset;
+                    VertexResetAdjustment var = theCollection.vertexAdjustments[i] as VertexResetAdjustment;
+
+                    var.initialNormal = normals[vertPos];
+                    var.initialTangent = tangents[vertPos];
+                    /*
+                    var.initialNormal = vertexEditorStage.InverseTransform(normals[vertPos]);
+                    Vector3 vector3 = vertexEditorStage.InverseTransform(tangents[vertPos]);
+                    var.initialTangent = new Vector4(vector3.x,vector3.y,vector3.z,tangents[vertPos].w);     */
+                }
+                currentModifierIndex = Modifiers.Count - 1;
+                ModifierScrollPos.y = 100000;
+                vertexEditorStage.SetVertexSelections(saveSelections);
+            }
+
+            EditorGUILayout.LabelField("Extract Bulk Modifier of Type:");
             selectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames);
 
             int activeCount = vertexEditorStage.GetActiveSelectedVertexCount();
             if (activeCount == 0)
             {
                 EditorGUILayout.LabelField("No vertexes selected", centeredLabel);
-                EditorGUILayout.HelpBox("Please select some vertexes to add a modifier to.", MessageType.Info);
+                EditorGUILayout.HelpBox("Please selectvertexes For Bulk Modifier", MessageType.Info);
             }
             else
             {
@@ -922,7 +1019,10 @@ namespace UMA
 
             MeshModifier.Modifier currentModifier = Modifiers[currentModifierIndex];
             if (currentModifier == null)
+            {
                 return;
+            }
+
             if (selectedType < 0 || selectedType >= ModifierTypes.Length)
             {
                 return;

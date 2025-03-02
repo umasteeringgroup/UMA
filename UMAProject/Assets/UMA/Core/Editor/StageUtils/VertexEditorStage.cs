@@ -1,4 +1,3 @@
-using PlasticPipe.PlasticProtocol.Messages;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,10 +6,12 @@ using System.Linq;
 using UMA;
 using UMA.CharacterSystem;
 using UMA.Editors;
+using Unity.Jobs;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
@@ -231,7 +232,24 @@ public class VertexEditorStage : PreviewSceneStage
         return SelectedVertexes;
     }
 
+    public void SetVertexSelections(List<VertexSelection> selections)
+    {
+        SelectedVertexes = selections;
+    }
+
     public List<VertexSelection> GetActiveSelectedVertexes()
+    {
+        List<VertexSelection> active = new List<VertexSelection>();
+        for (int i = 0; i < SelectedVertexes.Count; i++)
+        {
+            if (SelectedVertexes[i].isActive)
+            {
+                active.Add(SelectedVertexes[i]);
+            }
+        }
+        return active;
+    }
+    public List<VertexSelection> GetAllVertexes()
     {
         List<VertexSelection> active = new List<VertexSelection>();
         for (int i = 0; i < SelectedVertexes.Count; i++)
@@ -387,33 +405,6 @@ public class VertexEditorStage : PreviewSceneStage
 
     protected override void OnCloseStage()
     {
-        bool wasChanged = false;
-        /*if (!hasSaved)
-        {
-            if (modifierEditor != null)
-            {
-                // Modifier Editor was not closed first. Check for changes.
-                if (modifierEditor.Modifiers != null)
-                {
-                    if (modifierEditor.Modifiers.Count > 0)
-                    {
-                        wasChanged = true;
-                    }
-                    if (Adjustments.Count > 0)
-                    {
-                        wasChanged = true;
-                    }
-                }
-                if (wasChanged)
-                {
-                    if (EditorUtility.DisplayDialog("VertexEditorStage Save Changes", "Do you want to save the changes you made to the modifiers?", "Yes", "No"))
-                    {
-                        modifierEditor.SaveToAsset();
-                    }
-                }
-            }
-        }*/
-        //AssetDatabase.StopAssetEditing();   
         closing = true;
         Tools.hidden = false;
         DestroyImmediate(VertexObject);
@@ -429,7 +420,6 @@ public class VertexEditorStage : PreviewSceneStage
         if (thisDCA.editorTimeGeneration)
         {
             thisDCA.GenerateSingleUMA();
-            //thisDCA.StartCoroutine(RegenerateUMA());
         }
         if (modifierEditor != null)
         {
@@ -450,6 +440,62 @@ public class VertexEditorStage : PreviewSceneStage
     {
         yield return null;
         thisDCA.GenerateSingleUMA();
+    }
+
+    Int64 FloatToFixed5(float f)
+    {
+        return (Int64)(f * 100000);
+    }
+
+    public Int64 GetPositionKey(Vector3 inVector)
+    {
+        // convert position to 6 digit fixed point.
+        // and then pack it into an Int64
+        Int64 posKey = 0;
+        Int64 x = FloatToFixed5(inVector.x);
+        Int64 y = FloatToFixed5(inVector.y);
+        Int64 z = FloatToFixed5(inVector.z);
+
+        posKey = x + (y * 1000000) + (z * 1000000000000);
+        return posKey;
+    }
+
+
+#if UMA_BURSTCOMPILE
+        [BurstCompile(CompileSynchronously = true)]
+#endif
+    public void RecalculateNormals()
+    {
+        BakedMesh.RecalculateNormals();
+        BakedMesh.RecalculateTangents();
+        // now go through and average the normals for any duplicate vertexes to smooth the mesh at the seams.
+        Dictionary<Int64, List<Vector3>> normals = new Dictionary<long, List<Vector3>>();
+        Vector3[] verts = BakedMesh.vertices;
+        Vector3[] norms = BakedMesh.normals;
+
+        for (int i = 0; i < verts.Length; i++)
+        {
+            Int64 posKey = GetPositionKey(verts[i]);
+            if (!normals.ContainsKey(posKey))
+            {
+                normals.Add(posKey, new List<Vector3>());
+            }
+            normals[posKey].Add(norms[i]);
+        }
+
+        for(int i=0;i<verts.Length;i++)
+        {
+            Int64 posKey = GetPositionKey(verts[i]);
+            List<Vector3> normList = normals[posKey];
+            Vector3 avg = Vector3.zero;
+            foreach (Vector3 norm in normList)
+            {
+                avg += norm;
+            }
+            avg /= normList.Count;
+            norms[i] = avg;
+        }
+        BakedMesh.normals = norms;
     }
 
     private void OnSceneGUI(SceneView view)
@@ -1045,23 +1091,7 @@ public class VertexEditorStage : PreviewSceneStage
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Select All", smallButtonStyle))
         {
-            SelectedVertexes.Clear();
-            var vertexes = BakedMesh.vertices;
-            var normals = BakedMesh.normals;
-            for (int i = 0; i < vertexes.Length; i++)
-            {
-                SlotData foundSlot = thisDCA.umaData.umaRecipe.FindSlotForVertex(i);
-                if (foundSlot != null)
-                {
-                    SelectedVertexes.Add(new VertexSelection()
-                    {
-                        vertexIndexOnSlot = i - foundSlot.vertexOffset,
-                        slot = foundSlot,
-                        WorldPosition = VertexObject.transform.TransformPoint(vertexes[i]),
-                        isActive = (currentNewVertexState == (int)newVertexState.Active)
-                    });
-                }
-            }
+            SelectAll();
             modifierEditor.Repaint();
         }
         if (GUILayout.Button("Clear Selection", smallButtonStyle))
@@ -1096,6 +1126,28 @@ public class VertexEditorStage : PreviewSceneStage
         GUILayout.EndScrollView();
 
 
+    }
+
+
+    public void SelectAll()
+    {
+        SelectedVertexes.Clear();
+        var vertexes = BakedMesh.vertices;
+        var normals = BakedMesh.normals;
+        for (int i = 0; i < vertexes.Length; i++)
+        {
+            SlotData foundSlot = thisDCA.umaData.umaRecipe.FindSlotForVertex(i);
+            if (foundSlot != null)
+            {
+                SelectedVertexes.Add(new VertexSelection()
+                {
+                    vertexIndexOnSlot = i - foundSlot.vertexOffset,
+                    slot = foundSlot,
+                    WorldPosition = VertexObject.transform.TransformPoint(vertexes[i]),
+                    isActive = (currentNewVertexState == (int)newVertexState.Active)
+                });
+            }
+        }
     }
 
     private void LoadSelections()
@@ -1487,8 +1539,11 @@ public class VertexEditorStage : PreviewSceneStage
 
         // This is only called from the MeshModifierEditor being closed
         // so we need to null this out so we don't try to close it again
+        thisDCA.umaData.CharacterUpdated.RemoveAllListeners();
         thisDCA.umaData.manualMeshModifiers.Clear();
+        modifierEditor.DoCharacterRebuild(false,false);
         this.modifierEditor = null;
+       
         StageUtility.GoBackToPreviousStage();
         SceneView.RepaintAll();
 
@@ -1496,10 +1551,13 @@ public class VertexEditorStage : PreviewSceneStage
 
 
 
-    public void RebuildMesh(bool RecipeChanged)
+    public void RebuildMesh(bool RecipeChanged, bool buildCollisionMesh = true)
     {
         UMAGeneratorBuiltin gb = thisDCA.umaData.umaGenerator as UMAGeneratorBuiltin;
-        thisDCA.umaData.CharacterUpdated.AddAction(BuildCollisionMesh);
+        if (buildCollisionMesh)
+        {
+            thisDCA.umaData.CharacterUpdated.AddAction(BuildCollisionMesh);
+        }
         if (gb != null)
         {
             gb.Clear();
@@ -1586,6 +1644,10 @@ public class VertexEditorStage : PreviewSceneStage
         }
     }
 
+    public Vector3 InverseTransform(Vector3 point)
+    {
+        return VertexObject.transform.InverseTransformPoint(point);
+    }
 
     private VertexSelection FindVertex(RaycastHit hit, Mesh mesh, GameObject go)
     {
@@ -1681,7 +1743,10 @@ public class VertexEditorStage : PreviewSceneStage
         phyScene = PhysicsSceneExtensions.GetPhysicsScene(scene);
     }
 
-
+    public Mesh GetBakedMesh()
+    {
+        return BakedMesh;
+    }
 
     private Color[] defaultColors = new Color[]
 {
@@ -1757,4 +1822,6 @@ public class VertexEditorStage : PreviewSceneStage
     {
         Adjustments.Remove(removeMe);
     }
+
+
 }
