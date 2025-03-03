@@ -130,6 +130,11 @@ namespace UMA.CharacterSystem.Editors
 
         public override void OnInspectorGUI()
         {
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                EditorGUILayout.HelpBox("Compiling/Updating...", MessageType.Info);
+                return;
+            }
             bool wasChanged = false;
             thisDCA = target as DynamicCharacterAvatar;
             SerializedProperty userInfo = serializedObject.FindProperty("userInformation");
