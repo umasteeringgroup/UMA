@@ -5,8 +5,14 @@ namespace UMA
 {
     public class UmaAboutWindow : EditorWindow 
     {
-        public static string umaVersion { get { return _version; } }
-        private static readonly string _version = "2.13.f2";
+        public static string umaVersion 
+        { 
+            get 
+            {
+                var settings = UMASettings.GetOrCreateSettings();
+                return settings.UMAVersion;
+            } 
+        }
         private string windowTitle = "UMA About";
         private string wikiLink = "https://github.com/umasteeringgroup/UMA/wiki";
         private string githubLink = "https://github.com/umasteeringgroup";

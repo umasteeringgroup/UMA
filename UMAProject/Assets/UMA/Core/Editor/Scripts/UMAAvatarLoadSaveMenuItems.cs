@@ -6,8 +6,6 @@ using System.IO;
 using UMA.Examples;
 using UMA.PoseTools;
 using static UMA.UMAData;
-using UnityEngine.Experimental.Rendering;
-using PlasticPipe.PlasticProtocol.Messages;
 
 namespace UMA.Editors
 {

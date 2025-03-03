@@ -5,6 +5,9 @@ using UMA;
 using Unity.Collections;
 using UnityEngine;
 
+#if UMA_BURSTCOMPILE
+using Unity.Burst;
+#endif
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -1051,6 +1054,8 @@ namespace UMA
     {
         public int value;
         public Vector3 initialPosition;
+        public Vector3 initialNormal;    // this can be used to reset the normal to a new orientation without rotation
+        public Vector3 initialTangent;   // this can be used to reset the tangent to a new orientation without rotation
 
         override public void Apply(MeshDetails mesh, MeshDetails src)
         {
@@ -1060,7 +1065,13 @@ namespace UMA
             }
             else
             {
+                Vector3 Normal = mesh.normals[vertexIndex];
                 mesh.vertices[vertexIndex] = initialPosition;
+                mesh.normals[vertexIndex] = initialNormal;
+                mesh.tangents[vertexIndex] = initialTangent;
+                Quaternion qt = Quaternion.FromToRotation(Normal, mesh.normals[vertexIndex]);
+                Vector3 rot = qt.eulerAngles;
+                Debug.Log(rot.ToString());
             }
         }
 
@@ -1069,7 +1080,11 @@ namespace UMA
             scale *= weight;
             Vector3 start = mesh.vertices[vertexIndex];
             Vector3 lerp = Vector3.Lerp(start, initialPosition, scale);
+            Vector3 newNormal = Vector3.Lerp(mesh.normals[vertexIndex], initialNormal, scale);
+            Vector3 newTangent = Vector3.Lerp(mesh.tangents[vertexIndex], initialTangent, scale);
             mesh.vertices[vertexIndex] = lerp;
+            mesh.normals[vertexIndex] = newNormal;
+            mesh.tangents[vertexIndex] = newTangent;
         }
 
         public static void Apply(MeshDetails mesh, MeshDetails src, List<VertexAdjustment> adjustments)
@@ -1079,9 +1094,26 @@ namespace UMA
                 mesh.vertices = (Vector3[])src.vertices.Clone();
                 mesh.verticesModified = true;
             }
+            if (!mesh.normalsModified)
+            {
+                mesh.normals = (Vector3[])src.normals.Clone();
+                mesh.normalsModified = true;
+            }
+            if (!mesh.tangentsModified)
+            {
+                if (src.tangents == null)
+                {
+                    mesh.tangents = new Vector4[src.vertices.Length];
+                }
+                else
+                {
+                    mesh.tangents = (Vector4[])src.tangents.Clone();
+                }
+                mesh.tangentsModified = true;
+            }
             for (int i = 0; i < adjustments.Count; i++)
             {
-                mesh.vertices[adjustments[i].vertexIndex] = (adjustments[i] as VertexResetAdjustment).initialPosition;
+                adjustments[i].Apply(mesh, src);
             }
         }
 
@@ -1092,13 +1124,14 @@ namespace UMA
                 mesh.vertices = (Vector3[])src.vertices.Clone();
                 mesh.verticesModified = true;
             }
+            if (!mesh.normalsModified)
+            {
+                mesh.normals = (Vector3[])src.normals.Clone();
+                mesh.normalsModified = true;
+            }
             for (int i = 0; i < adjustments.Count; i++)
             {
                 adjustments[i].ApplyScaled(mesh, src, scale);
-/*                int vertIndex = adjustments[i].vertexIndex;
-                Vector3 start = mesh.vertices[vertIndex];
-                Vector3 lerp = Vector3.Lerp(start, (adjustments[i] as VertexResetAdjustment).initialPosition, scale);
-                mesh.vertices[vertIndex] = lerp; */
             }
         }
 
@@ -1120,17 +1153,18 @@ namespace UMA
 
         public override VertexAdjustment ShallowCopy()
         {
-            return new VertexResetAdjustment()
-            {
-                vertexIndex = vertexIndex,
-                weight = weight,
-                value = value,
-                initialPosition = initialPosition
+            VertexResetAdjustment vr = new VertexResetAdjustment();
+            vr.vertexIndex = vertexIndex;
+            vr.initialNormal = initialNormal;
+            vr.initialPosition = initialPosition;
+            vr.initialTangent = initialTangent;
+            vr.weight = weight;
+            vr.value = value;
 #if UNITY_EDITOR
-                ,
-                slotName = slotName
+
+            vr.slotName = slotName;
 #endif
-            };
+            return vr;
         }
 
 #if UNITY_EDITOR
@@ -1166,6 +1200,8 @@ namespace UMA
         public override void Init(UMAMeshData meshData)
         {
             initialPosition = meshData.vertices[vertexIndex];
+            initialNormal = meshData.normals[vertexIndex];
+            initialTangent = meshData.tangents[vertexIndex];
         }
 #endif
 

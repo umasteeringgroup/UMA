@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -99,6 +100,26 @@ namespace UMA.Editors
         void OnEnable()
         {
             instance = this;
+            EditorApplication.update += CheckInspectors;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.update -= CheckInspectors;
+        }
+
+        private List<UnityEngine.Object> InspectMe = new List<UnityEngine.Object>();
+
+        private void CheckInspectors()
+        {
+            if (InspectMe.Count > 0)
+            {
+                for (int i = 0; i < InspectMe.Count; i++)
+                {
+                    InspectorUtlity.InspectTarget(InspectMe[i]);
+                }
+                InspectMe.Clear();
+            }
         }
 
         private void OnGUI()
@@ -155,7 +176,8 @@ namespace UMA.Editors
         private void InspectFavorite(object oFavorite)
         {
             var favorite = oFavorite as UMAFavorite;
-            InspectorUtlity.InspectTarget(favorite.asset);
+            InspectMe.Add(favorite.asset);
+            //InspectorUtlity.InspectTarget(favorite.asset); // this causes GUI errors in Unity 2022+ 
             // Selection.activeObject = favorite.asset;
         }
 

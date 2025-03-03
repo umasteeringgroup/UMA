@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using UMA.Controls;
 using UnityEditor;
+using UnityEditor.TerrainTools;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -1529,70 +1530,75 @@ namespace UMA.Editors
                     }
 
                     GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-
-                    bool wasDeleted = false;
-                    foreach (SlotData sda in BlendShapeSlots)
+                    try
                     {
-                        GUILayout.BeginHorizontal();
-                        // show slots
-                        // show x (delete)
-                        // add an object box to add one.
-                        GUILayout.Label(sda.slotName, EditorStyles.textField, GUILayout.ExpandWidth(true));
-                        if (GUILayout.Button("X", GUILayout.Width(22)))
+                        bool wasDeleted = false;
+                        foreach (SlotData sda in BlendShapeSlots)
                         {
-                            _recipe.RemoveSlot(sda);
-                            wasDeleted = true;
-                        }
-                        GUILayout.EndHorizontal();
-                    }
-                    //
-                    if (wasDeleted)
-                    {
-                        _dnaDirty = true;
-                        _meshDirty = true;
-                        changed = true;
-                    }
-                    var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
-
-                    if (addedSlot != null)
-                    {
-                        bool OK = true;
-
-                        if (addedSlot.meshData.vertexCount != _slotData.asset.meshData.vertexCount)
-                        {
-                            EditorUtility.DisplayDialog("Error", "Slot " + addedSlot.slotName + " Does not have the same vertex count as slot " + _slotData.asset.slotName, "OK");
-                            OK = false;
-                        }
-                        if (OK && !HasBlendshapes(addedSlot))
-                        {
-                            EditorUtility.DisplayDialog("Error", "Slot " + addedSlot.slotName + " Does not have any blendshapes!", "OK");
-                            OK = false;
-                        }
-                        if (OK)
-                        {
-                            foreach (SlotData sda in BlendShapeSlots)
+                            GUILayout.BeginHorizontal();
+                            // show slots
+                            // show x (delete)
+                            // add an object box to add one.
+                            GUILayout.Label(sda.slotName, EditorStyles.textField, GUILayout.ExpandWidth(true));
+                            if (GUILayout.Button("X", GUILayout.Width(22)))
                             {
-                                if (sda.slotName == addedSlot.slotName)
-                                {
-                                    EditorUtility.DisplayDialog("Error", "Slot " + sda.slotName + " already exists in list!", "OK");
-                                    OK = false;
-                                    break;
-                                }
+                                _recipe.RemoveSlot(sda);
+                                wasDeleted = true;
                             }
+                            GUILayout.EndHorizontal();
                         }
-                        if (OK)
+                        //
+                        if (wasDeleted)
                         {
-                            var newSlot = new SlotData(addedSlot);
-                            newSlot.blendShapeTargetSlot = _slotData.slotName;
-                            newSlot.SetOverlayList(new List<OverlayData>());
-                            _recipe.MergeSlot(newSlot, false);
                             _dnaDirty = true;
-                            _textureDirty = true;
                             _meshDirty = true;
                             changed = true;
                         }
+                        var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+
+                        if (addedSlot != null)
+                        {
+                            bool OK = true;
+
+                            if (addedSlot.meshData.vertexCount != _slotData.asset.meshData.vertexCount)
+                            {
+                                EditorUtility.DisplayDialog("Error", "Slot " + addedSlot.slotName + " Does not have the same vertex count as slot " + _slotData.asset.slotName, "OK");
+                                OK = false;
+                            }
+                            if (OK && !HasBlendshapes(addedSlot))
+                            {
+                                EditorUtility.DisplayDialog("Error", "Slot " + addedSlot.slotName + " Does not have any blendshapes!", "OK");
+                                OK = false;
+                            }
+                            if (OK)
+                            {
+                                foreach (SlotData sda in BlendShapeSlots)
+                                {
+                                    if (sda.slotName == addedSlot.slotName)
+                                    {
+                                        EditorUtility.DisplayDialog("Error", "Slot " + sda.slotName + " already exists in list!", "OK");
+                                        OK = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (OK)
+                            {
+                                var newSlot = new SlotData(addedSlot);
+                                newSlot.blendShapeTargetSlot = _slotData.slotName;
+                                newSlot.SetOverlayList(new List<OverlayData>());
+                                _recipe.MergeSlot(newSlot, false);
+                                _dnaDirty = true;
+                                _textureDirty = true;
+                                _meshDirty = true;
+                                changed = true;
+                            }
+                        }
                     }
-                    GUIHelper.EndVerticalPadded(10);
+                    finally
+                    {
+                        GUIHelper.EndVerticalPadded(10);
+                    }
                 }
                 #endregion
 
@@ -2298,7 +2304,7 @@ namespace UMA.Editors
                 }
                 else
                 {
-                    EditorGUILayout.HelpBox("Add a property above to be able to associate a name with this overlay and assign properties at runtime", MessageType.Info);
+                    EditorGUILayout.HelpBox("Add a property to the shared color above to be able to associate a name with this overlay and assign properties at runtime", MessageType.Info);
                 }
                 return changed;
             }
@@ -2675,16 +2681,33 @@ namespace UMA.Editors
             return true;
         }
 
+        public List<UnityEngine.Object> InspectMe = new List<UnityEngine.Object>();
+
+        public void DoInspectors()
+        {
+            if (InspectMe.Count > 0)
+            {
+                for (int i = 0; i < InspectMe.Count; i++)
+                {
+                    InspectorUtlity.InspectTarget(InspectMe[i]);
+                }
+                InspectMe.Clear();
+            }
+        }
+
+
         public virtual void OnEnable()
         {
             _needsUpdate = false;
             _forceUpdate = false;
             UMATextRecipe theRecipe = target as UMATextRecipe;
             InitialResourcesOnlyFlag = theRecipe.resourcesOnly;
+            EditorApplication.update += DoInspectors;
         }
 
         public virtual void OnDisable()
         {
+            EditorApplication.update -= DoInspectors;
             if (_needsUpdate)
             {
                 //if (EditorUtility.DisplayDialog("Unsaved Changes", "Save changes made to the recipe?", "Save", "Discard"))

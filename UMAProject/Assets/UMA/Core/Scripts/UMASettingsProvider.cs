@@ -112,15 +112,37 @@ class UMASettingsProvider : SettingsProvider
     }
 
 
-    public void DrawBoolConfigToggle(string propertyName, string label, string tooltip, string defineSymbol, HashSet<string> defineSymbols)
+    public void DrawBoolConfigToggle(string propertyName, string label, string tooltip, string defineSymbol, HashSet<string> defineSymbols, bool burst=false)
     {
-
         SerializedProperty prop = m_CustomSettings.FindProperty(propertyName);
         EditorGUI.BeginChangeCheck();
         prop.boolValue = EditorGUILayout.Toggle(new GUIContent(label, tooltip), prop.boolValue);
         if (EditorGUI.EndChangeCheck())
         {
-            Debug.Log(label + " changed to " + prop.boolValue);
+            Debug.Log($"{label} changed to {prop.boolValue} burst = {burst}");
+            if (burst)
+            {
+                if (prop.boolValue)
+                {
+                    string datapath = Application.dataPath;
+                    string sourceFile= Path.Combine(datapath,"uma", "core", "uma_core_burst.dat");
+                    string destFile = Path.Combine(datapath, "uma","core", "uma_core.asmdef");
+                    Debug.Log($"Burst changed to {prop.boolValue}-Copying from {sourceFile} to {destFile}");
+                    File.Copy(sourceFile, destFile, true);
+                    AssetDatabase.Refresh();
+                    Debug.Log("File copied");
+                }
+                else
+                {
+                    string datapath = Application.dataPath;
+                    string sourceFile = Path.Combine(datapath,"uma", "core", "uma_core_noburst.dat");
+                    string destFile = Path.Combine(datapath, "uma","core", "uma_core.asmdef");
+                    Debug.Log($"Burst changed to {prop.boolValue}-Copying from {sourceFile} to {destFile}");
+                    File.Copy(sourceFile, destFile, true);
+                    AssetDatabase.Refresh();
+                    Debug.Log("File copied");
+                }
+            }
             m_CustomSettings.ApplyModifiedProperties();
             if (prop.boolValue)
             {
@@ -207,7 +229,8 @@ class UMASettingsProvider : SettingsProvider
         EditorGUILayout.LabelField("Project Build Options", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox("Modifying these settings will change the UMA define symbols in the project settings, and force a recompile.", MessageType.Info);
         DrawBoolConfigToggle("use32bitBuffers", "Use 32bit Buffers", "If true, UMA will use 32bit buffers for all UMA data", DefineSymbol_32BitBuffers, defineSymbols);
-        DrawBoolConfigToggle("useBurstCompiler", "Use Burst Compiler", "If true, UMA will use the Burst Compiler to speed up array math. Must install the jobs package first", DefineSymbol_BurstCompile, defineSymbols);
+        EditorGUILayout.HelpBox("Using the Burst compiler will speed up certain operations. But will require adding the following packages from the Package Manager: Burst, Jobs (Mathematics, Collections should be pulled in automatically)", MessageType.Warning, true); 
+        DrawBoolConfigToggle("useBurstCompiler", "Use Burst Compiler", "If true, UMA will use the Burst Compiler to speed up array math. Must install the jobs package first", DefineSymbol_BurstCompile, defineSymbols,true);
         DrawBoolConfigToggle("useAddressables", "Use Addressables", "If true, UMA will use the Addressables system for loading assets", DefineSymbol_Addressables, defineSymbols);
         DrawBoolConfigToggle("alwaysGetAddressables", "Always Get Addressables", "If true, UMA will always load items even if they bundles are not available in the editor. You should test with this off!", DefineSymbol_UMAAlwaysGetAddressableItems, defineSymbols);
         DrawBoolConfigToggle("enableGLTFExport", "Enable GLTF Export", "If true, UMA will enable the GLTF export feature", DefineSymbol_GLTFExport, defineSymbols);

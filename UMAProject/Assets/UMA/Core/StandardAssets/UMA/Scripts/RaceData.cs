@@ -21,6 +21,7 @@ namespace UMA
 		public List<string> KeepBoneNames = new List<string>();
 		public List<string> tags = new List<string>();
 
+		public bool disableDNAConverters = false;
         #region INameProvider
         public string GetAssetName()
         {
@@ -81,12 +82,21 @@ namespace UMA
 		/// </summary>
 		public DynamicDNAConverterController[] dnaConverterList
 		{
-			get { return _dnaConverterList.ToArray(); }
+			get {
+				if (disableDNAConverters)
+					return new DynamicDNAConverterController[0];
+				else
+					return _dnaConverterList.ToArray(); 
+			}
 			set { _dnaConverterList = new DNAConverterList(value); }
 		}
 
 		public DynamicDNAConverterController[] GetConverters(UMADnaBase DNA)
 		{
+			if (disableDNAConverters)
+			{
+				return new DynamicDNAConverterController[0];
+			}
 			return _dnaConverterList.ToArray();
 		}
 
@@ -96,6 +106,8 @@ namespace UMA
 		/// <param name="converter"></param>
 		public void AddConverter(IDNAConverter converter)
 		{
+			if (disableDNAConverters)
+				return;
 			_dnaConverterList.Add(converter as DynamicDNAConverterController);
 		}
 
@@ -166,7 +178,9 @@ namespace UMA
 		#pragma warning disable 618
 	    public void UpdateDictionary()
 	    {
+			if (disableDNAConverters) return;
 			//UMA2.8+ call Prepare() on the elements in _dnaConverterList now.
+			
 			for (int i = 0; i < _dnaConverterList.Count; i++)
 			{
 				if (_dnaConverterList[i] != null)

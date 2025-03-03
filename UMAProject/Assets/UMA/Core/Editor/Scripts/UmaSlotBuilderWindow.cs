@@ -460,7 +460,12 @@ namespace UMA.Editors
 
 
             SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(sbp);
-			slot.tags = Tags.ToArray();
+			if (slot == null)
+            {
+                Debug.LogError("Failed to create SlotDataAsset");
+                return null;
+            }
+            slot.tags = Tags.ToArray();
 			return slot;
 		}
 
