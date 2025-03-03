@@ -79,7 +79,9 @@ namespace UMA.Editors
 			race.FixupRotations = EditorGUILayout.Toggle("Fixup Rotations",race.FixupRotations);
 			EditorGUILayout.Space();
 
-			SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("disableDNAConverters"));
+
+            SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
 			EditorGUILayout.PropertyField(dnaConverterListprop, true);
 
 			SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");

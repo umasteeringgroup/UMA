@@ -468,6 +468,9 @@ public class VertexEditorStage : PreviewSceneStage
     {
         BakedMesh.RecalculateNormals();
         BakedMesh.RecalculateTangents();
+
+        return;
+
         // now go through and average the normals for any duplicate vertexes to smooth the mesh at the seams.
         Dictionary<Int64, List<Vector3>> normals = new Dictionary<long, List<Vector3>>();
         Vector3[] verts = BakedMesh.vertices;

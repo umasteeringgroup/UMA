@@ -716,31 +716,34 @@ namespace UMA
 #if UMA_BURSTCOMPILE
         [BurstCompile(CompileSynchronously = true)]
 #endif
-        public void DoCharacterRebuild(bool forceTPose = false, bool buildCollisionMesh=true)
+        public void DoCharacterRebuild(bool forceTPose = false, bool buildCollisionMesh=true, bool LoadMeshModifiers = true)
         {
             if (forceTPose)
             {
                 thisDCA.GetComponent<Animator>().enabled = false;
                 thisDCA.KeepAnimatorController = true;
-                thisDCA.activeRace.data.FixupRotations = false;
+                /*thisDCA.activeRace.data.FixupRotations = false;
                 Transform rootTransform = thisDCA.umaData.skeleton.GetRootTransform();
                 Transform globalTransform = thisDCA.umaData.skeleton.GetGlobalTransform();
 
                 globalTransform.localRotation = Quaternion.identity;
-                rootTransform.localRotation = Quaternion.identity;
+                rootTransform.localRotation = Quaternion.identity; */
             }
             else
             {
                 thisDCA.GetComponent<Animator>().enabled = wasAnimatorEnabled;
                 thisDCA.KeepAnimatorController = wasKeepAnimator;
-                thisDCA.activeRace.data.FixupRotations = wasRaceFixup;
+                /*thisDCA.activeRace.data.FixupRotations = wasRaceFixup;
                 Transform rootTransform = thisDCA.umaData.skeleton.GetRootTransform();
                 Transform globalTransform = thisDCA.umaData.skeleton.GetGlobalTransform();
                 globalTransform.localRotation = wasGlobalRotation;
-                rootTransform.localRotation = wasRootRotation;
+                rootTransform.localRotation = wasRootRotation;*/
             }
             thisDCA.umaData.manualMeshModifiers = new List<MeshModifier.Modifier>();
-            thisDCA.umaData.manualMeshModifiers = DoModifierSplit(true);
+            if (LoadMeshModifiers)
+            {
+                thisDCA.umaData.manualMeshModifiers = DoModifierSplit(true);
+            }
             vertexEditorStage.RebuildMesh(forceTPose,buildCollisionMesh);
         }
 
@@ -955,35 +958,41 @@ namespace UMA
         private void DrawMeshModifiers()
         {
             EditorGUILayout.LabelField("Mesh Modifiers", centeredLabel);
-            if (GUILayout.Button("Extract All Normals to Reset Modifier"))
+            EditorGUILayout.HelpBox("Recalculate normals to modifier will create a normal rotation modifier from the current normals and tangents to the recalculate normals and tangents. You should run this before doing any mesh modifications.", MessageType.Info);
+            if (GUILayout.Button("Recalculate Normals to Reset Modifier"))
             {
+                DoCharacterRebuild(true, false, false);
+                // Get normals from "fresh" mesh.
+                // Now recalculate normals and tangents.
+                // then get the new normals.
+                // go through the normals, and extract the rotation from/to.
+                List<Vector3> oldNormals = new List<Vector3>(vertexEditorStage.BakedMesh.normals);
+                vertexEditorStage.RecalculateNormals();
+                List<Vector3> newNormals = new List<Vector3>(vertexEditorStage.BakedMesh.normals);
+
+
+
                 var saveSelections = new List<VertexEditorStage.VertexSelection>();
                 saveSelections.AddRange(vertexEditorStage.GetVertexSelections());
-
                 MeshModifier.Modifier newMod = new MeshModifier.Modifier();
-                newMod.EditorInitialize(typeof(VertexResetAdjustmentCollection));
-                newMod.ModifierName = FindNameForModifier(newMod.TemplateAdjustment.Name);
+                newMod.EditorInitialize(typeof(VertexNormalAdjustmentCollection));
+
+                // newMod.EditorInitialize(typeof(VertexResetAdjustmentCollection));
+                newMod.ModifierName = FindNameForModifier("Extracted recalculated normals");
                 Modifiers.Add(newMod);
-                newMod.adjustments = new VertexResetAdjustmentCollection();
+                newMod.adjustments = new VertexNormalAdjustmentCollection();
+                // newMod.adjustments = new VertexResetAdjustmentCollection();
                 AddAllVertexesToCollection(newMod);
 
-                Mesh BakedMesh = vertexEditorStage.GetBakedMesh();
-                Vector3[] normals = BakedMesh.normals;
-                Vector4[] tangents = BakedMesh.tangents;
-
-                VertexResetAdjustmentCollection theCollection = (VertexResetAdjustmentCollection)newMod.adjustments;
+                VertexNormalAdjustmentCollection theCollection = (VertexNormalAdjustmentCollection)newMod.adjustments;
                 for (int i = 0; i < theCollection.vertexAdjustments.Count; i++)
                 {
                     SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(theCollection.vertexAdjustments[i].slotName);
                     int vertPos = theCollection.vertexAdjustments[i].vertexIndex + slot.vertexOffset;
-                    VertexResetAdjustment var = theCollection.vertexAdjustments[i] as VertexResetAdjustment;
-
-                    var.initialNormal = normals[vertPos];
-                    var.initialTangent = tangents[vertPos];
-                    /*
-                    var.initialNormal = vertexEditorStage.InverseTransform(normals[vertPos]);
-                    Vector3 vector3 = vertexEditorStage.InverseTransform(tangents[vertPos]);
-                    var.initialTangent = new Vector4(vector3.x,vector3.y,vector3.z,tangents[vertPos].w);     */
+                    VertexNormalAdjustment var = theCollection.vertexAdjustments[i] as VertexNormalAdjustment;
+                    var.rotation = Quaternion.FromToRotation(oldNormals[vertPos], newNormals[vertPos]);
+                    //var.initialNormal = normals[vertPos];
+                    //var.initialTangent = tangents[vertPos];
                 }
                 currentModifierIndex = Modifiers.Count - 1;
                 ModifierScrollPos.y = 100000;

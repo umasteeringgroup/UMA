@@ -1065,8 +1065,13 @@ namespace UMA
             }
             else
             {
+                Vector3 Normal = mesh.normals[vertexIndex];
                 mesh.vertices[vertexIndex] = initialPosition;
                 mesh.normals[vertexIndex] = initialNormal;
+                mesh.tangents[vertexIndex] = initialTangent;
+                Quaternion qt = Quaternion.FromToRotation(Normal, mesh.normals[vertexIndex]);
+                Vector3 rot = qt.eulerAngles;
+                Debug.Log(rot.ToString());
             }
         }
 
@@ -1148,17 +1153,18 @@ namespace UMA
 
         public override VertexAdjustment ShallowCopy()
         {
-            return new VertexResetAdjustment()
-            {
-                vertexIndex = vertexIndex,
-                weight = weight,
-                value = value,
-                initialPosition = initialPosition
+            VertexResetAdjustment vr = new VertexResetAdjustment();
+            vr.vertexIndex = vertexIndex;
+            vr.initialNormal = initialNormal;
+            vr.initialPosition = initialPosition;
+            vr.initialTangent = initialTangent;
+            vr.weight = weight;
+            vr.value = value;
 #if UNITY_EDITOR
-                ,
-                slotName = slotName
+
+            vr.slotName = slotName;
 #endif
-            };
+            return vr;
         }
 
 #if UNITY_EDITOR
@@ -1195,6 +1201,7 @@ namespace UMA
         {
             initialPosition = meshData.vertices[vertexIndex];
             initialNormal = meshData.normals[vertexIndex];
+            initialTangent = meshData.tangents[vertexIndex];
         }
 #endif
 
