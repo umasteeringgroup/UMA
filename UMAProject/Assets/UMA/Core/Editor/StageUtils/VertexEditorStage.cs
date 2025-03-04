@@ -6,15 +6,14 @@ using System.Linq;
 using UMA;
 using UMA.CharacterSystem;
 using UMA.Editors;
-using Unity.Jobs;
 using UnityEditor;
-using UnityEditor.Experimental.GraphView;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 
+#if UMA_BURSTCOMPILE
+using Unity.Burst;
+#endif
 public class VertexEditorStage : PreviewSceneStage
 {
     public PreviewWindow ownerWindow;
