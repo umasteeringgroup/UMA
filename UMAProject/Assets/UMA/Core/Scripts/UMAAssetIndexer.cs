@@ -181,6 +181,13 @@ namespace UMA
             {
                 if (theIndexer == null)
                 {
+#if UNITY_EDITOR
+                    if (EditorApplication.isCompiling)
+                    {
+                        Debug.Log("Warning: Attempted to get instance while compiling.");
+                        return null;
+                    }
+#endif
                     //var st = StartTimer();
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
                     if (theIndexer == null)
@@ -1873,7 +1880,7 @@ namespace UMA
 				}
 		}
 #endif
-        #endregion
+#endregion
 
         #region Add Remove Assets
 
@@ -2331,7 +2338,7 @@ namespace UMA
         }
 
 #endif
-        #endregion
+#endregion
 
         #region Maintenance
 
@@ -2355,6 +2362,15 @@ namespace UMA
         public void UpdateSerializedDictionaryItems()
         {
             DebugSerialization("Updating serialized Dictionary Items");
+            if (SerializedItems == null)
+            {
+                DebugSerialization("Serialized Items is null");
+                return;
+            }
+            if (SerializedItems.Count == 0)
+            {
+                DebugSerialization("Serialized Items is empty!!!");
+            }
             // Rebuuild all the lookup tables
             // Lookup by guid
             GuidTypes = new Dictionary<string, AssetItem>();
@@ -2951,6 +2967,7 @@ namespace UMA
 #region Serialization
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
+            DebugSerialization("Before Serialize called");
             UpdateSerializedList();
 
             // load typeFolders so it can be serialized.
@@ -2962,6 +2979,7 @@ namespace UMA
                 tpf.Folders =  kpv.Value.ToArray();
                 typeFolders.Add(tpf);
             }
+            DebugSerialization("Before Serialize complete");
         }
 
     void ISerializationCallbackReceiver.OnAfterDeserialize()
@@ -3065,7 +3083,13 @@ namespace UMA
                     TypeLookup = new Dictionary<Type, Dictionary<string, AssetItem>>();
                 }
             }
+
+            // should it call UpdateSerializeDictionaryItems()???
+            // NO IT SHOULD NOT
+            // THIS IS DONE WHERE THE SINGLETON IS CREATED ABOVE
+
             StopTimer(st, "After Serialize");
+            DebugSerialization("After Deserialize complete");
         }
 
 #if UNITY_EDITOR

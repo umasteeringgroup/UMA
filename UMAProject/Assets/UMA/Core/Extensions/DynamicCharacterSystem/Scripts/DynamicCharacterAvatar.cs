@@ -510,10 +510,22 @@ namespace UMA.CharacterSystem
         [UnityEditor.Callbacks.DidReloadScripts]
         private static void OnScriptsReloaded()
         {
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                // Try again after compiling and updating finished.
+                EditorApplication.delayCall += OnScriptsReloaded;
+                return;
+            }
+
+            EditorApplication.delayCall += RebuildAllEditTimeAvatars;
+        }
+
+        private static void RebuildAllEditTimeAvatars()
+        {
             if (!EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 DynamicCharacterAvatar[] dcas = GameObject.FindObjectsOfType<DynamicCharacterAvatar>();
-                for(int i=0; i<dcas.Length ; i++)
+                for (int i = 0; i < dcas.Length; i++)
                 {
                     DynamicCharacterAvatar dca = dcas[i];
                     if (dca.editorTimeGeneration)
