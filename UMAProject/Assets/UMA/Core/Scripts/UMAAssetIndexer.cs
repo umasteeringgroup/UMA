@@ -25,6 +25,7 @@ using UnityEditor.SceneManagement;
 
 using UnityEngine.SceneManagement;
 using System.Text;
+using System.Collections;
 
 
 namespace UMA
@@ -2447,16 +2448,41 @@ namespace UMA
 
         private void AddRaceRecipe(UMAWardrobeRecipe uwr)
         {
+
             if (!uwr)
             {
                 return;
             }
+
+            Dictionary<string, AssetItem> TypeDic;
+            TypeDic = GetAssetDictionary(typeof(RaceData));
+
             // if (req == null)
             //     req = new recipeEqualityComparer();
+            List<string> CompatibleRaces = new List<string>(uwr.compatibleRaces);
 
-            for (int i = 0; i < uwr.compatibleRaces.Count; i++)
+            List<string> AdditionalRaces = new List<string>();
+
+            foreach (string s in CompatibleRaces)
             {
-                string racename = uwr.compatibleRaces[i];
+                RaceData r = GetAsset<RaceData>(s);
+                if (r != null && !AdditionalRaces.Contains(r.name))
+                {
+                    if (r.IsCrossCompatibleWith(s))
+                    {
+                        if (!AdditionalRaces.Contains(r.name) && !CompatibleRaces.Contains(r.name))
+                        {
+                            AdditionalRaces.Add(r.name);
+                        }
+                    }
+                }
+            }
+            CompatibleRaces.AddRange(AdditionalRaces);
+
+
+            for (int i = 0; i < CompatibleRaces.Count; i++)
+            {
+                string racename = CompatibleRaces[i];
                 if (!raceRecipes.ContainsKey(racename))
                 {
                     raceRecipes.Add(racename, new SlotRecipes());

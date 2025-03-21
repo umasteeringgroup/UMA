@@ -12921,7 +12921,7 @@ MonoBehaviour:
   _converterController: {fileID: 11400000}
   _blendshapeDNAConverters:
   - _blendshapeToApply: MaleAlienHead
-    _startingShapeWeight: 0
+    _startingShapeWeight: 0.933
     _modifyingDNA:
       _dnaEvaluators:
       - _calcOption: 0
