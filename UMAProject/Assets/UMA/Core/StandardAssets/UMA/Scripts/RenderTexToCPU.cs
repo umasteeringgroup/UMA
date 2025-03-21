@@ -127,14 +127,14 @@ namespace UMA
                 try
                 {
 
-                    newTexture.Apply(true); // TEST ONLY JRRM
+                    newTexture.Apply(true); // TODO: IS THIS??? TEST ONLY JRRM
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
                     RenderTexture.ReleaseTemporary(texture);
                     renderTexturesCleanedApplied++;
                     texturesUploaded++;
                 }
-                catch (System.Exception e)
+                catch 
                 {
                     errorUploads++;
                 }

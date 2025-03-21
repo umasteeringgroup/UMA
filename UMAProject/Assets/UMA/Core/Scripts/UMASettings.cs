@@ -44,11 +44,37 @@ public class UMASettings : ScriptableObject
     public bool addrIncludeRecipes = false;
     public bool addrIncludeOther = false;
 
+    public bool showWelcomeToUMA = true;
+    public GameObject generatorPrefab;
+    public GameObject characterPrefab;
+    public TextureMerge textureMerge;
+
+    [Header("Links")]
+    public string DiscordInvite;
+    public string DiscordURL;
+    public string WikiURL;
+    public string ForumURL;
+    public string AssetStoreURL;
+    [Header("Shader Folder")]
+    [Tooltip("The folder where the UMA shaders are located, relative to the Assets folder. Usually UMA/Core/ShaderPackages")]
+    public string ShaderFolder;
+
+
     [MenuItem("Assets/Create/UMA/Core/UMASettings")]
     public static void CreateUMASettingsMenuItem()
     {
         var settings = CustomAssetUtility.CreateAsset<UMASettings>("", true, "UMASettings", true);
-
+        settings.showWelcomeToUMA = true;
+        settings.generatorPrefab = null;
+        settings.characterPrefab = null;
+        settings.DiscordInvite = "https://discord.gg/KdteVKd";
+        settings.DiscordURL = "https://discord.com/channels/459433092554162193/537991320636096523";
+        settings.WikiURL = "https://github.com/umasteeringgroup/UMA/wiki";
+        settings.ForumURL = "https://discussions.unity.com/t/uma-unity-multipurpose-avatar-on-the-asset-store-part-2/1487160";
+        settings.AssetStoreURL = "https://assetstore.unity.com/packages/3d/characters/uma-2-35611";
+        settings.ShaderFolder = "UMA/Core/ShaderPackages";
+        EditorUtility.SetDirty(settings);
+        AssetDatabase.SaveAssetIfDirty(settings);
         TestLoad();
     }
 

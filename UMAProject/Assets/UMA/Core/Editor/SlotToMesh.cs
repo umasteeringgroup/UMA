@@ -185,6 +185,18 @@ public class SlotToMesh : EditorWindow
 
         mesh.vertices = slot.meshData.vertices;
         mesh.uv = slot.meshData.uv;
+        if (slot.meshData.uv2 != null)
+        {
+            mesh.uv2 = slot.meshData.uv2;
+        }
+        if (slot.meshData.uv3 != null)
+        {
+            mesh.uv3 = slot.meshData.uv3;
+        }
+        if (slot.meshData.uv4 != null)
+        {
+            mesh.uv4 = slot.meshData.uv4;
+        }
         mesh.normals = slot.meshData.normals;
         mesh.tangents = slot.meshData.tangents;
         mesh.subMeshCount = slot.meshData.subMeshCount;

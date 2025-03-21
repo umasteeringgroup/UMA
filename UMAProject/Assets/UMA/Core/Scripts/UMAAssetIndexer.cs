@@ -181,13 +181,17 @@ namespace UMA
             {
                 if (theIndexer == null)
                 {
+
 #if UNITY_EDITOR
-                    if (EditorApplication.isCompiling)
+                    DebugSerializationStatic("Instance is NULL - getting new instance.");
+                    if (EditorApplication.isCompiling || EditorApplication.isUpdating)
                     {
-                        Debug.Log("Warning: Attempted to get instance while compiling.");
+                        Debug.Log("Warning: Attempted to get instance while compiling/Updating");
                         return null;
                     }
+                    DebugSerializationStatic("Loading AssetIndexer from resources...");
 #endif
+
                     //var st = StartTimer();
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
                     if (theIndexer == null)
@@ -195,6 +199,9 @@ namespace UMA
                         return null;
                     }
 
+#if UNITY_EDITOR
+                    DebugSerializationStatic("Rebulding Lookup Tables");
+#endif
                     theIndexer.UpdateSerializedDictionaryItems();
                     theIndexer.RebuildRaceRecipes();
 #if UNITY_EDITOR
@@ -203,6 +210,15 @@ namespace UMA
                     EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged; ;
 #endif
                     //StopTimer(st,"Asset index load");
+                }
+                else
+                {
+#if UNITY_EDITOR
+                    if (!theIndexer.IsValid())
+                    {
+                        theIndexer.HealIndex();
+                    }
+#endif
                 }
                 return theIndexer;
             }
@@ -2503,6 +2519,14 @@ namespace UMA
 #endif
         }
 
+        private static void DebugSerializationStatic(string s)
+        {
+#if DEBUG_SERIALIZATION
+            Debug.Log("[Serializing] "+s);
+#endif
+        }
+
+
         /// <summary>
         /// Updates the list so all items can be processed at once, or for
         /// serialization.
@@ -2516,10 +2540,11 @@ namespace UMA
             {
                 if (type == TypeToLookup[type])
                 {
-                    DebugSerialization($"Adding type to serialized list {type.ToString()}");
+                    DebugSerialization($"Adding type to serialized list {type.ToString()} ");
                     Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
                     if (TypeDic != null)
                     {
+                        DebugSerialization($"There are {TypeDic.Count} items for type {type.ToString()}");
                         foreach (AssetItem ai in TypeDic.Values)
                         {
                             if (ai.IsAddressable || ai.Ignore)
@@ -2535,6 +2560,7 @@ namespace UMA
                     }
                 }
             }
+            DebugSerialization($"{SerializedItems.Count} Serialized Items added");
             return SerializedItems;
         }
 
@@ -2554,6 +2580,29 @@ namespace UMA
 #if UNITY_EDITOR
 
         private List<AssetItem> Keeps = new List<AssetItem>();
+
+        public void RebuildLibrary()
+        {
+            SaveKeeps();
+            Clear();
+            BuildStringTypes();
+            AddEverything(false);
+            RestoreKeeps();
+            RebuildRaceRecipes();
+            ForceSave();
+            Resources.UnloadUnusedAssets();
+        }
+
+        public Dictionary<string, int> GetCounts()
+        {
+            Dictionary<string, int> counts = new Dictionary<string, int>();
+            foreach (System.Type type in TypeToLookup.Keys)
+            {
+                Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
+                counts.Add(type.Name, TypeDic.Count);
+            }
+            return counts;
+        }
 
         public void SaveKeeps()
         {
@@ -2908,6 +2957,24 @@ namespace UMA
             return TypeLookup[LookupType];
         }
 
+        public bool IndexIsValid
+        {
+            get
+            {
+                if (TypeToLookup == null)
+                {
+                    return false;
+                }
+                if (TypeToLookup.Count == 0)
+                {
+                    return false;
+                }
+
+                return false;
+            }
+        }
+
+
 #if UNITY_EDITOR
         /// <summary>
         /// Heals the index if possible, if not rebuilds
@@ -2932,6 +2999,7 @@ namespace UMA
                         ai._Name = ai.EvilName;
                     }
                     UpdateSerializedDictionaryItems();
+                    RebuildRaceRecipes();
                     return;
                 }
             }
@@ -2967,6 +3035,7 @@ namespace UMA
 #region Serialization
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
+
             DebugSerialization("Before Serialize called");
             UpdateSerializedList();
 
@@ -3006,24 +3075,84 @@ namespace UMA
                 typeof(UMAColorScheme)
             };
 
-            TypeToLookup = new Dictionary<System.Type, System.Type>()
+            if (TypeToLookup != null)
             {
-                { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
-                { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
-                { (typeof(RaceData)),(typeof(RaceData)) },
-                { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
-                { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
-                { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
-                { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
-                { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
+                if (TypeToLookup.ContainsKey(typeof(SlotDataAsset)) == false)
+                {
+                    TypeToLookup.Add(typeof(SlotDataAsset), typeof(SlotDataAsset));
+                }
+                if (TypeToLookup.ContainsKey(typeof(OverlayDataAsset)) == false)
+                {
+                    TypeToLookup.Add(typeof(OverlayDataAsset), typeof(OverlayDataAsset));
+                }
+                if (TypeToLookup.ContainsKey(typeof(RaceData)) == false)
+                {
+                    TypeToLookup.Add(typeof(RaceData), typeof(RaceData));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMATextRecipe)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMATextRecipe), typeof(UMATextRecipe));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMAWardrobeRecipe)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMAWardrobeRecipe), typeof(UMAWardrobeRecipe));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMAWardrobeCollection)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMAWardrobeCollection), typeof(UMAWardrobeCollection));
+                }
+                if (TypeToLookup.ContainsKey(typeof(RuntimeAnimatorController)) == false)
+                {
+                    TypeToLookup.Add(typeof(RuntimeAnimatorController), typeof(RuntimeAnimatorController));
+                }
+                if (TypeToLookup.ContainsKey(typeof(AnimatorOverrideController)) == false)
+                {
+                    TypeToLookup.Add(typeof(AnimatorOverrideController), typeof(RuntimeAnimatorController));
+                }
 #if UNITY_EDITOR
-                { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
+                if (TypeToLookup.ContainsKey(typeof(AnimatorController)) == false)
+                {
+                    TypeToLookup.Add(typeof(AnimatorController), typeof(RuntimeAnimatorController));
+                }
 #endif
-                {  typeof(TextAsset), typeof(TextAsset) },
-                { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
-                { (typeof(UMAMaterial)),(typeof(UMAMaterial)) },
-                {  typeof(UMAColorScheme), typeof(UMAColorScheme) }
-            };
+                if (TypeToLookup.ContainsKey(typeof(DynamicUMADnaAsset)) == false)
+                {
+                    TypeToLookup.Add(typeof(DynamicUMADnaAsset), typeof(DynamicUMADnaAsset));
+                }
+                if (TypeToLookup.ContainsKey(typeof(TextAsset)) == false)
+                {
+                    TypeToLookup.Add(typeof(TextAsset), typeof(TextAsset));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMAMaterial)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMAMaterial), typeof(UMAMaterial));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMAColorScheme)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMAColorScheme), typeof(UMAColorScheme));
+                }
+            }
+            else
+            {
+                TypeToLookup = new Dictionary<System.Type, System.Type>()
+                {
+                    { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
+                    { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
+                    { (typeof(RaceData)),(typeof(RaceData)) },
+                    { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
+                    { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
+                    { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
+                    { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
+                    { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
+#if UNITY_EDITOR
+                    { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
+#endif
+                    {  typeof(TextAsset), typeof(TextAsset) },
+                    { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
+                    { (typeof(UMAMaterial)),(typeof(UMAMaterial)) },
+                    {  typeof(UMAColorScheme), typeof(UMAColorScheme) }
+                };
+            }
 
             List<string> invalidTypeNames = new List<string>();
             // Add the additional Types.

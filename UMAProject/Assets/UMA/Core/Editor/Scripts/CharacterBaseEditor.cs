@@ -1691,7 +1691,7 @@ namespace UMA.Editors
                         changed = true;
                     }
 
-                    int remapUV = EditorGUILayout.Popup("Remap UV to Main", _slotData.UVSet, new string[] { "None", "UV Set 1", "UV Set 2", "UV Set 3" });
+                    int remapUV = EditorGUILayout.Popup("Remap UV to Main", _slotData.UVSet, new string[] { "None", "UV Set 2", "UV Set 3", "UV Set 4" });
                     if (remapUV != _slotData.UVSet)
                     {
                         _slotData.UVSet = remapUV;

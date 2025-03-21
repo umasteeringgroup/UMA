@@ -40,8 +40,10 @@ namespace UMA.Editors
         private int selectedRaceIndex = -1;
 		private List<RaceData> foundRaces = new List<RaceData>();
 		private List<string> foundRaceNames = new List<string>();
+		private int uvChannel;
+		private int uvChannelToMirror;
 
-		public override bool HasPreviewGUI() => true;
+        public override bool HasPreviewGUI() => true;
 		MeshPreview MeshPreview;
 		Mesh meshToPreview;
 		static Vector3 previewRotation = Vector3.zero;
@@ -314,10 +316,96 @@ namespace UMA.Editors
 
 			if (slot.utilitiesFoldout)
 			{
-				#region WELDS
+                #region UV_Utilities
+                // create a button and popup to select a UV channel to copy UV 0 to. This is on the same slot
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				GUILayout.Label("UV Utilities", EditorStyles.boldLabel);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Copy UV0 to UV Channel", GUILayout.Width(150));
+                uvChannel = EditorGUILayout.Popup(uvChannel, new string[] { "2", "3", "4" }, GUILayout.Width(50));
+                if (GUILayout.Button("Copy"))
+                {
+                    SlotDataAsset slotDataAsset = target as SlotDataAsset;
+                    switch (uvChannel)
+					{
+						case 0:
+							slotDataAsset.meshData.uv2 = slotDataAsset.meshData.uv.Clone() as Vector2[];
+							break;
+                        case 1:
+                            slotDataAsset.meshData.uv3 = slotDataAsset.meshData.uv.Clone() as Vector2[];
+                            break;
+                        case 2:
+                            slotDataAsset.meshData.uv4 = slotDataAsset.meshData.uv.Clone() as Vector2[];
+                            break;
+                    }
+					EditorUtility.SetDirty(target);
+                    AssetDatabase.SaveAssetIfDirty(target);
+                    UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
+                    EditorUtility.DisplayDialog("Complete", "UV0 copied to UV" + (uvChannel + 2), "OK");
+                }
+				GUILayout.EndHorizontal();
+
+                // create a button and popup to select UV channel to mirror left to right
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Mirror UV Channel ", GUILayout.Width(150));
+                uvChannelToMirror = EditorGUILayout.Popup(uvChannelToMirror, new string[] { "1", "2", "3", "4" }, GUILayout.Width(50));
+
+                if (GUILayout.Button("Mirror U"))
+                {
+                    SlotDataAsset slotDataAsset = target as SlotDataAsset;
+                    switch (uvChannelToMirror)
+                    {
+                        case 0:
+                            slotDataAsset.meshData.MirrorU(0);
+                            break;
+                        case 1:
+                            slotDataAsset.meshData.MirrorU(1);
+                            break;
+                        case 2:
+                            slotDataAsset.meshData.MirrorU(2);
+                            break;
+                        case 3:
+                            slotDataAsset.meshData.MirrorU(3);
+                            break;
+                    }
+                    EditorUtility.SetDirty(target);
+                    AssetDatabase.SaveAssetIfDirty(target);
+                    UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
+                    EditorUtility.DisplayDialog("Complete", "UV U" + (uvChannelToMirror + 1) + " mirrored", "OK");
+                }
+                if (GUILayout.Button("Mirror V"))
+                {
+                    SlotDataAsset slotDataAsset = target as SlotDataAsset;
+                    switch (uvChannelToMirror)
+                    {
+                        case 0:
+                            slotDataAsset.meshData.MirrorV(0);
+                            break;
+                        case 1:
+                            slotDataAsset.meshData.MirrorV(1);
+                            break;
+                        case 2:
+                            slotDataAsset.meshData.MirrorV(2);
+                            break;
+                        case 3:
+                            slotDataAsset.meshData.MirrorV(3);
+                            break;
+                    }
+                    EditorUtility.SetDirty(target);
+                    AssetDatabase.SaveAssetIfDirty(target);
+                    UMAUpdateProcessor.UpdateSlot(target as SlotDataAsset, false);
+                    EditorUtility.DisplayDialog("Complete", "UV V" + (uvChannelToMirror + 1) + " mirrored", "OK");
+                }
+				GUILayout.EndHorizontal();
 
 
-				selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
+
+                GUIHelper.EndVerticalPadded(10);
+
+                #endregion
+                #region WELDS
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+                selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
 				if (selectedRaceIndex <= 0)
 				{
 					EditorGUILayout.HelpBox("Select a slot by race quickly, or use manual selection below", MessageType.Info);
@@ -342,38 +430,16 @@ namespace UMA.Editors
 
 				GUILayout.Space(12);
 
-
-
 				WeldToSlot = EditorGUILayout.ObjectField("Source SLot", WeldToSlot, typeof(SlotDataAsset), false) as SlotDataAsset;
 
 				weldDistance = EditorGUILayout.FloatField("Max Vertex Distance", weldDistance);
-				//CopyBoneWeights = EditorGUILayout.Toggle("Copy Boneweights", CopyBoneWeights);
-				//CopyNormals = EditorGUILayout.Toggle("Copy Normals", CopyNormals);
-				//AverageNormals = EditorGUILayout.Toggle("Average Normals", AverageNormals);
-
-
-
-
-
-
 
 				if (WeldToSlot == null)
 				{
 					EditorGUI.BeginDisabledGroup(true);
 				}
 				string weldSlotName = WeldToSlot != null ? WeldToSlot.slotName : "No Slot Selected";
-				/*
-                if (GUILayout.Button("Perform Weld"))
-				{
-					lastWeld = slot.CalculateWelds(WeldToSlot, CopyNormals, CopyBoneWeights, AverageNormals, weldDistance, blendshapeCopyMode);
-					forceUpdate = true;
-				}
-
-                if (GUILayout.Button($"Clear Weld"))
-                {
-                    lastWeld = null;
-                    forceUpdate = true;
-                }*/
+ 
 				GUILayout.Box("Warning! averaging normals will update both slots!", GUILayout.ExpandWidth(true));
 
 				if (GUILayout.Button($"Copy boneweights"))
@@ -410,8 +476,10 @@ namespace UMA.Editors
 				{
 					EditorGUI.EndDisabledGroup();
 				}
+				GUIHelper.EndVerticalPadded(10);
+                #endregion 
                 #region info
-				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 				GUILayout.Label("This mesh"); 
 
 				GUILayout.BeginHorizontal();
@@ -448,7 +516,6 @@ namespace UMA.Editors
 
                 GUIHelper.EndVerticalPadded(10);
                 #endregion
-
                 #region Preview
 
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
@@ -508,28 +575,9 @@ namespace UMA.Editors
 						}
 					}
 
-					#endregion
-
-					/*
-					int lastWeldCount = 0;
-					int lastWeldMismatch = 0;
-					if (lastWeld != null)
-					{
-						lastWeldCount = lastWeld.WeldPoints.Count;
-						lastWeldMismatch = lastWeld.MisMatchCount;
-					}
-
-					if (lastWeld != null)
-					{
-						GUILayout.Label($"Last Weld: {lastWeldCount} points, {lastWeld.MisMatchCount} mismatches", GUILayout.ExpandWidth(true));
-					}
-					else
-					{
-						GUILayout.Label($"Last Weld: None", GUILayout.ExpandWidth(true));
-					}*/
-					#endregion
 				}
                 GUIHelper.EndVerticalPadded(10);
+                #endregion
             }
 
             foreach (var t in targets)

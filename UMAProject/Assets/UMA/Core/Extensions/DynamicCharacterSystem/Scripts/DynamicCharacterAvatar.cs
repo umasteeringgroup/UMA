@@ -708,8 +708,23 @@ namespace UMA.CharacterSystem
 
 #if UNITY_EDITOR
 
+        public bool nextBuildSlotsOnly = false;
         public void GenerateSingleUMA(bool slotsOnly = false)
         {
+            nextBuildSlotsOnly = slotsOnly;
+            EditorApplication.delayCall += InternalGenerateSingleUMA;
+        }
+
+        private void InternalGenerateSingleUMA()
+        {
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                // Try again after compiling and updating finished.
+                EditorApplication.delayCall += InternalGenerateSingleUMA;
+                return;
+            }
+
+            bool slotsOnly = nextBuildSlotsOnly;
             UMAGenerator ugb = umaGenerator as UMAGenerator;
             if (umaGenerator == null)
             {
@@ -722,11 +737,11 @@ namespace UMA.CharacterSystem
             }
             if (ugb != null)
             {
-               /* if (slotsOnly)
-                {
-                    ugb.UpdateSlots(umaData);
-                    return;
-                } */ // TODO: Fix this
+                /* if (slotsOnly)
+                 {
+                     ugb.UpdateSlots(umaData);
+                     return;
+                 } */ // TODO: Fix this
                 if (UnityEditor.PrefabUtility.IsPartOfPrefabInstance(gameObject.transform))
                 {
                     // Unfortunately we must unpack the prefab or it will blow up.

@@ -47,3 +47,14 @@ MonoBehaviour:
   addStripMaterials: 1
   addrIncludeRecipes: 0
   addrIncludeOther: 0
+  showWelcomeToUMA: 1
+  generatorPrefab: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889,
+    type: 3}
+  characterPrefab: {fileID: 153068, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+  textureMerge: {fileID: 11400000, guid: d242fc6cda21e9b42b95a0c72bb3bee1, type: 2}
+  DiscordInvite: https://discord.gg/KdteVKd
+  DiscordURL: https://discord.com/channels/459433092554162193/537991320636096523
+  WikiURL: https://github.com/umasteeringgroup/UMA/wiki
+  ForumURL: https://discussions.unity.com/t/uma-unity-multipurpose-avatar-on-the-asset-store-part-2/1487160
+  AssetStoreURL: https://assetstore.unity.com/packages/3d/characters/uma-2-35611
+  ShaderFolder: UMA/Core/ShaderPackages

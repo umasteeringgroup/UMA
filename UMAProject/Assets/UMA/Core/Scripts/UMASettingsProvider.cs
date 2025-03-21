@@ -178,6 +178,23 @@ class UMASettingsProvider : SettingsProvider
         }
     }
 
+    public void DrawObjectProperty(string propertyName, string label, string tooltip, System.Type type)
+    {
+        SerializedProperty prop = m_CustomSettings.FindProperty(propertyName);
+        EditorGUILayout.ObjectField(prop,type,new GUIContent(label, tooltip));
+    }
+
+    public void DrawStringProperty(string propertyName, string label, string toolTip)
+    {
+        SerializedProperty prop = m_CustomSettings.FindProperty(propertyName);
+        EditorGUI.BeginChangeCheck();
+        prop.stringValue = EditorGUILayout.TextField(new GUIContent(label, toolTip), prop.stringValue);
+        if (EditorGUI.EndChangeCheck())
+        {
+            m_CustomSettings.ApplyModifiedProperties();
+        }
+    }
+
     public override void OnGUI(string searchContext)
     {
         if (EditorApplication.isCompiling)
@@ -221,6 +238,20 @@ class UMASettingsProvider : SettingsProvider
         DrawBoolProperty("autoRepairIndex", "Index Auto Repair", "If true, UMA will attempt to repair any missing items in the UMA Global Library");
         DrawBoolProperty("showIndexedTypes", "Show Indexed Types", "If true, UMA will show all indexed types in the project window");
         DrawBoolProperty("showUnindexedTypes", "Show Unindexed Types", "If true, UMA will show all unindexed types in the project window");
+
+        DrawBoolProperty("showWelcomeToUMA", "Show Welcome Window", "If true, UMA will show the welcome window when the project is loaded");
+
+        DrawObjectProperty("characterPrefab", "Character Prefab", "The default character prefab used by UMA", typeof(GameObject));
+        DrawObjectProperty("generatorPrefab", "Generator Prefab", "The default generator prefab used by UMA", typeof(GameObject));
+        DrawObjectProperty("textureMerge",    "Texture Merger", "The default texture merger used by UMA", typeof(TextureMerge));
+
+        DrawStringProperty("DiscordInvite", "Discord Invite", "The default discord invite link for UMA");
+        DrawStringProperty("DiscordURL", "Discord URL", "The default discord URL for UMA");
+        DrawStringProperty("WikiURL", "Wiki URL", "The default wiki URL for UMA");
+        DrawStringProperty("ForumURL", "Forum URL", "The default forum URL for UMA");
+        DrawStringProperty("AssetStoreURL", "Asset Store URL", "The default asset store URL for UMA");
+        DrawStringProperty("ShaderFolder", "Shader Folder", "The folder where the UMA shaders are located, relative to the Assets folder. Usually UMA/Core/ShaderPackages");
+
         EndVerticalPadded(10);
 
         GUILayout.Space(10);
@@ -246,7 +277,6 @@ class UMASettingsProvider : SettingsProvider
         DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrIncludeRecipes","addrIncludeOther" });
         GUI.enabled = true;
         EndVerticalPadded(10);
-
 
         m_CustomSettings.ApplyModifiedPropertiesWithoutUndo();
     }

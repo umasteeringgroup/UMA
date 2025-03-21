@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine.Events;
 using System.IO;
 using System.Collections.Generic;
+using UnityEditor.AddressableAssets.Build.BuildPipelineTasks;
 
 namespace UMA.Editors
 {
@@ -130,6 +131,31 @@ namespace UMA.Editors
 		{
 			GUIHelper.EndVerticalPadded(10);
 		}
+        public static Rect ShrinkRect(Rect rect, float inset, float xinset = -1)
+        {
+            if (xinset < 0)
+            {
+                xinset = inset;
+            }
+            return new Rect(rect.x + xinset, rect.y + inset, rect.width - xinset * 2, rect.height - inset * 2);
+        }
+
+        public static void BeginInsetArea(Color backgroundColor, Rect rect, float inset, float vertpadding, float xinset = -1)
+        {
+            if (xinset < 0)
+            {
+                xinset = inset;
+            }
+            EditorGUI.DrawRect(ShrinkRect(rect, inset, xinset), backgroundColor);
+            GUILayout.BeginArea(ShrinkRect(rect, inset*2, xinset));
+            GUILayout.Space(vertpadding);
+        }
+
+
+        public static void EndInsetArea()
+        {
+            GUILayout.EndArea();
+        }
 
 		public static void BeginVerticalPadded(float padding, Color backgroundColor, GUIStyle theStyle = null)
 		{

@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5045c231c906a1a439a91fb82688bd29, type: 3}
+  m_Name: UMAWelcomeScenes
+  m_EditorClassIdentifier: 
+  umaScenes:
+  - sceneName: UMA DCS Demo - Simple Setup
+    shortName: Simple Setup
+    scenePath: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo -
+      Simple Setup.unity
+    sceneTexture: {fileID: 2800000, guid: 0b712bfa22a0a3a4d8a000de89caa9e4, type: 3}
+    sceneDescription: 'This sample is a complete character editor. It shows how to
+      change the race, add '
+  - sceneName: UMA DCS Demo - Random Characters
+    shortName: Random Characters
+    scenePath: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo -
+      Random Characters.unity
+    sceneTexture: {fileID: 2800000, guid: 0461740b7685e2b48a85e91e005c2dc6, type: 3}
+    sceneDescription: This sample shows how to use UMARandomAvatar to create random
+      characters
+  - sceneName: UMA DCS Demo - UMA Car
+    shortName: UMA Car
+    scenePath: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo -
+      UMA Car.unity
+    sceneTexture: {fileID: 2800000, guid: e325730323b430b45b28eb27534fc006, type: 3}
+    sceneDescription: Shows how to use UMA to customize a car
+  - sceneName: Cloth Example
+    shortName: Cloth
+    scenePath: Assets/UMA/Examples/Physics Examples/Cloth Example.unity
+    sceneTexture: {fileID: 2800000, guid: 059306881dbd7ca4eabed94bc65dbaec, type: 3}
+    sceneDescription: <description>
+  - sceneName: Blendshape Example
+    shortName: Blendshape
+    scenePath: Assets/UMA/Examples/Blendshape Examples/Blendshape Example.unity
+    sceneTexture: {fileID: 0}
+    sceneDescription: <description>
+  - sceneName: RagdollExample
+    shortName: 
+    scenePath: Assets/UMA/Examples/Physics Examples/RagdollExample.unity
+    sceneTexture: {fileID: 0}
+    sceneDescription: <description>
