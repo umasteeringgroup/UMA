@@ -1,57 +1,62 @@
-Release 2.13
+Whats new in UMA 2.14
 
-This update has 2 years of production usage. This includes numerous speed improvements, 
-many bug fixes and stability improvements. There are way too many to list all, but here are the hightlights:
+Fixed various scenes
+   Blendshape scene & example race
+   Timeline scene
+Updated documentation to include MeshModifiers
+Fix for random clearing of library requiring rebuild
+Fixed cross-compatible races with customization
+Added welcome page
+   pops up at start. But it's obvious how to turn that off if you never want to see it again.
+   Links to UMA resources
+   Tool to scan scene and detect problems and adjust for optimal settings
+   Tool to scan project and fix many common errors
+   Tool to recompile shaders if you change SRP after importing
+   Tool to Rebuild the library
+   Link to documentation
 
-New features:
+   UMA 2.14 RC 1
+Fixed:
+Slot creator will now correctly split multi-material objects into multiple slots without duplicating vertexes again.
+Many issues with opening a new inspector from inspector code (threw errors 2022+).
+consolidated version information to settings
+Extraneous using statements
+Missing using statements when UMA_BURSTCOMPILE is enabled
+Fixed when keeping ALL bones (warning: This can add a lot of bones)
+Added normal/tangent to Vertex Reset modifiers
+Fixed Burst option in project settings (wouldn't force recompile)
 
-Updated Skins
-Speed improvements switching to native arrays in various places
-New Materials used
-Compatibility across Built-in, URP and HDRP
-New "Simple Setup" scene to customize as a base character editor
-Many Blendshape fixes and changes
-Reorganized inspectors, greatly enhanced Avatar inspector, including:
-Ability to add multiple recipes, enable disable them, filter them.
-Ability to add DNA in editor
-Able to set "base" colors in color editor
-Get directly to race, race recipe, DNA Converters, and Boneposes
-New compositing textures to lower VRAM usage
-Faster building
-Greatly enhanced utilities in the global library
-Dynamic compression for hair, based on clipping plane(s)
-Filters to limit asset searches to ease library rebuild
-Photoshop style blend modes for combining textures
-Material animator
-New HumanBoy/HumanGirl races (compatible with HumanMale, HumanFemale)
-Favorites window
-New attachment options to ease holding items.
-Significantly smaller bundles when using Addressables (removes material references and slot references where not required)
-Added Addressable Build sample to show how to build smallest bundles and rebuild/label items in build script to address various issues with larger art teams.
-Ability to recalculate normals during build
-Added Burst support
-Fixed man multi-culture issues with strings
-Fixed AvatarDefinition to save Shader Parameter blocks with colors
-Lowered size of AvatarDefinition String
-Enable/disable slots in recipe editor for testing
-Added integrated tags editor into recipe editors
-Ability to match/hide by tags, simplifying process drastically
-Drag and drop recipe merging
-Fixed photobooth to work with SRPs
+Changes:
+New bone poses for girl/boy races
 
-New Tools:
+Changes from RC0:
+Updated shaders to address compatibility issues with HDRP in Unity 6
+Added Mesh Modifiers - these are modifiers you can add to recipes to modify a mesh.
+Vertex Color modifier
+Vertex Scaling (along normal) modifier
+Vertex Normal (and tangent) rotation modifier
+Blendshape extractor modifier (emulates a blendshape)
+Vertex reset modifier - Stores a vertex position on creation, and resets it on build. This is used when you need to adjust external modifications (like from itseez).
+Added transforms to shared colors. "UMAOverlayTransformProperty" to the property blocks. This allows you to assign overlay transforms to colors. (Resize, Move, Rotate overlays).
+Fixed the shared color table editor
+Fixed prefab editor
+Async GPU texture downloader ("Max Queued Conversions per frame" on Generator).
+UMA Preferences were moved to Project Settings
+Added additional statistics to Generator
+Various bug fixes
 
-Texture combiner - for combining texture channels
-Normal Viewer - see where the normals are after combining
-Convert slots to meshes
-Welding - Tools to copy vertex normals, bone weights from slots to match pieces together, or update weighting on slots without changing vertex count or order.
+Updated shaders to address compatibility issues with HDRP in Unity 6
+Added Mesh Modifiers - these are modifiers you can add to recipes to modify a mesh.
+Vertex Color modifier
+Vertex Scaling (along normal) modifier
+Vertex Normal (and tangent) rotation modifier
+Blendshape extractor modifier (emulates a blendshape)
+Vertex reset modifier - Stores a vertex position on creation, and resets it on build. This is used when you need to adjust external modifications (like from itseez).
+Added transforms to shared colors. "UMAOverlayTransformProperty" to the property blocks. This allows you to assign overlay transforms to colors. (Resize, Move, Rotate overlays).
+Fixed the shared color table editor
+Fixed prefab editor
+Async GPU texture downloader ("Max Queued Conversions per frame" on Generator).
+UMA Preferences were moved to Project Settings
+Added additional statistics to Generator
+Various bug fixes
 
-For asset creators/developers
-
-Multi-SRP compatiblity on materials.
-Multi-SRP materials shipped with UMA.
-Added "Second pass material" to UMAMaterial to emulate mult-pass shaders
-Override textures, bones, and vertexes by character (helpful for 3rd party avatar tools).
-New Material Types - to use existing textures, or use existing materials - these modes are useful for customizable characters without generating rendertextures (much faster, but less customizable).
-Meshcombiner tracks where every slot is inside the generated mesh, so you can get to the vertexes directly if needed. Also tracks where textures are placed in the Atlas.
-This will likely be the last major release of UMA 2 (bugfix releases are of course possible), with all future enhancements going into UMA 3, which will retain asset compatibility.
