@@ -18,7 +18,7 @@ namespace UMA.CharacterSystem
 
                 return (selfValue & flagValue) == flagValue;
             }
-            catch (Exception ex)
+            catch  
             {
 				return true;
             }

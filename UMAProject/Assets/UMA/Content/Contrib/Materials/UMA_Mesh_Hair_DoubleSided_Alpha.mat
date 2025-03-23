@@ -10,6 +10,8 @@ Material:
   m_Name: UMA_Mesh_Hair_DoubleSided_Alpha
   m_Shader: {fileID: -6465566751694194690, guid: ab87b81d084dd6047b63be46465e63c2,
     type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _ALPHABLEND_ON
@@ -21,15 +23,16 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 80801db820717d041b8eecbdd95b02a5, type: 3}
+        m_Texture: {fileID: 2800000, guid: 829395992e81a8b4c8d2bfd98851e39a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: 6af2d89646650ec4fa747db84d299b99, type: 3}
+        m_Texture: {fileID: 2800000, guid: c59b45917b12a5548bd5f02fa00d8cdc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -102,7 +105,7 @@ Material:
     - _MetallicModulation: 0
     - _MetallicStrength: 0
     - _Mode: 2
-    - _NormalStrength: 1
+    - _NormalStrength: 0.6
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _Richness: 0.721

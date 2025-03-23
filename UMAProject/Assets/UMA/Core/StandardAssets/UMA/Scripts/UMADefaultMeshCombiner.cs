@@ -358,10 +358,26 @@ namespace UMA
 					}
 					else
                     {
-						combineInstance.meshData = slotData.asset.meshData;
+						combineInstance.meshData = slotData.asset.meshData.ShallowCopy(null); 
 						combineInstance.meshData.SlotName = slotData.slotName;
 					}
-					combineInstance.meshData = ApplyMeshModifiers(umaData, combineInstance.meshData, slotData);
+					// UV is remapped. Update the MeshData.
+					if (slotData.UVRemapped)
+                    {
+						switch(slotData.UVSet)
+                        {
+                            case 1:
+                                combineInstance.meshData.uv = slotData.asset.meshData.uv2;
+                                break;
+                            case 2:
+                                combineInstance.meshData.uv = slotData.asset.meshData.uv3;
+                                break;
+                            case 3:
+                                combineInstance.meshData.uv = slotData.asset.meshData.uv4;
+                                break;
+                        }
+                    }
+                    combineInstance.meshData = ApplyMeshModifiers(umaData, combineInstance.meshData, slotData);
                     // save a copy of the slotData so we can add
                     // the vertex offsets, submeshindex to it.
                     combineInstance.slotData = slotData;

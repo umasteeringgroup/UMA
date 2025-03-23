@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: UMA_Hair_Aniso
   m_EditorClassIdentifier: 
   translateSRP: 1
+  AutoSetSRPMaterials: 1
   _material: {fileID: 2100000, guid: f4d3c2e2816d3dd4db44df0ff7085cae, type: 2}
-  _secondPass: {fileID: 0}
+  _secondPass: {fileID: -4288583467269203127, guid: f518b34f64e6ae24486b693967c5cd25,
+    type: 3}
   srpMaterials:
   - SRP: 2
     material: {fileID: 2100000, guid: 836ba1c96b1a93a4c8e7ff58ffb68a11, type: 2}
@@ -28,9 +30,9 @@ MonoBehaviour:
     alternateKeywords:
     - _BaseMap
     - _BumpMap
-  materialType: 1
+  materialType: 8
   channels:
-  - channelType: 0
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _MainTex
     sourceTextureName: 
@@ -38,7 +40,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 1
+  - channelType: 3
     textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: 

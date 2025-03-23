@@ -394,8 +394,7 @@ namespace UMA
 		public bool LoadedBoneweights;
 		public string SlotName; // the slotname. used for debugging.
 
-
-		public Vector3[] GetVertices()
+        public Vector3[] GetVertices()
 		{
             return vertices;
         }
@@ -439,11 +438,112 @@ namespace UMA
 			SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
         }
 
-		/// <summary>
-		/// Get an array for submesh triangle data.
-		/// </summary>
-		/// <returns>Either a shared or allocated int array for submesh triangles.</returns>
-		public NativeArray<int> GetSubmeshBuffer(int size, int submeshIndex)
+		public void MirrorU(int channel)
+		{
+            if (channel == 0)
+            {
+                for (int i = 0; i < uv.Length; i++)
+                {
+                    uv[i].x = 1 - uv[i].x;
+                }
+            }
+            else if (channel == 1)
+            {
+                for (int i = 0; i < uv2.Length; i++)
+                {
+                    uv2[i].x = 1 - uv2[i].x;
+                }
+            }
+            else if (channel == 2)
+            {
+                for (int i = 0; i < uv3.Length; i++)
+                {
+                    uv3[i].x = 1 - uv3[i].x;
+                }
+            }
+            else if (channel == 3)
+            {
+                for (int i = 0; i < uv4.Length; i++)
+                {
+                    uv4[i].x = 1 - uv4[i].x;
+                }
+            }
+        }
+
+		public void MirrorV(int channel)
+        {
+            if (channel == 0)
+            {
+                for (int i = 0; i < uv.Length; i++)
+                {
+                    uv[i].y = 1 - uv[i].y;
+                }
+            }
+            else if (channel == 1)
+            {
+                for (int i = 0; i < uv2.Length; i++)
+                {
+                    uv2[i].y = 1 - uv2[i].y;
+                }
+            }
+            else if (channel == 2)
+            {
+                for (int i = 0; i < uv3.Length; i++)
+                {
+                    uv3[i].y = 1 - uv3[i].y;
+                }
+            }
+            else if (channel == 3)
+            {
+                for (int i = 0; i < uv4.Length; i++)
+                {
+                    uv4[i].y = 1 - uv4[i].y;
+                }
+            }
+        }
+
+		public void MirrorUV(int Channel)
+		{
+            // mirror both X and Y
+            if (Channel == 0)
+            {
+                for (int i = 0; i < uv.Length; i++)
+                {
+                    uv[i].x = 1 - uv[i].x;
+                    uv[i].y = 1 - uv[i].y;
+                }
+            }
+            else if (Channel == 1)
+            {
+                for (int i = 0; i < uv2.Length; i++)
+                {
+                    uv2[i].x = 1 - uv2[i].x;
+                    uv2[i].y = 1 - uv2[i].y;
+                }
+            }
+            else if (Channel == 2)
+            {
+                for (int i = 0; i < uv3.Length; i++)
+                {
+                    uv3[i].x = 1 - uv3[i].x;
+                    uv3[i].y = 1 - uv3[i].y;
+                }
+            }
+            else if (Channel == 3)
+            {
+                for (int i = 0; i < uv4.Length; i++)
+                {
+                    uv4[i].x = 1 - uv4[i].x;
+                    uv4[i].y = 1 - uv4[i].y;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get an array for submesh triangle data.
+        /// </summary>
+        /// <returns>Either a shared or allocated int array for submesh triangles.</returns>
+        public NativeArray<int> GetSubmeshBuffer(int size, int submeshIndex)
 		{
 			if (size < 1)
             {
@@ -928,7 +1028,7 @@ namespace UMA
 			mesh.triangles = new int[0];
 
 				NativeArray<Vector3> verts = new NativeArray<Vector3>(vertices, Allocator.Temp);
-				// TODO: VERTUPDATES.
+				 
 				mesh.SetVertices(verts);
 
 				SetBoneWeightsFromMeshData(mesh);                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);

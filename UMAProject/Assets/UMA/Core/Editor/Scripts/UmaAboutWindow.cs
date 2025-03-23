@@ -30,7 +30,7 @@ namespace UMA
 
         private GUIStyle centeredStyle = new GUIStyle();
 
-        [MenuItem("UMA/About", false, 0)]
+        //[MenuItem("UMA/About", false, 0)]
         static void Init()
         {
             // Get existing open window or if none, make a new one:

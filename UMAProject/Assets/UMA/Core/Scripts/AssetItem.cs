@@ -98,6 +98,11 @@ namespace UMA
             }
         }
 
+        public T GetItem<T>() where T : Object
+        {
+            return Item as T;
+        }
+
         public Object Item
         {
             get

@@ -127,7 +127,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// Gets the recipe names for the given race from the WardrobeCollection
 		/// </summary>
-		public List<string> GetRacesRecipeNames(string race, DynamicCharacterSystem dcs)
+		public List<string> GetRacesRecipeNames(string race)
 		{
 			var recipesToGet = GetRacesWardrobeSet(race);
 			List<string> recipesWeGot = new List<string>();
@@ -140,13 +140,14 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// Gets the wardrobeRecipes for the given race from the WardrobeCollection
 		/// </summary>
-		public List<UMATextRecipe> GetRacesRecipes(string race, DynamicCharacterSystem dcs)
+		public List<UMATextRecipe> GetRacesRecipes(string race)
 		{
 			var recipesToGet = GetRacesWardrobeSet(race);
 			List<UMATextRecipe> recipesWeGot = new List<UMATextRecipe>();
 			for (int i = 0; i < recipesToGet.Count; i++)
 			{
-				recipesWeGot.Add(dcs.GetRecipe(recipesToGet[i].recipe, true));
+				var recipe = UMAAssetIndexer.Instance.GetRecipeWardrobeTextCollection(recipesToGet[i].recipe);
+                recipesWeGot.Add(recipe);
 			}
 			return recipesWeGot;
 		}
