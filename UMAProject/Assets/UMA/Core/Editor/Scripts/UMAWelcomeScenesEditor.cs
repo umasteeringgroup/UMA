@@ -57,6 +57,7 @@ namespace UMA
             GUILayout.Space(20);
 
             int delme = -1;
+            float currentWidth = EditorGUIUtility.currentViewWidth;
             for (int i=0;i< uws.umaScenes.Count; i++)
             {
                 GUILayout.BeginHorizontal();
@@ -98,7 +99,7 @@ namespace UMA
                 }
                 uws.umaScenes[i].shortName = EditorGUILayout.TextField(uws.umaScenes[i].shortName, GUILayout.Width(120));                
                 uws.umaScenes[i].sceneTexture = (Texture2D)EditorGUILayout.ObjectField(uws.umaScenes[i].sceneTexture, typeof(Texture2D), false, GUILayout.Width(48), GUILayout.Height(48));
-                uws.umaScenes[i].sceneDescription = EditorGUILayout.TextArea(uws.umaScenes[i].sceneDescription, GUILayout.ExpandWidth(true),GUILayout.Height(48));
+                uws.umaScenes[i].sceneDescription = EditorGUILayout.TextArea(uws.umaScenes[i].sceneDescription,description, GUILayout.Width(360),GUILayout.Height(48));
                 if(GUILayout.Button("X", GUILayout.Width(20)))
                 {
                     delme = i;

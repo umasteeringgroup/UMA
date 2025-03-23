@@ -1157,6 +1157,29 @@ namespace UMA
             }
         }
 
+        public UMATextRecipe GetRecipeWardrobeTextCollection(string name)
+        {
+
+            var wr = GetAssetItem<UMAWardrobeRecipe>(name);
+            if (wr != null)
+            {
+                return wr.Item as UMAWardrobeRecipe;
+            }
+
+            var utr = GetAssetItem<UMATextRecipe>(name);
+            if (utr != null)
+            {
+                return utr.Item as UMATextRecipe;
+            }
+
+            var wc = GetAssetItem<UMAWardrobeCollection>(name);
+            if (wc != null)
+            {
+                return wc.Item as UMAWardrobeCollection;
+            }
+            return null;
+        }
+
         public T GetAsset<T>(string name, bool recursionGuard = false) where T : UnityEngine.Object
         {
 #if UNITY_EDITOR
@@ -2003,7 +2026,7 @@ namespace UMA
         /// <param name="ai"></param>
         /// <param name="SkipBundleCheck"></param>
         /// <returns>Whether the asset was added or not.</returns>
-        private bool AddAssetItem(AssetItem ai)
+        public bool AddAssetItem(AssetItem ai)
         {
             try
             {

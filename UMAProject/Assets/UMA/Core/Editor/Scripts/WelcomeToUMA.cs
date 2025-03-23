@@ -3,8 +3,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UMA.CharacterSystem;
 using UMA.Editors;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEditor.TerrainTools;
 using UnityEngine;
 
@@ -48,6 +50,7 @@ namespace UMA
             public int index;
             public LogLineAction ButtonAction;
             public LogType logType = LogType.Info;
+            public AssetItem ReviewItem = null;
 
             public LogLine(string message, GUIStyle style, int index, LogType logType = LogType.Info)
             {
@@ -91,6 +94,8 @@ namespace UMA
         public GUIStyle Warning;
         public GUIStyle InfoStyle;
         public GUIStyle Hyperlink;
+        public GUIStyle DescriptionStyle;
+        public GUIStyle SceneTitleStyle;
 
         public Rect HeaderRect;
         public Rect NavigationRect;
@@ -99,7 +104,9 @@ namespace UMA
         public int currentButton;
         private Vector2 scrollPosition;
         public bool processing = false;
-        
+        public bool initialized = false;
+
+
 
 
         public void OnEnable()
@@ -114,6 +121,11 @@ namespace UMA
 
         public void Awake()
         {
+            EditorApplication.delayCall += DelayAwake;
+        }
+
+        public void DelayAwake()
+        {
             ActiveLargeStyle = new GUIStyle(EditorStyles.largeLabel);
             ActiveLargeStyle.richText = true;
             ActiveLargeStyle.wordWrap = true;
@@ -127,7 +139,7 @@ namespace UMA
             Hyperlink.alignment = TextAnchor.MiddleLeft;
 
             ErrorFound = new GUIStyle(EditorStyles.label);
-            ErrorFound.normal.textColor = new Color(0.3f,0,0,1);
+            ErrorFound.normal.textColor = new Color(0.3f, 0, 0, 1);
             ErrorFound.richText = true;
             ErrorFound.alignment = TextAnchor.MiddleLeft;
 
@@ -140,8 +152,21 @@ namespace UMA
             InfoStyle.alignment = TextAnchor.MiddleLeft;
             InfoStyle.richText = true;
 
+            DescriptionStyle = new GUIStyle(EditorStyles.label);
+            DescriptionStyle.wordWrap = true;
+            DescriptionStyle.richText = true;
+            DescriptionStyle.alignment = TextAnchor.UpperLeft;
+
+            SceneTitleStyle = new GUIStyle(EditorStyles.label);
+            SceneTitleStyle.wordWrap = false;
+            SceneTitleStyle.richText = true;
+            SceneTitleStyle.alignment = TextAnchor.UpperLeft;
+
+            //DescriptionStyle.fixedHeight = 48;
+
             currentButton = 0;
             DoWelcome();
+            initialized = true;
         }
 
         private void StartProcessing()
@@ -157,6 +182,16 @@ namespace UMA
 
         void OnGUI()
         {
+            if (!initialized)
+            {
+                // this is here because the "awake" function is called before EditorStyles are loaded.
+                // Causing an error when the window is initialized. So that was delayed.
+                // now this is here because we have to be sure that initial delay happened.
+                // Seems like this could have been better if the editor initialized itself before calling the awake functions.
+                // Just saying.
+                Repaint();
+                return;
+            }
             HeaderRect = new Rect(0, 0, position.width, 50);
             NavigationRect = new Rect(0, 50, 200, position.height - 50);
             ContentRect = new Rect(200, 50, position.width - 200, position.height - 50);
@@ -210,6 +245,12 @@ namespace UMA
                 ClearLog();
                 DoAddToScenePage();
                 currentButton = 2;
+            }
+            if (GUILayout.Button("Example Scenes", GUILayout.Height(40)))
+            {
+                ClearLog();
+                scrollPosition = Vector2.zero;
+                currentButton = 8;
             }
             if (GUILayout.Button("Rebuild Library", GUILayout.Height(40)))
             {
@@ -330,6 +371,11 @@ namespace UMA
                     DoLinksPage();
                     showLog = false;
                     break;
+
+                case 8:
+                    DoScenesPage();
+                    showLog = false;
+                    break;
             }
             /* now show the logged items */
             if (showLog)
@@ -428,7 +474,7 @@ namespace UMA
             return line;
         }
 
-
+        #region Scene Scan Button
         private void ScanScene()
         {
             UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>(true);
@@ -552,6 +598,7 @@ namespace UMA
                 // if race is NOT in library, give error
             }
         }
+        #endregion
 
         private void ScanProject()
         {
@@ -559,9 +606,683 @@ namespace UMA
             // Check library filters.
             // if no filters for animators, then complain
             // make sure there are slots, overlays, racedata assigned
-            // 
+            // scan all UMAMaterials. If they are type "Use Existing Textures" make sure they are using the Tinted Texture in channels
+            AddText("Checking library");
+            if (UMAAssetIndexer.Instance == null)
+            {
+                AddText("Cannot load Global Library from resources! Please reimport or restore the file.");
+                AddText("The library is normaly at the following location:");
+                AddText(" Assets/UMA/InternalDataSore/InGame/Resources/AssetIndexer.asset");
+                return;
+            }
+
+            CheckLibrary();
+            AddSeperator();
+            CheckMaterials();
+            AddSeperator();
+            CheckSlots();
+            AddSeperator();
+            CheckOverlays();
+            AddSeperator();
+            CheckTextRecipes();
+            AddSeperator();
+            CheckWardrobeRecipes();
+            AddSeperator();
+            CheckWardrobeCollections();
+            AddSeperator();
+            CheckRaces();
+            AddSeperator();
+            AddText("Project check completed. Please review any items that were flagged");
         }
 
+        private void CheckLibrary()
+        {
+            AddText("Checking UMA Global Library");
+            if (UMAAssetIndexer.Instance.IsValid() == false)
+            {
+                AddText("UMA Global Library is empty. Please rebuild library");
+                LogLine l = AddText("Rebuild Library");
+                l.ButtonAction = (line) => DoLibraryRebuild(l);
+                AddText("Please rescan after running library rebuild");
+                return;
+            }
+
+
+            var counts = UMAAssetIndexer.Instance.GetCounts();
+            foreach (var count in counts)
+            {
+                AddText($"{count.Key}: ({count.Value}) item(s)");
+            }
+
+            var filters = UMAAssetIndexer.Instance.TypeFolderSearch;
+
+            // get a list of keys from the filters
+            List<string> types = new List<string>(filters.Keys);
+
+            bool foundAnimatorController = false;
+            for(int i=0;i < types.Count; i++)
+            {
+                if (types[i].ToLower().IndexOf("animatorcontroller") > -1)
+                {
+                    foundAnimatorController = true;
+                    break;
+                }
+            }
+
+
+
+            if (!foundAnimatorController)
+            {
+                AddText("Warning: No filters are setup for animator controllers! You should setup filters to limit the objects stored in the Asset Index!", LogType.Warning);
+                AddText("Warning: Failure to do so could result in more objects stored in resources than needed!", LogType.Warning);
+                AddText("Filters are configured using the 'Global Library Filters' option on the UMA menu", LogType.Warning);
+            }
+            else if (filters.Count == 0)
+            {
+                AddText("Warning: No filters are setup. You should setup filters to limit the objects stored in the Asset Index!", LogType.Warning);
+                AddText("Warning: Failure to do so could result in more objects stored in resources than needed!", LogType.Warning);
+                AddText("Filters are configured using the 'Global Library Filters' option on the UMA menu", LogType.Warning);
+            }
+
+            AddText("UMA Global Library check complete");
+        }
+
+        private void CheckSlots()
+        {
+            AddText("Checking Slots");
+            var slots = UMAAssetIndexer.Instance.GetAssetItems<SlotDataAsset>();
+
+            if (slots == null || slots.Count == 0)
+            {
+                AddText("No SlotDataAssets found in library", LogType.Warning);
+            }
+            else
+            {
+                foreach (var AI in slots)
+                {
+                    if (AI.Item == null)
+                    {
+                        AddText($"Error: SlotDataAsset {AI._Name} is missing!", LogType.Error);
+                        LogLine l = AddText("Repair Library");
+                        l.ButtonAction = (line) => DoLibraryRepair(l);
+                    }
+                    SlotDataAsset sd = AI.GetItem<SlotDataAsset>();
+                    if (sd != null)
+                    {
+                        if (string.IsNullOrEmpty(sd.slotName))
+                        {
+                            AddText("Error: Error: SlotDataAsset {AI._Name} has no SlotName. Please fix, then rebuild library.");
+                            ReviewAssetItem(AI);
+                        }
+                        if (sd.meshData != null && sd.meshData.vertices != null && sd.meshData.vertexCount > 0)
+                        {
+                            if (sd.material == null)
+                            {
+                                var material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(sd.materialName);
+                                if (material != null)
+                                {
+                                    sd.material = material;
+                                    AddText($"Warning: SlotDataAsset {AI._Name} did not have material set. This has been fixed.", LogType.Warning);
+                                }
+                            }
+                            if (sd.material == null) // still not fixed
+                            {
+                                AddText($"Warning: SlotDataAsset {AI._Name} did not have material set, and Material was not found for slot material named '{sd.material}'", LogType.Error);
+                                LogLine l = AddText("Review slot");
+                                l.ButtonAction = (line) => ReviewItem(l);
+                                l.ReviewItem = AI;
+                            }
+                        }
+                        else
+                        {
+                            if (sd.isSmooshable)
+                            {
+                                if (sd.tags == null || sd.tags.Length < 1)
+                                {
+                                    AddText($"Warning: SlotDataAsset {AI._Name} is marked 'smooshable' but does not have any tags!", LogType.Warning);
+                                    AddText("This slot cannot be found by the smoosher!");
+                                    LogLine l = AddText("Review slot");
+                                    l.ButtonAction = (line) => ReviewItem(l);
+                                    l.ReviewItem = AI;
+                                }
+                            }
+                            if (sd.isWildCardSlot)
+                            {
+                                if (sd.tags == null || sd.tags.Length < 1)
+                                {
+                                    AddText($"Warning: SlotDataAsset {AI._Name} is marked 'WildCard' but does not have any tags!", LogType.Warning);
+                                    AddText("This slot will not find any matches!");
+                                    LogLine l = AddText("Review slot");
+                                    l.ButtonAction = (line) => ReviewItem(l);
+                                    l.ReviewItem = AI;
+                                }
+                            }
+                            if (sd.isClippingPlane && (sd.meshData == null) || sd.meshData.vertexCount < 4)
+                            {
+                                AddText($"Warning: SlotDataAsset {AI._Name} is marked as a clipping plane, but has no geometry!", LogType.Warning);
+                                AddText("This slot will never clip anything!");
+                                LogLine l = AddText("Review slot");
+                                l.ButtonAction = (line) => ReviewItem(l);
+                                l.ReviewItem = AI;
+                            }
+                        }
+                    }
+                }
+            }
+            AddText("Slot check complete");
+        }
+
+        private void CheckOverlays()
+        {
+            AddText("Checking Overlays");
+            var overlays = UMAAssetIndexer.Instance.GetAssetItems<OverlayDataAsset>();
+
+            if (overlays == null || overlays.Count == 0)
+            {
+                AddText("No Overlays found in library", LogType.Warning);
+                return;
+            }
+            else
+            {
+                foreach (var AI in overlays)
+                {
+                    if (AI.Item == null)
+                    {
+                        AddText($"Error: OverlayDataAsset {AI._Name} is missing!", LogType.Error);
+                        LogLine l = AddText("Repair Library");
+                        l.ButtonAction = (line) => DoLibraryRepair(l);
+                        return;
+                    }
+                    OverlayDataAsset od = AI.GetItem<OverlayDataAsset>();
+                    if (string.IsNullOrEmpty(od.overlayName))
+                    {
+                        AddText("Error: Error: OverlayDataAsset {AI._Name} has no OverlayName. Please fix, then rebuild library.");
+                        ReviewAssetItem(AI);
+                    }
+                    if (od.material == null)
+                    {
+                        var material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(od.materialName);
+                        if (material != null)
+                        {
+                            od.material = material;
+                            AddText($"Warning: SlotDataAsset {AI._Name} did not have material set. This has been fixed.", LogType.Warning);
+                        }
+                    }
+                    if (od.material == null) // still not fixed
+                    {
+                        AddText($"Warning: OverlayDataAsset {AI._Name} did not have material set, and material was not found for overlay material named {od.materialName}", LogType.Error);
+                        LogLine l = AddText("Review overlay");
+                        l.ButtonAction = (line) => ReviewItem(l);
+                        l.ReviewItem = AI;
+                    }
+                    else
+                    {
+                        if (od.textureList == null && od.material.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
+                        {
+                            AddText($"Warning: OverlayDataAsset {AI._Name} does not have a texture list, and is not set to UseExistingMaterial", LogType.Warning);
+                            LogLine l = AddText("Review overlay");
+                            l.ButtonAction = (line) => ReviewItem(l);
+                            l.ReviewItem = AI;
+                        }
+                    }
+
+                    if (od.textureCount > 0)
+                    {
+                        if (od.material != null && od.textureCount != od.material.channels.Length)
+                        {
+                            AddText("Texture Count on overlay does not match material channel count!", LogType.Error);
+                            ReviewAssetItem(AI);
+                        }
+                        bool texturesOK = true;
+
+                        for (int ii = 0; ii < od.textureCount; ii++)
+                        {
+                            if (od.textureList[ii] == null)
+                            {
+                                texturesOK = false;       
+                            }
+                        }
+                        if (!texturesOK)
+                        {
+                            AddText("Some textures on overlay are missing.", LogType.Warning);
+                            AddText("This is OK for overlays that are not a base overlay. Please review to make sure this is what you expect.");
+                            ReviewAssetItem(AI);
+                        }
+                    }
+                }
+            }
+            AddText("Overlay check complete");
+        }
+
+        private void ReviewAssetItem(AssetItem AI)
+        {
+            LogLine l = AddText("Review Overlay");
+            l.ButtonAction = (line) => ReviewItem(l);
+            l.ReviewItem = AI;
+        }
+
+        private void RebuildFromAssetItem(AssetItem AI)
+        {
+            LogLine l = AddText("Rebuild Library");
+            l.ButtonAction = (line) => DoLibraryRebuild(l);
+        }
+
+        private void CheckWardrobeCollections()
+        {
+            AddText("Checking Wardrobe Collections");
+            UMAAssetIndexer lib = UMAAssetIndexer.Instance;
+
+            var collections = UMAAssetIndexer.Instance.GetAssetItems<UMAWardrobeCollection>();
+            foreach (var c in collections)
+            {
+                if (c.Item == null)
+                {
+                    AddText($"Wardrobe Collection {c._Name} was not found. Please repair library and rerun");
+                    RebuildFromAssetItem(c);
+                }
+                UMAWardrobeCollection uwc = c.GetItem<UMAWardrobeCollection>();
+                if (uwc == null)
+                {
+                    AddText($"Wardrobe Collection {c._Name} is not a valid Wardrobe Collection", LogType.Error);
+                    ReviewAssetItem(c);
+                }
+                else
+                {
+                    bool invalid = false;
+
+                    if (uwc.wardrobeSlot == null)
+                    {
+                        AddText($"Wardrobe Collection {c._Name} does not have a wardrobe slot assigned", LogType.Error);
+                        invalid = true;
+                    }
+                    if (uwc.arbitraryRecipes != null && uwc.arbitraryRecipes.Count > 0)
+                    {
+                        foreach (var r in uwc.arbitraryRecipes)
+                        {
+                            if (!lib.HasAsset<UMAWardrobeRecipe>(r))
+                            {
+                                AddText($"Wardrobe Collection {c._Name} has an invalid recipe assigned ({r})", LogType.Error);
+                                invalid = true;
+                            }
+                        }
+                    }
+                    if (uwc.compatibleRaces != null && uwc.compatibleRaces.Count > 0)
+                    {
+                        foreach (var r in uwc.compatibleRaces)
+                        {
+                            if (!lib.HasAsset<RaceData>(r))
+                            {
+                                AddText($"Wardrobe Collection {c._Name} has an invalid race assigned ({r})", LogType.Error);
+                                invalid = true;
+                            }
+                            var raceRecipes = uwc.GetRacesRecipes(r);
+                            var raceRecipeNames = uwc.GetRacesRecipeNames(r);
+                            for (int ii = 0; ii < raceRecipes.Count; ii++)
+                            {
+                                if (raceRecipes[ii] == null)
+                                {
+                                    AddText($"Wardrobe Collection {c._Name} has an invalid recipe '{raceRecipeNames[ii]}' assigned for race {r}", LogType.Error);
+                                    invalid = true;
+                                }
+                            }
+                        }
+                    }
+                    if (invalid)
+                    {
+                        ReviewAssetItem(c);
+                    }
+                }
+            }
+        }
+        
+
+        private void CheckWardrobeRecipes()
+        {
+            UMAAssetIndexer lib = UMAAssetIndexer.Instance;
+
+            AddText("Checking Wardrobe Recipes");
+            var recipes = UMAAssetIndexer.Instance.GetAssetItems<UMAWardrobeRecipe>();
+            foreach (var r in recipes)
+            {
+                if (r.Item == null)
+                {
+                    AddText($"Wardrobe recipe {r._Name} was not found. Please repair library and rerun");
+                    RebuildFromAssetItem(r);
+                }
+                UMAWardrobeRecipe uwr = r.GetItem<UMAWardrobeRecipe>();
+                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = uwr.PackedLoad(null);
+
+                bool invalid = false;
+
+                if (string.IsNullOrEmpty(uwr.wardrobeSlot) || uwr.wardrobeSlot.ToLower() == "none")
+                {
+                    AddText($"Wardrobe Recipe {uwr.name} is not assigned to a wardrobe slot", LogType.Error);
+                    invalid = true;
+                }
+                if (uwr.compatibleRaces == null || uwr.compatibleRaces.Count == 0)
+                {
+                    AddText($"Wardrobe Recipe {uwr.name} has no races assigned!", LogType.Error);
+                    invalid = true;
+                }
+                else
+                {
+                    int validcount = 0;
+                    foreach (var rn in uwr.compatibleRaces)
+                    {
+                        if (!lib.HasAsset<RaceData>(rn))
+                        {
+                            AddText($"Wardrobe Recipe {uwr.name} has an invalid race ({rn}) assigned!", LogType.Error);
+                            invalid = true;
+                        }
+                        else
+                        {
+                            validcount++;
+                        }
+                    }
+                    if (validcount == 0)
+                    {
+                        AddText($"Wardrobe Recipe {uwr.name} has no valid races assigned!", LogType.Error);
+                        invalid = true;
+                    }
+                }
+
+                if (invalid)
+                {
+                    ReviewAssetItem(r);
+                }
+
+                var Slots = PackRecipe.slotsV3;
+                if (Slots == null)
+                {
+                    AddText($"Wardrobe Recipe {uwr.name} has no slots assigned!", LogType.Error);
+                    ReviewAssetItem(r);
+                    continue;
+                }
+                for (int i = 0; i < Slots.Length; i++)
+                {
+                    UMAPackedRecipeBase.PackedSlotDataV3 s = Slots[i];
+                    if (s == null)
+                    {
+                        continue;
+                    }
+                    if (string.IsNullOrEmpty(s.id))
+                    {
+                        // this is OK
+                        continue;
+                    }
+                    if (!lib.HasAsset<SlotDataAsset>(s.id))
+                    {
+                        AddText($"Wardrobe Recipe {uwr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
+                        AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
+                    }
+                    else
+                    {
+                        // if slot is not a utility slot, verify it has overlays assigned.
+                        SlotDataAsset sd = lib.GetAsset<SlotDataAsset>(s.id);
+                        if (sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot)
+                        {
+                            // nothing for now?
+                        }
+                        else
+                        {
+                            if (s.overlays == null || s.overlays.Length == 0)
+                            {
+                                AddText($"Wardrobe Recipe {uwr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
+                                ReviewAssetItem(r);
+                            }
+                        }
+                    }
+                }
+            }
+            AddText("Wardrobe Recipe check complete");
+        }
+
+        private void CheckTextRecipes()
+        {
+            UMAAssetIndexer lib = UMAAssetIndexer.Instance;
+
+            AddText("Checking Text Recipes");
+            var recipes = UMAAssetIndexer.Instance.GetAssetItems<UMATextRecipe>();
+            foreach (var r in recipes)
+            {
+                if (r.Item == null)
+                {
+                    AddText($"Text recipe {r._Name} was not found. Please rebuild library and rerun");
+                    RebuildFromAssetItem(r);
+                }
+                UMATextRecipe utr = r.GetItem<UMATextRecipe>();
+                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = utr.PackedLoad(null);
+
+                bool invalid = false;
+
+                // is DNA assigned?
+                if (string.IsNullOrEmpty(PackRecipe.race))
+                {
+                    AddText($"Text Recipe {utr.name} does not have an assigned race!");
+                    invalid = true;
+                }
+                else
+                {
+                    if (!lib.HasAsset<RaceData>(PackRecipe.race))
+                    {
+                        AddText($"Text Recipe {utr.name} has an invalid race", LogType.Warning);
+                        invalid = true;
+                    }
+                }
+                if (PackRecipe.umaDna == null || PackRecipe.umaDna.Count == 0)
+                {
+                    AddText($"Text Recipe {utr.name} does not have any DNA assigned!");
+                    invalid = true;
+                }
+
+                if (invalid)
+                {
+                    ReviewAssetItem(r);
+                }
+
+                var Slots = PackRecipe.slotsV3;
+                if (Slots == null)
+                {
+                    AddText($"Text Recipe {utr.name} has no slots assigned!", LogType.Error);
+                    ReviewAssetItem(r);
+                }
+                else
+                {
+                    for (int i = 0; i < Slots.Length; i++)
+                    {
+                        UMAPackedRecipeBase.PackedSlotDataV3 s = Slots[i];
+                        if (s == null)
+                        {                            
+                            continue;
+                        }
+                        if (string.IsNullOrEmpty(s.id))
+                        {
+                            // this is OK
+                            continue;
+                        }
+                        if (!lib.HasAsset<SlotDataAsset>(s.id))
+                        {
+                            AddText($"Text Recipe {utr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
+                            AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
+                        }
+                        else
+                        {
+                            // if slot is not a utility slot, verify it has overlays assigned.
+                            SlotDataAsset sd = lib.GetAsset<SlotDataAsset>(s.id);
+                            if (sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot)
+                            {
+                                // nothing for now?
+                            }
+                            else
+                            {
+                                if (s.overlays == null || s.overlays.Length == 0)
+                                {
+                                    AddText($"Text Recipe {utr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
+                                    ReviewAssetItem(r);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            AddText("Text Recipe check complete");
+        }
+
+        private void CheckRaces()
+        {
+            AddText("Checking Races");
+            var races = UMAAssetIndexer.Instance.GetAssetItems<RaceData>();
+            foreach (var r in races)
+            {
+                bool invalid = false;
+                if (r.Item == null)
+                {
+                    AddText($"RaceData {r._Name} was not found. Please rebuild library and rerun", LogType.Error);
+                    RebuildFromAssetItem(r);
+                    return;
+                }
+                RaceData race = r.Item as RaceData;
+                if (string.IsNullOrEmpty(race.raceName))
+                {
+                    AddText($"Race {race.name} has no 'raceName' - This has been set to the asset name. ", LogType.Warning);
+                    race.raceName = race.name;
+                    EditorUtility.SetDirty(race);
+                    AssetDatabase.SaveAssetIfDirty(race);
+                    ReviewAssetItem(r);
+                }
+                if (race.dnaConverterList == null || race.dnaConverterList.Length == 0)
+                {
+                    AddText($"Race {race.name} has no DNA Converters assigned!", LogType.Error);
+                    ReviewAssetItem(r);
+                }
+                else
+                {
+                    for (int i = 0; i < race.dnaConverterList.Length; i++)
+                    {
+                        if (race.dnaConverterList[i] == null)
+                        {
+                            AddText($"DynamicDNAConvertController {i} on Race {race.name} is invalid");
+                            invalid = true;
+                        }
+                        else
+                        {
+                            var cvt = race.dnaConverterList[i];
+                            var dnaasset = cvt.dnaAsset;
+                            if (!UMAAssetIndexer.Instance.HasAsset<DynamicUMADnaAsset>(dnaasset.name))
+                            {
+                                AddText($"DynamicDNAConvertController {i} on Race {dnaasset.name} is not indexed! Adding...", LogType.Warning);
+                                var ai = new AssetItem(typeof(DynamicUMADna), dnaasset);
+                                UMAAssetIndexer.Instance.AddAssetItem(ai);
+                                UMAAssetIndexer.Instance.ForceSave();
+                            }
+                        }
+                    }
+                }
+                if (race.baseRaceRecipe == null)
+                {
+                    AddText($"Warning: RaceData {race.raceName} has no base race recipe assigned!", LogType.Error);
+                    invalid = true;
+                }
+                if (invalid)
+                {
+                    ReviewAssetItem(r);
+                }
+            }
+            AddText("Race check complete");
+        }
+
+        private void CheckMaterials()
+        {
+            AddText("Checking Materials");
+            var Mats = UMAAssetIndexer.Instance.GetAssetItems<UMAMaterial>();
+            int missingfiles = 0;
+            for (int i = 0; i < Mats.Count; i++)
+            {
+                var ai = Mats[i];
+                UMAMaterial mat = ai.Item as UMAMaterial;
+                if (mat == null)
+                {
+                    AddText($"Unable to load UMAMaterial {ai._Name} at path {ai._Path} ");
+                    missingfiles++;
+                }
+                else
+                {
+                    if (mat.material == null)
+                    {
+                        AddText($"Error: UMAMaterial {mat.name} has no texture assigned!", LogType.Error);
+                        LogLine l = AddText("Inspect Material");
+                        l.ReviewItem = ai;
+                        l.ButtonAction = (line) => ReviewItem(l);
+                    }
+                    if (mat.channels.Length == 0 && mat.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
+                    {
+                        AddText($"Warning: UMAMaterial {mat.name} has no texture channels. Is this expected?", LogType.Warning);
+                        LogLine l = AddText("Review Material");
+                        l.ReviewItem = ai;
+                        l.ButtonAction = (line) => ReviewItem(l);
+                    }
+                    if (mat.channels.Length > 0 && mat.materialType == UMAMaterial.MaterialType.UseExistingTextures)
+                    {
+                        bool bad = false;
+                        for (int ii = 0; ii < mat.channels.Length; ii++)
+                        {
+                            var chan = mat.channels[ii];
+                            if (chan.channelType != UMAMaterial.ChannelType.TintedTexture)
+                            {
+                                bad = true;
+                                chan.channelType = UMAMaterial.ChannelType.TintedTexture;
+                            }
+                        }
+                        if (bad)
+                        {
+                            EditorUtility.SetDirty(mat);
+                            AssetDatabase.SaveAssetIfDirty(mat);
+                            AddText($"Material {mat.name} with 'Use Existing textures' had invalid channel type. Fixed.");
+                        }
+                    }
+                    else
+                    {
+                        bool bad = false;
+                        if (mat.material != null)
+                        {
+                            List<string> keywords = new List<string>(mat.material.GetTexturePropertyNames());
+                            // Check channel keywords vs shader.
+                            for (int ii = 0; ii < mat.channels.Length; ii++)
+                            {
+                                var chan = mat.channels[ii];
+                                if (!keywords.Contains(chan.materialPropertyName))
+                                {
+                                    AddText($"Error: Material {mat.name} channel {ii} has invalid property name");
+                                    bad = true;
+                                }
+                            }
+                            if (bad)
+                            {
+                                LogLine l = AddText("Review Material");
+                                l.ButtonAction = (line) => ReviewItem(l);
+                                l.ReviewItem = ai;
+                            }
+                        }
+                    }
+                }
+            }
+            AddText("Material check complete");
+        }
+
+        #region repairs
+
+        private void ReviewItem(LogLine line)
+        {
+            StartCoroutine(InspectObject(line.ReviewItem));
+            Repaint();
+        }
+
+
+        private IEnumerator InspectObject(AssetItem ai)
+        {
+            InspectorUtlity.InspectTarget(ai.Item);
+            return null;
+        }
         private void DoSetAtlasGenerationParms(LogLine line)
         {
             UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>();
@@ -593,7 +1314,7 @@ namespace UMA
             UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>();
             if (generators.Length == 1)
             {
-                generators[0].InitialScaleFactor = 4;
+                generators[0].editorInitialScaleFactor = 4;
                 line.Resolve("Editor Initial Scale Factor set");
             }
         }
@@ -669,17 +1390,12 @@ namespace UMA
             line.Resolve("Library Rebuilt");
         }
 
-        private void ShowLink(string label, string text, string URL)
+        private void DoLibraryRepair(LogLine line)
         {
-            
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(label, EditorStyles.boldLabel, GUILayout.Width(96));
-            if (GUILayout.Button(text, Hyperlink))
-            {
-                Application.OpenURL(URL);
-            }
-            GUILayout.EndHorizontal();
+            UMAAssetIndexer.Instance.RepairAndCleanup();
+            line.Resolve("Library Repaired. Please rerun scan");
         }
+        #endregion
 
         private void DoAddToScenePage()
         {
@@ -744,6 +1460,19 @@ namespace UMA
             l.ButtonAction = (line) => DoLibraryRebuild(l);
         }
 
+        #region LinksButton
+        private void ShowLink(string label, string text, string URL)
+        {
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, EditorStyles.boldLabel, GUILayout.Width(96));
+            if (GUILayout.Button(text, Hyperlink))
+            {
+                Application.OpenURL(URL);
+            }
+            GUILayout.EndHorizontal();
+        }
+
         private void DoLinksPage()
         {
             var settings = UMASettings.GetOrCreateSettings();
@@ -754,17 +1483,79 @@ namespace UMA
             ShowLink("Forum", "UMA Forum", settings.ForumURL);
             ShowLink("Asset Store", "UMA on the Asset Store", settings.AssetStoreURL);
         }
+        #endregion
+
+        #region ScenesButton
+        private void DoScenesPage()
+        {
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition);
+
+            Color darkerRect = new Color(PanelColor.r * 0.75f, PanelColor.g * 0.75f, PanelColor.b * 0.75f, 0.5f);
+
+            float ht = 60;
+            Rect SceneRect = new Rect(0, 0, ContentRect.width, ht);
+
+
+            UMAWelcomeScenes scenes = (UMAWelcomeScenes)Resources.Load("UMAWelcomeScenes");
+           // UMAWelcomeScenes scenes = (UMAWelcomeScenes)AssetDatabase.LoadAssetAtPath("Assets/UMA/InternalDataStore/Resources/UMAWelcomeScenes.asset", typeof(UMAWelcomeScenes));
+            if (scenes != null)
+            {
+                foreach (var scene in scenes.umaScenes)
+                {
+                    GUIHelper.BeginInsetArea(PanelColor, SceneRect, 2);
+                    DisplayScene(scene, SceneRect);
+                    SceneRect.y += ht;
+                    GUIHelper.EndInsetArea();
+                }
+            }
+            else
+            {
+                GUILayout.Label("No welcome scenes found. Please create a UMAWelcomeScenes asset in the project.");
+            }
+            // create a GUILayout area right at the bottom.
+            GUILayout.Label("", GUILayout.Width(ContentRect.width-48), GUILayout.Height(SceneRect.y));
+            GUILayout.EndScrollView();
+        }
+
+        private void DisplayScene(UMAWelcomeScenes.UMAScene scene, Rect SceneRect)
+        {
+            float gutter = 2f;
+            float sqrSide = SceneRect.height - (gutter * 2.0f);
+            Rect TitleRect = new Rect(sqrSide+(gutter * 2), gutter, SceneRect.width - (sqrSide + (gutter*2)), sqrSide);
+            Rect InfoRect = new Rect(TitleRect.x, TitleRect.y, TitleRect.width, TitleRect.height);
+            Rect textureRect = new Rect(gutter, gutter, sqrSide, sqrSide);
+
+            //GUI.DrawTexture(textureRect, scene.sceneTexture);
+            if (GUI.Button(textureRect, new GUIContent(scene.sceneTexture)))
+            {
+                var sc = EditorSceneManager.OpenScene(scene.scenePath);
+            }
+            GUI.Label(InfoRect, scene.sceneName, SceneTitleStyle);
+            InfoRect.y += EditorGUIUtility.singleLineHeight;
+            InfoRect.height -= EditorGUIUtility.singleLineHeight;
+            GUI.TextArea(InfoRect, scene.sceneDescription,DescriptionStyle);
+        }
+        #endregion
+
+        #region simple coroutine
         private void StartCoroutine(IEnumerator routine)
         {
             EditorApplication.CallbackFunction updateCallback = null;
             updateCallback = () =>
             {
+                if (routine == null)
+                {
+                    EditorApplication.update -= updateCallback;
+                    return;
+                }
                 if (!routine.MoveNext())
                 {
                     EditorApplication.update -= updateCallback;
+                    return;
                 }
             };
             EditorApplication.update += updateCallback;
         }
+        #endregion
     }
 }
