@@ -22,11 +22,11 @@ namespace UMA
                 return;
             }
 
-            
+
+            EnsureTags();
             if (!settings.Initialized)
             {
                 settings.Initialized = true;
-                EnsureTags();
                 EnsureUMAIndicators();
                 EditorUtility.SetDirty(settings);
                 AssetDatabase.SaveAssetIfDirty(settings);
@@ -37,7 +37,7 @@ namespace UMA
                     return;
                 }
 
-                int chosen = EditorUtility.DisplayDialogComplex("UMA " + UmaAboutWindow.umaVersion, "New UMA version imported. The global index should be rebuilt or restored (if you made a backup). (If you don't know what this means, choose 'Rebuild Index')", "Rebuild Index", "Restore from backup", "Do nothing");
+                /*int chosen = EditorUtility.DisplayDialogComplex("UMA " + UmaAboutWindow.umaVersion, "New UMA version imported. The global index should be rebuilt or restored (if you made a backup). (If you don't know what this means, choose 'Rebuild Index')", "Rebuild Index", "Restore from backup", "Do nothing");
 
                 switch (chosen)
                 {
@@ -82,7 +82,7 @@ namespace UMA
                     default:
                         EditorUtility.DisplayDialog("UMA " + UmaAboutWindow.umaVersion, "You can rebuild or restore the library from the Global Library window accessable from the UMA menu above.", "OK");
                         break;
-                }
+                } */
             }
         }
 
