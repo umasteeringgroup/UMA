@@ -60,3 +60,5 @@ MonoBehaviour:
   GithubURL: https://github.com/umasteeringgroup/UMA
   YoutubeURL: https://www.youtube.com/@SecretAnorak/videos
   ShaderFolder: UMA/Core/ShaderPackages
+  Overlays: {fileID: 2800000, guid: d422cb0fca0d49043a75d8e2f72a0834, type: 3}
+  Slots: {fileID: 2800000, guid: ec5079b2d8adda44c89fdcd6db299dc4, type: 3}

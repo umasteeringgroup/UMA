@@ -61,6 +61,10 @@ public class UMASettings : ScriptableObject
     [Tooltip("The folder where the UMA shaders are located, relative to the Assets folder. Usually UMA/Core/ShaderPackages")]
     public string ShaderFolder;
 
+    [Header("Welcome page textures")]
+    public Texture2D Overlays;
+    public Texture2D Slots;
+
 
     [MenuItem("Assets/Create/UMA/Core/UMASettings")]
     public static void CreateUMASettingsMenuItem()
