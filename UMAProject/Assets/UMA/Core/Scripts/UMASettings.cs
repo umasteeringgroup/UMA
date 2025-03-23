@@ -55,6 +55,8 @@ public class UMASettings : ScriptableObject
     public string WikiURL;
     public string ForumURL;
     public string AssetStoreURL;
+    public string GithubURL;
+    public string YoutubeURL;
     [Header("Shader Folder")]
     [Tooltip("The folder where the UMA shaders are located, relative to the Assets folder. Usually UMA/Core/ShaderPackages")]
     public string ShaderFolder;
@@ -102,6 +104,12 @@ public class UMASettings : ScriptableObject
         var settings4 = AssetDatabase.LoadAssetAtPath<UMASettings>(customSettingsPath);
         stopwatch.Stop();
         UnityEngine.Debug.Log($"LoadAssetAtPath {settings4.GetInstanceID()} loaded in " + stopwatch.ElapsedTicks + " ticks");
+    }
+
+    public static UMASettings GetSettings()
+    {
+        var settings = AssetDatabase.LoadAssetAtPath<UMASettings>(customSettingsPath);
+        return settings;
     }
 
     public static UMASettings GetOrCreateSettings()

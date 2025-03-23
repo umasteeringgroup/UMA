@@ -12,13 +12,37 @@ using UnityEngine;
 
 namespace UMA
 {
-    
+    [InitializeOnLoad]
     public class WelcomeToUMA : EditorWindow
     {
 
         public static WelcomeToUMA Instance
         {
             get; set;
+        }
+
+        static WelcomeToUMA()
+        {
+            EditorApplication.delayCall += DelayedCall;
+        }
+
+        static void DelayedCall()
+        {
+            EditorApplication.update += Update;
+        }
+
+        public static void Update()
+        {
+            UMASettings settings = UMASettings.GetOrCreateSettings();
+            if (settings == null)
+            {
+                return;
+            }
+            if (settings.showWelcomeToUMA)
+            {
+                ShowWindow();
+            }
+            EditorApplication.update -= Update;
         }
 
         [MenuItem("UMA/Welcome to UMA",false,0)]
@@ -106,7 +130,7 @@ namespace UMA
         public bool processing = false;
         public bool initialized = false;
 
-
+        public UMASettings initialSettings;
 
 
         public void OnEnable()
@@ -164,6 +188,7 @@ namespace UMA
 
             //DescriptionStyle.fixedHeight = 48;
 
+            initialSettings = UMASettings.GetOrCreateSettings();
             currentButton = 0;
             DoWelcome();
             initialized = true;
@@ -225,6 +250,26 @@ namespace UMA
             if (GUILayout.Button("Basics", GUILayout.Height(40)))
             {
                 ClearLog();
+                AddText("UMA is a runtime character creation system for Unity3D");
+                AddText("It relies on a library of indexed items to create characters");
+                AddText("The library data can be in Resources and/or in Addressable Bundles");
+                AddSeperator();
+                AddText("UMA uses a generator to create characters - UMA_GLIB");
+                AddText("This prefab needs to be in a scene for UMA to work.");
+                AddText("The generator has settings for texture merging, mesh combining, and more.");
+                AddText("To get started, use the 'Add an UMA to the current scene' button");
+                AddText("This will add an editable UMA and generator, if needed");
+                AddSeperator();
+                AddText("UMA uses recipes to define meshes, textures, and other data");
+                AddText("The following are the main base parts of an UMA:");
+                AddText("SlotData: This contains a mesh part, along with any rig parts needed.");
+                AddText("OverlayData: This contains texture parts that are colorized and combined to build textures.");
+                AddText("DNA: This is used to adjust the meshes when built, either bone modifications or blendshapes");
+                AddText("Recipes: These are used to tied slotdata and overlays together, to build skinned meshes");
+                AddText("RaceData: This defines a base recipe for the character, what wardrobe slots are available, what DNA converters are used, etc.");
+                AddSeperator();
+                AddText("We recommend to watch the videos on youtube for a deeper dive into how UMA works");
+                AddText("https://www.youtube.com/@SecretAnorak/videos");
                 // explain about the generator
                 // about the library
                 // about races
@@ -281,6 +326,20 @@ namespace UMA
                 ClearLog();
                 // Links page has to be done in content window
                 currentButton = 5;
+            }
+            if (initialSettings.showWelcomeToUMA)
+            {
+                if (GUILayout.Button("Turn this off!!"))
+                {
+                    currentButton = 9;
+                    ClearLog();
+                    UMASettings settings = UMASettings.GetOrCreateSettings();
+                    settings.showWelcomeToUMA = false;
+                    EditorUtility.SetDirty(settings);
+                    AddText("The welcome window will no longer show when Unity is opened");
+                    AddText("To view it at any time, you can use the 'UMA/Welcome to UMA' menu item");
+                    AddText("You can re-enable this in the UMA project settings.");
+                }
             }
             GUILayout.EndVertical();
             GUIHelper.EndInsetArea();
@@ -1482,6 +1541,8 @@ namespace UMA
             ShowLink("Wiki", "UMA Wiki", settings.WikiURL);
             ShowLink("Forum", "UMA Forum", settings.ForumURL);
             ShowLink("Asset Store", "UMA on the Asset Store", settings.AssetStoreURL);
+            ShowLink("GitHub", "UMA on GitHub", settings.GithubURL);
+            ShowLink("Youtube", "SecretAnorak's UMA Videos", settings.YoutubeURL);
         }
         #endregion
 
