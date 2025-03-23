@@ -75,6 +75,7 @@ namespace UMA
             public LogLineAction ButtonAction;
             public LogType logType = LogType.Info;
             public AssetItem ReviewItem = null;
+            public Texture2D Image = null;
 
             public LogLine(string message, GUIStyle style, int index, LogType logType = LogType.Info)
             {
@@ -83,6 +84,12 @@ namespace UMA
                 this.index = index;
                 this.logType = logType;
             }
+
+            public LogLine(Texture2D image)
+            {
+                Image = image;
+            }
+
             public LogLine(string message, GUIStyle style, LogLineAction buttonAction,int index, LogType logType = LogType.Info)
             {
                 Message = message;
@@ -261,12 +268,28 @@ namespace UMA
                 AddText("This will add an editable UMA and generator, if needed");
                 AddSeperator();
                 AddText("UMA uses recipes to define meshes, textures, and other data");
-                AddText("The following are the main base parts of an UMA:");
-                AddText("SlotData: This contains a mesh part, along with any rig parts needed.");
-                AddText("OverlayData: This contains texture parts that are colorized and combined to build textures.");
-                AddText("DNA: This is used to adjust the meshes when built, either bone modifications or blendshapes");
-                AddText("Recipes: These are used to tied slotdata and overlays together, to build skinned meshes");
-                AddText("RaceData: This defines a base recipe for the character, what wardrobe slots are available, what DNA converters are used, etc.");
+                AddText("   There are two types of recipes - basic <b>Text Recipes</b> and <b>Wardrobe Recipes.");
+                AddText("   <b>Text recipes</b> are used to define the base character, or to provide utility functions (like add a capsule collider)");
+                AddText("   <b>Wardrobe recipes</b> are used to define wearable items, who can use them, and what 'slot' they use when equipped.");
+                AddText("   Wardrobe recipes have advanced functions to hide parts of the character, switch out slotdatas when needed, smoosh hair under a hat, etc.");
+                AddText("");
+                AddText("<b>Base parts of an UMA</b>");
+                AddText(" ");
+                AddText("   <b>SlotData:</b>");
+                AddImage(initialSettings.Slots,"");
+                AddText("A SlotData contains a mesh part, along with any rig parts needed.");
+                AddText("These are combined into a Skinned Mesh when the character is built.");
+
+                AddText(" ");
+                AddText("   <b>OverlayData:</b>");
+                AddImage(initialSettings.Overlays,"");
+                AddText("An OverlayData contains texture parts that are colorized and combined to build textures.");
+                AddText("Overlays contain all the textures needed for a single layer - for example, the albedo, normal, and metallic.");
+                AddText("Overlays are layered on top of each other to build the final texture for a slotdata.");
+                AddText(" ");
+                AddText("   <b>DNA:</b>  This is used to adjust the meshes when built, either bone modifications or blendshapes");
+                AddText("   <b>Recipes:</b>  These are used to tie slotdata and overlays together, to build skinned meshes");
+                AddText("   <b>RaceData:</b>  This defines a base recipe for the character, what wardrobe slots are available, what DNA converters are used, etc.");
                 AddSeperator();
                 AddText("We recommend to watch the videos on youtube for a deeper dive into how UMA works");
                 AddText("https://www.youtube.com/@SecretAnorak/videos");
@@ -453,7 +476,18 @@ namespace UMA
            
             foreach (var item in LoggedItems)
             {
-                GUILayout.BeginHorizontal();
+                if (item.Image != null)
+                {
+                    GUILayout.BeginHorizontal();
+                    if (!string.IsNullOrEmpty(item.Message))
+                    {
+                        GUILayout.Label(item.Message, InfoStyle);
+                    }
+                    GUILayout.Label(item.Image, GUILayout.Width(600));
+                    GUILayout.EndHorizontal();
+                    continue;
+                }
+                GUILayout.BeginHorizontal();                
                 if (item.logType == LogType.Error)
                 {
                     GUILayout.Label("Error: ", ErrorFound, GUILayout.Width(60));
@@ -523,6 +557,15 @@ namespace UMA
                 Repaint();
                 return line;
             }
+        }
+
+        private LogLine AddImage(Texture2D image, string message)
+        {
+            LogLine line = new LogLine("", InfoStyle, LoggedItems.Count);
+            line.Image = image;
+            LoggedItems.Add(line);
+            Repaint();
+            return line;
         }
 
         private LogLine AddText(string text, GUIStyle style, LogLineAction buttonAction)
@@ -994,7 +1037,6 @@ namespace UMA
             }
         }
         
-
         private void CheckWardrobeRecipes()
         {
             UMAAssetIndexer lib = UMAAssetIndexer.Instance;
@@ -1335,7 +1377,6 @@ namespace UMA
             StartCoroutine(InspectObject(line.ReviewItem));
             Repaint();
         }
-
 
         private IEnumerator InspectObject(AssetItem ai)
         {

@@ -5,7 +5,7 @@ using UnityEditor.SceneManagement;
 using System;
 using UMA.Editors;
 using UMA.CharacterSystem;
-using Codice.Client.Common.GameUI;
+
 
 namespace UMA.CharacterSystem.Editors
 {
