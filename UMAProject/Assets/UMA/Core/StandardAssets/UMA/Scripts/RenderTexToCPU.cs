@@ -7,6 +7,7 @@ using static UMA.UMAData;
 using UnityEngine.Rendering;
 using System.Collections.Concurrent;
 using System.Linq;
+using UnityEngine.Experimental.Rendering;
 
 namespace UMA
 {
@@ -61,7 +62,23 @@ namespace UMA
             // if it's still valid, then create the texture and enqueue the apply method
             if (generatedMaterial != null && generatedMaterial.material != null)
             {
-                newTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, texture.mipmapCount > 0, true);
+                var w = asyncAction.width;
+                var h = asyncAction.height;
+
+                if (w != texture.width || h != texture.height)
+                {
+                    // the texture has changed since we started the copy, so we can't use it.
+                    // we need to clean up the texture
+                    Debug.LogWarning("Texture size changed during copy, discarding copy. RenderTexture will remain in VRAM");
+                    return;
+                }
+
+                GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(texture.format,false);
+                TextureFormat tf = GraphicsFormatUtility.GetTextureFormat(gf);
+                // texture.format
+                newTexture = new Texture2D(texture.width, texture.height, tf, texture.mipmapCount > 0, true);
+
+                // newTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, texture.mipmapCount > 0, true);
                 newTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
 #if UNITY_EDITOR
                 // We can't count on the callback due to the fact that the editor may not be playing.
