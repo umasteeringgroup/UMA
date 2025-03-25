@@ -13,10 +13,10 @@ namespace UMA.Editors
 		SerializedProperty meshCombiner;
 		SerializedProperty InitialScaleFactor;
 		SerializedProperty IterationCount;
-		SerializedProperty fastGeneration;
 		SerializedProperty garbageCollectionRate;
 		SerializedProperty processAllPending;
-		SerializedProperty MaxQueuedConversionsPerFrame;
+		SerializedProperty applyInline;
+        SerializedProperty MaxQueuedConversionsPerFrame;
 		SerializedProperty EditorInitialScaleFactor;
 		SerializedProperty editorAtlasResolution;
 		SerializedProperty collectGarbage;
@@ -37,8 +37,8 @@ namespace UMA.Editors
 			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
 			IterationCount = serializedObject.FindProperty("IterationCount");
 			processAllPending = serializedObject.FindProperty("processAllPending");
-			fastGeneration = serializedObject.FindProperty("fastGeneration");
-			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
+            applyInline = serializedObject.FindProperty("applyInline");
+            garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
 			EditorInitialScaleFactor = serializedObject.FindProperty("editorInitialScaleFactor");
 			editorAtlasResolution = serializedObject.FindProperty("editorAtlasResolution");
 			collectGarbage = serializedObject.FindProperty("collectGarbage");
@@ -60,7 +60,6 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.PropertyField(MaxQueuedConversionsPerFrame);
 				EditorGUILayout.PropertyField(InitialScaleFactor);
-				EditorGUILayout.PropertyField(fastGeneration);
 				EditorGUILayout.PropertyField(IterationCount);
 				EditorGUILayout.PropertyField(collectGarbage);
 				EditorGUILayout.PropertyField(garbageCollectionRate);
@@ -76,7 +75,9 @@ namespace UMA.Editors
 			{
 				GUILayout.Space(20);
 				EditorGUILayout.LabelField("Advanced Configuration", centeredLabel);
-				EditorGUILayout.HelpBox("The default renderer asset is used to set rendering parameters for the generated SkinnedMeshRenderer. This is only used if no other renderer asset is specified on the character, slot, or renderer manager.", MessageType.None);
+				EditorGUILayout.HelpBox("Use Apply Inline when you want converted rendertextures to apply immediately on your platform",MessageType.None);
+				EditorGUILayout.PropertyField(applyInline);
+                EditorGUILayout.HelpBox("The default renderer asset is used to set rendering parameters for the generated SkinnedMeshRenderer. This is only used if no other renderer asset is specified on the character, slot, or renderer manager.", MessageType.None);
 				EditorGUILayout.PropertyField(defaultRendererAsset);
 				EditorGUILayout.HelpBox("The default overlay asset is used when an overay is not specified on a slot. This is for testing only.", MessageType.None);
 				EditorGUILayout.PropertyField(defaultOverlayAsset);

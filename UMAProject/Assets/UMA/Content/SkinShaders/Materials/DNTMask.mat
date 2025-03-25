@@ -45,11 +45,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailOne:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 7ddc14a20b6ee5e49b64a78ba0a1902b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailOneNormal:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 8788e592cc3c5704db12353ec60e3b35, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailThree:

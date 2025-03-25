@@ -47,7 +47,6 @@ namespace UMA
         RenderTexture destinationTexture;
         Texture[] resultingTextures;
         UMAGeneratorBase umaGenerator;
-        bool fastPath = false;
 
         public bool SupportsRTToTexture2D
         {
@@ -69,7 +68,15 @@ namespace UMA
             RenderTexture.active = bkup;
             return rt;
         }
-
+        public void Prepare(UMAData _umaData, UMAGeneratorBase _umaGenerator)
+        {
+            umaData = _umaData;
+            umaGenerator = _umaGenerator;
+            if (umaData.atlasResolutionScale <= 0)
+            {
+                umaData.atlasResolutionScale = 1f;
+            }
+        }
 
 
 
@@ -82,10 +89,6 @@ namespace UMA
         {
             umaData = _umaData;
             umaGenerator = _umaGenerator;
-            if (umaGenerator is UMAGenerator)
-            {
-                fastPath = (umaGenerator as UMAGenerator).fastGeneration;
-            }
 
             if (umaData.atlasResolutionScale <= 0)
             {
@@ -133,7 +136,7 @@ namespace UMA
                             case UMAMaterial.ChannelType.NormalMap:
                             case UMAMaterial.ChannelType.DetailNormalMap:
                                 {
-                                    bool CopyRTtoTex = SupportsRTToTexture2D && fastPath && (umaGenerator.convertRenderTexture || slotData.material.channels[textureChannelNumber].ConvertRenderTexture);
+                                    bool CopyRTtoTex = SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || slotData.material.channels[textureChannelNumber].ConvertRenderTexture);
                                     if (CopyRTtoTex && !TextureFormats.ContainsKey(slotData.material.channels[textureChannelNumber].textureFormat))
                                     {
                                         CopyRTtoTex = false;

@@ -13,6 +13,7 @@ namespace UMA
 {
     public class RenderTexToCPU
     {
+        public static bool ApplyInline;
         public static Dictionary<int, RenderTexToCPU> renderTexturesToCPU = new Dictionary<int, RenderTexToCPU>();
         public static Queue<RenderTexToCPU> QueuedCopies = new Queue<RenderTexToCPU>();
         public static Dictionary<int, RenderTexture> renderTexturesToFree = new Dictionary<int, RenderTexture>();
@@ -89,9 +90,17 @@ namespace UMA
                     return;
                 }
 #endif
-                copiesEnqueued++;
-                renderTexturesToFree.Add(instanceID, texture);
-                QueuedCopies.Enqueue(this);
+                if (ApplyInline)
+                {
+                    // this will remove the rendertexture, etc.
+                    ApplyTexture();
+                }
+                else
+                {
+                    copiesEnqueued++;
+                    renderTexturesToFree.Add(instanceID, texture);
+                    QueuedCopies.Enqueue(this);
+                }
             }
             else
             {
