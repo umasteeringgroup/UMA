@@ -33,16 +33,13 @@ namespace UMA
 		[Tooltip("Number of iterations to process each frame")]
 		public int IterationCount = 1;
 
-		/// <summary>
-		/// If true, generate in a single update.
-		/// </summary>
-        [Tooltip("Set Fast Generation to true to have the UMA Avatar generated in a single update. Otherwise, generation can span multiple frames.")]
-		public bool fastGeneration = true;
-
 		[Tooltip("Enable Process All Pending to force the generate to process all pending UMA during the next frame")]
 		public bool processAllPending = false;
 
-		private int forceGarbageCollect;
+		[Tooltip("When enable, the texture will be applied right away during the conversion process")]
+		public bool applyInline = false;
+
+        private int forceGarbageCollect;
         /// <summary>
         /// Number of character updates before triggering System garbage collect.
         /// </summary>
@@ -146,8 +143,7 @@ namespace UMA
 		public static uint WorkCount = 0;
 		public override void Work()
 		{
-
-
+			RenderTexToCPU.ApplyInline = applyInline;
             if (!IsIdle())
 			{
                 // forceGarbageCollect is incremented every time the mesh/rig is built.
@@ -174,12 +170,6 @@ namespace UMA
 					count = umaDirtyList.Count;
                 }
 
-                if (RenderTexToCPU.PendingCopies() > 0)
-                {
-                    RenderTexToCPU.ApplyQueuedCopies(MaxQueuedConversionsPerFrame);
-					TexturesProcessed += MaxQueuedConversionsPerFrame > RenderTexToCPU.PendingCopies() ? RenderTexToCPU.PendingCopies() : MaxQueuedConversionsPerFrame;
-                }
-
 				if (hasPendingUMAS())
 				{
 					for (int i = 0; i < count; i++)
@@ -192,7 +182,6 @@ namespace UMA
 					}
 				}
 
-
                 ElapsedTicks += stopWatch.ElapsedTicks;
 #if UNITY_EDITOR
 				UnityEditor.EditorUtility.SetDirty(this);
@@ -204,7 +193,15 @@ namespace UMA
                     GC.Collect(0);
                 }
             }
-		}
+            if (RenderTexToCPU.PendingCopies() > 0)
+            {
+				stopWatch.Start();
+                RenderTexToCPU.ApplyQueuedCopies(MaxQueuedConversionsPerFrame);
+                TexturesProcessed += MaxQueuedConversionsPerFrame > RenderTexToCPU.PendingCopies() ? RenderTexToCPU.PendingCopies() : MaxQueuedConversionsPerFrame;
+				stopWatch.Stop();
+                ElapsedTicks += stopWatch.ElapsedTicks;
+            }
+        }
 
 #pragma warning disable 618
 		public void RebuildAllRenderTextures()
@@ -656,7 +653,7 @@ namespace UMA
 		/// <inheritdoc/>
 		public override bool IsIdle()
 		{
-			return (umaDirtyList.Count == 0 && RenderTexToCPU.PendingCopies() == 0);
+			return (umaDirtyList.Count == 0);// && RenderTexToCPU.PendingCopies() == 0);
         }
 
 		public bool hasPendingUMAS()

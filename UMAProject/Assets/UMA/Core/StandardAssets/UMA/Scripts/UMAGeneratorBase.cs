@@ -21,6 +21,11 @@ namespace UMA
 #else
         public bool convertRenderTexture = true;
 #endif
+		[Tooltip("Use Async RT conversion to avoid GPU stalls")]
+		public bool useAsyncConversion = true;
+		[Tooltip("Regenerate Mipmaps on conversion to avoid copying mips from GPU")]
+		public bool asyncMipRegen = true;
+
         [Tooltip("Create Mipmaps for the generated texture. Checking this is a good idea.")]
 		public bool convertMipMaps;
         [Tooltip("Initial size of the texture atlas (square)")]

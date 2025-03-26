@@ -7,11 +7,13 @@ using static UMA.UMAData;
 using UnityEngine.Rendering;
 using System.Collections.Concurrent;
 using System.Linq;
+using UnityEngine.Experimental.Rendering;
 
 namespace UMA
 {
     public class RenderTexToCPU
     {
+        public static bool ApplyInline;
         public static Dictionary<int, RenderTexToCPU> renderTexturesToCPU = new Dictionary<int, RenderTexToCPU>();
         public static Queue<RenderTexToCPU> QueuedCopies = new Queue<RenderTexToCPU>();
         public static Dictionary<int, RenderTexture> renderTexturesToFree = new Dictionary<int, RenderTexture>();
@@ -21,6 +23,7 @@ namespace UMA
         public string textureName;
         public int textureIndex;
         public Texture2D newTexture;
+        public bool recreateMips;
         public static int copiesEnqueued = 0;
         public static int copiesDequeued = 0;
         public static int unableToQueue = 0;
@@ -31,18 +34,18 @@ namespace UMA
         public static int renderTexturesCleanedApplied = 0;
         public static int renderTexturesCleanedMissed = 0;
 
-        public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex)
+        public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex, UMAGeneratorBase basegen)
         {
             this.texture = texture;
             this.generatedMaterial = generatedMaterial;
             this.textureName = textureName;
             this.textureIndex = textureIndex;
+            this.recreateMips = basegen.convertMipMaps;
             renderTexturesToCPU.Add(texture.GetInstanceID(), this);
         }
 
         public void DoAsyncCopy()
         {
-            //Asynchronously
             AsyncGPUReadback.Request(texture, 0, (AsyncGPUReadbackRequest asyncAction) =>
             {
                 QueueCopy(asyncAction);
@@ -61,7 +64,23 @@ namespace UMA
             // if it's still valid, then create the texture and enqueue the apply method
             if (generatedMaterial != null && generatedMaterial.material != null)
             {
-                newTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, texture.mipmapCount > 0, true);
+                var w = asyncAction.width;
+                var h = asyncAction.height;
+
+                if (w != texture.width || h != texture.height)
+                {
+                    // the texture has changed since we started the copy, so we can't use it.
+                    // we need to clean up the texture
+                    Debug.LogWarning("Texture size changed during copy, discarding copy. RenderTexture will remain in VRAM");
+                    return;
+                }
+
+                GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(texture.format,false);
+                TextureFormat tf = GraphicsFormatUtility.GetTextureFormat(gf);
+                // texture.format
+                newTexture = new Texture2D(texture.width, texture.height, tf, texture.mipmapCount > 0, true);
+
+                // newTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, texture.mipmapCount > 0, true);
                 newTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
 #if UNITY_EDITOR
                 // We can't count on the callback due to the fact that the editor may not be playing.
@@ -72,9 +91,17 @@ namespace UMA
                     return;
                 }
 #endif
-                copiesEnqueued++;
-                renderTexturesToFree.Add(instanceID, texture);
-                QueuedCopies.Enqueue(this);
+                if (ApplyInline)
+                {
+                    // this will remove the rendertexture, etc.
+                    ApplyTexture();
+                }
+                else
+                {
+                    copiesEnqueued++;
+                    renderTexturesToFree.Add(instanceID, texture);
+                    QueuedCopies.Enqueue(this);
+                }
             }
             else
             {
@@ -127,7 +154,7 @@ namespace UMA
                 try
                 {
 
-                    newTexture.Apply(true); // TODO: IS THIS??? TEST ONLY JRRM
+                    newTexture.Apply(texture.mipmapCount > 0);  
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
                     RenderTexture.ReleaseTemporary(texture);

@@ -40,7 +40,7 @@ namespace UMA
 
 		private void Initialize(bool retry = true)
 		{
-			if (serializedObject == null)
+			if (serializedObject == null)  
             {
                 return;
             }
@@ -174,8 +174,8 @@ namespace UMA
 			slot[0] = TempSlot;
 			TempUMAData.SetSlots(slot);
 
-			TextureProcessBaseCoroutine textureProcessCoroutine;
-			textureProcessCoroutine = new TextureProcessPROCoroutine();
+            TextureProcessPRO textureProcessCoroutine;
+			textureProcessCoroutine = new TextureProcessPRO();
 			textureProcessCoroutine.Prepare(TempUMAData, TempUMAData.umaGenerator);
 			try
 			{

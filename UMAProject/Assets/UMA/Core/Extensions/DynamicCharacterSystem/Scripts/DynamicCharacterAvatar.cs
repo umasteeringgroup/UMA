@@ -763,19 +763,16 @@ namespace UMA.CharacterSystem
                     BuildCharacter(false, true);
                     predefinedDNA = dna;
 
-                    bool oldFastGen = ugb.fastGeneration;
                     int oldScaleFactor = ugb.InitialScaleFactor;
                     int oldAtlasResolution = ugb.atlasResolution;
 
                     umaData.rawAvatar = rawAvatar;
                     ugb.FreezeTime = true;
-                    ugb.fastGeneration = true;
                     ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
                     ugb.atlasResolution = ugb.editorAtlasResolution;
 
                     ugb.GenerateSingleUMA(umaData, false); // don't fire completed events in the editor
 
-                    ugb.fastGeneration = oldFastGen;
                     ugb.FreezeTime = false;
                     ugb.InitialScaleFactor = oldScaleFactor;
                     ugb.atlasResolution = oldAtlasResolution;
@@ -3519,7 +3516,7 @@ namespace UMA.CharacterSystem
         public void InitializeAvatar()
         {
             Initialize();
-            umaData.OnCharacterBegun += this.SaveOverrideDNA;
+            umaData.OnCharacterBegun += this.SetAndSaveOverrideDNA;
             umaData.OnCharacterDnaUpdated += this.RestoreOverrideDna;
         }
 
@@ -4055,10 +4052,7 @@ namespace UMA.CharacterSystem
 						continue; 
 					}
 
-                    if (utr.OverrideDNA != null && utr.OverrideDNA.Count > 0)
-                    {
-                        overrideDNA.AddRange(utr.OverrideDNA);
-                    }
+
                     if (utr.suppressWardrobeSlots != null)
                     {
                         if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
@@ -4096,6 +4090,12 @@ namespace UMA.CharacterSystem
                     if (SuppressSlotsStrings.Contains(utr.wardrobeSlot))
                     {
                         continue;
+                    }
+
+                    // add the Override DNA here.
+                    if (utr.OverrideDNA != null && utr.OverrideDNA.Count > 0)
+                    {
+                        overrideDNA.AddRange(utr.OverrideDNA);
                     }
 
                     //Collect all HideTags
@@ -4263,7 +4263,7 @@ namespace UMA.CharacterSystem
             LoadCharacter(umaRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, skipBundleCheck);
         }
 
-        public void SaveOverrideDNA(UMAData udata)
+        public void SetAndSaveOverrideDNA(UMAData udata)
         {
             savedDNA.Clear();
             if (overrideDNA.Count > 0)

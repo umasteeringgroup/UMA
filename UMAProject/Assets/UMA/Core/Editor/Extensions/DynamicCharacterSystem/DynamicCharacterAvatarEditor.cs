@@ -1250,12 +1250,10 @@ namespace UMA.CharacterSystem.Editors
                 dca.BuildCharacter(false, true);
                 dca.predefinedDNA = dna;
 
-                bool oldFastGen = ugb.fastGeneration;
                 int oldScaleFactor = ugb.InitialScaleFactor;
                 int oldAtlasResolution = ugb.atlasResolution;
 
                 ugb.FreezeTime = true;
-                ugb.fastGeneration = true;
                 ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
                 ugb.atlasResolution = ugb.editorAtlasResolution;
 
@@ -1264,7 +1262,6 @@ namespace UMA.CharacterSystem.Editors
 
                 ugb.GenerateSingleUMA(dca.umaData, false);
 
-                ugb.fastGeneration = oldFastGen;
                 ugb.FreezeTime = false;
                 ugb.InitialScaleFactor = oldScaleFactor;
                 ugb.atlasResolution = oldAtlasResolution;
