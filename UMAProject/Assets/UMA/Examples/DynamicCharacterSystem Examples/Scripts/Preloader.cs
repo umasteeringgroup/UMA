@@ -56,23 +56,39 @@ namespace UMA
         private async void InitAddressables()
         {
 #if UMA_ADDRESSABLES
-        PreloadLogger("Initializing Addressables");
-        op = Addressables.InitializeAsync();
-        await op.Task;
-        PreloadLogger($"Addressables Initialized");
-
-        op = Addressables.DownloadDependenciesAsync(Labels, Addressables.MergeMode.Union, false);
-        op.Completed += Op_Completed;
-        PreloadLogger("Downloading Dependencies completed" );
+            PreloadLogger("Initializing Addressables");
+            op = Addressables.InitializeAsync();
+            await op.Task;
+            PreloadLogger($"Addressables Initialized");
+            if (Labels.Count > 0)
+            {
+                op = Addressables.DownloadDependenciesAsync(Labels, Addressables.MergeMode.Union, false);
+                op.Completed += Op_Completed;
+            }
+            else
+            {
+                if (ActivateOnCompletion != null)
+                {
+                    ActivateOnCompletion.SetActive(true);
+                }
+                if (LoadingSlider != null)
+                {
+                    LoadingSlider.gameObject.SetActive(false);
+                }
+            }
+            PreloadLogger("Downloading Dependencies completed" );
 #else
-            LoadingSlider.gameObject.SetActive(false);
+                if (LoadingSlider != null)
+                {
+                    LoadingSlider.gameObject.SetActive(false);
+                }
 #endif
         }
 
 #if UMA_ADDRESSABLES
-    void Update()
+        void Update()
     {
-        if (LoadingSlider.isActiveAndEnabled && op.IsValid())
+        if (LoadingSlider != null && LoadingSlider.isActiveAndEnabled && op.IsValid())
         {
             LoadingSlider.value = op.PercentComplete;
             Text t = LoadingSlider.gameObject.GetComponentInChildren<Text>();
@@ -80,22 +96,25 @@ namespace UMA
         }
     }
 
-    private void Op_Completed(AsyncOperationHandle obj)
-    {
-        if (obj.Status == AsyncOperationStatus.Succeeded)
+        private void Op_Completed(AsyncOperationHandle obj)
         {
-            if (ActivateOnCompletion != null)
+            if (obj.Status == AsyncOperationStatus.Succeeded)
             {
-                ActivateOnCompletion.SetActive(true);
+                if (ActivateOnCompletion != null)
+                {
+                    ActivateOnCompletion.SetActive(true);
+                }
             }
+            else
+            {
+                Debug.Log("Preloader error: " + obj.Status);
+            }
+            if (LoadingSlider != null)
+            {
+                LoadingSlider.gameObject.SetActive(false);
+            }
+            Addressables.Release(obj);
         }
-        else
-        {
-            Debug.Log("Preloader error: " + obj.Status);
-        }
-        LoadingSlider.gameObject.SetActive(false);
-        Addressables.Release(obj);
-    }
 #endif
     }
 }
