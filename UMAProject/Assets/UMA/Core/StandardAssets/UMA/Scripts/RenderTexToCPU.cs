@@ -23,6 +23,7 @@ namespace UMA
         public string textureName;
         public int textureIndex;
         public Texture2D newTexture;
+        public bool recreateMips;
         public static int copiesEnqueued = 0;
         public static int copiesDequeued = 0;
         public static int unableToQueue = 0;
@@ -33,18 +34,18 @@ namespace UMA
         public static int renderTexturesCleanedApplied = 0;
         public static int renderTexturesCleanedMissed = 0;
 
-        public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex)
+        public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex, UMAGeneratorBase basegen)
         {
             this.texture = texture;
             this.generatedMaterial = generatedMaterial;
             this.textureName = textureName;
             this.textureIndex = textureIndex;
+            this.recreateMips = basegen.convertMipMaps;
             renderTexturesToCPU.Add(texture.GetInstanceID(), this);
         }
 
         public void DoAsyncCopy()
         {
-            //Asynchronously
             AsyncGPUReadback.Request(texture, 0, (AsyncGPUReadbackRequest asyncAction) =>
             {
                 QueueCopy(asyncAction);
@@ -153,7 +154,7 @@ namespace UMA
                 try
                 {
 
-                    newTexture.Apply(true); // TODO: IS THIS??? TEST ONLY JRRM
+                    newTexture.Apply(texture.mipmapCount > 0);  
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
                     RenderTexture.ReleaseTemporary(texture);

@@ -170,12 +170,6 @@ namespace UMA
 					count = umaDirtyList.Count;
                 }
 
-                if (RenderTexToCPU.PendingCopies() > 0)
-                {
-                    RenderTexToCPU.ApplyQueuedCopies(MaxQueuedConversionsPerFrame);
-					TexturesProcessed += MaxQueuedConversionsPerFrame > RenderTexToCPU.PendingCopies() ? RenderTexToCPU.PendingCopies() : MaxQueuedConversionsPerFrame;
-                }
-
 				if (hasPendingUMAS())
 				{
 					for (int i = 0; i < count; i++)
@@ -201,8 +195,11 @@ namespace UMA
             }
             if (RenderTexToCPU.PendingCopies() > 0)
             {
+				stopWatch.Start();
                 RenderTexToCPU.ApplyQueuedCopies(MaxQueuedConversionsPerFrame);
                 TexturesProcessed += MaxQueuedConversionsPerFrame > RenderTexToCPU.PendingCopies() ? RenderTexToCPU.PendingCopies() : MaxQueuedConversionsPerFrame;
+				stopWatch.Stop();
+                ElapsedTicks += stopWatch.ElapsedTicks;
             }
         }
 
@@ -656,7 +653,7 @@ namespace UMA
 		/// <inheritdoc/>
 		public override bool IsIdle()
 		{
-			return (umaDirtyList.Count == 0 && RenderTexToCPU.PendingCopies() == 0);
+			return (umaDirtyList.Count == 0);// && RenderTexToCPU.PendingCopies() == 0);
         }
 
 		public bool hasPendingUMAS()

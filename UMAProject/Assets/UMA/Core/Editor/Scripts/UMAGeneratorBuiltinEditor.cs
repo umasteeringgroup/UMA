@@ -23,9 +23,11 @@ namespace UMA.Editors
 		SerializedProperty defaultRendererAsset;
 		SerializedProperty defaultOverlayAsset;
 		SerializedProperty convertRenderTexture;
-		public static bool showGenerationSettings = false;
+
+        public static bool showGenerationSettings = false;
 		public static bool showAdvancedSettings = false;
 		public static bool showStatistics = true;
+		public static bool showEditTimeSettings = false;
 
 
 #pragma warning disable 0108
@@ -46,6 +48,7 @@ namespace UMA.Editors
 			defaultOverlayAsset = serializedObject.FindProperty("defaultOverlayAsset");
 			MaxQueuedConversionsPerFrame = serializedObject.FindProperty("MaxQueuedConversionsPerFrame");
 			convertRenderTexture = serializedObject.FindProperty("convertRenderTexture");
+
 		}
 #pragma warning restore 0108
 
@@ -64,11 +67,15 @@ namespace UMA.Editors
 				EditorGUILayout.PropertyField(collectGarbage);
 				EditorGUILayout.PropertyField(garbageCollectionRate);
 				EditorGUILayout.PropertyField(processAllPending);
-				GUILayout.Space(20);
-				EditorGUILayout.HelpBox("Edit time generation options. Keep the atlas size down and the scale factor high to address possible problems loading large scene files.", MessageType.None);
-				EditorGUILayout.PropertyField(editorAtlasResolution);
-				EditorGUILayout.PropertyField(EditorInitialScaleFactor);
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("SaveAndRestoreIgnoredItems"));
 			}
+            showEditTimeSettings = EditorGUILayout.Foldout(showEditTimeSettings, "Edit Time Settings");
+			if (showEditTimeSettings)
+			{
+                EditorGUILayout.HelpBox("Edit time generation options. Keep the atlas size down and the scale factor high to address possible problems loading large scene files.", MessageType.None);
+                EditorGUILayout.PropertyField(editorAtlasResolution);
+                EditorGUILayout.PropertyField(EditorInitialScaleFactor);
+            }
 
             showAdvancedSettings = EditorGUILayout.Foldout(showAdvancedSettings, "Advanced Settings");
 			if (showAdvancedSettings)
