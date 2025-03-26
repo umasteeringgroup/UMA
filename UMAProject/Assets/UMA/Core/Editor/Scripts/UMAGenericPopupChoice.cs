@@ -1,27 +1,30 @@
 using UnityEngine;
-
-public class UMAGenericPopupChoice
+namespace UMA
 {
-    public GUIContent Content;
-    public event System.Action OnClick;
-    public bool isSeperator = false;
-    public UMAGenericPopupChoice(GUIContent content, System.Action onClick)
-    {
-        Content = content;
-        OnClick = onClick;
-        isSeperator = false;
-    }
 
-    public UMAGenericPopupChoice()
+    public class UMAGenericPopupChoice
     {
-        this.isSeperator = true;
-    }
-
-    public void FireEvent()
-    {
-        if (OnClick != null)
+        public GUIContent Content;
+        public event System.Action OnClick;
+        public bool isSeperator = false;
+        public UMAGenericPopupChoice(GUIContent content, System.Action onClick)
         {
-            OnClick();
+            Content = content;
+            OnClick = onClick;
+            isSeperator = false;
+        }
+
+        public UMAGenericPopupChoice()
+        {
+            this.isSeperator = true;
+        }
+
+        public void FireEvent()
+        {
+            if (OnClick != null)
+            {
+                OnClick();
+            }
         }
     }
 }

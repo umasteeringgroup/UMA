@@ -1,15 +1,18 @@
 ﻿using UMA;
 using UnityEngine;
 
-public class SpeedCheck : MonoBehaviour
+namespace UMA
 {
-    // Start is called before the first frame update
-    public UMAGeneratorBuiltin Generator;
-    public Rect ScreenLoc;
-
-    private void OnGUI()
+    public class SpeedCheck : MonoBehaviour
     {
-        int ms = Mathf.FloorToInt(Generator.ElapsedTicks / 10000.0f);
-        GUI.Label(ScreenLoc,"Speed: " + ms+"ms");
+        // Start is called before the first frame update
+        public UMAGeneratorBuiltin Generator;
+        public Rect ScreenLoc;
+
+        private void OnGUI()
+        {
+            int ms = Mathf.FloorToInt(Generator.ElapsedTicks / 10000.0f);
+            GUI.Label(ScreenLoc, "Speed: " + ms + "ms");
+        }
     }
 }

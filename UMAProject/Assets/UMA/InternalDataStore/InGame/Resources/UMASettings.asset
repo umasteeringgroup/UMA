@@ -36,7 +36,7 @@ MonoBehaviour:
   showIndexedTypes: 0
   showUnindexedTypes: 0
   postProcessAllAssets: 0
-  useBurstCompiler: 0
+  useBurstCompiler: 1
   use32bitBuffers: 1
   useAddressables: 0
   enableGLTFExport: 0
@@ -47,7 +47,7 @@ MonoBehaviour:
   addStripMaterials: 1
   addrIncludeRecipes: 0
   addrIncludeOther: 0
-  showWelcomeToUMA: 1
+  showWelcomeToUMA: 0
   generatorPrefab: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889,
     type: 3}
   characterPrefab: {fileID: 153068, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
@@ -61,4 +61,4 @@ MonoBehaviour:
   YoutubeURL: https://www.youtube.com/@SecretAnorak/videos
   ShaderFolder: UMA/Core/ShaderPackages
   Overlays: {fileID: 2800000, guid: d422cb0fca0d49043a75d8e2f72a0834, type: 3}
-  Slots: {fileID: 2800000, guid: ec5079b2d8adda44c89fdcd6db299dc4, type: 3}
+  Slots: {fileID: 2800000, guid: 2baa5f36ef4c6fd47922ddd177e6a20e, type: 3}

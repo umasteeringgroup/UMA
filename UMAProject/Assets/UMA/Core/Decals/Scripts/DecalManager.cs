@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DecalManager : MonoBehaviour
+namespace UMA
 {
-    public List<DecalDefinition> Decals = new List<DecalDefinition>();
+    public class DecalManager : MonoBehaviour
+    {
+        public List<DecalDefinition> Decals = new List<DecalDefinition>();
+    }
 }
