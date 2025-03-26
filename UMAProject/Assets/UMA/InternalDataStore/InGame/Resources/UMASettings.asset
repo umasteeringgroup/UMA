@@ -16,7 +16,7 @@ MonoBehaviour:
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
-  UMAVersion: UMA 2.14f2
+  UMAVersion: UMA 2.14f4
   IgnoreTag: UMAIgnore
   KeepTag: UMAKeepChain
   tagLookupValues:
