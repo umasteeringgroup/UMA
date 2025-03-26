@@ -4,70 +4,66 @@ using System.Collections.Generic;
 using UMA;
 using UnityEngine;
 
-public class SRPAdjuster : MonoBehaviour
+namespace UMA
 {
-    [System.Serializable]
-    public struct lightAdjustment
+    public class SRPAdjuster : MonoBehaviour
     {
-        UMAUtils.PipelineType pipeline;
-        public GameObject light;
-        public float intensity;
-        public Color color;
-        public bool disabled;
-    };
-
-    public lightAdjustment[] HDRPAdjustments;
-    public lightAdjustment[] URPAdjustments;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        StartCoroutine(UpdateAdjustments());
-        DoUpdate();
-    }
-
-    private IEnumerator UpdateAdjustments()
-    {
-        yield return new WaitForSeconds(1);
-        DoUpdate();
-    }
-
-    private void DoUpdate()
-    {
-        Debug.Log("Updating SRP Adjustments");
-        UMAUtils.PipelineType pipeline = UMAUtils.DetectPipeline();
-        lightAdjustment[] adjustments = null;
-
-        if (pipeline == UMAUtils.PipelineType.HDPipeline)
+        [System.Serializable]
+        public struct lightAdjustment
         {
-            Debug.Log("Using HDRP Adjustments");
-            adjustments = HDRPAdjustments;
-        }
-        else if (pipeline == UMAUtils.PipelineType.UniversalPipeline)
+            UMAUtils.PipelineType pipeline;
+            public GameObject light;
+            public float intensity;
+            public Color color;
+            public bool disabled;
+        };
+
+        public lightAdjustment[] HDRPAdjustments;
+        public lightAdjustment[] URPAdjustments;
+
+        // Start is called before the first frame update
+        void Start()
         {
-            Debug.Log("Using URP Adjustments");
-            adjustments = URPAdjustments;
+            StartCoroutine(UpdateAdjustments());
+            DoUpdate();
         }
 
-        if (adjustments != null)
+        private IEnumerator UpdateAdjustments()
         {
-            foreach (lightAdjustment adjustment in adjustments)
+            yield return new WaitForSeconds(1);
+            DoUpdate();
+        }
+
+        private void DoUpdate()
+        {
+            UMAUtils.PipelineType pipeline = UMAUtils.DetectPipeline();
+            lightAdjustment[] adjustments = null;
+
+            if (pipeline == UMAUtils.PipelineType.HDPipeline)
             {
-                if (adjustment.disabled)
+                adjustments = HDRPAdjustments;
+            }
+            else if (pipeline == UMAUtils.PipelineType.UniversalPipeline)
+            {
+                adjustments = URPAdjustments;
+            }
+
+            if (adjustments != null)
+            {
+                foreach (lightAdjustment adjustment in adjustments)
                 {
-                    adjustment.light.SetActive(false);
-                }
-                else
-                {
-                    adjustment.light.SetActive(true);
-                    adjustment.light.GetComponent<Light>().intensity = adjustment.intensity;
-                    adjustment.light.GetComponent<Light>().color = adjustment.color;
+                    if (adjustment.disabled)
+                    {
+                        adjustment.light.SetActive(false);
+                    }
+                    else
+                    {
+                        adjustment.light.SetActive(true);
+                        adjustment.light.GetComponent<Light>().intensity = adjustment.intensity;
+                        adjustment.light.GetComponent<Light>().color = adjustment.color;
+                    }
                 }
             }
-        }
-        else
-        {
-            Debug.Log("No adjustments found for this pipeline");
         }
     }
 }

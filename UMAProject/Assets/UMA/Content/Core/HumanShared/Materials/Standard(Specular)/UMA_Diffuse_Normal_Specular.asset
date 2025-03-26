@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: UMA_Diffuse_Normal_Specular
   m_EditorClassIdentifier: 
   translateSRP: 1
+  AutoSetSRPMaterials: 1
   _material: {fileID: 2100000, guid: cd1ed1024fad50b4f82637b57f787dd1, type: 2}
   _secondPass: {fileID: 0}
   srpMaterials:
@@ -20,9 +21,9 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: cd1ed1024fad50b4f82637b57f787dd1, type: 2}
     secondPass: {fileID: 0}
     alternateKeywords:
-    - _MainTex
+    - _BaseMap
     - _BumpMap
-    - _SpecGlossMap
+    - _SpecularMap
   materialType: 1
   channels:
   - channelType: 4

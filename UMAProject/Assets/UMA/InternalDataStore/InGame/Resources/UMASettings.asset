@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad6e21078dbc88344b21463ab3922a67, type: 3}
+  m_Name: UMASettings
+  m_EditorClassIdentifier: 
+  WarningMessage: "Warning: Please do not modify these\n settings using the inspector.\n
+    Use the project settings instead.\n Modifying settings that need compiler\n directives
+    set will NOT work if you\n edit them in the inspector!"
+  Initialized: 1
+  UMAVersion: UMA 2.14f2
+  IgnoreTag: UMAIgnore
+  KeepTag: UMAKeepChain
+  tagLookupValues:
+  - Head
+  - Hair
+  - Torso
+  - Legs
+  - Feet
+  - Hands
+  - Smooshable
+  - Unsmooshable
+  - KeepChain
+  - Ignore
+  - UnUsed
+  cleanRegenOnSave: 1
+  autoRepairIndex: 0
+  showIndexedTypes: 0
+  showUnindexedTypes: 0
+  postProcessAllAssets: 0
+  useBurstCompiler: 1
+  use32bitBuffers: 1
+  useAddressables: 0
+  enableGLTFExport: 0
+  alwaysGetAddressables: 1
+  addrUseSharedGroup: 1
+  addrSharedGroupName: UMAShared
+  addrDefaultLabel: UMA_Default
+  addStripMaterials: 1
+  addrIncludeRecipes: 0
+  addrIncludeOther: 0
+  showWelcomeToUMA: 0
+  generatorPrefab: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889,
+    type: 3}
+  characterPrefab: {fileID: 153068, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+  textureMerge: {fileID: 11400000, guid: d242fc6cda21e9b42b95a0c72bb3bee1, type: 2}
+  DiscordInvite: https://discord.gg/KdteVKd
+  DiscordURL: https://discord.com/channels/459433092554162193/537991320636096523
+  WikiURL: https://github.com/umasteeringgroup/UMA/wiki
+  ForumURL: https://discussions.unity.com/t/uma-unity-multipurpose-avatar-on-the-asset-store-part-2/1487160
+  AssetStoreURL: https://assetstore.unity.com/packages/3d/characters/uma-2-35611
+  GithubURL: https://github.com/umasteeringgroup/UMA
+  YoutubeURL: https://www.youtube.com/@SecretAnorak/videos
+  ShaderFolder: UMA/Core/ShaderPackages
+  Overlays: {fileID: 2800000, guid: d422cb0fca0d49043a75d8e2f72a0834, type: 3}
+  Slots: {fileID: 2800000, guid: 2baa5f36ef4c6fd47922ddd177e6a20e, type: 3}

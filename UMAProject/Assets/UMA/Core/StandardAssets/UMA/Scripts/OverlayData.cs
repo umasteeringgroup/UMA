@@ -279,8 +279,9 @@ namespace UMA
 		/// Be very careful! improper use could result in overflowing the texture on the atlas!
 		/// </summary>
 		public bool instanceTransformed;
-		public Vector3 Scale = Vector3.one;
-		[Range(0.0f,360.0f)]
+		public Vector2 Scale = Vector2.one;
+		public Vector2 Translate = Vector2.zero;
+        [Range(0.0f,360.0f)]
 		public float Rotation;
 
 		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
@@ -308,7 +309,8 @@ namespace UMA
 			res.rect = rect;
 			res.instanceTransformed = instanceTransformed;
 			res.Rotation = Rotation;
-			res.Scale = Scale;
+			res.Scale = new Vector2(Scale.x,Scale.y) ;
+			res.Translate = new Vector2(Translate.x, Translate.y);
             if (tags == null)
             {
                 res.tags = new string[0];

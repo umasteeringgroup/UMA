@@ -5,91 +5,95 @@ using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;
 
-public class UMAUVAttachedItemPreprocessor : MonoBehaviour
+namespace UMA
 {
-    DynamicCharacterAvatar avatar;
-    public List<UMAUVAttachedItemLauncher> launchers = new List<UMAUVAttachedItemLauncher>();
 
-    /// <summary>
-    /// Awake is called when the script instance is being loaded. This is before Start()
-    /// This is done so that the preprocessor can add the event listeners before the avatar is built.
-    /// </summary>
-    void Awake()
+    public class UMAUVAttachedItemPreprocessor : MonoBehaviour
     {
-        avatar = GetComponent<DynamicCharacterAvatar>();
-        avatar.BuildCharacterBegun?.AddListener(OnBuildCharacterBegun);
-        avatar.WardrobeSuppressed?.AddListener(OnWardrobeSuppressed);
-        avatar.SlotsHidden?.AddListener(OnSlotsHidden);
-    }
+        DynamicCharacterAvatar avatar;
+        public List<UMAUVAttachedItemLauncher> launchers = new List<UMAUVAttachedItemLauncher>();
 
-    /// <summary>
-    /// This is called when the character is being built in BuildCharacter()
-    /// </summary>
-    /// <param name="umaData"></param>
-    public void OnBuildCharacterBegun(UMAData umaData)
-    {
-        launchers = new List<UMAUVAttachedItemLauncher>();
-    }
-
-	/// <summary>
-	/// This is called when the character has loaded all the slots/overlays in LoadCharacter()
-	/// </summary>
-	/// <param name="hiddenSlots"></param>
-	public void OnSlotsHidden(List<SlotData> hiddenSlots)
-    {
-
-        foreach (var slot in hiddenSlots)
+        /// <summary>
+        /// Awake is called when the script instance is being loaded. This is before Start()
+        /// This is done so that the preprocessor can add the event listeners before the avatar is built.
+        /// </summary>
+        void Awake()
         {
-            if (slot.asset.SlotProcessed == null)
-            {
-                continue;
-            }
-            if (slot.asset.SlotProcessed.GetPersistentEventCount() == 0)
-            {
-                continue;
-            }
+            avatar = GetComponent<DynamicCharacterAvatar>();
+            avatar.BuildCharacterBegun?.AddListener(OnBuildCharacterBegun);
+            avatar.WardrobeSuppressed?.AddListener(OnWardrobeSuppressed);
+            avatar.SlotsHidden?.AddListener(OnSlotsHidden);
+        }
 
-            for(int i = 0; i < slot.asset.SlotProcessed.GetPersistentEventCount(); i++)
+        /// <summary>
+        /// This is called when the character is being built in BuildCharacter()
+        /// </summary>
+        /// <param name="umaData"></param>
+        public void OnBuildCharacterBegun(UMAData umaData)
+        {
+            launchers = new List<UMAUVAttachedItemLauncher>();
+        }
+
+        /// <summary>
+        /// This is called when the character has loaded all the slots/overlays in LoadCharacter()
+        /// </summary>
+        /// <param name="hiddenSlots"></param>
+        public void OnSlotsHidden(List<SlotData> hiddenSlots)
+        {
+
+            foreach (var slot in hiddenSlots)
             {
-                var target = slot.asset.SlotProcessed.GetPersistentTarget(i);
-                if (target is UMAUVAttachedItemLauncher)
+                if (slot.asset.SlotProcessed == null)
                 {
-                    launchers.Add(target as UMAUVAttachedItemLauncher);
+                    continue;
+                }
+                if (slot.asset.SlotProcessed.GetPersistentEventCount() == 0)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < slot.asset.SlotProcessed.GetPersistentEventCount(); i++)
+                {
+                    var target = slot.asset.SlotProcessed.GetPersistentTarget(i);
+                    if (target is UMAUVAttachedItemLauncher)
+                    {
+                        launchers.Add(target as UMAUVAttachedItemLauncher);
+                    }
                 }
             }
         }
-    }
 
-	/// <summary>
-	/// This is called when the character has loaded all the slots/overlays in LoadCharacter()
-	/// </summary>
-	/// <param name="suppressedRecipes"></param>
-	public void OnWardrobeSuppressed(List<UMATextRecipe> suppressedRecipes)
-    {
-        foreach(var recipe in suppressedRecipes)
+        /// <summary>
+        /// This is called when the character has loaded all the slots/overlays in LoadCharacter()
+        /// </summary>
+        /// <param name="suppressedRecipes"></param>
+        public void OnWardrobeSuppressed(List<UMATextRecipe> suppressedRecipes)
         {
-            var items = UMAAssetIndexer.Instance.GetAssetItems(recipe);
-            foreach(AssetItem ai in items)
+            foreach (var recipe in suppressedRecipes)
             {
-                if (ai._Type == typeof(SlotDataAsset))
+                var items = UMAAssetIndexer.Instance.GetAssetItems(recipe);
+                foreach (AssetItem ai in items)
                 {
-                    var slot = ai.Item as SlotDataAsset;
-                    if (slot.SlotProcessed != null)
+                    if (ai._Type == typeof(SlotDataAsset))
                     {
-                        if (slot.SlotProcessed.GetPersistentEventCount() == 0)
+                        var slot = ai.Item as SlotDataAsset;
+                        if (slot.SlotProcessed != null)
                         {
-                            continue;
-                        }
-                        for (int i = 0; i < slot.SlotProcessed.GetPersistentEventCount(); i++)
-                        {
-                            var target = slot.SlotProcessed.GetPersistentTarget(i);
-                            if (target is UMAUVAttachedItemLauncher)
+                            if (slot.SlotProcessed.GetPersistentEventCount() == 0)
                             {
-                                launchers.Add(target as UMAUVAttachedItemLauncher);
+                                continue;
+                            }
+                            for (int i = 0; i < slot.SlotProcessed.GetPersistentEventCount(); i++)
+                            {
+                                var target = slot.SlotProcessed.GetPersistentTarget(i);
+                                if (target is UMAUVAttachedItemLauncher)
+                                {
+                                    launchers.Add(target as UMAUVAttachedItemLauncher);
+                                }
                             }
                         }
+                        launchers.Add(ai.Item as UMAUVAttachedItemLauncher);
                     }
-                    launchers.Add(ai.Item as UMAUVAttachedItemLauncher);
                 }
             }
         }

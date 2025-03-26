@@ -24,26 +24,7 @@ namespace UMA
 
 		private const string umaDefaultLabelKey = "UMA_DEFAULTLABEL";
 		private const string umaHotkeyWord = "UMA_HOTKEYS";
-		private const string umaLocation = "RelativeUMA";
-		private const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
-		private const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
-		private const string DefineSymbol_BurstCompile = "UMA_BURSTCOMPILE";
-		private const string DefineSymbol_UMAAlwaysGetAddressableItems = "UMA_ALWAYSGETADDR_NO_PROD";
-        private const string DefineSymbol_GLTFExport = "UMA_GLTF";
 
-        //private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
-        public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
-		public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
-		public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
-
-		public const string ConfigToggle_AddCollectionLabels = "UMA_SHAREDGROUP_ADDCOLLECTIONLABELS";
-		public const string ConfigToggle_IncludeRecipes = "UMA_SHAREDGROUP_INCLUDERECIPES";
-		public const string ConfigToggle_IncludeOther = "UMA_SHAREDGROUP_INCLUDEOTHERINDEXED";
-		public const string ConfigToggle_StripUmaMaterials = "UMA_SHAREDGROUP_STRIPUMAMATERIALS";
-		public const string ConfigToggle_PostProcessAllAssets = "UMA_POSTPROCESS_ALL_ASSETS";
-		public const string ConfigToggle_IndexAutoRepair = "UMA_INDEX_AUTOREPAIR";
-        public const string umaDefaultTagsKey = "UMA_TAGS";
-		private static string DNALocation = "UMA/";
 
         static UMAEditorUtilities()
         {
@@ -77,14 +58,16 @@ namespace UMA
                         Debug.LogWarning("Unable to load texture icon");
                     }
                 }
+				showIndexedTypes = UMASettings.ShowIndexedTypes;
+                showUnindexedTypes = UMASettings.ShowUnindexedTypes;
 
-				showIndexedTypes = EditorPrefs.GetBool("BoolUMAShowTypes", true);
-				showUnindexedTypes = EditorPrefs.GetBool("BoolUMAShowUnindexed", false);
-
-				UMAAssetIndexer ai = UMAAssetIndexer.Instance;
-				if (showIndexedTypes && ai != null)
+				if (showIndexedTypes)
 				{
-					EditorApplication.projectWindowItemOnGUI += DrawItems;
+                    UMAAssetIndexer ai = UMAAssetIndexer.Instance;
+					if (ai != null)
+					{
+						EditorApplication.projectWindowItemOnGUI += DrawItems;
+					}
 				}
 				ranOnce = true;
 				return;
@@ -108,217 +91,10 @@ namespace UMA
             }
         }
 
-        private class MyPrefSettingsProvider : SettingsProvider
-		{
-			public MyPrefSettingsProvider(string path, SettingsScope scopes = SettingsScope.User)
-			: base(path, scopes)
-			{ }
-
-			public override void OnGUI(string searchContext)
-			{
-				PreferencesGUI();
-			}
-		}
-
-		[SettingsProvider]
-		static SettingsProvider MyNewPrefCode()
-		{
-			return new MyPrefSettingsProvider("Preferences/UMA");
-		}
- 
-		public static void PreferencesGUI()
-        {
-            // Preferences GUI
-            bool newshowIndexedTypes = EditorGUILayout.Toggle("Show Indexed Types", showIndexedTypes);
-            showUnindexedTypes = EditorGUILayout.Toggle("Show Unindexed Types", showUnindexedTypes);
-
-			if (!PlayerPrefs.HasKey(umaLocation))
-			{
-				PlayerPrefs.SetString(umaLocation, DNALocation);
-			}
-			string umaloc = PlayerPrefs.GetString(umaLocation);
-			string newUmaLoc = EditorGUILayout.DelayedTextField("Relative UMA Location", umaloc);
-
-
-            if (!PlayerPrefs.HasKey(umaDefaultTagsKey))
-            {
-                PlayerPrefs.SetString(umaDefaultTagsKey, umaDefaultTags);
-            }
-
-            string tags = PlayerPrefs.GetString(umaDefaultTagsKey);
-
-
-            string newTags = EditorGUILayout.DelayedTextField("Tag Lookup Values", tags);
-
-            if (tags != newTags)
-            {
-                PlayerPrefs.SetString(umaDefaultTagsKey, newTags);
-            }
-
-			if (umaloc != newUmaLoc)
-			{
-				PlayerPrefs.SetString(umaLocation, newUmaLoc);
-			}
-
-            // Save the preferences
-            if (newshowIndexedTypes != showIndexedTypes)
-            {
-                showIndexedTypes = newshowIndexedTypes;
-                EditorPrefs.SetBool("BoolUMAShowTypes", showIndexedTypes);
-                if (showIndexedTypes)
-                {
-                    EditorApplication.projectWindowItemOnGUI += DrawItems;
-                }
-                else
-                {
-                    EditorApplication.projectWindowItemOnGUI -= DrawItems;
-                }
-            }
-
-			ConfigToggle(ConfigToggle_PostProcessAllAssets, "Postprocess All Assets", "When assets in unity are moved, this will fix their paths in the index. This can be very slow.", false);
-			ConfigToggle(ConfigToggle_LeanMeanSceneFiles, "Clean/Regen on Save", "When using edit-time UMA's the geometry is stored in scene files. Enabling this cleans them up before saving, and regenerates after saving, making your scene files squeaky clean.", true);
-			ConfigToggle(ConfigToggle_IndexAutoRepair, "Auto Repair Index", "When enabled, the index will be repaired automatically when items are not found. This can be slow, so it is recommended to only enable this if you have a team of artists checking in work simultaneously.", false);
-			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.Space();
-			GUILayout.BeginHorizontal();
-			EditorGUILayout.LabelField("Build Options", EditorStyles.boldLabel);
-			EditorGUILayout.LabelField("Toggling build options will cause a recompile", EditorStyles.miniLabel);
-			GUILayout.EndHorizontal();
-
-			EditorGUILayout.Space();
-
-			bool prevAddressables = IsAddressable();
-
-			var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
-
-			var BurstChanged = DefineSymbolToggle(defineSymbols, DefineSymbol_BurstCompile, "Use Burst Compile", "This activates the burst compiler for UMA.");
-			bool changed = DefineSymbolToggle(defineSymbols, DefineSymbol_32BitBuffers, "Use 32bit buffers", "This allows meshes bigger than 64k vertices");
-			changed |= DefineSymbolToggle(defineSymbols, DefineSymbol_Addressables, "Use Addressables", "This activates the code that loads from asset bundles using addressables.");
-			changed |= DefineSymbolToggle(defineSymbols, DefineSymbol_UMAAlwaysGetAddressableItems, "Always Get Addressable Items", "This forces the addressable system to always load items in the editor. Should NEVER be turned on in a production build!");
-			changed |= DefineSymbolToggle(defineSymbols, DefineSymbol_GLTFExport, "Enable GLTF Export (future)", "Future: This activates the GLTF Exporter for UMA. You must install the package first");
-			changed |= BurstChanged;
-
-			if (BurstChanged)
-			{
-                if (IsAsmdef(defineSymbols, DefineSymbol_BurstCompile))
-				{
-                    EditorUtility.DisplayDialog("Burst Compile", "You have enabled Burst Compile. You will need to restart Unity to complete the process.", "OK");
-                    File.Copy("Assets/UMA/Core/UMA_CORE_BURST.dat", "Assets/UMA/Core/UMA_Core.asmdef", true);
-                }
-                else
-				{
-                    EditorUtility.DisplayDialog("Burst Compile", "You have disabled Burst Compile. You will need to restart Unity to complete the process.", "OK");
-					// copy the asmdef file for No BurstCompile into place
-					File.Copy("Assets/UMA/Core/UMA_CORE_NOBURST.dat", "Assets/UMA/Core/UMA_Core.asmdef", true);
-                }
-            }
-			
-
-			
-			/* bool prevuseAsmDef = IsAsmdef(defineSymbols, DefineSymbol_AsmDef);
-			bool useAsmDef = DefineSymbolToggle(defineSymbols, DefineSymbol_AsmDef, "Use Asmdef", "This activates the internal ASMDEF for UMA.");
-			if (prevuseAsmDef != useAsmDef)
-			{
-				if (useAsmDef)
-				{
-					EnableAsmdef();
-				}
-				else
-				{
-					DisableAsmDef();
-				}
-			}*/
-
-
-
-
-
-#if !UMA_ADDRESSABLES
-
-			GUILayout.Label("Addressables package MUST be installed before enabling this option!",EditorStyles.boldLabel);
-#endif
-			if (EditorGUI.EndChangeCheck())
-			{
-				Debug.Log("Saving define symbols");
-				//PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
-                PlayerSettings.SetScriptingDefineSymbols(CurrentNamedBuildTarget, string.Join(";", defineSymbols));
-            }
-
-
-            GUI.enabled =
-#if UMA_ADDRESSABLES
-				true;
-#else
-				false;
-#endif
-
-#if UMA_ADDRESSABLES
-
-			if (IsAddressable() == false && prevAddressables == true)
-            {
-				UMAAddressablesSupport.Instance.CleanupAddressables(false, true);
-            }
-
-			EditorGUILayout.Space();
-			EditorGUILayout.LabelField("Addressables Options",EditorStyles.boldLabel);
-			EditorGUILayout.Space();
-
-			// ask here for the 
-#else
-			EditorGUILayout.Space();
-			EditorGUILayout.LabelField("Addressables Options (Not Enabled)", EditorStyles.boldLabel);
-			EditorGUILayout.Space();
-#endif
-			ConfigToggle(ConfigToggle_UseSharedGroup, "Use Shared Group", "Add all Addressables to the same Shared Group.", true);
-			// This is managed by the addressables system
-			//ConfigToggle(ConfigToggle_ArchiveGroups, "Archive Groups", "For now just copies the assetbundles into folders with the group name.", false);
-			
-			GUILayout.Label("Shared Group Generation");
-			GUILayout.Label("By default, Slots and Overlays (with their Texture references) are included.",EditorStyles.miniLabel);
-
-			string currentLabel = PlayerPrefs.GetString(umaDefaultLabelKey, umaDefaultLabel);
-			string newUmaLabel = EditorGUILayout.DelayedTextField("Default UMA Label", currentLabel);
-			if (newUmaLabel != umaDefaultLabel)
-			{
-				PlayerPrefs.SetString(umaDefaultLabelKey, newUmaLabel);
-			}
-			GUILayout.Label("Note: If you include recipes or other items, you will need to manually load them using LoadLabelList!", EditorStyles.miniLabel);
-			ConfigToggle(ConfigToggle_StripUmaMaterials, "Strip UMAMaterials", "In some versions of Unity, using an SRP can cause each bundle to include the compiled shaders. This will stop that from happening.",
-#if UMA_ALWAYS_STRIP_MATERIALS //VES added
-				true
-#else
-				false
-#endif
-			);
-			ConfigToggle(ConfigToggle_IncludeRecipes, "Include Recipes", "Include recipes in shared group generation",
-#if UMA_ALWAYS_INCLUDE_RECIPES //VES added
-				true
-#else
-				false
-#endif
-			);
-			ConfigToggle(ConfigToggle_IncludeOther, "Include all other types", "Include all other types in index in shared group generation", false);
-
-			GUI.enabled = true;
-            if (GUI.changed)
-            {
-                EditorApplication.RepaintProjectWindow();
-            }
-        }
-
         public static string[] GetDefaultTags()
         {
-			var defaultTags = PlayerPrefs.GetString(umaDefaultTagsKey, umaDefaultTags);
-			if (string.IsNullOrEmpty(defaultTags))
-			{
-				defaultTags = "Head,Hair,Torso,Legs,Feet,Hands,Smooshable,Unsmooshable";
-			}
-			var tagsArray = defaultTags.Split(',');
-			if (tagsArray.Length == 0)
-			{
-                tagsArray = new string[] { "Head", "Hair", "Torso", "Legs", "Feet", "Hands", "Smooshable", "Unsmooshable" };
-            }
-			return tagsArray;
+			var settings = UMASettings.GetOrCreateSettings();
+			return settings.tagLookupValues;
         }
 
 		public static string[] GetDefaultBaseTags()
@@ -343,40 +119,40 @@ namespace UMA
 
 		public static string GetDefaultAddressableLabel()
 		{
-			return PlayerPrefs.GetString(umaDefaultLabelKey,umaDefaultLabel);
+			return UMASettings.AddrDefaultLabel;
 		}
 
 		public static bool LeanMeanSceneFiles()
 		{
-			return GetConfigValue(ConfigToggle_LeanMeanSceneFiles, true);
+			return UMASettings.CleanRegenOnSave;
 		}
 
 		public static bool UseSharedGroupConfigured()
 		{
-			return GetConfigValue(ConfigToggle_UseSharedGroup, true);
-		}
+			return UMASettings.AddrUseSharedGroup;
+        }
 
 		public static bool StripUMAMaterials()
         {
-			return GetConfigValue(ConfigToggle_StripUmaMaterials, false);
+			return UMASettings.AddStripMaterials;
         }
 		public static bool PostProcessAllAssets()
 		{
-			return GetConfigValue(ConfigToggle_PostProcessAllAssets, false);
-		}
+			return UMASettings.PostProcessAllAssets;
+        }
 
 		public static bool IsAddressable()
 		{
 #if UMA_ALWAYSADDRESSABLE
             return true;
 #else
-			return GetConfigValue(DefineSymbol_Addressables, false);
+			return UMASettings.UseAddressables;
 #endif
 		}
 
 		public static bool IsAutoRepairIndex()
 		{
-            return GetConfigValue(ConfigToggle_IndexAutoRepair, false);
+			return UMASettings.AutoRepairIndex;
         }
 
 		public static bool IsAsmdef(HashSet<string> defineSymbols, string Symbol)
@@ -384,78 +160,6 @@ namespace UMA
 			return (defineSymbols.Contains(Symbol));
 		}
 
-		private static void ConfigToggle(string toggleId, string text, string tooltip, bool defaultValue)
-		{
-			var toggle = GetConfigValue(toggleId, defaultValue);
-			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), toggle) != toggle)
-			{
-				SetConfigValue(toggleId, !toggle);
-			}
-		}
-
-		private static void SetConfigValue(string toggleId, bool value)
-		{
-#if UMA_ALWAYS_INCLUDE_RECIPES //VES added
-			if(toggleId == ConfigToggle_IncludeRecipes) {
-				value = true;
-			}
-#endif
-#if UMA_ALWAYS_STRIP_MATERIALS //VES added
-			if(toggleId == ConfigToggle_StripUmaMaterials) {
-				value = true;
-			}
-#endif
-			//TODO: obviously not the right place!
-			EditorPrefs.SetBool(toggleId, value);
-		}
-
-		public static bool GetConfigValue(string toggleId, bool defaultValue)
-		{
-#if UMA_ALWAYS_INCLUDE_RECIPES //VES added
-			if(toggleId == ConfigToggle_IncludeRecipes) {
-				return true;
-			}
-#endif
-#if UMA_ALWAYS_STRIP_MATERIALS //VES added
-			if(toggleId == ConfigToggle_StripUmaMaterials) {
-				return true;
-			}
-#endif
-			//TODO: obviously not the right place!
-			return EditorPrefs.GetBool(toggleId, defaultValue);
-		}
-
-		private static bool DefineSymbolToggle(HashSet<string> defineSymbols, string defineSymbol, string text, string tooltip)
-		{
-#if UMA_ALWAYSADDRESSABLE
-			if(defineSymbol == DefineSymbol_Addressables) {
-				if(!defineSymbols.Contains(defineSymbol)) {
-					defineSymbols.Add(defineSymbol);
-				}			
-				EditorGUILayout.Toggle(new GUIContent(text, tooltip), true);
-				return false;
-			}
-#endif
-
-			if (EditorGUILayout.Toggle(new GUIContent(text, tooltip), defineSymbols.Contains(defineSymbol)))
-			{
-                if (defineSymbols.Contains(defineSymbol))
-                {
-                    return false;
-                }
-                defineSymbols.Add(defineSymbol);
-				return true;
-			}
-			else
-			{
-				if (!defineSymbols.Contains(defineSymbol))
-				{
-                    return false;
-                }
-				defineSymbols.Remove(defineSymbol);
-				return true;
-			}
-		}
 
         private static void DrawItems(string guid, Rect selectionRect)
         {
@@ -911,9 +615,12 @@ namespace UMA
         {
             var result = new List<System.Type>();
             var assemblies = aAppDomain.GetAssemblies();
+			
             foreach (var assembly in assemblies)
             {
-                var types = assembly.GetTypes();
+				if (assembly.IsDynamic) { continue; }
+
+                var types = assembly.GetExportedTypes();
                 foreach (var type in types)
                 {
                     if (type.IsSubclassOf(aType))

@@ -1,0 +1,71 @@
+// use a custom pass to do a cheap outline
+// Note that when doing a custom pass, you are responsible for your own
+// abstactions between pipelines. It's just raw code copied into your shader.
+ BEGIN_OPTIONS
+   ShaderName "UMA/SimpleToon"
+   Stackable "False"
+   Workflow "Metallic"
+END_OPTIONS
+
+BEGIN_SUBSHADERS
+   "UMA_Diffuse.surfshader"
+END_SUBSHADERS
+
+BEGIN_PROPERTIES
+   _OutlineColor("Outline Color", Color) = (0,0,0,1)
+   _OutlineWidth("Outline Width", Range(1.5,40)) = 3
+END_PROPERTIES
+
+
+BEGIN_CUSTOM_PASS
+ 
+Pass
+{
+    Name "UMA/SimpleToon"
+    Cull Front
+
+    CGPROGRAM
+        #pragma vertex vert
+        #pragma fragment frag
+
+
+        CBUFFER_START(UnityPerMaterial)
+            half4 _OutlineColor;
+            half _OutlineWidth;
+        CBUFFER_END
+
+
+        struct v2f
+        {
+            float4 pos          : POSITION;
+        };
+
+        struct vdata
+        {
+            float4 vertex : POSITION;
+            float3 normal : NORMAL;
+        };
+ 
+        v2f vert (vdata v)
+        {
+            v2f o;
+            // do everything in clip space, so we are pixel perfect and perspective/aspect correct
+            float4 clipPos = UnityObjectToClipPos(v.vertex);
+            float3 clipNormal = mul((float3x3) UNITY_MATRIX_VP, mul((float3x3) UNITY_MATRIX_M, v.normal));
+            float2 offset = normalize(clipNormal.xy) / _ScreenParams.xy * _OutlineWidth * clipPos.w * 2;
+            clipPos.xy += offset;
+
+            o.pos = clipPos;
+
+            return o;
+        }
+
+        half4 frag( v2f i ) : COLOR
+        {
+            return _OutlineColor;
+        }
+    ENDCG          
+}
+
+END_CUSTOM_PASS
+

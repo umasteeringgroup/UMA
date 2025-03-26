@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine;
 
 namespace UMA.Editors
 {
@@ -116,7 +117,10 @@ namespace UMA.Editors
 						SetCurrentDnaTypeHashes();
 					}
                 }
-
+                if (GUILayout.Button("Rebuild"))
+                {
+                    DoUpdate();
+                }
                 base.OnInspectorGUI();
 			}
 			else

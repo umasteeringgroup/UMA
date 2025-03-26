@@ -3,63 +3,66 @@ using UMA.CharacterSystem;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SliderController : MonoBehaviour
+namespace UMA
 {
-    public GameObject SearchMe;
-    public DynamicCharacterAvatar Avatar;   
-    public string DnaName = "headSize";    // case matters here. 
-    public Slider theSlider;
-
-    public void AvatarGenerated(GameObject Generator, GameObject Character)
+    public class SliderController : MonoBehaviour
     {
-        Avatar = SearchMe.GetComponentInChildren<DynamicCharacterAvatar>();
-        SetSlider();
-    }
+        public GameObject SearchMe;
+        public DynamicCharacterAvatar Avatar;
+        public string DnaName = "headSize";    // case matters here. 
+        public Slider theSlider;
 
-    public void SetSlider()
-    {
-        if (theSlider != null)
+        public void AvatarGenerated(GameObject Generator, GameObject Character)
         {
-            RaceData race = Avatar.activeRace.data;
-            foreach (var d in race.dnaRanges)
+            Avatar = SearchMe.GetComponentInChildren<DynamicCharacterAvatar>();
+            SetSlider();
+        }
+
+        public void SetSlider()
+        {
+            if (theSlider != null)
             {
-                int index = d.IndexForDNAName(DnaName);
-                if (index >= 0)
+                RaceData race = Avatar.activeRace.data;
+                foreach (var d in race.dnaRanges)
                 {
-                    theSlider.minValue = d.means[index] - d.spreads[index];
-                    theSlider.maxValue = d.means[index] + d.spreads[index];
-                    //Debug.Log("Min = " + theSlider.minValue + " Max = " + theSlider.maxValue);
-                    return;
+                    int index = d.IndexForDNAName(DnaName);
+                    if (index >= 0)
+                    {
+                        theSlider.minValue = d.means[index] - d.spreads[index];
+                        theSlider.maxValue = d.means[index] + d.spreads[index];
+                        //Debug.Log("Min = " + theSlider.minValue + " Max = " + theSlider.maxValue);
+                        return;
+                    }
                 }
             }
         }
-    }
 
-    public void SetDNA(float Value)
-    {
-        if (Avatar == null)
+        public void SetDNA(float Value)
         {
-            Avatar = FindAvatar();
+            if (Avatar == null)
+            {
+                Avatar = FindAvatar();
+            }
+
+            if (Avatar == null)
+            {
+                return;
+            }
+
+            // Set the DNA on the Avatar.
+            // Case must match.
+            // If you cache DNA, you must do it after the character is completely built
+            var MyDNA = Avatar.GetDNA();
+            if (MyDNA.ContainsKey(DnaName))
+            {
+                MyDNA[DnaName].Set(Value);
+                Avatar.ForceUpdate(true);
+            }
         }
 
-        if (Avatar == null)
+        private DynamicCharacterAvatar FindAvatar()
         {
-            return;
+            return SearchMe.GetComponentInChildren<DynamicCharacterAvatar>();
         }
-
-        // Set the DNA on the Avatar.
-        // Case must match.
-        // If you cache DNA, you must do it after the character is completely built
-        var MyDNA = Avatar.GetDNA();
-        if (MyDNA.ContainsKey(DnaName))
-        {
-            MyDNA[DnaName].Set(Value);
-            Avatar.ForceUpdate(true); 
-        }
-    }
-
-    private DynamicCharacterAvatar FindAvatar()
-    {
-       return SearchMe.GetComponentInChildren<DynamicCharacterAvatar>();
     }
 }

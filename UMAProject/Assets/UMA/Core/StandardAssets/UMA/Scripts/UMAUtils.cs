@@ -113,25 +113,14 @@ namespace UMA
 
         public static Material GetDefaultDiffuseMaterial()
 		{
-			var pipe = DetectPipeline();
-#if UNITY_EDITOR
-			if (pipe != PipelineType.UniversalPipeline && pipe != PipelineType.HDPipeline)
-			{
-				return AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
-			}
-#endif
-            if (pipe == PipelineType.HDPipeline)
+			Shader shader = Shader.Find("UMA/Diffuse");
+            if (shader == null)
             {
-                return new Material(Shader.Find("HDRP/Lit"));
+				Debug.LogWarning("UMA/Diffuse shader not found");
+                return null;
             }
-            else if (pipe == PipelineType.UniversalPipeline)
-            {
-                return new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            }
-            else
-            {
-                return new Material(Shader.Find("Standard"));
-            }
+            Material material = new Material(shader);
+            return material; 
         }
 
 		public static string TranslatedSRPTextureName(string BuiltinName) {

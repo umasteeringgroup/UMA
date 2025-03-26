@@ -19,9 +19,12 @@ namespace UMA.Editors
 		int meshHideAssetPickerID = -1;
         int slotHidePickerID = -1;
 		int selectedsuppressed = -1;
+		private static bool showModifiers = false;
 
-		// Drop area for compatible Races
-		private void CompatibleRacesDropArea(Rect dropArea, List<string> compatibleRaces)
+
+
+        // Drop area for compatible Races
+        private void CompatibleRacesDropArea(Rect dropArea, List<string> compatibleRaces)
 		{
 			Event evt = Event.current;
 			//make the box clickable so that the user can select raceData assets from the asset selection window
@@ -572,7 +575,6 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.HelpBox("Incompatible Wardrobe Recipes are recipes that will not work with this specific recipe. It is up to your application to enforce this.", MessageType.Info);
 			}
-			GUILayout.Space(1);
 			return doUpdate;
 		}
 
@@ -589,6 +591,7 @@ namespace UMA.Editors
 		private string[] cachedRaceDNA = { };
 		private string[] rawcachedRaceDNA = { };
 		protected List<MeshHideAsset> DraggedMHA = new List<MeshHideAsset>();
+		protected List<MeshModifier> Modifiers = new List<MeshModifier>();
 
 		protected void AddDraggedFiles()
 		{
@@ -599,16 +602,33 @@ namespace UMA.Editors
 			{
 				foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
 				{
-                    if (theAsset.GetInstanceID() == mha.GetInstanceID())
+					if (theAsset.GetInstanceID() == mha.GetInstanceID())
 					{
 						found = true;
 						break;
 					}
 				}
 				if (!found)
+                {
                     recipe.MeshHideAssets.Add(mha);
                 }
             }
+			foreach (MeshModifier mm in Modifiers)
+			{
+				foreach (MeshModifier theMM in recipe.MeshModifiers)
+				{
+					if (theMM.GetInstanceID() == mm.GetInstanceID())
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					recipe.MeshModifiers.Add(mm);
+				}
+			}
+        }
 
 		protected bool DropAreaGUI(Rect dropArea)
 		{
@@ -643,7 +663,13 @@ namespace UMA.Editors
 								RecursiveScanFoldersForAssets(path);
 							}
 						}
-					}
+						if (draggedObjects[i] is MeshModifier)
+                        {
+							Debug.Log("Dragged object is a Mesh Modifier");
+                            MeshModifier mm = draggedObjects[i] as MeshModifier;
+                            Modifiers.Add(mm);
+                        }
+                    }
 				}
 			}
 			return false;
@@ -702,11 +728,14 @@ namespace UMA.Editors
 			string displayValue = (string)DisplayValueField.GetValue(target);
 			string userFieldValue = (string)UserField.GetValue(target);
             List<string> hideTags = (List<string>)HideTagsField.GetValue(target);
-			#endregion
 
-			#region Display Value UI
-			//displayValue UI
-			string PreviousValue = displayValue;
+            UMAWardrobeRecipe recipe = target as UMAWardrobeRecipe;
+
+            #endregion
+
+            #region Display Value UI
+            //displayValue UI
+            string PreviousValue = displayValue;
 			displayValue = EditorGUILayout.DelayedTextField("Display Value", displayValue);
 			if (displayValue != PreviousValue)
 			{
@@ -944,114 +973,169 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.HelpBox("Replaces: This is used to replace part of the base recipe while keeping it's overlays. For example, if you want to replace the head from the base race recipe with a High Poly head, you would 'replace' the head, not hide it. Only one slot can be replaced, and the recipe should only contain one slot.", MessageType.Info);
 			}
-			#endregion
+            #endregion
 
-			#region MeshHideArray
-			//EditorGUIUtility.LookLikeInspector();
-			SerializedProperty meshHides = serializedObject.FindProperty("MeshHideAssets");
-			EditorGUI.BeginChangeCheck();
-			if (GUILayout.Button("Add Mesh Hide Asset"))
+            #region MeshHideArray
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            GUILayout.Space(10);
+            showModifiers = EditorGUILayout.Foldout(showModifiers, "Mesh Modifications");
+            GUILayout.EndHorizontal();
+            if (showModifiers)
 			{
-				meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
-				EditorGUIUtility.ShowObjectPicker<MeshHideAsset>(null, false, "", meshHideAssetPickerID);
-			}
-
-			UMAWardrobeRecipe recipe = target as UMAWardrobeRecipe;
-			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == meshHideAssetPickerID)
-			{
-				bool found = false;
-				if (recipe != null)
+				//EditorGUIUtility.LookLikeInspector();
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+				GUILayout.Label("Mesh Modifications", EditorStyles.boldLabel);
+				SerializedProperty meshHides = serializedObject.FindProperty("MeshHideAssets");
+				EditorGUI.BeginChangeCheck();
+				GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+				if (GUILayout.Button("Add Mesh Hide Asset"))
 				{
-					MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
-					if (mha != null)
+					meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
+					EditorGUIUtility.ShowObjectPicker<MeshHideAsset>(null, false, "", meshHideAssetPickerID);
+				}
+				if (GUILayout.Button("Add Mesh Modifier"))
+				{
+					meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
+					EditorGUIUtility.ShowObjectPicker<MeshModifier>(null, false, "", meshHideAssetPickerID);
+				}
+				GUILayout.EndHorizontal();
+
+				if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == meshHideAssetPickerID)
+				{
+					if (recipe != null)
 					{
-						foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
+						MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
+						if (mha != null)
 						{
-                            if (theAsset.GetInstanceID() == mha.GetInstanceID())
-							{
-								found = true;
-								break;
-							}
+							AddMeshHideAsset(recipe, mha);
+						}
+						MeshModifier mm = EditorGUIUtility.GetObjectPickerObject() as MeshModifier;
+						if (mm != null)
+						{
+							Debug.Log("Dropped Mesh Modifier");
+							AddMeshModifier(recipe, mm);
 						}
 					}
-					if (!found)
-					{
-						recipe.MeshHideAssets.Add(mha);
-						EditorUtility.SetDirty(target);
-						string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
-						AssetDatabase.ImportAsset(path);
-						Repaint();
-						/*
-						meshHides.InsertArrayElementAtIndex(0);
-						SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
-						element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
-						meshHideAssetPickerID = -1;
-						Repaint();
-						*/
-					}
 				}
-			}
-			GUILayout.Space(10);
-			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-			GUI.Box(dropArea, "Drag Mesh Hide Assets here");
-			if (DropAreaGUI(dropArea))
-			{
-				EditorUtility.SetDirty(target);
-				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
-				AssetDatabase.ImportAsset(path);
-				Repaint();
-			}
-
-			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-			MeshHideAsset deleteme = null;
-			bool deleteNulls = false;
-
-			foreach (MeshHideAsset mha in recipe.MeshHideAssets)
-			{
-                EditorGUILayout.BeginHorizontal();
-				if (mha != null)
+				GUILayout.Space(10);
+				Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+				GUI.Box(dropArea, "Drag Mesh Hide or Modifier Assets here, or use buttons above to select.");
+				if (DropAreaGUI(dropArea))
 				{
-					EditorGUILayout.LabelField(mha.name + " (" + mha.AssetSlotName + ")");
-					if (GUILayout.Button("Inspect",GUILayout.Width(65)))
-                    {
-						InspectorUtlity.InspectTarget(mha);
-					}
-					if (GUILayout.Button("X", GUILayout.Width(20.0f)))
-					{
-						deleteme = mha;
-					}
+					EditorUtility.SetDirty(target);
+					string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+					AssetDatabase.ImportAsset(path);
+					Repaint();
 				}
-				else
-				{
-					deleteNulls = true;
-				}
-				EditorGUILayout.EndHorizontal();
-			}
-			EditorGUILayout.EndVertical();
 
-			if (deleteNulls == true)
-			{
-				recipe.MeshHideAssets.RemoveAll(x => x == null);
-				EditorUtility.SetDirty(target);
-				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
-				AssetDatabase.ImportAsset(path);
-			}
-			if (deleteme != null)
-			{
-				recipe.MeshHideAssets.Remove(deleteme);
-				EditorUtility.SetDirty(target);
-				string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
-				AssetDatabase.ImportAsset(path);
-			}
-			// EditorGUILayout.PropertyField(meshHides, true);
-			if (EditorGUI.EndChangeCheck())
-            {
-                serializedObject.ApplyModifiedProperties();
-            }
-            //EditorGUIUtility.LookLikeControls();
-            if (ShowHelp)
-			{
-				EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per triangle basis.", MessageType.Info);
+				EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+				MeshHideAsset deleteme = null;
+				bool deleteNulls = false;
+				GUILayout.Label("Mesh Hide Assets", EditorStyles.boldLabel);
+				int count = 0;
+				foreach (MeshHideAsset mha in recipe.MeshHideAssets)
+				{
+					EditorGUILayout.BeginHorizontal();
+					if (mha != null)
+					{
+						count++;
+						GUILayout.Space(10);
+						EditorGUILayout.LabelField(mha.name, GUILayout.ExpandWidth(true));
+						GUILayout.Label($"[{mha.AssetSlotName}]", GUILayout.Width(90.0f));
+                        if (GUILayout.Button("Inspect", GUILayout.Width(65)))
+						{
+							InspectMe.Add(mha);
+							//InspectorUtlity.InspectTarget(mha);
+						}
+						if (GUILayout.Button("X", GUILayout.Width(20.0f)))
+						{
+							deleteme = mha;
+						}
+					}
+					else
+					{
+						deleteNulls = true;
+					}
+					EditorGUILayout.EndHorizontal();
+				}
+				if (count == 0)
+				{
+					GUILayout.BeginHorizontal();
+					GUILayout.Space(10);
+					EditorGUILayout.LabelField("No Mesh Hide Assets", EditorStyles.miniLabel);
+					GUILayout.EndHorizontal();
+				}
+				GUILayout.Label("Mesh Modifiers", EditorStyles.boldLabel);
+
+				count = 0;
+				int delPos = -1;
+				int delCount = 0;
+                foreach (MeshModifier mm in recipe.MeshModifiers)
+				{
+					count++;
+					EditorGUILayout.BeginHorizontal();
+					GUILayout.Space(10);
+					if (mm == null)
+					{
+						EditorGUILayout.LabelField("Null Mesh Modifier", EditorStyles.miniLabel);
+					}
+					else
+					{
+						EditorGUILayout.LabelField(mm.name, GUILayout.ExpandWidth(true));
+						//GUILayout.Label($"[{mm.SlotName}]", GUILayout.Width(90.0f));
+						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
+						{
+							InspectMe.Add(mm);
+                            //InspectorUtlity.InspectTarget(mm);
+						}
+					}
+                    if (GUILayout.Button("X", GUILayout.Width(20.0f)))
+					{
+
+						delPos = delCount;
+                    }
+					EditorGUILayout.EndHorizontal();
+					delCount++;
+				}
+
+				if (delPos > -1)
+                {
+                    recipe.MeshModifiers.RemoveAt(delPos);
+                }
+                if (count == 0)
+				{
+					GUILayout.BeginHorizontal();
+					GUILayout.Space(10);
+					EditorGUILayout.LabelField("No Mesh Modifiers", EditorStyles.miniLabel);
+					GUILayout.EndHorizontal();
+				}
+				EditorGUILayout.EndVertical();
+				GUIHelper.EndVerticalPadded(10);
+
+				if (deleteNulls == true)
+				{
+					recipe.MeshHideAssets.RemoveAll(x => x == null);
+					EditorUtility.SetDirty(target);
+					string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+					AssetDatabase.ImportAsset(path);
+				}
+				if (deleteme != null)
+				{
+					recipe.MeshHideAssets.Remove(deleteme);
+					EditorUtility.SetDirty(target);
+					string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+					AssetDatabase.ImportAsset(path);
+				}
+				// EditorGUILayout.PropertyField(meshHides, true);
+				if (EditorGUI.EndChangeCheck())
+				{
+					serializedObject.ApplyModifiedProperties();
+				}
+				//EditorGUIUtility.LookLikeControls();
+				if (ShowHelp)
+				{
+					EditorGUILayout.HelpBox("MeshHideAssets: This is a list of advanced mesh hiding assets to hide their corresponding slot meshes on a per triangle basis.", MessageType.Info);
+				}
 			}
 			#endregion
 
@@ -1263,19 +1347,78 @@ namespace UMA.Editors
 			}
 			#endregion
 
-			if (DraggedMHA.Count > 0)
+			if (DraggedMHA.Count > 0 || Modifiers.Count > 0)
 			{
 				AddDraggedFiles();
 				DraggedMHA.Clear();
+				Modifiers.Clear();
 				return true;
 			}
 
 			return doUpdate;
 		}
-		/// <summary>
-		/// And editor for a WardrobeRecipe that shows sharedColors and Slots but hides the 'raceData' field (because WardrobeRecipes have a 'compatibleRaces' list)
-		/// </summary>
-		public class WardrobeRecipeMasterEditor : SlotMasterEditor
+
+        private void AddMeshModifier(UMAWardrobeRecipe recipe, MeshModifier mm)
+        {
+			bool found = false;
+            if (mm != null)
+            {
+                foreach (MeshModifier theMM in recipe.MeshModifiers)
+                {
+                    if (theMM.GetInstanceID() == mm.GetInstanceID())
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found)
+            {
+                recipe.MeshModifiers.Add(mm);
+                EditorUtility.SetDirty(target);
+                string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+                AssetDatabase.ImportAsset(path);
+                Repaint();
+            }
+        }
+
+        private bool AddMeshHideAsset(UMAWardrobeRecipe recipe, MeshHideAsset mha)
+        {
+			bool found = false;
+            if (mha != null)
+            {
+                foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
+                {
+                    if (theAsset.GetInstanceID() == mha.GetInstanceID())
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found)
+            {
+                recipe.MeshHideAssets.Add(mha);
+                EditorUtility.SetDirty(target);
+                string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+                AssetDatabase.ImportAsset(path);
+                Repaint();
+                /*
+                meshHides.InsertArrayElementAtIndex(0);
+                SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
+                element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
+                meshHideAssetPickerID = -1;
+                Repaint();
+                */
+            }
+
+            return found;
+        }
+
+        /// <summary>
+        /// And editor for a WardrobeRecipe that shows sharedColors and Slots but hides the 'raceData' field (because WardrobeRecipes have a 'compatibleRaces' list)
+        /// </summary>
+        public class WardrobeRecipeMasterEditor : SlotMasterEditor
 		{
 			List<string> _baseSlotOptions = new List<string>();
 			List<string> _baseSlotOptionsLabels = new List<string>();
@@ -1288,7 +1431,6 @@ namespace UMA.Editors
 			public override bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 			{
 				bool changed = false;
-
 				if (_sharedColorsEditor.OnGUI(_recipe))
 				{
 					changed = true;

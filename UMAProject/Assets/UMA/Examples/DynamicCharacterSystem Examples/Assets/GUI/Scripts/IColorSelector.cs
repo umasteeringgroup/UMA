@@ -1,6 +1,10 @@
 ﻿using UMA;
 
-public interface IColorSelector 
+namespace UMA
 {
-    public void SetColor(string ColorName, OverlayColorData color);
+
+    public interface IColorSelector
+    {
+        public void SetColor(string ColorName, OverlayColorData color);
+    }
 }

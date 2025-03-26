@@ -8,6 +8,8 @@ using UnityEditor;
 using System.Linq;
 using System.IO;
 
+namespace UMA
+{
 #if UMA_ADDRESSABLES
 public class UMAAddressablesBuildSample
 {
@@ -16,7 +18,7 @@ public class UMAAddressablesBuildSample
         // Generate the addressables for UMA, and cleanup after it
         GenerateUMAAddressables();
         UnityEditor.AddressableAssets.Settings.AddressableAssetSettings.BuildPlayerContent(out var result);
-        UMAPostBuildMaterialUpdate();
+        // UMAPostBuildMaterialUpdate();
         // Addressable bundles are built at this point, so we can build the player
 
 
@@ -44,7 +46,7 @@ public class UMAAddressablesBuildSample
         // The default is development build with debugging enabled
         var buildOptions = BuildOptions.Development | BuildOptions.AllowDebugging;
 
-        // if we don't pass true, wea are building a release build
+        // if we don't pass true, we are building a release build
         if (!dev)
         {
             buildOptions = BuildOptions.None;
@@ -65,6 +67,7 @@ public class UMAAddressablesBuildSample
             target = EditorUserBuildSettings.activeBuildTarget,
             options = buildOptions
         };
+
 
         if (!dev)
         {
@@ -120,3 +123,4 @@ public class UMAAddressablesBuildSample
     }
 }
 #endif
+}

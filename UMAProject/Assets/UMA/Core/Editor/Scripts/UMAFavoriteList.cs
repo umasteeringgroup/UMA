@@ -1,26 +1,29 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UMAFavoriteList : ScriptableObject
+namespace UMA
 {
-    public List<UMAFavorite> Favorites = new List<UMAFavorite>();
-    public bool exPanded = true;
-    public void AddAsset(Object asset)
+    public class UMAFavoriteList : ScriptableObject
     {
-        if (Favorites == null)
+        public List<UMAFavorite> Favorites = new List<UMAFavorite>();
+        public bool exPanded = true;
+        public void AddAsset(Object asset)
         {
-            Favorites = new List<UMAFavorite>();
+            if (Favorites == null)
+            {
+                Favorites = new List<UMAFavorite>();
+            }
+            UMAFavorite favorite = new UMAFavorite(asset);
+            favorite.favoriteList = this;
+            Favorites.Add(favorite);
         }
-        UMAFavorite favorite = new UMAFavorite(asset);
-        favorite.favoriteList = this;
-        Favorites.Add(favorite);
-    }
-    public void RemoveAsset(Object asset)
-    {
-        Favorites.Remove(new UMAFavorite(asset));
-    }
-    public void RemoveAsset(UMAFavorite asset)
-    {
-        Favorites.Remove(asset);
+        public void RemoveAsset(Object asset)
+        {
+            Favorites.Remove(new UMAFavorite(asset));
+        }
+        public void RemoveAsset(UMAFavorite asset)
+        {
+            Favorites.Remove(asset);
+        }
     }
 }

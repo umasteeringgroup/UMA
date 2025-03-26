@@ -25,6 +25,7 @@ using UnityEditor.SceneManagement;
 
 using UnityEngine.SceneManagement;
 using System.Text;
+using System.Collections;
 
 
 namespace UMA
@@ -181,6 +182,17 @@ namespace UMA
             {
                 if (theIndexer == null)
                 {
+
+#if UNITY_EDITOR
+                    DebugSerializationStatic("Instance is NULL - getting new instance.");
+                    if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+                    {
+                        Debug.Log("Warning: Attempted to get instance while compiling/Updating");
+                        return null;
+                    }
+                    DebugSerializationStatic("Loading AssetIndexer from resources...");
+#endif
+
                     //var st = StartTimer();
                     theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
                     if (theIndexer == null)
@@ -188,6 +200,9 @@ namespace UMA
                         return null;
                     }
 
+#if UNITY_EDITOR
+                    DebugSerializationStatic("Rebulding Lookup Tables");
+#endif
                     theIndexer.UpdateSerializedDictionaryItems();
                     theIndexer.RebuildRaceRecipes();
 #if UNITY_EDITOR
@@ -196,6 +211,15 @@ namespace UMA
                     EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged; ;
 #endif
                     //StopTimer(st,"Asset index load");
+                }
+                else
+                {
+#if UNITY_EDITOR
+                    if (!theIndexer.IsValid())
+                    {
+                        theIndexer.HealIndex();
+                    }
+#endif
                 }
                 return theIndexer;
             }
@@ -226,7 +250,7 @@ namespace UMA
 
         public static bool LeanMeanSceneFiles()
         {
-            return EditorPrefs.GetBool(ConfigToggle_LeanMeanSceneFiles, true);
+            return UMASettings.CleanRegenOnSave;
         }
 
         private static void EditorSceneManager_sceneSaved(UnityEngine.SceneManagement.Scene scene)
@@ -983,6 +1007,8 @@ namespace UMA
         /// </summary>
         public bool CheckIndex()
         {
+
+            var settings = UMASettings.GetOrCreateSettings();
             // Unfortunately that asmdef is not available here
             string autoconfig = "UMA_INDEX_AUTOREPAIR";
             if (EditorPrefs.GetBool(autoconfig, false))
@@ -1129,6 +1155,29 @@ namespace UMA
 #endif
                 return null;
             }
+        }
+
+        public UMATextRecipe GetRecipeWardrobeTextCollection(string name)
+        {
+
+            var wr = GetAssetItem<UMAWardrobeRecipe>(name);
+            if (wr != null)
+            {
+                return wr.Item as UMAWardrobeRecipe;
+            }
+
+            var utr = GetAssetItem<UMATextRecipe>(name);
+            if (utr != null)
+            {
+                return utr.Item as UMATextRecipe;
+            }
+
+            var wc = GetAssetItem<UMAWardrobeCollection>(name);
+            if (wc != null)
+            {
+                return wc.Item as UMAWardrobeCollection;
+            }
+            return null;
         }
 
         public T GetAsset<T>(string name, bool recursionGuard = false) where T : UnityEngine.Object
@@ -1871,7 +1920,7 @@ namespace UMA
 				}
 		}
 #endif
-        #endregion
+#endregion
 
         #region Add Remove Assets
 
@@ -1977,33 +2026,21 @@ namespace UMA
         /// <param name="ai"></param>
         /// <param name="SkipBundleCheck"></param>
         /// <returns>Whether the asset was added or not.</returns>
-        private bool AddAssetItem(AssetItem ai)
+        public bool AddAssetItem(AssetItem ai)
         {
             try
             {
-                if (!TypeToLookup.ContainsKey(ai._Type))
-                {
-                    Debug.LogError("Unable to get Lookup Type for Type: " + ai._Type.ToString() + " for Object " + ai._Name);
-                    return false;
-                }
-
-                System.Type theType = TypeToLookup[ai._Type];
-                Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
-
-                if (TypeDic == null)
-                {
-                    if (Debug.isDebugBuild)
-                    {
-                    Debug.Log("Unable to add asset item!. Unable to get Type Dictionary of type " + theType.ToString() + "For object " + ai._Name);
-                    }
-                    return false;
-                }
-
-                // Get out if we already have it.
-                if (TypeDic.ContainsKey(ai._Name))
+                Dictionary<string, AssetItem> TypeDic;
+                bool found = GetTypeDictionary(ai, out TypeDic);
+                if (!found)
                 {
                     return false;
                 }
+
+                /* if (AlreadyHasItem(ai, TypeDic))
+                 {
+                     return false;
+                 } */
 
                 if (ai._Name.ToLower().Contains((ai._Type.Name + "placeholder").ToLower()))
                 {
@@ -2017,10 +2054,7 @@ namespace UMA
 
                 string Key = ai._Name.ToLowerInvariant() + "." + ai._Type.ToString();
 
-                if (!LowerCaseLookup.ContainsKey(Key))
-                {
-                    LowerCaseLookup.Add(Key, ai._Name);
-                }
+                AddToLowercaseLookup(ai, Key);
 
 #if UNITY_EDITOR
                 if (string.IsNullOrWhiteSpace(ai._Name))
@@ -2043,10 +2077,7 @@ namespace UMA
 #endif
                 if (!string.IsNullOrEmpty(ai._Guid))
                 {
-                    if (!GuidTypes.ContainsKey(ai._Guid))
-                    {
-                        GuidTypes.Add(ai._Guid, ai);
-                    }
+                    AddToGUIDTypes(ai);
                 }
 #endif
                 if (ai._SerializedItem != null)
@@ -2061,6 +2092,19 @@ namespace UMA
                     }
                 }
 
+                AddToTypeDictionary(ai, TypeDic);
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogWarning("Exception in UMAAssetIndexer.AddAssetItem: " + ex.StackTrace);
+            }
+            return true;
+        }
+
+        private static void AddToTypeDictionary(AssetItem ai, Dictionary<string, AssetItem> TypeDic)
+        {
+            try
+            {
                 if (!TypeDic.ContainsKey(ai._Name))
                 {
                     TypeDic.Add(ai._Name, ai);
@@ -2073,9 +2117,92 @@ namespace UMA
             }
             catch (System.Exception ex)
             {
-                UnityEngine.Debug.LogWarning("Exception in UMAAssetIndexer.AddAssetItem: " + ex.StackTrace);
+                Debug.LogException(ex);
             }
-            return true;
+        }
+
+        private static void AddToGUIDTypes(AssetItem ai)
+        {
+            try
+            {
+            if (!GuidTypes.ContainsKey(ai._Guid))
+            {
+                GuidTypes.Add(ai._Guid, ai);
+            }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+        }
+
+        private static void AddToLowercaseLookup(AssetItem ai, string Key)
+        {
+            try
+            {
+                if (!LowerCaseLookup.ContainsKey(Key))
+                {
+                    LowerCaseLookup.Add(Key, ai._Name);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+        }
+
+        private bool AlreadyHasItem(AssetItem ai, Dictionary<string, AssetItem> typeDic)
+        {
+            try
+            {
+                // Get out if we already have it.
+                if (typeDic.ContainsKey(ai._Name))
+                {
+                    return true;
+                }
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                return false;
+            }
+        }
+
+        private bool GetTypeDictionary(AssetItem ai, out Dictionary<string, AssetItem> TypeDic)
+        {
+            try
+            {
+                TypeDic = null;
+                if (ai._Type == null)
+                {
+                    // this is an unindexed type. How did we get here?
+                    return false;
+                }
+                if (!TypeToLookup.ContainsKey(ai._Type))
+                {
+                    Debug.LogError("Unable to get Lookup Type for Type: " + ai._Type.ToString() + " for Object " + ai._Name);
+                    return false;
+                }
+
+                System.Type theType = TypeToLookup[ai._Type];
+                TypeDic = GetAssetDictionary(theType);
+                if (TypeDic == null)
+                {
+                    if (Debug.isDebugBuild)
+                    {
+                        Debug.Log("Unable to add asset item!. Unable to get Type Dictionary of type " + theType.ToString() + "For object " + ai._Name);
+                    }
+                    return false;
+                }
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                TypeDic = null;
+                return false;
+            }
         }
 
 
@@ -2251,7 +2378,7 @@ namespace UMA
         }
 
 #endif
-        #endregion
+#endregion
 
         #region Maintenance
 
@@ -2275,6 +2402,15 @@ namespace UMA
         public void UpdateSerializedDictionaryItems()
         {
             DebugSerialization("Updating serialized Dictionary Items");
+            if (SerializedItems == null)
+            {
+                DebugSerialization("Serialized Items is null");
+                return;
+            }
+            if (SerializedItems.Count == 0)
+            {
+                DebugSerialization("Serialized Items is empty!!!");
+            }
             // Rebuuild all the lookup tables
             // Lookup by guid
             GuidTypes = new Dictionary<string, AssetItem>();
@@ -2335,16 +2471,41 @@ namespace UMA
 
         private void AddRaceRecipe(UMAWardrobeRecipe uwr)
         {
+
             if (!uwr)
             {
                 return;
             }
+
+            Dictionary<string, AssetItem> TypeDic;
+            TypeDic = GetAssetDictionary(typeof(RaceData));
+
             // if (req == null)
             //     req = new recipeEqualityComparer();
+            List<string> CompatibleRaces = new List<string>(uwr.compatibleRaces);
 
-            for (int i = 0; i < uwr.compatibleRaces.Count; i++)
+            List<string> AdditionalRaces = new List<string>();
+
+            foreach (string s in CompatibleRaces)
             {
-                string racename = uwr.compatibleRaces[i];
+                RaceData r = GetAsset<RaceData>(s);
+                if (r != null && !AdditionalRaces.Contains(r.name))
+                {
+                    if (r.IsCrossCompatibleWith(s))
+                    {
+                        if (!AdditionalRaces.Contains(r.name) && !CompatibleRaces.Contains(r.name))
+                        {
+                            AdditionalRaces.Add(r.name);
+                        }
+                    }
+                }
+            }
+            CompatibleRaces.AddRange(AdditionalRaces);
+
+
+            for (int i = 0; i < CompatibleRaces.Count; i++)
+            {
+                string racename = CompatibleRaces[i];
                 if (!raceRecipes.ContainsKey(racename))
                 {
                     raceRecipes.Add(racename, new SlotRecipes());
@@ -2407,6 +2568,14 @@ namespace UMA
 #endif
         }
 
+        private static void DebugSerializationStatic(string s)
+        {
+#if DEBUG_SERIALIZATION
+            Debug.Log("[Serializing] "+s);
+#endif
+        }
+
+
         /// <summary>
         /// Updates the list so all items can be processed at once, or for
         /// serialization.
@@ -2420,10 +2589,11 @@ namespace UMA
             {
                 if (type == TypeToLookup[type])
                 {
-                    DebugSerialization($"Adding type to serialized list {type.ToString()}");
+                    DebugSerialization($"Adding type to serialized list {type.ToString()} ");
                     Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
                     if (TypeDic != null)
                     {
+                        DebugSerialization($"There are {TypeDic.Count} items for type {type.ToString()}");
                         foreach (AssetItem ai in TypeDic.Values)
                         {
                             if (ai.IsAddressable || ai.Ignore)
@@ -2439,6 +2609,7 @@ namespace UMA
                     }
                 }
             }
+            DebugSerialization($"{SerializedItems.Count} Serialized Items added");
             return SerializedItems;
         }
 
@@ -2458,6 +2629,29 @@ namespace UMA
 #if UNITY_EDITOR
 
         private List<AssetItem> Keeps = new List<AssetItem>();
+
+        public void RebuildLibrary()
+        {
+            SaveKeeps();
+            Clear();
+            BuildStringTypes();
+            AddEverything(false);
+            RestoreKeeps();
+            RebuildRaceRecipes();
+            ForceSave();
+            Resources.UnloadUnusedAssets();
+        }
+
+        public Dictionary<string, int> GetCounts()
+        {
+            Dictionary<string, int> counts = new Dictionary<string, int>();
+            foreach (System.Type type in TypeToLookup.Keys)
+            {
+                Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
+                counts.Add(type.Name, TypeDic.Count);
+            }
+            return counts;
+        }
 
         public void SaveKeeps()
         {
@@ -2812,6 +3006,24 @@ namespace UMA
             return TypeLookup[LookupType];
         }
 
+        public bool IndexIsValid
+        {
+            get
+            {
+                if (TypeToLookup == null)
+                {
+                    return false;
+                }
+                if (TypeToLookup.Count == 0)
+                {
+                    return false;
+                }
+
+                return false;
+            }
+        }
+
+
 #if UNITY_EDITOR
         /// <summary>
         /// Heals the index if possible, if not rebuilds
@@ -2836,6 +3048,7 @@ namespace UMA
                         ai._Name = ai.EvilName;
                     }
                     UpdateSerializedDictionaryItems();
+                    RebuildRaceRecipes();
                     return;
                 }
             }
@@ -2871,6 +3084,8 @@ namespace UMA
 #region Serialization
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
+
+            DebugSerialization("Before Serialize called");
             UpdateSerializedList();
 
             // load typeFolders so it can be serialized.
@@ -2882,6 +3097,7 @@ namespace UMA
                 tpf.Folders =  kpv.Value.ToArray();
                 typeFolders.Add(tpf);
             }
+            DebugSerialization("Before Serialize complete");
         }
 
     void ISerializationCallbackReceiver.OnAfterDeserialize()
@@ -2908,24 +3124,84 @@ namespace UMA
                 typeof(UMAColorScheme)
             };
 
-            TypeToLookup = new Dictionary<System.Type, System.Type>()
+            if (TypeToLookup != null)
             {
-                { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
-                { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
-                { (typeof(RaceData)),(typeof(RaceData)) },
-                { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
-                { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
-                { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
-                { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
-                { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
+                if (TypeToLookup.ContainsKey(typeof(SlotDataAsset)) == false)
+                {
+                    TypeToLookup.Add(typeof(SlotDataAsset), typeof(SlotDataAsset));
+                }
+                if (TypeToLookup.ContainsKey(typeof(OverlayDataAsset)) == false)
+                {
+                    TypeToLookup.Add(typeof(OverlayDataAsset), typeof(OverlayDataAsset));
+                }
+                if (TypeToLookup.ContainsKey(typeof(RaceData)) == false)
+                {
+                    TypeToLookup.Add(typeof(RaceData), typeof(RaceData));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMATextRecipe)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMATextRecipe), typeof(UMATextRecipe));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMAWardrobeRecipe)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMAWardrobeRecipe), typeof(UMAWardrobeRecipe));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMAWardrobeCollection)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMAWardrobeCollection), typeof(UMAWardrobeCollection));
+                }
+                if (TypeToLookup.ContainsKey(typeof(RuntimeAnimatorController)) == false)
+                {
+                    TypeToLookup.Add(typeof(RuntimeAnimatorController), typeof(RuntimeAnimatorController));
+                }
+                if (TypeToLookup.ContainsKey(typeof(AnimatorOverrideController)) == false)
+                {
+                    TypeToLookup.Add(typeof(AnimatorOverrideController), typeof(RuntimeAnimatorController));
+                }
 #if UNITY_EDITOR
-                { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
+                if (TypeToLookup.ContainsKey(typeof(AnimatorController)) == false)
+                {
+                    TypeToLookup.Add(typeof(AnimatorController), typeof(RuntimeAnimatorController));
+                }
 #endif
-                {  typeof(TextAsset), typeof(TextAsset) },
-                { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
-                { (typeof(UMAMaterial)),(typeof(UMAMaterial)) },
-                {  typeof(UMAColorScheme), typeof(UMAColorScheme) }
-            };
+                if (TypeToLookup.ContainsKey(typeof(DynamicUMADnaAsset)) == false)
+                {
+                    TypeToLookup.Add(typeof(DynamicUMADnaAsset), typeof(DynamicUMADnaAsset));
+                }
+                if (TypeToLookup.ContainsKey(typeof(TextAsset)) == false)
+                {
+                    TypeToLookup.Add(typeof(TextAsset), typeof(TextAsset));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMAMaterial)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMAMaterial), typeof(UMAMaterial));
+                }
+                if (TypeToLookup.ContainsKey(typeof(UMAColorScheme)) == false)
+                {
+                    TypeToLookup.Add(typeof(UMAColorScheme), typeof(UMAColorScheme));
+                }
+            }
+            else
+            {
+                TypeToLookup = new Dictionary<System.Type, System.Type>()
+                {
+                    { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
+                    { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
+                    { (typeof(RaceData)),(typeof(RaceData)) },
+                    { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
+                    { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
+                    { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
+                    { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
+                    { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
+#if UNITY_EDITOR
+                    { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
+#endif
+                    {  typeof(TextAsset), typeof(TextAsset) },
+                    { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
+                    { (typeof(UMAMaterial)),(typeof(UMAMaterial)) },
+                    {  typeof(UMAColorScheme), typeof(UMAColorScheme) }
+                };
+            }
 
             List<string> invalidTypeNames = new List<string>();
             // Add the additional Types.
@@ -2985,7 +3261,13 @@ namespace UMA
                     TypeLookup = new Dictionary<Type, Dictionary<string, AssetItem>>();
                 }
             }
+
+            // should it call UpdateSerializeDictionaryItems()???
+            // NO IT SHOULD NOT
+            // THIS IS DONE WHERE THE SINGLETON IS CREATED ABOVE
+
             StopTimer(st, "After Serialize");
+            DebugSerialization("After Deserialize complete");
         }
 
 #if UNITY_EDITOR

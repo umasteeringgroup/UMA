@@ -15,10 +15,10 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context, bool loadSlots = true)
 		{
 			var packedRecipe = PackedLoad(context);
-			UnpackRecipe(umaRecipe, packedRecipe, context);
+			UnpackRecipe(umaRecipe, packedRecipe, context, loadSlots);
 		}
 
 		public static UMAData.UMARecipe UnpackRecipe(UMAPackRecipe umaPackRecipe, UMAContextBase context)
@@ -28,12 +28,12 @@ namespace UMA
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
+		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context, bool loadSlots = true)
 		{
 			switch (umaPackRecipe.version)
 			{
 				case 3:
-					UnpackRecipeVersion3(umaRecipe, umaPackRecipe, context);
+					UnpackRecipeVersion3(umaRecipe, umaPackRecipe, context, loadSlots);
 					break;
 
 				case 2:
@@ -230,6 +230,7 @@ namespace UMA
             public string[] Tags; // Any recipe specific tags.
 			public bool[] tiling;
 			public int uvOverride;
+			public Vector2 translate;
 		}
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
@@ -650,6 +651,7 @@ namespace UMA
 
 						tempPackedOverlay.scale = overlayData.Scale;
 						tempPackedOverlay.rotation = overlayData.Rotation;
+						tempPackedOverlay.translate = new Vector2(overlayData.Translate.x, overlayData.Translate.y);
 						tempPackedOverlay.blendModes = new int[overlayData.GetOverlayBlendsLength()];
                         tempPackedOverlay.Tags = overlayData.tags.Clone() as string[];
 						tempPackedOverlay.uvOverride = overlayData.UVSet;
@@ -911,14 +913,14 @@ namespace UMA
 			}
 		}
 
-		public static UMAData.UMARecipe UnpackRecipeVersion3(UMAPackRecipe umaPackRecipe, UMAContextBase context)
+		public static UMAData.UMARecipe UnpackRecipeVersion3(UMAPackRecipe umaPackRecipe, UMAContextBase context, bool loadSlots = true)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
-			UnpackRecipeVersion3(umaRecipe, umaPackRecipe, context);
+			UnpackRecipeVersion3(umaRecipe, umaPackRecipe, context, loadSlots);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
+		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context, bool loadSlots = true)
         {
             umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV3.Length];
 
@@ -948,102 +950,105 @@ namespace UMA
                 umaRecipe.sharedColors[i] = colorData[i];
             }
 
-            for (int i = 0; i < umaPackRecipe.slotsV3.Length; i++)
-            {
-                PackedSlotDataV3 packedSlot = umaPackRecipe.slotsV3[i];
-                if (UMAPackRecipe.SlotIsValid(packedSlot))
-                {
-                    var tempSlotData = context.InstantiateSlot(packedSlot.id);
-					if (tempSlotData == null)
+			if (loadSlots)
+			{
+				for (int i = 0; i < umaPackRecipe.slotsV3.Length; i++)
+				{
+					PackedSlotDataV3 packedSlot = umaPackRecipe.slotsV3[i];
+					if (UMAPackRecipe.SlotIsValid(packedSlot))
 					{
-						if (Debug.isDebugBuild)
+						var tempSlotData = context.InstantiateSlot(packedSlot.id);
+						if (tempSlotData == null)
 						{
-							throw new UMAResourceNotFoundException("Slot " + packedSlot.id + " not found in context. Skipping.");
-                        }
-						continue;
-					}
-					if (packedSlot.Tags != null)
-                    {
-                        tempSlotData.tags = packedSlot.Tags.Clone() as string[];
-                    }
-                    else
-                    {
-                        tempSlotData.tags = new string[0];
-					}
-					if (packedSlot.Races != null)
-                    {
-						tempSlotData.Races = packedSlot.Races;
-                    }
-					tempSlotData.blendShapeTargetSlot = packedSlot.blendShapeTarget;
-					tempSlotData.overlayScale = packedSlot.scale * 0.01f;
-					tempSlotData.overSmoosh = packedSlot.overSmoosh;
-					tempSlotData.smooshDistance = packedSlot.smooshDistance;
-					tempSlotData.smooshInvertDist = packedSlot.smooshInvertDist;
-					tempSlotData.smooshInvertX = packedSlot.smooshInvertX;
-					tempSlotData.smooshInvertY = packedSlot.smooshInvertY;
-					tempSlotData.smooshInvertZ	= packedSlot.smooshInvertZ;
-					tempSlotData.smooshableTag = packedSlot.smooshableTag;
-					tempSlotData.smooshTargetTag = packedSlot.smooshTargetTag;
-                    tempSlotData.isSwapSlot = packedSlot.isSwapSlot;
-                    tempSlotData.swapTag = packedSlot.swapTag;
-					tempSlotData.UVSet = packedSlot.uvOverride;
-					tempSlotData.isDisabled = packedSlot.isDisabled;
-                    tempSlotData.expandAlongNormal = packedSlot.expandAlongNormal;
-
-
-                    umaRecipe.slotDataList[i] = tempSlotData;
-
-                    if (packedSlot.copyIdx == -1)
-                    {
-						for (int i2 = 0; i2 < packedSlot.overlays.Length; i2++)
+							if (Debug.isDebugBuild)
+							{
+								throw new UMAResourceNotFoundException("Slot " + packedSlot.id + " not found in context. Skipping.");
+							}
+							continue;
+						}
+						if (packedSlot.Tags != null)
 						{
-							PackedOverlayDataV3 packedOverlay = packedSlot.overlays[i2];
+							tempSlotData.tags = packedSlot.Tags.Clone() as string[];
+						}
+						else
+						{
+							tempSlotData.tags = new string[0];
+						}
+						if (packedSlot.Races != null)
+						{
+							tempSlotData.Races = packedSlot.Races;
+						}
+						tempSlotData.blendShapeTargetSlot = packedSlot.blendShapeTarget;
+						tempSlotData.overlayScale = packedSlot.scale * 0.01f;
+						tempSlotData.overSmoosh = packedSlot.overSmoosh;
+						tempSlotData.smooshDistance = packedSlot.smooshDistance;
+						tempSlotData.smooshInvertDist = packedSlot.smooshInvertDist;
+						tempSlotData.smooshInvertX = packedSlot.smooshInvertX;
+						tempSlotData.smooshInvertY = packedSlot.smooshInvertY;
+						tempSlotData.smooshInvertZ = packedSlot.smooshInvertZ;
+						tempSlotData.smooshableTag = packedSlot.smooshableTag;
+						tempSlotData.smooshTargetTag = packedSlot.smooshTargetTag;
+						tempSlotData.isSwapSlot = packedSlot.isSwapSlot;
+						tempSlotData.swapTag = packedSlot.swapTag;
+						tempSlotData.UVSet = packedSlot.uvOverride;
+						tempSlotData.isDisabled = packedSlot.isDisabled;
+						tempSlotData.expandAlongNormal = packedSlot.expandAlongNormal;
 
-							OverlayData overlayData = context.InstantiateOverlay(packedOverlay.id);
 
-                            overlayData.rect = new Rect(
-                                packedOverlay.rect[0],
-                                packedOverlay.rect[1],
-                                packedOverlay.rect[2],
-                                packedOverlay.rect[3]);
+						umaRecipe.slotDataList[i] = tempSlotData;
 
-							overlayData.instanceTransformed = packedOverlay.isTransformed;
-							overlayData.Scale = packedOverlay.scale;
-							overlayData.Rotation = packedOverlay.rotation;
-							overlayData.UVSet = packedSlot.uvOverride;
-
-							if (packedOverlay.colorIdx < umaPackRecipe.sharedColorCount)
-                            {
-                                overlayData.colorData = umaRecipe.sharedColors[packedOverlay.colorIdx];
-                            }
-                            else
-                            {
-                                overlayData.colorData = colorData[packedOverlay.colorIdx].Duplicate();
-                                overlayData.colorData.name = OverlayColorData.UNSHARED;
-                            }
-
-							if (packedOverlay.blendModes != null)
+						if (packedSlot.copyIdx == -1)
+						{
+							for (int i2 = 0; i2 < packedSlot.overlays.Length; i2++)
 							{
-                                overlayData.SetOverlayBlendsLength(packedOverlay.blendModes.Length);
-								for (int blendModeIdx = 0; blendModeIdx < packedOverlay.blendModes.Length; blendModeIdx++)
-								{
-                                    overlayData.SetOverlayBlend(blendModeIdx, (OverlayDataAsset.OverlayBlend)packedOverlay.blendModes[blendModeIdx]);
-                                }
-							}
+								PackedOverlayDataV3 packedOverlay = packedSlot.overlays[i2];
 
-                            if (packedOverlay.Tags != null)
-							{
-                                overlayData.tags = packedOverlay.Tags.Clone() as string[];
-                            }
-                            else
-								{
-                                overlayData.tags = new string[0];
-							}
+								OverlayData overlayData = context.InstantiateOverlay(packedOverlay.id);
 
-                            if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material))
-                            {
-                                overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
-                            }
+								overlayData.rect = new Rect(
+									packedOverlay.rect[0],
+									packedOverlay.rect[1],
+									packedOverlay.rect[2],
+									packedOverlay.rect[3]);
+
+								overlayData.instanceTransformed = packedOverlay.isTransformed;
+								overlayData.Scale = new Vector2(packedOverlay.scale.x, packedOverlay.scale.y);
+								overlayData.Rotation = packedOverlay.rotation;
+								overlayData.Translate = new Vector2(packedOverlay.translate.x, packedOverlay.translate.y);
+								overlayData.UVSet = packedSlot.uvOverride;
+
+								if (packedOverlay.colorIdx < umaPackRecipe.sharedColorCount)
+								{
+									overlayData.colorData = umaRecipe.sharedColors[packedOverlay.colorIdx];
+								}
+								else
+								{
+									overlayData.colorData = colorData[packedOverlay.colorIdx].Duplicate();
+									overlayData.colorData.name = OverlayColorData.UNSHARED;
+								}
+
+								if (packedOverlay.blendModes != null)
+								{
+									overlayData.SetOverlayBlendsLength(packedOverlay.blendModes.Length);
+									for (int blendModeIdx = 0; blendModeIdx < packedOverlay.blendModes.Length; blendModeIdx++)
+									{
+										overlayData.SetOverlayBlend(blendModeIdx, (OverlayDataAsset.OverlayBlend)packedOverlay.blendModes[blendModeIdx]);
+									}
+								}
+
+								if (packedOverlay.Tags != null)
+								{
+									overlayData.tags = packedOverlay.Tags.Clone() as string[];
+								}
+								else
+								{
+									overlayData.tags = new string[0];
+								}
+
+								if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material))
+								{
+									overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
+								}
 
 #if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 							if(packedOverlay.data == null)
@@ -1061,15 +1066,16 @@ namespace UMA
 							}
 #endif
 
-                            tempSlotData.AddOverlay(overlayData);
-                        }
-                    }
-                    else
-                    {
-                        tempSlotData.SetOverlayList(umaRecipe.slotDataList[packedSlot.copyIdx].GetOverlayList());
-                    }
-                }
-            }
+								tempSlotData.AddOverlay(overlayData);
+							}
+						}
+						else
+						{
+							tempSlotData.SetOverlayList(umaRecipe.slotDataList[packedSlot.copyIdx].GetOverlayList());
+						}
+					}
+				}
+			}
         }
 
         public static OverlayColorData[] UnpackColors(UMAPackRecipe umaPackRecipe)

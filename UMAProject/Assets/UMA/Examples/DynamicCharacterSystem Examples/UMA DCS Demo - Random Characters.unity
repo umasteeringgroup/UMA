@@ -38,12 +38,11 @@ RenderSettings:
   m_ReflectionIntensity: 0.645
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.11628304, g: 0.1455856, b: 0.19796523, a: 0.645}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 11
+  serializedVersion: 12
   m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
@@ -99,7 +98,7 @@ LightmapSettings:
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 112000002, guid: 84b4e57cc38b8b540be784fe74ce4a29,
     type: 2}
-  m_UseShadowmask: 1
+  m_LightingSettings: {fileID: 1561521895}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -119,6 +118,8 @@ NavMeshSettings:
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
@@ -152,10 +153,12 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -180,6 +183,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!65 &84395075
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -211,6 +215,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -5.1918097, y: -0.5, z: -5.1057944}
   m_LocalScale: {x: 60, y: 1, z: 60}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
@@ -225,17 +230,17 @@ PrefabInstance:
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
       propertyPath: GridXSize
-      value: 13
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
       propertyPath: GridZSize
-      value: 9
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
       propertyPath: GridDistance
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
@@ -245,6 +250,11 @@ PrefabInstance:
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
         type: 3}
       propertyPath: RandomOffset
+      value: 2.97
+      objectReference: {fileID: 0}
+    - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a,
+        type: 3}
+      propertyPath: RandomRotation
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576785209578, guid: 11b6342601a487e45a8ca8ed561a9b7a,
@@ -306,6 +316,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: UMARandomGeneratedCharacter
+      objectReference: {fileID: 0}
+    - target: {fileID: 2885161576785399288, guid: 11b6342601a487e45a8ca8ed561a9b7a,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
@@ -394,7 +409,7 @@ PrefabInstance:
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: convertMipMaps
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
@@ -404,7 +419,7 @@ PrefabInstance:
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: atlasResolution
-      value: 512
+      value: 1024
       objectReference: {fileID: 0}
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
@@ -414,12 +429,17 @@ PrefabInstance:
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: InitialScaleFactor
-      value: 6
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
       propertyPath: convertRenderTexture
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: editorAtlasResolution
+      value: 4096
       objectReference: {fileID: 0}
     - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
         type: 3}
@@ -430,6 +450,16 @@ PrefabInstance:
         type: 3}
       propertyPath: AtlasOverflowFitMethod
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: editorInitialScaleFactor
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7066486438860346000, guid: a54fde34eec40964b94d71ee0aba9889,
+        type: 3}
+      propertyPath: MaxQueuedConversionsPerFrame
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a54fde34eec40964b94d71ee0aba9889, type: 3}
@@ -509,6 +539,7 @@ Light:
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &504827746
@@ -521,6 +552,7 @@ Transform:
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
@@ -551,6 +583,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 3
@@ -643,7 +676,70 @@ Transform:
   m_LocalRotation: {x: 0.15645654, y: -0, z: -0, w: 0.98768485}
   m_LocalPosition: {x: -0.5, y: 3.98, z: -15.77}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 18.003, y: 0, z: 0}
+--- !u!850595691 &1561521895
+LightingSettings:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Settings.lighting
+  serializedVersion: 4
+  m_GIWorkflowMode: 1
+  m_EnableBakedLightmaps: 1
+  m_EnableRealtimeLightmaps: 1
+  m_RealtimeEnvironmentLighting: 1
+  m_BounceScale: 1
+  m_AlbedoBoost: 1
+  m_IndirectOutputScale: 1
+  m_UsingShadowmask: 1
+  m_BakeBackend: 0
+  m_LightmapMaxSize: 1024
+  m_BakeResolution: 40
+  m_Padding: 2
+  m_LightmapCompression: 3
+  m_AO: 0
+  m_AOMaxDistance: 1
+  m_CompAOExponent: 1
+  m_CompAOExponentDirect: 0
+  m_ExtractAO: 0
+  m_MixedBakeMode: 2
+  m_LightmapsBakeMode: 1
+  m_FilterMode: 1
+  m_LightmapParameters: {fileID: 15204, guid: 0000000000000000f000000000000000, type: 0}
+  m_ExportTrainingData: 0
+  m_TrainingDataDestination: TrainingData
+  m_RealtimeResolution: 2
+  m_ForceWhiteAlbedo: 0
+  m_ForceUpdates: 0
+  m_FinalGather: 0
+  m_FinalGatherRayCount: 256
+  m_FinalGatherFiltering: 1
+  m_PVRCulling: 1
+  m_PVRSampling: 1
+  m_PVRDirectSampleCount: 32
+  m_PVRSampleCount: 500
+  m_PVREnvironmentSampleCount: 500
+  m_PVREnvironmentReferencePointCount: 2048
+  m_LightProbeSampleCountMultiplier: 4
+  m_PVRBounces: 2
+  m_PVRMinBounces: 2
+  m_PVREnvironmentMIS: 0
+  m_PVRFilteringMode: 2
+  m_PVRDenoiserTypeDirect: 0
+  m_PVRDenoiserTypeIndirect: 0
+  m_PVRDenoiserTypeAO: 0
+  m_PVRFilterTypeDirect: 0
+  m_PVRFilterTypeIndirect: 0
+  m_PVRFilterTypeAO: 0
+  m_PVRFilteringGaussRadiusDirect: 1
+  m_PVRFilteringGaussRadiusIndirect: 5
+  m_PVRFilteringGaussRadiusAO: 2
+  m_PVRFilteringAtrousPositionSigmaDirect: 0.5
+  m_PVRFilteringAtrousPositionSigmaIndirect: 2
+  m_PVRFilteringAtrousPositionSigmaAO: 1
+  m_PVRTiledBaking: 0

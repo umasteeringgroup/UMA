@@ -157,7 +157,11 @@ namespace UMA
 			EnsureUMADataSetup(umaData);
 			umaData.skeleton.BeginSkeletonUpdate();
 
-			for (currentRendererIndex = 0; currentRendererIndex < umaData.generatedMaterials.rendererAssets.Count; currentRendererIndex++)
+
+			umaData.BuildActiveModifiers();
+
+
+            for (currentRendererIndex = 0; currentRendererIndex < umaData.generatedMaterials.rendererAssets.Count; currentRendererIndex++)
 			{
                 int subMeshIndex = 0;
 				//Move umaMesh creation to with in the renderer loops
@@ -184,6 +188,7 @@ namespace UMA
 						var Blendshapes = SkinnedMeshCombiner.GetBlendshapeSources(tempMesh, umaData.umaRecipe);
 						tempMesh.blendShapes = Blendshapes.ToArray();
                     }
+					
 					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
                     var inst = combinedMeshList[0];
                     inst.slotData.vertexOffset = 0;
@@ -194,23 +199,17 @@ namespace UMA
 				{
 					UMAMeshData umaMesh = new UMAMeshData();
 					umaMesh.SlotName = "CombinedMesh";
-#if NO_BAD_BUFFERS
-					umaMesh.ClaimSharedBuffers();
-#endif
 					umaMesh.subMeshCount = 0;
 					umaMesh.vertexCount = 0;
 
 					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings,umaData.umaRecipe, currentRendererIndex );
 
-					if (updatedAtlas)
+					// Apply the modifiers before the UV is updated for the atlas.
+                    if (updatedAtlas)
 					{
 						RecalculateUV(umaMesh);
 					}
-
-					umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
-#if NO_BAD_BUFFERS
-					umaMesh.ReleaseSharedBuffers();
-#endif
+                    umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
 				}
 				var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
 				if (clothProperties != null)
@@ -312,6 +311,22 @@ namespace UMA
 			}
         }
 
+		protected UMAMeshData ApplyMeshModifiers(UMAData umaData, UMAMeshData meshData, SlotData slotData)
+		{
+            if (slotData.meshModifiers != null)
+            {
+                foreach (var modifier in slotData.meshModifiers)
+                {
+                    if (modifier != null)
+                    {
+                        // Need an override to apply the mesh modifiers to the 
+                        meshData = modifier.Process( meshData);
+					}
+                }
+            }
+			return meshData;
+        }
+
         protected void BuildCombineInstances()
 		{
 			SkinnedMeshCombiner.CombineInstance combineInstance;
@@ -343,9 +358,26 @@ namespace UMA
 					}
 					else
                     {
-						combineInstance.meshData = slotData.asset.meshData;
+						combineInstance.meshData = slotData.asset.meshData.ShallowCopy(null); 
 						combineInstance.meshData.SlotName = slotData.slotName;
 					}
+					// UV is remapped. Update the MeshData.
+					if (slotData.UVRemapped)
+                    {
+						switch(slotData.UVSet)
+                        {
+                            case 1:
+                                combineInstance.meshData.uv = slotData.asset.meshData.uv2;
+                                break;
+                            case 2:
+                                combineInstance.meshData.uv = slotData.asset.meshData.uv3;
+                                break;
+                            case 3:
+                                combineInstance.meshData.uv = slotData.asset.meshData.uv4;
+                                break;
+                        }
+                    }
+                    combineInstance.meshData = ApplyMeshModifiers(umaData, combineInstance.meshData, slotData);
                     // save a copy of the slotData so we can add
                     // the vertex offsets, submeshindex to it.
                     combineInstance.slotData = slotData;
@@ -393,7 +425,8 @@ namespace UMA
                     continue;
                 }
 
-                if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
+				if (!generatedMaterial.umaMaterial.IsGeneratedTextures)
+                //if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
 				{
                     for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
 					{

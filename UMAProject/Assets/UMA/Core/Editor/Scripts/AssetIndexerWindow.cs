@@ -204,13 +204,14 @@ namespace UMA.Controls
             // ***********************************************************************************
             AddMenuItemWithCallback(FileMenu, "Rebuild From Project", () =>
             {
-                UAI.SaveKeeps();
+                UAI.RebuildLibrary();
+                /*UAI.SaveKeeps();
                 UAI.Clear();
                 UAI.BuildStringTypes();
                 UAI.AddEverything(false);
                 UAI.RestoreKeeps();
                 UAI.ForceSave();
-                Resources.UnloadUnusedAssets();
+                Resources.UnloadUnusedAssets(); */
                 m_Initialized = false;
                 Repaint();
             });
@@ -1331,7 +1332,7 @@ namespace UMA.Controls
                                 }
                                 if (setScale)
                                 {
-                                    od.Scale.Set(scale.x, scale.y, scale.z);
+                                    od.Scale.Set(scale.x, scale.y);
                                 }
                                 if (setRotation)
                                 {
@@ -2285,13 +2286,13 @@ namespace UMA.Controls
 
         void OnGUI()
         {
-            if (EditorApplication.isCompiling)
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
             {
                 dots += ".";
                 if (dots.Length > 20)
                     dots = "";
                 GUILayout.Space(30);
-                EditorGUILayout.LabelField("    Compile in progress  " + dots);
+                EditorGUILayout.LabelField("    Compile/update in progress  " + dots);
                 System.Threading.Thread.Sleep(100);
                 Repaint();
                 return;

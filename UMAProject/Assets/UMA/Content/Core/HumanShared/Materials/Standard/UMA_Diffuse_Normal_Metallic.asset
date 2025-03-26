@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: UMA_Diffuse_Normal_Metallic
   m_EditorClassIdentifier: 
   translateSRP: 1
+  AutoSetSRPMaterials: 1
   _material: {fileID: 2100000, guid: 2db8991bb8fd75f4eb02f3ee57a55f37, type: 2}
   _secondPass: {fileID: 0}
   srpMaterials:
@@ -23,7 +24,7 @@ MonoBehaviour:
     - _BaseMap
     - _BumpMap
     - _MetallicGlossMap
-  materialType: 1
+  materialType: 2
   channels:
   - channelType: 0
     textureFormat: 0

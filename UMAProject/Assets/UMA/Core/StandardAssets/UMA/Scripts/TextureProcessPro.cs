@@ -3,6 +3,8 @@ using UnityEngine;
 using System;
 using CopyTextureSupport = UnityEngine.Rendering.CopyTextureSupport;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
 
 
 namespace UMA
@@ -47,7 +49,6 @@ namespace UMA
         RenderTexture destinationTexture;
         Texture[] resultingTextures;
         UMAGeneratorBase umaGenerator;
-        bool fastPath = false;
 
         public bool SupportsRTToTexture2D
         {
@@ -69,7 +70,15 @@ namespace UMA
             RenderTexture.active = bkup;
             return rt;
         }
-
+        public void Prepare(UMAData _umaData, UMAGeneratorBase _umaGenerator)
+        {
+            umaData = _umaData;
+            umaGenerator = _umaGenerator;
+            if (umaData.atlasResolutionScale <= 0)
+            {
+                umaData.atlasResolutionScale = 1f;
+            }
+        }
 
 
 
@@ -82,10 +91,6 @@ namespace UMA
         {
             umaData = _umaData;
             umaGenerator = _umaGenerator;
-            if (umaGenerator is UMAGenerator)
-            {
-                fastPath = (umaGenerator as UMAGenerator).fastGeneration;
-            }
 
             if (umaData.atlasResolutionScale <= 0)
             {
@@ -133,7 +138,7 @@ namespace UMA
                             case UMAMaterial.ChannelType.NormalMap:
                             case UMAMaterial.ChannelType.DetailNormalMap:
                                 {
-                                    bool CopyRTtoTex = SupportsRTToTexture2D && fastPath && (umaGenerator.convertRenderTexture || slotData.material.channels[textureChannelNumber].ConvertRenderTexture);
+                                    bool CopyRTtoTex = SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || slotData.material.channels[textureChannelNumber].ConvertRenderTexture);
                                     if (CopyRTtoTex && !TextureFormats.ContainsKey(slotData.material.channels[textureChannelNumber].textureFormat))
                                     {
                                         CopyRTtoTex = false;
@@ -187,6 +192,7 @@ namespace UMA
                                         destinationTexture = new RenderTexture(ww, hh, 0, slotData.material.channels[textureChannelNumber].textureFormat, RenderTextureReadWrite.Linear);
                                         destinationTexture.useMipMap = umaGenerator.convertMipMaps; // && !umaGenerator.convertRenderTexture;
                                     }
+                                    
                                     destinationTexture.filterMode = FilterMode.Point;
                                     destinationTexture.name = slotData.material.name + " Chan " + textureChannelNumber + " frame: " + Time.frameCount;
 
@@ -203,6 +209,7 @@ namespace UMA
                                         backgroundColor = UMAMaterial.GetBackgroundColor(slotData.material.channels[textureChannelNumber].channelType);
                                     }
 
+                                    RenderTexture.active = destinationTexture;
                                     textureMerge.DrawAllRects(destinationTexture, width, height, backgroundColor, umaGenerator.SharperFitTextures);
 
                                     //PostProcess
@@ -211,17 +218,35 @@ namespace UMA
                                     if (CopyRTtoTex)
                                     {
                                         #region Convert Render Textures
-                                        // copy the texture with mips to the Texture2D
-                                        Texture2D tempTexture;
+                                        if (umaGenerator.useAsyncConversion)
+                                        {
 
-                                        TextureFormat texFmt = TextureFormats[destinationTexture.format];
-                                        tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, umaGenerator.convertMipMaps, true);
-                                        Graphics.CopyTexture(destinationTexture, tempTexture);
-                                        RenderTexture.ReleaseTemporary(destinationTexture);
-                                        //destinationTexture.Release();
-                                        //UnityEngine.GameObject.DestroyImmediate(destinationTexture);
-                                        resultingTextures[textureChannelNumber] = tempTexture as Texture;
-                                        SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture);
+                                            // Let it have the RenderTexture now.
+                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture);
+                                            resultingTextures[textureChannelNumber] = destinationTexture;
+                                            // Now asynchronously copy and reset it
+                                            RenderTexToCPU rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, slotData.material.channels[textureChannelNumber].materialPropertyName, textureChannelNumber, umaGenerator);
+                                            rt2cpu.DoAsyncCopy();
+                                        }
+                                        else
+                                        {
+                                            // copy the texture with mips to the Texture2D
+                                            Texture2D tempTexture;                                            
+                                            GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(destinationTexture.format, false);
+                                            TextureFormat texFmt = GraphicsFormatUtility.GetTextureFormat(gf);
+
+                                            tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, umaGenerator.convertMipMaps, true);
+                                            var asyncAction = AsyncGPUReadback.Request(destinationTexture, 0);
+                                            asyncAction.WaitForCompletion();
+
+                                            tempTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
+                                            tempTexture.Apply();
+
+                                            RenderTexture.ReleaseTemporary(destinationTexture);
+
+                                            resultingTextures[textureChannelNumber] = tempTexture as Texture;
+                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture);                                            
+                                        }
                                         #endregion
                                     }
                                     else

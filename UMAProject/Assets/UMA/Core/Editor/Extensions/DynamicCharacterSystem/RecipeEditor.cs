@@ -174,7 +174,7 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
-			if (warningIcon == null)
+            if (warningIcon == null)
 			{
 				warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
 				warningStyle = new GUIStyle(EditorStyles.label);
@@ -229,7 +229,6 @@ namespace UMA.Editors
 				EditorGUILayout.EndHorizontal();
 				return;
             }
-
             PowerToolsGUI();
             base.OnInspectorGUI();
 		}

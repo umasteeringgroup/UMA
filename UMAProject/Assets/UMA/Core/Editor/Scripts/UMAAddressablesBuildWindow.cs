@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 
+namespace UMA
+{
+
 #if UMA_ADDRESSABLES
 public class UMAAddressablesBuildWindow : EditorWindow
 {
@@ -76,3 +79,4 @@ public class UMAAddressablesBuildWindow : EditorWindow
 
 
 #endif
+}

@@ -1,4 +1,8 @@
-public interface IDNASelector
+namespace UMA
 {
-    public void SetDNA(string dnaName, float value);
+
+    public interface IDNASelector
+    {
+        public void SetDNA(string dnaName, float value);
+    }
 }

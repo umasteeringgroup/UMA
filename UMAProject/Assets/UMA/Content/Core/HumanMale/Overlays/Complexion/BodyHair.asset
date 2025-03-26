@@ -25,9 +25,13 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
-  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[],"colors":[],"fColors":[],"sharedColorCount":0,"race":"","packedDna":[]}'
+  disabled: 0
+  recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[],"colors":[],"fColors":[],"sharedColorCount":0,"race":"","packedDna":[],"uvOverride":0}'
+  forceKeep: 0
+  labelLocalFiles: 0
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

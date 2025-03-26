@@ -1,12 +1,16 @@
 ﻿using UnityEditor;
 
-public interface IUMARecipePlugin  
+namespace UMA
 {
-	bool foldOut {
-		get; set;
+	public interface IUMARecipePlugin
+	{
+		bool foldOut
+		{
+			get; set;
+		}
+		string GetSectionLabel();
+		void OnEnable();
+		void OnDestroy();
+		void OnInspectorGUI(SerializedObject serializedObject);
 	}
-	string GetSectionLabel();
-	void OnEnable();
-	void OnDestroy();
-	void OnInspectorGUI(SerializedObject serializedObject);
 }

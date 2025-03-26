@@ -76,7 +76,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// NOTE: Use GetUniversalPackRecipe to get a recipe that includes a wardrobeSet. Load this Recipe's recipeString into the specified UMAData.UMARecipe.
 		/// </summary>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context, bool loadSlots = true)
 		{
 			if ((recipeString != null) && (recipeString.Length > 0))
 			{
@@ -94,7 +94,7 @@ namespace UMA.CharacterSystem
 				var packedRecipe = PackedLoadDCSInternal(context);
 				if (packedRecipe != null)
                 {
-                    UnpackRecipe(umaRecipe, packedRecipe, context);
+                    UnpackRecipe(umaRecipe, packedRecipe, context,loadSlots);
                 }
             }
 		}

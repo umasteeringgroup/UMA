@@ -26,6 +26,8 @@ namespace UMA
 		public bool showAdvanced;
 		public bool isBaseColor = false;
 		public bool deleteThis = false;
+		public bool colorsExpanded = false;
+		public bool propertiesExpanded = false;
 #endif
         public Color displayColor = Color.white;
 
@@ -460,8 +462,11 @@ namespace UMA
 		}
 		public void AssignFrom(OverlayColorData src, bool CopyParmsOnly=false)
 		{
-			if (CopyParmsOnly == false)
+            // If CopyParmsOnly is false, then we need to copy the colors and the property block.
+            // If it is true, then we are copying the property block only.
+            if (CopyParmsOnly == false)
 			{
+                // Copy the colors.
 #if UNITY_EDITOR
                 isBaseColor = src.isBaseColor;
 #endif
@@ -490,7 +495,10 @@ namespace UMA
 				for (int i = 0; i < src.PropertyBlock.shaderProperties.Count; i++)
 				{
 					UMAProperty up = src.PropertyBlock.shaderProperties[i];
-					PropertyBlock.shaderProperties.Add(up.Clone());
+					if (up != null)
+					{
+						PropertyBlock.shaderProperties.Add(up.Clone());
+					}
 				}
 			}
         }

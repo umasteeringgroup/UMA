@@ -141,7 +141,11 @@ namespace UMA
 
 		private void AddBonesRecursive(Transform transform, UMAGeneratorBase umaGenerator)
 		{
-			if (transform.tag == umaGenerator.ignoreTag)
+			if (transform == null)
+            {
+                return;
+            }
+            if (transform.tag == umaGenerator.ignoreTag)
             {
                 return;
             }
@@ -344,6 +348,28 @@ namespace UMA
 			return GetBoneTransform(nameHash);
         }
 
+		public Transform GetRootTransform()
+		{
+			return GetBoneTransform(rootBoneHash);
+        }
+
+		public Transform GetGlobalTransform()
+		{
+			var global = GetBoneTransform("Global");
+			if (global == null)
+			{
+                Transform root = GetRootTransform();
+				if (root != null)
+				{
+					return root.childCount > 0 ? root.GetChild(0) : root;
+                }
+            }
+            else
+            {
+                return global;
+            }
+            return null;
+        }
         /// <summary>
         /// Gets the game object for a transform in the skeleton.
         /// </summary>

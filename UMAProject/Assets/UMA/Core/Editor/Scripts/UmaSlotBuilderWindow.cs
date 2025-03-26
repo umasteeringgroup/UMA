@@ -64,10 +64,15 @@ namespace UMA.Editors
 		public string BoneStripper;
 		private bool useRootFolder=false;
 		public bool keepAllBones = false;
+		public bool rotationEnabled = false;
+        public Quaternion rotation = Quaternion.identity;
+		public bool invertX;
+        public bool invertY;
+        public bool invertZ;
 
         string GetAssetFolder()
 		{
-			int index = slotName.LastIndexOf('/');
+            int index = slotName.LastIndexOf('/');
 			if( index > 0 )
 			{
 				return slotName.Substring(0, index+1);
@@ -139,7 +144,7 @@ namespace UMA.Editors
 			}
 			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
 			GUILayout.Label("Common Parameters", EditorStyles.boldLabel);
-			normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+            normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 
             slotMaterial = EditorGUILayout.ObjectField("UMAMaterial	 ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
             slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
@@ -167,8 +172,20 @@ namespace UMA.Editors
             keepAllBones = EditorGUILayout.Toggle("Keep All Bones", keepAllBones);
             EditorGUILayout.EndHorizontal();
             BoneStripper = EditorGUILayout.TextField("Strip from Bones:", BoneStripper);
-			boneList.DoLayoutList();
+            rotationEnabled = EditorGUILayout.Toggle("Enable Rotation", rotationEnabled);
+            rotation = Quaternion.Euler(EditorGUILayout.Vector3Field("Rotation", rotation.eulerAngles));
+			invertX = EditorGUILayout.Toggle("Invert X", invertX);
+            invertY = EditorGUILayout.Toggle("Invert Y", invertY);
+            invertZ = EditorGUILayout.Toggle("Invert Z", invertZ);
+            if (rotationEnabled)
+            {
+                EditorGUILayout.HelpBox("Rotation is enabled. This will rotate the slot mesh by the specified amount. This is useful for correcting the orientation of the slot mesh.", MessageType.Info);
+            }
+
+            boneList.DoLayoutList();
 			GUIHelper.EndVerticalPadded(10);
+
+
 			DoDragDrop();
 
 			EnforceFolder(ref slotFolder);
@@ -435,9 +452,20 @@ namespace UMA.Editors
             sbp.udimAdjustment = udimAdjustment;
             sbp.useRootFolder = false;
 			sbp.keepAllBones = keepAllBones;
+			sbp.rotation = rotation;
+			sbp.rotationEnabled = rotationEnabled;
+            sbp.invertX = invertX;
+            sbp.invertY = invertY;
+            sbp.invertZ = invertZ;
+
 
             SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(sbp);
-			slot.tags = Tags.ToArray();
+			if (slot == null)
+            {
+                Debug.LogError("Failed to create SlotDataAsset");
+                return null;
+            }
+            slot.tags = Tags.ToArray();
 			return slot;
 		}
 

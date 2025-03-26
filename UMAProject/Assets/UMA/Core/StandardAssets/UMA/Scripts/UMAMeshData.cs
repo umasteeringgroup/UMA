@@ -315,21 +315,9 @@ namespace UMA
 #endif
     }
 
-    /// <summary>
-    /// UMA version of Unity mesh data.
-    /// </summary>
-    [Serializable]
-	[StructLayout(LayoutKind.Sequential, Pack = 1)]
-	public class UMAMeshData
+
+	public class MeshDetails
 	{
-		public Matrix4x4[] bindPoses;
-		public UMABoneWeight[] boneWeights;
-#if USE_NATIVE_ARRAYS
-		[NonSerialized]
-		public NativeArray<BoneWeight1> unityBoneWeights;
-		[NonSerialized]
-		public NativeArray<byte> unityBonesPerVertex);
-#endif
 		public Vector3[] vertices;
 		public Vector3[] normals;
 		public Vector4[] tangents;
@@ -338,6 +326,50 @@ namespace UMA
 		public Vector2[] uv2;
 		public Vector2[] uv3;
 		public Vector2[] uv4;
+		public bool verticesModified;
+		public bool normalsModified;
+		public bool tangentsModified;
+		public bool colors32Modified;
+		public bool uvModified;
+		public bool uv2Modified;
+		public bool uv3Modified;
+		public bool uv4Modified;
+
+		public MeshDetails ShallowCopy()
+		{
+			MeshDetails copy = new MeshDetails();
+			copy.vertices = vertices;
+			copy.normals = normals;
+			copy.tangents = tangents;
+			copy.colors32 = colors32;
+			copy.uv = uv;
+			copy.uv2 = uv2;
+			copy.uv3 = uv3;
+			copy.uv4 = uv4;
+			copy.verticesModified = false;
+			copy.normalsModified = false;
+			copy.tangentsModified = false;
+			copy.colors32Modified = false;
+			copy.uvModified = false;
+			copy.uv2Modified = false;
+			copy.uv3Modified = false;
+			copy.uv4Modified = false;
+			return copy;
+		}
+	}
+    /// <summary>
+    /// UMA version of Unity mesh data.
+    /// </summary>
+    [Serializable]
+	//[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public class UMAMeshData : MeshDetails
+	{
+#if UNITY_EDITOR
+		public string ID = "Base";
+		public int iteration = 0;
+#endif
+		public Matrix4x4[] bindPoses;
+		public UMABoneWeight[] boneWeights;
 		public UMABlendShape[] blendShapes;
 		public ClothSkinningCoefficient[] clothSkinning;
 		public Vector2[] clothSkinningSerialized;
@@ -362,16 +394,29 @@ namespace UMA
 		public bool LoadedBoneweights;
 		public string SlotName; // the slotname. used for debugging.
 
+        public Vector3[] GetVertices()
+		{
+            return vertices;
+        }
 
-		// They forgot the List<> method for bone weights.
+        // They forgot the List<> method for bone weights.
 #if USE_UNSAFE_CODE
 		static BoneWeight[] gBoneWeightsArray = new BoneWeight[MAX_VERTEX_COUNT];
 #endif
 
-		public static Dictionary<int, NativeArray<int>> SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
+        public static Dictionary<int, NativeArray<int>> SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
 
+		public int BoneWeightOffset(int vertexIndex)
+        {
+            int offset = 0;
+            for (int i = 0; i < vertexIndex; i++)
+            {
+                offset += ManagedBonesPerVertex[i];
+            }
+            return offset;
+        }
 
-		static UMAMeshData()
+        static UMAMeshData()
 		{
 			AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
 		}
@@ -393,11 +438,112 @@ namespace UMA
 			SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
         }
 
-		/// <summary>
-		/// Get an array for submesh triangle data.
-		/// </summary>
-		/// <returns>Either a shared or allocated int array for submesh triangles.</returns>
-		public NativeArray<int> GetSubmeshBuffer(int size, int submeshIndex)
+		public void MirrorU(int channel)
+		{
+            if (channel == 0)
+            {
+                for (int i = 0; i < uv.Length; i++)
+                {
+                    uv[i].x = 1 - uv[i].x;
+                }
+            }
+            else if (channel == 1)
+            {
+                for (int i = 0; i < uv2.Length; i++)
+                {
+                    uv2[i].x = 1 - uv2[i].x;
+                }
+            }
+            else if (channel == 2)
+            {
+                for (int i = 0; i < uv3.Length; i++)
+                {
+                    uv3[i].x = 1 - uv3[i].x;
+                }
+            }
+            else if (channel == 3)
+            {
+                for (int i = 0; i < uv4.Length; i++)
+                {
+                    uv4[i].x = 1 - uv4[i].x;
+                }
+            }
+        }
+
+		public void MirrorV(int channel)
+        {
+            if (channel == 0)
+            {
+                for (int i = 0; i < uv.Length; i++)
+                {
+                    uv[i].y = 1 - uv[i].y;
+                }
+            }
+            else if (channel == 1)
+            {
+                for (int i = 0; i < uv2.Length; i++)
+                {
+                    uv2[i].y = 1 - uv2[i].y;
+                }
+            }
+            else if (channel == 2)
+            {
+                for (int i = 0; i < uv3.Length; i++)
+                {
+                    uv3[i].y = 1 - uv3[i].y;
+                }
+            }
+            else if (channel == 3)
+            {
+                for (int i = 0; i < uv4.Length; i++)
+                {
+                    uv4[i].y = 1 - uv4[i].y;
+                }
+            }
+        }
+
+		public void MirrorUV(int Channel)
+		{
+            // mirror both X and Y
+            if (Channel == 0)
+            {
+                for (int i = 0; i < uv.Length; i++)
+                {
+                    uv[i].x = 1 - uv[i].x;
+                    uv[i].y = 1 - uv[i].y;
+                }
+            }
+            else if (Channel == 1)
+            {
+                for (int i = 0; i < uv2.Length; i++)
+                {
+                    uv2[i].x = 1 - uv2[i].x;
+                    uv2[i].y = 1 - uv2[i].y;
+                }
+            }
+            else if (Channel == 2)
+            {
+                for (int i = 0; i < uv3.Length; i++)
+                {
+                    uv3[i].x = 1 - uv3[i].x;
+                    uv3[i].y = 1 - uv3[i].y;
+                }
+            }
+            else if (Channel == 3)
+            {
+                for (int i = 0; i < uv4.Length; i++)
+                {
+                    uv4[i].x = 1 - uv4[i].x;
+                    uv4[i].y = 1 - uv4[i].y;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get an array for submesh triangle data.
+        /// </summary>
+        /// <returns>Either a shared or allocated int array for submesh triangles.</returns>
+        public NativeArray<int> GetSubmeshBuffer(int size, int submeshIndex)
 		{
 			if (size < 1)
             {
@@ -442,7 +588,7 @@ namespace UMA
 		/// <param name="renderer">Source renderer.</param>
 		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer, int submeshIndex, bool udimAdjustment = false)
 		{
-			RetrieveDataFromUnityMesh(renderer.sharedMesh, udimAdjustment);
+			RetrieveDataFromUnityMesh(renderer.sharedMesh, udimAdjustment, submeshIndex);
 
 			UpdateBones(renderer.rootBone, renderer.bones);
 		}
@@ -460,6 +606,7 @@ namespace UMA
             return ret;
         }
 
+		
         /// <summary>
         /// Initialize UMA mesh data from Unity mesh.
         /// </summary>
@@ -608,13 +755,13 @@ namespace UMA
                 }
             }
             #endregion
-        }
+        } 
 
         /// <summary>
         /// Initialize UMA mesh data from Unity mesh.
         /// </summary>
         /// <param name="sharedMesh">Source mesh.</param>
-        public void RetrieveDataFromUnityMesh(Mesh sharedMesh, bool udimAdjustment = false)
+        public void OldetrieveDataFromUnityMesh(Mesh sharedMesh, bool udimAdjustment = false)
 		{
 			bindPoses = sharedMesh.bindposes;
 #if USE_NATIVE_ARRAYS
@@ -881,9 +1028,11 @@ namespace UMA
 			mesh.triangles = new int[0];
 
 				NativeArray<Vector3> verts = new NativeArray<Vector3>(vertices, Allocator.Temp);
+				 
 				mesh.SetVertices(verts);
 
 				SetBoneWeightsFromMeshData(mesh);                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
+
 				mesh.normals = normals;
 				mesh.tangents = tangents;
 				mesh.uv = uv;
@@ -1290,7 +1439,14 @@ namespace UMA
 			boneNameHashes = new int[bones.Length];
 			for (int i = 0; i < bones.Length; i++)
 			{
-				boneNameHashes[i] = UMAUtils.StringToHash(bones[i].name);
+                try
+                {
+                    boneNameHashes[i] = UMAUtils.StringToHash(bones[i].name);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error computing hash for bone {i} : " + ex.Message);
+                }
 			}
 		}
 
@@ -1390,11 +1546,54 @@ namespace UMA
 			return newMeshData;
 		}
 
-		/// <summary>
-		/// Creates a deep copy of an UMAMeshData object.
-		/// </summary>
-		/// <returns>The new copy of the UMAMeshData</returns>
-		public UMAMeshData DeepCopy()
+
+		public UMAMeshData ShallowClearCopy()
+        {
+            UMAMeshData newMeshData = new UMAMeshData();
+
+            newMeshData.SlotName = SlotName; 
+            newMeshData.vertices = vertices;
+            newMeshData.ManagedBonesPerVertex = ManagedBonesPerVertex;
+            newMeshData.ManagedBoneWeights = ManagedBoneWeights;
+            newMeshData.bindPoses = bindPoses;
+            newMeshData.normals = normals;
+            newMeshData.tangents = tangents;
+            newMeshData.colors32 = colors32;
+            newMeshData.uv = uv;
+            newMeshData.uv2 = uv2;
+            newMeshData.uv3 = uv3;
+            newMeshData.uv4 = uv4;
+            newMeshData.blendShapes = blendShapes;
+            newMeshData.clothSkinning = clothSkinning;
+            newMeshData.clothSkinningSerialized = clothSkinningSerialized;
+            newMeshData.submeshes = submeshes;
+            newMeshData.bones = bones;
+            newMeshData.rootBone = rootBone;
+            newMeshData.umaBones = umaBones;
+            newMeshData.umaBoneCount = umaBoneCount;
+            newMeshData.rootBoneHash = rootBoneHash;
+            newMeshData.boneNameHashes = boneNameHashes;
+            newMeshData.subMeshCount = subMeshCount;
+            newMeshData.vertexCount = vertexCount;
+            newMeshData.RootBoneName = RootBoneName;
+
+
+            newMeshData.verticesModified = false;
+            newMeshData.normalsModified = false;
+            newMeshData.tangentsModified = false;
+            newMeshData.colors32Modified = false;
+            newMeshData.uvModified = false;
+            newMeshData.uv2Modified = false;
+            newMeshData.uv3Modified = false;
+            newMeshData.uv4Modified = false;
+
+            return newMeshData;
+        }
+        /// <summary>
+        /// Creates a deep copy of an UMAMeshData object.
+        /// </summary>
+        /// <returns>The new copy of the UMAMeshData</returns>
+        public UMAMeshData DeepCopy()
 		{
 			UMAMeshData newMeshData = new UMAMeshData();
 

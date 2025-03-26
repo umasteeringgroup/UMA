@@ -16,10 +16,34 @@ namespace UMA.Editors
         private bool[] channelExpanded = new bool[3];
 
         private bool shaderParmsFoldout = false;
+
+        private List<UnityEngine.Object> _inspectedObjects = new List<UnityEngine.Object>();
+
         public void OnEnable()
         { 
             _shaderParms = serializedObject.FindProperty("shaderParms");
+            EditorApplication.update += DoInspectors;
         }
+
+        public void OnDisable()
+        {
+            EditorApplication.update -= DoInspectors;
+        }
+
+
+
+        public void DoInspectors()
+        {
+            if (_inspectedObjects.Count > 0)
+            {
+                for(int i=0;i<_inspectedObjects.Count; i++)
+                {
+                    InspectorUtlity.InspectTarget(_inspectedObjects[i]);
+                }
+                _inspectedObjects.Clear();
+            }
+        }
+
         public override void OnInspectorGUI()
         {
             UMAMaterial source = target as UMAMaterial;
@@ -53,7 +77,8 @@ namespace UMA.Editors
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_material"), new GUIContent( "Default Material", "The Unity Material to link to."),GUILayout.ExpandWidth(true));
             if (GUILayout.Button("Inspect", GUILayout.Width(60)))
             {
-                InspectorUtlity.InspectTarget(serializedObject.FindProperty("_material").objectReferenceValue);
+                _inspectedObjects.Add(serializedObject.FindProperty("_material").objectReferenceValue);
+                // InspectorUtlity.InspectTarget(serializedObject.FindProperty("_material").objectReferenceValue);
             }
             GUILayout.EndHorizontal();
             if (showHelp)

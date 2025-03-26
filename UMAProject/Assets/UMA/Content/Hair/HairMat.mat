@@ -9,6 +9,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: HairMat
   m_Shader: {fileID: 4800000, guid: def76a94c229c2a4dae4e0ec3bcd8cca, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
   - EFFECT_BUMP
@@ -26,6 +28,7 @@ Material:
   stringTagMap:
     Keep: Keep
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -363,7 +366,7 @@ Material:
     - _BlueColor1: {r: 1, g: 1, b: 1, a: 1}
     - _BlueColor2: {r: 1, g: 1, b: 1, a: 1}
     - _BlueColor3: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0.4811321, g: 0.19601172, b: 0.15735134, a: 1}
+    - _Color: {r: 0.46540874, g: 0.19638006, b: 0.15952681, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GreenColor0: {r: 1, g: 1, b: 1, a: 1}
     - _GreenColor1: {r: 1, g: 1, b: 1, a: 1}

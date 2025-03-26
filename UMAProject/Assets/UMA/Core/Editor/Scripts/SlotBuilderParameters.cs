@@ -25,5 +25,10 @@ namespace UMA.Editors
         public SkinnedMeshRenderer slotMesh;
         public SkinnedMeshRenderer seamsMesh;
         public UMAMaterial material;
+        public Quaternion rotation;
+        public bool rotationEnabled;
+        public bool invertX;
+        public bool invertY;
+        public bool invertZ;
     }
 }

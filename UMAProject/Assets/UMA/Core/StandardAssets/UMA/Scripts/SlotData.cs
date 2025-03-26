@@ -28,6 +28,16 @@ namespace UMA
 
         public string[] Races;
 
+        public List<MeshModifier.Modifier> meshModifiers = new List<MeshModifier.Modifier>();
+
+        public bool hasAdjustments
+        {
+            get
+            {
+                return meshModifiers.Count > 0;
+            }
+        }
+
         public bool isBlendShapeSource
         {
             get { return !string.IsNullOrEmpty(blendShapeTargetSlot); }
@@ -194,6 +204,24 @@ namespace UMA
             expandAlongNormal = 0;
         }
 
+        /// <summary>
+        /// Gets the blendshape from the MeshData that matches the name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public UMABlendShape GetBlendshape(string name)
+        {
+            foreach (UMABlendShape ubs in asset.meshData.blendShapes)
+            {
+                if (ubs.shapeName == name)
+                {
+                    return ubs;
+                }
+
+            }
+            return null;
+        }
+
 
         public bool HasRace(string raceName)
         {
@@ -324,7 +352,7 @@ namespace UMA
             res.smooshInvertY = smooshInvertY;
             res.smooshInvertZ = smooshInvertZ;
             res.smooshInvertDist = smooshInvertDist;
-
+            res.meshModifiers = new List<MeshModifier.Modifier>(meshModifiers);
             return res;
         }
 
