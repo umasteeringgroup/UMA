@@ -1,28 +1,32 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DNAEffector : MonoBehaviour
+namespace UMA
 {
-    public IDNASelector dNAEffector;
-    public string dnaName;
 
-    public void Setup(IDNASelector dNAEffector, string dnaName, string label, float value)
+    public class DNAEffector : MonoBehaviour
     {
-        this.dNAEffector = dNAEffector;
-        this.dnaName = dnaName;
-        Text t = GetComponentInChildren<Text>();
-        t.text = label;
-        Reset(value);
-    }
+        public IDNASelector dNAEffector;
+        public string dnaName;
 
-    public void Reset( float value)
-    {
-        Slider slider = GetComponentInChildren<Slider>();
-        slider.value = value;
-    }
+        public void Setup(IDNASelector dNAEffector, string dnaName, string label, float value)
+        {
+            this.dNAEffector = dNAEffector;
+            this.dnaName = dnaName;
+            Text t = GetComponentInChildren<Text>();
+            t.text = label;
+            Reset(value);
+        }
 
-    public void DNAChanged(float value)
-    {
-        dNAEffector.SetDNA(dnaName, value);
+        public void Reset(float value)
+        {
+            Slider slider = GetComponentInChildren<Slider>();
+            slider.value = value;
+        }
+
+        public void DNAChanged(float value)
+        {
+            dNAEffector.SetDNA(dnaName, value);
+        }
     }
 }

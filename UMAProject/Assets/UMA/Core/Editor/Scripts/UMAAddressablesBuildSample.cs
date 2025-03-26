@@ -8,6 +8,8 @@ using UnityEditor;
 using System.Linq;
 using System.IO;
 
+namespace UMA
+{
 #if UMA_ADDRESSABLES
 public class UMAAddressablesBuildSample
 {
@@ -121,3 +123,4 @@ public class UMAAddressablesBuildSample
     }
 }
 #endif
+}

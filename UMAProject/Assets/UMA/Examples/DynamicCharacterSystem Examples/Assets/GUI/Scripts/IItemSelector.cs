@@ -1,6 +1,10 @@
 ﻿using UMA.CharacterSystem;
 
-public interface IItemSelector 
+namespace UMA
 {
-    public void SetItem(UMAWardrobeRecipe item);
+
+    public interface IItemSelector
+    {
+        public void SetItem(UMAWardrobeRecipe item);
+    }
 }

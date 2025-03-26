@@ -1,4 +1,5 @@
-
+namespace UMA
+{
 #if Projected_Decals
 // List<RendererFragment> 
 
@@ -126,3 +127,4 @@ public class DecalChunk
     //    what vertex position the slot starts at in the SMR
 }
 #endif
+}
