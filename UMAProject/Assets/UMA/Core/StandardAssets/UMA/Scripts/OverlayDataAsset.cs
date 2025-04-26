@@ -128,6 +128,10 @@ namespace UMA
         public bool forceKeep = false;
         public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
 
+		[Tooltip("If true, this overlay will not be added to the index when adding all")]
+        public bool noAutoAdd = false;
+        public bool NoAutoAdd { get { return noAutoAdd; } set { noAutoAdd = value; } }
+
         private bool labelLocalFiles = false;
         public bool LabelLocalFiles { get { return labelLocalFiles; } set { labelLocalFiles = value; } }
 

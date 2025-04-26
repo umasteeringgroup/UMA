@@ -1,5 +1,7 @@
 
 using UnityEngine;
+using System.Runtime.InteropServices;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -29,6 +31,7 @@ namespace UMA
 		public bool IsAlwaysLoaded;
         public bool Ignore; // does not go into adressables or resources.
 		public string AddressableGroup;
+        public int Index = -1;
 		public string AddressableAddress
         {
             get
@@ -80,6 +83,11 @@ namespace UMA
                 else
                 {
                     _TheType = UMAAssetIndexer.TypeFromString[_BaseTypeName];
+                }
+                if (_TheType == null)
+                {
+                    Debug.LogError("The type " + _BaseTypeName + " is not a valid type. Please check the AssetItem.");
+                    return typeof(UnityEngine.Object);
                 }
                 return _TheType;
             }
@@ -424,6 +432,14 @@ namespace UMA
 #if UNITY_EDITOR
 			_Guid = AssetDatabase.AssetPathToGUID(_Path);
 #endif
+        }
+        public void Update()
+        {
+            if (_SerializedItem != null)
+            {
+                _Name = EvilName;
+                _TheType = _SerializedItem.GetType();
+            }
         }
         public AssetItem(System.Type Type, Object Item)
         {

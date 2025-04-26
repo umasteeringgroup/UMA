@@ -813,8 +813,8 @@ namespace UMA
                     {
                         if (string.IsNullOrEmpty(sd.slotName))
                         {
-                            AddText("Error: Error: SlotDataAsset {AI._Name} has no SlotName. Please fix, then rebuild library.");
-                            ReviewAssetItem(AI);
+                            AddText($"Error: Error: SlotDataAsset {AI._Name} has no SlotName. Please fix, then rebuild library.");
+                            ReviewAssetItem(AI, "SlotDataAsset");
                         }
                         if (sd.meshData != null && sd.meshData.vertices != null && sd.meshData.vertexCount > 0)
                         {
@@ -848,7 +848,7 @@ namespace UMA
                                     l.ReviewItem = AI;
                                 }
                             }
-                            if (sd.isWildCardSlot)
+                            if (sd.isWildCardSlot && sd.slotName.ToLower() != "wildcard")
                             {
                                 if (sd.tags == null || sd.tags.Length < 1)
                                 {
@@ -859,7 +859,7 @@ namespace UMA
                                     l.ReviewItem = AI;
                                 }
                             }
-                            if (sd.isClippingPlane && (sd.meshData == null) || sd.meshData.vertexCount < 4)
+                            if (sd.isClippingPlane && (sd.meshData == null || sd.meshData.vertexCount < 4))
                             {
                                 AddText($"Warning: SlotDataAsset {AI._Name} is marked as a clipping plane, but has no geometry!", LogType.Warning);
                                 AddText("This slot will never clip anything!");
@@ -899,7 +899,7 @@ namespace UMA
                     if (string.IsNullOrEmpty(od.overlayName))
                     {
                         AddText("Error: Error: OverlayDataAsset {AI._Name} has no OverlayName. Please fix, then rebuild library.");
-                        ReviewAssetItem(AI);
+                        ReviewAssetItem(AI, "OverlayDataAsset");
                     }
                     if (od.material == null)
                     {
@@ -932,7 +932,7 @@ namespace UMA
                     {
                         if (od.material != null && od.textureCount != od.material.channels.Length)
                         {
-                            AddText("Texture Count on overlay does not match material channel count!", LogType.Error);
+                            AddText($"Texture Count on overlay {AI._Name} does not match material channel count!", LogType.Error);
                             ReviewAssetItem(AI);
                         }
                         bool texturesOK = true;
@@ -956,9 +956,13 @@ namespace UMA
             AddText("Overlay check complete");
         }
 
-        private void ReviewAssetItem(AssetItem AI)
+        private void ReviewAssetItem(AssetItem AI, string type = "")
         {
-            LogLine l = AddText("Review Overlay");
+            if (type == "")
+            {
+                type = AI._BaseTypeName;
+            }
+            LogLine l = AddText($"Review {type}");
             l.ButtonAction = (line) => ReviewItem(l);
             l.ReviewItem = AI;
         }
@@ -1182,47 +1186,57 @@ namespace UMA
                 }
 
                 var Slots = PackRecipe.slotsV3;
-                if (Slots == null)
+                var Slot2 = PackRecipe.slotsV2;
+
+                if (Slots == null && Slot2 == null)
                 {
+                    
                     AddText($"Text Recipe {utr.name} has no slots assigned!", LogType.Error);
                     ReviewAssetItem(r);
                 }
                 else
                 {
-                    for (int i = 0; i < Slots.Length; i++)
+                    if (Slots != null)
                     {
-                        UMAPackedRecipeBase.PackedSlotDataV3 s = Slots[i];
-                        if (s == null)
-                        {                            
-                            continue;
-                        }
-                        if (string.IsNullOrEmpty(s.id))
+                        for (int i = 0; i < Slots.Length; i++)
                         {
-                            // this is OK
-                            continue;
-                        }
-                        if (!lib.HasAsset<SlotDataAsset>(s.id))
-                        {
-                            AddText($"Text Recipe {utr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
-                            AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
-                        }
-                        else
-                        {
-                            // if slot is not a utility slot, verify it has overlays assigned.
-                            SlotDataAsset sd = lib.GetAsset<SlotDataAsset>(s.id);
-                            if (sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot)
+                            UMAPackedRecipeBase.PackedSlotDataV3 s = Slots[i];
+                            if (s == null)
                             {
-                                // nothing for now?
+                                continue;
+                            }
+                            if (string.IsNullOrEmpty(s.id))
+                            {
+                                // this is OK
+                                continue;
+                            }
+                            if (!lib.HasAsset<SlotDataAsset>(s.id))
+                            {
+                                AddText($"Text Recipe {utr.name} has a slot '{s.id}' that does not exist in the library!", LogType.Error);
+                                AddText("To fix this, restore the missing slot, add it to the library, and then validate the slot", LogType.Error);
                             }
                             else
                             {
-                                if (s.overlays == null || s.overlays.Length == 0)
+                                // if slot is not a utility slot, verify it has overlays assigned.
+                                SlotDataAsset sd = lib.GetAsset<SlotDataAsset>(s.id);
+                                if (sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot)
                                 {
-                                    AddText($"Text Recipe {utr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
-                                    ReviewAssetItem(r);
+                                    // nothing for now?
+                                }
+                                else
+                                {
+                                    if (s.overlays == null || s.overlays.Length == 0)
+                                    {
+                                        AddText($"Text Recipe {utr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
+                                        ReviewAssetItem(r);
+                                    }
                                 }
                             }
                         }
+                    }
+                    if (Slot2 == null)
+                    {
+
                     }
                 }
             }

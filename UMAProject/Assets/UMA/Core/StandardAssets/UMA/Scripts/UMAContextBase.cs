@@ -19,7 +19,7 @@ namespace UMA
 				}
 				if (_instance == null)
 				{
-					_instance = new GameObject("UMAContext").AddComponent<UMAGlobalContext>();
+					_instance = new GameObject("UMAContext_HADS").AddComponent<UMAGlobalContext>();
 					_instance.hideFlags = HideFlags.HideAndDontSave;
                 }
 				return _instance;

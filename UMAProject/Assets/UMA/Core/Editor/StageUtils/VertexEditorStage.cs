@@ -468,11 +468,12 @@ namespace UMA
 #endif
         public void RecalculateNormals()
         {
+#if TRUE
             BakedMesh.RecalculateNormals();
             BakedMesh.RecalculateTangents();
 
             return;
-
+#else
             // now go through and average the normals for any duplicate vertexes to smooth the mesh at the seams.
             Dictionary<Int64, List<Vector3>> normals = new Dictionary<long, List<Vector3>>();
             Vector3[] verts = BakedMesh.vertices;
@@ -501,6 +502,7 @@ namespace UMA
                 norms[i] = avg;
             }
             BakedMesh.normals = norms;
+#endif
         }
 
         private void OnSceneGUI(SceneView view)
