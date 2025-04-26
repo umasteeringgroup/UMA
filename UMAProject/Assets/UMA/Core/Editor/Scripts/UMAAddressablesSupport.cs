@@ -221,6 +221,7 @@ namespace UMA
             }
         }
 
+        /*
         public void AssignLabel(AssetItem ai, string Label)
         {
             AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Path);
@@ -229,7 +230,7 @@ namespace UMA
                 if (ae.labels.Contains(Label)) return;
                 ae.SetLabel(Label, true, true, true);
             }
-        }
+        } */
 
         public void AddItemToSharedGroup(string GUID, string Address, List<string> labels, AddressableAssetGroup sharedGroup)
         {
@@ -640,7 +641,7 @@ namespace UMA
 
             StringBuilder sb = new StringBuilder();
 
-            List<AssetItem> SerializedItems = UMAAssetIndexer.Instance.UpdateSerializedList();
+            List<AssetItem> SerializedItems = UMAAssetIndexer.Instance.SerializedItems;
             foreach (AssetItem ai in SerializedItems)
             {
                 List<string> labels = plugin.ProcessItem(ai);
@@ -711,8 +712,7 @@ namespace UMA
                 ClearAddressableFlags(typeof(SlotDataAsset));
                 ClearAddressableFlags(typeof(OverlayDataAsset));
 
-                // Will generate an editor context if needed.
-                UMAContextBase context = UMAAssetIndexer.Instance.GetContext();
+                UMAContextBase context = UMAContextBase.Instance;
 
                 // Create the shared group that has each item packed separately.
                 AddressableAssetGroup sharedGroup = AddressableUtility.AddressableSettings.CreateGroup(SharedGroupName, false, false, true, AddressableUtility.AddressableSettings.DefaultGroup.Schemas);
@@ -817,7 +817,7 @@ namespace UMA
 
         public void AssignAddressableInformation()
         {
-            List<AssetItem> SerializedItems = UMAAssetIndexer.Instance.UpdateSerializedList();
+            List<AssetItem> SerializedItems = UMAAssetIndexer.Instance.SerializedItems;
             foreach (AssetItem ai in SerializedItems)
             {
                 AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Path);

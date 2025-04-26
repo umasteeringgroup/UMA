@@ -22,6 +22,10 @@ namespace UMA.Editors
         public static void UpdateSlotData( SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents)
         {
 			int subMesh = slot.subMeshIndex;
+			if (slot.sourceSubmeshIndex > 0)
+			{
+                subMesh = slot.sourceSubmeshIndex;
+            }
             string path = UMAUtils.GetAssetFolder(AssetDatabase.GetAssetPath(slot));
             string assetName = slot.slotName;
 
@@ -269,9 +273,31 @@ namespace UMA.Editors
 			{
 				Debug.Log($"failed saving {SkinnedName} prefab"); 
 			}
-			var meshgo = skinnedResult.transform.Find(sbp.slotMesh.name);
-			var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
-			if (finalMeshRenderer.sharedMesh == null)
+
+			SkinnedMeshRenderer finalMeshRenderer = null;
+
+			int childCount = skinnedResult.transform.childCount;
+			for (int i = 0; i < childCount; i++)
+			{
+                var child = skinnedResult.transform.GetChild(i);
+                if (child.name == sbp.slotMesh.name)
+                {
+					if (child.GetComponent<SkinnedMeshRenderer>() != null)
+					{
+						finalMeshRenderer = child.GetComponent<SkinnedMeshRenderer>();
+						break;
+                    }
+                }
+            }
+
+            // var meshgo = skinnedResult.transform.Find(sbp.slotMesh.name);
+			// var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
+			if (finalMeshRenderer == null)
+            {
+                Debug.LogWarning($"Final Mesh Renderer is null on temp object {sbp.slotMesh.name} of skinned prefab {SkinnedName}");
+                return null;
+            }
+            if (finalMeshRenderer.sharedMesh == null)
 			{
 				Debug.Log("Final Mesh Renderer shareMesh is null!!!");
 				finalMeshRenderer.sharedMesh = resultingMesh;
@@ -282,7 +308,8 @@ namespace UMA.Editors
 			//Make sure slots get created with a name hash
 			slot.nameHash = UMAUtils.StringToHash(slot.slotName);
 			slot.material = sbp.material;
-			try
+			slot.sourceSubmeshIndex = 0;
+            try
 			{
 				slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, sbp.udimAdjustment, 0);
 			}
@@ -325,6 +352,7 @@ namespace UMA.Editors
 				additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, sbp.udimAdjustment, i);
 				TransformMeshData(additionalSlot, sbp);
 
+				additionalSlot.sourceSubmeshIndex = i;
 				//additionalSlot.subMeshIndex = i; 
 
 				string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + "_slot.asset";

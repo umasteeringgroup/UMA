@@ -15,13 +15,22 @@ namespace UMA
     /// </remarks>
     [PreferBinarySerialization]
 	[Serializable]
-	public partial class RaceData : ScriptableObject, INameProvider
+	public partial class RaceData : ScriptableObject, INameProvider, IUMAIndexOptions
 	{
 	    public string raceName;
 		public List<string> KeepBoneNames = new List<string>();
 		public List<string> tags = new List<string>();
 
 		public bool disableDNAConverters = false;
+		[Tooltip("if true, this will not be added to the index when all items are scanned.")]
+        public bool noAutoAdd = false;
+
+		public bool NoAutoAdd
+		{
+			get { return noAutoAdd; }
+            set { noAutoAdd = value; }
+        }
+
         #region INameProvider
         public string GetAssetName()
         {
@@ -91,7 +100,12 @@ namespace UMA
 			set { _dnaConverterList = new DNAConverterList(value); }
 		}
 
-		public DynamicDNAConverterController[] GetConverters(UMADnaBase DNA)
+		public bool forceKeep;
+        public bool ForceKeep { get => forceKeep; set => forceKeep = value; }
+		public bool labelLocalFiles;
+        public bool LabelLocalFiles { get => labelLocalFiles; set => labelLocalFiles = value; }
+
+        public DynamicDNAConverterController[] GetConverters(UMADnaBase DNA)
 		{
 			if (disableDNAConverters)
 			{

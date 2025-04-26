@@ -16,18 +16,22 @@ namespace UMA
         /// <summary>
         /// If true, the recipe will not be removed from the index, and will always have the keep flag set.
         /// </summary>
-        public bool forceKeep = false;
+        public bool forceKeep = false;  
         public bool labelLocalFiles = false;
         public bool LabelLocalFiles { get { return labelLocalFiles; } set { labelLocalFiles = value; } }
         public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
 
+		[Tooltip("When true, this will not be automatically added to the index when all items are scanned.")]
+        public bool noAutoAdd = false;
+        public bool NoAutoAdd { get { return noAutoAdd; } set { noAutoAdd = value; } }  
 
-		/// <summary>
-		/// Deserialize recipeString data into packed recipe.
-		/// </summary>
-		/// <returns>The packed recipe.</returns>
-		/// <param name="context">Context.</param>
-		public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContextBase context = null)
+
+        /// <summary>
+        /// Deserialize recipeString data into packed recipe.
+        /// </summary>
+        /// <returns>The packed recipe.</returns>
+        /// <param name="context">Context.</param>
+        public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContextBase context = null)
 		{
 			if ((recipeString == null) || (recipeString.Length == 0))
 			{

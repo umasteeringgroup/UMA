@@ -546,7 +546,7 @@ namespace UMA.Controls
 						// remove from tree.
 
 						List<AssetTreeElement> RemoveMe = new List<AssetTreeElement>();
-						UMAAssetIndexer.Instance.RemoveAsset(ai._Type, ai._Name);
+						UMAAssetIndexer.Instance.RemoveAsset(ai);
 						RemoveMe.Add(item.data);
 						this.treeModel.RemoveElements(RemoveMe);
 						owningWindow.RecountTypes();

@@ -24,6 +24,10 @@ namespace UMA
         public bool forceKeep = false;
         public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
 
+        [Tooltip("If true, this Slot will not be added to the index when adding all")]
+        public bool noAutoAdd = false;
+        public bool NoAutoAdd { get { return noAutoAdd; } set { noAutoAdd = value; } }
+
 
 #if UNITY_EDITOR
         [Tooltip("This is only used when updating the slot with drag and drop below. It is not used at runtime nor is it included in the build")]
@@ -857,7 +861,16 @@ namespace UMA
         /// from accessing Unity's managed memory.
         /// </remarks>
         public UMAMeshData meshData;
+        /// <summary>
+        /// Index of the submesh in the MeshData. Later versions will always have 1 submesh, but this is kept for 
+        /// compatibility with older versions.
+        /// </summary>
         public int subMeshIndex;
+        /// <summary>
+        /// Index of the submesh in the source mesh. This is needed for using the correct submesh when updating existing slots.
+        /// Only used in latest version of SlotDataAsset.
+        /// </summary>
+        public int sourceSubmeshIndex = -1;
         /// <summary>
         /// Use this to identify slots that serves the same purpose
         /// Eg. ChestArmor, Helmet, etc.

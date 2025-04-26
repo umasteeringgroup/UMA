@@ -21,6 +21,17 @@ namespace UMA
         }
     };
 
+    public class AddressableEntryAndInfo
+    {
+        public AddressableAssetEntry Entry;
+        public AddressableInfo Info;
+        public AddressableEntryAndInfo(AddressableAssetEntry entry, AddressableInfo info)
+        {
+            Entry = entry;
+            Info = info;
+        }
+    }
+
     public class AddressableUtility
     {
         private static readonly AddressableUtility addressableUtility = new AddressableUtility();
@@ -56,6 +67,16 @@ namespace UMA
             return false;
         }
 
+        public static void ClearAddressableEntries()
+        {
+            if (_addressableEntries == null)
+            {
+                return;
+            }
+            _addressableEntries.Clear();
+            _addressableEntries = null;
+        }
+
         public static AddressableAssetEntry GetAddressableAssetEntry(string assetPath, out AddressableAssetGroup assetgroup)
         {
             assetgroup = null;
@@ -81,7 +102,63 @@ namespace UMA
             return null;
         }
 
-        public static AddressableAssetEntry GetAddressableAssetEntry(string AssetPath)
+
+        public static void RebuildAddressableEntries()
+        {
+            _addressableEntries = new Dictionary<string, AddressableEntryAndInfo>();
+
+            if (AddressableUtility.AddressableSettings == null)
+                return;
+
+            foreach (var group in AddressableUtility.AddressableSettings.groups)
+            {
+                if (group == null) continue;
+
+                foreach (var entry in group.entries)
+                {
+                    if (!_addressableEntries.ContainsKey(entry.AssetPath))
+                    {
+                        AddEntry(entry.AssetPath, entry);
+                    }
+                }
+            }
+        }
+
+        private static Dictionary<string, AddressableEntryAndInfo> _addressableEntries = new Dictionary<string, AddressableEntryAndInfo>();
+
+        public static void AddEntry(string assetPath, AddressableAssetEntry entry)
+        {
+            ValidateEntryAndInfo();
+            if (!_addressableEntries.ContainsKey(assetPath))
+            {
+                _addressableEntries.Add(assetPath, new AddressableEntryAndInfo(entry, new AddressableInfo(entry.address, entry.parentGroup.Name, GetAddressableLabels(entry))));
+            }
+        }
+
+        public static AddressableAssetEntry GetAddressableAssetEntry(string assetPath)
+        {
+            ValidateEntryAndInfo();
+            if (_addressableEntries.ContainsKey(assetPath))
+            {
+                return _addressableEntries[assetPath].Entry;
+            }
+            AddressableAssetEntry entry = internalGetAddressableAssetEntry(assetPath);
+            if (entry != null)
+            {
+                AddEntry(assetPath, entry);
+            }
+            return entry;
+        }
+
+        private static void ValidateEntryAndInfo()
+        {
+            if (_addressableEntries == null)
+            {
+                RebuildAddressableEntries();
+            }
+        }
+
+        public static AddressableAssetEntry internalGetAddressableAssetEntry(string AssetPath)
         {
             if (AddressableSettings == null)
             {
@@ -113,6 +190,10 @@ namespace UMA
         {
             string retval = "";
 
+            if (ae.labels == null)
+            {
+                return retval;
+            }
             foreach (string s in ae.labels)
             {
                 retval += s + ";";
@@ -125,7 +206,16 @@ namespace UMA
             AddressableAssetEntry ae = GetAddressableAssetEntry(assetPath);
             if (ae != null)
             {
-                return new AddressableInfo(ae.address, ae.parentGroup.Name, GetAddressableLabels(ae));
+                string name = "";
+                if (ae.parentGroup != null)
+                {
+                    name = ae.parentGroup.Name;
+                }
+                else
+                {
+                    name = "No Group";
+                }
+                return new AddressableInfo(ae.address, name, GetAddressableLabels(ae));
             }
             return null;
         }

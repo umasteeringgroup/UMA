@@ -1,6 +1,7 @@
 ﻿#if UMA_ADDRESSABLES
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UMA.CharacterSystem;
 using UnityEditor;
@@ -20,6 +21,12 @@ namespace UMA
         Dictionary<string, List<string>> RecipeExtraLabels = new Dictionary<string, List<string>>();
 
         const string SharedGroupName = "UMA_SharedItems";
+
+        public void DebugLog(string message)
+        {
+            File.AppendAllText("D:\\DebugGenerator.txt", message + Environment.NewLine);
+        }
+
 
         public string Menu
         {

@@ -20,6 +20,7 @@ namespace UMA.Editors
 		private SerializedProperty _alphaMask;
 		private SerializedProperty _tags;
 		private SerializedProperty _occlusionEntries;
+		private SerializedProperty _noAutoAdd;
 
 
 		void OnEnable()
@@ -33,7 +34,8 @@ namespace UMA.Editors
 			_alphaMask = serializedObject.FindProperty("alphaMask");
 			_tags = serializedObject.FindProperty("tags");
 			_occlusionEntries = serializedObject.FindProperty("OcclusionEntries");
-			(target as OverlayDataAsset).tagsList = GUIHelper.InitTagsList("tags",serializedObject);
+            _noAutoAdd = serializedObject.FindProperty("noAutoAdd");
+            (target as OverlayDataAsset).tagsList = GUIHelper.InitTagsList("tags",serializedObject);
 
 			EditorApplication.update += DoDelayedSave;
 		}
@@ -73,7 +75,8 @@ namespace UMA.Editors
 			EditorGUILayout.PropertyField(_overlayName);
 			EditorGUILayout.PropertyField(_overlayType);
 			EditorGUILayout.PropertyField(_rect);
-			EditorGUILayout.LabelField("Note: It is recommended to use UV coordinates (0.0 -> 1.0) in 2.10+ for rect fields.", EditorStyles.helpBox);
+            EditorGUILayout.PropertyField(_noAutoAdd);
+            EditorGUILayout.LabelField("Note: It is recommended to use UV coordinates (0.0 -> 1.0) in 2.10+ for rect fields.", EditorStyles.helpBox);
 
 			EditorGUILayout.PropertyField(_umaMaterial);
 
