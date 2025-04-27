@@ -50,10 +50,6 @@ namespace UMA.Editors
 		SlotPreviewMode previewMode = SlotPreviewMode.ThisSlot;
 		int previewVertex = -1;
 
-        private void Awake()
-        {
-            Debug.Log("SlotDataAssetInspector Awake");
-        }
 
         [MenuItem("Assets/Create/UMA/Core/Custom Slot Asset")]
 		public static void CreateCustomSlotAssetMenuItem()

@@ -68,12 +68,11 @@ namespace UMA
         public void Awake()
         {
             instanceKey = Guid.NewGuid().ToString();
-            DebugSerialization("Awake called for " + instanceKey);
         }
 
         private void DebugLog(string msg)
         {
-            File.AppendAllText("d:\\indexerlog.txt", msg + "\n");
+           // File.AppendAllText("d:\\indexerlog.txt", msg + "\n");
         }
 
 #if UMA_ADDRESSABLES
