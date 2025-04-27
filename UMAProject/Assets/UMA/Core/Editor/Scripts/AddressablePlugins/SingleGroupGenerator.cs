@@ -24,7 +24,7 @@ namespace UMA
 
         public void DebugLog(string message)
         {
-            File.AppendAllText("D:\\DebugGenerator.txt", message + Environment.NewLine);
+            // File.AppendAllText("D:\\DebugGenerator.txt", message + Environment.NewLine);
         }
 
 
