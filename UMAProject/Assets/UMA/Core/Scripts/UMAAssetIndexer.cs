@@ -2843,7 +2843,7 @@ namespace UMA
                     {
                         continue;
                     }
-
+                    
                     if (o is IUMAIndexOptions)
                     {
                         IUMAIndexOptions iso = o as IUMAIndexOptions;
