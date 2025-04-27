@@ -6,9 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/UMA/Examples/SceneLoader/SceneLoader.unity
+    guid: a1a1dbd0307d14745b80be8e43a92d8a
+  - enabled: 1
     path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Simple
       Setup.unity
-    guid: 43ce2d3e5bdfc924b84fc85a02c01ca0
+    guid: 8ad72cdcbe3186c4fae3fed42c3a09a8
   m_configObjects:
-    com.unity.addressableassets: {fileID: 11400000, guid: d0b1e960ce196a24bb6c3f80a77d3c6f,
+    com.unity.addressableassets: {fileID: 11400000, guid: c01981105a29b8646b546646d2b5c134,
       type: 2}
