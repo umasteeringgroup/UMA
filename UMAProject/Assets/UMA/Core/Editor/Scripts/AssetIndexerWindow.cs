@@ -205,13 +205,6 @@ namespace UMA.Controls
             AddMenuItemWithCallback(FileMenu, "Rebuild From Project", () =>
             {
                 UAI.RebuildLibrary();
-                /*UAI.SaveKeeps();
-                UAI.Clear();
-                UAI.BuildStringTypes();
-                UAI.AddEverything(false);
-                UAI.RestoreKeeps();
-                UAI.ForceSave();
-                Resources.UnloadUnusedAssets(); */
                 m_Initialized = false;
                 Repaint();
             });
@@ -294,6 +287,17 @@ namespace UMA.Controls
                         EditorUtility.DisplayDialog("Error", "Error writing backup: " + ex.Message, "OK");
                     }
                 }
+            });
+
+            AddMenuItemWithCallback(FileMenu, "Save to disk", () =>
+            {
+                UMAAssetIndexer.Instance.ForceSave();
+            });
+
+            AddMenuItemWithCallback(FileMenu, "Rebuild Dictionaries", () =>
+            {
+                UMAAssetIndexer.Instance.UpdateSerializedDictionaryItems();
+                Repaint();
             });
 
             AddMenuItemWithCallback(FileMenu, "Restore Index", () =>
@@ -1894,7 +1898,7 @@ namespace UMA.Controls
                     {
 
                         EditorUtility.DisplayProgressBar("Removing Assets", "Removing Item: " + tr.ai.EvilName, current / total);
-                        UAI.RemoveAsset(tr.ai._Type, tr.ai._Name);
+                        UAI.RemoveAsset(tr.ai._Type, tr.ai._Name, false);
                         current += 1.0f;
                     }
                 }
@@ -2230,7 +2234,7 @@ namespace UMA.Controls
                         if (draggedObjects[i])
                         {
                             m_Initialized = false; // need to reload when we're done.
-                            UAI.RemoveIfIndexed(draggedObjects[i]);
+                            UAI.RemoveIfIndexed(draggedObjects[i], true);
 
                             var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
                             if (System.IO.Directory.Exists(path))
@@ -2350,7 +2354,7 @@ namespace UMA.Controls
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginScrollView(sideBarPosition,false,true);
+            sideBarPosition = GUILayout.BeginScrollView(sideBarPosition,false,true);
 
             _meshHideFoldout = EditorGUILayout.Foldout(_meshHideFoldout, "Mesh Hide Assetz");
             if (_meshHideFoldout)
@@ -2606,6 +2610,7 @@ namespace UMA.Controls
                 {
                     FindOverlaysWithInvalidTextures();
                 }
+                GUIHelper.EndVerticalPadded(10);
             }
 
             _SlotFoldout = EditorGUILayout.Foldout(_SlotFoldout, "Slots");
@@ -3111,7 +3116,14 @@ namespace UMA.Controls
                 Repaint();
 			}
 
-			Rect FillRect = new Rect(rect);
+            if (EditorUtility.IsDirty(UAI))
+            {
+                MenuRect.x += 100;
+                MenuRect.width = 150;
+                GUI.Label(MenuRect, new GUIContent("Unsaved Changes"), EditorStyles.boldLabel);
+            }
+
+            Rect FillRect = new Rect(rect);
 			FillRect.x += 530;
 			FillRect.width -= 530;
 			GUI.Box(FillRect, "", EditorStyles.toolbar);

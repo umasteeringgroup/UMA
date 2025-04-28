@@ -78,6 +78,7 @@ namespace UMA
 
             string removeKey = "";
             string removePath = "";
+
             foreach (var filter in UMAAssetIndexer.Instance.TypeFolderSearch)
             {
                 foreach (string s in filter.Value)

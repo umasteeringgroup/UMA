@@ -195,7 +195,7 @@ namespace UMA
 
         public void OnLostFocus()
         {
-            Debug.Log("lost focus");
+            //Debug.Log("lost focus");
             Tools.lockedLayers = savedLockedLayers;
         }
 
@@ -312,7 +312,7 @@ namespace UMA
 
         public override void OnDisable()
         {
-            Debug.Log("On Disable");
+            //Debug.Log("On Disable");
             base.OnDisable();
             Cleanup();
         }

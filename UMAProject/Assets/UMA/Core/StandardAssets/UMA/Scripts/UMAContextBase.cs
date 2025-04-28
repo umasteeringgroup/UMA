@@ -15,12 +15,17 @@ namespace UMA
 			{
 				if (_instance == null)
 				{
-					_instance = GameObject.FindObjectOfType<UMAContextBase>();
+					_instance = GameObject.FindObjectOfType<UMAGlobalContext>();
 				}
 				if (_instance == null)
 				{
-					_instance = new GameObject("UMAContext").AddComponent<UMAGlobalContext>();
-					_instance.hideFlags = HideFlags.HideAndDontSave;
+					_instance = GameObject.FindObjectOfType<UMAContext>();
+				}
+				if (_instance == null)
+				{
+					GameObject go = new GameObject("UMAContext_HADS2");
+					go.hideFlags = HideFlags.HideAndDontSave;
+					_instance = go.AddComponent<UMAGlobalContext>();
                 }
 				return _instance;
 			}
