@@ -54,21 +54,16 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-			if (UMAContext.Instance == null)
-            {
-				var raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
-				SetRaceLists(raceDatas.ToArray());
-				return;
-            }
+
 			if (Application.isPlaying)
 			{
 				//Start will have cleared any EditorAdded Assets and we only *need* the ones in the library
-				var raceDatas = UMAContext.Instance.GetAllRacesBase();
+				var raceDatas = UMAAssetIndexer.Instance.GetAllRacesBase();
 				SetRaceLists(raceDatas);
 			}
 			else
 			{
-					var raceDatas = UMAContext.Instance.GetAllRaces();
+					var raceDatas = UMAAssetIndexer.Instance.GetAllRaces();
 					if ((raceDatas.Length + 1) != (foundRaces.Count))
 					{
 						SetRaceLists(raceDatas);

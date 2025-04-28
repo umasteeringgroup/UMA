@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6782112333398131214}
-  - component: {fileID: 6782112333398131215}
   - component: {fileID: 7066486438860346000}
   - component: {fileID: 7275351159514515506}
   m_Layer: 0
@@ -34,18 +33,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6782112333398131215
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6782112333398131213}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fd2661724b5ab24ea2d5da16a31cb27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &7066486438860346000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -76,6 +63,7 @@ MonoBehaviour:
   MultiThreadTextureConversion: 1
   MaxQueuedConversionsPerFrame: 8
   SaveAndRestoreIgnoredItems: 0
+  skipAddressableRecipeLookupInEditor: 0
   meshCombiner: {fileID: 7275351159514515506}
   InitialScaleFactor: 1
   editorInitialScaleFactor: 4

@@ -98,19 +98,6 @@ namespace UMA
 
 #endif
 
-#if UNITY_EDITOR
-		/// <summary>
-		/// Creates a temporary UMAContextBase for use when editing recipes when the open Scene does not have an UMAContextBase or libraries set up
-		/// </summary>
-		/// 
-		public override UMAContextBase CreateEditorContext()
-		{
-			//UMAContextBase.CreateEditorContext();
-			return UMAContextBase.Instance;
-		}
-#endif
-
-
 		/// <summary>
 		/// Gets the thumbnail for this WardrobeRecipe filtered by racename
 		/// </summary>
@@ -247,7 +234,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context = null, bool loadSlots = true)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, bool loadSlots = true)
 		{
 			try
 			{
@@ -262,18 +249,18 @@ namespace UMA
 				if (activeWardrobeSet == null)
 				{
 					recipeType = "Standard";
-					base.Load(umaRecipe, context, loadSlots);
+					base.Load(umaRecipe, loadSlots);
 					return;
 				}
 				//if it has a wardrobeSet or was saved using the DCSPackRecipe Model
 				if (activeWardrobeSet.Count > 0 || (recipeType == "DynamicCharacterAvatar" /*|| recipeType == "WardrobeCollection"*/))
 				{
-					var packedRecipe = PackedLoadDCSInternal(context/*, recipeString*/);
-					UnpackRecipe(umaRecipe, packedRecipe, context);
+					var packedRecipe = PackedLoadDCSInternal();
+					UnpackRecipe(umaRecipe, packedRecipe);
 				}
 				else //we can use standard UMALoading
 				{
-					base.Load(umaRecipe, context, loadSlots);
+					base.Load(umaRecipe, loadSlots);
 				}
 			}
 			catch (UMAResourceNotFoundException e)
@@ -291,9 +278,9 @@ namespace UMA
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		protected DCSUniversalPackRecipe PackedLoadDCSInternal(UMAContextBase context/*, string recipeToUnpack*/)
+		protected DCSUniversalPackRecipe PackedLoadDCSInternal()
 		{
-			return PackedLoadDCS(context, recipeString, this);
+			return PackedLoadDCS(recipeString, this);
 		}
 
 		/// <summary>
@@ -303,7 +290,7 @@ namespace UMA
 		/// <param name="recipeToUnpack"></param>
 		/// <param name="targetUTR">If set the wardrobeSet (if it exists) and the recipeType will assigned to UMATextRecipe assets fields (used by the Recipe Editor)</param>
 		/// <returns></returns>
-		public static DCSUniversalPackRecipe PackedLoadDCS(UMAContextBase context, string recipeToUnpack, UMATextRecipe targetUTR = null)
+		public static DCSUniversalPackRecipe PackedLoadDCS(string recipeToUnpack, UMATextRecipe targetUTR = null)
 		{
 			if ((recipeToUnpack == null) || (recipeToUnpack.Length == 0))
             {
@@ -344,7 +331,7 @@ namespace UMA
 		/// <summary>
 		/// Saves a 'Standard' UMATextRecipe. If saving a DynamicCharacterAvatar as 'Backwards Compatible' this will save a recipe that has slots/overlay data AND a wardrobe set
 		/// </summary>
-		public void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context, Dictionary<string, UMATextRecipe> wardrobeRecipes, bool backwardsCompatible = true)
+		public void Save(UMAData.UMARecipe umaRecipe, Dictionary<string, UMATextRecipe> wardrobeRecipes, bool backwardsCompatible = true)
 		{
 			if (wardrobeRecipes.Count > 0)
             {
@@ -352,15 +339,15 @@ namespace UMA
             }
 
             recipeType = backwardsCompatible ? "Standard" : "DynamicCharacterAvatar";
-			Save(umaRecipe, context);
+			Save(umaRecipe);
 		}
 
 		//This is used when an inspected recipe asset is saved
-		public override void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context)
+		public override void Save(UMAData.UMARecipe umaRecipe)
 		{
 			if (recipeType == "Wardrobe")//Wardrobe Recipes can save the standard UMA way- they dont have WardrobeSets- although the recipe string wont have a packedRecipeType field
 			{
-				base.Save(umaRecipe, context);
+				base.Save(umaRecipe);
 			}
 			else if (recipeType != "Standard")//this will just be for type DynamicCharacterAvatar- and WardrobeCollection if we add that
 			{

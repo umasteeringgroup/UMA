@@ -80,12 +80,12 @@ namespace UMA
 		/// Initializes a new UMASkeleton from a transform hierarchy.
 		/// </summary>
 		/// <param name="rootBone">Root transform.</param>
-		public UMASkeleton(Transform rootBone, UMAGeneratorBase umaGenerator)
+		public UMASkeleton(Transform rootBone)
 		{
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
 			this.boneHashData = new Dictionary<int, BoneData>();
 			BeginSkeletonUpdate();
-			AddBonesRecursive(rootBone, umaGenerator);
+			AddBonesRecursive(rootBone);
 			EndSkeletonUpdate();
 		}
 
@@ -139,13 +139,13 @@ namespace UMA
 			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
 		}
 
-		private void AddBonesRecursive(Transform transform, UMAGeneratorBase umaGenerator)
+		private void AddBonesRecursive(Transform transform)
 		{
 			if (transform == null)
             {
                 return;
             }
-            if (transform.tag == umaGenerator.ignoreTag)
+            if (transform.tag == UMAAssetIndexer.Instance.generator.ignoreTag)
             {
                 return;
             }
@@ -179,7 +179,7 @@ namespace UMA
 			for (int i = 0; i < transform.childCount; i++)
 			{
 				var child = transform.GetChild(i);
-				AddBonesRecursive(child, umaGenerator);
+				AddBonesRecursive(child);
 			}
 		}
 

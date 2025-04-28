@@ -121,7 +121,7 @@ namespace UMA
             EditorUtility.ClearProgressBar();
         }
 
-        private void GenerateLookups(UMAContextBase context, List<AssetItem> wardrobe)
+        private void GenerateLookups(List<AssetItem> wardrobe)
         {
             float pos = 0.0f;
             float inc = 1.0f / wardrobe.Count;
@@ -136,7 +136,7 @@ namespace UMA
                 EditorUtility.DisplayProgressBar("Generating", "Calculating Usage: " + uwr.name, iPos);
 
                 // todo: cache this
-                UMAData.UMARecipe ur = UMAAssetIndexer.Instance.GetRecipe(uwr, context);
+                UMAData.UMARecipe ur = UMAAssetIndexer.Instance.GetRecipe(uwr);
 
                 if (ur.slotDataList == null) continue;
 
@@ -712,8 +712,6 @@ namespace UMA
                 ClearAddressableFlags(typeof(SlotDataAsset));
                 ClearAddressableFlags(typeof(OverlayDataAsset));
 
-                UMAContextBase context = UMAContextBase.Instance;
-
                 // Create the shared group that has each item packed separately.
                 AddressableAssetGroup sharedGroup = AddressableUtility.AddressableSettings.CreateGroup(SharedGroupName, false, false, true, AddressableUtility.AddressableSettings.DefaultGroup.Schemas);
                 sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
@@ -759,7 +757,7 @@ namespace UMA
 
                 GenerateCollectionLabels();
 
-                GenerateLookups(context, theRecipeItems);
+                GenerateLookups(theRecipeItems);
 
                 float pos = 0.0f;
                 float inc = 1.0f / theRecipes.Count;

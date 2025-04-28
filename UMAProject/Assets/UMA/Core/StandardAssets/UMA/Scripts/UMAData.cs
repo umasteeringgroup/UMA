@@ -569,7 +569,7 @@ namespace UMA
 				}
 				globalTransform = newGlobal.transform;
 			}
-			skeleton = new UMASkeleton(globalTransform,umaGenerator);
+			skeleton = new UMASkeleton(globalTransform);
 		}
 
 	
@@ -616,7 +616,7 @@ namespace UMA
 				}
 				globalTransform = newGlobal.transform;
 			}
-			skeleton = new UMASkeleton(globalTransform,umaGenerator);
+			skeleton = new UMASkeleton(globalTransform);
 		}
 
 		public void ResetAnimatedBones()
@@ -754,13 +754,7 @@ namespace UMA
 
 		void Awake()
 		{
-			if (!umaGenerator)
-            {
-				if (UMAContextBase.Instance != null)
-                {
-                    umaGenerator = UMAContextBase.Instance.gameObject.GetComponent<UMAGeneratorBase>();
-                }
-            }
+			// Generator needs to be a scriptable object, and loaded at initialize.
 			if (!umaGenerator)
 			{
 				FindObjectOfType<UMAGeneratorBase>();
@@ -2830,7 +2824,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaAdditionalRecipes">Additional recipes.</param>
 		/// <param name="context">Context.</param>
-		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContextBase context, bool mergeMatchingOverlays=true)
+		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, bool mergeMatchingOverlays=true)
 		{
 			if (umaAdditionalRecipes != null)
 			{
@@ -2839,7 +2833,7 @@ namespace UMA
                     UMARecipeBase umaAdditionalRecipe = umaAdditionalRecipes[i];
                     if (umaAdditionalRecipe != null)
 					{
-						UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
+						UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe();
 						umaRecipe.Merge(cachedRecipe, true, mergeMatchingOverlays);
 					}
 				}

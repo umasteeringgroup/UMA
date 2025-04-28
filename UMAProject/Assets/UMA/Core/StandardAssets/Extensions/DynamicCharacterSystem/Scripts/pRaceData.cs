@@ -77,7 +77,7 @@ namespace UMA
                 return packedRecipe;
             }
 
-            packedRecipe = (baseRaceRecipe as UMATextRecipe).PackedLoad(UMAContextBase.Instance);
+            packedRecipe = (baseRaceRecipe as UMATextRecipe).PackedLoad();
 
 			return packedRecipe;
 		}

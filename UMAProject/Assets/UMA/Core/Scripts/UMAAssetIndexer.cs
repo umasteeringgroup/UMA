@@ -32,7 +32,7 @@ using System.Xml.Serialization;
 namespace UMA
 {
     [PreferBinarySerialization]
-    public class UMAAssetIndexer : ScriptableObject /*, ISerializationCallbackReceiver */
+    public partial class UMAAssetIndexer : ScriptableObject /*, ISerializationCallbackReceiver */
     {
         const float DefaultLife = 5.0f;
 
@@ -63,7 +63,8 @@ namespace UMA
             }
         }
 
-        //= new Dictionary<string, List<string>>();
+        // TODO: change to scriptable object and load in Initialize
+        public UMAGenerator generator;
 
         public void Awake()
         {
@@ -686,12 +687,12 @@ namespace UMA
             return null;
         }
 
-        public UMAData.UMARecipe GetRecipe(UMATextRecipe recipe, UMAContextBase context)
+        public UMAData.UMARecipe GetRecipe(UMATextRecipe recipe)
         {
-            UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(context);
+            UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad();
             try
             {
-                UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe, context);
+                UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe);
                 return TempRecipe;
             }
             catch (Exception ex)
@@ -837,7 +838,7 @@ namespace UMA
             {
                 return new List<AssetItem>();
             }
-            UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(UMAContextBase.Instance);
+            UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad();
 
             var Slots = PackRecipe.slotsV3;
 
@@ -1437,20 +1438,6 @@ namespace UMA
 #if UNITY_EDITOR
         GameObject EditorUMAContextBase;
 #endif
-        public UMAContextBase GetContext()
-        {
-            UMAContextBase instance = UMAContextBase.Instance;
-            if (instance != null)
-            {
-                return instance;
-            }
-#if UNITY_EDITOR
-            //EditorUMAContextBase = UMAContextBase.CreateEditorContext();
-            return UMAContextBase.Instance;
-#else
-			return null;
-#endif
-        }
 
         public void DestroyEditorUMAContextBase()
         {
@@ -1616,14 +1603,6 @@ namespace UMA
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<UMATextRecipe> theRecipes, bool keepLoaded = false)
 		{
-			UMAContextBase context = UMAContextBase.Instance;
-			if (!context)
-			{
-				Debug.LogError("No context to preload!");
-				AsyncOperationHandle<IList<UnityEngine.Object>> ao = new AsyncOperationHandle<IList<UnityEngine.Object>>();
-				return ao;
-			}
-
 			List<string> Keys = new List<string>();
 
 			foreach (UMATextRecipe utr in theRecipes)
@@ -2629,7 +2608,7 @@ namespace UMA
             }
         }
 
-        private void RebuildRaceRecipes()
+        public void RebuildRaceRecipes()
         {
             //Dictionary<string, RaceData> RaceLookup = new Dictionary<string, RaceData>();
 

@@ -58,14 +58,7 @@ namespace UMA
 
 			List<DynamicUMADnaAsset> AllDNA;// = UMAContext.Instance.GetAllDNA();
 
-			if (UMAContext.Instance == null)
-            {
-				AllDNA = UMAAssetIndexer.Instance.GetAllAssets<DynamicUMADnaAsset>();
-			}
-			else
-            {
-				AllDNA = UMAContext.Instance.GetAllDNA();
-			}
+			AllDNA = UMAAssetIndexer.Instance.GetAllAssets<DynamicUMADnaAsset>();
 
             for (int i = 0; i < AllDNA.Count; i++)
 			{
@@ -145,7 +138,7 @@ namespace UMA
 		/// <param name="dnaAssetName"></param>
 		public virtual void FindMissingDnaAsset(string dnaAssetName)
 		{
-			_dnaAsset = UMAContext.Instance.GetDNA(dnaAssetName);
+			_dnaAsset = UMAAssetIndexer.Instance.GetDNA(dnaAssetName);
 			if (_dnaAsset == null)
 			{
 				if (Debug.isDebugBuild)

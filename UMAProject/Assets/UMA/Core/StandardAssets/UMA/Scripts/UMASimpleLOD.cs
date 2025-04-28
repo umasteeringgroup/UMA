@@ -257,7 +257,7 @@ namespace UMA.Examples
             {
                 SlotLods[i] = string.Empty;
                 string possibleSlot = $"{baseSlotName}_LOD{i}";
-                if (UMAContextBase.Instance.HasSlot(possibleSlot))
+                if (UMAAssetIndexer.Instance.HasSlot(possibleSlot))
                 {
                     SlotLods[i] = possibleSlot;
                     foundLODS++;
@@ -265,7 +265,7 @@ namespace UMA.Examples
                 }
                 else
                 {
-                    if (i == 0 && UMAContextBase.Instance.HasSlot(baseSlotName))
+                    if (i == 0 && UMAAssetIndexer.Instance.HasSlot(baseSlotName))
                     {
                         SlotLods[i] = baseSlotName;
                         foundLODS++;
@@ -344,7 +344,7 @@ namespace UMA.Examples
                     // if there is a new LOD slot, then switch to that, and schedule for regeneration
                     if (newSlot != null && newSlot != string.Empty && newSlot != slot.slotName)
                     {
-                        _umaData.umaRecipe.slotDataList[i] = UMAContextBase.Instance.InstantiateSlot(newSlot, slot.GetOverlayList());
+                        _umaData.umaRecipe.slotDataList[i] = UMAAssetIndexer.Instance.InstantiateSlot(newSlot, slot.GetOverlayList());
                         changedSlots = true;
                     }
                 }

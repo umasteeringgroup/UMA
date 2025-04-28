@@ -355,7 +355,7 @@ namespace UMA.Editors
 					baseSlotsList.Clear();
 					baseSlotsNamesList.Clear();
 
-					UMAData.UMARecipe thisBaseRecipe = (baseRaceRecipe.objectReferenceValue as UMARecipeBase).GetCachedRecipe(UMAContextBase.Instance);
+					UMAData.UMARecipe thisBaseRecipe = (baseRaceRecipe.objectReferenceValue as UMARecipeBase).GetCachedRecipe();
 					SlotData[] thisBaseSlots = thisBaseRecipe.GetAllSlots();
 					foreach (SlotData slot in thisBaseSlots)
 					{
@@ -455,7 +455,7 @@ namespace UMA.Editors
 					{
 						var ccSlotsList = new List<SlotData>();
 						var ccSlotsNamesList = new List<string>();
-						UMAData.UMARecipe ccBaseRecipe = ccRaceData.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance);
+						UMAData.UMARecipe ccBaseRecipe = ccRaceData.baseRaceRecipe.GetCachedRecipe();
 						SlotData[] ccBaseSlots = ccBaseRecipe.GetAllSlots();
 						foreach (SlotData slot in ccBaseSlots)
 						{

@@ -14,13 +14,13 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void Load(UMAData.UMARecipe umaRecipe, UMAContextBase context, bool loadSlots = true);
+		public abstract void Load(UMAData.UMARecipe umaRecipe, bool loadSlots = true);
 		/// <summary>
 		/// Save data from the specified umaRecipe.
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context);
+		public abstract void Save(UMAData.UMARecipe umaRecipe);
 		public abstract string GetInfo();
 		public abstract byte[] GetBytes();
 		public abstract void SetBytes(byte[] data);
@@ -50,23 +50,18 @@ namespace UMA
 
 #if UNITY_EDITOR
 
-		//This is used as a base for UMATextRecipe to override, because we cannt get what we need from this assembly- but the method needs to exist here to work in RecipeEditor
-		public virtual UMAContextBase CreateEditorContext()
-		{
-			return null;
-		}
 	#endif
 		/// <summary>
 		/// Return a cached version of the UMA recipe, Load if required.
 		/// </summary>
 		/// <returns>The cached recipe.</returns>
 		/// <param name="context">Context.</param>
-		public UMAData.UMARecipe GetCachedRecipe(UMAContextBase context, bool loadSlots = true)
+		public UMAData.UMARecipe GetCachedRecipe( bool loadSlots = true)
 		{
 			if (!cached || umaRecipe == null)
 			{
 				umaRecipe = new UMAData.UMARecipe();
-				Load(umaRecipe, context, loadSlots);
+				Load(umaRecipe,loadSlots);
 #if !UNITY_EDITOR
 #if UMA_ADDRESSABLES
 				// don't cache addressables, as they can be unloaded.

@@ -1220,7 +1220,7 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-            UMAGenerator ugb = UMAContext.Instance.gameObject.GetComponentInChildren<UMAGenerator>(true);
+            UMAGenerator ugb = UMAAssetIndexer.Instance.generator;
             if (ugb == null)
             {
                 Debug.Log("Cannot find generator!");

@@ -6,7 +6,6 @@ namespace UMA
 
 	public class Rotator : MonoBehaviour
 	{
-		bool rotating = false;
 		bool gotLastPoint = false;
 		public float scale = 0.1f;
 
@@ -57,14 +56,12 @@ namespace UMA
 		}
 		void OnMouseDown()
 		{
-			rotating = true;
 			lastPoint = Input.mousePosition;
 
 		}
 
 		public void OnMouseUp()
 		{
-			rotating = false;
 		}
 	}
 }

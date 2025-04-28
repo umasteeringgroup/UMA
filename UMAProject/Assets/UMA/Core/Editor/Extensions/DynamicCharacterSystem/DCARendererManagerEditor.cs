@@ -16,7 +16,6 @@ namespace UMA.Editors
         UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
         List<string> wardrobeOptions = new List<string>();
         List<SlotDataAsset> slotOptions = new List<SlotDataAsset>();
-        UMAContextBase context;
         RaceData currentRaceData;
 
         void OnEnable()
@@ -25,7 +24,6 @@ namespace UMA.Editors
 
             RendererElements = serializedObject.FindProperty("RendererElements");
             showHelp = serializedObject.FindProperty("showHelp");
-            context = UMAContextBase.Instance;
 
             DCARendererManager manager = target as DCARendererManager;
             avatar = manager.GetComponent<DynamicCharacterAvatar>();
@@ -186,7 +184,7 @@ namespace UMA.Editors
                 wardrobeOptions.AddRange(avatar.activeRace.data.wardrobeSlots);
                 wardrobeOptions.Insert(0, "Add Wardrobe Slot");
 
-                avatar.activeRace.data.baseRaceRecipe.Load(umaRecipe, context);
+                avatar.activeRace.data.baseRaceRecipe.Load(umaRecipe);
                 for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
                 {
                     if (umaRecipe.slotDataList[i] != null && umaRecipe.slotDataList[i].asset != null)

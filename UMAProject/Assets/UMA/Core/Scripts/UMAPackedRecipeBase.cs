@@ -15,34 +15,34 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context, bool loadSlots = true)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, bool loadSlots = true)
 		{
-			var packedRecipe = PackedLoad(context);
-			UnpackRecipe(umaRecipe, packedRecipe, context, loadSlots);
+			var packedRecipe = PackedLoad();
+			UnpackRecipe(umaRecipe, packedRecipe, loadSlots);
 		}
 
-		public static UMAData.UMARecipe UnpackRecipe(UMAPackRecipe umaPackRecipe, UMAContextBase context)
+		public static UMAData.UMARecipe UnpackRecipe(UMAPackRecipe umaPackRecipe)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
-			UnpackRecipe(umaRecipe, umaPackRecipe, context);
+			UnpackRecipe(umaRecipe, umaPackRecipe);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context, bool loadSlots = true)
+		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe,  bool loadSlots = true)
 		{
 			switch (umaPackRecipe.version)
 			{
 				case 3:
-					UnpackRecipeVersion3(umaRecipe, umaPackRecipe, context, loadSlots);
+					UnpackRecipeVersion3(umaRecipe, umaPackRecipe, loadSlots);
 					break;
 
 				case 2:
-					UnpackRecipeVersion2(umaRecipe, umaPackRecipe, context);
+					UnpackRecipeVersion2(umaRecipe, umaPackRecipe);
 					break;
 
 				case 1:
 				default:
-					if (UnpackRecipeVersion1(umaRecipe, umaPackRecipe, context))
+					if (UnpackRecipeVersion1(umaRecipe, umaPackRecipe))
 					{
 						umaRecipe.MergeMatchingOverlays();
 					}
@@ -55,11 +55,11 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public override void Save(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context)
+		public override void Save(UMA.UMAData.UMARecipe umaRecipe)
 		{
 			umaRecipe.MergeMatchingOverlays();
 			var packedRecipe = PackRecipeV3(umaRecipe);
-			PackedSave(packedRecipe, context);
+			PackedSave(packedRecipe);
 		}
 
 		/// <summary>
@@ -67,14 +67,14 @@ namespace UMA
 		/// </summary>
 		/// <returns>The UMAPackRecipe.</returns>
 		/// <param name="context">Context.</param>
-		public abstract UMAPackRecipe PackedLoad(UMAContextBase context);
+		public abstract UMAPackRecipe PackedLoad();
 
 		/// <summary>
 		/// Serialize the packed recipe.
 		/// </summary>
 		/// <param name="packedRecipe">Packed recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void PackedSave(UMAPackRecipe packedRecipe, UMAContextBase context);
+		public abstract void PackedSave(UMAPackRecipe packedRecipe);
 
 		#region Packing Related
 
@@ -706,9 +706,10 @@ namespace UMA
 			return umaPackRecipe;
 		}
 
-		public static bool UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
+		public static bool UnpackRecipeVersion1(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe)
 		{
-			if (!UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList))
+			var context = UMAAssetIndexer.Instance;
+            if (!UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList))
             {
 				return false;
             }
@@ -763,7 +764,7 @@ namespace UMA
 							{
 								tempRect = new Rect(0, 0, 0, 0);
 							}
-
+							
 							tempSlotData.AddOverlay(context.InstantiateOverlay(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].overlayID));
 							tempSlotData.GetOverlay(tempSlotData.OverlayCount - 1).colorData.color = tempColor;
 							tempSlotData.GetOverlay(tempSlotData.OverlayCount - 1).rect = tempRect;
@@ -816,15 +817,16 @@ namespace UMA
 			return UnpackedDNA;
 		}
 
-		public static UMAData.UMARecipe UnpackRecipeVersion2(UMAPackRecipe umaPackRecipe, UMAContextBase context)
+		public static UMAData.UMARecipe UnpackRecipeVersion2(UMAPackRecipe umaPackRecipe)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
-			UnpackRecipeVersion2(umaRecipe, umaPackRecipe, context);
+			UnpackRecipeVersion2(umaRecipe, umaPackRecipe);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context)
+		public static void UnpackRecipeVersion2(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe)
 		{
+			var context = UMAAssetIndexer.Instance;
 			umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV2.Length];
 			if (!String.IsNullOrWhiteSpace(umaPackRecipe.race))
 			{
@@ -913,15 +915,16 @@ namespace UMA
 			}
 		}
 
-		public static UMAData.UMARecipe UnpackRecipeVersion3(UMAPackRecipe umaPackRecipe, UMAContextBase context, bool loadSlots = true)
+		public static UMAData.UMARecipe UnpackRecipeVersion3(UMAPackRecipe umaPackRecipe, bool loadSlots = true)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
-			UnpackRecipeVersion3(umaRecipe, umaPackRecipe, context, loadSlots);
+			UnpackRecipeVersion3(umaRecipe, umaPackRecipe, loadSlots);
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, UMAContextBase context, bool loadSlots = true)
+		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, bool loadSlots = true)
         {
+			var context = UMAAssetIndexer.Instance;
             umaRecipe.slotDataList = new SlotData[umaPackRecipe.slotsV3.Length];
 
             if (!string.IsNullOrEmpty(umaPackRecipe.race))

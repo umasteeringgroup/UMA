@@ -352,9 +352,9 @@ namespace UMA
 		
 			if (autoSetRaceBlendshapes)
 			{
-				if (raceNames == null && UMAContextBase.Instance != null)
+				if (raceNames == null)
 				{
-					RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+					RaceData[] races = UMAAssetIndexer.Instance.GetAllRaces();
 					raceNames = new HashSet<string>();
                     for (int i = 0; i < races.Length; i++)
 					{
@@ -446,105 +446,6 @@ namespace UMA
             }
         }
 
-
-		public virtual bool OldHandleDirtyUpdate(UMAData data)
-		{
-            /*
-			UMAContextBase.IgnoreTag = ignoreTag;
-			if (data == null)
-            {
-                return true;
-            }
-
-            if (umaData != data)
-			{
-				umaData = data;
-
-				if (!umaData.Validate())
-                {
-                    return true;
-                }
-
-                if (meshCombiner != null)
-				{
-					meshCombiner.Preprocess(umaData);
-				}
-				umaData.FireCharacterBegunEvents();
-				PreApply(umaData);
-			}
-			if (umaData.RebuildSkeleton)
-			{
-				SaveMountedItems(umaData);
-				DestroyImmediate(umaData.umaRoot, false);
-				umaData.umaRoot = null;
-				umaData.RebuildSkeleton = false;
-				umaData.isShapeDirty = true;
-			}
-
-
-			if (umaData.isTextureDirty)
-			{
-				bool meshWasDirty = umaData.isMeshDirty;
-				if (activeGeneratorCoroutine == null)
-				{
-					TextureProcessBaseCoroutine textureProcessCoroutine;
-					textureProcessCoroutine = new TextureProcessPROCoroutine();
-					textureProcessCoroutine.Prepare(data, this);
-
-					activeGeneratorCoroutine = new UMAGeneratorCoroutine();
-					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty, InitialScaleFactor);
-				}
-
-				bool workDone = activeGeneratorCoroutine.Work();
-				if (workDone)
-				{
-					activeGeneratorCoroutine = null;
-					umaData.isTextureDirty = false;
-					umaData.isAtlasDirty |= umaData.isMeshDirty;
-					TextureChanged++;
-				}
-
-				//shouldn't this only cause another loop if this part MADE the mesh dirty?
-				if (!workDone || !fastGeneration || (!meshWasDirty && umaData.isMeshDirty))
-				{
-					return false;
-				}
-			}
-
-
-			if (umaData.isMeshDirty)
-			{
-				UpdateUMAMesh(umaData.isAtlasDirty);
-				umaData.isAtlasDirty = false;
-				umaData.isMeshDirty = false;
-				SlotsChanged++;
-				forceGarbageCollect++;
-
-				if (!fastGeneration)
-                {
-                    return false;
-                }
-            }
-
-			if (umaData.isShapeDirty)
-			{
-				if (!umaData.skeleton.isUpdating)
-				{
-					umaData.skeleton.BeginSkeletonUpdate();
-				}
-				UpdateUMABody(umaData);
-				umaData.isShapeDirty = false;
-				DnaChanged++;
-			}
-			else if (umaData.skeleton.isUpdating)
-			{
-				umaData.skeleton.EndSkeletonUpdate();
-			}
-
-			UMAReady();
-			*/
-            return true;
-		}
 
 		public virtual void OnDirtyUpdate()
 		{

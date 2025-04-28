@@ -8,7 +8,6 @@ namespace UMA
 	/// </summary>
 	public abstract class UMAAvatarBase : MonoBehaviour
 	{
-		public UMAContextBase context;
 		public UMAData umaData;
 		[Tooltip("The default renderer asset to use for this avatar. This lets you set parameters for the generated SkinnedMeshRenderer")]
 		public UMARendererAsset defaultRendererAsset; // this can be null if no default renderers need to be applied.
@@ -21,7 +20,14 @@ namespace UMA
 		/// Additional partial UMA recipes (not serialized).
 		/// </summary>
 		public UMARecipeBase[] umaAdditionalRecipes;
-		public UMAGeneratorBase umaGenerator;
+		public UMAGenerator umaGenerator
+		{
+			get
+			{
+				return UMAAssetIndexer.Instance.generator;
+            }
+		}
+
 		public RuntimeAnimatorController animationController;
 
 		protected RaceData umaRace = null;
@@ -56,10 +62,7 @@ namespace UMA
 		}
 		public void Initialize()
 		{
-			if (context == null)
-			{
-				context = UMAContextBase.Instance;
-			}
+
 
 			if (umaData == null)
 			{
@@ -68,15 +71,6 @@ namespace UMA
 				{
 					umaData = gameObject.AddComponent<UMAData>();
 					umaData.umaRecipe = new UMAData.UMARecipe(); // TEST JRRM
-					if (umaGenerator != null && !umaGenerator.gameObject.activeInHierarchy)
-					{
-						if (Debug.isDebugBuild)
-						{
-							Debug.LogError("Invalid UMA Generator on Avatar.", gameObject);
-							Debug.LogError("UMA generators must be active scene objects!", umaGenerator.gameObject);
-						}
-						umaGenerator = null;
-					}
 				}
 			}
 			if (umaGenerator != null)
@@ -148,8 +142,8 @@ namespace UMA
 
 			this.umaRecipe = umaRecipe;
 
-			umaRecipe.Load(umaData.umaRecipe, context);
-			umaData.AddAdditionalRecipes(umaAdditionalRecipes, context);
+			umaRecipe.Load(umaData.umaRecipe);
+			umaData.AddAdditionalRecipes(umaAdditionalRecipes);
 
 			if (umaRace != umaData.umaRecipe.raceData)
 			{

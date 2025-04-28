@@ -172,7 +172,7 @@ namespace UMA.Editors
 
 			public override bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 			{
-				var context = UMAContextBase.Instance;
+				var context = UMAAssetIndexer.Instance;
 				if (context == null)
 				{
 					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContextBase.";

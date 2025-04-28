@@ -1055,7 +1055,7 @@ namespace UMA
                     RebuildFromAssetItem(r);
                 }
                 UMAWardrobeRecipe uwr = r.GetItem<UMAWardrobeRecipe>();
-                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = uwr.PackedLoad(null);
+                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = uwr.PackedLoad();
 
                 bool invalid = false;
 
@@ -1156,7 +1156,7 @@ namespace UMA
                     RebuildFromAssetItem(r);
                 }
                 UMATextRecipe utr = r.GetItem<UMATextRecipe>();
-                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = utr.PackedLoad(null);
+                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = utr.PackedLoad();
 
                 bool invalid = false;
 

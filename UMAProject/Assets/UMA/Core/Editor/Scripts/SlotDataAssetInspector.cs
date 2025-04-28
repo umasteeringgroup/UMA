@@ -151,21 +151,18 @@ namespace UMA.Editors
 
 		public void SetRaceLists()
 		{
-			UMAContextBase ubc = UMAContext.Instance;
-			if (ubc != null)
+
+			RaceData[] raceDataArray = UMAAssetIndexer.Instance.GetAllRaces();
+			foundRaces.Clear();
+			foundRaceNames.Clear();
+			foundRaces.Add(null);
+			foundRaceNames.Add("None Set");
+			foreach (RaceData race in raceDataArray)
 			{
-				RaceData[] raceDataArray = ubc.GetAllRaces();
-				foundRaces.Clear();
-				foundRaceNames.Clear();
-				foundRaces.Add(null);
-				foundRaceNames.Add("None Set");
-				foreach (RaceData race in raceDataArray)
+				if (race != null && race.raceName != "RaceDataPlaceholder")
 				{
-					if (race != null && race.raceName != "RaceDataPlaceholder")
-					{
-						foundRaces.Add(race);
-						foundRaceNames.Add(race.raceName);
-					}
+					foundRaces.Add(race);
+					foundRaceNames.Add(race.raceName);
 				}
 			}
 		}
@@ -414,7 +411,7 @@ namespace UMA.Editors
 				else
 				{
 					UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
-					foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContextBase.Instance);
+					foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe);
 
 					foreach (SlotData sd in baseRecipe.slotDataList)
 					{

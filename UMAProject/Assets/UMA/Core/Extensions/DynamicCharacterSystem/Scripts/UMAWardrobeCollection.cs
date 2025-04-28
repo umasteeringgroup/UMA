@@ -48,57 +48,11 @@ namespace UMA.CharacterSystem
 				return null;
 			}
 		}
-		/// <summary>
-		/// Requests each recipe in the Collection from DynamicCharacterSystem (optionally limited by race) which will trigger the download of the recipes if they are in asset bundles.
-		/// </summary>
-		public void EnsureLocalAvailability(string forRace = "")
-		{
-			//Ensure WardrobeCollection items
-			var thisRecipeNames = wardrobeCollection.GetAllRecipeNamesInCollection(forRace);
-			if (thisRecipeNames.Count > 0)
-			{
-				//we maybe adding recipes for races we have not downloaded yet so make sure DCS has a place for them in its index
-				if (forRace != "")
-                {
-                    UMAContext.Instance.EnsureRaceKey(forRace);
-                }
-                else
-                {
-                    for (int i = 0; i < compatibleRaces.Count; i++)
-					{
-                        string race = compatibleRaces[i];
-                        UMAContext.Instance.EnsureRaceKey(race);
-					}
-                }
-
-                for (int i = 0; i < thisRecipeNames.Count; i++)
-				{
-					UMAContext.Instance.GetRecipe(thisRecipeNames[i], true);
-				}
-			}
-			//Ensure Arbitrary Items
-			if(arbitraryRecipes.Count > 0)
-			{
-				for (int i = 0; i < arbitraryRecipes.Count; i++)
-				{
-					UMAContext.Instance.GetRecipe(arbitraryRecipes[i], true);
-				}
-			}
-		}
 
 		public List<WardrobeSettings> GetRacesWardrobeSet(string race)
 		{
-			var thisContext = UMAContextBase.Instance;
-			if(thisContext == null)
-			{
-				if (Debug.isDebugBuild)
-                {
-                    Debug.LogWarning("Getting the WardrobeSet from a WardrobeCollection requires a valid UMAContextBase in the scene");
-                }
-
-                return new List<WardrobeSettings>();
-			}
-			var thisRace = UMAContext.Instance.GetRace(race);
+			var thisContext = UMAAssetIndexer.Instance;
+			var thisRace = thisContext.GetRace(race);
 			return GetRacesWardrobeSet(thisRace);
 		}
 		/// <summary>
@@ -151,33 +105,14 @@ namespace UMA.CharacterSystem
 			}
 			return recipesWeGot;
 		}
-		/// <summary>
-		/// Gets the recipe names from this collections arbitrary recipes list
-		/// </summary>
-		public List<string> GetArbitraryRecipesNames()
-		{
-			return arbitraryRecipes;
-		}
-		/// <summary>
-		/// Gets the wardrobeRecipes from this collections arbitrary recipes list
-		/// </summary>
-		public List<UMATextRecipe> GetArbitraryRecipes(DynamicCharacterSystem dcs)
-		{
-			List<UMATextRecipe> recipesWeGot = new List<UMATextRecipe>();
-			for (int i = 0; i < arbitraryRecipes.Count; i++)
-			{
-				recipesWeGot.Add(dcs.GetRecipe(arbitraryRecipes[i], true));
-			}
-			return recipesWeGot;
-		}
 
 		/// <summary>
 		/// Gets a DCSUnversalPackRecipeModel that has the wardrobeSet set to be the set in this collection for the given race of the sent avatar
 		/// Or if this recipe is cross compatible returns the wardrobe set for the first matched cross compatible race
 		/// </summary>
-		public DCSUniversalPackRecipe GetUniversalPackRecipe(DynamicCharacterAvatar dca, UMAContextBase context)
+		public DCSUniversalPackRecipe GetUniversalPackRecipe(DynamicCharacterAvatar dca)
 		{
-			var thisPackRecipe = PackedLoadDCSInternal(context);
+			var thisPackRecipe = PackedLoadDCSInternal();
 			RaceData race = dca.activeRace.racedata;
 			if (dca.activeRace.racedata == null)
 			{
@@ -193,14 +128,14 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// NOTE: Use GetUniversalPackRecipe to get a recipe that includes a wardrobeSet. Load this Recipe's recipeString into the specified UMAData.UMARecipe.
 		/// </summary>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context, bool loadSlots = true)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe, bool loadSlots = true)
 		{
 			if ((recipeString != null) && (recipeString.Length > 0))
 			{
-				var packedRecipe = PackedLoadDCSInternal(context);
+				var packedRecipe = PackedLoadDCSInternal();
 				if(packedRecipe != null)
                 {
-                    UnpackRecipe(umaRecipe, packedRecipe, context, loadSlots);
+                    UnpackRecipe(umaRecipe, packedRecipe, loadSlots);
                 }
             }
 		}

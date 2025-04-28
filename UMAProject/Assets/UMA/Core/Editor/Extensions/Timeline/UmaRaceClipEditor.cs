@@ -14,8 +14,8 @@ namespace UMA.Editors
 
         void OnEnable()
         {
-            UMAContextBase context = UMAContextBase.Instance;
-            RaceData[] races = context.GetAllRaces();
+
+            RaceData[] races = UMAAssetIndexer.Instance.GetAllRaces();
 
             raceToChangeTo = serializedObject.FindProperty("raceToChangeTo");
 

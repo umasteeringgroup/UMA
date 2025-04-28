@@ -9,11 +9,11 @@ using static UMA.UMAUtils;
 
 namespace UMA.Editors
 {
-    //OnPreviewGUI
-    //http://timaksu.com/post/126337219047/spruce-up-your-custom-unity-inspectors-with-a
-    //
-    [CustomEditor(typeof(MeshHideAsset))]
-	public class MeshHideInspector : Editor 
+	//OnPreviewGUI
+	//http://timaksu.com/post/126337219047/spruce-up-your-custom-unity-inspectors-with-a
+	//
+	[CustomEditor(typeof(MeshHideAsset))]
+	public class MeshHideInspector : Editor
 	{
 		private Mesh _meshPreview;
 		private UMAMeshData _meshData;
@@ -33,16 +33,16 @@ namespace UMA.Editors
 			SetRaceLists();
 
 			if (source.asset == null)
-            {
-                return;
-            }
+			{
+				return;
+			}
 
-            if ( _material == null )
-            {
-                _material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
-            }
+			if (_material == null)
+			{
+				_material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+			}
 
-            if (_meshPreview == null)
+			if (_meshPreview == null)
 			{
 				UpdateMeshPreview();
 			}
@@ -67,7 +67,7 @@ namespace UMA.Editors
 				source.asset = obj as SlotDataAsset;
 				if (_autoInitialize)
 				{
-				  UpdateSourceAsset(obj);
+					UpdateSourceAsset(obj);
 				}
 			}
 			EditorGUILayout.LabelField("Slot Name", source.AssetSlotName.ToString());
@@ -83,39 +83,39 @@ namespace UMA.Editors
 			}
 
 			_autoInitialize = EditorGUILayout.Toggle(new GUIContent("AutoInitialize (recommended)", "Checking this will auto initialize the MeshHideAsset when a slot is added (recommended).  " +
-				"For users that are rebuilding slots that don't change the geometry, the slot reference will be lost but can be reset without losing the existing MeshHide information by unchecking this." ),_autoInitialize);
+				"For users that are rebuilding slots that don't change the geometry, the slot reference will be lost but can be reset without losing the existing MeshHide information by unchecking this."), _autoInitialize);
 
 			if (source.asset == null)
-            {
-                EditorGUILayout.HelpBox("No SlotDataAsset set! Begin by adding a SlotDataAsset to the object field above.", MessageType.Error);
-            }
+			{
+				EditorGUILayout.HelpBox("No SlotDataAsset set! Begin by adding a SlotDataAsset to the object field above.", MessageType.Error);
+			}
 
 
-            //Race Selector here
-            GUILayout.Space(20);
+			//Race Selector here
+			GUILayout.Space(20);
 			selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
-			if( selectedRaceIndex <= 0)
+			if (selectedRaceIndex <= 0)
 			{
 				EditorGUILayout.HelpBox("Quick selection of base slots by race. This is not needed to create a mesh hide asset, any slot can be used.", MessageType.Info);
 			}
 			else
 			{
 				UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
-				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContextBase.Instance);
+				foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe);
 
-				foreach(SlotData sd in baseRecipe.slotDataList)
+				foreach (SlotData sd in baseRecipe.slotDataList)
 				{
 					if (sd != null && sd.asset != null)
 					{
-						if( GUILayout.Button(string.Format("{0} ({1})", sd.asset.name, sd.slotName)))
+						if (GUILayout.Button(string.Format("{0} ({1})", sd.asset.name, sd.slotName)))
 						{
-							if( UpdateSourceAsset(sd.asset))
-                            {
-                                selectedRaceIndex = 0;
-                            }
-                        }
+							if (UpdateSourceAsset(sd.asset))
+							{
+								selectedRaceIndex = 0;
+							}
+						}
 					}
-				}                
+				}
 			}
 
 			GUILayout.Space(20);
@@ -130,21 +130,21 @@ namespace UMA.Editors
 				EditorGUILayout.LabelField("Hidden Triangle Count: " + source.HiddenCount);
 			}
 			else
-            {
-                EditorGUILayout.LabelField("No triangle array found");
-            }
+			{
+				EditorGUILayout.LabelField("No triangle array found");
+			}
 
-            GUILayout.Space(20);
+			GUILayout.Space(20);
 			if (!GeometrySelectorWindow.IsOpen)
 			{
 				EditorGUI.BeginDisabledGroup(source.asset == null);
 				if (GUILayout.Button("Begin Editing", GUILayout.MinHeight(50)))
 				{
 					if (source.asset != null)
-                    {
-                        beginSceneEditing = true;
-                    }
-                }
+					{
+						beginSceneEditing = true;
+					}
+				}
 				EditorGUI.EndDisabledGroup();
 				GUILayout.Space(20);
 				GUILayout.Label("Editing will be done in an empty scene.");
@@ -159,8 +159,8 @@ namespace UMA.Editors
 				EditorApplication.delayCall += CreateSceneEditObject;
 			}
 		}
-    
-		private bool UpdateSourceAsset( SlotDataAsset newObj )
+
+		private bool UpdateSourceAsset(SlotDataAsset newObj)
 		{
 			MeshHideAsset source = target as MeshHideAsset;
 			bool update = false;
@@ -168,16 +168,16 @@ namespace UMA.Editors
 			if (source.asset != null)
 			{
 				if (EditorUtility.DisplayDialog("Warning", "Setting a new source slot will clear the existing data on this asset!", "OK", "Cancel"))
-                {
-                    update = true;
-                }
-            }
+				{
+					update = true;
+				}
+			}
 			else
 			{
 				update = true;
 			}
 
-			if(update)
+			if (update)
 			{
 				source.AssetSlotName = newObj.slotName;
 				source.Initialize();
@@ -206,7 +206,7 @@ namespace UMA.Editors
 #endif
 			}
 
-			UpdateMeshData( source.triangleFlags);
+			UpdateMeshData(source.triangleFlags);
 
 			_meshPreview.Clear();
 			_meshPreview.vertices = _meshData.vertices;
@@ -214,14 +214,14 @@ namespace UMA.Editors
 
 			for (int i = 0; i < _meshData.subMeshCount; i++)
 			{
-                var tris = _meshData.submeshes[i].getBaseTriangles();
+				var tris = _meshData.submeshes[i].getBaseTriangles();
 				_meshPreview.SetIndices(tris, MeshTopology.Triangles, i);
 			}
 
 			ResetPreviewCamera();
 		}
 
-		public void UpdateMeshData( BitArray[] triangleFlags )
+		public void UpdateMeshData(BitArray[] triangleFlags)
 		{
 			if (triangleFlags == null)
 			{
@@ -229,15 +229,15 @@ namespace UMA.Editors
 				return;
 			}
 
-			if (_meshData == null )
-            {
-                _meshData = new UMAMeshData();
-            }
+			if (_meshData == null)
+			{
+				_meshData = new UMAMeshData();
+			}
 
-            MeshHideAsset source = target as MeshHideAsset;
+			MeshHideAsset source = target as MeshHideAsset;
 
 			UMAMeshData sourceData = source.asset.meshData;
-				
+
 			_meshData.submeshes = new SubMeshTriangles[sourceData.subMeshCount];
 			_meshData.subMeshCount = sourceData.subMeshCount;
 
@@ -246,7 +246,7 @@ namespace UMA.Editors
 			_meshData.vertices = new Vector3[sourceData.vertexCount];
 			sourceData.vertices.CopyTo(_meshData.vertices, 0);
 
-			if(has_normals)
+			if (has_normals)
 			{
 				_meshData.normals = new Vector3[sourceData.vertexCount];
 				sourceData.normals.CopyTo(_meshData.normals, 0);
@@ -261,9 +261,9 @@ namespace UMA.Editors
 				{
 					if (!triangleFlags[i][j])
 					{
-						newTriangles.Add(subMeshTriangles[(j*3) + 0]);
-						newTriangles.Add(subMeshTriangles[(j*3) + 1]);
-						newTriangles.Add(subMeshTriangles[(j*3) + 2]);
+						newTriangles.Add(subMeshTriangles[(j * 3) + 0]);
+						newTriangles.Add(subMeshTriangles[(j * 3) + 1]);
+						newTriangles.Add(subMeshTriangles[(j * 3) + 2]);
 					}
 				}
 				_meshData.submeshes[i] = new SubMeshTriangles();
@@ -277,11 +277,11 @@ namespace UMA.Editors
 			bool focusObject = true;
 			MeshHideAsset source = target as MeshHideAsset;
 			if (source.asset == null)
-            {
-                return;
-            }
+			{
+				return;
+			}
 
-            if (GeometrySelectorWindow.IsOpen)
+			if (GeometrySelectorWindow.IsOpen)
 			{
 				return;
 			}
@@ -297,10 +297,10 @@ namespace UMA.Editors
 			{
 				Scene sc = EditorSceneManager.GetSceneAt(i);
 				if (sc.isDirty)
-                {
-                    hasDirtyScenes = true;
-                }
-            }
+				{
+					hasDirtyScenes = true;
+				}
+			}
 			if (hasDirtyScenes)
 			{
 				int saveChoice = EditorUtility.DisplayDialogComplex("Modified scenes detected", "Opening the Mesh Hide Editor will close all scenes and create a new blank scene. Any current scene changes will be lost unless saved.", "Save and Continue", "Continue without saving", "Cancel");
@@ -308,14 +308,14 @@ namespace UMA.Editors
 				switch (saveChoice)
 				{
 					case 0: // Save and continue
-					{
-						if (!EditorSceneManager.SaveOpenScenes())
-                            {
-                                return;
-                            }
+						{
+							if (!EditorSceneManager.SaveOpenScenes())
+							{
+								return;
+							}
 
-                            break;
-					}
+							break;
+						}
 					case 1: // don't save and continue
 						break;
 					case 2: // cancel
@@ -350,7 +350,7 @@ namespace UMA.Editors
 				{
 					si.mode = sc.isLoaded ? OpenSceneMode.Additive : OpenSceneMode.AdditiveWithoutLoading;
 				}
-				currentscenes.Add(si); 
+				currentscenes.Add(si);
 			}
 
 #if UNITY_2019_1_OR_NEWER
@@ -359,25 +359,25 @@ namespace UMA.Editors
 			Scene s = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 #endif
 			EditorSceneManager.SetActiveScene(s);
-			GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor); 
+			GameObject obj = EditorUtility.CreateGameObjectWithHideFlags("GeometrySelector", HideFlags.DontSaveInEditor);
 			GeometrySelector geometry = obj.AddComponent<GeometrySelector>();
 
 			// Restore the camera position.
 			string CamKey = source.name + "_MHA_Cam";
 			if (EditorPrefs.HasKey(CamKey))
-            {
+			{
 				string xform = EditorPrefs.GetString(CamKey);
 				CamSaver cs = CamSaver.FromString(xform);
 				sceneView.camera.transform.position = cs.position;
 				sceneView.camera.transform.localRotation = cs.rotation;
 				focusObject = false;
-            }
+			}
 
 			if (geometry != null)
 			{
-                Selection.activeGameObject = obj;
-               //InspectorUtlity.InspectTarget(obj);
-                if (focusObject)
+				Selection.activeGameObject = obj;
+				//InspectorUtlity.InspectTarget(obj);
+				if (focusObject)
 				{
 					SceneView.lastActiveSceneView.FrameSelected(true);
 				}
@@ -408,36 +408,36 @@ namespace UMA.Editors
 			}
 		}
 
- 
+
 		private bool GeometrySelectorExists()
 		{
 			if (GameObject.Find("GeometrySelector") != null)
-            {
-                return true;
-            }
+			{
+				return true;
+			}
 
-            return false;
+			return false;
 		}
-			
+
 		public override bool HasPreviewGUI()
 		{
 			MeshHideAsset source = target as MeshHideAsset;
 			if (source.asset == null)
-            {
-                return false;
-            }
+			{
+				return false;
+			}
 
-            return true;
+			return true;
 		}
 
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			if (_meshPreview == null)
-            {
-                return;
-            }
+			{
+				return;
+			}
 
-            if (_material == null)
+			if (_material == null)
 			{
 				_material = GetDefaultDiffuseMaterial();
 			}
@@ -450,7 +450,7 @@ namespace UMA.Editors
 				ResetPreviewCamera();
 			}
 
-			if( Event.current.type == EventType.Repaint )
+			if (Event.current.type == EventType.Repaint)
 			{
 				_previewRenderUtility.BeginPreview(r, background);
 				_previewRenderUtility.DrawMesh(_meshPreview, Vector3.zero, Quaternion.identity, _material, 0);
@@ -458,7 +458,7 @@ namespace UMA.Editors
 				_previewRenderUtility.camera.transform.position = Vector2.zero;
 				_previewRenderUtility.camera.transform.rotation = Quaternion.Euler(new Vector3(-_drag.y, -_drag.x, 0));
 				_previewRenderUtility.camera.transform.position = _previewRenderUtility.camera.transform.forward * -6f;
-				_previewRenderUtility.camera.transform.position +=  _meshPreview.bounds.center;
+				_previewRenderUtility.camera.transform.position += _meshPreview.bounds.center;
 
 				_previewRenderUtility.camera.Render();
 
@@ -471,37 +471,37 @@ namespace UMA.Editors
 		public void ResetPreviewCamera()
 		{
 			if (_previewRenderUtility == null)
-            {
-                return;
-            }
+			{
+				return;
+			}
 
-            MeshHideAsset source = target as MeshHideAsset;
-			
+			MeshHideAsset source = target as MeshHideAsset;
+
 			_drag = Vector2.zero;
-			if( source.asset.meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
-            {
-                _drag.y = -90;
-            }
+			if (source.asset.meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
+			{
+				_drag.y = -90;
+			}
 
-            _previewRenderUtility.camera.transform.position = new Vector3(0, 0, -6);
+			_previewRenderUtility.camera.transform.position = new Vector3(0, 0, -6);
 			_previewRenderUtility.camera.transform.rotation = Quaternion.identity;
 		}
 
 		public override void OnPreviewSettings()
 		{
 			if (GUILayout.Button("Refresh", EditorStyles.whiteMiniLabel))
-            {
-                UpdateMeshPreview();
-            }
-        }
+			{
+				UpdateMeshPreview();
+			}
+		}
 
 		void OnDisable()
 		{
-			if( _previewRenderUtility != null )
-            {
-                _previewRenderUtility.Cleanup();
-            }
-        }
+			if (_previewRenderUtility != null)
+			{
+				_previewRenderUtility.Cleanup();
+			}
+		}
 
 		public static Vector2 Drag2D(Vector2 scrollPosition, Rect position)
 		{
@@ -539,21 +539,17 @@ namespace UMA.Editors
 
 		public void SetRaceLists()
 		{
-			UMAContextBase ubc = UMAContext.Instance;
-			if (ubc != null)
+			RaceData[] raceDataArray = UMAAssetIndexer.Instance.GetAllRaces();
+			foundRaces.Clear();
+			foundRaceNames.Clear();
+			foundRaces.Add(null);
+			foundRaceNames.Add("None Set");
+			foreach (RaceData race in raceDataArray)
 			{
-				RaceData[] raceDataArray = ubc.GetAllRaces();
-				foundRaces.Clear();
-				foundRaceNames.Clear();
-				foundRaces.Add(null);
-				foundRaceNames.Add("None Set");
-				foreach (RaceData race in raceDataArray)
+				if (race != null && race.raceName != "RaceDataPlaceholder")
 				{
-					if (race != null && race.raceName != "RaceDataPlaceholder")
-					{
-						foundRaces.Add(race);
-						foundRaceNames.Add(race.raceName);
-					}
+					foundRaces.Add(race);
+					foundRaceNames.Add(race.raceName);
 				}
 			}
 		}

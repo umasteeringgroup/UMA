@@ -186,7 +186,7 @@ namespace UMA.Editors
                 _umaData.umaRecipe = new UMAData.UMARecipe ();
             }
 
-            baseRecipe.Load(_umaData.umaRecipe, UMAContextBase.Instance);
+            baseRecipe.Load(_umaData.umaRecipe);
             Debug.Log ("UMAData initialization successful!");
         }
 
@@ -197,13 +197,7 @@ namespace UMA.Editors
                 return;
             }
 
-            UMAContextBase uc = UMAContextBase.Instance;
-
-			if (uc == null)
-			{
-				return;
-			}
-			UMAGeneratorBase ugb = uc.gameObject.GetComponentInChildren<UMAGeneratorBase>();
+			UMAGeneratorBase ugb = UMAAssetIndexer.Instance.generator;
 
 			_animator = umaObject.gameObject.GetComponent<Animator> ();
             if (_animator == null)
@@ -293,8 +287,7 @@ namespace UMA.Editors
                 globalTransform = _umaData.umaRoot.transform.Find ("Global");
                 if (globalTransform != null) 
                 {
-                    UMAGeneratorBase umaGenerator = UMAContextBase.Instance.gameObject.GetComponentInChildren<UMAGeneratorBase>();
-                    _umaData.skeleton = new UMASkeleton (globalTransform,umaGenerator);
+                    _umaData.skeleton = new UMASkeleton (globalTransform);
                 }
             }
         }

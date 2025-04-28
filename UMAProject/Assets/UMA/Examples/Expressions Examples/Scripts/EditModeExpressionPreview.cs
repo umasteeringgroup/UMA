@@ -55,28 +55,12 @@ namespace UMA.PoseTools
 
 			if (umaGenerator == null)
 			{
-                UMAContextBase uc = UMAContextBase.Instance;
-
-                if (uc == null)
-                {
-					Debug.LogWarning("Couldn't find UMA Context to preview!");
-                    return;
-                }
-                umaGenerator = uc.gameObject.GetComponentInChildren<UMAGeneratorBase>();
-
-                if (umaGenerator == null)
-				{
-                    if (Debug.isDebugBuild)
-					{
-                        Debug.LogWarning("Couldn't find UMA Generator to preview!");
-                    }
-                    return;
-                }
+				umaGenerator = UMAAssetIndexer.Instance.generator;
             }
 
 			if (skeleton == null)
 			{
-				skeleton = new UMASkeleton(skeletonRoot,umaGenerator);
+				skeleton = new UMASkeleton(skeletonRoot);
 			}
 
 			expressionSet.RestoreBones(skeleton);

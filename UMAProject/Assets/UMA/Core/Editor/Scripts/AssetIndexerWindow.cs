@@ -830,7 +830,7 @@ namespace UMA.Controls
 
                     dest.fColors = currentColors.ToArray();
                     dest.sharedColorCount = dest.fColors.Length;
-                    utr.PackedSave(dest, null);
+                    utr.PackedSave(dest);
                     UMAData.UMARecipe ur = new UMAData.UMARecipe();
                     utr.Load(ur);
                     EditorUtility.SetDirty(utr);
@@ -1293,20 +1293,15 @@ namespace UMA.Controls
 
         private void UpdateRecipeTransforms(Rect rect, Vector3 scale, float rotation, bool rectLimit, Rect rectCheck)
         {
-            if (UMAContext.Instance == null)
-            {
-                EditorUtility.DisplayDialog("No context found!","A valid context must be loaded in an open scene to use this function.","OK");
-                return;
-            }
             var assets = GetSelectedAssets(typeof(UMAWardrobeRecipe));
             foreach (var ai in assets)
             {
                 UMAWardrobeRecipe uwr = ai.Item as UMAWardrobeRecipe;
                 if (uwr != null)
                 {
-                    uwr.PackedLoad(UMAContext.Instance);
+                    uwr.PackedLoad();
                     UMAData.UMARecipe _recipe = new UMAData.UMARecipe();
-                    uwr.Load(_recipe, UMAContext.Instance);
+                    uwr.Load(_recipe);
 
                     foreach (SlotData sd in _recipe.slotDataList)
                     {
@@ -1347,7 +1342,7 @@ namespace UMA.Controls
                     }
 
 
-                    uwr.Save(_recipe, UMAContextBase.Instance);
+                    uwr.Save(_recipe);
                     EditorUtility.SetDirty(uwr);
 #if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
                     AssetDatabase.SaveAssetIfDirty(uwr);

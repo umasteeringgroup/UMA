@@ -74,7 +74,7 @@ namespace UMA.CharacterSystem.Editors
                     if (recipesIndexed)
                     {
                         recipesIndexed = false;
-                        UMAContextBase.Instance.ValidateDictionaries();
+                        UMAAssetIndexer.Instance.RebuildRaceRecipes();
                     }
                 }
 				if (evt.type != EventType.Layout)
@@ -131,7 +131,7 @@ namespace UMA.CharacterSystem.Editors
             if (recipesIndexed)
             {
                 recipesIndexed = false;
-                UMAContextBase.Instance.ValidateDictionaries();
+                UMAAssetIndexer.Instance.RebuildRaceRecipes();
             }
 		}
 
@@ -154,9 +154,9 @@ namespace UMA.CharacterSystem.Editors
             }
             if (needToAddNew)
             {
-                if (!UMAContextBase.Instance.HasRecipe(tempRecipeAsset.name))
+                if (!UMAAssetIndexer.Instance.HasRecipe(tempRecipeAsset.name))
                 {
-                    UMAContextBase.Instance.AddRecipe(tempRecipeAsset);
+                    UMAAssetIndexer.Instance.AddRecipe(tempRecipeAsset);
                     recipesIndexed = true;
                 }
                 int newArrayElIndex = thisRecipesProp.arraySize;
@@ -287,7 +287,7 @@ namespace UMA.CharacterSystem.Editors
                     {
                         foreach (var recipe in availableRecipes[slot])
                         {
-                            var recipeAsset = UMAContextBase.Instance.GetRecipe(recipe.name, false);
+                            var recipeAsset = UMAAssetIndexer.Instance.GetRecipe(recipe.name, false);
                             if (recipeAsset != null)
                             {
                                 AddRecipe(thisRecipesProp, recipeAsset);
@@ -379,7 +379,7 @@ namespace UMA.CharacterSystem.Editors
                     if (added >= 0)
                     {
                         var recipe = recipes[added];
-                        var recipeAsset = UMAContextBase.Instance.GetRecipe(recipe, false);
+                        var recipeAsset = UMAAssetIndexer.Instance.GetRecipe(recipe, false);
                         if (recipeAsset != null)
                         {
                             AddRecipe(thisRecipesProp, recipeAsset);
@@ -469,10 +469,8 @@ namespace UMA.CharacterSystem.Editors
                         }
                         recipeName = thisElement.FindPropertyRelative("_recipeName").stringValue;
 
-                        if (UMAContext.Instance != null)
-                        {
-                            recipeIsLive = UMAContext.Instance.HasRecipe(recipeName);
-                        }
+                        recipeIsLive = UMAAssetIndexer.Instance.HasRecipe(recipeName);
+
 
                         string prequel = "";
 

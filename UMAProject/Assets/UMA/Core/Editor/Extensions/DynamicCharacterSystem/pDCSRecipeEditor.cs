@@ -40,17 +40,12 @@ namespace UMA.Editors
 
 			public bool OnGUI()
 			{
-				if (warningIcon == null)
+				UMAAssetIndexer context = UMAAssetIndexer.Instance;
+                if (warningIcon == null)
 				{
 					warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
 				}
 				bool changed = false;
-				var context = UMAContextBase.Instance;
-				if (context == null)
-				{
-					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContextBase.";
-					Debug.LogWarning(_errorMessage);
-				}
 				var recipesForRaceSlot = context.GetRecipeNamesForRaceSlot(_wsRace, _wsSlot); 
 				List<string> thisPopupVals = new List<string>();
 				thisPopupVals.Add("None");
@@ -151,19 +146,13 @@ namespace UMA.Editors
 			}
 			public bool OnGUI()
 			{
-				bool changed = false;
+                UMAAssetIndexer context = UMAAssetIndexer.Instance;
+                bool changed = false;
 				if (_race != null)
                 {
                     if (_race.wardrobeSlots.Count > 0)
 					{
-						var context = UMAContextBase.Instance;
-						if (context == null)
-						{
-							var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContextBase.";
-							Debug.LogWarning(_errorMessage);
-						}
-
-						if (_wardrobeSet == null || context == null)
+						if (_wardrobeSet == null)
                         {
                             return false;
                         }
@@ -173,7 +162,7 @@ namespace UMA.Editors
 						EditorGUILayout.HelpBox("Recently added recipes not showing up? Make sure you have added them to the 'UMA Global Library' and click the 'Refresh Recipes' button below.", MessageType.Info);
 						if (GUILayout.Button("Refresh Recipes"))
 						{
-							context.ValidateDictionaries();
+							context.RebuildRaceRecipes();
 							return false;
 						}
 						//a dictionary of slots that are being assigned by WardrobeCollections
@@ -365,11 +354,8 @@ namespace UMA.Editors
 			{
 				bool changed = false;
 				var thisUmaDataRecipe = new UMAData.UMARecipe();
-				var context = UMAContextBase.Instance;
-				if (context == null)
-                {
-                    return false;
-                }
+                UMAAssetIndexer context = UMAAssetIndexer.Instance;
+
 
                 var thisWardrobeRecipe = context.GetBaseRecipe(sourceRecipeName,true);
 				if (thisWardrobeRecipe == null)
@@ -541,12 +527,8 @@ namespace UMA.Editors
 			}
 			private void UpdateBackwardsCompatibleData()
 			{
-				var context = UMAContextBase.Instance;
-				if (context == null)
-				{
-					var _errorMessage = "Editing a recipe requires a loaded scene with a valid UMAContextBase.";
-					Debug.LogWarning(_errorMessage);
-				}
+				var context = UMAAssetIndexer.Instance;
+
 				//reset the recipe to the raceBase recipe
 				var thisBaseRecipe = _recipe.raceData.baseRaceRecipe;
 				thisBaseRecipe.Load(_recipe, context);
@@ -561,7 +543,7 @@ namespace UMA.Editors
                     for (int i = 0; i < _wardrobeSet.Count; i++)
 					{
                         WardrobeSettings set = _wardrobeSet[i];
-                        var thisRecipe = UMAContext.Instance.GetBaseRecipe(set.recipe,true);
+                        var thisRecipe = context.GetBaseRecipe(set.recipe,true);
 						if (thisRecipe == null)
 						{
 							continue;
@@ -576,7 +558,7 @@ namespace UMA.Editors
                                 for (int i1 = 0; i1 < wardrobeCollection[activeRace].Count; i1++)
 								{
                                     WardrobeSettings ws = wardrobeCollection[activeRace][i1];
-                                    var wsRecipe = UMAContext.Instance.GetBaseRecipe(ws.recipe,true);
+                                    var wsRecipe = context.GetBaseRecipe(ws.recipe,true);
 									if (wsRecipe != null)
 									{
 										if (wardrobeRecipesToRender.ContainsKey(ws.slot))

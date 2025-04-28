@@ -577,11 +577,11 @@ namespace UMA.Editors
 						//check if Avatar is DCS
 						if (avatar is UMA.CharacterSystem.DynamicCharacterAvatar)
 						{
-							asset.Save(avatar.umaData.umaRecipe, avatar.context, (avatar as DynamicCharacterAvatar).WardrobeRecipes, true);
+							asset.Save(avatar.umaData.umaRecipe,(avatar as DynamicCharacterAvatar).WardrobeRecipes, true);
 						}
 						else
 						{
-							asset.Save(avatar.umaData.umaRecipe, avatar.context);
+							asset.Save(avatar.umaData.umaRecipe);
 						}
 						System.IO.File.WriteAllText(path, asset.recipeString);
 						UMAUtils.DestroySceneObject(asset);
@@ -651,11 +651,11 @@ namespace UMA.Editors
 						//check if Avatar is DCS
 						if (avatar is DynamicCharacterAvatar)
 						{
-							asset.Save(avatar.umaData.umaRecipe, avatar.context, (avatar as DynamicCharacterAvatar).WardrobeRecipes, true);
+							asset.Save(avatar.umaData.umaRecipe, (avatar as DynamicCharacterAvatar).WardrobeRecipes, true);
 						}
 						else
 						{
-							asset.Save(avatar.umaData.umaRecipe, avatar.context);
+							asset.Save(avatar.umaData.umaRecipe);
 						}
 						AssetDatabase.CreateAsset(asset, path);
 						AssetDatabase.SaveAssets();

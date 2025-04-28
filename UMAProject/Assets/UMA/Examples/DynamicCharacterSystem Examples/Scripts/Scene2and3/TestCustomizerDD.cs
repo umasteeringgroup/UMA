@@ -61,7 +61,6 @@ namespace UMA.CharacterSystem.Examples
 		public bool _loadWardrobe = true;
 		public bool _loadBodyColors = true;
 		public bool _loadWardrobeColors = true;
-		public UMAContextBase Context;
 
 		public bool LoadRace
 		{
@@ -207,7 +206,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			changeRaceDropdown.options.Clear();
 			changeRaceDropdown.onValueChanged.RemoveListener(ChangeRace);
-			var raceDropdownOptionsArray = Avatar.context.GetAllRacesBase();
+			var raceDropdownOptionsArray = UMAAssetIndexer.Instance.GetAllRacesBase();
 			raceDropdownOptions = new List<string>();
 			//add the 'NoneSet'
 			raceDropdownOptions.Add("None Set");
@@ -323,7 +322,7 @@ namespace UMA.CharacterSystem.Examples
 				//Force CharacterSystem to find the new race - unless its None Set
 				if(RaceToSet != "None Set")
                 {
-                    UMAContextBase.Instance.GetRace(RaceToSet);
+                    UMAAssetIndexer.Instance.GetRace(RaceToSet);
                 }
 
                 DynamicCharacterAvatar.ChangeRaceOptions thisLoadOptions = DynamicCharacterAvatar.ChangeRaceOptions.none;
@@ -1009,7 +1008,7 @@ namespace UMA.CharacterSystem.Examples
 				}
 			}
 
-            List<string> list = UMAContext.Instance.GetRecipeFiles();
+            List<string> list = UMAAssetIndexer.Instance.GetRecipeFiles();
             for (int i = 0; i < list.Count; i++)
 			{
                 string s = list[i];
@@ -1031,7 +1030,7 @@ namespace UMA.CharacterSystem.Examples
 			}
 			else
 			{
-				recipeText = UMAContext.Instance.GetCharacterRecipe(filename);
+				recipeText = UMAAssetIndexer.Instance.GetCharacterRecipe(filename);
 			}
 			if (recipeText != "")
 			{

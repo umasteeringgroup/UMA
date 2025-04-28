@@ -199,7 +199,7 @@ namespace UMA.Editors
 		private List<string> GetSlotNames(UMAPackedRecipeBase recipe)
         {
 			List<string> theSlots = new List<string>();
-			UMAPackedRecipeBase.UMAPackRecipe PackRecipe =recipe.PackedLoad(UMAContextBase.Instance);
+			UMAPackedRecipeBase.UMAPackRecipe PackRecipe =recipe.PackedLoad();
 
 			if (PackRecipe.slotsV2 != null)
 			{
@@ -427,11 +427,7 @@ namespace UMA.Editors
 							butScene.width = addButsRect.width / 3f;
 							butIndex.xMin = butScene.xMax;
 							butIndex.width = (addButsRect.width / 3f)*2;
-                            if (GUI.Button(butScene,"Add to Scene Only", EditorStyles.miniButton))
-							{
-								UMAContextBase.Instance.AddRace(_compatibleRaceDatas[compatibleRaces[i]]);
-							}
-							if (GUI.Button(butIndex,"Add to Global Index (Recommended)", EditorStyles.miniButton))
+							if (GUI.Button(butIndex,"Add to Index", EditorStyles.miniButton))
 							{
 								UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _compatibleRaceDatas[compatibleRaces[i]]);
 							}
@@ -1465,8 +1461,7 @@ namespace UMA.Editors
 							var slotName = _baseSlotOptions[baseAdded - 1];
 							LastSlot = slotName;
 							//we know there should be one because we created a virtual one when we unpacked the recipe if it didn't exist
-							var context = UMAContextBase.Instance;
-							var slotToAdd = context.InstantiateSlot(slotName);
+							var slotToAdd = UMAAssetIndexer.Instance.InstantiateSlot(slotName);
 							_recipe.MergeSlot(slotToAdd, false);
 							changed |= true;
 							_dnaDirty |= true;
