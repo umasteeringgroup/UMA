@@ -415,6 +415,29 @@ namespace UMA
 
         public void Initialize()
         {
+            UMASettings settings = UMASettings.GetSettingsFromResources(); 
+            if (settings == null)
+            {
+                Debug.LogError("Unable to load UMASettings!!! UMA Will Not Work!");
+                return;
+            }
+
+            if (generator == null || generator.gameObject == null)
+            { 
+                GameObject go = GameObject.Instantiate(settings.generatorPrefab);
+                go.name = "UMAGenerator";
+                go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
+#if UNITY_EDITOR
+                if (EditorApplication.isPlaying)
+                {
+                    GameObject.DontDestroyOnLoad(go);
+                }
+#else
+                GameObject.DontDestroyOnLoad(go);
+#endif
+                go.SetActive(true);
+                generator = go.GetComponent<UMAGenerator>();
+            }
             BuildStringTypes();
             CreateTypeFolderMapping();
         }

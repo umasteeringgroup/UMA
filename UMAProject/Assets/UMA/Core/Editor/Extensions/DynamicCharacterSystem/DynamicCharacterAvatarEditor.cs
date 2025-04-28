@@ -176,7 +176,6 @@ namespace UMA.CharacterSystem.Editors
             }
 
             //The base DynamicAvatar properties- get these early because changing the race changes someof them
-            SerializedProperty context = serializedObject.FindProperty("context");
             SerializedProperty umaData = serializedObject.FindProperty("umaData");
             SerializedProperty umaGenerator = serializedObject.FindProperty("umaGenerator");
             SerializedProperty umaRecipe = serializedObject.FindProperty("umaRecipe");
@@ -290,10 +289,10 @@ namespace UMA.CharacterSystem.Editors
 
             GUILayout.Space(2f);
             //for AdvancedOptions
-            context.isExpanded = EditorGUILayout.Foldout(context.isExpanded, "Advanced Options");
-            if (context.isExpanded)
+            umaData.isExpanded = EditorGUILayout.Foldout(umaData.isExpanded, "Advanced Options");
+            if (umaData.isExpanded)
             {
-                DoAdvancedOptionsGUI(context, umaData, umaGenerator);
+                DoAdvancedOptionsGUI(umaData, umaData, umaGenerator);
             }
             GUILayout.Space(2f);
 

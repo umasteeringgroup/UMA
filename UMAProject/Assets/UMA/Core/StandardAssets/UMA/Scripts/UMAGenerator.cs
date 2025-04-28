@@ -20,7 +20,7 @@ namespace UMA
 					Debug.LogError("UMA Data ", umaToAdd.gameObject);
 				}
 				return;
-			}
+			} 
 			base.addDirtyUMA(umaToAdd);
 		}
 	}

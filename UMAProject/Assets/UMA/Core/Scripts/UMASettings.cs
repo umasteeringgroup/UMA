@@ -1,8 +1,9 @@
-#if UNITY_EDITOR
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UMA;
 using System.Threading;
 using System.Diagnostics;
@@ -12,6 +13,7 @@ namespace UMA
 
     public class UMASettings : ScriptableObject
     {
+#if UNITY_EDITOR
         public const string customSettingsPath = "Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset";
 
         [Multiline(7)]
@@ -47,7 +49,9 @@ namespace UMA
         public bool addrIncludeOther = false;
 
         public bool showWelcomeToUMA = true;
+#endif
         public GameObject generatorPrefab;
+#if UNITY_EDITOR
         public GameObject characterPrefab;
         public TextureMerge textureMerge;
 
@@ -130,7 +134,15 @@ namespace UMA
             }
             return settings;
         }
+#endif
 
+        public static UMASettings GetSettingsFromResources()
+        {
+            UMASettings settings = Resources.Load<UMASettings>("UMASettings");
+            return settings;
+        }
+
+#if UNITY_EDITOR
         public static SerializedObject GetSerializedSettings()
         {
             return new SerializedObject(GetOrCreateSettings());
@@ -160,6 +172,6 @@ namespace UMA
         public static bool AddStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addStripMaterials; } }
         public static bool AddrIncludeRecipes { get { var settings = GetOrCreateSettings(); return settings.addrIncludeRecipes; } }
         public static bool AddrIncludeOther { get { var settings = GetOrCreateSettings(); return settings.addrIncludeOther; } }
+#endif
     }
 }
-#endif
