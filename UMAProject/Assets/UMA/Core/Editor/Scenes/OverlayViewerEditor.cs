@@ -59,7 +59,7 @@ namespace UMA
 
 			SetupGenerator();
 
-			TempUMAData.Initialize(ugb);
+			TempUMAData.Initialize();
 			TempUMAData.SetSlot(0, TempSlot);
 
 			baseOverlayProperty = serializedObject.FindProperty("BaseOverlay");

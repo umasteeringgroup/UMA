@@ -754,55 +754,14 @@ namespace UMA
 
 		void Awake()
 		{
-			// Generator needs to be a scriptable object, and loaded at initialize.
-			if (!umaGenerator)
-			{
-				FindObjectOfType<UMAGeneratorBase>();
-
-				var generatorGO = GameObject.Find("UMA_GLIB");
-				if (generatorGO == null)
-                {
-                    return;
-                }
-
-                umaGenerator = generatorGO.GetComponent<UMAGeneratorBase>();
-			}
-			Initialize(umaGenerator);
+			umaGenerator = UMAAssetIndexer.Instance.generator;
+			Initialize();
 		}
 
-
-		public UMAGeneratorBase FindGenerator()
-		{
-            var gen = UnityEngine.Object.FindFirstObjectByType<UMAGeneratorBase>() as UMAGeneratorBase;
-			if (gen != null)
-            {
-				return gen;
-            }
-
-            // Some versions of Unity could find hidden objects, so we need to check for that.
-            if (GameObject.Find("TempUMAGenerator") != null)
-			{
-                return GameObject.Find("TempUMAGenerator").GetComponent<UMAGeneratorBase>();
-            }
-
-            // If we still can't find it, create a temporary one, and hide it.
-            GameObject temp = new GameObject("TempUMAGenerator")
-			{
-				hideFlags = HideFlags.HideAndDontSave
-            };
-
-			return temp.AddComponent<UMAGeneratorStub>();
-        }
-
-
-		public void Initialize(UMAGeneratorBase generator)
+		public void Initialize()
 		{
 			firstBake = true;
-
-			if (umaGenerator == null)
-            {
-                umaGenerator = generator;
-            }
+            umaGenerator = UMAAssetIndexer.Instance.generator;
 
             if (_umaRecipe == null)
 			{

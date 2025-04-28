@@ -261,7 +261,7 @@ namespace UMA
                 AddText("It relies on a library of indexed items to create characters");
                 AddText("The library data can be in Resources and/or in Addressable Bundles");
                 AddSeperator();
-                AddText("UMA uses a generator to create characters - UMA_GLIB");
+                AddText("UMA uses a generator to create characters. This is a scriptable object.");
                 AddText("This prefab needs to be in a scene for UMA to work.");
                 AddText("The generator has settings for texture merging, mesh combining, and more.");
                 AddText("To get started, use the 'Add an UMA to the current scene' button");
