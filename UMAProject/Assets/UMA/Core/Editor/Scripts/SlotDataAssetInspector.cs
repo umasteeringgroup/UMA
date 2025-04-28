@@ -178,14 +178,8 @@ namespace UMA.Editors
 			}
 		}*/
 
-		bool isWarned = false;
 		public override void OnInspectorGUI() 
 		{
-			if (!isWarned)
-            {
-                Debug.Log("SlotDataAssetInspector OnInspectorGUI");
-                isWarned = true;
-            }
             if (slot == null)
 			{
 				OnEnable();
