@@ -197,7 +197,7 @@ namespace UMA.Editors
                 return;
             }
 
-			UMAGeneratorBase ugb = UMAAssetIndexer.Instance.generator;
+			UMAGeneratorBase ugb = UMAAssetIndexer.Instance.Generator;
 
 			_animator = umaObject.gameObject.GetComponent<Animator> ();
             if (_animator == null)

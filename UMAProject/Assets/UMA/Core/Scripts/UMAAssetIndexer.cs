@@ -66,6 +66,22 @@ namespace UMA
         // TODO: change to scriptable object and load in Initialize
         public UMAGenerator generator;
 
+        public UMAGenerator Generator
+        {
+            get
+            {
+                if (generator == null)
+                {
+                    generator = GameObject.FindObjectOfType<UMAGenerator>();
+                    if (generator == null)
+                    {
+                        CreateGenerator();
+                    }
+                } 
+                return generator;
+            }
+        }
+
         public void Awake()
         {
             instanceKey = Guid.NewGuid().ToString();
@@ -415,7 +431,14 @@ namespace UMA
 
         public void Initialize()
         {
-            UMASettings settings = UMASettings.GetSettingsFromResources(); 
+            CreateGenerator();
+            BuildStringTypes();
+            CreateTypeFolderMapping();
+        }
+
+        private void CreateGenerator()
+        {
+            UMASettings settings = UMASettings.GetSettingsFromResources();
             if (settings == null)
             {
                 Debug.LogError("Unable to load UMASettings!!! UMA Will Not Work!");
@@ -423,10 +446,10 @@ namespace UMA
             }
 
             if (generator == null || generator.gameObject == null)
-            { 
+            {
                 GameObject go = GameObject.Instantiate(settings.generatorPrefab);
                 go.name = "UMAGenerator";
-                go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
+                //  go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
 #if UNITY_EDITOR
                 if (EditorApplication.isPlaying)
                 {
@@ -438,8 +461,6 @@ namespace UMA
                 go.SetActive(true);
                 generator = go.GetComponent<UMAGenerator>();
             }
-            BuildStringTypes();
-            CreateTypeFolderMapping();
         }
 
 #if UNITY_EDITOR

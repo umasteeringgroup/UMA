@@ -24,7 +24,7 @@ namespace UMA
 		{
 			get
 			{
-				return UMAAssetIndexer.Instance.generator;
+				return UMAAssetIndexer.Instance.Generator;
             }
 		}
 

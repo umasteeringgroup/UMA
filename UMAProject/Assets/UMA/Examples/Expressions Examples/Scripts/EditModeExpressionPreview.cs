@@ -55,7 +55,7 @@ namespace UMA.PoseTools
 
 			if (umaGenerator == null)
 			{
-				umaGenerator = UMAAssetIndexer.Instance.generator;
+				umaGenerator = UMAAssetIndexer.Instance.Generator;
             }
 
 			if (skeleton == null)

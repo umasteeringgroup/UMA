@@ -754,14 +754,14 @@ namespace UMA
 
 		void Awake()
 		{
-			umaGenerator = UMAAssetIndexer.Instance.generator;
+			umaGenerator = UMAAssetIndexer.Instance.Generator;
 			Initialize();
 		}
 
 		public void Initialize()
 		{
 			firstBake = true;
-            umaGenerator = UMAAssetIndexer.Instance.generator;
+            umaGenerator = UMAAssetIndexer.Instance.Generator;
 
             if (_umaRecipe == null)
 			{

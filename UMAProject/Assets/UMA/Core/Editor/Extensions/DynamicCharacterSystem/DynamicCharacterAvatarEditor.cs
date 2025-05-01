@@ -1219,7 +1219,7 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-            UMAGenerator ugb = UMAAssetIndexer.Instance.generator;
+            UMAGenerator ugb = UMAAssetIndexer.Instance.Generator;
             if (ugb == null)
             {
                 Debug.Log("Cannot find generator!");
