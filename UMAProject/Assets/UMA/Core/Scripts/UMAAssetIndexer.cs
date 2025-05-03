@@ -35,6 +35,7 @@ namespace UMA
     public partial class UMAAssetIndexer : ScriptableObject /*, ISerializationCallbackReceiver */
     {
         const float DefaultLife = 5.0f;
+        const string generatorName = "UMAGeneratorInternal";
 
         private string instanceKey = "<"+Guid.NewGuid().ToString()+">";
 
@@ -237,7 +238,6 @@ namespace UMA
                     DebugSerializationStatic("Instance is NULL - getting new instance.");
                     if (EditorApplication.isCompiling || EditorApplication.isUpdating)
                     {
-                        Debug.Log("Warning: Attempted to get instance while compiling/Updating");
                         return null;
                     }
                     DebugSerializationStatic("Loading AssetIndexer from resources...");
@@ -294,9 +294,28 @@ namespace UMA
                 if (theIndexer != null)
                 {
                     Debug.Log("playmde. creating generator");
-                    theIndexer.generator = null;
-                    theIndexer.CreateGenerator();
+                    if (theIndexer.generator != null)
+                    {
+                        Debug.Log("Entered Edit Mode. Destroying generator");
+                        GameObject.DestroyImmediate(theIndexer.generator.gameObject);
+                        theIndexer.generator = null;
+                    }
                 }
+            }
+            if (obj == PlayModeStateChange.EnteredEditMode)
+            {
+                if (theIndexer != null)
+                {
+                    if (theIndexer.generator != null)
+                    {
+                        Debug.Log("Entered Edit Mode. Destroying generator");
+                        GameObject.DestroyImmediate(theIndexer.generator.gameObject);
+                        theIndexer.generator = null;
+                    }
+                }
+                //Debug.Log("playmde. exiting playmode");
+                //theIndexer.generator = null;
+                //theIndexer.CreateGenerator();
             }
             UMAMeshData.CleanupGlobalBuffers();
         }
@@ -456,8 +475,19 @@ namespace UMA
 
             if (generator == null || generator.gameObject == null)
             {
+                GameObject goat = GameObject.Find(generatorName);
+                if (goat != null)
+                {
+                    generator = goat.GetComponent<UMAGenerator>();
+                    if (generator != null)
+                    {
+                        generator.gameObject.hideFlags = HideFlags.DontSave;
+                        return;
+                    }
+                }
+                //Debug.Log("Creating generator");
                 GameObject go = GameObject.Instantiate(settings.generatorPrefab);
-                go.name = "UMAGenerator";
+                go.name = "UMAGeneratorInternal";
                 generator = go.GetComponent<UMAGenerator>();
                 if (generator != null)
                 {
@@ -467,7 +497,7 @@ namespace UMA
                     }
                     else
                     {
-                        go.hideFlags = HideFlags.DontSave;
+                        go.hideFlags = HideFlags.DontSave; 
                     }
                 }
 
@@ -2952,6 +2982,7 @@ namespace UMA
 #if UMA_ADDRESSABLES
             AddressableUtility.ClearAddressableEntries();
 #endif
+            generator = null;
             // Rebuild the tables
             GuidTypes.Clear();
             ClearReferences();

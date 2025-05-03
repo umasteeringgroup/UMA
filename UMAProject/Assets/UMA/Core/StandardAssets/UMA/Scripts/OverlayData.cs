@@ -392,14 +392,17 @@ namespace UMA
 			{
 				if (asset.materialName != null)
 				{
-					asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
-					if (asset.material == null)
+					if (UMAAssetIndexer.Instance != null)
 					{
-						this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
-					}
-					else
-					{
-						this.colorData = new OverlayColorData(asset.material.channels.Length);
+						asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
+						if (asset.material == null)
+						{
+							this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
+						}
+						else
+						{
+							this.colorData = new OverlayColorData(asset.material.channels.Length);
+						}
 					}
 				}
             }

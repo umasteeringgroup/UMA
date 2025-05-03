@@ -1054,6 +1054,7 @@ namespace UMA.CharacterSystem.Editors
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("alwaysRebuildSkeleton"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("leanHiding"));
 #if UMA_ADDRESSABLES
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("DelayUnload"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("BundleCheck"));

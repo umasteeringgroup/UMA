@@ -363,7 +363,7 @@ namespace UMA
 
 		public bool hideRenderers;
 
-		public UMAGeneratorBase umaGenerator;
+		public UMAGeneratorBuiltin umaGenerator;
 
 		[NonSerialized]
 		public GeneratedMaterials generatedMaterials = new GeneratedMaterials();
@@ -2329,8 +2329,8 @@ namespace UMA
             dirty = true;
 			if (!umaGenerator)
 			{
-				umaGenerator = FindObjectOfType<UMAGeneratorBase>();
-			}
+				umaGenerator = UMAAssetIndexer.Instance.Generator;
+            }
 			if (umaGenerator)
 			{
 				umaGenerator.addDirtyUMA(this);

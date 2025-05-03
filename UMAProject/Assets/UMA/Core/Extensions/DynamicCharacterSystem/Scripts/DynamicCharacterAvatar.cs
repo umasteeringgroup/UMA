@@ -103,6 +103,8 @@ namespace UMA.CharacterSystem
         //but for it to still not be shown immediately or you may want to hide it anyway
         [Tooltip("If checked will turn off the SkinnedMeshRenderer after the character has been created to hide it. If not checked will turn it on again.")]
         public bool hide = false;
+        [Tooltip("If checked, then any generated textures will be freed when hidden, and regenerated when shown again. This only works when the 'hide' property is set of cleared. This will do nothing if you are not generating textures.")]
+        public bool leanHiding = false;
         [NonSerialized]
         public bool lastHide;
 
@@ -767,6 +769,7 @@ namespace UMA.CharacterSystem
 
         public void SetRenderers(bool val)
         {
+
             if (umaData.rendererCount > 0)
             {
                 SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
@@ -778,23 +781,52 @@ namespace UMA.CharacterSystem
                         for (int i = 0; i < array.Length; i++)
                         {
                             SkinnedMeshRenderer smr = array[i];
-                            if (smr != null && smr.enabled == hide)
+                            if (smr != null && smr.enabled == true)
                             {
-                                smr.enabled = !hide;
+                                smr.enabled = false; 
                             }
                         }
                     }
-                    if (!frenderer.enabled && hide == false)
+
+                }
+
+                if (hide)
+                {
+                    // dump all generated textures
+                    if (leanHiding)
                     {
-                        SkinnedMeshRenderer[] array = umaData.GetRenderers();
-                        for (int i = 0; i < array.Length; i++)
-                        {
-                            SkinnedMeshRenderer smr = array[i];
-                            if (smr != null && smr.enabled == hide)
-                            {
-                                smr.enabled = !hide;
-                            }
-                        }
+                        umaData.CleanTextures();
+                    }
+                }
+                else
+                {
+                    if (leanHiding)
+                    {
+                        // restore generated textures, then unhide.
+                        umaData.Dirty(false, true, false);
+                        umaData.OnCharacterUpdated += UnhideRenderers;
+                    }
+                    else
+                    {
+                        UnhideRenderers(umaData);
+                    }
+                }
+            }
+        }
+
+        private void UnhideRenderers(UMAData data)
+        {
+            umaData.OnCharacterUpdated -= UnhideRenderers;
+            SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
+            if (!frenderer.enabled && hide == false)
+            {
+                SkinnedMeshRenderer[] array = umaData.GetRenderers();
+                for (int i = 0; i < array.Length; i++)
+                {
+                    SkinnedMeshRenderer smr = array[i];
+                    if (smr != null && smr.enabled == false)
+                    {
+                        smr.enabled = true;
                     }
                 }
             }
@@ -3920,7 +3952,7 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
-            Debug.Log($"Buildcharacter {gameObject.name}");
+            //Debug.Log($"Buildcharacter {gameObject.name}");
             InitialStartup(); // This is to make sure that the UMAContext is set up correctly
 
             overrideDNA.Clear();

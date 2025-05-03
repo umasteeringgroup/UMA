@@ -12,7 +12,8 @@ namespace UMA
 
 		public override void addDirtyUMA(UMAData umaToAdd)
 		{
-			if (!gameObject.activeInHierarchy)
+			// Debug.Log(Debug.isDebugBuild ? "Adding Dirty UMA: " + umaToAdd.gameObject.name : string.Empty);
+            if (!gameObject.activeInHierarchy)
 			{
 				if (Debug.isDebugBuild)
 				{
