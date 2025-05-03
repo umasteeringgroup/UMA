@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
+using System;
 
 namespace UMA
 {
@@ -9,12 +10,15 @@ namespace UMA
 	/// </summary>
 	public partial class UMAAssetIndexer 
 	{
-		/// <summary>
-		/// Gets a race by name, if it has been added to the library
-		/// </summary>
-		/// <returns>The race.</returns>
-		/// <param name="name">Name.</param>
-		public RaceData HasRace(string name)
+        [NonSerialized]
+        public List<UMAData> dirtyList = new List<UMAData>();
+
+        /// <summary>
+        /// Gets a race by name, if it has been added to the library
+        /// </summary>
+        /// <returns>The race.</returns>
+        /// <param name="name">Name.</param>
+        public RaceData HasRace(string name)
 		{
 			return GetAsset<RaceData>(name);
 		}

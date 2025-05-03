@@ -63,13 +63,13 @@ MonoBehaviour:
   MultiThreadTextureConversion: 1
   MaxQueuedConversionsPerFrame: 8
   SaveAndRestoreIgnoredItems: 0
-  skipAddressableRecipeLookupInEditor: 0
   meshCombiner: {fileID: 7275351159514515506}
   InitialScaleFactor: 1
   editorInitialScaleFactor: 4
   IterationCount: 1
   processAllPending: 0
   applyInline: 0
+  showInHierarchy: 1
   garbageCollectionRate: 8
   collectGarbage: 1
   autoSetRaceBlendshapes: 0

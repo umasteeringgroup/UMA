@@ -11,10 +11,17 @@ namespace UMA
 	{
 		[NonSerialized]
 		protected UMAData umaData;
-		[NonSerialized]
-		protected List<UMAData> umaDirtyList = new List<UMAData>();
 
-		private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
+        protected List<UMAData> umaDirtyList
+		{
+			get
+			{
+				return UMAAssetIndexer.Instance.dirtyList;
+			}
+		}
+
+
+        private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
 		public UMAMeshCombiner meshCombiner;
 		private HashSet<string> raceNames;
@@ -38,6 +45,9 @@ namespace UMA
 
 		[Tooltip("When enable, the texture will be applied right away during the conversion process")]
 		public bool applyInline = false;
+
+		[Tooltip("When true, the generator is visible in the hierarchy. useful for debugging.")]
+		public bool showInHierarchy = false;
 
         private int forceGarbageCollect;
         /// <summary>
@@ -66,6 +76,8 @@ namespace UMA
 		public long SlotsChanged;
 		[NonSerialized]
 		public long TexturesProcessed;
+		[NonSerialized]
+		public long pendingUmas;
 
         public virtual void OnEnable()
 		{
@@ -169,6 +181,7 @@ namespace UMA
 				{
 					count = umaDirtyList.Count;
                 }
+				pendingUmas = umaDirtyList.Count;
 
 				if (hasPendingUMAS())
 				{

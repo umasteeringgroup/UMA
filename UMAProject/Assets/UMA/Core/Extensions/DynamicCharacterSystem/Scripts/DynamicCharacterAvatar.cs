@@ -3920,6 +3920,7 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
+            Debug.Log($"Buildcharacter {gameObject.name}");
             InitialStartup(); // This is to make sure that the UMAContext is set up correctly
 
             overrideDNA.Clear();

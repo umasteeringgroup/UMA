@@ -289,6 +289,15 @@ namespace UMA
             {
                 RebuildUMAS(SceneManager.GetActiveScene());
             }
+            if (obj == PlayModeStateChange.ExitingEditMode)
+            {
+                if (theIndexer != null)
+                {
+                    Debug.Log("playmde. creating generator");
+                    theIndexer.generator = null;
+                    theIndexer.CreateGenerator();
+                }
+            }
             UMAMeshData.CleanupGlobalBuffers();
         }
 
@@ -449,7 +458,19 @@ namespace UMA
             {
                 GameObject go = GameObject.Instantiate(settings.generatorPrefab);
                 go.name = "UMAGenerator";
-                //  go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
+                generator = go.GetComponent<UMAGenerator>();
+                if (generator != null)
+                {
+                    if (!generator.showInHierarchy)
+                    {
+                        go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
+                    }
+                    else
+                    {
+                        go.hideFlags = HideFlags.DontSave;
+                    }
+                }
+
 #if UNITY_EDITOR
                 if (EditorApplication.isPlaying)
                 {
@@ -459,7 +480,6 @@ namespace UMA
                 GameObject.DontDestroyOnLoad(go);
 #endif
                 go.SetActive(true);
-                generator = go.GetComponent<UMAGenerator>();
             }
         }
 
