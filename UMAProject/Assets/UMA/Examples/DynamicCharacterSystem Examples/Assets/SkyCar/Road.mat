@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Road
-  m_Shader: {fileID: -6465566751694194690, guid: dc34824871ae54a4ab4b1152574918f0,
+  m_Shader: {fileID: -6465566751694194690, guid: e2c95817ac413714c8f36b80020c9867,
     type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -33,11 +33,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
         m_Texture: {fileID: 2800000, guid: 65da2c549736ca54e8cfb2bf941b15de, type: 3}
-        m_Scale: {x: 8, y: 8}
+        m_Scale: {x: 1, y: 100}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 2800000, guid: e165712a3e967fb4f8ceacbc4ecef661, type: 3}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 1, y: 100}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
@@ -69,7 +69,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 2800000, guid: 867ea551f07a55349bbea8c5006d4c4b, type: 3}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 1, y: 100}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
         m_Texture: {fileID: 0}
@@ -107,13 +107,13 @@ Material:
     - _Metallic: 0
     - _MetallicModulation: 1
     - _Mode: 0
-    - _NormalStrength: 1.083
+    - _NormalStrength: 1.41
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _RimLightPower: 4
     - _RimLightingModulation: 0
     - _Smoothness: 0
-    - _SmoothnessModulation: 1
+    - _SmoothnessModulation: 0.09
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SpecularModulation: 1
