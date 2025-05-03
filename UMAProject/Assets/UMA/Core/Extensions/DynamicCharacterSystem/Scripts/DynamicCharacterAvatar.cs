@@ -5598,10 +5598,14 @@ namespace UMA.CharacterSystem
             {
                 get { return _theRaceData; }
             }
-
+             
             public void SetRaceData()
             {
                 if (string.IsNullOrEmpty(name))
+                {
+                    return;
+                }
+                if (UMAAssetIndexer.Instance == null)
                 {
                     return;
                 }
