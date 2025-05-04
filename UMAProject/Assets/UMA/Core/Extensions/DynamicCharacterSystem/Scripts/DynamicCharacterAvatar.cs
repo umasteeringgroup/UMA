@@ -103,7 +103,7 @@ namespace UMA.CharacterSystem
         //but for it to still not be shown immediately or you may want to hide it anyway
         [Tooltip("If checked will turn off the SkinnedMeshRenderer after the character has been created to hide it. If not checked will turn it on again.")]
         public bool hide = false;
-        [Tooltip("If checked, then any generated textures will be freed when hidden, and regenerated when shown again. This only works when the 'hide' property is set of cleared. This will do nothing if you are not generating textures.")]
+        [Tooltip("If checked, then any generated textures will be freed when hidden, and regenerated when shown again. Does nothing at edit time. At playtime, this only works when the 'hide' property is set of cleared. This will do nothing if you are not generating textures.")]
         public bool leanHiding = false;
         [NonSerialized]
         public bool lastHide;
@@ -801,7 +801,7 @@ namespace UMA.CharacterSystem
                 if (hide)
                 {
                     // dump all generated textures
-                    if (leanHiding)
+                    if (leanHiding && UnityEngine.Application.isPlaying)
                     {
                         umaData.CleanTextures();
                     }
@@ -812,7 +812,16 @@ namespace UMA.CharacterSystem
                     {
                         // restore generated textures, then unhide.
                         umaData.Dirty(false, true, false);
-                        umaData.OnCharacterUpdated += UnhideRenderers;
+                        if (UnityEngine.Application.isPlaying)
+                        {
+                            umaData.Dirty(false, true, false);
+                            umaData.OnCharacterUpdated += UnhideRenderers;
+                        }
+                        else
+                        {
+                            // In the editor, we need to unhide immediately.
+                            UnhideRenderers(umaData);
+                        }
                     }
                     else
                     {
