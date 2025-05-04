@@ -56,15 +56,15 @@ namespace UMA
             }
 
             DCA.CharacterCreated = new UMADataEvent();
-            DCA.CharacterCreated.AddListener(IsCreated);
+            DCA.CharacterCreated.AddListener(UMACreated);
             // Set any predefined wardrobe items.
             go.transform.position = new Vector3(0f, 0.5f, 0f);
             go.SetActive(true);
         }
 
-        public void IsCreated(UMAData u)
+        public void UMACreated(UMAData u)
         {
-            Debug.Log("Is Created!");
+            Debug.Log("UMA Successfully Created!");
         }
     }
 }

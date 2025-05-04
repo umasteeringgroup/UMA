@@ -660,36 +660,72 @@ namespace UMA
 		/// <summary>
 		/// Callback event when character has been updated.
 		/// </summary>
-		public event Action<UMAData> OnCharacterBegun { add { if (CharacterBegun == null) { CharacterBegun = new UMADataEvent(); } CharacterBegun.AddAction(value); } remove { CharacterBegun.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterBegun 
+		{ 
+			add 
+			{ 
+				if (CharacterBegun == null) 
+				{ 
+					CharacterBegun = new UMADataEvent(); 
+				} 
+				CharacterBegun.AddAction(value); 
+			} 
+			remove 
+			{ 
+				if (CharacterBegun == null)
+                {
+                    return;
+                }
+                CharacterBegun.RemoveAction(value); 
+			} 
+		}
 		/// <summary>
 		/// Callback event when character has been updated.
 		/// </summary>
-		public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) { CharacterUpdated = new UMADataEvent(); } CharacterUpdated.AddAction(value); } remove { CharacterUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterUpdated 
+		{ 
+			add 
+			{ 
+				if (CharacterUpdated == null) 
+				{ 
+					CharacterUpdated = new UMADataEvent(); 
+				} 
+				CharacterUpdated.AddAction(value); 
+			} 
+			remove 
+			{ 
+				if (CharacterUpdated == null)
+                {
+					return;
+                }
+                CharacterUpdated.RemoveAction(value); 
+			} 
+		}
 		/// <summary>
 		/// Callback event when character has been completely created.
 		/// </summary>
-		public event Action<UMAData> OnCharacterCreated { add { if (CharacterCreated == null) { CharacterCreated = new UMADataEvent(); } CharacterCreated.AddAction(value); } remove { CharacterCreated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterCreated { add { if (CharacterCreated == null) { CharacterCreated = new UMADataEvent(); } CharacterCreated.AddAction(value); } remove { if (CharacterCreated == null) { return; } CharacterCreated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event when character has been destroyed.
 		/// </summary>
-		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) { CharacterDestroyed = new UMADataEvent(); } CharacterDestroyed.AddAction(value); } remove { CharacterDestroyed.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) { CharacterDestroyed = new UMADataEvent(); } CharacterDestroyed.AddAction(value); } remove { if (CharacterDestroyed == null) { return; } CharacterDestroyed.RemoveAction(value); } }
 
 		/// <summary>
 		/// Callback event when character DNA has been updated.
 		/// </summary>
-		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) { CharacterDnaUpdated = new UMADataEvent(); } CharacterDnaUpdated.AddAction(value); } remove { CharacterDnaUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) { CharacterDnaUpdated = new UMADataEvent(); } CharacterDnaUpdated.AddAction(value); } remove { if (CharacterDnaUpdated == null) { return; } CharacterDnaUpdated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event used by UMA to make last minute tweaks
 		/// </summary>
-		public event Action<UMAData> OnCharacterBeforeUpdated { add { if (CharacterBeforeUpdated == null) { CharacterBeforeUpdated = new UMADataEvent(); } CharacterBeforeUpdated.AddAction(value);} remove { CharacterBeforeUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterBeforeUpdated { add { if (CharacterBeforeUpdated == null) { CharacterBeforeUpdated = new UMADataEvent(); } CharacterBeforeUpdated.AddAction(value);} remove { if (CharacterBeforeUpdated == null) { return; } CharacterBeforeUpdated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event used by UMA to make last minute tweaks
 		/// </summary>
-		public event Action<UMAData> OnCharacterBeforeDnaUpdated { add { if (CharacterBeforeDnaUpdated == null) { CharacterBeforeDnaUpdated = new UMADataEvent(); } CharacterBeforeDnaUpdated.AddAction(value);} remove { CharacterBeforeDnaUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterBeforeDnaUpdated { add { if (CharacterBeforeDnaUpdated == null) { CharacterBeforeDnaUpdated = new UMADataEvent(); } CharacterBeforeDnaUpdated.AddAction(value);} remove { if (CharacterBeforeDnaUpdated == null) { return; } CharacterBeforeDnaUpdated.RemoveAction(value); } }
 
-		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) { AnimatorStateSaved = new UMADataEvent(); } AnimatorStateSaved.AddAction(value); } remove { AnimatorStateSaved.RemoveAction(value); } }
-		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) { AnimatorStateRestored = new UMADataEvent(); } AnimatorStateRestored.AddAction(value); } remove { AnimatorStateRestored.RemoveAction(value); } }
-		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) { PreUpdateUMABody = new UMADataEvent(); } PreUpdateUMABody.AddAction(value); } remove { PreUpdateUMABody.RemoveAction(value); } } //VES added
+		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) { AnimatorStateSaved = new UMADataEvent(); } AnimatorStateSaved.AddAction(value); } remove { if (AnimatorStateSaved == null) { return; } AnimatorStateSaved.RemoveAction(value); } }
+		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) { AnimatorStateRestored = new UMADataEvent(); } AnimatorStateRestored.AddAction(value); } remove { if (AnimatorStateRestored == null) { return; } AnimatorStateRestored.RemoveAction(value); } }
+		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) { PreUpdateUMABody = new UMADataEvent(); } PreUpdateUMABody.AddAction(value); } remove { if (PreUpdateUMABody == null) { return; } PreUpdateUMABody.RemoveAction(value); } } //VES added
 
 		public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;

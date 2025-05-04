@@ -293,10 +293,10 @@ namespace UMA
             {
                 if (theIndexer != null)
                 {
-                    Debug.Log("playmde. creating generator");
+                    // Debug.Log("playmde. creating generator");
                     if (theIndexer.generator != null)
                     {
-                        Debug.Log("Entered Edit Mode. Destroying generator");
+                        //Debug.Log("Entered Edit Mode. Destroying generator");
                         GameObject.DestroyImmediate(theIndexer.generator.gameObject);
                         theIndexer.generator = null;
                     }
@@ -308,7 +308,7 @@ namespace UMA
                 {
                     if (theIndexer.generator != null)
                     {
-                        Debug.Log("Entered Edit Mode. Destroying generator");
+                        //Debug.Log("Entered Edit Mode. Destroying generator");
                         GameObject.DestroyImmediate(theIndexer.generator.gameObject);
                         theIndexer.generator = null;
                     }

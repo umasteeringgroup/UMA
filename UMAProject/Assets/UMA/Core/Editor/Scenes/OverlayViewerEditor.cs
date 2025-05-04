@@ -40,7 +40,15 @@ namespace UMA
 
 		private void Initialize(bool retry = true)
 		{
-			if (serializedObject == null)  
+			if (target == null)
+            {
+                return;
+            }
+            if (serializedObject == null)  // I don't even know how this is possible. Nothing is selected. But unity is doing it.
+            {
+                return;
+            }
+            if (serializedObject == null)  
             {
                 return;
             }

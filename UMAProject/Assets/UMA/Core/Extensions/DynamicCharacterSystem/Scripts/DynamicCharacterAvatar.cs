@@ -769,6 +769,10 @@ namespace UMA.CharacterSystem
 
         public void SetRenderers(bool val)
         {
+            if (umaData == null)
+            {
+                return;
+            }
 
             if (umaData.rendererCount > 0)
             {
@@ -816,6 +820,10 @@ namespace UMA.CharacterSystem
 
         private void UnhideRenderers(UMAData data)
         {
+            if (umaData == null)
+            {
+                return;
+            }
             umaData.OnCharacterUpdated -= UnhideRenderers;
             SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
             if (!frenderer.enabled && hide == false)
