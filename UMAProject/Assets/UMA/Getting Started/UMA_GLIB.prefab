@@ -52,7 +52,7 @@ MonoBehaviour:
   asyncMipRegen: 1
   convertMipMaps: 1
   atlasResolution: 2048
-  editorAtlasResolution: 1024
+  editorAtlasResolution: 2048
   AtlasOverflowFitMethod: 1
   FitPercentageDecrease: 0.5
   SharperFitTextures: 1
@@ -65,7 +65,7 @@ MonoBehaviour:
   SaveAndRestoreIgnoredItems: 0
   meshCombiner: {fileID: 7275351159514515506}
   InitialScaleFactor: 1
-  editorInitialScaleFactor: 4
+  editorInitialScaleFactor: 1
   IterationCount: 1
   processAllPending: 0
   applyInline: 0

@@ -693,6 +693,10 @@ namespace UMA.CharacterSystem
                 return;
             }
 
+            if (this == null || this.gameObject == null)
+            {
+                return;
+            }
             bool slotsOnly = nextBuildSlotsOnly;
             UMAGenerator ugb = umaGenerator;
             if (ugb != null)
