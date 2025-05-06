@@ -118,7 +118,7 @@ namespace UMA
                 {
                     if (!_addressableEntries.ContainsKey(entry.AssetPath))
                     {
-                        AddEntry(entry.AssetPath, entry);
+                        InternalAddEntry(entry.AssetPath, entry);
                     }
                 }
             }
@@ -131,8 +131,13 @@ namespace UMA
             ValidateEntryAndInfo();
             if (!_addressableEntries.ContainsKey(assetPath))
             {
-                _addressableEntries.Add(assetPath, new AddressableEntryAndInfo(entry, new AddressableInfo(entry.address, entry.parentGroup.Name, GetAddressableLabels(entry))));
+                InternalAddEntry(assetPath, entry);
             }
+        }
+
+        public static void InternalAddEntry(string assetPath, AddressableAssetEntry entry)
+        {
+                _addressableEntries.Add(assetPath, new AddressableEntryAndInfo(entry, new AddressableInfo(entry.address, entry.parentGroup.Name, GetAddressableLabels(entry))));
         }
 
         public static AddressableAssetEntry GetAddressableAssetEntry(string assetPath)
@@ -142,6 +147,12 @@ namespace UMA
             {
                 return _addressableEntries[assetPath].Entry;
             }
+
+            if (EditorApplication.isPlaying)
+            {
+                return null;
+            }
+
             AddressableAssetEntry entry = internalGetAddressableAssetEntry(assetPath);
             if (entry != null)
             {
@@ -152,7 +163,7 @@ namespace UMA
 
         private static void ValidateEntryAndInfo()
         {
-            if (_addressableEntries == null)
+            if (_addressableEntries == null || _addressableEntries.Count == 0)
             {
                 RebuildAddressableEntries();
             }

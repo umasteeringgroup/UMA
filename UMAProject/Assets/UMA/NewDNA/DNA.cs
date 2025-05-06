@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UMA.CharacterSystem;
 using UnityEngine;
 
 namespace UMA
@@ -9,25 +10,25 @@ namespace UMA
         public string name;
         public string description;
         public List<DNAEffect> effects = new List<DNAEffect>();
-        public void PreApply(UMAData umaData, float value)
+        public void PreApply(DynamicCharacterAvatar avatar, float value)
         {
             foreach (var effect in effects)
             {
-                effect.PreApply(umaData, this, value);
+                effect.PreApply(avatar, this, value);
             }
         }
-        public void Apply(UMAData umaData, float value)
+        public void Apply(DynamicCharacterAvatar avatar, float value)
         {
             foreach (var effect in effects)
             {
-                effect.Apply(umaData, this, value);
+                effect.Apply(avatar, this, value);
             }
         }
-        public void PostApply(UMAData umaData, float value)
+        public void PostApply(DynamicCharacterAvatar avatar, float value)
         {
             foreach (var effect in effects)
             {
-                effect.PostApply(umaData, this, value);
+                effect.PostApply(avatar, this, value);
             }
         }
     }
