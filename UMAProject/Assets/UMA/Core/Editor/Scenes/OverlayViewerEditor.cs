@@ -40,7 +40,15 @@ namespace UMA
 
 		private void Initialize(bool retry = true)
 		{
-			if (serializedObject == null)  
+			if (target == null)
+            {
+                return;
+            }
+            if (serializedObject == null)  // I don't even know how this is possible. Nothing is selected. But unity is doing it.
+            {
+                return;
+            }
+            if (serializedObject == null)  
             {
                 return;
             }
@@ -59,7 +67,7 @@ namespace UMA
 
 			SetupGenerator();
 
-			TempUMAData.Initialize(ugb);
+			TempUMAData.Initialize();
 			TempUMAData.SetSlot(0, TempSlot);
 
 			baseOverlayProperty = serializedObject.FindProperty("BaseOverlay");

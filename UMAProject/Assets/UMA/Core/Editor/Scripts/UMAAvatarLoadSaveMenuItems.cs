@@ -60,7 +60,7 @@ namespace UMA.Editors
 			EditorUtility.DisplayDialog("Saved", "Avatar save to assets as CreatedAvatar", "OK");
 		}
 
-		public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA)
+		public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting)
 		{
 			Folder = Folder + "/" + CharName;
 
@@ -158,50 +158,94 @@ namespace UMA.Editors
 				smr.materials = mats;
 			}
 
-			// save Animator Avatar.
-			var animator = baseObject.GetComponent<Animator>();
+            // save Animator Avatar.
+            var animator = baseObject.GetComponent<Animator>();
+            string avatarName = Folder + "/" + CharName + "_Avatar.asset";
+            CustomAssetUtility.SaveAsset<Avatar>(animator.avatar, avatarName);
 
-			string avatarName = Folder + "/"+CharName+"_Avatar.asset";
-			CustomAssetUtility.SaveAsset<Avatar>(animator.avatar, avatarName);
 
-			DestroyImmediate(avatar);
-			var lod = baseObject.GetComponent<UMASimpleLOD>();
-			if (lod != null)
-            {
-                DestroyImmediate(lod);
-            }
-
-            if (AddStandaloneDNA)
+            if (replaceExisting)
 			{
-				UMAData uda = baseObject.GetComponent<UMAData>();
-				StandAloneDNA sda = baseObject.AddComponent<UMA.StandAloneDNA>();
-				sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
-				if (avatar is DynamicCharacterAvatar)
+				DestroyImmediate(avatar);
+				var lod = baseObject.GetComponent<UMASimpleLOD>();
+				if (lod != null)
 				{
-					DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
-					sda.avatarDefinition = avt.GetAvatarDefinition(true);
+					DestroyImmediate(lod);
 				}
-				sda.umaData = uda;
+
+				if (AddStandaloneDNA)
+				{
+					UMAData uda = baseObject.GetComponent<UMAData>();
+					StandAloneDNA sda = baseObject.AddComponent<UMA.StandAloneDNA>();
+					sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+					if (avatar is DynamicCharacterAvatar)
+					{
+						DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+						sda.avatarDefinition = avt.GetAvatarDefinition(true);
+					}
+					sda.umaData = uda;
+				}
+				else
+				{
+					var ud = baseObject.GetComponent<UMAData>();
+					if (ud != null)
+					{
+						DestroyImmediate(ud);
+					}
+				}
+				var ue = baseObject.GetComponent<UMAExpressionPlayer>();
+				if (ue != null)
+				{
+					DestroyImmediate(ue);
+				}
+
+				baseObject.name = CharName;
+				string prefabName = Folder + "/" + CharName + ".prefab";
+				prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
+				PrefabUtility.SaveAsPrefabAssetAndConnect(baseObject, prefabName, InteractionMode.AutomatedAction);
 			}
 			else
 			{
-				var ud = baseObject.GetComponent<UMAData>();
-				if (ud != null)
+                // Create a new GameObject to hold the converted avatar.
+                GameObject newAvatar = GameObject.Instantiate(baseObject);
+                var lod = newAvatar.GetComponent<UMASimpleLOD>();
+                if (lod != null)
                 {
-                    DestroyImmediate(ud);
+                    DestroyImmediate(lod);
                 }
-            }
-			var ue = baseObject.GetComponent<UMAExpressionPlayer>();
-			if (ue != null)
-            {
-                DestroyImmediate(ue);
-            }
 
-            baseObject.name = CharName;
-			string prefabName = Folder + "/"+CharName+".prefab";
-			prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
-			PrefabUtility.SaveAsPrefabAssetAndConnect(baseObject, prefabName, InteractionMode.AutomatedAction);
-		}
+                if (AddStandaloneDNA)
+                {
+                    UMAData uda = newAvatar.GetComponent<UMAData>();
+                    StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
+                    sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+                    if (avatar is DynamicCharacterAvatar)
+                    {
+                        DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+                        sda.avatarDefinition = avt.GetAvatarDefinition(true);
+                    }
+                    sda.umaData = uda;
+                }
+                else
+                {
+                    var ud = newAvatar.GetComponent<UMAData>();
+                    if (ud != null)
+                    {
+                        DestroyImmediate(ud);
+                    }
+                }
+                var ue = newAvatar.GetComponent<UMAExpressionPlayer>();
+                if (ue != null)
+                {
+                    DestroyImmediate(ue);
+                }
+
+                newAvatar.name = CharName;
+                string prefabName = Folder + "/" + CharName + ".prefab";
+                prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
+                PrefabUtility.SaveAsPrefabAssetAndConnect(newAvatar, prefabName, InteractionMode.AutomatedAction);
+            }
+        }
 
 
 		[UnityEditor.MenuItem("GameObject/UMA/Save Atlas Textures")]
@@ -404,7 +448,7 @@ namespace UMA.Editors
 			return convertedNormalMap;
 		}
 
-		private static Texture2D SConvertNormalMap(RenderTexture normalMap)
+		public static Texture2D SConvertNormalMap(RenderTexture normalMap)
 		{
 			ComputeShader normalMapConverter = Resources.Load<ComputeShader>("Shader/NormalShader");
 			int kernel = normalMapConverter.FindKernel("NormalCvt");
@@ -577,11 +621,11 @@ namespace UMA.Editors
 						//check if Avatar is DCS
 						if (avatar is UMA.CharacterSystem.DynamicCharacterAvatar)
 						{
-							asset.Save(avatar.umaData.umaRecipe, avatar.context, (avatar as DynamicCharacterAvatar).WardrobeRecipes, true);
+							asset.Save(avatar.umaData.umaRecipe,(avatar as DynamicCharacterAvatar).WardrobeRecipes, true);
 						}
 						else
 						{
-							asset.Save(avatar.umaData.umaRecipe, avatar.context);
+							asset.Save(avatar.umaData.umaRecipe);
 						}
 						System.IO.File.WriteAllText(path, asset.recipeString);
 						UMAUtils.DestroySceneObject(asset);
@@ -651,11 +695,11 @@ namespace UMA.Editors
 						//check if Avatar is DCS
 						if (avatar is DynamicCharacterAvatar)
 						{
-							asset.Save(avatar.umaData.umaRecipe, avatar.context, (avatar as DynamicCharacterAvatar).WardrobeRecipes, true);
+							asset.Save(avatar.umaData.umaRecipe, (avatar as DynamicCharacterAvatar).WardrobeRecipes, true);
 						}
 						else
 						{
-							asset.Save(avatar.umaData.umaRecipe, avatar.context);
+							asset.Save(avatar.umaData.umaRecipe);
 						}
 						AssetDatabase.CreateAsset(asset, path);
 						AssetDatabase.SaveAssets();
@@ -840,7 +884,9 @@ namespace UMA.Editors
 	{
 		[Tooltip("The character that you want to convert")]
 		public UMAAvatarBase baseObject;
-		[Tooltip("Convert Swizzled normal maps back to standard normal maps")]
+		[Tooltip("If true, will replace the UMA with the generated prefab in the scene")]
+        public bool replaceExisting = false;
+        [Tooltip("Convert Swizzled normal maps back to standard normal maps")]
 		public bool UnswizzleNormalMaps = true;
 		[Tooltip("If True, will keep the umaData, and add a Standalone DNA component allowing you to load/save/Deform skeletal DNA")]
 		public bool AddStandaloneDNA = true;
@@ -875,6 +921,16 @@ namespace UMA.Editors
 			UnswizzleNormalMaps = EditorGUILayout.Toggle("Unswizzle Normals", UnswizzleNormalMaps);
 			EditorGUILayout.HelpBox("Adding Standalone DNA will allow you to adjust most DNA of the character, without it being an UMA. However, it will require that you have the UMA system in the project.",MessageType.None);
 			AddStandaloneDNA = EditorGUILayout.Toggle("Add Standalone DNA", AddStandaloneDNA);
+
+            replaceExisting = EditorGUILayout.Toggle("Replace Existing UMA", replaceExisting);
+            if (replaceExisting)
+            {
+                EditorGUILayout.HelpBox("If you replace the existing UMA, it will be removed from the scene. If you do not replace it, you will need to manually add the prefab to the scene.", MessageType.None);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("If you do not replace the existing UMA, you will need to manually add the prefab to the scene.", MessageType.None);
+            }
 			CharacterName = EditorGUILayout.TextField("Prefab Name", CharacterName);
 			prefabFolder = EditorGUILayout.ObjectField("Prefab Base Folder", prefabFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 
@@ -884,7 +940,7 @@ namespace UMA.Editors
 			{
 				if (GUILayout.Button("Make Prefab") && prefabFolder != null)
 				{
-					UMAAvatarLoadSaveMenuItems.ConvertToNonUMA(baseObject.gameObject, baseObject, folder, UnswizzleNormalMaps, CharacterName,AddStandaloneDNA);
+					UMAAvatarLoadSaveMenuItems.ConvertToNonUMA(baseObject.gameObject, baseObject, folder, UnswizzleNormalMaps, CharacterName,AddStandaloneDNA,replaceExisting);
 					EditorUtility.DisplayDialog("UMA Prefab Saver", "Conversion complete", "OK");
 				}
 			}

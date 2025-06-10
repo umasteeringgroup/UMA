@@ -143,7 +143,7 @@ namespace UMA.CharacterSystem.Examples
 				}
 				else
 				{
-					Dictionary<string, List<UMATextRecipe>> recipesToPhoto = UMAContext.Instance.GetRecipes(avatarToPhoto.activeRace.name);
+					Dictionary<string, List<UMATextRecipe>> recipesToPhoto = UMAAssetIndexer.Instance.GetRecipes(avatarToPhoto.activeRace.name);
 					basePhotoTaken = false;
 					StartCoroutine(TakePhotosCoroutine(recipesToPhoto));
 				}
@@ -687,7 +687,7 @@ namespace UMA.CharacterSystem.Examples
 			{
                 UMATextRecipe utr = wardrobeRecipeToPhoto[i];
                 UMAData.UMARecipe tempLoadedRecipe = new UMAData.UMARecipe();
-				utr.Load(tempLoadedRecipe, avatarToPhoto.context);
+				utr.Load(tempLoadedRecipe);
                 for (int i1 = 0; i1 < tempLoadedRecipe.slotDataList.Length; i1++)
 				{
                     SlotData slot = tempLoadedRecipe.slotDataList[i1];

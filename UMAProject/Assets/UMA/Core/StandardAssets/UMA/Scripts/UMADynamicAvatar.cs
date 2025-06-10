@@ -34,9 +34,7 @@ namespace UMA
 		static void CreateDynamicAvatarMenuItem()
 		{
 			var res = new GameObject("New Dynamic Avatar");
-			var da = res.AddComponent<UMADynamicAvatar>();
-			da.context = UMAContextBase.FindInstance();
-			da.umaGenerator = Component.FindObjectOfType<UMAGeneratorBase>();
+			res.AddComponent<UMADynamicAvatar>();
 			UnityEditor.Selection.activeGameObject = res;
 		}
 	#endif

@@ -126,8 +126,34 @@ namespace UMA.Editors
 			else
             {
 				EditorGUILayout.HelpBox("The UMAData component is a runtime component and cannot be adjusted at edit time.",MessageType.Info);
+                DoEditTimeInfo();
             }
         }
+
+        protected void DoEditTimeInfo()
+        {
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 1f));
+            EditorGUILayout.LabelField("Edit Time Info", EditorStyles.boldLabel);
+            EditorGUILayout.IntField("Instance ID", _umaData.GetInstanceID());
+            EditorGUILayout.Toggle("Using 32 bit", _umaData.force32bit);
+            if (_umaData.umaRecipe != null)
+            {
+                EditorGUILayout.IntField("SlotCount", _umaData.umaRecipe.slotDataList.Length);
+                foreach(SlotData slot in _umaData.umaRecipe.slotDataList)
+                {
+                    if (slot != null)
+                    {
+                        EditorGUILayout.LabelField("Slot: " + slot.asset.slotName);
+                    }
+                }
+            }
+            else
+            {
+                EditorGUILayout.LabelField("No Recipe Data");
+            }
+            GUIHelper.EndVerticalPadded();
+        }
+
 
         protected override void DoUpdate()
         {

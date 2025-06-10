@@ -57,6 +57,9 @@ namespace UMA
 		public bool MultiThreadTextureConversion = true;
 		public int MaxQueuedConversionsPerFrame = 8;
 
+		[Tooltip("Use 32 bit buffers for the generated meshes. This is required for meshes with more than 65535 vertices,boneweights, or trianges. Will use more memory.")]
+        public bool Use32BitBuffers = true;
+
         [NonSerialized]
 		public bool FreezeTime;
 
@@ -517,10 +520,21 @@ namespace UMA
 			int missingBoneCount = 0;
 			newBones.Clear();
 
-			while (!umaData.skeleton.HasBone(UMAUtils.StringToHash(bones[missingBoneCount].name)))
+
+            while (missingBoneCount < bones.Length)
+            {
+                int boneHash = UMAUtils.StringToHash(bones[missingBoneCount].name);
+                if (umaData.skeleton.HasBone(boneHash))
+                {
+                    break;
+                }
+                missingBoneCount++;
+            }
+
+            /*while (!umaData.skeleton.HasBone(UMAUtils.StringToHash(bones[missingBoneCount].name)))
 			{
 				missingBoneCount++;
-			}
+			}*/
 			if (missingBoneCount > 0)
 			{
 				// force the two root transforms, reuse old bones entries to ensure any humanoid identifiers stay intact

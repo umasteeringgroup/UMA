@@ -25,7 +25,7 @@ namespace UMA
         // Start is called before the first frame update
         void Start()
         {
-            CheckInspector();
+            //CheckInspector();
         }
 
         private void OnDestroy()
@@ -47,7 +47,7 @@ namespace UMA
         {
             if (inspector == null)
             {
-                inspector = PopUpAssetInspector.Create(this);
+                //inspector = PopUpAssetInspector.Create(this);
             }
         }
 #endif

@@ -112,6 +112,17 @@ namespace UMA
 		//Its is OPTIONAL for any DynamicDNAPlugin to override these properties / methods
 
 		/// <summary>
+		/// By default, FirstPass() does nothing.
+		/// But you can use this pass to set things up that must happen before *any* DNA is processed.
+		/// This is specifically done for Blendshape DNA so it can be processed before the DNA pass...
+		/// </summary>
+		public virtual void FirstPass(UMAData umaData, int dnaTypeHash)
+		{
+			return;
+		}
+
+
+		/// <summary>
 		/// Does this plugin get applied during the Standard ApplyDNA pass or in the 'Pre Pass'
 		/// </summary>
 		public virtual ApplyPassOpts ApplyPass { get { return ApplyPassOpts.Standard; } }

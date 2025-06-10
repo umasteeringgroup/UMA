@@ -76,9 +76,12 @@ BEGIN_CODE
    SAMPLER(sampler_BaseMap);
    TEXTURE2D(_BumpMap);
    SAMPLER(sampler_BumpMap);
+
    TEXTURE2D(_ThicknessMap);
+   SAMPLER(sampler_ThicknessMap);
 
    TEXTURE2D(_DetailMask);
+   SAMPLER(sampler_DetailMask);
 
    TEXTURE2D(_DetailOne);
    SAMPLER(sampler_DetailOne);
@@ -114,7 +117,7 @@ BEGIN_CODE
       float2 dt2nuv = d.texcoord0.xy * _DetailTwoNormal_ST.xy + _DetailTwoNormal_ST.zw;
       float2 dt3nuv = d.texcoord0.xy * _DetailThreeNormal_ST.xy + _DetailThreeNormal_ST.zw;
 
-	  half4 mask = SAMPLE_TEXTURE2D(_ThicknessMap,sampler_BaseMap,cuv);
+	  half4 mask = SAMPLE_TEXTURE2D(_ThicknessMap,sampler_ThicknessMap,cuv);
 	  half4 base_c = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, auv);
 	  half4 basepackednormal = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap,nuv);
 	  half3 base_n = UnpackScaleNormal(basepackednormal,_NormalStrength);
@@ -137,7 +140,7 @@ BEGIN_CODE
       }
 
       // Detail Mask
-      half4 detailMask = SAMPLE_TEXTURE2D(_DetailMask, sampler_BaseMap, auv);
+      half4 detailMask = SAMPLE_TEXTURE2D(_DetailMask, sampler_DetailMask, auv);
       if (detailMask.r>0) 
       { 
             float4 add_n = SAMPLE_TEXTURE2D(_DetailOneNormal, sampler_DetailOneNormal, dt1nuv);

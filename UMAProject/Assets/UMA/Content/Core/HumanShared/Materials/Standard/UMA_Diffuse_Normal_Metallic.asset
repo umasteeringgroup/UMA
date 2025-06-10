@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: UMA_Diffuse_Normal_Metallic
   m_EditorClassIdentifier: 
-  translateSRP: 1
+  translateSRP: 0
   AutoSetSRPMaterials: 1
   _material: {fileID: 2100000, guid: 2db8991bb8fd75f4eb02f3ee57a55f37, type: 2}
   _secondPass: {fileID: 0}
@@ -24,7 +24,7 @@ MonoBehaviour:
     - _BaseMap
     - _BumpMap
     - _MetallicGlossMap
-  materialType: 2
+  materialType: 1
   channels:
   - channelType: 0
     textureFormat: 0
@@ -34,7 +34,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
-  - channelType: 1
+  - channelType: 0
     textureFormat: 0
     materialPropertyName: _BumpMap
     sourceTextureName: 

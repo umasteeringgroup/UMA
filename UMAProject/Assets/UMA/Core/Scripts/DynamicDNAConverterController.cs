@@ -257,6 +257,14 @@ namespace UMA
                     ((DynamicUMADnaBase)umaDna).dnaAsset = DNAAsset;
                 }
             }
+			for(int i=0;i<PluginCount; i++)
+            {
+				if (_plugins[i] != null)
+				{
+					_plugins[i].FirstPass(umaData, DNATypeHash);
+                }
+            }
+
 			if (_applyDNAPrepassPlugins.Count > 0)
 			{
 				for (int i = 0; i < _applyDNAPrepassPlugins.Count; i++)

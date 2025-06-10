@@ -89,6 +89,11 @@ namespace UMA
             return 0;
         }
 
+		public void Sort()
+		{
+            PreloadValues = PreloadValues.OrderBy(x => x.Name).ToList();
+        }
+
 		public UMAPredefinedDNA Clone()
         {
 			UMAPredefinedDNA newdna = new UMAPredefinedDNA();

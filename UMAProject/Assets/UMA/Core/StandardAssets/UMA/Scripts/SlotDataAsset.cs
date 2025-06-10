@@ -743,17 +743,8 @@ namespace UMA
         /// could remove transforms from the rig. Animated bones will always
         /// be preserved.
         /// </remarks>
-        public string[] animatedBoneNames = new string[0];
-        /// <summary>
-        /// The animated bone name hashes.
-        /// </summary>
-        /// <remarks>
-        /// The animated bones array is required for cases where optimizations
-        /// could remove transforms from the rig. Animated bones will always
-        /// be preserved.
-        /// </remarks>
-        [UnityEngine.HideInInspector]
-        public int[] animatedBoneHashes = new int[0];
+        [Tooltip("The animated bones. These are root bones. Add a bone animator (SwayBoneAnimator or UnityJointAnimator) to animate bones for hair, jiggle, etc. Create the Bone Animators from the UMA right-click ment in the project.")]
+        public BaseUpdatedObject[] animatedBones = new BaseUpdatedObject[0];
 
         [Tooltip("This object is a clipping plane, and is not added to the model.")]
         public bool isClippingPlane = false;
@@ -770,20 +761,11 @@ namespace UMA
         [Tooltip("This is used to grow around the center. Negative values subtract. Positive values add.")]
         public Vector3 smooshExpand = Vector3.one;
 
+
+
         [Tooltip("This object can process events ")]
         public GameObject SlotObject;
         private bool SlotObjectHookedUp = false;
-
-#pragma warning disable 649
-        //UMA2.8+ we need to use DNAConverterField now because that can contain Behaviours and the new controllers
-        //we need this because we need the old data out of it on deserialize
-        /// <summary>
-        /// Optional DNA converter specific to the slot.
-        /// </summary>
-        [FormerlySerializedAs("slotDNA")]
-        [SerializeField]
-        private DnaConverterBehaviour _slotDNALegacy;
-#pragma warning restore 649
 
         //UMA 2.8 FixDNAPrefabs: this is a new field that can take DNAConverter Prefabs *and* DNAConverterControllers
         [SerializeField]
@@ -1084,8 +1066,7 @@ namespace UMA
             nameHash = source.nameHash;
             material = source.material;
             overlayScale = source.overlayScale;
-            animatedBoneNames = source.animatedBoneNames;
-            animatedBoneHashes = source.animatedBoneHashes;
+            animatedBones = source.animatedBones;
             meshData = source.meshData;
             subMeshIndex = source.subMeshIndex;
             isClippingPlane = source.isClippingPlane;

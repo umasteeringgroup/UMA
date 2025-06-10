@@ -114,11 +114,28 @@ namespace UMA
 			else
 			{
 				res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
+#if UNITY_EDITOR
+				OverlayData od = null;
+				if (res.materialFragments != null && res.materialFragments.Count > 0)
+				{
+                    od = res.materialFragments[0].overlayData[0];
+                }
+				if (od != null)
+				{
+					res.material.name = umaMaterial.material.name + "_Gena_" + od.overlayName;
+				}
+				else
+				{
+                    res.material.name = umaMaterial.material.name + "_Genb_" + UnityEngine.Random.Range(1, 1000000000);
+                }
+
+#else
 				res.material.name = umaMaterial.material.name + "_Gen_" + UnityEngine.Random.Range(1,1000000000);
+#endif
 #if UNITY_WEBGL
 			res.material.shader = Shader.Find(res.material.shader.name);
 #endif
-				res.material.shader = umaMaterial.material.shader;
+                res.material.shader = umaMaterial.material.shader;
 				res.material.CopyPropertiesFromMaterial(umaMaterial.material);
 			}
 			atlassedMaterials.Add(res);
@@ -367,6 +384,12 @@ namespace UMA
 			for (int i=0;i<generatedMaterials.Count;i++)
             {
                 UMAData.GeneratedMaterial ugm = generatedMaterials[i];
+#if UNITY_EDITOR
+				if (ugm.materialFragments != null && ugm.materialFragments.Count > 0 && ugm.materialFragments[0].overlayData != null && ugm.materialFragments[0].overlayData.Length > 0)
+                {
+                    ugm.material.name = ugm.material.name + "_" + ugm.materialFragments[0].overlayData[0].overlayName;
+                }
+#endif
                 ApplyMaterialParameters(ugm,umaData,ugm.material);
             }
             packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
@@ -531,7 +554,15 @@ namespace UMA
 
                             if (atlasses[i].umaMaterial.secondPass != null) 
                             {
-                                Material secondPass = GameObject.Instantiate(cm.umaMaterial.secondPass);
+								Material secondPass = null;
+                                if (cm.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingMaterial)
+								{
+                                    secondPass = cm.material;
+                                }
+								else
+								{
+									secondPass = GameObject.Instantiate(cm.umaMaterial.secondPass);
+								}
                                 cm.secondPassMaterial = secondPass;
                                 // Apply shader property blocks to second pass material
                                 UMAGeneratorPro.ApplyMaterialParameters(cm, umaData, secondPass);

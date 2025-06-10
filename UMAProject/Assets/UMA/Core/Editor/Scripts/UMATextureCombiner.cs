@@ -510,7 +510,8 @@ void OnGUI()
             var path = EditorUtility.SaveFilePanelInProject("Save combined texture", "CombinedTexture",  "png" , "Save combined texture as...");
             if (!string.IsNullOrEmpty(path))
             {
-                UMAAvatarLoadSaveMenuItems.SaveRenderTexture(textureCombined, path, false);
+                UMAAvatarLoadSaveMenuItems.LinearSave(textureCombined, path, false);
+               // UMAAvatarLoadSaveMenuItems.SaveRenderTexture(textureCombined, path, false);
             }
         }
 

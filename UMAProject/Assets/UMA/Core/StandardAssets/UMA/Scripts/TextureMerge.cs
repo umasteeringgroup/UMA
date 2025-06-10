@@ -1,5 +1,4 @@
 #define UMA_ADVANCED_BLENDMODES
-
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
@@ -386,7 +385,25 @@ namespace UMA
 					break;
 			}
 
-			textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
+#if debug_texturecombine
+            if (source.baseOverlay.textureList[textureType] != null)
+            {
+                Debug.Log("Base overlay: " + source.baseOverlay.textureList[textureType].name + " on slot: " + source.slotData.slotName);
+            }
+            else
+            {
+                Debug.Log("Base overlay: NULL on slot: " + source.slotData.slotName);
+            }
+			var multiplier = source.GetMultiplier(0, textureType);
+			var additive = source.GetAdditive(0, textureType);
+
+            //Debug.Log($"Base overlay multiplier: {multiplier} on slot: {source.slotData.slotName} TextureType {textureType}");
+            //Debug.Log($"Base overlay additive: {additive} on slot: {source.slotData.slotName} TextureType {textureType}");
+
+
+
+#endif
+            textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
 			textureMergeRect.mat.SetTexture("_ExtraTex", source.baseOverlay.alphaTexture);
 			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureType));
 			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(0, textureType));

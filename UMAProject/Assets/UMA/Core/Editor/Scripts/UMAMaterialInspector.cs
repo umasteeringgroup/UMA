@@ -2,19 +2,22 @@
 using UnityEditor;
 using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
     [CustomEditor(typeof(UMAMaterial)),CanEditMultipleObjects]
     public class UMAMaterialInspector : Editor 
     {
+        public DynamicCharacterAvatar dca;
         public static bool showHelp = false;
         private Shader _lastSelectedShader;
         private string[] _shaderProperties;
         private GUIStyle _centeredStyle;
         private SerializedProperty _shaderParms;
         private bool[] channelExpanded = new bool[3];
-
+        private static bool showMaterialInspector = false;
+        Editor innerEditor = null;
         private bool shaderParmsFoldout = false;
 
         private List<UnityEngine.Object> _inspectedObjects = new List<UnityEngine.Object>();
@@ -28,6 +31,11 @@ namespace UMA.Editors
         public void OnDisable()
         {
             EditorApplication.update -= DoInspectors;
+            if (innerEditor != null)
+            {
+                DestroyImmediate(innerEditor);
+                innerEditor = null;
+            }
         }
 
 
@@ -75,17 +83,97 @@ namespace UMA.Editors
 
             GUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_material"), new GUIContent( "Default Material", "The Unity Material to link to."),GUILayout.ExpandWidth(true));
+
+
+
             if (GUILayout.Button("Inspect", GUILayout.Width(60)))
             {
                 _inspectedObjects.Add(serializedObject.FindProperty("_material").objectReferenceValue);
                 // InspectorUtlity.InspectTarget(serializedObject.FindProperty("_material").objectReferenceValue);
             }
             GUILayout.EndHorizontal();
+
             if (showHelp)
             {
                 EditorGUILayout.HelpBox("Default Material: This is the material that will be used if no other material is found.", MessageType.Info);
             }
+            showMaterialInspector = GUIHelper.FoldoutBar(showMaterialInspector, "Show Material Inspector");
+            if (showMaterialInspector && source.material != null)
+            {
+                if (innerEditor == null)
+                {
+                    Material m = source.material;
 
+                    innerEditor = Editor.CreateEditor(source.material, typeof(MaterialEditor));
+                    if (innerEditor == null)
+                    {
+                        Debug.LogError("Failed to create MaterialEditor for " + source.material.name);
+                        return;
+                    }
+                }
+                //GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
+                dca = EditorGUILayout.ObjectField("Preview Avatar", dca, typeof(DynamicCharacterAvatar), true) as DynamicCharacterAvatar;
+                //GUILayout.Label("Material Inspector", _centeredStyle);
+                DrawFoldoutInspector(source.material, ref innerEditor);
+                //GUILayout.Label("This is the material inspector for the material used by this UMAMaterial.", _centeredStyle);
+                //GUIHelper.EndVerticalPadded(10);
+
+                if (Event.current.type == EventType.Repaint && innerEditor != null && dca != null)
+                {
+                    SkinnedMeshRenderer[] smr = dca.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+                    if (smr != null && smr.Length > 0)
+                    {
+                        foreach (SkinnedMeshRenderer s in smr)
+                        {
+                            foreach(Material mat in s.sharedMaterials)
+                            {
+                                if (mat == null)
+                                {
+                                    continue;
+                                }
+                                if (mat.name.StartsWith(source.material.name) && mat.shader == source.material.shader)
+                                {
+                                    List<KeyValuePair<string,Texture>> savedTextures = new List<KeyValuePair<string,Texture>>();
+                                    foreach (var chan in source.channels)
+                                    {
+                                        string prop = chan.materialPropertyName;
+                                        Texture tex = mat.GetTexture(prop);
+                                        if (tex != null)
+                                        {
+                                            savedTextures.Add(new KeyValuePair<string, Texture>(prop,tex));
+                                        }
+                                    }
+                                    mat.CopyMatchingPropertiesFromMaterial(source.material);
+                                    // restore textures
+                                    foreach (var kvp in savedTextures)
+                                    {
+                                        if (mat.HasProperty(kvp.Key))
+                                        {
+                                            mat.SetTexture(kvp.Key, kvp.Value);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    Debug.LogWarning("Material " + mat.name + " does not match " + source.material.name + ". Skipping copy of properties.");
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (GUILayout.Button("Save material changes to disk"))
+                {
+                    if (innerEditor == null)
+                    {
+                        Debug.LogError("No inner editor found for material " + source.material.name);
+                        return;
+                    }
+                    innerEditor.serializedObject.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(source.material);
+                    AssetDatabase.SaveAssetIfDirty(source.material);
+                }
+            }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("srpMaterials"), new GUIContent("SRP Materials", "Materials for SRP pipelines. If no SRP materials are found, the default material will be used."));
             if (showHelp)
             {

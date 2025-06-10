@@ -154,9 +154,8 @@ namespace UMA
 		public static ValidateResult ValidateSlot(SkinnedMeshRenderer RaceSMR, SkinnedMeshRenderer SlotSMR, out string description)
 		{
 			var slotMesh = new Mesh();
-#if UMA_32BITBUFFERS
-				slotMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-#endif
+
+			slotMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 			SlotSMR.BakeMesh(slotMesh);
 			var bounds = slotMesh.bounds;
 			if (bounds.max.y < 0.05f)

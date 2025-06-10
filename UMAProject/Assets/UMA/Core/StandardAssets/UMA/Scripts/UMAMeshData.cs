@@ -29,7 +29,16 @@ namespace UMA
 			return triangles;
 		}
 
-		public void SetTriangles(int[] tris)
+		public int GetTriangleCount()
+        {
+            if (triangles == null)
+            {
+                return 0;
+            }
+            return triangles.Length;
+        }
+
+        public void SetTriangles(int[] tris)
 		{
 			triangles = tris;
 			if (nativeTriangles.IsCreated)
@@ -1001,12 +1010,16 @@ namespace UMA
 			CreateTransforms(skeleton);
 
 			Mesh mesh = new Mesh();//renderer.sharedMesh;
-#if UMA_32BITBUFFERS
-			mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-#endif
-
+            if (UMAAssetIndexer.Instance.generator.Use32BitBuffers)
+            {
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            }
+            else
+            {
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt16;
+            }
 #if UNITY_EDITOR
-			if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
+            if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
 			{
 				if (Debug.isDebugBuild)
                 {

@@ -31,7 +31,7 @@ namespace UMA
         /// </summary>
         /// <returns>The packed recipe.</returns>
         /// <param name="context">Context.</param>
-        public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad(UMAContextBase context = null)
+        public override UMAPackedRecipeBase.UMAPackRecipe PackedLoad()
 		{
 			if ((recipeString == null) || (recipeString.Length == 0))
 			{
@@ -65,7 +65,7 @@ namespace UMA
         /// </summary>
         /// <param name="packedRecipe">Packed recipe.</param>
         /// <param name="context">Context.</param>
-        public override void PackedSave(UMAPackedRecipeBase.UMAPackRecipe packedRecipe, UMAContextBase context)
+        public override void PackedSave(UMAPackedRecipeBase.UMAPackRecipe packedRecipe)
 		{
 			recipeString = JsonUtility.ToJson(packedRecipe);
 		}
@@ -86,14 +86,14 @@ namespace UMA
 
 		public UMAData.UMARecipe GetUMARecipe()
 		{
-			return GetCachedRecipe(UMAContext.Instance);
+			return GetCachedRecipe();
 		}
 
 		public OverlayColorData[] SharedColors
 		{
 			get
 			{
-				var recipe = GetCachedRecipe(UMAContext.Instance);
+				var recipe = GetCachedRecipe();
 				return recipe.sharedColors;
 			}
 		}

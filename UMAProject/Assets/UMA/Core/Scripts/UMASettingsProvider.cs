@@ -14,7 +14,6 @@ namespace UMA
 
     class UMASettingsProvider : SettingsProvider
     {
-        public const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
         public const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
         public const string DefineSymbol_BurstCompile = "UMA_BURSTCOMPILE";
         public const string DefineSymbol_UMAAlwaysGetAddressableItems = "UMA_ALWAYSGETADDR_NO_PROD";
@@ -209,11 +208,11 @@ namespace UMA
                 System.Threading.Thread.Sleep(100);
                 Repaint();
                 return;
-            }
+            } 
 
             dots = "";
 
-            var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+            var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbols(CurrentNamedBuildTarget).Split(';'));
 
             EditorGUILayout.LabelField("UMA Version " + m_CustomSettings.FindProperty("UMAVersion").stringValue, EditorStyles.boldLabel);
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
@@ -261,7 +260,6 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("Project Build Options", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Modifying these settings will change the UMA define symbols in the project settings, and force a recompile.", MessageType.Info);
-            DrawBoolConfigToggle("use32bitBuffers", "Use 32bit Buffers", "If true, UMA will use 32bit buffers for all UMA data", DefineSymbol_32BitBuffers, defineSymbols);
             EditorGUILayout.HelpBox("Using the Burst compiler will speed up certain operations. But will require adding the following packages from the Package Manager: Burst, Jobs (Mathematics, Collections should be pulled in automatically)", MessageType.Warning, true);
             DrawBoolConfigToggle("useBurstCompiler", "Use Burst Compiler", "If true, UMA will use the Burst Compiler to speed up array math. Must install the jobs package first", DefineSymbol_BurstCompile, defineSymbols, true);
             DrawBoolConfigToggle("useAddressables", "Use Addressables", "If true, UMA will use the Addressables system for loading assets", DefineSymbol_Addressables, defineSymbols);

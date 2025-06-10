@@ -23,7 +23,6 @@ namespace UMA.CharacterSystem
 		private DynamicCharacterAvatar avatar;
 		private UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
 		List<SlotDataAsset> wardrobeSlotAssets = new List<SlotDataAsset>();
-		private UMAContextBase context;
 		private List<SlotData> slotsToAdd = new List<SlotData>();
 
 #pragma warning disable 0414
@@ -38,7 +37,6 @@ namespace UMA.CharacterSystem
 		{
 			avatar = GetComponent<DynamicCharacterAvatar>();
 			avatar.CharacterBegun.AddListener(CharacterBegun);
-			context = UMAContextBase.Instance;
 			lastState = RenderersEnabled; // only cause it to rebuild if it actually changes
 		}
 
@@ -103,7 +101,7 @@ namespace UMA.CharacterSystem
                     UMATextRecipe recipe = avatar.GetWardrobeItem(wardrobeSlot);
 					if (recipe != null)
 					{
-						recipe.Load(umaRecipe, context);
+						recipe.Load(umaRecipe);
 
 						if (umaRecipe.slotDataList != null)
 						{

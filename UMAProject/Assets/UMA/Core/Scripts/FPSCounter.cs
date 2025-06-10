@@ -68,13 +68,7 @@ namespace UMA
             {
                 if (Text != null)
                 {
-                    Text.text = _currentAveraged switch
-                    {
-                        var x when x >= 0 && x < _cacheNumbersAmount => CachedNumberStrings[x],
-                        var x when x >= _cacheNumbersAmount => $"> {_cacheNumbersAmount}",
-                        var x when x < 0 => "< 0",
-                        _ => "?"
-                    };
+                    Text.text = _currentAveraged.ToString();
                 }
                 updateTime = updateRate;
             }

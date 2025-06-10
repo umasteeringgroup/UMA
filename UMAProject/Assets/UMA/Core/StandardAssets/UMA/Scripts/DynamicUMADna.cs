@@ -227,7 +227,7 @@ namespace UMA
                 return;
             }
 
-            _dnaAsset = UMAContext.Instance.GetDNA(dnaAssetName);
+            _dnaAsset = UMAAssetIndexer.Instance.GetDNA(dnaAssetName);
 
 			if (!_dnaAsset)
 			{

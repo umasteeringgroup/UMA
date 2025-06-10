@@ -459,7 +459,7 @@ namespace UMA.CharacterSystem.Examples
 
         public void ToggleUpdateBounds()
         {
-            SkinnedMeshRenderer[] sm = FindObjectsOfType<SkinnedMeshRenderer>();
+            SkinnedMeshRenderer[] sm = FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None);
             for (int i = 0; i < sm.Length; i++)
             {
                 SkinnedMeshRenderer smr = sm[i];

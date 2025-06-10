@@ -14,7 +14,7 @@ namespace UMA.Editors
 		enum SlotPreviewMode { ThisSlot, WeldSlot, BothSlots };
 
 		static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
-		static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "animatedBoneNames", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
+		static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
 		SerializedProperty slotName;
 		SerializedProperty CharacterBegun;
 		SerializedProperty SlotAtlassed;
@@ -151,21 +151,18 @@ namespace UMA.Editors
 
 		public void SetRaceLists()
 		{
-			UMAContextBase ubc = UMAContext.Instance;
-			if (ubc != null)
+
+			RaceData[] raceDataArray = UMAAssetIndexer.Instance.GetAllRaces();
+			foundRaces.Clear();
+			foundRaceNames.Clear();
+			foundRaces.Add(null);
+			foundRaceNames.Add("None Set");
+			foreach (RaceData race in raceDataArray)
 			{
-				RaceData[] raceDataArray = ubc.GetAllRaces();
-				foundRaces.Clear();
-				foundRaceNames.Clear();
-				foundRaces.Add(null);
-				foundRaceNames.Add("None Set");
-				foreach (RaceData race in raceDataArray)
+				if (race != null && race.raceName != "RaceDataPlaceholder")
 				{
-					if (race != null && race.raceName != "RaceDataPlaceholder")
-					{
-						foundRaces.Add(race);
-						foundRaceNames.Add(race.raceName);
-					}
+					foundRaces.Add(race);
+					foundRaceNames.Add(race.raceName);
 				}
 			}
 		}
@@ -414,7 +411,7 @@ namespace UMA.Editors
 				else
 				{
 					UMAData.UMARecipe baseRecipe = new UMAData.UMARecipe();
-					foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe, UMAContextBase.Instance);
+					foundRaces[selectedRaceIndex].baseRaceRecipe.Load(baseRecipe);
 
 					foreach (SlotData sd in baseRecipe.slotDataList)
 					{
@@ -581,23 +578,6 @@ namespace UMA.Editors
                 #endregion
             }
 
-            foreach (var t in targets)
-			{
-				var slotDataAsset = t as SlotDataAsset;
-				if (slotDataAsset != null)
-				{
-					if (slotDataAsset.animatedBoneHashes.Length != slotDataAsset.animatedBoneNames.Length)
-					{
-						slotDataAsset.animatedBoneHashes = new int[slotDataAsset.animatedBoneNames.Length];
-						for (int i = 0; i < slotDataAsset.animatedBoneNames.Length; i++)
-						{
-							slotDataAsset.animatedBoneHashes[i] = UMASkeleton.StringToHash(slotDataAsset.animatedBoneNames[i]);
-						}
-						GUI.changed = true;
-						EditorUtility.SetDirty(slotDataAsset);
-					}
-				}
-			}
 
 			if (!slot.isWildCardSlot)
 			{
@@ -608,10 +588,6 @@ namespace UMA.Editors
 				UpdateSlotDropAreaGUI(updateDropArea);
 
 				GUILayout.Space(10);
-				Rect boneDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-				GUI.Box(boneDropArea, "Drag Bone Transforms here to add their names to the Animated Bone Names.\nSo the power tools will preserve them!");
-				GUILayout.Space(10);
-				AnimatedBoneDropAreaGUI(boneDropArea);
 			}
 
 			serializedObject.ApplyModifiedProperties();
@@ -721,15 +697,6 @@ namespace UMA.Editors
             }
         }
 
-        private void AnimatedBoneDropAreaGUI(Rect dropArea)
-        {
-            GameObject obj = DropAreaGUI(dropArea);
-            if (obj != null)
-            {
-                AddAnimatedBone(obj.name);
-            }
-        }
-
 		private void UpdateSlotDropAreaGUI(Rect dropArea)
 		{
 			GameObject obj = DropAreaGUI(dropArea);
@@ -783,20 +750,7 @@ namespace UMA.Editors
 			}
             return null;
 		}
-		private void AddAnimatedBone(string animatedBone)
-		{
-			var hash = UMASkeleton.StringToHash(animatedBone);
-			foreach (var t in targets)
-			{
-				var slotDataAsset = t as SlotDataAsset;
-				if (slotDataAsset != null)
-				{
-					ArrayUtility.Add(ref slotDataAsset.animatedBoneNames, animatedBone);
-					ArrayUtility.Add(ref slotDataAsset.animatedBoneHashes, hash);
-					EditorUtility.SetDirty(slotDataAsset);
-				}
-			}			
-		}
+
 		private void UpdateSlotData(SkinnedMeshRenderer seamsMesh, SkinnedMeshRenderer skinnedMesh)
 		{
 			SlotDataAsset slot = target as SlotDataAsset;

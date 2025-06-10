@@ -466,7 +466,7 @@ namespace UMA
 #endif
 		public static void ToggleUMAHotkeys()
 		{
-			string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup ( EditorUserBuildSettings.selectedBuildTargetGroup );
+			string definesString = PlayerSettings.GetScriptingDefineSymbols ( CurrentNamedBuildTarget );
             List<string> allDefines = new List<string>();
             allDefines.AddRange(definesString.Split(';'));
 
@@ -478,8 +478,8 @@ namespace UMA
             {
                 allDefines.Add(umaHotkeyWord);
             }
-
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
+			PlayerSettings.SetScriptingDefineSymbols(CurrentNamedBuildTarget, string.Join(";", allDefines.ToArray()));
+            //PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
 		}
       
 		/// <summary>
@@ -503,7 +503,7 @@ namespace UMA
 				mySlot.AddOverlay(myOverlay);
 			}
 			recipe.SetSlot(0, mySlot);
-			asset.Save(recipe, UMAContextBase.Instance);
+			asset.Save(recipe);
 			asset.DisplayValue = slotName;
 
 			// Write the asset to disk

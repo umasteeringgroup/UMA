@@ -363,7 +363,7 @@ namespace UMA
 
 		public bool hideRenderers;
 
-		public UMAGeneratorBase umaGenerator;
+		public UMAGeneratorBuiltin umaGenerator;
 
 		[NonSerialized]
 		public GeneratedMaterials generatedMaterials = new GeneratedMaterials();
@@ -537,6 +537,10 @@ namespace UMA
 		/// </summary>
 		public bool markDynamic = false;
 
+		// This UMAData will require 32 bit indexes
+		// this is calculated from the slots when the mesh generation starts.
+		public bool force32bit = false;
+
 		public BlendShapeSettings blendShapeSettings = new BlendShapeSettings();
 
 		public RuntimeAnimatorController animationController;
@@ -569,7 +573,7 @@ namespace UMA
 				}
 				globalTransform = newGlobal.transform;
 			}
-			skeleton = new UMASkeleton(globalTransform,umaGenerator);
+			skeleton = new UMASkeleton(globalTransform);
 		}
 
 	
@@ -616,7 +620,7 @@ namespace UMA
 				}
 				globalTransform = newGlobal.transform;
 			}
-			skeleton = new UMASkeleton(globalTransform,umaGenerator);
+			skeleton = new UMASkeleton(globalTransform);
 		}
 
 		public void ResetAnimatedBones()
@@ -660,36 +664,72 @@ namespace UMA
 		/// <summary>
 		/// Callback event when character has been updated.
 		/// </summary>
-		public event Action<UMAData> OnCharacterBegun { add { if (CharacterBegun == null) { CharacterBegun = new UMADataEvent(); } CharacterBegun.AddAction(value); } remove { CharacterBegun.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterBegun 
+		{ 
+			add 
+			{ 
+				if (CharacterBegun == null) 
+				{ 
+					CharacterBegun = new UMADataEvent(); 
+				} 
+				CharacterBegun.AddAction(value); 
+			} 
+			remove 
+			{ 
+				if (CharacterBegun == null)
+                {
+                    return;
+                }
+                CharacterBegun.RemoveAction(value); 
+			} 
+		}
 		/// <summary>
 		/// Callback event when character has been updated.
 		/// </summary>
-		public event Action<UMAData> OnCharacterUpdated { add { if (CharacterUpdated == null) { CharacterUpdated = new UMADataEvent(); } CharacterUpdated.AddAction(value); } remove { CharacterUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterUpdated 
+		{ 
+			add 
+			{ 
+				if (CharacterUpdated == null) 
+				{ 
+					CharacterUpdated = new UMADataEvent(); 
+				} 
+				CharacterUpdated.AddAction(value); 
+			} 
+			remove 
+			{ 
+				if (CharacterUpdated == null)
+                {
+					return;
+                }
+                CharacterUpdated.RemoveAction(value); 
+			} 
+		}
 		/// <summary>
 		/// Callback event when character has been completely created.
 		/// </summary>
-		public event Action<UMAData> OnCharacterCreated { add { if (CharacterCreated == null) { CharacterCreated = new UMADataEvent(); } CharacterCreated.AddAction(value); } remove { CharacterCreated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterCreated { add { if (CharacterCreated == null) { CharacterCreated = new UMADataEvent(); } CharacterCreated.AddAction(value); } remove { if (CharacterCreated == null) { return; } CharacterCreated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event when character has been destroyed.
 		/// </summary>
-		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) { CharacterDestroyed = new UMADataEvent(); } CharacterDestroyed.AddAction(value); } remove { CharacterDestroyed.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterDestroyed { add { if (CharacterDestroyed == null) { CharacterDestroyed = new UMADataEvent(); } CharacterDestroyed.AddAction(value); } remove { if (CharacterDestroyed == null) { return; } CharacterDestroyed.RemoveAction(value); } }
 
 		/// <summary>
 		/// Callback event when character DNA has been updated.
 		/// </summary>
-		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) { CharacterDnaUpdated = new UMADataEvent(); } CharacterDnaUpdated.AddAction(value); } remove { CharacterDnaUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterDnaUpdated { add { if (CharacterDnaUpdated == null) { CharacterDnaUpdated = new UMADataEvent(); } CharacterDnaUpdated.AddAction(value); } remove { if (CharacterDnaUpdated == null) { return; } CharacterDnaUpdated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event used by UMA to make last minute tweaks
 		/// </summary>
-		public event Action<UMAData> OnCharacterBeforeUpdated { add { if (CharacterBeforeUpdated == null) { CharacterBeforeUpdated = new UMADataEvent(); } CharacterBeforeUpdated.AddAction(value);} remove { CharacterBeforeUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterBeforeUpdated { add { if (CharacterBeforeUpdated == null) { CharacterBeforeUpdated = new UMADataEvent(); } CharacterBeforeUpdated.AddAction(value);} remove { if (CharacterBeforeUpdated == null) { return; } CharacterBeforeUpdated.RemoveAction(value); } }
 		/// <summary>
 		/// Callback event used by UMA to make last minute tweaks
 		/// </summary>
-		public event Action<UMAData> OnCharacterBeforeDnaUpdated { add { if (CharacterBeforeDnaUpdated == null) { CharacterBeforeDnaUpdated = new UMADataEvent(); } CharacterBeforeDnaUpdated.AddAction(value);} remove { CharacterBeforeDnaUpdated.RemoveAction(value); } }
+		public event Action<UMAData> OnCharacterBeforeDnaUpdated { add { if (CharacterBeforeDnaUpdated == null) { CharacterBeforeDnaUpdated = new UMADataEvent(); } CharacterBeforeDnaUpdated.AddAction(value);} remove { if (CharacterBeforeDnaUpdated == null) { return; } CharacterBeforeDnaUpdated.RemoveAction(value); } }
 
-		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) { AnimatorStateSaved = new UMADataEvent(); } AnimatorStateSaved.AddAction(value); } remove { AnimatorStateSaved.RemoveAction(value); } }
-		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) { AnimatorStateRestored = new UMADataEvent(); } AnimatorStateRestored.AddAction(value); } remove { AnimatorStateRestored.RemoveAction(value); } }
-		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) { PreUpdateUMABody = new UMADataEvent(); } PreUpdateUMABody.AddAction(value); } remove { PreUpdateUMABody.RemoveAction(value); } } //VES added
+		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) { AnimatorStateSaved = new UMADataEvent(); } AnimatorStateSaved.AddAction(value); } remove { if (AnimatorStateSaved == null) { return; } AnimatorStateSaved.RemoveAction(value); } }
+		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) { AnimatorStateRestored = new UMADataEvent(); } AnimatorStateRestored.AddAction(value); } remove { if (AnimatorStateRestored == null) { return; } AnimatorStateRestored.RemoveAction(value); } }
+		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) { PreUpdateUMABody = new UMADataEvent(); } PreUpdateUMABody.AddAction(value); } remove { if (PreUpdateUMABody == null) { return; } PreUpdateUMABody.RemoveAction(value); } } //VES added
 
 		public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;
@@ -754,61 +794,14 @@ namespace UMA
 
 		void Awake()
 		{
-			if (!umaGenerator)
-            {
-				if (UMAContextBase.Instance != null)
-                {
-                    umaGenerator = UMAContextBase.Instance.gameObject.GetComponent<UMAGeneratorBase>();
-                }
-            }
-			if (!umaGenerator)
-			{
-				FindObjectOfType<UMAGeneratorBase>();
-
-				var generatorGO = GameObject.Find("UMA_GLIB");
-				if (generatorGO == null)
-                {
-                    return;
-                }
-
-                umaGenerator = generatorGO.GetComponent<UMAGeneratorBase>();
-			}
-			Initialize(umaGenerator);
+			umaGenerator = UMAAssetIndexer.Instance.Generator;
+			Initialize();
 		}
 
-
-		public UMAGeneratorBase FindGenerator()
-		{
-            var gen = UnityEngine.Object.FindFirstObjectByType<UMAGeneratorBase>() as UMAGeneratorBase;
-			if (gen != null)
-            {
-				return gen;
-            }
-
-            // Some versions of Unity could find hidden objects, so we need to check for that.
-            if (GameObject.Find("TempUMAGenerator") != null)
-			{
-                return GameObject.Find("TempUMAGenerator").GetComponent<UMAGeneratorBase>();
-            }
-
-            // If we still can't find it, create a temporary one, and hide it.
-            GameObject temp = new GameObject("TempUMAGenerator")
-			{
-				hideFlags = HideFlags.HideAndDontSave
-            };
-
-			return temp.AddComponent<UMAGeneratorStub>();
-        }
-
-
-		public void Initialize(UMAGeneratorBase generator)
+		public void Initialize()
 		{
 			firstBake = true;
-
-			if (umaGenerator == null)
-            {
-                umaGenerator = generator;
-            }
+            umaGenerator = UMAAssetIndexer.Instance.Generator;
 
             if (_umaRecipe == null)
 			{
@@ -2103,7 +2096,7 @@ namespace UMA
                 //DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
                 if (dnaConverter.PreApplyDnaAction != null)
 				{
-					if (!umaDNAPreApplyConverters.ContainsKey(dnaConverter.DNATypeHash))
+					if (!umaDNAPreApplyConverters.ContainsKey(dnaConverter.DNATypeHash)) 
                     {
                         umaDNAPreApplyConverters.Add(dnaConverter.DNATypeHash, new List<DNAConvertDelegate>());
                     }
@@ -2275,20 +2268,45 @@ namespace UMA
 		}
 
 
-		[System.Serializable]
-		public class BoneData
-		{
-			public Transform boneTransform;
-			public Vector3 originalBoneScale;
-			public Vector3 originalBonePosition;
-			public Quaternion originalBoneRotation;
-		}
+		List<BaseUpdatedObject> boneAnimators = new List<BaseUpdatedObject>();
 
-		/// <summary>
-		/// Fire the Pre Update event.
-		/// This happens before the Animator State is saved.
-		/// </summary>
-		public void FirePreUpdateUMABody()
+        public void FixedUpdate()
+        {
+			for(int i=0; i < boneAnimators.Count; i++)
+			{
+				boneAnimators[i].FixedUpdate(); 
+			}
+        }
+
+        public void SetupEmbeddedPhysics()
+        {
+			boneAnimators.Clear();
+            var slotDataList = umaRecipe.slotDataList;
+			
+			if (slotDataList == null || slotDataList.Length < 1)
+            {
+                return;
+            }
+            for (int i = 0; i < slotDataList.Length; i++)
+            {
+                SlotData slot = slotDataList[i];
+                if (slot != null && slot.asset != null && slot.asset.animatedBones != null && slot.asset.animatedBones.Length > 0)
+                {
+                    for (int j = 0; j < slot.asset.animatedBones.Length; j++)
+                    {
+                        BaseUpdatedObject boneAnimator = slot.asset.animatedBones[j];
+                        boneAnimator.Initialize(this);
+						boneAnimators.Add(boneAnimator);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fire the Pre Update event.
+        /// This happens before the Animator State is saved.
+        /// </summary>
+        public void FirePreUpdateUMABody()
 		{
 			if (PreUpdateUMABody != null)
 			{
@@ -2376,8 +2394,8 @@ namespace UMA
             dirty = true;
 			if (!umaGenerator)
 			{
-				umaGenerator = FindObjectOfType<UMAGeneratorBase>();
-			}
+				umaGenerator = UMAAssetIndexer.Instance.Generator;
+            }
 			if (umaGenerator)
 			{
 				umaGenerator.addDirtyUMA(this);
@@ -2444,11 +2462,11 @@ namespace UMA
 					if (generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
                     {
 						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
-					}
-					if (generatedMaterials.materials[atlasIndex].secondPassMaterial != null)
-					{
-						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
-						generatedMaterials.materials[atlasIndex].secondPassMaterial = null;
+                        if (generatedMaterials.materials[atlasIndex].secondPassMaterial != null)
+                        {
+                            UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
+                            generatedMaterials.materials[atlasIndex].secondPassMaterial = null;
+                        }
                     }
 					for (int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++)
 					{
@@ -2742,15 +2760,6 @@ namespace UMA
 			}
 		}
 
-		public int[] GetAnimatedBones()
-		{
-			var res = new int[animatedBonesTable.Count];
-			foreach (var entry in animatedBonesTable)
-			{
-				res[entry.Value] = entry.Key;
-			}
-			return res;
-		}
 
 		/// <summary>
 		/// Calls character begun events on slots.
@@ -2830,7 +2839,7 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaAdditionalRecipes">Additional recipes.</param>
 		/// <param name="context">Context.</param>
-		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, UMAContextBase context, bool mergeMatchingOverlays=true)
+		public void AddAdditionalRecipes(UMARecipeBase[] umaAdditionalRecipes, bool mergeMatchingOverlays=true)
 		{
 			if (umaAdditionalRecipes != null)
 			{
@@ -2839,7 +2848,7 @@ namespace UMA
                     UMARecipeBase umaAdditionalRecipe = umaAdditionalRecipes[i];
                     if (umaAdditionalRecipe != null)
 					{
-						UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe(context);
+						UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe();
 						umaRecipe.Merge(cachedRecipe, true, mergeMatchingOverlays);
 					}
 				}
@@ -2865,7 +2874,10 @@ namespace UMA
         public void SetBlendShapeData(string name, bool bake, bool rebuild = false)
         {
 			BlendShapeData data;
-			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
+#if DEBUG_BAKING
+            Debug.Log("SetBlendShapeData: " + name + " bake: " + bake + " rebuild: " + rebuild);
+#endif
+            if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
 			{
 				data.isBaked = bake;
             }
@@ -2910,16 +2922,30 @@ namespace UMA
 		/// <param name="name">Name of the blendshape.</param>
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>
 		/// <param name="allowRebuild">Triggers a rebuild of the uma character if the blendshape is baked</param>
-		public void SetBlendShape(string name, float weight, bool allowRebuild = false)
+		public void SetBlendShape(string name, float weight, bool allowRebuild = false, bool bakedOnly = false)
 		{
 			BlendShapeData data;
 			if (blendShapeSettings.blendShapes.TryGetValue(name, out data))
 			{
+				if (bakedOnly)
+				{
+					if (data.isBaked)
+					{
+						data.value = weight;
+					}
+					return;
+				}
+				// not baked only pass...
 				data.value = weight;
 			}
 			else
 			{
-				data = new BlendShapeData
+				if (bakedOnly)
+				{
+					// only working on baked stuff... but this isn't.
+					return;
+				}
+                data = new BlendShapeData
 				{
 					value = weight,
 					isBaked = false,

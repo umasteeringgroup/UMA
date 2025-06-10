@@ -77,42 +77,31 @@ namespace UMA
                 EditorUtility.DisplayDialog("Warning", "Addressable Asset Settings not found", "OK");
                 return;
             }
-                List<AddressableAssetGroup> GroupsToDelete = new List<AddressableAssetGroup>();
+            List<AddressableAssetGroup> GroupsToDelete = new List<AddressableAssetGroup>();
 
-                foreach (var group in AddressableUtility.AddressableSettings.groups)
+            foreach (var group in AddressableUtility.AddressableSettings.groups)
+            {
+                if (IsUMAGroup(group.name))
                 {
-                    if (IsUMAGroup(group.name))
+                    if (OnlyEmpty)
                     {
-                        if (OnlyEmpty)
-                        {
-                            if (group.entries.Count > 0) continue;
-                        }
-                        GroupsToDelete.Add(group);
+                        if (group.entries.Count > 0) continue;
                     }
+                    GroupsToDelete.Add(group);
                 }
+            }
 
-                float pos = 0.0f;
-                float inc = 1.0f / GroupsToDelete.Count;
+            float pos = 0.0f;
+            float inc = 1.0f / GroupsToDelete.Count;
 
-                foreach (AddressableAssetGroup group in GroupsToDelete)
-                {
-                    int iPos = Mathf.CeilToInt(pos);
-                    EditorUtility.DisplayProgressBar("Cleanup", "Removing " + group.Name, iPos);
-                    if (group.name.Contains(SharedGroupName))
-                    {
-                        List<AddressableAssetEntry> ItemsToClear = new List<AddressableAssetEntry>();
-                        ItemsToClear.AddRange(group.entries);
-                        foreach (AddressableAssetEntry ae in ItemsToClear)
-                        {
-                            group.RemoveAssetEntry(ae);
-                        }
-                    }
-                    else
-                    {
-                        AddressableUtility.AddressableSettings.RemoveGroup(group);
-                    }
-                    pos += inc;
-                }
+            foreach (AddressableAssetGroup group in GroupsToDelete)
+            {
+                int iPos = Mathf.CeilToInt(pos);
+
+                EditorUtility.DisplayProgressBar("Cleanup", "Removing " + group.Name, iPos);
+                AddressableUtility.AddressableSettings.RemoveGroup(group);
+                pos += inc;
+            }
 
             if (RemoveFlags)
             {
@@ -121,7 +110,7 @@ namespace UMA
             EditorUtility.ClearProgressBar();
         }
 
-        private void GenerateLookups(UMAContextBase context, List<AssetItem> wardrobe)
+        private void GenerateLookups(List<AssetItem> wardrobe)
         {
             float pos = 0.0f;
             float inc = 1.0f / wardrobe.Count;
@@ -136,7 +125,7 @@ namespace UMA
                 EditorUtility.DisplayProgressBar("Generating", "Calculating Usage: " + uwr.name, iPos);
 
                 // todo: cache this
-                UMAData.UMARecipe ur = UMAAssetIndexer.Instance.GetRecipe(uwr, context);
+                UMAData.UMARecipe ur = UMAAssetIndexer.Instance.GetRecipe(uwr);
 
                 if (ur.slotDataList == null) continue;
 
@@ -712,8 +701,6 @@ namespace UMA
                 ClearAddressableFlags(typeof(SlotDataAsset));
                 ClearAddressableFlags(typeof(OverlayDataAsset));
 
-                UMAContextBase context = UMAContextBase.Instance;
-
                 // Create the shared group that has each item packed separately.
                 AddressableAssetGroup sharedGroup = AddressableUtility.AddressableSettings.CreateGroup(SharedGroupName, false, false, true, AddressableUtility.AddressableSettings.DefaultGroup.Schemas);
                 sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
@@ -759,7 +746,7 @@ namespace UMA
 
                 GenerateCollectionLabels();
 
-                GenerateLookups(context, theRecipeItems);
+                GenerateLookups(theRecipeItems);
 
                 float pos = 0.0f;
                 float inc = 1.0f / theRecipes.Count;

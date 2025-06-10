@@ -1,8 +1,9 @@
-#if UNITY_EDITOR
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UMA;
 using System.Threading;
 using System.Diagnostics;
@@ -12,6 +13,7 @@ namespace UMA
 
     public class UMASettings : ScriptableObject
     {
+#if UNITY_EDITOR
         public const string customSettingsPath = "Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset";
 
         [Multiline(7)]
@@ -33,7 +35,6 @@ namespace UMA
         public bool postProcessAllAssets = false;
 
         public bool useBurstCompiler = false;
-        public bool use32bitBuffers = true;
         public bool useAddressables = false;
         public bool enableGLTFExport = false;
         public bool alwaysGetAddressables = true;
@@ -47,7 +48,9 @@ namespace UMA
         public bool addrIncludeOther = false;
 
         public bool showWelcomeToUMA = true;
+#endif
         public GameObject generatorPrefab;
+#if UNITY_EDITOR
         public GameObject characterPrefab;
         public TextureMerge textureMerge;
 
@@ -130,7 +133,15 @@ namespace UMA
             }
             return settings;
         }
+#endif
 
+        public static UMASettings GetSettingsFromResources()
+        {
+            UMASettings settings = Resources.Load<UMASettings>("UMASettings");
+            return settings;
+        }
+
+#if UNITY_EDITOR
         public static SerializedObject GetSerializedSettings()
         {
             return new SerializedObject(GetOrCreateSettings());
@@ -150,7 +161,6 @@ namespace UMA
         public static bool ShowUnindexedTypes { get { var settings = GetOrCreateSettings(); return settings.showUnindexedTypes; } }
         public static bool PostProcessAllAssets { get { var settings = GetOrCreateSettings(); return settings.postProcessAllAssets; } }
         public static bool UseBurstCompiler { get { var settings = GetOrCreateSettings(); return settings.useBurstCompiler; } }
-        public static bool Use32bitBuffers { get { var settings = GetOrCreateSettings(); return settings.use32bitBuffers; } }
         public static bool UseAddressables { get { var settings = GetOrCreateSettings(); return settings.useAddressables; } }
         public static bool EnableGLTFExport { get { var settings = GetOrCreateSettings(); return settings.enableGLTFExport; } }
         public static bool AlwaysGetAddressables { get { var settings = GetOrCreateSettings(); return settings.alwaysGetAddressables; } }
@@ -160,6 +170,6 @@ namespace UMA
         public static bool AddStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addStripMaterials; } }
         public static bool AddrIncludeRecipes { get { var settings = GetOrCreateSettings(); return settings.addrIncludeRecipes; } }
         public static bool AddrIncludeOther { get { var settings = GetOrCreateSettings(); return settings.addrIncludeOther; } }
+#endif
     }
 }
-#endif

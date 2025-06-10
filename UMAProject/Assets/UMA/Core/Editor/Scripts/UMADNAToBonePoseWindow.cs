@@ -256,7 +256,6 @@ namespace UMA.PoseTools
 			tempAvatarPreDNA.transform.localRotation = sourceUMA.transform.localRotation;
 
 			UMADynamicAvatar tempAvatar = tempAvatarPreDNA.AddComponent<UMADynamicAvatar>();
-			tempAvatar.umaGenerator = sourceUMA.umaGenerator;
 			tempAvatar.Initialize();
 			tempAvatar.umaData.umaRecipe = new UMAData.UMARecipe();
 			tempAvatar.umaData.umaRecipe.raceData = ScriptableObject.CreateInstance<RaceData>();
@@ -280,7 +279,6 @@ namespace UMA.PoseTools
 			tempAvatarPostDNA.transform.localRotation = sourceUMA.transform.localRotation;
 
 			UMADynamicAvatar tempAvatar2 = tempAvatarPostDNA.AddComponent<UMADynamicAvatar>();
-			tempAvatar2.umaGenerator = sourceUMA.umaGenerator;
 			tempAvatar2.Initialize();
 			tempAvatar2.umaData.umaRecipe = new UMAData.UMARecipe();
 			tempAvatar2.umaData.umaRecipe.raceData = ScriptableObject.CreateInstance<RaceData>();

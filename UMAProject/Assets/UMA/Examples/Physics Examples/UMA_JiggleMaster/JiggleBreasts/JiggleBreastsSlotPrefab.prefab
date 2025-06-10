@@ -24,12 +24,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1589969537021848}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &114813453997285572
 MonoBehaviour:
@@ -47,7 +48,7 @@ MonoBehaviour:
   _breastMass: 1
   _breastDamping: 0
   _breastGravity: 0.75
-  _breastSquashAndStretch: 1
+  _breastSquashAndStretch: 0
   _breastFrontStretch: 1
   _breastSideStretch: 1
   _jigglers: []

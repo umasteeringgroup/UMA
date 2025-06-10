@@ -22,9 +22,9 @@ BEGIN_PROPERTIES
     [Enum(Flip, 0, Mirror, 1, None, 2)] _DoubleSidedNormalMode("Double sided normal mode", Float) = 1
 
     _BaseMap("BaseMap", 2D) = "white" {}
-    _BumpMap("_BumpMap", 2D) = "bump" {}
+    _BumpMap("BumpMap", 2D) = "bump" {}
     _NormalStrength ("Normal Strength", Range(0,2)) = 1
-    _MetallicGlossMap("_MetallicGlossMap", 2D) = "black" {}
+    _MetallicGlossMap("MetallicGlossMap", 2D) = "black" {}
     _UberTile("Uber Tile", Range(0,16)) = 1
 
 END_PROPERTIES
@@ -48,6 +48,10 @@ BEGIN_CBUFFER
     float _NormalStrength;
     float _UseHalfLambert;
     float _UberTile;
+
+    float4 _BaseMap_ST;
+    float4 _BumpMap_ST;
+    float4 _MetallicGlossMap_ST;
 END_CBUFFER
 
 
@@ -64,11 +68,11 @@ BEGIN_CODE
 
 	void SurfaceFunction(inout Surface o, ShaderData d)
 	{
-      float2 auv = d.texcoord0.xy * _UberTile;
-      float2 nuv = d.texcoord0.xy * _UberTile;
-      float2 cuv = d.texcoord0.xy * _UberTile;
+      float2 auv = d.texcoord0.xy * (_UberTile * _BaseMap_ST.xy) + _BaseMap_ST.zw;
+      float2 nuv = d.texcoord0.xy * (_UberTile * _BumpMap_ST.xy) + _BumpMap_ST.zw;
+      float2 mguv = d.texcoord0.xy * (_UberTile * _MetallicGlossMap_ST.xy) + _MetallicGlossMap_ST.zw;
       
-	  half4 mask = SAMPLE_TEXTURE2D(_MetallicGlossMap,sampler_MetallicGlossMap,cuv);
+	  half4 mask = SAMPLE_TEXTURE2D(_MetallicGlossMap,sampler_MetallicGlossMap,mguv);
 	  half4 base_c = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, auv);
 	  half4 basepackednormal = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap,nuv);
 	  half3 base_n = UnpackScaleNormal(basepackednormal,_NormalStrength);

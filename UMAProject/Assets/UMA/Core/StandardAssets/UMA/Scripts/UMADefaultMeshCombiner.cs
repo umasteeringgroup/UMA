@@ -40,7 +40,20 @@ namespace UMA
 			#endregion
 			if (umaData.umaRoot != null)
 			{
+				if (umaData.force32bit && UMAAssetIndexer.Instance.generator.Use32BitBuffers == false)
+				{
+					int rendererCount = umaData.rendererCount;
+					for (int i = 0; i < rendererCount; i++)
+					{
+						var renderer = umaData.GetRenderer(i);
+						if (renderer.sharedMesh != null && renderer.sharedMesh.indexFormat != UnityEngine.Rendering.IndexFormat.UInt32)
+						{
+                            renderer.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                        }
+                    }
+				}
 				umaData.CleanMesh(false);
+
 				if ((umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets)))
 				{
 					renderers = umaData.GetRenderers();
@@ -125,10 +138,15 @@ namespace UMA
                 newRenderer.sharedMesh.MarkDynamic();
             }
 
-#if UMA_32BITBUFFERS
-			newRenderer.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-#endif
-			newRenderer.rootBone = rootBone;
+			if (umaData.force32bit)
+            {
+                newRenderer.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            }
+            else
+            {
+                newRenderer.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt16;
+            }
+            newRenderer.rootBone = rootBone;
 			newRenderer.quality = SkinQuality.Auto;
 			newRenderer.sharedMesh.name = i == 0 ? "UMAMesh" : ("UMAMesh " + i);
 
@@ -188,7 +206,7 @@ namespace UMA
 						var Blendshapes = SkinnedMeshCombiner.GetBlendshapeSources(tempMesh, umaData.umaRecipe);
 						tempMesh.blendShapes = Blendshapes.ToArray();
                     }
-					
+					 
 					tempMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton,umaData);
                     var inst = combinedMeshList[0];
                     inst.slotData.vertexOffset = 0;

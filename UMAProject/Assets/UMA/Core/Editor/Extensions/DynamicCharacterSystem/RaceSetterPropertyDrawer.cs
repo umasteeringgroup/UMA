@@ -25,14 +25,15 @@ namespace UMA.CharacterSystem.Editors
 
 		public void SetRaceLists(RaceData[] raceDataArray = null)
 		{
+			if (foundRaces.Count == raceDataArray.Length)
+			{
+				return;
+			}
 			foundRaces.Clear();
 			foundRaceNames.Clear();
 			foundRaces.Add(null);
 			foundRaceNames.Add("None Set");
-			if (raceDataArray == null)
-            {
-				return;
-            }
+
             for (int i = 0; i < raceDataArray.Length; i++)
 			{
                 RaceData race = raceDataArray[i];
@@ -44,36 +45,11 @@ namespace UMA.CharacterSystem.Editors
 			}
 		}
 
-		float lastTime = 0.0f;
+
         private void CheckRaceDataLists()
 		{
-			float currentTime = Time.realtimeSinceStartup;
-			if (currentTime - lastTime < 5.0f)
-			{
-				lastTime = currentTime;
-                return;
-            }
-
-			if (UMAContext.Instance == null)
-            {
-				var raceDatas = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
-				SetRaceLists(raceDatas.ToArray());
-				return;
-            }
-			if (Application.isPlaying)
-			{
-				//Start will have cleared any EditorAdded Assets and we only *need* the ones in the library
-				var raceDatas = UMAContext.Instance.GetAllRacesBase();
-				SetRaceLists(raceDatas);
-			}
-			else
-			{
-					var raceDatas = UMAContext.Instance.GetAllRaces();
-					if ((raceDatas.Length + 1) != (foundRaces.Count))
-					{
-						SetRaceLists(raceDatas);
-					}
-			}
+			var races = UMAAssetIndexer.Instance.GetAllRaces();
+            SetRaceLists(races);
 		}
 
 		public List<Object> InspectMe = new List<Object>();
