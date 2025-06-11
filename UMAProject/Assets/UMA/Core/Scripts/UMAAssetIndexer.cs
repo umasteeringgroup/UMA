@@ -1120,7 +1120,7 @@ namespace UMA
             return Items;
         }
 
-        public List<T> GetAllAssets<T>(string[] foldersToSearch = null) where T : UnityEngine.Object
+        public List<T> GetAllAssets<T>() where T : UnityEngine.Object
         {
             var st = StartTimer();
 
@@ -1132,13 +1132,13 @@ namespace UMA
 
             foreach (KeyValuePair<string, AssetItem> kp in TypeDic)
             {
-                if (AssetFolderCheck(kp.Value, foldersToSearch))
-                {
-                    if (kp.Value.Item != null)
-                    {
+                //if (AssetFolderCheck(kp.Value, foldersToSearch))
+                //{
+                //    if (kp.Value.Item != null)
+                //    {
                         ret.Add((kp.Value.Item as T));
-                    }
-                }
+                 //   }
+                //}
             }
             StopTimer(st, "GetAllAssets type=" + typeof(T).Name);
             return ret;

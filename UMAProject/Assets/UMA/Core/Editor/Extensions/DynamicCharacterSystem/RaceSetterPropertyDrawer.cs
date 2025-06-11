@@ -48,8 +48,11 @@ namespace UMA.CharacterSystem.Editors
 
         private void CheckRaceDataLists()
 		{
-			var races = UMAAssetIndexer.Instance.GetAllRaces();
-            SetRaceLists(races);
+			if (foundRaces.Count == 0)
+			{
+				var races = UMAAssetIndexer.Instance.GetAllRaces();
+				SetRaceLists(races);
+			}
 		}
 
 		public List<Object> InspectMe = new List<Object>();
@@ -81,6 +84,12 @@ namespace UMA.CharacterSystem.Editors
 				rIndex = foundRaceNames.IndexOf(rn) == -1 ? (foundRaceNames.IndexOf(rn + " (Not Available)") == -1 ? 0 : foundRaceNames.IndexOf(rn + " (Not Available)")) : foundRaceNames.IndexOf(rn);
 			}
 
+			if (GUILayout.Button("Refresh Race List"))
+			{
+				foundRaces.Clear();
+				CheckRaceDataLists();
+				HandleUtility.Repaint();
+            }
            // EditorGUI.BeginProperty(position, label, property);
             GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
 

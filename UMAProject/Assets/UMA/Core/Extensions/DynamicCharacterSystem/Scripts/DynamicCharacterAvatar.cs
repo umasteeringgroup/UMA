@@ -4365,6 +4365,11 @@ namespace UMA.CharacterSystem
         {
             try
             {
+                if (Op.Status == AsyncOperationStatus.Failed)
+                {
+                    Debug.LogError("LoadWhenReady failed - Async OP could not load bundles!" + Op.OperationException.Message);
+                    return;
+                }
                 if (Op.IsDone)
                 {
                     BuildSave bs = LoadQueue[Op];

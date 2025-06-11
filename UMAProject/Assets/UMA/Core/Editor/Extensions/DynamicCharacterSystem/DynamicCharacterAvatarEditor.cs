@@ -1423,7 +1423,7 @@ namespace UMA.CharacterSystem.Editors
         {
             EditorGUILayout.PropertyField(context);
             EditorGUILayout.PropertyField(umaData);
-            EditorGUILayout.PropertyField(umaGenerator);
+            // EditorGUILayout.PropertyField(umaGenerator);
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(animationController);
         }
