@@ -8,7 +8,7 @@ public class BaseUpdatedObject : ScriptableObject
     protected bool initialized = false;
     protected UMAData umaData;
 
-    public virtual void Initialize(UMAData umaData)
+    public virtual void Initialize(UMAData umaData, SlotData sd)
     {
         this.umaData = umaData;
     }

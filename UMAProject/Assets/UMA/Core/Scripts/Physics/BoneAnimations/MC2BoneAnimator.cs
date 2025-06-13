@@ -13,51 +13,54 @@ using UnityEditor;
  * To use this script, ensure you have the Magica Cloth 2 package imported into your Unity project.
  * Also, the MC2 asmdef file should be added to the UMA_CORE asmdef file
  */
-public class MC2BoneAnimator : BaseUpdatedObject
+
+namespace UMA
 {
+    public class MC2BoneAnimator : BaseUpdatedObject
+    {
 #if UNITY_EDITOR
-    [MenuItem("Assets/Create/UMA/Physics/MC2BoneAnimator")]
-    public static void CreateObject()
-    {
-        UMA.CustomAssetUtility.CreateAsset<MC2BoneAnimator>();
-    }
+        [MenuItem("Assets/Create/UMA/Physics/MC2BoneAnimator")]
+        public static void CreateObject()
+        {
+            UMA.CustomAssetUtility.CreateAsset<MC2BoneAnimator>();
+        }
 #endif
-    [Header("General Settings")]
-    [Tooltip("Add the root bone of each bone chain you want to animate. ")]
-    public string[] AnimatedRootBoneNames;
-    [SerializeField]
-    [Tooltip("Add Magica CLoth2 preset file. If not set, the default settings will be used.")] 
-    private TextAsset presetFile;
+        [Header("General Settings")]
+        [Tooltip("Add the root bone of each bone chain you want to animate. ")]
+        public string[] AnimatedRootBoneNames;
+        [SerializeField]
+        [Tooltip("Add Magica CLoth2 preset file. If not set, the default settings will be used.")]
+        private TextAsset presetFile;
 
 
-    public override void Initialize(UMAData umaData)
-    {
-        if (AnimatedRootBoneNames == null || AnimatedRootBoneNames.Length == 0)
+        public override void Initialize(UMAData umaData, SlotData sd)
         {
-            Debug.LogError("No animated root bone names specified. Please set AnimatedRootBoneNames in the inspector.");
-            return;
-        }
-
-        base.Initialize(umaData);
-
-        for (int i = 0; i < AnimatedRootBoneNames.Length; i++)
-        {
-            string bone = AnimatedRootBoneNames[i];
-            if (!string.IsNullOrEmpty(bone))
+            if (AnimatedRootBoneNames == null || AnimatedRootBoneNames.Length == 0)
             {
-                Transform boneXform = umaData.skeleton.GetBoneTransform(bone);
-                AddMCBoneJiggle(umaData, boneXform);
+                Debug.LogError("No animated root bone names specified. Please set AnimatedRootBoneNames in the inspector.");
+                return;
             }
+
+            base.Initialize(umaData, sd);
+
+            for (int i = 0; i < AnimatedRootBoneNames.Length; i++)
+            {
+                string bone = AnimatedRootBoneNames[i];
+                if (!string.IsNullOrEmpty(bone))
+                {
+                    Transform boneXform = umaData.skeleton.GetBoneTransform(bone);
+                    AddMCBoneJiggle(umaData, boneXform);
+                }
+            }
+            initialized = true;
         }
-        initialized = true;
-    }
 
-    public void AddMCBoneJiggle(UMAData umaData, Transform rootBone)
-    {
-
-
-        if (rootBone != null)
+        public void AddMCBoneJiggle(UMAData umaData, Transform rootBone)
         {
+
+
+            if (rootBone != null)
+            {
 #if MAGICACLOTH2
             // Check if rootBone already has MagicaCloth component and abort if it does
             if (rootBone.GetComponent<MagicaCloth>() != null) return;
@@ -78,6 +81,7 @@ public class MC2BoneAnimator : BaseUpdatedObject
             // Build MagicaCloth2
             cloth.BuildAndRun();
 #endif
+            }
         }
     }
 }

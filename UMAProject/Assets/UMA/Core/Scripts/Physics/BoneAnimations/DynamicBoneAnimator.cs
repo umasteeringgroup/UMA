@@ -11,48 +11,50 @@ using UnityEditor;
  * As well, change the #if false below to #if true to enable the script.
  * If you do not have DynamicBone, you can use the SwayBoneAnimator scriptable object instead.
  */
-public class DynamicBoneAnimator : BaseUpdatedObject
+namespace UMA
 {
+    public class DynamicBoneAnimator : BaseUpdatedObject
+    {
 #if UNITY_EDITOR
-    [MenuItem("Assets/Create/UMA/Physics/DynamicBoneAnimator")]
-    public static void CreateObject()
-    {
-        UMA.CustomAssetUtility.CreateAsset<DynamicBoneAnimator>();
-    }
-#endif
-    [Header("General Settings")]
-    [Tooltip("Add the root bone of each bone chain you want to animate. ")]
-    public string[] AnimatedRootBoneNames;
-    [Tooltip("List of bone names to exclude from the jiggle effect. These bones and their children will not be affected by the jiggle.")]
-    public List<string> exceptions = new List<string>();
-    [Range(0, 1)]
-    public float reduceEffect;
-
-    public override void Initialize(UMAData umaData)
-    {
-        if (AnimatedRootBoneNames == null || AnimatedRootBoneNames.Length == 0)
+        [MenuItem("Assets/Create/UMA/Physics/DynamicBoneAnimator")]
+        public static void CreateObject()
         {
-            Debug.LogError("No animated root bone names specified. Please set AnimatedRootBoneNames in the inspector.");
-            return;
+            UMA.CustomAssetUtility.CreateAsset<DynamicBoneAnimator>();
         }
-        base.Initialize(umaData);
-        for(int i=0; i < AnimatedRootBoneNames.Length; i++)
+#endif
+        [Header("General Settings")]
+        [Tooltip("Add the root bone of each bone chain you want to animate. ")]
+        public string[] AnimatedRootBoneNames;
+        [Tooltip("List of bone names to exclude from the jiggle effect. These bones and their children will not be affected by the jiggle.")]
+        public List<string> exceptions = new List<string>();
+        [Range(0, 1)]
+        public float reduceEffect;
+
+        public override void Initialize(UMAData umaData, SlotData sd)
         {
-            string bone = AnimatedRootBoneNames[i];
-            if (!string.IsNullOrEmpty(bone))
+            if (AnimatedRootBoneNames == null || AnimatedRootBoneNames.Length == 0)
             {
-                Transform boneXform = umaData.skeleton.GetBoneTransform(bone);
-                AddBoneJiggle(umaData, boneXform);
+                Debug.LogError("No animated root bone names specified. Please set AnimatedRootBoneNames in the inspector.");
+                return;
+            }
+            base.Initialize(umaData, sd);
+            for (int i = 0; i < AnimatedRootBoneNames.Length; i++)
+            {
+                string bone = AnimatedRootBoneNames[i];
+                if (!string.IsNullOrEmpty(bone))
+                {
+                    Transform boneXform = umaData.skeleton.GetBoneTransform(bone);
+                    AddBoneJiggle(umaData, boneXform);
+                }
             }
         }
-    }
 
-    public void AddBoneJiggle(UMAData umaData, Transform rootBone)
-    {
-        List<Transform> exclusionList = new List<Transform>();
-
-        if (rootBone != null)
+        public void AddBoneJiggle(UMAData umaData, Transform rootBone)
         {
+            List<Transform> exclusionList = new List<Transform>();
+
+            if (rootBone != null)
+            {
 #if false
 			DynamicBone jiggleBone = rootBone.GetComponent<DynamicBone>();
 			if(jiggleBone == null)
@@ -74,22 +76,23 @@ public class DynamicBoneAnimator : BaseUpdatedObject
 			jiggleBone.m_Inert = reduceEffect;
 			jiggleBone.UpdateParameters();
 #else
-            SwayRootBone jiggleBone = rootBone.GetComponent<SwayRootBone>();
-            if (jiggleBone == null)
-            {
-                jiggleBone = rootBone.gameObject.AddComponent<SwayRootBone>();
-            }
+                SwayRootBone jiggleBone = rootBone.GetComponent<SwayRootBone>();
+                if (jiggleBone == null)
+                {
+                    jiggleBone = rootBone.gameObject.AddComponent<SwayRootBone>();
+                }
 
-            for (int i = 0; i < exceptions.Count; i++)
-            {
-                string exception = exceptions[i];
-                exclusionList.Add(SkeletonTools.RecursiveFindBone(umaData.gameObject.transform, exception));
-            }
+                for (int i = 0; i < exceptions.Count; i++)
+                {
+                    string exception = exceptions[i];
+                    exclusionList.Add(SkeletonTools.RecursiveFindBone(umaData.gameObject.transform, exception));
+                }
 
-            jiggleBone.Exclusions = exclusionList;
-            jiggleBone.inertia = reduceEffect;
-            jiggleBone.SetupBoneChains();
+                jiggleBone.Exclusions = exclusionList;
+                jiggleBone.inertia = reduceEffect;
+                jiggleBone.SetupBoneChains();
 #endif
+            }
         }
     }
 }

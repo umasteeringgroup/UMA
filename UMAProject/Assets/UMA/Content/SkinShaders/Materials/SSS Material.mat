@@ -194,7 +194,7 @@ Material:
     - _DstBlendAlpha: 0
     - _EmissiveModulation: 1
     - _EnvironmentReflections: 1
-    - _FuzzAmount: 0.271
+    - _FuzzAmount: 0
     - _GlossMapScale: 0.521
     - _Glossiness: 0
     - _GlossyReflections: 1
@@ -205,7 +205,7 @@ Material:
     - _MinSmooth: 0.4
     - _Mode: 0
     - _NormalDistortion: 1
-    - _NormalStrength: 0.5
+    - _NormalStrength: 0.54
     - _Occlusion: 1
     - _OcclusionStrength: 0.07
     - _OcclusionUVSource: 0

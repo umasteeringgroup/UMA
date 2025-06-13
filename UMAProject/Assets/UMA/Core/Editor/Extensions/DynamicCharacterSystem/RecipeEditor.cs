@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UMA.Integrations;
+using System.Collections;
 
 namespace UMA.Editors
 {
@@ -19,6 +20,7 @@ namespace UMA.Editors
 		List<GameObject> draggedObjs;
 
 		EditorWindow inspectorWindow;
+		public bool Initialized = false;
 
 		//for showing a warning if any of the compatible races are missing or not assigned to bundles or the index
 		protected Texture warningIcon;
@@ -108,15 +110,31 @@ namespace UMA.Editors
 
         public override void OnEnable()
         {
-			if(plugins == null) {
-				AddPlugins();
-			}
+            EditorApplication.delayCall += InitializeEditor;
+        }
+
+        private void InitializeEditor()
+        {
+			if (Initialized)
+            {
+                return;
+            }
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+			{
+                EditorApplication.delayCall += InitializeEditor;
+                return;
+            }
+            if (plugins == null)
+            {
+                AddPlugins();
+            }
 
             base.OnEnable();
 
-			foreach(IUMARecipePlugin plugin in plugins) {
-				plugin.OnEnable();
-			}
+            foreach (IUMARecipePlugin plugin in plugins)
+            {
+                plugin.OnEnable();
+            }
 
             if (!NeedsReenable())
                 return;
@@ -128,14 +146,14 @@ namespace UMA.Editors
             try
             {
                 var umaRecipeBase = target as UMARecipeBase;
-				if (umaRecipeBase != null)
-				{
+                if (umaRecipeBase != null)
+                {
 
-					umaRecipeBase.Load(_recipe);
-					_description = umaRecipeBase.GetInfo();
-				}
+                    umaRecipeBase.Load(_recipe);
+                    _description = umaRecipeBase.GetInfo();
+                }
             }
-			catch (UMAResourceNotFoundException e)
+            catch (UMAResourceNotFoundException e)
             {
                 _errorMessage = e.Message;
             }
@@ -144,9 +162,13 @@ namespace UMA.Editors
             slotEditor = new SlotMasterEditor(_recipe);
 
             _rebuildOnLayout = true;
+            Initialized = true;
         }
-		
-		public void OnDestroy()
+
+
+
+
+        public void OnDestroy()
 		{
 			foreach(IUMARecipePlugin plugin in plugins) {
 				plugin.OnDestroy();
@@ -156,6 +178,11 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
+			if (!Initialized)
+			{
+                EditorGUILayout.HelpBox("Recipe Editor is not initialized. Please wait until the editor is ready.", MessageType.Info);
+                return;
+            }
             if (warningIcon == null)
 			{
 				warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");

@@ -2295,7 +2295,7 @@ namespace UMA
                     for (int j = 0; j < slot.asset.animatedBones.Length; j++)
                     {
                         BaseUpdatedObject boneAnimator = slot.asset.animatedBones[j];
-                        boneAnimator.Initialize(this);
+                        boneAnimator.Initialize(this,slot);
 						boneAnimators.Add(boneAnimator);
                     }
                 }
