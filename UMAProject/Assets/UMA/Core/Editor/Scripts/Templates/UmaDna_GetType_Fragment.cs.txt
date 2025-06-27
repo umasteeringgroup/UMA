@@ -1,2 +1,0 @@
-
-			if( "{0:ClassName}" == className ) return typeof({0:ClassName});	

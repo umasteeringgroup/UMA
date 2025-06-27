@@ -1638,7 +1638,7 @@ namespace UMA
             float gutter = 2f;
             float sqrSide = SceneRect.height - (gutter * 2.0f);
             Rect TitleRect = new Rect(sqrSide+(gutter * 2), gutter, SceneRect.width - (sqrSide + (gutter*2)), sqrSide);
-            Rect InfoRect = new Rect(TitleRect.x, TitleRect.y, TitleRect.width, TitleRect.height);
+            Rect InfoRect = new Rect(TitleRect.x, TitleRect.y, TitleRect.width-32, TitleRect.height);
             Rect textureRect = new Rect(gutter, gutter, sqrSide, sqrSide);
 
             //GUI.DrawTexture(textureRect, scene.sceneTexture);

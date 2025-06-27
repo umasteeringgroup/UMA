@@ -686,7 +686,7 @@ namespace UMA
 
 #endif
 
-        public UMARendererAsset RendererAsset { get { return _rendererAsset; } }
+        public UMARendererAsset RendererAsset { get { return _rendererAsset; } set { _rendererAsset = value; } }
         [SerializeField] private UMARendererAsset _rendererAsset = null;
 
         #region INameProvider

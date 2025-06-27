@@ -13,6 +13,7 @@ namespace UMA.Editors
         public bool useRootFolder;
         public bool nameByMaterial;
         public bool keepAllBones;
+        public bool updateExistingSlots;
 
         public string stripBones;
         public string rootBone;
