@@ -371,8 +371,8 @@ namespace UMA
         private void ReimportShaderFolder()
         {
             ClearLog();
-            string path = Application.dataPath;
-            path = Path.Combine(path, "UMA", "Core", "ShaderPackages");
+            string path = UMAEditorUtilities.FindUMAFullPath();
+            path = Path.Combine(path,"Core", "ShaderPackages");
 
             if (Directory.Exists(path))
             {
@@ -429,7 +429,7 @@ namespace UMA
             AddText("Opening UMA Documentation.PDF");
 
             // Open Assets/UMA/UMA Documentation.PDF
-            string path = Path.Combine(Application.dataPath,"UMA", "UMA Documentation.PDF");
+            string path = Path.Combine(UMAEditorUtilities.FindUMAFullPath(), "UMA Documentation.PDF");
 
             if (System.IO.File.Exists(path))
             {

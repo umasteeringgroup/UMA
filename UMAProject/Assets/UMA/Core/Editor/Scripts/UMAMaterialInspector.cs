@@ -180,13 +180,6 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("SRP Materials: These are the materials that will be used for the various SRP pipelines. If no SRP materials are found, the default material will be used.", MessageType.Info);
             }
             GUILayout.BeginHorizontal(); 
-            if (GUILayout.Button("Create from default"))
-            {
-                serializedObject.ApplyModifiedProperties();
-                source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.BuiltInPipeline));
-                serializedObject.Update();
-                source.SetupSRP(true);
-            }
             if (GUILayout.Button("Force save Materials"))
             {
                 serializedObject.ApplyModifiedProperties();
@@ -195,23 +188,6 @@ namespace UMA.Editors
             }
             if (GUILayout.Button("Refresh Materials"))
             {
-                serializedObject.Update();
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Init for each SRP"))
-            {
-                serializedObject.ApplyModifiedProperties();
-                source.srpMaterials.Clear();
-                source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.BuiltInPipeline));
-                source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.UniversalPipeline));
-                source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.HDPipeline));
-                serializedObject.Update();
-            }
-            if (GUILayout.Button("Clear SRP Materials"))
-            {
-                serializedObject.ApplyModifiedProperties();
-                source.srpMaterials.Clear();
                 serializedObject.Update();
             }
             GUILayout.EndHorizontal();
@@ -225,7 +201,6 @@ namespace UMA.Editors
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("_secondPass"), new GUIContent("Second Pass", "The Unity Material for a second pass. Usually NULL."));
             }
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("translateSRP"), new GUIContent("Translate SRP", "When checked, this will automatically translate the UMAMaterial property names to URP/HDRP names (ie - _MainTex becomes _BaseMap etc.)"));
 
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Generated Texture Settings", _centeredStyle);
@@ -292,7 +267,6 @@ namespace UMA.Editors
             if (wasChanged)
             {
                 serializedObject.ApplyModifiedProperties();
-                source.SetupSRP(true);
                 UMAMaterial.MaterialType NewMatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
                 if (MatType != NewMatType)
                 {
@@ -432,14 +406,9 @@ namespace UMA.Editors
                         {
                             string oldValue = materialPropertyName.stringValue;
                             int selection = EditorGUILayout.Popup(0, _shaderProperties, GUILayout.MinWidth(100), GUILayout.MaxWidth(200));
-                            if (oldValue != materialPropertyName.stringValue) 
-                            {
-                                UpdateCurrentSRP(i, materialPropertyName.stringValue, serializedObject);
-                            }
                             if (selection > 0)
                             {
                                 materialPropertyName.stringValue = _shaderProperties[selection];
-                                UpdateCurrentSRP(i, _shaderProperties[selection],serializedObject);
                             }
                         }
                         EditorGUILayout.EndHorizontal();
@@ -479,23 +448,6 @@ namespace UMA.Editors
                     GUILayout.Space(8);
                 }
                 GUIHelper.EndVerticalPadded(10);
-            }
-        }
-
-        private void UpdateCurrentSRP(int i, string v, SerializedObject sobj)
-        {
-            // Update the current SRP property name from the array
-            UMAMaterial source = target as UMAMaterial;
-            if (source.srpMaterials != null)
-            {
-                foreach (UMAMaterial.SRPMaterial srpMaterial in source.srpMaterials)
-                {
-                    if (srpMaterial.SRP == UMAUtils.CurrentPipeline)
-                    {
-                        srpMaterial.alternateKeywords[i] = v;
-                        sobj.Update();
-                    }
-                }
             }
         }
 

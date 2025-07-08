@@ -2,6 +2,7 @@ BEGIN_OPTIONS
    ShaderName "UMA/Diffuse_Normal_Metallic"
    Stackable "False"
    Workflow "Metallic"
+   Tags { "RenderType" = "Opaque" "Queue" = "Geometry+100" }
 END_OPTIONS
 
 BEGIN_PROPERTIES

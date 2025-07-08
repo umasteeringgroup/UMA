@@ -224,7 +224,11 @@ namespace UMA.CharacterSystem.Editors
         }
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-			changed = false;
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                return; // don't draw the property if Unity is compiling or updating
+            }
+            changed = false;
             if (warningIcon == null)
             {
                 warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");

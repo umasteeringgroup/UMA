@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using NUnit.Framework;
 
 namespace UMA
 {
@@ -30,7 +31,16 @@ namespace UMA
 			get { return noAutoAdd; }
             set { noAutoAdd = value; }
         }
+        #region NEW DNA
+        /*
+		 * New DNA
+		 */
 
+		[Tooltip("The DNA groups assigned to this race")]
+        public DNACollection DNACollection = new DNACollection();
+
+
+        #endregion
         #region INameProvider
         public string GetAssetName()
         {

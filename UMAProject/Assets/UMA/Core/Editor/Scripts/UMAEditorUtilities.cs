@@ -74,8 +74,35 @@ namespace UMA
 			}
 		}
 
+        public static string FindUMAFolder()
+        {
+            string basePath = FindUMAFullPath();
+            // return the path relative to the Assets folder
+            string folder = basePath.Replace(Application.dataPath, "Assets");
+            return folder;
+        }
 
+        public static string FindUMAFullPath()
+        {
+            string folder = "UMA";
 
+            // search the project for the UMA folder
+            string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
+            if (folders != null && folders.Length > 0)
+            {
+                foreach (string guid in folders)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (path.EndsWith(folder, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return path;
+                    }
+                }
+            }
+
+            // if we didn't find it, return the default path
+            return Path.Combine(Application.dataPath, folder);
+        }
         public static NamedBuildTarget CurrentNamedBuildTarget
         {
             get

@@ -192,7 +192,7 @@ namespace UMA
                                         destinationTexture = new RenderTexture(ww, hh, 0, slotData.material.channels[textureChannelNumber].textureFormat, RenderTextureReadWrite.Linear);
                                         destinationTexture.useMipMap = umaGenerator.convertMipMaps; // && !umaGenerator.convertRenderTexture;
                                     }
-                                    
+
                                     destinationTexture.filterMode = FilterMode.Point;
                                     destinationTexture.name = slotData.material.name + " Chan " + textureChannelNumber + " frame: " + Time.frameCount;
 
@@ -231,7 +231,7 @@ namespace UMA
                                         else
                                         {
                                             // copy the texture with mips to the Texture2D
-                                            Texture2D tempTexture;                                            
+                                            Texture2D tempTexture;
                                             GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(destinationTexture.format, false);
                                             TextureFormat texFmt = GraphicsFormatUtility.GetTextureFormat(gf);
 
@@ -245,7 +245,7 @@ namespace UMA
                                             RenderTexture.ReleaseTemporary(destinationTexture);
 
                                             resultingTextures[textureChannelNumber] = tempTexture as Texture;
-                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture);                                            
+                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture);
                                         }
                                         #endregion
                                     }
@@ -278,7 +278,7 @@ namespace UMA
                                         {
                                             if (Debug.isDebugBuild)
                                             {
-                                                Debug.LogWarning($"Material property {slotData.material.channels[textureChannelNumber].materialPropertyName} is not a color property in UMAMaterial { slotData.material.name }");
+                                                Debug.LogWarning($"Material property {slotData.material.channels[textureChannelNumber].materialPropertyName} is not a color property in UMAMaterial {slotData.material.name}");
                                             }
                                         }
                                     }
@@ -348,7 +348,7 @@ namespace UMA
 
         public static void SetCompositingProperties(UMAData.GeneratedMaterial generatedMaterial, Material material, UMAData.MaterialFragment fragment)
         {
-            if (fragment == null ||fragment.baseOverlay == null || fragment.baseOverlay.textureList == null || fragment.overlays == null)
+            if (fragment == null || fragment.baseOverlay == null || fragment.baseOverlay.textureList == null || fragment.overlays == null)
             {
                 return;
             }
@@ -372,8 +372,8 @@ namespace UMA
                 // apply tileable properties.
                 // apply UV offset properties.
                 // x,y,z,w = xuv, yuv, xwidth, ywidth
-                
-                string tileProperty = "_UseTiling"+ovl;
+
+                string tileProperty = "_UseTiling" + ovl;
                 if (ovl > 0 && material.HasProperty(tileProperty))
                 {
                     float tiling = 0;
@@ -386,7 +386,7 @@ namespace UMA
                 }
                 else
                 {
-                    if (ovl > 0) 
+                    if (ovl > 0)
                     {
                         Debug.Log($"No tiling property {tileProperty} on {material.name} for overlay {overlay.overlayName}");
                     }
@@ -394,7 +394,7 @@ namespace UMA
                 string offsetProperty = "_UV_Offset" + ovl;
                 if (material.HasProperty(offsetProperty))
                 {
-                    Vector4 uv = overlay.GetUV(referenceWidth,referenceHeight);
+                    Vector4 uv = overlay.GetUV(referenceWidth, referenceHeight);
                     material.SetVector("_UV_Offset" + ovl, uv);
                     Debug.Log("Setting uv offset " + uv + " on " + material.name);
                 }
@@ -459,44 +459,38 @@ namespace UMA
             }
 
             string materialPropertyName;
-            if (umaMaterial.translateSRP)
+
+            if (umaMaterial.channels == null)
             {
-                materialPropertyName = UMAUtils.TranslatedSRPTextureName(overlay0.asset.material.channels[textureChannelNumber].materialPropertyName);
-            }
-            else
-            {
-                if (umaMaterial.channels == null)
-                {
 #if DEBUG
                     Debug.LogWarning("Texture channels are null on " + umaMaterial+" are null on Overlay: "+overlay0.overlayName);
 #endif
-                    return;
-                }
+                return;
+            }
 
-                if (textureChannelNumber < 0)
-                {
+            if (textureChannelNumber < 0)
+            {
 #if DEBUG
                     Debug.LogWarning("Texture channel " + textureChannelNumber + " not found in material " + umaMaterial.name+ "  on Overlay:" +overlay0.overlayName);
 #endif
-                    return;
-                }
+                return;
+            }
 
-                if (textureChannelNumber >= umaMaterial.channels.Length)
-                {
+            if (textureChannelNumber >= umaMaterial.channels.Length)
+            {
 #if DEBUG
                     Debug.LogWarning("Texture channel " + textureChannelNumber + " not found in material " + umaMaterial.name + "  on Overlay:" + overlay0.overlayName);
 #endif
-                    return;
-                }
-                try
-                {
+                return;
+            }
+            try
+            {
                 materialPropertyName = umaMaterial.channels[textureChannelNumber].materialPropertyName;
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogWarning("Exception processing Texture channel " + textureChannelNumber + " in material " + umaMaterial.name +" " + ex.Message);
-                    return;
-                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("Exception processing Texture channel " + textureChannelNumber + " in material " + umaMaterial.name + " " + ex.Message);
+                return;
             }
 
             if (overlayNumber > 0)
@@ -537,14 +531,7 @@ namespace UMA
 
             if (!slotData.material.channels[textureType].NonShaderTexture)
             {
-                if (generatedMaterial.umaMaterial.translateSRP)
-                {
-                    generatedMaterial.material.SetTexture(UMAUtils.TranslatedSRPTextureName(slotData.material.channels[textureType].materialPropertyName), tempTexture);
-                }
-                else
-                {
-                    generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
-                }
+                generatedMaterial.material.SetTexture(slotData.material.channels[textureType].materialPropertyName, tempTexture);
             }
         }
 

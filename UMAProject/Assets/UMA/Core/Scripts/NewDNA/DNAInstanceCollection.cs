@@ -13,15 +13,16 @@ namespace UMA
     public class DNAInstanceCollection 
     {
         [Flags]
-        public enum DnaUpdateArea
+        public enum DNABuildType
         {
             None,
             Texture,
             Mesh,
-            Rig
+            Rig,
+            All = Texture | Mesh | Rig
         }
 
-        public DnaUpdateArea updateFlags = DnaUpdateArea.None;
+        public DNABuildType updateFlags = DNABuildType.None;
 
         /// <summary>
         /// The list of DNA instances.
@@ -46,7 +47,8 @@ namespace UMA
 
         public void PreApply(DNACollection theCollection, DynamicCharacterAvatar avatar)
         {
-            DnaUpdateArea updateFlags = DnaUpdateArea.None;
+            DNABuildType updateFlags = DNABuildType.None;
+            
             for (int i = 0; i < dnaInstances.Count; i++)
             {
                 if (!dnaInstances[i].isDefault)

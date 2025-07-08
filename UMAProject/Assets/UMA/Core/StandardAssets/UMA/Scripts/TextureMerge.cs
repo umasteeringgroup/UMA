@@ -216,6 +216,7 @@ namespace UMA
 
             if (tr.transform)
 			{
+#if true
 				// rotate texture here?
 				GL.PushMatrix();
 
@@ -225,9 +226,24 @@ namespace UMA
 				Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
 
 				GL.MultMatrix(newMat);
-			}
+#else
+                // rotate texture here?
+                GL.PushMatrix();
 
-			if (sharperFitTextures)
+                // rotate around the pivot
+                pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f), tr.rect.y + (tr.rect.height / 2.0f));
+				
+                tr.rect.width *= tr.scale.x;
+                tr.rect.height *= tr.scale.y;
+
+                Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), Vector3.one) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
+
+                GL.MultMatrix(newMat);
+
+#endif
+            }
+
+            if (sharperFitTextures)
 			{
 				tr.tex.mipMapBias = -1.0f;
 			}

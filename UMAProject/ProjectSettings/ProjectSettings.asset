@@ -821,7 +821,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Standalone: DEBUG_TIMING;UMA_BURSTCOMPILE
+    Standalone: DEBUG_TIMING;UMA_BURSTCOMPILE;UMA_DNACOLLECTIONS;__BETTERSHADERS__
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

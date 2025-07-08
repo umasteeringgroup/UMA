@@ -79,6 +79,11 @@ namespace UMA.Editors
 			race.FixupRotations = EditorGUILayout.Toggle("Fixup Rotations",race.FixupRotations);
 			EditorGUILayout.Space();
 
+#if UMA_DNACOLLECTIONS
+			EditorGUILayout.HelpBox("DNA Collection is the ongoing rewrite of DNA. It's not done, and won't be for some time, please ignore it", MessageType.Warning);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("DNACollection"));
+#endif
+            EditorGUILayout.Space();
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("disableDNAConverters"));
 
             SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");

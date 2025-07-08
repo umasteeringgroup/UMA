@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using System.Text;
+using UMA.PoseTools;
 using UnityEditorInternal;
 #endif
 using UnityEngine;
@@ -15,19 +16,33 @@ namespace UMA
     [PreferBinarySerialization]
     public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider, IUMAIndexOptions
     {
+        #region internalClasses
+        [System.Serializable]
+        public class BonePoseToRace
+        {
+            public string RaceName;
+            public UMABonePose BonePose;
+        };
+        #endregion
+        #region enums
         public enum BlendshapeCopyMode {UpdateAndAdd, ClearAndReplace, AddNewOnly }
         public enum NormalCopyMode {CopyNormals, AverageNormals }
+        #endregion
+
         public string slotName;
         [System.NonSerialized]
         public int nameHash;
 
+        #region IUMAIndexOptions
         public bool forceKeep = false;
         public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
 
         [Tooltip("If true, this Slot will not be added to the index when adding all")]
         public bool noAutoAdd = false;
         public bool NoAutoAdd { get { return noAutoAdd; } set { noAutoAdd = value; } }
+        #endregion
 
+        public List<BonePoseToRace> bonePoseToRaces = new List<BonePoseToRace>();
 
 #if UNITY_EDITOR
         [Tooltip("This is only used when updating the slot with drag and drop below. It is not used at runtime nor is it included in the build")]

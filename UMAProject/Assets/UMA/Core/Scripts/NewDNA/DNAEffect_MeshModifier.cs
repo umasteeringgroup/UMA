@@ -1,0 +1,10 @@
+using UnityEngine;
+
+namespace UMA
+{
+    [System.Serializable]
+    public class DNAEffect_MeshModifier : DNAEffect
+    {
+
+    }
+}
