@@ -16,7 +16,8 @@ namespace UMA
         }
 
         public string sharedColorName = "SharedColor";
-        public Color BaseModifier;
+        public Color FromColor;
+        public Color ToColor;
         public CombinationMethod colorCombineMethod = CombinationMethod.Additive;
         [Tooltip("The texture number in the overlay to apply this to. This is used to identify which texture number to modify in the shared color.")]
         public int TextureNumber; // the number of the texture in the overlay to apply this to.
@@ -29,7 +30,8 @@ namespace UMA
         {
             base.DoGui(showDescription, showHelp);
             sharedColorName = UnityEditor.EditorGUILayout.TextField("Shared Color Name", sharedColorName);
-            BaseModifier = UnityEditor.EditorGUILayout.ColorField("Combined Color", BaseModifier);
+            FromColor = UnityEditor.EditorGUILayout.ColorField("From Color", FromColor);
+            ToColor = UnityEditor.EditorGUILayout.ColorField("To Color", ToColor);
             colorCombineMethod = (CombinationMethod)UnityEditor.EditorGUILayout.EnumPopup("Combination Method", colorCombineMethod);
             TextureNumber = UnityEditor.EditorGUILayout.IntField("Texture Number", TextureNumber);
             colorType = (ColorType)UnityEditor.EditorGUILayout.EnumPopup("Color Type", colorType);
@@ -52,21 +54,21 @@ namespace UMA
                 {
                     sharedColor.EnsureChannels(TextureNumber + 1);
                 }
-                Color col = sharedColor.GetColor(TextureNumber, colorType == ColorType.Additive);
+                Color col = FromColor;
                 // Combine the base modifier with the existing color based on the combination method
                 switch (colorCombineMethod)
                 {
                     case CombinationMethod.Additive:
-                        col += BaseModifier * value;
+                        col += ToColor * value;
                         break;
                     case CombinationMethod.Subtractive:
-                        col -= BaseModifier * value;
+                        col -= ToColor * value;
                         break;
                     case CombinationMethod.Multiply:
-                        col *= BaseModifier * value;
+                        col *= ToColor * value;
                         break;
                     case CombinationMethod.Replace:
-                        col = BaseModifier * value;
+                        col = ToColor * value;
                         break;
                 }
                 sharedColor.SetColor(TextureNumber, colorType == ColorType.Additive, col);

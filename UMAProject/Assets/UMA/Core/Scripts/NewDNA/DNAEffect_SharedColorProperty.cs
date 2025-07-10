@@ -16,8 +16,7 @@ namespace UMA
         public string sharedColorName;
         public string propertyName;
         public ParameterType parameterType = ParameterType.Color;
-        public float zerofloatValue = 0.0f;
-        public float onefloatValue = 1.0f;
+        public float floatValue = 0.0f;
         public Color zeroColorValue;
         public Color oneColorValue;
 
@@ -47,8 +46,7 @@ namespace UMA
             }
             if (parameterType.HasFlag(ParameterType.Float))
             {
-                zerofloatValue = UnityEditor.EditorGUILayout.FloatField("Zero Float Value", zerofloatValue);
-                onefloatValue = UnityEditor.EditorGUILayout.FloatField("One Float Value", onefloatValue);
+                floatValue = UnityEditor.EditorGUILayout.FloatField("Zero Float Value", floatValue);
             }
         }
 #endif
