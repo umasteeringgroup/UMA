@@ -19,6 +19,7 @@ namespace UMA
         // And finally applied to the avatar's DNA.
 
         // The curve is used to modify the value before applying it.
+        [SerializeField]
         public AnimationCurve curve = new AnimationCurve();
         public float minMapping = 0.0f; // The minimum value to map. This will be the base value when the adjusted input is 0.
         public float maxMapping = 1.0f; // The maximum value to map. This will be the maximum value when the adjusted input is 1.
@@ -29,11 +30,18 @@ namespace UMA
         {
             get
             {
-                return EffectName + " (" + GetType().ToString().Replace("DNA", "") + ")";
+                return EffectName + " (" + baseEffectName+ ")";
+            }
+        }
+
+        public string baseEffectName
+        {
+            get
+            {
+                return GetType().ToString().Replace("DNA", "");
             }
         }
 #endif
-
         public virtual DNABuildType AreaEffect
         {
             get
@@ -43,29 +51,35 @@ namespace UMA
             }
         }
 
-        private float GetMappedValue(float value)
-        {
+        protected float GetMappedValue(float value)
+        { 
+            if (curve != null && curve.length > 0)
+            {
+                value = curve.Evaluate(value);
+            }
             return minMapping + (value * (maxMapping - minMapping));
         }
 
         public string EffectName;
-        public string Description { get; }
+        public virtual string Description { get; }
 
 #if UNITY_EDITOR
-        public virtual void DoGui(bool showHelp)
+        public virtual void DoGui(bool showDescription, bool showHelp = false)
         {
+
             if (showHelp)
             {
-                EditorGUILayout.HelpBox("", MessageType.None);
+                EditorGUILayout.HelpBox($"{baseEffectName}: {this.Description}", MessageType.None);
+                EditorGUILayout.HelpBox("Raw DNA Values are 0 - 1. These are evaluated on the curve (if present), and then mapped to the min & max values ", MessageType.None);
             }
             // select: 0,1
             // select: 1,0
             // select: 0,1,0
             // select: 1,0,1
-            EffectName = EditorGUILayout.TextField("Effect Name", EffectName);
+            EffectName = EditorGUILayout.DelayedTextField("Effect Name", EffectName);
             curve = EditorGUILayout.CurveField("Curve", curve);
-            minMapping = EditorGUILayout.FloatField("Min", minMapping);
-            maxMapping = EditorGUILayout.FloatField("Max", maxMapping);
+            minMapping = EditorGUILayout.DelayedFloatField("Min", minMapping);
+            maxMapping = EditorGUILayout.DelayedFloatField("Max", maxMapping);
             EditorGUILayout.HelpBox("You can load a template curve here. This will set the Min, Max and Curve values to the values in the template curve. The template curve is not saved.", MessageType.Info);
             bool wasNull = _TemplateCurve == null;
             _TemplateCurve = EditorGUILayout.ObjectField("Template Curve", _TemplateCurve, typeof(DNACurve), false) as DNACurve;
@@ -78,6 +92,12 @@ namespace UMA
             // add option to save curve to asset for use in other effects
         }
 #endif
+        public virtual void AfterRecipeGenerated(DynamicCharacterAvatar avatar, DNA dna, float value)
+        {
+            // This is called during the avatar Load process, after the recipe is merged.
+            // Some effects need to be applied during the load process, such as those that modify avatar shared colors.
+        }
+
         public virtual void PreApply(DynamicCharacterAvatar avatar, DNA dna, float value)
         {
             // This is called before Apply, so we can do any pre-processing here.

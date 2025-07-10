@@ -174,23 +174,6 @@ namespace UMA.Editors
                     AssetDatabase.SaveAssetIfDirty(source.material);
                 }
             }
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("srpMaterials"), new GUIContent("SRP Materials", "Materials for SRP pipelines. If no SRP materials are found, the default material will be used."));
-            if (showHelp)
-            {
-                EditorGUILayout.HelpBox("SRP Materials: These are the materials that will be used for the various SRP pipelines. If no SRP materials are found, the default material will be used.", MessageType.Info);
-            }
-            GUILayout.BeginHorizontal(); 
-            if (GUILayout.Button("Force save Materials"))
-            {
-                serializedObject.ApplyModifiedProperties();
-                EditorUtility.SetDirty(target);
-                AssetDatabase.SaveAssetIfDirty(target);
-            }
-            if (GUILayout.Button("Refresh Materials"))
-            {
-                serializedObject.Update();
-            }
-            GUILayout.EndHorizontal();
 
             EditorGUILayout.PropertyField(materialTypeProperty, new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
             if (showHelp)

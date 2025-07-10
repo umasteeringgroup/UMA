@@ -22,14 +22,12 @@ public class DNAEditor : Editor
     private Type[] effectTypes;
     private string[] effectTypeNames;
     private bool editorExpanded = true;
+    private bool initialized = false;
 
     void Initialize()
     {
-        //nameProp = serializedObject.FindProperty("name");
-        descriptionProp = serializedObject.FindProperty("description");
-        defaultValueProp = serializedObject.FindProperty("defaultValue");
-        // effectsProp = serializedObject.FindProperty("effects");  This returns null? wtf?
-
+        if (initialized) return;
+        initialized = true;
         // Find all non-abstract, non-generic subclasses of DNAEffect
         var baseType = typeof(DNAEffect);
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -57,28 +55,26 @@ public class DNAEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        if (descriptionProp == null || defaultValueProp == null || effectsProp == null)
-        {
-            Initialize();
-        }
+        Initialize();
+        DNA targetDNA = target as DNA;
+
         serializedObject.Update();
 
-        //EditorGUILayout.PropertyField(nameProp, new GUIContent("Name"));
-        EditorGUILayout.PropertyField(descriptionProp, new GUIContent("Description"));
-        EditorGUILayout.Slider(defaultValueProp, 0f, 1f, new GUIContent("Default Value"));
-
+        targetDNA.description = EditorGUILayout.DelayedTextField("Description", targetDNA.description);
+        targetDNA.defaultValue = EditorGUILayout.Slider("Default Value", targetDNA.defaultValue, 0f, 1f);
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Effects", EditorStyles.boldLabel);
 
-        var targetDNA = target as DNA;
 
-        editorExpanded = EditorGUILayout.Foldout(editorExpanded, "Add New Effect", true);
+        //editorExpanded = EditorGUILayout.Foldout(editorExpanded, "Add New Effect", true);
+        editorExpanded = GUIHelper.FoldoutBar(editorExpanded, "Add New Effect Settings");
         if (editorExpanded)
         {
             ShowAddNew(targetDNA);
         }
 
         // Draw existing effects
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Existing Effects", EditorStyles.boldLabel);
         int deleteme = -1;
         for (int i = 0; i < targetDNA.effects.Count; i++)
         {
@@ -140,7 +136,8 @@ public class DNAEditor : Editor
 
     private void ShowAddNew(DNA targetDNA)
     {
-        EditorGUILayout.LabelField("Add New Effect", EditorStyles.boldLabel);
+        GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+        EditorGUILayout.LabelField("Add the New Effect", EditorStyles.boldLabel);
 
         if (effectTypes.Length > 0)
         {
@@ -157,17 +154,7 @@ public class DNAEditor : Editor
             if (newEffectInstance != null)
             {
 
-                newEffectInstance.DoGui(false);
-                /*SerializedObject tempSO = new SerializedObject(newEffectInstance);
-                SerializedProperty prop = tempSO.GetIterator();
-                bool enterChildren = true;
-                while (prop.NextVisible(enterChildren))
-                {
-                    if (prop.name == "m_Script") continue;
-                    EditorGUILayout.PropertyField(prop, true);
-                    enterChildren = false;
-                }
-                tempSO.ApplyModifiedProperties();*/
+                newEffectInstance.DoGui(true);
 
                 if (GUILayout.Button("Add Effect"))
                 {
@@ -180,6 +167,7 @@ public class DNAEditor : Editor
         {
             EditorGUILayout.HelpBox("No DNAEffect types found.", MessageType.Warning);
         }
+        GUIHelper.EndVerticalPadded();
     }
 
     // Helper to deep clone a DNAEffect (since Unity doesn't serialize managedReferenceValue directly from a temp object)
@@ -195,38 +183,3 @@ public class DNAEditor : Editor
         return clone;
     }
 }
-
-/*using UnityEditor;
-using UnityEngine;
-using UMA;
-
-[CustomEditor(typeof(DNA))]
-public class DNAEditor : Editor
-{
-    SerializedProperty nameProp;
-    SerializedProperty descriptionProp;
-    SerializedProperty defaultValueProp;
-    SerializedProperty effectsProp;
-
-    void OnEnable()
-    {
-        nameProp = serializedObject.FindProperty("name");
-        descriptionProp = serializedObject.FindProperty("description");
-        defaultValueProp = serializedObject.FindProperty("defaultValue");
-        effectsProp = serializedObject.FindProperty("effects");
-    }
-
-    public override void OnInspectorGUI()
-    {
-        serializedObject.Update();
-
-        EditorGUILayout.PropertyField(nameProp, new GUIContent("name"));
-        EditorGUILayout.PropertyField(descriptionProp, new GUIContent("Description"));
-        EditorGUILayout.Slider(defaultValueProp, 0f, 1f, new GUIContent("Default Value"));
-        //EditorGUILayout.PropertyField(effectsProp, new GUIContent("Effects"), true);
-
-
-        serializedObject.ApplyModifiedProperties();
-    }
-}
-*/

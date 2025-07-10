@@ -19,7 +19,10 @@ namespace UMA
             Texture,
             Mesh,
             Rig,
-            All = Texture | Mesh | Rig
+            BlendShape,
+            SharedColors,
+            Base = Mesh | Rig | Texture,
+            All = Texture | Mesh | Rig | BlendShape | SharedColors
         }
 
         public DNABuildType updateFlags = DNABuildType.None;

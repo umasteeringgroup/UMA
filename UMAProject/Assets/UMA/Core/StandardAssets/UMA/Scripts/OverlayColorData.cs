@@ -375,6 +375,37 @@ namespace UMA
 			}
 		}
 
+		public Color GetColor(int textureNumber, bool additive)
+		{
+            if (textureNumber < channelMask.Length)
+            {
+                if (additive)
+                {
+                    return channelAdditiveMask[textureNumber];
+                }
+                else
+                {
+                    return channelMask[textureNumber];
+                }
+            }
+            return Color.white;
+        }
+
+        public void SetColor(int textureNumber, bool additive, Color col)
+		{
+            if (textureNumber < channelMask.Length)
+            {
+                if (additive)
+                {
+                    channelAdditiveMask[textureNumber] = col;
+                }
+                else
+                {
+                    channelMask[textureNumber] = col;
+                }
+            }
+        }
+
         public void EnsureChannels(int channels)
         {
 			if (channelMask == null)

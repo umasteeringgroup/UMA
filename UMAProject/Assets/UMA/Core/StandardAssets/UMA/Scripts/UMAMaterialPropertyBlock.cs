@@ -794,13 +794,31 @@ namespace UMA
             CheckInitialize();
         }
 
-        // Returns a list of types to load 
-   /*     public static List<Type> GetPropertyTypes()
+        public UMAProperty GetProperty<T>(string propertyName) where T : UMAProperty
         {
-            return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-                 .Where(x => typeof(UMAProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-                 .Select(x => x).ToList();
-        }*/
+            if (shaderProperties == null)
+            {
+                return null;
+            }
+            for (int i = 0; i < shaderProperties.Count; i++)
+            {
+                UMAProperty p = shaderProperties[i];
+                if (p.name == propertyName)
+                {
+                    return p as T;
+                }
+            }
+            return null;
+        }
+
+
+        // Returns a list of types to load 
+        /*     public static List<Type> GetPropertyTypes()
+             {
+                 return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+                      .Where(x => typeof(UMAProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
+                      .Select(x => x).ToList();
+             }*/
         public static List<Type> GetPropertyTypes()
         {
             List<Type> theTypes = new List<Type>();

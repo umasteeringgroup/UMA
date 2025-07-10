@@ -1180,6 +1180,31 @@ namespace UMA
 				}
 			}
 
+			public OverlayData FindFirstOverlay(string name)
+			{
+                if (slotDataList == null || slotDataList.Length == 0)
+                {
+                    return null;
+                }
+                for (int i = 0; i < slotDataList.Length; i++)
+                {
+                    var slotData = slotDataList[i];
+                    if (slotData != null)
+                    {
+						var overlayList = slotData.GetOverlayList();
+                        for (int j = 0; j < overlayList.Count; j++)
+                        {
+                            var overlay = overlayList[j];
+                            if (overlay != null && overlay.overlayName == name)
+                            {
+                                return overlay;
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+
 			public bool Validate()
 			{
 				bool valid = true;
