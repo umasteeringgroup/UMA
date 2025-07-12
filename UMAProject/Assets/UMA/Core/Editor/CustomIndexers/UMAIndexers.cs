@@ -9,7 +9,7 @@ namespace UMA
         [CustomObjectIndexer(typeof(UMAWardrobeRecipe))]
         internal static void UMAWardrobeIndexer(CustomObjectIndexerTarget context, ObjectIndexer indexer)
         {
-
+            /*
             var recipe = context.target as UMAWardrobeRecipe;
             if (recipe == null)
             {
@@ -22,7 +22,7 @@ namespace UMA
                 Debug.Log("Indexing file: " + context.target.name);
                 Debug.Log("Race is " + raceName);
                 indexer.AddProperty("race", raceName, context.documentIndex);
-            }
+            }*/
             /*
             var wardrobeRecipes = UMAAssetIndexer.GetAssets<UMAWardrobeRecipe>();
             foreach (var recipe in wardrobeRecipes)

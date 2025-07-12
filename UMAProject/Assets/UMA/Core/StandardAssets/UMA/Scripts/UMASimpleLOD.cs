@@ -23,6 +23,11 @@ namespace UMA.Examples
 		public int maxReduction = 8;
 		[Tooltip("Allow the system to drop slots based on the SlotDataAsset MaxLOD")]
 		public bool useSlotDropping;
+        [Tooltip("Allow the system to drop slots based on the SlotDataAsset MaxLOD")]
+        public bool useTextureResize;
+        [Tooltip("Disable the automated processing of LOD changes. This is useful if you want to control when the LOD changes happen, such as in a custom update loop or event system.")]
+        public bool disableAutomatedProcessing;
+
 		[Tooltip("How much of a movement buffer before triggering an LOD change again. This is to stop thrashing at edges 4.99->5.0->4.99, etc")]
 		public float BufferZone = 0.5f;
 
@@ -104,9 +109,42 @@ namespace UMA.Examples
             }
         }
 
+        /// <summary>
+        /// Manually check the LOD level. This is useful if you want to control when the LOD changes happen, such as in a custom update loop or event system.
+        /// Call passing the maximum LOD level you want set. 
+        /// This should be called from a "CharacterBegun" event or similar, so that the UMAData is initialized and ready to process the LOD change.
+        /// </summary>
+        /// <param name="lodLevel"></param>
+        public void DoManualLODCheck(int lodLevel)
+        {
+            if (_umaData == null)
+            {
+                _umaData = gameObject.GetComponent<UMAData>();
+            }
+            if (_umaData == null)
+            {
+                return;
+            }
+            if (lodLevel < 0)
+            {
+                lodLevel = 0;
+            }
+            if (lodLevel >= maxLOD)
+            {
+                lodLevel = maxLOD - 1;
+            }
+            _currentLOD = lodLevel + lodOffset;
+            ProcessRecipe(_currentLOD);
+        }
+
         public void Update()
 		{
 			if (!initialized)
+            {
+                return;
+            }
+
+            if (disableAutomatedProcessing)
             {
                 return;
             }
@@ -186,7 +224,7 @@ namespace UMA.Examples
             bool updatedTextures = false;
             bool updatedSlots = false;
 
-			if (_umaData.atlasResolutionScale != atlasResolutionScale)
+			if ((_umaData.atlasResolutionScale != atlasResolutionScale) && useTextureResize)
 			{
                 updatedTextures = true;
 				_umaData.atlasResolutionScale = atlasResolutionScale;
@@ -257,7 +295,7 @@ namespace UMA.Examples
             {
                 SlotLods[i] = string.Empty;
                 string possibleSlot = $"{baseSlotName}_LOD{i}";
-                if (UMAContextBase.Instance.HasSlot(possibleSlot))
+                if (UMAAssetIndexer.Instance.HasSlot(possibleSlot))
                 {
                     SlotLods[i] = possibleSlot;
                     foundLODS++;
@@ -265,7 +303,7 @@ namespace UMA.Examples
                 }
                 else
                 {
-                    if (i == 0 && UMAContextBase.Instance.HasSlot(baseSlotName))
+                    if (i == 0 && UMAAssetIndexer.Instance.HasSlot(baseSlotName))
                     {
                         SlotLods[i] = baseSlotName;
                         foundLODS++;
@@ -344,7 +382,7 @@ namespace UMA.Examples
                     // if there is a new LOD slot, then switch to that, and schedule for regeneration
                     if (newSlot != null && newSlot != string.Empty && newSlot != slot.slotName)
                     {
-                        _umaData.umaRecipe.slotDataList[i] = UMAContextBase.Instance.InstantiateSlot(newSlot, slot.GetOverlayList());
+                        _umaData.umaRecipe.slotDataList[i] = UMAAssetIndexer.Instance.InstantiateSlot(newSlot, slot.GetOverlayList());
                         changedSlots = true;
                     }
                 }

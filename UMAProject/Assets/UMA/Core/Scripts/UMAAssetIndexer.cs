@@ -32,7 +32,7 @@ using System.Xml.Serialization;
 namespace UMA
 {
     [PreferBinarySerialization]
-    public class UMAAssetIndexer : ScriptableObject /*, ISerializationCallbackReceiver */
+    public partial class UMAAssetIndexer : ScriptableObject /*, ISerializationCallbackReceiver */
     {
         const float DefaultLife = 5.0f;
 
