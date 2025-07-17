@@ -193,6 +193,9 @@ namespace UMA.CharacterSystem
         public string loadString;
         public bool loadFileOnStart;
 
+        [Tooltip("When using DNA Collections, this is the list of DNA for the character")]
+        public List<DNAInstanceCollection> dnaInstanceCollections = new List<DNAInstanceCollection>();
+
         [Tooltip("This will make the slot use the UMAMaterial of the first overlay")]
         public bool forceSlotMaterials;
 
@@ -370,6 +373,7 @@ namespace UMA.CharacterSystem
                 return _wardrobeCollections;
             }
         }
+
         /// <summary>
         /// Is building the character enabled? Set to FALSE to make multiple changes to the avatar that will only be built when this becomes TRUE again
         /// </summary>
@@ -4511,6 +4515,7 @@ namespace UMA.CharacterSystem
                 InitializeAvatar();
             }
             SetUMADataOptions();
+            umaData.dnaInstanceCollections = dnaInstanceCollections;
             umaData.defaultRendererAsset = defaultRendererAsset;
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
             umaData.atlasResolutionScale = this.AtlasResolutionScale;
@@ -5490,6 +5495,7 @@ namespace UMA.CharacterSystem
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
         {
             umaData.rawAvatar = rawAvatar;
+            umaData.dnaInstanceCollections = dnaInstanceCollections;
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
 

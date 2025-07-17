@@ -66,9 +66,12 @@ namespace UMA
 		public List<UMASavedItem> savedItems = new List<UMASavedItem>();
 		public string userInformation = "";
 
-		// MeshModifers are used to modify the mesh during creation.
-		// This array is built from the various recipes added during the build process.
-		private Dictionary<string,List<MeshModifier.Modifier>> meshModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
+		public List<DNAInstanceCollection> dnaInstanceCollections = new List<DNAInstanceCollection>();
+
+
+        // MeshModifers are used to modify the mesh during creation.
+        // This array is built from the various recipes added during the build process.
+        private Dictionary<string,List<MeshModifier.Modifier>> meshModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
 		private Dictionary<string, List<MeshModifier.Modifier>> accumulatedModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
 
         // This array is not built from the recipes. It must be set manually. It is merged into the dictionary of MeshModifiers with the recipe driven modifiers.

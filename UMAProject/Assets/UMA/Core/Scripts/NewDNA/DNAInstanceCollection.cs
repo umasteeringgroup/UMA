@@ -27,6 +27,9 @@ namespace UMA
 
         public DNABuildType updateFlags = DNABuildType.None;
 
+        private Dictionary<string, DNA> dnaDictionary = new Dictionary<string, DNA>();
+
+
         /// <summary>
         /// The list of DNA instances.
         /// </summary>

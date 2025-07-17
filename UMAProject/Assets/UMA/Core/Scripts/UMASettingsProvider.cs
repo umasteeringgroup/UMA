@@ -157,19 +157,20 @@ namespace UMA
 
         public void DrawBoolConfigToggle(string propertyName, string label, string tooltip, string defineSymbol, HashSet<string> defineSymbols, bool burst = false)
         {
-            SerializedProperty prop = m_CustomSettings.FindProperty(propertyName);
+
             EditorGUI.BeginChangeCheck();
-            prop.boolValue = EditorGUILayout.Toggle(new GUIContent(label, tooltip), prop.boolValue);
+            var boolValue = defineSymbols.Contains(defineSymbol);
+            boolValue = EditorGUILayout.Toggle(new GUIContent(label, tooltip), boolValue);
             if (EditorGUI.EndChangeCheck())
             {
-                Debug.Log($"{label} changed to {prop.boolValue} burst = {burst}");
+                Debug.Log($"{label} changed to {boolValue} burst = {burst}");
                 if (burst)
                 {
-                    if (prop.boolValue)
+                    if (boolValue)
                     {
                         string sourceFile = Path.Combine(BasePath,  "core", "uma_core_burst.dat");
                         string destFile = Path.Combine(BasePath,"core", "uma_core.asmdef");
-                        Debug.Log($"Burst changed to {prop.boolValue}-Copying from {sourceFile} to {destFile}");
+                        Debug.Log($"Burst changed to {boolValue}-Copying from {sourceFile} to {destFile}");
                         File.Copy(sourceFile, destFile, true);
                         AssetDatabase.Refresh();
                         Debug.Log("File copied");
@@ -178,14 +179,14 @@ namespace UMA
                     {
                         string sourceFile = Path.Combine(BasePath,"core", "uma_core_noburst.dat");
                         string destFile = Path.Combine(BasePath,"core", "uma_core.asmdef");
-                        Debug.Log($"Burst changed to {prop.boolValue}-Copying from {sourceFile} to {destFile}");
+                        Debug.Log($"Burst changed to {boolValue}-Copying from {sourceFile} to {destFile}");
                         File.Copy(sourceFile, destFile, true);
                         AssetDatabase.Refresh();
                         Debug.Log("File copied");
                     }
                 }
                 m_CustomSettings.ApplyModifiedProperties();
-                if (prop.boolValue)
+                if (boolValue)
                 {
                     if (!defineSymbols.Contains(defineSymbol))
                     {
