@@ -59,7 +59,7 @@ namespace UMA
             {
                 return;
             }
-            swayRootBone.DoUpdate(step);
+            swayRootBone.UpdateRootBone(step);
         }
     }
 }

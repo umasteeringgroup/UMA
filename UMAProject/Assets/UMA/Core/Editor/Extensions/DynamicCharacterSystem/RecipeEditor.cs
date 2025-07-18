@@ -94,7 +94,7 @@ namespace UMA.Editors
 		{
 			var GO = new GameObject(recipe.name);
 			var avatar = GO.AddComponent<UMADynamicAvatar>();
-			avatar.umaRecipe = recipe;
+			avatar.serializedRecipe = recipe;
 			avatar.loadOnStart = true;
 			return GO;
 		}

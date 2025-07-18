@@ -73,7 +73,7 @@ namespace UMA
             {
                 if (generator == null)
                 {
-                    generator = GameObject.FindFirstObjectByType<UMAGenerator>();
+                    generator = GameObject.FindFirstObjectByType<UMAGenerator>(FindObjectsInactive.Exclude);
                     if (generator == null)
                     {
                         CreateGenerator();
@@ -192,6 +192,18 @@ namespace UMA
         #region Static Fields
         static UMAAssetIndexer theIndexer = null;
 
+        public static UMAAssetIndexer bareInstance
+        {
+            get { return theIndexer; }
+        }
+
+        public UMAGenerator bareGenerator
+        {
+            get
+            {
+                return generator;
+            }
+        }
 
         #endregion
 
@@ -464,6 +476,7 @@ namespace UMA
             CreateTypeFolderMapping();
         }
 
+        static int generatorNumber = 0;
         private void CreateGenerator()
         {
             UMASettings settings = UMASettings.GetSettingsFromResources();
@@ -487,17 +500,17 @@ namespace UMA
                 }
                 //Debug.Log("Creating generator");
                 GameObject go = GameObject.Instantiate(settings.generatorPrefab);
-                go.name = "UMAGeneratorInternal";
+                go.name = $"UMAGeneratorInternal-{generatorNumber++}";
                 generator = go.GetComponent<UMAGenerator>();
                 if (generator != null)
                 {
                     if (!generator.showInHierarchy)
                     {
-                        go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
+                        //go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
                     }
                     else
                     {
-                        go.hideFlags = HideFlags.DontSave; 
+                        //go.hideFlags = HideFlags.DontSave; 
                     }
                 }
 
@@ -1529,23 +1542,6 @@ namespace UMA
 
         #region Addressables
 
-#if UNITY_EDITOR
-        GameObject EditorUMAContextBase;
-#endif
-
-        public void DestroyEditorUMAContextBase()
-        {
-#if UNITY_EDITOR
-            if (EditorUMAContextBase != null)
-            {
-                foreach (Transform child in EditorUMAContextBase.transform)
-                {
-                    DestroyImmediate(child.gameObject);
-                }
-                DestroyImmediate(EditorUMAContextBase);
-            }
-#endif
-        }
 
 #if UMA_ADDRESSABLES
         public string GetLabel(UMARecipeBase recipe)

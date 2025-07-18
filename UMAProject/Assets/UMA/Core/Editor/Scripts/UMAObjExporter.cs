@@ -67,7 +67,7 @@ namespace UMA.Editors
 					if (path.Length != 0)
 					{
 						var staticMesh = new Mesh();
-                        if (UMAAssetIndexer.Instance.generator.Use32BitBuffers)
+                        if (UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
                         {
                             staticMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
                         }

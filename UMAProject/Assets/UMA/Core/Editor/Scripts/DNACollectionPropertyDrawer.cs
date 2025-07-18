@@ -11,7 +11,6 @@ namespace UMA
     public class DNACollectionPropertyDrawer : PropertyDrawer
     {
         public const float dropAreaHeight = 50f;
-        private float horizPadding = 2f;
 
         private float LineHeight = EditorGUIUtility.singleLineHeight;
         private float VerticalSpacing = EditorGUIUtility.standardVerticalSpacing;

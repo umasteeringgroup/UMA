@@ -436,9 +436,12 @@ namespace UMA.Controls
 			{
 				if (EditorUtility.DisplayDialog("Warning!", "The Addressables Package must be installed first before enabling Addressables support in UMA. Enabling addressables will trigger a recompile during which the library will be unavailable.", "OK", "Cancel"))
 				{
-					var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+                    var currentBuildTarget = UMASettingsProvider.CurrentNamedBuildTarget;
+                    var defines = PlayerSettings.GetScriptingDefineSymbols(currentBuildTarget);
+					var defineSymbols = new HashSet<string>(defines.Split(';'));
+
 					defineSymbols.Add("UMA_ADDRESSABLES");
-					PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
+                    PlayerSettings.SetScriptingDefineSymbols(currentBuildTarget, string.Join(";", defineSymbols));
 					m_Initialized = false;
 					Repaint();
 				}

@@ -59,11 +59,13 @@ namespace UMA
 		[SerializeField]
 		private SkinnedMeshRenderer[] renderers;
 		private UMARendererAsset[] rendererAssets = new UMARendererAsset[0];
-		public UMARendererAsset defaultRendererAsset { get; set; }
+
+        [Tooltip("The default renderer asset to use for this avatar. This lets you set parameters for the generated SkinnedMeshRenderer")]
+        public UMARendererAsset defaultRendererAsset { get; set; }
 		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
-		public List<SlotTracker> slotTrackers = new List<SlotTracker>();
-		public List<UMASavedItem> savedItems = new List<UMASavedItem>();
+		public List<SlotTracker> slotTrackers = new();
+		public List<UMASavedItem> savedItems = new();
 		public string userInformation = "";
 
 		public List<DNAInstanceCollection> dnaInstanceCollections = new List<DNAInstanceCollection>();
@@ -358,17 +360,35 @@ namespace UMA
 		public bool firstBake;
 
 		[NonSerialized]
-		public bool RebuildSkeleton;
+		public bool RebuildSkeletonThisBuild;
 
-		public bool rawAvatar;
+        [Tooltip("If checked, will not animate or modify the vertexes")]
+        public bool rawAvatar;
 
 		public bool raceChanged;
 
 		public bool hideRenderers;
 
-		public UMAGeneratorBuiltin umaGenerator;
+        public UMAGenerator umaGenerator
+        {
+            get
+            {
+				UMAAssetIndexer instance = UMAAssetIndexer.Instance;
+				if (instance == null)
+				{
+					Debug.LogError("AssetIndexer instance is NULL!!!!");
+					return null;
+				}
+				UMAGenerator umaGenerator = instance.Generator;
+				if (umaGenerator == null)
+				{
+					Debug.LogError("AssetIndexer generator instance is NULL!!!!");
+				}
+				return umaGenerator;
+            }
+        }
 
-		[NonSerialized]
+        [NonSerialized]
 		public GeneratedMaterials generatedMaterials = new GeneratedMaterials();
 
 		private LinkedListNode<UMAData> listNode;
@@ -531,14 +551,16 @@ namespace UMA
 		/// </summary>
 		public bool isAtlasDirty;
 
-		/// <summary>
-		/// Can the mesh be read after creation?
-		/// </summary>
-		public bool markNotReadable = true;
-		/// <summary>
-		/// Should the mesh use dynamic buffers?
-		/// </summary>
-		public bool markDynamic = false;
+        /// <summary>
+        /// Can the mesh be read after creation?
+        /// </summary>
+        [Tooltip("When this is true, the meshcombiner will upload the data and the mesh will no longer be readable. Set this to false if you use a 3rd party asset that needs to read the mesh data.")]
+        public bool markNotReadable = true;
+        /// <summary>
+        /// Should the mesh use dynamic buffers?
+        /// </summary>
+        [Tooltip("When this is true, the meshcombiner will mark the mesh as dynamic. This will slightly decrease build time and slightly increase rendering.")]
+        public bool markDynamic = false;
 
 		// This UMAData will require 32 bit indexes
 		// this is calculated from the slots when the mesh generation starts.
@@ -797,14 +819,12 @@ namespace UMA
 
 		void Awake()
 		{
-			umaGenerator = UMAAssetIndexer.Instance.Generator;
 			Initialize();
 		}
 
 		public void Initialize()
 		{
 			firstBake = true;
-            umaGenerator = UMAAssetIndexer.Instance.Generator;
 
             if (_umaRecipe == null)
 			{
@@ -2414,20 +2434,14 @@ namespace UMA
 
 		public virtual void Dirty()
 		{
+			Debug.Log($"Setting Dirty");
 			if (dirty)
             {
                 return;
             }
 
             dirty = true;
-			if (!umaGenerator)
-			{
-				umaGenerator = UMAAssetIndexer.Instance.Generator;
-            }
-			if (umaGenerator)
-			{
-				umaGenerator.addDirtyUMA(this);
-			}
+			umaGenerator.addDirtyUMA(this);
 		}
 
 		void OnDestroy()

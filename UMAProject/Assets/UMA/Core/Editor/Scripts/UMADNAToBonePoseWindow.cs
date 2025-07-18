@@ -271,7 +271,7 @@ namespace UMA.PoseTools
 
                 tempAvatar.umaData.umaRecipe.SetSlot(slotIndex++, slotEntry);
 			}
-			tempAvatar.Show();
+			tempAvatar.ShowAndLoad();
 
 			tempAvatarPostDNA = new GameObject("Temp DNA Avatar");
 			tempAvatarPostDNA.transform.parent = sourceUMA.transform.parent;
@@ -301,7 +301,7 @@ namespace UMA.PoseTools
 			}
 
 			tempAvatar2.umaData.OnCharacterUpdated += CreateBonePoseCallback;
-			tempAvatar2.Show();
+			tempAvatar2.ShowAndLoad();
 		}
 
 		public static void EnforceFolder(ref UnityEngine.Object folderObject)

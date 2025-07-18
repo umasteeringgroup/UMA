@@ -33,7 +33,7 @@ namespace UMA.CharacterSystem
         public bool KeepAnimatorController = false;
         [Tooltip("If true, the Animator will be rebuilt anytime the race changes")]
         public bool RecreateAnimatorOnRaceChange = true;
-        public string userInformation = "";
+        //public string userInformation = "";
 #if UNITY_EDITOR
         [UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar", false, 10)]
         public static void CreateDynamicCharacterAvatarMenuItem()
@@ -108,10 +108,10 @@ namespace UMA.CharacterSystem
         [NonSerialized]
         public bool lastHide;
 
-        [Tooltip("When this is true, the meshcombiner will upload the data and the mesh will no longer be readable. Set this to false if you use a 3rd party asset that needs to read the mesh data.")]
-        public bool markNotReadable = true;
-        [Tooltip("When this is true, the meshcombiner will mark the mesh as dynamic. This will slightly decrease build time and slightly increase rendering.")]
-        public bool markDynamic = true;
+        //[Tooltip("When this is true, the meshcombiner will upload the data and the mesh will no longer be readable. Set this to false if you use a 3rd party asset that needs to read the mesh data.")]
+        //public bool markNotReadable = true;
+        //[Tooltip("When this is true, the meshcombiner will mark the mesh as dynamic. This will slightly decrease build time and slightly increase rendering.")]
+        //public bool markDynamic = true;
         [Tooltip("If true, then the meshcombiner will merge blendshapes found on slots that are part of this umaData")]
         public bool loadBlendShapes = false;
 
@@ -131,8 +131,6 @@ namespace UMA.CharacterSystem
         [Tooltip("If true, will reuse the mecanim avatar if it exists.")]
         public bool keepAvatar;
 
-        [Tooltip("If checked, will not animate or modify the vertexes")]
-        public bool rawAvatar;
 
         [Tooltip("If checked, the predefined DNA will always be loaded every time the character is built.")]
         public bool keepPredefinedDNA;
@@ -192,9 +190,6 @@ namespace UMA.CharacterSystem
         public string loadFilename;
         public string loadString;
         public bool loadFileOnStart;
-
-        [Tooltip("When using DNA Collections, this is the list of DNA for the character")]
-        public List<DNAInstanceCollection> dnaInstanceCollections = new List<DNAInstanceCollection>();
 
         [Tooltip("This will make the slot use the UMAMaterial of the first overlay")]
         public bool forceSlotMaterials;
@@ -460,15 +455,28 @@ namespace UMA.CharacterSystem
                     if (editorTimeGeneration && Application.isPlaying)
                     {
                         List<GameObject> Cleaners = GetRenderers(gameObject);
-                        Hide(false);
-                        
-                        for (int i=0;i<Cleaners.Count;i++)
+                        HideAndCleanup(false);
+
+                        for (int i = 0; i < Cleaners.Count; i++)
                         {
                             GameObject go = Cleaners[i];
                             DestroyImmediate(go);
                         }
                     }
-                   // ud.umaRoot = null;
+                    // ud.umaRoot = null;
+                }
+            }
+            else
+            {
+                Debug.Log("hiding renderers until rebuilt");
+                SkinnedMeshRenderer[] smrs = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+
+                if (smrs.Length > 0)
+                {
+                    for (int i = 0; i < smrs.Length; i++)
+                    {
+                        smrs[i].enabled = false;
+                    }
                 }
             }
 
@@ -478,7 +486,7 @@ namespace UMA.CharacterSystem
            if (ud != null)
            {
                List<GameObject> Cleaners = GetRenderers(gameObject);
-               Hide(false);
+               HideAndCleanup(false);
                 for (int i=0;i<Cleaners.Count;i++)
                 {
                     GameObject go = Cleaners[i];
@@ -488,7 +496,7 @@ namespace UMA.CharacterSystem
            }
 #endif
 
-            cacheStates = new Dictionary<string, string>();
+                cacheStates = new Dictionary<string, string>();
         }
 
 #if UNITY_EDITOR
@@ -522,7 +530,7 @@ namespace UMA.CharacterSystem
         }
 #endif
         // Use this for initialization
-        public override void Start()
+        public void Start()
         {
             InitialStartup();
         }
@@ -625,20 +633,20 @@ namespace UMA.CharacterSystem
                 Debug.LogWarning("UMAData is null, cannot set blendshape settings");
                 return;
             }
-            if (umaData.blendShapeSettings == null)
+            if (blendShapeSettings == null)
             {
 #if DEBUG_BAKING
                 Debug.Log("Creating new BlendShapeSettings for " + gameObject.name);
 #endif
-                umaData.blendShapeSettings = new BlendShapeSettings();
+                blendShapeSettings = new BlendShapeSettings();
             }
-            umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
-            umaData.blendShapeSettings.loadTangents = loadBlendshapeTangents;
-            umaData.blendShapeSettings.loadNormals = loadBlendshapeNormals;
-            umaData.blendShapeSettings.loadAllFrames = loadAllFrames;
-            umaData.blendShapeSettings.filteredBlendshapes = blendShapes;
-            umaData.markNotReadable = markNotReadable;
-            umaData.markDynamic = markDynamic;
+            blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
+            blendShapeSettings.loadTangents = loadBlendshapeTangents;
+            blendShapeSettings.loadNormals = loadBlendshapeNormals;
+            blendShapeSettings.loadAllFrames = loadAllFrames;
+            blendShapeSettings.filteredBlendshapes = blendShapes;
+           // umaData.markNotReadable = markNotReadable;
+           // umaData.markDynamic = markDynamic;
         }
 
         List<GameObject> GetRenderers(GameObject parent)
@@ -776,7 +784,7 @@ namespace UMA.CharacterSystem
         public void CleanupGeneratedData()
         {
             List<GameObject> Cleaners = GetRenderers(gameObject);
-            Hide(false);
+            HideAndCleanup(false);
             for (int i=0;i<Cleaners.Count;i++)
             {
                 var go = Cleaners[i];
@@ -1039,9 +1047,9 @@ namespace UMA.CharacterSystem
             {
                 DoLoad();
             }
-            else if (umaRecipe != null)
+            else if (serializedRecipe != null)
             {
-                LoadFromRecipe(umaRecipe);
+                LoadFromRecipe(serializedRecipe);
             }
         }
 
@@ -1424,7 +1432,7 @@ namespace UMA.CharacterSystem
             if (activeRace.data != null && activeRace.name == activeRace.racedata.raceName)
             {
                 activeRace.name = activeRace.racedata.raceName;
-                umaRecipe = activeRace.racedata.baseRaceRecipe;
+                serializedRecipe = activeRace.racedata.baseRaceRecipe;
             }
             //otherwise...
             else if (activeRace.name != "")
@@ -1432,11 +1440,11 @@ namespace UMA.CharacterSystem
                 activeRace.data = UMAAssetIndexer.Instance.GetRace(activeRace.name);
                 if (activeRace.racedata != null)
                 {
-                    umaRecipe = activeRace.racedata.baseRaceRecipe;
+                    serializedRecipe = activeRace.racedata.baseRaceRecipe;
                 }
             }
             //if we are loading an old UMARecipe from the recipe field and the old race is not in resources the race will be null but the recipe wont be 
-            if (umaRecipe == null)
+            if (serializedRecipe == null)
             {
                 if (Debug.isDebugBuild)
                 {
@@ -3639,11 +3647,6 @@ namespace UMA.CharacterSystem
             _isFirstSettingsBuild = false;
             var prevDna = new UMADnaBase[0];
 
-            if (umaData == null)
-            {
-                InitializeAvatar();
-
-            }
             if ((!thisLoadOptions.HasFlagSet(LoadOptions.loadDNA) || settingsToLoad.packedDna.Count == 0) && activeRace.racedata != null)
             {
                 prevDna = umaData.umaRecipe.GetAllDna();
@@ -3662,7 +3665,7 @@ namespace UMA.CharacterSystem
                 activeRace.name = settingsToLoad.race;
                 SetActiveRace();
                 //If the UmaRecipe is still after that null, bail - we cant go any further (and SetStartingRace will have shown an error)
-                if (umaRecipe == null)
+                if (serializedRecipe == null)
                 {
                     return false;
                 }
@@ -4011,7 +4014,7 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
-            //Debug.Log($"Buildcharacter {gameObject.name}");
+            Debug.Log($"Buildcharacter {gameObject.name}");
             InitialStartup(); // This is to make sure that the UMAContext is set up correctly
 
             overrideDNA.Clear();
@@ -4023,7 +4026,7 @@ namespace UMA.CharacterSystem
 
             if (activeRace.racedata != null)
             {
-                umaRecipe = activeRace.racedata.baseRaceRecipe;
+                serializedRecipe = activeRace.racedata.baseRaceRecipe;
             }
 
             List<string> HiddenSlots = new List<string>();//why was this HashSet list is faster for our purposes (http://stackoverflow.com/questions/150750/hashset-vs-list-performance)
@@ -4047,7 +4050,6 @@ namespace UMA.CharacterSystem
                 {
                     CurrentDNA = umaData.umaRecipe.GetDefinedDna();
                 }
-                umaData.userInformation = userInformation;
                 SetUMADataOptions();
                 umaData.ClearModifiers();
             }
@@ -4282,11 +4284,12 @@ namespace UMA.CharacterSystem
                 if (useBundleParameter)
                     skipBundleCheck = !BundleCheck;
 #endif
-            LoadCharacter(umaRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, skipBundleCheck);
+            LoadCharacter(serializedRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, skipBundleCheck);
         }
 
         public void SetAndSaveOverrideDNA(UMAData udata)
         {
+            Debug.Log("Setting and saving override DNA");
             savedDNA.Clear();
             if (overrideDNA.Count > 0)
             {
@@ -4462,12 +4465,13 @@ namespace UMA.CharacterSystem
         /// Loads the Avatar from the given recipe and additional recipe. 
         /// Has additional functions for removing any slots that should be hidden by any 'wardrobe Recipes' that are in the additional recipes array.
         /// </summary>
-        /// <param name="umaRecipe"></param>
+        /// <param name="characterRecipe"></param>
         /// <param name="Replaces"></param>
         /// <param name="umaAdditionalSerializedRecipes"></param>
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
-        private void LoadCharacter(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
+        private void LoadCharacter(UMARecipeBase characterRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
         {
+            Debug.Log($"LoadCharacter {gameObject.name}");
 #if UMA_ADDRESSABLES
 #if UNITY_EDITOR
             // If we are in the editor, and we don't want to look & load bundles, just go ahead.
@@ -4510,13 +4514,9 @@ namespace UMA.CharacterSystem
 #if SUPER_LOGGING
                 Debug.Log("Load Character: " + gameObject.name);
 #endif
-            if (umaData == null)
-            {
-                InitializeAvatar();
-            }
+
             SetUMADataOptions();
             umaData.dnaInstanceCollections = dnaInstanceCollections;
-            umaData.defaultRendererAsset = defaultRendererAsset;
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
             umaData.atlasResolutionScale = this.AtlasResolutionScale;
             umaData.hideRenderers = this.hide;
@@ -4527,11 +4527,11 @@ namespace UMA.CharacterSystem
                 umaData.animator = this.gameObject.GetComponent<Animator>();
             }
 
-            this.umaRecipe = umaRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
+            serializedRecipe = characterRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
 
-            umaRecipe.Load(umaData.umaRecipe);
-            umaData.umaRecipe.SetRace(this.activeRace.racedata); // JRRM Test
-            umaData.umaRecipe.MeshHideDictionary = MeshHideDictionary;
+            characterRecipe.Load(umaRecipe);
+            umaRecipe.SetRace(this.activeRace.racedata); // JRRM Test
+            umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
             umaData.AddAdditionalRecipes(AdditionalRecipes, false);
             if (umaAdditionalSerializedRecipes != null)
@@ -4667,27 +4667,26 @@ namespace UMA.CharacterSystem
 
             if (umaRace != umaData.umaRecipe.raceData)
             {
-                umaData.RebuildSkeleton = rebuildSkeleton;
-                umaData.raceChanged = true;
+                RebuildSkeletonThisBuild = rebuildSkeleton;
+                raceChanged = true;
                 UpdateNewRace();
             }
             else
             {
-                umaData.RebuildSkeleton = false;
-                umaData.raceChanged = false;
+                RebuildSkeletonThisBuild = false;
+                raceChanged = false;
                 UpdateSameRace();
             }
 
-			umaData.RebuildSkeleton = false;
+			RebuildSkeletonThisBuild = false;
             if (alwaysRebuildSkeleton)
             {
-                umaData.RebuildSkeleton = true;
+               RebuildSkeletonThisBuild = true;
             }
 
             ApplyPredefinedDNA();
-            umaData.rawAvatar = rawAvatar;
-            umaData.KeepAvatar = keepAvatar;
-            umaData.ForceRebindAnimator = forceRebindAnimator;
+            KeepAvatar = keepAvatar;
+            ForceRebindAnimator = forceRebindAnimator;
             //But the ExpressionPlayer needs to be Initialized AFTER Load
             if (activeRace.racedata != null && !restoreDNA)
             {
@@ -4700,11 +4699,11 @@ namespace UMA.CharacterSystem
             // Add saved DNA
             if (restoreDNA)
             {
-                umaData.umaRecipe.ClearDna();
+                umaRecipe.ClearDna();
                 for (int i = 0; i < CurrentDNA.Length; i++)
                 {
                     UMADnaBase ud = CurrentDNA[i];
-                    umaData.umaRecipe.AddDna(ud);
+                    umaRecipe.AddDna(ud);
                 }
             }
             ApplyDNAToModifiers();
@@ -5055,7 +5054,7 @@ namespace UMA.CharacterSystem
                 }
             }
             ClearSlots();
-            umaRecipe = null;
+            serializedRecipe = null;
             umaData.umaRecipe.ClearDna();
             umaData.umaRecipe.SetSlots(new SlotData[0]);
             umaData.umaRecipe.sharedColors = new OverlayColorData[0];
@@ -5494,6 +5493,7 @@ namespace UMA.CharacterSystem
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
         {
+            Debug.Log("Updating Character Avatar");
             umaData.rawAvatar = rawAvatar;
             umaData.dnaInstanceCollections = dnaInstanceCollections;
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
@@ -5578,9 +5578,14 @@ namespace UMA.CharacterSystem
 #endif
             if (umaData != null)
             {
-                if (umaData.umaGenerator != null)
+                Hide();
+                if (UMAAssetIndexer.bareInstance != null)
                 {
-                    umaData.umaGenerator.removeUMA(umaData);
+                    var generator = UMAAssetIndexer.bareInstance.generator;
+                    if (generator != null)
+                    {
+                        generator.removeUMA(umaData);
+                    }
                 }
             }
         }

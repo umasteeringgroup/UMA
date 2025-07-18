@@ -8,9 +8,8 @@ namespace UMA
 	public class UMADynamicAvatar : UMAAvatarBase
 	{
 		public bool loadOnStart;
-		public override void Start()
+		public  void Start()
 		{
-			base.Start();
 			if (loadOnStart)
 			{
 				DynamicLoad();
@@ -21,11 +20,11 @@ namespace UMA
 		{
 				if (umaAdditionalRecipes == null || umaAdditionalRecipes.Length == 0)
 				{
-					Load(umaRecipe);
+					Load(serializedRecipe);
 				}
 				else
 				{
-					Load(umaRecipe, umaAdditionalRecipes);
+					Load(serializedRecipe, umaAdditionalRecipes);
 				}
 			}
 

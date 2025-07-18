@@ -13,7 +13,7 @@ using System;
 namespace UMA
 {
 
-    class UMASettingsProvider : SettingsProvider
+    public class UMASettingsProvider : SettingsProvider
     {
         public const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
         public const string DefineSymbol_BurstCompile = "UMA_BURSTCOMPILE";

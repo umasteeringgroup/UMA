@@ -2648,7 +2648,10 @@ namespace UMA.Editors
             _needsUpdate = false;
             _forceUpdate = false;
             UMATextRecipe theRecipe = target as UMATextRecipe;
-            InitialResourcesOnlyFlag = theRecipe.resourcesOnly;
+            if (theRecipe != null)
+            {
+                InitialResourcesOnlyFlag = theRecipe.resourcesOnly;
+            }
             EditorApplication.update += DoInspectors;
         }
 

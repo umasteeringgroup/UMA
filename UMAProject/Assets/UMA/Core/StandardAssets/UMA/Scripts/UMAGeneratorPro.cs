@@ -72,7 +72,6 @@ namespace UMA
 
 		UMAGeneratorBase umaGenerator;
 		UMAData umaData;
-		Texture[] backUpTexture;
 		bool updateMaterialList;
 		int scaleFactor;
 		MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
@@ -499,7 +498,6 @@ namespace UMA
 
 
             textureProcesser.ProcessTexture(_umaData,_umaGenerator);
-            // CleanBackUpTextures();
 
             UpdateUV();
 
@@ -585,31 +583,6 @@ namespace UMA
 				}
 			}
 		}
-
-
-		private void CleanBackUpTextures()
-		{
-			for (int textureIndex = 0; textureIndex < backUpTexture.Length; textureIndex++)
-			{
-				if (backUpTexture[textureIndex] != null)
-				{
-					Texture tempTexture = backUpTexture[textureIndex];
-					if (tempTexture is RenderTexture)
-					{
-						RenderTexture tempRenderTexture = tempTexture as RenderTexture;
-						tempRenderTexture.Release();
-						UMAUtils.DestroySceneObject(tempRenderTexture);
-						tempRenderTexture = null;
-					}
-					else
-					{
-						UMAUtils.DestroySceneObject(tempTexture);
-					}
-					backUpTexture[textureIndex] = null;
-				}
-			}
-		}
-
 
 
 		/// <summary>

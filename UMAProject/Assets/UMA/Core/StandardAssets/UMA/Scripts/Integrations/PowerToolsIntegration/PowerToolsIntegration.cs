@@ -74,7 +74,7 @@ namespace UMA.Integrations
 			var go = new GameObject("PowerTools_" + recipeBase.name);
 			go.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
 			var avatar = go.AddComponent<UMADynamicAvatar>();
-			avatar.umaRecipe = recipeBase;
+			avatar.serializedRecipe = recipeBase;
 
 			var persistance = GetPowerPackPersistanceType();
 			var showAvatarMethod = persistance.GetMethod("ShowAvatar", new Type[] { typeof(UMAAvatarBase) });

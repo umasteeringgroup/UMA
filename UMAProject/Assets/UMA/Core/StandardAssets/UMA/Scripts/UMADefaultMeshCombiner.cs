@@ -40,7 +40,7 @@ namespace UMA
 			#endregion
 			if (umaData.umaRoot != null)
 			{
-				if (umaData.force32bit && UMAAssetIndexer.Instance.generator.Use32BitBuffers == false)
+				if (umaData.force32bit && UMAAssetIndexer.Instance.Generator.Use32BitBuffers == false)
 				{
 					int rendererCount = umaData.rendererCount;
 					for (int i = 0; i < rendererCount; i++)

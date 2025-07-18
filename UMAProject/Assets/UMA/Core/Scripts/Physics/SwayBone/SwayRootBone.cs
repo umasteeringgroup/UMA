@@ -76,7 +76,7 @@ namespace UMA
 			}
 		}
 
-		public void DoUpdate(float step)
+		public void UpdateRootBone(float step)
 		{
 			for (int i = 0; i < SwayBones.Count; i++)
 			{

@@ -257,7 +257,6 @@ namespace UMA
                 return true;
             }
 
-            data.umaGenerator = this;
             umaData = data;
 
 
@@ -312,11 +311,10 @@ namespace UMA
                 return true;
             }
 
-            data.umaGenerator = this;
 			FreezeTime = true;
 			umaData = data;
 
-			if (umaData.RebuildSkeleton)
+			if (umaData.RebuildSkeletonThisBuild)
 			{
 				if (umaData.umaRoot != null)
                 {
@@ -324,7 +322,7 @@ namespace UMA
                 }
                 DestroyImmediate(umaData.umaRoot, false);
 				umaData.umaRoot = null;
-				umaData.RebuildSkeleton = false;
+				umaData.RebuildSkeletonThisBuild = false;
 				umaData.isShapeDirty = true;
 			}
 
@@ -553,7 +551,7 @@ namespace UMA
 					if (v.totalVerts > 65535 || v.totalTris > 65535 || v.totalWeights > 65535)
 					{
 						return true;
-					}
+                    }
 				}
             }
 //#endif
@@ -676,6 +674,7 @@ namespace UMA
                 // guard against duplicates
                 if (!updatePending(umaToAdd))
                 {
+					Debug.Log("Adding to dirty list");
                     umaDirtyList.Add(umaToAdd);
                     umaToAdd.MoveToList(dirtyUmas);
                 }

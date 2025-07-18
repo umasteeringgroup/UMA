@@ -1010,7 +1010,7 @@ namespace UMA
 			CreateTransforms(skeleton);
 
 			Mesh mesh = new Mesh();//renderer.sharedMesh;
-            if (UMAAssetIndexer.Instance.generator.Use32BitBuffers)
+            if (UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
             {
                 mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             }

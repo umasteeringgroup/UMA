@@ -6,113 +6,29 @@ namespace UMA
 	/// <summary>
 	/// Base class for UMA character.
 	/// </summary>
-	public abstract class UMAAvatarBase : MonoBehaviour
+	public abstract class UMAAvatarBase : UMAData 
 	{
-		public UMAData umaData;
-		[Tooltip("The default renderer asset to use for this avatar. This lets you set parameters for the generated SkinnedMeshRenderer")]
-		public UMARendererAsset defaultRendererAsset; // this can be null if no default renderers need to be applied.
+		// public UMAData umaData;
+		public UMAData umaData
+		{
+			get
+			{
+				return this as UMAData;
+			}
+		}
 
 		/// <summary>
 		/// The serialized basic UMA recipe.
 		/// </summary>
-		public UMARecipeBase umaRecipe;
+		public UMARecipeBase serializedRecipe;
 		/// <summary>
 		/// Additional partial UMA recipes (not serialized).
 		/// </summary>
 		public UMARecipeBase[] umaAdditionalRecipes;
-		public UMAGenerator umaGenerator
-		{
-			get
-			{
-				return UMAAssetIndexer.Instance.Generator;
-            }
-		}
-
-		public RuntimeAnimatorController animationController;
-
 		protected RaceData umaRace = null;
 
-		/// <summary>
-		/// Callback event when character is created.
-		/// </summary>
-		public UMADataEvent CharacterCreated;
-		/// <summary>
-		/// Callback event when character is started.
-		/// </summary>
-		public UMADataEvent CharacterBegun;
-		/// <summary>
-		/// Callback event when character is destroyed.
-		/// </summary>
-		public UMADataEvent CharacterDestroyed;
-		/// <summary>
-		/// Callback event when character is updated.
-		/// </summary>
-		public UMADataEvent CharacterUpdated;
-		/// <summary>
-		/// Callback event when character DNA is updated.
-		/// </summary>
-		public UMADataEvent CharacterDnaUpdated;
-
-		public UMADataEvent AnimatorStateSaved;
-		public UMADataEvent AnimatorStateRestored;
-
-		public virtual void Start()
-		{
-			Initialize();
-		}
-		public void Initialize()
-		{
-
-
-			if (umaData == null)
-			{
-				umaData = GetComponent<UMAData>();
-				if (umaData == null)
-				{
-					umaData = gameObject.AddComponent<UMAData>();
-					umaData.umaRecipe = new UMAData.UMARecipe(); // TEST JRRM
-				}
-			}
-			if (umaGenerator != null)
-			{
-				umaData.umaGenerator = umaGenerator;
-			}
-			
-			if (CharacterCreated != null)
-            {
-                umaData.CharacterCreated = CharacterCreated;
-            }
-
-            if (CharacterBegun != null)
-            {
-                umaData.CharacterBegun = CharacterBegun;
-            }
-
-            if (CharacterDestroyed != null)
-            {
-                umaData.CharacterDestroyed = CharacterDestroyed;
-            }
-
-            if (CharacterUpdated != null)
-            {
-                umaData.CharacterUpdated = CharacterUpdated;
-            }
-
-            if (CharacterDnaUpdated != null)
-            {
-                umaData.CharacterDnaUpdated = CharacterDnaUpdated;
-            }
-
-            if (AnimatorStateSaved != null)
-            {
-                umaData.AnimatorStateSaved = AnimatorStateSaved;
-            }
-
-            if (AnimatorStateRestored != null)
-            {
-                umaData.AnimatorStateRestored = AnimatorStateRestored;
-            }
-        }
+		//public UMADataEvent AnimatorStateSaved;
+		//public UMADataEvent AnimatorStateRestored;
 
 		/// <summary>
 		/// Load a UMA recipe into the avatar.
@@ -140,7 +56,7 @@ namespace UMA
 			}
 			Profiler.BeginSample("Load");
 
-			this.umaRecipe = umaRecipe;
+			this.serializedRecipe = umaRecipe;
 
 			umaRecipe.Load(umaData.umaRecipe);
 			umaData.AddAdditionalRecipes(umaAdditionalRecipes);
@@ -161,10 +77,6 @@ namespace UMA
 #if SUPER_LOGGING
 			Debug.Log("UpdateSameRace on DynamicCharacterAvatar: " + gameObject.name);
 #endif
-			if (animationController != null)
-			{
-				umaData.animationController = animationController;
-			}
 			umaData.Dirty(true, true, true);
 		}
 
@@ -173,27 +85,19 @@ namespace UMA
 #if SUPER_LOGGING
 			Debug.Log("UpdateNewRace on DynamicCharacterAvatar: " + gameObject.name);
 #endif
-
 			umaRace = umaData.umaRecipe.raceData;
-			if (animationController != null)
-			{
-				umaData.animationController = animationController;
-			}
-
-			umaData.umaGenerator = umaGenerator;
-
-			umaData.Dirty(true, true, true);
+			Dirty(true, true, true);
 		}
 
-		public virtual void Hide()
+		public virtual void HideAndCleanup()
 		{
-			Hide(true);
+			HideAndCleanup(true);
 		}
 
 		/// <summary>
 		/// Hide the avatar and clean up its components.
 		/// </summary>
-		public virtual void Hide(bool DestroyRoot = true)
+		public virtual void HideAndCleanup(bool DestroyRoot = true)
 		{
 			if (umaData != null)
 			{
@@ -217,11 +121,11 @@ namespace UMA
 		/// <summary>
 		/// Load the avatar recipe and create components.
 		/// </summary>
-		public virtual void Show()
+		public virtual void ShowAndLoad()
 		{
-			if (umaRecipe != null)
+			if (serializedRecipe != null)
 			{
-				Load(umaRecipe);
+				Load(serializedRecipe);
 			}
 			else
 			{

@@ -57,9 +57,9 @@ namespace UMA
             
             for (int i = 0; i < dnaInstances.Count; i++)
             {
-                if (!dnaInstances[i].isDefault)
+                DNA dna = theCollection.dnaDictionary[dnaInstances[i].name];
+                if (dnaInstances[i].value != dna.defaultValue)
                 {
-                    DNA dna = theCollection.dnaDictionary[dnaInstances[i].name];
                     updateFlags |= dna.PreApply(avatar, dnaInstances[i].value);
                 }
             }

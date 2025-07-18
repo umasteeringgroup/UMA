@@ -9,8 +9,5 @@ namespace UMA
     {
         public string name;
         public float value;
-        public bool isDefault;
-        public DNA DNA;
-        public DNACollection dnaCollection;
     }
 }
