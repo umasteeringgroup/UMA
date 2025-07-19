@@ -1764,16 +1764,50 @@ namespace UMA.CharacterSystem
             }
             if (_wardrobeRecipes.ContainsKey(thisRecipeSlot))
             {
-                //New event that allows for tweaking the resulting recipe before the character is actually generated
-                if (WardrobeRemoved != null)
+                // Check if the recipe being replaced is part of a wardrobe collection and unload it if so
+                string oldRecipeName = _wardrobeRecipes[thisRecipeSlot].name;
+                UMAWardrobeCollection collection = FindWardrobeCollectionForSlotRecipe(thisRecipeSlot, oldRecipeName);
+                if (collection != null)
                 {
-                    WardrobeRemoved.Invoke(umaData, _wardrobeRecipes[thisRecipeSlot] as UMAWardrobeRecipe);
-                }
+                    UnloadWardrobeCollection(collection.name);
+                    // After unloading the collection, we may need to set the new recipe if the slot is now empty
+                    if (!_wardrobeRecipes.ContainsKey(thisRecipeSlot))
+                    {
+                        _wardrobeRecipes.Add(thisRecipeSlot, utr);
+                        if (WardrobeAdded != null)
+                        {
+                            WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
+                        }
+                    }
+                    else
+                    {
+                        // The slot still has a recipe after unloading, replace it
+                        //New event that allows for tweaking the resulting recipe before the character is actually generated
+                        if (WardrobeRemoved != null)
+                        {
+                            WardrobeRemoved.Invoke(umaData, _wardrobeRecipes[thisRecipeSlot] as UMAWardrobeRecipe);
+                        }
 
-                _wardrobeRecipes[thisRecipeSlot] = utr;
-                if (WardrobeAdded != null)
+                        _wardrobeRecipes[thisRecipeSlot] = utr;
+                        if (WardrobeAdded != null)
+                        {
+                            WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
+                        }
+                    }
+                }
+                else
                 {
-                    WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
+                    //New event that allows for tweaking the resulting recipe before the character is actually generated
+                    if (WardrobeRemoved != null)
+                    {
+                        WardrobeRemoved.Invoke(umaData, _wardrobeRecipes[thisRecipeSlot] as UMAWardrobeRecipe);
+                    }
+
+                    _wardrobeRecipes[thisRecipeSlot] = utr;
+                    if (WardrobeAdded != null)
+                    {
+                        WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
+                    }
                 }
             }
             else
@@ -1868,10 +1902,10 @@ namespace UMA.CharacterSystem
             }
         }
         /// <summary>
-        /// Clears the given wardrobe slot of any recipes that have been set on the Avatar
+        /// Internal method to clear a slot without checking for wardrobe collections (to avoid circular dependencies)
         /// </summary>
         /// <param name="ws"></param>
-        public void ClearSlot(string ws)
+        private void InternalClearSlot(string ws)
         {
             if (_wardrobeRecipes.ContainsKey(ws))
             {
@@ -1881,6 +1915,56 @@ namespace UMA.CharacterSystem
             {
                 _additiveRecipes.Remove(ws);
             }
+        }
+
+        /// <summary>
+        /// Finds the wardrobe collection that contains the given recipe in the given slot, if any
+        /// </summary>
+        /// <param name="slotName">The slot name to check</param>
+        /// <param name="recipeName">The recipe name to check</param>
+        /// <returns>The wardrobe collection that contains this recipe in this slot, or null if none found</returns>
+        private UMAWardrobeCollection FindWardrobeCollectionForSlotRecipe(string slotName, string recipeName)
+        {
+            if (string.IsNullOrEmpty(slotName) || string.IsNullOrEmpty(recipeName))
+                return null;
+
+            if (activeRace.racedata == null)
+                return null;
+
+            foreach (KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
+            {
+                var wardrobeSet = kp.Value.GetRacesWardrobeSet(activeRace.racedata);
+                for (int i = 0; i < wardrobeSet.Count; i++)
+                {
+                    if (wardrobeSet[i].slot == slotName && wardrobeSet[i].recipe == recipeName)
+                    {
+                        return kp.Value;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Clears the given wardrobe slot of any recipes that have been set on the Avatar
+        /// </summary>
+        /// <param name="ws"></param>
+        public void ClearSlot(string ws)
+        {
+            // Check if the recipe being removed is part of a wardrobe collection and unload it if so
+            if (_wardrobeRecipes.ContainsKey(ws))
+            {
+                string recipeName = _wardrobeRecipes[ws].name;
+                UMAWardrobeCollection collection = FindWardrobeCollectionForSlotRecipe(ws, recipeName);
+                if (collection != null)
+                {
+                    UnloadWardrobeCollection(collection.name);
+                    return; // UnloadWardrobeCollection will call InternalClearSlot for each slot, so we're done
+                }
+            }
+            
+            // If no wardrobe collection was found, use the internal clear method
+            InternalClearSlot(ws);
         }
 
         /// <summary>
@@ -2087,7 +2171,7 @@ namespace UMA.CharacterSystem
                             {
                                 if (_wardrobeRecipes[wardrobeSet[si].slot].name == wardrobeSet[si].recipe)
                                 {
-                                    ClearSlot(wardrobeSet[si].slot);
+                                    InternalClearSlot(wardrobeSet[si].slot);
                                 }
                             }
                         }
