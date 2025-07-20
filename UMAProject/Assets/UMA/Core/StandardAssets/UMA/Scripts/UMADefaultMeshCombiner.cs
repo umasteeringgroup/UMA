@@ -10,6 +10,14 @@ namespace UMA
     /// </summary>
     public class UMADefaultMeshCombiner : UMAMeshCombiner
 	{
+		[Header("Performance Settings")]
+		[Tooltip("Use the new jobified mesh combiner for improved performance")]
+		public bool useJobifiedCombiner = true;
+		[Tooltip("Use parallel jobs for mesh combining (requires Job System)")]
+		public bool useParallelJobs = false;
+		[Tooltip("Batch size for vertex processing jobs")]
+		public int vertexBatchSize = 64;
+		
 		protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
 		protected List<UMAData.GeneratedMaterial> combinedMaterialList;
 
@@ -202,7 +210,19 @@ namespace UMA
 					umaMesh.subMeshCount = 0;
 					umaMesh.vertexCount = 0;
 
-					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings,umaData.umaRecipe, currentRendererIndex );
+					// Use jobified combiner if enabled, otherwise fall back to original
+					if (useJobifiedCombiner)
+					{
+						var jobSettings = SkinnedMeshCombinerJobified.JobifiedSettings.Default;
+						jobSettings.useParallelJobs = useParallelJobs;
+						jobSettings.vertexBatchSize = vertexBatchSize;
+						
+						SkinnedMeshCombinerJobified.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings, umaData.umaRecipe, currentRendererIndex, jobSettings);
+					}
+					else
+					{
+						SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings, umaData.umaRecipe, currentRendererIndex);
+					}
 
 					// Apply the modifiers before the UV is updated for the atlas.
                     if (updatedAtlas)
