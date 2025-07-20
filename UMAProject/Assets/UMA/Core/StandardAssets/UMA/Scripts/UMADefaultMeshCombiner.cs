@@ -10,6 +10,10 @@ namespace UMA
     /// </summary>
     public class UMADefaultMeshCombiner : UMAMeshCombiner
 	{
+		[Header("Performance Settings")]
+		[Tooltip("Use the new jobified mesh combiner for improved performance")]
+		public bool useJobifiedCombiner = true;
+		
 		protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
 		protected List<UMAData.GeneratedMaterial> combinedMaterialList;
 
@@ -202,7 +206,15 @@ namespace UMA
 					umaMesh.subMeshCount = 0;
 					umaMesh.vertexCount = 0;
 
-					SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings,umaData.umaRecipe, currentRendererIndex );
+					// Use jobified combiner if enabled, otherwise fall back to original
+					if (useJobifiedCombiner)
+					{
+						SkinnedMeshCombinerJobified.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings, umaData.umaRecipe, currentRendererIndex);
+					}
+					else
+					{
+						SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings, umaData.umaRecipe, currentRendererIndex);
+					}
 
 					// Apply the modifiers before the UV is updated for the atlas.
                     if (updatedAtlas)
