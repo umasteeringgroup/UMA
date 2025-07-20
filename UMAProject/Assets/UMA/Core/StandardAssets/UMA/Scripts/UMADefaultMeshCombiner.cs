@@ -13,6 +13,10 @@ namespace UMA
 		[Header("Performance Settings")]
 		[Tooltip("Use the new jobified mesh combiner for improved performance")]
 		public bool useJobifiedCombiner = true;
+		[Tooltip("Use parallel jobs for mesh combining (requires Job System)")]
+		public bool useParallelJobs = false;
+		[Tooltip("Batch size for vertex processing jobs")]
+		public int vertexBatchSize = 64;
 		
 		protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
 		protected List<UMAData.GeneratedMaterial> combinedMaterialList;
@@ -209,7 +213,11 @@ namespace UMA
 					// Use jobified combiner if enabled, otherwise fall back to original
 					if (useJobifiedCombiner)
 					{
-						SkinnedMeshCombinerJobified.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings, umaData.umaRecipe, currentRendererIndex);
+						var jobSettings = SkinnedMeshCombinerJobified.JobifiedSettings.Default;
+						jobSettings.useParallelJobs = useParallelJobs;
+						jobSettings.vertexBatchSize = vertexBatchSize;
+						
+						SkinnedMeshCombinerJobified.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings, umaData.umaRecipe, currentRendererIndex, jobSettings);
 					}
 					else
 					{
