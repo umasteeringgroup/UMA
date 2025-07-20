@@ -195,12 +195,31 @@ namespace UMA
 
                 meshData.SetVertexBufferParams(totalVertexCount, attributes.ToArray());
 
-                // Get vertex data arrays from MeshData
+                // Get vertex data arrays from MeshData - handle the stream indices properly
                 var vertices = meshData.GetVertexData<Vector3>(0);
-                var normals = hasNormals ? meshData.GetVertexData<Vector3>(1) : default;
-                var tangents = hasTangents ? meshData.GetVertexData<Vector4>(hasNormals ? 2 : 1) : default;
-                var uvs = hasUV ? meshData.GetVertexData<Vector2>(GetUVStreamIndex(hasNormals, hasTangents)) : default;
-                var colors = hasColors ? meshData.GetVertexData<Color32>(GetColorStreamIndex(hasNormals, hasTangents, hasUV)) : default;
+                
+                NativeArray<Vector3> normals = default;
+                NativeArray<Vector4> tangents = default;
+                NativeArray<Vector2> uvs = default;
+                NativeArray<Color32> colors = default;
+                
+                int streamIndex = 1;
+                if (hasNormals)
+                {
+                    normals = meshData.GetVertexData<Vector3>(streamIndex++);
+                }
+                if (hasTangents)
+                {
+                    tangents = meshData.GetVertexData<Vector4>(streamIndex++);
+                }
+                if (hasUV)
+                {
+                    uvs = meshData.GetVertexData<Vector2>(streamIndex++);
+                }
+                if (hasColors)
+                {
+                    colors = meshData.GetVertexData<Color32>(streamIndex++);
+                }
 
                 // Process vertex data using jobs for parallel execution
                 ProcessVertexDataWithJobs(sources, vertices, normals, tangents, uvs, colors, hasNormals, hasTangents, hasUV, hasColors);
@@ -250,29 +269,14 @@ namespace UMA
             }
         }
 
-        private int GetUVStreamIndex(bool hasNormals, bool hasTangents)
-        {
-            int index = 1; // Start after position
-            if (hasNormals) index++;
-            if (hasTangents) index++;
-            return index;
-        }
 
-        private int GetColorStreamIndex(bool hasNormals, bool hasTangents, bool hasUV)
-        {
-            int index = 1; // Start after position
-            if (hasNormals) index++;
-            if (hasTangents) index++;
-            if (hasUV) index++;
-            return index;
-        }
 
         private void ProcessVertexDataWithJobs(SkinnedMeshCombiner.CombineInstance[] sources, 
             NativeArray<Vector3> vertices, NativeArray<Vector3> normals, NativeArray<Vector4> tangents, 
             NativeArray<Vector2> uvs, NativeArray<Color32> colors,
             bool hasNormals, bool hasTangents, bool hasUV, bool hasColors)
         {
-            var jobHandles = new NativeList<JobHandle>(sources.Length, Allocator.TempJob);
+            var jobHandles = new NativeList<JobHandle>(sources.Length * 4, Allocator.TempJob);
             int vertexOffset = 0;
 
             try
@@ -285,22 +289,23 @@ namespace UMA
 
                     int sourceVertexCount = source.meshData.vertices.Length;
 
-                    // Schedule vertex copying job
+                    // Schedule vertex copying job with expand along normal support
                     var vertexJob = new OptimizedVertexCopyJob
                     {
                         sourceVertices = new NativeArray<Vector3>(source.meshData.vertices, Allocator.TempJob),
                         targetVertices = vertices,
-                        sourceNormals = hasNormals && source.meshData.normals != null ? 
+                        sourceNormals = hasNormals && source.meshData.normals != null && source.meshData.normals.Length > 0 ? 
                             new NativeArray<Vector3>(source.meshData.normals, Allocator.TempJob) : default,
                         vertexOffset = vertexOffset,
-                        expandAlongNormal = source.slotData.expandAlongNormal
+                        expandAlongNormal = source.slotData.expandAlongNormal,
+                        hasSourceNormals = hasNormals && source.meshData.normals != null && source.meshData.normals.Length > 0
                     };
 
-                    var handle = vertexJob.Schedule(sourceVertexCount, 64);
-                    jobHandles.Add(handle);
+                    var vertexHandle = vertexJob.Schedule(sourceVertexCount, 64);
+                    jobHandles.Add(vertexHandle);
 
-                    // Additional jobs for other vertex attributes...
-                    if (hasNormals && source.meshData.normals != null && normals.IsCreated)
+                    // Schedule normal copying job if available
+                    if (hasNormals && source.meshData.normals != null && source.meshData.normals.Length > 0 && normals.IsCreated)
                     {
                         var normalJob = new CopyNormalDataJob
                         {
@@ -308,10 +313,25 @@ namespace UMA
                             targetNormals = normals,
                             vertexOffset = vertexOffset
                         };
-                        jobHandles.Add(normalJob.Schedule(sourceVertexCount, 64, handle));
+                        var normalHandle = normalJob.Schedule(sourceVertexCount, 64, vertexHandle);
+                        jobHandles.Add(normalHandle);
                     }
 
-                    if (hasUV && source.meshData.uv != null && uvs.IsCreated)
+                    // Schedule tangent copying job if available
+                    if (hasTangents && source.meshData.tangents != null && source.meshData.tangents.Length > 0 && tangents.IsCreated)
+                    {
+                        var tangentJob = new CopyTangentDataJob
+                        {
+                            sourceTangents = new NativeArray<Vector4>(source.meshData.tangents, Allocator.TempJob),
+                            targetTangents = tangents,
+                            vertexOffset = vertexOffset
+                        };
+                        var tangentHandle = tangentJob.Schedule(sourceVertexCount, 64, vertexHandle);
+                        jobHandles.Add(tangentHandle);
+                    }
+
+                    // Schedule UV copying job if available
+                    if (hasUV && source.meshData.uv != null && source.meshData.uv.Length >= sourceVertexCount && uvs.IsCreated)
                     {
                         var uvJob = new CopyUVDataJob
                         {
@@ -319,7 +339,21 @@ namespace UMA
                             targetUV = uvs,
                             vertexOffset = vertexOffset
                         };
-                        jobHandles.Add(uvJob.Schedule(sourceVertexCount, 64, handle));
+                        var uvHandle = uvJob.Schedule(sourceVertexCount, 64, vertexHandle);
+                        jobHandles.Add(uvHandle);
+                    }
+
+                    // Schedule color copying job if available
+                    if (hasColors && source.meshData.colors32 != null && source.meshData.colors32.Length > 0 && colors.IsCreated)
+                    {
+                        var colorJob = new CopyColorDataJob
+                        {
+                            sourceColors = new NativeArray<Color32>(source.meshData.colors32, Allocator.TempJob),
+                            targetColors = colors,
+                            vertexOffset = vertexOffset
+                        };
+                        var colorHandle = colorJob.Schedule(sourceVertexCount, 64, vertexHandle);
+                        jobHandles.Add(colorHandle);
                     }
 
                     vertexOffset += sourceVertexCount;
@@ -702,12 +736,13 @@ namespace UMA
         public NativeArray<Vector3> targetVertices;
         [ReadOnly] public int vertexOffset;
         [ReadOnly] public int expandAlongNormal;
+        [ReadOnly] public bool hasSourceNormals;
 
         public void Execute(int index)
         {
             Vector3 vertex = sourceVertices[index];
             
-            if (expandAlongNormal > 0 && sourceNormals.IsCreated && index < sourceNormals.Length)
+            if (expandAlongNormal > 0 && hasSourceNormals && index < sourceNormals.Length)
             {
                 float expandAmount = ((float)expandAlongNormal) / 1000000f;
                 vertex += sourceNormals[index] * expandAmount;
@@ -735,6 +770,21 @@ namespace UMA
 #if UMA_BURSTCOMPILE
     [BurstCompile]
 #endif
+    public struct CopyTangentDataJob : IJobParallelFor
+    {
+        [ReadOnly] public NativeArray<Vector4> sourceTangents;
+        public NativeArray<Vector4> targetTangents;
+        [ReadOnly] public int vertexOffset;
+
+        public void Execute(int index)
+        {
+            targetTangents[vertexOffset + index] = sourceTangents[index];
+        }
+    }
+
+#if UMA_BURSTCOMPILE
+    [BurstCompile]
+#endif
     public struct CopyUVDataJob : IJobParallelFor
     {
         [ReadOnly] public NativeArray<Vector2> sourceUV;
@@ -744,6 +794,21 @@ namespace UMA
         public void Execute(int index)
         {
             targetUV[vertexOffset + index] = sourceUV[index];
+        }
+    }
+
+#if UMA_BURSTCOMPILE
+    [BurstCompile]
+#endif
+    public struct CopyColorDataJob : IJobParallelFor
+    {
+        [ReadOnly] public NativeArray<Color32> sourceColors;
+        public NativeArray<Color32> targetColors;
+        [ReadOnly] public int vertexOffset;
+
+        public void Execute(int index)
+        {
+            targetColors[vertexOffset + index] = sourceColors[index];
         }
     }
 }
