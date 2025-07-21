@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using static UMA.DNAInstanceCollection;
 
 namespace UMA
 {
@@ -314,7 +315,9 @@ namespace UMA
 			FreezeTime = true;
 			umaData = data;
 
-			if (umaData.RebuildSkeletonThisBuild)
+
+
+            if (umaData.RebuildSkeletonThisBuild)
 			{
 				if (umaData.umaRoot != null)
                 {
@@ -360,6 +363,7 @@ namespace UMA
             long preapply = gstopWatch.ElapsedTicks;
             gstopWatch.Restart();
 #endif
+			DNABuildType dnaUpdateFlags = umaData.DNAPreApply();
 
             if (umaData.isTextureDirty)
 			{
@@ -674,7 +678,7 @@ namespace UMA
                 // guard against duplicates
                 if (!updatePending(umaToAdd))
                 {
-					Debug.Log("Adding to dirty list");
+					//Debug.Log("Adding to dirty list");
                     umaDirtyList.Add(umaToAdd);
                     umaToAdd.MoveToList(dirtyUmas);
                 }

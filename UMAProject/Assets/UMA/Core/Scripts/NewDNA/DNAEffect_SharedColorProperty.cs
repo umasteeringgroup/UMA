@@ -51,15 +51,20 @@ namespace UMA
         }
 #endif
 
-        public override void AfterRecipeGenerated(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {
+            if (avatar is not DynamicCharacterAvatar)
+            {
+                Debug.LogError("DNAEffect_SharedColorChannel: Avatar is not a DynamicCharacterAvatar.");
+                return;
+            }
             base.AfterRecipeGenerated(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(sharedColorName))
             {
                 value = GetMappedValue(value);
 
                 // get the shared color from the DynamicCharacterAvatar, if it exists
-                OverlayColorData sharedColor = avatar.GetColor(sharedColorName);
+                OverlayColorData sharedColor = (avatar as DynamicCharacterAvatar).GetColor(sharedColorName);
                 if (sharedColor == null)
                 {
                     return;

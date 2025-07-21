@@ -36,6 +36,7 @@ namespace UMA
             return $"{name}{overlayNumber}";
         }
 
+
         public static UMAProperty FromString(string serializedString)
         {
             char[] split = { splitter[0] };
@@ -764,6 +765,21 @@ namespace UMA
             return strings.ToArray();
         }
 
+        public T GetProperty<T>(string propertyName) where T : UMAProperty
+        {
+            if (shaderProperties == null)
+            {
+                return null;
+            }
+            foreach (UMAProperty p in shaderProperties)
+            {
+                if (p.name == propertyName && p is T)
+                {
+                    return p as T;
+                }
+            }
+            return null;
+        }
         public void SetPropertyStrings(string[] strings)
         {
             shaderProperties = new List<UMAProperty>();
@@ -792,23 +808,6 @@ namespace UMA
         public UMAMaterialPropertyBlock()
         {
             CheckInitialize();
-        }
-
-        public UMAProperty GetProperty<T>(string propertyName) where T : UMAProperty
-        {
-            if (shaderProperties == null)
-            {
-                return null;
-            }
-            for (int i = 0; i < shaderProperties.Count; i++)
-            {
-                UMAProperty p = shaderProperties[i];
-                if (p.name == propertyName)
-                {
-                    return p as T;
-                }
-            }
-            return null;
         }
 
 

@@ -17,12 +17,12 @@ namespace UMA
         public override string Description => "Lerps a bones transform to an absolute local position/rotation/scale based on the translated DNA value. ";
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Rig;
-        public override void PostApply(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public override void PostApply(UMAData avatar, DNA dna, float value)
         {
             base.PostApply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(boneName))
             {
-                Transform boneTransform = avatar.umaData.skeleton.GetBoneTransform(boneName);
+                Transform boneTransform = avatar.skeleton.GetBoneTransform(boneName);
                 if (boneTransform != null)
                 {
                     value = GetMappedValue(value);

@@ -418,7 +418,7 @@ namespace UMA
             {
                 wearable.disabled = false;
             }
-            thisDCA.umaData.manualMeshModifiers = new List<MeshModifier.Modifier>();
+            thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
             if (thisDCA.editorTimeGeneration)
             {
                 thisDCA.GenerateSingleUMA();
@@ -1547,7 +1547,7 @@ namespace UMA
             // This is only called from the MeshModifierEditor being closed
             // so we need to null this out so we don't try to close it again
             thisDCA.umaData.CharacterUpdated.RemoveAllListeners();
-            thisDCA.umaData.manualMeshModifiers.Clear();
+            thisDCA.umaData.ManualMeshModifiers.Clear();
             modifierEditor.DoCharacterRebuild(false, false);
             this.modifierEditor = null;
 

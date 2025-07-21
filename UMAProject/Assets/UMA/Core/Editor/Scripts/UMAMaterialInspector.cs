@@ -97,7 +97,7 @@ namespace UMA.Editors
             {
                 EditorGUILayout.HelpBox("Default Material: This is the material that will be used if no other material is found.", MessageType.Info);
             }
-            showMaterialInspector = GUIHelper.FoldoutBar(showMaterialInspector, "Show Material Inspector");
+            showMaterialInspector = GUIHelper.FoldoutBar(showMaterialInspector, "Material Preview");
             if (showMaterialInspector && source.material != null)
             {
                 if (innerEditor == null)
@@ -112,8 +112,8 @@ namespace UMA.Editors
                     }
                 }
                 //GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
+                EditorGUILayout.HelpBox("Select an avatar in the scene, and use the material properties below to adjust the template material and see the changes in real time",MessageType.Info);
                 dca = EditorGUILayout.ObjectField("Preview Avatar", dca, typeof(DynamicCharacterAvatar), true) as DynamicCharacterAvatar;
-                //GUILayout.Label("Material Inspector", _centeredStyle);
                 DrawFoldoutInspector(source.material, ref innerEditor);
                 //GUILayout.Label("This is the material inspector for the material used by this UMAMaterial.", _centeredStyle);
                 //GUIHelper.EndVerticalPadded(10);

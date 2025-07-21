@@ -42,7 +42,7 @@ namespace UMA
 			{
 				if (umaData.force32bit && UMAAssetIndexer.Instance.Generator.Use32BitBuffers == false)
 				{
-					int rendererCount = umaData.rendererCount;
+					int rendererCount = umaData.RendererCount;
 					for (int i = 0; i < rendererCount; i++)
 					{
 						var renderer = umaData.GetRenderer(i);
@@ -54,7 +54,7 @@ namespace UMA
 				}
 				umaData.CleanMesh(false);
 
-				if ((umaData.rendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets)))
+				if ((umaData.RendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets)))
 				{
 					renderers = umaData.GetRenderers();
 					umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
@@ -111,7 +111,7 @@ namespace UMA
 			}
 
 			//Clear out old cloth components
-			for (int i = 0; i < umaData.rendererCount; i++)
+			for (int i = 0; i < umaData.RendererCount; i++)
 			{
 				Cloth cloth = renderers[i].GetComponent<Cloth>();
 				if (cloth != null)

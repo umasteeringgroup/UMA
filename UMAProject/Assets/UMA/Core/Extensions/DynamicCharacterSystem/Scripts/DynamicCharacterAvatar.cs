@@ -468,7 +468,7 @@ namespace UMA.CharacterSystem
             }
             else
             {
-                Debug.Log("hiding renderers until rebuilt");
+                //Debug.Log("hiding renderers until rebuilt");
                 SkinnedMeshRenderer[] smrs = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
 
                 if (smrs.Length > 0)
@@ -813,7 +813,7 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-            if (umaData.rendererCount > 0)
+            if (umaData.RendererCount > 0)
             {
                 SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
                 if (frenderer != null)
@@ -1658,7 +1658,7 @@ namespace UMA.CharacterSystem
                     {
                         if (recipe.ForceLoad)
                         {
-                            Debug.Log("[DynamicCharacterAvatar:LoadDefaultWardrobe] ForceLoading " + recipe._recipeName + " for " + activeRace.name);
+                            //Debug.Log("[DynamicCharacterAvatar:LoadDefaultWardrobe] ForceLoading " + recipe._recipeName + " for " + activeRace.name);
                             ForceWear(recipe._recipe);
                             continue;
                         }
@@ -4014,7 +4014,7 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
-            Debug.Log($"Buildcharacter {gameObject.name}");
+            //Debug.Log($"Buildcharacter {gameObject.name}");
             InitialStartup(); // This is to make sure that the UMAContext is set up correctly
 
             overrideDNA.Clear();
@@ -4289,7 +4289,7 @@ namespace UMA.CharacterSystem
 
         public void SetAndSaveOverrideDNA(UMAData udata)
         {
-            Debug.Log("Setting and saving override DNA");
+            //Debug.Log("Setting and saving override DNA");
             savedDNA.Clear();
             if (overrideDNA.Count > 0)
             {
@@ -4471,7 +4471,7 @@ namespace UMA.CharacterSystem
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
         private void LoadCharacter(UMARecipeBase characterRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
         {
-            Debug.Log($"LoadCharacter {gameObject.name}");
+            //Debug.Log($"LoadCharacter {gameObject.name}");
 #if UMA_ADDRESSABLES
 #if UNITY_EDITOR
             // If we are in the editor, and we don't want to look & load bundles, just go ahead.
@@ -4516,7 +4516,6 @@ namespace UMA.CharacterSystem
 #endif
 
             SetUMADataOptions();
-            umaData.dnaInstanceCollections = dnaInstanceCollections;
             umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
             umaData.atlasResolutionScale = this.AtlasResolutionScale;
             umaData.hideRenderers = this.hide;
@@ -4656,6 +4655,10 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
+
+            dnaInstanceCollection.Initialize(activeRace.racedata.DNACollection);
+            dnaInstanceCollection.AfterRecipeGenerated(this);
+            // AfterRecipeGenerated
 
             UpdateColors();
 
@@ -5495,7 +5498,6 @@ namespace UMA.CharacterSystem
         {
             Debug.Log("Updating Character Avatar");
             umaData.rawAvatar = rawAvatar;
-            umaData.dnaInstanceCollections = dnaInstanceCollections;
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
 

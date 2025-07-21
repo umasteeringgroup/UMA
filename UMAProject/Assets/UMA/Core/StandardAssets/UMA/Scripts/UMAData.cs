@@ -2,6 +2,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using static UMA.DNAInstanceCollection;
 
 namespace UMA
 {
@@ -62,19 +63,21 @@ namespace UMA
 
         [Tooltip("The default renderer asset to use for this avatar. This lets you set parameters for the generated SkinnedMeshRenderer")]
         public UMARendererAsset defaultRendererAsset { get; set; }
-		public int rendererCount { get { return renderers == null ? 0 : renderers.Length; } }
+		public int RendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
-		public List<SlotTracker> slotTrackers = new();
-		public List<UMASavedItem> savedItems = new();
+		//public List<SlotTracker> slotTrackers = new();
+		private readonly List<UMASavedItem> savedItems = new();
 		public string userInformation = "";
 
-		public List<DNAInstanceCollection> dnaInstanceCollections = new List<DNAInstanceCollection>();
+		// NEW DNA
+		public DNAInstanceCollection dnaInstanceCollection = new();
+		public bool useNewDNA;
 
-
+        #region MESH MODIFIERS
         // MeshModifers are used to modify the mesh during creation.
         // This array is built from the various recipes added during the build process.
-        private Dictionary<string,List<MeshModifier.Modifier>> meshModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
-		private Dictionary<string, List<MeshModifier.Modifier>> accumulatedModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
+        private readonly Dictionary<string,List<MeshModifier.Modifier>> meshModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
+		private readonly Dictionary<string, List<MeshModifier.Modifier>> accumulatedModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
 
         // This array is not built from the recipes. It must be set manually. It is merged into the dictionary of MeshModifiers with the recipe driven modifiers.
         // It's general use case is for adding mesh modifiers that are not part of the normal UMA build process, such as during editing, etc.
@@ -90,7 +93,7 @@ namespace UMA
 #if UNITY_EDITOR
 
         private List<MeshModifier.Modifier> _manualMeshModifiers = new List<MeshModifier.Modifier>();
-		public List<MeshModifier.Modifier> manualMeshModifiers 
+		public List<MeshModifier.Modifier> ManualMeshModifiers 
 		{ 
 			get 
 			{ 
@@ -171,7 +174,9 @@ namespace UMA
             }
 			
         }
+        #endregion
 
+        #region SAVE RESTORE ITEMS
         public void SaveMountedItems()
         {
             GameObject holder = null;
@@ -268,9 +273,11 @@ namespace UMA
 			}
 			savedItems.Clear();
 		}
+        #endregion
 
-		//TODO Change these get functions to getter properties?
-		public SkinnedMeshRenderer GetRenderer(int idx)
+        #region RENDERER AND RENDERER ASSETS
+        //TODO Change these get functions to getter properties?
+        public SkinnedMeshRenderer GetRenderer(int idx)
 		{
 			if (renderers != null && idx < renderers.Length)
 			{
@@ -352,8 +359,9 @@ namespace UMA
 
 			UMARendererAsset.ResetRenderer(renderers[idx]);
 		}
+        #endregion
 
-		[NonSerialized]
+        [NonSerialized]
 		public bool staticCharacter = false;
 
 		[NonSerialized]
@@ -401,7 +409,9 @@ namespace UMA
 			list.AddLast(listNode);
 		}
 
-		[SerializeField]
+
+        #region OVERRIDES
+        [SerializeField]
 		public UmaTPose OverrideTpose = null;
 
 		// key: OverlayName, Channel
@@ -529,9 +539,9 @@ namespace UMA
 
 			return null;
 		}
+        #endregion
 
-
-		public float atlasResolutionScale = 1f;
+        public float atlasResolutionScale = 1f;
 
 		public bool ForceRebindAnimator;
 		/// <summary>
@@ -601,7 +611,24 @@ namespace UMA
 			skeleton = new UMASkeleton(globalTransform);
 		}
 
-	
+
+		public DNABuildType DNAPreApply()
+		{
+			if (dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances.Count == 0)
+			{
+				return DNABuildType.None;
+			}
+
+			DNABuildType updateFlags = DNABuildType.None;
+
+			foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+			{
+				//dnaInstanceCollection.
+				var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
+                updateFlags |= dna.PreApply(this, dnainstance.value);
+			}
+			return updateFlags;
+        }
 
         public void SetupSkeleton()
 		{
@@ -1110,7 +1137,7 @@ namespace UMA
 			}
 			else
 			{
-				for (int i = 0; i < rendererCount; i++)
+				for (int i = 0; i < RendererCount; i++)
                 {
                     GetRenderer(i).enabled = true;
                 }
@@ -1119,7 +1146,7 @@ namespace UMA
 
 		public void Hide()
 		{
-			for (int i = 0; i < rendererCount; i++)
+			for (int i = 0; i < RendererCount; i++)
             {
                 GetRenderer(i).enabled = false;
             }
@@ -1901,7 +1928,7 @@ namespace UMA
 #pragma warning disable 618
 			public void PreApplyDNA(UMAData umaData, bool fixUpUMADnaToDynamicUMADna = false)
 			{
-				EnsureAllDNAPresent();
+                EnsureAllDNAPresent();
 				//clear any color adjusters from all overlays in the recipe
 				umaData.umaRecipe.ClearOverlayColorAdjusters();
 				foreach (var dnaEntry in umaDna)
@@ -2434,7 +2461,7 @@ namespace UMA
 
 		public virtual void Dirty()
 		{
-			Debug.Log($"Setting Dirty");
+			//Debug.Log($"Setting Dirty");
 			if (dirty)
             {
                 return;
@@ -2565,7 +2592,7 @@ namespace UMA
 		/// <param name="destroyRenderer">If set to <c>true</c> destroy mesh renderer.</param>
 		public void CleanMesh(bool destroyRenderer)
 		{
-			for(int j = 0; j < rendererCount; j++)
+			for(int j = 0; j < RendererCount; j++)
 			{
 				var renderer = GetRenderer(j);
 				if (renderer == null)
@@ -3036,7 +3063,7 @@ namespace UMA
                 return "";
 			}
 				
-			if (rendererIndex >= rendererCount) //for multi-renderer support
+			if (rendererIndex >= RendererCount) //for multi-renderer support
 			{
 				if (Debug.isDebugBuild)
                 {

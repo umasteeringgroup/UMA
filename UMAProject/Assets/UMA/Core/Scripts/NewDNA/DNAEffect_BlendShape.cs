@@ -18,13 +18,13 @@ namespace UMA
         }
 #endif
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.BlendShape;
-        public override void PostApply(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public override void PostApply(UMAData avatar, DNA dna, float value)
         {
             base.PostApply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(BlendShapeName))
             {
                 value = GetMappedValue(value);
-                var skinnedMeshRenderers = avatar.umaData.GetRenderers();
+                var skinnedMeshRenderers = avatar.GetRenderers();
                 foreach (var smr in skinnedMeshRenderers)
                 {
                     if (smr is SkinnedMeshRenderer skinnedMeshRenderer)

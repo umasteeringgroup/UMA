@@ -29,12 +29,12 @@ namespace UMA
             ScaleFactor = UnityEditor.EditorGUILayout.Vector3Field("Scale Factor", ScaleFactor);
         }
 #endif
-        public override void PostApply(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public override void PostApply(UMAData avatar, DNA dna, float value)
         {
             base.PostApply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(BoneName))
             {
-                Transform boneTransform = avatar.umaData.skeleton.GetBoneTransform(BoneName);
+                Transform boneTransform = avatar.skeleton.GetBoneTransform(BoneName);
                 if (boneTransform != null)
                 {
                     boneTransform.localScale = Vector3.Scale(boneTransform.localScale, ScaleFactor * GetMappedValue(value));

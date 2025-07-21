@@ -4,6 +4,8 @@ using UnityEditor;
 using UnityEngine.Events;
 using System.IO;
 using System.Collections.Generic;
+using UnityEditorInternal;
+using System.Runtime.CompilerServices;
 
 namespace UMA.Editors
 {
@@ -77,7 +79,8 @@ namespace UMA.Editors
 			}
 		}
 
-		private static GUIContent inspectContent
+
+        private static GUIContent inspectContent
 		{
 			get
 			{

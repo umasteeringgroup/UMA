@@ -198,7 +198,7 @@ Material:
     - _GlossMapScale: 0.521
     - _Glossiness: 0
     - _GlossyReflections: 1
-    - _HalfLambertStrength: 1.7
+    - _HalfLambertStrength: 1.2
     - _InvertThickness: 1
     - _MaxSmooth: 0.75
     - _Metallic: 0

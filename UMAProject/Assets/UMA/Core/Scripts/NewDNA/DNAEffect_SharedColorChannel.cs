@@ -40,14 +40,19 @@ namespace UMA
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Texture;
 
-        public override void AfterRecipeGenerated(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {
             base.PreApply(avatar, dna, value);
+            if (avatar is not DynamicCharacterAvatar)
+            {
+                Debug.LogError("DNAEffect_SharedColorChannel: Avatar is not a DynamicCharacterAvatar.");
+                return;
+            }
             if (avatar != null && !string.IsNullOrEmpty(SharedColorName))
             {
                 value = GetMappedValue(value);
 
-                OverlayColorData sharedColor = avatar.GetColor(SharedColorName);
+                OverlayColorData sharedColor = ((DynamicCharacterAvatar)avatar).GetColor(SharedColorName);
                 if (sharedColor == null)
                 {
                     return;

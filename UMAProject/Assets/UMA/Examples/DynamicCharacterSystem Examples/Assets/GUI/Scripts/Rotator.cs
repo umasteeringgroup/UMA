@@ -44,13 +44,13 @@ namespace UMA
 			}
 
 			Vector3 currentMousePoint = Input.mousePosition;
-			float delta = (lastPoint.x - currentMousePoint.x) * scale;
+            float delta = (lastPoint.x - currentMousePoint.x) * scale * Mathf.Rad2Deg;
 
 			if (delta != 0.0f)
 			{
-				Vector3 localRotation = rotateMe.transform.localRotation.ToEuler();
-				localRotation.y += delta;
-				rotateMe.transform.localRotation = Quaternion.EulerAngles(localRotation);
+				Vector3 localRotation = rotateMe.transform.localRotation.eulerAngles;
+                localRotation.y += delta;
+				rotateMe.transform.localRotation = Quaternion.Euler(localRotation);
 			}
 			lastPoint = Input.mousePosition;
 		}

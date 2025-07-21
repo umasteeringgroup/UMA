@@ -41,12 +41,12 @@ namespace UMA
             rotation = UnityEditor.EditorGUILayout.Slider("Rotation", rotation, 0.0f, 360.0f);
         }
 #endif
-        public override void AfterRecipeGenerated(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {
             base.AfterRecipeGenerated(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(overlayName))
             {
-                var overlay = avatar.umaData.umaRecipe.FindFirstOverlay(overlayName);
+                var overlay = avatar.umaRecipe.FindFirstOverlay(overlayName);
                 if (overlay != null)
                 {
                     value = GetMappedValue(value);

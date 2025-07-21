@@ -39,13 +39,13 @@ namespace UMA
 #endif
         // Updating a sharedcolor only touches textures
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Texture;
-        public override void AfterRecipeGenerated(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {            
             base.AfterRecipeGenerated(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(sharedColorName))
             {
                 value = GetMappedValue(value);
-                OverlayColorData sharedColor = avatar.GetColor(sharedColorName);
+                OverlayColorData sharedColor = (avatar as DynamicCharacterAvatar).GetColor(sharedColorName);
                 if (sharedColor == null)
                 {
                     return;

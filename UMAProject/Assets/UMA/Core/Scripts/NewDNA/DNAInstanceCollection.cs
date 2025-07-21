@@ -25,10 +25,39 @@ namespace UMA
             All = Texture | Mesh | Rig | BlendShape | SharedColors
         }
 
-        public DNABuildType updateFlags = DNABuildType.None;
+        private DNABuildType updateFlags = DNABuildType.None;
+        private DNACollection _DNACollection = null;
 
-        private Dictionary<string, DNA> dnaDictionary = new Dictionary<string, DNA>();
+        public DNACollection dnaCollection
+        {
+            get
+            {
+                return _DNACollection;
+            }
+        }
 
+        public DNA GetDNA(string dnaName)
+        {
+            if (_DNACollection == null)
+            {
+                Debug.LogError("DNACollection is not initialized. Please call Initialize() before accessing DNA.");
+                return null;
+            }
+            if (_DNACollection.dnaDictionary.TryGetValue(dnaName, out DNA dna))
+            {
+                return dna;
+            }
+            else
+            {
+                Debug.LogWarning($"DNA with name '{dnaName}' not found in the collection.");
+                return null;
+            }
+        }
+
+        public void Initialize(DNACollection collection)
+        {
+            _DNACollection=collection;
+        }
 
         /// <summary>
         /// The list of DNA instances.
@@ -51,27 +80,64 @@ namespace UMA
             dnaInstances.Remove(dnaInstance);
         }
 
-        public void PreApply(DNACollection theCollection, DynamicCharacterAvatar avatar)
+        public void AfterRecipeGenerated(DynamicCharacterAvatar avatar)
+        {
+            DNABuildType updateFlags = DNABuildType.None;
+
+            for (int i = 0; i < dnaInstances.Count; i++)
+            {
+                DNA dna = dnaCollection.dnaDictionary[dnaInstances[i].name];
+                if (dnaInstances[i].value != dna.defaultValue)
+                {
+                    updateFlags |= dna.AfterRecipeGeneration(avatar, dnaInstances[i].value);
+                }
+            }
+            //return updateFlags;
+        }
+
+        public void PreApply(DynamicCharacterAvatar avatar)
         {
             DNABuildType updateFlags = DNABuildType.None;
             
             for (int i = 0; i < dnaInstances.Count; i++)
             {
-                DNA dna = theCollection.dnaDictionary[dnaInstances[i].name];
+                DNA dna = dnaCollection.dnaDictionary[dnaInstances[i].name];
                 if (dnaInstances[i].value != dna.defaultValue)
                 {
                     updateFlags |= dna.PreApply(avatar, dnaInstances[i].value);
                 }
             }
-        }
-
-        public void Apply(DNACollection theCollection, UMAData umaData)
-        {
+            //return updateFlags;
 
         }
 
-        public void PostApply(DNACollection theCollection, UMAData umaData)
+        public void Apply(DynamicCharacterAvatar umaData)
         {
+            DNABuildType updateFlags = DNABuildType.None;
+            for (int i = 0; i < dnaInstances.Count; i++)
+            {
+                DNA dna = dnaCollection.dnaDictionary[dnaInstances[i].name];
+                if (dnaInstances[i].value != dna.defaultValue)
+                {
+                    updateFlags |= dna.Apply(umaData, dnaInstances[i].value);
+                }
+            }
+            //return updateFlags;
+
+        }
+
+        public void PostApply(DynamicCharacterAvatar umaData)
+        {
+            DNABuildType updateFlags = DNABuildType.None;
+            for (int i = 0; i < dnaInstances.Count; i++)
+            {
+                DNA dna = dnaCollection.dnaDictionary[dnaInstances[i].name];
+                if (dnaInstances[i].value != dna.defaultValue)
+                {
+                    updateFlags |= dna.PostApply(umaData, dnaInstances[i].value);
+                }
+            }
+            //return updateFlags;
         }
     }
 }

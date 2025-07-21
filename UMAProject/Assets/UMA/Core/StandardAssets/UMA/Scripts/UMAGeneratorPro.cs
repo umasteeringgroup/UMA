@@ -504,7 +504,7 @@ namespace UMA
 			// Procedural textures were done here 
 			if (updateMaterialList)
 			{
-				for (int j = 0; j < umaData.rendererCount; j++)
+				for (int j = 0; j < umaData.RendererCount; j++)
 				{
 					var renderer = umaData.GetRenderer(j);
 					var mats = renderer.sharedMaterials;

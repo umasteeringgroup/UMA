@@ -92,20 +92,20 @@ namespace UMA
             // add option to save curve to asset for use in other effects
         }
 #endif
-        public virtual void AfterRecipeGenerated(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public virtual void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {
             // This is called during the avatar Load process, after the recipe is merged.
             // Some effects need to be applied during the load process, such as those that modify avatar shared colors.
         }
 
-        public virtual void PreApply(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public virtual void PreApply(UMAData avatar, DNA dna, float value)
         {
             // This is called before Apply, so we can do any pre-processing here.
             // For example, we could map the value to a range or perform other calculations.
         }
 
         // This is called after PreApply, so we can do the actual application of the effect.
-        public virtual void Apply(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public virtual void Apply(UMAData avatar, DNA dna, float value)
         {
             // This is called after PreApply, so we can do the actual application of the effect.
             // For example, we could modify the UMAData based on the mapped value.
@@ -113,7 +113,7 @@ namespace UMA
         }
 
         // This is called after Apply, so we can do any post-processing here.
-        public virtual void PostApply(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public virtual void PostApply(UMAData avatar, DNA dna, float value)
         {
             // This is called after Apply, so we can do any post-processing here.
             // For example, we could clean up or reset any temporary values.

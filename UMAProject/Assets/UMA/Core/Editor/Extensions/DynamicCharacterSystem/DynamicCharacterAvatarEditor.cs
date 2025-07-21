@@ -314,11 +314,13 @@ namespace UMA.CharacterSystem.Editors
                 DoGizmosUI(enableGizmo, previewModel, customModel, customRotation, previewColor);
             }
 
-            //showUMAData = GUIHelper.FoldoutBar(showUMAData, "UMA Data");
-            //if (showUMAData)
-            //{
-                DrawFoldoutInspector(thisDCA, ref innerEditor);
-           // }
+            showUMAData = GUIHelper.FoldoutBar(showUMAData, "UMA Data");
+            if (showUMAData)
+            {
+                innerEditor.OnInspectorGUI();
+               // DrawFoldoutInspector(thisDCA, ref innerEditor);
+            }
+
             if (Application.isPlaying || thisDCA.editorTimeGeneration)
             {
                 showWardrobe = EditorGUILayout.Foldout(showWardrobe, "Current Wardrobe");

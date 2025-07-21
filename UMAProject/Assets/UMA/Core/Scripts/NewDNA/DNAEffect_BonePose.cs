@@ -23,12 +23,12 @@ namespace UMA
             }
         }
 #endif
-        public override void Apply(DynamicCharacterAvatar avatar, DNA dna, float value)
+        public override void Apply(UMAData avatar, DNA dna, float value)
         {
             base.PostApply(avatar, dna, value);
             if (avatar != null && bonePose != null)
             {
-                bonePose.ApplyPose(avatar.umaData.skeleton, GetMappedValue(value));
+                bonePose.ApplyPose(avatar.skeleton, GetMappedValue(value));
             }
         }
     }
