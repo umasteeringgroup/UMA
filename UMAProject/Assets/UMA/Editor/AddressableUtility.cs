@@ -67,20 +67,8 @@ namespace UMA
             return false;
         }
 
-        public static void ClearAddressableEntries()
+        public static AddressableAssetEntry GetAddressableAssetEntry(string AssetGUID)
         {
-            if (_addressableEntries == null)
-            {
-                return;
-            }
-            _addressableEntries.Clear();
-            _addressableEntries = null;
-        }
-
-        public static AddressableAssetEntry GetAddressableAssetEntry(string assetPath, out AddressableAssetGroup assetgroup)
-        {
-            assetgroup = null;
-
             if (AddressableSettings == null)
             {
                 return null;
@@ -88,89 +76,22 @@ namespace UMA
 
             foreach (var group in AddressableSettings.groups)
             {
+                if (group.HasSchema<PlayerDataGroupSchema>())
+                    continue;
 
-                foreach (AddressableAssetEntry e in group.entries)
+                var entry = group.GetAssetEntry(AssetGUID);
+                if (entry != null)
                 {
-                    if (e.AssetPath == assetPath)
-                    {
-                        assetgroup = group;
-                        return e;
-                    }
+                    return entry;
                 }
             }
+
             // Not found
             return null;
         }
-
-
-        public static void RebuildAddressableEntries()
+        public static AddressableAssetEntry GetAddressableAssetEntry(string AssetGUID, out AddressableAssetGroup Group)
         {
-            _addressableEntries = new Dictionary<string, AddressableEntryAndInfo>();
-
-            if (AddressableUtility.AddressableSettings == null)
-                return;
-
-            foreach (var group in AddressableUtility.AddressableSettings.groups)
-            {
-                if (group == null) continue;
-
-                foreach (var entry in group.entries)
-                {
-                    if (!_addressableEntries.ContainsKey(entry.AssetPath))
-                    {
-                        InternalAddEntry(entry.AssetPath, entry);
-                    }
-                }
-            }
-        }
-
-        private static Dictionary<string, AddressableEntryAndInfo> _addressableEntries = new Dictionary<string, AddressableEntryAndInfo>();
-
-        public static void AddEntry(string assetPath, AddressableAssetEntry entry)
-        {
-            ValidateEntryAndInfo();
-            if (!_addressableEntries.ContainsKey(assetPath))
-            {
-                InternalAddEntry(assetPath, entry);
-            }
-        }
-
-        public static void InternalAddEntry(string assetPath, AddressableAssetEntry entry)
-        {
-                _addressableEntries.Add(assetPath, new AddressableEntryAndInfo(entry, new AddressableInfo(entry.address, entry.parentGroup.Name, GetAddressableLabels(entry))));
-        }
-
-        public static AddressableAssetEntry GetAddressableAssetEntry(string assetPath)
-        {
-            ValidateEntryAndInfo();
-            if (_addressableEntries.ContainsKey(assetPath))
-            {
-                return _addressableEntries[assetPath].Entry;
-            }
-
-            if (EditorApplication.isPlaying)
-            {
-                return null;
-            }
-
-            AddressableAssetEntry entry = internalGetAddressableAssetEntry(assetPath);
-            if (entry != null)
-            {
-                AddEntry(assetPath, entry);
-            }
-            return entry;
-        }
-
-        private static void ValidateEntryAndInfo()
-        {
-            if (_addressableEntries == null || _addressableEntries.Count == 0)
-            {
-                RebuildAddressableEntries();
-            }
-        }
-
-        public static AddressableAssetEntry internalGetAddressableAssetEntry(string AssetPath)
-        {
+            Group = null;
             if (AddressableSettings == null)
             {
                 return null;
@@ -178,18 +99,14 @@ namespace UMA
 
             foreach (var group in AddressableSettings.groups)
             {
-                if (group == null)
-                {
+                if (group.HasSchema<PlayerDataGroupSchema>())
                     continue;
-                }
 
-
-                foreach (AddressableAssetEntry e in group.entries)
+                var entry = group.GetAssetEntry(AssetGUID);
+                if (entry != null)
                 {
-                    if (e.AssetPath == AssetPath)
-                    {
-                        return e;
-                    }
+                    Group = group;
+                    return entry;
                 }
             }
 
@@ -212,9 +129,9 @@ namespace UMA
             return retval;
         }
 
-        public static AddressableInfo GetAddressableInfo(string assetPath)
+        public static AddressableInfo GetAddressableInfo(string guid)
         {
-            AddressableAssetEntry ae = GetAddressableAssetEntry(assetPath);
+            AddressableAssetEntry ae = GetAddressableAssetEntry(guid);
             if (ae != null)
             {
                 string name = "";

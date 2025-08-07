@@ -226,7 +226,7 @@ namespace UMA
 #if TIMEINDEXER
             st.Stop();
             if(Debug.isDebugBuild)
-                Debug.Log(Status + " Completed " + st.ElapsedMilliseconds + "ms");
+                Debug.Log(Status + " Timer Completed " + st.ElapsedMilliseconds + "ms");
             return;
 #endif
         }
@@ -247,12 +247,12 @@ namespace UMA
                 {
 
 #if UNITY_EDITOR
-                    DebugSerializationStatic("Instance is NULL - getting new instance.");
+                    //DebugSerializationStatic("Instance is NULL - getting new instance.");
                     if (EditorApplication.isCompiling || EditorApplication.isUpdating)
                     {
                         return null;
                     }
-                    DebugSerializationStatic("Loading AssetIndexer from resources...");
+                    //DebugSerializationStatic("Loading AssetIndexer from resources...");
 #endif
 
                     //var st = StartTimer();
@@ -260,13 +260,13 @@ namespace UMA
                     if (theIndexer == null)
                     {
 #if UNITY_EDITOR
-                        DebugSerializationStatic("AssetIndexer is NULL - ON LOAD!!! How can this happen?");
+                        //DebugSerializationStatic("AssetIndexer is NULL - ON LOAD!!! How can this happen?");
 #endif
                         return null;
                     }
 
 #if UNITY_EDITOR
-                    DebugSerializationStatic("Rebulding Lookup Tables");
+                    //DebugSerializationStatic("Rebulding Lookup Tables");
 #endif
                     theIndexer.Initialize();
                     theIndexer.UpdateSerializedDictionaryItems();
@@ -274,9 +274,9 @@ namespace UMA
 #if UNITY_EDITOR
                     EditorSceneManager.sceneSaving += EditorSceneManager_sceneSaving;
                     EditorSceneManager.sceneSaved += EditorSceneManager_sceneSaved;
-                    EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged; ;
+                    EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged;
+                    ;
 #endif
-                    //StopTimer(st,"Asset index load");
                 }
                 else
                 {
@@ -475,8 +475,9 @@ namespace UMA
             BuildStringTypes();
             CreateTypeFolderMapping();
         }
-
+#pragma warning disable CS0414
         static int generatorNumber = 0;
+#pragma warning restore CS0414
         private void CreateGenerator()
         {
             UMASettings settings = UMASettings.GetSettingsFromResources();
@@ -500,17 +501,17 @@ namespace UMA
                 }
                 //Debug.Log("Creating generator");
                 GameObject go = GameObject.Instantiate(settings.generatorPrefab);
-                go.name = $"UMAGeneratorInternal-{generatorNumber++}";
+                go.name = generatorName;
                 generator = go.GetComponent<UMAGenerator>();
                 if (generator != null)
                 {
                     if (!generator.showInHierarchy)
                     {
-                        //go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
+                        go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
                     }
                     else
                     {
-                        //go.hideFlags = HideFlags.DontSave; 
+                        go.hideFlags = HideFlags.DontSave | HideFlags.DontUnloadUnusedAsset;
                     }
                 }
 
@@ -876,10 +877,12 @@ namespace UMA
             }
             else
             {
+#if !UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning($"Unknown item [{Name}] for type {ot.ToString()}. TypeDic contains {TypeDic.Count} items");
                 }
+#endif
             }
 
             return null;
@@ -1344,11 +1347,30 @@ namespace UMA
         public T GetAsset<T>(string name, bool recursionGuard = false) where T : UnityEngine.Object
         {
 #if UNITY_EDITOR
-            bool indexUpdated = CheckIndex();
+            bool indexUpdated = false;
+            UMASettings settings = UMASettings.GetOrCreateSettings();
+            if (settings == null)
+            {
+                Debug.LogError("Unable to load UMASettings!!! UMA Will Not Work!");
+                return null;
+            }
+            if (settings.autoRepairIndex)
+            {
+                indexUpdated = CheckIndex();
+            }
 #endif
             var thisAssetItem = GetAssetItem<T>(name);
             if (thisAssetItem != null)
             {
+#if UNITY_EDITOR
+                if (thisAssetItem.Item == null)
+                {
+                    if (settings.alwaysGetAddressables)
+                    {
+                        return thisAssetItem.GetItem<T>();
+                    }
+                }
+#endif
                 return (thisAssetItem.Item as T);
             }
             else
@@ -1711,6 +1733,9 @@ namespace UMA
 
         public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
         {
+#if UMA_VES
+            Keys.RemoveAll(label => VesUmaLabelMaker.DO_NOT_INCLUDE_LABELS.Contains(label)); //VES added
+#endif
 
             BeforeProcessingLabels.Invoke(Keys);
 
@@ -2158,6 +2183,10 @@ namespace UMA
             AddAssetItem(ai);
         }
 
+
+        //System.Diagnostics.Stopwatch addtoracelookup = new System.Diagnostics.Stopwatch();
+        //System.Diagnostics.Stopwatch getAddrInfo = new System.Diagnostics.Stopwatch();
+
         /// <summary>
         /// Adds an asset to the index. If the name already exists, it is not added. (Should we do this, or replace it?)
         /// </summary>
@@ -2175,20 +2204,12 @@ namespace UMA
                     return false;
                 }
 
-                /* if (AlreadyHasItem(ai, TypeDic))
-                 {
-                     return false;
-                 } */
-
-                if (ai._Name.ToLower().Contains((ai._Type.Name + "placeholder").ToLower()))
-                {
-                    return false;
-                }
-
+                //addtoracelookup.Start();
                 if (ai._Type == typeof(UMAWardrobeRecipe))
                 {
                     AddToRaceLookup(ai._SerializedItem as UMAWardrobeRecipe);
                 }
+                //addtoracelookup.Stop();
 
 #if UNITY_EDITOR
                 if (string.IsNullOrWhiteSpace(ai._Name))
@@ -2200,7 +2221,7 @@ namespace UMA
                     ai._SerializedItem = null;
                 }
 #if UMA_ADDRESSABLES
-                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Path);
+                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Guid);
                 if (ainfo != null)
                 {
                     ai.IsAddressable = true;
@@ -2531,7 +2552,6 @@ namespace UMA
 #if UNITY_EDITOR
         public void ClearAddressableFlags()
         {
-            AddressableUtility.ClearAddressableEntries();
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
@@ -2552,15 +2572,15 @@ namespace UMA
             CompressNulls();
 #endif
             ClearDictionaries();
-            DebugSerialization("Updating serialized Dictionary Items");
+            //DebugSerialization("Updating serialized Dictionary Items");
             if (SerializedItems == null)
             {
-                DebugSerialization("Serialized Items is null");
+                //DebugSerialization("Serialized Items is null");
                 return;
             }
             if (SerializedItems.Count == 0)
             {
-                DebugSerialization("Serialized Items is empty!!!");
+                //DebugSerialization("Serialized Items is empty!!!");
                 return;
             }
             // Rebuuild all the lookup tables
@@ -2577,10 +2597,10 @@ namespace UMA
                 // the dictionary when rebuilt.
                 if (ai == null)
                 {
-                    DebugSerialization("Skipping null item in SerializedItems");
+                    //DebugSerialization("Skipping null item in SerializedItems");
                     continue;
                 }
-                DebugSerialization($"Adding item {ai._Name}");
+                //DebugSerialization($"Adding item {ai._Name}");
                 AddAssetItem(ai, noDirty: true);
             }
             DebugSerialization("All items added");
@@ -2644,6 +2664,11 @@ namespace UMA
         }
 
         private recipeEqualityComparer req;
+
+        // public System.Diagnostics.Stopwatch CompatLookup = new System.Diagnostics.Stopwatch();
+        //public System.Diagnostics.Stopwatch getAsset = new System.Diagnostics.Stopwatch();
+        //public System.Diagnostics.Stopwatch crossCompatLookup = new System.Diagnostics.Stopwatch();
+
 
         private void AddRaceRecipe(UMAWardrobeRecipe uwr)
         {
@@ -2758,10 +2783,10 @@ namespace UMA
             }
 
             // get the current stacktrace
-            string stackTrace = Environment.StackTrace;
-            SQLDebugger.LogSerialization(msg, stackTrace , instanceKey, isClear, Time.time);
+            // string stackTrace = Environment.StackTrace;
+            // SQLDebugger.LogSerialization(msg, stackTrace , instanceKey, isClear, Time.time);
 
-            Debug.Log("[Serializing] "+s);
+            Debug.Log("[Serializing] "+msg);
 #endif
 #endif
         }
@@ -2975,9 +3000,6 @@ namespace UMA
         /// </summary>
         public void Clear(bool forceSave = true)
         {
-#if UMA_ADDRESSABLES
-            AddressableUtility.ClearAddressableEntries();
-#endif
             generator = null;
             // Rebuild the tables
             GuidTypes.Clear();
@@ -3103,7 +3125,7 @@ namespace UMA
                 ai.AddressableAddress = "";
 #if UNITY_EDITOR
 #if UMA_ADDRESSABLES
-                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Path);
+                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Guid);
                 if (ainfo != null)
                 {
                     ai.AddressableAddress = ainfo.AddressableAddress;
@@ -3460,7 +3482,6 @@ namespace UMA
             BuildStringTypes();
             AddEverything(false);
             RestoreKeeps();
-            ClearMHASlotReferences();
             AddReferences();
 #if UMA_ADDRESSABLES
             // TODO: Build addressable bundles here.
@@ -3480,7 +3501,7 @@ namespace UMA
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 string fileName = Path.GetFileName(assetPath);
                 MeshHideAsset mha = AssetDatabase.LoadAssetAtPath<MeshHideAsset>(assetPath);
-               // mha.FreeReference();
+                // mha.FreeReference();
                 EditorUtility.SetDirty(mha);
 #if UNITY_2021_1_OR_NEWER
                 AssetDatabase.SaveAssetIfDirty(mha);

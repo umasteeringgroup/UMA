@@ -165,6 +165,8 @@ namespace UMA
             for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
 			{
 				var slot = umaRecipe.slotDataList[i];
+				if (slot != null && slot.meshModifiers != null)
+				{
 				slot.meshModifiers.Clear();
 				if (accumulatedModifiers.ContainsKey(slot.slotName))
 				{
@@ -174,7 +176,7 @@ namespace UMA
             }
 			
         }
-        #endregion
+        }
 
         #region SAVE RESTORE ITEMS
         public void SaveMountedItems()
@@ -331,6 +333,10 @@ namespace UMA
 
 		public bool AreRenderersEqual(List<UMARendererAsset> rendererList)
 		{
+			if (renderers == null || rendererList == null)
+			{
+				return false;
+			}
 			if (renderers.Length != rendererList.Count)
 			{
 				return false;
@@ -3090,3 +3096,4 @@ namespace UMA
 #endregion
 	}
 }
+#endregion

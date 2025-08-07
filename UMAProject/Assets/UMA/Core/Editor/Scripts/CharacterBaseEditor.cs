@@ -7,7 +7,6 @@ using System.IO;
 using System.Reflection;
 using UMA.Controls;
 using UnityEditor;
-using UnityEditor.TerrainTools;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -817,6 +816,18 @@ namespace UMA.Editors
         {
             SlotData FirstSlot = null;
 
+            if (DraggedSlots.Count >= 1 && DraggedOverlays.Count == 1)
+            {
+                // if there are multiple slots, and one overlay, just put that overlay on all the slots.
+                foreach (SlotDataAsset sd in DraggedSlots)
+                {
+                    SlotData slot = new SlotData(sd);
+                    slot.AddOverlay(new OverlayData(DraggedOverlays[0]));
+                    slot = _recipe.MergeSlot(slot, false);
+                }
+                return;
+            }
+
             // Add the slots.
             // if there are overlays, well, no way to really know where they go, so add them to the first slot.
             foreach (SlotDataAsset sd in DraggedSlots)
@@ -1438,11 +1449,48 @@ namespace UMA.Editors
             }
 
             bool disabled = _slotData.isDisabled;
-            _slotData.isDisabled = EditorGUILayout.Toggle("Disabled", _slotData.isDisabled);
+            _slotData.isDisabled = EditorGUILayout.Toggle("Disable in recipe:", _slotData.isDisabled);
 
             if (disabled != _slotData.isDisabled)
             {
                 changed = true;
+            }
+            _slotData.slotAssetFoldout = EditorGUILayout.Foldout(_slotData.slotAssetFoldout, "View copied data", true);
+            if (_slotData.slotAssetFoldout)
+            {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+                EditorGUILayout.LabelField("Overlay Scale", _slotData.overlayScale.ToString("F4"));
+                EditorGUILayout.LabelField("Matching Tags");
+                if (_slotData.tags != null && _slotData.tags.Length > 0)
+                {
+                    foreach (var tag in _slotData.tags)
+                    {
+                        EditorGUILayout.LabelField(" - " + tag);
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.LabelField(" - None");
+                }
+                EditorGUILayout.LabelField("Matching Races");
+                if (_slotData.Races != null && _slotData.Races.Length > 0)
+                {
+                    foreach (var race in _slotData.Races)
+                    {
+                        EditorGUILayout.LabelField(" - " + race);
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.LabelField(" - None");
+                }
+                if (GUILayout.Button("Refresh slot from Asset"))
+                {
+                    _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
+                    _slotData.UpdateFromAsset(_slotData.asset);
+                    changed = true;
+                }
+                GUIHelper.EndVerticalPadded(10);
             }
 
             if (_slotData.asset.isClippingPlane)

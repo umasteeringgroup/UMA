@@ -40,7 +40,7 @@ namespace UMA.Examples
 	    {
 			// Moving this into a scriptable object that can be attached to slots.
 			return;
-
+#pragma warning disable CS0162
 			CollisionMatrixFixer.FixLayers();
 
 	        umaData = dta;
@@ -56,6 +56,7 @@ namespace UMA.Examples
 				// Setup Swing Bones
 				SetupSwingBones(SwingBoneNames);
 			}
+#pragma warning restore CS0162
 	    }
 
 		private void SetupSwayBone(Transform t)

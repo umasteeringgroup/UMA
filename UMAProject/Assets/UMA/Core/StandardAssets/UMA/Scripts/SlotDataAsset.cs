@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using System.Text;
+#endif
 using UMA.PoseTools;
+#if UNITY_EDITOR
 using UnityEditorInternal;
 #endif
 using UnityEngine;

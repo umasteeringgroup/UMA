@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine.Rendering;
 using UnityEngine.Events;
+#if UNITY_EDITOR
 using UnityEditor.Events;
+#endif
 using System.Linq;
 
 

@@ -179,7 +179,7 @@ Material:
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _ColorModulation: 1
-    - _Contrast: 1.1
+    - _Contrast: 1.353
     - _Cull: 2
     - _CullMode: 2
     - _CurveBias: 0.005
@@ -205,7 +205,7 @@ Material:
     - _MinSmooth: 0.4
     - _Mode: 0
     - _NormalDistortion: 1
-    - _NormalStrength: 0.54
+    - _NormalStrength: 0.798
     - _Occlusion: 1
     - _OcclusionStrength: 0.07
     - _OcclusionUVSource: 0
@@ -224,7 +224,7 @@ Material:
     - _SSSLevel: 0.777
     - _SSSPow: 6.03
     - _SSSShadow: 1
-    - _Saturation: 1
+    - _Saturation: 0.68
     - _Scale: 1
     - _ScatteringByAlbedo: 1
     - _SecondUVSource: 0

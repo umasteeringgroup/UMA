@@ -13,8 +13,9 @@ namespace UMA
 		[Tooltip("Bones that you want to ignore - these and their children are not processed")]
 		public List<Transform> Exclusions = new List<Transform>();
 		private List<SwayBone> SwayBones = new List<SwayBone>();
+#pragma warning disable CS0414
 		private float step = 1.0f / 60.0f;
-	
+#pragma warning restore CS0414
 
 		public void Setup(float elasticity, float inertia, float limit)
 		{

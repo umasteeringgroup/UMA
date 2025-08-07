@@ -378,7 +378,7 @@ namespace UMA
             {
                 AddText($"Reimporting shaders in {path}");
                 StartProcessing();
-                AssetDatabase.ImportAsset("Assets/UMA/Core/ShaderPackages", ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer | ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer | ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
                 StopProcessing();
                 AddText(path + " reimported successfully!");
             }

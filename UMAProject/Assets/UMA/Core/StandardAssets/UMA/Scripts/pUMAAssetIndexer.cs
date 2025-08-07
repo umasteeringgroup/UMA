@@ -6,7 +6,7 @@ using System;
 namespace UMA
 {
 	/// <summary>
-	/// Gloal container for various UMA objects in the scene.
+    /// Functions to emulate the old UMAContext, which is removed in the UMA 3.0 release.
 	/// </summary>
 	public partial class UMAAssetIndexer 
 	{

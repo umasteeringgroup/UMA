@@ -23,7 +23,7 @@ MonoBehaviour:
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: Tattoo
-  Appended: 0
+  Appended: 1
   Hides: []
   HideTags: []
   suppressWardrobeSlots: []

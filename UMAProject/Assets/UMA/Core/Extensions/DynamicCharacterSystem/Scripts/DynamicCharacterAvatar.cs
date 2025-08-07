@@ -1772,6 +1772,65 @@ namespace UMA.CharacterSystem
             return null;
         }
 
+        #region UMA 3 WearableItems start
+
+        public void ClearAllWearablItems()
+        {
+            _wardrobeRecipes.Clear();
+            _additiveRecipes.Clear();
+        }
+
+        public void ClearWearableItems(string SlotName)
+        {
+            if (_wardrobeRecipes.ContainsKey(SlotName))
+            {
+                _wardrobeRecipes.Remove(SlotName);
+            }
+            if (_additiveRecipes.ContainsKey(SlotName))
+            {
+                _additiveRecipes.Remove(SlotName);
+            }
+        }
+
+        public void SetWearableItem(UMATextRecipe utr, bool allowDuplicatesOnAdditives = false)
+        {
+            if (utr.Appended)
+            {
+                AppendWearableItem(utr, allowDuplicatesOnAdditives);
+                return;
+            }
+            internalSetSlot(utr, utr.wardrobeSlot);
+        }
+
+        public void AppendWearableItem(UMATextRecipe utr, bool allowDuplicatesOnAdditives = false)
+        {
+            if (!_additiveRecipes.ContainsKey(utr.wardrobeSlot))
+            {
+                _additiveRecipes.Add(utr.wardrobeSlot, new List<UMATextRecipe>());
+            }
+            _additiveRecipes[utr.wardrobeSlot].Add(utr);
+        }
+
+        private void RemoveWearableItem(UMATextRecipe utr, bool removeAllMatching = false)
+        {
+            string thisRecipeSlot = utr.wardrobeSlot;
+            if (!_additiveRecipes.ContainsKey(thisRecipeSlot))
+            {
+                return;
+            }
+            if (removeAllMatching)
+            {
+                int instanceID = utr.GetInstanceID();
+                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetInstanceID() == instanceID));
+            }
+            else
+            {
+                // Remove the first instance of the recipe
+                AdditiveRecipes[thisRecipeSlot].Remove(utr);
+            }
+        }
+        #endregion
+
         /// <summary>
         /// Sets the avatars wardrobe slot to use the given wardrobe recipe (not to be mistaken with an UMA SlotDataAsset)
         /// </summary>
@@ -4014,6 +4073,9 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
+#if UMA_ADDRESSABLES
+			skipBundleCheck = false;
+#endif
             //Debug.Log($"Buildcharacter {gameObject.name}");
             InitialStartup(); // This is to make sure that the UMAContext is set up correctly
 
@@ -4491,7 +4553,7 @@ namespace UMA.CharacterSystem
 
                 var theOp = UMAAssetIndexer.Instance.Preload(this);
                 LoadedHandles.Enqueue(theOp);
-                LoadQueue.Add(theOp,new BuildSave( umaRecipe,Replaces,umaAdditionalSerializedRecipes,AdditionalRecipes, MeshHideDictionary, hiddenSlots, HideTags, CurrentDNA, restoreDNA));
+                LoadQueue.Add(theOp,new BuildSave(characterRecipe, Replaces,umaAdditionalSerializedRecipes,AdditionalRecipes, MeshHideDictionary, hiddenSlots, HideTags, CurrentDNA, restoreDNA));
                 theOp.Completed += LoadWhenReady;
 #if SUPER_LOGGING
                 Debug.Log("LoadCharacter waiting for preload...");

@@ -1073,7 +1073,9 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("leanHiding"));
 #if UMA_ADDRESSABLES
+			EditorGUILayout.HelpBox("DelayUnload: This option delays unloading the addressable asset for 2.0 seconds in case you are rebuilding an UMA immediately after freeing this one. Normally this should be unchecked.", MessageType.Info);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("DelayUnload"));
+			EditorGUILayout.HelpBox("BundleCheck: This option makes UMA check the addressable bundles and load if needed. If you are using addressables this should absolutely be checked. Only uncheck this if you have a special circumstance where you are building an UMA that has specific slots and overlays that are not addressable!", MessageType.Info);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("BundleCheck"));
 #endif
             EditorGUILayout.PropertyField(serializedObject.FindProperty("forceSlotMaterials"));

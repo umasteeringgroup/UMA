@@ -7,6 +7,8 @@ using UnityEditor;
 using UMA;
 using System.Threading;
 using System.Diagnostics;
+using System;
+using System.IO;
 
 namespace UMA
 {
@@ -14,7 +16,7 @@ namespace UMA
     public class UMASettings : ScriptableObject
     {
 #if UNITY_EDITOR
-        public const string customSettingsPath = "Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset";
+        //public const string customSettingsPath = "Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset";
 
         [Multiline(7)]
         public string WarningMessage = "Warning: Please do not modify these\n settings using the inspector.\n Use the project settings instead.\n Modifying settings that need compiler\n directives set will NOT work if you\n edit them in the inspector!";
@@ -43,7 +45,7 @@ namespace UMA
         public bool addrUseSharedGroup = true;
         public string addrSharedGroupName = "UMAShared";
         public string addrDefaultLabel = "UMA_Default";
-        public bool addStripMaterials = true;
+        public bool addrStripMaterials = true; //VES fixed missing r in addStripMaterials
         public bool addrIncludeRecipes = false;
         public bool addrIncludeOther = false;
 
@@ -69,6 +71,7 @@ namespace UMA
         [Header("Welcome page textures")]
         public Texture2D Overlays;
         public Texture2D Slots;
+		public static UMASettings instance;
 
 
         [MenuItem("Assets/Create/UMA/Core/UMASettings")]
@@ -84,53 +87,61 @@ namespace UMA
             settings.ForumURL = "https://discussions.unity.com/t/uma-unity-multipurpose-avatar-on-the-asset-store-part-2/1487160";
             settings.AssetStoreURL = "https://assetstore.unity.com/packages/3d/characters/uma-2-35611";
             settings.ShaderFolder = "UMA/Core/ShaderPackages";
+			UpdateAlwaysOverrides(settings); //VES added
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssetIfDirty(settings);
-            TestLoad();
         }
 
-        internal static void TestLoad()
-        {
-            Stopwatch stopwatch = new Stopwatch();
-
-
-            stopwatch.Start();
-            var settings = AssetDatabase.LoadAssetAtPath<UMASettings>(customSettingsPath);
-            stopwatch.Stop();
-            UnityEngine.Debug.Log($"LoadAssetAtPath {settings.GetInstanceID()} loaded in " + stopwatch.ElapsedTicks + " ticks");
-
-            stopwatch.Restart();
-            var settings2 = AssetDatabase.LoadAssetAtPath<UMASettings>(customSettingsPath);
-            stopwatch.Stop();
-            UnityEngine.Debug.Log($"LoadAssetAtPath {settings2.GetInstanceID()} loaded in " + stopwatch.ElapsedTicks + " ticks");
-
-            stopwatch.Restart();
-            var settings3 = AssetDatabase.LoadAssetAtPath<UMASettings>(customSettingsPath);
-            stopwatch.Stop();
-            UnityEngine.Debug.Log($"LoadAssetAtPath {settings3.GetInstanceID()} loaded in " + stopwatch.ElapsedTicks + " ticks");
-
-            stopwatch.Restart();
-            var settings4 = AssetDatabase.LoadAssetAtPath<UMASettings>(customSettingsPath);
-            stopwatch.Stop();
-            UnityEngine.Debug.Log($"LoadAssetAtPath {settings4.GetInstanceID()} loaded in " + stopwatch.ElapsedTicks + " ticks");
-        }
 
         public static UMASettings GetSettings()
         {
-            var settings = AssetDatabase.LoadAssetAtPath<UMASettings>(customSettingsPath);
+            var settings = Resources.Load<UMASettings>("UMASettings");
+			UpdateAlwaysOverrides(settings); //VES added
             return settings;
+        }
+
+        public static string FindUMAFullPath()
+        {
+            string folder = "UMA";
+
+            // search the project for the UMA folder
+            string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
+            if (folders != null && folders.Length > 0)
+            {
+                foreach (string guid in folders)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (path.EndsWith(folder, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return path;
+                    }
+                }
+            }
+
+            // if we didn't find it, return the default path
+            return Path.Combine(Application.dataPath, folder);
         }
 
         public static UMASettings GetOrCreateSettings()
         {
-            var settings = AssetDatabase.LoadAssetAtPath<UMASettings>(customSettingsPath);
+            if (instance != null)
+            {
+                return instance;
+            }
+            string path = FindUMAFullPath() + "/InternalDataStore/InGame/Resources/UMASettings.asset";
+            var settings = AssetDatabase.LoadAssetAtPath<UMASettings>(path);
+#if UNITY_EDITOR
             if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<UMASettings>();
                 // settings.cities = new List<string>();
-                AssetDatabase.CreateAsset(settings, customSettingsPath);
+				UpdateAlwaysOverrides(settings); //VES added
+                AssetDatabase.CreateAsset(settings, path);
                 AssetDatabase.SaveAssets();
             }
+#endif
+			UpdateAlwaysOverrides(settings); //VES added
+            instance = settings;
             return settings;
         }
 #endif
@@ -138,8 +149,20 @@ namespace UMA
         public static UMASettings GetSettingsFromResources()
         {
             UMASettings settings = Resources.Load<UMASettings>("UMASettings");
+			UpdateAlwaysOverrides(settings); //VES added
             return settings;
         }
+
+		static void UpdateAlwaysOverrides(UMASettings settings) { //VES added
+#if UNITY_EDITOR
+#if UMA_ALWAYS_STRIP_MATERIALS
+			settings.addrStripMaterials = true;
+#endif
+#if UMA_ALWAYS_INCLUDE_RECIPES
+			settings.addrIncludeRecipes = true;
+#endif
+#endif
+		}
 
 #if UNITY_EDITOR
         public static SerializedObject GetSerializedSettings()
@@ -167,7 +190,7 @@ namespace UMA
         public static bool AddrUseSharedGroup { get { var settings = GetOrCreateSettings(); return settings.addrUseSharedGroup; } }
         public static string AddrSharedGroupName { get { var settings = GetOrCreateSettings(); return settings.addrSharedGroupName; } }
         public static string AddrDefaultLabel { get { var settings = GetOrCreateSettings(); return settings.addrDefaultLabel; } }
-        public static bool AddStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addStripMaterials; } }
+        public static bool AddrStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addrStripMaterials; } } //VES fixed missing r in AddStripMaterials
         public static bool AddrIncludeRecipes { get { var settings = GetOrCreateSettings(); return settings.addrIncludeRecipes; } }
         public static bool AddrIncludeOther { get { var settings = GetOrCreateSettings(); return settings.addrIncludeOther; } }
 #endif

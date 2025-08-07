@@ -24,8 +24,9 @@ namespace UMA
             Base = Mesh | Rig | Texture,
             All = Texture | Mesh | Rig | BlendShape | SharedColors
         }
-
+#pragma warning disable CS0414
         private DNABuildType updateFlags = DNABuildType.None;
+#pragma warning restore CS0414
         private DNACollection _DNACollection = null;
 
         public DNACollection dnaCollection

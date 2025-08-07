@@ -821,7 +821,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Standalone: UMA_BURSTCOMPILE;UMA_DNACOLLECTIONS;__BETTERSHADERS__
+    Standalone: UMA_BURSTCOMPILE;UMA_DNACOLLECTIONS;__BETTERSHADERS__;UMA_ADDRESSABLES
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

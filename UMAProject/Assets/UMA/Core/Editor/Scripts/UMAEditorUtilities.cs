@@ -161,7 +161,7 @@ namespace UMA
 
 		public static bool StripUMAMaterials()
         {
-			return UMASettings.AddStripMaterials;
+			return UMASettings.AddrStripMaterials;
         }
 		public static bool PostProcessAllAssets()
 		{

@@ -53,7 +53,7 @@ namespace UMA
         /// <param name="ai"></param>
         private void ClearAddressableAssetEntry(AssetItem ai)
         {
-            AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Path, out AddressableAssetGroup group);
+            AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Guid, out AddressableAssetGroup group);
             if (group != null)
             {
                 group.RemoveAssetEntry(ae);
@@ -223,7 +223,7 @@ namespace UMA
 
         public void AddItemToSharedGroup(string GUID, string Address, List<string> labels, AddressableAssetGroup sharedGroup)
         {
-            AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, true);
+            AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, false);
             ae.SetAddress(Address);
             ae.SetLabel(umaBaseName, true, true, true);
             foreach (string s in labels)
@@ -480,7 +480,7 @@ namespace UMA
             {
                 if (ai.IsAddressable)
                 {
-                    AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Path);
+                    AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Guid);
                     if (ae != null && ae.parentGroup.Name == SharedGroupName)
                     {
                         continue;
@@ -797,7 +797,6 @@ namespace UMA
             finally
             {
                 EditorUtility.ClearProgressBar();
-                UMAAssetIndexer.Instance.DestroyEditorUMAContextBase();
                 UMAAssetIndexer.Instance.ForceSave();
             }
         }
@@ -807,7 +806,7 @@ namespace UMA
             List<AssetItem> SerializedItems = UMAAssetIndexer.Instance.SerializedItems;
             foreach (AssetItem ai in SerializedItems)
             {
-                AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Path);
+                AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Guid);
                 if (ae != null)
                 {
                     ai.AddressableAddress = ae.address;

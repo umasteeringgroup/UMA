@@ -1,4 +1,5 @@
 ﻿#if UMA_ADDRESSABLES
+//#define UMA_VES
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -156,6 +157,9 @@ namespace UMA
                     if (IncludeRecipes)
                     {
                         AssetItem RecipeItem = UMAAssetIndexer.Instance.GetRecipeItem(uwr);
+						if(RecipeItem == null) { //VES added
+							Debug.LogError("UMA RecipeItem is null! " + uwr);
+						}
                         if (AddressableItems.ContainsKey(RecipeItem) == false)
                         {
                             AddressableItems.Add(RecipeItem, new List<string>());
@@ -377,6 +381,11 @@ namespace UMA
             List<AssetItem> Items = UMAAssetIndexer.Instance.GetAssetItems(t);
             foreach (AssetItem item in Items)
             {
+                if (AddressableItems.ContainsKey(item))
+                {
+                    Debug.LogWarning("Duplicate Addressable item found: " + item._Name + " of type " + item._Type.Name);
+                    continue;
+                }
                 AddressableItems.Add(item, new List<string>());
                 AddressableItems[item].Add(DefaultLabel);
             }

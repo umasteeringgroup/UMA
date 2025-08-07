@@ -48,6 +48,7 @@ namespace UMA
         public bool BlendshapeFoldout;
         public bool ClipPlaneFoldout;
         public bool isDeleted;
+        public bool slotAssetFoldout = false; // This is used in the editor to show/hide the slot in the recipe editor.
 #endif
         public int expandAlongNormal = 0; // 8 digits of fixed point resolution. Multiply by 0.00001f to get the float value.
 
@@ -202,6 +203,14 @@ namespace UMA
             smooshInvertY = true;
             smooshInvertDist = true;
             expandAlongNormal = 0;
+        }
+
+        public void UpdateFromAsset(SlotDataAsset asset)
+        {
+            tags = asset.tags.Length > 0 ? (string[])asset.tags.Clone() : new string[0];
+            Races = asset.Races;
+            overlayScale = asset.overlayScale;
+            rendererAsset = asset.RendererAsset;
         }
 
         /// <summary>
