@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UMA.CharacterSystem;
 using UMA.Editors;
@@ -2321,7 +2322,27 @@ namespace UMA.Controls
         }
 
 
-        Vector2 sideBarPosition;
+		private void OpenFileWithEditorUtility(string filePath) {
+			if(!File.Exists(filePath)) {
+				Debug.LogError($"File does not exist: {filePath}");
+				return;
+			}
+
+			try {
+				// This method works in the Unity Editor and opens with the default application
+				UnityEditor.EditorUtility.OpenWithDefaultApp(filePath);
+				Debug.Log($"Opened report file: {filePath}");
+			} catch(System.Exception ex) {
+				Debug.LogError($"Failed to open file {filePath}: {ex.Message}");
+
+				// Fallback: copy path to clipboard
+				GUIUtility.systemCopyBuffer = filePath;
+				Debug.Log($"File path copied to clipboard: {filePath}");
+			}
+		}
+
+		Vector2 sideBarPosition;
+		bool _IndexFoldout;
         bool _meshHideFoldout;
         bool _materialFoldout;
         bool _raceFoldout;
@@ -2336,8 +2357,11 @@ namespace UMA.Controls
         bool _overlayLimit;
         Rect _rectCheck;
         int _channelType;
-        
-        void ShowSidebar()
+		private UMAAssetIndexer beforeIndex;
+		private UMAAssetIndexer afterIndex;
+		private UMAAssetIndexer AnalyzeIndex;
+
+		void ShowSidebar()
         {
             GUILayout.Label("Utilities Panel", EditorStyles.toolbarButton,GUILayout.ExpandWidth(true));
             GUILayout.BeginHorizontal();
@@ -2354,7 +2378,71 @@ namespace UMA.Controls
 
             sideBarPosition = GUILayout.BeginScrollView(sideBarPosition,false,true);
 
-            _meshHideFoldout = EditorGUILayout.Foldout(_meshHideFoldout, "Mesh Hide Assetz");
+			_IndexFoldout = EditorGUILayout.Foldout(_IndexFoldout, "Asset Indexer");
+			if(_IndexFoldout) {
+				string compareFile = Application.dataPath + "/AssetIndexCompareSerializedItems2.txt";
+				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+
+				beforeIndex = EditorGUILayout.ObjectField("Before Index:", beforeIndex, typeof(UMAAssetIndexer), false) as UMAAssetIndexer;
+				afterIndex = EditorGUILayout.ObjectField("After Index:", afterIndex, typeof(UMAAssetIndexer), false) as UMAAssetIndexer;
+				if (GUILayout.Button("Compare Serialized Items"))
+				{
+					if (beforeIndex != null && afterIndex != null)
+					{
+						beforeIndex.CompareSerializedItems2(afterIndex,compareFile);
+						OpenFileWithEditorUtility(compareFile);
+
+					}
+					else
+					{
+						EditorUtility.DisplayDialog("Error", "Please select both before and after indexes.", "OK");
+					}
+				}
+				if (GUILayout.Button("Full Compare"))
+				{
+					if (beforeIndex != null && afterIndex != null)
+					{
+						beforeIndex.CompareTo(afterIndex, compareFile);
+						OpenFileWithEditorUtility(compareFile);
+					}
+					else
+					{
+						EditorUtility.DisplayDialog("Error", "Please select both before and after indexes.", "OK");
+					}
+				}
+				AnalyzeIndex = EditorGUILayout.ObjectField("Analyze Index:", AnalyzeIndex, typeof(UMAAssetIndexer), false) as UMAAssetIndexer;
+				if (GUILayout.Button("Analyze Index"))
+				{
+					if (AnalyzeIndex != null)
+					{
+						Debug.Log("Analyzing index: " + AnalyzeIndex.name);
+                        //AnalyzeIndex.Clear();
+                        //AnalyzeIndex.RebuildLibrary();
+#if UMA_ADDRESSABLES
+						Debug.Log($"ANALYZE: Before count = {AnalyzeIndex.SerializedItems.Count}");
+                        UMAAddressablesSupport.Instance.GenerateAddressables(new SingleGroupGenerator { ClearMaterials = true },AnalyzeIndex);
+						Debug.Log($"ANALYZE: After count = {AnalyzeIndex.SerializedItems.Count}");
+#endif
+                        Debug.Log("ANALYZE: Running startup");
+						AnalyzeIndex.Initialize();
+						Debug.Log($"ANALYZE: After Initialize count = {AnalyzeIndex.SerializedItems.Count}");
+						AnalyzeIndex.UpdateSerializedDictionaryItems();
+						Debug.Log($"ANALYZE: After UpdateSerializedDictionaryItems count = {AnalyzeIndex.SerializedItems.Count}");
+						AnalyzeIndex.RebuildRaceRecipes();
+						Debug.Log($"ANALYZE: After RebuildRaceRecipes count = {AnalyzeIndex.SerializedItems.Count}");
+					}
+					else
+					{
+						EditorUtility.DisplayDialog("Error", "Please select an index to analyze.", "OK");
+					}
+				}
+
+				GUIHelper.EndVerticalPadded(10);
+			}
+
+			
+
+			_meshHideFoldout = EditorGUILayout.Foldout(_meshHideFoldout, "Mesh Hide Assets");
             if (_meshHideFoldout)
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));

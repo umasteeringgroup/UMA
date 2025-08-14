@@ -601,9 +601,12 @@ namespace UMA
             }
         }
 
-        public void GenerateAddressables(IUMAAddressablePlugin plugin)
+        public void GenerateAddressables(IUMAAddressablePlugin plugin, UMAAssetIndexer Index = null)
         {
-            bool OK = plugin.Prepare();
+			if(Index == null) {
+				Index = UMAAssetIndexer.Instance;
+			}
+				bool OK = plugin.Prepare();
             if (!OK) return;
 
             foreach (Type t in UMAAssetIndexer.Instance.GetTypes())
@@ -801,9 +804,12 @@ namespace UMA
             }
         }
 
-        public void AssignAddressableInformation()
+        public void AssignAddressableInformation(UMAAssetIndexer Index=null)
         {
-            List<AssetItem> SerializedItems = UMAAssetIndexer.Instance.SerializedItems;
+			if(Index == null) {
+				Index = UMAAssetIndexer.Instance;
+			}
+				List<AssetItem> SerializedItems = Index.SerializedItems;
             foreach (AssetItem ai in SerializedItems)
             {
                 AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Guid);

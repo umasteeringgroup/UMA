@@ -1774,12 +1774,19 @@ namespace UMA.CharacterSystem
 
         #region UMA 3 WearableItems start
 
+        /// <summary>
+        /// Clear all wearable items from the Avatar.
+        /// </summary>
         public void ClearAllWearablItems()
         {
             _wardrobeRecipes.Clear();
             _additiveRecipes.Clear();
         }
 
+        /// <summary>
+        /// Clear all wearable items from the Avatar for a specific slot.
+        /// </summary>
+        /// <param name="SlotName"></param>
         public void ClearWearableItems(string SlotName)
         {
             if (_wardrobeRecipes.ContainsKey(SlotName))
@@ -1792,17 +1799,22 @@ namespace UMA.CharacterSystem
             }
         }
 
-        public void SetWearableItem(UMATextRecipe utr, bool allowDuplicatesOnAdditives = false)
+        /// <summary>
+        /// Set a wearable item for the Avatar. If the item is already set, it will be replaced.
+        /// </summary>
+        public void SetWearableItem(UMATextRecipe utr)
         {
             if (utr.Appended)
             {
-                AppendWearableItem(utr, allowDuplicatesOnAdditives);
+                AppendWearableItem(utr);
                 return;
             }
             internalSetSlot(utr, utr.wardrobeSlot);
         }
-
-        public void AppendWearableItem(UMATextRecipe utr, bool allowDuplicatesOnAdditives = false)
+        /// <summary>
+        /// Adds a wearable item to the Avatar. This will be stacked on top of any existing items in the same slot.
+        /// </summary>
+        public void AppendWearableItem(UMATextRecipe utr)
         {
             if (!_additiveRecipes.ContainsKey(utr.wardrobeSlot))
             {
@@ -1810,8 +1822,11 @@ namespace UMA.CharacterSystem
             }
             _additiveRecipes[utr.wardrobeSlot].Add(utr);
         }
-
-        private void RemoveWearableItem(UMATextRecipe utr, bool removeAllMatching = false)
+        /// <summary>
+        /// Removes a wearable item from the Avatar. If removeAllMatching is true, 
+        /// all instances of the item will be removed.
+        /// </summary>
+        public void RemoveWearableItem(UMATextRecipe utr, bool removeAllMatching = false)
         {
             string thisRecipeSlot = utr.wardrobeSlot;
             if (!_additiveRecipes.ContainsKey(thisRecipeSlot))
@@ -1828,6 +1843,27 @@ namespace UMA.CharacterSystem
                 // Remove the first instance of the recipe
                 AdditiveRecipes[thisRecipeSlot].Remove(utr);
             }
+        }
+
+        //
+        public List<UMATextRecipe> GetWearableItems(string SlotName, bool Appended)
+        {
+            if (Appended)
+            {
+                if (_additiveRecipes.ContainsKey(SlotName))
+                {
+                    return _additiveRecipes[SlotName];
+                }
+                return new List<UMATextRecipe>();
+            }
+            else
+            {
+                if (_wardrobeRecipes.ContainsKey(SlotName))
+                {
+                    return new List<UMATextRecipe> { _wardrobeRecipes[SlotName] };
+                }
+            }
+            return null;
         }
         #endregion
 

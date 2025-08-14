@@ -582,7 +582,21 @@ namespace UMA.CharacterSystem.Editors
                 }
                 DropAreaGUI(dropArea, thisRecipesProp);
             }
-           EditorGUI.EndProperty();
+            try
+            {
+                EditorGUI.EndProperty();
+            }
+            catch (System.Exception e)
+            {
+                // log all the EditorApplication states
+                Debug.LogError("EditorApplication.isCompiling: " + EditorApplication.isCompiling);
+                Debug.LogError("EditorApplication.isUpdating: " + EditorApplication.isUpdating);
+                Debug.LogError("EditorApplication.isPlaying: " + EditorApplication.isPlaying);
+                Debug.LogError("EditorApplication.isPaused: " + EditorApplication.isPaused);
+                Debug.LogError("EditorApplication.isPlayingOrWillChangePlaymode: " + EditorApplication.isPlayingOrWillChangePlaymode);
+                Debug.LogError("Error in WardrobeRecipeListPropertyDrawer: " + e.Message);
+            }
+
         }
 
         private void SortBySlot(SerializedProperty thisRecipesProp)

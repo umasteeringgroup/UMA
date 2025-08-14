@@ -386,7 +386,11 @@ namespace UMA
 #if UNITY_EDITOR
 				if (ugm.materialFragments != null && ugm.materialFragments.Count > 0 && ugm.materialFragments[0].overlayData != null && ugm.materialFragments[0].overlayData.Length > 0)
                 {
-                    ugm.material.name = ugm.material.name + "_" + ugm.materialFragments[0].overlayData[0].overlayName;
+					if (ugm.materialFragments[0].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial &&
+						ugm.materialFragments[0].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingTextures)
+					{
+						ugm.material.name = ugm.material.name + "_" + ugm.materialFragments[0].overlayData[0].overlayName;
+					}
                 }
 #endif
                 ApplyMaterialParameters(ugm,umaData,ugm.material);
