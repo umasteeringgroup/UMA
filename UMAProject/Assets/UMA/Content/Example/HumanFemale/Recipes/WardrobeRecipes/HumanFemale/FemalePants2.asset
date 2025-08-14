@@ -29,6 +29,7 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
   disabled: 0
@@ -36,6 +37,7 @@ MonoBehaviour:
     Accent","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-1}],"sharedColorCount":2,"race":"HumanFemale","packedDna":[],"uvOverride":0}'
   forceKeep: 0
   labelLocalFiles: 0
+  noAutoAdd: 0
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

@@ -3,8 +3,9 @@
 --- !u!90 &9000000
 Avatar:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: DefaultMaleAvatar
   m_AvatarSize: 32656
   m_Avatar:
@@ -754,8 +755,7 @@ Avatar:
           q: {x: 0.0000003917376, y: -0.0000000013969839, z: -0.000000009436918, w: 1}
           s: {x: 1, y: 0.99999994, z: 1}
         - t: {x: -0.035068855, y: 0.000000066298526, z: -0.000000026077032}
-          q: {x: -0.00000007136259, y: -0.000000001862645, z: -0.000000010142686,
-            w: 1}
+          q: {x: -0.00000007136259, y: -0.000000001862645, z: -0.000000010142686, w: 1}
           s: {x: 1, y: 1.0006862, z: 1.0006863}
         - t: {x: -0.03506906, y: -0.0000001618755, z: -0.00000013411045}
           q: {x: 0.0000002514571, y: -9.313226e-10, z: 0.00000000819273, w: 1}
@@ -773,8 +773,7 @@ Avatar:
           q: {x: -0.04384483, y: -0.040393144, z: -0.0217519, w: 0.9979844}
           s: {x: 0.9999999, y: 0.9999998, z: 0.9999999}
         - t: {x: -0.11892725, y: 0.00000003306195, z: 0.00000005401671}
-          q: {x: 0.000000051106326, y: -0.0000000018626451, z: -0.000000006519258,
-            w: 1}
+          q: {x: 0.000000051106326, y: -0.0000000018626451, z: -0.000000006519258, w: 1}
           s: {x: 1, y: 1.0386349, z: 1.0190157}
         - t: {x: -0.4757111, y: 0.00000012802167, z: 0.00000005190898}
           q: {x: 0.85952497, y: 0.0017339684, z: -0.50931305, w: 0.04259278}
@@ -1233,8 +1232,7 @@ Avatar:
           q: {x: 0.0000003917376, y: -0.0000000013969839, z: -0.000000009436918, w: 1}
           s: {x: 1, y: 0.99999994, z: 1}
         - t: {x: -0.035068855, y: 0.000000066298526, z: -0.000000026077032}
-          q: {x: -0.00000007136259, y: -0.000000001862645, z: -0.000000010142686,
-            w: 1}
+          q: {x: -0.00000007136259, y: -0.000000001862645, z: -0.000000010142686, w: 1}
           s: {x: 1, y: 1.0006862, z: 1.0006863}
         - t: {x: -0.03506906, y: -0.0000001618755, z: -0.00000013411045}
           q: {x: 0.0000002514571, y: -9.313226e-10, z: 0.00000000819273, w: 1}
@@ -1252,8 +1250,7 @@ Avatar:
           q: {x: -0.04384483, y: -0.040393144, z: -0.0217519, w: 0.9979844}
           s: {x: 0.9999999, y: 0.9999998, z: 0.9999999}
         - t: {x: -0.11892725, y: 0.00000003306195, z: 0.00000005401671}
-          q: {x: 0.000000051106326, y: -0.0000000018626451, z: -0.000000006519258,
-            w: 1}
+          q: {x: 0.000000051106326, y: -0.0000000018626451, z: -0.000000006519258, w: 1}
           s: {x: 1, y: 1.0386349, z: 1.0190157}
         - t: {x: -0.4757111, y: 0.00000012802167, z: 0.00000005190898}
           q: {x: 0.85952497, y: 0.0017339684, z: -0.50931305, w: 0.04259278}
@@ -1877,8 +1874,7 @@ Avatar:
               q: {x: 0.71245694, y: 0.0000031481031, z: -0.7017165, w: -0.0000040056184}
               s: {x: 0.9317244, y: 0.9317244, z: 0.9317244}
             - t: {x: 0.000000071639114, y: 0.000000109694405, z: -0.00000042982063}
-              q: {x: -0.0000043809414, y: 0.000000029802322, z: -0.000000029802322,
-                w: 1.0000005}
+              q: {x: -0.0000043809414, y: 0.000000029802322, z: -0.000000029802322, w: 1.0000005}
               s: {x: 1, y: 0.99999994, z: 1}
             - t: {x: -0.10662583, y: -0.034980297, z: 0.11798751}
               q: {x: 0.71245694, y: -0.0000031415839, z: -0.7017165, w: 0.0000041662715}
@@ -2033,656 +2029,6 @@ Avatar:
         m_RightHand:
           data:
             m_HandBoneIndex: 130000001400000015000000160000001700000018000000100000001100000012000000190000001a0000001b0000001c0000001d0000001e000000
-        m_Handles: []
-        m_ColliderArray:
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.21939524, y: 0.18450424, z: 0.27675635}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0.19675818, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.39351636, y: 0.06886536, z: 0.06886536}
-          m_Type: 4
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -70
-          m_MaxLimitX: 10
-          m_MaxLimitY: 45
-          m_MaxLimitZ: 60
-        - m_X:
-            t: {x: 0.19675802, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.39351603, y: 0.06886531, z: 0.06886531}
-          m_Type: 4
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -70
-          m_MaxLimitX: 10
-          m_MaxLimitY: 45
-          m_MaxLimitZ: 60
-        - m_X:
-            t: {x: 0.21668865, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.4333773, y: 0.075841025, z: 0.075841025}
-          m_Type: 4
-          m_XMotionType: 2
-          m_YMotionType: 1
-          m_ZMotionType: 2
-          m_MinLimitX: 0
-          m_MaxLimitX: 130
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 10
-        - m_X:
-            t: {x: 0.2166889, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.4333778, y: 0.075841114, z: 0.075841114}
-          m_Type: 4
-          m_XMotionType: 2
-          m_YMotionType: 1
-          m_ZMotionType: 2
-          m_MinLimitX: 0
-          m_MaxLimitX: 130
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 10
-        - m_X:
-            t: {x: 0.04396996, y: -0.079233125, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.08793992, y: 0.3169325, z: 0.1491447}
-          m_Type: 1
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -45
-          m_MaxLimitX: 20
-          m_MaxLimitY: 30
-          m_MaxLimitZ: 50
-        - m_X:
-            t: {x: 0.043949425, y: -0.079233125, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.08789885, y: 0.3169325, z: 0.1491447}
-          m_Type: 1
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -45
-          m_MaxLimitX: 20
-          m_MaxLimitY: 30
-          m_MaxLimitZ: 50
-        - m_X:
-            t: {x: 0.08140807, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.16281614, y: 0.1476034, z: 0.2214051}
-          m_Type: 2
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -7
-          m_MaxLimitX: 7
-          m_MaxLimitY: 7
-          m_MaxLimitZ: 7
-        - m_X:
-            t: {x: 0.0873186, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.1746372, y: 0.22371705, z: 0.37286174}
-          m_Type: 1
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -11
-          m_MaxLimitX: 11
-          m_MaxLimitY: 11
-          m_MaxLimitZ: 11
-        - m_X:
-            t: {x: 0.04530137, y: 0.009060274, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.09060274, y: 0.029898906, z: 0.029898906}
-          m_Type: 2
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -10
-          m_MaxLimitX: 10
-          m_MaxLimitY: 20
-          m_MaxLimitZ: 5
-        - m_X:
-            t: {x: 0.04530137, y: 0.04474341, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.22371705, y: 0.16778778, z: 0.1491447}
-          m_Type: 2
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -5
-          m_MaxLimitX: 8
-          m_MaxLimitY: 20
-          m_MaxLimitZ: 10
-        - m_X:
-            t: {x: 0.07166604, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.14333208, y: 0.07457235, z: 0.037286174}
-          m_Type: 0
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0.07166605, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.1433321, y: 0.07457235, z: 0.037286174}
-          m_Type: 0
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0.13089971, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.26179942, y: 0.065449856, z: 0.065449856}
-          m_Type: 4
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -100
-          m_MaxLimitX: 100
-          m_MaxLimitY: 20
-          m_MaxLimitZ: 45
-        - m_X:
-            t: {x: 0.13089964, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.26179928, y: 0.06544982, z: 0.06544982}
-          m_Type: 4
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -100
-          m_MaxLimitX: 100
-          m_MaxLimitY: 20
-          m_MaxLimitZ: 45
-        - m_X:
-            t: {x: 0.1331566, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.2663132, y: 0.0665783, z: 0.0665783}
-          m_Type: 4
-          m_XMotionType: 2
-          m_YMotionType: 1
-          m_ZMotionType: 2
-          m_MinLimitX: -130
-          m_MaxLimitX: 0
-          m_MaxLimitY: 5
-          m_MaxLimitZ: 20
-        - m_X:
-            t: {x: 0.13315685, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.2663137, y: 0.066578425, z: 0.066578425}
-          m_Type: 4
-          m_XMotionType: 2
-          m_YMotionType: 1
-          m_ZMotionType: 2
-          m_MinLimitX: 0
-          m_MaxLimitX: 130
-          m_MaxLimitY: 5
-          m_MaxLimitZ: 20
-        - m_X:
-            t: {x: 0.03328915, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.0665783, y: 0.01331566, z: 0.03328915}
-          m_Type: 1
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -30
-          m_MaxLimitX: 30
-          m_MaxLimitY: 40
-          m_MaxLimitZ: 25
-        - m_X:
-            t: {x: 0.033289213, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.066578425, y: 0.013315685, z: 0.033289213}
-          m_Type: 1
-          m_XMotionType: 2
-          m_YMotionType: 2
-          m_ZMotionType: 2
-          m_MinLimitX: -30
-          m_MaxLimitX: 30
-          m_MaxLimitY: 40
-          m_MaxLimitZ: 25
-        - m_X:
-            t: {x: 0.01797066, y: -0.037286174, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.03594132, y: 0.07457235, z: 0.1491447}
-          m_Type: 0
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0.017970663, y: -0.037286174, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.035941325, y: 0.07457235, z: 0.1491447}
-          m_Type: 0
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0.05, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.1, y: 1, z: 1}
-          m_Type: 0
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0.05, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.1, y: 1, z: 1}
-          m_Type: 0
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0.05, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 0.1, y: 1, z: 1}
-          m_Type: 0
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
-        - m_X:
-            t: {x: 0, y: 0, z: 0}
-            q: {x: 0, y: 0, z: 0, w: 1}
-            s: {x: 1, y: 1, z: 1}
-          m_Type: 1
-          m_XMotionType: 0
-          m_YMotionType: 0
-          m_ZMotionType: 0
-          m_MinLimitX: 0
-          m_MaxLimitX: 0
-          m_MaxLimitY: 0
-          m_MaxLimitZ: 0
         m_HumanBoneIndex: 010000003200000036000000330000003700000034000000380000000300000004000000ffffffff05000000060000001f0000000c000000200000000d000000210000000e000000220000000f00000035000000390000000a000000080000000b000000
         m_HumanBoneMass:
         - 0.14545456
@@ -2710,7 +2056,6 @@ Avatar:
         - 0
         - 0
         - 0
-        m_ColliderIndex: 000000000100000002000000030000000400000005000000060000000700000008000000ffffffff090000000a0000000b0000000c0000000d0000000e0000000f0000001000000011000000120000001300000014000000150000001600000017000000
         m_Scale: 1.053375
         m_ArmTwist: 0.5
         m_ForeArmTwist: 0.5
@@ -2739,161 +2084,177 @@ Avatar:
         m_X: []
     m_RootMotionSkeletonIndexArray: 
   m_TOS:
-    0: 
-    21667091: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LipsInferior/LipsInferiorAdjust
-    38228525: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLowMaxilar/LeftLowMaxilarAdjust
-    42431125: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowUp
-    116083838: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightForeArmTwist
-    169743528: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEar
-    179881168: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightArmAdjust
-    182684228: Root/Global/Position/Hips/LeftUpLeg
-    198576438: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye
-    224542192: Root/Global/Position/Hips/LeftUpLeg/LeftUpLegAdjust
-    299272970: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseTop
-    337040016: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftCheek
-    360336113: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand
-    386353372: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LipsInferior
-    462876324: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightNose/RightNoseAdjust
-    476240682: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightShoulderAdjust
-    477835020: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger05_01/RightHandFinger05_02/RightHandFinger05_03
-    512994644: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LipsSuperior
-    518646176: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseMiddle/NoseMiddleAdjust
-    536073790: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightForeArmAdjust
-    539155334: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmTwist
-    599672123: Root/Global/Position/Hips/RightUpLeg/RightLeg/RightLegAdjust
-    662132622: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightTrapezius
-    689321054: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftEyeGlobe
-    714344374: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLipsSuperiorMiddle
-    715756407: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLips/LeftLipsAdjust
-    751084522: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger04_01/LeftHandFinger04_02/LeftHandFinger04_03
-    793309915: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLipsInferior
-    866512463: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm
-    877460158: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLipsSuperiorMiddle/LeftLipsSuperiorMiddleAdjust
-    879850986: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftCheek/LeftCheekAdjust
-    891364321: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLips
-    907124386: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftUpperLid
-    945871846: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LipsSuperior/LipsSuperiorAdjust
-    957575247: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLipsSuperiorMiddle/RightLipsSuperiorMiddleAdjust
-    988509136: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowMiddle/RightEyebrowMiddleAdjust
     1064671690: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01/LeftHandFinger05_02/LeftHandFinger05_03
-    1118404042: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowLow
-    1164066602: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger02_01/LeftHandFinger02_02/LeftHandFinger02_03
-    1239200587: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger01_01
-    1266469188: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01/LeftHandFinger05_02
-    1286013684: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftShoulderAdjust
-    1291033261: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger01_01/RightHandFinger01_02/RightHandFinger01_03
-    1378625489: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLips
-    1379299844: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftOuterBreast
-    1424207548: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEar/RightEarAdjust
-    1456669962: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger03_01/LeftHandFinger03_02/LeftHandFinger03_03
-    1462924696: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01
+    4080949736: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLipsInferior/RightLipsInferiorAdjust
+    2598818297: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEar/LeftEarAdjust
+    2816949640: Root/Global
+    4245466658: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm
+    2327698959: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseMiddle
+    879850986: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftCheek/LeftCheekAdjust
+    2133739178: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightLowerLid
+    2897438087: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmAdjust
+    4138130881: Root/Global/Position/Hips/LeftUpLeg/LeftLeg/LeftLegAdjust
+    3009099370: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightEyeAdjust
+    1907454282: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger01_01/LeftHandFinger01_02/LeftHandFinger01_03
+    4231946274: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/NeckAdjust
+    3822418880: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01
     1523076325: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightForeArmTwist/RightForeArmTwistAdjust
-    1529683663: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowUp/LeftEyebrowUpAdjust
-    1533615269: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01
-    1541354309: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseBase
+    2299478877: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01/RightHandFinger03_02/RightHandFinger03_03
+    988509136: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowMiddle/RightEyebrowMiddleAdjust
+    2503417370: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightNose
+    0: 
+    224542192: Root/Global/Position/Hips/LeftUpLeg/LeftUpLegAdjust
+    1291033261: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger01_01/RightHandFinger01_02/RightHandFinger01_03
+    512994644: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LipsSuperior
+    3111053069: Root/Global/Position/Hips/RightUpLeg
     1609010662: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/HeadAdjust
+    3246316322: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand
+    1918446148: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger03_01
+    793309915: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLipsInferior
+    689321054: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftEyeGlobe
+    3044695888: Root/Global/Position/Hips/RightUpLeg/RightLeg/RightFoot/RightToeBase
+    3434993914: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowLow/LeftEyebrowLowAdjust
+    3157372813: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLowCheek/LeftLowCheekAdjust
+    1378625489: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLips
+    1424207548: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEar/RightEarAdjust
+    2420748341: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightUpperLid
+    3769711243: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseBase/NoseBaseAdjust
+    116083838: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightForeArmTwist
+    3211325430: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible
+    3727344840: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger03_01/LeftHandFinger03_02
+    3648415805: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftLowerLid
+    169743528: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEar
+    1675052133: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftTrapezius
+    518646176: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseMiddle/NoseMiddleAdjust
+    1456669962: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger03_01/LeftHandFinger03_02/LeftHandFinger03_03
     1617059106: Root/Global/Position
     1621067818: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder
-    1659837042: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEar
-    1663502316: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye
-    1675052133: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftTrapezius
-    1777662011: Root/Global/Position/Hips/RightUpLeg/RightGluteus
-    1819021418: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLowMaxilar/RightLowMaxilarAdjust
-    1839225688: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightLowerLid/RightLowerLidAdjust
-    1870018084: Root/Global/Position/Hips/LeftUpLeg/LeftLeg/LeftFoot/LeftToeBase
-    1907454282: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger01_01/LeftHandFinger01_02/LeftHandFinger01_03
-    1918446148: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger03_01
-    1920487238: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/UpperLips
-    1927662342: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger04_01/LeftHandFinger04_02
-    1980504295: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowUp
-    1995311778: Root/Global/Position/Hips/RightUpLeg/RightLeg/RightFoot
-    2000019973: Root/Global/Position/Hips/LowerBack/Spine/SpineAdjust
-    2017219695: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLowCheek/RightLowCheekAdjust
-    2046145451: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseTop/NoseTopAdjust
-    2114077561: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01
-    2122521800: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/Tongue01
-    2122662900: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01/RightHandFinger04_02/RightHandFinger04_03
-    2133739178: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightLowerLid
-    2161737935: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftUpperLid/LeftUpperLidAdjust
-    2188727985: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLips/RightLipsAdjust
-    2226288596: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftArmAdjust
-    2244250826: Root/Global/Position/Hips/LeftUpLeg/LeftLeg
-    2260767760: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightOuterBreast/RightInnerBreast
-    2289679091: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightCheek
-    2299478877: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01/RightHandFinger03_02/RightHandFinger03_03
-    2327698959: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseMiddle
-    2354315799: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Spine1Adjust
-    2404260553: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightEyeGlobe
-    2414024973: Root/Global/Position/Hips/RightUpLeg/RightUpLegAdjust
-    2420748341: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightUpperLid
-    2435921024: Root/Global/Position/Hips/LowerBack/Spine/Spine1
-    2458370017: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/MandibleAdjust
-    2503417370: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightNose
-    2527973501: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/UpperLips/UpperLipsAdjust
-    2598818297: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEar/LeftEarAdjust
-    2652031526: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLowMaxilar
-    2660641802: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightOuterBreast
-    2745092786: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightCheek/RightCheekAdjust
-    2750999648: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01/RightHandFinger04_02
-    2810708513: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck
-    2816949640: Root/Global
-    2857305310: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm
-    2878241383: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/Tongue01/Tongue02
-    2897438087: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmAdjust
-    2903434439: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmTwist/LeftForeArmTwistAdjust
-    2904080460: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger01_01/LeftHandFinger01_02
-    2940772681: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLipsSuperiorMiddle
-    3008255270: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowMiddle/LeftEyebrowMiddleAdjust
-    3009099370: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightEyeAdjust
-    3024113239: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftLowerLid/LeftLowerLidAdjust
-    3044695888: Root/Global/Position/Hips/RightUpLeg/RightLeg/RightFoot/RightToeBase
-    3047310428: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLipsInferior/LeftLipsInferiorAdjust
-    3066451557: Root
-    3111053069: Root/Global/Position/Hips/RightUpLeg
-    3157372813: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLowCheek/LeftLowCheekAdjust
-    3173065186: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder
-    3192850701: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowUp/RightEyebrowUpAdjust
-    3201243915: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger05_01/RightHandFinger05_02
-    3204673589: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm
-    3211325430: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible
-    3246316322: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand
-    3272509006: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightUpperLid/RightUpperLidAdjust
-    3326620003: Root/Global/Position/Hips/RightUpLeg/RightLeg
-    3334349852: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger05_01
-    3352536891: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLowCheek
-    3376823606: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLipsInferior
-    3390097063: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger01_01/RightHandFinger01_02
+    957575247: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLipsSuperiorMiddle/RightLipsSuperiorMiddleAdjust
     3404025121: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger02_01
-    3434993914: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowLow/LeftEyebrowLowAdjust
-    3491393075: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLowMaxilar
-    3535411670: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftNose/LeftNoseAdjust
-    3568971240: Root/Global/Position/Hips/LowerBack
-    3605940535: Root/Global/Position/Hips
-    3629179599: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger01_01
-    3648415805: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftLowerLid
-    3651742069: Root/Global/Position/Hips/LeftUpLeg/LeftLeg/LeftFoot
-    3717621923: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftEyeAdjust
-    3720766518: Root/Global/Position/Hips/LowerBack/LowerBackAdjust/LowerBackBelly
-    3727344840: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger03_01/LeftHandFinger03_02
-    3765766273: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowMiddle
-    3769711243: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseBase/NoseBaseAdjust
-    3822418880: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01
-    3887318666: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger02_01/LeftHandFinger02_02
-    3911016926: Root/Global/Position/Hips/LowerBack/Spine
-    3944536773: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowMiddle
-    3958452133: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01/RightHandFinger02_02/RightHandFinger02_03
-    3975283866: Root/Global/Position/Hips/LeftUpLeg/LeftGluteus
-    3980975898: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01/RightHandFinger02_02
-    4019065597: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger04_01
-    4034865265: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01/RightHandFinger03_02
-    4080949736: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLipsInferior/RightLipsInferiorAdjust
-    4082750686: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftNose
-    4138130881: Root/Global/Position/Hips/LeftUpLeg/LeftLeg/LeftLegAdjust
-    4178474745: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftOuterBreast/LeftInnerBreast
+    2046145451: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseTop/NoseTopAdjust
+    1533615269: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01
+    599672123: Root/Global/Position/Hips/RightUpLeg/RightLeg/RightLegAdjust
+    1995311778: Root/Global/Position/Hips/RightUpLeg/RightLeg/RightFoot
+    1239200587: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger01_01
+    462876324: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightNose/RightNoseAdjust
+    751084522: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger04_01/LeftHandFinger04_02/LeftHandFinger04_03
+    1164066602: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger02_01/LeftHandFinger02_02/LeftHandFinger02_03
+    2114077561: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01
+    877460158: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLipsSuperiorMiddle/LeftLipsSuperiorMiddleAdjust
     4216412548: Root/Global/Position/Hips/LowerBack/LowerBackAdjust
-    4227753823: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head
-    4231946274: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/NeckAdjust
-    4241942192: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowLow
-    4245466658: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm
+    2161737935: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftUpperLid/LeftUpperLidAdjust
+    360336113: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand
+    2122662900: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01/RightHandFinger04_02/RightHandFinger04_03
+    2904080460: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger01_01/LeftHandFinger01_02
+    3535411670: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftNose/LeftNoseAdjust
+    1980504295: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowUp
+    3326620003: Root/Global/Position/Hips/RightUpLeg/RightLeg
+    4082750686: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftNose
+    1462924696: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01
+    714344374: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLipsSuperiorMiddle
+    1266469188: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01/LeftHandFinger05_02
     4251668408: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLowCheek
+    907124386: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftUpperLid
+    3008255270: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowMiddle/LeftEyebrowMiddleAdjust
     4291181972: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowLow/RightEyebrowLowAdjust
+    3352536891: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftLowCheek
+    539155334: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmTwist
+    3958452133: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01/RightHandFinger02_02/RightHandFinger02_03
+    182684228: Root/Global/Position/Hips/LeftUpLeg
+    3173065186: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder
+    2260767760: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightOuterBreast/RightInnerBreast
+    2244250826: Root/Global/Position/Hips/LeftUpLeg/LeftLeg
+    3024113239: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftLowerLid/LeftLowerLidAdjust
+    3720766518: Root/Global/Position/Hips/LowerBack/LowerBackAdjust/LowerBackBelly
+    3629179599: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger01_01
+    4178474745: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftOuterBreast/LeftInnerBreast
+    2857305310: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm
+    337040016: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftCheek
+    662132622: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightTrapezius
+    866512463: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm
+    42431125: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowUp
+    477835020: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger05_01/RightHandFinger05_02/RightHandFinger05_03
+    3980975898: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger02_01/RightHandFinger02_02
+    3887318666: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger02_01/LeftHandFinger02_02
+    715756407: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLips/LeftLipsAdjust
+    3944536773: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowMiddle
+    198576438: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye
+    3911016926: Root/Global/Position/Hips/LowerBack/Spine
+    4241942192: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowLow
+    2435921024: Root/Global/Position/Hips/LowerBack/Spine/Spine1
+    2652031526: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLowMaxilar
+    3066451557: Root
+    3605940535: Root/Global/Position/Hips
+    2404260553: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightEyeGlobe
+    1870018084: Root/Global/Position/Hips/LeftUpLeg/LeftLeg/LeftFoot/LeftToeBase
+    1663502316: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye
+    476240682: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightShoulderAdjust
+    1659837042: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEar
+    3201243915: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger05_01/RightHandFinger05_02
+    1819021418: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLowMaxilar/RightLowMaxilarAdjust
+    3272509006: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightUpperLid/RightUpperLidAdjust
+    2527973501: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/UpperLips/UpperLipsAdjust
+    2750999648: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger04_01/RightHandFinger04_02
+    3975283866: Root/Global/Position/Hips/LeftUpLeg/LeftGluteus
+    3047310428: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLipsInferior/LeftLipsInferiorAdjust
+    3717621923: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEye/LeftEyeAdjust
+    891364321: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLips
+    1777662011: Root/Global/Position/Hips/RightUpLeg/RightGluteus
+    179881168: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightArmAdjust
+    3390097063: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger01_01/RightHandFinger01_02
+    1286013684: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftShoulderAdjust
+    2000019973: Root/Global/Position/Hips/LowerBack/Spine/SpineAdjust
+    3651742069: Root/Global/Position/Hips/LeftUpLeg/LeftLeg/LeftFoot
+    299272970: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseTop
+    1118404042: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowLow
+    38228525: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLowMaxilar/LeftLowMaxilarAdjust
+    2940772681: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLipsSuperiorMiddle
+    3192850701: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowUp/RightEyebrowUpAdjust
+    4227753823: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head
+    3568971240: Root/Global/Position/Hips/LowerBack
+    3491393075: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LeftLowMaxilar
+    2188727985: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLips/RightLipsAdjust
+    2660641802: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightOuterBreast
+    4019065597: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger04_01
+    536073790: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightForeArmAdjust
+    1927662342: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger04_01/LeftHandFinger04_02
+    21667091: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LipsInferior/LipsInferiorAdjust
+    1529683663: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEyebrowUp/LeftEyebrowUpAdjust
+    1541354309: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/NoseBase
+    2289679091: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightCheek
+    2122521800: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/Tongue01
+    2878241383: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/Tongue01/Tongue02
+    2226288596: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftArmAdjust
+    1379299844: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftOuterBreast
+    2414024973: Root/Global/Position/Hips/RightUpLeg/RightUpLegAdjust
+    1920487238: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/UpperLips
+    2354315799: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Spine1Adjust
+    2458370017: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/MandibleAdjust
+    386353372: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/LipsInferior
+    2810708513: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck
+    2903434439: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftForeArmTwist/LeftForeArmTwistAdjust
+    2745092786: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightCheek/RightCheekAdjust
+    3204673589: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm
+    3334349852: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger05_01
+    3376823606: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLipsInferior
+    3765766273: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowMiddle
+    4034865265: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01/RightHandFinger03_02
+    945871846: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LipsSuperior/LipsSuperiorAdjust
+    1839225688: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightLowerLid/RightLowerLidAdjust
+    2017219695: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLowCheek/RightLowCheekAdjust
+  m_HumanDescription:
+    serializedVersion: 3
+    m_Human: []
+    m_Skeleton: []
+    m_ArmTwist: 0.5
+    m_ForeArmTwist: 0.5
+    m_UpperLegTwist: 0.5
+    m_LegTwist: 0.5
+    m_ArmStretch: 0.05
+    m_LegStretch: 0.05
+    m_FeetSpacing: 0
+    m_GlobalScale: 1
+    m_RootMotionBoneName: 
+    m_HasTranslationDoF: 0
+    m_HasExtraRoot: 0
+    m_SkeletonHasParents: 1

@@ -39,6 +39,7 @@ MonoBehaviour:
   - Feet
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
   disabled: 0
@@ -46,6 +47,7 @@ MonoBehaviour:
     Color 1","colors":[255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-1},{"name":"SharedColor1","colors":[8,225,90,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-10821368},{"name":"SharedColor3","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-1},{"name":"SharedColor2","colors":[170,30,126,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-8511830},{"name":"Skin","colors":[255,166,166,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"alwaysUpdateParms":false,"isBaseColor":false,"displayColor":-5855489}],"sharedColorCount":1,"race":"ToonFemale","packedDna":[],"uvOverride":0}'
   forceKeep: 0
   labelLocalFiles: 0
+  noAutoAdd: 0
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

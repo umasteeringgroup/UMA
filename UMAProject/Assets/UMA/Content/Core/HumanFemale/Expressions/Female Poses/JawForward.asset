@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -14,8 +15,9 @@ MonoBehaviour:
   poses:
   - bone: Mandible
     hash: 1574626840
-    position: {x: .00170255452, y: -1.60071068e-10, z: .00474590436}
-    rotation: {x: -4.91547851e-08, y: .00120402535, z: 2.87684561e-08, w: 1.00000274}
+    position: {x: 0.0017025545, y: -1.6007107e-10, z: 0.0047459044}
+    rotation: {x: -0.000000049154785, y: 0.0012040253, z: 0.000000028768456, w: 1.0000027}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   tweenPoses: []
   tweenWeights: []

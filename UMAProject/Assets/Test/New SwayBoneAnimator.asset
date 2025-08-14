@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44ea7e4d7cd8f1340912b4dfdd1a693d, type: 3}
   m_Name: New SwayBoneAnimator
   m_EditorClassIdentifier: 
-  AnchorBone: 
+  AnchorBoneName: 
   inertia: 0.75
   limit: 2
   elasticity: 2

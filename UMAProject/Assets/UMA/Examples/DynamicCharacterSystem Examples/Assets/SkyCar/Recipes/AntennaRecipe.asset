@@ -29,9 +29,14 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
+  disabled: 0
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"SkyCarAntenna","scale":100,"copyIdx":-1,"overlays":[{"id":"SkyCarBodyOverlay","colorIdx":0,"rect":[0,0,0,0],"data":[]}]}],"colors":[],"fColors":[{"name":"","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"sharedColorCount":0,"race":"","packedDna":[]}'
+  forceKeep: 0
+  labelLocalFiles: 0
+  noAutoAdd: 0
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

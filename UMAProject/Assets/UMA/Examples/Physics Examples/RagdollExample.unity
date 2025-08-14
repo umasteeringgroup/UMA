@@ -11739,14 +11739,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 397708212}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -11764,26 +11791,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -11807,8 +11842,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -11816,7 +11849,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -12393,10 +12425,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -12466,6 +12500,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -12504,6 +12539,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -12544,6 +12580,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -12582,6 +12619,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -12622,6 +12660,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -12660,6 +12699,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -12699,6 +12739,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -12736,6 +12777,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -12773,6 +12815,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -12810,6 +12853,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -12848,6 +12892,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.001
       smooshDistance: 0.001
@@ -12885,6 +12930,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -12922,6 +12968,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -16912,14 +16959,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 491856412}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 7057b3bb6c38031459bffc3b43b345e3, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -16937,26 +17011,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -16980,8 +17062,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -16989,7 +17069,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: Werewolf
@@ -17406,10 +17485,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -17478,6 +17559,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -17515,6 +17597,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -17552,6 +17635,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -17589,6 +17673,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -17626,6 +17711,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -17663,6 +17749,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -17700,6 +17787,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -17737,6 +17825,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -17774,6 +17863,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -17811,6 +17901,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -17848,6 +17939,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -18960,14 +19052,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 516963719}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -18985,26 +19104,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -19028,8 +19155,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -19037,7 +19162,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -19451,10 +19575,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -19524,6 +19650,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -19562,6 +19689,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -19600,6 +19728,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -19640,6 +19769,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -19678,6 +19808,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -19718,6 +19849,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -19756,6 +19888,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -19795,6 +19928,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -19832,6 +19966,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -19869,6 +20004,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -19907,6 +20043,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -19944,6 +20081,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -26398,14 +26536,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 755643401}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -26423,26 +26588,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -26466,8 +26639,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -26475,7 +26646,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -26889,10 +27059,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -26962,6 +27134,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -27000,6 +27173,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -27038,6 +27212,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -27078,6 +27253,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -27116,6 +27292,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -27156,6 +27333,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -27194,6 +27372,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -27233,6 +27412,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -27270,6 +27450,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -27307,6 +27488,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -27344,6 +27526,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -33290,14 +33473,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 929426246}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -33315,26 +33525,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -33358,8 +33576,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -33367,7 +33583,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -33944,10 +34159,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -34017,6 +34234,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -34055,6 +34273,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -34095,6 +34314,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -34133,6 +34353,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -34173,6 +34394,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -34211,6 +34433,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -34250,6 +34473,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -34287,6 +34511,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -34324,6 +34549,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -34361,6 +34587,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -34399,6 +34626,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.001
       smooshDistance: 0.001
@@ -34436,6 +34664,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -34473,6 +34702,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -35609,14 +35839,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 951770137}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -35634,26 +35891,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -35677,8 +35942,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -35686,7 +35949,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -36160,10 +36422,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -36233,6 +36497,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -36271,6 +36536,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -36311,6 +36577,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -36349,6 +36616,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -36389,6 +36657,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -36427,6 +36696,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -36466,6 +36736,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -36503,6 +36774,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -36540,6 +36812,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -36577,6 +36850,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -36614,6 +36888,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -36651,6 +36926,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -39830,14 +40106,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 1060424590}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -39855,26 +40158,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -39898,8 +40209,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -39907,7 +40216,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -40484,10 +40792,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -40557,6 +40867,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -40595,6 +40906,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -40635,6 +40947,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -40673,6 +40986,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -40713,6 +41027,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -40751,6 +41066,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -40790,6 +41106,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -40827,6 +41144,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -40864,6 +41182,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -40901,6 +41220,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -40939,6 +41259,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.001
       smooshDistance: 0.001
@@ -40976,6 +41297,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -41013,6 +41335,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -50468,16 +50791,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 1355390908}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   CharacterDestroyed:
@@ -50486,7 +50819,16 @@ MonoBehaviour:
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -50495,11 +50837,27 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -50523,8 +50881,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -50532,7 +50888,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -51065,10 +51420,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -51126,6 +51483,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -51164,6 +51522,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -51202,6 +51561,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -51240,6 +51600,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -51280,6 +51641,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -51318,6 +51680,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -51358,6 +51721,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -51396,6 +51760,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -51435,6 +51800,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -51472,6 +51838,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -51510,6 +51877,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -65311,14 +65679,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 1797285560}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -65336,26 +65731,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -65379,8 +65782,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -65388,7 +65789,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -65965,10 +66365,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -66038,6 +66440,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -66076,6 +66479,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -66116,6 +66520,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -66154,6 +66559,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -66194,6 +66600,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -66232,6 +66639,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -66271,6 +66679,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -66308,6 +66717,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -66345,6 +66755,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -66382,6 +66793,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -66420,6 +66832,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.001
       smooshDistance: 0.001
@@ -66457,6 +66870,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -66494,6 +66908,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -71337,14 +71752,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 1944390152}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -71362,26 +71804,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -71405,8 +71855,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -71414,7 +71862,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -71909,10 +72356,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -71982,6 +72431,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -72020,6 +72470,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -72058,6 +72509,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -72098,6 +72550,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -72136,6 +72589,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -72176,6 +72630,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -72214,6 +72669,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -72253,6 +72709,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -72290,6 +72747,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -72327,6 +72785,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -72365,6 +72824,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -72402,6 +72862,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -74387,14 +74848,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 1996584568}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -74412,26 +74900,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -74455,8 +74951,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -74464,7 +74958,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -75041,10 +75534,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -75114,6 +75609,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -75152,6 +75648,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -75192,6 +75689,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -75230,6 +75728,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -75270,6 +75769,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -75308,6 +75808,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -75347,6 +75848,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -75384,6 +75886,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -75421,6 +75924,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -75458,6 +75962,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -75496,6 +76001,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.001
       smooshDistance: 0.001
@@ -75533,6 +76039,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -75570,6 +76077,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -80201,14 +80709,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 2142631542}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -80226,26 +80761,34 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
+  - {fileID: 11400000, guid: b8f097e9dd7c12f41be671d16d75804d, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -80269,8 +80812,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -80278,7 +80819,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -80855,10 +81395,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -80928,6 +81470,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -80966,6 +81509,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -81006,6 +81550,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -81044,6 +81589,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -81084,6 +81630,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -81122,6 +81669,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -81161,6 +81709,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -81198,6 +81747,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -81235,6 +81785,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -81272,6 +81823,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -81310,6 +81862,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.001
       smooshDistance: 0.001
@@ -81347,6 +81900,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -81384,6 +81938,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0

@@ -64,6 +64,7 @@ MonoBehaviour:
   MaxQueuedConversionsPerFrame: 8
   Use32BitBuffers: 0
   SaveAndRestoreIgnoredItems: 0
+  skipAddressableRecipeLookupInEditor: 0
   meshCombiner: {fileID: 7275351159514515506}
   InitialScaleFactor: 1
   editorInitialScaleFactor: 1

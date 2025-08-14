@@ -25,6 +25,11 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
+  disabled: 0
   recipeString: '{"version":2,"packedSlotDataList":null,"slotsV2":[{"id":"ForearmTwist","scale":100,"copyIdx":-1,"overlays":[]}],"colors":[],"sharedColorCount":0,"race":null,"umaDna":{},"packedDna":[]}'
+  forceKeep: 0
+  labelLocalFiles: 0
+  noAutoAdd: 0

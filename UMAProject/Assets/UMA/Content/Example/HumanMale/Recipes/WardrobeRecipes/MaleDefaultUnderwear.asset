@@ -29,11 +29,14 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
+  disabled: 0
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":""},{"id":"MaleLegs","scale":100,"copyIdx":-1,"overlays":[{"id":"M_Underwear","colorIdx":0,"rect":[0.0,0.0,0.0,0.0],"isTransformed":false,"scale":{"x":0.0,"y":0.0,"z":0.0},"rotation":0.0,"blendModes":[0,0,0],"Tags":[],"tiling":[false,false,false]}],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":""}],"colors":[],"fColors":[{"name":"Undies","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0],"ShaderParms":[],"alwaysUpdate":false,"isBaseColor":false}],"sharedColorCount":1,"race":"HumanMale","packedDna":[]}'
   forceKeep: 0
   labelLocalFiles: 0
+  noAutoAdd: 0
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

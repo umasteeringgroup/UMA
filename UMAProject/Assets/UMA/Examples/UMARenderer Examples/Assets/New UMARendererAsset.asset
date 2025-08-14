@@ -23,3 +23,6 @@ MonoBehaviour:
   _CastShadows: 1
   _ReceiveShadows: 1
   _ClothProperties: {fileID: 0}
+  _RecalculateNormals: 0
+  _NormalAngle: 60
+  blendShapeNameStartsWith: 

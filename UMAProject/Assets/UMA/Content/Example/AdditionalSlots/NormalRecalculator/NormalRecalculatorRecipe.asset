@@ -25,8 +25,11 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
+  disabled: 0
   recipeString: '{"version":3,"packedSlotDataList":[],"slotsV2":[],"slotsV3":[{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0},{"id":"","scale":1,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.0,"smooshDistance":0.0,"smooshInvertX":false,"smooshInvertY":false,"smooshInvertZ":false,"smooshInvertDist":false,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"","uvOverride":0},{"id":"NormalRecalculator","scale":100,"copyIdx":-1,"overlays":[],"Tags":[],"Races":[],"blendShapeTarget":"","overSmoosh":0.009999999776482582,"smooshDistance":0.0010000000474974514,"smooshInvertX":false,"smooshInvertY":true,"smooshInvertZ":false,"smooshInvertDist":true,"smooshTargetTag":"","smooshableTag":"","isSwapSlot":false,"swapTag":"LongHair","uvOverride":0}],"colors":[],"fColors":[],"sharedColorCount":0,"race":"HumanMale","packedDna":[],"uvOverride":0,"wardrobeSet":[],"packedRecipeType":"Standard"}'
   forceKeep: 0
   labelLocalFiles: 0
+  noAutoAdd: 0

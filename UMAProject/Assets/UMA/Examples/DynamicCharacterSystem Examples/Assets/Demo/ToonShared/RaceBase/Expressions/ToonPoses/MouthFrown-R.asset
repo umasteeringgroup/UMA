@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -17,35 +18,42 @@ MonoBehaviour:
     position: {x: -2.910383e-11, y: -0.0007695742, z: 0.00017607212}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1.0000001, z: 1}
+    category: 
   - bone: LipsInferior
     hash: -499586065
     position: {x: -0.000040930703, y: 0.000011488795, z: 0.0038670003}
     rotation: {x: -0.041447427, y: -3.5210623e-11, z: -1.737192e-10, w: 0.99914074}
     scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    category: 
   - bone: RightLips
     hash: -1558564409
     position: {x: -0.003734149, y: 0.008295372, z: -0.029931698}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    category: 
   - bone: RightLipsInferior
     hash: 921042654
     position: {x: 0.0019218065, y: 0.0020550191, z: 0.000032767653}
     rotation: {x: -0.13850771, y: -0.0000000045430277, z: -0.000000009366618, w: 0.99036133}
     scale: {x: 1.0000001, y: 1.0000001, z: 1}
+    category: 
   - bone: RightMaskMouth
     hash: -1026653043
     position: {x: -0.003734149, y: 0.008295372, z: -0.029931698}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    category: 
   - bone: RightLipsSuperiorMiddle
     hash: -2093673696
     position: {x: 0.008625582, y: -0.0037208237, z: -0.0022308826}
     rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
     scale: {x: 1, y: 0.9999999, z: 1}
+    category: 
   - bone: RightLowCheek
     hash: -1122647396
     position: {x: 0.002142407, y: -0.0029858348, z: 0.002513364}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    category: 
   tweenPoses: []
   tweenWeights: []

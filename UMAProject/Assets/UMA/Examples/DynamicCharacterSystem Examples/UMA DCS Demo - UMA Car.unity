@@ -13,7 +13,7 @@ OcclusionCullingSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 9
+  serializedVersion: 10
   m_Fog: 0
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
@@ -42,8 +42,8 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
-  m_GIWorkflowMode: 1
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -66,9 +66,6 @@ LightmapSettings:
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
-    m_FinalGather: 0
-    m_FinalGatherFiltering: 1
-    m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
     m_MixedBakeMode: 2
     m_BakeBackend: 2
@@ -96,8 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000000, guid: c99cedcf2e4af5845a32e8f5f2f4371a,
-    type: 2}
+  m_LightingDataAsset: {fileID: 112000000, guid: c99cedcf2e4af5845a32e8f5f2f4371a, type: 2}
   m_LightingSettings: {fileID: 1079232023}
 --- !u!196 &4
 NavMeshSettings:
@@ -2328,6 +2324,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3741,9 +3740,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 905529535}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 11
   m_Type: 1
-  m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 0.2
   m_Range: 10
@@ -3793,8 +3791,12 @@ Light:
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!4 &905529537
 Transform:
   m_ObjectHideFlags: 0
@@ -3985,12 +3987,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 114399585964980174}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 3e701a02cd597ad4193792a7a3202dd3, type: 2}
-  umaAdditionalRecipes: []
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
     m_PersistentCalls:
       m_Calls: []
   CharacterBegun:
@@ -4008,26 +4039,32 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  CharacterDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterDnaUpdated:
-    m_PersistentCalls:
-      m_Calls: []
   AnimatorStateSaved:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -4051,8 +4088,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 0
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -4060,7 +4095,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: SkyCar
@@ -4073,8 +4107,7 @@ MonoBehaviour:
     loadDefaultRecipes: 1
     recipes: []
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
-      type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     animators:
     - raceName: ToonFemale
       animatorControllerName: IdleTest-w-head
@@ -4631,8 +4664,7 @@ LightingSettings:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Settings.lighting
-  serializedVersion: 6
-  m_GIWorkflowMode: 1
+  serializedVersion: 9
   m_EnableBakedLightmaps: 1
   m_EnableRealtimeLightmaps: 1
   m_RealtimeEnvironmentLighting: 1
@@ -4642,6 +4674,8 @@ LightingSettings:
   m_UsingShadowmask: 1
   m_BakeBackend: 2
   m_LightmapMaxSize: 1024
+  m_LightmapSizeFixed: 0
+  m_UseMipmapLimits: 1
   m_BakeResolution: 40
   m_Padding: 2
   m_LightmapCompression: 3
@@ -4655,13 +4689,11 @@ LightingSettings:
   m_FilterMode: 1
   m_LightmapParameters: {fileID: 15204, guid: 0000000000000000f000000000000000, type: 0}
   m_ExportTrainingData: 0
+  m_EnableWorkerProcessBaking: 1
   m_TrainingDataDestination: TrainingData
   m_RealtimeResolution: 2
   m_ForceWhiteAlbedo: 0
   m_ForceUpdates: 0
-  m_FinalGather: 0
-  m_FinalGatherRayCount: 256
-  m_FinalGatherFiltering: 1
   m_PVRCulling: 1
   m_PVRSampling: 1
   m_PVRDirectSampleCount: 32
@@ -4685,8 +4717,6 @@ LightingSettings:
   m_PVRFilteringAtrousPositionSigmaDirect: 0.5
   m_PVRFilteringAtrousPositionSigmaIndirect: 2
   m_PVRFilteringAtrousPositionSigmaAO: 1
-  m_PVRTiledBaking: 0
-  m_NumRaysToShootPerTexel: -1
   m_RespectSceneVisibilityWhenBakingGI: 0
 --- !u!1 &1147589784
 GameObject:
@@ -5074,6 +5104,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6011,6 +6044,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6192,6 +6228,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6433,6 +6472,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6738,9 +6780,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1830689608}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 11
   m_Type: 3
-  m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 7.053368
@@ -6790,8 +6831,12 @@ Light:
   m_BoundingSphereOverride: {x: 4.06e-43, y: 1.39e-43, z: 0, w: 6.020069}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!4 &1830689610
 Transform:
   m_ObjectHideFlags: 0
@@ -7197,9 +7242,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1895055599}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 11
   m_Type: 1
-  m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 0.8
   m_Range: 10
@@ -7249,8 +7293,12 @@ Light:
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!4 &1895055601
 Transform:
   m_ObjectHideFlags: 0
@@ -7970,9 +8018,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2052355807}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 11
   m_Type: 1
-  m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 0.4
   m_Range: 10
@@ -8022,8 +8069,12 @@ Light:
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!4 &2052355809
 Transform:
   m_ObjectHideFlags: 0
@@ -8575,6 +8626,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -8871,10 +8925,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -8884,6 +8940,7 @@ MonoBehaviour:
   isAtlasDirty: 0
   markNotReadable: 1
   markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -8942,6 +8999,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -8979,6 +9037,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -9016,6 +9075,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -9053,6 +9113,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -9090,6 +9151,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -9210,7 +9272,7 @@ MonoBehaviour:
   characterMass: 50
 --- !u!95 &114399585964980175
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9224,6 +9286,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1

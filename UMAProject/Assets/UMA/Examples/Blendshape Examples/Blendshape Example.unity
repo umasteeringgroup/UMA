@@ -1194,6 +1194,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -1234,6 +1235,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -1272,6 +1274,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -1310,6 +1313,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -1348,6 +1352,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -1387,6 +1392,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0.01
       smooshDistance: 0.001
@@ -1424,6 +1430,7 @@ MonoBehaviour:
       BlendshapeFoldout: 0
       ClipPlaneFoldout: 0
       isDeleted: 0
+      slotAssetFoldout: 0
       expandAlongNormal: 0
       overSmoosh: 0
       smooshDistance: 0
@@ -9393,6 +9400,7 @@ MonoBehaviour:
   MaxQueuedConversionsPerFrame: 8
   Use32BitBuffers: 0
   SaveAndRestoreIgnoredItems: 0
+  skipAddressableRecipeLookupInEditor: 0
   meshCombiner: {fileID: 2071395361}
   InitialScaleFactor: 1
   editorInitialScaleFactor: 1

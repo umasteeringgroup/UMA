@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -14,13 +15,15 @@ MonoBehaviour:
   poses:
   - bone: Tongue01
     hash: 1278850178
-    position: {x: -6.33299351e-08, y: -8.65838956e-10, z: 2.79396772e-08}
-    rotation: {x: 2.84644415e-08, y: -5.76840193e-08, z: -.0749336705, w: .997188568}
-    scale: {x: 1.00000012, y: .999999762, z: .999999762}
+    position: {x: -0.000000063329935, y: -8.6583896e-10, z: 0.000000027939677}
+    rotation: {x: 0.000000028464441, y: -0.00000005768402, z: -0.07493367, w: 0.99718857}
+    scale: {x: 1.0000001, y: 0.99999976, z: 0.99999976}
+    category: 
   - bone: Tongue02
     hash: -718215880
-    position: {x: 0, y: -1.21794397e-09, z: 1.70529546e-09}
-    rotation: {x: 1.71511338e-08, y: -9.38624378e-09, z: .0859559625, w: .996298969}
-    scale: {x: 1.00000012, y: 1, z: .999999762}
+    position: {x: 0, y: -0.000000001217944, z: 0.0000000017052955}
+    rotation: {x: 0.000000017151134, y: -0.000000009386244, z: 0.08595596, w: 0.99629897}
+    scale: {x: 1.0000001, y: 1, z: 0.99999976}
+    category: 
   tweenPoses: []
   tweenWeights: []

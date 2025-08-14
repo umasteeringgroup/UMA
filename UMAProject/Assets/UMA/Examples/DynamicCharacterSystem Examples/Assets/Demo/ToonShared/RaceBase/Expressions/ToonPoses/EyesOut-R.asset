@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -17,10 +18,12 @@ MonoBehaviour:
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0.0000000062803296, y: -0.0000000024283, z: 0.32428244, w: 0.9459603}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   - bone: RightMaskEyeGlobe
     hash: -1579608369
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0.000000003992991, y: -7.253344e-10, z: 0.2510119, w: 0.967984}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   tweenPoses: []
   tweenWeights: []

@@ -47,6 +47,7 @@ UMAProject/Assets/AssetStoreTools
 UMAProject/Assets/AssetStoreTools.meta
 UMAProject/.vs
 UMAProject/Assets/Temp.meta
+UMAProject/Assets/TextMesh Pro
 UMAProject/.vsconfig
 UMAProject/Logs
 UMAProject/Assets/Assets
@@ -56,3 +57,5 @@ UMAProject/Assets/Tarfmagougou.meta
 *.docx
 UMAProject/Assets/Test
 UMAProject/Assets/SceneTemplateAssets
+TextMesh*Pro/
+Assets/TextMesh\ Pro/

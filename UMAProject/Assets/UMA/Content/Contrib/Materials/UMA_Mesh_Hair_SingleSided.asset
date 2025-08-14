@@ -12,16 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: UMA_Mesh_Hair_SingleSided
   m_EditorClassIdentifier: 
-  translateSRP: 1
   _material: {fileID: 2100000, guid: 9c4bf0532bb657b40b85d6a4a2cf6bae, type: 2}
   _secondPass: {fileID: 0}
-  srpMaterials:
-  - SRP: 1
-    material: {fileID: 2100000, guid: 0e95ef0aa23de984b9e09719a5d977c4, type: 2}
-    secondPass: {fileID: 0}
-    alternateKeywords:
-    - _MainTex
-    - _BumpMap
   materialType: 1
   channels:
   - channelType: 4

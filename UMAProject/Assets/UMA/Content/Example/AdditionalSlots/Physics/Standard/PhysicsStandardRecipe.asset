@@ -25,6 +25,11 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
+  disabled: 0
   recipeString: '{"version":2,"packedSlotDataList":[],"slotsV2":[{"id":"","scale":1,"copyIdx":-1,"overlays":[]},{"id":"PhysicsStandard","scale":100,"copyIdx":-1,"overlays":[]}],"colors":[],"fColors":[],"sharedColorCount":0,"race":"","packedDna":[],"wardrobeSet":[],"packedRecipeType":"Standard"}'
+  forceKeep: 0
+  labelLocalFiles: 0
+  noAutoAdd: 0

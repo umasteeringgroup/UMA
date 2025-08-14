@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -14,8 +15,9 @@ MonoBehaviour:
   poses:
   - bone: Neck
     hash: -2145158803
-    position: {x: 2.38418579e-07, y: 5.32907052e-15, z: 4.87045693e-09}
-    rotation: {x: 2.62648694e-08, y: -8.44199164e-08, z: -.258819193, w: .965925813}
+    position: {x: 0.00000023841858, y: 5.3290705e-15, z: 0.000000004870457}
+    rotation: {x: 0.00000002626487, y: -0.000000084419916, z: -0.2588192, w: 0.9659258}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   tweenPoses: []
   tweenWeights: []

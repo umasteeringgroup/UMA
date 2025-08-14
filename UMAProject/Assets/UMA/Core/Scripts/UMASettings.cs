@@ -102,8 +102,15 @@ namespace UMA
 
         public static string FindUMAFullPath()
         {
-            string folder = "UMA";
+            string folder = "/UMA";
+            string OSFolderName = Path.Combine(Application.dataPath, "UMA");
+            if (Directory.Exists(OSFolderName))
+            {
+                // If the UMA folder exists in the Assets directory, return its path
+                return "Assets/UMA";
+            }
 
+            // Not in the default location, so we need to search for it
             // search the project for the UMA folder
             string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
             if (folders != null && folders.Length > 0)
@@ -113,13 +120,14 @@ namespace UMA
                     string path = AssetDatabase.GUIDToAssetPath(guid);
                     if (path.EndsWith(folder, StringComparison.OrdinalIgnoreCase))
                     {
+                        // If we find a folder path that ends with "/UMA", return its path
                         return path;
                     }
                 }
             }
 
-            // if we didn't find it, return the default path
-            return Path.Combine(Application.dataPath, folder);
+            // if we didn't find it, return the default path. Let the chips fall where they may.
+            return "Assets/UMA";
         }
 
         public static UMASettings GetOrCreateSettings()

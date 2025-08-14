@@ -29,9 +29,14 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
+  disabled: 0
   recipeString: '{"packedRecipeType":"WardrobeCollection","name":"ToonDancerCollection","race":"","dna":[],"characterColors":[{"name":"Skin","colors":[255,166,166,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor1","colors":[8,225,90,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor2","colors":[170,30,126,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]},{"name":"SharedColor3","colors":[255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0,255,255,255,255,0,0,0,0]}],"wardrobeSet":[],"raceAnimatorController":""}'
+  forceKeep: 0
+  labelLocalFiles: 0
+  noAutoAdd: 0
   coverImages: []
   wardrobeCollection:
     sets:

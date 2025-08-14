@@ -43,7 +43,7 @@ MonoBehaviour:
   addrUseSharedGroup: 1
   addrSharedGroupName: UMAShared
   addrDefaultLabel: UMA_Default
-  addStripMaterials: 1
+  addrStripMaterials: 1
   addrIncludeRecipes: 0
   addrIncludeOther: 1
   showWelcomeToUMA: 0

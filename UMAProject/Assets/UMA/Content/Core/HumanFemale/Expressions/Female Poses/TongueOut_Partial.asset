@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -14,23 +15,27 @@ MonoBehaviour:
   poses:
   - bone: LeftLowCheek
     hash: 1716905425
-    position: {x: 1.52606517e-05, y: 2.5998801e-05, z: -4.52622771e-05}
-    rotation: {x: -4.92970909e-09, y: 4.26679492e-08, z: -8.39114591e-08, w: 1}
-    scale: {x: 1, y: 1.00000012, z: 1.00000012}
+    position: {x: 0.000015260652, y: 0.000025998801, z: -0.000045262277}
+    rotation: {x: -0.000000004929709, y: 0.00000004266795, z: -0.00000008391146, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+    category: 
   - bone: Tongue01
     hash: 1278850178
-    position: {x: -.0119682513, y: 1.92085281e-09, z: .0180359259}
-    rotation: {x: 1.57620878e-13, y: -1.48336099e-08, z: -5.81052608e-14, w: 1}
-    scale: {x: .99999994, y: 1, z: .999999821}
+    position: {x: -0.011968251, y: 0.0000000019208528, z: 0.018035926}
+    rotation: {x: 1.5762088e-13, y: -0.00000001483361, z: -5.810526e-14, w: 1}
+    scale: {x: 0.99999994, y: 1, z: 0.9999998}
+    category: 
   - bone: Tongue02
     hash: -718215880
-    position: {x: -2.98023224e-08, y: 4.29434266e-13, z: -1.33025011e-07}
-    rotation: {x: 3.75210654e-08, y: -3.72154418e-09, z: -1.50864338e-11, w: 1.00000012}
-    scale: {x: 1, y: .996762753, z: 1}
+    position: {x: -0.000000029802322, y: 4.2943427e-13, z: -0.00000013302501}
+    rotation: {x: 0.000000037521065, y: -0.0000000037215442, z: -1.5086434e-11, w: 1.0000001}
+    scale: {x: 1, y: 0.99676275, z: 1}
+    category: 
   - bone: RightLowCheek
     hash: -1122647396
-    position: {x: 1.52587891e-05, y: -2.5998801e-05, z: -4.52622771e-05}
-    rotation: {x: -1.93245938e-07, y: 1.1533367e-07, z: 1.71959762e-08, w: 1.00000012}
+    position: {x: 0.000015258789, y: -0.000025998801, z: -0.000045262277}
+    rotation: {x: -0.00000019324594, y: 0.00000011533367, z: 0.000000017195976, w: 1.0000001}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   tweenPoses: []
   tweenWeights: []

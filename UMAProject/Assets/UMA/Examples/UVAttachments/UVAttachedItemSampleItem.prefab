@@ -24,12 +24,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2895802341509255895}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2595418417575999124
 MonoBehaviour:
@@ -57,9 +58,23 @@ MonoBehaviour:
     overlayScale: 1
     tags: []
     Races: []
+    meshModifiers: []
     blendShapeTargetSlot: 
     BlendshapeFoldout: 0
+    ClipPlaneFoldout: 0
     isDeleted: 0
+    slotAssetFoldout: 0
+    expandAlongNormal: 0
+    overSmoosh: 0.01
+    smooshDistance: 0.001
+    smooshInvertX: 0
+    smooshInvertY: 1
+    smooshInvertZ: 0
+    smooshInvertDist: 1
+    smooshTargetTag: 
+    smooshableTag: 
+    isSwapSlot: 0
+    swapTag: LongHair
     skinnedMeshRenderer: 0
     submeshIndex: 0
     vertexOffset: 0
@@ -69,14 +84,19 @@ MonoBehaviour:
       y: 0
       width: 1
       height: 1
+    tempHidden: 0
+    isDisabled: 0
+    UVSet: 0
     altMaterial: {fileID: 0}
     BlendshapeSlotNames: []
     Suppressed: 0
     dontSerialize: 0
     rendererAsset: {fileID: 0}
   useMostestBone: 1
+  UVSet: 0
   VertexNumber: 0
   subMeshNumber: 0
   triangle: 
   skin: {fileID: 0}
+  blendshapeAdjusters: []
   worldTransform: 0

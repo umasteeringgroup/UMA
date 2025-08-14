@@ -32,6 +32,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
@@ -50,6 +52,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
@@ -68,6 +72,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
@@ -86,6 +92,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
@@ -104,6 +112,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
@@ -122,6 +132,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
@@ -140,6 +152,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
@@ -158,6 +172,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
@@ -176,6 +192,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
@@ -194,6 +212,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Red
     channelMask:
@@ -212,6 +232,8 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 1
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Green
     channelMask:
@@ -230,4 +252,6 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 0.13886054, g: 0.7987421, b: 0.12810002, a: 1}

@@ -13,7 +13,7 @@ OcclusionCullingSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 9
+  serializedVersion: 10
   m_Fog: 0
   m_FogColor: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
   m_FogMode: 2
@@ -42,8 +42,8 @@ RenderSettings:
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
-  m_GIWorkflowMode: 1
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -66,9 +66,6 @@ LightmapSettings:
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 0
-    m_FinalGather: 0
-    m_FinalGatherFiltering: 1
-    m_FinalGatherRayCount: 1024
     m_ReflectionCompression: 2
     m_MixedBakeMode: 1
     m_BakeBackend: 0
@@ -96,10 +93,8 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000000, guid: 2265e9853318cf94a86f02ab67f7eddb,
-    type: 2}
-  m_LightingSettings: {fileID: 4890085278179872738, guid: 556a7f9e69ccfc442bc33b989156db3c,
-    type: 2}
+  m_LightingDataAsset: {fileID: 112000000, guid: 2265e9853318cf94a86f02ab67f7eddb, type: 2}
+  m_LightingSettings: {fileID: 4890085278179872738, guid: 556a7f9e69ccfc442bc33b989156db3c, type: 2}
 --- !u!196 &5
 NavMeshSettings:
   serializedVersion: 2
@@ -286,113 +281,91 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2143838568}
     m_Modifications:
-    - target: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Name
       value: ScrollArea
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.x
       value: -73.3727
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.y
       value: -95.6517
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: -2.7174988
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 4.345703
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
@@ -403,8 +376,7 @@ PrefabInstance:
   m_SourcePrefab: {fileID: 100100000, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
 --- !u!224 &23871891 stripped
 RectTransform:
-  m_CorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
   m_PrefabInstance: {fileID: 23871890}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &42561832
@@ -571,123 +543,99 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2016767558}
     m_Modifications:
-    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -478.06815
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Name
       value: ScrollArea
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.x
       value: -73.3727
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.y
       value: -95.6517
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: -2.7174683
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 4.345703
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
@@ -698,8 +646,7 @@ PrefabInstance:
   m_SourcePrefab: {fileID: 100100000, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
 --- !u!224 &53947285 stripped
 RectTransform:
-  m_CorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
   m_PrefabInstance: {fileID: 53947284}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &55043007
@@ -964,6 +911,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1432,6 +1382,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2658,6 +2611,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3298,8 +3254,7 @@ CanvasRenderer:
   m_CullTransparentMesh: 1
 --- !u!1 &467771461 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
   m_PrefabInstance: {fileID: 591789001}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &495036490
@@ -4083,223 +4038,179 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 999883200}
     m_Modifications:
-    - target: {fileID: 1299558404314965835, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 1299558404314965835, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2534185168165766956, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 2534185168165766956, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2534185168165766956, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 2534185168165766956, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 50
       objectReference: {fileID: 0}
-    - target: {fileID: 2534185168165766956, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 2534185168165766956, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -50
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520440, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520440, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520440, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520440, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_ChildControlHeight
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520440, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520440, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_ChildForceExpandHeight
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520444, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520444, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.x
       value: 333.3513
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.y
       value: 1350.656
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 166.67564
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520445, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -675.3288
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547002520446, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547002520446, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547717237827, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547717237827, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732584, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732584, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_ShowMaskGraphic
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732585, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732585, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_VerticalScrollbar
       value: 
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Name
       value: ScrollArea
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.x
       value: -73.3727
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.y
       value: -95.6517
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: -2.7174988
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 4.345703
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
@@ -4307,24 +4218,20 @@ PrefabInstance:
     - {fileID: 1299558404314965835, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - targetCorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1140501598}
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - targetCorrespondingSourceObject: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       insertIndex: -1
       addedObject: {fileID: 591789007}
-    - targetCorrespondingSourceObject: {fileID: 5317771547002520444, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - targetCorrespondingSourceObject: {fileID: 5317771547002520444, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1459299031}
   m_SourcePrefab: {fileID: 100100000, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
 --- !u!224 &591789002 stripped
 RectTransform:
-  m_CorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
   m_PrefabInstance: {fileID: 591789001}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &591789007
@@ -4516,6 +4423,8 @@ MonoBehaviour:
   maxLOD: 5
   maxReduction: 8
   useSlotDropping: 1
+  useTextureResize: 0
+  disableAutomatedProcessing: 0
   BufferZone: 0
   MinCheck: 0.5
   CheckRange: 0.25
@@ -4531,15 +4440,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 596790634}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 7c7a68f26d49a4046b039854e10a7751, type: 2}
-  umaAdditionalRecipes: []
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   CharacterDestroyed:
@@ -4548,7 +4468,16 @@ MonoBehaviour:
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -4557,11 +4486,26 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -4585,8 +4529,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 1
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -4594,7 +4536,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: Elf Female
@@ -4610,70 +4551,84 @@ MonoBehaviour:
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleShirt2
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleSmoothSkin
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMaleHighPoly
       - HumanBoy
       - HumanMale
+      ForceLoad: 0
     - _recipeName: TallShoes_Black_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - HumanMaleHighPoly
+      ForceLoad: 0
     - _recipeName: FemaleTallShoes_Turquoise
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
       - HumanFemaleHighPoly
+      ForceLoad: 0
     - _recipeName: MaleHairSlick01_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - Elf Male
+      ForceLoad: 0
     - _recipeName: woman-haircard 7_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleSportPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleSweatPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: FemaleShirt3
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleHair3
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemalePonyTail_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleHair2
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleHair1
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleShirt4
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
-      type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     animators: []
     dynamicallyAddFromResources: 0
     resourcesFolderPath: 
@@ -5703,7 +5658,7 @@ MonoBehaviour:
   debugVertexes: 1
 --- !u!95 &596790633
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5717,6 +5672,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -5736,10 +5692,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 0
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -5749,6 +5707,7 @@ MonoBehaviour:
   isAtlasDirty: 0
   markNotReadable: 1
   markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -6217,6 +6176,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6473,6 +6435,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6762,6 +6727,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6958,6 +6926,8 @@ MonoBehaviour:
   maxLOD: 5
   maxReduction: 8
   useSlotDropping: 1
+  useTextureResize: 0
+  disableAutomatedProcessing: 0
   BufferZone: 0
   MinCheck: 0.5
   CheckRange: 0.25
@@ -6973,15 +6943,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 679532420}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: e9c4ce3b586a9884f83db0fb2581ddfe, type: 2}
-  umaAdditionalRecipes: []
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   CharacterDestroyed:
@@ -6990,7 +6971,16 @@ MonoBehaviour:
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -6999,11 +6989,26 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -7027,8 +7032,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 1
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -7036,7 +7039,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
@@ -7052,54 +7054,64 @@ MonoBehaviour:
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleShirt2
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleSmoothSkin
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMaleHighPoly
       - HumanBoy
       - HumanMale
+      ForceLoad: 0
     - _recipeName: TallShoes_Black_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - HumanMaleHighPoly
+      ForceLoad: 0
     - _recipeName: FemaleTallShoes_Turquoise
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
       - HumanFemaleHighPoly
+      ForceLoad: 0
     - _recipeName: MaleHairSlick01_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - Elf Male
+      ForceLoad: 0
     - _recipeName: woman-haircard 7_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleSportPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleSweatPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleHoodie_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleHair1
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
-      type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     animators: []
     dynamicallyAddFromResources: 0
     resourcesFolderPath: 
@@ -8058,7 +8070,7 @@ MonoBehaviour:
   debugVertexes: 1
 --- !u!95 &679532419
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -8072,6 +8084,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -8091,10 +8104,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 0
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -8104,6 +8119,7 @@ MonoBehaviour:
   isAtlasDirty: 0
   markNotReadable: 1
   markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -8616,6 +8632,8 @@ MonoBehaviour:
   maxLOD: 5
   maxReduction: 8
   useSlotDropping: 1
+  useTextureResize: 0
+  disableAutomatedProcessing: 0
   BufferZone: 0
   MinCheck: 0.5
   CheckRange: 0.25
@@ -8631,15 +8649,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 756189362}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 7057b3bb6c38031459bffc3b43b345e3, type: 2}
-  umaAdditionalRecipes: []
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   CharacterDestroyed:
@@ -8648,7 +8677,16 @@ MonoBehaviour:
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -8657,11 +8695,26 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -8685,8 +8738,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 1
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -8694,7 +8745,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: Werewolf
@@ -8710,50 +8760,59 @@ MonoBehaviour:
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleShirt2
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleSmoothSkin
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMaleHighPoly
       - HumanBoy
       - HumanMale
+      ForceLoad: 0
     - _recipeName: TallShoes_Black_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
       - HumanMaleHighPoly
+      ForceLoad: 0
     - _recipeName: FemaleTallShoes_Turquoise
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
       - HumanFemaleHighPoly
+      ForceLoad: 0
     - _recipeName: MaleHairSlick01_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
       - Elf Male
+      ForceLoad: 0
     - _recipeName: woman-haircard 7_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleSportPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleSweatPants_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: FemaleShirt3
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
-      type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     animators: []
     dynamicallyAddFromResources: 0
     resourcesFolderPath: 
@@ -9836,7 +9895,7 @@ MonoBehaviour:
   debugVertexes: 1
 --- !u!95 &756189361
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9850,6 +9909,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -9869,10 +9929,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 0
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -9882,6 +9944,7 @@ MonoBehaviour:
   isAtlasDirty: 0
   markNotReadable: 1
   markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -10209,6 +10272,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -10482,6 +10548,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -11267,21 +11336,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93040e3d481979e489c16bf346c52213, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  intensity: 0.45
-  diffuseIntensity: 1.5
-  keyColor: {r: 0.8358209, g: 0.8358209, b: 0.8358209, a: 0}
-  fillColor: {r: 0.104477584, g: 0.056137208, b: 0.08757535, a: 0}
-  backColor: {r: 0.23524171, g: 0.4061723, b: 0.49253732, a: 0}
-  wrapAround: 0.26
-  metalic: 0
-  specularIntensity: 1
-  specularShininess: 0.16000003
-  translucency: 1
-  translucentColor: {r: 0.3208955, g: 0.033660386, b: 0, a: 0}
-  lookupTextureWidth: 128
-  lookupTextureHeight: 128
-  fastPreview: 1
-  lookupTexture: {fileID: 1929875438}
 --- !u!108 &882472674
 Light:
   m_ObjectHideFlags: 0
@@ -11290,9 +11344,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 876470120}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 11
   m_Type: 1
-  m_Shape: 0
   m_Color: {r: 0.9338235, g: 0.9185755, b: 0.88575906, a: 1}
   m_Intensity: 1.15
   m_Range: 10
@@ -11342,8 +11395,12 @@ Light:
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!108 &882483930
 Light:
   m_ObjectHideFlags: 0
@@ -11352,9 +11409,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 876514178}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 11
   m_Type: 1
-  m_Shape: 0
   m_Color: {r: 0.6, g: 0.7529412, b: 0.99607843, a: 1}
   m_Intensity: 0.89
   m_Range: 10
@@ -11404,8 +11460,12 @@ Light:
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!108 &882510798
 Light:
   m_ObjectHideFlags: 0
@@ -11414,9 +11474,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 876476876}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 11
   m_Type: 1
-  m_Shape: 0
   m_Color: {r: 0.509434, g: 0.509434, b: 0.509434, a: 1}
   m_Intensity: 1.19
   m_Range: 10
@@ -11466,8 +11525,12 @@ Light:
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!1 &894751604
 GameObject:
   m_ObjectHideFlags: 0
@@ -12197,6 +12260,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -12525,6 +12591,8 @@ MonoBehaviour:
   maxLOD: 5
   maxReduction: 8
   useSlotDropping: 1
+  useTextureResize: 0
+  disableAutomatedProcessing: 0
   BufferZone: 0
   MinCheck: 0.5
   CheckRange: 0.25
@@ -12540,15 +12608,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 0}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 4fb63e6b6f4986f48afbfc6ff09bed9f, type: 2}
-  umaAdditionalRecipes: []
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   CharacterDestroyed:
@@ -12557,7 +12636,16 @@ MonoBehaviour:
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -12566,11 +12654,26 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -12594,8 +12697,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 1
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -12603,7 +12704,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanBoy
@@ -12619,54 +12719,64 @@ MonoBehaviour:
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleShirt2
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleSmoothSkin
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMaleHighPoly
       - HumanBoy
       - HumanMale
+      ForceLoad: 0
     - _recipeName: TallShoes_Black_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
       - HumanMaleHighPoly
+      ForceLoad: 0
     - _recipeName: FemaleTallShoes_Turquoise
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
       - HumanFemaleHighPoly
+      ForceLoad: 0
     - _recipeName: MaleHairSlick01_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
       - Elf Male
+      ForceLoad: 0
     - _recipeName: woman-haircard 7_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleSportPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleSweatPants_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleShirt1
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleDefaultUnderwear
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
-      type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     animators: []
     dynamicallyAddFromResources: 0
     resourcesFolderPath: 
@@ -13463,7 +13573,7 @@ MonoBehaviour:
   debugVertexes: 1
 --- !u!95 &976861115
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -13477,6 +13587,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -13866,98 +13977,79 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalScale.x
       value: 200
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalScale.y
       value: 300
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalScale.z
       value: 300
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalPosition.y
       value: 2.04
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalPosition.z
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 90
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
-    - target: {fileID: -7511558181221131132, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -7511558181221131132, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_CastShadows
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -7511558181221131132, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: -7511558181221131132, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_ImportantGI
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: -7511558181221131132, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -7511558181221131132, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 0d1ec37e55738c542862b0086fb85cb6, type: 2}
-    - target: {fileID: 919132149155446097, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: 919132149155446097, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_Name
       value: background
       objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 4b4df1214e709df469045bd0652e4315,
-        type: 3}
+    - target: {fileID: 919132149155446097, guid: 4b4df1214e709df469045bd0652e4315, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 1
       objectReference: {fileID: 0}
@@ -14570,6 +14662,8 @@ MonoBehaviour:
   maxLOD: 5
   maxReduction: 8
   useSlotDropping: 1
+  useTextureResize: 0
+  disableAutomatedProcessing: 0
   BufferZone: 0
   MinCheck: 0.5
   CheckRange: 0.25
@@ -14585,15 +14679,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 1127923780}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 52132aa93024910468fe6e7ce1e450a9, type: 2}
-  umaAdditionalRecipes: []
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   CharacterDestroyed:
@@ -14602,7 +14707,16 @@ MonoBehaviour:
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -14611,11 +14725,26 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -14639,8 +14768,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 1
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -14648,7 +14775,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: Elf Male
@@ -14664,58 +14790,69 @@ MonoBehaviour:
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleShirt2
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleSmoothSkin
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMaleHighPoly
       - HumanBoy
       - HumanMale
+      ForceLoad: 0
     - _recipeName: TallShoes_Black_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - HumanMaleHighPoly
+      ForceLoad: 0
     - _recipeName: FemaleTallShoes_Turquoise
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
       - HumanFemaleHighPoly
+      ForceLoad: 0
     - _recipeName: MaleHairSlick01_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
       - Elf Male
+      ForceLoad: 0
     - _recipeName: woman-haircard 7_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleSportPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleSweatPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: TrollHead
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleChallengerTorso
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleChallengerShouderPads
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
-      type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     animators: []
     dynamicallyAddFromResources: 0
     resourcesFolderPath: 
@@ -15643,7 +15780,7 @@ MonoBehaviour:
   debugVertexes: 1
 --- !u!95 &1127923779
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -15657,6 +15794,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -15676,10 +15814,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 0
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -15689,6 +15829,7 @@ MonoBehaviour:
   isAtlasDirty: 0
   markNotReadable: 1
   markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -17807,6 +17948,8 @@ MonoBehaviour:
   maxLOD: 5
   maxReduction: 8
   useSlotDropping: 1
+  useTextureResize: 0
+  disableAutomatedProcessing: 0
   BufferZone: 0
   MinCheck: 0.5
   CheckRange: 0.25
@@ -17822,15 +17965,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 1438399050}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: b24ba5dfb8159b944a1d9a37c8ce65d8, type: 2}
-  umaAdditionalRecipes: []
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   CharacterDestroyed:
@@ -17839,7 +17993,16 @@ MonoBehaviour:
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -17848,11 +18011,26 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -17876,8 +18054,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 1
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -17885,7 +18061,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanGirl
@@ -17901,62 +18076,74 @@ MonoBehaviour:
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleShirt2
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleSmoothSkin
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMaleHighPoly
       - HumanBoy
       - HumanMale
+      ForceLoad: 0
     - _recipeName: TallShoes_Black_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - HumanMaleHighPoly
+      ForceLoad: 0
     - _recipeName: FemaleTallShoes_Turquoise
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
       - HumanFemaleHighPoly
+      ForceLoad: 0
     - _recipeName: MaleHairSlick01_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - Elf Male
+      ForceLoad: 0
     - _recipeName: woman-haircard 7_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleSportPants_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleSweatPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: FemaleShirt1
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemalePants1
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleHair1
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleHair2
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
-      type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     animators: []
     dynamicallyAddFromResources: 0
     resourcesFolderPath: 
@@ -18870,7 +19057,7 @@ MonoBehaviour:
   debugVertexes: 1
 --- !u!95 &1438399049
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -18884,6 +19071,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -18903,10 +19091,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 0
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -18916,6 +19106,7 @@ MonoBehaviour:
   isAtlasDirty: 0
   markNotReadable: 1
   markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -19030,6 +19221,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -19096,8 +19290,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1459299026 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 5317771547002520444, guid: a01ade369e1e7244f982bc776170bd95,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 5317771547002520444, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
   m_PrefabInstance: {fileID: 591789001}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1459299031
@@ -19788,9 +19981,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1545987733}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 11
   m_Type: 0
-  m_Shape: 0
   m_Color: {r: 0.7987421, g: 0.9960242, b: 1, a: 1}
   m_Intensity: 1.82
   m_Range: 8.63
@@ -19840,8 +20032,12 @@ Light:
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!1 &1576203585
 GameObject:
   m_ObjectHideFlags: 0
@@ -20629,6 +20825,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -21190,6 +21389,8 @@ MonoBehaviour:
   maxLOD: 5
   maxReduction: 8
   useSlotDropping: 1
+  useTextureResize: 0
+  disableAutomatedProcessing: 0
   BufferZone: 0
   MinCheck: 0.5
   CheckRange: 0.25
@@ -21205,15 +21406,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 1778863410}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: 52132aa93024910468fe6e7ce1e450a9, type: 2}
-  umaAdditionalRecipes: []
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   CharacterDestroyed:
@@ -21222,7 +21434,16 @@ MonoBehaviour:
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -21231,11 +21452,26 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -21259,8 +21495,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 1
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -21268,7 +21502,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: Elf Male
@@ -21284,67 +21517,80 @@ MonoBehaviour:
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleShirt2
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleSmoothSkin
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMaleHighPoly
       - HumanBoy
       - HumanMale
+      ForceLoad: 0
     - _recipeName: TallShoes_Black_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
       - HumanMaleHighPoly
+      ForceLoad: 0
     - _recipeName: FemaleTallShoes_Turquoise
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
       - HumanFemaleHighPoly
+      ForceLoad: 0
     - _recipeName: MaleHairSlick01_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - Elf Male
+      ForceLoad: 0
     - _recipeName: woman-haircard 7_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleSportPants_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleSweatPants_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MilCut
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
       - HumanMaleHighPoly
+      ForceLoad: 0
     - _recipeName: MaleShortHair_Recipe
       _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MalePants
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleChallengerBoots
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleChallengerTorso
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
-      type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     animators: []
     dynamicallyAddFromResources: 0
     resourcesFolderPath: 
@@ -22260,7 +22506,7 @@ MonoBehaviour:
   debugVertexes: 1
 --- !u!95 &1778863409
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -22274,6 +22520,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -22293,10 +22540,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 0
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -22306,6 +22555,7 @@ MonoBehaviour:
   isAtlasDirty: 0
   markNotReadable: 1
   markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -22806,21 +23056,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   avatar: {fileID: 4983528355912461228}
   showConsole: 0
-  ColorSelector: {fileID: 4754531951062815681, guid: 5d52a7fec5a4bb344b5e73db01a3f607,
-    type: 3}
-  DNAAdjuster: {fileID: 7066871665824917200, guid: a975002cf0da09747958cecbbb8b1009,
-    type: 3}
-  ColorLabel: {fileID: 6435131565238294634, guid: f4cb446fd3d05a84798e1e643ba62cbc,
-    type: 3}
-  GridContainer: {fileID: 2895564110581446606, guid: 4f4cd0929f2c2e54ab7dda65a8576b04,
-    type: 3}
+  ColorSelector: {fileID: 4754531951062815681, guid: 5d52a7fec5a4bb344b5e73db01a3f607, type: 3}
+  DNAAdjuster: {fileID: 7066871665824917200, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
+  ColorLabel: {fileID: 6435131565238294634, guid: f4cb446fd3d05a84798e1e643ba62cbc, type: 3}
+  GridContainer: {fileID: 2895564110581446606, guid: 4f4cd0929f2c2e54ab7dda65a8576b04, type: 3}
   Item: {fileID: 4754531951062815681, guid: 81de77acc06405641993b7b223bb2ebc, type: 3}
-  ItemContainer: {fileID: 2895564110581446606, guid: cbae07ea713eef54fb787641a542954c,
-    type: 3}
-  InfoText: {fileID: 2197140239810485115, guid: a552e0ef6d8d79a498a4871a8cbcb582,
-    type: 3}
-  LogLabel: {fileID: 6435131565238294634, guid: 150898cbf8c16fc4c8f47ad6f5fc19ab,
-    type: 3}
+  ItemContainer: {fileID: 2895564110581446606, guid: cbae07ea713eef54fb787641a542954c, type: 3}
+  InfoText: {fileID: 2197140239810485115, guid: a552e0ef6d8d79a498a4871a8cbcb582, type: 3}
+  LogLabel: {fileID: 6435131565238294634, guid: 150898cbf8c16fc4c8f47ad6f5fc19ab, type: 3}
   FacePos: {fileID: 1303395238}
   LegsPos: {fileID: 1931106495}
   BodyPos: {fileID: 280286252}
@@ -23523,8 +23766,7 @@ CanvasRenderer:
   m_CullTransparentMesh: 1
 --- !u!224 &1885245331 stripped
 RectTransform:
-  m_CorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
   m_PrefabInstance: {fileID: 5317771547659917308}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1902066693
@@ -23717,54 +23959,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1923368277}
   m_CullTransparentMesh: 1
---- !u!28 &1929875438
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  m_IsAlphaChannelOptional: 0
-  serializedVersion: 2
-  m_Width: 32
-  m_Height: 64
-  m_CompleteImageSize: 8192
-  m_MipsStripped: 0
-  m_TextureFormat: 5
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_IsPreProcessed: 0
-  m_IgnoreMipmapLimit: 0
-  m_MipmapLimitGroupName: 
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_VTOnly: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 1
-    m_WrapV: 1
-    m_WrapW: 1
-  m_LightmapFormat: 0
-  m_ColorSpace: 1
-  m_PlatformBlob: 
-  image data: 8192
-  _typelessdata: 001f1719001d1517001c1214001a101100190e0f00170b0c0016090a00150607001304040012020200100000000f0000000e00000010000000120100001504030017070600190a09001b0d0c001e100f00201312002216140024191700271c1a00291f1d002b2220002d2523002f282600322b2900342d2b0036302e00383331001f1719001d1517001c1214001a101100190d0f00170b0c0016090a00140607001304040012020200100000000f0000000e00000010000000120100001504030017070600190a09001b0d0c001e100f00201312002216140024191700261c1a00291f1d002b2220002d2523002f282600322b2900342d2b0036302e00383331001f1719001d1517001c1214001a101100190d0f00170b0c0016090a00140607001304040012020200100000000f0000000e00000010000000120100001504030017070600190a09001b0d0c001d100f00201312002216140024191700261c1a00291f1d002b2220002d2523002f282600322b2900342d2b0036302e00383331001e1719001d1517001c1214001a101100190d0f00170b0c0016090a00140607001304040011020200100000000f0000000e00000010000000120100001404030017070600190a09001b0d0c001d100f00201312002216140024191700261c1a00291f1d002b2220002d2523002f282600322b2900342d2b0036302e00383331001e1719001d1517001c1214001a101100190d0f00170b0c0016090a00140607001304040011020200100000000e0000000e00000010000000120100001404030017070600190a09001b0d0c001d100f00201312002216140024191700261c1a00291f1d002b2220002d2523002f282600322a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100190d0f00170b0c0016090a00140607001304040011020200100000000e0000000e00000010000000120100001404030016070600190a09001b0d0c001d100f001f1312002216140024191700261c1a00281f1d002b2220002d2523002f282600322a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100180d0f00170b0c0016090a00140607001304040011020200100000000e0000000d00000010000000120100001404030016070600190a09001b0d0c001d100f001f1312002216140024191700261c1a00281f1d002b2220002d2523002f282600322a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100180d0f00170b0c0016090a00140607001304040011020200100000000e0000000d00000010000000120100001404030016070600190a09001b0d0c001d100f001f1312002216140024191700261c1a00281f1d002b2220002d2523002f282600312a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100180d0f00170b0c0015090a00140607001304040011020200100000000e0000000d00000010000000120100001404030016070600180a09001b0d0c001d100f001f1312002116140024191700261c1a00281f1d002b2220002d2523002f282600312a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100180d0f00170b0c0015090a00140607001204040011020200100000000e0000000d0000000f000000120100001404030016070600180a09001b0d0c001d100f001f1312002116140024191700261c1a00281f1d002b2220002d2523002f282600312a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100180d0f00170b0c0015090a001406070012040400110202000f0000000e0000000d0000000f000000120100001404030016070600180a09001b0d0c001d100f001f1312002116140024191700261c1a00281f1d002a2220002d2523002f282600312a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100180d0f00170b0c0015090a001406070012040400110202000f0000000e0000000d0000000f000000110100001404030016070600180a09001a0d0c001d100f001f1312002116140024191700261c1a00281f1d002a2220002d2523002f282600312a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100180d0f00170b0c0015090a001406070012040400110202000f0000000e0000000d0000000f000000110100001404030016070600180a09001a0d0c001d100f001f1312002116140023191700261c1a00281f1d002a2220002d2523002f282600312a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100180d0f00170b0c0015090a001406070012040400110202000f0000000e0000000d0000000f000000110100001404030016070600180a09001a0d0c001d100f001f1312002116140023191700261c1a00281f1d002a2220002d2523002f282600312a2900342d2b0036302e00383331001e1719001d1517001b1214001a101100180d0f00170b0c0015090a001406070012040400110202000f0000000e0000000d0000000f000000110100001304030016070600180a09001a0d0c001c100f001f1312002116140023191700261c1a00281f1d002a2220002d2523002f282600312a2900342d2b0036302e00383331001e1719001d1417001b1214001a101100180d0f00160b0c0015090a001306070012040400100202000f0000000e0000000d0000000f000000110100001304030016070600180a09001a0d0c001c100f001f1312002116140023191700261c1a00281f1d002a2220002d2523002f282600312a2900342d2b0036302e00383331001e1719001d1417001b12140019101100180d0f00160b0c0015090a001306070012040400100202000f0000000d0000000d0000000f000000110100001304030016070600180a09001a0d0c001c100f001f1312002116140023191700251c1a00281f1d002a2220002c2523002f282600312a2900342d2b0036302e00383331001e1719001d1417001b12140019101100180d0f00160b0c0015090a001306070012040400100202000f0000000d0000000d0000000f000000110100001304030015070600180a09001a0d0c001c100f001f1312002116140023191700251c1a00281f1d002a2220002c2523002f282600312a2900342d2b0036302e00383331001e1719001c1417001b12140019101100180d0f00160b0c0015090a001306070012040400100202000f0000000d0000000c0000000f000000110100001304030015070600180a09001a0d0c001c100f001e1312002116140023191700251c1a00281f1d002a2220002c2523002f272600312a2900332d2b0036302e00383331001e1719001c1417001b12140019101100180d0f00160b0c0015090a001306070012040400100202000f0000000d0000000c0000000f000000110100001304030015070600180a09001a0d0c001c100f001e1312002116140023191700251c1a00281f1d002a2220002c2523002f272600312a2900332d2b0036302e00383331001e1719001c1417001b12140019101100180d0f00160b0c0015090a001306070012040400100202000f0000000d0000000c0000000e000000110100001304030015070600170a09001a0d0c001c100f001e1312002116140023191700251c1a00281f1d002a2220002c2523002f272600312a2900332d2b0036302e00383331001e1719001c1417001b12140019101100180d0f00160b0c0015090a001306070012040400100202000f0000000d0000000c0000000e000000110100001304030015070600170a09001a0d0c001c100f001e1312002116140023191700251c1a00281f1d002a2220002c2523002f272600312a2900332d2b0036302e00383331001e1719001c1417001b12140019101100180d0f00160b0c0014090a001306070011040400100202000e0000000d0000000c0000000e000000110100001304030015070600170a09001a0d0c001c100f001e1312002016140023191700251c1a00271f1d002a2220002c2523002f272600312a2900332d2b0036302e00383331001e1719001c1417001b12140019101100180d0f00160b0c0014090a001306070011040400100202000e0000000d0000000c0000000e000000100100001304030015070600170a0900190d0c001c100f001e1312002016140023191700251c1a00271f1d002a2220002c2523002f272600312a2900332d2b0036302e00383331001e1719001c1417001b12140019101100170d0f00160b0c0014090a001306070011040400100202000e0000000d0000000c0000000e000000100100001304030015070600170a0900190d0c001c100f001e1312002016140023191700251c1a00271f1d002a2220002c2523002e272600312a2900332d2b0036302e00383331001e1719001c1417001b12140019101100170d0f00160b0c0014090a001306070011040400100202000e0000000d0000000c0000000e000000100100001304030015070600170a0900190d0c001c100f001e1312002016140023191700251c1a00271f1d002a2220002c2523002e272600312a2900332d2b0036302e00383331001e1719001c1417001b12140019101100170d0f00160b0c0014090a001306070011040400100202000e0000000d0000000c0000000e000000100100001204030015070600170a0900190d0c001c100f001e1312002016140022191700251c1a00271f1d002a2220002c2523002e272600312a2900332d2b0036302e00383331001e1719001c1417001b12140019101100170d0f00160b0c0014090a001306070011040400100202000e0000000d0000000c0000000e000000100100001204030015070600170a0900190d0c001b100f001e1312002016140022191700251c1a00271f1d002a2220002c2523002e272600312a2900332d2b0036302e00383331001e1719001c1417001a12140019101100170d0f00160b0c0014090a0013060700110404000f0202000e0000000c0000000c0000000e000000100100001204030014070600170a0900190d0c001b100f001e1312002016140022191700251c1a00271f1d00292220002c2423002e272600312a2900332d2b0036302e00383331001e1719001c1417001a12140019101100170d0f00160b0c0014090a0012060700110404000f0202000e0000000c0000000b0000000e000000100100001204030014070600170a0900190d0c001b100f001e1312002016140022191700251c1a00271f1d00292220002c2423002e272600312a2900332d2b0036302e00383331001e1719001c1417001a12140019101100170d0f00160b0c0014090a0012060700110404000f0202000e0000000c0000000b0000000e000000100100001204030014070600170a0900190d0c001b100f001e1312002016140022191700251c1a00271f1d00292220002c2423002e272600312a2900332d2b0036302e00383331001e1719001c1417001a12140019101100170d0f00150b0c0014090a0012060700110404000f0102000e0000000c0000000b0000000e000000100100001204030014070600170a0900190d0c001b100f001d1312002016140022191700251c1a00271f1d00292220002c2423002e272600312a2900332d2b0036302e00383331001e1719001c1417001a12140019101100170d0f00150b0c0014090a0012060700110404000f0102000e0000000c0000000b0000000d000000100100001204030014070600160a0900190d0c001b100f001d1312002016140022191700241c1a00271f1d00292220002c2423002e272600312a2900332d2b0036302e00383331001e1719001c1417001a12140019101100170d0f00150b0c0014090a0012060700110404000f0102000e0000000c0000000b0000000d000000100100001204030014070600160a0900190d0c001b100f001d1312002016140022191700241c1a00271f1d00292220002c2423002e272600312a2900332d2b0036302e00383331001e1719001c1417001a12140019101100170d0f00150b0c0014090a0012060700110404000f0102000d0000000c0000000b0000000d0000000f0100001204030014070600160a0900190d0c001b100f001d1312002016140022191700241c1a00271f1d00292220002c2423002e272600312a2900332d2b0036302e00383331001e1719001c1417001a12140018101100170d0f00150b0c0014090a0012060700100404000f0102000d0000000c0000000b0000000d0000000f0100001204030014070600160a0900180d0c001b100f001d1312001f16140022191700241c1a00271f1d00292220002c2423002e272600312a2900332d2b0036302e00383331001e1719001c1417001a12140018101100170d0f00150b0c0014090a0012060700100404000f0102000d0000000c0000000b0000000d0000000f0100001204030014070600160a0900180d0c001b100f001d1312001f16140022191700241c1a00271f1d00292120002b2423002e272600302a2900332d2b0036302e00383331001d1719001c1417001a12140018101100170d0f00150b0c0013090a0012060700100404000f0102000d0000000c0000000b0000000d0000000f0100001104030014070600160a0900180d0c001b100f001d1312001f16140022191700241c1a00271f1d00292120002b2423002e272600302a2900332d2b0036302e00383331001d1719001c1417001a12140018101100170d0f00150b0c0013090a0012060700100404000f0102000d0000000c0000000b0000000d0000000f0100001104030014070600160a0900180d0c001b100f001d1312001f16140022191700241c1a00261f1d00292120002b2423002e272600302a2900332d2b0035302e00383331001d1719001c1417001a12140018101100170d0f00150b0c0013090a0012060700100404000f0102000d0000000c0000000b0000000d0000000f0100001104030014070600160a0900180d0c001a100f001d1312001f16140022191700241c1a00261f1d00292120002b2423002e272600302a2900332d2b0035302e00383331001d1719001c1417001a12140018101100170d0f00150b0c0013090a0012060700100404000f0102000d0000000b0000000b0000000d0000000f0100001104030013070600160a0900180d0c001a100f001d1312001f16140021191700241c1a00261f1d00292120002b2423002e272600302a2900332d2b0035302e00383331001d1719001c1417001a12140018101100170d0f00150b0c0013090a0012060700100404000e0102000d0000000b0000000a0000000d0000000f0100001104030013070600160a0900180d0c001a100f001d1312001f16140021191700241c1a00261f1d00292120002b2423002e272600302a2900332d2b0035302e00383331001d1719001c1417001a12140018101100160d0f00150b0c0013090a0012060700100404000e0102000d0000000b0000000a0000000d0000000f0100001104030013070600160a0900180d0c001a100f001d1312001f16140021191700241c1a00261f1d00292120002b2423002e272600302a2900332d2b0035302e00383331001d1719001c1417001a12140018101100160d0f00150b0c0013090a0011060700100404000e0102000d0000000b0000000a0000000c0000000f0100001104030013070600150a0900180d0c001a100f001c1312001f16140021191700241c1a00261e1d00292120002b2423002e272600302a2900332d2b0035302e00383331001d1719001c1417001a12140018101100160d0f00150b0c0013080a0011060700100404000e0102000d0000000b0000000a0000000c0000000f0100001104030013070600150a0900180d0c001a100f001c1312001f16140021191700241c1a00261e1d00292120002b2423002e272600302a2900332d2b0035302e00383331001d1719001b1417001a12140018101100160d0f00150b0c0013080a0011060700100404000e0102000d0000000b0000000a0000000c0000000f0100001104030013070600150a0900180d0c001a100f001c1312001f16140021191700241c1a00261e1d00292120002b2423002e272600302a2900332d2b0035302e00383331001d1719001b1417001a12140018101100160d0f00150b0c0013080a0011060700100404000e0102000c0000000b0000000a0000000c0000000e0100001104030013070600150a0900180d0c001a100f001c1312001f16140021191700241c1a00261e1d00282120002b2423002e272600302a2900332d2b0035302e00383331001d1719001b1417001a12140018101100160d0f00140b0c0013080a0011060700100404000e0102000c0000000b0000000a0000000c0000000e0100001104030013070600150a0900170d0c001a100f001c1312001f16140021191700231c1a00261e1d00282120002b2423002d272600302a2900332d2b0035302e00383331001d1719001b1417001a12140018101100160d0f00140b0c0013080a00110607000f0404000e0102000c0000000b0000000a0000000c0000000e0100001104030013070600150a0900170d0c001a100f001c1312001e16140021191700231c1a00261e1d00282120002b2423002d272600302a2900332d2b0035302e00383331011d1719011b1417011a12140118101101160d0f01140b0c0113080a01110607010f0404010e0102010c0000010b0000010a0000010c0000010e0100011004030113070601150a0901170d0c011a100f011c1312011e16140121191701231b1a01261e1d01282120012b2423012d272601302a2901332d2b0135302e01383331011d1719011b1417011a12140118101101160d0f01140b0c0113080a01110607010f0404010e0102010c0000010b0000010a0000010c0000010e0100011004030113070601150a0901170d0c011a100f011c1312011e16140121191701231b1a01261e1d01282120012b2423012d272601302a2901332d2b0135302e01383331011d1719011b1417011912140118101101160d0f01140b0c0113080a01110607010f0404010e0102010c0000010b0000010a0000010c0000010e0100011004030113070601150a0901170d0c0119100f011c1312011e16140121191701231b1a01261e1d01282120012b2423012d272601302a2901332d2b0135302e01383331021d1719021b1417021912140218101102160d0f02140b0c0212080a02110607020f0404020e0102020c0000020a0000020a0000020c0000020e0100021004030212070602150a0902170d0c0219100f021c1312021e16140221191702231b1a02261e1d02282120022b2423022d272602302a2902332d2b0235302e02383331031d1719031b1417031912140318101103160d0f03140b0c0312080a03110607030f0404030e0102030c0000030a000003090000030c0000030e0100031004030312070603150a0903170d0c0319100f031c1312031e16140321191703231b1a03261e1d03282120032b2423032d272603302a2903332d2b0335302e03383331041d1719041b1417041912140418101104160d0f04140b0c0412080a04110607040f0404040d0102040c0000040a000004090000040c0000040e0100041004030412070604150a0904170d0c0419100f041c1312041e16140420181704231b1a04251e1d04282120042b2423042d272604302a2904322d2b0435302e04383331061d1719061b1417061912140617101106160d0f06140b0c0612080a06110607060f0404060d0102060c0000060a000006090000060b0000060e0100061004030612070606140a0906170d0c0619100f061c1312061e16140620181706231b1a06251e1d06282120062b2423062d272606302a2906322d2b0635302e06383331081d1719081b1417081912140817101108160d0f08140b0c0812080a08110607080f0404080d0102080c0000080a000008090000080b0000080e0100081004030812070608140a0908170d0c0819100f081b1312081e16140820181708231b1a08251e1d08282120082b2423082d272608302a2908322d2b0835302e083833310b1d17190b1b14170b1912140b1710110b160d0f0b140b0c0b12080a0b1006070b0f04040b0d01020b0c00000b0a00000b0900000b0b00000b0d01000b1004030b1207060b140a090b170d0c0b19100f0b1b13120b1e16140b2018170b231b1a0b251e1d0b2821200b2a24230b2d27260b302a290b322d2b0b35302e0b383331101d1719101b1417101912141017101110160d0f10140b0c1012080a10100607100f0404100d0102100c0000100a000010090000100b0000100d0100101004031012070610140a0910170d0c1019100f101b1312101e16141020181710231b1a10251e1d10282120102a2423102d272610302a2910322d2b1035302e10383331171d1719171b1417171912141717101117150d0f17140b0c1712080a17100607170f0404170d0102170b0000170a000017090000170b0000170d0100171004031712070617140a0917160d0c1719100f171b1312171e16141720181717231b1a17251e1d17282120172a2423172d272617302a2917322d2b1735302e17383331211d1719211b1417211912142117101121150d0f21140b0c2112080a21100607210f0404210d0102210b0000210a000021090000210b0000210d0100210f04032112070621140a0921160d0c2119100f211b1312211e15142120181721231b1a21251e1d21282120212a2423212d272621302a2921322d2b2135302e213833312e1d17192e1b14172e1912142e1710112e150d0f2e140b0c2e12080a2e1006072e0f04042e0d01022e0b00002e0a00002e0900002e0b00002e0d01002e0f04032e1207062e140a092e160d0c2e19100f2e1b13122e1e15142e2018172e231b1a2e251e1d2e2821202e2a24232e2d27262e302a292e322d2b2e35302e2e383331401d1719401b1417401912144017101140150d0f40140b0c4012080a40100607400e0404400d0102400b0000400a000040090000400b0000400d0100400f04034012070640140a0940160d0c4019100f401b1312401d15144020181740221b1a40251e1d40282120402a2423402d272640302a2940322d2b4035302e40383331591d1719591b1417591912145917101159150d0f59130b0c5912080a59100607590e0404590d0102590b0000590a000059090000590b0000590d0100590f04035911070659140a0959160d0c5919100f591b1312591d15145920181759221b1a59251e1d59282120592a2423592d272659302a2959322d2b5935302e59383331
-  m_StreamData:
-    serializedVersion: 2
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &1930832579
 GameObject:
   m_ObjectHideFlags: 0
@@ -25418,6 +25612,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -25617,9 +25814,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2122507221}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 11
   m_Type: 1
-  m_Shape: 0
   m_Color: {r: 0.509434, g: 0.509434, b: 0.509434, a: 1}
   m_Intensity: 1
   m_Range: 10
@@ -25669,8 +25865,12 @@ Light:
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!1 &2139768148
 GameObject:
   m_ObjectHideFlags: 0
@@ -25888,138 +26088,111 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1078857922}
     m_Modifications:
-    - target: {fileID: 2926710496873047045, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 2926710496873047045, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2926710496873047045, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 2926710496873047045, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2926710496873047045, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 2926710496873047045, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchorMin.x
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2926710497549187157, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 2926710497549187157, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2926710497549187157, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 2926710497549187157, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 7066871665824917200, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 7066871665824917200, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_Name
       value: DNAAdjuster
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchorMin.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_SizeDelta.x
       value: 345.35
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_SizeDelta.y
       value: 32.0477
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 206.64
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -312.02386
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-        type: 3}
+    - target: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
@@ -26030,8 +26203,7 @@ PrefabInstance:
   m_SourcePrefab: {fileID: 100100000, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
 --- !u!224 &2926710496113767502 stripped
 RectTransform:
-  m_CorrespondingSourceObject: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 8305466371282870054, guid: a975002cf0da09747958cecbbb8b1009, type: 3}
   m_PrefabInstance: {fileID: 2926710496113767501}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &4983528355051440488
@@ -26053,6 +26225,8 @@ MonoBehaviour:
   maxLOD: 5
   maxReduction: 8
   useSlotDropping: 1
+  useTextureResize: 0
+  disableAutomatedProcessing: 0
   BufferZone: 0
   MinCheck: 0.5
   CheckRange: 0.25
@@ -26108,15 +26282,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  umaData: {fileID: 4983528355912461234}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 11400000, guid: d3995223b7bbc2345a73ede40763c8d4, type: 2}
-  umaAdditionalRecipes: []
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
   CharacterCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   CharacterDestroyed:
@@ -26125,7 +26310,16 @@ MonoBehaviour:
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -26134,11 +26328,26 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
-  userInformation: 
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -26162,8 +26371,6 @@ MonoBehaviour:
       m_Calls: []
   hide: 0
   leanHiding: 0
-  markNotReadable: 1
-  markDynamic: 1
   loadBlendShapes: 1
   loadOnlyUsedBlendshapes: 1
   loadBlendshapeNormals: 1
@@ -26171,7 +26378,6 @@ MonoBehaviour:
   loadAllFrames: 1
   forceKeepBlendshapes: []
   keepAvatar: 0
-  rawAvatar: 0
   keepPredefinedDNA: 0
   activeRace:
     name: HumanFemale
@@ -26187,50 +26393,59 @@ MonoBehaviour:
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleShirt2
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: MaleSmoothSkin
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMaleHighPoly
       - HumanBoy
       - HumanMale
+      ForceLoad: 0
     - _recipeName: TallShoes_Black_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - HumanMaleHighPoly
+      ForceLoad: 0
     - _recipeName: FemaleTallShoes_Turquoise
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
       - HumanFemaleHighPoly
+      ForceLoad: 0
     - _recipeName: MaleHairSlick01_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
       - Elf Male
+      ForceLoad: 0
     - _recipeName: woman-haircard 7_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: FemaleSportPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
     - _recipeName: MaleSweatPants_Recipe
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanMale
+      ForceLoad: 0
     - _recipeName: FemaleShirt3
       _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemale
+      ForceLoad: 0
   raceAnimationControllers:
-    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343,
-      type: 2}
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
     animators: []
     dynamicallyAddFromResources: 0
     resourcesFolderPath: 
@@ -27315,7 +27530,7 @@ MonoBehaviour:
       m_Calls: []
 --- !u!95 &4983528355912461233
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -27329,6 +27544,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -27348,10 +27564,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderers: []
   userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
   rawAvatar: 0
   raceChanged: 0
   hideRenderers: 0
-  umaGenerator: {fileID: 0}
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -27361,6 +27579,7 @@ MonoBehaviour:
   isAtlasDirty: 0
   markNotReadable: 1
   markDynamic: 1
+  force32bit: 0
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -27411,128 +27630,103 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1078857922}
     m_Modifications:
-    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547717237825, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 172.5
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732590, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Name
       value: ScrollArea
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchorMin.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.x
       value: -73.3727
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_SizeDelta.y
       value: -95.6517
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: -2.7174988
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 4.345703
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95,
-        type: 3}
+    - target: {fileID: 5317771547923732591, guid: a01ade369e1e7244f982bc776170bd95, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
