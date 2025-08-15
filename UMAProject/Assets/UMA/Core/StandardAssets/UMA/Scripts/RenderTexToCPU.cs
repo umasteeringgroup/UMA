@@ -34,7 +34,7 @@ namespace UMA
         public static int renderTexturesCleanedApplied = 0;
         public static int renderTexturesCleanedMissed = 0;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             renderTexturesToCPU = new Dictionary<int, RenderTexToCPU>();

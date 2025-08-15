@@ -4910,7 +4910,7 @@ namespace UMA.CharacterSystem
         // todo: Should cache these. Maybe in a dictionary by slot name?
         private static Dictionary<string, Mesh> SmooshTargets = new Dictionary<string, Mesh>();
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             SmooshTargets = new Dictionary<string, Mesh>();

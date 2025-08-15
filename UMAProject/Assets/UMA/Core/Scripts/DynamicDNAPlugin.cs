@@ -343,7 +343,7 @@ namespace UMA
         #endregion
 
         #region PUBLIC STATIC METHODS
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
 			_pluginTypes = null;

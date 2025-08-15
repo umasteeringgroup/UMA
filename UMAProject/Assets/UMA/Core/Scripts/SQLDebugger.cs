@@ -17,7 +17,7 @@ public static class SQLDebugger
     private static string connectionString;
     public static bool initialized = false;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     public static void AfterAssembliesLoaded()
     {
         InitializeDebugger();

@@ -98,7 +98,7 @@ namespace UMA
 		public static UMATransformComparer TransformComparer = new UMATransformComparer();
 
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             TransformComparer = new UMATransformComparer();
@@ -423,7 +423,7 @@ namespace UMA
         public static Dictionary<int, NativeArray<int>> SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
 
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             SubmeshBuffers = new Dictionary<int, NativeArray<int>>();

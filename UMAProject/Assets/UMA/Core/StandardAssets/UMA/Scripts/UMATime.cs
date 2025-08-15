@@ -11,7 +11,7 @@ namespace UMA
 		private static float frameTime;
 		public static float deltaTime;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
 			frame = -10;

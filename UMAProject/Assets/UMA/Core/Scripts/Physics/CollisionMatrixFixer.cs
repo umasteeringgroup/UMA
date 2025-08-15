@@ -8,7 +8,7 @@ namespace UMA.Examples
 		static int _defaultRagdollLayer = 8;
 		static int _noCollisionLayer = 10;
 
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 		public static void StaticInitializeOnLoad()
 		{
             _defaultRagdollLayer = LayerMask.NameToLayer("Ragdoll");

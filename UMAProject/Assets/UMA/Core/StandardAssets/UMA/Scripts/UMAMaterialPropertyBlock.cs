@@ -753,7 +753,7 @@ namespace UMA
         public static List<Type> availableTypes = new List<Type>();
 
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             PropertyTypeStrings = new string[0];

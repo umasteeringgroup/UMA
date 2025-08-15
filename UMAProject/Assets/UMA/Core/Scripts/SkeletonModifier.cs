@@ -92,7 +92,7 @@ namespace UMA.CharacterSystem
 			};
 
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             // Initialize the default values for the skeleton modifiers?

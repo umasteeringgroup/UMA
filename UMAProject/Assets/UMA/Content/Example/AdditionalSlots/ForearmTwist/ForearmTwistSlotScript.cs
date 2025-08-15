@@ -18,7 +18,7 @@ namespace UMA
 		static int rightTwistHash;
 		static bool hashesFound = false;
 
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 		public static void StaticInitializeOnLoad()
 		{
 			leftHandHash = 0;

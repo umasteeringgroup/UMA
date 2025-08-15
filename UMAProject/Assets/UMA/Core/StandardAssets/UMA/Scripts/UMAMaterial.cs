@@ -105,7 +105,7 @@ namespace UMA
 			new Color(0,0,0,0)
 		};
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             ChannelBackground = new Color[]

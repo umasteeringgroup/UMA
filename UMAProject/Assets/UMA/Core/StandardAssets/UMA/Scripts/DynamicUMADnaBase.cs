@@ -47,7 +47,7 @@ namespace UMA
 
 		protected static Dictionary<string, DynamicUMADnaAsset> DynamicDNADictionary = null;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             DynamicDNADictionary = null;

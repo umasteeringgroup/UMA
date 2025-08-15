@@ -85,7 +85,7 @@ namespace UMA
 		static protected int rightShoulderHash;
 		static protected int mandibleHash;
 
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 		public static void StaticInitializeOnLoad()
 		{
             // Initialize all the hashes

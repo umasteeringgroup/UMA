@@ -80,7 +80,7 @@ namespace UMA
 
         public static HashSet<int> CreatedAvatars = new HashSet<int>();
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             CreatedAvatars = new HashSet<int>();

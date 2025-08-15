@@ -85,7 +85,7 @@ namespace UMA
 		static NativeArray<BoneWeight1> nativeBoneWeights;
 		static NativeArray<byte> nativeBonesPerVertex;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
 			if (nativeBoneWeights.IsCreated)

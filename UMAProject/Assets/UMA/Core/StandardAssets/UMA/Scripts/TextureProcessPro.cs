@@ -50,7 +50,7 @@ namespace UMA
         UMAGeneratorBase umaGenerator;
 
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             TextureFormats = new Dictionary<RenderTextureFormat, TextureFormat>()
