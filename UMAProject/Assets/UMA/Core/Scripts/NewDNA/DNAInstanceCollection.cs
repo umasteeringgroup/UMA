@@ -50,7 +50,9 @@ namespace UMA
             }
             else
             {
+#if UNITY_EDITOR
                 Debug.LogWarning($"DNA with name '{dnaName}' not found in the collection.");
+#endif
                 return null;
             }
         }

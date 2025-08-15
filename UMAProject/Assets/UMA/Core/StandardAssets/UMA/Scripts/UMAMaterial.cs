@@ -93,11 +93,6 @@ namespace UMA
             DetailNormalMap = 5,
         }
 
-		static public Color GetBackgroundColor(ChannelType channelType)
-		{
-			return ChannelBackground[(int)channelType];
-		}
-
 		//The ChannelTypes index into this for it's corresponding background color.
 		//Needed to have normalMaps have a grey background for proper blending
 		static Color[] ChannelBackground =
@@ -109,6 +104,27 @@ namespace UMA
 			new Color(0,0,0,0),
 			new Color(0,0,0,0)
 		};
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            ChannelBackground = new Color[]
+            {
+                new Color(0,0,0,0), // Texture
+                Color.grey,        // NormalMap
+                new Color(0,0,0,0), // MaterialColor
+                new Color(0,0,0,0), // TintedTexture
+                new Color(0,0,0,0), // DiffuseTexture
+                new Color(0,0,0,0)  // DetailNormalMap
+            };
+        }
+
+        static public Color GetBackgroundColor(ChannelType channelType)
+		{
+			return ChannelBackground[(int)channelType];
+		}
+
+
 
         [Serializable]
         public struct MaterialChannel
@@ -131,6 +147,7 @@ namespace UMA
 			UMA.CustomAssetUtility.CreateAsset<UMAMaterial>();
 		}
 #endif
+
 
         public List<string> GetTexturePropertyNames()
         {

@@ -687,12 +687,13 @@ namespace UMA.CharacterSystem.Examples
 		{
 			if (GenericColorList == null)
 			{
-				if (Debug.isDebugBuild)
+#if UNITY_EDITOR
+                if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("[TestCustomizerDD] the GenericColorList was null or missing, this must be set.");
                 }
-
-                return;
+#endif
+				return;
 			}
 			int colorTableSelected = -1;
 			SharedColorTable thisColorTable = null;
@@ -701,12 +702,14 @@ namespace UMA.CharacterSystem.Examples
 				thisColorTable = sharedColorTables[sharedColorTables.FindIndex(s => s.name == colorType.name)].sharedColorTable;
 				if (thisColorTable == null)
 				{
-					if (Debug.isDebugBuild)
+#if UNITY_EDITOR
+
+                    if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning("[TestCustomizerDD] the colorList for " + colorType.name + " was null or missing, please set this or remove it from the list.");
                     }
-
-                    return;
+#endif
+					return;
 				}
 				for (int i = 0; i < thisColorTable.colors.Length; i++)
 				{

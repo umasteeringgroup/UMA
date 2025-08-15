@@ -71,11 +71,12 @@ namespace UMA
             gameObject.name = "GeometrySelector";
             if (_sharedMesh == null)
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
                 }
-
+#endif
                 return;
             }
 
@@ -225,6 +226,7 @@ namespace UMA
 
                 UpdateSelectionMesh();
             }
+#if UNITY_EDITOR
             else
             {
                 if (Debug.isDebugBuild)
@@ -232,6 +234,7 @@ namespace UMA
                     Debug.LogWarning("selectedTriangles is null! Try starting editing again.");
                 }
             }
+#endif
         }
 
         public void UpdateSelectionMesh()
@@ -265,21 +268,23 @@ namespace UMA
 
             if (_sharedMesh.uv == null)
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("UpdateFromTexture: This mesh has no uv data!");
                 }
-
+#endif
                 return;
             }
 
             if (selectedTriangles == null)
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("UpdateFromTexture: selectedTriangles is null!");
                 }
-
+#endif
                 return;
             }
 

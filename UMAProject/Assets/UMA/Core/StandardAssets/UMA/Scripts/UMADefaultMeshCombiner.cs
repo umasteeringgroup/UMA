@@ -254,7 +254,9 @@ namespace UMA
                 {
 					if (i >= renderer.sharedMesh.subMeshCount) 
 					{
-						Debug.LogWarning("Submesh count mismatch between generated materials and renderer mesh. This can happen if you have overlays applied to a utility (non-mesh) slot somehow. This can cause the wrong materials to be applied to the mesh.");
+#if UNITY_EDITOR
+                        Debug.LogWarning("Submesh count mismatch between generated materials and renderer mesh. This can happen if you have overlays applied to a utility (non-mesh) slot somehow. This can cause the wrong materials to be applied to the mesh.");
+#endif
 						break;
 					}
 					var cm = combinedMaterialList[i];

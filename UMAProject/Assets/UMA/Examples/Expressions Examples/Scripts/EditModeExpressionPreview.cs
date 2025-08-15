@@ -44,12 +44,13 @@ namespace UMA.PoseTools
 				expressionPlayer = gameObject.GetComponent<ExpressionPlayer>();
 				if (expressionPlayer == null)
 				{
-					if (Debug.isDebugBuild)
+#if UNITY_EDITOR
+                    if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning("Couldn't find expression player to preview!");
                     }
-
-                    return;
+#endif
+					return;
 				}
 			}
 

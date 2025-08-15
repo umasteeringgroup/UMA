@@ -59,7 +59,9 @@ namespace UMA.Examples
         {
             if (_avatar == null || _umaData == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("UMAManualLOD: Avatar or UMAData is not initialized.");
+#endif
                 return;
             }
  

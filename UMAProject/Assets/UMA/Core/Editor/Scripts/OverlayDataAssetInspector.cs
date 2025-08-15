@@ -22,16 +22,18 @@ namespace UMA.Editors
 		private SerializedProperty _tags;
 		private SerializedProperty _occlusionEntries;
 		private SerializedProperty _noAutoAdd;
+		private SerializedProperty _dontMergeDuplicates;
 
 
-		void OnEnable()
+        void OnEnable()
 		{
 			_overlayName = serializedObject.FindProperty("overlayName");
 			_overlayType = serializedObject.FindProperty("overlayType");
 			_umaMaterial = serializedObject.FindProperty("material");
 			_textureList = serializedObject.FindProperty("textureList");
 			_blendList =   serializedObject.FindProperty("overlayBlend");
-			_rect = serializedObject.FindProperty("rect");
+			_dontMergeDuplicates = serializedObject.FindProperty("dontMergeDuplicates");
+            _rect = serializedObject.FindProperty("rect");
 			_alphaMask = serializedObject.FindProperty("alphaMask");
 			_tags = serializedObject.FindProperty("tags");
 			_occlusionEntries = serializedObject.FindProperty("OcclusionEntries");
@@ -78,6 +80,7 @@ namespace UMA.Editors
             EditorGUILayout.LabelField("Note: It is recommended to use UV coordinates (0.0 -> 1.0) in 2.10+ for rect fields.", EditorStyles.helpBox);
             EditorGUILayout.PropertyField(_rect);
             EditorGUILayout.PropertyField(_noAutoAdd);
+			EditorGUILayout.PropertyField(_dontMergeDuplicates, new GUIContent("Don't Merge Duplicates", "If this is true, this overlay will not removed if it's a duplicate"));
 
             Rect dropArea = new Rect();
             dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));

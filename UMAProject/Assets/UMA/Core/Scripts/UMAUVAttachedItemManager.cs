@@ -26,10 +26,7 @@ namespace UMA
 		// events
 		public event System.Action<UMAData> UmaUvAttachedItemManagerUpdated;
 
-		public void Start()
-        {
-            //Debug.Log($"Start {GetInstanceID()}");
-        }
+
 
         public void OnDestroy()
         {
@@ -42,15 +39,6 @@ namespace UMA
                     attachedItem.CleanUp();
                 }
             }
-        }
-
-        public void OnEnable()
-        {
-            //Debug.Log($"Enable {GetInstanceID()}");
-        }
-        public void OnDisable()
-        {
-            //Debug.Log($"Disable {GetInstanceID()}");
         }
 
 

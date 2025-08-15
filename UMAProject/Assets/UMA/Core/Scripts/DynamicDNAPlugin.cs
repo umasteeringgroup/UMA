@@ -340,11 +340,16 @@ namespace UMA
 
 		private static List<Type> _pluginTypes;
 
-		#endregion
+        #endregion
 
-		#region PUBLIC STATIC METHODS
+        #region PUBLIC STATIC METHODS
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+			_pluginTypes = null;
+        }
 
-		public static List<Type> GetAvailablePluginTypes()
+        public static List<Type> GetAvailablePluginTypes()
 		{
 			if (_pluginTypes == null)
 			{

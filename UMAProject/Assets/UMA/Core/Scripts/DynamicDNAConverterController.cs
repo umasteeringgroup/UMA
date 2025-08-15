@@ -76,12 +76,13 @@ namespace UMA
                 {
                     return _dnaAsset.dnaTypeHash;
                 }
+#if UNITY_EDITOR
                 else
                 {
                     Debug.LogWarning(this.name + " did not have a DNA Asset assigned. This is required for DynamicDnaConverterControllers.");
                 }
-
-                return 0;
+#endif
+				return 0;
 			}
 		}
 
@@ -610,17 +611,23 @@ namespace UMA
 			//Checks and warnings
 			if (pluginType == null)
 			{
+#if UNITY_EDITOR
 				Debug.LogWarning("Could not create plugin because the plugin type was null");
+#endif
 				return null;
 			}
 			if (converter == null)
 			{
-				Debug.LogWarning("Could not create plugin because no converterController was provided to add it to");
+#if UNITY_EDITOR
+                Debug.LogWarning("Could not create plugin because no converterController was provided to add it to");
+#endif
 				return null;
 			}
 			if (!DynamicDNAPlugin.IsValidPluginType(pluginType))
 			{
-				Debug.LogWarning("Could not create plugin because it did not descend from DynamicDNAPlugin");
+#if UNITY_EDITOR
+                Debug.LogWarning("Could not create plugin because it did not descend from DynamicDNAPlugin");
+#endif
 				return null;
 			}
 

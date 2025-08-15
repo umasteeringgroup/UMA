@@ -25,7 +25,9 @@ namespace UMA
 
             if (Application.isPlaying)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning(string.Format("The BoneVisualizer on {0} is a helper component and should be removed for a final build.", gameObject.name));
+#endif
             }
         }
 

@@ -30,7 +30,6 @@ namespace UMA
             {"_Add3_0","_Add3_1","_Add3_2","_Add3_3" }
         };
 
-        static string[] alphaMaskProperties = { "_AlphaMask", "_AlphaMask1", "_AlphaMask2", "_AlphaMask3", "_AlphaMask4", "_AlphaMask5", "_AlphaMask6", "_AlphaMask7" };
         static Dictionary<RenderTextureFormat, TextureFormat> TextureFormats = new Dictionary<RenderTextureFormat, TextureFormat>()
         {
             {RenderTextureFormat.ARGB32, TextureFormat.ARGB32 },
@@ -50,6 +49,25 @@ namespace UMA
         Texture[] resultingTextures;
         UMAGeneratorBase umaGenerator;
 
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            TextureFormats = new Dictionary<RenderTextureFormat, TextureFormat>()
+            {
+                {RenderTextureFormat.ARGB32, TextureFormat.ARGB32 },
+                {RenderTextureFormat.ARGB4444, TextureFormat.ARGB4444 },
+                {RenderTextureFormat.BGRA32, TextureFormat.BGRA32 },
+                {RenderTextureFormat.RFloat , TextureFormat.RFloat },
+                {RenderTextureFormat.R8 , TextureFormat.R8 },
+                {RenderTextureFormat.RG16 , TextureFormat.R16 },
+                {RenderTextureFormat.RGB565 , TextureFormat.RGB565 },
+                {RenderTextureFormat.RHalf , TextureFormat.RHalf },
+                {RenderTextureFormat.RGFloat, TextureFormat.RGFloat},
+                {RenderTextureFormat.RGHalf , TextureFormat.RGHalf },
+                {RenderTextureFormat.ARGB1555 , TextureFormat.ARGB32 }
+            };
+        }
         public bool SupportsRTToTexture2D
         {
             get
@@ -274,6 +292,8 @@ namespace UMA
                                         {
                                             generatedMaterial.material.SetColor(slotData.material.channels[textureChannelNumber].materialPropertyName, generatedMaterial.materialFragments[0].baseColor);
                                         }
+#if UNITY_EDITOR
+
                                         else
                                         {
                                             if (Debug.isDebugBuild)
@@ -281,7 +301,10 @@ namespace UMA
                                                 Debug.LogWarning($"Material property {slotData.material.channels[textureChannelNumber].materialPropertyName} is not a color property in UMAMaterial {slotData.material.name}");
                                             }
                                         }
+#endif
                                     }
+#if UNITY_EDITOR
+
                                     else
                                     {
                                         if (Debug.isDebugBuild)
@@ -289,7 +312,7 @@ namespace UMA
                                             Debug.LogWarning("Material property " + slotData.material.channels[textureChannelNumber].materialPropertyName + " not found in shader " + generatedMaterial.material.shader.name);
                                         }
                                     }
-
+#endif
                                     break;
                                 }
                             case UMAMaterial.ChannelType.TintedTexture:
@@ -421,7 +444,7 @@ namespace UMA
                     else
                     {
                         ColorTints[i] = Color.white;
-                        ColorAdds[i] = OverlayColorData.EmptyAdditive;
+                        ColorAdds[i] = new Color(0, 0, 0, 0);
                     }
                     // don't go out of bounds if someone goes crazy with overlays and channels
                     if (c < tintProperties.GetLength(1) && ovl < tintProperties.GetLength(0))
@@ -489,7 +512,9 @@ namespace UMA
             }
             catch (Exception ex)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("Exception processing Texture channel " + textureChannelNumber + " in material " + umaMaterial.name + " " + ex.Message);
+#endif
                 return;
             }
 

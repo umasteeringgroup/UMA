@@ -26,9 +26,11 @@ public class BaseUpdatedObject : ScriptableObject
         {
             DoUpdate(umaData, Time.fixedDeltaTime);
         }
+#if UNITY_EDITOR
         else
         {
             Debug.LogWarning("BaseBoneAnimator not initialized or UMAData is null. Please call Initialize() before using DoUpdate().");
         }
+#endif
     }
 }

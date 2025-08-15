@@ -96,7 +96,14 @@ namespace UMA
 		}
 
 		public static UMATransformComparer TransformComparer = new UMATransformComparer();
-		public class UMATransformComparer : IComparer<UMATransform>
+
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            TransformComparer = new UMATransformComparer();
+        }
+        public class UMATransformComparer : IComparer<UMATransform>
 		{
 			#region IComparer<UMATransform> Members
 
@@ -415,7 +422,14 @@ namespace UMA
 
         public static Dictionary<int, NativeArray<int>> SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
 
-		public int BoneWeightOffset(int vertexIndex)
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
+        }
+
+        public int BoneWeightOffset(int vertexIndex)
         {
             int offset = 0;
             for (int i = 0; i < vertexIndex; i++)

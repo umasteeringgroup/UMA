@@ -18,10 +18,13 @@ namespace UMA.Timeline
 
             if (avatar == null)
             {
+#if UNITY_EDITOR
+
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("No DynamicCharacterAvatar set for UmaColor Playable!");
                 }
+#endif
                 return;
             }
 

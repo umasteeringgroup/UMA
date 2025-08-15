@@ -80,9 +80,6 @@ namespace UMA
 		[NonSerialized]
 		public long pendingUmas;
 
-        public virtual void OnEnable()
-		{
-		}
 
 		public virtual void Awake()
 		{
@@ -153,7 +150,6 @@ namespace UMA
 			return null;
 		}
 
-		public static uint WorkCount = 0;
 		public override void Work()
 		{
 			RenderTexToCPU.ApplyInline = applyInline;
@@ -718,13 +714,15 @@ namespace UMA
                 }
 
                 umaData.FireCharacterCompletedEvents(fireEvents);
-				if (umaData.skeleton.boneCount > 600)
+#if UNITY_EDITOR
+                if (umaData.skeleton.boneCount > 600)
 				{
 					if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
                     }
                 }
+#endif
 			}
 		}
 

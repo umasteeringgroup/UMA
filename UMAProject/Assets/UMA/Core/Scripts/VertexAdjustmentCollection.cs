@@ -96,6 +96,11 @@ namespace UMA
         }
 
         private static List<VertexAdjustment>  adjustmentTypes = new List<VertexAdjustment>();
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            adjustmentTypes = new List<VertexAdjustment>();
+        }
 
         public static List<VertexAdjustment> AdjustmentTypes
         {

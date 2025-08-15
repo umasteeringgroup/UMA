@@ -468,8 +468,10 @@ namespace UMA
                         }
 						else
 						{
-                            Debug.LogWarning("UMAData.UMARecipe is null");
-                        }
+#if UNITY_EDITOR
+							Debug.LogWarning("UMAData.UMARecipe is null");
+#endif
+						}
                     }
                 }
 

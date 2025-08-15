@@ -35,7 +35,9 @@ namespace UMA.Examples
         {
             if (!fpsTextOutput)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("UtilityFramesPerSecond needs a Text component for output!");
+#endif
                 enabled = false;
                 return;
             }

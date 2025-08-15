@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace UMA
 {
     /// <summary>
@@ -8,7 +10,6 @@ namespace UMA
     /// </remarks>
     public class HumanoidDNAConverterBehaviour : DnaConverterBehaviour 
 	{
-		static bool builtHashes = false;
 		static protected int headAdjustHash;
 		static protected int neckAdjustHash;
 		static protected int leftOuterBreastHash;
@@ -83,90 +84,85 @@ namespace UMA
 		static protected int leftShoulderHash;
 		static protected int rightShoulderHash;
 		static protected int mandibleHash;
-		
-		public override void Prepare()
-		{
-			if (builtHashes)
-            {
-                return;
-            }
 
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+		public static void StaticInitializeOnLoad()
+		{
+            // Initialize all the hashes
             headAdjustHash = UMAUtils.StringToHash("HeadAdjust");
-			neckAdjustHash = UMAUtils.StringToHash("NeckAdjust");
-			leftOuterBreastHash = UMAUtils.StringToHash("LeftOuterBreast");
-			rightOuterBreastHash = UMAUtils.StringToHash("RightOuterBreast");
-			leftEyeHash = UMAUtils.StringToHash("LeftEye");
-			rightEyeHash = UMAUtils.StringToHash("RightEye");
-			leftEyeAdjustHash = UMAUtils.StringToHash("LeftEyeAdjust");
-			rightEyeAdjustHash = UMAUtils.StringToHash("RightEyeAdjust");
-			spine1AdjustHash = UMAUtils.StringToHash("Spine1Adjust");
-			spineAdjustHash = UMAUtils.StringToHash("SpineAdjust");
-			lowerBackBellyHash = UMAUtils.StringToHash("LowerBackBelly");
-			lowerBackAdjustHash = UMAUtils.StringToHash("LowerBackAdjust");
-			leftTrapeziusHash = UMAUtils.StringToHash("LeftTrapezius");
-			rightTrapeziusHash = UMAUtils.StringToHash("RightTrapezius");
-			leftArmAdjustHash = UMAUtils.StringToHash("LeftArmAdjust");
-			rightArmAdjustHash = UMAUtils.StringToHash("RightArmAdjust");
-			leftForeArmAdjustHash = UMAUtils.StringToHash("LeftForeArmAdjust");
-			rightForeArmAdjustHash = UMAUtils.StringToHash("RightForeArmAdjust");
-			leftForeArmTwistAdjustHash = UMAUtils.StringToHash("LeftForeArmTwistAdjust");
-			rightForeArmTwistAdjustHash = UMAUtils.StringToHash("RightForeArmTwistAdjust");
-			leftShoulderAdjustHash = UMAUtils.StringToHash("LeftShoulderAdjust");
-			rightShoulderAdjustHash = UMAUtils.StringToHash("RightShoulderAdjust");
-			leftUpLegAdjustHash = UMAUtils.StringToHash("LeftUpLegAdjust");
-			rightUpLegAdjustHash = UMAUtils.StringToHash("RightUpLegAdjust");
-			leftLegAdjustHash = UMAUtils.StringToHash("LeftLegAdjust");
-			rightLegAdjustHash = UMAUtils.StringToHash("RightLegAdjust");
-			leftGluteusHash = UMAUtils.StringToHash("LeftGluteus");
-			rightGluteusHash = UMAUtils.StringToHash("RightGluteus");
-			leftEarAdjustHash = UMAUtils.StringToHash("LeftEarAdjust");
-			rightEarAdjustHash = UMAUtils.StringToHash("RightEarAdjust");
-			noseBaseAdjustHash = UMAUtils.StringToHash("NoseBaseAdjust");
-			noseMiddleAdjustHash = UMAUtils.StringToHash("NoseMiddleAdjust");
-			leftNoseAdjustHash = UMAUtils.StringToHash("LeftNoseAdjust");
-			rightNoseAdjustHash = UMAUtils.StringToHash("RightNoseAdjust");
-			upperLipsAdjustHash = UMAUtils.StringToHash("UpperLipsAdjust");
-			mandibleAdjustHash = UMAUtils.StringToHash("MandibleAdjust");
-			leftLowMaxilarAdjustHash = UMAUtils.StringToHash("LeftLowMaxilarAdjust");
-			rightLowMaxilarAdjustHash = UMAUtils.StringToHash("RightLowMaxilarAdjust");
-			leftCheekAdjustHash = UMAUtils.StringToHash("LeftCheekAdjust");
-			rightCheekAdjustHash = UMAUtils.StringToHash("RightCheekAdjust");
-			leftLowCheekAdjustHash = UMAUtils.StringToHash("LeftLowCheekAdjust");
-			rightLowCheekAdjustHash = UMAUtils.StringToHash("RightLowCheekAdjust");
-			noseTopAdjustHash = UMAUtils.StringToHash("NoseTopAdjust");
-			leftEyebrowLowAdjustHash = UMAUtils.StringToHash("LeftEyebrowLowAdjust");
-			rightEyebrowLowAdjustHash = UMAUtils.StringToHash("RightEyebrowLowAdjust");
-			leftEyebrowMiddleAdjustHash = UMAUtils.StringToHash("LeftEyebrowMiddleAdjust");
-			rightEyebrowMiddleAdjustHash = UMAUtils.StringToHash("RightEyebrowMiddleAdjust");
-			leftEyebrowUpAdjustHash = UMAUtils.StringToHash("LeftEyebrowUpAdjust");
-			rightEyebrowUpAdjustHash = UMAUtils.StringToHash("RightEyebrowUpAdjust");
-			lipsSuperiorAdjustHash = UMAUtils.StringToHash("LipsSuperiorAdjust");
-			lipsInferiorAdjustHash = UMAUtils.StringToHash("LipsInferiorAdjust");
-			leftLipsSuperiorMiddleAdjustHash = UMAUtils.StringToHash("LeftLipsSuperiorMiddleAdjust");
-			rightLipsSuperiorMiddleAdjustHash = UMAUtils.StringToHash("RightLipsSuperiorMiddleAdjust");
-			leftLipsInferiorAdjustHash = UMAUtils.StringToHash("LeftLipsInferiorAdjust");
-			rightLipsInferiorAdjustHash = UMAUtils.StringToHash("RightLipsInferiorAdjust");
-			leftLipsAdjustHash = UMAUtils.StringToHash("LeftLipsAdjust");
-			rightLipsAdjustHash = UMAUtils.StringToHash("RightLipsAdjust");
-			globalHash = UMAUtils.StringToHash("Global");
-			positionHash = UMAUtils.StringToHash("Position");
-			lowerBackHash = UMAUtils.StringToHash("LowerBack");
-			headHash = UMAUtils.StringToHash("Head");
-			leftArmHash = UMAUtils.StringToHash("LeftArm");
-			rightArmHash = UMAUtils.StringToHash("RightArm");
-			leftForeArmHash = UMAUtils.StringToHash("LeftForeArm");
-			rightForeArmHash = UMAUtils.StringToHash("RightForeArm");
-			leftHandHash = UMAUtils.StringToHash("LeftHand");
-			rightHandHash = UMAUtils.StringToHash("RightHand");
-			leftFootHash = UMAUtils.StringToHash("LeftFoot");
-			rightFootHash = UMAUtils.StringToHash("RightFoot");
-			leftUpLegHash = UMAUtils.StringToHash("LeftUpLeg");
-			rightUpLegHash = UMAUtils.StringToHash("RightUpLeg");
-			leftShoulderHash = UMAUtils.StringToHash("LeftShoulder");
-			rightShoulderHash = UMAUtils.StringToHash("RightShoulder");
-			mandibleHash = UMAUtils.StringToHash("Mandible");
-			
-			builtHashes = true;
-		}
+            neckAdjustHash = UMAUtils.StringToHash("NeckAdjust");
+            leftOuterBreastHash = UMAUtils.StringToHash("LeftOuterBreast");
+            rightOuterBreastHash = UMAUtils.StringToHash("RightOuterBreast");
+            leftEyeHash = UMAUtils.StringToHash("LeftEye");
+            rightEyeHash = UMAUtils.StringToHash("RightEye");
+            leftEyeAdjustHash = UMAUtils.StringToHash("LeftEyeAdjust");
+            rightEyeAdjustHash = UMAUtils.StringToHash("RightEyeAdjust");
+            spine1AdjustHash = UMAUtils.StringToHash("Spine1Adjust");
+            spineAdjustHash = UMAUtils.StringToHash("SpineAdjust");
+            lowerBackBellyHash = UMAUtils.StringToHash("LowerBackBelly");
+            lowerBackAdjustHash = UMAUtils.StringToHash("LowerBackAdjust");
+            leftTrapeziusHash = UMAUtils.StringToHash("LeftTrapezius");
+            rightTrapeziusHash = UMAUtils.StringToHash("RightTrapezius");
+            leftArmAdjustHash = UMAUtils.StringToHash("LeftArmAdjust");
+            rightArmAdjustHash = UMAUtils.StringToHash("RightArmAdjust");
+            leftForeArmAdjustHash = UMAUtils.StringToHash("LeftForeArmAdjust");
+            rightForeArmAdjustHash = UMAUtils.StringToHash("RightForeArmAdjust");
+            leftForeArmTwistAdjustHash = UMAUtils.StringToHash("LeftForeArmTwistAdjust");
+            rightForeArmTwistAdjustHash = UMAUtils.StringToHash("RightForeArmTwistAdjust");
+            leftShoulderAdjustHash = UMAUtils.StringToHash("LeftShoulderAdjust");
+            rightShoulderAdjustHash = UMAUtils.StringToHash("RightShoulderAdjust");
+            leftUpLegAdjustHash = UMAUtils.StringToHash("LeftUpLegAdjust");
+            rightUpLegAdjustHash = UMAUtils.StringToHash("RightUpLegAdjust");
+            leftLegAdjustHash = UMAUtils.StringToHash("LeftLegAdjust");
+            rightLegAdjustHash = UMAUtils.StringToHash("RightLegAdjust");
+            leftGluteusHash = UMAUtils.StringToHash("LeftGluteus");
+            rightGluteusHash = UMAUtils.StringToHash("RightGluteus");
+            leftEarAdjustHash = UMAUtils.StringToHash("LeftEarAdjust");
+            rightEarAdjustHash = UMAUtils.StringToHash("RightEarAdjust");
+            noseBaseAdjustHash = UMAUtils.StringToHash("NoseBaseAdjust");
+            noseMiddleAdjustHash = UMAUtils.StringToHash("NoseMiddleAdjust");
+            leftNoseAdjustHash = UMAUtils.StringToHash("LeftNoseAdjust");
+            rightNoseAdjustHash = UMAUtils.StringToHash("RightNoseAdjust");
+            upperLipsAdjustHash = UMAUtils.StringToHash("UpperLipsAdjust");
+            mandibleAdjustHash = UMAUtils.StringToHash("MandibleAdjust");
+            leftLowMaxilarAdjustHash = UMAUtils.StringToHash("LeftLowMaxilarAdjust");
+            rightLowMaxilarAdjustHash = UMAUtils.StringToHash("RightLowMaxilarAdjust");
+            leftCheekAdjustHash = UMAUtils.StringToHash("LeftCheekAdjust");
+            rightCheekAdjustHash = UMAUtils.StringToHash("RightCheekAdjust");
+            leftLowCheekAdjustHash = UMAUtils.StringToHash("LeftLowCheekAdjust");
+            rightLowCheekAdjustHash = UMAUtils.StringToHash("RightLowCheekAdjust");
+            noseTopAdjustHash = UMAUtils.StringToHash("NoseTopAdjust");
+            leftEyebrowLowAdjustHash = UMAUtils.StringToHash("LeftEyebrowLowAdjust");
+            rightEyebrowLowAdjustHash = UMAUtils.StringToHash("RightEyebrowLowAdjust");
+            leftEyebrowMiddleAdjustHash = UMAUtils.StringToHash("LeftEyebrowMiddleAdjust");
+            rightEyebrowMiddleAdjustHash = UMAUtils.StringToHash("RightEyebrowMiddleAdjust");
+            leftEyebrowUpAdjustHash = UMAUtils.StringToHash("LeftEyebrowUpAdjust");
+            rightEyebrowUpAdjustHash = UMAUtils.StringToHash("RightEyebrowUpAdjust");
+            lipsSuperiorAdjustHash = UMAUtils.StringToHash("LipsSuperiorAdjust");
+            lipsInferiorAdjustHash = UMAUtils.StringToHash("LipsInferiorAdjust");
+            leftLipsSuperiorMiddleAdjustHash = UMAUtils.StringToHash("LeftLipsSuperiorMiddleAdjust");
+            rightLipsSuperiorMiddleAdjustHash = UMAUtils.StringToHash("RightLipsSuperiorMiddleAdjust");
+            leftLipsInferiorAdjustHash = UMAUtils.StringToHash("LeftLipsInferiorAdjust");
+            rightLipsInferiorAdjustHash = UMAUtils.StringToHash("RightLipsInferiorAdjust");
+            leftLipsAdjustHash = UMAUtils.StringToHash("LeftLipsAdjust");
+            rightLipsAdjustHash = UMAUtils.StringToHash("RightLipsAdjust");
+            globalHash = UMAUtils.StringToHash("Global");
+            positionHash = UMAUtils.StringToHash("Position");
+            lowerBackHash = UMAUtils.StringToHash("LowerBack");
+            headHash = UMAUtils.StringToHash("Head");
+            leftArmHash = UMAUtils.StringToHash("LeftArm");
+            rightArmHash = UMAUtils.StringToHash("RightArm");
+            leftForeArmHash = UMAUtils.StringToHash("LeftForeArm");
+            rightForeArmHash = UMAUtils.StringToHash("RightForeArm");
+            leftHandHash = UMAUtils.StringToHash("LeftHand");
+            rightHandHash = UMAUtils.StringToHash("RightHand");
+            leftFootHash = UMAUtils.StringToHash("LeftFoot");
+            rightFootHash = UMAUtils.StringToHash("RightFoot");
+            leftUpLegHash = UMAUtils.StringToHash("LeftUpLeg");
+            rightUpLegHash = UMAUtils.StringToHash("RightUpLeg");
+            leftShoulderHash = UMAUtils.StringToHash("LeftShoulder");
+            rightShoulderHash = UMAUtils.StringToHash("RightShoulder");
+            mandibleHash = UMAUtils.StringToHash("Mandible");
+        }
 	}
 }

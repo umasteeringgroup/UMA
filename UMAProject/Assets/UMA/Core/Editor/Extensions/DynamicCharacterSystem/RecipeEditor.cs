@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UMA.Integrations;
 using System.Collections;
 
 namespace UMA.Editors
@@ -203,7 +202,6 @@ namespace UMA.Editors
 				}
 			}
 
-            PowerToolsGUI();
             base.OnInspectorGUI();
 		}
 
@@ -226,50 +224,8 @@ namespace UMA.Editors
         {
             base.Rebuild();
             var recipeBase = target as UMARecipeBase;
-            if (PowerToolsIntegration.HasPowerTools() && PowerToolsIntegration.HasPreview(recipeBase))
-            {
-                _needsUpdate = true;
-            }
         }
 
-        private void PowerToolsGUI()
-        {
-            if (PowerToolsIntegration.HasPowerTools())
-            {
-                GUILayout.BeginHorizontal();
-                var recipeBase = target as UMARecipeBase;
-                if (PowerToolsIntegration.HasPreview(recipeBase))
-                {
-                    if (GUILayout.Button("Hide"))
-                    {
-                        PowerToolsIntegration.Hide(recipeBase);
-                    }
-                    if (GUILayout.Button("Create Prefab"))
-                    {
-                        //PowerToolsIntegration.CreatePrefab(recipeBase);
-                    }
-                    if (GUILayout.Button("Hide All"))
-                    {
-                        PowerToolsIntegration.HideAll();
-                    }
-                } else
-                {
-                    if (GUILayout.Button("Show"))
-                    {
-                        PowerToolsIntegration.Show(recipeBase);
-                    }
-                    if (GUILayout.Button("Create Prefab"))
-                    {
-                        //PowerToolsIntegration.CreatePrefab(recipeBase);
-                    }
-                    if (GUILayout.Button("Hide All"))
-                    {
-                        PowerToolsIntegration.HideAll();
-                    }
-                }
-                GUILayout.EndHorizontal();
-            }
-        }
 
 		/// <summary>
 		/// Checks if the given RaceData is in the globalLibrary or an assetBundle

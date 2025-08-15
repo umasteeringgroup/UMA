@@ -241,9 +241,14 @@ namespace UMA.Examples
             }
 
             return true;
-		}
+        }
 
-
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            // Clear the LOD cache when we do a domain reload.
+            LODSFound = new Dictionary<string, string[]>();
+        }
         // Should this be in the library?
         // Key:   string slotName.  This is the base slot name.
         // Value: Array of strings, one for each possible LOD level.

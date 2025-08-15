@@ -963,7 +963,8 @@ namespace UMA
 						var tempSlotData = context.InstantiateSlot(packedSlot.id);
 						if (tempSlotData == null)
 						{
-							if (Debug.isDebugBuild)
+#if UNITY_EDITOR
+                            if (Debug.isDebugBuild)
 							{
 								var assetItem = context.GetAssetItem<SlotDataAsset>(packedSlot.id);
 								if (assetItem == null)
@@ -975,6 +976,7 @@ namespace UMA
                                     Debug.LogWarning($"Slot {packedSlot.id} AssetItem found, but slot not instantiated.");
                                 }
 							}
+#endif
 							continue;
 						}
 						if (packedSlot.Tags != null)

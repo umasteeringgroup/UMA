@@ -628,11 +628,6 @@ namespace UMA.CharacterSystem
 
         private void SetUMADataOptions()
         {
-            if (umaData == null)
-            {
-                Debug.LogWarning("UMAData is null, cannot set blendshape settings");
-                return;
-            }
             if (blendShapeSettings == null)
             {
 #if DEBUG_BAKING
@@ -911,10 +906,6 @@ namespace UMA.CharacterSystem
                     ToggleHide(hide);
                 }
             }
-        }
-
-        void OnDisable()
-        {
         }
 
         void OnDestroy()
@@ -1421,11 +1412,13 @@ namespace UMA.CharacterSystem
             if (activeRace.name == "" || activeRace.name == "None Set")
             {
                 activeRace.data = null;
+#if UNITY_EDITOR
+
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("No activeRace set. Aborting build");
                 }
-
+#endif
                 return false;
             }
             //ImportSettingsCO might have changed the activeRace.name so we may still need to change the actual racedata if activeRace.racedata.raceName is different
@@ -1446,11 +1439,12 @@ namespace UMA.CharacterSystem
             //if we are loading an old UMARecipe from the recipe field and the old race is not in resources the race will be null but the recipe wont be 
             if (serializedRecipe == null)
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("[SetActiveRace] could not find baseRaceRecipe for the race " + activeRace.name + ". Have you set one in the raceData?");
                 }
-
+#endif
                 return false;
             }
             return true;
@@ -1685,6 +1679,7 @@ namespace UMA.CharacterSystem
                             }
                         }
                     }
+#if UNITY_EDITOR
                     else
                     {
                         if (Debug.isDebugBuild && recipe._recipe == null)
@@ -1692,6 +1687,7 @@ namespace UMA.CharacterSystem
                             Debug.LogWarning("[DynamicCharacterAvatar:LoadDefaultWardrobe] recipe._recipe was null for " + recipe._recipeName);
                         }
                     }
+#endif
                 }
             }
         }
@@ -1714,8 +1710,10 @@ namespace UMA.CharacterSystem
 
             List<UMATextRecipe> SlotRecipes = recipes[Slotname];
 			if(SlotRecipes == null) { //VES added
-				Debug.LogWarning("DCA SlotRecipes is null");
-				return null;
+#if UNITY_EDITOR
+                Debug.LogWarning("DCA SlotRecipes is null");
+#endif
+                return null;
 			}
             for (int i = 0; i < SlotRecipes.Count; i++)
             {
@@ -1845,23 +1843,30 @@ namespace UMA.CharacterSystem
             }
         }
 
-        //
-        public List<UMATextRecipe> GetWearableItems(string SlotName, bool Appended)
+        /// <summary>
+        /// Gets all wearable items that were appended to the given slot.
+        /// </summary>
+        /// <param name="SlotName"></param>
+        /// <returns></returns>
+        public List<UMATextRecipe> GetAppendedWearableItems(string SlotName)
         {
-            if (Appended)
+            if (_additiveRecipes.ContainsKey(SlotName))
             {
-                if (_additiveRecipes.ContainsKey(SlotName))
-                {
-                    return _additiveRecipes[SlotName];
-                }
-                return new List<UMATextRecipe>();
+                return _additiveRecipes[SlotName];
             }
-            else
+            return new List<UMATextRecipe>();
+        }
+
+        /// <summary>
+        /// Gets the wearable item for the given slot.
+        /// </summary>
+        /// <param name="SlotName"></param>
+        /// <returns></returns>
+        public UMATextRecipe GetWearableItem(string SlotName)
+        {
+            if (_wardrobeRecipes.ContainsKey(SlotName))
             {
-                if (_wardrobeRecipes.ContainsKey(SlotName))
-                {
-                    return new List<UMATextRecipe> { _wardrobeRecipes[SlotName] };
-                }
+                return _wardrobeRecipes[SlotName];
             }
             return null;
         }
@@ -1987,10 +1992,13 @@ namespace UMA.CharacterSystem
             {
                 //throw new Exception("Unable to find slot or recipe for Slotname "+ Slotname+" Recipename "+ Recipename);
                 //it may just be that the race has changed and the current wardrobe didn't fit? If so we dont want to stop everything.
+#if UNITY_EDITOR
+
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("Unable to find slot or recipe for Slotname " + Slotname + " Recipename " + Recipename);
                 }
+#endif
             }
             else
             {
@@ -3655,11 +3663,13 @@ namespace UMA.CharacterSystem
         /// <param name="Recipe"></param>
         public void Preload(string Recipe)
         {
+#if UNITY_EDITOR
+
             if (Debug.isDebugBuild)
             {
                 Debug.LogWarning("DEPRICATED please use SetLoadString instead");
             }
-
+#endif
             loadString = Recipe;
             loadPathType = loadPathTypes.String;
             loadFileOnStart = true;
@@ -3916,10 +3926,12 @@ namespace UMA.CharacterSystem
                 LoadFromRecipeString(recipeString);
                 return;
             }
+#if UNITY_EDITOR
             if (Debug.isDebugBuild)
             {
                 Debug.LogWarning("Asset '" + Name + "' Not found in Global Index");
             }
+#endif
         }
 
         public void LoadFromTextFile(string Name)
@@ -3932,10 +3944,12 @@ namespace UMA.CharacterSystem
                 LoadFromRecipeString(recipeString);
                 return;
             }
+#if UNITY_EDITOR
             if (Debug.isDebugBuild)
             {
                 Debug.LogWarning("Asset '" + Name + "' Not found in Global Index");
             }
+#endif
         }
 
         void GetRecipeStringToLoad()
@@ -4014,11 +4028,12 @@ namespace UMA.CharacterSystem
                     path = (loadPath != "") ? System.IO.Path.Combine(path, loadPath.TrimStart('\\', '/').TrimEnd('\\', '/').Trim()) : path;
                     if (loadFilename == "")
                     {
+#if UNITY_EDITOR
                         if (Debug.isDebugBuild)
                         {
                             Debug.LogWarning("[CharacterAvatar.DoLoad] No filename specified to load!");
                         }
-
+#endif
                         BuildFromComponentSettings();
                         return;
                     }
@@ -4041,11 +4056,12 @@ namespace UMA.CharacterSystem
             }
             else
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("[CharacterAvatar.DoLoad] No TextRecipe found with filename " + loadFilename);
                 }
-
+#endif
                 BuildFromComponentSettings();
             }
         }
@@ -4894,24 +4910,32 @@ namespace UMA.CharacterSystem
         // todo: Should cache these. Maybe in a dictionary by slot name?
         private static Dictionary<string, Mesh> SmooshTargets = new Dictionary<string, Mesh>();
 
-        private static void CreateSmooshScene()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
         {
-            if (SmooshScene.IsValid())
+            SmooshTargets = new Dictionary<string, Mesh>();
+            SmooshScene = CreateSmooshScene(SmooshScene); // Yes, it's cleaning it up, and reassining it to itself. This is to stop a warning from the project auditor
+        }
+
+        private static Scene CreateSmooshScene(Scene scene)
+        {
+            if (scene.IsValid())
             {
-                CleanScene(SmooshScene);
+                CleanScene(scene);
             }
             else
             {
 #if UNITY_EDITOR
-                SmooshScene = EditorSceneManager.NewPreviewScene();
+                scene = EditorSceneManager.NewPreviewScene();
 #else
             CreateSceneParameters csp = new CreateSceneParameters(LocalPhysicsMode.Physics3D);
-            SmooshScene = SceneManager.CreateScene("SmooshScene", csp);
+            scene = SceneManager.CreateScene("SmooshScene", csp);
 #endif
             }
+            return scene;
             }
 
-        private static void CleanScene(Scene scene)
+        private static Scene CleanScene(Scene scene)
         {
             var rootObjects = scene.GetRootGameObjects();
             for (int i = 0; i < rootObjects.Length; i++)
@@ -4923,6 +4947,7 @@ namespace UMA.CharacterSystem
                 GameObject.Destroy(rootObject);
 #endif
             }
+            return scene;
         }
 
         public bool debugVertexes = true;
@@ -4945,7 +4970,7 @@ namespace UMA.CharacterSystem
 
             Physics.BakeMesh(m.GetInstanceID(), false);
 
-            CreateSmooshScene();
+            SmooshScene = CreateSmooshScene(SmooshScene);
 
             GameObject go = new GameObject();
             go.transform.localPosition = Vector3.zero;
@@ -5095,12 +5120,15 @@ namespace UMA.CharacterSystem
                    newVector = SmooshMe.smooshOffset + newVector;
                    newVerts[i].Set(newVector.x * SmooshMe.smooshExpand.x, newVector.y * SmooshMe.smooshExpand.y, newVector.z * SmooshMe.smooshExpand.z);
                 }
+#if UNITY_EDITOR
                 if (debugVertexes)
                 {
                     DrawBox("HairBounds", min, max, Color.red);
                     DrawBox("PlaneBounds", SmooshMin, SmooshMax, Color.blue);
+
                     Debug.LogWarning("Smooshed " + smooshCount + " verts. Unsmooshed: "+unsmooshCount);
                 }
+#endif
                 umaData.AddVertexOverride(SmooshMe, newVerts);
             }
             finally
@@ -5166,6 +5194,8 @@ namespace UMA.CharacterSystem
                 gameObject.GetComponent<UMAExpressionPlayer>().enabled = false;
             }
         }
+
+
 
         public void AddAdditionalSerializedRecipes(List<UMARecipeBase> umaAdditionalSerializedRecipes)
         {

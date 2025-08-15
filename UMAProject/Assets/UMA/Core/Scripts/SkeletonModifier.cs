@@ -91,7 +91,20 @@ namespace UMA.CharacterSystem
 				{SkeletonPropType.Scale,  new Vector3(1f,0f, 5f) }
 			};
 
-		[Obsolete("Please use CalculateValueX((UMADnaBase umaDNA) instead")]
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            // Initialize the default values for the skeleton modifiers?
+            skelAddDefaults = new Dictionary<SkeletonPropType, Vector3>
+            {
+                {SkeletonPropType.Position, new Vector3(0f,-0.1f, 0.1f) },
+                {SkeletonPropType.Rotation, new Vector3(0f,-360f, 360f) },
+                {SkeletonPropType.Scale,  new Vector3(1f,0f, 5f) }
+            };
+        }
+
+        [Obsolete("Please use CalculateValueX((UMADnaBase umaDNA) instead")]
 		public Vector3 ValueX
 		{
 			get { return _valuesX.CalculateValue(_umaDNA); }

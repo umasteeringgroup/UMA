@@ -101,6 +101,10 @@ namespace UMA
             ShowInfo();
         }
 
+        private void OnDestroy()
+        {
+            Application.logMessageReceived -= HandleLog;
+        }
 
 
         // Update is called once per frame

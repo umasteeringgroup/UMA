@@ -516,7 +516,9 @@ namespace UMA
 			{
 				if (pRecipeType != "DynamicCharacterAvatar")
 				{
+#if UNITY_EDITOR
 					Debug.LogWarning("DCSPackRecipe Type can only be used for recipeTypes 'DynamicCharacterAvatar'");
+#endif
 					return;
 				}
 				var recipeToSave = dcaToSave.umaData.umaRecipe;

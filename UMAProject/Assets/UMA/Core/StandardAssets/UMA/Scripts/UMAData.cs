@@ -929,7 +929,8 @@ namespace UMA
 				valid = valid && umaRecipe.Validate();
 			}
 
-			if (animationController == null)
+#if UNITY_EDITOR
+            if (animationController == null)
 			{
 				if (Application.isPlaying)
 				{
@@ -940,7 +941,6 @@ namespace UMA
                 }
 			}
 
-#if UNITY_EDITOR
 			if (!valid && UnityEditor.EditorApplication.isPlaying)
 			{
 				if (Debug.isDebugBuild)
@@ -1179,7 +1179,8 @@ namespace UMA
 		public class UMARecipe
 		{
 			public RaceData raceData;
-			Dictionary<int, UMADnaBase> _umaDna;
+			public string recipeName; // only used when DynamicCharacterAvatar merges the recipe with the avatar.
+            Dictionary<int, UMADnaBase> _umaDna;
 			protected Dictionary<int, UMADnaBase> umaDna
 			{
 				get
@@ -1594,7 +1595,7 @@ namespace UMA
 			/// </summary>
 			/// <param name="slot">Slot.</param>
 			/// <param name="dontSerialize">If set to <c>true</c> slot will not be serialized.</param>
-			public SlotData MergeSlot(SlotData slot, bool dontSerialize, bool mergeMatchingOverlays = true)
+			public SlotData MergeSlot(SlotData slot, bool dontSerialize, bool mergeMatchingOverlays = true, string recipeName = "")
 			{
 				if ((slot == null) || (slot.asset == null))
                 {
@@ -1648,7 +1649,8 @@ namespace UMA
 									}
 								}
                                 overlayCopy.mergedFromSlot = slot;
-								originalSlot.AddOverlay(overlayCopy);
+								overlayCopy.mergedFromRecipe = recipeName;
+                                originalSlot.AddOverlay(overlayCopy);
 							}
 						}
 						originalSlot.dontSerialize = dontSerialize;
@@ -1678,7 +1680,8 @@ namespace UMA
 				for (int j = 0; j < overlayCount; j++)
 				{
 					OverlayData overlay = slotCopy.GetOverlay(j);
-					if (overlay.colorData.HasName())
+					overlay.mergedFromRecipe = recipeName;
+                    if (overlay.colorData.HasName())
 					{
 						int sharedIndex;
 						if (mergedSharedColors.TryGetValue(overlay.colorData.name, out sharedIndex))
@@ -1978,8 +1981,10 @@ namespace UMA
 					{
 						if (Debug.isDebugBuild)
                         {
-                            Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
-                        }
+#if UNITY_EDITOR
+							Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
+#endif
+						}
                     }
 				}
 			}
@@ -2003,6 +2008,7 @@ namespace UMA
 							dnaConverters[i](umaData, umaData.GetSkeleton());
 						}
 					}
+#if UNITY_EDITOR
 					else
 					{
 						if (Debug.isDebugBuild)
@@ -2010,6 +2016,7 @@ namespace UMA
                             Debug.LogWarning("**UMA: Cannot apply dna: " + dnaEntry.Value.GetType().Name + " using key " + dnaEntry.Key);
                         }
                     }
+#endif
 				}
 			}
 
@@ -2143,12 +2150,13 @@ namespace UMA
                         DynamicDNAConverterController converter = raceData.dnaConverterList[i];
                         if (converter == null)
 						{
+#if UNITY_EDITOR
 							if (Debug.isDebugBuild)
                             {
                                 Debug.LogWarning("RaceData " + raceData.raceName + " has a missing DNAConverter");
                             }
-
-                            continue;
+#endif
+							continue;
 						}
 						//'old' dna converters return a typehash based on the type name. 
 						//Dynamic DNA Converters return the typehash of their dna asset or 0 if none is assigned- we dont want to include those
@@ -2211,8 +2219,10 @@ namespace UMA
 				}
 				else
                 {
-                    Debug.LogWarning("The applyAction for " + dnaConverter + " already existed in the list");
-                }
+#if UNITY_EDITOR
+					Debug.LogWarning("The applyAction for " + dnaConverter + " already existed in the list");
+#endif
+				}
             }
 
 			/// <summary>
@@ -2259,13 +2269,15 @@ namespace UMA
 
                 if (mergeDNA)
 				{
-					if ((recipe.raceData != null) && (recipe.raceData != raceData))
+#if UNITY_EDITOR
+                    if ((recipe.raceData != null) && (recipe.raceData != raceData))
 					{
-						if (Debug.isDebugBuild)
+                        if (Debug.isDebugBuild)
                         {
                             Debug.LogWarning("Merging recipe with conflicting race data: " + recipe.raceData.name);
                         }
                     }
+#endif
 					foreach (var dnaEntry in recipe.umaDna)
 					{
 						var destDNA = GetOrCreateDna(dnaEntry.Value.GetType(), dnaEntry.Key);
@@ -2330,7 +2342,7 @@ namespace UMA
 
                             if (sd.HasRace(raceName))
 							{
-								MergeSlot(sd, dontSerialize, mergeMatchingOverlays);
+								MergeSlot(sd, dontSerialize, mergeMatchingOverlays, recipe.recipeName );
 							}
 						}
 					}
@@ -2341,7 +2353,7 @@ namespace UMA
 					{
 						for (int i = 0; i < recipe.slotDataList.Length; i++)
 						{
-							MergeSlot(recipe.slotDataList[i], dontSerialize, mergeMatchingOverlays);
+							MergeSlot(recipe.slotDataList[i], dontSerialize, mergeMatchingOverlays, recipe.recipeName);
 						}
 					}
 				}

@@ -633,6 +633,7 @@ namespace UMA
 
                         valid = false;
                     }
+#if UNITY_EDITOR
                     else
                     {
                         for (int i = 0; i < material.channels.Length; i++)
@@ -648,6 +649,7 @@ namespace UMA
                             }
                         }
                     }
+#endif
                 }
                 for (int i = 0; i < overlayList.Count; i++)
                 {
@@ -665,6 +667,7 @@ namespace UMA
 #endif
                 }
             }
+#if UNITY_EDITOR
             else
             {
                 if (material != null)
@@ -684,6 +687,7 @@ namespace UMA
                 }
 
             }
+#endif
             return valid;
         }
 

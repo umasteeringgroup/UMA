@@ -27,6 +27,7 @@ namespace UMA.Examples
                 tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
                 _lodDisplay = tm.GetComponent<TextMesh>();
             }
+#if UNITY_EDITOR
             else
             {
                 if (Debug.isDebugBuild)
@@ -34,6 +35,7 @@ namespace UMA.Examples
                     Debug.LogWarning("No LOD Display prefab set on " + gameObject.name);
                 }
             }
+#endif
         }
 
         // Update is called once per frame

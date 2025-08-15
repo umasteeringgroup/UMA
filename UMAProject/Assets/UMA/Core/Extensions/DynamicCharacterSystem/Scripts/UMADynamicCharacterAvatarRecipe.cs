@@ -84,13 +84,15 @@ namespace UMA.CharacterSystem
                 {
                     activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
                 }
+#if UNITY_EDITOR
                 else
-				{
+                {
 					if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning("[UMADynamicCharacterAvatar] recipe did not have wardrobe set");
                     }
                 }
+#endif
 				var packedRecipe = PackedLoadDCSInternal();
 				if (packedRecipe != null)
                 {

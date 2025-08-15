@@ -210,10 +210,12 @@ namespace UMA
                 {
                     _dnaConverterList[i].Prepare();
                 }
+#if UNITY_EDITOR
                 else
                 {
 					Debug.LogWarning($"Null converter list on race: {raceName} object {this.name} ");
                 }
+#endif
 			}
 	    }
 #pragma warning restore 618

@@ -80,6 +80,13 @@ namespace UMA
 
         public static HashSet<int> CreatedAvatars = new HashSet<int>();
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            CreatedAvatars = new HashSet<int>();
+            newBones = new List<SkeletonBone>();
+        }
+
         /// <summary>
         /// returns true if the UMAData is in the update queue.
         /// Note that this will return false if the UMA is currently being processed!
@@ -396,7 +403,7 @@ namespace UMA
 					break;
 			}
 		}
-
+#if UNITY_EDITOR
 		public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
 		{
 			if (Debug.isDebugBuild)
@@ -444,6 +451,7 @@ namespace UMA
                 Debug.Log("++++");
             }
         }
+#endif
 
 		/// <summary>
 		/// Creates a human (biped) avatar for a UMA character.
@@ -515,7 +523,8 @@ namespace UMA
 		}
 
 		private static List<SkeletonBone> newBones = new List<SkeletonBone>();
-		private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones, HumanBone[] human)
+
+        private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones, HumanBone[] human)
 		{
 			int missingBoneCount = 0;
 			newBones.Clear();

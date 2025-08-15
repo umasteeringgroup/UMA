@@ -8,7 +8,25 @@ namespace UMA.Examples
 		static int _defaultRagdollLayer = 8;
 		static int _noCollisionLayer = 10;
 
-		public static void FixLayers()
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+		public static void StaticInitializeOnLoad()
+		{
+            _defaultRagdollLayer = LayerMask.NameToLayer("Ragdoll");
+            _noCollisionLayer = LayerMask.NameToLayer("NoCollisions");
+            // if not found, use the defaults.
+            if (_defaultRagdollLayer == -1)
+            {
+                _defaultRagdollLayer = 8;
+            }
+
+            if (_noCollisionLayer == -1)
+            {
+                _noCollisionLayer = 10;
+            }
+        }
+
+
+        public static void FixLayers()
 		{
 			for (int i = 8; i < 32; i++)
 			{

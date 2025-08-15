@@ -10,11 +10,20 @@ namespace UMA
 		private static int frame = -10;
 		private static float frameTime;
 		public static float deltaTime;
-		/// <summary>
-		/// Report Time Spendt This Frame
-		/// </summary>
-		/// <param name="ticks">10,000,000 ticks is 1 second (1/10,000ms)</param>
-		public static void ReportTimeSpendtThisFrameTicks(long ticks)
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+			frame = -10;
+			frameTime = 0f;
+			deltaTime = 0f;
+        }
+
+        /// <summary>
+        /// Report Time Spendt This Frame
+        /// </summary>
+        /// <param name="ticks">10,000,000 ticks is 1 second (1/10,000ms)</param>
+        public static void ReportTimeSpendtThisFrameTicks(long ticks)
 		{
 			ReportTimeSpendtThisFrame(ticks / 10000000f);
 		}

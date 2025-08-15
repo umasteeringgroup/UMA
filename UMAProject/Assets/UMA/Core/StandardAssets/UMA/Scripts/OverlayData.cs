@@ -27,8 +27,9 @@ namespace UMA
 
         public bool Supressed = false;
 
-		[System.NonSerialized]
+        [System.NonSerialized]
 		public SlotData mergedFromSlot;
+		public string mergedFromRecipe;
 
         /// <summary>
         /// This instance specific tags. Loaded from the recipe, or from the asset at assignment time.

@@ -85,7 +85,25 @@ namespace UMA
 		static NativeArray<BoneWeight1> nativeBoneWeights;
 		static NativeArray<byte> nativeBonesPerVertex;
 
-		public static List<UMABlendShape> GetBlendshapeSources(UMAMeshData meshData, UMAData.UMARecipe recipe)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+			if (nativeBoneWeights.IsCreated)
+			{
+				nativeBoneWeights.Dispose();
+			}
+			if (nativeBonesPerVertex.IsCreated)
+			{
+				nativeBonesPerVertex.Dispose();
+			}
+			bonesCollection = new Dictionary<int, BoneIndexEntry>();
+			bindPoses = new List<Matrix4x4>();
+			bonesList = new List<int>();
+			nativeBoneWeights = new NativeArray<BoneWeight1>(0, Allocator.Persistent);
+			nativeBonesPerVertex = new NativeArray<byte>(0, Allocator.Persistent);
+        }
+
+        public static List<UMABlendShape> GetBlendshapeSources(UMAMeshData meshData, UMAData.UMARecipe recipe)
         {
 			List<UMABlendShape> sourceShapes;
 			if (meshData.blendShapes != null && meshData.blendShapes.Length > 0)
@@ -340,11 +358,13 @@ namespace UMA
                             //If we aren't loading all blendshapes and we don't find the blendshape name in the list of explicit blendshapes to combine, then skip to the next one.
                             if (blendShapeSettings.ignoreBlendShapes && !blendShapeSettings.blendShapes.ContainsKey(shapeName))
                             {
-                                if (Debug.isDebugBuild)
+#if UNITY_EDITOR
+								if (Debug.isDebugBuild)
                                 {
                                     Debug.LogWarning("BlendShape " + shapeName + " is not in the list of blendshapes to combine, skipping.");
                                 }
-                                continue;
+#endif
+								continue;
                             }
 
                             if (BakeBlendShape(blendShapeSettings.blendShapes, ubs, ref vertexIndex, vertices, normals, tangents, has_normals, has_tangents))
@@ -489,8 +509,10 @@ namespace UMA
 #endif
 							if (!MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] ))
                             {
+#if UNITY_EDITOR
 								Debug.LogWarning("Error copying int array on slot: " + source.meshData.SlotName);
-                            }
+#endif
+							}
 							subMeshTriangleLength[destMesh] += (triangleLength - (UMAUtils.GetCardinality(source.triangleMask[i])*3));
 						}
 					}
@@ -503,7 +525,7 @@ namespace UMA
 				boneWeightIndex += source.meshData.ManagedBoneWeights.Length;
 #endif
 			}
-
+#if UNITY_EDITOR
 			if (vertexCount != vertexIndex)
 			{
 				if (Debug.isDebugBuild)
@@ -511,6 +533,7 @@ namespace UMA
                     Debug.LogError("Combined vertices size didn't match precomputed value!");
                 }
             }
+#endif
 
 			// fill in new values.
 			target.vertexCount = vertexCount;

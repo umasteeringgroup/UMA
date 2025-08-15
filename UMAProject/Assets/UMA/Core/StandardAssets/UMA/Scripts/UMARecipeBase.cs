@@ -58,6 +58,7 @@ namespace UMA
 		/// <param name="context">Context.</param>
 		public UMAData.UMARecipe GetCachedRecipe( bool loadSlots = true)
 		{
+			umaRecipe.recipeName = name;
 			if (!cached || umaRecipe == null)
 			{
 				umaRecipe = new UMAData.UMARecipe();
@@ -71,18 +72,27 @@ namespace UMA
 				cached = true;
 #endif
 #endif
-			}
+
+
+            }
 
 			return umaRecipe;
 		}
 
 		[NonSerialized]
 		private static Type[] recipeFormats;
-		/// <summary>
-		/// Gets the list of all existing recipe formats.
-		/// </summary>
-		/// <returns>The recipe formats.</returns>
-		public static Type[] GetRecipeFormats()
+
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            recipeFormats = null;
+        }
+        /// <summary>
+        /// Gets the list of all existing recipe formats.
+        /// </summary>
+        /// <returns>The recipe formats.</returns>
+        public static Type[] GetRecipeFormats()
 		{
 			if (recipeFormats == null)
 			{

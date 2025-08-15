@@ -54,22 +54,12 @@ namespace UMA
 				NotSet
 			}
 
-		public static Dictionary<string, string> URPTextureTranslation = new Dictionary<string, string>() {
-			{"_MainTex","_BaseMap"},
-			{"_MetallicMap", "_MaskMap" }
-		};
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            // This method is called after all assemblies are loaded.
+        }
 
-		public static Dictionary<string, string> HDRPTextureTranslation = new Dictionary<string, string>() {
-			{"_MainTex","_BaseMap"},
-			{"_MetallicMap", "_MaskMap" }
-		};
-
-		public static Dictionary<PipelineType, Dictionary<string, string>> PipelineTranslations = new Dictionary<PipelineType, Dictionary<string, string>>() {
-			{PipelineType.HDPipeline,HDRPTextureTranslation },
-			{PipelineType.UniversalPipeline,URPTextureTranslation }
-		};
-
-		public static PipelineType CurrentPipeline = PipelineType.NotSet;
 		/// <summary>
 		/// Returns the type of renderpipeline that is currently running
 		/// </summary>
@@ -124,25 +114,15 @@ namespace UMA
 			Shader shader = Shader.Find("UMA/Diffuse");
             if (shader == null)
             {
+#if UNITY_EDITOR
 				Debug.LogWarning("UMA/Diffuse shader not found");
-                return null;
+#endif
+				return null;
             }
             Material material = new Material(shader);
             return material; 
         }
 
-		public static string TranslatedSRPTextureName(string BuiltinName) {
-			if (CurrentPipeline == PipelineType.NotSet) {
-				CurrentPipeline = DetectPipeline();
-			}
-			if (PipelineTranslations.ContainsKey(CurrentPipeline)) {
-				var textureTranslation = PipelineTranslations[CurrentPipeline];
-				if(textureTranslation.ContainsKey(BuiltinName)) {
-					return textureTranslation[BuiltinName];
-				}
-			}
-			return BuiltinName;
-		}
 
 #if UNITY_EDITOR
 		static public int CreateLayer(string name)

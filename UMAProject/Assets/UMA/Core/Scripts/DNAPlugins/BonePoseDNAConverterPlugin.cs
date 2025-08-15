@@ -308,12 +308,13 @@ namespace UMA
 			{
 				if (_poseToApply == null)
 				{
+#if UNITY_EDITOR
 					if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning(umaData.gameObject.name + " had an invalid or empty pose set in its BonePoseDNAConverters in its DNAConverterController");
                     }
-
-                    return;
+#endif
+					return;
 				}
 				_livePoseWeight = _startingPoseWeight;
 
@@ -332,12 +333,13 @@ namespace UMA
 			{
 				if (_poseToApply == null)
 				{
+#if UNITY_EDITOR
 					if (Debug.isDebugBuild)
                     {
-                        Debug.LogWarning(umaData.gameObject.name + " had an invalid or empty pose set in its BonePoseDNAConverters in its DNAConverterController");
+						Debug.LogWarning(umaData.gameObject.name + " had an invalid or empty pose set in its BonePoseDNAConverters in its DNAConverterController");
                     }
-
-                    return;
+#endif
+					return;
 				}
 				_livePoseWeight = _startingPoseWeight;
 
@@ -358,9 +360,9 @@ namespace UMA
 				 
 			}
 			
-			#endregion
+#endregion
 		}
 
-		#endregion
+#endregion
 	}
 }

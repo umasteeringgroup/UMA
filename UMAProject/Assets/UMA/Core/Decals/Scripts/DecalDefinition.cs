@@ -29,7 +29,9 @@ namespace UMA
             SkinnedMeshRenderer smr = newDecal.GetComponent<SkinnedMeshRenderer>();
             if (smr == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("Unable to instantiate decal - no SMR");
+#endif
                 return null;
             }
 

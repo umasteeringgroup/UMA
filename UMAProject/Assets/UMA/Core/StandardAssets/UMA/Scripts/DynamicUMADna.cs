@@ -93,11 +93,12 @@ namespace UMA
 		/// </summary>
 		public static string[] GetNames()
 		{
-			if (Debug.isDebugBuild)
+#if UNITY_EDITOR
+            if (Debug.isDebugBuild)
             {
                 Debug.LogWarning("Calling the static GetNames() method of Dynamic DNA, result will be empty");
             }
-
+#endif
             return new string[0];
 		}
 
@@ -304,14 +305,15 @@ namespace UMA
 			{
 				res.SetDnaTypeHash(res.dnaAsset.dnaTypeHash);
 			}
-			else
-			{
+#if UNITY_EDITOR
+            else
+            {
 				if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("Deserialized DynamicUMADna with no matching asset!");
                 }
             }
-
+#endif
             return res;
         }
         public static DynamicUMADna_Byte FromDna(DynamicUMADnaBase dna )

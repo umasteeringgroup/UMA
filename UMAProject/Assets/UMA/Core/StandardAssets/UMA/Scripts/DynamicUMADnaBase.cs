@@ -47,7 +47,12 @@ namespace UMA
 
 		protected static Dictionary<string, DynamicUMADnaAsset> DynamicDNADictionary = null;
 
-		protected static void InitializeDynamicDNADictionary()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            DynamicDNADictionary = null;
+        }
+        protected static void InitializeDynamicDNADictionary()
 		{
 			if (DynamicDNADictionary != null)
             {
@@ -100,11 +105,13 @@ namespace UMA
 			InitializeDynamicDNADictionary();
 			if (DynamicDNADictionary.ContainsKey(asset.name))
 			{
+#if UNITY_EDITOR
 				if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("DynamicDNADictionary already contained DNA asset " + asset.name);
                 }
-            }
+#endif
+			}
 			else
 			{
 				DynamicDNADictionary.Add(asset.name, asset);
@@ -139,6 +146,7 @@ namespace UMA
 		public virtual void FindMissingDnaAsset(string dnaAssetName)
 		{
 			_dnaAsset = UMAAssetIndexer.Instance.GetDNA(dnaAssetName);
+#if UNITY_EDITOR
 			if (_dnaAsset == null)
 			{
 				if (Debug.isDebugBuild)
@@ -155,6 +163,7 @@ namespace UMA
 					Debug.LogWarning("DynamicUMADnaBase could not find DNAAsset " + dnaAssetName + "!");
 			}
 			*/
+#endif
 		}
 
 		public virtual void SetMissingDnaAsset(DynamicUMADnaAsset[] foundAssets)

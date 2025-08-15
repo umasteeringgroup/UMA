@@ -207,6 +207,26 @@ namespace UMA
 
         #endregion
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        public static void StaticInitializeOnLoad()
+        {
+            SortOrder = "Name";
+            SortOrders = new string[] { "Name", "AssetName" };
+            WasChecked = false;
+            TypeFromString = new Dictionary<string, System.Type>();
+            
+            // This method is called after all assemblies are loaded, so we can initialize static data here if needed.
+            // Currently, we don't have any static initialization logic, but this method is a good place to add it in the future.
+            if (theIndexer == null)
+            {
+                theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
+                if (theIndexer != null)
+                {
+                    theIndexer.Initialize();
+                }
+            }
+        }
+
         public static System.Diagnostics.Stopwatch StartTimer()
         {
 #if TIMEINDEXER
@@ -508,9 +528,6 @@ namespace UMA
 		}
 
 
-#pragma warning disable CS0414
-        static int generatorNumber = 0;
-#pragma warning restore CS0414
         private void CreateGenerator()
         {
             UMASettings settings = UMASettings.GetSettingsFromResources();
@@ -739,11 +756,14 @@ namespace UMA
 						string key = $"{item._Type?.Name ?? "Unknown"}:{item._Name}";
 						if(!thisItems.ContainsKey(key)) {
 							thisItems[key] = item;
-						}else
-							{
+						}
+#if UNITY_EDITOR
+                        else
+						{
 														Debug.LogWarning($"Duplicate item found in this indexer: {item._Type?.Name ?? "Unknown"}:{item._Name}");
 						}
-					}
+#endif
+                    }
 				}
 
 				// Build lookup dictionaries for other indexer
@@ -752,11 +772,14 @@ namespace UMA
 						string key = $"{item._Type?.Name ?? "Unknown"}:{item._Name}";
 						if(!otherItems.ContainsKey(key)) {
 							otherItems[key] = item;
-						}else
+						}
+#if UNITY_EDITOR                        
+                        else
 							{
 														Debug.LogWarning($"Duplicate item found in other indexer: {item._Type?.Name ?? "Unknown"}:{item._Name}");
 						}
-					}
+#endif
+                    }
 				}
 
 				// Find items missing in other indexer
@@ -875,7 +898,8 @@ namespace UMA
 				}
 
 			} catch(Exception ex) {
-				Debug.LogError($"Error during SerializedItems comparison: {ex.Message}");
+#if UNITY_EDITOR
+                Debug.LogError($"Error during SerializedItems comparison: {ex.Message}");
 				Debug.LogException(ex);
 
 				// Write error report
@@ -887,8 +911,9 @@ namespace UMA
 				} catch {
 					// Ignore file write errors in error handler
 				}
-			}
-		}
+#endif
+            }
+        }
 		public void CompareSerializedItems(UMAAssetIndexer After, string filePath) {
 			if(After == null) {
 				Debug.LogError("Cannot compare to null UMAAssetIndexer");
@@ -1041,13 +1066,14 @@ namespace UMA
 
 				// Write report to file
 				File.WriteAllText(filePath, report.ToString());
-
-				Debug.Log($"SerializedItems comparison complete. Report written to: {filePath}");
+#if UNITY_EDITOR
+                Debug.Log($"SerializedItems comparison complete. Report written to: {filePath}");
 				if(missingInOther.Count > 0 || missingInThis.Count > 0) {
 					Debug.LogWarning($"Found differences: {missingInOther.Count} missing in After indexer, {missingInThis.Count} missing in Before indexer.");
 				}
+#endif
 
-			} catch(Exception ex) {
+            } catch(Exception ex) {
 				Debug.LogError($"Error during SerializedItems comparison: {ex.Message}");
 				Debug.LogException(ex);
 
@@ -1416,6 +1442,7 @@ namespace UMA
 
             if (TypeDic.ContainsKey(Name))
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     if (TypeDic[Name] == null)
@@ -1423,6 +1450,7 @@ namespace UMA
                         Debug.LogError($"Asset with Name {Name} is NULL for type {ot.ToString()}");
                     }
                 }
+#endif
                 return TypeDic[Name];
             }
             else
@@ -1712,7 +1740,7 @@ namespace UMA
 
         // Only do a full check of the index one time after domain reload
 
-        private static bool WasChecked = false;
+        protected static bool WasChecked = false;
 
 #if UNITY_EDITOR
         /// <summary>
@@ -2833,7 +2861,9 @@ namespace UMA
             }
             catch (System.Exception ex)
             {
+#if UNITY_EDITOR
                 UnityEngine.Debug.LogWarning("Exception in UMAAssetIndexer.AddAssetItem: " + ex.StackTrace);
+#endif
             }
             if (noDirty == false)
             {
