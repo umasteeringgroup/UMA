@@ -58,11 +58,10 @@ namespace UMA
 		/// <param name="context">Context.</param>
 		public UMAData.UMARecipe GetCachedRecipe( bool loadSlots = true)
 		{
-			umaRecipe.recipeName = name;
 			if (!cached || umaRecipe == null)
 			{
 				umaRecipe = new UMAData.UMARecipe();
-				Load(umaRecipe,loadSlots);
+                Load(umaRecipe,loadSlots);
 #if !UNITY_EDITOR
 #if UMA_ADDRESSABLES
 				// don't cache addressables, as they can be unloaded.
@@ -75,8 +74,12 @@ namespace UMA
 
 
             }
+			if (umaRecipe != null)
+			{
+				umaRecipe.recipeName = name;
+			}
 
-			return umaRecipe;
+            return umaRecipe;
 		}
 
 		[NonSerialized]
