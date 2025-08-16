@@ -15,9 +15,27 @@ namespace UMA
         {
             base.dnaTypeHash = typeHash;
         }
-		#endregion
+        #endregion
 
-		#region Properties
+        #region Properties
+
+        
+        public override int DNATypeHash
+        {
+            get
+            {
+                if (dnaTypeHash == 0)
+                {
+                    dnaTypeHash = UMAUtils.StringToHash("DynamicUMADna");
+                }
+                return dnaTypeHash;
+            }
+            set
+            {
+                dnaTypeHash = value;
+            }
+        }
+	
 
 		public override DynamicUMADnaAsset dnaAsset
         {

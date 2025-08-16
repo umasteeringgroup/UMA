@@ -299,7 +299,7 @@ namespace UMA.Examples
             for (int i = 0; i < maxLOD; i++)
             {
                 SlotLods[i] = string.Empty;
-                string possibleSlot = $"{baseSlotName}_LOD{i}";
+                string possibleSlot = string.Concat(baseSlotName, "_LOD", i.ToString());
                 if (UMAAssetIndexer.Instance.HasSlot(possibleSlot))
                 {
                     SlotLods[i] = possibleSlot;

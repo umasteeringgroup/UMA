@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections.Generic;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -41,33 +43,38 @@ namespace UMA
 
 		public static Mesh PerformSeamRemoval(SkinnedMeshRenderer originalMesh, SkinnedMeshRenderer referenceMesh, float threshold, bool calcTangents)
 		{
-			float sqrthreshold = threshold * threshold;
+#if UNITY_EDITOR
+            float sqrthreshold = threshold * threshold;
 			int matchCount = 0;
+            List<Vector3> referenceVertices = new List<Vector3>();
+			List<Vector3> referenceNormals = new List<Vector3>();
+			List<Vector4> referenceTangents = new List<Vector4>();
 
-			Vector3[] referenceVertices = referenceMesh.sharedMesh.vertices;
-			Vector3[] referencenormals = referenceMesh.sharedMesh.normals;
-			Vector4[] referencetangents = referenceMesh.sharedMesh.tangents;
+            referenceMesh.sharedMesh.GetVertices(referenceVertices);
+			referenceMesh.sharedMesh.GetNormals(referenceNormals);
+			referenceMesh.sharedMesh.GetTangents(referenceTangents);
+
 
 			Vector3[] normals = originalMesh.sharedMesh.normals;
 			Vector3[] meshIndexVertices = originalMesh.sharedMesh.vertices;
 			Vector4[] tangents = originalMesh.sharedMesh.tangents;
 
-			if (tangents == null || tangents.Length == 0 || referencetangents == null || referencetangents.Length == 0)
+			if (tangents == null || tangents.Length == 0 || referenceTangents == null || referenceTangents.Count == 0)
             {
                 calcTangents = true;
             }
 
             for (int vertexIndex = 0; vertexIndex < meshIndexVertices.Length; vertexIndex++)
 			{
-				for (int othervertexIndex = 0; othervertexIndex < referenceVertices.Length; othervertexIndex++)
+				for (int othervertexIndex = 0; othervertexIndex < referenceVertices.Count; othervertexIndex++)
 				{
 					if ((meshIndexVertices[vertexIndex] - referenceVertices[othervertexIndex]).sqrMagnitude <= sqrthreshold)
 					{
 						matchCount++;
-						normals[vertexIndex] = referencenormals[othervertexIndex];
+						normals[vertexIndex] = referenceNormals[othervertexIndex];
 						if (!calcTangents)
                         {
-                            tangents[vertexIndex] = referencetangents[othervertexIndex];
+                            tangents[vertexIndex] = referenceTangents[othervertexIndex];
                         }
                     }
 				}
@@ -86,13 +93,14 @@ namespace UMA
 			if (calcTangents) {
 				tempMesh.RecalculateTangents();
 			}
-				//calculateMeshTangents(tempMesh);
-			
-			return tempMesh;
-		}
-		
+            //calculateMeshTangents(tempMesh);
+            return tempMesh;
+#endif
+			return null;
+        }
 
-		public static void calculateMeshTangents(Mesh mesh)
+
+        public static void calculateMeshTangents(Mesh mesh)
 		{
 			/*
 			Derived from

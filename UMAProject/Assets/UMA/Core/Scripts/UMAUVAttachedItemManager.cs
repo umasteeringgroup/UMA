@@ -221,13 +221,13 @@ namespace UMA
 				return;
 			}
 
-			Debug.Log("Adding attached item: " + uMAUVAttachedItemLauncher.sourceSlot.slotName);
+			//Debug.Log("Adding attached item: " + uMAUVAttachedItemLauncher.sourceSlot.slotName);
 			UMAUVAttachedItem uvai = new UMAUVAttachedItem();
 			uvai.Setup(umaData, uMAUVAttachedItemLauncher, Activate);
 
 
 			pendingAttachedItemsList.Add(uvai);
-			Debug.Log($"Pending list count {pendingAttachedItemsList.Count}");
+			//Debug.Log($"Pending list count {pendingAttachedItemsList.Count}");
 		}
     }
 }

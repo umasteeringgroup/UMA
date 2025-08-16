@@ -512,7 +512,6 @@ namespace UMA
 			{
 				_prepared = false;
 				_plugins.Remove(pluginToDelete);
-				Debug.Log(pluginToDelete.name + " successfully deleted from " + this.name);
 #if UNITY_EDITOR
 				DestroyImmediate(pluginToDelete, true);
 				EditorUtility.SetDirty(this);

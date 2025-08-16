@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using static UMA.UMAData;
+using System.Linq;
 
 namespace UMA
 {
@@ -510,18 +511,21 @@ namespace UMA
 			// Procedural textures were done here 
 			if (updateMaterialList)
 			{
-				for (int j = 0; j < umaData.RendererCount; j++)
+				List<Material> mats = new List<Material>(20);
+				List<Material> newMats = new List<Material>(20);
+                for (int j = 0; j < umaData.RendererCount; j++)
 				{
 					var renderer = umaData.GetRenderer(j);
-					var mats = renderer.sharedMaterials;
-					var newMats = new Material[mats.Length];
+					renderer.GetSharedMaterials(mats);
+                    //var mats = renderer.sharedMaterials;
+                    //var newMats = new Material[mats.Count];
 					var atlasses = umaData.generatedMaterials.materials;	
 					int materialIndex = 0;
 					for (int i = 0; i < atlasses.Count; i++)
 					{
 						if (atlasses[i].rendererAsset == umaData.GetRendererAsset(j))
 						{
-							if (mats.Length > materialIndex) 
+							if (mats.Count > materialIndex) 
 							{
                                 if (mats[materialIndex] != null)
                                 {
@@ -534,9 +538,10 @@ namespace UMA
 							}
 							else
                             {
-								List<Material> listMats = new List<Material>(newMats);
+								newMats.Add(null);
+								/*List<Material> listMats = new List<Material>(newMats);
 								listMats.Add(null);
-								newMats = listMats.ToArray();
+								newMats = listMats.ToArray();*/
                             }
 							newMats[materialIndex] = atlasses[i].material;
 							atlasses[i].skinnedMeshRenderer = renderer;
@@ -585,7 +590,7 @@ namespace UMA
 							materialIndex++;
 						}
 					}
-					renderer.sharedMaterials = newMats;
+					renderer.sharedMaterials = newMats.ToArray();
 				}
 			}
 		}

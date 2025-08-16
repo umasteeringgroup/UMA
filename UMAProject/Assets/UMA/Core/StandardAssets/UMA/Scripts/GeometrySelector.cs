@@ -145,17 +145,16 @@ namespace UMA
                 _Materials[1] = new Material(_Shader);
                 _Materials[1].name = "Selected";
                 _Materials[1].color = Color.red;
+                _Materials[1].hideFlags = HideFlags.HideInInspector;
 
                 //UnSelected
                 _Materials[0] = new Material(_Shader);
                 _Materials[0].name = "UnSelected";
                 _Materials[0].color = Color.gray;
+                _Materials[0].hideFlags = HideFlags.HideInInspector;
 
                 _sharedMesh.subMeshCount = 2;
                 _meshRenderer.sharedMaterials = _Materials;
-
-                _meshRenderer.sharedMaterials[0].hideFlags = HideFlags.HideInInspector;
-                _meshRenderer.sharedMaterials[1].hideFlags = HideFlags.HideInInspector;
             }
         }
 

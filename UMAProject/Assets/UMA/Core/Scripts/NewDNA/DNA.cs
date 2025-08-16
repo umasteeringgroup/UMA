@@ -16,6 +16,19 @@ namespace UMA
         [Tooltip("The list of DNA effects that this DNA applies. Each effect can modify the character in different ways.")]
         public List<DNAEffect> effects = new List<DNAEffect>();
 
+        private string _name;
+        public string dnaName
+        {
+            get
+            {
+                if (_name == null)
+                {
+                    _name = name;
+                }
+                return _name;
+            }
+        }
+
 #if UNITY_EDITOR
         [UnityEditor.MenuItem("Assets/Create/UMA/DNA/DNA Item")]
         public static void CreateDNA()

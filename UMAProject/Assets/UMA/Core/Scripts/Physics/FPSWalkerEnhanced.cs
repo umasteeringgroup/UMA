@@ -104,7 +104,8 @@ namespace UMA.Dynamics.Examples
                 }
 
                 // If sliding (and it's allowed), or if we're on an object tagged "Slide", get a vector pointing down the slope we're on
-                if ( (sliding && slideWhenOverSlopeLimit) || (slideOnTaggedObjects && hit.collider.tag == "Slide") ) {
+                if ( (sliding && slideWhenOverSlopeLimit) || (slideOnTaggedObjects && hit.collider.CompareTag("Slide")) ) 
+				{
 					Vector3 hitNormal = hit.normal;
 					moveDirection = new Vector3(hitNormal.x, -hitNormal.y, hitNormal.z);
 					Vector3.OrthoNormalize (ref hitNormal, ref moveDirection);

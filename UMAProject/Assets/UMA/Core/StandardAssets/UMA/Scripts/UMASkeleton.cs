@@ -145,7 +145,7 @@ namespace UMA
             {
                 return;
             }
-            if (transform.tag == UMAAssetIndexer.Instance.Generator.ignoreTag)
+            if (transform.CompareTag(UMAAssetIndexer.Instance.Generator.ignoreTag))
             {
                 return;
             }

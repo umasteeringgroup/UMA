@@ -481,7 +481,7 @@ namespace UMA
                 }
             }
 
-            string materialPropertyName;
+            string materialPropertyName = "";
 
             if (umaMaterial.channels == null)
             {
@@ -510,13 +510,18 @@ namespace UMA
             {
                 materialPropertyName = umaMaterial.channels[textureChannelNumber].materialPropertyName;
             }
+#if !UNITY_EDITOR
+            catch
+            {
+                // this is only here to stop compiler warnings
+            }
+#else
             catch (Exception ex)
             {
-#if UNITY_EDITOR
                 Debug.LogWarning("Exception processing Texture channel " + textureChannelNumber + " in material " + umaMaterial.name + " " + ex.Message);
-#endif
                 return;
             }
+#endif
 
             if (overlayNumber > 0)
             {

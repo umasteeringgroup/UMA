@@ -37,7 +37,7 @@ namespace UMA
 
             // Copy bindposes from main.
             // copy bones from main.
-            smr.sharedMesh.bindposes = baseRenderer.sharedMesh.bindposes;
+            smr.sharedMesh.SetBindposes(baseRenderer.sharedMesh.GetBindposes());
             smr.bones = baseRenderer.bones;
 
             return newDecal;

@@ -39,7 +39,7 @@ namespace UMA
                 {
                     foreach (var dna in collection.dnaList)
                     {
-                        if (!DNADictionary.ContainsKey(dna.name))
+                        if (!DNADictionary.ContainsKey(dna.dnaName))
                         {
                             DNADictionary.Add(dna.name, dna);
                         }

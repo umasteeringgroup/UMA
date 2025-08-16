@@ -1076,7 +1076,6 @@ namespace UMA
                 mesh.tangents[vertexIndex] = initialTangent;
                 Quaternion qt = Quaternion.FromToRotation(Normal, mesh.normals[vertexIndex]);
                 Vector3 rot = qt.eulerAngles;
-                Debug.Log(rot.ToString());
             }
         }
 

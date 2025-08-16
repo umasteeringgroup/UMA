@@ -420,8 +420,10 @@ namespace UMA
 				}
 				catch
                 {
+#if UNITY_EDITOR
 					Debug.Log("An exception occurred loading assemblies. this can happen when an invalid assembly is present in the project and it cannot be loaded.");
-                }
+#endif
+				}
 			}
 			_pluginTypes = list;
 		}

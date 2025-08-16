@@ -809,7 +809,11 @@ namespace UMA
             if (PropertyTypeStrings.Length == 0)
             {
                 availableTypes = UMAMaterialPropertyBlock.GetPropertyTypes();
-                PropertyTypeStrings = availableTypes.Select(i => i.ToString()).ToArray();
+                PropertyTypeStrings = new string[availableTypes.Count];
+                for (int i = 0; i < availableTypes.Count; i++)
+                {
+                    PropertyTypeStrings[i] = availableTypes[i].ToString();
+                }
             }
         }
 

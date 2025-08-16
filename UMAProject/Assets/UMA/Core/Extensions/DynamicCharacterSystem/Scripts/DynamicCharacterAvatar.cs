@@ -1552,15 +1552,15 @@ namespace UMA.CharacterSystem
             //if keepBodyColors then dont load body colors from the racebaserecipe == keep current bodyColors
             LoadOptions thisLoadFlags = LoadOptions.loadDNA | LoadOptions.loadWardrobe | LoadOptions.loadWardrobeColors | LoadOptions.loadBodyColors;
             //we wont be able to keep anything if the race is currently null so dont change the flags in that case
-            if (thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepBodyColors) && activeRace.racedata != null)
+            if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepBodyColors) && activeRace.racedata != null)
             {
                 thisLoadFlags &= ~LoadOptions.loadBodyColors;//Dont load body colors - keep what we have
             }
-            if (thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepDNA) && activeRace.racedata != null)
+            if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepDNA) && activeRace.racedata != null)
             {
                 thisLoadFlags &= ~LoadOptions.loadDNA;//dont load dna keep what we have
             }
-            if (thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepWardrobe) && activeRace.racedata != null)
+            if (thisChangeRaceOpts.HasFlag(ChangeRaceOptions.keepWardrobe) && activeRace.racedata != null)
             {
                 thisLoadFlags &= ~LoadOptions.loadWardrobe;//dont load wardrobe- try to keep what we have
                 thisLoadFlags &= ~LoadOptions.loadWardrobeColors;
@@ -1580,7 +1580,7 @@ namespace UMA.CharacterSystem
                     //call this here rather than letting ImportSettingsCO do it because the base recipe might have a different race to the race it's been assigned to!
                     SetActiveRace();
                     //if we are not going to try to keep the current wardrobe, clear it
-                    if (!thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepWardrobe))
+                    if ((thisChangeRaceOpts & ChangeRaceOptions.keepWardrobe) == 0)
                     {
                         _wardrobeRecipes.Clear();
                     }
@@ -1596,21 +1596,17 @@ namespace UMA.CharacterSystem
                 //call this here rather than letting ImportSettingsCO do it because the base recipe might have a different race to the race it's been assigned to!
                 SetActiveRace();
                 //if there is no cached version and we are NOT keeping the current colors- we want to reset to the colors the component started with
-                if (!thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepBodyColors))
+                if ((thisChangeRaceOpts & ChangeRaceOptions.keepBodyColors) == 0)
                 {
                     //if keepBodyColors is FALSE we ALSO dont want to load them from the recipe- we want to load them from the null set
                     thisLoadFlags &= ~LoadOptions.loadBodyColors;
                     RestoreCachedBodyColors(false, true);
                 }
-                if (!thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepWardrobe))
+                if ((thisChangeRaceOpts & ChangeRaceOptions.keepWardrobe) == 0)
                 {
                     //if keepWardrobe is FALSE we ALSO dont want to load colors from the recipe- we want to load them from the null set
                     thisLoadFlags &= ~LoadOptions.loadWardrobeColors;
                     RestoreCachedWardrobeColors(false, true);
-                }
-                //if we are not going to try to keep the current wardrobe, clear it
-                if (!thisChangeRaceOpts.HasFlagSet(ChangeRaceOptions.keepWardrobe))
-                {
                     _wardrobeRecipes.Clear();
                 }
                 //by setting 'ForceDCSLoad' to true the loaded race will always be loaded like a new uma rather than the old uma way
@@ -3465,10 +3461,6 @@ namespace UMA.CharacterSystem
 #else
                 FileUtils.WriteAllText(filePath, asset.recipeString);
 #endif
-                if (Debug.isDebugBuild)
-                {
-                    Debug.Log("Recipe saved to " + filePath);
-                }
 
                 if (savePathType == savePathTypes.Resources)
                 {
@@ -5209,6 +5201,7 @@ namespace UMA.CharacterSystem
                         UMAData.UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe();
                         umaData.umaRecipe.Merge(cachedRecipe, false, true, false, activeRace.racedata.raceName);
                     }
+#if UNITY_EDITOR
                     else
                     {
                         if (Debug.isDebugBuild)
@@ -5216,6 +5209,7 @@ namespace UMA.CharacterSystem
                             Debug.Log("Null recipe in additional serialized recipes");
                         }
                     }
+#endif
                 }
                 // compress the umaData.umaRecipe.slotDataList
                 umaData.umaRecipe.Compress();

@@ -31,7 +31,23 @@ namespace UMA
         {
         }
 
+        private string _thisName;
+        public string objectName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_thisName))
+                {
+                    _thisName = name;
+                }
+                return _thisName;
+            }
+            set
+            {
+                _thisName = value;
+            }
 
+        }
         public Material  material
         {
             get 
@@ -207,7 +223,7 @@ namespace UMA
         /// <returns></returns>
         public bool Equals(UMAMaterial material)
         {
-            return name == material.name;
+            return objectName == material.objectName;
         }
 
     }

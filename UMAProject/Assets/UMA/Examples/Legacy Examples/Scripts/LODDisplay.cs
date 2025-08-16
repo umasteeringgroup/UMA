@@ -48,11 +48,11 @@ namespace UMA.Examples
                     _lastSetLevel = _simpleLOD.CurrentLOD;
                     if (_lastSetLevel < 0)
                     {
-                        _lodDisplay.text = string.Format("LOD #0/{0}", _lastSetLevel);
+                        _lodDisplay.text = string.Concat("LOD #0/", _lastSetLevel.ToString());
                     }
                     else
                     {
-                        _lodDisplay.text = string.Format("LOD #{0}", _lastSetLevel);
+                        _lodDisplay.text = string.Concat("LOD #", _lastSetLevel.ToString());
                     }
                 }
                 var delta = transform.position - _cameraTransform.position;

@@ -138,7 +138,7 @@ namespace UMA
                     dat.GetNormals(allNormals);
                     dat.GetVertices(allVerts);
                     uvVerts = FindVert(slotData, maxVert, UVInAtlas, UvUpInAtlas, allUVS);
-                    Debug.Log($"Found vertex {uvVerts.positionVertex}");
+                    //Debug.Log($"Found vertex {uvVerts.positionVertex}");
                     triangle = FindTriangle(uvVerts.positionVertex, dat, mesh);
                     mostestBone = GetMostestBone(uvVerts.positionVertex, mesh, smr);
                 }
@@ -224,7 +224,7 @@ namespace UMA
             }
             Transform mostestBone = smr.bones[meshweights[myOffset].boneIndex];
 
-            Debug.Log($"Vertex {vertexNumber} Offset = {myOffset} in BoneWeights Mostest Bone = {mostestBone.gameObject.name}");
+            //Debug.Log($"Vertex {vertexNumber} Offset = {myOffset} in BoneWeights Mostest Bone = {mostestBone.gameObject.name}");
             return mostestBone;
         }
 
@@ -242,7 +242,6 @@ namespace UMA
                 myOffset += meshbpv[i];
             }
 
-            Debug.Log($"Vertex {vertexNumber} Offset = {myOffset} in BoneWeights");
             for(int i=myOffset; i < myOffset + meshbpv[vertexNumber]; i++)
             {
                 BonesAndWeights boneWeights = new BonesAndWeights();
@@ -250,7 +249,6 @@ namespace UMA
                 boneWeights.Weight = meshweights[i].weight;
                 weights.Add(boneWeights);
             }
-            Debug.Log($"weights size = {weights.Count}");
             return weights;
         }
 

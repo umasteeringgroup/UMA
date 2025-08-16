@@ -388,11 +388,21 @@ namespace UMA
                 string tag = HideTags[j];
                 for (int i = 0; i < overlayList.Count; i++)
                 {
-                    if (overlayList[i].asset.tags.Contains<string>(tag))
+                    // Manually check if the tag exists in overlayList[i].asset.tags
+                    string[] overlayTags = overlayList[i].asset.tags;
+                    bool tagFound = false;
+                    for (int t = 0; t < overlayTags.Length; t++)
+                    {
+                        if (overlayTags[t] == tag)
+                        {
+                            tagFound = true;
+                            break;
+                        }
+                    }
+                    if (tagFound)
                     {
                         overlayList.RemoveAt(i);
                         break;
-                        //newOverlays.Remove(overlayList[i]);
                     }
                 }
             }
