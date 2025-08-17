@@ -84,7 +84,14 @@ namespace UMA
 
         public static string FindUMAFullPath()
         {
-            string folder = "UMA";
+            string folder = "/UMA";
+
+            string path1 = Path.Combine(Application.dataPath, "UMA");
+            if (Directory.Exists(path1.ToString()))
+            {
+                Debug.Log("UMA at default location: " + path1);
+                return "Assets/UMA";
+            }
 
             // search the project for the UMA folder
             string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
@@ -101,7 +108,7 @@ namespace UMA
             }
 
             // if we didn't find it, return the default path
-            return Path.Combine(Application.dataPath, folder);
+            return "Assets/UMA";
         }
         public static NamedBuildTarget CurrentNamedBuildTarget
         {

@@ -29,7 +29,7 @@ namespace UMA.CharacterSystem
     {
         public float DelayUnload = 2.0f;
         public bool BundleCheck = true;
-        private bool StartGuard = false;
+        public bool StartGuard = false;
         public bool KeepAnimatorController = false;
         [Tooltip("If true, the Animator will be rebuilt anytime the race changes")]
         public bool RecreateAnimatorOnRaceChange = true;
@@ -247,8 +247,6 @@ namespace UMA.CharacterSystem
         //switches between races they do not loose their previous changes to the avatar when it was set to be that race
         private Dictionary<string, string> cacheStates = new Dictionary<string, string>();
         //the wardrobe slots that are hidden by the avatars current wardrobe
-        //a list of downloading assets that the avatar can check the download status of.
-        private List<string> requiredAssetsToCheck = new List<string>();
         //This is so we know if whether to use the 'default' settings as set in the componnt by colors/defaultRecipes/loadString/umaRecipe
         //or if an external script has already overridden these and so we should just build with the settings as they are (i.e. just call BuildCharacter)
         //Should be set to FALSE by any method that actually changes settings without calling ImportSettings
@@ -532,6 +530,25 @@ namespace UMA.CharacterSystem
         // Use this for initialization
         public void Start()
         {
+            StartGuard = false;
+            _isFirstSettingsBuild = true;
+            blendShapes = new HashSet<string>();
+            previousRace = null;
+            _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
+            _additiveRecipes = new Dictionary<string, List<UMATextRecipe>>();
+            _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>();
+#if UMA_ADDRESSABLES
+            LoadedHandles = new Queue<AsyncOp>();
+#endif
+            SuppressedRecipes.Clear();
+            HiddenSlots.Clear();
+            cacheStates.Clear();
+            wasCrossCompatibleBuild = false;
+            crossCompatibleRaces.Clear();
+            forceSuppressedWardrobeSlots.Clear();
+            forceRemovedBaseSlots.Clear();
+            forceSuppressSlotsContaining.Clear();
+            forceRemovedTags.Clear();
             InitialStartup();
         }
 
@@ -4380,10 +4397,12 @@ namespace UMA.CharacterSystem
             }
             else
             {
+                skipBundleCheck = false;
+                /*
                 if (useBundleParameter)
                 {
                     skipBundleCheck = !BundleCheck;
-                }
+                }*/
             }
 
 #else
@@ -4485,6 +4504,7 @@ namespace UMA.CharacterSystem
                 }
                 if (Op.IsDone)
                 {
+                    //Debug.Log("LoadWhenReady - Async OP is done, loading character now: " + Op.DebugName);
                     BuildSave bs = LoadQueue[Op];
                     LoadCharacter(bs._umaRecipe, bs._Replaces, bs._umaAdditionalSerializedRecipes,bs._AdditionalRecipes, bs._MeshHideDictionary, bs._hiddenSlots,bs._HideTags, bs._currentDNA, bs._restoreDNA, true);
                     LoadQueue.Remove(Op);
@@ -4581,10 +4601,13 @@ namespace UMA.CharacterSystem
 #if UMA_ADDRESSABLES
 #if UNITY_EDITOR
             // If we are in the editor, and we don't want to look & load bundles, just go ahead.
-            if (umaGenerator != null && umaGenerator.skipAddressableRecipeLookupInEditor)
+           /* if (Application.isEditor && !Application.isPlaying)
             {
-                skipBundleCheck = true;
-            }
+                if (umaGenerator != null && umaGenerator.skipAddressableRecipeLookupInEditor)
+                {
+                    skipBundleCheck = true;
+                }
+            }*/
 #endif
             if (!skipBundleCheck)
             {
