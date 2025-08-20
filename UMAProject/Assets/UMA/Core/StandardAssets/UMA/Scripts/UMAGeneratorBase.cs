@@ -9,7 +9,7 @@ namespace UMA
     /// </summary>
     public abstract class UMAGeneratorBase : MonoBehaviour
 	{
-		public enum FitMethod {DecreaseResolution, BestFitSquare };
+		public enum FitMethod {DecreaseResolution, BestFitSquare, MultipleHeuristics };
 
 		public bool fitAtlas;
 		[HideInInspector]

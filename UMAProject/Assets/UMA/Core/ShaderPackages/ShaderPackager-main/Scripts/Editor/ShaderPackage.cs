@@ -280,6 +280,7 @@ namespace UMA.ShaderPackager
 
         public string GetShaderSrc()
         {
+            List<Entry> foundEntries = new List<Entry>();
             UnityVersion curVersion = UnityVersion.Min;
 
 #if UNITY_2021_2_OR_NEWER
@@ -320,18 +321,61 @@ namespace UMA.ShaderPackager
                 // default init state..
                 if (e.UnityVersionMax == UnityVersion.Min && e.UnityVersionMin == UnityVersion.Min)
                 {
-                    e.UnityVersionMax = UnityVersion.Max;
+                    if (e.shader != null)
+                    {
+                        Debug.LogWarning($"ShaderPackage: UnityVersionMin and UnityVersionMax are not set for shader {e.shader.name}. Setting to default values.");
+                    }
+                    else
+                    {
+                        string shad = e.shaderSrc;
+                        Debug.LogWarning($"ShaderPackage: UnityVersionMin and UnityVersionMax are not set for an entry with a null shader. Setting to default values.");
+                        Debug.LogWarning($"Shader source starts with: {shad.Substring(0, Mathf.Min(80, shad.Length))}");
+                    }
+                        e.UnityVersionMax = UnityVersion.Max;
                 }
                 if (curVersion >= e.UnityVersionMin && curVersion <= e.UnityVersionMax)
                 {
+                    foundEntries.Add(e);
                     if (s != null)
                     {
-                        Debug.LogWarning("Found multiple possible entries for unity version of shader");
+                        if (e.shader == null)
+                        {
+                            string shad = e.shaderSrc;
+                            Debug.LogWarning($"ShaderPackage: Found multiple entries for shader {shad.Substring(0, Mathf.Min(80, shad.Length))} with no shader set. Using the last one found, which may not be correct. Please check the shader package entries.");
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"ShaderPackage: Found multiple entries for shader {e.shader.name}. Using the last one found, which may not be correct. Please check the shader package entries.");
+                        }
+                        // Debug.LogWarning($"Found multiple possible entries for unity version of shader {e.shader.name}.");
+                        // Debug.LogWarning($"Using the last one found, which may not be correct. Please check the shader package entries.");
+                        Debug.LogWarning($"CurrentVersion: {curVersion} Min: {e.UnityVersionMin} Max: {e.UnityVersionMax}");
+                        DumpFoundEntries(foundEntries);
+
                     }
                     s = e.shaderSrc;
                 }
             }
             return s;
+        }
+
+        void DumpFoundEntries(List<Entry> foundEntries)
+        {
+            Debug.LogWarning("ShaderPackage: " + name);
+            Debug.LogWarning($"Found {foundEntries.Count} entries:");
+            if (betterShader != null)
+            {
+                Debug.LogWarning($"BetterShader: {betterShader.name} Path: {betterShaderPath}");
+            }
+            else
+            {
+                Debug.LogWarning("No BetterShader set.");
+            }
+
+            foreach (var e in foundEntries)
+            {
+                Debug.LogWarning($"SRP: {e.srpTarget} Min: {e.UnityVersionMin} Max: {e.UnityVersionMax}");
+            }
         }
     }
 }

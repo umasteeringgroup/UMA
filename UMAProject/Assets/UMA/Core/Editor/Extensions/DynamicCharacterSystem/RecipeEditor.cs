@@ -169,8 +169,11 @@ namespace UMA.Editors
 
         public void OnDestroy()
 		{
-			foreach(IUMARecipePlugin plugin in plugins) {
-				plugin.OnDestroy();
+			if (plugins == null) return;
+            foreach (IUMARecipePlugin plugin in plugins) 
+			{
+				if (plugin == null) continue;
+                plugin.OnDestroy();
 			}
 
 		}

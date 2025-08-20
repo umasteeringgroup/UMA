@@ -444,12 +444,12 @@ namespace UMA
                     }
                     else
                     {
-                        Debug.LogError($"UMA Bone not found with hash {boneData.boneNameHash} name {boneData.boneTransform.name}");
+                        Debug.LogError("UMA Bone not found with hash "+boneData.boneNameHash+" name "+boneData.boneTransform.name);
                     }
                 }
                 else
                 {
-                    Debug.LogError($"Decal bone not found with hash {Hash}");
+                    Debug.LogError("Decal bone not found with hash "+Hash);
                 } 
 
                 /*

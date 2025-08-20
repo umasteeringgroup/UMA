@@ -283,6 +283,15 @@ namespace UMA
 
             DrawBoolProperty("showWelcomeToUMA", "Show Welcome Window", "If true, UMA will show the welcome window when the project is loaded");
 
+            // Runtime MeshAPI combiner toggle (Unity 2022.2+)
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Runtime Mesh Combiner", EditorStyles.boldLabel);
+            DrawBoolProperty(
+                "useMeshAPICombiner",
+                "Use MeshAPI Combiner (Unity 2022.2+)",
+                "Enable the MeshData API based combiner at runtime on Unity 2022.2+. When disabled or on older Unity versions, UMA uses the legacy combiner."
+            );
+
             DrawObjectProperty("characterPrefab", "Character Prefab", "The default character prefab used by UMA", typeof(GameObject));
             DrawObjectProperty("generatorPrefab", "Generator Prefab", "The default generator prefab used by UMA", typeof(GameObject));
             DrawObjectProperty("textureMerge", "Texture Merger", "The default texture merger used by UMA", typeof(TextureMerge));

@@ -1625,7 +1625,7 @@ namespace UMA
 							OverlayData overlay = slot.GetOverlay(j);
 							//DynamicCharacterSystem:: Needs to use alternative methods that find equivalent overlays since they may not be Equal if they were in an assetBundle
 							OverlayData originalOverlay = originalSlot.GetEquivalentUsedOverlay(overlay);
-							if (originalOverlay != null)
+							if (originalOverlay != null && overlay.asset.dontMergeDuplicates != true)
 							{
 								originalOverlay.CopyColors(overlay);//also copies textures
 								if (overlay.colorData.HasName())

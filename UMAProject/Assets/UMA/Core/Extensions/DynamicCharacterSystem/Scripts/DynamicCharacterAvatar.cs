@@ -2595,7 +2595,9 @@ namespace UMA.CharacterSystem
 
         public void SetRawColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
         {
-            characterColors.SetRawColor(Name, colorData);
+            // avoid using reference of the colorData in case it is modified later
+            var tempColor = colorData.Duplicate();
+            characterColors.SetRawColor(Name, tempColor);
             if (UpdateTexture)
             {
                 UpdateColors();
@@ -4126,6 +4128,7 @@ namespace UMA.CharacterSystem
             return visibleWearables.ToArray();
         }
 
+        public static DynamicCharacterAvatar firstAvatar = null;
 
         /// <summary>
         /// Builds the character by combining the Avatar's raceData.baseRecipe with the any wardrobe recipes that have been applied to the avatar.
@@ -4134,6 +4137,10 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
+            if (firstAvatar == null)
+            {
+                firstAvatar = this;
+            }
 #if UMA_ADDRESSABLES
 			skipBundleCheck = false;
 #endif

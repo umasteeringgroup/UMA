@@ -15,6 +15,10 @@ namespace UMA
 
     public class UMASettings : ScriptableObject
     {
+        // Runtime toggle for MeshAPI combiner (Unity 2022.2+)
+        [Tooltip("Enable the MeshData API based combiner on Unity 2022.2+. Falls back to legacy combiner when disabled or on older Unity.")]
+        public bool useMeshAPICombiner = false;
+
 #if UNITY_EDITOR
         //public const string customSettingsPath = "Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset";
 
@@ -87,7 +91,9 @@ namespace UMA
             settings.ForumURL = "https://discussions.unity.com/t/uma-unity-multipurpose-avatar-on-the-asset-store-part-2/1487160";
             settings.AssetStoreURL = "https://assetstore.unity.com/packages/3d/characters/uma-2-35611";
             settings.ShaderFolder = "UMA/Core/ShaderPackages";
-			UpdateAlwaysOverrides(settings); //VES added
+            // Default to legacy combiner to avoid surprises
+            settings.useMeshAPICombiner = false;
+            UpdateAlwaysOverrides(settings); //VES added
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssetIfDirty(settings);
         }
@@ -96,7 +102,7 @@ namespace UMA
         public static UMASettings GetSettings()
         {
             var settings = Resources.Load<UMASettings>("UMASettings");
-			UpdateAlwaysOverrides(settings); //VES added
+            UpdateAlwaysOverrides(settings); //VES added
             return settings;
         }
 
@@ -143,12 +149,13 @@ namespace UMA
             {
                 settings = ScriptableObject.CreateInstance<UMASettings>();
                 // settings.cities = new List<string>();
-				UpdateAlwaysOverrides(settings); //VES added
+                settings.useMeshAPICombiner = false;
+                UpdateAlwaysOverrides(settings); //VES added
                 AssetDatabase.CreateAsset(settings, path);
                 AssetDatabase.SaveAssets();
             }
 #endif
-			UpdateAlwaysOverrides(settings); //VES added
+            UpdateAlwaysOverrides(settings); //VES added
             instance = settings;
             return settings;
         }
@@ -157,20 +164,30 @@ namespace UMA
         public static UMASettings GetSettingsFromResources()
         {
             UMASettings settings = Resources.Load<UMASettings>("UMASettings");
-			UpdateAlwaysOverrides(settings); //VES added
+            UpdateAlwaysOverrides(settings); //VES added
             return settings;
         }
 
-		static void UpdateAlwaysOverrides(UMASettings settings) { //VES added
+        // Runtime accessor for the toggle
+        public static bool UseMeshAPICombiner
+        {
+            get
+            {
+                var s = GetSettingsFromResources();
+                return s != null && s.useMeshAPICombiner;
+            }
+        }
+
+        static void UpdateAlwaysOverrides(UMASettings settings) { //VES added
 #if UNITY_EDITOR
 #if UMA_ALWAYS_STRIP_MATERIALS
-			settings.addrStripMaterials = true;
+            settings.addrStripMaterials = true;
 #endif
 #if UMA_ALWAYS_INCLUDE_RECIPES
-			settings.addrIncludeRecipes = true;
+            settings.addrIncludeRecipes = true;
 #endif
 #endif
-		}
+        }
 
 #if UNITY_EDITOR
         public static SerializedObject GetSerializedSettings()

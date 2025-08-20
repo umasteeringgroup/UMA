@@ -12,6 +12,7 @@ BEGIN_PROPERTIES
 	_Metallic ("Metallic", Range(0,2)) = 1
 	_SmoothnessModulation ("Smoothness Level", Range(0,2)) = 1
 	[BetterHeader(Lighting Adjustment)]
+        [Toggle]_UseHalfLambert ("Use Half Lambert (!HDRP)", Float) = 0
     _HalfLambertStrength ("Lambert(0), HalfLambert(1)", Range(0,8)) = 1
     _RimLightingModulation ("Rim Lighting Level", Float) = 0
 	_RimLightColor("Rim Light Color", Color) = (1,1,1,1)
@@ -66,6 +67,7 @@ BEGIN_CBUFFER
     float4 _DetailOneNormal_ST;
     float4 _DetailTwoNormal_ST;
     float4 _DetailThreeNormal_ST;
+    half _UseHalfLambert;
 END_CBUFFER
 
 
@@ -166,17 +168,22 @@ BEGIN_CODE
           base_n = normalize(lerp(base_n, add_n.rgb, (detailMask.b * add_n.a)));
       }
 
+        float3 lightDir = {0,0,1};
+        float3 lightColor = {0.8,0.8,0.8};
 
-	 float3 lightDir;
-     float3 lightColor;
-	 GetSun(lightDir, lightColor);
-     o.Normal = base_n;
-	 float3 normalDirection = TangentToWorldSpace(d, o.Normal);
-	 float atten = 1.0;
-	 float lambert = dot(normalDirection, lightDir);
+      if (_UseHalfLambert > 0)
+      {
+#if !_HDRP 
+    	GetSun(lightDir, lightColor);
+#endif
+	    float3 normalDirection = TangentToWorldSpace(d, o.Normal);
+	    float atten = 1.0;
+	    float lambert = dot(normalDirection, lightDir);
 
-     lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
-     o.Albedo *= atten * lightColor * lambert;
+        lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
+        o.Albedo *= atten * lightColor * lambert;
+      }
+
      if (_InvertThickness) 
      { 
          base_thick = 1.0 - base_thick;

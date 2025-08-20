@@ -512,10 +512,10 @@ namespace UMA
                 var tex = source.overlayData[0].GetTexture(0);
 				if (tex != null)
 				{
-					float xx = od.Translate.x * tex.width;
-                    float yy = od.Translate.y * tex.height;
+					//float xx = od.Translate.x * tex.width;
+                    //float yy = od.Translate.y * tex.height;
 
-                    textureMergeRects[textureMergeRectCount].rect = new Rect(overlayRect.x + xx, overlayRect.y + yy, overlayRect.width, overlayRect.height);
+                    textureMergeRects[textureMergeRectCount].rect = new Rect(overlayRect.x, overlayRect.y, overlayRect.width, overlayRect.height);
                 }
 				else
 				{

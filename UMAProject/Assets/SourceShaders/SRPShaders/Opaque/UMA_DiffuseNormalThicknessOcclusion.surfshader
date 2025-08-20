@@ -12,6 +12,7 @@ BEGIN_PROPERTIES
 	_Metallic ("Metallic", Range(0,2)) = 1
 	_SmoothnessModulation ("Smoothness Level", Range(0,2)) = 1
 	[BetterHeader(Lighting Adjustment)]
+        [Toggle]_UseHalfLambert ("Use Half Lambert (!HDRP)", Float) = 0
     _HalfLambertStrength ("Lambert(0), HalfLambert(1)", Range(0,8)) = 1
     _RimLightingModulation ("Rim Lighting Level", Float) = 0
 	_RimLightColor("Rim Light Color", Color) = (1,1,1,1)
@@ -55,6 +56,7 @@ BEGIN_CBUFFER
     float _SSSLevel;
     float _SSSGlow;
     float _Occlusion;
+    half _UseHalfLambert;
 END_CBUFFER
 
 

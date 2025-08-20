@@ -98,28 +98,57 @@ namespace UMA
 				}
 			}
 			Randomize(RandomAvatar);
+			RandomAvatar.BuildCharacterEnabled = false; // don't go through automated startup, we are already setting and building the character here.
 			RandomAvatar.BuildCharacter(true);
-		}
+			// look at wardrobe here:
+			//DumpWardrobeToConsole(RandomAvatar);
+        }
 
-		public RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots)
+		public static DynamicCharacterAvatar lastValidCharacter = null;
+        public void DumpWardrobeToConsole(DynamicCharacterAvatar Avatar)
 		{
-			int total = 0;
+			Debug.Log("Avatar " + Avatar.name + " has the following wardrobe:");
+			foreach (var ws in Avatar.WardrobeRecipes)
+			{
+				Debug.Log("    " + ws.Value.name);
+            }
+			Debug.Log("End of wardrobe for " + Avatar.name);
+			if (lastValidCharacter == null)
+			{
+				if (Avatar.WardrobeRecipes.Count > 0)
+				{
+					lastValidCharacter = Avatar;
+                }
+            }
+        }
 
+        public RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots)
+		{
+			// Sum weights
+            int total = 0;
             for (int i = 0; i < wardrobeSlots.Count; i++)
             {
-                RandomWardrobeSlot rws = wardrobeSlots[i];
-                total += rws.Chance;
+                total += wardrobeSlots[i].Chance;
+            }
+            if (total <= 0)
+            {
+                return wardrobeSlots[wardrobeSlots.Count - 1];
             }
 
+            // Single roll, cumulative selection
+            int roll = UnityEngine.Random.Range(0, total);
+            int cumulative = 0;
             for (int i = 0; i < wardrobeSlots.Count; i++)
-			{
-                RandomWardrobeSlot rws = wardrobeSlots[i];
-                if (UnityEngine.Random.Range(0,total) < rws.Chance)
-				{
-					return rws;
-				}
-			}
-			return wardrobeSlots[wardrobeSlots.Count - 1];
+            {
+                cumulative += wardrobeSlots[i].Chance;
+                if (roll < cumulative)
+                {
+                    return wardrobeSlots[i];
+                }
+            }
+
+            // Fallback (shouldn’t hit)
+            return wardrobeSlots[wardrobeSlots.Count - 1];
 		}
 
 		private OverlayColorData GetRandomColor(RandomColors rc)
@@ -206,7 +235,11 @@ namespace UMA
 					{
 						AddRandomSlot(Avatar, uwr);
 					}
-				}
+					else
+					{
+						Debug.LogWarning("RandomAvatar: No WardrobeSlot found for " + s + " in " + Randomizer.name);
+                    }
+                }
 			}
 		}
 	}

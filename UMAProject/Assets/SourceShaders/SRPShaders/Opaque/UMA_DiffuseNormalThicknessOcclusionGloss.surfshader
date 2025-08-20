@@ -15,6 +15,7 @@ BEGIN_PROPERTIES
     _MinSmooth ("Min Smoothness", Range(0, 1)) = 0.1
     _MaxSmooth ("Max Smoothness", Range(0, 1)) = 1
 	[BetterHeader(Lighting Adjustment)]
+        [Toggle]_UseHalfLambert ("Use Half Lambert (!HDRP)", Float) = 0
     _HalfLambertStrength ("Lambert(0), HalfLambert(1)", Range(0,8)) = 1
     _RimLightingModulation ("Rim Lighting Level", Float) = 0
 	_RimLightColor("Rim Light Color", Color) = (1,1,1,1)
@@ -72,6 +73,7 @@ BEGIN_CBUFFER
     float _MaxSmooth;
     half _Contrast;
     half _Saturation;
+    half _UseHalfLambert;
 END_CBUFFER
 
 
@@ -159,17 +161,20 @@ BEGIN_CODE
 		 o.Normal.z *= d.isFrontFace ? 1 : -1;
       }
 
-#if !_HDRP
-	 float3 lightDir;
-     float3 lightColor;
-	 GetSun(lightDir, lightColor);
-	 float3 normalDirection = TangentToWorldSpace(d, o.Normal);
-	 float atten = 1.0;
-	 float lambert = dot(normalDirection, lightDir);
-     lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
-     o.Albedo *= atten * lightColor * lambert;
-#endif
 
+        float3 lightDir = float3(0, 0, -1);
+        float3 lightColor = float3(0.8, 0.8, 0.8);
+#if  _HDRP
+	 GetSun(lightDir, lightColor);
+#endif
+     if (_UseHalfLambert) 
+     { 
+	    float3 normalDirection = TangentToWorldSpace(d, o.Normal);
+	    float atten = 1.0;
+	    float lambert = dot(normalDirection, lightDir);
+        lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
+        o.Albedo *= atten * lightColor * lambert;
+     }
      if (_InvertThickness) 
      { 
          base_thick = 1.0 - base_thick;

@@ -5,10 +5,14 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Random
+      Characters.unity
+    guid: 23bb4999598a61e4989ccef2415039cf
   m_configObjects:
-    com.unity.addressableassets: {fileID: 11400000, guid: 0e9e6aa1b157d364fbcd2ca66332ffc3, type: 2}
+    com.unity.addressableassets: {fileID: 11400000, guid: 3bda6a79c1653184cb062282d25d7ece, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

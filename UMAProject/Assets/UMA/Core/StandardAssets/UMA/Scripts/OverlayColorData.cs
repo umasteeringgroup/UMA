@@ -493,11 +493,6 @@ namespace UMA
 		}
 		public void AssignFrom(OverlayColorData src, bool CopyParmsOnly=false)
 		{
-			// If this is the same color, no need to do anything, right mate?
-			if (this == src)
-			{
-				return;
-			}
             // If CopyParmsOnly is false, then we need to copy the colors and the property block.
             // If it is true, then we are copying the property block only.
             if (CopyParmsOnly == false)

@@ -12,6 +12,7 @@ BEGIN_PROPERTIES
 	_MetallicModulation ("Metallic Level", Range(0,2)) = 1
 	_SmoothnessModulation ("Smoothness Level", Range(0,2)) = 1
 	[BetterHeader(Lighting Adjustment)]
+    [Toggle]_UseHalfLambert ("Use Half Lambert (!HDRP)", Float) = 0
     _HalfLambertStrength ("Lambert(0), HalfLambert(1)", Range(0,4)) = 1
     _RimLightingModulation ("Rim Lighting Level", Float) = 0
 	_RimLightColor("Rim Light Color", Color) = (1,1,1,1)
@@ -45,6 +46,7 @@ BEGIN_CBUFFER
 	half  _RimLightPower;
     float _RimLightingModulation;
     float _NormalStrength;
+    half _UseHalfLambert;
 END_CBUFFER
 
 
@@ -97,15 +99,24 @@ BEGIN_CODE
       }
 
 
-	 float3 lightDir;
-     float3 lightColor;
-	 GetSun(lightDir, lightColor);
-	 float3 normalDirection = TangentToWorldSpace(d, o.Normal);
-	 float atten = 1.0;
-	 float lambert = dot(normalDirection, lightDir);
+        if (_UseHalfLambert > 0)
+        {
+#if _HDRP 
+        float3 lightDir = {0,0,1};
+        float3 lightColor = {0.8,0.8,0.8};
+#else
+        float3 lightDir;
+        float3 lightColor;
+    	GetSun(lightDir, lightColor);
+#endif
+	    float3 normalDirection = TangentToWorldSpace(d, o.Normal);
+	    float atten = 1.0;
+	    float lambert = dot(normalDirection, lightDir);
 
-     lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
-     o.Albedo *= atten * lightColor * lambert;
+        lambert = lerp(lambert, lambert * 0.5 + 0.5, _HalfLambertStrength);
+        o.Albedo *= atten * lightColor * lambert;
+        }
+
      if (_RimLightingModulation>0) 
      { 
 	    float rim = 1.0 - saturate(dot(d.tangentSpaceViewDir, o.Normal)); 

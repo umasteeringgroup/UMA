@@ -210,11 +210,13 @@ namespace UMA
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
+
             SortOrder = "Name";
             SortOrders = new string[] { "Name", "AssetName" };
             WasChecked = false;
             TypeFromString = new Dictionary<string, System.Type>();
-
+            theIndexer = null;
+/*
             // This method is called after all assemblies are loaded, so we can initialize static data here if needed.
             // Currently, we don't have any static initialization logic, but this method is a good place to add it in the future.
             if (theIndexer == null)
@@ -225,7 +227,28 @@ namespace UMA
                     theIndexer.Initialize();
                 }
             }
+            else
+            {
+                theIndexer.ReinitializePrivateFields();
+            }*/
         }
+
+        public void ReinitializePrivateFields()
+        {
+            // Reinitialize the private fields of the indexer
+            instanceKey = "<" + Guid.NewGuid().ToString() + ">";
+            generator = null;
+            raceRecipes.Clear();
+            TypeLookup.Clear();
+            IndexedTypeNames.Clear();
+            SerializedItems.Clear();
+            CreateGenerator();
+            BuildStringTypes();
+            CreateTypeFolderMapping();
+            DoInitialDictionaryLoad();
+            RebuildRaceRecipes();
+        }
+
 
         public static System.Diagnostics.Stopwatch StartTimer()
         {
@@ -265,9 +288,7 @@ namespace UMA
             {
                 if (theIndexer == null)
                 {
-
 #if UNITY_EDITOR
-                    //DebugSerializationStatic("Instance is NULL - getting new instance.");
                     if (EditorApplication.isCompiling || EditorApplication.isUpdating)
                     {
                         return null;
@@ -493,6 +514,9 @@ namespace UMA
 
         public void Initialize()
         {
+            // reset the public variables
+
+
             CreateGenerator();
             BuildStringTypes();
             CreateTypeFolderMapping();

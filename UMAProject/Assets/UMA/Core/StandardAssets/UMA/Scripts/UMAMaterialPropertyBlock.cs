@@ -32,7 +32,7 @@ namespace UMA
                 return name;
             }
 
-            return $"{name}{overlayNumber}";
+            return name + overlayNumber;
         }
 
 
@@ -285,7 +285,12 @@ namespace UMA
         }
         public override string ToString()
         {
-            return "Vector" + splitter + string.Format(CultureInfo.InvariantCulture,vectorprecision, Value.x, Value.y, Value.z, Value.w) + ";" + name;
+            return "Vector" + splitter
+                + Value.x.ToString("F4", CultureInfo.InvariantCulture) + ","
+                + Value.y.ToString("F4", CultureInfo.InvariantCulture) + ","
+                + Value.z.ToString("F4", CultureInfo.InvariantCulture) + ","
+                + Value.w.ToString("F4", CultureInfo.InvariantCulture)
+                + ";" + name;
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
