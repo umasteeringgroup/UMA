@@ -1,5 +1,5 @@
-#if UNITY_2022_2_OR_NEWER
-#define UMA_MESHAPI_2022
+#if UNITY_2021_3_OR_NEWER
+#define UMA_MESHAPI_2021
 #endif
 
 using System;
@@ -11,18 +11,18 @@ using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
 #if UMA_UNSAFE
-using Unity.Collections.LowLevel.Unsafe; // UnsafeUtility for high-performance single-stream path
+using Unity.Collections.LowLevel.Unsafe;
 #endif
 
 namespace UMA
 {
     /// <summary>
-    /// Unity 2022+ MeshData API based combiner.
-    /// - Builds a new Mesh and assigns it to the provided SkinnedMeshRenderer(s).
-    /// - Uses 32-bit index buffers when possible.
-    /// - Supports partial Burst/Jobs (unmasked index copy).
-    /// - Supports cloth and blendshape baking (names -> weights).
-    /// - Owns UMA-style UV remap for atlased output.
+    /// Unity 2021.3+ MeshData API based combiner.
+    /// - Writes directly to MeshData buffers to avoid large intermediates.
+    /// - Uses 16-bit index buffers when possible.
+    /// - Burst/Jobs for index copy (masked and unmasked).
+    /// - Preserves cloth and blendshapes (unbaked added directly to Mesh).
+    /// - UMA atlas UV remap operates on MeshData UV buffer.
     /// </summary>
     public static class SkinnedMeshCombinerMeshAPI
     {
@@ -34,7 +34,7 @@ namespace UMA
             public int AtlasResolution;
         }
 
-        // Safe path structs (used when UMA_UNSAFE is NOT defined)
+        // Safe interleaved structs (multi-stream layout)
         [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
         private struct NormTan { public Vector3 normal; public Vector4 tangent; }
 
@@ -44,9 +44,6 @@ namespace UMA
         [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
         private struct UV23 { public Vector2 uv2; public Vector2 uv3; }
 
-        /// <summary>
-        /// Combine into one renderer. Returns Cloth coefficients (null if none).
-        /// </summary>
         public static ClothSkinningCoefficient[] CombineIntoRenderer(
             SkinnedMeshRenderer renderer,
             SkinnedMeshCombiner.CombineInstance[] sources,
@@ -57,12 +54,12 @@ namespace UMA
             bool markDynamic = false,
             bool markNotReadable = false)
         {
-#if !UMA_MESHAPI_2022
-            throw new NotSupportedException("Requires Unity 202.2+ MeshData API (define UNITY_2022_2_OR_NEWER).");
+#if !UMA_MESHAPI_2021
+            throw new NotSupportedException("Requires Unity 2021.3+ MeshData API.");
 #else
-            if (renderer == null) throw new ArgumentNullException("renderer");
-            if (sources == null || sources.Length == 0) throw new ArgumentException("sources empty", "sources");
-            if (umaData == null) throw new ArgumentNullException("umaData");
+            if (renderer == null) throw new ArgumentNullException(nameof(renderer));
+            if (sources == null || sources.Length == 0) throw new ArgumentException("sources empty", nameof(sources));
+            if (umaData == null) throw new ArgumentNullException(nameof(umaData));
 
             CombineInternal(
                 new RendererBatch
@@ -82,9 +79,6 @@ namespace UMA
 #endif
         }
 
-        /// <summary>
-        /// Combine into multiple renderers. Returns Cloth coefficients per renderer.
-        /// </summary>
         public static ClothSkinningCoefficient[][] CombineIntoRenderers(
             RendererBatch[] batches,
             UMAData umaData,
@@ -92,17 +86,17 @@ namespace UMA
             bool markDynamic = false,
             bool markNotReadable = false)
         {
-#if !UMA_MESHAPI_2022
-            throw new NotSupportedException("Requires Unity 202.2+ MeshData API (define UNITY_2022_2_OR_NEWER).");
+#if !UMA_MESHAPI_2021
+            throw new NotSupportedException("Requires Unity 2021.3+ MeshData API.");
 #else
-            if (batches == null || batches.Length == 0) throw new ArgumentException("batches empty", "batches");
-            if (umaData == null) throw new ArgumentNullException("umaData");
+            if (batches == null || batches.Length == 0) throw new ArgumentException("batches empty", nameof(batches));
+            if (umaData == null) throw new ArgumentNullException(nameof(umaData));
 
             var results = new ClothSkinningCoefficient[batches.Length][];
             for (int i = 0; i < batches.Length; i++)
             {
-                if (batches[i].Renderer == null) throw new ArgumentNullException("Renderer at " + i);
-                if (batches[i].Sources == null || batches[i].Sources.Length == 0) throw new ArgumentException("sources empty at " + i);
+                if (batches[i].Renderer == null) throw new ArgumentNullException($"Renderer at {i}");
+                if (batches[i].Sources == null || batches[i].Sources.Length == 0) throw new ArgumentException($"sources empty at {i}");
 
                 CombineInternal(
                     batches[i],
@@ -118,7 +112,7 @@ namespace UMA
 #endif
         }
 
-#if UMA_MESHAPI_2022
+#if UMA_MESHAPI_2021
         private static void CombineInternal(
             RendererBatch batch,
             UMAData umaData,
@@ -140,7 +134,7 @@ namespace UMA
             MeshComponents flags = MeshComponents.none;
             AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref boneWeightCount, ref bindPoseCount, ref transformHierarchyCount, ref flags);
 
-            // Blendshape analysis: collect unbaked shape infos
+            // Blendshape analysis (unbaked only)
             Dictionary<string, BlendShapeVertexData> blendShapeNames;
             AnalyzeBlendShapeSources(sources, bakedBlendshapes, ref flags, out blendShapeNames, umaData.umaRecipe);
 
@@ -154,25 +148,64 @@ namespace UMA
             bool hasBlendShapes = (flags & MeshComponents.has_blendShapes) != 0;
             bool hasCloth = (flags & MeshComponents.has_clothSkinning) != 0;
 
-            // Attribute buffers
-            var vertices = new Vector3[vertexCount];
-            Vector3[] normals = hasNormals ? new Vector3[vertexCount] : null;
-            Vector4[] tangents = hasTangents ? new Vector4[vertexCount] : null;
-            Vector2[] uv = hasUV ? new Vector2[vertexCount] : null;
-            Vector2[] uv2 = hasUV2 ? new Vector2[vertexCount] : null;
-            Vector2[] uv3 = hasUV3 ? new Vector2[vertexCount] : null;
-            Vector2[] uv4 = hasUV4 ? new Vector2[vertexCount] : null;
-            Color32[] colors32 = hasColors32 ? new Color32[vertexCount] : null;
-
-            // Blendshape frames (unbaked)
-            UMABlendShape[] bsArray = null;
-            if (hasBlendShapes)
+            // Prefix sums for submeshes and total index count
+            int totalIndexCount = 0;
+            var subIndexStart = new int[subMeshCount];
+            for (int i = 0, run = 0; i < subMeshCount; i++)
             {
-                bsArray = new UMABlendShape[blendShapeNames.Keys.Count];
-                InitializeBlendShapeData(ref vertexCount, blendShapeNames, bsArray);
+                subIndexStart[i] = run;
+                run += subMeshTriangleLength[i];
+                totalIndexCount = run;
             }
 
-            // Bones and bindposes
+            // Allocate MeshData
+            var mda = Mesh.AllocateWritableMeshData(1);
+            var md = mda[0];
+
+            // Vertex layout: multi-stream to keep copies minimal and contiguous
+            var vDescs = BuildVertexLayout(hasNormals, hasTangents, hasUV, hasUV2, hasUV3, hasUV4, hasColors32);
+            md.SetVertexBufferParams(vertexCount, vDescs);
+
+            // Index buffer (16-bit if possible)
+            var indexFormat = (vertexCount <= 65535) ? IndexFormat.UInt16 : IndexFormat.UInt32;
+            md.SetIndexBufferParams(totalIndexCount, indexFormat);
+
+            // Submeshes (ranges assigned after indices are written)
+            md.subMeshCount = subMeshCount;
+
+            // Grab vertex streams
+            var vPos = md.GetVertexData<Vector3>(0);
+
+            NativeArray<NormTan> vNT = default;
+            NativeArray<ColUV01> vC01 = default;
+            NativeArray<UV23> vUV23 = default;
+
+            int stream = 1;
+            if (hasNormals || hasTangents) vNT = md.GetVertexData<NormTan>(stream++);
+            if (hasColors32 || hasUV || hasUV2) vC01 = md.GetVertexData<ColUV01>(stream++);
+            if (hasUV3 || hasUV4) vUV23 = md.GetVertexData<UV23>(stream++);
+
+            // Index buffer
+            NativeArray<int> ibInt = default;
+            NativeArray<ushort> ibU16 = default;
+            if (indexFormat == IndexFormat.UInt16) ibU16 = md.GetIndexData<ushort>();
+            else ibInt = md.GetIndexData<int>();
+
+            // UMA transforms merged
+            int boneCount = 0;
+            var mergedUmaTransforms = new UMATransform[transformHierarchyCount];
+            for (int i = 0; i < sources.Length; i++)
+                MergeSortedTransforms(mergedUmaTransforms, ref boneCount, sources[i].meshData.umaBones);
+
+            if (umaData != null && umaData.skeleton != null)
+            {
+                umaData.skeleton.BeginSkeletonUpdate();
+                for (int i = 0; i < boneCount; i++) umaData.skeleton.EnsureBone(mergedUmaTransforms[i]);
+                umaData.skeleton.EnsureBoneHierarchy();
+                umaData.skeleton.EndSkeletonUpdate();
+            }
+
+            // Bones and weights collection
             var bonesCollection = new Dictionary<int, BoneIndexEntry>(Math.Max(64, bindPoseCount));
             var bindPoses = new List<Matrix4x4>(bindPoseCount);
             var bonesList = new List<int>(transformHierarchyCount);
@@ -180,397 +213,665 @@ namespace UMA
             var nativeBoneWeights = new NativeArray<BoneWeight1>(boneWeightCount, Allocator.Temp);
             var nativeBonesPerVertex = new NativeArray<byte>(Math.Max(1, vertexCount), Allocator.Temp);
 
-            // Merge UMA transforms (bone tree list)
-            int boneCount = 0;
-            var mergedUmaTransforms = new UMATransform[transformHierarchyCount];
-            for (int i = 0; i < sources.Length; i++)
-            {
-                MergeSortedTransforms(mergedUmaTransforms, ref boneCount, sources[i].meshData.umaBones);
-            }
+            // Track offsets and bounds
+            int vertexOffset = 0;
+            int boneWeightOffset = 0;
+            var boundsMin = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+            var boundsMax = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
 
-            // Ensure those bones exist in the skeleton and are parented
-            if (umaData != null && umaData.skeleton != null)
-            {
-                umaData.skeleton.BeginSkeletonUpdate();
-                for (int i = 0; i < boneCount; i++)
-                    umaData.skeleton.EnsureBone(mergedUmaTransforms[i]);
-                umaData.skeleton.EnsureBoneHierarchy();
-                umaData.skeleton.EndSkeletonUpdate();
-            }
+            // Index write cursors per submesh
+            var subWrite = new int[subMeshCount];
 
-            // UMA-style atlas UV remap will run after we copy all uvs
-            // Precompute index buffer totals and per-submesh base offsets (prefix sums)
-            int totalIndexCount = 0;
-            for (int i = 0; i < subMeshTriangleLength.Length; i++) totalIndexCount += subMeshTriangleLength[i];
+            // Collect vertex offsets per source (for blendshape pass later)
+            var sourceVertexOffsets = new int[sources.Length];
 
-            var meshDataArray = Mesh.AllocateWritableMeshData(1);
-            var md = meshDataArray[0];
-            var indexFormat = IndexFormat.UInt32;
-
-            NativeArray<int> idxDataInt = default;
-            var subBase = new int[subMeshCount];          // base write offset per submesh
-            var subWrite = new int[subMeshCount];         // running write offset per submesh
-            bool hasAnyIndices = (subMeshCount > 0) && (totalIndexCount > 0);
-
-            if (hasAnyIndices)
-            {
-                // prefix sum for submesh index starts
-                int run = 0;
-                for (int sm = 0; sm < subMeshCount; sm++)
-                {
-                    subBase[sm] = run;
-                    subWrite[sm] = 0;
-                    run += subMeshTriangleLength[sm];
-                }
-
-                md.SetIndexBufferParams(totalIndexCount, indexFormat);
-                idxDataInt = md.GetIndexData<uint>().Reinterpret<int>();
-                md.subMeshCount = subMeshCount; // set before SetSubMesh
-            }
-            else
-            {
-                md.SetIndexBufferParams(0, indexFormat);
-                md.subMeshCount = 0;
-            }
-
-            // Fill vertex data and index buffer
-            int vertexIndex = 0;
-            int boneWeightIndex = 0;
-
-            // track bounds while copying vertices
-            var min = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
-            var max = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
-
+            // Copy vertex attributes and indices directly into MeshData buffers
             for (int s = 0; s < sources.Length; s++)
             {
-                var src = sources[s];
-                int srcVertCount = src.meshData.vertices.Length;
+                var ci = sources[s];
+                var src = ci.meshData;
+                int srcCount = src.vertexCount;
+                sourceVertexOffsets[s] = vertexOffset;
 
-                // Bone weights
-                BuildBoneWeights(src.meshData, nativeBoneWeights, nativeBonesPerVertex, vertexIndex, boneWeightIndex, bonesCollection, bindPoses, bonesList);
+                // Bone weights: remap and copy into global buffers
+                BuildBoneWeights(src, nativeBoneWeights, nativeBonesPerVertex, vertexOffset, boneWeightOffset, bonesCollection, bindPoses, bonesList);
 
-                // Vertices (+ optional expansion)
-                if (src.slotData.expandAlongNormal > 0 && src.meshData.normals != null && src.meshData.normals.Length == srcVertCount)
+                // Positions (with optional expandAlongNormal) + bounds
+#if UMA_UNSAFE
                 {
-                    ArrayCopyandExpand(src.meshData, src.slotData.expandAlongNormal, ref vertices, vertexIndex, srcVertCount);
+                    float expand = 0f;
+                    if (ci.slotData != null && ci.slotData.expandAlongNormal > 0)
+                    {
+                        expand = ci.slotData.expandAlongNormal / 1000000f;
+                    }
+
+                    FastCopyPositionsAndBoundsUnsafe(
+                        vPos, vertexOffset,
+                        src.vertices, src.normals,
+                        srcCount, expand,
+                        ref boundsMin, ref boundsMax);
+                }
+#else
+                if (ci.slotData != null && ci.slotData.expandAlongNormal > 0 && src.normals != null && src.normals.Length == srcCount)
+                {
+                    float expand = ci.slotData.expandAlongNormal / 1000000f;
+                    for (int i = 0; i < srcCount; i++)
+                    {
+                        vPos[vertexOffset + i] = src.vertices[i] + (src.normals[i] * expand);
+                    }
                 }
                 else
                 {
-                    Array.Copy(src.meshData.vertices, 0, vertices, vertexIndex, srcVertCount);
+                    NativeArray<Vector3>.Copy(src.vertices, 0, vPos, vertexOffset, srcCount);
                 }
-
                 // update bounds
-                for (int i = vertexIndex, end = vertexIndex + srcVertCount; i < end; i++)
+                for (int i = 0; i < srcCount; i++)
                 {
-                    var v = vertices[i];
-                    if (v.x < min.x) min.x = v.x; if (v.x > max.x) max.x = v.x;
-                    if (v.y < min.y) min.y = v.y; if (v.y > max.y) max.y = v.y;
-                    if (v.z < min.z) min.z = v.z; if (v.z > max.z) max.z = v.z;
+                    var v = vPos[vertexOffset + i];
+                    if (v.x < boundsMin.x) boundsMin.x = v.x; if (v.x > boundsMax.x) boundsMax.x = v.x;
+                    if (v.y < boundsMin.y) boundsMin.y = v.y; if (v.y > boundsMax.y) boundsMax.y = v.y;
+                    if (v.z < boundsMin.z) boundsMin.z = v.z; if (v.z > boundsMax.z) boundsMax.z = v.z;
                 }
-
-                // Normals/Tangents
-                if (hasNormals)
-                {
-                    if (src.meshData.normals != null && src.meshData.normals.Length == srcVertCount)
-                        Array.Copy(src.meshData.normals, 0, normals, vertexIndex, srcVertCount);
-                    else
-                        FillArray(normals, vertexIndex, srcVertCount, Vector3.zero);
-                }
-                if (hasTangents)
-                {
-                    if (src.meshData.tangents != null && src.meshData.tangents.Length == srcVertCount)
-                        Array.Copy(src.meshData.tangents, 0, tangents, vertexIndex, srcVertCount);
-                    else
-                        FillArray(tangents, vertexIndex, srcVertCount, Vector4.zero);
-                }
-
-                // UVs
-                if (hasUV)
-                {
-                    if (src.meshData.uv != null && src.meshData.uv.Length >= srcVertCount)
-                        Array.Copy(src.meshData.uv, 0, uv, vertexIndex, srcVertCount);
-                    else
-                        FillArray(uv, vertexIndex, srcVertCount, Vector2.zero);
-                }
-                if (hasUV2)
-                {
-                    if (src.meshData.uv2 != null && src.meshData.uv2.Length >= srcVertCount)
-                        Array.Copy(src.meshData.uv2, 0, uv2, vertexIndex, srcVertCount);
-                    else
-                        FillArray(uv2, vertexIndex, srcVertCount, Vector2.zero);
-                }
-                if (hasUV3)
-                {
-                    if (src.meshData.uv3 != null && src.meshData.uv3.Length >= srcVertCount)
-                        Array.Copy(src.meshData.uv3, 0, uv3, vertexIndex, srcVertCount);
-                    else
-                        FillArray(uv3, vertexIndex, srcVertCount, Vector2.zero);
-                }
-                if (hasUV4)
-                {
-                    if (src.meshData.uv4 != null && src.meshData.uv4.Length >= srcVertCount)
-                        Array.Copy(src.meshData.uv4, 0, uv4, vertexIndex, srcVertCount);
-                    else
-                        FillArray(uv4, vertexIndex, srcVertCount, Vector2.zero);
-                }
-
-                // Colors
-                if (hasColors32)
-                {
-                    if (src.meshData.colors32 != null && src.meshData.colors32.Length == srcVertCount)
-                        Array.Copy(src.meshData.colors32, 0, colors32, vertexIndex, srcVertCount);
-                    else
-                        FillArray(colors32, vertexIndex, srcVertCount, (Color32)Color.white);
-                }
-
-                // Blendshapes: bake listed; accumulate others
-                if (hasBlendShapes)
-                {
-                    var sourceShapes = SkinnedMeshCombiner.GetBlendshapeSources(src.meshData, umaData.umaRecipe);
-                    for (int b = 0; b < sourceShapes.Count; b++)
-                    {
-                        var ubs = sourceShapes[b];
-                        // Bake if listed
-                        if (bakedBlendshapes.TryGetValue(ubs.shapeName, out float value))
-                        {
-                            if (BakeBlendShape(ubs, value, ref vertexIndex, vertices, normals, tangents, hasNormals, hasTangents))
-                                continue;
-                        }
-
-                        // Unbaked -> copy frames into bsArray
-                        if (blendShapeNames.TryGetValue(ubs.shapeName, out var meta))
-                        {
-                            int destIdx = meta.index;
-                            if (bsArray[destIdx].frames.Length != ubs.frames.Length)
-                            {
-#if UNITY_EDITOR
-                                if (Debug.isDebugBuild) Debug.LogError("BlendShape frame count mismatch!");
 #endif
-                                break;
-                            }
-
-                            for (int f = 0; f < ubs.frames.Length; f++)
-                            {
-                                var srcF = ubs.frames[f];
-                                var dstF = bsArray[destIdx].frames[f];
-
-                                Array.Copy(srcF.deltaVertices, 0, dstF.deltaVertices, vertexIndex, srcVertCount);
-
-                                if (meta.hasNormals && srcF.deltaNormals != null && srcF.deltaNormals.Length > 0)
-                                    Array.Copy(srcF.deltaNormals, 0, dstF.deltaNormals, vertexIndex, srcVertCount);
-                                else
-                                    dstF.deltaNormals = null; // avoid per-frame zero-length alloc
-
-                                if (meta.hasTangents && srcF.deltaTangents != null && srcF.deltaTangents.Length > 0)
-                                    Array.Copy(srcF.deltaTangents, 0, dstF.deltaTangents, vertexIndex, srcVertCount);
-                                else
-                                    dstF.deltaTangents = null; // avoid per-frame zero-length alloc
-                            }
-                        }
+                // Normals/Tangents
+                if (hasNormals || hasTangents)
+                {
+#if UMA_UNSAFE
+                    PackNormTanUnsafe(vNT, vertexOffset, src.normals, src.tangents, srcCount, hasNormals, hasTangents);
+#else
+                    for (int i = 0; i < srcCount; i++)
+                    {
+                        var nt = default(NormTan);
+                        nt.normal = (hasNormals && src.normals != null && src.normals.Length == srcCount) ? src.normals[i] : Vector3.zero;
+                        nt.tangent = (hasTangents && src.tangents != null && src.tangents.Length == srcCount) ? src.tangents[i] : new Vector4(0, 0, 0, 1);
+                        vNT[vertexOffset + i] = nt;
                     }
+#endif
                 }
 
-                // Triangles per submesh -> write directly into final index buffer
-                if (hasAnyIndices)
+                // Colors, UV0, UV1
+                if (hasColors32 || hasUV || hasUV2)
                 {
-                    for (int i = 0; i < src.meshData.subMeshCount; i++)
+#if UMA_UNSAFE
+                    PackColUV01Unsafe(vC01, vertexOffset, src.colors32, src.uv, src.uv2, srcCount, hasColors32, hasUV, hasUV2);
+#else
+                    for (int i = 0; i < srcCount; i++)
                     {
-                        int destSub = src.targetSubmeshIndices[i];
-                        if (destSub < 0) continue;
+                        var c01 = default(ColUV01);
+                        c01.color = (hasColors32 && src.colors32 != null && src.colors32.Length == srcCount) ? src.colors32[i] : (Color32)Color.white;
+                        c01.uv0 = (hasUV && src.uv != null && src.uv.Length >= srcCount) ? src.uv[i] : Vector2.zero;
+                        c01.uv1 = (hasUV2 && src.uv2 != null && src.uv2.Length >= srcCount) ? src.uv2[i] : Vector2.zero;
+                        vC01[vertexOffset + i] = c01;
+                    }
+#endif
+                }
+                // UV2, UV3 (TexCoord2, TexCoord3)
+                if (hasUV3 || hasUV4)
+                {
+#if UMA_UNSAFE
+                    // note: uv3 -> TexCoord2, uv4 -> TexCoord3
+                    PackUV23Unsafe(vUV23, vertexOffset, src.uv3, src.uv4, srcCount, hasUV3, hasUV4);
+#else
+                    for (int i = 0; i < srcCount; i++)
+                    {
+                        var uv23 = default(UV23);
+                        uv23.uv2 = (hasUV3 && src.uv3 != null && src.uv3.Length >= srcCount) ? src.uv3[i] : Vector2.zero;
+                        uv23.uv3 = (hasUV4 && src.uv4 != null && src.uv4.Length >= srcCount) ? src.uv4[i] : Vector2.zero;
+                        vUV23[vertexOffset + i] = uv23;
+                    }
+#endif
+                }
 
-                        var srcTris = src.meshData.submeshes[i].GetTriangles();
-                        int triLen = srcTris.Length;
+                // Triangles -> index buffer (masked/unmasked), with offset
+                for (int sm = 0; sm < src.subMeshCount; sm++)
+                {
+                    int dstSub = ci.targetSubmeshIndices[sm];
+                    if (dstSub < 0) continue;
 
-                        int destStart = subBase[destSub] + subWrite[destSub];
+                    var srcTris = src.submeshes[sm].GetTriangles();
+                    int triLen = srcTris.Length;
+                    int dstStart = subIndexStart[dstSub] + subWrite[dstSub];
 
-                        if (src.triangleMask == null)
+                    if (ci.triangleMask != null && sm < ci.triangleMask.Length)
+                    {
+                        int kept = triLen - (UMAUtils.GetCardinality(ci.triangleMask[sm]) * 3);
+                        if (kept > 0)
                         {
-                            // Unmasked
-                            for (int t = 0; t < triLen; t++)
+                            if (indexFormat == IndexFormat.UInt16)
                             {
-                                idxDataInt[destStart + t] = srcTris[t] + vertexIndex;
+                                var job = new MaskedCopyIndicesJobU16
+                                {
+                                    Src = srcTris,
+                                    Mask = BitArrayToNative(ci.triangleMask[sm], Allocator.TempJob),
+                                    Dst = ibU16,
+                                    DstStart = dstStart,
+                                    Add = (ushort)vertexOffset
+                                }.Schedule();
+                                job.Complete();
                             }
-                            subWrite[destSub] += triLen;
+                            else
+                            {
+                                var job = new MaskedCopyIndicesJobInt
+                                {
+                                    Src = srcTris,
+                                    Mask = BitArrayToNative(ci.triangleMask[sm], Allocator.TempJob),
+                                    Dst = ibInt,
+                                    DstStart = dstStart,
+                                    Add = vertexOffset
+                                }.Schedule();
+                                job.Complete();
+                            }
+                        }
+                        subWrite[dstSub] += kept;
+                    }
+                    else
+                    {
+                        if (indexFormat == IndexFormat.UInt16)
+                        {
+                            var job = new CopyIndicesJobU16
+                            {
+                                Src = srcTris,
+                                Dst = ibU16,
+                                DstStart = dstStart,
+                                Add = (ushort)vertexOffset
+                            }.Schedule();
+                            job.Complete();
                         }
                         else
                         {
-                            // Masked
-                            int wrote = 0;
-                            for (int t = 0; t < triLen; t += 3)
+                            var job = new CopyIndicesJobInt
                             {
-                                if (!src.triangleMask[i][t / 3])
-                                {
-                                    idxDataInt[destStart + wrote + 0] = srcTris[t + 0] + vertexIndex;
-                                    idxDataInt[destStart + wrote + 1] = srcTris[t + 1] + vertexIndex;
-                                    idxDataInt[destStart + wrote + 2] = srcTris[t + 2] + vertexIndex;
-                                    wrote += 3;
-                                }
-                            }
-                            subWrite[destSub] += wrote;
+                                Src = srcTris,
+                                Dst = ibInt,
+                                DstStart = dstStart,
+                                Add = vertexOffset
+                            }.Schedule();
+                            job.Complete();
                         }
+                        subWrite[dstSub] += triLen;
                     }
                 }
 
-                src.slotData.vertexOffset = vertexIndex;
-                src.slotData.skinnedMeshRenderer = batch.CurrentRendererIndex;
+                ci.slotData.vertexOffset = vertexOffset;
+                ci.slotData.skinnedMeshRenderer = batch.CurrentRendererIndex;
 
-                vertexIndex += srcVertCount;
-                boneWeightIndex += src.meshData.ManagedBoneWeights.Length;
+                vertexOffset += srcCount;
+                boneWeightOffset += src.ManagedBoneWeights.Length;
             }
 
-            // UMA-style atlas UV remap (class owns the mapping)
+            // UMA atlas UV remap — in place on MeshData UV buffer
             if (hasUV)
             {
-                RecalculateUVForUMA(uv, umaData, batch.AtlasResolution, batch.CurrentRendererIndex);
+                // we remap vC01.uv0
+                RecalculateUVForUMA(vC01, umaData, batch.AtlasResolution, batch.CurrentRendererIndex);
             }
 
-            // Vertex buffers (same as before)
-#if UMA_UNSAFE
-            // ... existing unsafe single-stream code (unchanged) ...
-#else
-            var descriptors = new List<VertexAttributeDescriptor>(8);
-            descriptors.Add(new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0)); // stream 0
-
-            bool anyNT = hasNormals || hasTangents;
-            bool anyC01 = hasColors32 || hasUV || hasUV2;
-            bool anyUV23 = hasUV3 || hasUV4;
-
-            if (anyNT)
+            // Submesh descriptors
+            for (int i = 0; i < subMeshCount; i++)
             {
-                descriptors.Add(new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, 1));
-                descriptors.Add(new VertexAttributeDescriptor(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, 1));
-            }
-            if (anyC01)
-            {
-                descriptors.Add(new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4, 2));
-                descriptors.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2, 2));
-                descriptors.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord1, VertexAttributeFormat.Float32, 2, 2));
-            }
-            if (anyUV23)
-            {
-                descriptors.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord2, VertexAttributeFormat.Float32, 2, 3));
-                descriptors.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord3, VertexAttributeFormat.Float32, 2, 3));
-            }
-
-            md.SetVertexBufferParams(vertices.Length, descriptors.ToArray());
-
-            // Stream 0
-            var vPos = md.GetVertexData<Vector3>(0);
-            for (int i = 0; i < vertices.Length; i++) vPos[i] = vertices[i];
-
-            if (anyNT)
-            {
-                var vNT = md.GetVertexData<NormTan>(1);
-                for (int i = 0; i < vertices.Length; i++)
+                var smd = new SubMeshDescriptor
                 {
-                    vNT[i] = new NormTan
-                    {
-                        normal = hasNormals && normals != null && i < normals.Length ? normals[i] : Vector3.zero,
-                        tangent = hasTangents && tangents != null && i < tangents.Length ? tangents[i] : Vector4.zero
-                    };
-                }
+                    topology = MeshTopology.Triangles,
+                    indexStart = subIndexStart[i],
+                    indexCount = subMeshTriangleLength[i],
+                    baseVertex = 0,
+                    vertexCount = vertexCount
+                };
+                md.SetSubMesh(i, smd, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontNotifyMeshUsers);
             }
 
-            if (anyC01)
-            {
-                var vC01 = md.GetVertexData<ColUV01>(2);
-                for (int i = 0; i < vertices.Length; i++)
-                {
-                    vC01[i] = new ColUV01
-                    {
-                        color = hasColors32 && colors32 != null && i < colors32.Length ? colors32[i] : (Color32)Color.white,
-                        uv0 = hasUV && uv != null && i < uv.Length ? uv[i] : Vector2.zero,
-                        uv1 = hasUV2 && uv2 != null && i < uv2.Length ? uv2[i] : Vector2.zero
-                    };
-                }
-            }
-
-            if (anyUV23)
-            {
-                var vUV23 = md.GetVertexData<UV23>(3);
-                for (int i = 0; i < vertices.Length; i++)
-                {
-                    vUV23[i] = new UV23
-                    {
-                        uv2 = hasUV3 && uv3 != null && i < uv3.Length ? uv3[i] : Vector2.zero,
-                        uv3 = hasUV4 && uv4 != null && i < uv4.Length ? uv4[i] : Vector2.zero
-                    };
-                }
-            }
-#endif
-
-            // Finalize submeshes (just declare ranges) – we already wrote indices
-            if (hasAnyIndices)
-            {
-                for (int i = 0; i < subMeshCount; i++)
-                {
-                    var sm = new SubMeshDescriptor
-                    {
-                        topology = MeshTopology.Triangles,
-                        indexStart = subBase[i],
-                        indexCount = subMeshTriangleLength[i],
-                        baseVertex = 0
-                    };
-                    md.SetSubMesh(i, sm, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
-                }
-            }
-
-            // Create mesh and apply
+            // Create Mesh and apply
             var mesh = new Mesh { indexFormat = indexFormat };
-            Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, new Mesh[] { mesh }, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
+            Mesh.ApplyAndDisposeWritableMeshData(mda, new[] { mesh }, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
 
-            // Bindposes and bone weights
+            // Bindposes and weights
             mesh.bindposes = bindPoses.ToArray();
             mesh.SetBoneWeights(nativeBonesPerVertex, nativeBoneWeights);
 
-            // Add unbaked blendshapes
-            if (hasBlendShapes && bsArray != null)
+            // Build and add unbaked blendshapes on-the-fly to Mesh
+            if (hasBlendShapes && blendShapeNames != null && blendShapeNames.Count > 0)
             {
-                for (int s = 0; s < bsArray.Length; s++)
-                {
-                    var shape = bsArray[s];
-                    for (int f = 0; f < shape.frames.Length; f++)
-                    {
-                        var frame = shape.frames[f];
-                        var dn = (frame.deltaNormals != null && frame.deltaNormals.Length > 0) ? frame.deltaNormals : null;
-                        var dt = (frame.deltaTangents != null && frame.deltaTangents.Length > 0) ? frame.deltaTangents : null;
-                        mesh.AddBlendShapeFrame(shape.shapeName, frame.frameWeight, frame.deltaVertices, dn, dt);
-                    }
-                }
+                AddBlendShapesDirect(mesh, sources, bakedBlendshapes, blendShapeNames, umaData.umaRecipe, sourceVertexOffsets, vertexCount);
             }
 
-            // Set bounds we computed (skip RecalculateBounds)
+            // Bounds from streaming copy
             if (vertexCount > 0)
             {
-                var size = max - min;
-                var center = min + (size * 0.5f);
+                var size = boundsMax - boundsMin;
+                var center = boundsMin + (size * 0.5f);
                 mesh.bounds = new Bounds(center, size);
             }
             if (markDynamic) mesh.MarkDynamic();
             if (markNotReadable) mesh.UploadMeshData(true);
 
-            // Assign to SkinnedMeshRenderer
+            // Assign to renderer
             UMAUtils.DestroySceneObject(batch.Renderer.sharedMesh);
             batch.Renderer.sharedMesh = mesh;
             batch.Renderer.sharedMesh.name = "UMAMesh (MeshAPI)";
+
             if (umaData != null && umaData.skeleton != null)
             {
                 batch.Renderer.bones = umaData.skeleton.HashesToTransforms(bonesList.ToArray());
                 if (batch.Renderer.rootBone == null)
-                {
                     batch.Renderer.rootBone = umaData.GetGlobalTransform();
-                }
             }
 
-            // Cloth coefficients (returned to caller)
-            clothCoeffs = hasCloth ? BuildClothCoefficients(sources, vertices) : null;
+            clothCoeffs = hasCloth ? BuildClothCoefficients(sources) : null;
 
-            // dispose temps
             nativeBonesPerVertex.Dispose();
             nativeBoneWeights.Dispose();
         }
 #endif
-        #region Helpers (adapted from UMA combiner)
+
+        #region Jobs and helpers
+
+#if UMA_UNSAFE
+        private static unsafe void FastCopyPositionsAndBoundsUnsafe(
+            NativeArray<Vector3> dst, int dstStart,
+            Vector3[] srcVertices, Vector3[] srcNormals,
+            int count, float expandAlongNormal,
+            ref Vector3 boundsMin, ref Vector3 boundsMax)
+        {
+            var dstPtr = (Vector3*)((byte*)NativeArrayUnsafeUtility.GetUnsafePtr(dst) + dstStart * UnsafeUtility.SizeOf<Vector3>());
+
+            if (expandAlongNormal > 0f && srcNormals != null && srcNormals.Length >= count)
+            {
+                fixed (Vector3* sV = srcVertices)
+                fixed (Vector3* sN = srcNormals)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        Vector3 v = sV[i] + sN[i] * expandAlongNormal;
+                        dstPtr[i] = v;
+
+                        if (v.x < boundsMin.x) boundsMin.x = v.x; if (v.x > boundsMax.x) boundsMax.x = v.x;
+                        if (v.y < boundsMin.y) boundsMin.y = v.y; if (v.y > boundsMax.y) boundsMax.y = v.y;
+                        if (v.z < boundsMin.z) boundsMin.z = v.z; if (v.z > boundsMax.z) boundsMax.z = v.z;
+                    }
+                }
+            }
+            else
+            {
+                fixed (Vector3* sV = srcVertices)
+                {
+                    long bytes = (long)count * UnsafeUtility.SizeOf<Vector3>();
+                    UnsafeUtility.MemCpy(dstPtr, sV, bytes);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        Vector3 v = sV[i];
+                        if (v.x < boundsMin.x) boundsMin.x = v.x; if (v.x > boundsMax.x) boundsMax.x = v.x;
+                        if (v.y < boundsMin.y) boundsMin.y = v.y; if (v.y > boundsMax.y) boundsMax.y = v.y;
+                        if (v.z < boundsMin.z) boundsMin.z = v.z; if (v.z > boundsMax.z) boundsMax.z = v.z;
+                    }
+                }
+            }
+        }
+
+        private static unsafe void PackNormTanUnsafe(
+            NativeArray<SkinnedMeshCombinerMeshAPI.NormTan> dst, int dstStart,
+            Vector3[] normals, Vector4[] tangents, int count,
+            bool hasNormals, bool hasTangents)
+        {
+            var dstPtr = (NormTan*)((byte*)NativeArrayUnsafeUtility.GetUnsafePtr(dst) + dstStart * UnsafeUtility.SizeOf<NormTan>());
+            bool nValid = hasNormals && normals != null && normals.Length >= count;
+            bool tValid = hasTangents && tangents != null && tangents.Length >= count;
+
+            Vector3 zeroN = default;
+            Vector4 defT = new Vector4(0, 0, 0, 1);
+
+            if (nValid && tValid)
+            {
+                fixed (Vector3* nP = normals)
+                fixed (Vector4* tP = tangents)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].normal = nP[i];
+                        dstPtr[i].tangent = tP[i];
+                    }
+                }
+            }
+            else if (nValid)
+            {
+                fixed (Vector3* nP = normals)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].normal = nP[i];
+                        dstPtr[i].tangent = defT;
+                    }
+                }
+            }
+            else if (tValid)
+            {
+                fixed (Vector4* tP = tangents)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].normal = zeroN;
+                        dstPtr[i].tangent = tP[i];
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    dstPtr[i].normal = zeroN;
+                    dstPtr[i].tangent = defT;
+                }
+            }
+        }
+
+        private static unsafe void PackColUV01Unsafe(
+            NativeArray<SkinnedMeshCombinerMeshAPI.ColUV01> dst, int dstStart,
+            Color32[] colors, Vector2[] uv0, Vector2[] uv1, int count,
+            bool hasColors32, bool hasUV0, bool hasUV1)
+        {
+            var dstPtr = (ColUV01*)((byte*)NativeArrayUnsafeUtility.GetUnsafePtr(dst) + dstStart * UnsafeUtility.SizeOf<ColUV01>());
+            bool cValid = hasColors32 && colors != null && colors.Length >= count;
+            bool u0Valid = hasUV0 && uv0 != null && uv0.Length >= count;
+            bool u1Valid = hasUV1 && uv1 != null && uv1.Length >= count;
+
+            Color32 white = new Color32(255, 255, 255, 255);
+
+            if (cValid && u0Valid && u1Valid)
+            {
+                fixed (Color32* cP = colors)
+                fixed (Vector2* u0P = uv0)
+                fixed (Vector2* u1P = uv1)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].color = cP[i];
+                        dstPtr[i].uv0 = u0P[i];
+                        dstPtr[i].uv1 = u1P[i];
+                    }
+                }
+            }
+            else if (cValid && u0Valid)
+            {
+                fixed (Color32* cP = colors)
+                fixed (Vector2* u0P = uv0)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].color = cP[i];
+                        dstPtr[i].uv0 = u0P[i];
+                        dstPtr[i].uv1 = default;
+                    }
+                }
+            }
+            else if (cValid && u1Valid)
+            {
+                fixed (Color32* cP = colors)
+                fixed (Vector2* u1P = uv1)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].color = cP[i];
+                        dstPtr[i].uv0 = default;
+                        dstPtr[i].uv1 = u1P[i];
+                    }
+                }
+            }
+            else if (u0Valid && u1Valid)
+            {
+                fixed (Vector2* u0P = uv0)
+                fixed (Vector2* u1P = uv1)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].color = white;
+                        dstPtr[i].uv0 = u0P[i];
+                        dstPtr[i].uv1 = u1P[i];
+                    }
+                }
+            }
+            else if (cValid)
+            {
+                fixed (Color32* cP = colors)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].color = cP[i];
+                        dstPtr[i].uv0 = default;
+                        dstPtr[i].uv1 = default;
+                    }
+                }
+            }
+            else if (u0Valid)
+            {
+                fixed (Vector2* u0P = uv0)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].color = white;
+                        dstPtr[i].uv0 = u0P[i];
+                        dstPtr[i].uv1 = default;
+                    }
+                }
+            }
+            else if (u1Valid)
+            {
+                fixed (Vector2* u1P = uv1)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].color = white;
+                        dstPtr[i].uv0 = default;
+                        dstPtr[i].uv1 = u1P[i];
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    dstPtr[i].color = white;
+                    dstPtr[i].uv0 = default;
+                    dstPtr[i].uv1 = default;
+                }
+            }
+        }
+
+        private static unsafe void PackUV23Unsafe(
+            NativeArray<SkinnedMeshCombinerMeshAPI.UV23> dst, int dstStart,
+            Vector2[] uv2, Vector2[] uv3, int count,
+            bool hasUV2, bool hasUV3)
+        {
+            var dstPtr = (UV23*)((byte*)NativeArrayUnsafeUtility.GetUnsafePtr(dst) + dstStart * UnsafeUtility.SizeOf<UV23>());
+            bool u2Valid = hasUV2 && uv2 != null && uv2.Length >= count;
+            bool u3Valid = hasUV3 && uv3 != null && uv3.Length >= count;
+
+            if (u2Valid && u3Valid)
+            {
+                fixed (Vector2* u2P = uv2)
+                fixed (Vector2* u3P = uv3)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].uv2 = u2P[i];
+                        dstPtr[i].uv3 = u3P[i];
+                    }
+                }
+            }
+            else if (u2Valid)
+            {
+                fixed (Vector2* u2P = uv2)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].uv2 = u2P[i];
+                        dstPtr[i].uv3 = default;
+                    }
+                }
+            }
+            else if (u3Valid)
+            {
+                fixed (Vector2* u3P = uv3)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        dstPtr[i].uv2 = default;
+                        dstPtr[i].uv3 = u3P[i];
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    dstPtr[i].uv2 = default;
+                    dstPtr[i].uv3 = default;
+                }
+            }
+        }
+#endif
+
+        [BurstCompile]
+        private struct CopyIndicesJobInt : IJob
+        {
+            [ReadOnly] public NativeArray<int> Src;
+            [NativeDisableParallelForRestriction] public NativeArray<int> Dst;
+            public int DstStart;
+            public int Add;
+
+            public void Execute()
+            {
+                for (int i = 0; i < Src.Length; i++)
+                    Dst[DstStart + i] = Src[i] + Add;
+            }
+        }
+
+        [BurstCompile]
+        private struct CopyIndicesJobU16 : IJob
+        {
+            [ReadOnly] public NativeArray<int> Src;
+            [NativeDisableParallelForRestriction] public NativeArray<ushort> Dst;
+            public int DstStart;
+            public ushort Add;
+
+            public void Execute()
+            {
+                for (int i = 0; i < Src.Length; i++)
+                    Dst[DstStart + i] = (ushort)(Src[i] + Add);
+            }
+        }
+
+        [BurstCompile]
+        private struct MaskedCopyIndicesJobInt : IJob
+        {
+            [ReadOnly] public NativeArray<int> Src;
+            [ReadOnly] public NativeArray<byte> Mask;
+            [NativeDisableParallelForRestriction] public NativeArray<int> Dst;
+            public int DstStart;
+            public int Add;
+
+            public void Execute()
+            {
+                int dst = DstStart;
+                int triCount = Mask.Length;
+                for (int t = 0; t < triCount; t++)
+                {
+                    if (Mask[t] != 0) continue;
+                    int i3 = t * 3;
+                    Dst[dst++] = Src[i3 + 0] + Add;
+                    Dst[dst++] = Src[i3 + 1] + Add;
+                    Dst[dst++] = Src[i3 + 2] + Add;
+                }
+            }
+        }
+
+        [BurstCompile]
+        private struct MaskedCopyIndicesJobU16 : IJob
+        {
+            [ReadOnly] public NativeArray<int> Src;
+            [ReadOnly] public NativeArray<byte> Mask;
+            [NativeDisableParallelForRestriction] public NativeArray<ushort> Dst;
+            public int DstStart;
+            public ushort Add;
+
+            public void Execute()
+            {
+                int dst = DstStart;
+                int triCount = Mask.Length;
+                for (int t = 0; t < triCount; t++)
+                {
+                    if (Mask[t] != 0) continue;
+                    int i3 = t * 3;
+                    Dst[dst++] = (ushort)(Src[i3 + 0] + Add);
+                    Dst[dst++] = (ushort)(Src[i3 + 1] + Add);
+                    Dst[dst++] = (ushort)(Src[i3 + 2] + Add);
+                }
+            }
+        }
+
+        private static NativeArray<byte> BitArrayToNative(BitArray ba, Allocator allocator)
+        {
+            var arr = new NativeArray<byte>(ba.Count, allocator, NativeArrayOptions.UninitializedMemory);
+            for (int i = 0; i < ba.Count; i++)
+                arr[i] = ba[i] ? (byte)1 : (byte)0;
+            return arr;
+        }
+
+        private static void AddBlendShapesDirect(
+            Mesh mesh,
+            SkinnedMeshCombiner.CombineInstance[] sources,
+            Dictionary<string, float> baked,
+            Dictionary<string, BlendShapeVertexData> meta,
+            UMAData.UMARecipe recipe,
+            int[] sourceVertexOffsets,
+            int vertexCount)
+        {
+            // Aggregate per shape per frame into temp arrays, then add to Mesh, discard immediately.
+            foreach (var kv in meta)
+            {
+                string shapeName = kv.Key;
+                var info = kv.Value;
+
+                for (int f = 0; f < info.frameCount; f++)
+                {
+                    var dv = new Vector3[vertexCount];
+                    Vector3[] dn = info.hasNormals ? new Vector3[vertexCount] : Array.Empty<Vector3>();
+                    Vector3[] dt = info.hasTangents ? new Vector3[vertexCount] : Array.Empty<Vector3>();
+
+                    for (int s = 0; s < sources.Length; s++)
+                    {
+                        var srcShapes = SkinnedMeshCombiner.GetBlendshapeSources(sources[s].meshData, recipe);
+                        if (srcShapes == null || srcShapes.Count == 0) continue;
+
+                        for (int i = 0; i < srcShapes.Count; i++)
+                        {
+                            var ubs = srcShapes[i];
+                            if (ubs.shapeName != shapeName) continue;
+
+                            int vo = sourceVertexOffsets[s];
+                            int vc = sources[s].meshData.vertexCount;
+
+                            int frameIdx = Mathf.Clamp(f, 0, ubs.frames.Length - 1);
+                            var fr = ubs.frames[frameIdx];
+
+                            Array.Copy(fr.deltaVertices, 0, dv, vo, vc);
+
+                            if (info.hasNormals && fr.deltaNormals != null && fr.deltaNormals.Length == vc)
+                                Array.Copy(fr.deltaNormals, 0, dn, vo, vc);
+
+                            if (info.hasTangents && fr.deltaTangents != null && fr.deltaTangents.Length == vc)
+                                Array.Copy(fr.deltaTangents, 0, dt, vo, vc);
+                        }
+                    }
+
+                    float w = (info.frameWeights != null && f < info.frameWeights.Length) ? info.frameWeights[f] : 100f;
+                    mesh.AddBlendShapeFrame(shapeName, w, dv, dn, dt);
+                }
+            }
+        }
+
+        #endregion
+
+        #region UMA helpers and retained logic
 
         [Flags]
         private enum MeshComponents
@@ -589,59 +890,11 @@ namespace UMA
 
         private class BlendShapeVertexData
         {
-            public bool hasNormals;
-            public bool hasTangents;
-            public int frameCount;
+            public bool hasNormals = false;
+            public bool hasTangents = false;
+            public int frameCount = 0;
             public float[] frameWeights;
             public int index;
-        }
-
-        [BurstCompile]
-        private struct CopyIntArrayAddJob : IJob
-        {
-            [ReadOnly] public NativeArray<int> Source;
-            public NativeArray<int> Dest;
-            public int SourceIndex;
-            public int DestIndex;
-            public int Count;
-            public int Add;
-
-            public void Execute()
-            {
-                for (int i = 0; i < Count; i++)
-                {
-                    Dest[DestIndex + i] = Source[SourceIndex + i] + Add;
-                }
-            }
-        }
-
-        [BurstCompile]
-        private struct BoneWeightsRemapJob : IJob
-        {
-            [ReadOnly] public NativeArray<byte> SrcBonesPerVertex;
-            [ReadOnly] public NativeArray<BoneWeight1> SrcBoneWeights;
-            [ReadOnly] public NativeArray<int> BoneRemap; // local -> global
-
-            // Dest (global) buffers
-            public NativeArray<byte> DestBonesPerVertex;
-            public NativeArray<BoneWeight1> DestBoneWeights;
-
-            public int DestVertexStart;
-            public int DestBoneWeightStart;
-
-            public void Execute()
-            {
-                // Copy bones-per-vertex
-                NativeArray<byte>.Copy(SrcBonesPerVertex, 0, DestBonesPerVertex, DestVertexStart, SrcBonesPerVertex.Length);
-
-                // Remap bone weights
-                for (int i = 0; i < SrcBoneWeights.Length; i++)
-                {
-                    var bw = SrcBoneWeights[i];
-                    bw.boneIndex = BoneRemap[bw.boneIndex];
-                    DestBoneWeights[DestBoneWeightStart + i] = bw;
-                }
-            }
         }
 
         private static void AnalyzeSources(
@@ -713,9 +966,7 @@ namespace UMA
                     }
 
                     if (!blendShapeNames.ContainsKey(shapeName))
-                    {
                         blendShapeNames.Add(shapeName, new BlendShapeVertexData());
-                    }
 
                     var meta = blendShapeNames[shapeName];
                     meta.hasNormals |= ubs.frames[0].HasNormals();
@@ -726,9 +977,7 @@ namespace UMA
                         meta.frameCount = ubs.frames.Length;
                         meta.frameWeights = new float[meta.frameCount];
                         for (int i = 0; i < meta.frameCount; i++)
-                        {
                             meta.frameWeights[i] = ubs.frames[i].frameWeight;
-                        }
                     }
                 }
             }
@@ -737,256 +986,11 @@ namespace UMA
                 meshComponents |= MeshComponents.has_blendShapes;
         }
 
-        private static void InitializeBlendShapeData(ref int vertexCount, Dictionary<string, BlendShapeVertexData> blendShapeNames, UMABlendShape[] blendShapes)
+        private static ClothSkinningCoefficient[] BuildClothCoefficients(SkinnedMeshCombiner.CombineInstance[] sources)
         {
-            int idx = 0;
-            foreach (var kv in blendShapeNames)
-            {
-                string name = kv.Key;
-                var meta = kv.Value;
+            var clothDict = new Dictionary<Vector3, int>(1024);
+            var result = new List<ClothSkinningCoefficient>(1024);
 
-                meta.index = idx;
-                blendShapes[idx] = new UMABlendShape
-                {
-                    shapeName = name,
-                    frames = new UMABlendFrame[meta.frameCount]
-                };
-
-                for (int f = 0; f < meta.frameCount; f++)
-                {
-                    blendShapes[idx].frames[f] = new UMABlendFrame(vertexCount, meta.hasNormals, meta.hasTangents);
-                    blendShapes[idx].frames[f].frameWeight = meta.frameWeights[f];
-                }
-                idx++;
-            }
-        }
-
-        private static bool MaskedCopyIntArrayAdd(NativeArray<int> source, int sourceIndex, NativeArray<int> dest, int destIndex, int count, int add, BitArray mask)
-        {
-#if DEBUG
-            if ((mask.Count * 3) != source.Length)
-            {
-                if (Debug.isDebugBuild) Debug.LogError("MaskedCopyIntArrayAdd: mask count and source length do not match!");
-                return false;
-            }
-            if ((mask.Count * 3) != count)
-            {
-                if (Debug.isDebugBuild) Debug.LogError("MaskedCopyIntArrayAdd: mask count and count do not match!");
-                return false;
-            }
-#endif
-            for (int i = 0; i < count; i += 3)
-            {
-                if (!mask[i / 3])
-                {
-                    dest[destIndex++] = source[sourceIndex + i + 0] + add;
-                    dest[destIndex++] = source[sourceIndex + i + 1] + add;
-                    dest[destIndex++] = source[sourceIndex + i + 2] + add;
-                }
-            }
-            return true;
-        }
-
-        [BurstCompile]
-        private static void ArrayCopyandExpand(UMAMeshData meshData, int expandAlongNormal, ref Vector3[] vertices, int vertexIndex, int sourceVertexCount)
-        {
-            float expandAlongNormalF = ((float)expandAlongNormal) / 1000000f;
-            for (int i = vertexIndex; i < vertexIndex + sourceVertexCount; i++)
-            {
-                Vector3 v = meshData.vertices[i - vertexIndex];
-                vertices[i] = v + (meshData.normals[i - vertexIndex] * expandAlongNormalF);
-            }
-        }
-
-        private static void FillArray(Vector3[] array, int index, int count, Vector3 value)
-        {
-            if (array == null || count <= 0) return;
-#if UMA_UNSAFE
-            unsafe
-            {
-                fixed (Vector3* dst = &array[index])
-                {
-                    UnsafeUtility.MemCpyReplicate(dst, &value, sizeof(Vector3), count);
-                }
-            }
-#else
-            // Set first, then double-copy
-            int filled = 1;
-            array[index] = value;
-            while (filled < count)
-            {
-                int toCopy = Math.Min(filled, count - filled);
-                Array.Copy(array, index, array, index + filled, toCopy);
-                filled += toCopy;
-            }
-#endif
-        }
-
-        private static void FillArray(Vector4[] array, int index, int count, Vector4 value)
-        {
-            if (array == null || count <= 0) return;
-#if UMA_UNSAFE
-            unsafe
-            {
-                fixed (Vector4* dst = &array[index])
-                {
-                    UnsafeUtility.MemCpyReplicate(dst, &value, sizeof(Vector4), count);
-                }
-            }
-#else
-            int filled = 1;
-            array[index] = value;
-            while (filled < count)
-            {
-                int toCopy = Math.Min(filled, count - filled);
-                Array.Copy(array, index, array, index + filled, toCopy);
-                filled += toCopy;
-            }
-#endif
-        }
-
-        private static void FillArray(Vector2[] array, int index, int count, Vector2 value)
-        {
-            if (array == null || count <= 0) return;
-#if UMA_UNSAFE
-            unsafe
-            {
-                fixed (Vector2* dst = &array[index])
-                {
-                    UnsafeUtility.MemCpyReplicate(dst, &value, sizeof(Vector2), count);
-                }
-            }
-#else
-            int filled = 1;
-            array[index] = value;
-            while (filled < count)
-            {
-                int toCopy = Math.Min(filled, count - filled);
-                Array.Copy(array, index, array, index + filled, toCopy);
-                filled += toCopy;
-            }
-#endif
-        }
-
-        private static void FillArray(Color32[] array, int index, int count, Color32 value)
-        {
-            if (array == null || count <= 0) return;
-#if UMA_UNSAFE
-            unsafe
-            {
-                fixed (Color32* dst = &array[index])
-                {
-                    UnsafeUtility.MemCpyReplicate(dst, &value, sizeof(Color32), count);
-                }
-            }
-#else
-            int filled = 1;
-            array[index] = value;
-            while (filled < count)
-            {
-                int toCopy = Math.Min(filled, count - filled);
-                Array.Copy(array, index, array, index + filled, toCopy);
-                filled += toCopy;
-            }
-#endif
-        }
-
-        private static bool BakeBlendShape(
-            UMABlendShape currentShape,
-            float value,
-            ref int vertexIndex,
-            Vector3[] vertices,
-            Vector3[] normals,
-            Vector4[] tangents,
-            bool has_Normals,
-            bool has_Tangents)
-        {
-            float weight = value * 100.0f;
-            if (Mathf.Abs(weight) <= Mathf.Epsilon) return true;
-
-            int frameIndex;
-            for (frameIndex = 0; frameIndex < currentShape.frames.Length; frameIndex++)
-            {
-                if (currentShape.frames[frameIndex].frameWeight >= weight) break;
-            }
-
-            float frameWeight;
-            float prevWeight = 0f;
-            bool doLerp = false;
-            int prevIndex;
-
-            if (frameIndex >= currentShape.frames.Length)
-            {
-                frameIndex = currentShape.frames.Length - 1;
-                frameWeight = (weight / currentShape.frames[frameIndex].frameWeight);
-            }
-            else if (frameIndex > 0)
-            {
-                doLerp = true;
-                float prevFrameWeight = currentShape.frames[frameIndex - 1].frameWeight;
-                frameWeight = (weight - prevFrameWeight) / (currentShape.frames[frameIndex].frameWeight - prevFrameWeight);
-                prevWeight = 1f - frameWeight;
-            }
-            else
-            {
-                frameWeight = (weight / currentShape.frames[frameIndex].frameWeight);
-            }
-            prevIndex = (frameIndex > 0) ? (frameIndex - 1) : 0;
-
-            var currVerts = currentShape.frames[frameIndex].deltaVertices;
-            var prevVerts = currentShape.frames[prevIndex].deltaVertices;
-
-            Vector3[] currNormals = null, prevNormals = null;
-            Vector3[] currTangents = null, prevTangents = null;
-
-            bool has_deltaNormals = (has_Normals && currentShape.frames[frameIndex].deltaNormals != null && currentShape.frames[frameIndex].deltaNormals.Length > 0);
-            bool has_deltaTangents = (has_Tangents && currentShape.frames[frameIndex].deltaTangents != null && currentShape.frames[frameIndex].deltaTangents.Length > 0);
-
-            if (has_deltaNormals)
-            {
-                currNormals = currentShape.frames[frameIndex].deltaNormals;
-                prevNormals = currentShape.frames[prevIndex].deltaNormals;
-            }
-            if (has_deltaTangents)
-            {
-                currTangents = currentShape.frames[frameIndex].deltaTangents;
-                prevTangents = currentShape.frames[prevIndex].deltaTangents;
-            }
-
-            int vi = vertexIndex;
-            for (int i = 0; i < currVerts.Length; i++, vi++)
-            {
-                if (currVerts[i].sqrMagnitude > 0.0000001f)
-                {
-                    vertices[vi] += currVerts[i] * frameWeight;
-                    if (doLerp) vertices[vi] += prevVerts[i] * prevWeight;
-                }
-                if (has_deltaNormals && normals != null)
-                {
-                    if (currNormals[i].sqrMagnitude > 0.0000001f)
-                    {
-                        normals[vi] += currNormals[i] * frameWeight;
-                        if (doLerp) normals[vi] += prevNormals[i] * prevWeight;
-                    }
-                }
-                if (has_deltaTangents && tangents != null)
-                {
-                    if (currTangents[i].sqrMagnitude > 0.0000001f)
-                    {
-                        tangents[vi] += (Vector4)currTangents[i] * frameWeight;
-                        if (doLerp) tangents[vi] += (Vector4)prevTangents[i] * prevWeight;
-                    }
-                }
-            }
-            return true;
-        }
-
-        private static ClothSkinningCoefficient[] BuildClothCoefficients(SkinnedMeshCombiner.CombineInstance[] sources, Vector3[] combinedVertices)
-        {
-            var clothDict = new Dictionary<Vector3, int>(combinedVertices.Length);
-            var result = new List<ClothSkinningCoefficient>(combinedVertices.Length);
-
-            int vertexIndex = 0;
             for (int k = 0; k < sources.Length; k++)
             {
                 var src = sources[k];
@@ -1029,8 +1033,6 @@ namespace UMA
                         }
                     }
                 }
-
-                vertexIndex += count;
             }
 
             return (result.Count > 0) ? result.ToArray() : null;
@@ -1091,8 +1093,7 @@ namespace UMA
             List<int> bonesList)
         {
             int boneHash = bonesHashes[index];
-            BoneIndexEntry entry;
-            if (bonesCollection.TryGetValue(boneHash, out entry))
+            if (bonesCollection.TryGetValue(boneHash, out var entry))
             {
                 for (int i = 0; i < entry.Count; i++)
                 {
@@ -1131,46 +1132,17 @@ namespace UMA
 
             int[] boneMapping = new int[bones.Length];
             for (int i = 0; i < boneMapping.Length; i++)
-            {
                 boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
-            }
 
             NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
             NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneWeightIndex, data.ManagedBoneWeights.Length);
 
-            var bw = new BoneWeight1();
             for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
             {
-                bw.boneIndex = boneMapping[data.ManagedBoneWeights[i].boneIndex];
-                bw.weight = data.ManagedBoneWeights[i].weight;
-                dest[i + destBoneWeightIndex] = bw;
+                var bw = dest[destBoneWeightIndex + i];
+                bw.boneIndex = boneMapping[bw.boneIndex];
+                dest[destBoneWeightIndex + i] = bw;
             }
-        }
-
-        [BurstCompile]
-        private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
-        {
-            int newBones = 0, p1 = 0, p2 = 0, len2 = umaTransforms.Length;
-            while (p1 < len1 && p2 < len2)
-            {
-                long diff = ((long)mergedTransforms[p1].hash) - ((long)umaTransforms[p2].hash);
-                if (diff == 0) { p1++; p2++; }
-                else if (diff < 0) { p1++; }
-                else { p2++; newBones++; }
-            }
-            newBones += len2 - p2;
-            p1 = len1 - 1; p2 = len2 - 1;
-            len1 += newBones;
-            int dest = len1 - 1;
-
-            while (p1 >= 0 && p2 >= 0)
-            {
-                long diff = ((long)mergedTransforms[p1].hash) - ((long)umaTransforms[p2].hash);
-                if (diff == 0) { mergedTransforms[dest--] = mergedTransforms[p1--]; p2--; }
-                else if (diff > 0) { mergedTransforms[dest--] = mergedTransforms[p1--]; }
-                else { mergedTransforms[dest--] = umaTransforms[p2--]; }
-            }
-            while (p2 >= 0) mergedTransforms[dest--] = umaTransforms[p2--];
         }
 
         private static VertexAttributeDescriptor[] BuildVertexLayout(
@@ -1181,17 +1153,13 @@ namespace UMA
                 new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0)
             };
             int stream = 1;
-            if (hasNormals) list.Add(new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, stream++));
-            if (hasTangents) list.Add(new VertexAttributeDescriptor(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, stream++));
-            if (hasColors32) list.Add(new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4, stream++));
-            if (hasUV) list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2, stream++));
-            if (hasUV2) list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord1, VertexAttributeFormat.Float32, 2, stream++));
-            if (hasUV3) list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord2, VertexAttributeFormat.Float32, 2, stream++));
-            if (hasUV4) list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord3, VertexAttributeFormat.Float32, 2, stream++));
+            if (hasNormals || hasTangents) { list.Add(new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, stream)); list.Add(new VertexAttributeDescriptor(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, stream)); stream++; }
+            if (hasColors32 || hasUV || hasUV2) { list.Add(new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4, stream)); list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2, stream)); list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord1, VertexAttributeFormat.Float32, 2, stream)); stream++; }
+            if (hasUV3 || hasUV4) { list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord2, VertexAttributeFormat.Float32, 2, stream)); list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord3, VertexAttributeFormat.Float32, 2, stream)); }
             return list.ToArray();
         }
 
-        private static void RecalculateUVForUMA(Vector2[] uv, UMAData umaData, int atlasResolution, int currentRendererIndex)
+        private static void RecalculateUVForUMA(NativeArray<ColUV01> vC01, UMAData umaData, int atlasResolution, int currentRendererIndex)
         {
             int idx = 0;
             for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
@@ -1235,11 +1203,10 @@ namespace UMA
                         OverlayData foundRect = null;
                         for (int i = 0; i < fragment.overlayList.Count; i++)
                         {
-                            OverlayData ov = fragment.overlayList[i];
+                            var ov = fragment.overlayList[i];
                             if (fragment.slotData.slotName != null && ov.overlayName != null && ov.overlayName.Contains(fragment.slotData.slotName))
                             {
-                                foundRect = ov;
-                                break;
+                                foundRect = ov; break;
                             }
                         }
                         if (foundRect != null && foundRect.rect != Rect.zero)
@@ -1256,10 +1223,12 @@ namespace UMA
                         }
                     }
 
-                    while (vertexCount-- > 0)
+                    for (int i = 0; i < vertexCount; i++)
                     {
-                        uv[idx].x = atlasXMin + atlasXRange * uv[idx].x;
-                        uv[idx].y = atlasYMin + atlasYRange * uv[idx].y;
+                        var c01 = vC01[idx];
+                        c01.uv0.x = atlasXMin + atlasXRange * c01.uv0.x;
+                        c01.uv0.y = atlasYMin + atlasYRange * c01.uv0.y;
+                        vC01[idx] = c01;
                         idx++;
                     }
                 }
@@ -1286,6 +1255,68 @@ namespace UMA
             }
             return highestTargetIndex + 1;
         }
+
+        private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
+{
+    int newBones = 0;
+    int pos1 = 0;
+    int pos2 = 0;
+    int len2 = umaTransforms.Length;
+
+    while (pos1 < len1 && pos2 < len2)
+    {
+        long i = ((long)mergedTransforms[pos1].hash) - ((long)umaTransforms[pos2].hash);
+        if (i == 0)
+        {
+            pos1++;
+            pos2++;
+        }
+        else if (i < 0)
+        {
+            pos1++;
+        }
+        else
+        {
+            pos2++;
+            newBones++;
+        }
+    }
+    newBones += len2 - pos2;
+    pos1 = len1 - 1;
+    pos2 = len2 - 1;
+
+    len1 += newBones;
+
+    int dest = len1 - 1;
+
+    while (pos1 >= 0 && pos2 >= 0)
+    {
+        long i = ((long)mergedTransforms[pos1].hash) - ((long)umaTransforms[pos2].hash);
+        if (i == 0)
+        {
+            mergedTransforms[dest] = mergedTransforms[pos1];
+            pos1--;
+            pos2--;
+        }
+        else if (i > 0)
+        {
+            mergedTransforms[dest] = mergedTransforms[pos1];
+            pos1--;
+        }
+        else
+        {
+            mergedTransforms[dest] = umaTransforms[pos2];
+            pos2--;
+        }
+        dest--;
+    }
+    while (pos2 >= 0)
+    {
+        mergedTransforms[dest] = umaTransforms[pos2];
+        pos2--;
+        dest--;
+    }
+}
 
         #endregion
     }
