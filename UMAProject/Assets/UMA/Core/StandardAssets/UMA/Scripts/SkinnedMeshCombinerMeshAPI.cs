@@ -35,6 +35,9 @@ namespace UMA
             public int CurrentRendererIndex;
             public int AtlasResolution;
         }
+        // Toggle to enable the parallel bone weight remap path.
+        // Can be flipped at runtime before combining.
+        public static bool UseParallelBoneWeights = true;
 
         // Timings (Stopwatch ticks). Call ResetTimings() to clear.
         public static long Ticks_CombineInternalTotal;
@@ -56,7 +59,9 @@ namespace UMA
         public static long Ticks_SetBindposesAndWeights;
         public static long Ticks_AssignBones;
         public static long Ticks_BuildCloth;
-
+#if UMA_PARALLEL_BONEWEIGHTS_VALIDATE || UMA_DEBUG_BONEWEIGHTS_VALIDATE
+        private const int BoneWeightValidateSampleCount = 16;
+#endif
         public static void ResetTimings()
         {
             Ticks_CombineInternalTotal = 0;
@@ -273,8 +278,9 @@ namespace UMA
             var bindPoses = new List<Matrix4x4>(bindPoseCount);
             var bonesList = new List<int>(transformHierarchyCount);
 
-            var nativeBoneWeights = new NativeArray<BoneWeight1>(boneWeightCount, Allocator.Temp);
-            var nativeBonesPerVertex = new NativeArray<byte>(Math.Max(1, vertexCount), Allocator.Temp);
+            // Must be TempJob (or Persistent) because nativeBoneWeights is touched by scheduled jobs.
+            var nativeBoneWeights = new NativeArray<BoneWeight1>(boneWeightCount, Allocator.TempJob);
+            var nativeBonesPerVertex = new NativeArray<byte>(Math.Max(1, vertexCount), Allocator.TempJob);
 
             // Track offsets and bounds
             int vertexOffset = 0;
@@ -290,6 +296,12 @@ namespace UMA
 
             // Collect scheduled index jobs
             var indexJobs = new List<JobHandle>(Math.Max(32, subMeshCount * sources.Length));
+            var boneWeightJobs = UseParallelBoneWeights ? new List<JobHandle>(sources.Length) : null;
+
+            // Parallel path accumulates remap targets then does a single job after all copies.
+            NativeArray<int> bwRemap = default;
+            if (UseParallelBoneWeights)
+                bwRemap = new NativeArray<int>(boneWeightCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
 
             // Copy vertex attributes directly into MeshData buffers
             for (int s = 0; s < sources.Length; s++)
@@ -301,9 +313,40 @@ namespace UMA
 
                 // Bone weights: remap and copy into global buffers
                 sw.Restart();
-                BuildBoneWeights(src, nativeBoneWeights, nativeBonesPerVertex, vertexOffset, boneWeightOffset, bonesCollection, bindPoses, bonesList);
+                if (UseParallelBoneWeights)
+                {
+                    // Build mapping (same logic as synchronous path) but do NOT modify weights yet.
+                    var bones = src.boneNameHashes;
+                    var bindPosesSrc = src.bindPoses;
+                    var pool = ArrayPool<int>.Shared;
+                    var boneMapping = pool.Rent(bones.Length);
+                    try
+                    {
+                        for (int iMap = 0; iMap < bones.Length; iMap++)
+                            boneMapping[iMap] = TranslateBoneIndex(iMap, bones, bindPosesSrc, bonesCollection, bindPoses, bonesList);
+
+                        // Copy raw bones-per-vertex & weights (original indices)
+                        NativeArray<byte>.Copy(src.ManagedBonesPerVertex, 0, nativeBonesPerVertex, vertexOffset, src.ManagedBonesPerVertex.Length);
+                        NativeArray<BoneWeight1>.Copy(src.ManagedBoneWeights, 0, nativeBoneWeights, boneWeightOffset, src.ManagedBoneWeights.Length);
+
+                        // Fill remap table for this block
+                        var srcWeights = src.ManagedBoneWeights;
+                        for (int w = 0; w < srcWeights.Length; w++)
+                            bwRemap[boneWeightOffset + w] = boneMapping[srcWeights[w].boneIndex];
+                    }
+                    finally
+                    {
+                        pool.Return(boneMapping, clearArray: false);
+                    }
+                }
+                else
+                {
+                    BuildBoneWeights(src, nativeBoneWeights, nativeBonesPerVertex, vertexOffset, boneWeightOffset, bonesCollection, bindPoses, bonesList);
+                }
                 sw.Stop();
                 Ticks_BuildBoneWeights += sw.ElapsedTicks;
+
+
 
                 // Positions (+bounds) and optional expandAlongNormal
                 sw.Restart();
@@ -530,6 +573,8 @@ namespace UMA
                 Ticks_IndexJobsComplete += sw.ElapsedTicks;
             }
 
+
+
             // UMA atlas UV remap — in place on MeshData UV buffer
             if (hasUV)
             {
@@ -564,6 +609,43 @@ namespace UMA
             sw.Stop();
             Ticks_ApplyMeshData += sw.ElapsedTicks;
 
+
+            // Complete bone weight remap jobs (parallel path)
+            if (UseParallelBoneWeights && bwRemap.IsCreated)
+            {
+                var swBW = System.Diagnostics.Stopwatch.StartNew();
+                var job = new RemapAllBoneWeightsJob
+                {
+                    Weights = nativeBoneWeights,
+                    RemappedIndex = bwRemap
+                }.Schedule(nativeBoneWeights.Length, 256);
+                job.Complete();
+                swBW.Stop();
+                // Consume existing timing bucket (optional): Ticks_BuildBoneWeights += swBW.ElapsedTicks;
+                bwRemap.Dispose();
+            }
+
+#if UNITY_EDITOR && (UMA_PARALLEL_BONEWEIGHTS_VALIDATE || UMA_DEBUG_BONEWEIGHTS_VALIDATE)
+            if (UseParallelBoneWeights)
+            {
+                // Lightweight validation: sample first few weights of each source to ensure boneIndex < bindPoses.Count
+                int samples = 0;
+                for (int s = 0; s < sources.Length && samples < BoneWeightValidateSampleCount; s++)
+                {
+                    var srcValidate = sources[s].meshData;
+                    int len = Math.Min(srcValidate.ManagedBoneWeights.Length, 4);
+                    for (int i = 0; i < len && samples < BoneWeightValidateSampleCount; i++, samples++)
+                    {
+                        var bw = nativeBoneWeights[boneWeightOffset - srcValidate.ManagedBoneWeights.Length + i];
+                        if (bw.boneIndex < 0 || bw.boneIndex >= bindPoses.Count)
+                        {
+                            Debug.LogWarning($"[UMA] BoneWeight remap validation failed (boneIndex {bw.boneIndex} out of range 0..{bindPoses.Count - 1}) in source {s}.");
+                            break;
+                        }
+                    }
+                }
+            }
+#endif
             // Bindposes and weights
             sw.Restart();
             mesh.bindposes = bindPoses.ToArray();
@@ -593,6 +675,7 @@ namespace UMA
 
             nativeBonesPerVertex.Dispose();
             nativeBoneWeights.Dispose();
+            if (bwRemap.IsCreated) bwRemap.Dispose(); // safety (should already be disposed)
 
             totalSW.Stop();
             Ticks_CombineInternalTotal += totalSW.ElapsedTicks;
@@ -1122,6 +1205,41 @@ namespace UMA
             if (blendShapeNames.Count > 0 || bakedCount > 0)
                 meshComponents |= MeshComponents.has_blendShapes;
         }
+        private static void BuildBoneWeights(
+    UMAMeshData data,
+    NativeArray<BoneWeight1> dest,
+    NativeArray<byte> destBonesPerVertex,
+    int destIndex,
+    int destBoneWeightIndex,
+    Dictionary<int, BoneIndexEntry> bonesCollection,
+    List<Matrix4x4> bindPosesList,
+    List<int> bonesList)
+        {
+            var bones = data.boneNameHashes;
+            var bindPoses = data.bindPoses;
+
+            var pool = ArrayPool<int>.Shared;
+            var boneMapping = pool.Rent(bones.Length);
+            try
+            {
+                for (int i = 0; i < bones.Length; i++)
+                    boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+
+                NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
+                NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneWeightIndex, data.ManagedBoneWeights.Length);
+
+                for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
+                {
+                    var bw = dest[destBoneWeightIndex + i];
+                    bw.boneIndex = boneMapping[bw.boneIndex];
+                    dest[destBoneWeightIndex + i] = bw;
+                }
+            }
+            finally
+            {
+                pool.Return(boneMapping, clearArray: false);
+            }
+        }
 
         private static ClothSkinningCoefficient[] BuildClothCoefficients(SkinnedMeshCombiner.CombineInstance[] sources)
         {
@@ -1254,42 +1372,35 @@ namespace UMA
             }
         }
 
-        private static void BuildBoneWeights(
+        [BurstCompile]
+        private struct RemapAllBoneWeightsJob : IJobParallelFor
+        {
+            [NativeDisableParallelForRestriction]
+            public NativeArray<BoneWeight1> Weights;          // Combined destination weights
+            [ReadOnly] public NativeArray<int> RemappedIndex; // Per-weight final bone index
+            public void Execute(int i)
+            {
+                var bw = Weights[i];
+                bw.boneIndex = RemappedIndex[i];
+                Weights[i] = bw;
+            }
+        }
+
+        private static JobHandle BuildBoneWeightsParallel(
             UMAMeshData data,
             NativeArray<BoneWeight1> dest,
             NativeArray<byte> destBonesPerVertex,
-            int destIndex,
-            int destBoneWeightIndex,
+            int destVertexStart,
+            int destBoneWeightStart,
             Dictionary<int, BoneIndexEntry> bonesCollection,
             List<Matrix4x4> bindPosesList,
-            List<int> bonesList)
+            List<int> bonesList,
+            out bool scheduled)
         {
-            var bones = data.boneNameHashes;
-            var bindPoses = data.bindPoses;
-
-            var pool = ArrayPool<int>.Shared;
-            var boneMapping = pool.Rent(bones.Length);
-
-            try
-            {
-                for (int i = 0; i < bones.Length; i++)
-                    boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
-
-                NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
-                NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneWeightIndex, data.ManagedBoneWeights.Length);
-
-                for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
-                {
-                    var bw = dest[destBoneWeightIndex + i];
-                    bw.boneIndex = boneMapping[bw.boneIndex];
-                    dest[destBoneWeightIndex + i] = bw;
-                }
-            }
-            finally
-            {
-                pool.Return(boneMapping, clearArray: false);
-            }
+            scheduled = false;
+            return default;
         }
+
 
         private static VertexAttributeDescriptor[] BuildVertexLayout(
             bool hasNormals, bool hasTangents, bool hasUV, bool hasUV2, bool hasUV3, bool hasUV4, bool hasColors32)
@@ -1587,110 +1698,6 @@ namespace UMA
                         }
 
                         processedSlots.Add(slot);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-        }
-        private static void badRecalculateUVForUMA(NativeArray<ColUV01> vC01, UMAData umaData, int atlasResolution, int currentRendererIndex)
-        {
-            if (!vC01.IsCreated || vC01.Length == 0 || umaData == null || umaData.generatedMaterials == null)
-                return;
-
-            var targetRendererAsset = umaData.GetRendererAsset(currentRendererIndex);
-            if (targetRendererAsset == null)
-                return;
-
-            try
-            {
-                var materials = umaData.generatedMaterials.materials;
-                for (int materialIndex = 0; materialIndex < materials.Count; materialIndex++)
-                {
-                    var generatedMaterial = materials[materialIndex];
-
-                    // Skip materials for other renderer assets
-                    if (generatedMaterial == null || generatedMaterial.rendererAsset != targetRendererAsset)
-                        continue;
-
-                    // Skip if not atlas generated
-                    if (generatedMaterial.umaMaterial == null || !generatedMaterial.umaMaterial.IsGeneratedTextures)
-                        continue;
-
-                    var fragments = generatedMaterial.materialFragments;
-                    for (int m = 0; m < fragments.Count; m++)
-                    {
-                        var fragment = fragments[m];
-                        if (fragment == null || fragment.slotData == null || fragment.slotData.asset == null || fragment.slotData.asset.meshData == null)
-                            continue;
-
-                        // Ensure this fragment actually belongs to this renderer (defensive)
-                        if (fragment.slotData.skinnedMeshRenderer != currentRendererIndex)
-                            continue;
-
-                        int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
-                        int start = fragment.slotData.vertexOffset;
-
-                        // Bounds safety (defensive)
-                        if (start < 0 || start + vertexCount > vC01.Length)
-                        {
-#if UNITY_EDITOR
-                            Debug.LogWarning($"RecalculateUVForUMA: fragment vertex range out of bounds (start {start} count {vertexCount} len {vC01.Length}) for slot {fragment.slotData?.asset?.name}");
-#endif
-                            vertexCount = Mathf.Max(0, Mathf.Min(vertexCount, vC01.Length - start));
-                        }
-                        if (vertexCount == 0)
-                            continue;
-
-                        var tempAtlasRect = fragment.atlasRegion;
-
-                        float atlasXMin = tempAtlasRect.xMin / atlasResolution;
-                        float atlasXMax = tempAtlasRect.xMax / atlasResolution;
-                        float atlasXRange = atlasXMax - atlasXMin;
-                        float atlasYMin = tempAtlasRect.yMin / atlasResolution;
-                        float atlasYMax = tempAtlasRect.yMax / atlasResolution;
-                        float atlasYRange = atlasYMax - atlasYMin;
-
-                        // Shared rect adjustment
-                        if (fragment.isRectShared && fragment.slotData.useAtlasOverlay)
-                        {
-                            OverlayData foundRect = null;
-                            for (int i = 0; i < fragment.overlayList.Count; i++)
-                            {
-                                var ov = fragment.overlayList[i];
-                                if (fragment.slotData.slotName != null &&
-                                    ov.overlayName != null &&
-                                    ov.overlayName.Contains(fragment.slotData.slotName))
-                                {
-                                    foundRect = ov;
-                                    break;
-                                }
-                            }
-                            if (foundRect != null && foundRect.rect != Rect.zero)
-                            {
-                                var size = foundRect.rect.size * generatedMaterial.resolutionScale;
-                                var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale.x;
-                                var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale.x;
-
-                                atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
-                                atlasXRange = size.x / generatedMaterial.cropResolution.x;
-
-                                atlasYMin += (offsetY / generatedMaterial.cropResolution.y);
-                                atlasYRange = size.y / generatedMaterial.cropResolution.y;
-                            }
-                        }
-
-                        // Remap UVs directly via vertexOffset
-                        for (int i = 0; i < vertexCount; i++)
-                        {
-                            int vi = start + i;
-                            var c01 = vC01[vi];
-                            c01.uv0.x = atlasXMin + atlasXRange * c01.uv0.x;
-                            c01.uv0.y = atlasYMin + atlasYRange * c01.uv0.y;
-                            vC01[vi] = c01;
-                        }
                     }
                 }
             }
