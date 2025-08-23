@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using UMA;
 using UnityEngine;
 
@@ -19,18 +20,18 @@ public class StatDisplayer : MonoBehaviour
 
         if (_boldStyle == null || _lastBaseSize != baseSize)
         {
-            int targetSize = Mathf.RoundToInt(baseSize * 1.2f);
+            int targetSize = Mathf.RoundToInt(baseSize * 1.5f);
             _lastBaseSize = baseSize;
 
             _boldStyle = new GUIStyle(GUI.skin.label)
-            {
+            {                
                 fontStyle = FontStyle.Bold,
                 fontSize = targetSize
             };
             _boldStyle.normal.textColor = Color.white;
 
             _shadowStyle = new GUIStyle(_boldStyle);
-            _shadowStyle.normal.textColor = new Color(0f, 0f, 0f, 0.85f);
+            _shadowStyle.normal.textColor = new Color(0f, 0f, 0f, 1f);
             _shadowStyle.contentOffset = Vector2.zero; // offset handled via rect
         }
     }
@@ -90,6 +91,26 @@ public class StatDisplayer : MonoBehaviour
                 ShadowLabel($"    {label,-28} : {ticks / freq:F2}");
             }
 
+            //public static long Ticks_BuildCombineInstances;
+            //public static long Ticks_PerRendererTotal;
+            //public static long Ticks_PerRendererMaterials;
+            //public static long Ticks_LegacyUV;
+            //Ticks_SkeletonEnsure = 0;
+            //Ticks_ClearDNA = 0;
+            //Ticks_EnsureUMADataSetup = 0;
+            //Ticks_BuildActiveModifiers = 0;
+
+            ShowMeshCombinerTiming("BuildCombineInstances", UMADefaultMeshCombiner.Ticks_BuildCombineInstances);
+            ShowMeshCombinerTiming("PerRendererTotal", UMADefaultMeshCombiner.Ticks_PerRendererTotal);
+            ShowMeshCombinerTiming("PerRendererMaterials", UMADefaultMeshCombiner.Ticks_PerRendererMaterials);
+            ShowMeshCombinerTiming("LegacyUV", UMADefaultMeshCombiner.Ticks_LegacyUV);
+            ShowMeshCombinerTiming("SkeletonEnsure", UMADefaultMeshCombiner.Ticks_SkeletonEnsure);
+            ShowMeshCombinerTiming("ClearDNA", UMADefaultMeshCombiner.Ticks_ClearDNA);
+            ShowMeshCombinerTiming("EnsureUMADataSetup", UMADefaultMeshCombiner.Ticks_EnsureUMADataSetup);
+            ShowMeshCombinerTiming("BuildActiveModifiers", UMADefaultMeshCombiner.Ticks_BuildActiveModifiers);
+
+
+#if SHOW_SKINNEDMESHCOMBER
             ShowMeshCombinerTiming("CombineInternalTotal", UMA.SkinnedMeshCombinerMeshAPI.Ticks_CombineInternalTotal);
             ShowMeshCombinerTiming("AnalyzeSources", UMA.SkinnedMeshCombinerMeshAPI.Ticks_AnalyzeSources);
             ShowMeshCombinerTiming("AnalyzeBlendshapes", UMA.SkinnedMeshCombinerMeshAPI.Ticks_AnalyzeBlendshapes);
@@ -109,7 +130,7 @@ public class StatDisplayer : MonoBehaviour
             ShowMeshCombinerTiming("SetBindposesAndWeights", UMA.SkinnedMeshCombinerMeshAPI.Ticks_SetBindposesAndWeights);
             ShowMeshCombinerTiming("AssignBones", UMA.SkinnedMeshCombinerMeshAPI.Ticks_AssignBones);
             ShowMeshCombinerTiming("BuildCloth", UMA.SkinnedMeshCombinerMeshAPI.Ticks_BuildCloth);
-
+#endif
             if (umaGenerator.convertRenderTexture)
             {
                 GUILayout.Space(8);

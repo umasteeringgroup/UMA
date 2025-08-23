@@ -37,8 +37,12 @@ namespace UMA
         }
         // Toggle to enable the parallel bone weight remap path.
         // Can be flipped at runtime before combining.
+#if UMA_MESHAPI_2021
+        // Add near other static flags (top of class)
         public static bool UseParallelBoneWeights = true;
-
+        public static bool UseParallelUVRemap = true;
+        private const int UV_PARALLEL_MIN_VERTS = 4000;
+#endif
         // Timings (Stopwatch ticks). Call ResetTimings() to clear.
         public static long Ticks_CombineInternalTotal;
         public static long Ticks_AnalyzeSources;
@@ -94,7 +98,48 @@ namespace UMA
 
         [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
         private struct UV23 { public Vector2 uv2; public Vector2 uv3; }
+        // Add inside class near other private structs (after NormTan/ColUV01/UV23 definitions).
+#if UMA_MESHAPI_2021
+        [BurstCompile]
+        private struct ApplyUVTransformsJob : IJobParallelFor
+        {
+            public NativeArray<ColUV01> Vertices;
+            [ReadOnly] public NativeArray<UVTransform> Transforms;
 
+            public void Execute(int i)
+            {
+                var t = Transforms[i];
+                int start = t.start;
+                int end = start + t.count;
+                float xMin = t.xMin;
+                float yMin = t.yMin;
+                float xScale = t.xScale;
+                float yScale = t.yScale;
+
+                for (int v = start; v < end; v++)
+                {
+                    var c = Vertices[v];
+                    c.uv0.x = xMin + c.uv0.x * xScale;
+                    c.uv0.y = yMin + c.uv0.y * yScale;
+                    Vertices[v] = c;
+                }
+            }
+        }
+
+        private struct UVTransform
+        {
+            public int start;
+            public int count;
+            public float xMin;
+            public float yMin;
+            public float xScale;
+            public float yScale;
+        }
+
+        // Reusable static (cleared each invocation) to cut GC.
+        private static readonly List<UVTransform> _uvTransforms = new List<UVTransform>(128);
+        private static readonly HashSet<SlotData> _uvProcessedSlots = new HashSet<SlotData>();
+#endif
         public static ClothSkinningCoefficient[] CombineIntoRenderer(
             SkinnedMeshRenderer renderer,
             SkinnedMeshCombiner.CombineInstance[] sources,
@@ -1584,6 +1629,160 @@ namespace UMA
             public Vector2 cropResolution;
             public bool prefersCropping;
         }
+
+#if UMA_MESHAPI_2021
+        private static void RecalculateUVForUMA_Optimized(
+            NativeArray<ColUV01> vC01,
+            UMAData umaData,
+            int atlasResolution,
+            int currentRendererIndex)
+        {
+            if (!vC01.IsCreated || vC01.Length == 0 || umaData == null || umaData.generatedMaterials == null)
+                return;
+
+            var targetRendererAsset = umaData.GetRendererAsset(currentRendererIndex);
+            //if (targetRendererAsset == null) return;
+
+            try
+            {
+                _uvTransforms.Clear();
+                _uvProcessedSlots.Clear();
+                float invAtlas = 1f / atlasResolution;
+
+                var materials = umaData.generatedMaterials.materials;
+                for (int mIdx = 0; mIdx < materials.Count; mIdx++)
+                {
+                    var gm = materials[mIdx];
+                    if (gm == null) continue;
+                    if (gm.rendererAsset != targetRendererAsset) continue;
+                    if (gm.umaMaterial == null || !gm.umaMaterial.IsGeneratedTextures) continue;
+
+                    var fragments = gm.materialFragments;
+                    for (int f = 0; f < fragments.Count; f++)
+                    {
+                        var frag = fragments[f];
+                        if (frag == null) continue;
+
+                        var slot = frag.slotData;
+                        if (slot == null || slot.asset == null || slot.asset.meshData == null)
+                            continue;
+
+                        if (_uvProcessedSlots.Contains(slot)) continue; // de-dupe per slot
+
+                        int start = slot.vertexOffset;
+                        int count = slot.asset.meshData.vertexCount;
+                        if (start < 0 || count <= 0 || (start + count) > vC01.Length)
+                            continue;
+
+                        // Base atlas rect
+                        var rect = frag.atlasRegion;
+                        float xMin = rect.xMin * invAtlas;
+                        float xMax = rect.xMax * invAtlas;
+                        float yMin = rect.yMin * invAtlas;
+                        float yMax = rect.yMax * invAtlas;
+
+                        float xRange = xMax - xMin;
+                        float yRange = yMax - yMin;
+
+                        // Shared rect cropping adjustment (same logic as legacy)
+                        if (frag.isRectShared && slot.useAtlasOverlay)
+                        {
+                            OverlayData foundRect = null;
+                            var overlays = frag.overlayList;
+                            if (overlays != null)
+                            {
+                                for (int o = 0; o < overlays.Count; o++)
+                                {
+                                    var ov = overlays[o];
+                                    if (slot.slotName != null &&
+                                        ov.overlayName != null &&
+                                        ov.overlayName.Contains(slot.slotName))
+                                    {
+                                        foundRect = ov;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (foundRect != null && foundRect.rect != Rect.zero)
+                            {
+                                var size = foundRect.rect.size * gm.resolutionScale;
+                                var offsetX = foundRect.rect.x * gm.resolutionScale.x;
+                                var offsetY = foundRect.rect.y * gm.resolutionScale.x;
+
+                                xMin += (offsetX / gm.cropResolution.x);
+                                xRange = size.x / gm.cropResolution.x;
+
+                                yMin += (offsetY / gm.cropResolution.y);
+                                yRange = size.y / gm.cropResolution.y;
+                            }
+                        }
+
+                        _uvTransforms.Add(new UVTransform
+                        {
+                            start = start,
+                            count = count,
+                            xMin = xMin,
+                            yMin = yMin,
+                            xScale = xRange,
+                            yScale = yRange
+                        });
+
+                        _uvProcessedSlots.Add(slot);
+                    }
+                }
+
+                int transformCount = _uvTransforms.Count;
+                if (transformCount == 0) return;
+
+                // Small meshes: do synchronous to avoid job overhead
+                if (!UseParallelUVRemap || vC01.Length < UV_PARALLEL_MIN_VERTS || transformCount == 1)
+                {
+                    for (int i = 0; i < transformCount; i++)
+                    {
+                        var t = _uvTransforms[i];
+                        int end = t.start + t.count;
+                        float xMin = t.xMin, yMin = t.yMin, xScale = t.xScale, yScale = t.yScale;
+                        for (int v = t.start; v < end; v++)
+                        {
+                            var c = vC01[v];
+                            c.uv0.x = xMin + c.uv0.x * xScale;
+                            c.uv0.y = yMin + c.uv0.y * yScale;
+                            vC01[v] = c;
+                        }
+                    }
+                }
+                else
+                {
+                    // Parallel job path
+                    var naTransforms = new NativeArray<UVTransform>(transformCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+                    for (int i = 0; i < transformCount; i++)
+                        naTransforms[i] = _uvTransforms[i];
+
+                    var job = new ApplyUVTransformsJob
+                    {
+                        Vertices = vC01,
+                        Transforms = naTransforms
+                    }.Schedule(transformCount, 1); // 1 per slot; inner loop is big chunk
+
+                    job.Complete();
+                    naTransforms.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+#if UNITY_EDITOR
+                Debug.LogException(ex);
+#endif
+                // Fallback if something unexpected
+                RecalculateUVForUMA(vC01, umaData, atlasResolution, currentRendererIndex);
+            }
+            finally
+            {
+                _uvTransforms.Clear();
+                _uvProcessedSlots.Clear();
+            }
+        }
+#endif
         private static void RecalculateUVForUMA(NativeArray<ColUV01> vC01, UMAData umaData, int atlasResolution, int currentRendererIndex)
         {
             if (!vC01.IsCreated || vC01.Length == 0 || umaData == null || umaData.generatedMaterials == null)
