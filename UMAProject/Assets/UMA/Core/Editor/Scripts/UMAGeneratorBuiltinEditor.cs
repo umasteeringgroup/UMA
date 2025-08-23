@@ -108,8 +108,20 @@ namespace UMA.Editors
 				if (Application.isPlaying)
 				{
 					EditorGUILayout.LabelField("Elapsed Time", string.Format("{0} ms", generator.ElapsedTicks / 10000));
-				}
-				else
+					EditorGUILayout.LabelField("Validation Time", string.Format("{0} ms", generator.validationTicks / 10000));
+					EditorGUILayout.LabelField("MeshProcessing Time", string.Format("{0} ms", generator.meshpreprocessTicks / 10000));
+					EditorGUILayout.LabelField("Begun Events Time", string.Format("{0} ms", generator.BegunEventsTicks / 10000));
+					EditorGUILayout.LabelField("preApply Time", string.Format("{0} ms", generator.preapplyTicks / 10000));
+					EditorGUILayout.LabelField("Texture Processing Time", string.Format("{0} ms", generator.textureprocessingTicks / 10000));
+                    EditorGUILayout.LabelField("Mesh Updates Time", string.Format("{0} ms", generator.meshUpdatesTicks / 10000));
+                    EditorGUILayout.LabelField("Skeleton Updates Time", string.Format("{0} ms", generator.skeletonUpdatesTicks / 10000));
+                    EditorGUILayout.LabelField("Race Blendshapes Time", string.Format("{0} ms", generator.raceblendshapesTicks / 10000));
+                    EditorGUILayout.LabelField("End Events Time", string.Format("{0} ms", generator.endEventsTicks / 10000));
+					EditorGUILayout.LabelField("Average Mesh Time", string.Format("{0:F4} ms", generator.averageMeshUpdatesTime));
+					EditorGUILayout.LabelField("Average Texture Time", string.Format("{0:F4} ms",generator.averageTextureProcessingTime));
+					EditorGUILayout.LabelField("Average Skeleton Time", string.Format("{0:F4} ms", generator.averageSkeletonUpdatesTime));
+                }
+                else
 				{
 					EditorGUILayout.LabelField("Elapsed Time", "N/A");
 				}

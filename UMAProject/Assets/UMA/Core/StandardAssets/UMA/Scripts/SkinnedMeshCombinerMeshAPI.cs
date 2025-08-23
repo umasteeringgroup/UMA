@@ -1,8 +1,10 @@
 #if UNITY_2021_3_OR_NEWER
 #define UMA_MESHAPI_2021
 #endif
+#define UMA_DEBUG_UV_VALIDATE
 
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Burst;
@@ -32,6 +34,50 @@ namespace UMA
             public SkinnedMeshCombiner.CombineInstance[] Sources;
             public int CurrentRendererIndex;
             public int AtlasResolution;
+        }
+
+        // Timings (Stopwatch ticks). Call ResetTimings() to clear.
+        public static long Ticks_CombineInternalTotal;
+        public static long Ticks_AnalyzeSources;
+        public static long Ticks_AnalyzeBlendshapes;
+        public static long Ticks_AllocateMeshData;
+        public static long Ticks_MergeTransforms;
+        public static long Ticks_EnsureSkeleton;
+        public static long Ticks_BuildBoneWeights;
+        public static long Ticks_CopyPositionsAndBounds;
+        public static long Ticks_PackNormalsTangents;
+        public static long Ticks_PackColUV01;
+        public static long Ticks_PackUV23;
+        public static long Ticks_IndexJobsSchedule;
+        public static long Ticks_IndexJobsComplete;
+        public static long Ticks_UVRemap;
+        public static long Ticks_SetSubmeshes;
+        public static long Ticks_ApplyMeshData;
+        public static long Ticks_SetBindposesAndWeights;
+        public static long Ticks_AssignBones;
+        public static long Ticks_BuildCloth;
+
+        public static void ResetTimings()
+        {
+            Ticks_CombineInternalTotal = 0;
+            Ticks_AnalyzeSources = 0;
+            Ticks_AnalyzeBlendshapes = 0;
+            Ticks_AllocateMeshData = 0;
+            Ticks_MergeTransforms = 0;
+            Ticks_EnsureSkeleton = 0;
+            Ticks_BuildBoneWeights = 0;
+            Ticks_CopyPositionsAndBounds = 0;
+            Ticks_PackNormalsTangents = 0;
+            Ticks_PackColUV01 = 0;
+            Ticks_PackUV23 = 0;
+            Ticks_IndexJobsSchedule = 0;
+            Ticks_IndexJobsComplete = 0;
+            Ticks_UVRemap = 0;
+            Ticks_SetSubmeshes = 0;
+            Ticks_ApplyMeshData = 0;
+            Ticks_SetBindposesAndWeights = 0;
+            Ticks_AssignBones = 0;
+            Ticks_BuildCloth = 0;
         }
 
         // Safe interleaved structs (multi-stream layout)
@@ -112,6 +158,7 @@ namespace UMA
 #endif
         }
 
+
 #if UMA_MESHAPI_2021
         private static void CombineInternal(
             RendererBatch batch,
@@ -121,6 +168,8 @@ namespace UMA
             bool markNotReadable,
             out ClothSkinningCoefficient[] clothCoeffs)
         {
+            var totalSW = System.Diagnostics.Stopwatch.StartNew();
+
             var sources = batch.Sources;
 
             // Analyze
@@ -132,11 +181,18 @@ namespace UMA
             int[] subMeshTriangleLength = new int[subMeshCount];
 
             MeshComponents flags = MeshComponents.none;
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref boneWeightCount, ref bindPoseCount, ref transformHierarchyCount, ref flags);
+            sw.Stop();
+            Ticks_AnalyzeSources += sw.ElapsedTicks;
 
             // Blendshape analysis (unbaked only)
             Dictionary<string, BlendShapeVertexData> blendShapeNames;
+            sw.Restart();
             AnalyzeBlendShapeSources(sources, bakedBlendshapes, ref flags, out blendShapeNames, umaData.umaRecipe);
+            sw.Stop();
+            Ticks_AnalyzeBlendshapes += sw.ElapsedTicks;
 
             bool hasNormals = (flags & MeshComponents.has_normals) != 0;
             bool hasTangents = (flags & MeshComponents.has_tangents) != 0;
@@ -159,19 +215,19 @@ namespace UMA
             }
 
             // Allocate MeshData
+            sw.Restart();
             var mda = Mesh.AllocateWritableMeshData(1);
             var md = mda[0];
 
-            // Vertex layout: multi-stream to keep copies minimal and contiguous
             var vDescs = BuildVertexLayout(hasNormals, hasTangents, hasUV, hasUV2, hasUV3, hasUV4, hasColors32);
             md.SetVertexBufferParams(vertexCount, vDescs);
 
-            // Index buffer (16-bit if possible)
             var indexFormat = (vertexCount <= 65535) ? IndexFormat.UInt16 : IndexFormat.UInt32;
             md.SetIndexBufferParams(totalIndexCount, indexFormat);
 
-            // Submeshes (ranges assigned after indices are written)
             md.subMeshCount = subMeshCount;
+            sw.Stop();
+            Ticks_AllocateMeshData += sw.ElapsedTicks;
 
             // Grab vertex streams
             var vPos = md.GetVertexData<Vector3>(0);
@@ -192,11 +248,16 @@ namespace UMA
             else ibInt = md.GetIndexData<int>();
 
             // UMA transforms merged
+            sw.Restart();
             int boneCount = 0;
             var mergedUmaTransforms = new UMATransform[transformHierarchyCount];
             for (int i = 0; i < sources.Length; i++)
                 MergeSortedTransforms(mergedUmaTransforms, ref boneCount, sources[i].meshData.umaBones);
+            sw.Stop();
+            Ticks_MergeTransforms += sw.ElapsedTicks;
 
+            // Ensure skeleton
+            sw.Restart();
             if (umaData != null && umaData.skeleton != null)
             {
                 umaData.skeleton.BeginSkeletonUpdate();
@@ -204,6 +265,8 @@ namespace UMA
                 umaData.skeleton.EnsureBoneHierarchy();
                 umaData.skeleton.EndSkeletonUpdate();
             }
+            sw.Stop();
+            Ticks_EnsureSkeleton += sw.ElapsedTicks;
 
             // Bones and weights collection
             var bonesCollection = new Dictionary<int, BoneIndexEntry>(Math.Max(64, bindPoseCount));
@@ -225,7 +288,10 @@ namespace UMA
             // Collect vertex offsets per source (for blendshape pass later)
             var sourceVertexOffsets = new int[sources.Length];
 
-            // Copy vertex attributes and indices directly into MeshData buffers
+            // Collect scheduled index jobs
+            var indexJobs = new List<JobHandle>(Math.Max(32, subMeshCount * sources.Length));
+
+            // Copy vertex attributes directly into MeshData buffers
             for (int s = 0; s < sources.Length; s++)
             {
                 var ci = sources[s];
@@ -234,16 +300,18 @@ namespace UMA
                 sourceVertexOffsets[s] = vertexOffset;
 
                 // Bone weights: remap and copy into global buffers
+                sw.Restart();
                 BuildBoneWeights(src, nativeBoneWeights, nativeBonesPerVertex, vertexOffset, boneWeightOffset, bonesCollection, bindPoses, bonesList);
+                sw.Stop();
+                Ticks_BuildBoneWeights += sw.ElapsedTicks;
 
-                // Positions (with optional expandAlongNormal) + bounds
+                // Positions (+bounds) and optional expandAlongNormal
+                sw.Restart();
 #if UMA_UNSAFE
                 {
                     float expand = 0f;
                     if (ci.slotData != null && ci.slotData.expandAlongNormal > 0)
-                    {
                         expand = ci.slotData.expandAlongNormal / 1000000f;
-                    }
 
                     FastCopyPositionsAndBoundsUnsafe(
                         vPos, vertexOffset,
@@ -256,9 +324,7 @@ namespace UMA
                 {
                     float expand = ci.slotData.expandAlongNormal / 1000000f;
                     for (int i = 0; i < srcCount; i++)
-                    {
                         vPos[vertexOffset + i] = src.vertices[i] + (src.normals[i] * expand);
-                    }
                 }
                 else
                 {
@@ -273,9 +339,13 @@ namespace UMA
                     if (v.z < boundsMin.z) boundsMin.z = v.z; if (v.z > boundsMax.z) boundsMax.z = v.z;
                 }
 #endif
+                sw.Stop();
+                Ticks_CopyPositionsAndBounds += sw.ElapsedTicks;
+
                 // Normals/Tangents
                 if (hasNormals || hasTangents)
                 {
+                    sw.Restart();
 #if UMA_UNSAFE
                     PackNormTanUnsafe(vNT, vertexOffset, src.normals, src.tangents, srcCount, hasNormals, hasTangents);
 #else
@@ -287,11 +357,14 @@ namespace UMA
                         vNT[vertexOffset + i] = nt;
                     }
 #endif
+                    sw.Stop();
+                    Ticks_PackNormalsTangents += sw.ElapsedTicks;
                 }
 
                 // Colors, UV0, UV1
                 if (hasColors32 || hasUV || hasUV2)
                 {
+                    sw.Restart();
 #if UMA_UNSAFE
                     PackColUV01Unsafe(vC01, vertexOffset, src.colors32, src.uv, src.uv2, srcCount, hasColors32, hasUV, hasUV2);
 #else
@@ -304,12 +377,15 @@ namespace UMA
                         vC01[vertexOffset + i] = c01;
                     }
 #endif
+                    sw.Stop();
+                    Ticks_PackColUV01 += sw.ElapsedTicks;
                 }
+
                 // UV2, UV3 (TexCoord2, TexCoord3)
                 if (hasUV3 || hasUV4)
                 {
+                    sw.Restart();
 #if UMA_UNSAFE
-                    // note: uv3 -> TexCoord2, uv4 -> TexCoord3
                     PackUV23Unsafe(vUV23, vertexOffset, src.uv3, src.uv4, srcCount, hasUV3, hasUV4);
 #else
                     for (int i = 0; i < srcCount; i++)
@@ -320,9 +396,26 @@ namespace UMA
                         vUV23[vertexOffset + i] = uv23;
                     }
 #endif
+                    sw.Stop();
+                    Ticks_PackUV23 += sw.ElapsedTicks;
                 }
 
-                // Triangles -> index buffer (masked/unmasked), with offset
+                ci.slotData.vertexOffset = vertexOffset;
+                ci.slotData.skinnedMeshRenderer = batch.CurrentRendererIndex;
+
+                vertexOffset += srcCount;
+                boneWeightOffset += src.ManagedBoneWeights.Length;
+            }
+
+            // SECOND PASS: schedule index copy jobs
+            Array.Clear(subWrite, 0, subWrite.Length);
+
+            sw.Restart();
+            for (int s = 0; s < sources.Length; s++)
+            {
+                var ci = sources[s];
+                var src = ci.meshData;
+
                 for (int sm = 0; sm < src.subMeshCount; sm++)
                 {
                     int dstSub = ci.targetSubmeshIndices[sm];
@@ -334,8 +427,36 @@ namespace UMA
 
                     if (ci.triangleMask != null && sm < ci.triangleMask.Length)
                     {
-                        int kept = triLen - (UMAUtils.GetCardinality(ci.triangleMask[sm]) * 3);
-                        if (kept > 0)
+                        int maskedRemoved = UMAUtils.GetCardinality(ci.triangleMask[sm]);
+                        int kept = triLen - (maskedRemoved * 3);
+
+                        if (maskedRemoved == 0)
+                        {
+                            if (indexFormat == IndexFormat.UInt16)
+                            {
+                                var job = new CopyIndicesJobU16
+                                {
+                                    Src = srcTris,
+                                    Dst = ibU16,
+                                    DstStart = dstStart,
+                                    Add = (ushort)ci.slotData.vertexOffset
+                                }.Schedule();
+                                indexJobs.Add(job);
+                            }
+                            else
+                            {
+                                var job = new CopyIndicesJobInt
+                                {
+                                    Src = srcTris,
+                                    Dst = ibInt,
+                                    DstStart = dstStart,
+                                    Add = ci.slotData.vertexOffset
+                                }.Schedule();
+                                indexJobs.Add(job);
+                            }
+                            subWrite[dstSub] += triLen;
+                        }
+                        else if (kept > 0)
                         {
                             if (indexFormat == IndexFormat.UInt16)
                             {
@@ -345,9 +466,9 @@ namespace UMA
                                     Mask = BitArrayToNative(ci.triangleMask[sm], Allocator.TempJob),
                                     Dst = ibU16,
                                     DstStart = dstStart,
-                                    Add = (ushort)vertexOffset
+                                    Add = (ushort)ci.slotData.vertexOffset
                                 }.Schedule();
-                                job.Complete();
+                                indexJobs.Add(job);
                             }
                             else
                             {
@@ -357,12 +478,13 @@ namespace UMA
                                     Mask = BitArrayToNative(ci.triangleMask[sm], Allocator.TempJob),
                                     Dst = ibInt,
                                     DstStart = dstStart,
-                                    Add = vertexOffset
+                                    Add = ci.slotData.vertexOffset
                                 }.Schedule();
-                                job.Complete();
+                                indexJobs.Add(job);
                             }
+                            subWrite[dstSub] += kept;
                         }
-                        subWrite[dstSub] += kept;
+                        // else: all masked, nothing to write
                     }
                     else
                     {
@@ -373,9 +495,9 @@ namespace UMA
                                 Src = srcTris,
                                 Dst = ibU16,
                                 DstStart = dstStart,
-                                Add = (ushort)vertexOffset
+                                Add = (ushort)ci.slotData.vertexOffset
                             }.Schedule();
-                            job.Complete();
+                            indexJobs.Add(job);
                         }
                         else
                         {
@@ -384,29 +506,41 @@ namespace UMA
                                 Src = srcTris,
                                 Dst = ibInt,
                                 DstStart = dstStart,
-                                Add = vertexOffset
+                                Add = ci.slotData.vertexOffset
                             }.Schedule();
-                            job.Complete();
+                            indexJobs.Add(job);
                         }
                         subWrite[dstSub] += triLen;
                     }
                 }
+            }
+            sw.Stop();
+            Ticks_IndexJobsSchedule += sw.ElapsedTicks;
 
-                ci.slotData.vertexOffset = vertexOffset;
-                ci.slotData.skinnedMeshRenderer = batch.CurrentRendererIndex;
-
-                vertexOffset += srcCount;
-                boneWeightOffset += src.ManagedBoneWeights.Length;
+            // Complete all scheduled index jobs once
+            if (indexJobs.Count > 0)
+            {
+                sw.Restart();
+                var handles = new NativeArray<JobHandle>(indexJobs.Count, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+                for (int i = 0; i < indexJobs.Count; i++) handles[i] = indexJobs[i];
+                JobHandle.CompleteAll(handles);
+                handles.Dispose();
+                indexJobs.Clear();
+                sw.Stop();
+                Ticks_IndexJobsComplete += sw.ElapsedTicks;
             }
 
             // UMA atlas UV remap — in place on MeshData UV buffer
             if (hasUV)
             {
-                // we remap vC01.uv0
+                sw.Restart();
                 RecalculateUVForUMA(vC01, umaData, batch.AtlasResolution, batch.CurrentRendererIndex);
+                sw.Stop();
+                Ticks_UVRemap += sw.ElapsedTicks;
             }
 
             // Submesh descriptors
+            sw.Restart();
             for (int i = 0; i < subMeshCount; i++)
             {
                 var smd = new SubMeshDescriptor
@@ -419,35 +553,28 @@ namespace UMA
                 };
                 md.SetSubMesh(i, smd, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontNotifyMeshUsers);
             }
+            sw.Stop();
+            Ticks_SetSubmeshes += sw.ElapsedTicks;
 
             // Create Mesh and apply
-            var mesh = new Mesh { indexFormat = indexFormat };
+            sw.Restart();
+            var mesh = batch.Renderer.sharedMesh ?? new Mesh();
+            mesh.indexFormat = indexFormat;
             Mesh.ApplyAndDisposeWritableMeshData(mda, new[] { mesh }, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
+            sw.Stop();
+            Ticks_ApplyMeshData += sw.ElapsedTicks;
 
             // Bindposes and weights
+            sw.Restart();
             mesh.bindposes = bindPoses.ToArray();
             mesh.SetBoneWeights(nativeBonesPerVertex, nativeBoneWeights);
+            sw.Stop();
+            Ticks_SetBindposesAndWeights += sw.ElapsedTicks;
 
-            // Build and add unbaked blendshapes on-the-fly to Mesh
-            if (hasBlendShapes && blendShapeNames != null && blendShapeNames.Count > 0)
-            {
-                AddBlendShapesDirect(mesh, sources, bakedBlendshapes, blendShapeNames, umaData.umaRecipe, sourceVertexOffsets, vertexCount);
-            }
-
-            // Bounds from streaming copy
-            if (vertexCount > 0)
-            {
-                var size = boundsMax - boundsMin;
-                var center = boundsMin + (size * 0.5f);
-                mesh.bounds = new Bounds(center, size);
-            }
-            if (markDynamic) mesh.MarkDynamic();
-            if (markNotReadable) mesh.UploadMeshData(true);
-
-            // Assign to renderer
-            UMAUtils.DestroySceneObject(batch.Renderer.sharedMesh);
+            // Assign to renderer and bones
+            sw.Restart();
             batch.Renderer.sharedMesh = mesh;
-            batch.Renderer.sharedMesh.name = "UMAMesh (MeshAPI)";
+            if (string.IsNullOrEmpty(mesh.name)) mesh.name = "UMAMesh (MeshAPI)";
 
             if (umaData != null && umaData.skeleton != null)
             {
@@ -455,13 +582,23 @@ namespace UMA
                 if (batch.Renderer.rootBone == null)
                     batch.Renderer.rootBone = umaData.GetGlobalTransform();
             }
+            sw.Stop();
+            Ticks_AssignBones += sw.ElapsedTicks;
 
+            // Cloth
+            sw.Restart();
             clothCoeffs = hasCloth ? BuildClothCoefficients(sources) : null;
+            sw.Stop();
+            Ticks_BuildCloth += sw.ElapsedTicks;
 
             nativeBonesPerVertex.Dispose();
             nativeBoneWeights.Dispose();
+
+            totalSW.Stop();
+            Ticks_CombineInternalTotal += totalSW.ElapsedTicks;
         }
 #endif
+
 
         #region Jobs and helpers
 
@@ -734,7 +871,7 @@ namespace UMA
         private struct CopyIndicesJobInt : IJob
         {
             [ReadOnly] public NativeArray<int> Src;
-            [NativeDisableParallelForRestriction] public NativeArray<int> Dst;
+            [NativeDisableContainerSafetyRestriction] public NativeArray<int> Dst;
             public int DstStart;
             public int Add;
 
@@ -749,7 +886,7 @@ namespace UMA
         private struct CopyIndicesJobU16 : IJob
         {
             [ReadOnly] public NativeArray<int> Src;
-            [NativeDisableParallelForRestriction] public NativeArray<ushort> Dst;
+            [NativeDisableContainerSafetyRestriction] public NativeArray<ushort> Dst;
             public int DstStart;
             public ushort Add;
 
@@ -764,8 +901,8 @@ namespace UMA
         private struct MaskedCopyIndicesJobInt : IJob
         {
             [ReadOnly] public NativeArray<int> Src;
-            [ReadOnly] public NativeArray<byte> Mask;
-            [NativeDisableParallelForRestriction] public NativeArray<int> Dst;
+            [ReadOnly, DeallocateOnJobCompletion] public NativeArray<byte> Mask;
+            [NativeDisableContainerSafetyRestriction] public NativeArray<int> Dst;
             public int DstStart;
             public int Add;
 
@@ -788,8 +925,8 @@ namespace UMA
         private struct MaskedCopyIndicesJobU16 : IJob
         {
             [ReadOnly] public NativeArray<int> Src;
-            [ReadOnly] public NativeArray<byte> Mask;
-            [NativeDisableParallelForRestriction] public NativeArray<ushort> Dst;
+            [ReadOnly, DeallocateOnJobCompletion] public NativeArray<byte> Mask;
+            [NativeDisableContainerSafetyRestriction] public NativeArray<ushort> Dst;
             public int DstStart;
             public ushort Add;
 
@@ -1130,18 +1267,27 @@ namespace UMA
             var bones = data.boneNameHashes;
             var bindPoses = data.bindPoses;
 
-            int[] boneMapping = new int[bones.Length];
-            for (int i = 0; i < boneMapping.Length; i++)
-                boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+            var pool = ArrayPool<int>.Shared;
+            var boneMapping = pool.Rent(bones.Length);
 
-            NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
-            NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneWeightIndex, data.ManagedBoneWeights.Length);
-
-            for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
+            try
             {
-                var bw = dest[destBoneWeightIndex + i];
-                bw.boneIndex = boneMapping[bw.boneIndex];
-                dest[destBoneWeightIndex + i] = bw;
+                for (int i = 0; i < bones.Length; i++)
+                    boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+
+                NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
+                NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneWeightIndex, data.ManagedBoneWeights.Length);
+
+                for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
+                {
+                    var bw = dest[destBoneWeightIndex + i];
+                    bw.boneIndex = boneMapping[bw.boneIndex];
+                    dest[destBoneWeightIndex + i] = bw;
+                }
+            }
+            finally
+            {
+                pool.Return(boneMapping, clearArray: false);
             }
         }
 
@@ -1149,91 +1295,494 @@ namespace UMA
             bool hasNormals, bool hasTangents, bool hasUV, bool hasUV2, bool hasUV3, bool hasUV4, bool hasColors32)
         {
             var list = new List<VertexAttributeDescriptor>(8)
-            {
-                new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0)
-            };
+    {
+        new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3, 0)
+    };
             int stream = 1;
             if (hasNormals || hasTangents) { list.Add(new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3, stream)); list.Add(new VertexAttributeDescriptor(VertexAttribute.Tangent, VertexAttributeFormat.Float32, 4, stream)); stream++; }
             if (hasColors32 || hasUV || hasUV2) { list.Add(new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4, stream)); list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2, stream)); list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord1, VertexAttributeFormat.Float32, 2, stream)); stream++; }
             if (hasUV3 || hasUV4) { list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord2, VertexAttributeFormat.Float32, 2, stream)); list.Add(new VertexAttributeDescriptor(VertexAttribute.TexCoord3, VertexAttributeFormat.Float32, 2, stream)); }
             return list.ToArray();
         }
-
-        private static void RecalculateUVForUMA(NativeArray<ColUV01> vC01, UMAData umaData, int atlasResolution, int currentRendererIndex)
+        private static void WorkingRecalculateUVForUMA(NativeArray<ColUV01> vC01, UMAData umaData, int atlasResolution, int currentRendererIndex)
         {
-            int idx = 0;
-            for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
+            if (!vC01.IsCreated || vC01.Length == 0 || umaData == null || umaData.generatedMaterials == null)
+                return;
+
+            var targetRendererAsset = umaData.GetRendererAsset(currentRendererIndex);
+           // if (targetRendererAsset == null)
+           //     return;
+
+            try
             {
-                var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
-                if (generatedMaterial.rendererAsset != umaData.GetRendererAsset(currentRendererIndex))
+                // Per-slot best fragment (cropping candidate preferred)
+                var bestFragmentPerSlot = new Dictionary<SlotData, FragmentChoice>(64);
+                var materials = umaData.generatedMaterials.materials;
+
+                for (int mi = 0; mi < materials.Count; mi++)
                 {
-                    for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
+                    var gm = materials[mi];
+                    if (gm == null) continue;
+                    if (gm.rendererAsset != targetRendererAsset) continue;
+                    if (gm.umaMaterial == null || !gm.umaMaterial.IsGeneratedTextures) continue;
+
+                    var frags = gm.materialFragments;
+                    for (int fi = 0; fi < frags.Count; fi++)
                     {
-                        var fragment = generatedMaterial.materialFragments[i];
-                        idx += fragment.slotData.asset.meshData.vertices.Length;
+                        var frag = frags[fi];
+                        if (frag == null) continue;
+
+                        var slot = frag.slotData;
+                        if (slot == null || slot.asset == null || slot.asset.meshData == null) continue;
+                        if (slot.skinnedMeshRenderer != currentRendererIndex) continue;
+
+                        bool isCroppingCandidate = frag.isRectShared && slot.useAtlasOverlay;
+
+                        if (!bestFragmentPerSlot.TryGetValue(slot, out var existing))
+                        {
+                            bestFragmentPerSlot.Add(slot, new FragmentChoice
+                            {
+                                slot = slot,
+                                atlasRegion = frag.atlasRegion,
+                                isRectShared = frag.isRectShared,
+                                slotUseAtlasOverlay = slot.useAtlasOverlay,
+                                overlayList = frag.overlayList,                 // assumed List<OverlayData>
+                                resolutionScale = gm.resolutionScale,           // assumed Vector2
+                                cropResolution = gm.cropResolution,             // assumed Vector2
+                                prefersCropping = isCroppingCandidate
+                            });
+                        }
+                        else if (isCroppingCandidate && !existing.prefersCropping)
+                        {
+                            existing.atlasRegion = frag.atlasRegion;
+                            existing.isRectShared = frag.isRectShared;
+                            existing.slotUseAtlasOverlay = slot.useAtlasOverlay;
+                            existing.overlayList = frag.overlayList;
+                            existing.resolutionScale = gm.resolutionScale;
+                            existing.cropResolution = gm.cropResolution;
+                            existing.prefersCropping = true;
+                            bestFragmentPerSlot[slot] = existing;
+                        }
                     }
-                    continue;
                 }
 
-                if (!generatedMaterial.umaMaterial.IsGeneratedTextures)
+                foreach (var kvp in bestFragmentPerSlot)
                 {
-                    for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
+                    var slot = kvp.Key;
+                    var choice = kvp.Value;
+
+                    int vertexCount = slot.asset.meshData.vertexCount;
+                    int start = slot.vertexOffset;
+
+                    if (start < 0 || start + vertexCount > vC01.Length)
                     {
-                        var fragment = generatedMaterial.materialFragments[i];
-                        idx += fragment.slotData.asset.meshData.vertices.Length;
+#if UNITY_EDITOR
+                        Debug.LogWarning($"RecalculateUVForUMA: Slot '{slot.asset.name}' vertex range out of bounds (start {start}, count {vertexCount}, len {vC01.Length}). Skipping.");
+#endif
+                        continue;
                     }
-                    continue;
-                }
 
-                for (int m = 0; m < generatedMaterial.materialFragments.Count; m++)
-                {
-                    var fragment = generatedMaterial.materialFragments[m];
-                    var tempAtlasRect = fragment.atlasRegion;
-                    int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
+                    var atlasRect = choice.atlasRegion;
 
-                    float atlasXMin = tempAtlasRect.xMin / atlasResolution;
-                    float atlasXMax = tempAtlasRect.xMax / atlasResolution;
-                    float atlasXRange = atlasXMax - atlasXMin;
-                    float atlasYMin = tempAtlasRect.yMin / atlasResolution;
-                    float atlasYMax = tempAtlasRect.yMax / atlasResolution;
-                    float atlasYRange = atlasYMax - atlasYMin;
+                    float atlasXMin = atlasRect.xMin / atlasResolution;
+                    float atlasXMax = atlasRect.xMax / atlasResolution;
+                    float atlasYMin = atlasRect.yMin / atlasResolution;
+                    float atlasYMax = atlasRect.yMax / atlasResolution;
 
-                    if (fragment.isRectShared && fragment.slotData.useAtlasOverlay)
+                    if (choice.isRectShared && choice.slotUseAtlasOverlay)
                     {
                         OverlayData foundRect = null;
-                        for (int i = 0; i < fragment.overlayList.Count; i++)
+                        // overlayList can be null if fragment did not populate overlays (defensive)
+                        var overlays = choice.overlayList;
+                        if (overlays != null)
                         {
-                            var ov = fragment.overlayList[i];
-                            if (fragment.slotData.slotName != null && ov.overlayName != null && ov.overlayName.Contains(fragment.slotData.slotName))
+                            for (int i = 0; i < overlays.Count; i++)
                             {
-                                foundRect = ov; break;
+                                var ov = overlays[i];
+                                if (slot.slotName != null && ov.overlayName != null && ov.overlayName.Contains(slot.slotName))
+                                {
+                                    foundRect = ov;
+                                    break;
+                                }
                             }
                         }
                         if (foundRect != null && foundRect.rect != Rect.zero)
                         {
-                            var size = foundRect.rect.size * generatedMaterial.resolutionScale;
-                            var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale.x;
-                            var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale.x;
+                            var size = foundRect.rect.size * choice.resolutionScale;
+                            var offsetX = foundRect.rect.x * choice.resolutionScale.x;
+                            var offsetY = foundRect.rect.y * choice.resolutionScale.x; // preserve original behavior
 
-                            atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
-                            atlasXRange = size.x / generatedMaterial.cropResolution.x;
+                            atlasXMin += (offsetX / choice.cropResolution.x);
+                            float atlasXRange = size.x / choice.cropResolution.x;
+                            atlasXMax = atlasXMin + atlasXRange;
 
-                            atlasYMin += (offsetY / generatedMaterial.cropResolution.y);
-                            atlasYRange = size.y / generatedMaterial.cropResolution.y;
+                            atlasYMin += (offsetY / choice.cropResolution.y);
+                            float atlasYRange = size.y / choice.cropResolution.y;
+                            atlasYMax = atlasYMin + atlasYRange;
                         }
                     }
 
+                    float rangeX = atlasXMax - atlasXMin;
+                    float rangeY = atlasYMax - atlasYMin;
+
                     for (int i = 0; i < vertexCount; i++)
                     {
-                        var c01 = vC01[idx];
-                        c01.uv0.x = atlasXMin + atlasXRange * c01.uv0.x;
-                        c01.uv0.y = atlasYMin + atlasYRange * c01.uv0.y;
-                        vC01[idx] = c01;
-                        idx++;
+                        int vi = start + i;
+                        var c01 = vC01[vi];
+                        c01.uv0.x = atlasXMin + rangeX * c01.uv0.x;
+                        c01.uv0.y = atlasYMin + rangeY * c01.uv0.y;
+                        vC01[vi] = c01;
+                    }
+                }
+
+#if UNITY_EDITOR && UMA_DEBUG_UV_VALIDATE
+                foreach (var kvp in bestFragmentPerSlot)
+                {
+                    var slot = kvp.Key;
+                    int vertexCount = slot.asset.meshData.vertexCount;
+                    int start = slot.vertexOffset;
+                    bool outOfRange = false;
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        var uv = vC01[start + i].uv0;
+                        if (uv.x < -0.001f || uv.x > 1.001f || uv.y < -0.001f || uv.y > 1.001f)
+                        {
+                            outOfRange = true;
+                            break;
+                        }
+                    }
+                    if (outOfRange)
+                        Debug.LogWarning($"RecalculateUVForUMA: UVs for slot '{slot.asset.name}' outside [0,1].");
+                }
+#endif
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+        }
+
+        private struct FragmentChoice
+        {
+            public SlotData slot;
+            public Rect atlasRegion;
+            public bool isRectShared;
+            public bool slotUseAtlasOverlay;
+            public List<OverlayData> overlayList;
+            public Vector2 resolutionScale;
+            public Vector2 cropResolution;
+            public bool prefersCropping;
+        }
+        private static void RecalculateUVForUMA(NativeArray<ColUV01> vC01, UMAData umaData, int atlasResolution, int currentRendererIndex)
+        {
+            if (!vC01.IsCreated || vC01.Length == 0 || umaData == null || umaData.generatedMaterials == null)
+                return;
+
+            var targetRendererAsset = umaData.GetRendererAsset(currentRendererIndex);
+
+            try
+            {
+                var materials = umaData.generatedMaterials.materials;
+                // Track slots already remapped (avoid reprocessing when a slot appears in multiple fragments)
+                var processedSlots = new HashSet<SlotData>();
+
+                for (int materialIndex = 0; materialIndex < materials.Count; materialIndex++)
+                {
+                    var generatedMaterial = materials[materialIndex];
+                    if (generatedMaterial == null) continue;
+
+                    if (generatedMaterial.rendererAsset != targetRendererAsset)
+                        continue;
+
+                    if (generatedMaterial.umaMaterial == null || !generatedMaterial.umaMaterial.IsGeneratedTextures)
+                        continue;
+
+                    var fragments = generatedMaterial.materialFragments;
+                    for (int m = 0; m < fragments.Count; m++)
+                    {
+                        var fragment = fragments[m];
+                        if (fragment == null) continue;
+                        var slot = fragment.slotData;
+                        if (slot == null || slot.asset == null || slot.asset.meshData == null)
+                            continue;
+
+                        // De-duplicate by slot reference
+                        if (processedSlots.Contains(slot))
+                            continue;
+
+                        int declaredRenderer = slot.skinnedMeshRenderer;
+                        // Accept if it matches the current renderer OR (fallback) vertex range is inside array (slot renderer index might not be set yet for some pipelines).
+                        bool rendererMatches = (declaredRenderer == currentRendererIndex);
+                        int vertexCount = slot.asset.meshData.vertexCount;
+                        int start = slot.vertexOffset;
+
+                        if (!rendererMatches)
+                        {
+                            if (start < 0 || start >= vC01.Length)
+                                continue; // Definitely not ours
+#if UNITY_EDITOR
+#if UMA_DEBUG_UV
+                            Debug.LogWarning($"RecalculateUVForUMA: slot '{slot.asset.name}' had skinnedMeshRenderer={declaredRenderer} expected {currentRendererIndex} but falls inside range; remapping anyway.");
+#endif
+#endif
+                        }
+
+                        // Bounds defensive clamp
+                        if (start < 0 || start + vertexCount > vC01.Length)
+                        {
+#if UNITY_EDITOR
+                            Debug.LogWarning($"RecalculateUVForUMA: vertex range out of bounds (start {start} count {vertexCount} len {vC01.Length}) for slot {slot.asset.name}. Clamping.");
+#endif
+                            vertexCount = Mathf.Max(0, Mathf.Min(vertexCount, vC01.Length - Math.Max(0, start)));
+                        }
+                        if (vertexCount <= 0)
+                            continue;
+
+                        // Atlas rect from fragment
+                        var tempAtlasRect = fragment.atlasRegion;
+                        float atlasXMin = tempAtlasRect.xMin / atlasResolution;
+                        float atlasXMax = tempAtlasRect.xMax / atlasResolution;
+                        float atlasYMin = tempAtlasRect.yMin / atlasResolution;
+                        float atlasYMax = tempAtlasRect.yMax / atlasResolution;
+                        float atlasXRange = atlasXMax - atlasXMin;
+                        float atlasYRange = atlasYMax - atlasYMin;
+
+                        // Shared rect adjustment (same as previous logic)
+                        if (fragment.isRectShared && slot.useAtlasOverlay)
+                        {
+                            OverlayData foundRect = null;
+                            for (int i = 0; i < fragment.overlayList.Count; i++)
+                            {
+                                var ov = fragment.overlayList[i];
+                                if (slot.slotName != null &&
+                                    ov.overlayName != null &&
+                                    ov.overlayName.Contains(slot.slotName))
+                                {
+                                    foundRect = ov;
+                                    break;
+                                }
+                            }
+                            if (foundRect != null && foundRect.rect != Rect.zero)
+                            {
+                                var size = foundRect.rect.size * generatedMaterial.resolutionScale;
+                                var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale.x;
+                                var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale.x;
+
+                                atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
+                                atlasXRange = size.x / generatedMaterial.cropResolution.x;
+
+                                atlasYMin += (offsetY / generatedMaterial.cropResolution.y);
+                                atlasYRange = size.y / generatedMaterial.cropResolution.y;
+                            }
+                        }
+
+                        // Remap UVs
+                        for (int i = 0; i < vertexCount; i++)
+                        {
+                            int vi = start + i;
+                            var c01 = vC01[vi];
+                            c01.uv0.x = atlasXMin + atlasXRange * c01.uv0.x;
+                            c01.uv0.y = atlasYMin + atlasYRange * c01.uv0.y;
+                            vC01[vi] = c01;
+                        }
+
+                        processedSlots.Add(slot);
                     }
                 }
             }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
+        private static void badRecalculateUVForUMA(NativeArray<ColUV01> vC01, UMAData umaData, int atlasResolution, int currentRendererIndex)
+        {
+            if (!vC01.IsCreated || vC01.Length == 0 || umaData == null || umaData.generatedMaterials == null)
+                return;
+
+            var targetRendererAsset = umaData.GetRendererAsset(currentRendererIndex);
+            if (targetRendererAsset == null)
+                return;
+
+            try
+            {
+                var materials = umaData.generatedMaterials.materials;
+                for (int materialIndex = 0; materialIndex < materials.Count; materialIndex++)
+                {
+                    var generatedMaterial = materials[materialIndex];
+
+                    // Skip materials for other renderer assets
+                    if (generatedMaterial == null || generatedMaterial.rendererAsset != targetRendererAsset)
+                        continue;
+
+                    // Skip if not atlas generated
+                    if (generatedMaterial.umaMaterial == null || !generatedMaterial.umaMaterial.IsGeneratedTextures)
+                        continue;
+
+                    var fragments = generatedMaterial.materialFragments;
+                    for (int m = 0; m < fragments.Count; m++)
+                    {
+                        var fragment = fragments[m];
+                        if (fragment == null || fragment.slotData == null || fragment.slotData.asset == null || fragment.slotData.asset.meshData == null)
+                            continue;
+
+                        // Ensure this fragment actually belongs to this renderer (defensive)
+                        if (fragment.slotData.skinnedMeshRenderer != currentRendererIndex)
+                            continue;
+
+                        int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
+                        int start = fragment.slotData.vertexOffset;
+
+                        // Bounds safety (defensive)
+                        if (start < 0 || start + vertexCount > vC01.Length)
+                        {
+#if UNITY_EDITOR
+                            Debug.LogWarning($"RecalculateUVForUMA: fragment vertex range out of bounds (start {start} count {vertexCount} len {vC01.Length}) for slot {fragment.slotData?.asset?.name}");
+#endif
+                            vertexCount = Mathf.Max(0, Mathf.Min(vertexCount, vC01.Length - start));
+                        }
+                        if (vertexCount == 0)
+                            continue;
+
+                        var tempAtlasRect = fragment.atlasRegion;
+
+                        float atlasXMin = tempAtlasRect.xMin / atlasResolution;
+                        float atlasXMax = tempAtlasRect.xMax / atlasResolution;
+                        float atlasXRange = atlasXMax - atlasXMin;
+                        float atlasYMin = tempAtlasRect.yMin / atlasResolution;
+                        float atlasYMax = tempAtlasRect.yMax / atlasResolution;
+                        float atlasYRange = atlasYMax - atlasYMin;
+
+                        // Shared rect adjustment
+                        if (fragment.isRectShared && fragment.slotData.useAtlasOverlay)
+                        {
+                            OverlayData foundRect = null;
+                            for (int i = 0; i < fragment.overlayList.Count; i++)
+                            {
+                                var ov = fragment.overlayList[i];
+                                if (fragment.slotData.slotName != null &&
+                                    ov.overlayName != null &&
+                                    ov.overlayName.Contains(fragment.slotData.slotName))
+                                {
+                                    foundRect = ov;
+                                    break;
+                                }
+                            }
+                            if (foundRect != null && foundRect.rect != Rect.zero)
+                            {
+                                var size = foundRect.rect.size * generatedMaterial.resolutionScale;
+                                var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale.x;
+                                var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale.x;
+
+                                atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
+                                atlasXRange = size.x / generatedMaterial.cropResolution.x;
+
+                                atlasYMin += (offsetY / generatedMaterial.cropResolution.y);
+                                atlasYRange = size.y / generatedMaterial.cropResolution.y;
+                            }
+                        }
+
+                        // Remap UVs directly via vertexOffset
+                        for (int i = 0; i < vertexCount; i++)
+                        {
+                            int vi = start + i;
+                            var c01 = vC01[vi];
+                            c01.uv0.x = atlasXMin + atlasXRange * c01.uv0.x;
+                            c01.uv0.y = atlasYMin + atlasYRange * c01.uv0.y;
+                            vC01[vi] = c01;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+
+        private static void OldRecalculateUVForUMA(NativeArray<ColUV01> vC01, UMAData umaData, int atlasResolution, int currentRendererIndex)
+        {
+            try
+            {
+                int idx = 0;
+                for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
+                {
+                    var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
+                    if (generatedMaterial.rendererAsset != umaData.GetRendererAsset(currentRendererIndex))
+                    {
+                        for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
+                        {
+                            var fragment = generatedMaterial.materialFragments[i];
+                            idx += fragment.slotData.asset.meshData.vertices.Length;
+                        }
+                        continue;
+                    }
+
+                    if (!generatedMaterial.umaMaterial.IsGeneratedTextures)
+                    {
+                        for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
+                        {
+                            var fragment = generatedMaterial.materialFragments[i];
+                            idx += fragment.slotData.asset.meshData.vertices.Length;
+                        }
+                        continue;
+                    }
+
+                    for (int m = 0; m < generatedMaterial.materialFragments.Count; m++)
+                    {
+                        var fragment = generatedMaterial.materialFragments[m];
+                        var tempAtlasRect = fragment.atlasRegion;
+                        int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
+
+                        float atlasXMin = tempAtlasRect.xMin / atlasResolution;
+                        float atlasXMax = tempAtlasRect.xMax / atlasResolution;
+                        float atlasXRange = atlasXMax - atlasXMin;
+                        float atlasYMin = tempAtlasRect.yMin / atlasResolution;
+                        float atlasYMax = tempAtlasRect.yMax / atlasResolution;
+                        float atlasYRange = atlasYMax - atlasYMin;
+
+                        if (fragment.isRectShared && fragment.slotData.useAtlasOverlay)
+                        {
+                            OverlayData foundRect = null;
+                            for (int i = 0; i < fragment.overlayList.Count; i++)
+                            {
+                                var ov = fragment.overlayList[i];
+                                if (fragment.slotData.slotName != null && ov.overlayName != null && ov.overlayName.Contains(fragment.slotData.slotName))
+                                {
+                                    foundRect = ov; break;
+                                }
+                            }
+                            if (foundRect != null && foundRect.rect != Rect.zero)
+                            {
+                                var size = foundRect.rect.size * generatedMaterial.resolutionScale;
+                                var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale.x;
+                                var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale.x;
+
+                                atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
+                                atlasXRange = size.x / generatedMaterial.cropResolution.x;
+
+                                atlasYMin += (offsetY / generatedMaterial.cropResolution.y);
+                                atlasYRange = size.y / generatedMaterial.cropResolution.y;
+                            }
+                        }
+
+                        for (int i = 0; i < vertexCount; i++)
+                        {
+                            var c01 = vC01[idx];
+                            c01.uv0.x = atlasXMin + atlasXRange * c01.uv0.x;
+                            c01.uv0.y = atlasYMin + atlasYRange * c01.uv0.y;
+                            vC01[idx] = c01;
+                            idx++;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+
 
         public static void ConvertData(ref Vector2 source, ref ClothSkinningCoefficient dest)
         {
@@ -1257,67 +1806,66 @@ namespace UMA
         }
 
         private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
-{
-    int newBones = 0;
-    int pos1 = 0;
-    int pos2 = 0;
-    int len2 = umaTransforms.Length;
+        {
+            int newBones = 0;
+            int pos1 = 0;
+            int pos2 = 0;
+            int len2 = umaTransforms.Length;
 
-    while (pos1 < len1 && pos2 < len2)
-    {
-        long i = ((long)mergedTransforms[pos1].hash) - ((long)umaTransforms[pos2].hash);
-        if (i == 0)
-        {
-            pos1++;
-            pos2++;
-        }
-        else if (i < 0)
-        {
-            pos1++;
-        }
-        else
-        {
-            pos2++;
-            newBones++;
-        }
-    }
-    newBones += len2 - pos2;
-    pos1 = len1 - 1;
-    pos2 = len2 - 1;
+            while (pos1 < len1 && pos2 < len2)
+            {
+                long i = ((long)mergedTransforms[pos1].hash) - ((long)umaTransforms[pos2].hash);
+                if (i == 0)
+                {
+                    pos1++;
+                    pos2++;
+                }
+                else if (i < 0)
+                {
+                    pos1++;
+                }
+                else
+                {
+                    pos2++;
+                    newBones++;
+                }
+            }
+            newBones += len2 - pos2;
+            pos1 = len1 - 1;
+            pos2 = len2 - 1;
 
-    len1 += newBones;
+            len1 += newBones;
 
-    int dest = len1 - 1;
+            int dest = len1 - 1;
 
-    while (pos1 >= 0 && pos2 >= 0)
-    {
-        long i = ((long)mergedTransforms[pos1].hash) - ((long)umaTransforms[pos2].hash);
-        if (i == 0)
-        {
-            mergedTransforms[dest] = mergedTransforms[pos1];
-            pos1--;
-            pos2--;
+            while (pos1 >= 0 && pos2 >= 0)
+            {
+                long i = ((long)mergedTransforms[pos1].hash) - ((long)umaTransforms[pos2].hash);
+                if (i == 0)
+                {
+                    mergedTransforms[dest] = mergedTransforms[pos1];
+                    pos1--;
+                    pos2--;
+                }
+                else if (i > 0)
+                {
+                    mergedTransforms[dest] = mergedTransforms[pos1];
+                    pos1--;
+                }
+                else
+                {
+                    mergedTransforms[dest] = umaTransforms[pos2];
+                    pos2--;
+                }
+                dest--;
+            }
+            while (pos2 >= 0)
+            {
+                mergedTransforms[dest] = umaTransforms[pos2];
+                pos2--;
+                dest--;
+            }
         }
-        else if (i > 0)
-        {
-            mergedTransforms[dest] = mergedTransforms[pos1];
-            pos1--;
-        }
-        else
-        {
-            mergedTransforms[dest] = umaTransforms[pos2];
-            pos2--;
-        }
-        dest--;
-    }
-    while (pos2 >= 0)
-    {
-        mergedTransforms[dest] = umaTransforms[pos2];
-        pos2--;
-        dest--;
-    }
-}
-
         #endregion
     }
 }

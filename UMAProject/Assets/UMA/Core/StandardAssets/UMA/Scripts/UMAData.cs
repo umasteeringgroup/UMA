@@ -179,44 +179,79 @@ namespace UMA
         }
 
         #region SAVE RESTORE ITEMS
+        // Replace SaveMountedItems with this non-alloc version
         public void SaveMountedItems()
         {
             GameObject holder = null;
 
-            foreach (Transform t in gameObject.transform)
+            // Find or create holder using for loops (no foreach alloc)
+            var rootTf = gameObject.transform;
+            for (int i = 0; i < rootTf.childCount; i++)
             {
-                if (t.name == HolderObjectName)
+                var child = rootTf.GetChild(i);
+                if (child.name == HolderObjectName)
                 {
-                    holder = t.gameObject;
+                    holder = child.gameObject;
+                    break;
                 }
             }
 
             if (holder == null)
             {
-				string ignoreTag = umaGenerator.ignoreTag;
+                string ignoreTag = umaGenerator.ignoreTag;
                 if (string.IsNullOrEmpty(ignoreTag))
                 {
                     ignoreTag = "UMAIgnore";
                 }
-            
+
                 holder = new GameObject(HolderObjectName);
                 holder.tag = ignoreTag;
                 holder.SetActive(false);
-                holder.transform.parent = gameObject.transform;
+                holder.transform.parent = rootTf;
             }
-			// walk through all the bones.
-			// if the tag has UMAContextBase.IgnoreTag, then 
-			// copy the transform
-			// copy the hash of the bone it came from  
-			// save the object by changing the parent.
-			// the parent object should be disabled so the children don't render.
-			// continue.
-			if (umaRoot != null)
-			{
-				SaveBonesRecursively(umaRoot.transform, holder.transform, umaGenerator.ignoreTag, umaGenerator.keepTag);
-			}
+
+            if (umaRoot == null) return;
+
+            // Use iterative traversal to avoid recursion + per-node allocations
+            string igTag = umaGenerator.ignoreTag;
+            string kpTag = umaGenerator.keepTag;
+            SaveBonesIterative(umaRoot.transform, holder.transform, igTag, kpTag);
         }
 
+        // Add this new helper inside class UMAData; it supersedes SaveBonesRecursively at call sites
+        private void SaveBonesIterative(Transform root, Transform holder, string ignoreTag, string keepTag)
+        {
+            // Pre-size the stack modestly to avoid reallocations on typical rigs
+            var stack = new Stack<Transform>(128);
+            stack.Push(root);
+
+            while (stack.Count > 0)
+            {
+                var bone = stack.Pop();
+
+                bool isIgnored = !string.IsNullOrEmpty(ignoreTag) && bone.CompareTag(ignoreTag);
+                bool keep = !string.IsNullOrEmpty(keepTag) && bone.CompareTag(keepTag);
+
+                if (isIgnored || keep)
+                {
+                    if (bone.parent != null)
+                    {
+                        // Cache parent identity before reparenting
+                        var parent = bone.parent;
+                        savedItems.Add(new UMASavedItem(parent.name, UMAUtils.StringToHash(parent.name), bone, keep));
+                        bone.SetParent(holder, false);
+                    }
+                    // Do not traverse children; reparenting moves the whole subtree
+                    continue;
+                }
+
+                // Push children (reverse order keeps original traversal order roughly similar)
+                for (int i = bone.childCount - 1; i >= 0; i--)
+                {
+                    stack.Push(bone.GetChild(i));
+                }
+            }
+        }
         public void SaveBonesRecursively(Transform bone, Transform holder, string ignoreTag, string keepTag)
         {
             List<Transform> childlist = new List<Transform>();
@@ -2381,7 +2416,7 @@ namespace UMA
                 return;
             }
             for (int i = 0; i < slotDataList.Length; i++)
-            {
+			{
                 SlotData slot = slotDataList[i];
                 if (slot != null && slot.asset != null && slot.asset.animatedBones != null && slot.asset.animatedBones.Length > 0)
                 {
@@ -2823,35 +2858,31 @@ namespace UMA
 			return tpose;
 		}
 
-		/// <summary>
-		/// Align skeleton to the TPose.
-		/// </summary>
-		public void GotoTPose()
-		{
-			UmaTPose tpose = GetTPose();
+        /// <summary>
+        /// Align skeleton to the TPose.
+        /// </summary>
+        public void GotoTPose()
+        {
+            UmaTPose tpose = GetTPose();
+            if (tpose == null || skeleton == null) return;
 
-			if (tpose != null)
-			{
-				tpose.DeSerialize();
-				for (int i = 0; i < tpose.boneInfo.Length; i++)
-				{
-					var bone = tpose.boneInfo[i];
-					var hash = UMAUtils.StringToHash(bone.name);
-					if (!skeleton.HasBone(hash))
-                    {
-                        continue;
-                    }
+            var hashes = GetOrBuildTPoseHashes(tpose);
+            var bones = tpose.boneInfo;
+            for (int i = 0; i < bones.Length; i++)
+            {
+                int hash = hashes[i];
+                if (!skeleton.HasBone(hash)) continue;
 
-                    skeleton.Set(hash, bone.position, bone.scale, bone.rotation);
-				}
-			}
-		}
+                var bone = bones[i];
+                skeleton.Set(hash, bone.position, bone.scale, bone.rotation);
+            }
+        }
 
 
-		/// <summary>
-		/// Calls character begun events on slots.
-		/// </summary>
-		public void FireCharacterBegunEvents()
+        /// <summary>
+        /// Calls character begun events on slots.
+        /// </summary>
+        public void FireCharacterBegunEvents()
 		{
 			if (CharacterBegun != null)
             {
@@ -2971,9 +3002,9 @@ namespace UMA
             else
             {
                 data = new BlendShapeData
-                {
-                    isBaked = bake,
-                };
+				{
+					isBaked = bake,
+				};
 
                 blendShapeSettings.blendShapes.Add(name, data);
             }
@@ -3106,6 +3137,30 @@ namespace UMA
 		}
 			
 #endregion
+
+		// Add this field inside class UMAData (near other private fields)
+private readonly Dictionary<UmaTPose, int[]> _tposeHashCache = new Dictionary<UmaTPose, int[]>();
+
+// Add this helper method inside class UMAData
+private int[] GetOrBuildTPoseHashes(UmaTPose tpose)
+{
+    if (tpose == null) return Array.Empty<int>();
+
+    int[] hashes;
+    if (!_tposeHashCache.TryGetValue(tpose, out hashes))
+    {
+        // DeSerialize once per TPose; subsequent calls reuse cached hashes.
+        tpose.DeSerialize();
+        var bones = tpose.boneInfo ?? Array.Empty<SkeletonBone>();
+        hashes = new int[bones.Length];
+        for (int i = 0; i < bones.Length; i++)
+        {
+            hashes[i] = UMAUtils.StringToHash(bones[i].name);
+        }
+        _tposeHashCache[tpose] = hashes;
+    }
+    return hashes;
+}
 	}
 }
 #endregion

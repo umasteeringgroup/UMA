@@ -32,6 +32,12 @@ MonoBehaviour:
   - KeepChain
   - Ignore
   - UnUsed
+  - Frampton
+  - Slots/Head
+  - Slots/Hair
+  - Slots/Face
+  - Slots/Legs
+  - Slots/Arms
   cleanRegenOnSave: 1
   autoRepairIndex: 0
   showIndexedTypes: 0

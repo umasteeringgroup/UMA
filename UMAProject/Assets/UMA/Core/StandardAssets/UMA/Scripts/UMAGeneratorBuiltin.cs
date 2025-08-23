@@ -1,3 +1,5 @@
+#define DEBUG_TIMING
+
 using System;
 using UnityEngine;
 using System.Collections.Generic;
@@ -60,6 +62,7 @@ namespace UMA
 
 		public bool collectGarbage = true;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
+        private System.Diagnostics.Stopwatch buildStopWatch = new System.Diagnostics.Stopwatch();
 
 		[Tooltip("Automatically set blendshapes based on race")]
 		public bool autoSetRaceBlendshapes = false;
@@ -80,8 +83,61 @@ namespace UMA
 		[NonSerialized]
 		public long pendingUmas;
 
+        [NonSerialized]
+        public long validationTicks;
+        [NonSerialized]
+        public long meshpreprocessTicks;
+        [NonSerialized]
+        public long BegunEventsTicks;
+        [NonSerialized]
+        public long preapplyTicks;
+        [NonSerialized]
+        public long textureprocessingTicks;
+        [NonSerialized]
+        public long meshUpdatesTicks;
+        [NonSerialized]
+        public long skeletonUpdatesTicks;
+        [NonSerialized]
+        public long raceblendshapesTicks;
+        [NonSerialized]
+        public long endEventsTicks;
 
-		public virtual void Awake()
+        public float averageTextureProcessingTime
+        {
+            get
+            {
+                if (TextureChanged > 0)
+                {
+                    return (textureprocessingTicks / (float)TextureChanged) * 1000.0f / System.Diagnostics.Stopwatch.Frequency;
+                }
+                return 0.0f;
+            }
+        }
+
+        public float averageMeshUpdatesTime
+        {
+            get
+            {
+                if (SlotsChanged > 0)
+                {
+                    return (meshUpdatesTicks / (float)SlotsChanged) * 1000.0f / System.Diagnostics.Stopwatch.Frequency;
+                }
+                return 0.0f;
+            }
+        }
+        public float averageSkeletonUpdatesTime
+        {
+            get
+            {
+                if (DnaChanged > 0)
+                {
+                    return (skeletonUpdatesTicks / (float)DnaChanged) * 1000.0f / System.Diagnostics.Stopwatch.Frequency;
+                }
+                return 0.0f;
+            }
+        }
+
+        public virtual void Awake()
 		{
 
 			if (atlasResolution == 0)
@@ -331,6 +387,7 @@ namespace UMA
             }
 #if DEBUG_TIMING
             long validation = gstopWatch.ElapsedTicks;
+            validationTicks += validation;
             gstopWatch.Restart();
 #endif
             RenderTexture rbackup = RenderTexture.active;
@@ -342,12 +399,14 @@ namespace UMA
 
 #if DEBUG_TIMING
             long meshpreprocess = gstopWatch.ElapsedTicks;
+            meshpreprocessTicks += meshpreprocess;
             gstopWatch.Restart();
 #endif
             umaData.FireCharacterBegunEvents();
 
 #if DEBUG_TIMING
             long BegunEvents = gstopWatch.ElapsedTicks;
+            BegunEventsTicks += BegunEvents;
             gstopWatch.Restart();
 #endif
             if (!umaData.rawAvatar)
@@ -357,6 +416,7 @@ namespace UMA
 
 #if DEBUG_TIMING
             long preapply = gstopWatch.ElapsedTicks;
+            preapplyTicks += preapply;
             gstopWatch.Restart();
 #endif
 			DNABuildType dnaUpdateFlags = umaData.DNAPreApply();
@@ -372,6 +432,7 @@ namespace UMA
 
 #if DEBUG_TIMING
             long textureprocessing = gstopWatch.ElapsedTicks;
+            textureprocessingTicks += textureprocessing;
             gstopWatch.Restart();
 #endif
             if (umaData.isMeshDirty)
@@ -385,6 +446,7 @@ namespace UMA
             }
 #if DEBUG_TIMING
             long meshUpdates = gstopWatch.ElapsedTicks;
+            meshUpdatesTicks += meshUpdates;
             gstopWatch.Restart();
 #endif
 
@@ -404,6 +466,7 @@ namespace UMA
 			}
 #if DEBUG_TIMING
             long skeletonUpdates = gstopWatch.ElapsedTicks;
+            skeletonUpdatesTicks += skeletonUpdates;
             gstopWatch.Restart();
 #endif
 
@@ -452,6 +515,7 @@ namespace UMA
 
 #if DEBUG_TIMING
             long raceblendshapes = gstopWatch.ElapsedTicks;
+            raceblendshapesTicks += raceblendshapes;
             gstopWatch.Restart();
 #endif
             RenderTexture.active = rbackup;
@@ -467,10 +531,11 @@ namespace UMA
             }
 #if DEBUG_TIMING
             long endEvents = gstopWatch.ElapsedTicks;
+            endEventsTicks += endEvents;
             gstopWatch.Stop();
 #endif
 			FreezeTime = false;
-#if DEBUG_TIMING
+#if DUMP_DEBUG_TIMING
             Debug.Log($"GenerateSingleUMA - Validation {ToMS(validation)} ms");
             Debug.Log($"GenerateSingleUMA - Mesh Preprocess {ToMS(meshpreprocess)} ms");
             Debug.Log($"GenerateSingleUMA - Begun Events {ToMS(BegunEvents)} ms");
@@ -736,25 +801,39 @@ namespace UMA
 
 		public virtual void UpdateUMABody(UMAData umaData)
 		{
-			if (umaData)
-			{
-				umaData.FirePreUpdateUMABody();
+			if (!umaData)
+                return;
 
-				umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
-												// Put the skeleton into TPose so rotations will be valid for generating avatar
-				if (!umaData.rawAvatar)
-				{
-					umaData.GotoTPose();
-					umaData.ApplyDNA();
-				}
-				umaData.RestoreSavedItems();
-				// This has to happen for some reason, or the default models heads cave in.
-				umaData.skeleton.EndSkeletonUpdate();
-				UpdateAvatar(umaData);
-				// Blendshape DNA must be applied after the avatar is reset on the animator
-				umaData.PostApplyDNA();
-				umaData.FireDNAAppliedEvents();
-			}
+            umaData.FirePreUpdateUMABody();
+
+            // Keep this to ensure a clean baseline. Removing it caused skeleton issues.
+            umaData.skeleton.ResetAll();
+
+            // Put the skeleton into TPose so rotations will be valid for generating avatar
+            if (!umaData.rawAvatar)
+            {
+                umaData.GotoTPose();
+                umaData.ApplyDNA();
+            }
+
+            // Only restore items if enabled, as this can be expensive
+            if (SaveAndRestoreIgnoredItems)
+            {
+                umaData.RestoreSavedItems();
+            }
+
+            // End the batched skeleton update (begun in GenerateSingleUMA when isShapeDirty)
+            umaData.skeleton.EndSkeletonUpdate();
+
+            // Rebuild the avatar only if allowed. This is a measurable cost saver.
+            if (!umaData.KeepAvatar)
+            {
+                UpdateAvatar(umaData);
+            }
+
+            // Blendshape DNA must be applied after the avatar is reset on the animator
+            umaData.PostApplyDNA();
+            umaData.FireDNAAppliedEvents();
 		}
 #pragma warning restore 618
 	}

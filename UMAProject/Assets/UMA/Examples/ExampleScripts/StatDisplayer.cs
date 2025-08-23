@@ -58,13 +58,57 @@ public class StatDisplayer : MonoBehaviour
 
         if (umaGenerator != null)
         {
-            ShadowLabel("Generation Metrics");
+            ShadowLabel("  Generation Metrics");
             long elapsedMs = umaGenerator.ElapsedTicks / 10000; // ticks -> ms
-            ShadowLabel($"Elapsed Time: {elapsedMs} ms");
-            ShadowLabel($"Pending UMAs: {umaGenerator.pendingUmas}");
-            ShadowLabel($"Shape Dirty: {umaGenerator.DnaChanged}");
-            ShadowLabel($"Texture Dirty: {umaGenerator.TextureChanged}");
-            ShadowLabel($"Mesh Dirty: {umaGenerator.SlotsChanged}");
+            ShadowLabel($"  Elapsed Time: {elapsedMs} ms");
+            ShadowLabel($"  Pending UMAs: {umaGenerator.pendingUmas}");
+            ShadowLabel($"  Shape Dirty: {umaGenerator.DnaChanged}");
+            ShadowLabel($"  Texture Dirty: {umaGenerator.TextureChanged}");
+            ShadowLabel($"  Mesh Dirty: {umaGenerator.SlotsChanged}");
+
+            ShadowLabel($"  Validation Ticks : {umaGenerator.validationTicks/10000}");
+            ShadowLabel($"  Mesh pre process Ticks: {umaGenerator.meshpreprocessTicks / 10000}");
+            ShadowLabel($"  Begun Events Ticks: {umaGenerator.BegunEventsTicks / 10000}");
+            ShadowLabel($"  Pre Apply Ticks: {umaGenerator.preapplyTicks / 10000}");
+            ShadowLabel($"  Texture Process Ticks: {umaGenerator.textureprocessingTicks / 10000}");
+            ShadowLabel($"  Mesh Update Ticks: {umaGenerator.meshUpdatesTicks / 10000}");
+            ShadowLabel($"  Skeleton Update Ticks: {umaGenerator.skeletonUpdatesTicks / 10000}");
+            ShadowLabel($"  Race Blendshapes Ticks: {umaGenerator.raceblendshapesTicks / 10000}");
+            ShadowLabel($"  End Events Ticks: {umaGenerator.endEventsTicks / 10000}");
+
+            ShadowLabel($"  Average Texture: {umaGenerator.averageTextureProcessingTime}");
+            ShadowLabel($"  Average Mesh: {umaGenerator.averageMeshUpdatesTime}");
+            ShadowLabel($"  Average DNA: {umaGenerator.averageSkeletonUpdatesTime}");
+            // --- UMA Mesh Combiner Timings ---
+            GUILayout.Space(8);
+            ShadowLabel("  Mesh Combiner Timings (ms):");
+
+            double freq = (double)System.Diagnostics.Stopwatch.Frequency / 1000.0; // ticks to ms
+
+            void ShowMeshCombinerTiming(string label, long ticks)
+            {
+                ShadowLabel($"    {label,-28} : {ticks / freq:F2}");
+            }
+
+            ShowMeshCombinerTiming("CombineInternalTotal", UMA.SkinnedMeshCombinerMeshAPI.Ticks_CombineInternalTotal);
+            ShowMeshCombinerTiming("AnalyzeSources", UMA.SkinnedMeshCombinerMeshAPI.Ticks_AnalyzeSources);
+            ShowMeshCombinerTiming("AnalyzeBlendshapes", UMA.SkinnedMeshCombinerMeshAPI.Ticks_AnalyzeBlendshapes);
+            ShowMeshCombinerTiming("AllocateMeshData", UMA.SkinnedMeshCombinerMeshAPI.Ticks_AllocateMeshData);
+            ShowMeshCombinerTiming("MergeTransforms", UMA.SkinnedMeshCombinerMeshAPI.Ticks_MergeTransforms);
+            ShowMeshCombinerTiming("EnsureSkeleton", UMA.SkinnedMeshCombinerMeshAPI.Ticks_EnsureSkeleton);
+            ShowMeshCombinerTiming("BuildBoneWeights", UMA.SkinnedMeshCombinerMeshAPI.Ticks_BuildBoneWeights);
+            ShowMeshCombinerTiming("CopyPositionsAndBounds", UMA.SkinnedMeshCombinerMeshAPI.Ticks_CopyPositionsAndBounds);
+            ShowMeshCombinerTiming("PackNormalsTangents", UMA.SkinnedMeshCombinerMeshAPI.Ticks_PackNormalsTangents);
+            ShowMeshCombinerTiming("PackColUV01", UMA.SkinnedMeshCombinerMeshAPI.Ticks_PackColUV01);
+            ShowMeshCombinerTiming("PackUV23", UMA.SkinnedMeshCombinerMeshAPI.Ticks_PackUV23);
+            ShowMeshCombinerTiming("IndexJobsSchedule", UMA.SkinnedMeshCombinerMeshAPI.Ticks_IndexJobsSchedule);
+            ShowMeshCombinerTiming("IndexJobsComplete", UMA.SkinnedMeshCombinerMeshAPI.Ticks_IndexJobsComplete);
+            ShowMeshCombinerTiming("UVRemap", UMA.SkinnedMeshCombinerMeshAPI.Ticks_UVRemap);
+            ShowMeshCombinerTiming("SetSubmeshes", UMA.SkinnedMeshCombinerMeshAPI.Ticks_SetSubmeshes);
+            ShowMeshCombinerTiming("ApplyMeshData", UMA.SkinnedMeshCombinerMeshAPI.Ticks_ApplyMeshData);
+            ShowMeshCombinerTiming("SetBindposesAndWeights", UMA.SkinnedMeshCombinerMeshAPI.Ticks_SetBindposesAndWeights);
+            ShowMeshCombinerTiming("AssignBones", UMA.SkinnedMeshCombinerMeshAPI.Ticks_AssignBones);
+            ShowMeshCombinerTiming("BuildCloth", UMA.SkinnedMeshCombinerMeshAPI.Ticks_BuildCloth);
 
             if (umaGenerator.convertRenderTexture)
             {
@@ -91,7 +135,7 @@ public class StatDisplayer : MonoBehaviour
         }
         else
         {
-            ShadowLabel("UMA Generator not found.");
+            ShadowLabel("  UMA Generator not found.");
         }
     }
 }
