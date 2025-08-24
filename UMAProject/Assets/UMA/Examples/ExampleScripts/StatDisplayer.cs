@@ -1,5 +1,6 @@
 using JetBrains.Annotations;
 using UMA;
+using UMA.CharacterSystem;
 using UnityEngine;
 
 public class StatDisplayer : MonoBehaviour
@@ -99,7 +100,10 @@ public class StatDisplayer : MonoBehaviour
             //Ticks_ClearDNA = 0;
             //Ticks_EnsureUMADataSetup = 0;
             //Ticks_BuildActiveModifiers = 0;
-
+            GUILayout.Space(4);
+            ShowMeshCombinerTiming("BuildCharacter", DynamicCharacterAvatar.Ticks_BuildCharacter);
+            ShowMeshCombinerTiming("LoadCharacter", DynamicCharacterAvatar.Ticks_LoadCharacter);
+            GUILayout.Space(4);
             ShowMeshCombinerTiming("BuildCombineInstances", UMADefaultMeshCombiner.Ticks_BuildCombineInstances);
             ShowMeshCombinerTiming("PerRendererTotal", UMADefaultMeshCombiner.Ticks_PerRendererTotal);
             ShowMeshCombinerTiming("PerRendererMaterials", UMADefaultMeshCombiner.Ticks_PerRendererMaterials);

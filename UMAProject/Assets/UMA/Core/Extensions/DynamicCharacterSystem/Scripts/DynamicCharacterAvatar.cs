@@ -1,4 +1,5 @@
 #undef SUPER_LOGGINGCOLLECTIONS
+#define UMA_DCA_TIMING
 
 using UnityEngine;
 //For loading a recipe directly from the web @2465
@@ -27,6 +28,9 @@ namespace UMA.CharacterSystem
     [ExecuteInEditMode]
     public class DynamicCharacterAvatar : UMAAvatarBase
     {
+        public static long Ticks_LoadCharacter = 0;
+        public static long Ticks_BuildCharacter = 0;
+
         public float DelayUnload = 2.0f;
         public bool BundleCheck = true;
         public bool StartGuard = false;
@@ -4137,6 +4141,10 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
+#if UMA_DCA_TIMING
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
             if (firstAvatar == null)
             {
                 firstAvatar = this;
@@ -4417,6 +4425,10 @@ namespace UMA.CharacterSystem
                     skipBundleCheck = !BundleCheck;
 #endif
             LoadCharacter(serializedRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, skipBundleCheck);
+#if UMA_DCA_TIMING
+            sw.Stop();
+            Ticks_BuildCharacter += sw.ElapsedTicks;
+#endif
         }
 
         public void SetAndSaveOverrideDNA(UMAData udata)
@@ -4604,6 +4616,10 @@ namespace UMA.CharacterSystem
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
         private void LoadCharacter(UMARecipeBase characterRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
         {
+#if UMA_DCA_TIMING
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
             //Debug.Log($"LoadCharacter {gameObject.name}");
 #if UMA_ADDRESSABLES
 #if UNITY_EDITOR
@@ -4846,6 +4862,10 @@ namespace UMA.CharacterSystem
                 }
             }
             ApplyDNAToModifiers();
+#if UMA_DCA_TIMING
+            sw.Stop();
+            Ticks_LoadCharacter += sw.ElapsedTicks;
+#endif
         }
 
         private void ApplyDNAToModifiers()
