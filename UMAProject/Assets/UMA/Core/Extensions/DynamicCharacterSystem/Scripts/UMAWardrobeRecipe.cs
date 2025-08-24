@@ -46,8 +46,18 @@ namespace UMA.CharacterSystem
 		{
 			recipeType = "Wardrobe";
 		}
-	#if UNITY_EDITOR
-		public UMAWardrobeRecipe(UMATextRecipe recipeToCopyFrom)
+
+        // (Optional) Backward compatibility: if older saved data lacks flag, enforce it post-load.
+        public override void Load(UMA.UMAData.UMARecipe umaRecipe, bool loadSlots = true)
+        {
+            var packed = PackedLoad();
+            // Legacy safeguard: some historical wardrobe recipes won’t have isWardrobe set
+            packed.isWardrobe = true;
+            UnpackRecipe(umaRecipe, packed, loadSlots);
+        }
+
+#if UNITY_EDITOR
+        public UMAWardrobeRecipe(UMATextRecipe recipeToCopyFrom)
 		{
 			if(recipeToCopyFrom.recipeType == "Wardrobe")
 			{

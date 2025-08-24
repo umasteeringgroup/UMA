@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace UMA
 {
@@ -51,14 +52,17 @@ namespace UMA
 #if UNITY_EDITOR
 
 	#endif
-		/// <summary>
-		/// Return a cached version of the UMA recipe, Load if required.
-		/// </summary>
-		/// <returns>The cached recipe.</returns>
-		/// <param name="context">Context.</param>
-		public UMAData.UMARecipe GetCachedRecipe( bool loadSlots = true)
+		public static long Ticks_Load = 0;
+        /// <summary>
+        /// Return a cached version of the UMA recipe, Load if required.
+        /// </summary>
+        /// <returns>The cached recipe.</returns>
+        /// <param name="context">Context.</param>
+        public UMAData.UMARecipe GetCachedRecipe( bool loadSlots = true, bool loadRaceData=false)
 		{
-			if (!cached || umaRecipe == null)
+			Stopwatch sw = Stopwatch.StartNew();
+
+            if (!cached || umaRecipe == null)
 			{
 				umaRecipe = new UMAData.UMARecipe();
                 Load(umaRecipe,loadSlots);
@@ -78,7 +82,8 @@ namespace UMA
 			{
 				umaRecipe.recipeName = name;
 			}
-
+			sw.Stop();
+			Ticks_Load += sw.ElapsedTicks;
             return umaRecipe;
 		}
 

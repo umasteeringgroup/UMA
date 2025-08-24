@@ -96,6 +96,7 @@ namespace UMA.CharacterSystem
 				var packedRecipe = PackedLoadDCSInternal();
 				if (packedRecipe != null)
                 {
+					packedRecipe.isWardrobe = false;
                     UnpackRecipe(umaRecipe, packedRecipe,loadSlots);
                 }
             }

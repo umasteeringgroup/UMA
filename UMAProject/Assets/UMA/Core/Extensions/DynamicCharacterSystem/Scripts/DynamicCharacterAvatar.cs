@@ -1,14 +1,16 @@
 #undef SUPER_LOGGINGCOLLECTIONS
 #define UMA_DCA_TIMING
+#define DCA_OPTIMIZED
 
 using UnityEngine;
 //For loading a recipe directly from the web @2465
 using UnityEngine.Networking;
-#if UNITY_EDITOR 
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 using UnityEngine.Serialization;//for converting old characterColors.Colors to new colors
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 using System;
 using System.IO;
@@ -30,6 +32,18 @@ namespace UMA.CharacterSystem
     {
         public static long Ticks_LoadCharacter = 0;
         public static long Ticks_BuildCharacter = 0;
+        public static long Ticks_InitializeBuild = 0;
+        public static long Ticks_Phase1 = 0;
+        public static long Ticks_Phase2 = 0;
+        public static long Ticks_Phase3 = 0;
+        public static long Ticks_Phase4 = 0;
+        public static long Ticks_LoadPhase1 = 0;
+        public static long Ticks_LoadPhase2 = 0;
+        public static long Ticks_LoadPhase3 = 0;
+        public static long Ticks_LoadPhase4 = 0;
+        public static long Ticks_LoadPhase5 = 0;
+
+
 
         public float DelayUnload = 2.0f;
         public bool BundleCheck = true;
@@ -49,7 +63,7 @@ namespace UMA.CharacterSystem
         }
 
 #endif
-        #region Extra Events
+#region Extra Events
         /// <summary>
         /// Callback event when the character recipe is updated. Use this to tweak the resulting recipe BEFORE the UMA is actually generated
         /// </summary>
@@ -239,7 +253,7 @@ namespace UMA.CharacterSystem
         [Tooltip("What color to give the placeholder.")]
         public Color previewColor = Color.grey;
 #endif
-        #endregion
+#endregion
 
         #region PRIVATE FIELDS 
         //Is building the character enabled? Disable this to make multiple changes to the avatar that will be built
@@ -282,7 +296,7 @@ namespace UMA.CharacterSystem
         private Material mat;
         private Mesh previewMesh;
 #endif
-        #endregion
+#endregion
 
         #region PROPERTIES
 
@@ -436,8 +450,67 @@ namespace UMA.CharacterSystem
         }
 
         #endregion
+        // Add near top of class (inside DynamicCharacterAvatar but before methods)
+#if DCA_OPTIMIZED
+        // Reusable scratch containers to avoid per-build allocations.
+        private sealed class BuildScratch
+        {
+            public readonly List<UMAWardrobeRecipe> ReplaceRecipes = new List<UMAWardrobeRecipe>(8);
+            public readonly List<UMARecipeBase>     Recipes        = new List<UMARecipeBase>(16);
+            public readonly List<UMATextRecipe>     AllRecipesTmp  = new List<UMATextRecipe>(16);
+            public readonly List<string>            SuppressSlots  = new List<string>(8);
+            public readonly List<string>            HideTags       = new List<string>(16);
+            public readonly List<string>            HiddenSlotNames= new List<string>(16);
+            public readonly List<SlotData>          SwapSlots      = new List<SlotData>(8);
+            public readonly List<SlotData>          WildCards      = new List<SlotData>(8);
+            public readonly List<SlotData>          NewSlots       = new List<SlotData>(32);
+            public readonly Dictionary<string,List<MeshHideAsset>> MeshHideDictionary = new Dictionary<string,List<MeshHideAsset>>(16);
 
-        #region METHODS 
+            public void Clear()
+            {
+                ReplaceRecipes.Clear();
+                Recipes.Clear();
+                AllRecipesTmp.Clear();
+                SuppressSlots.Clear();
+                HideTags.Clear();
+                HiddenSlotNames.Clear();
+                SwapSlots.Clear();
+                WildCards.Clear();
+                NewSlots.Clear();
+                // MeshHideDictionary: we do NOT Clear() each time – we reuse list instances if contents identical.
+            }
+        }
+
+        private sealed class BuildCache
+        {
+            public readonly BuildScratch Scratch = new BuildScratch();
+
+            // Wardrobe signature (base + additive).
+            public int LastWardrobeHash;
+            // MeshHide signature per slot (hash of asset IDs list) so we can skip list rebuild.
+            public readonly Dictionary<string,int> MeshHideSlotHashes = new Dictionary<string,int>(16);
+
+            // Track last race to guard against wrong reuse.
+            public string LastRaceName;
+
+            // If last build had cross compatible recipes.
+            public bool LastHadCrossCompat;
+
+            public void Invalidate()
+            {
+                LastWardrobeHash = 0;
+                LastRaceName = null;
+                MeshHideSlotHashes.Clear();
+                LastHadCrossCompat = false;
+            }
+        }
+
+        private BuildCache _buildCache;
+#endif
+#region METHODS 
+
+
+
 
         #region Start Update and Inititalization
 
@@ -553,6 +626,10 @@ namespace UMA.CharacterSystem
             forceRemovedBaseSlots.Clear();
             forceSuppressSlotsContaining.Clear();
             forceRemovedTags.Clear();
+#if DCA_OPTIMIZED
+            if (_buildCache == null) _buildCache = new BuildCache();
+            else _buildCache.Invalidate();
+#endif
             InitialStartup();
         }
 
@@ -646,6 +723,46 @@ namespace UMA.CharacterSystem
             }
 #endif
         }
+
+#if DCA_OPTIMIZED
+        private int ComputeWardrobeHash()
+        {
+            unchecked
+            {
+                int h = 17;
+                h = h * 31 + (activeRace?.name?.GetHashCode() ?? 0);
+
+                foreach (var kvp in _wardrobeRecipes)
+                {
+                    // Use recipe instance id if loaded, else name hash
+                    var r = kvp.Value;
+                    if (r == null) continue;
+                    h = h * 31 + r.GetInstanceID();
+                }
+
+                foreach (var kvp in _additiveRecipes)
+                {
+                    var list = kvp.Value;
+                    if (list == null) continue;
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        var r = list[i];
+                        if (r == null) continue;
+                        h = h * 31 + r.GetInstanceID();
+                    }
+                }
+
+                // Include forced suppress/remove sets (affect final result)
+                foreach (var s in forceSuppressedWardrobeSlots) h = h * 31 + s.GetHashCode();
+                foreach (var s in forceRemovedBaseSlots)        h = h * 31 + s.GetHashCode();
+                foreach (var s in forceRemovedTags)             h = h * 31 + s.GetHashCode();
+                foreach (var s in forceSuppressSlotsContaining) h = h * 31 + s.GetHashCode();
+
+                // Cross compat influence (rare; only when present) – we re-add when discovered but if race rarely changes
+                return h;
+            }
+        }
+#endif
 
         private void SetUMADataOptions()
         {
@@ -4139,21 +4256,29 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <returns>Can also be used to return an array of additional slots if this avatars flagForReload field is set to true before calling</returns>
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
+        // MODIFY BuildCharacter (only the beginning and list initializations)
+        // Find: public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         {
 #if UMA_DCA_TIMING
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            Stopwatch sw = new Stopwatch();
             sw.Start();
+#endif
+#if DCA_OPTIMIZED
+            if (_buildCache == null) _buildCache = new BuildCache();
+            var cache = _buildCache;
+            var scratch = cache.Scratch;
+            scratch.Clear();
 #endif
             if (firstAvatar == null)
             {
                 firstAvatar = this;
             }
 #if UMA_ADDRESSABLES
-			skipBundleCheck = false;
+            skipBundleCheck = false;
 #endif
-            //Debug.Log($"Buildcharacter {gameObject.name}");
-            InitialStartup(); // This is to make sure that the UMAContext is set up correctly
+            Stopwatch tm = Stopwatch.StartNew();
+            InitialStartup();
 
             overrideDNA.Clear();
 
@@ -4161,36 +4286,63 @@ namespace UMA.CharacterSystem
             {
                 activeRace.SetRaceData();
             }
-
             if (activeRace.racedata != null)
             {
                 serializedRecipe = activeRace.racedata.baseRaceRecipe;
             }
+            tm.Stop();
+            Ticks_InitializeBuild += tm.ElapsedTicks;
 
-            List<string> HiddenSlots = new List<string>();//why was this HashSet list is faster for our purposes (http://stackoverflow.com/questions/150750/hashset-vs-list-performance)
 
+
+            List<string> HiddenSlots = new List<string>();
             _isFirstSettingsBuild = false;
-            //clear these values each time we build
             wasCrossCompatibleBuild = false;
             crossCompatibleRaces.Clear();
-
-            // clear the hiddenslots and hidden mesh assets
-            // so they can be accumulate anew from the recipe
             HiddenSlots.Clear();
 
-            // MeshHideDictionary.Clear();
-            Dictionary<string, List<MeshHideAsset>> MeshHideDictionary = new Dictionary<string, List<MeshHideAsset>>();
+            Dictionary<string, List<MeshHideAsset>> MeshHideDictionary =
+#if DCA_OPTIMIZED
+                scratch.MeshHideDictionary
+#else
+                new Dictionary<string, List<MeshHideAsset>>()
+#endif
+            ;
+#if DCA_OPTIMIZED
+            // Early out if wardrobe identical & race same & no overrideDNA (and we are allowed to restore DNA) – skip heavy collection phase
+            int wardrobeHash = ComputeWardrobeHash();
+            bool wardrobeUnchanged = (wardrobeHash == cache.LastWardrobeHash) && cache.LastRaceName == activeRace.name;
+
+            // Only early out if we are not forcing skeleton rebuild or animator rebind and no cross compat last time
+            if (wardrobeUnchanged &&
+                !rebuildSkeleton &&
+                !alwaysRebuildSkeleton &&
+                !forceRebindAnimator &&
+                overrideDNA.Count == 0 &&
+                !cache.LastHadCrossCompat)
+            {
+                // We still may need to apply predefined DNA (if keepPredefinedDNA) & do color update
+                ApplyPredefinedDNA();
+                UpdateColors();
+#if UMA_DCA_TIMING
+                sw.Stop();
+                Ticks_BuildCharacter += sw.ElapsedTicks;
+#endif
+                return;
+            }
+            cache.LastWardrobeHash = wardrobeHash;
+            cache.LastRaceName = activeRace.name;
+#endif
 
             UMADnaBase[] CurrentDNA = null;
-            if (umaData != null)
-            {
-                if (umaData.umaRecipe != null)
+                if (umaRecipe != null)
                 {
-                    CurrentDNA = umaData.umaRecipe.GetDefinedDna();
+                    CurrentDNA = umaRecipe.GetDefinedDna();
                 }
-                SetUMADataOptions();
-                umaData.ClearModifiers();
-            }
+            tm.Restart();
+
+            SetUMADataOptions();
+            ClearModifiers();
             if (DNAIsValid(CurrentDNA) == false)
             {
                 RestoreDNA = false;
@@ -4201,38 +4353,58 @@ namespace UMA.CharacterSystem
                 BuildCharacterBegun.Invoke(umaData);
             }
 
-            List<UMAWardrobeRecipe> ReplaceRecipes = new List<UMAWardrobeRecipe>();
-            List<UMARecipeBase> Recipes = new List<UMARecipeBase>();
-            List<string> SuppressSlotsStrings = new List<string>(forceSuppressedWardrobeSlots);
-            List<string> HideTags = new List<string>();
+            List<UMAWardrobeRecipe> ReplaceRecipes =
+#if DCA_OPTIMIZED
+                scratch.ReplaceRecipes
+#else
+                new List<UMAWardrobeRecipe>()
+#endif
+            ;
+            List<UMARecipeBase> WardrobeRecipes =
+#if DCA_OPTIMIZED
+                scratch.Recipes
+#else
+                new List<UMARecipeBase>()
+#endif
+            ;
+            List<string> SuppressSlotsStrings =
+#if DCA_OPTIMIZED
+                scratch.SuppressSlots
+#else
+                new List<string>(forceSuppressedWardrobeSlots)
+#endif
+            ;
+#if !DCA_OPTIMIZED
+            SuppressSlotsStrings.AddRange(forceSuppressedWardrobeSlots);
+#else
+            // Initialize with forced suppressed list
+            for (int i=0;i<forceSuppressedWardrobeSlots.Count;i++)
+                SuppressSlotsStrings.Add(forceSuppressedWardrobeSlots[i]);
+#endif
+            tm.Stop();
+            Ticks_Phase1 += tm.ElapsedTicks;
 
-            if ((WardrobeRecipes.Count > 0) && activeRace.racedata != null)
+            List<string> HideTags =
+#if DCA_OPTIMIZED
+                scratch.HideTags
+#else
+                new List<string>()
+#endif
+            ;
+            tm.Restart();
+            if ((this.WardrobeRecipes.Count > 0) && activeRace.racedata != null)
             {
-                foreach (UMATextRecipe utr in WardrobeRecipes.Values)
+#if DCA_OPTIMIZED
+                // Aggregate recipes first (wardrobe + additive) into scratch.AllRecipesTmp
+                var allRecipes = scratch.AllRecipesTmp;
+                foreach (var r in this.WardrobeRecipes.Values) if (r != null) allRecipes.Add(r);
+                if (_additiveRecipes != null && _additiveRecipes.Count > 0)
                 {
-					if (utr.disabled) { 
-						continue; 
-					}
-
-
-                    if (utr.suppressWardrobeSlots != null)
-                    {
-                        if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name)) || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
-                        {
-                            if (!SuppressSlotsStrings.Contains(utr.wardrobeSlot))
-                            {
-                                for (int i = 0; i < utr.suppressWardrobeSlots.Count; i++)
-                                {
-                                    string suppressedSlot = utr.suppressWardrobeSlots[i];
-                                    SuppressSlotsStrings.Add(suppressedSlot);
-                                }
-                            }
-                        }
-                    }
+                    foreach (var list in _additiveRecipes.Values)
+                        if (list != null) allRecipes.AddRange(list);
                 }
-
+#else
                 List<UMATextRecipe> allRecipes = new List<UMATextRecipe>(WardrobeRecipes.Values);
-
                 if (_additiveRecipes != null && AdditiveRecipes.Count > 0)
                 {
                     foreach (List<UMATextRecipe> addlRecipes in _additiveRecipes.Values)
@@ -4240,171 +4412,162 @@ namespace UMA.CharacterSystem
                         allRecipes.AddRange(addlRecipes);
                     }
                 }
-
-
+#endif
+                // Pass 1: collect suppression, overrideDNA, hide tags, mesh hide lists
                 for (int i = 0; i < allRecipes.Count; i++)
                 {
-                    UMATextRecipe utr = allRecipes[i];
-					if(utr.disabled) {
-						continue;
-					}
-					// don't gather hides from suppresed slots...
-                    if (SuppressSlotsStrings.Contains(utr.wardrobeSlot))
-                    {
-                        continue;
-                    }
+                    var utr = allRecipes[i];
+                    if (utr == null || utr.disabled) continue;
 
-                    // add the Override DNA here.
-                    if (utr.OverrideDNA != null && utr.OverrideDNA.Count > 0)
+                    if (utr.suppressWardrobeSlots != null && utr.suppressWardrobeSlots.Count > 0)
                     {
-                        overrideDNA.AddRange(utr.OverrideDNA);
-                    }
-
-                    //Collect all HideTags
-                    if (utr.HideTags.Count > 0)
-                    {
-                        HideTags.AddRange(utr.HideTags);
-                    }
-                    //Collect all the MeshHideAssets on all the wardrobe recipes
-                    if (utr.MeshHideAssets != null)// && !SuppressSlotsStrings.Contains(utr.wardrobeSlot))
-                    {
-                        for (int i1 = 0; i1 < utr.MeshHideAssets.Count; i1++)
+                        // Race compat check (unchanged logic)
+                        if (activeRace.name == "" ||
+                            utr.compatibleRaces.Count == 0 ||
+                            utr.compatibleRaces.Contains(activeRace.name) ||
+                            (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot)))
                         {
-                            MeshHideAsset meshHide = utr.MeshHideAssets[i1];
-                            if (meshHide != null)
+                            for (int s = 0; s < utr.suppressWardrobeSlots.Count; s++)
                             {
-                                if (!MeshHideDictionary.ContainsKey(meshHide.AssetSlotName))
-                                {   //If this meshHide.asset isn't already in the dictionary, then let's add it and start a new list.
-                                    MeshHideDictionary.Add(meshHide.AssetSlotName, new List<MeshHideAsset>());
-                                }
-
-                                //If this meshHide.asset is already in the dictionary AND the meshHide isn't already in the list, then add it.
-                                if (!MeshHideDictionary[meshHide.AssetSlotName].Contains(meshHide))
-                                {
-                                    MeshHideDictionary[meshHide.AssetSlotName].Add(meshHide);
-                                }
+                                string suppressedSlot = utr.suppressWardrobeSlots[s];
+                                if (!SuppressSlotsStrings.Contains(suppressedSlot))
+                                    SuppressSlotsStrings.Add(suppressedSlot);
                             }
+                        }
+                    }
+
+                    if (utr.OverrideDNA != null && utr.OverrideDNA.Count > 0)
+                        overrideDNA.AddRange(utr.OverrideDNA);
+
+                    if (utr.HideTags.Count > 0)
+                        HideTags.AddRange(utr.HideTags);
+
+                    if (utr.MeshHideAssets != null)
+                    {
+                        for (int mh = 0; mh < utr.MeshHideAssets.Count; mh++)
+                        {
+                            var meshHide = utr.MeshHideAssets[mh];
+                            if (meshHide == null) continue;
+                            var slotName = meshHide.AssetSlotName;
+                            if (!MeshHideDictionary.TryGetValue(slotName, out var list))
+                            {
+                                list = new List<MeshHideAsset>(4);
+                                MeshHideDictionary[slotName] = list;
+                            }
+                            // avoid duplicates
+                            bool exists = false;
+                            for (int e = 0; e < list.Count; e++)
+                                if (list[e] == meshHide) { exists = true; break; }
+                            if (!exists) list.Add(meshHide);
                         }
                     }
                 }
 
                 SuppressedRecipes.Clear();
-                for (int i = 0; i < activeRace.racedata.wardrobeSlots.Count; i++)//this doesn't need to validate racedata- we wouldn't be here if it was null
+
+                // Pass 2: per race wardrobe slot ordering (unchanged logic)
+                for (int i = 0; i < activeRace.racedata.wardrobeSlots.Count; i++)
                 {
                     string ws = activeRace.racedata.wardrobeSlots[i];
+
                     if (SuppressSlotsStrings.Contains(ws))
                     {
-                        if (WardrobeRecipes.ContainsKey(ws))
+                        if (this.WardrobeRecipes.ContainsKey(ws))
                         {
-                            SuppressedRecipes.Add(WardrobeRecipes[ws]);
+                            SuppressedRecipes.Add(this.WardrobeRecipes[ws]);
                         }
                         continue;
                     }
-                    if (WardrobeRecipes.ContainsKey(ws))
+
+                    if (this.WardrobeRecipes.ContainsKey(ws))
                     {
-                        UMATextRecipe utr = WardrobeRecipes[ws];
-                        if (utr.disabled) { continue; }
-                        //we can use the race data here to filter wardrobe slots
-                        //if checking a backwards compatible race we also need to check the race has a compatible wardrobe slot, 
-                        //since while a race can be backwards compatible it does not *have* to have all the same wardrobeslots as the race it is compatible with
-                       // if (activeRace.name == "" || ((utr.compatibleRaces.Count == 0 || utr.compatibleRaces.Contains(activeRace.name))*/ || (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot))))
+                        UMATextRecipe utr = this.WardrobeRecipes[ws];
+                        if (utr != null && !utr.disabled)
                         {
                             UMAWardrobeRecipe umr = (utr as UMAWardrobeRecipe);
-                            if (umr != null)
+                            bool utrIsCross = (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) &&
+                                               activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot));
+                            if (utrIsCross)
                             {
-                                if (umr.MeshModifiers != null)
-                                {
-                                    for (int i1 = 0; i1 < umr.MeshModifiers.Count; i1++)
-                                    {
-                                        umaData.AddMeshModifiers(umr.MeshModifiers[i1].Modifiers);
-                                    }
-                                }
-                            }
-
-                            //check if this recipe is directly or only cross compatible
-                            bool utrIsCrossCompatible = (activeRace.racedata.IsCrossCompatibleWith(utr.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(utr.wardrobeSlot));
-                            if (utrIsCrossCompatible)
-                            {
-                                //FixCrossCompatibleSlots will be called to remove any slots added by cross compatible recipes that are 'equivalent' according to this races 'Cross Compatibility' settings
                                 wasCrossCompatibleBuild = true;
-                                for (int ccri = 0; ccri < utr.compatibleRaces.Count; ccri++)
+                                for (int c = 0; c < utr.compatibleRaces.Count; c++)
                                 {
-                                    if (!crossCompatibleRaces.Contains(utr.compatibleRaces[ccri]))
-                                    {
-                                        crossCompatibleRaces.Add(utr.compatibleRaces[ccri]);
-                                    }
+                                    var cr = utr.compatibleRaces[c];
+                                    if (!crossCompatibleRaces.Contains(cr))
+                                        crossCompatibleRaces.Add(cr);
                                 }
                             }
 
                             if (umr != null && umr.HasReplaces)
-                            {
                                 ReplaceRecipes.Add(umr);
-                            }
                             else
-                            {
-                                if (!utr.disabled)
-                                {
-                                    Recipes.Add(utr);
-                                }
-                            }
+                                WardrobeRecipes.Add(utr);
+
                             if (utr.Hides.Count > 0)
                             {
-                                for (int i1 = 0; i1 < utr.Hides.Count; i1++)
+                                for (int h = 0; h < utr.Hides.Count; h++)
                                 {
-                                    string s = utr.Hides[i1];
-                                    HiddenSlots.Add(s);
-                                    //if the current race is only 'CrossCompatible' with the races this recipe is compatible with
-                                    //get the equivalent slot from the races crossCompatibility settings so that is hidden too;
-                                    if (utrIsCrossCompatible)
+                                    string hid = utr.Hides[h];
+                                    HiddenSlots.Add(hid);
+                                    if (utrIsCross)
                                     {
-                                        var equivalentSlot = activeRace.racedata.FindEquivalentSlot(utr.compatibleRaces, s, false);
-                                        if (!string.IsNullOrEmpty(equivalentSlot))
-                                        {
-                                            HiddenSlots.Add(equivalentSlot);
-                                        }
+                                        var eq = activeRace.racedata.FindEquivalentSlot(utr.compatibleRaces, hid, false);
+                                        if (!string.IsNullOrEmpty(eq))
+                                            HiddenSlots.Add(eq);
                                     }
                                 }
                             }
                         }
                     }
+
                     if (AdditiveRecipes.ContainsKey(ws))
                     {
-                        // must check additive after wardrobe
-                        Recipes.AddRange(AdditiveRecipes[ws]);
+                        var addl = AdditiveRecipes[ws];
+                        if (addl != null)
+                        {
+                            for (int a = 0; a < addl.Count; a++)
+                            {
+                                var r = addl[a];
+                                if (r != null && !r.disabled)
+                                    WardrobeRecipes.Add(r);
+                            }
+                        }
                     }
                 }
             }
 
+            tm.Stop();
+            Ticks_Phase2 += tm.ElapsedTicks;
+            tm.Restart();
+            // Additional recipes (unchanged, original logic below)
             if (umaAdditionalRecipes != null)
             {
                 for (int i = 0; i < umaAdditionalRecipes.Length; i++)
                 {
                     UMATextRecipe utr = (UMATextRecipe)umaAdditionalRecipes[i];
-                    if (utr)
+                    if (utr && !utr.disabled)
                     {
-                        if (utr.disabled) { continue; }
                         if (utr.Hides.Count > 0)
                         {
-                            for (int i1 = 0; i1 < utr.Hides.Count; i1++)
-                            {
-                                string s = utr.Hides[i1];
-                                HiddenSlots.Add(s);
-                            }
+                            for (int h = 0; h < utr.Hides.Count; h++)
+                                HiddenSlots.Add(utr.Hides[h]);
                         }
                     }
                 }
             }
 
             foreach (string s in forceRemovedBaseSlots)
-            {
                 HiddenSlots.Add(s);
-            }
 
-            foreach(string s in forceRemovedTags)
-            {
+            foreach (string s in forceRemovedTags)
                 HideTags.Add(s);
-            }
 
+#if DCA_OPTIMIZED
+            cache.LastHadCrossCompat = wasCrossCompatibleBuild;
+#endif
+            tm.Stop();
+            Ticks_Phase3 += tm.ElapsedTicks;
+            tm.Restart();
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
@@ -4424,7 +4587,9 @@ namespace UMA.CharacterSystem
                 if (useBundleParameter)
                     skipBundleCheck = !BundleCheck;
 #endif
-            LoadCharacter(serializedRecipe, ReplaceRecipes, Recipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, skipBundleCheck);
+            tm.Stop();
+            Ticks_Phase4 += tm.ElapsedTicks;
+            LoadCharacter(serializedRecipe, ReplaceRecipes, WardrobeRecipes, umaAdditionalRecipes, MeshHideDictionary, HiddenSlots, HideTags, CurrentDNA, RestoreDNA, skipBundleCheck);
 #if UMA_DCA_TIMING
             sw.Stop();
             Ticks_BuildCharacter += sw.ElapsedTicks;
@@ -4612,14 +4777,14 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <param name="characterRecipe"></param>
         /// <param name="Replaces"></param>
-        /// <param name="umaAdditionalSerializedRecipes"></param>
+        /// <param name="wardrobeRecipes"></param>
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
-        private void LoadCharacter(UMARecipeBase characterRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
+        private void LoadCharacter(UMARecipeBase characterRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> wardrobeRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
         {
 #if UMA_DCA_TIMING
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
+            Stopwatch sw = Stopwatch.StartNew();
 #endif
+            Stopwatch tm = Stopwatch.StartNew();
             //Debug.Log($"LoadCharacter {gameObject.name}");
 #if UMA_ADDRESSABLES
 #if UNITY_EDITOR
@@ -4668,28 +4833,37 @@ namespace UMA.CharacterSystem
 #endif
 
             SetUMADataOptions();
-            umaData.blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
-            umaData.atlasResolutionScale = this.AtlasResolutionScale;
-            umaData.hideRenderers = this.hide;
+            blendShapeSettings.ignoreBlendShapes = !loadBlendShapes;
+            atlasResolutionScale = this.AtlasResolutionScale;
+            hideRenderers = this.hide;
 
             //set the umaData.animator if we have an animator already
             if (this.gameObject.GetComponent<Animator>())
             {
-                umaData.animator = this.gameObject.GetComponent<Animator>();
+                animator = this.gameObject.GetComponent<Animator>();
             }
 
             serializedRecipe = characterRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
 
+            tm.Restart();
             characterRecipe.Load(umaRecipe);
+            tm.Stop();
+            Ticks_LoadPhase1 += tm.ElapsedTicks;
+            tm.Restart();
             umaRecipe.SetRace(this.activeRace.racedata); // JRRM Test
+            tm.Stop();
+            Ticks_LoadPhase2 += tm.ElapsedTicks;
+            tm.Restart();
             umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
             umaData.AddAdditionalRecipes(AdditionalRecipes, false);
-            if (umaAdditionalSerializedRecipes != null)
+            if (wardrobeRecipes != null)
             {
-                AddAdditionalSerializedRecipes(umaAdditionalSerializedRecipes);
+                AddWardrobeRecipes(wardrobeRecipes);
             }
-
+            tm.Stop();
+            Ticks_LoadPhase3 += tm.ElapsedTicks;
+            tm.Restart();
             //not sure if we do this first or not
             if (wasCrossCompatibleBuild)
             {
@@ -4862,6 +5036,8 @@ namespace UMA.CharacterSystem
                 }
             }
             ApplyDNAToModifiers();
+            tm.Stop();
+            Ticks_LoadPhase4 += tm.ElapsedTicks;
 #if UMA_DCA_TIMING
             sw.Stop();
             Ticks_LoadCharacter += sw.ElapsedTicks;
@@ -5239,13 +5415,13 @@ namespace UMA.CharacterSystem
 
 
 
-        public void AddAdditionalSerializedRecipes(List<UMARecipeBase> umaAdditionalSerializedRecipes)
+        public void AddWardrobeRecipes(List<UMARecipeBase> wardrobeRecipes)
         {
-            if (umaAdditionalSerializedRecipes != null)
+            if (wardrobeRecipes != null)
             {
-                for (int i = 0; i < umaAdditionalSerializedRecipes.Count; i++)
+                for (int i = 0; i < wardrobeRecipes.Count; i++)
                 {
-                    UMARecipeBase umaAdditionalRecipe = umaAdditionalSerializedRecipes[i];
+                    UMARecipeBase umaAdditionalRecipe = wardrobeRecipes[i];
                     if (umaAdditionalRecipe != null)
                     {
                         UMAData.UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe();

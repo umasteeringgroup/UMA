@@ -103,6 +103,33 @@ public class StatDisplayer : MonoBehaviour
             GUILayout.Space(4);
             ShowMeshCombinerTiming("BuildCharacter", DynamicCharacterAvatar.Ticks_BuildCharacter);
             ShowMeshCombinerTiming("LoadCharacter", DynamicCharacterAvatar.Ticks_LoadCharacter);
+            
+            GUILayout.Space(4);
+                  /*  public static long Ticks_LoadCharacter = 0;
+    public static long Ticks_BuildCharacter = 0;
+    public static long Ticks_InitializeBuild = 0;
+    public static long Ticks_Phase1 = 0;
+    public static long Ticks_Phase2 = 0;
+    public static long Ticks_Phase3 = 0;
+    public static long Ticks_Phase4 = 0;
+    public static long Ticks_LoadPhase1 = 0;
+    public static long Ticks_LoadPhase2 = 0;
+    public static long Ticks_LoadPhase3 = 0;
+    public static long Ticks_LoadPhase4 = 0; */
+            ShowMeshCombinerTiming("InitializeBuild", DynamicCharacterAvatar.Ticks_InitializeBuild);
+            ShowMeshCombinerTiming("Build phase 1", DynamicCharacterAvatar.Ticks_Phase1);
+            ShowMeshCombinerTiming("Build phase 2", DynamicCharacterAvatar.Ticks_Phase2);
+            ShowMeshCombinerTiming("Build phase 3", DynamicCharacterAvatar.Ticks_Phase3);
+            ShowMeshCombinerTiming("Build phase 4", DynamicCharacterAvatar.Ticks_Phase4);
+            ShowMeshCombinerTiming("Load phase 1", DynamicCharacterAvatar.Ticks_LoadPhase1);
+            ShowMeshCombinerTiming("Load phase 2", DynamicCharacterAvatar.Ticks_LoadPhase2);
+            ShowMeshCombinerTiming("Load phase 3", DynamicCharacterAvatar.Ticks_LoadPhase3);
+            ShowMeshCombinerTiming("Load phase 4", DynamicCharacterAvatar.Ticks_LoadPhase4);
+            ShowMeshCombinerTiming("Recipe Load", UMAPackedRecipeBase.Ticks_Load);
+
+
+
+
             GUILayout.Space(4);
             ShowMeshCombinerTiming("BuildCombineInstances", UMADefaultMeshCombiner.Ticks_BuildCombineInstances);
             ShowMeshCombinerTiming("PerRendererTotal", UMADefaultMeshCombiner.Ticks_PerRendererTotal);

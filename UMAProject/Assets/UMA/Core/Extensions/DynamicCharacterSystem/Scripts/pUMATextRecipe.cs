@@ -228,51 +228,6 @@ namespace UMA
 			return wardrobeSet;
 		}
 
-		//Override Load from PackedRecipeBase
-		/// <summary>
-		/// Load this Recipe's recipeString into the specified UMAData.UMARecipe. If there is Wardrobe data in the recipe string, its values are set to this recipe assets 'activeWardrobeSet' field
-		/// </summary>
-		/// <param name="umaRecipe">UMA recipe.</param>
-		/// <param name="context">Context.</param>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, bool loadSlots = true)
-		{
-			try
-			{
-				//This check can be removed in future- If we set the recipeType properly from now on we should not need to do this check
-				var typeInRecipe = GetRecipesType(recipeString);
-				recipeType = typeInRecipe != "Standard" ? typeInRecipe : recipeType;
-				if (RecipeHasWardrobeSet(recipeString))
-				{
-					activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
-				}
-				//if its an old UMARecipe there wont be an activeWardrobeSet field
-				if (activeWardrobeSet == null)
-				{
-					recipeType = "Standard";
-					base.Load(umaRecipe, loadSlots);
-					return;
-				}
-				//if it has a wardrobeSet or was saved using the DCSPackRecipe Model
-				if (activeWardrobeSet.Count > 0 || (recipeType == "DynamicCharacterAvatar" /*|| recipeType == "WardrobeCollection"*/))
-				{
-					var packedRecipe = PackedLoadDCSInternal();
-					UnpackRecipe(umaRecipe, packedRecipe);
-				}
-				else //we can use standard UMALoading
-				{
-					base.Load(umaRecipe, loadSlots);
-				}
-			}
-			catch (UMAResourceNotFoundException e)
-			{
-                Debug.LogError($"UMAResourceNotFoundException on recipe {this.name} race {umaRecipe.raceData.raceName} file {umaRecipe.raceData.name}: {e.Message}"); 
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error loading recipe: {name} Error: {e.Message} Stacktrace {e.StackTrace}");
-            }
-        }
-
 		/// <summary>
 		/// Internal call to static PackedLoadDCS which uses the assets string and object and returns a DCSUniversalPackRecipe data model that can be used by any UMA
 		/// </summary>

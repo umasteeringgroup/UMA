@@ -1064,6 +1064,7 @@ namespace UMA.Editors
             if (_recipe.raceData != newRace)
             {
                 _recipe.SetRace(newRace);
+                _recipe.ClearDNAConverters();
                 changed = true;
             }
 
