@@ -58,8 +58,12 @@ namespace UMA.Timeline
             if (elapsedTime >= timeStep)
             {
                 elapsedTime = 0f;
+                Color color = avatar.GetColor(sharedColorName).color;
                 avatar.SetColor(sharedColorName, finalColor);
-                colorUpdated = true;
+                if (color != finalColor)
+                {
+                    colorUpdated = true;
+                }
             }
 
             if (colorUpdated)
