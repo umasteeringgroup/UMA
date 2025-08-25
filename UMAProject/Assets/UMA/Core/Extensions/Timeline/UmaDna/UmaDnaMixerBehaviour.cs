@@ -12,6 +12,7 @@ namespace UMA.Timeline
 
         public override void ProcessFrame(Playable playable, FrameData info, object playerData)
         {
+            bool needRebuild = false;
             DynamicCharacterAvatar avatar = playerData as DynamicCharacterAvatar;
             if (avatar == null || !Application.isPlaying)
             {
@@ -32,12 +33,17 @@ namespace UMA.Timeline
                     UmaDnaBehaviour.DnaTuple dna = input.dnaValues[i1];
                     if (allDNA.ContainsKey(dna.Name))
                     {
+                        float originalValue = allDNA[dna.Name].Value;
                         float currentValue = allDNA[dna.Name].Value * (1f - inputWeight);
                         allDNA[dna.Name].Set(currentValue + (dna.Value * inputWeight));
+                        if (originalValue != allDNA[dna.Name].Value)
+                        {
+                            needRebuild = true;
+                        }
                     }
                 }
 
-                if (input.rebuildImmediately)
+                if (needRebuild)
                 {
                     avatar.ForceUpdate(true, false, false);
                 }
