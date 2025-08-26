@@ -183,7 +183,7 @@ namespace UMA.CharacterSystem.Editors
 
             //The base DynamicAvatar properties- get these early because changing the race changes someof them
             SerializedProperty umaGenerator = serializedObject.FindProperty("umaGenerator");
-            SerializedProperty umaRecipe = serializedObject.FindProperty("umaRecipe");
+            SerializedProperty umaRecipe = serializedObject.FindProperty("_umaRecipe");
             SerializedProperty umaAdditionalRecipes = serializedObject.FindProperty("umaAdditionalRecipes");
             animationController = serializedObject.FindProperty("animationController");
 
@@ -214,7 +214,7 @@ namespace UMA.CharacterSystem.Editors
                 {
                     thisDCA.ChangeRace((string)thisRaceSetter.FindPropertyRelative("name").stringValue, DynamicCharacterAvatar.ChangeRaceOptions.useDefaults, true);
                     //Changing the race may cause umaRecipe, animationController to change so forcefully update these too
-                    umaRecipe.objectReferenceValue = thisDCA.serializedRecipe;
+                    //umaRecipe.objectReferenceValue = thisDCA.serializedRecipe;
                     animationController.objectReferenceValue = thisDCA.animationController;
                     serializedObject.ApplyModifiedProperties();
                     GenerateSingleUMA(thisDCA.rebuildSkeleton);

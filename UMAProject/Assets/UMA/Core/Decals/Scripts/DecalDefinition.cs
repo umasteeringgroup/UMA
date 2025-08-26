@@ -7,6 +7,7 @@ namespace UMA
 {
     public class DecalDefinition
     {
+        
         public string Name;
         public int InitialIndex;
         public GameObject DecalMeshObject;
@@ -272,5 +273,7 @@ namespace UMA
         // To do this, we will need to track for each slot in the UMAData (during the build process)
         //    What SMR the slot is actually in, in case there are multiples
         //    what vertex position the slot starts at in the SMR
+        
     }
+        
 }

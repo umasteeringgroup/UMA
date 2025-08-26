@@ -4319,16 +4319,22 @@ namespace UMA.CharacterSystem
                 !alwaysRebuildSkeleton &&
                 !forceRebindAnimator &&
                 overrideDNA.Count == 0 &&
-                !cache.LastHadCrossCompat)
+                !cache.LastHadCrossCompat 
+                )
+
             {
-                // We still may need to apply predefined DNA (if keepPredefinedDNA) & do color update
-                ApplyPredefinedDNA();
-                UpdateColors();
+                var renderer = this.GetRenderer(0);
+                if (renderer != null )
+                {
+                    // We still may need to apply predefined DNA (if keepPredefinedDNA) & do color update
+                    ApplyPredefinedDNA();
+                    UpdateColors();
 #if UMA_DCA_TIMING
-                sw.Stop();
-                Ticks_BuildCharacter += sw.ElapsedTicks;
+                    sw.Stop();
+                    Ticks_BuildCharacter += sw.ElapsedTicks;
 #endif
-                return;
+                    return;
+                }
             }
             cache.LastWardrobeHash = wardrobeHash;
             cache.LastRaceName = activeRace.name;
@@ -5844,6 +5850,7 @@ namespace UMA.CharacterSystem
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
         {
+            Debug.Log("Forcing Update");
             umaData.rawAvatar = rawAvatar;
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
