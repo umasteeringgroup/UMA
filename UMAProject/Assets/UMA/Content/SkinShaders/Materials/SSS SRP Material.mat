@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: SSS SRP Material
-  m_Shader: {fileID: -6465566751694194690, guid: 067f98d61f2fae04b9241b2c7c0ff6a4, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 72ef220eb187015429a4740c0a67cf15, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -42,7 +42,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: d2f564755f5fb184f9b281447b756f0c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BentNormal:
@@ -82,6 +82,14 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FuzzMap:
+        m_Texture: {fileID: 2800000, guid: d2f564755f5fb184f9b281447b756f0c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -145,6 +153,7 @@ Material:
     m_Floats:
     - _BumpScale: 0.55
     - _ColorModulation: 1
+    - _Contrast: 1
     - _CullMode: 2
     - _CurveBias: 0.005
     - _Cutoff: 0.5
@@ -154,16 +163,21 @@ Material:
     - _DetailNormalMapScale: 1
     - _DoubleSidedNormalMode: 1
     - _DstBlend: 0
+    - _EmissiveModulation: 1
+    - _FuzzAmount: 0.35
     - _GlossMapScale: 0.81
     - _Glossiness: 0
     - _GlossyReflections: 1
     - _HalfLambertStrength: 4.5
     - _InvertThickness: 1
+    - _MaxSmooth: 1
     - _Metallic: 0.24
     - _MetallicModulation: 1
+    - _MinSmooth: 0.1
     - _Mode: 0
     - _NormalDistortion: 1
     - _NormalStrength: 0.491
+    - _Occlusion: 1
     - _OcclusionStrength: 0.07
     - _OcclusionUVSource: 0
     - _Parallax: 0.02
@@ -180,11 +194,13 @@ Material:
     - _SSSLevel: 0.306
     - _SSSPow: 6.03
     - _SSSShadow: 1
+    - _Saturation: 1
     - _Scale: 1
     - _ScatteringByAlbedo: 1
     - _SecondUVSource: 0
     - _SkinDetailTiling: 1
     - _Smoothness: 0.7
+    - _SmoothnessAdd: 0
     - _SmoothnessFromAlbedo: 0
     - _SmoothnessModulation: 0.5
     - _SmoothnessTextureChannel: 0
@@ -209,6 +225,7 @@ Material:
     - _AlbedoTinting: {r: 1, g: 1, b: 1, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
+    - _EmissiveAdd: {r: 0, g: 0, b: 0, a: 0}
     - _OverlayColor: {r: 1, g: 1, b: 1, a: 1}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _SSSCol: {r: 1, g: 0.1660024, b: 0, a: 1}

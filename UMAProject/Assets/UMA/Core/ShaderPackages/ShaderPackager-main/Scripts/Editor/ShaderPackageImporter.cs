@@ -65,7 +65,7 @@ namespace UMA.ShaderPackager
             string shaderSrc = package.GetShaderSrc();
             if (shaderSrc == null)
             {
-            Debug.LogError("No Shader for this platform and SRP provided");
+                Debug.LogError("No Shader for this platform and SRP provided: "+ctx.assetPath);
                 // maybe make an error shader here?
                 return;
             }
