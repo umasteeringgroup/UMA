@@ -79,7 +79,7 @@ namespace UMA.Controls
                 {
                     SetupMenus();
                 }
-#if UMA_ADDRESSABLES
+#if UMA_ADDRESSABLES 
                 //  Rebuild menus if addressables changed.
                 if (_AddressablesMenu.GetItemCount() == 1)
                 {
