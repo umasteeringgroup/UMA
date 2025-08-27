@@ -5850,7 +5850,7 @@ namespace UMA.CharacterSystem
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
         {
-            Debug.Log("Forcing Update");
+            //Debug.Log("Forcing Update");
             umaData.rawAvatar = rawAvatar;
             umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
