@@ -52,7 +52,7 @@ MonoBehaviour:
   addrDefaultLabel: UMA_Default
   addrStripMaterials: 1
   addrIncludeRecipes: 0
-  addrIncludeOther: 1
+  addrIncludeOther: 0
   showWelcomeToUMA: 0
   generatorPrefab: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889, type: 3}
   characterPrefab: {fileID: 153068, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}

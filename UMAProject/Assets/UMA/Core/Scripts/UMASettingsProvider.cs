@@ -322,10 +322,7 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("UMA Addressables Options", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These settings are only used if 'Use Addressables' is enabled", MessageType.Info);
-            bool useAddressables = m_CustomSettings.FindProperty("useAddressables").boolValue;
-            GUI.enabled = useAddressables;
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrIncludeRecipes", "addrIncludeOther" });
-            GUI.enabled = true;
             EndVerticalPadded(10);
 
             m_CustomSettings.ApplyModifiedPropertiesWithoutUndo();

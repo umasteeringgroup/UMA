@@ -4781,11 +4781,11 @@ namespace UMA.CharacterSystem
         /// Loads the Avatar from the given recipe and additional recipe. 
         /// Has additional functions for removing any slots that should be hidden by any 'wardrobe Recipes' that are in the additional recipes array.
         /// </summary>
-        /// <param name="characterRecipe"></param>
+        /// <param name="baseRaceRecipe"></param>
         /// <param name="Replaces"></param>
         /// <param name="wardrobeRecipes"></param>
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
-        private void LoadCharacter(UMARecipeBase characterRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> wardrobeRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
+        private void LoadCharacter(UMARecipeBase baseRaceRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> wardrobeRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
         {
 #if UMA_DCA_TIMING
             Stopwatch sw = Stopwatch.StartNew();
@@ -4814,7 +4814,7 @@ namespace UMA.CharacterSystem
 
                 var theOp = UMAAssetIndexer.Instance.Preload(this);
                 LoadedHandles.Enqueue(theOp);
-                LoadQueue.Add(theOp,new BuildSave(characterRecipe, Replaces, wardrobeRecipes, AdditionalRecipes, MeshHideDictionary, hiddenSlots, HideTags, CurrentDNA, restoreDNA));
+                LoadQueue.Add(theOp,new BuildSave(baseRaceRecipe, Replaces, wardrobeRecipes, AdditionalRecipes, MeshHideDictionary, hiddenSlots, HideTags, CurrentDNA, restoreDNA));
                 theOp.Completed += LoadWhenReady;
 #if SUPER_LOGGING
                 Debug.Log("LoadCharacter waiting for preload...");
@@ -4849,10 +4849,10 @@ namespace UMA.CharacterSystem
                 animator = this.gameObject.GetComponent<Animator>();
             }
 
-            serializedRecipe = characterRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
+            serializedRecipe = baseRaceRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
 
             tm.Restart();
-            characterRecipe.Load(umaRecipe);
+            baseRaceRecipe.Load(umaRecipe);
             tm.Stop();
             Ticks_LoadPhase1 += tm.ElapsedTicks;
             tm.Restart();
