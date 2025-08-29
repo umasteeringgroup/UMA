@@ -1934,7 +1934,7 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Set a wearable item for the Avatar. If the item is already set, it will be replaced.
         /// </summary>
-        public void SetWearableItem(UMATextRecipe utr)
+        public void SetWearableItem(UMAWardrobeRecipe utr)
         {
             if (utr.Appended)
             {
@@ -1946,7 +1946,7 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Adds a wearable item to the Avatar. This will be stacked on top of any existing items in the same slot.
         /// </summary>
-        public void AppendWearableItem(UMATextRecipe utr)
+        public void AppendWearableItem(UMAWardrobeRecipe utr)
         {
             if (!_additiveRecipes.ContainsKey(utr.wardrobeSlot))
             {
@@ -1958,9 +1958,19 @@ namespace UMA.CharacterSystem
         /// Removes a wearable item from the Avatar. If removeAllMatching is true, 
         /// all instances of the item will be removed.
         /// </summary>
-        public void RemoveWearableItem(UMATextRecipe utr, bool removeAllMatching = false)
+        public void RemoveWearableItem(UMAWardrobeRecipe utr, bool removeAllMatching = false)
         {
             string thisRecipeSlot = utr.wardrobeSlot;
+
+            if (WardrobeRecipes.ContainsKey(thisRecipeSlot) && WardrobeRecipes[thisRecipeSlot] == utr)
+            {
+                WardrobeRecipes.Remove(thisRecipeSlot);
+                if (WardrobeRemoved != null)
+                {
+                    WardrobeRemoved.Invoke(umaData, utr);
+                }
+                return;
+            }
             if (!_additiveRecipes.ContainsKey(thisRecipeSlot))
             {
                 return;
@@ -1982,13 +1992,23 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <param name="SlotName"></param>
         /// <returns></returns>
-        public List<UMATextRecipe> GetAppendedWearableItems(string SlotName)
+        public List<UMAWardrobeRecipe> GetAppendedWearableItems(string SlotName)
         {
             if (_additiveRecipes.ContainsKey(SlotName))
             {
-                return _additiveRecipes[SlotName];
+                List<UMAWardrobeRecipe> result = new List<UMAWardrobeRecipe>();
+
+                // append all the _additiveRecipes for this slot that are UMAWardrobeRecipe
+                foreach (var utr in _additiveRecipes[SlotName])
+                {
+                    if (utr is UMAWardrobeRecipe uwr)
+                    {
+                        result.Add(uwr);
+                    }
+                }
+                return result;
             }
-            return new List<UMATextRecipe>();
+            return new List<UMAWardrobeRecipe>();
         }
 
         /// <summary>
@@ -2033,7 +2053,11 @@ namespace UMA.CharacterSystem
                 {
                     WardrobeRemoved.Invoke(umaData, _wardrobeRecipes[thisRecipeSlot] as UMAWardrobeRecipe);
                 }
-
+                var oldSlot = _wardrobeRecipes[thisRecipeSlot];
+                if (oldSlot is UMAWardrobeCollection)
+                {
+                    RemoveWardrobeCollection(oldSlot as UMAWardrobeCollection);
+                }
                 _wardrobeRecipes[thisRecipeSlot] = utr;
                 if (WardrobeAdded != null)
                 {
@@ -2046,6 +2070,75 @@ namespace UMA.CharacterSystem
                 if (WardrobeAdded != null)
                 {
                     WardrobeAdded.Invoke(umaData, utr as UMAWardrobeRecipe);
+                }
+            }
+        }
+
+        public void RemoveWardrobeCollection(UMATextRecipe utr)
+        {
+            if (utr == null)
+            {
+                return;
+            }
+            if (utr is UMAWardrobeCollection uwc)
+            {
+                RemoveWardrobeCollection(uwc);
+            }
+        }
+
+        public void RemoveWardrobeCollection(UMAWardrobeCollection uwr)
+        {
+            if (uwr == null)
+            {
+                return;
+            }
+
+            // Collect all recipes in the collection for the current race (if race set)
+            List<UMATextRecipe> collectionRecipes = new List<UMATextRecipe>();
+            if (!string.IsNullOrEmpty(activeRace.name))
+            {
+                var raceRecipes = uwr.GetRacesRecipes(activeRace.name);
+                if (raceRecipes != null && raceRecipes.Count > 0)
+                {
+                    collectionRecipes.AddRange(uwr.GetRacesRecipes(activeRace.name));
+                }
+            }
+
+            // Also include any arbitrary recipe names listed on the collection
+            if (uwr.arbitraryRecipes != null && uwr.arbitraryRecipes.Count > 0)
+            {
+                for (int i = 0; i < uwr.arbitraryRecipes.Count; i++)
+                {
+                    var recipeName = uwr.arbitraryRecipes[i];
+                    if (string.IsNullOrEmpty(recipeName)) continue;
+                    var r = UMAAssetIndexer.Instance.GetRecipe(recipeName, false);
+                    if (r != null)
+                    {
+                        collectionRecipes.Add(r);
+                    }
+                }
+            }
+
+            if (collectionRecipes.Count == 0)
+            {
+                return;
+            }
+
+            // For each recipe from the collection, remove any appended (additive) wearable items that match.
+            // We only use RemoveWearableItem as requested (it operates on appended/additive items).
+            for (int cr = 0; cr < collectionRecipes.Count; cr++)
+            {
+                var collectionRecipe = collectionRecipes[cr];
+                if (collectionRecipe == null) continue;
+                if (collectionRecipe is UMAWardrobeCollection) continue; // Skip nested collections
+                if (collectionRecipe is UMAWardrobeRecipe uwrItem)
+                {
+                    RemoveWearableItem(uwrItem, true);
+                }
+                else
+                {
+                    // Not a wearable item, so just clear the slot if it matches.
+                    ClearSlot(collectionRecipe.wardrobeSlot);
                 }
             }
         }
@@ -2147,6 +2240,18 @@ namespace UMA.CharacterSystem
         {
             if (_wardrobeRecipes.ContainsKey(ws))
             {
+                if (_wardrobeRecipes.ContainsKey(ws))
+                {
+                    var wr = _wardrobeRecipes[ws];
+                    if (wr is UMAWardrobeCollection)
+                    {
+                        RemoveWardrobeCollection(wr as UMAWardrobeCollection);
+                    }
+                    if (WardrobeRemoved != null)
+                    {
+                        WardrobeRemoved.Invoke(umaData, _wardrobeRecipes[ws] as UMAWardrobeRecipe);
+                    }
+                }
                 _wardrobeRecipes.Remove(ws);
             }
             if (_additiveRecipes.ContainsKey(ws))

@@ -53,7 +53,14 @@ namespace UMA.CharacterSystem
 		{
 			var thisContext = UMAAssetIndexer.Instance;
 			var thisRace = thisContext.GetRace(race);
-			return GetRacesWardrobeSet(thisRace);
+			if (thisRace == null)
+			{
+				return new List<WardrobeSettings>();
+			}
+			else
+			{
+				return GetRacesWardrobeSet(thisRace);
+			}
 		}
 		/// <summary>
 		/// Gets the wardrobeSet set in this collection for the given race
@@ -101,7 +108,10 @@ namespace UMA.CharacterSystem
 			for (int i = 0; i < recipesToGet.Count; i++)
 			{
 				var recipe = UMAAssetIndexer.Instance.GetRecipeWardrobeTextCollection(recipesToGet[i].recipe);
-                recipesWeGot.Add(recipe);
+				if (recipe != null)
+				{
+					recipesWeGot.Add(recipe);
+				}
 			}
 			return recipesWeGot;
 		}

@@ -75,8 +75,22 @@ namespace UMA.Editors
 
 			EditorGUI.BeginChangeCheck();
 
-			EditorGUILayout.PropertyField(_overlayName);
-			EditorGUILayout.PropertyField(_overlayType);
+            //Sam3DX edit. Replacing the overlay name field with horizontal layout that includes a button to set the name to the object name.
+            //EditorGUILayout.PropertyField(_overlayName);
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.PropertyField(_overlayName);
+            if (GUILayout.Button("Use Obj Name", GUILayout.Width(90)))
+            {
+                foreach (var t in targets)
+                {
+                    var overlayDataAsset = t as OverlayDataAsset;
+                    overlayDataAsset.overlayName = overlayDataAsset.name;
+                    EditorUtility.SetDirty(overlayDataAsset);
+                    GUI.changed = true;
+                }
+            }
+            GUILayout.EndHorizontal();
+            EditorGUILayout.PropertyField(_overlayType);
             EditorGUILayout.LabelField("Note: It is recommended to use UV coordinates (0.0 -> 1.0) in 2.10+ for rect fields.", EditorStyles.helpBox);
             EditorGUILayout.PropertyField(_rect);
             EditorGUILayout.PropertyField(_noAutoAdd);
