@@ -219,9 +219,11 @@ namespace UMA
 #if true
 				// rotate texture here?
 				GL.PushMatrix();
+				tr.rect.x += tr.position.x;
+				tr.rect.y += tr.position.y;
 
-				// rotate around the pivot
-				pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f) , tr.rect.y + (tr.rect.height / 2.0f) );
+                // rotate around the pivot
+                pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f) , tr.rect.y + (tr.rect.height / 2.0f) );
 				
 				Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
 
@@ -512,9 +514,9 @@ namespace UMA
                 var tex = source.overlayData[0].GetTexture(0);
 				if (tex != null)
 				{
-					//float xx = od.Translate.x * tex.width;
-                    //float yy = od.Translate.y * tex.height;
-
+					float xx = od.Translate.x * tex.width;
+                    float yy = od.Translate.y * tex.height;
+					textureMergeRects[textureMergeRectCount].position = new Vector2(xx, yy);
                     textureMergeRects[textureMergeRectCount].rect = new Rect(overlayRect.x, overlayRect.y, overlayRect.width, overlayRect.height);
                 }
 				else

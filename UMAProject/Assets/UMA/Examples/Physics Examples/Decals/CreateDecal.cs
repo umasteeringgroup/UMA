@@ -187,9 +187,11 @@ public class CreateDecal : MonoBehaviour
             var overlayInstance = new OverlayData(DecalOverlay);
             slotData.AddOverlay(overlayInstance);
         }
+        slotData.expandAlongNormal = 10000; // Slight expansion to avoid z-fighting
 
         // Add (accumulate) into existing UMA recipe
         Avatar.umaData.umaRecipe.MergeSlot(slotData, true);
+        Avatar.ForceUpdate(true, true, true);
 
         // Force rebuild – common UMA approach is to ask avatar to rebuild. If ForceUpdate exists in your version, prefer that.
         // Fallback minimal triggers if rebuild API differs:

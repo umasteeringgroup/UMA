@@ -302,7 +302,7 @@ namespace UMA
             int boneCount = 0;
             var mergedUmaTransforms = new UMATransform[transformHierarchyCount];
             for (int i = 0; i < sources.Length; i++)
-                MergeSortedTransforms(mergedUmaTransforms, ref boneCount, sources[i].meshData.umaBones);
+                MergeSortedTransforms(mergedUmaTransforms, ref boneCount, sources[i].meshData.umaBones, sources[i].slotData.asset.slotName);
             sw.Stop();
             Ticks_MergeTransforms += sw.ElapsedTicks;
 
@@ -2011,7 +2011,7 @@ namespace UMA
             return highestTargetIndex + 1;
         }
 
-        private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
+        private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms, string slotName)
         {
             int newBones = 0;
             int pos1 = 0;
@@ -2067,6 +2067,21 @@ namespace UMA
             }
             while (pos2 >= 0)
             {
+                if (pos2 >= umaTransforms.Length)
+                {
+                    Debug.Log($"MergeSortedTransforms on slot {slotName } - Error - pos2 is outside bounds!");
+                    return;
+                }
+                if (dest < 0)
+                {
+                    Debug.Log($"MergeSortedTransforms on slot {slotName} - Error - Dest < 0!!!");
+                    return;
+                }
+                if (dest >= mergedTransforms.Length)
+                {
+                    Debug.Log($"MergeSortedTransforms on slot {slotName} - Error - Dest is too big!");
+                    return;
+                }
                 mergedTransforms[dest] = umaTransforms[pos2];
                 pos2--;
                 dest--;

@@ -1436,7 +1436,9 @@ namespace UMA
                 SubMeshTriangles sm = submeshes[i];
                 if (sm.nativeTriangles.IsCreated)
                 {
+					Debug.Log("Disposing native triangles for submesh " + i + " in slot " + SlotName);
                     sm.nativeTriangles.Dispose();
+					sm.nativeTriangles = new NativeArray<int>();  // likely problem area
                 }
             }
 

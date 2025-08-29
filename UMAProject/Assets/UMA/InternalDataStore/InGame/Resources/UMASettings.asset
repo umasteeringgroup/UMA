@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad6e21078dbc88344b21463ab3922a67, type: 3}
   m_Name: UMASettings
   m_EditorClassIdentifier: 
-  useMeshAPICombiner: 1
+  useMeshAPICombiner: 0
   WarningMessage: "Warning: Please do not modify these\n settings using the inspector.\n
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"

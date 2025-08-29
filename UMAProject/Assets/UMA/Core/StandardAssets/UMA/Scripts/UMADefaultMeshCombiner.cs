@@ -408,77 +408,54 @@ namespace UMA
             }
         }
 
-        /// <summary>
-        /// Legacy UV remap for the non MeshAPI path (called only when updatedAtlas == true).
-        /// </summary>
-        private void RecalculateUV(UMAMeshData umaMesh)
+        protected void RecalculateUV(UMAMeshData umaMesh)
         {
-            if (umaMesh == null || umaMesh.uv == null || umaMesh.uv.Length == 0 || umaData == null || umaData.generatedMaterials == null)
-                return;
-
             int idx = 0;
+            //Handle Atlassed Verts
             for (int materialIndex = 0; materialIndex < umaData.generatedMaterials.materials.Count; materialIndex++)
             {
                 var generatedMaterial = umaData.generatedMaterials.materials[materialIndex];
-                if (generatedMaterial == null) continue;
 
-                // Skip materials not for this renderer
                 if (generatedMaterial.rendererAsset != umaData.GetRendererAsset(currentRendererIndex))
                 {
-                    // Advance idx by vertex counts for these fragments
-                    for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
-                    {
-                        var fragment = generatedMaterial.materialFragments[i];
-                        if (fragment?.slotData?.asset?.meshData == null) continue;
-                        idx += fragment.slotData.asset.meshData.vertices.Length;
-                    }
                     continue;
                 }
 
-                // Skip non-atlassed materials
                 if (!generatedMaterial.umaMaterial.IsGeneratedTextures)
+                //if (generatedMaterial.umaMaterial.materialType != UMAMaterial.MaterialType.Atlas)
                 {
                     for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                     {
-                        var fragment = generatedMaterial.materialFragments[i];
-                        if (fragment?.slotData?.asset?.meshData == null) continue;
-                        idx += fragment.slotData.asset.meshData.vertices.Length;
+                        UMAData.MaterialFragment fragment = generatedMaterial.materialFragments[i];
+                        int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
+                        idx += vertexCount;
                     }
                     continue;
                 }
 
-                for (int m = 0; m < generatedMaterial.materialFragments.Count; m++)
+                for (int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++)
                 {
-                    var fragment = generatedMaterial.materialFragments[m];
-                    if (fragment?.slotData?.asset?.meshData == null) continue;
-
+                    var fragment = generatedMaterial.materialFragments[materialDefinitionIndex];
                     var tempAtlasRect = fragment.atlasRegion;
                     int vertexCount = fragment.slotData.asset.meshData.vertices.Length;
-
                     float atlasXMin = tempAtlasRect.xMin / atlasResolution;
                     float atlasXMax = tempAtlasRect.xMax / atlasResolution;
+                    float atlasXRange = atlasXMax - atlasXMin;
                     float atlasYMin = tempAtlasRect.yMin / atlasResolution;
                     float atlasYMax = tempAtlasRect.yMax / atlasResolution;
-                    float atlasXRange = atlasXMax - atlasXMin;
                     float atlasYRange = atlasYMax - atlasYMin;
 
-                    // Cropped shared rect adjustment
+                    // code below is for UVs remap based on rel pos in the atlas
                     if (fragment.isRectShared && fragment.slotData.useAtlasOverlay)
                     {
                         OverlayData foundRect = null;
-                        var overlays = fragment.overlayList;
-                        if (overlays != null)
+                        for (int i = 0; i < fragment.overlayList.Count; i++)
                         {
-                            for (int i = 0; i < overlays.Count; i++)
+                            OverlayData szname = fragment.overlayList[i];
+                            if (fragment.slotData.slotName != null && szname.overlayName != null && szname.overlayName.Contains(fragment.slotData.slotName))
                             {
-                                var ov = overlays[i];
-                                if (fragment.slotData.slotName != null &&
-                                    ov.overlayName != null &&
-                                    ov.overlayName.Contains(fragment.slotData.slotName))
-                                {
-                                    foundRect = ov;
-                                    break;
-                                }
+                                foundRect = szname;
+                                break;
                             }
                         }
                         if (foundRect != null && foundRect.rect != Rect.zero)
@@ -495,26 +472,25 @@ namespace UMA
                         }
                     }
 
-                    // Store UV area back to slot for later use
-                    fragment.slotData.UVArea.Set(atlasXMin, atlasYMin, atlasXRange, atlasYRange);
+                    var sd = fragment.slotData;
+                    sd.UVArea.Set(atlasXMin, atlasYMin, atlasXRange, atlasYRange);
 
-                    // Apply transform
-                    for (int v = 0; v < vertexCount; v++)
+                    while (vertexCount-- > 0)
                     {
-                        var uv = umaMesh.uv[idx];
-                        uv.x = atlasXMin + atlasXRange * uv.x;
-                        uv.y = atlasYMin + atlasYRange * uv.y;
-                        umaMesh.uv[idx] = uv;
+                        umaMesh.uv[idx].x = atlasXMin + atlasXRange * umaMesh.uv[idx].x;
+                        umaMesh.uv[idx].y = atlasYMin + atlasYRange * umaMesh.uv[idx].y;
                         idx++;
                     }
                 }
             }
         }
+    
 
-        /// <summary>
-        /// Build dictionary of blendshapes to bake (name -> weight).
-        /// </summary>
-        private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSettings settings)
+
+/// <summary>
+/// Build dictionary of blendshapes to bake (name -> weight).
+/// </summary>
+private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSettings settings)
         {
             var dict = new Dictionary<string, float>();
             if (settings == null || settings.blendShapes == null) return dict;

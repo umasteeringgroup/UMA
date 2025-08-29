@@ -4398,7 +4398,7 @@ namespace UMA.CharacterSystem
 #endif
             ;
             tm.Restart();
-            if ((this.WardrobeRecipes.Count > 0) && activeRace.racedata != null)
+            if ((this.WardrobeRecipes.Count > 0 || this._additiveRecipes.Count > 0) && activeRace.racedata != null)
             {
 #if DCA_OPTIMIZED
                 // Aggregate recipes first (wardrobe + additive) into scratch.AllRecipesTmp

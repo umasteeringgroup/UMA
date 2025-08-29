@@ -188,6 +188,9 @@ namespace UMA
             md.ManagedBoneWeights = managedWeights.ToArray();
             md.vertexCount = vertexCount;
 
+            // NEW: ensure bones are unique + sorted and weights remapped
+            FinalizeAndSortBones(md);
+
             // Blendshapes (optional)
             if (options.copyBlendshapes)
             {
@@ -428,6 +431,99 @@ namespace UMA
         }
 
         #endregion
+
+        private static void FinalizeAndSortBones(UMAMeshData md)
+        {
+            if (md.umaBones == null || md.umaBones.Length == 0 ||
+                md.ManagedBoneWeights == null || md.ManagedBoneWeights.Length == 0)
+                return;
+
+            var oldBones = md.umaBones;
+            var oldBindPoses = md.bindPoses ?? Array.Empty<Matrix4x4>();
+
+            int oldCount = oldBones.Length;
+            var hashToNew = new Dictionary<int, int>(oldCount);
+            var uniqueBones = new List<UMATransform>(oldCount);
+            var uniqueBind = new List<Matrix4x4>(oldCount);
+            var oldIndexToUnique = new int[oldCount];
+
+            for (int i = 0; i < oldCount; i++)
+            {
+                var b = oldBones[i];
+                if (!hashToNew.TryGetValue(b.hash, out int uIdx))
+                {
+                    uIdx = uniqueBones.Count;
+                    hashToNew.Add(b.hash, uIdx);
+                    uniqueBones.Add(b);
+                    uniqueBind.Add(i < oldBindPoses.Length ? oldBindPoses[i] : Matrix4x4.identity);
+                }
+                oldIndexToUnique[i] = uIdx;
+            }
+
+            int uniqueCount = uniqueBones.Count;
+            if (uniqueCount == 0)
+                return;
+
+            // Sort by hash; build mapping uniqueOldIndex -> sortedIndex
+            var order = new int[uniqueCount];
+            for (int i = 0; i < uniqueCount; i++) order[i] = i;
+            Array.Sort(order, (a, b) => uniqueBones[a].hash.CompareTo(uniqueBones[b].hash));
+
+            var uniqueToSorted = new int[uniqueCount];
+            for (int sorted = 0; sorted < uniqueCount; sorted++)
+                uniqueToSorted[order[sorted]] = sorted;
+
+            // Remap bone indices in weights
+            var weights = md.ManagedBoneWeights;
+            for (int i = 0; i < weights.Length; i++)
+            {
+                var bw = weights[i];
+                int oldBoneIndex = bw.boneIndex;
+                if ((uint)oldBoneIndex >= (uint)oldIndexToUnique.Length)
+                {
+#if UNITY_EDITOR
+                    Debug.LogWarning($"DecalSlotBuilder: boneIndex {oldBoneIndex} out of range (len {oldIndexToUnique.Length}). Skipping remap.");
+#endif
+                    continue;
+                }
+                int uniqueIdx = oldIndexToUnique[oldBoneIndex];
+                bw.boneIndex = uniqueToSorted[uniqueIdx];
+                weights[i] = bw;
+            }
+            md.ManagedBoneWeights = weights;
+
+            // Build sorted arrays
+            var sortedBones = new UMATransform[uniqueCount];
+            var sortedBindPoses = new Matrix4x4[uniqueCount];
+            for (int sorted = 0; sorted < uniqueCount; sorted++)
+            {
+                int src = order[sorted];
+                sortedBones[sorted] = uniqueBones[src];
+                sortedBindPoses[sorted] = uniqueBind[src];
+            }
+
+            md.umaBones = sortedBones;
+            md.umaBoneCount = sortedBones.Length;
+            md.bindPoses = sortedBindPoses;
+
+            // Rebuild bone name hashes in sorted order
+            md.boneNameHashes = new int[md.umaBoneCount];
+            for (int i = 0; i < md.umaBoneCount; i++)
+            {
+                try
+                {
+                    md.boneNameHashes[i] = UMAUtils.StringToHash(sortedBones[i].name);
+                }
+                catch (Exception ex)
+                {
+#if UNITY_EDITOR
+                    Debug.LogError($"DecalSlotBuilder: Failed hashing bone name '{sortedBones[i].name}' : {ex.Message}");
+#endif
+                    md.boneNameHashes[i] = sortedBones[i].hash; // fallback
+                }
+            }
+        }
+
 
         #region Blendshape Construction (Multi-frame)
 
