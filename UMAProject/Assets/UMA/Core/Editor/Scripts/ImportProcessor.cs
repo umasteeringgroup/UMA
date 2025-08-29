@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEngine;
 
 namespace UMA
@@ -85,14 +86,28 @@ namespace UMA
                 } */
             }
         }
+        public static NamedBuildTarget CurrentNamedBuildTarget
+        {
+            get
+            {
+#if UNITY_SERVER
+                    return NamedBuildTarget.Server;
+#else
+                BuildTarget buildTarget = EditorUserBuildSettings.activeBuildTarget;
+                BuildTargetGroup targetGroup = BuildPipeline.GetBuildTargetGroup(buildTarget);
+                NamedBuildTarget namedBuildTarget = NamedBuildTarget.FromBuildTargetGroup(targetGroup);
+                return namedBuildTarget;
+#endif
+            }
+        }
 
         private static void EnsureUMAIndicators()
         {
-            var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+            var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbols(CurrentNamedBuildTarget).Split(';'));
             if (!defineSymbols.Contains("UMA_INSTALLED"))
             {
                 defineSymbols.Add("UMA_INSTALLED");
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join(";", defineSymbols));
+                PlayerSettings.SetScriptingDefineSymbols(CurrentNamedBuildTarget, string.Join(";", defineSymbols));
             }
         }
 

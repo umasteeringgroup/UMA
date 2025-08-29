@@ -112,6 +112,17 @@ namespace UMA
 		//Its is OPTIONAL for any DynamicDNAPlugin to override these properties / methods
 
 		/// <summary>
+		/// By default, FirstPass() does nothing.
+		/// But you can use this pass to set things up that must happen before *any* DNA is processed.
+		/// This is specifically done for Blendshape DNA so it can be processed before the DNA pass...
+		/// </summary>
+		public virtual void FirstPass(UMAData umaData, int dnaTypeHash)
+		{
+			return;
+		}
+
+
+		/// <summary>
 		/// Does this plugin get applied during the Standard ApplyDNA pass or in the 'Pre Pass'
 		/// </summary>
 		public virtual ApplyPassOpts ApplyPass { get { return ApplyPassOpts.Standard; } }
@@ -329,11 +340,16 @@ namespace UMA
 
 		private static List<Type> _pluginTypes;
 
-		#endregion
+        #endregion
 
-		#region PUBLIC STATIC METHODS
+        #region PUBLIC STATIC METHODS
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+			_pluginTypes = null;
+        }
 
-		public static List<Type> GetAvailablePluginTypes()
+        public static List<Type> GetAvailablePluginTypes()
 		{
 			if (_pluginTypes == null)
 			{
@@ -404,8 +420,10 @@ namespace UMA
 				}
 				catch
                 {
+#if UNITY_EDITOR
 					Debug.Log("An exception occurred loading assemblies. this can happen when an invalid assembly is present in the project and it cannot be loaded.");
-                }
+#endif
+				}
 			}
 			_pluginTypes = list;
 		}

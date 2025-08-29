@@ -96,6 +96,11 @@ namespace UMA
         }
 
         private static List<VertexAdjustment>  adjustmentTypes = new List<VertexAdjustment>();
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+            adjustmentTypes = new List<VertexAdjustment>();
+        }
 
         public static List<VertexAdjustment> AdjustmentTypes
         {
@@ -1071,7 +1076,6 @@ namespace UMA
                 mesh.tangents[vertexIndex] = initialTangent;
                 Quaternion qt = Quaternion.FromToRotation(Normal, mesh.normals[vertexIndex]);
                 Vector3 rot = qt.eulerAngles;
-                Debug.Log(rot.ToString());
             }
         }
 

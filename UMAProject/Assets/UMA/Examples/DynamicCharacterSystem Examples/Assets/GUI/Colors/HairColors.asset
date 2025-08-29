@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: HairColors
   m_EditorClassIdentifier: 
   channelCount: 3
-  copyColorName: 0
   sharedColorName: Hair
   colors:
   - name: Red
@@ -27,10 +26,15 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Brown
     channelMask:
     - {r: 0.084905684, g: 0.022943575, b: 0.010145955, a: 1}
@@ -42,10 +46,15 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Blonde
     channelMask:
     - {r: 0.8113208, g: 0.68397003, b: 0.45668682, a: 1}
@@ -57,10 +66,15 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Green
     channelMask:
     - {r: 0.03739962, g: 0.23584908, b: 0.023733223, a: 1}
@@ -72,7 +86,12 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}

@@ -13,7 +13,7 @@ namespace UMA.Editors
 	public class DynamicDNAConverterControllerInspector : Editor
 	{
 
-		[MenuItem("Assets/Create/UMA/DNA/Dynamic DNA Converter Controller")]
+		[MenuItem("Assets/Create/UMA/DNA/Legacy/Dynamic DNA Converter Controller")]
 		public static void CreateDynamicDNAConverterController()
 		{
 			DynamicDNAConverterController.CreateDynamicDNAConverterControllerAsset();

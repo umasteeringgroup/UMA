@@ -256,7 +256,6 @@ namespace UMA.PoseTools
 			tempAvatarPreDNA.transform.localRotation = sourceUMA.transform.localRotation;
 
 			UMADynamicAvatar tempAvatar = tempAvatarPreDNA.AddComponent<UMADynamicAvatar>();
-			tempAvatar.umaGenerator = sourceUMA.umaGenerator;
 			tempAvatar.Initialize();
 			tempAvatar.umaData.umaRecipe = new UMAData.UMARecipe();
 			tempAvatar.umaData.umaRecipe.raceData = ScriptableObject.CreateInstance<RaceData>();
@@ -272,7 +271,7 @@ namespace UMA.PoseTools
 
                 tempAvatar.umaData.umaRecipe.SetSlot(slotIndex++, slotEntry);
 			}
-			tempAvatar.Show();
+			tempAvatar.ShowAndLoad();
 
 			tempAvatarPostDNA = new GameObject("Temp DNA Avatar");
 			tempAvatarPostDNA.transform.parent = sourceUMA.transform.parent;
@@ -280,7 +279,6 @@ namespace UMA.PoseTools
 			tempAvatarPostDNA.transform.localRotation = sourceUMA.transform.localRotation;
 
 			UMADynamicAvatar tempAvatar2 = tempAvatarPostDNA.AddComponent<UMADynamicAvatar>();
-			tempAvatar2.umaGenerator = sourceUMA.umaGenerator;
 			tempAvatar2.Initialize();
 			tempAvatar2.umaData.umaRecipe = new UMAData.UMARecipe();
 			tempAvatar2.umaData.umaRecipe.raceData = ScriptableObject.CreateInstance<RaceData>();
@@ -303,7 +301,7 @@ namespace UMA.PoseTools
 			}
 
 			tempAvatar2.umaData.OnCharacterUpdated += CreateBonePoseCallback;
-			tempAvatar2.Show();
+			tempAvatar2.ShowAndLoad();
 		}
 
 		public static void EnforceFolder(ref UnityEngine.Object folderObject)

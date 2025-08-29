@@ -2,19 +2,22 @@
 using UnityEditor;
 using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
     [CustomEditor(typeof(UMAMaterial)),CanEditMultipleObjects]
     public class UMAMaterialInspector : Editor 
     {
+        public DynamicCharacterAvatar dca;
         public static bool showHelp = false;
         private Shader _lastSelectedShader;
         private string[] _shaderProperties;
         private GUIStyle _centeredStyle;
         private SerializedProperty _shaderParms;
         private bool[] channelExpanded = new bool[3];
-
+        private static bool showMaterialInspector = false;
+        Editor innerEditor = null;
         private bool shaderParmsFoldout = false;
 
         private List<UnityEngine.Object> _inspectedObjects = new List<UnityEngine.Object>();
@@ -28,6 +31,11 @@ namespace UMA.Editors
         public void OnDisable()
         {
             EditorApplication.update -= DoInspectors;
+            if (innerEditor != null)
+            {
+                DestroyImmediate(innerEditor);
+                innerEditor = null;
+            }
         }
 
 
@@ -75,58 +83,97 @@ namespace UMA.Editors
 
             GUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_material"), new GUIContent( "Default Material", "The Unity Material to link to."),GUILayout.ExpandWidth(true));
+
+
+
             if (GUILayout.Button("Inspect", GUILayout.Width(60)))
             {
                 _inspectedObjects.Add(serializedObject.FindProperty("_material").objectReferenceValue);
                 // InspectorUtlity.InspectTarget(serializedObject.FindProperty("_material").objectReferenceValue);
             }
             GUILayout.EndHorizontal();
+
             if (showHelp)
             {
                 EditorGUILayout.HelpBox("Default Material: This is the material that will be used if no other material is found.", MessageType.Info);
             }
+            showMaterialInspector = GUIHelper.FoldoutBar(showMaterialInspector, "Material Preview");
+            if (showMaterialInspector && source.material != null)
+            {
+                if (innerEditor == null)
+                {
+                    Material m = source.material;
 
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("srpMaterials"), new GUIContent("SRP Materials", "Materials for SRP pipelines. If no SRP materials are found, the default material will be used."));
-            if (showHelp)
-            {
-                EditorGUILayout.HelpBox("SRP Materials: These are the materials that will be used for the various SRP pipelines. If no SRP materials are found, the default material will be used.", MessageType.Info);
+                    innerEditor = Editor.CreateEditor(source.material, typeof(MaterialEditor));
+                    if (innerEditor == null)
+                    {
+                        Debug.LogError("Failed to create MaterialEditor for " + source.material.name);
+                        return;
+                    }
+                }
+                //GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
+                EditorGUILayout.HelpBox("Select an avatar in the scene, and use the material properties below to adjust the template material and see the changes in real time",MessageType.Info);
+                dca = EditorGUILayout.ObjectField("Preview Avatar", dca, typeof(DynamicCharacterAvatar), true) as DynamicCharacterAvatar;
+                DrawFoldoutInspector(source.material, ref innerEditor);
+                //GUILayout.Label("This is the material inspector for the material used by this UMAMaterial.", _centeredStyle);
+                //GUIHelper.EndVerticalPadded(10);
+
+                if (Event.current.type == EventType.Repaint && innerEditor != null && dca != null)
+                {
+                    SkinnedMeshRenderer[] smr = dca.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+                    if (smr != null && smr.Length > 0)
+                    {
+                        foreach (SkinnedMeshRenderer s in smr)
+                        {
+                            foreach(Material mat in s.sharedMaterials)
+                            {
+                                if (mat == null)
+                                {
+                                    continue;
+                                }
+                                if (mat.name.StartsWith(source.material.name) && mat.shader == source.material.shader)
+                                {
+                                    List<KeyValuePair<string,Texture>> savedTextures = new List<KeyValuePair<string,Texture>>();
+                                    foreach (var chan in source.channels)
+                                    {
+                                        string prop = chan.materialPropertyName;
+                                        Texture tex = mat.GetTexture(prop);
+                                        if (tex != null)
+                                        {
+                                            savedTextures.Add(new KeyValuePair<string, Texture>(prop,tex));
+                                        }
+                                    }
+                                    mat.CopyMatchingPropertiesFromMaterial(source.material);
+                                    // restore textures
+                                    foreach (var kvp in savedTextures)
+                                    {
+                                        if (mat.HasProperty(kvp.Key))
+                                        {
+                                            mat.SetTexture(kvp.Key, kvp.Value);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    Debug.LogWarning("Material " + mat.name + " does not match " + source.material.name + ". Skipping copy of properties.");
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (GUILayout.Button("Save material changes to disk"))
+                {
+                    if (innerEditor == null)
+                    {
+                        Debug.LogError("No inner editor found for material " + source.material.name);
+                        return;
+                    }
+                    innerEditor.serializedObject.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(source.material);
+                    AssetDatabase.SaveAssetIfDirty(source.material);
+                }
             }
-            GUILayout.BeginHorizontal(); 
-            if (GUILayout.Button("Create from default"))
-            {
-                serializedObject.ApplyModifiedProperties();
-                source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.BuiltInPipeline));
-                serializedObject.Update();
-                source.SetupSRP(true);
-            }
-            if (GUILayout.Button("Force save Materials"))
-            {
-                serializedObject.ApplyModifiedProperties();
-                EditorUtility.SetDirty(target);
-                AssetDatabase.SaveAssetIfDirty(target);
-            }
-            if (GUILayout.Button("Refresh Materials"))
-            {
-                serializedObject.Update();
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Init for each SRP"))
-            {
-                serializedObject.ApplyModifiedProperties();
-                source.srpMaterials.Clear();
-                source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.BuiltInPipeline));
-                source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.UniversalPipeline));
-                source.srpMaterials.Add(source.CreateSRPMaterial(UMAUtils.PipelineType.HDPipeline));
-                serializedObject.Update();
-            }
-            if (GUILayout.Button("Clear SRP Materials"))
-            {
-                serializedObject.ApplyModifiedProperties();
-                source.srpMaterials.Clear();
-                serializedObject.Update();
-            }
-            GUILayout.EndHorizontal();
 
             EditorGUILayout.PropertyField(materialTypeProperty, new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
             if (showHelp)
@@ -137,7 +184,6 @@ namespace UMA.Editors
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("_secondPass"), new GUIContent("Second Pass", "The Unity Material for a second pass. Usually NULL."));
             }
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("translateSRP"), new GUIContent("Translate SRP", "When checked, this will automatically translate the UMAMaterial property names to URP/HDRP names (ie - _MainTex becomes _BaseMap etc.)"));
 
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Generated Texture Settings", _centeredStyle);
@@ -204,7 +250,6 @@ namespace UMA.Editors
             if (wasChanged)
             {
                 serializedObject.ApplyModifiedProperties();
-                source.SetupSRP(true);
                 UMAMaterial.MaterialType NewMatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
                 if (MatType != NewMatType)
                 {
@@ -344,14 +389,9 @@ namespace UMA.Editors
                         {
                             string oldValue = materialPropertyName.stringValue;
                             int selection = EditorGUILayout.Popup(0, _shaderProperties, GUILayout.MinWidth(100), GUILayout.MaxWidth(200));
-                            if (oldValue != materialPropertyName.stringValue) 
-                            {
-                                UpdateCurrentSRP(i, materialPropertyName.stringValue, serializedObject);
-                            }
                             if (selection > 0)
                             {
                                 materialPropertyName.stringValue = _shaderProperties[selection];
-                                UpdateCurrentSRP(i, _shaderProperties[selection],serializedObject);
                             }
                         }
                         EditorGUILayout.EndHorizontal();
@@ -391,23 +431,6 @@ namespace UMA.Editors
                     GUILayout.Space(8);
                 }
                 GUIHelper.EndVerticalPadded(10);
-            }
-        }
-
-        private void UpdateCurrentSRP(int i, string v, SerializedObject sobj)
-        {
-            // Update the current SRP property name from the array
-            UMAMaterial source = target as UMAMaterial;
-            if (source.srpMaterials != null)
-            {
-                foreach (UMAMaterial.SRPMaterial srpMaterial in source.srpMaterials)
-                {
-                    if (srpMaterial.SRP == UMAUtils.CurrentPipeline)
-                    {
-                        srpMaterial.alternateKeywords[i] = v;
-                        sobj.Update();
-                    }
-                }
             }
         }
 

@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: TattooColors
   m_EditorClassIdentifier: 
   channelCount: 3
-  copyColorName: 0
   sharedColorName: Tattoo
   colors:
   - name: 
@@ -27,10 +26,15 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: 
     channelMask:
     - {r: 0.18867922, g: 0, b: 0.01902886, a: 0.78431374}
@@ -42,10 +46,15 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: 
     channelMask:
     - {r: 0.001991121, g: 0.047169805, b: 0, a: 0.78431374}
@@ -57,7 +66,12 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}

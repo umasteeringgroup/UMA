@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace UMA
 {
@@ -14,13 +15,13 @@ namespace UMA
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void Load(UMAData.UMARecipe umaRecipe, UMAContextBase context, bool loadSlots = true);
+		public abstract void Load(UMAData.UMARecipe umaRecipe, bool loadSlots = true);
 		/// <summary>
 		/// Save data from the specified umaRecipe.
 		/// </summary>
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
-		public abstract void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context);
+		public abstract void Save(UMAData.UMARecipe umaRecipe);
 		public abstract string GetInfo();
 		public abstract byte[] GetBytes();
 		public abstract void SetBytes(byte[] data);
@@ -50,23 +51,21 @@ namespace UMA
 
 #if UNITY_EDITOR
 
-		//This is used as a base for UMATextRecipe to override, because we cannt get what we need from this assembly- but the method needs to exist here to work in RecipeEditor
-		public virtual UMAContextBase CreateEditorContext()
-		{
-			return null;
-		}
 	#endif
-		/// <summary>
-		/// Return a cached version of the UMA recipe, Load if required.
-		/// </summary>
-		/// <returns>The cached recipe.</returns>
-		/// <param name="context">Context.</param>
-		public UMAData.UMARecipe GetCachedRecipe(UMAContextBase context, bool loadSlots = true)
+		public static long Ticks_Load = 0;
+        /// <summary>
+        /// Return a cached version of the UMA recipe, Load if required.
+        /// </summary>
+        /// <returns>The cached recipe.</returns>
+        /// <param name="context">Context.</param>
+        public UMAData.UMARecipe GetCachedRecipe( bool loadSlots = true, bool loadRaceData=false)
 		{
-			if (!cached || umaRecipe == null)
+			Stopwatch sw = Stopwatch.StartNew();
+
+            if (!cached || umaRecipe == null)
 			{
 				umaRecipe = new UMAData.UMARecipe();
-				Load(umaRecipe, context, loadSlots);
+                Load(umaRecipe,loadSlots);
 #if !UNITY_EDITOR
 #if UMA_ADDRESSABLES
 				// don't cache addressables, as they can be unloaded.
@@ -76,18 +75,32 @@ namespace UMA
 				cached = true;
 #endif
 #endif
-			}
 
-			return umaRecipe;
+
+            }
+			if (umaRecipe != null)
+			{
+				umaRecipe.recipeName = name;
+			}
+			sw.Stop();
+			Ticks_Load += sw.ElapsedTicks;
+            return umaRecipe;
 		}
 
 		[NonSerialized]
 		private static Type[] recipeFormats;
-		/// <summary>
-		/// Gets the list of all existing recipe formats.
-		/// </summary>
-		/// <returns>The recipe formats.</returns>
-		public static Type[] GetRecipeFormats()
+
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+            recipeFormats = null;
+        }
+        /// <summary>
+        /// Gets the list of all existing recipe formats.
+        /// </summary>
+        /// <returns>The recipe formats.</returns>
+        public static Type[] GetRecipeFormats()
 		{
 			if (recipeFormats == null)
 			{

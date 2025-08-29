@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -17,5 +18,6 @@ MonoBehaviour:
     position: {x: -0.001226585, y: 0.008048335, z: 0.00003056973}
     rotation: {x: -0.0000003064344, y: -0.00000006888451, z: -0.00000009842128, w: 1}
     scale: {x: 1.0000007, y: 1.0000004, z: 1.0000005}
+    category: 
   tweenPoses: []
   tweenWeights: []

@@ -74,8 +74,42 @@ namespace UMA
 			}
 		}
 
+        public static string FindUMAFolder()
+        {
+            string basePath = FindUMAFullPath();
+            // return the path relative to the Assets folder
+            string folder = basePath.Replace(Application.dataPath, "Assets");
+            return folder;
+        }
 
+        public static string FindUMAFullPath()
+        {
+            string folder = "/UMA";
 
+            string path1 = Path.Combine(Application.dataPath, "UMA");
+            if (Directory.Exists(path1.ToString()))
+            {
+                Debug.Log("UMA at default location: " + path1);
+                return "Assets/UMA";
+            }
+
+            // search the project for the UMA folder
+            string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
+            if (folders != null && folders.Length > 0)
+            {
+                foreach (string guid in folders)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (path.EndsWith(folder, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return path;
+                    }
+                }
+            }
+
+            // if we didn't find it, return the default path
+            return "Assets/UMA";
+        }
         public static NamedBuildTarget CurrentNamedBuildTarget
         {
             get
@@ -134,7 +168,7 @@ namespace UMA
 
 		public static bool StripUMAMaterials()
         {
-			return UMASettings.AddStripMaterials;
+			return UMASettings.AddrStripMaterials;
         }
 		public static bool PostProcessAllAssets()
 		{
@@ -292,173 +326,6 @@ namespace UMA
 		}
 #endif
 
-
-		[MenuItem("UMA/SRP/Convert to URP (LWRP)")]
-		static void ConvertToURP()
-		{
-			if (EditorUtility.DisplayDialog("Convert?", "Convert UMA Materials from Standard to URP. You should run the Unity option to convert your project to URP/LWRP in addition to running this option. Continue?", "OK", "Cancel"))
-			{
-				if (ConvertUMAMaterials("_MainTex", "_BaseMap"))
-				{
-					EditorUtility.DisplayDialog("Convert",
-						"UMAMaterials converted. You will need to run the unity URP (LWRP) conversion utility to convert your materials if you have not already done this.", "OK");
-				}
-				else
-				{
-					EditorUtility.DisplayDialog("Convert", "No UMAMaterials needed to be converted.", "OK");
-				}
-
-			}
-		}
-
-		[MenuItem("UMA/SRP/Convert to Standard from URP (LWRP)")]
-		static void ConvertToStandard()
-		{
-			if (EditorUtility.DisplayDialog("Convert?", "Convert UMAMaterials to Standard from URP. You will need to manually fix the template materials. Continue?", "OK", "Cancel"))
-			{
-				if (ConvertUMAMaterials("_BaseMap", "_MainTex"))
-				{
-					EditorUtility.DisplayDialog("Convert", "UMAMaterials converted. You will need to manually fix the template materials by changing them to use the correct shaders if you modified them.", "OK");
-				}
-				else
-				{
-					EditorUtility.DisplayDialog("Convert", "No UMAMaterials needed to be converted.", "OK");
-				}
-			}
-		}
-
-		/// <summary>
-		/// Convertes all UMAMaterial channel Material Property names if they match.
-		/// </summary>
-		/// <param name="From"></param>
-		/// <param name="To"></param>
-		/// <returns></returns>
-		static bool ConvertUMAMaterials(string From, string To)
-		{
-			string[] guids = AssetDatabase.FindAssets("t:UMAMaterial");
-
-			int dirtycount = 0;
-			foreach (string guid in guids)
-			{
-				bool matModified = false;
-				string path = AssetDatabase.GUIDToAssetPath(guid);
-				UMAMaterial umat = AssetDatabase.LoadAssetAtPath<UMAMaterial>(path);
-				var lowerShaderName = umat.material.shader.name.ToLower();
-				if (lowerShaderName.StartsWith("standard") || lowerShaderName.Contains("lit"))
-				{
-					if ((lowerShaderName.StartsWith("standard") && From == "_MainTex") || (lowerShaderName.Contains("lit") && To == "_MainTex"))
-					{
-						matModified = true;
-						var tex = umat.material.GetTexture(From);
-						if (lowerShaderName.StartsWith("standard"))
-						{
-							var mode = umat.material.GetFloat("_Mode");
-							umat.material.shader = Shader.Find("Universal Render Pipeline/Lit");
-							var keywords = umat.material.shaderKeywords;
-							switch (mode)
-							{
-								case 0:
-									umat.material.SetFloat("_Surface", 0);
-									break;
-								case 1:
-									umat.material.SetFloat("_Surface", 1);
-									umat.material.SetFloat("_AlphaClip", 1);
-									ArrayUtility.Add(ref keywords, "_SURFACE_TYPE_TRANSPARENT");
-									ArrayUtility.Add(ref keywords, "_ALPHATEST_ON");
-									break;
-								case 2:
-									umat.material.SetFloat("_Surface", 1);
-									umat.material.SetFloat("_SpecularHighlights", 0);
-									umat.material.SetFloat("_EnvironmentReflections", 0);
-									ArrayUtility.Add(ref keywords, "_SURFACE_TYPE_TRANSPARENT");
-									ArrayUtility.Add(ref keywords, "_SPECULARHIGHLIGHTS_OFF");
-									ArrayUtility.Add(ref keywords, "_ENVIRONMENTREFLECTIONS_OFF");
-									break;
-								case 3:
-									umat.material.SetFloat("_Surface", 1);
-									ArrayUtility.Add(ref keywords, "_SURFACE_TYPE_TRANSPARENT");
-									break;
-							}
-							umat.material.shaderKeywords = keywords;
-							if (lowerShaderName.Contains("specular"))
-							{
-								umat.material.SetFloat("_WorkflowMode", 0);
-							}
-							else
-							{
-								umat.material.SetFloat("_WorkflowMode", 1);
-							}
-							EditorUtility.SetDirty(umat.material);
-						}
-						else if (lowerShaderName.Contains("lit"))
-						{
-							var keywords = umat.material.shaderKeywords;
-							var transparent = umat.material.GetFloat("_Surface") > 0.5f;
-							if (umat.material.GetFloat("_WorkflowMode") == 1)
-							{
-								umat.material.shader = Shader.Find("Standard");
-							}
-							else
-							{
-								umat.material.shader = Shader.Find("Standard (Specular setup)");
-							}
-							if (!transparent)
-							{
-								umat.material.SetFloat("_Mode", 0);
-							}
-							else if (Array.IndexOf(keywords, "_SPECULARHIGHLIGHTS_OFF") >= 0)
-							{
-								umat.material.SetFloat("_Mode", 2);
-							}
-							else if (Array.IndexOf(keywords, "_ALPHATEST_ON") >= 0)
-							{
-								umat.material.SetFloat("_Mode", 1);
-							}
-							else
-							{
-								umat.material.SetFloat("_Mode", 3);
-							}
-						}
-						umat.material.SetTexture(To, tex);
-						EditorUtility.SetDirty(umat.material);
-					}
-					for (int i = 0; i < umat.channels.Length; i++)
-					{
-						if (umat.channels[i].materialPropertyName == From)
-						{
-							umat.channels[i].materialPropertyName = To;
-							matModified = true;
-						}
-					}
-				}
-				if (umat.material.shader.name.ToLower().Contains("hair fade"))
-                {
-					umat.material.shader = Shader.Find("Universal Render Pipeline/Nature/SpeedTree8");
-					if (umat.material.name.ToLower().Contains("single"))
-                    {
-						umat.material.SetInt("_TwoSided", 2);
-                    }
-					else
-                    {
-						umat.material.SetInt("_TwoSided", 0);
-					}
-					EditorUtility.SetDirty(umat.material);
-					matModified = true;
-                }
-				if (matModified)
-				{
-					dirtycount++;
-					EditorUtility.SetDirty(umat);
-				}
-			}
-			if (dirtycount > 0)
-			{
-				AssetDatabase.SaveAssets();
-				return true;
-			}
-			return false;
-		}
-
 #if UMA_HOTKEYS
 		[MenuItem("UMA/Toggle Hotkeys (enabled)",priority =30)]
 #else
@@ -466,7 +333,7 @@ namespace UMA
 #endif
 		public static void ToggleUMAHotkeys()
 		{
-			string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup ( EditorUserBuildSettings.selectedBuildTargetGroup );
+			string definesString = PlayerSettings.GetScriptingDefineSymbols ( CurrentNamedBuildTarget );
             List<string> allDefines = new List<string>();
             allDefines.AddRange(definesString.Split(';'));
 
@@ -478,8 +345,8 @@ namespace UMA
             {
                 allDefines.Add(umaHotkeyWord);
             }
-
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
+			PlayerSettings.SetScriptingDefineSymbols(CurrentNamedBuildTarget, string.Join(";", allDefines.ToArray()));
+            //PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
 		}
       
 		/// <summary>
@@ -503,7 +370,7 @@ namespace UMA
 				mySlot.AddOverlay(myOverlay);
 			}
 			recipe.SetSlot(0, mySlot);
-			asset.Save(recipe, UMAContextBase.Instance);
+			asset.Save(recipe);
 			asset.DisplayValue = slotName;
 
 			// Write the asset to disk

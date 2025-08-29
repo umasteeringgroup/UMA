@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using System.Text;
+#endif
+using UMA.PoseTools;
+#if UNITY_EDITOR
 using UnityEditorInternal;
 #endif
 using UnityEngine;
@@ -15,19 +18,33 @@ namespace UMA
     [PreferBinarySerialization]
     public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider, IUMAIndexOptions
     {
+        #region internalClasses
+        [System.Serializable]
+        public class BonePoseToRace
+        {
+            public string RaceName;
+            public UMABonePose BonePose;
+        };
+        #endregion
+        #region enums
         public enum BlendshapeCopyMode {UpdateAndAdd, ClearAndReplace, AddNewOnly }
         public enum NormalCopyMode {CopyNormals, AverageNormals }
+        #endregion
+
         public string slotName;
         [System.NonSerialized]
         public int nameHash;
 
+        #region IUMAIndexOptions
         public bool forceKeep = false;
         public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
 
         [Tooltip("If true, this Slot will not be added to the index when adding all")]
         public bool noAutoAdd = false;
         public bool NoAutoAdd { get { return noAutoAdd; } set { noAutoAdd = value; } }
+        #endregion
 
+        public List<BonePoseToRace> bonePoseToRaces = new List<BonePoseToRace>();
 
 #if UNITY_EDITOR
         [Tooltip("This is only used when updating the slot with drag and drop below. It is not used at runtime nor is it included in the build")]
@@ -686,7 +703,7 @@ namespace UMA
 
 #endif
 
-        public UMARendererAsset RendererAsset { get { return _rendererAsset; } }
+        public UMARendererAsset RendererAsset { get { return _rendererAsset; } set { _rendererAsset = value; } }
         [SerializeField] private UMARendererAsset _rendererAsset = null;
 
         #region INameProvider
@@ -743,17 +760,8 @@ namespace UMA
         /// could remove transforms from the rig. Animated bones will always
         /// be preserved.
         /// </remarks>
-        public string[] animatedBoneNames = new string[0];
-        /// <summary>
-        /// The animated bone name hashes.
-        /// </summary>
-        /// <remarks>
-        /// The animated bones array is required for cases where optimizations
-        /// could remove transforms from the rig. Animated bones will always
-        /// be preserved.
-        /// </remarks>
-        [UnityEngine.HideInInspector]
-        public int[] animatedBoneHashes = new int[0];
+        [Tooltip("The animated bones. These are root bones. Add a bone animator (SwayBoneAnimator or UnityJointAnimator) to animate bones for hair, jiggle, etc. Create the Bone Animators from the UMA right-click ment in the project.")]
+        public BaseUpdatedObject[] animatedBones = new BaseUpdatedObject[0];
 
         [Tooltip("This object is a clipping plane, and is not added to the model.")]
         public bool isClippingPlane = false;
@@ -770,20 +778,11 @@ namespace UMA
         [Tooltip("This is used to grow around the center. Negative values subtract. Positive values add.")]
         public Vector3 smooshExpand = Vector3.one;
 
+
+
         [Tooltip("This object can process events ")]
         public GameObject SlotObject;
         private bool SlotObjectHookedUp = false;
-
-#pragma warning disable 649
-        //UMA2.8+ we need to use DNAConverterField now because that can contain Behaviours and the new controllers
-        //we need this because we need the old data out of it on deserialize
-        /// <summary>
-        /// Optional DNA converter specific to the slot.
-        /// </summary>
-        [FormerlySerializedAs("slotDNA")]
-        [SerializeField]
-        private DnaConverterBehaviour _slotDNALegacy;
-#pragma warning restore 649
 
         //UMA 2.8 FixDNAPrefabs: this is a new field that can take DNAConverter Prefabs *and* DNAConverterControllers
         [SerializeField]
@@ -1084,8 +1083,7 @@ namespace UMA
             nameHash = source.nameHash;
             material = source.material;
             overlayScale = source.overlayScale;
-            animatedBoneNames = source.animatedBoneNames;
-            animatedBoneHashes = source.animatedBoneHashes;
+            animatedBones = source.animatedBones;
             meshData = source.meshData;
             subMeshIndex = source.subMeshIndex;
             isClippingPlane = source.isClippingPlane;

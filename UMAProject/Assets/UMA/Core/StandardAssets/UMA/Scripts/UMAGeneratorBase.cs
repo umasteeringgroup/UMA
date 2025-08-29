@@ -9,7 +9,7 @@ namespace UMA
     /// </summary>
     public abstract class UMAGeneratorBase : MonoBehaviour
 	{
-		public enum FitMethod {DecreaseResolution, BestFitSquare };
+		public enum FitMethod {DecreaseResolution, BestFitSquare, MultipleHeuristics };
 
 		public bool fitAtlas;
 		[HideInInspector]
@@ -57,6 +57,9 @@ namespace UMA
 		public bool MultiThreadTextureConversion = true;
 		public int MaxQueuedConversionsPerFrame = 8;
 
+		[Tooltip("Use 32 bit buffers for the generated meshes. This is required for meshes with more than 65535 vertices,boneweights, or trianges. Will use more memory.")]
+        public bool Use32BitBuffers = true;
+
         [NonSerialized]
 		public bool FreezeTime;
 
@@ -76,6 +79,13 @@ namespace UMA
 #endif
 
         public static HashSet<int> CreatedAvatars = new HashSet<int>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+            CreatedAvatars = new HashSet<int>();
+            newBones = new List<SkeletonBone>();
+        }
 
         /// <summary>
         /// returns true if the UMAData is in the update queue.
@@ -393,7 +403,7 @@ namespace UMA
 					break;
 			}
 		}
-
+#if UNITY_EDITOR
 		public static void DebugLogHumanAvatar(GameObject root, HumanDescription description)
 		{
 			if (Debug.isDebugBuild)
@@ -441,6 +451,7 @@ namespace UMA
                 Debug.Log("++++");
             }
         }
+#endif
 
 		/// <summary>
 		/// Creates a human (biped) avatar for a UMA character.
@@ -512,15 +523,27 @@ namespace UMA
 		}
 
 		private static List<SkeletonBone> newBones = new List<SkeletonBone>();
-		private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones, HumanBone[] human)
+
+        private static void SkeletonModifier(UMAData umaData, ref SkeletonBone[] bones, HumanBone[] human)
 		{
 			int missingBoneCount = 0;
 			newBones.Clear();
 
-			while (!umaData.skeleton.HasBone(UMAUtils.StringToHash(bones[missingBoneCount].name)))
+
+            while (missingBoneCount < bones.Length)
+            {
+                int boneHash = UMAUtils.StringToHash(bones[missingBoneCount].name);
+                if (umaData.skeleton.HasBone(boneHash))
+                {
+                    break;
+                }
+                missingBoneCount++;
+            }
+
+            /*while (!umaData.skeleton.HasBone(UMAUtils.StringToHash(bones[missingBoneCount].name)))
 			{
 				missingBoneCount++;
-			}
+			}*/
 			if (missingBoneCount > 0)
 			{
 				// force the two root transforms, reuse old bones entries to ensure any humanoid identifiers stay intact

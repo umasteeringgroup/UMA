@@ -57,10 +57,14 @@ namespace UMA
 		[Tooltip("Normal or Cutout overlay type. This determines whether or not to use a cutout shader during the texture merging process.")]
 		public OverlayType overlayType;
 
-		/// <summary>
-		/// Destination rectangle for drawing overlay textures.
-		/// </summary>
-		[Tooltip("Destination rectangle for drawing overlay textures.")]
+        /// <summary>
+        /// When true, this overlay will not be merged with other overlays that share the same material.
+        /// </summary>
+        public bool dontMergeDuplicates = false;
+        /// <summary>
+        /// Destination rectangle for drawing overlay textures.
+        /// </summary>
+        [Tooltip("Destination rectangle for drawing overlay textures.")]
 		public Rect rect;
 		/// <summary>
 		/// Optional Alpha mask, if alpha mask is not set the texture[0].alpha is used instead.
@@ -152,7 +156,7 @@ namespace UMA
 				overlayBlend = new OverlayBlend[textureList.Length];
 			}
 		}
-
+#if false
 		/// <summary>
 		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
 		/// </summary>
@@ -173,7 +177,7 @@ namespace UMA
 				public System.Int32[] occlusion;
 			}
 
-			public class OcclusionEntryComparer : IComparer
+			/*public class OcclusionEntryComparer : IComparer
 			{
 				static OcclusionEntryComparer _instance;
 				private OcclusionEntryComparer() { }
@@ -210,14 +214,15 @@ namespace UMA
 
                     return 0;
 				}
-			}
+			}*/
 		}
+#endif
 		/// <summary>
 		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
 		/// It is important that the OcclusionEntries be sorted by slotNameHash ascending to allow fast binary lookup
 		/// </summary>
-		[Tooltip("Occlusion Entries for occluding triangles, currently only supported by powertools.")]
-		public OcclusionEntry[] OcclusionEntries;
+		//[Tooltip("Occlusion Entries for occluding triangles, currently only supported by powertools.")]
+		//public OcclusionEntry[] OcclusionEntries;
 
 		public OverlayDataAsset()
 		{
@@ -237,7 +242,7 @@ namespace UMA
 			return alphaMask != null ? alphaMask : textureList[0];
 		}
 
-		public void SortOcclusion()
+		/*public void SortOcclusion()
 		{
 			if (OcclusionEntries != null)
 			{
@@ -246,6 +251,6 @@ namespace UMA
 				UnityEditor.EditorUtility.SetDirty(this);
 #endif
 			}
-		}
+		} */
 	}
 }

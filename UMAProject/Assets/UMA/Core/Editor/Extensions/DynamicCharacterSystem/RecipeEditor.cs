@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UMA.Integrations;
+using System.Collections;
 
 namespace UMA.Editors
 {
@@ -18,9 +18,8 @@ namespace UMA.Editors
     {
 		List<GameObject> draggedObjs;
 
-		GameObject generatedContext;
-
 		EditorWindow inspectorWindow;
+		public bool Initialized = false;
 
 		//for showing a warning if any of the compatible races are missing or not assigned to bundles or the index
 		protected Texture warningIcon;
@@ -94,7 +93,7 @@ namespace UMA.Editors
 		{
 			var GO = new GameObject(recipe.name);
 			var avatar = GO.AddComponent<UMADynamicAvatar>();
-			avatar.umaRecipe = recipe;
+			avatar.serializedRecipe = recipe;
 			avatar.loadOnStart = true;
 			return GO;
 		}
@@ -110,15 +109,31 @@ namespace UMA.Editors
 
         public override void OnEnable()
         {
-			if(plugins == null) {
-				AddPlugins();
-			}
+            EditorApplication.delayCall += InitializeEditor;
+        }
+
+        private void InitializeEditor()
+        {
+			if (Initialized)
+            {
+                return;
+            }
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+			{
+                EditorApplication.delayCall += InitializeEditor;
+                return;
+            }
+            if (plugins == null)
+            {
+                AddPlugins();
+            }
 
             base.OnEnable();
 
-			foreach(IUMARecipePlugin plugin in plugins) {
-				plugin.OnEnable();
-			}
+            foreach (IUMARecipePlugin plugin in plugins)
+            {
+                plugin.OnEnable();
+            }
 
             if (!NeedsReenable())
                 return;
@@ -132,22 +147,12 @@ namespace UMA.Editors
                 var umaRecipeBase = target as UMARecipeBase;
                 if (umaRecipeBase != null)
                 {
-					var context = UMAContextBase.Instance;
-					//create a virtual UMAContextBase if we dont have one and we have DCS
-				//	if (context == null || context.gameObject.name == "UMAEditorContext")
-				//	{
-				//		context = umaRecipeBase.CreateEditorContext();//will create or update an UMAEditorContext to the latest version
-				//		generatedContext = context.gameObject.transform.parent.gameObject;//The UMAContextBase in a UMAEditorContext is that gameobject's child
-				//	}
-					//legacy checks for context
-					if (context != null)
-					{
-						umaRecipeBase.Load(_recipe, context);
-						_description = umaRecipeBase.GetInfo();
-					}
+
+                    umaRecipeBase.Load(_recipe);
+                    _description = umaRecipeBase.GetInfo();
                 }
             }
-			catch (UMAResourceNotFoundException e)
+            catch (UMAResourceNotFoundException e)
             {
                 _errorMessage = e.Message;
             }
@@ -156,24 +161,30 @@ namespace UMA.Editors
             slotEditor = new SlotMasterEditor(_recipe);
 
             _rebuildOnLayout = true;
+            Initialized = true;
         }
-		
-		public void OnDestroy()
+
+
+
+
+        public void OnDestroy()
 		{
-			if (generatedContext != null)
+			if (plugins == null) return;
+            foreach (IUMARecipePlugin plugin in plugins) 
 			{
-				//Ensure UMAContextBase.Instance is set to null
-				UMAContextBase.Instance = null;
-				DestroyImmediate(generatedContext);
-			}
-			foreach(IUMARecipePlugin plugin in plugins) {
-				plugin.OnDestroy();
+				if (plugin == null) continue;
+                plugin.OnDestroy();
 			}
 
 		}
 
         public override void OnInspectorGUI()
         {
+			if (!Initialized)
+			{
+                EditorGUILayout.HelpBox("Recipe Editor is not initialized. Please wait until the editor is ready.", MessageType.Info);
+                return;
+            }
             if (warningIcon == null)
 			{
 				warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
@@ -194,42 +205,6 @@ namespace UMA.Editors
 				}
 			}
 
-			if (UMAContext.Instance == null)
-            {
-				EditorGUILayout.HelpBox("A valid context was not found. This is required to be able to view and edit UMA recipes. You can add a Temporary context, and it will disappear when the scene or appdomain is reloaded, or you can add a permanent UMA_GLIB to the scene.", MessageType.Warning);
-				EditorGUILayout.BeginHorizontal();
-				if (GUILayout.Button("Add Permanent Context"))
-                {
-					var glib = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/UMA/Getting Started/UMA_GLIB.prefab");
-					if (glib != null)
-					{
-						glib.name = "UMA_GLIB";
-						var g = (GameObject)PrefabUtility.InstantiatePrefab(glib);
-					}
-					else
-					{
-						EditorUtility.DisplayDialog("error", "Unable to find UMA_GLIB. Please add context manually.", "OK");
-					}
-				}
-				if (GUILayout.Button("Add Temp Context"))
-				{
-					var glib = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/UMA/Getting Started/UMA_GLIB.prefab");
-					if (glib != null)
-					{
-						glib.name = "Temp Context (does not save)";
-						var g = (GameObject)PrefabUtility.InstantiatePrefab(glib);
-						g.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
-						UMAContext.Instance = g.GetComponent<UMAGlobalContext>();
-					}
-					else
-                    {
-						EditorUtility.DisplayDialog("error", "Unable to find UMA_GLIB. Please add context manually.", "OK");
-                    }
-				}
-				EditorGUILayout.EndHorizontal();
-				return;
-            }
-            PowerToolsGUI();
             base.OnInspectorGUI();
 		}
 
@@ -237,7 +212,7 @@ namespace UMA.Editors
         {
             _needsUpdate = false;
             var recipeBase = (UMARecipeBase)target;
-            recipeBase.Save(_recipe, UMAContextBase.Instance);
+            recipeBase.Save(_recipe);
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssetIfDirty(recipeBase);
 			_rebuildOnLayout = true;
@@ -252,50 +227,8 @@ namespace UMA.Editors
         {
             base.Rebuild();
             var recipeBase = target as UMARecipeBase;
-            if (PowerToolsIntegration.HasPowerTools() && PowerToolsIntegration.HasPreview(recipeBase))
-            {
-                _needsUpdate = true;
-            }
         }
 
-        private void PowerToolsGUI()
-        {
-            if (PowerToolsIntegration.HasPowerTools())
-            {
-                GUILayout.BeginHorizontal();
-                var recipeBase = target as UMARecipeBase;
-                if (PowerToolsIntegration.HasPreview(recipeBase))
-                {
-                    if (GUILayout.Button("Hide"))
-                    {
-                        PowerToolsIntegration.Hide(recipeBase);
-                    }
-                    if (GUILayout.Button("Create Prefab"))
-                    {
-                        //PowerToolsIntegration.CreatePrefab(recipeBase);
-                    }
-                    if (GUILayout.Button("Hide All"))
-                    {
-                        PowerToolsIntegration.HideAll();
-                    }
-                } else
-                {
-                    if (GUILayout.Button("Show"))
-                    {
-                        PowerToolsIntegration.Show(recipeBase);
-                    }
-                    if (GUILayout.Button("Create Prefab"))
-                    {
-                        //PowerToolsIntegration.CreatePrefab(recipeBase);
-                    }
-                    if (GUILayout.Button("Hide All"))
-                    {
-                        PowerToolsIntegration.HideAll();
-                    }
-                }
-                GUILayout.EndHorizontal();
-            }
-        }
 
 		/// <summary>
 		/// Checks if the given RaceData is in the globalLibrary or an assetBundle
@@ -304,19 +237,7 @@ namespace UMA.Editors
 		/// <returns></returns>
 		protected bool RaceInIndex(RaceData _raceData)
 		{
-			if (UMAContextBase.Instance != null)
-			{
-				if (UMAContextBase.Instance.HasRace(_raceData.raceName) != null)
-					return true;
-			}
-
-			AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<RaceData>(_raceData.raceName);
-			if (ai != null)
-			{
-				return true;
-			}
-
-			return false;
+			return UMAAssetIndexer.Instance.HasRace(_raceData.raceName);
 		}
 	}
 	/*public class ShowGatheringNotification : EditorWindow

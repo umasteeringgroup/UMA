@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -16,61 +17,193 @@ MonoBehaviour:
   colors:
   - name: Hair
     channelMask:
-    - {r: .796078503, g: .576470613, b: .262745112, a: 1}
+    - {r: 0.7960785, g: 0.5764706, b: 0.2627451, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .662745118, g: .400000036, b: .0156862754, a: 1}
+    - {r: 0.6627451, g: 0.40000004, b: 0.015686275, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .882353008, g: .690196097, b: .407843173, a: 1}
+    - {r: 0.882353, g: 0.6901961, b: 0.40784317, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .905882418, g: .56078434, b: .0588235334, a: 1}
+    - {r: 0.9058824, g: 0.56078434, b: 0.058823533, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .611764729, g: .368627459, b: .011764707, a: 1}
+    - {r: 0.6117647, g: 0.36862746, b: 0.011764707, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .360784322, g: .215686291, b: .00392156886, a: 1}
+    - {r: 0.36078432, g: 0.21568629, b: 0.003921569, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .325490206, g: .152941182, b: 0, a: 1}
+    - {r: 0.3254902, g: 0.15294118, b: 0, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .207843155, g: .0980392247, b: 0, a: 1}
+    - {r: 0.20784315, g: 0.098039225, b: 0, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .0745098069, g: .0313725509, b: .0156862754, a: 1}
+    - {r: 0.07450981, g: 0.03137255, b: 0.015686275, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .0156862754, g: .00392156886, b: .0745098069, a: 1}
+    - {r: 0.015686275, g: 0.003921569, b: 0.07450981, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .278431386, g: .278431386, b: .278431386, a: 1}
+    - {r: 0.2784314, g: 0.2784314, b: 0.2784314, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Hair
     channelMask:
-    - {r: .56078434, g: .466666698, b: .333333343, a: 1}
+    - {r: 0.56078434, g: 0.4666667, b: 0.33333334, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}

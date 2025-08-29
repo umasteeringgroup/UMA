@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using static UMA.UMAData;
+using System.Linq;
 
 namespace UMA
 {
@@ -72,7 +73,6 @@ namespace UMA
 
 		UMAGeneratorBase umaGenerator;
 		UMAData umaData;
-		Texture[] backUpTexture;
 		bool updateMaterialList;
 		int scaleFactor;
 		MaterialDefinitionComparer comparer = new MaterialDefinitionComparer();
@@ -114,11 +114,28 @@ namespace UMA
 			else
 			{
 				res.material = UnityEngine.Object.Instantiate(umaMaterial.material) as Material;
+#if UNITY_EDITOR
+				OverlayData od = null;
+				if (res.materialFragments != null && res.materialFragments.Count > 0)
+				{
+                    od = res.materialFragments[0].overlayData[0];
+                }
+				if (od != null)
+				{
+					res.material.name = umaMaterial.material.name + "_Gena_" + od.overlayName;
+				}
+				else
+				{
+                    res.material.name = umaMaterial.material.name + "_Genb_" + UnityEngine.Random.Range(1, 1000000000);
+                }
+
+#else
 				res.material.name = umaMaterial.material.name + "_Gen_" + UnityEngine.Random.Range(1,1000000000);
+#endif
 #if UNITY_WEBGL
 			res.material.shader = Shader.Find(res.material.shader.name);
 #endif
-				res.material.shader = umaMaterial.material.shader;
+                res.material.shader = umaMaterial.material.shader;
 				res.material.CopyPropertiesFromMaterial(umaMaterial.material);
 			}
 			atlassedMaterials.Add(res);
@@ -367,6 +384,16 @@ namespace UMA
 			for (int i=0;i<generatedMaterials.Count;i++)
             {
                 UMAData.GeneratedMaterial ugm = generatedMaterials[i];
+#if UNITY_EDITOR
+				if (ugm.materialFragments != null && ugm.materialFragments.Count > 0 && ugm.materialFragments[0].overlayData != null && ugm.materialFragments[0].overlayData.Length > 0)
+                {
+					if (ugm.materialFragments[0].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial &&
+						ugm.materialFragments[0].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingTextures)
+					{
+						ugm.material.name = ugm.material.name + "_" + ugm.materialFragments[0].overlayData[0].overlayName;
+					}
+                }
+#endif
                 ApplyMaterialParameters(ugm,umaData,ugm.material);
             }
             packTexture = new MaxRectsBinPack(umaGenerator.atlasResolution, umaGenerator.atlasResolution, false);
@@ -442,8 +469,10 @@ namespace UMA
                         }
 						else
 						{
-                            Debug.LogWarning("UMAData.UMARecipe is null");
-                        }
+#if UNITY_EDITOR
+							Debug.LogWarning("UMAData.UMARecipe is null");
+#endif
+						}
                     }
                 }
 
@@ -476,25 +505,105 @@ namespace UMA
 
 
             textureProcesser.ProcessTexture(_umaData,_umaGenerator);
-            // CleanBackUpTextures();
 
             UpdateUV();
 
 			// Procedural textures were done here 
 			if (updateMaterialList)
 			{
-				for (int j = 0; j < umaData.rendererCount; j++)
+                var atlasses = umaData.generatedMaterials.materials;
+
+                // Reuse these lists to reduce allocations per renderer
+                var newMats = new List<Material>();
+                var mats = new List<Material>();
+
+                for (int j = 0; j < umaData.RendererCount; j++)
+                {
+                    var renderer = umaData.GetRenderer(j);
+                    var rAsset = umaData.GetRendererAsset(j);
+
+                    mats.Clear();
+                    renderer.GetSharedMaterials(mats);
+
+                    newMats.Clear();
+
+                    for (int i = 0; i < atlasses.Count; i++)
+                    {
+                        var gm = atlasses[i];
+                        if (gm.rendererAsset != rAsset)
+                            continue;
+
+                        // Destination index in the new material list
+                        int dstIndex = newMats.Count;
+
+                        // Destroy existing material in the destination slot if not tagged "Keep"
+                        if (dstIndex < mats.Count && mats[dstIndex] != null)
+                        {
+                            var keepTag = mats[dstIndex].GetTag("Keep", false);
+                            if (string.IsNullOrEmpty(keepTag))
+                            {
+                                UMAUtils.DestroySceneObject(mats[dstIndex]);
+                            }
+                        }
+
+                        // First pass material
+                        var firstPass = gm.material;
+                        newMats.Add(firstPass);
+
+                        gm.skinnedMeshRenderer = renderer;
+                        gm.materialIndex = dstIndex;
+
+                        UMAGeneratorPro.ApplyMaterialParameters(gm, umaData, firstPass);
+                        UMADefaultMeshCombiner.CopyMaterialTextures(firstPass, gm.material, gm.umaMaterial);
+                        if (gm.material.HasProperty("_OverlayCount"))
+                        {
+                            UMADefaultMeshCombiner.SetCompositingParameters(firstPass, gm);
+                        }
+
+                        // Ensure submesh index is set to the first pass index
+                        for (int k = 0; k < gm.materialFragments.Count; k++)
+                        {
+                            gm.materialFragments[k].slotData.submeshIndex = dstIndex;
+                        }
+
+                        // Optional second pass
+                        if (gm.umaMaterial.secondPass != null)
+                        {
+                            Material secondPass = (gm.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingMaterial)
+                                ? gm.material
+                                : GameObject.Instantiate(gm.umaMaterial.secondPass);
+
+                            gm.secondPassMaterial = secondPass;
+
+                            UMAGeneratorPro.ApplyMaterialParameters(gm, umaData, secondPass);
+                            UMADefaultMeshCombiner.CopyMaterialTextures(secondPass, gm.material, gm.umaMaterial);
+                            if (gm.material.HasProperty("_OverlayCount"))
+                            {
+                                UMADefaultMeshCombiner.SetCompositingParameters(secondPass, gm);
+                            }
+
+                            newMats.Add(secondPass);
+                        }
+                    }
+
+                    renderer.sharedMaterials = newMats.ToArray();
+                }
+                /*
+				List<Material> mats = new List<Material>(20);
+				List<Material> newMats = new List<Material>(20);
+                for (int j = 0; j < umaData.RendererCount; j++)
 				{
 					var renderer = umaData.GetRenderer(j);
-					var mats = renderer.sharedMaterials;
-					var newMats = new Material[mats.Length];
+					renderer.GetSharedMaterials(mats);
+                    //var mats = renderer.sharedMaterials;
+                    //var newMats = new Material[mats.Count];
 					var atlasses = umaData.generatedMaterials.materials;	
 					int materialIndex = 0;
 					for (int i = 0; i < atlasses.Count; i++)
 					{
 						if (atlasses[i].rendererAsset == umaData.GetRendererAsset(j))
 						{
-							if (mats.Length > materialIndex) 
+							if (mats.Count > materialIndex) 
 							{
                                 if (mats[materialIndex] != null)
                                 {
@@ -507,11 +616,16 @@ namespace UMA
 							}
 							else
                             {
-								List<Material> listMats = new List<Material>(newMats);
-								listMats.Add(null);
-								newMats = listMats.ToArray();
-                            }
-							newMats[materialIndex] = atlasses[i].material;
+								newMats.Add(null);
+								//List<Material> listMats = new List<Material>(newMats);
+								//listMats.Add(null);
+								//newMats = listMats.ToArray();
+							}
+							var atlassedMaterial = atlasses[i].material;
+                            while (newMats.Count <= materialIndex)
+                                newMats.Add(null);
+                            newMats[materialIndex] = atlassedMaterial;
+
 							atlasses[i].skinnedMeshRenderer = renderer;
 							atlasses[i].materialIndex = materialIndex;
                             var cm = atlasses[i];
@@ -531,7 +645,15 @@ namespace UMA
 
                             if (atlasses[i].umaMaterial.secondPass != null) 
                             {
-                                Material secondPass = GameObject.Instantiate(cm.umaMaterial.secondPass);
+								Material secondPass = null;
+                                if (cm.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingMaterial)
+								{
+                                    secondPass = cm.material;
+                                }
+								else
+								{
+									secondPass = GameObject.Instantiate(cm.umaMaterial.secondPass);
+								}
                                 cm.secondPassMaterial = secondPass;
                                 // Apply shader property blocks to second pass material
                                 UMAGeneratorPro.ApplyMaterialParameters(cm, umaData, secondPass);
@@ -550,35 +672,10 @@ namespace UMA
 							materialIndex++;
 						}
 					}
-					renderer.sharedMaterials = newMats;
-				}
+					renderer.sharedMaterials = newMats.ToArray();
+				} */
 			}
 		}
-
-
-		private void CleanBackUpTextures()
-		{
-			for (int textureIndex = 0; textureIndex < backUpTexture.Length; textureIndex++)
-			{
-				if (backUpTexture[textureIndex] != null)
-				{
-					Texture tempTexture = backUpTexture[textureIndex];
-					if (tempTexture is RenderTexture)
-					{
-						RenderTexture tempRenderTexture = tempTexture as RenderTexture;
-						tempRenderTexture.Release();
-						UMAUtils.DestroySceneObject(tempRenderTexture);
-						tempRenderTexture = null;
-					}
-					else
-					{
-						UMAUtils.DestroySceneObject(tempTexture);
-					}
-					backUpTexture[textureIndex] = null;
-				}
-			}
-		}
-
 
 
 		/// <summary>
@@ -610,8 +707,11 @@ namespace UMA
 				// if "BestFitSquare"
 				switch (umaGenerator.AtlasOverflowFitMethod)
 				{
+					case UMAGeneratorBase.FitMethod.MultipleHeuristics:
+						scaled = CalculateBestFit(area, atlasRes, ref Scale, generatedMaterial);
+						break;
                     case UMAGeneratorBase.FitMethod.BestFitSquare:
-                        scaled = CalculateBestFitSquare(area, atlasRes, ref Scale, generatedMaterial);
+                        scaled = OriginalCalculateBestFitSquare(area, atlasRes, ref Scale, generatedMaterial);
                         break;
                     default: // Shrink Textures
 						while (!CalculateRects(generatedMaterial, area).success)
@@ -630,7 +730,165 @@ namespace UMA
 			}
 		}
 
-        private bool CalculateBestFitSquare(SizeInt area, float atlasRes, ref Vector2 Scale, UMAData.GeneratedMaterial generatedMaterial)
+        // Try packing using several heuristics and pick the best used extents.
+        // "Best" is defined as the minimal bounding area (xMax * yMax), with a tie-breaker on max(xMax,yMax).
+        private bool TryPackBest(UMAData.GeneratedMaterial generatedMaterial, SizeInt area, out PackSize bestPack, out MaxRectsBinPack.FreeRectChoiceHeuristic bestHeuristic)
+        {
+            bestPack = default;
+            bestHeuristic = MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit;
+
+            // Evaluate a small set of robust heuristics
+            var heuristics = new[]
+            {
+                MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestShortSideFit,
+                MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit,
+                MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestAreaFit
+            };
+
+            bool anySuccess = false;
+            long bestArea = long.MaxValue;
+            int bestMaxSpan = int.MaxValue;
+
+            for (int h = 0; h < heuristics.Length; h++)
+            {
+                var pack = CalculateRects(generatedMaterial, area, heuristics[h]);
+                if (!pack.success) continue;
+
+                // Used extents (what you later scale against)
+                int usedW = Math.Max(1, pack.xMax);
+                int usedH = Math.Max(1, pack.yMax);
+                long usedArea = (long)usedW * (long)usedH;
+                int maxSpan = Math.Max(usedW, usedH);
+
+                // Prefer smallest used area, break ties by smaller max span
+                if (usedArea < bestArea || (usedArea == bestArea && maxSpan < bestMaxSpan))
+                {
+                    bestArea = usedArea;
+                    bestMaxSpan = maxSpan;
+                    bestPack = pack;
+                    bestHeuristic = heuristics[h];
+                    anySuccess = true;
+                }
+            }
+
+            return anySuccess;
+        }
+
+        // Overload that allows choosing a heuristic per attempt.
+        private PackSize CalculateRects(UMAData.GeneratedMaterial material, SizeInt area, MaxRectsBinPack.FreeRectChoiceHeuristic heuristic)
+        {
+            Rect nullRect = new Rect(0, 0, 0, 0);
+            PackSize lastPackSize = new PackSize();
+
+            packTexture.Init(area.Width, area.Height, false); // rotations disabled to keep UVs unmodified
+
+            for (int atlasElementIndex = 0; atlasElementIndex < material.materialFragments.Count; atlasElementIndex++)
+            {
+                var tempMaterialDef = material.materialFragments[atlasElementIndex];
+                if (tempMaterialDef.isRectShared) continue;
+                if (tempMaterialDef.isNoTextures) continue;
+                if (tempMaterialDef.baseOverlay == null) continue;
+                if (tempMaterialDef.baseOverlay.textureList == null) continue;
+                if (tempMaterialDef.baseOverlay.textureList[0] == null)
+                {
+                    // No base texture; skip but continue packing
+                    continue;
+                }
+
+                int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale);
+                int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale);
+
+                // Avoid zero-size inserts which can cause infinite loops
+                if (width == 0 || height == 0)
+                {
+                    tempMaterialDef.atlasRegion = nullRect;
+                    continue;
+                }
+
+                tempMaterialDef.atlasRegion = packTexture.Insert(width, height, heuristic);
+                lastPackSize.Width = width;
+                lastPackSize.Height = height;
+
+                if (tempMaterialDef.atlasRegion.xMax > lastPackSize.xMax) lastPackSize.xMax = (int)tempMaterialDef.atlasRegion.xMax;
+                if (tempMaterialDef.atlasRegion.yMax > lastPackSize.yMax) lastPackSize.yMax = (int)tempMaterialDef.atlasRegion.yMax;
+
+                if (tempMaterialDef.atlasRegion == nullRect)
+                {
+                    if (umaGenerator.fitAtlas)
+                    {
+                        lastPackSize.success = false;
+                        return lastPackSize;
+                    }
+                    else
+                    {
+#if UNITY_EDITOR
+                        Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
+#endif
+                    }
+                }
+            }
+            lastPackSize.success = true;
+            return lastPackSize;
+        }
+
+        private bool CalculateBestFit(SizeInt area, float atlasRes, ref Vector2 Scale, UMAData.GeneratedMaterial generatedMaterial)
+        {
+            while (true)
+            {
+                // Try several heuristics and pick the best fit in the current area.
+                if (TryPackBest(generatedMaterial, area, out var bestPack, out _))
+                {
+                    // If we expanded beyond nominal atlas size, compute precise scale using used extents.
+                    if (area.Width != umaGenerator.atlasResolution || area.Height != umaGenerator.atlasResolution)
+                    {
+                        float usedW = Mathf.Max(1, bestPack.xMax);
+                        float usedH = Mathf.Max(1, bestPack.yMax);
+                        Scale.x = atlasRes / usedW;
+                        Scale.y = atlasRes / usedH;
+                        return true;
+                    }
+                    // Everything fit in the base square area; no scaling required.
+                    return false;
+                }
+
+                // Failed to pack: grow the smaller dimension just enough to fit the last attempted block.
+                // We approximate needed growth from bestPack bounds (xMax/yMax) and last attempted rect size.
+                // Use the most recent attempt's sizes (from TryPackBest call) by re-running a single pass to get metrics.
+                var lastAttempt = CalculateRects(generatedMaterial, area, MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
+
+                int projectedWidth = lastAttempt.xMax + lastAttempt.Width;
+                int projectedHeight = lastAttempt.yMax + lastAttempt.Height;
+
+                if (area.Width < area.Height)
+                {
+                    // Increase width
+                    if (projectedWidth <= area.Width)
+                    {
+                        // Ensure growth each loop
+                        area.Width += Math.Max(1, lastAttempt.Width);
+                    }
+                    else
+                    {
+                        area.Width = projectedWidth;
+                    }
+                }
+                else
+                {
+                    // Increase height
+                    if (projectedHeight <= area.Height)
+                    {
+                        area.Height += Math.Max(1, lastAttempt.Height);
+                    }
+                    else
+                    {
+                        area.Height = projectedHeight;
+                    }
+                }
+            }
+            // no exit here! :)
+        }
+
+        private bool OriginalCalculateBestFitSquare(SizeInt area, float atlasRes, ref Vector2 Scale, UMAData.GeneratedMaterial generatedMaterial)
         {
             while (true)
             {

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+//using System.Diagnostics;
 using UnityEngine;
 
 namespace UMA
@@ -80,12 +82,16 @@ namespace UMA
 		/// Initializes a new UMASkeleton from a transform hierarchy.
 		/// </summary>
 		/// <param name="rootBone">Root transform.</param>
-		public UMASkeleton(Transform rootBone, UMAGeneratorBase umaGenerator)
+		public UMASkeleton(Transform rootBone)
 		{
 			rootBoneHash = UMAUtils.StringToHash(rootBone.name);
 			this.boneHashData = new Dictionary<int, BoneData>();
 			BeginSkeletonUpdate();
-			AddBonesRecursive(rootBone, umaGenerator);
+			AddBonesRecursive(rootBone);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            ValidateHierarchy(rootBone, UMAAssetIndexer.Instance?.Generator?.ignoreTag);
+            ValidateBoneDictionary(rootBone);
+#endif
 			EndSkeletonUpdate();
 		}
 
@@ -139,20 +145,22 @@ namespace UMA
 			// The default MeshCombiner is ignoring the animated bones, virtual method added to share common interface.
 		}
 
-		private void AddBonesRecursive(Transform transform, UMAGeneratorBase umaGenerator)
+		private void AddBonesRecursive(Transform transform)
 		{
-			if (transform == null)
-            {
-                return;
-            }
-            if (transform.tag == umaGenerator.ignoreTag)
-            {
-                return;
-            }
+			if (transform == null) return;
 
-            var hash = UMAUtils.StringToHash(transform.name);
+			// Only skip when ignoreTag is a valid, non-empty tag and not the default "Untagged"
+			var gen = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.Generator : null;
+			var ignoreTag = gen != null ? gen.ignoreTag : null;
+			if (!string.IsNullOrEmpty(ignoreTag) && !string.Equals(ignoreTag, "Untagged", StringComparison.Ordinal)
+				&& transform.CompareTag(ignoreTag))
+			{
+				return;
+			}
+
+			var hash = UMAUtils.StringToHash(transform.name);
 			var parentHash = transform.parent != null ? UMAUtils.StringToHash(transform.parent.name) : 0;
-			BoneData data = new BoneData()
+			var data = new BoneData
 			{
 				parentBoneNameHash = parentHash,
 				boneNameHash = hash,
@@ -171,15 +179,12 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-                {
-                    Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
-                }
-            }
+					Debug.LogError("AddBonesRecursive: " + transform.name + " already exists in the dictionary! Consider renaming those bones. For example, `Items` under each hand bone can become `LeftItems` and `RightItems`.");
+			}
 
 			for (int i = 0; i < transform.childCount; i++)
 			{
-				var child = transform.GetChild(i);
-				AddBonesRecursive(child, umaGenerator);
+				AddBonesRecursive(transform.GetChild(i));
 			}
 		}
 
@@ -760,20 +765,59 @@ namespace UMA
 
 		public virtual Transform[] HashesToTransforms(int[] boneNameHashes)
 		{
-			Transform[] res = new Transform[boneNameHashes.Length];
+			var res = new Transform[boneNameHashes.Length];
+			Transform fallback = GetGlobalTransform() ?? GetRootTransform();
+			bool reported = false;
+
 			for (int i = 0; i < boneNameHashes.Length; i++)
 			{
-				res[i] = boneHashData[boneNameHashes[i]].boneTransform;
+				BoneData bd;
+				if (!boneHashData.TryGetValue(boneNameHashes[i], out bd) || bd == null || bd.boneTransform == null)
+				{
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+					if (!reported && Debug.isDebugBuild)
+					{
+						Debug.LogError($"[UMA] Missing bone hash {boneNameHashes[i]} in UMASkeleton. " +
+									   "This is usually caused by using an ignore tag that hides parts of the rig, or duplicate bone names. " +
+									   "Verify UMAAssetIndexer.Generator.ignoreTag is not set to 'Untagged' and that bone names are unique.");
+						reported = true;
+					}
+#endif
+					res[i] = fallback;
+				}
+				else
+				{
+					res[i] = bd.boneTransform;
+				}
 			}
 			return res;
 		}
 
 		public virtual Transform[] HashesToTransforms(List<int> boneNameHashes)
 		{
-			Transform[] res = new Transform[boneNameHashes.Count];
+			var res = new Transform[boneNameHashes.Count];
+			Transform fallback = GetGlobalTransform() ?? GetRootTransform();
+			bool reported = false;
+
 			for (int i = 0; i < boneNameHashes.Count; i++)
 			{
-				res[i] = boneHashData[boneNameHashes[i]].boneTransform;
+				BoneData bd;
+				if (!boneHashData.TryGetValue(boneNameHashes[i], out bd) || bd == null || bd.boneTransform == null)
+				{
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+					if (!reported && Debug.isDebugBuild)
+					{
+						Debug.LogError($"[UMA] Missing bone hash {boneNameHashes[i]} in UMASkeleton. " +
+									   "Check ignore tag and duplicate bone names.");
+						reported = true;
+					}
+#endif
+					res[i] = fallback;
+				}
+				else
+				{
+					res[i] = bd.boneTransform;
+				}
 			}
 			return res;
 		}
@@ -841,5 +885,85 @@ namespace UMA
                 ReplaceBoneRecursively(transform.GetChild(i));
             }
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+// Editor/dev-only: detect name collisions and ignored subtrees
+private void ValidateHierarchy(Transform root, string ignoreTag)
+{
+    if (root == null) return;
+
+    var byName = new Dictionary<string, List<Transform>>(256);
+    int total = 0, ignored = 0;
+
+    void Collect(Transform t)
+    {
+        if (t == null) return;
+        if (!string.IsNullOrEmpty(ignoreTag) && t.CompareTag(ignoreTag))
+        {
+            ignored++;
+            return;
+        }
+        total++;
+        if (!byName.TryGetValue(t.name, out var list)) { list = new List<Transform>(2); byName.Add(t.name, list); }
+        list.Add(t);
+        for (int i = 0; i < t.childCount; i++) Collect(t.GetChild(i));
+    }
+
+    Collect(root);
+
+    var dups = byName.Where(kvp => kvp.Value.Count > 1).ToList();
+    if (dups.Count > 0)
+    {
+        var msg = new System.Text.StringBuilder();
+        msg.AppendLine("[UMA] UMASkeleton detected duplicate bone names. UMA requires unique transform names across the skeleton. Rename duplicates (e.g., LeftItems/RightItems).");
+        foreach (var kvp in dups)
+        {
+            msg.AppendLine($"  Name '{kvp.Key}' occurs {kvp.Value.Count} times:");
+            foreach (var t in kvp.Value)
+                msg.AppendLine($"    - {GetTransformPath(t)}");
+        }
+        if (!string.IsNullOrEmpty(ignoreTag))
+            msg.AppendLine($"Note: Transforms tagged '{ignoreTag}' (and their children) are skipped.");
+
+        if (Debug.isDebugBuild) Debug.LogError(msg.ToString());
+    }
+    else
+    {
+        // Optional info in debug
+        if (Debug.isDebugBuild && ignored > 0)
+            Debug.Log($"[UMA] UMASkeleton: {ignored} transforms skipped due to ignore tag '{ignoreTag}'. Consider if that’s intended.");
+    }
+}
+
+// Editor/dev-only: verify boneHashData matches collected transforms (minus ignored)
+private void ValidateBoneDictionary(Transform root)
+{
+    // Build expected set from dictionary
+    var dictCount = boneHashData.Count;
+
+    // Spot-check for null transforms in dictionary
+    var nullEntries = boneHashData.Where(kvp => kvp.Value == null || kvp.Value.boneTransform == null).ToList();
+    if (nullEntries.Count > 0 && Debug.isDebugBuild)
+    {
+        var msg = new System.Text.StringBuilder();
+        msg.AppendLine("[UMA] UMASkeleton: Found entries with null boneTransform:");
+        foreach (var kvp in nullEntries)
+            msg.AppendLine($"  Hash: {kvp.Key}");
+        Debug.LogError(msg.ToString());
+    }
+}
+
+private static string GetTransformPath(Transform t)
+{
+    if (t == null) return "<null>";
+    var stack = new Stack<string>();
+    while (t != null)
+    {
+        stack.Push(t.name);
+        t = t.parent;
+    }
+    return string.Join("/", stack.ToArray());
+}
+#endif
     }
 }

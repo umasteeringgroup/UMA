@@ -22,11 +22,6 @@ namespace UMA.CharacterSystem.Examples
 				targetAvatar.CharacterUpdated.AddListener(CheckRaceChange);
 			}
 		}
-		// Use this for initialization
-		void Start()
-		{
-
-		}
 
 		public void CheckRaceChange(UMAData umaData)
 		{

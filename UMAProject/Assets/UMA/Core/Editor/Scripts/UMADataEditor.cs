@@ -8,23 +8,19 @@ namespace UMA.Editors
     public class UMADataEditor : CharacterBaseEditor
     {
         protected UMAData _umaData;
+        public bool initialized = false;
 
 		//To keep the DNA inspector uptodate when DCA changes the recipe we need to track
 		//the active dna and update the editor for it when the recipe changes.
 		private int[] _currentDnaTypeHashes;
-
-		public override void OnEnable()
-        {
-            dnaEditor = null;
-            slotEditor = null;
-            InitializeUMADataEditor();
-        }
 
         public void InitializeUMADataEditor()
         {
             //   if (!NeedsReenable())
             //       return;
 
+            dnaEditor = null;
+            slotEditor = null;
             showBaseEditor = false;
             _umaData = target as UMAData;
             _errorMessage = null;
@@ -95,12 +91,13 @@ namespace UMA.Editors
 
 		public override void OnInspectorGUI()
         {
-			if (EditorApplication.isPlayingOrWillChangePlaymode)
+            if (dnaEditor == null)
+            {
+                InitializeUMADataEditor();
+            }
+
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
 			{
-                if (dnaEditor == null)
-                {
-                    InitializeUMADataEditor();
-                }
 				if (GUIHelper.BeginCollapsableGroup(ref ShowOverrides, "Override Info"))
                 {
 					EditorGUILayout.LabelField("Object ID", _umaData.GetInstanceID().ToString());
@@ -121,13 +118,38 @@ namespace UMA.Editors
                 {
                     DoUpdate();
                 }
-                base.OnInspectorGUI();
+                base.OnInspectorGUI(); 
 			}
 			else
             {
-				EditorGUILayout.HelpBox("The UMAData component is a runtime component and cannot be adjusted at edit time.",MessageType.Info);
+                DoEditTimeInfo();
             }
         }
+
+        protected void DoEditTimeInfo()
+        {
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f, 1f));
+            EditorGUILayout.LabelField("Edit Time Info", EditorStyles.boldLabel);
+            EditorGUILayout.IntField("Instance ID", _umaData.GetInstanceID());
+            EditorGUILayout.Toggle("Using 32 bit", _umaData.force32bit);
+            if (_umaData.umaRecipe != null)
+            {
+                EditorGUILayout.IntField("SlotCount", _umaData.umaRecipe.slotDataList.Length);
+                foreach(SlotData slot in _umaData.umaRecipe.slotDataList)
+                {
+                    if (slot != null)
+                    {
+                        EditorGUILayout.LabelField("Slot: " + slot.asset.slotName);
+                    }
+                }
+            }
+            else
+            {
+                EditorGUILayout.LabelField("No Recipe Data");
+            }
+            GUIHelper.EndVerticalPadded();
+        }
+
 
         protected override void DoUpdate()
         {

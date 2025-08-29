@@ -23,6 +23,8 @@ namespace UMA.Editors
 		SerializedProperty defaultRendererAsset;
 		SerializedProperty defaultOverlayAsset;
 		SerializedProperty convertRenderTexture;
+		SerializedProperty showInHierarchy;
+		SerializedProperty Use32BitBuffers;
 
         public static bool showGenerationSettings = false;
 		public static bool showAdvancedSettings = false;
@@ -48,8 +50,10 @@ namespace UMA.Editors
 			defaultOverlayAsset = serializedObject.FindProperty("defaultOverlayAsset");
 			MaxQueuedConversionsPerFrame = serializedObject.FindProperty("MaxQueuedConversionsPerFrame");
 			convertRenderTexture = serializedObject.FindProperty("convertRenderTexture");
+            showInHierarchy = serializedObject.FindProperty("showInHierarchy");
+            Use32BitBuffers = serializedObject.FindProperty("Use32BitBuffers");
 
-		}
+        }
 #pragma warning restore 0108
 
 		public override void OnInspectorGUI()
@@ -68,7 +72,8 @@ namespace UMA.Editors
 				EditorGUILayout.PropertyField(garbageCollectionRate);
 				EditorGUILayout.PropertyField(processAllPending);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("SaveAndRestoreIgnoredItems"));
-			}
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("showInHierarchy"));
+            }
             showEditTimeSettings = EditorGUILayout.Foldout(showEditTimeSettings, "Edit Time Settings");
 			if (showEditTimeSettings)
 			{
@@ -88,7 +93,9 @@ namespace UMA.Editors
 				EditorGUILayout.PropertyField(defaultRendererAsset);
 				EditorGUILayout.HelpBox("The default overlay asset is used when an overay is not specified on a slot. This is for testing only.", MessageType.None);
 				EditorGUILayout.PropertyField(defaultOverlayAsset);
-				EditorGUILayout.PropertyField(textureMerge);
+                EditorGUILayout.PropertyField(Use32BitBuffers);
+				EditorGUILayout.PropertyField(showInHierarchy);
+                EditorGUILayout.PropertyField(textureMerge);
 				EditorGUILayout.PropertyField(meshCombiner);
 			}
 
@@ -101,11 +108,24 @@ namespace UMA.Editors
 				if (Application.isPlaying)
 				{
 					EditorGUILayout.LabelField("Elapsed Time", string.Format("{0} ms", generator.ElapsedTicks / 10000));
-				}
-				else
+					EditorGUILayout.LabelField("Validation Time", string.Format("{0} ms", generator.validationTicks / 10000));
+					EditorGUILayout.LabelField("MeshProcessing Time", string.Format("{0} ms", generator.meshpreprocessTicks / 10000));
+					EditorGUILayout.LabelField("Begun Events Time", string.Format("{0} ms", generator.BegunEventsTicks / 10000));
+					EditorGUILayout.LabelField("preApply Time", string.Format("{0} ms", generator.preapplyTicks / 10000));
+					EditorGUILayout.LabelField("Texture Processing Time", string.Format("{0} ms", generator.textureprocessingTicks / 10000));
+                    EditorGUILayout.LabelField("Mesh Updates Time", string.Format("{0} ms", generator.meshUpdatesTicks / 10000));
+                    EditorGUILayout.LabelField("Skeleton Updates Time", string.Format("{0} ms", generator.skeletonUpdatesTicks / 10000));
+                    EditorGUILayout.LabelField("Race Blendshapes Time", string.Format("{0} ms", generator.raceblendshapesTicks / 10000));
+                    EditorGUILayout.LabelField("End Events Time", string.Format("{0} ms", generator.endEventsTicks / 10000));
+					EditorGUILayout.LabelField("Average Mesh Time", string.Format("{0:F4} ms", generator.averageMeshUpdatesTime));
+					EditorGUILayout.LabelField("Average Texture Time", string.Format("{0:F4} ms",generator.averageTextureProcessingTime));
+					EditorGUILayout.LabelField("Average Skeleton Time", string.Format("{0:F4} ms", generator.averageSkeletonUpdatesTime));
+                }
+                else
 				{
 					EditorGUILayout.LabelField("Elapsed Time", "N/A");
 				}
+				EditorGUILayout.LabelField("Pending UMAs", string.Format("{0}", generator.pendingUmas));
 				EditorGUILayout.LabelField("Shape Dirty", string.Format("{0}", generator.DnaChanged));
 				EditorGUILayout.LabelField("Texture Dirty", string.Format("{0}", generator.TextureChanged));
 				EditorGUILayout.LabelField("Mesh Dirty", string.Format("{0}", generator.SlotsChanged));

@@ -79,6 +79,11 @@ namespace UMA.Editors
 			race.FixupRotations = EditorGUILayout.Toggle("Fixup Rotations",race.FixupRotations);
 			EditorGUILayout.Space();
 
+#if UMA_DNACOLLECTIONS
+			EditorGUILayout.HelpBox("DNA Collection is the ongoing rewrite of DNA. It's not done, and won't be for some time, please ignore it", MessageType.Warning);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("DNACollection"));
+#endif
+            EditorGUILayout.Space();
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("disableDNAConverters"));
 
             SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
@@ -355,7 +360,7 @@ namespace UMA.Editors
 					baseSlotsList.Clear();
 					baseSlotsNamesList.Clear();
 
-					UMAData.UMARecipe thisBaseRecipe = (baseRaceRecipe.objectReferenceValue as UMARecipeBase).GetCachedRecipe(UMAContextBase.Instance);
+					UMAData.UMARecipe thisBaseRecipe = (baseRaceRecipe.objectReferenceValue as UMARecipeBase).GetCachedRecipe();
 					SlotData[] thisBaseSlots = thisBaseRecipe.GetAllSlots();
 					foreach (SlotData slot in thisBaseSlots)
 					{
@@ -455,7 +460,7 @@ namespace UMA.Editors
 					{
 						var ccSlotsList = new List<SlotData>();
 						var ccSlotsNamesList = new List<string>();
-						UMAData.UMARecipe ccBaseRecipe = ccRaceData.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance);
+						UMAData.UMARecipe ccBaseRecipe = ccRaceData.baseRaceRecipe.GetCachedRecipe();
 						SlotData[] ccBaseSlots = ccBaseRecipe.GetAllSlots();
 						foreach (SlotData slot in ccBaseSlots)
 						{

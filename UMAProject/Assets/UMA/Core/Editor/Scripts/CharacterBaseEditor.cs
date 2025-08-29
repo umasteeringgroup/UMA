@@ -7,7 +7,6 @@ using System.IO;
 using System.Reflection;
 using UMA.Controls;
 using UnityEditor;
-using UnityEditor.TerrainTools;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -536,7 +535,7 @@ namespace UMA.Editors
                 if (RaceNames == null)
                 {
                     List<string> theRaceNames = new List<string>();
-                    RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+                    RaceData[] races = UMAAssetIndexer.Instance.GetAllRaces();
                     foreach (RaceData race in races)
                     {
                         if (race != null)
@@ -689,7 +688,7 @@ namespace UMA.Editors
                     if (RaceNames == null)
                     {
                         List<string> theRaceNames = new List<string>();
-                        RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+                        RaceData[] races = UMAAssetIndexer.Instance.GetAllRaces();
                         foreach (RaceData race in races)
                         {
                             if (race != null)
@@ -817,6 +816,18 @@ namespace UMA.Editors
         {
             SlotData FirstSlot = null;
 
+            if (DraggedSlots.Count >= 1 && DraggedOverlays.Count == 1)
+            {
+                // if there are multiple slots, and one overlay, just put that overlay on all the slots.
+                foreach (SlotDataAsset sd in DraggedSlots)
+                {
+                    SlotData slot = new SlotData(sd);
+                    slot.AddOverlay(new OverlayData(DraggedOverlays[0]));
+                    slot = _recipe.MergeSlot(slot, false);
+                }
+                return;
+            }
+
             // Add the slots.
             // if there are overlays, well, no way to really know where they go, so add them to the first slot.
             foreach (SlotDataAsset sd in DraggedSlots)
@@ -931,7 +942,7 @@ namespace UMA.Editors
                             if (draggedObjects[i] is UMATextRecipe)
                             {
                                 var textRecipe = draggedObjects[i] as UMATextRecipe;
-                                var recipe = textRecipe.GetCachedRecipe(UMAContextBase.Instance);
+                                var recipe = textRecipe.GetCachedRecipe();
                                 if (recipe != null)
                                 {
                                     _recipe.Merge(recipe, false);
@@ -994,21 +1005,7 @@ namespace UMA.Editors
 
         protected bool RaceInIndex(RaceData _raceData)
         {
-            if (UMAContextBase.Instance != null)
-            {
-                if (UMAContextBase.Instance.HasRace(_raceData.raceName) != null)
-                {
-                    return true;
-                }
-            }
-
-            AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<RaceData>(_raceData.raceName);
-            if (ai != null)
-            {
-                return true;
-            }
-
-            return false;
+            return UMAAssetIndexer.Instance.HasAsset<RaceData>(_raceData.raceName);
         }
 
         public SlotMasterEditor(UMAData.UMARecipe recipe)
@@ -1067,6 +1064,7 @@ namespace UMA.Editors
             if (_recipe.raceData != newRace)
             {
                 _recipe.SetRace(newRace);
+                _recipe.ClearDNAConverters();
                 changed = true;
             }
 
@@ -1075,10 +1073,7 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("Race " + _recipe.raceData.raceName + " is not indexed! Either assign it to an assetBundle or use one of the buttons below to add it to the Scene/Global Library.", MessageType.Error);
 
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Add to Scene Only"))
-                {
-                    UMAContextBase.Instance.AddRace(_recipe.raceData);
-                }
+
                 if (GUILayout.Button("Add to Global Index (Recommended)"))
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _recipe.raceData);
@@ -1115,7 +1110,7 @@ namespace UMA.Editors
                     if (_recipe.raceData.baseRaceRecipe.name != targetName)
                     {
                         //we dont want to show this if this IS the base recipe
-                        UMAData.UMARecipe thisBaseRecipe = _recipe.raceData.baseRaceRecipe.GetCachedRecipe(UMAContextBase.Instance);
+                        UMAData.UMARecipe thisBaseRecipe = _recipe.raceData.baseRaceRecipe.GetCachedRecipe();
                         SlotData[] thisBaseSlots = thisBaseRecipe.GetAllSlots();
                         foreach (SlotData slot in thisBaseSlots)
                         {
@@ -1409,21 +1404,7 @@ namespace UMA.Editors
 
         private bool InIndex(SlotData _slotData)
         {
-            if (UMAContextBase.Instance != null)
-            {
-                if (UMAContextBase.Instance.HasSlot(_slotData.asset.slotName))
-                {
-                    return true;
-                }
-            }
-
-            AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<SlotDataAsset>(_slotData.asset.slotName);
-            if (ai != null)
-            {
-                return true;
-            }
-
-            return false;
+            return UMAAssetIndexer.Instance.HasSlot(_slotData.asset.slotName);
         }
 
         public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
@@ -1459,10 +1440,7 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("Slot " + _slotData.asset.name + " is not indexed!", MessageType.Error);
 
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Add to Scene Only"))
-                {
-                    UMAContextBase.Instance.AddSlotAsset(_slotData.asset);
-                }
+
                 if (GUILayout.Button("Add to Global Index (Recommended)"))
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), _slotData.asset);
@@ -1472,11 +1450,48 @@ namespace UMA.Editors
             }
 
             bool disabled = _slotData.isDisabled;
-            _slotData.isDisabled = EditorGUILayout.Toggle("Disabled", _slotData.isDisabled);
+            _slotData.isDisabled = EditorGUILayout.Toggle("Disable in recipe:", _slotData.isDisabled);
 
             if (disabled != _slotData.isDisabled)
             {
                 changed = true;
+            }
+            _slotData.slotAssetFoldout = EditorGUILayout.Foldout(_slotData.slotAssetFoldout, "View copied data", true);
+            if (_slotData.slotAssetFoldout)
+            {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+                EditorGUILayout.LabelField("Overlay Scale", _slotData.overlayScale.ToString("F4"));
+                EditorGUILayout.LabelField("Matching Tags");
+                if (_slotData.tags != null && _slotData.tags.Length > 0)
+                {
+                    foreach (var tag in _slotData.tags)
+                    {
+                        EditorGUILayout.LabelField(" - " + tag);
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.LabelField(" - None");
+                }
+                EditorGUILayout.LabelField("Matching Races");
+                if (_slotData.Races != null && _slotData.Races.Length > 0)
+                {
+                    foreach (var race in _slotData.Races)
+                    {
+                        EditorGUILayout.LabelField(" - " + race);
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.LabelField(" - None");
+                }
+                if (GUILayout.Button("Refresh slot from Asset"))
+                {
+                    _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
+                    _slotData.UpdateFromAsset(_slotData.asset);
+                    changed = true;
+                }
+                GUIHelper.EndVerticalPadded(10);
             }
 
             if (_slotData.asset.isClippingPlane)
@@ -1915,21 +1930,7 @@ namespace UMA.Editors
 
         private bool InIndex(OverlayData _overlayData)
         {
-            if (UMAContextBase.Instance != null)
-            {
-                if (UMAContextBase.Instance.HasOverlay(_overlayData.overlayName))
-                {
-                    return true;
-                }
-            }
-
-            AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<OverlayDataAsset>(_overlayData.asset.overlayName);
-            if (ai != null)
-            {
-                return true;
-            }
-
-            return false;
+            return UMAAssetIndexer.Instance.HasOverlay(_overlayData.overlayName);
         }
 
         public bool OnGUI()
@@ -1988,11 +1989,6 @@ namespace UMA.Editors
             {
                 EditorGUILayout.HelpBox("Overlay " + _overlayData.asset.name + " is not indexed!", MessageType.Error);
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Add to Scene Only"))
-                {
-                    UMAContextBase.Instance.AddOverlayAsset(_overlayData.asset);
-
-                }
                 if (GUILayout.Button("Add to Global Index"))
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), _overlayData.asset);
@@ -2701,7 +2697,10 @@ namespace UMA.Editors
             _needsUpdate = false;
             _forceUpdate = false;
             UMATextRecipe theRecipe = target as UMATextRecipe;
-            InitialResourcesOnlyFlag = theRecipe.resourcesOnly;
+            if (theRecipe != null)
+            {
+                InitialResourcesOnlyFlag = theRecipe.resourcesOnly;
+            }
             EditorApplication.update += DoInspectors;
         }
 
@@ -2944,7 +2943,7 @@ namespace UMA.Editors
                     if (_needsUpdate)
                     {
                         var recipeBase = (UMARecipeBase)target;
-                        recipeBase.Save(_recipe, UMAContextBase.Instance);
+                        recipeBase.Save(_recipe);
                         EditorUtility.SetDirty(target);
                     }
                 }

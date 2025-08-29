@@ -3,6 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine.Rendering;
+using UnityEngine.Events;
+#if UNITY_EDITOR
+using UnityEditor.Events;
+#endif
+using System.Linq;
+
+
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -46,22 +54,12 @@ namespace UMA
 				NotSet
 			}
 
-		public static Dictionary<string, string> URPTextureTranslation = new Dictionary<string, string>() {
-			{"_MainTex","_BaseMap"},
-			{"_MetallicMap", "_MaskMap" }
-		};
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+            // This method is called after all assemblies are loaded.
+        }
 
-		public static Dictionary<string, string> HDRPTextureTranslation = new Dictionary<string, string>() {
-			{"_MainTex","_BaseMap"},
-			{"_MetallicMap", "_MaskMap" }
-		};
-
-		public static Dictionary<PipelineType, Dictionary<string, string>> PipelineTranslations = new Dictionary<PipelineType, Dictionary<string, string>>() {
-			{PipelineType.HDPipeline,HDRPTextureTranslation },
-			{PipelineType.UniversalPipeline,URPTextureTranslation }
-		};
-
-		public static PipelineType CurrentPipeline = PipelineType.NotSet;
 		/// <summary>
 		/// Returns the type of renderpipeline that is currently running
 		/// </summary>
@@ -116,25 +114,15 @@ namespace UMA
 			Shader shader = Shader.Find("UMA/Diffuse");
             if (shader == null)
             {
+#if UNITY_EDITOR
 				Debug.LogWarning("UMA/Diffuse shader not found");
-                return null;
+#endif
+				return null;
             }
             Material material = new Material(shader);
             return material; 
         }
 
-		public static string TranslatedSRPTextureName(string BuiltinName) {
-			if (CurrentPipeline == PipelineType.NotSet) {
-				CurrentPipeline = DetectPipeline();
-			}
-			if (PipelineTranslations.ContainsKey(CurrentPipeline)) {
-				var textureTranslation = PipelineTranslations[CurrentPipeline];
-				if(textureTranslation.ContainsKey(BuiltinName)) {
-					return textureTranslation[BuiltinName];
-				}
-			}
-			return BuiltinName;
-		}
 
 #if UNITY_EDITOR
 		static public int CreateLayer(string name)
@@ -373,5 +361,105 @@ namespace UMA
 
             fieldInfo.SetValue(list, newSize);
 		}
+#if UNITY_EDITOR       
+		public static void CopyUnityEvents(object sourceObj, string source_UnityEvent, object dest, bool debug = false)
+        {
+            var allBindings = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+
+            FieldInfo unityEvent = sourceObj.GetType().GetField(source_UnityEvent, allBindings);
+            if (unityEvent.FieldType != dest.GetType())
+            {
+                if (debug == true)
+                {
+                    Debug.Log("Source Type: " + unityEvent.FieldType);
+                    Debug.Log("Dest Type: " + dest.GetType());
+                    Debug.Log("CopyUnityEvents - Source & Dest types don't match, exiting.");
+                }
+                return;
+            }
+            else
+            {
+                SerializedObject so = new SerializedObject((Object)sourceObj);
+                SerializedProperty persistentCalls = so.FindProperty(source_UnityEvent).FindPropertyRelative("m_PersistentCalls.m_Calls");
+                for (int i = 0; i < persistentCalls.arraySize; ++i)
+                {
+                    Object target = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Target").objectReferenceValue;
+                    string methodName = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_MethodName").stringValue;
+                    MethodInfo method = null;
+                    try
+                    {
+                        method = target.GetType().GetMethod(methodName, allBindings);
+                    }
+                    catch
+                    {
+                        foreach (MethodInfo info in target.GetType().GetMethods(allBindings).Where(x => x.Name == methodName))
+                        {
+                            ParameterInfo[] _params = info.GetParameters();
+                            if (_params.Length < 2)
+                            {
+                                method = info;
+                            }
+                        }
+                    }
+                    ParameterInfo[] parameters = method.GetParameters();
+                    switch (parameters[0].ParameterType.Name)
+                    {
+                        case nameof(System.Boolean):
+                            bool bool_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_BoolArgument").boolValue;
+                            var bool_execute = System.Delegate.CreateDelegate(typeof(UnityAction<bool>), target, methodName) as UnityAction<bool>;
+                            UnityEventTools.AddBoolPersistentListener(
+                                dest as UnityEventBase,
+                                bool_execute,
+                                bool_value
+                            );
+                            break;
+                        case nameof(System.Int32):
+                            int int_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_IntArgument").intValue;
+                            var int_execute = System.Delegate.CreateDelegate(typeof(UnityAction<int>), target, methodName) as UnityAction<int>;
+                            UnityEventTools.AddIntPersistentListener(
+                                dest as UnityEventBase,
+                                int_execute,
+                                int_value
+                            );
+                            break;
+                        case nameof(System.Single):
+                            float float_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_FloatArgument").floatValue;
+                            var float_execute = System.Delegate.CreateDelegate(typeof(UnityAction<float>), target, methodName) as UnityAction<float>;
+                            UnityEventTools.AddFloatPersistentListener(
+                                dest as UnityEventBase,
+                                float_execute,
+                                float_value
+                            );
+                            break;
+                        case nameof(System.String):
+                            string str_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_StringArgument").stringValue;
+                            var str_execute = System.Delegate.CreateDelegate(typeof(UnityAction<string>), target, methodName) as UnityAction<string>;
+                            UnityEventTools.AddStringPersistentListener(
+                                dest as UnityEventBase,
+                                str_execute,
+                                str_value
+                            );
+                            break;
+                        case nameof(System.Object):
+                            Object obj_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_ObjectArgument").objectReferenceValue;
+                            var obj_execute = System.Delegate.CreateDelegate(typeof(UnityAction<Object>), target, methodName) as UnityAction<Object>;
+                            UnityEventTools.AddObjectPersistentListener(
+                                dest as UnityEventBase,
+                                obj_execute,
+                                obj_value
+                            );
+                            break;
+                        default:
+                            var void_execute = System.Delegate.CreateDelegate(typeof(UnityAction), target, methodName) as UnityAction;
+                            UnityEventTools.AddPersistentListener(
+                                dest as UnityEvent,
+                                void_execute
+                            );
+                            break;
+                    }
+                }
+            }
+        }
+#endif
 	}
 }

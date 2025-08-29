@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: HumanSkinLinear
   m_EditorClassIdentifier: 
   channelCount: 1
-  copyColorName: 1
   sharedColorName: Skin
   colors:
   - name: Skin
@@ -23,10 +22,14 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
@@ -35,10 +38,14 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
@@ -47,10 +54,14 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
@@ -59,10 +70,14 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
@@ -71,10 +86,14 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
@@ -83,10 +102,14 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
@@ -95,10 +118,14 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Skin
     channelMask:
@@ -107,8 +134,12 @@ MonoBehaviour:
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}

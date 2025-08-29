@@ -85,7 +85,8 @@ namespace UMA.Editors
             EditorGUILayout.EndHorizontal();
 			if (name.isExpanded)
 			{
-				EditorGUILayout.LabelField("Overlay Color Data", EditorStyles.boldLabel);
+				EditorGUILayout.BeginVertical(GUI.skin.box);
+                EditorGUILayout.LabelField("Overlay Color Data", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
 				EditorGUILayout.PropertyField(displayColor);
@@ -109,11 +110,11 @@ namespace UMA.Editors
 
 				GUILayout.Space(5);
 
-
+				
 				colorFoldout.boolValue = EditorGUILayout.Foldout(colorFoldout.boolValue, "Colors");
 				if (colorFoldout.boolValue)
 				{
-					GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+					//GUIHelper.BeginVerticalPadded(0, new Color(0.75f, 0.875f, 1f, 0.3f));
 					for (int i = 0; i < mask.arraySize; i++)
 					{
 						if (showAdvancedProperty.boolValue)
@@ -136,14 +137,20 @@ namespace UMA.Editors
 						}
 						else
 						{
-							Modulate.text = "Multiplier (" + i + ")";
-							EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(i), Modulate);
-							Additive.text = "Additive (" + i + ")";
-							EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(i), Additive);
-						}
-						GUILayout.Space(5);
+                            EditorGUILayout.BeginHorizontal();
+                            EditorGUILayout.LabelField($"Tex {i}", EditorStyles.miniLabel,GUILayout.Width(50));
+                            Modulate.text = "";
+							EditorGUILayout.LabelField("Mult", EditorStyles.miniLabel, GUILayout.Width(40));
+                            EditorGUILayout.PropertyField(mask.GetArrayElementAtIndex(i),Modulate,GUILayout.MinWidth(50));
+							Additive.text = "";
+							GUILayout.FlexibleSpace();
+							EditorGUILayout.LabelField("Add", EditorStyles.miniLabel, GUILayout.Width(40));
+                            EditorGUILayout.PropertyField(additive.GetArrayElementAtIndex(i), Additive, GUILayout.MinWidth(50));
+							EditorGUILayout.EndHorizontal();
+                        }
+						//GUILayout.Space(5);
 					}
-					GUIHelper.EndVerticalPadded(3);
+					//GUIHelper.EndVerticalPadded(3);
 				}
 
 
@@ -175,7 +182,8 @@ namespace UMA.Editors
 						}
 					}
 				}
-			}
+				EditorGUILayout.EndVertical();
+            }
 			property.serializedObject.ApplyModifiedProperties();
             EditorGUI.EndProperty();
 		}

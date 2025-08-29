@@ -554,7 +554,7 @@ namespace UMA
             Debug.DrawRay(vert, decalIndicator.Ray.direction, Color.green,30.0f);
 //            Rays.Add(ray);
 
-            if (!physcene.Raycast(ray.origin, ray.direction, out hit, 512.0f, LayerMask.GetMask("Player")))
+            if (!physcene.Raycast(ray.origin, ray.direction, out hit))
             {
                 Debug.Log("Ray did not hit");
                 return vert;
@@ -711,28 +711,31 @@ namespace UMA
 
         private void ProcessEvents(InteractiveUMAWindow sceneView)
         {
-            if (Event.current != null && Event.current.type == EventType.MouseDown && Event.current.button == 0)
+            if (Event.current != null && Event.current.type == EventType.MouseDown)
             {
-                FreezeCurrentMesh(sceneView);
-                Ray ray = sceneView.GUIPointToWorldRay(Event.current.mousePosition);
-    
-                RaycastHit hit;
-                PhysicsScene physcene = PhysicsSceneExtensions.GetPhysicsScene(sceneView.CurrentScene);
-                if (!physcene.Raycast(ray.origin, ray.direction, out hit, 512.0f, LayerMask.GetMask("Player")))
+                if (Event.current.button == 0)
                 {
-                    return;
-                }
+                    FreezeCurrentMesh(sceneView);
+                    Ray ray = sceneView.GUIPointToWorldRay(Event.current.mousePosition);
 
-                if (decalIndicator != null)
-                {
-                    if ((hit.transform.gameObject == sceneView.avatarGo) || (hit.transform.parent == sceneView.avatarGo.transform))
+                    RaycastHit hit;
+                    PhysicsScene physcene = PhysicsSceneExtensions.GetPhysicsScene(sceneView.CurrentScene);
+                    if (!physcene.Raycast(ray.origin, ray.direction, out hit))
                     {
-                        // Event.current.Use();
-                        // Indicator.transform.position = hit.point;
-                        decalIndicator.gameObject.transform.position = hit.point;
-                        decalIndicator.Ray = ray;
-                        decalIndicator.gameObject.transform.forward = ray.direction;
-                        decalIndicator.LocalEuler = decalIndicator.gameObject.transform.localEulerAngles;
+                        return;
+                    }
+
+                    if (decalIndicator != null)
+                    {
+                        if ((hit.transform.gameObject == sceneView.avatarGo) || (hit.transform.parent == sceneView.avatarGo.transform))
+                        {
+                            // Event.current.Use();
+                            // Indicator.transform.position = hit.point;
+                            decalIndicator.gameObject.transform.position = hit.point;
+                            decalIndicator.Ray = ray;
+                            decalIndicator.gameObject.transform.forward = ray.direction;
+                            decalIndicator.LocalEuler = decalIndicator.gameObject.transform.localEulerAngles;
+                        }
                     }
                 }
             }

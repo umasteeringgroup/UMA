@@ -812,9 +812,9 @@ namespace UMA.PoseTools
 
 			if (GUILayout.Button("Find UMA in scene"))
             {
-				UMAData data = GameObject.FindObjectOfType<UMAData>();
+				UMAData data = GameObject.FindFirstObjectByType<UMAData>();
 				if (data != null)
-                {
+                { 
 					sourceUMA = data;
 					saveUMAData = data;
 

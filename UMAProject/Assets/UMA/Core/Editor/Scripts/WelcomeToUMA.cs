@@ -261,7 +261,7 @@ namespace UMA
                 AddText("It relies on a library of indexed items to create characters");
                 AddText("The library data can be in Resources and/or in Addressable Bundles");
                 AddSeperator();
-                AddText("UMA uses a generator to create characters - UMA_GLIB");
+                AddText("UMA uses a generator to create characters. This is a scriptable object.");
                 AddText("This prefab needs to be in a scene for UMA to work.");
                 AddText("The generator has settings for texture merging, mesh combining, and more.");
                 AddText("To get started, use the 'Add an UMA to the current scene' button");
@@ -371,14 +371,14 @@ namespace UMA
         private void ReimportShaderFolder()
         {
             ClearLog();
-            string path = Application.dataPath;
-            path = Path.Combine(path, "UMA", "Core", "ShaderPackages");
+            string path = UMAEditorUtilities.FindUMAFullPath();
+            path = Path.Combine(path,"Core", "ShaderPackages");
 
             if (Directory.Exists(path))
             {
                 AddText($"Reimporting shaders in {path}");
                 StartProcessing();
-                AssetDatabase.ImportAsset("Assets/UMA/Core/ShaderPackages", ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer | ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer | ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
                 StopProcessing();
                 AddText(path + " reimported successfully!");
             }
@@ -429,7 +429,7 @@ namespace UMA
             AddText("Opening UMA Documentation.PDF");
 
             // Open Assets/UMA/UMA Documentation.PDF
-            string path = Path.Combine(Application.dataPath,"UMA", "UMA Documentation.PDF");
+            string path = Path.Combine(UMAEditorUtilities.FindUMAFullPath(), "UMA Documentation.PDF");
 
             if (System.IO.File.Exists(path))
             {
@@ -579,7 +579,7 @@ namespace UMA
         #region Scene Scan Button
         private void ScanScene()
         {
-            UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>(true);
+            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsInactive.Include,FindObjectsSortMode.None);
             AddText("Checking for generator");
             if (generators.Length == 0)
             {
@@ -1055,7 +1055,7 @@ namespace UMA
                     RebuildFromAssetItem(r);
                 }
                 UMAWardrobeRecipe uwr = r.GetItem<UMAWardrobeRecipe>();
-                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = uwr.PackedLoad(null);
+                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = uwr.PackedLoad();
 
                 bool invalid = false;
 
@@ -1156,7 +1156,7 @@ namespace UMA
                     RebuildFromAssetItem(r);
                 }
                 UMATextRecipe utr = r.GetItem<UMATextRecipe>();
-                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = utr.PackedLoad(null);
+                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = utr.PackedLoad();
 
                 bool invalid = false;
 
@@ -1399,7 +1399,7 @@ namespace UMA
         }
         private void DoSetAtlasGenerationParms(LogLine line)
         {
-            UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>();
+            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
             if (generators.Length == 1)
             {
                 generators[0].fitAtlas = true;
@@ -1415,7 +1415,7 @@ namespace UMA
 
         private void DoSetInitialScaleFactor(LogLine line)
         {
-            UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>();
+            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
             if (generators.Length == 1)
             {
                 generators[0].InitialScaleFactor = 1;
@@ -1425,7 +1425,7 @@ namespace UMA
 
         private void DoSetEditorInitialScaleFactor(LogLine line)
         {
-            UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>();
+            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
             if (generators.Length == 1)
             {
                 generators[0].editorInitialScaleFactor = 4;
@@ -1435,7 +1435,7 @@ namespace UMA
 
         private void DoAddMeshCombiner(LogLine line)
         {
-            UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>();
+            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
             if (generators.Length == 1)
             {
                 UMAMeshCombiner uc = generators[0].gameObject.AddComponent<UMAMeshCombiner>();
@@ -1458,7 +1458,7 @@ namespace UMA
             }
             else
             {
-                UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>();
+                UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
                 if (generators.Length == 1)
                 {
                     generators[0].textureMerge = tx;
@@ -1486,7 +1486,7 @@ namespace UMA
 
         private void DoActivateGenerator(LogLine line)
         {
-            UMAGenerator[] generators = FindObjectsOfType<UMAGenerator>(true);
+            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsInactive.Include,FindObjectsSortMode.None);
             if (generators.Length == 1)
             {
                 generators[0].gameObject.SetActive(true);
@@ -1638,7 +1638,7 @@ namespace UMA
             float gutter = 2f;
             float sqrSide = SceneRect.height - (gutter * 2.0f);
             Rect TitleRect = new Rect(sqrSide+(gutter * 2), gutter, SceneRect.width - (sqrSide + (gutter*2)), sqrSide);
-            Rect InfoRect = new Rect(TitleRect.x, TitleRect.y, TitleRect.width, TitleRect.height);
+            Rect InfoRect = new Rect(TitleRect.x, TitleRect.y, TitleRect.width-32, TitleRect.height);
             Rect textureRect = new Rect(gutter, gutter, sqrSide, sqrSide);
 
             //GUI.DrawTexture(textureRect, scene.sceneTexture);

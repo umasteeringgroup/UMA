@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -14,28 +15,33 @@ MonoBehaviour:
   poses:
   - bone: LeftEyebrowMiddle
     hash: -356417641
-    position: {x: -1.1920929e-07, y: 0, z: 0}
-    rotation: {x: -2.66351599e-08, y: .0635710061, z: 1.60720681e-09, w: .997935832}
+    position: {x: -0.00000011920929, y: 0, z: 0}
+    rotation: {x: -0.00000002663516, y: 0.063571006, z: 0.0000000016072068, w: 0.99793583}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   - bone: LeftEyebrowUp
     hash: 1123680177
     position: {x: 0, y: 0, z: 0}
-    rotation: {x: -1.70165582e-09, y: .0787402317, z: -9.42317335e-10, w: .996895254}
+    rotation: {x: -0.0000000017016558, y: 0.07874023, z: -9.423173e-10, w: 0.99689525}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   - bone: NoseMiddle
     hash: 865884795
-    position: {x: .00029797852, y: -3.18868842e-07, z: -2.78651714e-06}
-    rotation: {x: 9.05854677e-07, y: 4.4694179e-08, z: 1.505048e-08, w: 1.00000012}
+    position: {x: 0.00029797852, y: -0.00000031886884, z: -0.0000027865171}
+    rotation: {x: 0.0000009058547, y: 0.00000004469418, z: 0.00000001505048, w: 1.0000001}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   - bone: RightEyebrowMiddle
     hash: 1695671804
-    position: {x: -1.1920929e-07, y: 0, z: 0}
-    rotation: {x: -3.88547825e-08, y: .0635708719, z: 3.32263816e-09, w: .997935891}
-    scale: {x: .999999881, y: 1, z: 1}
+    position: {x: -0.00000011920929, y: 0, z: 0}
+    rotation: {x: -0.000000038854783, y: 0.06357087, z: 0.0000000033226382, w: 0.9979359}
+    scale: {x: 0.9999999, y: 1, z: 1}
+    category: 
   - bone: RightEyebrowUp
     hash: 1246724795
-    position: {x: -7.4505806e-09, y: 0, z: 0}
-    rotation: {x: 2.48048071e-08, y: .0787402317, z: -7.78681652e-09, w: .996895194}
-    scale: {x: .999999881, y: .99999994, z: .999999881}
+    position: {x: -0.000000007450581, y: 0, z: 0}
+    rotation: {x: 0.000000024804807, y: 0.07874023, z: -0.0000000077868165, w: 0.9968952}
+    scale: {x: 0.9999999, y: 0.99999994, z: 0.9999999}
+    category: 
   tweenPoses: []
   tweenWeights: []

@@ -1,1 +1,0 @@
-		res.{0:FieldName} = {0:FieldName} * (1f / 255f);

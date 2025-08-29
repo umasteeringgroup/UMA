@@ -20,6 +20,8 @@ namespace UMA.CharacterSystem.Editors
         public static bool showAnimatorGUI = false;
         public static bool showBlendshapes = false;
         public static bool showUMAFramework = false;
+        public static bool showUMAData = false;
+        public static bool showAdvanced = false;
 
         public static int currentcolorfilter = 0;
         public string[] colorfilters = { "Base", "All", "Hide ColorDNA" };
@@ -37,11 +39,15 @@ namespace UMA.CharacterSystem.Editors
         protected WardrobeRecipeListPropertyDrawer _wardrobePropDrawer = new WardrobeRecipeListPropertyDrawer();
         protected RaceAnimatorListPropertyDrawer _animatorPropDrawer = new RaceAnimatorListPropertyDrawer();
         SerializedProperty animationController;
+        protected Editor innerEditor;
+
         public void OnEnable()
         {
             baseColorNames.Clear();
             baseColorNames.AddRange(new string[] { "skin", "hair", "eyes" });
             thisDCA = target as DynamicCharacterAvatar;
+
+            innerEditor = (UMADataEditor)Editor.CreateEditor(thisDCA, typeof(UMADataEditor));
             /*
 			if (thisDCA.context == null)
 			{
@@ -176,10 +182,8 @@ namespace UMA.CharacterSystem.Editors
             }
 
             //The base DynamicAvatar properties- get these early because changing the race changes someof them
-            SerializedProperty context = serializedObject.FindProperty("context");
-            SerializedProperty umaData = serializedObject.FindProperty("umaData");
             SerializedProperty umaGenerator = serializedObject.FindProperty("umaGenerator");
-            SerializedProperty umaRecipe = serializedObject.FindProperty("umaRecipe");
+            SerializedProperty umaRecipe = serializedObject.FindProperty("_umaRecipe");
             SerializedProperty umaAdditionalRecipes = serializedObject.FindProperty("umaAdditionalRecipes");
             animationController = serializedObject.FindProperty("animationController");
 
@@ -210,7 +214,7 @@ namespace UMA.CharacterSystem.Editors
                 {
                     thisDCA.ChangeRace((string)thisRaceSetter.FindPropertyRelative("name").stringValue, DynamicCharacterAvatar.ChangeRaceOptions.useDefaults, true);
                     //Changing the race may cause umaRecipe, animationController to change so forcefully update these too
-                    umaRecipe.objectReferenceValue = thisDCA.umaRecipe;
+                    //umaRecipe.objectReferenceValue = thisDCA.serializedRecipe;
                     animationController.objectReferenceValue = thisDCA.animationController;
                     serializedObject.ApplyModifiedProperties();
                     GenerateSingleUMA(thisDCA.rebuildSkeleton);
@@ -290,10 +294,10 @@ namespace UMA.CharacterSystem.Editors
 
             GUILayout.Space(2f);
             //for AdvancedOptions
-            context.isExpanded = EditorGUILayout.Foldout(context.isExpanded, "Advanced Options");
-            if (context.isExpanded)
+            showAdvanced = EditorGUILayout.Foldout(showAdvanced, "Advanced Options");
+            if (showAdvanced)
             {
-                DoAdvancedOptionsGUI(context, umaData, umaGenerator);
+                DoAdvancedOptionsGUI(umaGenerator);
             }
             GUILayout.Space(2f);
 
@@ -310,6 +314,13 @@ namespace UMA.CharacterSystem.Editors
                 DoGizmosUI(enableGizmo, previewModel, customModel, customRotation, previewColor);
             }
 
+            showUMAData = GUIHelper.FoldoutBar(showUMAData, "UMA Data");
+            if (showUMAData)
+            {
+                innerEditor.OnInspectorGUI();
+               // DrawFoldoutInspector(thisDCA, ref innerEditor);
+            }
+
             if (Application.isPlaying || thisDCA.editorTimeGeneration)
             {
                 showWardrobe = EditorGUILayout.Foldout(showWardrobe, "Current Wardrobe");
@@ -323,6 +334,8 @@ namespace UMA.CharacterSystem.Editors
                     DoUtilitiesGUI();
                 }
             }
+
+
 
 
             if (wasChanged)
@@ -571,6 +584,7 @@ namespace UMA.CharacterSystem.Editors
                     else
                     {
                         AddSingleDNA(theDna);
+                        SortDNA();
                         serializedObject.Update();
                         wasChanged = true;
                     }
@@ -584,6 +598,8 @@ namespace UMA.CharacterSystem.Editors
                             AddSingleDNA(s);
                         }
                     }
+                    SortDNA();
+                    serializedObject.Update();
                     wasChanged = true;
                 }
                 if (GUILayout.Button("Clear"))
@@ -1048,15 +1064,18 @@ namespace UMA.CharacterSystem.Editors
             }
         }
 
-        private void DoAdvancedOptionsGUI(SerializedProperty context, SerializedProperty umaData, SerializedProperty umaGenerator)
+        private void DoAdvancedOptionsGUI(SerializedProperty umaGenerator)
         {
             EditorGUI.BeginChangeCheck();
             BeginVerticalPadded();
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("alwaysRebuildSkeleton"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("leanHiding"));
 #if UMA_ADDRESSABLES
+			EditorGUILayout.HelpBox("DelayUnload: This option delays unloading the addressable asset for 2.0 seconds in case you are rebuilding an UMA immediately after freeing this one. Normally this should be unchecked.", MessageType.Info);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("DelayUnload"));
+			EditorGUILayout.HelpBox("BundleCheck: This option makes UMA check the addressable bundles and load if needed. If you are using addressables this should absolutely be checked. Only uncheck this if you have a special circumstance where you are building an UMA that has specific slots and overlays that are not addressable!", MessageType.Info);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("BundleCheck"));
 #endif
             EditorGUILayout.PropertyField(serializedObject.FindProperty("forceSlotMaterials"));
@@ -1087,16 +1106,6 @@ namespace UMA.CharacterSystem.Editors
             if (showHelp)
             {
                 EditorGUILayout.HelpBox("Build Character Enabled: Builds the character on recipe load or race changed. If you want to load multiple recipes into a character you can disable this and enable it when you are done. By default this should be true.", MessageType.Info);
-            }
-            showUMAFramework = EditorGUILayout.Foldout(showUMAFramework, "UMA Framework");
-            if (showUMAFramework)
-            {
-                EditorGUI.BeginChangeCheck();
-                ShowUMAFramework(context, umaData, umaGenerator);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    serializedObject.ApplyModifiedProperties();
-                }
             }
             EndVerticalPadded();
             if (EditorGUI.EndChangeCheck())
@@ -1220,7 +1229,7 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-            UMAGenerator ugb = UMAContext.Instance.gameObject.GetComponentInChildren<UMAGenerator>(true);
+            UMAGenerator ugb = UMAAssetIndexer.Instance.Generator;
             if (ugb == null)
             {
                 Debug.Log("Cannot find generator!");
@@ -1284,17 +1293,17 @@ namespace UMA.CharacterSystem.Editors
             }
 
             List<GameObject> Cleaners = GetRenderers(thisDCA.gameObject);
-            thisDCA.Hide(clear);
+            thisDCA.HideAndCleanup(clear);
             for (int i = 0; i < Cleaners.Count; i++)
             {
                 GameObject go = Cleaners[i];
                 DestroyImmediate(go);
             }
-            if (killUMAData)
+            /*if (killUMAData)
             {
                 DestroyImmediate(thisDCA.umaData);
                 thisDCA.umaData = null;
-            }
+            }*/
             thisDCA.ClearSlots();
         }
 
@@ -1416,13 +1425,12 @@ namespace UMA.CharacterSystem.Editors
             return n_newArraySize;
         }
 
-        private void ShowUMAFramework(SerializedProperty context, SerializedProperty umaData, SerializedProperty umaGenerator)
+        private void SortDNA()
         {
-            EditorGUILayout.PropertyField(context);
-            EditorGUILayout.PropertyField(umaData);
-            EditorGUILayout.PropertyField(umaGenerator);
-            EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(animationController);
+            if (thisDCA.predefinedDNA != null)
+            {
+                thisDCA.predefinedDNA.Sort();
+            }
         }
 
         private void AddSingleDNA(string theDna)

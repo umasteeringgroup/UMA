@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-#if UMA_BURSTCOMPILE
+#if UMA_BURSTCOMPILE 
 using Unity.Burst;
 #endif
 #if UNITY_2019_3_OR_NEWER
@@ -85,7 +85,25 @@ namespace UMA
 		static NativeArray<BoneWeight1> nativeBoneWeights;
 		static NativeArray<byte> nativeBonesPerVertex;
 
-		public static List<UMABlendShape> GetBlendshapeSources(UMAMeshData meshData, UMAData.UMARecipe recipe)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+			if (nativeBoneWeights.IsCreated)
+			{
+				nativeBoneWeights.Dispose();
+			}
+			if (nativeBonesPerVertex.IsCreated)
+			{
+				nativeBonesPerVertex.Dispose();
+			}
+			bonesCollection = new Dictionary<int, BoneIndexEntry>();
+			bindPoses = new List<Matrix4x4>();
+			bonesList = new List<int>();
+			nativeBoneWeights = new NativeArray<BoneWeight1>(0, Allocator.Persistent);
+			nativeBonesPerVertex = new NativeArray<byte>(0, Allocator.Persistent);
+        }
+
+        public static List<UMABlendShape> GetBlendshapeSources(UMAMeshData meshData, UMAData.UMARecipe recipe)
         {
 			List<UMABlendShape> sourceShapes;
 			if (meshData.blendShapes != null && meshData.blendShapes.Length > 0)
@@ -327,7 +345,7 @@ namespace UMA
 
                 if (has_blendShapes)
                 {
-                    //if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length > 0)
+                   // if (source.meshData.blendShapes != null && source.meshData.blendShapes.Length > 0)
                     {
                         List<UMABlendShape> sourceShapes = GetBlendshapeSources(source.meshData, recipe);
                         int sourceBlendShapeLength = sourceShapes.Count;
@@ -335,14 +353,20 @@ namespace UMA
                         {
 							UMABlendShape ubs = sourceShapes[shapeIndex];
                             string shapeName = ubs.shapeName;
+                            #region BlendShape Baking
 
                             //If we aren't loading all blendshapes and we don't find the blendshape name in the list of explicit blendshapes to combine, then skip to the next one.
                             if (blendShapeSettings.ignoreBlendShapes && !blendShapeSettings.blendShapes.ContainsKey(shapeName))
                             {
-                                continue;
+#if UNITY_EDITOR
+								if (Debug.isDebugBuild)
+                                {
+                                    Debug.LogWarning("BlendShape " + shapeName + " is not in the list of blendshapes to combine, skipping.");
+                                }
+#endif
+								continue;
                             }
 
-                            #region BlendShape Baking
                             if (BakeBlendShape(blendShapeSettings.blendShapes, ubs, ref vertexIndex, vertices, normals, tangents, has_normals, has_tangents))
                             {
                                 continue; //If we baked this blendshape, then continue to the next one and skip adding the regular blendshape.
@@ -485,8 +509,10 @@ namespace UMA
 #endif
 							if (!MaskedCopyIntArrayAdd(subTriangles, 0, submeshTriangles[destMesh], subMeshTriangleLength[destMesh], triangleLength, vertexIndex, source.triangleMask[i] ))
                             {
+#if UNITY_EDITOR
 								Debug.LogWarning("Error copying int array on slot: " + source.meshData.SlotName);
-                            }
+#endif
+							}
 							subMeshTriangleLength[destMesh] += (triangleLength - (UMAUtils.GetCardinality(source.triangleMask[i])*3));
 						}
 					}
@@ -499,7 +525,7 @@ namespace UMA
 				boneWeightIndex += source.meshData.ManagedBoneWeights.Length;
 #endif
 			}
-
+#if UNITY_EDITOR
 			if (vertexCount != vertexIndex)
 			{
 				if (Debug.isDebugBuild)
@@ -507,6 +533,7 @@ namespace UMA
                     Debug.LogError("Combined vertices size didn't match precomputed value!");
                 }
             }
+#endif
 
 			// fill in new values.
 			target.vertexCount = vertexCount;
@@ -542,7 +569,7 @@ namespace UMA
 			target.submeshes = new SubMeshTriangles[subMeshCount];
 			target.umaBones = umaTransforms;
 			target.umaBoneCount = boneCount;
-			for (int i = 0; i < subMeshCount; i++)
+			for (int i = 0; i < subMeshCount; i++) 
 			{
 				target.submeshes[i].SetTriangles(null);
 				target.submeshes[i].nativeTriangles = submeshTriangles[i];
@@ -634,6 +661,9 @@ namespace UMA
 			return target;
 		}
 
+#if UMA_BURSTCOMPILE
+		[BurstCompile]
+#endif
 		public static bool BakeBlendShape(Dictionary<string, BlendShapeData> blendShapes, UMABlendShape currentShape, ref int vertexIndex, Vector3[] vertices, Vector3[] normals, Vector4[] tangents, bool has_Normals, bool has_Tangents)
 		{
 			//If we can't find this blendshape then it can't have been baked so return false.

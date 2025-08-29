@@ -31,7 +31,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1375438559846836915}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -110,7 +109,6 @@ RectTransform:
   m_Children:
   - {fileID: 6771853055591045811}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -230,7 +228,12 @@ MonoBehaviour:
     channelAdditiveMask: []
     PropertyBlock:
       alwaysUpdate: 0
+      alwaysUpdateParms: 0
       serializedProperties: []
     foldout: 0
     showAdvanced: 0
     isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}

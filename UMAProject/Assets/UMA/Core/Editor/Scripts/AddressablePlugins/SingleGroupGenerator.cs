@@ -1,4 +1,5 @@
 ﻿#if UMA_ADDRESSABLES
+//#define UMA_VES
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -46,6 +47,11 @@ namespace UMA
 
         public void Complete()
         {
+			if (Index == null)
+			{
+				Index = UMAAssetIndexer.Instance;
+				return;
+			}
             // if the preference is turned on, then force the build flag to clear materials
             bool stripUmaMaterials = UMAEditorUtilities.StripUMAMaterials();
             if (stripUmaMaterials)
@@ -64,7 +70,7 @@ namespace UMA
 
                 RecipeExtraLabels = new Dictionary<string, List<string>>();
                 
-                    var WardrobeCollections = UMAAssetIndexer.Instance.GetAllAssets<UMAWardrobeCollection>();
+                    var WardrobeCollections = Index.GetAllAssets<UMAWardrobeCollection>();
                     foreach (var wc in WardrobeCollections)
                     {
                         if (wc == null) continue;
@@ -114,7 +120,7 @@ namespace UMA
                     {
                         // Get the asset items for the recipe from the local directory, not the index
                         // if it doesn't exist in the local directory, then get it from the index
-                        List<AssetItem> items = UMAAssetIndexer.Instance.GetAssetItems(uwr, false);
+                        List<AssetItem> items = Index.GetAssetItems(uwr, false);
                         foreach (AssetItem ai in items)
                         {
                             // Local items do not get default labels.
@@ -155,7 +161,10 @@ namespace UMA
 
                     if (IncludeRecipes)
                     {
-                        AssetItem RecipeItem = UMAAssetIndexer.Instance.GetRecipeItem(uwr);
+                        AssetItem RecipeItem = Index.GetRecipeItem(uwr);
+						if(RecipeItem == null) { //VES added
+							Debug.LogError("UMA RecipeItem is null! " + uwr);
+						}
                         if (AddressableItems.ContainsKey(RecipeItem) == false)
                         {
                             AddressableItems.Add(RecipeItem, new List<string>());
@@ -312,7 +321,7 @@ namespace UMA
             finally
             {
                 EditorUtility.ClearProgressBar();
-                UMAAssetIndexer.Instance.ForceSave();
+				Index.ForceSave();
             }
         }
 
@@ -342,8 +351,9 @@ namespace UMA
 
         public bool Prepare()
         {
-
+			if(Index == null) {
             Index = UMAAssetIndexer.Instance;
+			}
             UMAAddressablesSupport.Instance.CleanupAddressables(false, true);
             foreach (Type t in Index.GetTypes())
             {
@@ -374,9 +384,14 @@ namespace UMA
 
         private void AddAssetItems(Type t, string DefaultLabel)
         {
-            List<AssetItem> Items = UMAAssetIndexer.Instance.GetAssetItems(t);
+            List<AssetItem> Items = Index.GetAssetItems(t);
             foreach (AssetItem item in Items)
             {
+                if (AddressableItems.ContainsKey(item))
+                {
+                    Debug.LogWarning("Duplicate Addressable item found: " + item._Name + " of type " + item._Type.Name);
+                    continue;
+                }
                 AddressableItems.Add(item, new List<string>());
                 AddressableItems[item].Add(DefaultLabel);
             }

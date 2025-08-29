@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -14,18 +15,21 @@ MonoBehaviour:
   poses:
   - bone: LeftEyebrowMiddle
     hash: -356417641
-    position: {x: -1.1920929e-07, y: 0, z: 0}
-    rotation: {x: -2.6643832e-08, y: .0635736287, z: 1.62880121e-09, w: .997977138}
-    scale: {x: 1, y: 1, z: 1.00000024}
+    position: {x: -0.00000011920929, y: 0, z: 0}
+    rotation: {x: -0.000000026643832, y: 0.06357363, z: 0.0000000016288012, w: 0.99797714}
+    scale: {x: 1, y: 1, z: 1.0000002}
+    category: 
   - bone: LeftEyebrowUp
     hash: 1123680177
     position: {x: 0, y: 0, z: 0}
-    rotation: {x: -1.70165582e-09, y: .0787402317, z: -9.42317335e-10, w: .996895254}
-    scale: {x: .999999762, y: 1, z: 1}
+    rotation: {x: -0.0000000017016558, y: 0.07874023, z: -9.423173e-10, w: 0.99689525}
+    scale: {x: 0.99999976, y: 1, z: 1}
+    category: 
   - bone: NoseMiddle
     hash: 865884795
-    position: {x: .00014898926, y: -1.59430783e-07, z: -1.40070915e-06}
-    rotation: {x: 4.52952719e-07, y: 1.17586962e-09, z: 7.60592123e-09, w: 1}
-    scale: {x: .999999881, y: .999999881, z: 1}
+    position: {x: 0.00014898926, y: -0.00000015943078, z: -0.0000014007092}
+    rotation: {x: 0.00000045295272, y: 0.0000000011758696, z: 0.000000007605921, w: 1}
+    scale: {x: 0.9999999, y: 0.9999999, z: 1}
+    category: 
   tweenPoses: []
   tweenWeights: []

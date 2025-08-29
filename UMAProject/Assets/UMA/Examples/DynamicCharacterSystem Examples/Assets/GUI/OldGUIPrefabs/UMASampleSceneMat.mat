@@ -1,5 +1,18 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7009964335988127070
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 10
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
@@ -8,17 +21,22 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMASampleSceneMat
-  m_Shader: {fileID: -6465566751694194690, guid: e2c95817ac413714c8f36b80020c9867,
-    type: 3}
-  m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _GLOSSYREFLECTIONS_OFF
+  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _METALLICSPECGLOSSMAP
+  - _NORMALMAP
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -84,7 +102,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: f8b2a4c840685104d963ee001cbdbfe6, type: 3}
-        m_Scale: {x: 7, y: 7}
+        m_Scale: {x: 4, y: 4}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 2800000, guid: f8b2a4c840685104d963ee001cbdbfe6, type: 3}
@@ -110,19 +128,46 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SpecGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _SpecularMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AddPrecomputedVelocity: 0
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 0
+    - _BlendModePreserveSpecular: 1
     - _BumpScale: 1
+    - _ClearCoatMask: 0
+    - _ClearCoatSmoothness: 0
     - _ColorModulation: 1
+    - _Cull: 2
     - _CullMode: 2
     - _Cutoff: 0.5
+    - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DoubleSidedNormalMode: 1
     - _DstBlend: 0
+    - _DstBlendAlpha: 0
+    - _EnvironmentReflections: 1
     - _GlossMapScale: 1
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -130,7 +175,7 @@ Material:
     - _Metallic: 0
     - _MetallicModulation: 0
     - _Mode: 0
-    - _NormalStrength: 0.2
+    - _NormalStrength: 0.594
     - _NormalStrength0: 1
     - _NormalStrength1: 1
     - _NormalStrength2: 1
@@ -138,14 +183,19 @@ Material:
     - _OcclusionStrength: 1
     - _OverlayCount: 0
     - _Parallax: 0.02
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 1
     - _RimLightPower: 4.38
     - _RimLightingModulation: 0
     - _Smoothness: 0
-    - _SmoothnessModulation: 0
+    - _SmoothnessModulation: 0.339
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SpecularModulation: 1
     - _SrcBlend: 1
+    - _SrcBlendAlpha: 1
+    - _Surface: 0
     - _Tile0_0: 1
     - _Tile0_1: 1
     - _Tile0_2: 1
@@ -160,11 +210,13 @@ Material:
     - _Tile3_2: 1
     - _UVSec: 0
     - _UberTile: 6
-    - _UseHalfLambert: 0
+    - _UseHalfLambert: 1
     - _UseTiling1: 0
     - _UseTiling2: 0
     - _UseTiling3: 0
     - _UseTiling99: 0
+    - _WorkflowMode: 1
+    - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
     - _Add0_0: {r: 0, g: 0, b: 0, a: 0}
@@ -179,12 +231,14 @@ Material:
     - _Add3_0: {r: 0, g: 0, b: 0, a: 0}
     - _Add3_1: {r: 0, g: 0, b: 0, a: 0}
     - _Add3_2: {r: 0, g: 0, b: 0, a: 0}
+    - _BaseColor: {r: 0, g: 0, b: 0, a: 1}
     - _BlueColor0: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0.59748423, g: 0.59748423, b: 0.59748423, a: 1}
+    - _Color: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GreenColor0: {r: 1, g: 1, b: 1, a: 1}
     - _RedColor0: {r: 1, g: 1, b: 1, a: 1}
     - _RimLightColor: {r: 0.3555556, g: 0.6277778, b: 1, a: 1}
+    - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _Tint0_0: {r: 0.23745102, g: 0.30360985, b: 0.6509434, a: 1}
     - _Tint0_1: {r: 1, g: 1, b: 1, a: 1}
     - _Tint0_2: {r: 1, g: 1, b: 1, a: 1}
@@ -201,3 +255,4 @@ Material:
     - _UV_Offset2: {r: 0, g: 0, b: 1, a: 1}
     - _UV_Offset3: {r: 0, g: 0, b: 1, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1

@@ -72,6 +72,17 @@ namespace UMA
 			}
 		}
 
+        public override void FirstPass(UMAData umaData, int dnaTypeHash)
+        {
+            var umaDna = umaData.GetDna(dnaTypeHash);
+            var masterWeightCalc = masterWeight.GetWeight(umaDna);
+            for (int i = 0; i < _blendshapeDNAConverters.Count; i++)
+            {
+				_blendshapeDNAConverters[i].ApplyFirstPass(umaData, dnaTypeHash, masterWeightCalc);
+            }
+        }
+
+
 		/// <summary>
 		/// Apply the blendshape modifications according to the given dna (determined by the dnaTypeHash)
 		/// </summary>
@@ -158,7 +169,7 @@ namespace UMA
 			[Tooltip("Add dna(s) here that will change the amount that this blendshape is applied depending on their evaluated value.")]
 			private DNAEvaluatorList _modifyingDNA = new DNAEvaluatorList();
 
-			#endregion
+			#endregion 
 
 			#region PRIVATE VARS
 
@@ -239,6 +250,23 @@ namespace UMA
 			#region METHODS
 
 			//TODO methods for screwing with the reducer dnas? Better if we can use fancy properties with indexers
+
+			public void ApplyFirstPass(UMAData umaData, int dnaTypeHash, float masterWeight = 1f)
+			{
+                _liveShapeWeight = _startingShapeWeight;
+
+                //dna weight superceeds startingWeight if it exists
+                if (_modifyingDNA.UsedDNANames.Count > 0)
+                {
+                    _activeDNA = (DynamicUMADnaBase)umaData.GetDna(dnaTypeHash);
+                    _liveShapeWeight = _modifyingDNA.Evaluate(_activeDNA);
+                }
+                _liveShapeWeight = _liveShapeWeight * masterWeight;
+                _liveShapeWeight = Mathf.Clamp(_liveShapeWeight, 0f, 1f);
+
+                umaData.SetBlendShape(_blendshapeToApply, _liveShapeWeight,false,true);
+            }
+
 
 			public void ApplyDNA(UMAData umaData, UMASkeleton skeleton, UMADnaBase activeDNA, float masterWeight = 1f)
 			{

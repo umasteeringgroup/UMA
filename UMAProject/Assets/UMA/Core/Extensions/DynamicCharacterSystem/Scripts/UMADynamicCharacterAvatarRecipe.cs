@@ -76,7 +76,7 @@ namespace UMA.CharacterSystem
 		/// <summary>
 		/// NOTE: Use GetUniversalPackRecipe to get a recipe that includes a wardrobeSet. Load this Recipe's recipeString into the specified UMAData.UMARecipe.
 		/// </summary>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context, bool loadSlots = true)
+		public override void Load(UMA.UMAData.UMARecipe umaRecipe,  bool loadSlots = true)
 		{
 			if ((recipeString != null) && (recipeString.Length > 0))
 			{
@@ -84,17 +84,20 @@ namespace UMA.CharacterSystem
                 {
                     activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
                 }
+#if UNITY_EDITOR
                 else
-				{
+                {
 					if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning("[UMADynamicCharacterAvatar] recipe did not have wardrobe set");
                     }
                 }
-				var packedRecipe = PackedLoadDCSInternal(context);
+#endif
+				var packedRecipe = PackedLoadDCSInternal();
 				if (packedRecipe != null)
                 {
-                    UnpackRecipe(umaRecipe, packedRecipe, context,loadSlots);
+					packedRecipe.isWardrobe = false;
+                    UnpackRecipe(umaRecipe, packedRecipe,loadSlots);
                 }
             }
 		}

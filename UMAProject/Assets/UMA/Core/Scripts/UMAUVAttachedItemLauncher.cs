@@ -41,14 +41,8 @@ namespace UMA
 
         public bool worldTransform;
 
-        public void Start()
-        {
-            Debug.Log($"Start {GetInstanceID()}");
-        }
-
         public void OnSlotProcessed(UMAData umaData, SlotData slotData)
         {
-            Debug.Log("SlotProcessed: " + slotData.slotName);
             this.sourceSlot = slotData;
         }
 
@@ -61,7 +55,6 @@ namespace UMA
                 return;
             }
 #endif
-            Debug.Log($"DNA Applied {GetInstanceID()}");
 
             var uvam = umaData.gameObject.GetComponent<UMAUVAttachedItemManager>();
             if (!uvam)

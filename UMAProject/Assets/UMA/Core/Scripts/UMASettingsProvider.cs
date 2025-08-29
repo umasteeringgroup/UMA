@@ -8,13 +8,13 @@ using UnityEngine.UIElements;
 using System.Linq;
 using UMA;
 using UnityEditor.Build;
+using System;
 
 namespace UMA
 {
 
-    class UMASettingsProvider : SettingsProvider
+    public class UMASettingsProvider : SettingsProvider
     {
-        public const string DefineSymbol_32BitBuffers = "UMA_32BITBUFFERS";
         public const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
         public const string DefineSymbol_BurstCompile = "UMA_BURSTCOMPILE";
         public const string DefineSymbol_UMAAlwaysGetAddressableItems = "UMA_ALWAYSGETADDR_NO_PROD";
@@ -33,7 +33,48 @@ namespace UMA
         public const string ConfigToggle_IndexAutoRepair = "UMA_INDEX_AUTOREPAIR";
 
         private string dots = "";
+        private string UMABasePath = "";
+        public string BasePath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(UMABasePath))
+                {
+                    UMABasePath = FindUMAFullPath();
+                }
+                return UMABasePath;
+            }
+        }
 
+        public static string FindUMAFolder()
+        {
+            string basePath = FindUMAFullPath();
+            // return the path relative to the Assets folder
+            string folder = basePath.Replace(Application.dataPath, "Assets");
+            return folder;
+        }
+
+        public static string FindUMAFullPath()
+        {
+            string folder = "UMA";
+
+            // search the project for the UMA folder
+            string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
+            if (folders != null && folders.Length > 0)
+            {
+                foreach (string guid in folders)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (path.EndsWith(folder, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return path;
+                    }
+                }
+            }
+
+            // if we didn't find it, return the default path
+            return Path.Combine(Application.dataPath, folder);
+        }
 
         private SerializedObject m_CustomSettings;
 
@@ -116,37 +157,36 @@ namespace UMA
 
         public void DrawBoolConfigToggle(string propertyName, string label, string tooltip, string defineSymbol, HashSet<string> defineSymbols, bool burst = false)
         {
-            SerializedProperty prop = m_CustomSettings.FindProperty(propertyName);
+
             EditorGUI.BeginChangeCheck();
-            prop.boolValue = EditorGUILayout.Toggle(new GUIContent(label, tooltip), prop.boolValue);
+            var boolValue = defineSymbols.Contains(defineSymbol);
+            boolValue = EditorGUILayout.Toggle(new GUIContent(label, tooltip), boolValue);
             if (EditorGUI.EndChangeCheck())
             {
-                Debug.Log($"{label} changed to {prop.boolValue} burst = {burst}");
+                Debug.Log($"{label} changed to {boolValue} burst = {burst}");
                 if (burst)
                 {
-                    if (prop.boolValue)
+                    if (boolValue)
                     {
-                        string datapath = Application.dataPath;
-                        string sourceFile = Path.Combine(datapath, "uma", "core", "uma_core_burst.dat");
-                        string destFile = Path.Combine(datapath, "uma", "core", "uma_core.asmdef");
-                        Debug.Log($"Burst changed to {prop.boolValue}-Copying from {sourceFile} to {destFile}");
+                        string sourceFile = Path.Combine(BasePath,  "core", "uma_core_burst.dat");
+                        string destFile = Path.Combine(BasePath,"core", "uma_core.asmdef");
+                        Debug.Log($"Burst changed to {boolValue}-Copying from {sourceFile} to {destFile}");
                         File.Copy(sourceFile, destFile, true);
                         AssetDatabase.Refresh();
                         Debug.Log("File copied");
                     }
                     else
                     {
-                        string datapath = Application.dataPath;
-                        string sourceFile = Path.Combine(datapath, "uma", "core", "uma_core_noburst.dat");
-                        string destFile = Path.Combine(datapath, "uma", "core", "uma_core.asmdef");
-                        Debug.Log($"Burst changed to {prop.boolValue}-Copying from {sourceFile} to {destFile}");
+                        string sourceFile = Path.Combine(BasePath,"core", "uma_core_noburst.dat");
+                        string destFile = Path.Combine(BasePath,"core", "uma_core.asmdef");
+                        Debug.Log($"Burst changed to {boolValue}-Copying from {sourceFile} to {destFile}");
                         File.Copy(sourceFile, destFile, true);
                         AssetDatabase.Refresh();
                         Debug.Log("File copied");
                     }
                 }
                 m_CustomSettings.ApplyModifiedProperties();
-                if (prop.boolValue)
+                if (boolValue)
                 {
                     if (!defineSymbols.Contains(defineSymbol))
                     {
@@ -209,11 +249,11 @@ namespace UMA
                 System.Threading.Thread.Sleep(100);
                 Repaint();
                 return;
-            }
+            } 
 
             dots = "";
 
-            var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(';'));
+            var defineSymbols = new HashSet<string>(PlayerSettings.GetScriptingDefineSymbols(CurrentNamedBuildTarget).Split(';'));
 
             EditorGUILayout.LabelField("UMA Version " + m_CustomSettings.FindProperty("UMAVersion").stringValue, EditorStyles.boldLabel);
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
@@ -243,6 +283,15 @@ namespace UMA
 
             DrawBoolProperty("showWelcomeToUMA", "Show Welcome Window", "If true, UMA will show the welcome window when the project is loaded");
 
+            // Runtime MeshAPI combiner toggle (Unity 2022.2+)
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Runtime Mesh Combiner", EditorStyles.boldLabel);
+            DrawBoolProperty(
+                "useMeshAPICombiner",
+                "Use MeshAPI Combiner (Unity 2022.2+)",
+                "Enable the MeshData API based combiner at runtime on Unity 2022.2+. When disabled or on older Unity versions, UMA uses the legacy combiner."
+            );
+
             DrawObjectProperty("characterPrefab", "Character Prefab", "The default character prefab used by UMA", typeof(GameObject));
             DrawObjectProperty("generatorPrefab", "Generator Prefab", "The default generator prefab used by UMA", typeof(GameObject));
             DrawObjectProperty("textureMerge", "Texture Merger", "The default texture merger used by UMA", typeof(TextureMerge));
@@ -261,7 +310,6 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("Project Build Options", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Modifying these settings will change the UMA define symbols in the project settings, and force a recompile.", MessageType.Info);
-            DrawBoolConfigToggle("use32bitBuffers", "Use 32bit Buffers", "If true, UMA will use 32bit buffers for all UMA data", DefineSymbol_32BitBuffers, defineSymbols);
             EditorGUILayout.HelpBox("Using the Burst compiler will speed up certain operations. But will require adding the following packages from the Package Manager: Burst, Jobs (Mathematics, Collections should be pulled in automatically)", MessageType.Warning, true);
             DrawBoolConfigToggle("useBurstCompiler", "Use Burst Compiler", "If true, UMA will use the Burst Compiler to speed up array math. Must install the jobs package first", DefineSymbol_BurstCompile, defineSymbols, true);
             DrawBoolConfigToggle("useAddressables", "Use Addressables", "If true, UMA will use the Addressables system for loading assets", DefineSymbol_Addressables, defineSymbols);
@@ -274,10 +322,7 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("UMA Addressables Options", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These settings are only used if 'Use Addressables' is enabled", MessageType.Info);
-            bool useAddressables = m_CustomSettings.FindProperty("useAddressables").boolValue;
-            GUI.enabled = useAddressables;
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrIncludeRecipes", "addrIncludeOther" });
-            GUI.enabled = true;
             EndVerticalPadded(10);
 
             m_CustomSettings.ApplyModifiedPropertiesWithoutUndo();

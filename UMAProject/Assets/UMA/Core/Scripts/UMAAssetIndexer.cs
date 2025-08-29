@@ -26,20 +26,21 @@ using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 using System.Text;
 using System.Collections;
-using System.Xml.Serialization; 
+using System.Xml.Serialization;
 
 
 namespace UMA
 {
     [PreferBinarySerialization]
-    public class UMAAssetIndexer : ScriptableObject /*, ISerializationCallbackReceiver */
+    public partial class UMAAssetIndexer : ScriptableObject /*, ISerializationCallbackReceiver */
     {
         const float DefaultLife = 5.0f;
+        const string generatorName = "UMAGeneratorInternal";
 
-        private string instanceKey = "<"+Guid.NewGuid().ToString()+">";
+        private string instanceKey = "<" + Guid.NewGuid().ToString() + ">";
 
         public UMALabelsEvent BeforeProcessingLabels = new UMALabelsEvent();
-        
+
         [Serializable]
         public class TypeFolders
         {
@@ -63,7 +64,24 @@ namespace UMA
             }
         }
 
-        //= new Dictionary<string, List<string>>();
+        // TODO: change to scriptable object and load in Initialize
+        public UMAGenerator generator;
+
+        public UMAGenerator Generator
+        {
+            get
+            {
+                if (generator == null)
+                {
+                    generator = GameObject.FindFirstObjectByType<UMAGenerator>(FindObjectsInactive.Exclude);
+                    if (generator == null)
+                    {
+                        CreateGenerator();
+                    }
+                }
+                return generator;
+            }
+        }
 
         public void Awake()
         {
@@ -72,7 +90,7 @@ namespace UMA
 
         private void DebugLog(string msg)
         {
-           // File.AppendAllText("d:\\indexerlog.txt", msg + "\n");
+            // File.AppendAllText("d:\\indexerlog.txt", msg + "\n");
         }
 
 #if UMA_ADDRESSABLES
@@ -174,8 +192,63 @@ namespace UMA
         #region Static Fields
         static UMAAssetIndexer theIndexer = null;
 
+        public static UMAAssetIndexer bareInstance
+        {
+            get { return theIndexer; }
+        }
+
+        public UMAGenerator bareGenerator
+        {
+            get
+            {
+                return generator;
+            }
+        }
 
         #endregion
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+
+            SortOrder = "Name";
+            SortOrders = new string[] { "Name", "AssetName" };
+            WasChecked = false;
+            TypeFromString = new Dictionary<string, System.Type>();
+            theIndexer = null;
+/*
+            // This method is called after all assemblies are loaded, so we can initialize static data here if needed.
+            // Currently, we don't have any static initialization logic, but this method is a good place to add it in the future.
+            if (theIndexer == null)
+            {
+                theIndexer = Resources.Load("AssetIndexer") as UMAAssetIndexer;
+                if (theIndexer != null)
+                {
+                    theIndexer.Initialize();
+                }
+            }
+            else
+            {
+                theIndexer.ReinitializePrivateFields();
+            }*/
+        }
+
+        public void ReinitializePrivateFields()
+        {
+            // Reinitialize the private fields of the indexer
+            instanceKey = "<" + Guid.NewGuid().ToString() + ">";
+            generator = null;
+            raceRecipes.Clear();
+            TypeLookup.Clear();
+            IndexedTypeNames.Clear();
+            SerializedItems.Clear();
+            CreateGenerator();
+            BuildStringTypes();
+            CreateTypeFolderMapping();
+            DoInitialDictionaryLoad();
+            RebuildRaceRecipes();
+        }
+
 
         public static System.Diagnostics.Stopwatch StartTimer()
         {
@@ -196,7 +269,7 @@ namespace UMA
 #if TIMEINDEXER
             st.Stop();
             if(Debug.isDebugBuild)
-                Debug.Log(Status + " Completed " + st.ElapsedMilliseconds + "ms");
+                Debug.Log(Status + " Timer Completed " + st.ElapsedMilliseconds + "ms");
             return;
 #endif
         }
@@ -215,15 +288,12 @@ namespace UMA
             {
                 if (theIndexer == null)
                 {
-
 #if UNITY_EDITOR
-                    DebugSerializationStatic("Instance is NULL - getting new instance.");
                     if (EditorApplication.isCompiling || EditorApplication.isUpdating)
                     {
-                        Debug.Log("Warning: Attempted to get instance while compiling/Updating");
                         return null;
                     }
-                    DebugSerializationStatic("Loading AssetIndexer from resources...");
+                    //DebugSerializationStatic("Loading AssetIndexer from resources...");
 #endif
 
                     //var st = StartTimer();
@@ -231,23 +301,25 @@ namespace UMA
                     if (theIndexer == null)
                     {
 #if UNITY_EDITOR
-                        DebugSerializationStatic("AssetIndexer is NULL - ON LOAD!!! How can this happen?");
+                        //DebugSerializationStatic("AssetIndexer is NULL - ON LOAD!!! How can this happen?");
 #endif
                         return null;
                     }
 
 #if UNITY_EDITOR
-                    DebugSerializationStatic("Rebulding Lookup Tables");
+                    //DebugSerializationStatic("Rebulding Lookup Tables");
 #endif
                     theIndexer.Initialize();
-                    theIndexer.UpdateSerializedDictionaryItems();
-                    theIndexer.RebuildRaceRecipes();
+
+                    /*theIndexer.UpdateSerializedDictionaryItems();
+					theIndexer.RebuildRaceRecipes();*/
+
 #if UNITY_EDITOR
                     EditorSceneManager.sceneSaving += EditorSceneManager_sceneSaving;
                     EditorSceneManager.sceneSaved += EditorSceneManager_sceneSaved;
-                    EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged; ;
+                    EditorApplication.playModeStateChanged += EditorApplication_playModeStateChanged;
+                    ;
 #endif
-                    //StopTimer(st,"Asset index load");
                 }
                 else
                 {
@@ -271,6 +343,34 @@ namespace UMA
                  !EditorApplication.isPlaying)
             {
                 RebuildUMAS(SceneManager.GetActiveScene());
+            }
+            if (obj == PlayModeStateChange.ExitingEditMode)
+            {
+                if (theIndexer != null)
+                {
+                    // Debug.Log("playmde. creating generator");
+                    if (theIndexer.generator != null)
+                    {
+                        //Debug.Log("Entered Edit Mode. Destroying generator");
+                        GameObject.DestroyImmediate(theIndexer.generator.gameObject);
+                        theIndexer.generator = null;
+                    }
+                }
+            }
+            if (obj == PlayModeStateChange.EnteredEditMode)
+            {
+                if (theIndexer != null)
+                {
+                    if (theIndexer.generator != null)
+                    {
+                        //Debug.Log("Entered Edit Mode. Destroying generator");
+                        GameObject.DestroyImmediate(theIndexer.generator.gameObject);
+                        theIndexer.generator = null;
+                    }
+                }
+                //Debug.Log("playmde. exiting playmode");
+                //theIndexer.generator = null;
+                //theIndexer.CreateGenerator();
             }
             UMAMeshData.CleanupGlobalBuffers();
         }
@@ -311,7 +411,7 @@ namespace UMA
             CleanupUMAS(scene);
         }
 
-	    public static void RebuildUMAS(Scene scene)
+        public static void RebuildUMAS(Scene scene)
         {
             GameObject[] sceneObjs = scene.GetRootGameObjects();
             for (int i = 0; i < sceneObjs.Length; i++)
@@ -414,8 +514,91 @@ namespace UMA
 
         public void Initialize()
         {
+            // reset the public variables
+
+
+            CreateGenerator();
             BuildStringTypes();
             CreateTypeFolderMapping();
+            DoInitialDictionaryLoad();
+            RebuildRaceRecipes();
+            // UpdateSerializedDictionaryItems();
+            //heIndexer.RebuildRaceRecipes();*/
+
+        }
+
+        public void DoInitialRecipeLoad() {
+            // Load the serialized items into the raceRecipes dictionary
+            raceRecipes.Clear();
+
+        }
+
+
+
+        public void DoInitialDictionaryLoad() {
+            // Load the serialized items into the TypeLookup dictionary
+            TypeLookup.Clear();
+            foreach (var type in Types)
+            {
+                TypeLookup[type] = new Dictionary<string, AssetItem>();
+            }
+            foreach (var item in SerializedItems)
+            {
+                if (item != null && item._Type != null && TypeLookup.ContainsKey(item._Type))
+                {
+                    TypeLookup[item._Type][item._Name] = item;
+                }
+            }
+        }
+
+
+        private void CreateGenerator()
+        {
+            UMASettings settings = UMASettings.GetSettingsFromResources();
+            if (settings == null)
+            {
+                Debug.LogError("Unable to load UMASettings!!! UMA Will Not Work!");
+                return;
+            }
+
+            if (generator == null || generator.gameObject == null)
+            {
+                GameObject goat = GameObject.Find(generatorName);
+                if (goat != null)
+                {
+                    generator = goat.GetComponent<UMAGenerator>();
+                    if (generator != null)
+                    {
+                        generator.gameObject.hideFlags = HideFlags.DontSave;
+                        return;
+                    }
+                }
+                //Debug.Log("Creating generator");
+                GameObject go = GameObject.Instantiate(settings.generatorPrefab);
+                go.name = generatorName;
+                generator = go.GetComponent<UMAGenerator>();
+                if (generator != null)
+                {
+                    if (!generator.showInHierarchy)
+                    {
+                        go.hideFlags = HideFlags.HideAndDontSave | HideFlags.DontUnloadUnusedAsset;
+                    }
+                    else
+                    {
+                        go.hideFlags = HideFlags.DontSave | HideFlags.DontUnloadUnusedAsset;
+                    }
+                }
+
+#if UNITY_EDITOR
+                if (EditorApplication.isPlaying)
+                {
+                    GameObject.DontDestroyOnLoad(go);
+                }
+#else
+                GameObject.DontDestroyOnLoad(go);
+#endif
+                go.SetActive(true);
+            }
         }
 
 #if UNITY_EDITOR
@@ -468,7 +651,7 @@ namespace UMA
         /// <returns></returns>
         public bool IsValid()
         {
-            foreach(var t in TypeToLookup.Keys)
+            foreach (var t in TypeToLookup.Keys)
             {
                 var typeDic = GetAssetDictionary(t);
                 if (typeDic.Keys.Count > 0)
@@ -569,9 +752,596 @@ namespace UMA
         {
             var st = StartTimer();
             EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssetIfDirty(this);
+            // Save all assets
+            //AssetDatabase.SaveAssetIfDirty(this);
+            AssetDatabase.SaveAssets();
             StopTimer(st, "ForceSave");
         }
+#endif
+
+#if UNITY_EDITOR
+        public void CompareSerializedItems2(UMAAssetIndexer after, string filePath)
+        {
+            if (after == null)
+            {
+                Debug.LogError("Cannot compare to null UMAAssetIndexer");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(filePath))
+            {
+                Debug.LogError("File path cannot be null or empty");
+                return;
+            }
+
+            try
+            {
+                // Create dictionaries for faster lookup by name and type
+                var thisItems = new Dictionary<string, AssetItem>();
+                var otherItems = new Dictionary<string, AssetItem>();
+
+                // Build lookup dictionaries for this indexer
+                foreach (var item in SerializedItems)
+                {
+                    if (item != null && !string.IsNullOrEmpty(item._Name))
+                    {
+                        string key = $"{item._Type?.Name ?? "Unknown"}:{item._Name}";
+                        if (!thisItems.ContainsKey(key))
+                        {
+                            thisItems[key] = item;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Duplicate item found in this indexer: {item._Type?.Name ?? "Unknown"}:{item._Name}");
+                        }
+                    }
+                }
+
+                // Build lookup dictionaries for other indexer
+                foreach (var item in after.SerializedItems)
+                {
+                    if (item != null && !string.IsNullOrEmpty(item._Name))
+                    {
+                        string key = $"{item._Type?.Name ?? "Unknown"}:{item._Name}";
+                        if (!otherItems.ContainsKey(key))
+                        {
+                            otherItems[key] = item;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Duplicate item found in other indexer: {item._Type?.Name ?? "Unknown"}:{item._Name}");
+                        }
+                    }
+                }
+
+                // Find items missing in other indexer
+                var missingInOther = new List<AssetItem>();
+                foreach (var kvp in thisItems)
+                {
+                    if (!otherItems.ContainsKey(kvp.Key))
+                    {
+                        missingInOther.Add(kvp.Value);
+                    }
+                }
+
+                // Find items missing in this indexer
+                var missingInThis = new List<AssetItem>();
+                foreach (var kvp in otherItems)
+                {
+                    if (!thisItems.ContainsKey(kvp.Key))
+                    {
+                        missingInThis.Add(kvp.Value);
+                    }
+                }
+
+                // Generate detailed report
+                StringBuilder report = new StringBuilder();
+                report.AppendLine($"UMA Asset Indexer SerializedItems Comparison Report");
+                report.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                report.AppendLine("=".PadRight(70, '='));
+                report.AppendLine();
+
+                // Summary
+                report.AppendLine("SUMMARY:");
+                report.AppendLine($"  Before indexer SerializedItems count: {SerializedItems.Count}");
+                report.AppendLine($"  After indexer SerializedItems count: {after.SerializedItems.Count}");
+                report.AppendLine($"  Items missing in After indexer: {missingInOther.Count}");
+                report.AppendLine($"  Items missing in Before indexer: {missingInThis.Count}");
+                report.AppendLine($"  Total differences: {missingInOther.Count + missingInThis.Count}");
+                report.AppendLine();
+
+                // Items missing in other indexer
+                if (missingInOther.Count > 0)
+                {
+                    report.AppendLine($"ITEMS MISSING IN AFTER INDEXER ({missingInOther.Count}):");
+                    report.AppendLine("-".PadRight(50, '-'));
+
+                    // Group by type for better readability
+                    var groupedMissingInOther = missingInOther
+                        .GroupBy(item => item._Type?.Name ?? "Unknown")
+                        .OrderBy(g => g.Key);
+
+                    foreach (var typeGroup in groupedMissingInOther)
+                    {
+                        report.AppendLine($"  {typeGroup.Key} ({typeGroup.Count()} items):");
+                        foreach (var item in typeGroup.OrderBy(i => i._Name))
+                        {
+                            report.AppendLine($"    • {item._Name}");
+                            if (!string.IsNullOrEmpty(item._Path))
+                            {
+                                report.AppendLine($"      Path: {item._Path}");
+                            }
+                            if (!string.IsNullOrEmpty(item._Guid))
+                            {
+                                report.AppendLine($"      GUID: {item._Guid}");
+                            }
+                        }
+                        report.AppendLine();
+                    }
+                }
+
+                // Items missing in this indexer
+                if (missingInThis.Count > 0)
+                {
+                    report.AppendLine($"ITEMS MISSING IN BEFORE INDEXER ({missingInThis.Count}):");
+                    report.AppendLine("-".PadRight(50, '-'));
+
+                    // Group by type for better readability
+                    var groupedMissingInThis = missingInThis
+                        .GroupBy(item => item._Type?.Name ?? "Unknown")
+                        .OrderBy(g => g.Key);
+
+                    foreach (var typeGroup in groupedMissingInThis)
+                    {
+                        report.AppendLine($"  {typeGroup.Key} ({typeGroup.Count()} items):");
+                        foreach (var item in typeGroup.OrderBy(i => i._Name))
+                        {
+                            report.AppendLine($"    • {item._Name}");
+                            if (!string.IsNullOrEmpty(item._Path))
+                            {
+                                report.AppendLine($"      Path: {item._Path}");
+                            }
+                            if (!string.IsNullOrEmpty(item._Guid))
+                            {
+                                report.AppendLine($"      GUID: {item._Guid}");
+                            }
+                        }
+                        report.AppendLine();
+                    }
+                }
+
+                // Type breakdown comparison
+                report.AppendLine("TYPE BREAKDOWN COMPARISON:");
+                report.AppendLine("-".PadRight(50, '-'));
+
+                // Collect all type names from both dictionaries
+                List<string> allTypesList = new List<string>();
+
+                foreach (var item in thisItems.Values)
+                {
+                    string typeName = item._Type != null ? item._Type.Name : "Unknown";
+                    if (!allTypesList.Contains(typeName))
+                    {
+                        allTypesList.Add(typeName);
+                    }
+                }
+                foreach (var item in otherItems.Values)
+                {
+                    string typeName = item._Type != null ? item._Type.Name : "Unknown";
+                    if (!allTypesList.Contains(typeName))
+                    {
+                        allTypesList.Add(typeName);
+                    }
+                }
+
+                // Sort the type names alphabetically
+                allTypesList.Sort();
+
+                for (int t = 0; t < allTypesList.Count; t++)
+                {
+                    string typeName = allTypesList[t];
+                    int thisCount = 0;
+                    int otherCount = 0;
+
+                    foreach (var item in thisItems.Values)
+                    {
+                        string tn = item._Type != null ? item._Type.Name : "Unknown";
+                        if (tn == typeName)
+                            thisCount++;
+                    }
+                    foreach (var item in otherItems.Values)
+                    {
+                        string tn = item._Type != null ? item._Type.Name : "Unknown";
+                        if (tn == typeName)
+                            otherCount++;
+                    }
+
+                    string status = (thisCount == otherCount) ? "✓" : "⚠";
+                    report.AppendLine($"  {status} {typeName}: Before={thisCount}, After={otherCount}");
+                }
+                report.AppendLine();
+
+                // Final status
+                if (missingInOther.Count == 0 && missingInThis.Count == 0)
+                {
+                    report.AppendLine("✓ SUCCESS: SerializedItems lists are identical.");
+                }
+                else
+                {
+                    report.AppendLine($"⚠ DIFFERENCES FOUND: {missingInOther.Count} items missing in After, {missingInThis.Count} items missing in Before indexer");
+                }
+
+                // Write report to file
+                File.WriteAllText(filePath, report.ToString());
+                Debug.Log($"SerializedItems comparison complete. Report written to: {filePath}");
+                if (missingInOther.Count > 0 || missingInThis.Count > 0)
+                {
+                    Debug.LogWarning($"Found differences: {missingInOther.Count} missing in other indexer, {missingInThis.Count} missing in this indexer.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error during SerializedItems comparison: {ex.Message}");
+                Debug.LogException(ex);
+
+                // Write error report
+                try
+                {
+                    File.WriteAllText(filePath, $"SerializedItems Comparison Error\n" +
+                                            $"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+                                            $"Error: {ex.Message}\n" +
+                                            $"Stack Trace:\n{ex.StackTrace}");
+                }
+                catch
+                {
+                    // Ignore file write errors in error handler
+                }
+
+            }
+        }
+
+        public void CompareSerializedItems(UMAAssetIndexer After, string filePath) {
+			if(After == null) {
+				Debug.LogError("Cannot compare to null UMAAssetIndexer");
+				return;
+			}
+
+			if(string.IsNullOrEmpty(filePath)) {
+				Debug.LogError("File path cannot be null or empty");
+				return;
+			}
+
+			Initialize();
+			UpdateSerializedDictionaryItems();
+
+			After.Initialize();
+			After.UpdateSerializedDictionaryItems();
+
+
+			try {
+				// Create dictionaries for faster lookup by name and type
+				var thisItems = new Dictionary<string, AssetItem>();
+				var otherItems = new Dictionary<string, AssetItem>();
+
+				// Build lookup dictionaries for this indexer
+				foreach(var item in SerializedItems) {
+					if(item != null && !string.IsNullOrEmpty(item._Name)) {
+						string key = $"{item._Type?.Name ?? "Unknown"}:{item._Name}";
+						if(!thisItems.ContainsKey(key)) {
+							thisItems[key] = item;
+						}
+					}
+				}
+
+				// Build lookup dictionaries for other indexer
+				foreach(var item in After.SerializedItems) {
+					if(item != null && !string.IsNullOrEmpty(item._Name)) {
+						string key = $"{item._Type?.Name ?? "Unknown"}:{item._Name}";
+						if(!otherItems.ContainsKey(key)) {
+							otherItems[key] = item;
+						}
+					}
+				}
+
+				// Find items missing in other indexer
+				var missingInOther = new List<AssetItem>();
+				foreach(var kvp in thisItems) {
+					if(!otherItems.ContainsKey(kvp.Key)) {
+						missingInOther.Add(kvp.Value);
+					}
+				}
+
+				// Find items missing in this indexer
+				var missingInThis = new List<AssetItem>();
+				foreach(var kvp in otherItems) {
+					if(!thisItems.ContainsKey(kvp.Key)) {
+						missingInThis.Add(kvp.Value);
+					}
+				}
+
+				// Generate detailed report
+				StringBuilder report = new StringBuilder();
+				report.AppendLine($"UMA Asset Indexer SerializedItems Comparison Report");
+				report.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+				report.AppendLine("=".PadRight(70, '='));
+				report.AppendLine();
+
+				// Summary
+				report.AppendLine("SUMMARY:");
+				report.AppendLine($"  Before indexer SerializedItems count: {SerializedItems.Count}");
+				report.AppendLine($"  After indexer SerializedItems count: {After.SerializedItems.Count}");
+				report.AppendLine($"  Items missing in After indexer: {missingInOther.Count}");
+				report.AppendLine($"  Items missing in Before indexer: {missingInThis.Count}");
+				report.AppendLine($"  Total differences: {missingInOther.Count + missingInThis.Count}");
+				report.AppendLine();
+
+				// Items missing in other indexer
+				if(missingInOther.Count > 0) {
+					report.AppendLine($"ITEMS MISSING IN After INDEXER ({missingInOther.Count}):");
+					report.AppendLine("-".PadRight(50, '-'));
+
+					// Group by type for better readability
+					var groupedMissingInOther = missingInOther
+						.GroupBy(item => item._Type?.Name ?? "Unknown")
+						.OrderBy(g => g.Key);
+
+					foreach(var typeGroup in groupedMissingInOther) {
+						report.AppendLine($"  {typeGroup.Key} ({typeGroup.Count()} items):");
+						foreach(var item in typeGroup.OrderBy(i => i._Name)) {
+							report.AppendLine($"    • {item._Name}");
+							if(!string.IsNullOrEmpty(item._Path)) {
+								report.AppendLine($"      Path: {item._Path}");
+							}
+							if(!string.IsNullOrEmpty(item._Guid)) {
+								report.AppendLine($"      GUID: {item._Guid}");
+							}
+						}
+						report.AppendLine();
+					}
+				}
+
+				// Items missing in this indexer
+				if(missingInThis.Count > 0) {
+					report.AppendLine($"ITEMS MISSING IN BEFORE INDEXER ({missingInThis.Count}):");
+					report.AppendLine("-".PadRight(50, '-'));
+
+					// Group by type for better readability
+					var groupedMissingInThis = missingInThis
+						.GroupBy(item => item._Type?.Name ?? "Unknown")
+						.OrderBy(g => g.Key);
+
+					foreach(var typeGroup in groupedMissingInThis) {
+						report.AppendLine($"  {typeGroup.Key} ({typeGroup.Count()} items):");
+						foreach(var item in typeGroup.OrderBy(i => i._Name)) {
+							report.AppendLine($"    • {item._Name}");
+							if(!string.IsNullOrEmpty(item._Path)) {
+								report.AppendLine($"      Path: {item._Path}");
+							}
+							if(!string.IsNullOrEmpty(item._Guid)) {
+								report.AppendLine($"      GUID: {item._Guid}");
+							}
+						}
+						report.AppendLine();
+					}
+				}
+
+				// Type breakdown comparison
+				report.AppendLine("TYPE BREAKDOWN COMPARISON:");
+				report.AppendLine("-".PadRight(50, '-'));
+
+				var allTypes = thisItems.Values.Select(i => i._Type?.Name ?? "Unknown")
+					.Union(otherItems.Values.Select(i => i._Type?.Name ?? "Unknown"))
+					.Distinct()
+					.OrderBy(t => t);
+
+				foreach(var typeName in allTypes) {
+					var thisCount = thisItems.Values.Count(i => (i._Type?.Name ?? "Unknown") == typeName);
+					var otherCount = otherItems.Values.Count(i => (i._Type?.Name ?? "Unknown") == typeName);
+					var status = thisCount == otherCount ? "✓" : "⚠";
+
+					report.AppendLine($"  {status} {typeName}: Before={thisCount}, After={otherCount}");
+				}
+				report.AppendLine();
+
+				// Final status
+				if(missingInOther.Count == 0 && missingInThis.Count == 0) {
+					report.AppendLine("✓ SUCCESS: SerializedItems lists are identical.");
+				} else {
+					report.AppendLine($"⚠ DIFFERENCES FOUND: {missingInOther.Count} items missing in After, {missingInThis.Count} items missing in Before indexer");
+				}
+
+				// Write report to file
+				File.WriteAllText(filePath, report.ToString());
+                Debug.Log($"SerializedItems comparison complete. Report written to: {filePath}");
+				if(missingInOther.Count > 0 || missingInThis.Count > 0) {
+					Debug.LogWarning($"Found differences: {missingInOther.Count} missing in After indexer, {missingInThis.Count} missing in Before indexer.");
+				}
+
+
+            } catch(Exception ex) {
+				Debug.LogError($"Error during SerializedItems comparison: {ex.Message}");
+				Debug.LogException(ex);
+
+				// Write error report
+				try {
+					File.WriteAllText(filePath, $"SerializedItems Comparison Error\n" +
+											$"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+											$"Error: {ex.Message}\n" +
+											$"Stack Trace:\n{ex.StackTrace}");
+				} catch {
+					// Ignore file write errors in error handler
+				}
+			}
+		}
+
+		public void CompareTo(UMAAssetIndexer After, string filePath) {
+			// compare the types first. Log any that are missing the the file at filePath.
+
+			if(After == null) {
+				Debug.LogError("Cannot compare to null UMAAssetIndexer");
+				return;
+			}
+
+			if(string.IsNullOrEmpty(filePath)) {
+				Debug.LogError("File path cannot be null or empty");
+				return;
+			}
+
+			List<string> missingTypes = new List<string>();
+			List<string> missingAssets = new List<string>();
+			List<string> comparisonLog = new List<string>();
+
+			Initialize();
+			UpdateSerializedDictionaryItems();
+
+			After.Initialize();
+			After.UpdateSerializedDictionaryItems();
+
+			try {
+				// Compare TypeToLookup dictionaries
+				var thisTypes = new HashSet<System.Type>(TypeToLookup.Keys);
+				var otherTypes = new HashSet<System.Type>(After.TypeToLookup.Keys);
+
+				// Find types missing in other indexer
+				foreach(var thisType in thisTypes) {
+					if(!otherTypes.Contains(thisType)) {
+						missingTypes.Add($"Type missing in After indexer: {thisType.Name} ({thisType.FullName})");
+					}
+				}
+
+				// Find types missing in this indexer
+				foreach(var otherType in otherTypes) {
+					if(!thisTypes.Contains(otherType)) {
+						missingTypes.Add($"Type missing in Before indexer: {otherType.Name} ({otherType.FullName})");
+					}
+				}
+
+				// Compare assets within common types
+				var commonTypes = thisTypes.Intersect(otherTypes);
+				foreach(var type in commonTypes) {
+					var thisAssets = GetAssetDictionary(type);
+					var otherAssets = After.GetAssetDictionary(type);
+
+					// Assets in this indexer but not in other
+					foreach(var assetName in thisAssets.Keys) {
+						if(!otherAssets.ContainsKey(assetName)) {
+							missingAssets.Add($"Asset missing in After indexer: '{assetName}' (Type: {type.Name})");
+						}
+					}
+
+					// Assets in other indexer but not in this
+					foreach(var assetName in otherAssets.Keys) {
+						if(!thisAssets.ContainsKey(assetName)) {
+							missingAssets.Add($"Asset missing in Before indexer: '{assetName}' (Type: {type.Name})");
+						}
+					}
+				}
+
+				// Compare additional indexed type names
+				var thisAdditionalTypes = new HashSet<string>(IndexedTypeNames);
+				var otherAdditionalTypes = new HashSet<string>(After.IndexedTypeNames);
+
+				foreach(var typeName in thisAdditionalTypes) {
+					if(!otherAdditionalTypes.Contains(typeName)) {
+						missingTypes.Add($"Additional indexed type missing in After indexer: {typeName}");
+					}
+				}
+
+				foreach(var typeName in otherAdditionalTypes) {
+					if(!thisAdditionalTypes.Contains(typeName)) {
+						missingTypes.Add($"Additional indexed type missing in Before indexer: {typeName}");
+					}
+				}
+
+				// Generate comparison report
+				StringBuilder report = new StringBuilder();
+				report.AppendLine($"UMA Asset Indexer Comparison Report");
+				report.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+				report.AppendLine("=".PadRight(60, '='));
+				report.AppendLine();
+
+				// Summary
+				report.AppendLine("SUMMARY:");
+				report.AppendLine($"  This indexer contains {SerializedItems.Count} total items");
+				report.AppendLine($"  Comparison indexer contains {After.SerializedItems.Count} total items");
+				report.AppendLine($"  Missing types found: {missingTypes.Count}");
+				report.AppendLine($"  Missing assets found: {missingAssets.Count}");
+				report.AppendLine();
+
+				// Type comparison details
+				if(missingTypes.Count > 0) {
+					report.AppendLine($"MISSING TYPES ({missingTypes.Count}):");
+					report.AppendLine("-".PadRight(40, '-'));
+					foreach(var missingType in missingTypes) {
+						report.AppendLine($"  • {missingType}");
+					}
+					report.AppendLine();
+				}
+
+				// Asset comparison details
+				if(missingAssets.Count > 0) {
+					report.AppendLine($"MISSING ASSETS ({missingAssets.Count}):");
+					report.AppendLine("-".PadRight(40, '-'));
+
+					// Group missing assets by type for better readability
+					var assetsByType = missingAssets
+						.GroupBy(asset => {
+							var typeStart = asset.LastIndexOf("Type: ") + 6;
+							var typeEnd = asset.LastIndexOf(")");
+							return typeEnd > typeStart ? asset.Substring(typeStart, typeEnd - typeStart) : "Unknown";
+						})
+						.OrderBy(g => g.Key);
+
+					foreach(var typeGroup in assetsByType) {
+						report.AppendLine($"  {typeGroup.Key}:");
+						foreach(var asset in typeGroup) {
+							report.AppendLine($"    • {asset}");
+						}
+						report.AppendLine();
+					}
+				}
+
+				// Type details comparison
+				report.AppendLine("TYPE DETAILS COMPARISON:");
+				report.AppendLine("-".PadRight(40, '-'));
+				var allTypes = thisTypes.Union(otherTypes).OrderBy(t => t.Name);
+				foreach(var type in allTypes) {
+					var thisCount = thisTypes.Contains(type) ? GetAssetDictionary(type).Count : 0;
+					var otherCount = otherTypes.Contains(type) ? After.GetAssetDictionary(type).Count : 0;
+					var status = thisCount == otherCount ? "✓" : "⚠";
+
+					report.AppendLine($"  {status} {type.Name}: This={thisCount}, Other={otherCount}");
+				}
+				report.AppendLine();
+
+				if(missingTypes.Count == 0 && missingAssets.Count == 0) {
+					report.AppendLine("✓ SUCCESS: No missing types or assets found. Indexers are identical.");
+				} else {
+					report.AppendLine($"⚠ DIFFERENCES FOUND: {missingTypes.Count} missing types, {missingAssets.Count} missing assets");
+				}
+
+				// Write report to file
+				File.WriteAllText(filePath, report.ToString());
+
+				Debug.Log($"UMA Asset Indexer comparison complete. Report written to: {filePath}");
+				if(missingTypes.Count > 0 || missingAssets.Count > 0) {
+					Debug.LogWarning($"Found {missingTypes.Count} missing types and {missingAssets.Count} missing assets between indexers.");
+				}
+			} catch(Exception ex) {
+				Debug.LogError($"Error during UMA Asset Indexer comparison: {ex.Message}");
+				Debug.LogException(ex);
+
+				// Write error report
+				try {
+					File.WriteAllText(filePath, $"UMA Asset Indexer Comparison Error\n" +
+													$"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+													$"Error: {ex.Message}\n" +
+													$"Stack Trace:\n{ex.StackTrace}");
+				} catch {
+					// Ignore file write errors in error handler
+				}
+			}
+		}
 #endif
 
 
@@ -686,12 +1456,12 @@ namespace UMA
             return null;
         }
 
-        public UMAData.UMARecipe GetRecipe(UMATextRecipe recipe, UMAContextBase context)
+        public UMAData.UMARecipe GetRecipe(UMATextRecipe recipe)
         {
-            UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(context);
+            UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad();
             try
             {
-                UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe, context);
+                UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe);
                 return TempRecipe;
             }
             catch (Exception ex)
@@ -757,6 +1527,7 @@ namespace UMA
 
             if (TypeDic.ContainsKey(Name))
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     if (TypeDic[Name] == null)
@@ -764,14 +1535,17 @@ namespace UMA
                         Debug.LogError($"Asset with Name {Name} is NULL for type {ot.ToString()}");
                     }
                 }
+#endif
                 return TypeDic[Name];
             }
             else
             {
+#if !UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
-                    Debug.LogWarning($"Unknown item [{Name}] for type {ot.ToString()}. TypeDic contains {TypeDic.Count} items");
+                    Debug.LogWarning($"Unknown item [{Name}] for type {ot.ToString()}.");
                 }
+#endif
             }
 
             return null;
@@ -837,7 +1611,7 @@ namespace UMA
             {
                 return new List<AssetItem>();
             }
-            UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad(UMAContextBase.Instance);
+            UMAPackedRecipeBase.UMAPackRecipe PackRecipe = recipe.PackedLoad();
 
             var Slots = PackRecipe.slotsV3;
 
@@ -1025,7 +1799,7 @@ namespace UMA
             return Items;
         }
 
-        public List<T> GetAllAssets<T>(string[] foldersToSearch = null) where T : UnityEngine.Object
+        public List<T> GetAllAssets<T>() where T : UnityEngine.Object
         {
             var st = StartTimer();
 
@@ -1037,13 +1811,13 @@ namespace UMA
 
             foreach (KeyValuePair<string, AssetItem> kp in TypeDic)
             {
-                if (AssetFolderCheck(kp.Value, foldersToSearch))
-                {
-                    if (kp.Value.Item != null)
-                    {
+                //if (AssetFolderCheck(kp.Value, foldersToSearch))
+                //{
+                //    if (kp.Value.Item != null)
+                //    {
                         ret.Add((kp.Value.Item as T));
-                    }
-                }
+                 //   }
+                //}
             }
             StopTimer(st, "GetAllAssets type=" + typeof(T).Name);
             return ret;
@@ -1051,7 +1825,7 @@ namespace UMA
 
         // Only do a full check of the index one time after domain reload
 
-        private static bool WasChecked = false;
+        protected static bool WasChecked = false;
 
 #if UNITY_EDITOR
         /// <summary>
@@ -1164,6 +1938,7 @@ namespace UMA
             {
                 FolderFilter = TypeFolderSearch[typeString];
             }
+			SerializedItems.RemoveAll(item => item._Type == ot);
             AddType(typeString, ot, FolderFilter);
             ForceSave();
         }
@@ -1233,14 +2008,64 @@ namespace UMA
             return null;
         }
 
-        public T GetAsset<T>(string name, bool recursionGuard = false) where T : UnityEngine.Object
+		public T RawGetAsset<T>(string name) where T : UnityEngine.Object
+		{
+			System.Type ot = typeof(T);
+			if (!TypeToLookup.ContainsKey(ot))
+			{
+				Debug.LogError($"Unknown type: {ot.ToString()} for item {name}");
+			}
+			System.Type theType = TypeToLookup[ot];
+			Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+			if (TypeDic.ContainsKey(name))
+			{
+				return (TypeDic[name].Item as T);
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Get an asset by name and type.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="name"></param>
+		/// <param name="recursionGuard">If true, we will not try to rebuild the index if it fails.</param>
+		/// <param name="inStartup">If true, we will not log an error if the asset is not found.</param>
+		/// <returns></returns>
+		public T GetAsset<T>(string name, bool recursionGuard = false, bool inStartup = false) where T : UnityEngine.Object
         {
 #if UNITY_EDITOR
-            bool indexUpdated = CheckIndex();
+            bool indexUpdated = false;
+            UMASettings settings = UMASettings.GetOrCreateSettings();
+            if (settings == null)
+            {
+                Debug.LogError("Unable to load UMASettings!!! UMA Will Not Work!");
+                return null;
+            }
+			if (!inStartup && settings.autoRepairIndex && !WasChecked)
+            {
+                indexUpdated = CheckIndex();
+            }
 #endif
             var thisAssetItem = GetAssetItem<T>(name);
+			if(inStartup && thisAssetItem == null) 
+			{
+#if UNITY_EDITOR
+				Debug.Log("Unable to find asset " + name + " of type " + typeof(T).Name + ".");
+#endif
+				return null;
+			}
             if (thisAssetItem != null)
             {
+#if UNITY_EDITOR
+                if (thisAssetItem.Item == null)
+                {
+                    if (settings.alwaysGetAddressables)
+                    {
+                        return thisAssetItem.GetItem<T>();
+                    }
+                }
+#endif
                 return (thisAssetItem.Item as T);
             }
             else
@@ -1303,6 +2128,7 @@ namespace UMA
             return;
         }
 
+#if false
         public Dictionary<string, List<UMATextRecipe>> GetRecipes(string race)
         {
             Dictionary<string, HashSet<UMATextRecipe>> aggregate = new Dictionary<string, HashSet<UMATextRecipe>>();
@@ -1328,7 +2154,38 @@ namespace UMA
 
             return results;
         }
+#endif
+        public Dictionary<string, List<UMATextRecipe>> GetRecipes(string race)
+        {
+            Dictionary<string, HashSet<UMATextRecipe>> aggregate = new Dictionary<string, HashSet<UMATextRecipe>>();
 
+            internalGetRecipes(race, ref aggregate);
+
+            RaceData rc = GetAsset<RaceData>(race);
+            if (rc != null)
+            {
+                List<string> list = rc.GetCrossCompatibleRaces();
+                for (int i = 0; i < list.Count; i++)
+                {
+                    string CompatRace = list[i];
+                    internalGetRecipes(CompatRace, ref aggregate);
+                }
+            }
+
+            SlotRecipes results = new SlotRecipes();
+            foreach (KeyValuePair<string, HashSet<UMATextRecipe>> kp in aggregate)
+            {
+                // Replace LINQ ToList() with manual copy
+                List<UMATextRecipe> listForKey = new List<UMATextRecipe>(kp.Value.Count);
+                foreach (UMATextRecipe recipe in kp.Value)
+                {
+                    listForKey.Add(recipe);
+                }
+                results.Add(kp.Key, listForKey);
+            }
+
+            return results;
+        }
         private HashSet<string> internalGetRecipeNamesForRaceSlot(string race, string slot)
         {
             HashSet<string> results = new HashSet<string>();
@@ -1364,7 +2221,13 @@ namespace UMA
                 }
             }
 
-            return results.ToList();
+            // Manual conversion of HashSet<string> to List<string> without LINQ
+            List<string> resultList = new List<string>(results.Count);
+            foreach (string s in results)
+            {
+                resultList.Add(s);
+            }
+            return resultList;
         }
 
         /// <summary>
@@ -1430,41 +2293,10 @@ namespace UMA
             return false;
         }
 
-        #endregion
+#endregion
 
         #region Addressables
 
-#if UNITY_EDITOR
-        GameObject EditorUMAContextBase;
-#endif
-        public UMAContextBase GetContext()
-        {
-            UMAContextBase instance = UMAContextBase.Instance;
-            if (instance != null)
-            {
-                return instance;
-            }
-#if UNITY_EDITOR
-            //EditorUMAContextBase = UMAContextBase.CreateEditorContext();
-            return UMAContextBase.Instance;
-#else
-			return null;
-#endif
-        }
-
-        public void DestroyEditorUMAContextBase()
-        {
-#if UNITY_EDITOR
-            if (EditorUMAContextBase != null)
-            {
-                foreach (Transform child in EditorUMAContextBase.transform)
-                {
-                    DestroyImmediate(child.gameObject);
-                }
-                DestroyImmediate(EditorUMAContextBase);
-            }
-#endif
-        }
 
 #if UMA_ADDRESSABLES
         public string GetLabel(UMARecipeBase recipe)
@@ -1616,14 +2448,6 @@ namespace UMA
 
 		public AsyncOperationHandle<IList<UnityEngine.Object>> Preload(List<UMATextRecipe> theRecipes, bool keepLoaded = false)
 		{
-			UMAContextBase context = UMAContextBase.Instance;
-			if (!context)
-			{
-				Debug.LogError("No context to preload!");
-				AsyncOperationHandle<IList<UnityEngine.Object>> ao = new AsyncOperationHandle<IList<UnityEngine.Object>>();
-				return ao;
-			}
-
 			List<string> Keys = new List<string>();
 
 			foreach (UMATextRecipe utr in theRecipes)
@@ -1642,6 +2466,9 @@ namespace UMA
 
         public AsyncOperationHandle<IList<UnityEngine.Object>> LoadLabelList(List<string> Keys, bool keepLoaded)
         {
+#if UMA_VES
+            Keys.RemoveAll(label => VesUmaLabelMaker.DO_NOT_INCLUDE_LABELS.Contains(label)); //VES added
+#endif
 
             BeforeProcessingLabels.Invoke(Keys);
 
@@ -2073,11 +2900,12 @@ namespace UMA
         {
             if (o == null)
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.Log("Skipping null item");
                 }
-
+#endif
                 return;
             }
             if (type == null)
@@ -2088,6 +2916,10 @@ namespace UMA
             AssetItem ai = new AssetItem(type, name, path, o);
             AddAssetItem(ai);
         }
+
+
+        //System.Diagnostics.Stopwatch addtoracelookup = new System.Diagnostics.Stopwatch();
+        //System.Diagnostics.Stopwatch getAddrInfo = new System.Diagnostics.Stopwatch();
 
         /// <summary>
         /// Adds an asset to the index. If the name already exists, it is not added. (Should we do this, or replace it?)
@@ -2106,20 +2938,12 @@ namespace UMA
                     return false;
                 }
 
-                /* if (AlreadyHasItem(ai, TypeDic))
-                 {
-                     return false;
-                 } */
-
-                if (ai._Name.ToLower().Contains((ai._Type.Name + "placeholder").ToLower()))
-                {
-                    return false;
-                }
-
+                //addtoracelookup.Start();
                 if (ai._Type == typeof(UMAWardrobeRecipe))
                 {
                     AddToRaceLookup(ai._SerializedItem as UMAWardrobeRecipe);
                 }
+                //addtoracelookup.Stop();
 
 #if UNITY_EDITOR
                 if (string.IsNullOrWhiteSpace(ai._Name))
@@ -2131,7 +2955,7 @@ namespace UMA
                     ai._SerializedItem = null;
                 }
 #if UMA_ADDRESSABLES
-                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Path);
+                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Guid);
                 if (ainfo != null)
                 {
                     ai.IsAddressable = true;
@@ -2159,10 +2983,17 @@ namespace UMA
 
                 AddToTypeDictionary(ai, TypeDic);
             }
+#if !UNITY_EDITOR
+            catch
+            {
+                // this is onyl here to stop compiler warnings
+            }
+#else
             catch (System.Exception ex)
             {
                 UnityEngine.Debug.LogWarning("Exception in UMAAssetIndexer.AddAssetItem: " + ex.StackTrace);
             }
+#endif
             if (noDirty == false)
             {
 #if UNITY_EDITOR
@@ -2462,7 +3293,6 @@ namespace UMA
 #if UNITY_EDITOR
         public void ClearAddressableFlags()
         {
-            AddressableUtility.ClearAddressableEntries();
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
@@ -2483,15 +3313,15 @@ namespace UMA
             CompressNulls();
 #endif
             ClearDictionaries();
-            DebugSerialization("Updating serialized Dictionary Items");
+            //DebugSerialization("Updating serialized Dictionary Items");
             if (SerializedItems == null)
             {
-                DebugSerialization("Serialized Items is null");
+                //DebugSerialization("Serialized Items is null");
                 return;
             }
             if (SerializedItems.Count == 0)
             {
-                DebugSerialization("Serialized Items is empty!!!");
+                //DebugSerialization("Serialized Items is empty!!!");
                 return;
             }
             // Rebuuild all the lookup tables
@@ -2499,7 +3329,7 @@ namespace UMA
             GuidTypes = new Dictionary<string, AssetItem>();
             // Lookup by type, object name
             RecreateTypeLookups();
-            DebugSerialization($"Adding Items from SerializedItems - size is {SerializedItems.Count}");
+            //DebugSerialization($"Adding Items from SerializedItems - size is {SerializedItems.Count}");
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
@@ -2508,10 +3338,10 @@ namespace UMA
                 // the dictionary when rebuilt.
                 if (ai == null)
                 {
-                    DebugSerialization("Skipping null item in SerializedItems");
+                    //DebugSerialization("Skipping null item in SerializedItems");
                     continue;
                 }
-                DebugSerialization($"Adding item {ai._Name}");
+                //DebugSerialization($"Adding item {ai._Name}");
                 AddAssetItem(ai, noDirty: true);
             }
             DebugSerialization("All items added");
@@ -2576,6 +3406,11 @@ namespace UMA
 
         private recipeEqualityComparer req;
 
+        // public System.Diagnostics.Stopwatch CompatLookup = new System.Diagnostics.Stopwatch();
+        //public System.Diagnostics.Stopwatch getAsset = new System.Diagnostics.Stopwatch();
+        //public System.Diagnostics.Stopwatch crossCompatLookup = new System.Diagnostics.Stopwatch();
+
+
         private void AddRaceRecipe(UMAWardrobeRecipe uwr)
         {
 
@@ -2595,7 +3430,7 @@ namespace UMA
 
             foreach (string s in CompatibleRaces)
             {
-                RaceData r = GetAsset<RaceData>(s);
+                RaceData r = RawGetAsset<RaceData>(s);
                 if (r != null && !AdditionalRaces.Contains(r.name))
                 {
                     if (r.IsCrossCompatibleWith(s))
@@ -2629,13 +3464,8 @@ namespace UMA
             }
         }
 
-        private void RebuildRaceRecipes()
+        public void RebuildRaceRecipes()
         {
-            //Dictionary<string, RaceData> RaceLookup = new Dictionary<string, RaceData>();
-
-            List<RaceData> races = GetAllAssets<RaceData>();
-
-            /// Build Race Recipes and RaceLookup
             raceRecipes.Clear();
 
             /// Add all the directly assigned items.
@@ -2689,10 +3519,10 @@ namespace UMA
             }
 
             // get the current stacktrace
-            string stackTrace = Environment.StackTrace;
-            SQLDebugger.LogSerialization(msg, stackTrace , instanceKey, isClear, Time.time);
+            // string stackTrace = Environment.StackTrace;
+            // SQLDebugger.LogSerialization(msg, stackTrace , instanceKey, isClear, Time.time);
 
-            Debug.Log("[Serializing] "+s);
+            Debug.Log("[Serializing] "+msg);
 #endif
 #endif
         }
@@ -2798,10 +3628,21 @@ namespace UMA
 
         private void AddType(string s, Type CurrentType, List<string> FolderFilter)
         {
+			bool logAdds = false;
+			if(CurrentType == typeof(RaceData)) {
+				logAdds = true;
+				Debug.Log("Adding type " + CurrentType.ToString() + " to index");
+			}
             string[] guids = AssetDatabase.FindAssets("t:" + s);
+			if(logAdds) {
+				Debug.Log("Found " + guids.Length + " items of type " + s + " to add to index");
+			}
             for (int i = 0; i < guids.Length; i++)
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+				if(logAdds) {
+					Debug.Log("Adding item " + i + " of " + guids.Length + " to index: " + assetPath);
+				}
 
                 // IF we have filters
                 if (FolderFilter != null && FolderFilter.Count > 0)
@@ -2906,9 +3747,7 @@ namespace UMA
         /// </summary>
         public void Clear(bool forceSave = true)
         {
-#if UMA_ADDRESSABLES
-            AddressableUtility.ClearAddressableEntries();
-#endif
+            generator = null;
             // Rebuild the tables
             GuidTypes.Clear();
             ClearReferences();
@@ -3017,10 +3856,10 @@ namespace UMA
         }
 
 
-            /// <summary>
-            /// Repairs the index. Removes anything that it cannot find.
-            /// </summary>
-            public void RepairAndCleanup()
+        /// <summary>
+        /// Repairs the index. Removes anything that it cannot find.
+        /// </summary>
+        public void RepairAndCleanup()
         {
             DebugSerialization("Repairing and cleaning up index");
 
@@ -3033,7 +3872,7 @@ namespace UMA
                 ai.AddressableAddress = "";
 #if UNITY_EDITOR
 #if UMA_ADDRESSABLES
-                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Path);
+                AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(ai._Guid);
                 if (ainfo != null)
                 {
                     ai.AddressableAddress = ainfo.AddressableAddress;
@@ -3048,8 +3887,8 @@ namespace UMA
 
                 if (!ai.IsAssetBundle)
                 {
-					// If we already have a reference to the item, let's verify that everything is correct on it.
-					UnityEngine.Object obj = ai.Item;
+                    // If we already have a reference to the item, let's verify that everything is correct on it.
+                    UnityEngine.Object obj = ai.Item;
                     if (obj != null)
                     {
                         ai._Name = ai.EvilName;
@@ -3074,7 +3913,7 @@ namespace UMA
                     }
                 }
             }
-            
+
 
             UpdateSerializedDictionaryItems();
             RebuildRaceRecipes();
@@ -3082,12 +3921,12 @@ namespace UMA
         }
 
 #endif
-            /// <summary>
-            /// returns the entire lookup dictionary for a specific type.
-            /// </summary>
-            /// <param name="type"></param>
-            /// <returns></returns>
-            public Dictionary<string, AssetItem> GetAssetDictionary(System.Type type)
+        /// <summary>
+        /// returns the entire lookup dictionary for a specific type.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public Dictionary<string, AssetItem> GetAssetDictionary(System.Type type)
         {
             System.Type LookupType = TypeToLookup[type];
             if (TypeLookup.ContainsKey(LookupType) == false)
@@ -3390,7 +4229,6 @@ namespace UMA
             BuildStringTypes();
             AddEverything(false);
             RestoreKeeps();
-            ClearMHASlotReferences();
             AddReferences();
 #if UMA_ADDRESSABLES
             // TODO: Build addressable bundles here.
@@ -3410,7 +4248,7 @@ namespace UMA
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 string fileName = Path.GetFileName(assetPath);
                 MeshHideAsset mha = AssetDatabase.LoadAssetAtPath<MeshHideAsset>(assetPath);
-               // mha.FreeReference();
+                // mha.FreeReference();
                 EditorUtility.SetDirty(mha);
 #if UNITY_2021_1_OR_NEWER
                 AssetDatabase.SaveAssetIfDirty(mha);

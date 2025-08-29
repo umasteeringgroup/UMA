@@ -27,8 +27,9 @@ namespace UMA
 
         public bool Supressed = false;
 
-		[System.NonSerialized]
+        [System.NonSerialized]
 		public SlotData mergedFromSlot;
+		public string mergedFromRecipe;
 
         /// <summary>
         /// This instance specific tags. Loaded from the recipe, or from the asset at assignment time.
@@ -392,14 +393,17 @@ namespace UMA
 			{
 				if (asset.materialName != null)
 				{
-					asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
-					if (asset.material == null)
+					if (UMAAssetIndexer.Instance != null)
 					{
-						this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
-					}
-					else
-					{
-						this.colorData = new OverlayColorData(asset.material.channels.Length);
+						asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
+						if (asset.material == null)
+						{
+							this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
+						}
+						else
+						{
+							this.colorData = new OverlayColorData(asset.material.channels.Length);
+						}
 					}
 				}
             }

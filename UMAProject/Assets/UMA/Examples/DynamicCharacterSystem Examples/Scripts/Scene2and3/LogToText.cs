@@ -15,7 +15,12 @@ namespace UMA.CharacterSystem.Examples
 			Application.logMessageReceivedThreaded += Application_logMessageReceivedThreaded;
 		}
 
-		private void Application_logMessageReceivedThreaded(string condition, string stackTrace, LogType type)
+		void OnDestroy()
+		{
+			Application.logMessageReceivedThreaded -= Application_logMessageReceivedThreaded;
+        }
+
+        private void Application_logMessageReceivedThreaded(string condition, string stackTrace, LogType type)
 		{
 			lock (buffer)
 			{

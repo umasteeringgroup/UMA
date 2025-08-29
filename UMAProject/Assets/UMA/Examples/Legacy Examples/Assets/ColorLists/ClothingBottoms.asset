@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -19,18 +20,62 @@ MonoBehaviour:
     - {r: 0.1102941, g: 0.10349301, b: 0.09731833, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Pants
     channelMask:
     - {r: 0.6911765, g: 0.6407957, b: 0.39641005, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Pants
     channelMask:
     - {r: 0.21945284, g: 0.41744947, b: 0.72794116, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Pants
     channelMask:
     - {r: 0.3954909, g: 0.5661765, b: 0.47435942, a: 1}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties: []
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    colorsExpanded: 0
+    propertiesExpanded: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}

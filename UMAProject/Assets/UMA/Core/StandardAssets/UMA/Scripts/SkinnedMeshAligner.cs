@@ -34,12 +34,13 @@ namespace UMA
                 var destIndex = FindBoneIndexInHierarchy(bone, template.rootBone, boneMap, templateIndex);
 	            if (destIndex == -1)
 	            {
+#if UNITY_EDITOR
                     if (Debug.isDebugBuild)
                     {
-                        Debug.Log(bone.name, bone);
+                        Debug.LogWarning("Could not find bone " + bone.name + " in template " + template.name, bone);
                     }
-
-                    sourceIndex++;
+#endif
+					sourceIndex++;
 	                continue;
 	            }
 

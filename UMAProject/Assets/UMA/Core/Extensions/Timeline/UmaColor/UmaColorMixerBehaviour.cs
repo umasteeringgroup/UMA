@@ -18,10 +18,13 @@ namespace UMA.Timeline
 
             if (avatar == null)
             {
+#if UNITY_EDITOR
+
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("No DynamicCharacterAvatar set for UmaColor Playable!");
                 }
+#endif
                 return;
             }
 
@@ -55,8 +58,12 @@ namespace UMA.Timeline
             if (elapsedTime >= timeStep)
             {
                 elapsedTime = 0f;
+                Color color = avatar.GetColor(sharedColorName).color;
                 avatar.SetColor(sharedColorName, finalColor);
-                colorUpdated = true;
+                if (color != finalColor)
+                {
+                    colorUpdated = true;
+                }
             }
 
             if (colorUpdated)

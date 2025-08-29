@@ -280,6 +280,7 @@ namespace UMA.ShaderPackager
 
         public string GetShaderSrc()
         {
+            List<Entry> foundEntries = new List<Entry>();
             UnityVersion curVersion = UnityVersion.Min;
 
 #if UNITY_2021_2_OR_NEWER
@@ -320,15 +321,37 @@ namespace UMA.ShaderPackager
                 // default init state..
                 if (e.UnityVersionMax == UnityVersion.Min && e.UnityVersionMin == UnityVersion.Min)
                 {
+                    if (e.shader != null)
+                    {
+                        Debug.LogWarning($"ShaderPackage: UnityVersionMin and UnityVersionMax are not set for shader {e.shader.name}. Setting to default values.");
+                    }
+                    else
+                    {
+                        string shad = e.shaderSrc;
+                        Debug.LogWarning($"ShaderPackage: UnityVersionMin and UnityVersionMax are not set for an entry with a null shader. Setting to default values.");
+                        Debug.LogWarning($"Shader source starts with: {shad.Substring(0, Mathf.Min(80, shad.Length))}");
+                    }
                     e.UnityVersionMax = UnityVersion.Max;
                 }
                 if (curVersion >= e.UnityVersionMin && curVersion <= e.UnityVersionMax)
                 {
+                    foundEntries.Add(e);
                     if (s != null)
                     {
-                        Debug.LogWarning("Found multiple possible entries for unity version of shader");
+                        if (e.shader == null)
+                        {
+                            // Only replace if this is the top entry
+                            if (e.UnityVersionMax == UnityVersion.Max)
+                            {
+                                s = e.shaderSrc;
+                            }
+                        }
                     }
-                    s = e.shaderSrc;
+                    else 
+                    {
+                        // first match
+                        s = e.shaderSrc; 
+                    }
                 }
             }
             return s;

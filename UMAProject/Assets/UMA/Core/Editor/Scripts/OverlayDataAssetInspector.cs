@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,16 +22,18 @@ namespace UMA.Editors
 		private SerializedProperty _tags;
 		private SerializedProperty _occlusionEntries;
 		private SerializedProperty _noAutoAdd;
+		private SerializedProperty _dontMergeDuplicates;
 
 
-		void OnEnable()
+        void OnEnable()
 		{
 			_overlayName = serializedObject.FindProperty("overlayName");
 			_overlayType = serializedObject.FindProperty("overlayType");
 			_umaMaterial = serializedObject.FindProperty("material");
 			_textureList = serializedObject.FindProperty("textureList");
 			_blendList =   serializedObject.FindProperty("overlayBlend");
-			_rect = serializedObject.FindProperty("rect");
+			_dontMergeDuplicates = serializedObject.FindProperty("dontMergeDuplicates");
+            _rect = serializedObject.FindProperty("rect");
 			_alphaMask = serializedObject.FindProperty("alphaMask");
 			_tags = serializedObject.FindProperty("tags");
 			_occlusionEntries = serializedObject.FindProperty("OcclusionEntries");
@@ -74,11 +77,18 @@ namespace UMA.Editors
 
 			EditorGUILayout.PropertyField(_overlayName);
 			EditorGUILayout.PropertyField(_overlayType);
-			EditorGUILayout.PropertyField(_rect);
-            EditorGUILayout.PropertyField(_noAutoAdd);
             EditorGUILayout.LabelField("Note: It is recommended to use UV coordinates (0.0 -> 1.0) in 2.10+ for rect fields.", EditorStyles.helpBox);
+            EditorGUILayout.PropertyField(_rect);
+            EditorGUILayout.PropertyField(_noAutoAdd);
+			EditorGUILayout.PropertyField(_dontMergeDuplicates, new GUIContent("Don't Merge Duplicates", "If this is true, this overlay will not removed if it's a duplicate"));
 
-			EditorGUILayout.PropertyField(_umaMaterial);
+            Rect dropArea = new Rect();
+            dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+            GUI.Box(dropArea, "Drop a Material here to copy textures to texture channels");
+            CopyMaterialDropArea(dropArea);
+            EditorGUILayout.Space();
+
+            EditorGUILayout.PropertyField(_umaMaterial);
 
 			if (_umaMaterial != null && _umaMaterial.objectReferenceValue != null)
 			{
@@ -154,7 +164,9 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("No UMA Material selected!", MessageType.Warning);
             }
 
-			od.additionalFoldout = GUIHelper.FoldoutBar(od.additionalFoldout, "Alpha mask Parameters");
+
+
+            od.additionalFoldout = GUIHelper.FoldoutBar(od.additionalFoldout, "Alpha mask Parameters");
 			if (od.additionalFoldout)
 			{
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
@@ -186,6 +198,89 @@ namespace UMA.Editors
 				od.doSave = true;
 			}
 		}
-	}
+
+        private void CopyMaterialDropArea(Rect dropArea)
+        {
+            Event evt = Event.current;
+
+            if (evt.type == EventType.DragUpdated)
+            {
+                if (dropArea.Contains(evt.mousePosition))
+                {
+                    UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+                    if (draggedObjects.Length == 0)
+                    {
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+                        return;
+                    }
+					var obj = draggedObjects[0];
+					if (obj is Material)
+					{
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                    }
+					else
+					{
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+                    }
+                }
+            }
+            if (evt.type == EventType.DragPerform)
+            {
+                if (dropArea.Contains(evt.mousePosition))
+                {
+					var obj = DragAndDrop.objectReferences[0];
+					if (obj is Material)
+					{
+						DragAndDrop.AcceptDrag();
+                        Material material = obj as Material;
+                        OverlayDataAsset od = target as OverlayDataAsset;
+                        var channelCount = od.material.channels.Length;
+                        if (od.textureCount != od.material.channels.Length)
+						{
+                            var oldTextureList = od.textureList;
+							var oldBlendList = od.overlayBlend;
+
+
+							od.textureList = new Texture[channelCount];
+							od.overlayBlend = new OverlayDataAsset.OverlayBlend[channelCount];
+
+							for (int i = 0; i < channelCount; i++)
+							{
+								if (i < oldTextureList.Length)
+								{
+									od.textureList[i] = oldTextureList[i];
+								}
+								else
+								{
+									od.textureList[i] = null;
+								}
+							}
+							for (int i = 0; i < channelCount; i++)
+							{
+								if (i < oldBlendList.Length)
+								{
+									od.overlayBlend[i] = oldBlendList[i];
+								}
+								else
+								{
+									od.overlayBlend[i] = OverlayDataAsset.OverlayBlend.Normal;
+								}
+							}
+						}
+
+                        for (int i = 0; i < channelCount; i++)
+                        {
+                            string propertyName = od.material.channels[i].materialPropertyName;
+                            Texture texture = material.GetTexture(propertyName);
+                            if (texture != null)
+                            {
+                                od.textureList[i] = texture;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 #endif

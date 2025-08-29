@@ -288,7 +288,7 @@ Material:
     - _PrimaryShift: 0.5
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _RimAngle: 1.82
+    - _RimAngle: 0
     - _RimLightPower: 4
     - _RimLightingModulation: 0
     - _RimPower: 0.296
@@ -302,7 +302,7 @@ Material:
     - _SecondUVSource: 0
     - _SecondaryShift: -0.5
     - _ShadowScaleOffset: -0.001
-    - _Smoother: -2.61
+    - _Smoother: -1.05
     - _Smoothness: 0.077
     - _SmoothnessAdd: 0
     - _SmoothnessFromAlbedo: 0
@@ -366,7 +366,7 @@ Material:
     - _BlueColor1: {r: 1, g: 1, b: 1, a: 1}
     - _BlueColor2: {r: 1, g: 1, b: 1, a: 1}
     - _BlueColor3: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0.46540874, g: 0.19638006, b: 0.15952681, a: 1}
+    - _Color: {r: 0.4811321, g: 0.19601172, b: 0.15735134, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GreenColor0: {r: 1, g: 1, b: 1, a: 1}
     - _GreenColor1: {r: 1, g: 1, b: 1, a: 1}
@@ -398,3 +398,4 @@ Material:
     - _Tint3_1: {r: 1, g: 1, b: 1, a: 1}
     - _Tint3_2: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1

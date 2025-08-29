@@ -16,6 +16,7 @@ MonoBehaviour:
   - ModifierName: Bulk Adjustment
     isTemporary: 0
     manuallyModified: 0
+    keepAsIs: 0
     SlotName: M_High poly Head
     DNAName: 
     Scale: 1
@@ -6260,6 +6261,7 @@ MonoBehaviour:
   - ModifierName: Bulk Adjustment
     isTemporary: 0
     manuallyModified: 0
+    keepAsIs: 0
     SlotName: MaleEyes
     DNAName: 
     Scale: 1
@@ -6466,6 +6468,7 @@ MonoBehaviour:
   - ModifierName: Bulk Adjustment
     isTemporary: 0
     manuallyModified: 0
+    keepAsIs: 0
     SlotName: MaleInnerMouth
     DNAName: 
     Scale: 1
@@ -6854,6 +6857,7 @@ MonoBehaviour:
   - ModifierName: Bulk Adjustment
     isTemporary: 0
     manuallyModified: 0
+    keepAsIs: 0
     SlotName: M_Eyebrow
     DNAName: 
     Scale: 1
@@ -6896,6 +6900,7 @@ MonoBehaviour:
   - ModifierName: Bulk Adjustment
     isTemporary: 0
     manuallyModified: 0
+    keepAsIs: 0
     SlotName: M_High poly Eyelash
     DNAName: 
     Scale: 1
@@ -7068,6 +7073,7 @@ MonoBehaviour:
   - ModifierName: Bulk Adjustment
     isTemporary: 0
     manuallyModified: 0
+    keepAsIs: 0
     SlotName: MaleHairSlick01
     DNAName: 
     Scale: 1
@@ -9421,6 +9427,7 @@ MonoBehaviour:
   - ModifierName: Scale Along Normal (1)
     isTemporary: 0
     manuallyModified: 0
+    keepAsIs: 0
     SlotName: 
     DNAName: 
     Scale: 1
@@ -18701,6 +18708,7 @@ MonoBehaviour:
   - ModifierName: Scale Along Normal (2)
     isTemporary: 0
     manuallyModified: 0
+    keepAsIs: 0
     SlotName: 
     DNAName: 
     Scale: 1

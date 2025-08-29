@@ -379,7 +379,7 @@ namespace UMA
 		// UMAs can have lots of renderers, but this should return the one that we should use when calculating umaData.characterHeight/Radius/Mass- will that always be umaData.GetRenderer(0)?
 		private SkinnedMeshRenderer GetBaseRenderer(UMAData umaData, int rendererToGet = 0)
 		{
-			if (umaData.rendererCount == 0 || umaData.GetRenderer(rendererToGet) == null)
+			if (umaData.RendererCount == 0 || umaData.GetRenderer(rendererToGet) == null)
 			{
 				return null;
 			}

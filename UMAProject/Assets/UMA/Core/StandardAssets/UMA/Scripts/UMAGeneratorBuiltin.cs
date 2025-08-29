@@ -1,6 +1,9 @@
+#define DEBUG_TIMING
+
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using static UMA.DNAInstanceCollection;
 
 namespace UMA
 {
@@ -11,10 +14,17 @@ namespace UMA
 	{
 		[NonSerialized]
 		protected UMAData umaData;
-		[NonSerialized]
-		protected List<UMAData> umaDirtyList = new List<UMAData>();
 
-		private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
+        protected List<UMAData> umaDirtyList
+		{
+			get
+			{
+				return UMAAssetIndexer.Instance.dirtyList;
+			}
+		}
+
+
+        private LinkedList<UMAData> cleanUmas = new LinkedList<UMAData>();
 		private LinkedList<UMAData> dirtyUmas = new LinkedList<UMAData>();
 		public UMAMeshCombiner meshCombiner;
 		private HashSet<string> raceNames;
@@ -39,6 +49,9 @@ namespace UMA
 		[Tooltip("When enable, the texture will be applied right away during the conversion process")]
 		public bool applyInline = false;
 
+		[Tooltip("When true, the generator is visible in the hierarchy. useful for debugging.")]
+		public bool showInHierarchy = false;
+
         private int forceGarbageCollect;
         /// <summary>
         /// Number of character updates before triggering System garbage collect.
@@ -49,6 +62,7 @@ namespace UMA
 
 		public bool collectGarbage = true;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
+        private System.Diagnostics.Stopwatch buildStopWatch = new System.Diagnostics.Stopwatch();
 
 		[Tooltip("Automatically set blendshapes based on race")]
 		public bool autoSetRaceBlendshapes = false;
@@ -66,12 +80,64 @@ namespace UMA
 		public long SlotsChanged;
 		[NonSerialized]
 		public long TexturesProcessed;
+		[NonSerialized]
+		public long pendingUmas;
 
-        public virtual void OnEnable()
-		{
-		}
+        [NonSerialized]
+        public long validationTicks;
+        [NonSerialized]
+        public long meshpreprocessTicks;
+        [NonSerialized]
+        public long BegunEventsTicks;
+        [NonSerialized]
+        public long preapplyTicks;
+        [NonSerialized]
+        public long textureprocessingTicks;
+        [NonSerialized]
+        public long meshUpdatesTicks;
+        [NonSerialized]
+        public long skeletonUpdatesTicks;
+        [NonSerialized]
+        public long raceblendshapesTicks;
+        [NonSerialized]
+        public long endEventsTicks;
 
-		public virtual void Awake()
+        public float averageTextureProcessingTime
+        {
+            get
+            {
+                if (TextureChanged > 0)
+                {
+                    return (textureprocessingTicks / (float)TextureChanged) * 1000.0f / System.Diagnostics.Stopwatch.Frequency;
+                }
+                return 0.0f;
+            }
+        }
+
+        public float averageMeshUpdatesTime
+        {
+            get
+            {
+                if (SlotsChanged > 0)
+                {
+                    return (meshUpdatesTicks / (float)SlotsChanged) * 1000.0f / System.Diagnostics.Stopwatch.Frequency;
+                }
+                return 0.0f;
+            }
+        }
+        public float averageSkeletonUpdatesTime
+        {
+            get
+            {
+                if (DnaChanged > 0)
+                {
+                    return (skeletonUpdatesTicks / (float)DnaChanged) * 1000.0f / System.Diagnostics.Stopwatch.Frequency;
+                }
+                return 0.0f;
+            }
+        }
+
+        public virtual void Awake()
 		{
 
 			if (atlasResolution == 0)
@@ -140,7 +206,6 @@ namespace UMA
 			return null;
 		}
 
-		public static uint WorkCount = 0;
 		public override void Work()
 		{
 			RenderTexToCPU.ApplyInline = applyInline;
@@ -169,6 +234,7 @@ namespace UMA
 				{
 					count = umaDirtyList.Count;
                 }
+				pendingUmas = umaDirtyList.Count;
 
 				if (hasPendingUMAS())
 				{
@@ -237,10 +303,57 @@ namespace UMA
 			umaData.SaveMountedItems();
         }
 
+        public bool GenerateTexturesOnly(UMAData data, bool fireEvents)
+        {
+            if (data == null)
+            {
+                return true;
+            }
+
+            umaData = data;
 
 
+            if (!umaData.Validate())
+            {
+                return true;
+            }
 
-		public bool GenerateSingleUMA(UMAData data, bool fireEvents)
+            RenderTexture rbackup = RenderTexture.active;
+
+            umaData.FireCharacterBegunEvents();
+
+            if (!umaData.rawAvatar)
+            {
+                PreApply(umaData);
+            }
+
+
+            if (umaData.isTextureDirty)
+            {
+                UMAGeneratorPro ugp = new UMAGeneratorPro();
+                ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
+                umaData.isTextureDirty = false;
+                umaData.isAtlasDirty |= umaData.isMeshDirty;
+                TextureChanged++;
+            }
+
+            RenderTexture.active = rbackup;
+
+            umaData.dirty = false;
+            if (fireEvents)
+            {
+                UMAReady();
+            }
+            else
+            {
+                umaData.Show();
+            }
+            FreezeTime = false;
+            return true;
+        }
+
+
+        public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
 #if DEBUG_TIMING
             System.Diagnostics.Stopwatch gstopWatch = System.Diagnostics.Stopwatch.StartNew();
@@ -251,11 +364,12 @@ namespace UMA
                 return true;
             }
 
-            data.umaGenerator = this;
 			FreezeTime = true;
 			umaData = data;
 
-			if (umaData.RebuildSkeleton)
+
+
+            if (umaData.RebuildSkeletonThisBuild)
 			{
 				if (umaData.umaRoot != null)
                 {
@@ -263,7 +377,7 @@ namespace UMA
                 }
                 DestroyImmediate(umaData.umaRoot, false);
 				umaData.umaRoot = null;
-				umaData.RebuildSkeleton = false;
+				umaData.RebuildSkeletonThisBuild = false;
 				umaData.isShapeDirty = true;
 			}
 
@@ -273,6 +387,7 @@ namespace UMA
             }
 #if DEBUG_TIMING
             long validation = gstopWatch.ElapsedTicks;
+            validationTicks += validation;
             gstopWatch.Restart();
 #endif
             RenderTexture rbackup = RenderTexture.active;
@@ -284,12 +399,14 @@ namespace UMA
 
 #if DEBUG_TIMING
             long meshpreprocess = gstopWatch.ElapsedTicks;
+            meshpreprocessTicks += meshpreprocess;
             gstopWatch.Restart();
 #endif
             umaData.FireCharacterBegunEvents();
 
 #if DEBUG_TIMING
             long BegunEvents = gstopWatch.ElapsedTicks;
+            BegunEventsTicks += BegunEvents;
             gstopWatch.Restart();
 #endif
             if (!umaData.rawAvatar)
@@ -299,8 +416,10 @@ namespace UMA
 
 #if DEBUG_TIMING
             long preapply = gstopWatch.ElapsedTicks;
+            preapplyTicks += preapply;
             gstopWatch.Restart();
 #endif
+			DNABuildType dnaUpdateFlags = umaData.DNAPreApply();
 
             if (umaData.isTextureDirty)
 			{
@@ -313,18 +432,21 @@ namespace UMA
 
 #if DEBUG_TIMING
             long textureprocessing = gstopWatch.ElapsedTicks;
+            textureprocessingTicks += textureprocessing;
             gstopWatch.Restart();
 #endif
             if (umaData.isMeshDirty)
-			{
-				UpdateUMAMesh(umaData.isAtlasDirty);
-				umaData.isAtlasDirty = false;
-				umaData.isMeshDirty = false;
-				SlotsChanged++;
-				forceGarbageCollect++;
-			}
+            {
+                umaData.force32bit = Calculate32bitness();
+                UpdateUMAMesh(umaData.isAtlasDirty);
+                umaData.isAtlasDirty = false;
+                umaData.isMeshDirty = false;
+                SlotsChanged++;
+                forceGarbageCollect++;
+            }
 #if DEBUG_TIMING
             long meshUpdates = gstopWatch.ElapsedTicks;
+            meshUpdatesTicks += meshUpdates;
             gstopWatch.Restart();
 #endif
 
@@ -344,6 +466,7 @@ namespace UMA
 			}
 #if DEBUG_TIMING
             long skeletonUpdates = gstopWatch.ElapsedTicks;
+            skeletonUpdatesTicks += skeletonUpdates;
             gstopWatch.Restart();
 #endif
 
@@ -352,9 +475,9 @@ namespace UMA
 		
 			if (autoSetRaceBlendshapes)
 			{
-				if (raceNames == null && UMAContextBase.Instance != null)
+				if (raceNames == null)
 				{
-					RaceData[] races = UMAContextBase.Instance.GetAllRaces();
+					RaceData[] races = UMAAssetIndexer.Instance.GetAllRaces();
 					raceNames = new HashSet<string>();
                     for (int i = 0; i < races.Length; i++)
 					{
@@ -388,8 +511,11 @@ namespace UMA
 				}
 			}
 
+			umaData.SetupEmbeddedPhysics();
+
 #if DEBUG_TIMING
             long raceblendshapes = gstopWatch.ElapsedTicks;
+            raceblendshapesTicks += raceblendshapes;
             gstopWatch.Restart();
 #endif
             RenderTexture.active = rbackup;
@@ -405,10 +531,11 @@ namespace UMA
             }
 #if DEBUG_TIMING
             long endEvents = gstopWatch.ElapsedTicks;
+            endEventsTicks += endEvents;
             gstopWatch.Stop();
 #endif
 			FreezeTime = false;
-#if DEBUG_TIMING
+#if DUMP_DEBUG_TIMING
             Debug.Log($"GenerateSingleUMA - Validation {ToMS(validation)} ms");
             Debug.Log($"GenerateSingleUMA - Mesh Preprocess {ToMS(meshpreprocess)} ms");
             Debug.Log($"GenerateSingleUMA - Begun Events {ToMS(BegunEvents)} ms");
@@ -423,6 +550,78 @@ namespace UMA
 #endif
             return true;
 		}
+
+		class Calc32
+        {
+            public int totalVerts=0;
+            public int totalTris=0;
+            public int totalWeights=0;
+        }
+
+
+        private bool Calculate32bitness()
+        {
+			
+//#if EXPERIMENTAL_PREDICTION_OF_INDEXES
+            // this needs to to group them by material if "atlas" type.
+			// otherwise, we just check the slot counts individually.
+			if (Use32BitBuffers == false)
+            {
+		
+				Dictionary<string,Calc32> endMesh = new Dictionary<string, Calc32>();
+
+                var slotList = umaData.umaRecipe.slotDataList;
+                for (int i = 0; i < slotList.Length; i++)
+                {
+                    SlotData slot = slotList[i];
+
+                    if (slot != null && slot.asset.meshData != null)
+                    {
+						string key = "slot:"+slot.asset.slotName;
+                        if (slot.asset.material.materialType == UMAMaterial.MaterialType.Atlas)
+						{
+                            key = "mat:"+slot.asset.materialName;
+                        }
+
+                        int submesh = slot.asset.subMeshIndex;
+                        if (submesh < 0 || submesh >= slot.asset.meshData.subMeshCount)
+                        {
+#if UNITY_EDITOR
+                            if (Debug.isDebugBuild)
+                            {
+                                Debug.LogError($"Slot {slot.asset.slotName} has invalid submesh index {submesh}, using 0 instead.", slot.asset);
+                            }
+#endif
+                            // if the submesh index is invalid, use 0
+                            submesh = 0;
+                        }
+                        UMAMeshData meshData = slot.asset.meshData;
+
+                        if (!endMesh.TryGetValue(key, out Calc32 meshDataCalc))
+                        {
+                            meshDataCalc = new Calc32();
+                            endMesh[key] = meshDataCalc;
+                        }
+						meshDataCalc = endMesh[key];
+
+                        meshDataCalc.totalVerts += meshData.vertexCount;
+                        meshDataCalc.totalTris += meshData.submeshes[submesh].GetTriangleCount();
+                        meshDataCalc.totalWeights += meshData.ManagedBonesPerVertex.Length;
+                    }
+                }
+
+				var values = endMesh.Values;
+				foreach (var v in values)
+				{
+					if (v.totalVerts > 65535 || v.totalTris > 65535 || v.totalWeights > 65535)
+					{
+						return true;
+                    }
+				}
+            }
+//#endif
+            return Use32BitBuffers;
+        }
 
         int ToMS(long ticks)
         {
@@ -446,105 +645,6 @@ namespace UMA
             }
         }
 
-
-		public virtual bool OldHandleDirtyUpdate(UMAData data)
-		{
-            /*
-			UMAContextBase.IgnoreTag = ignoreTag;
-			if (data == null)
-            {
-                return true;
-            }
-
-            if (umaData != data)
-			{
-				umaData = data;
-
-				if (!umaData.Validate())
-                {
-                    return true;
-                }
-
-                if (meshCombiner != null)
-				{
-					meshCombiner.Preprocess(umaData);
-				}
-				umaData.FireCharacterBegunEvents();
-				PreApply(umaData);
-			}
-			if (umaData.RebuildSkeleton)
-			{
-				SaveMountedItems(umaData);
-				DestroyImmediate(umaData.umaRoot, false);
-				umaData.umaRoot = null;
-				umaData.RebuildSkeleton = false;
-				umaData.isShapeDirty = true;
-			}
-
-
-			if (umaData.isTextureDirty)
-			{
-				bool meshWasDirty = umaData.isMeshDirty;
-				if (activeGeneratorCoroutine == null)
-				{
-					TextureProcessBaseCoroutine textureProcessCoroutine;
-					textureProcessCoroutine = new TextureProcessPROCoroutine();
-					textureProcessCoroutine.Prepare(data, this);
-
-					activeGeneratorCoroutine = new UMAGeneratorCoroutine();
-					activeGeneratorCoroutine.Prepare(this, umaData, textureProcessCoroutine, !umaData.isMeshDirty, InitialScaleFactor);
-				}
-
-				bool workDone = activeGeneratorCoroutine.Work();
-				if (workDone)
-				{
-					activeGeneratorCoroutine = null;
-					umaData.isTextureDirty = false;
-					umaData.isAtlasDirty |= umaData.isMeshDirty;
-					TextureChanged++;
-				}
-
-				//shouldn't this only cause another loop if this part MADE the mesh dirty?
-				if (!workDone || !fastGeneration || (!meshWasDirty && umaData.isMeshDirty))
-				{
-					return false;
-				}
-			}
-
-
-			if (umaData.isMeshDirty)
-			{
-				UpdateUMAMesh(umaData.isAtlasDirty);
-				umaData.isAtlasDirty = false;
-				umaData.isMeshDirty = false;
-				SlotsChanged++;
-				forceGarbageCollect++;
-
-				if (!fastGeneration)
-                {
-                    return false;
-                }
-            }
-
-			if (umaData.isShapeDirty)
-			{
-				if (!umaData.skeleton.isUpdating)
-				{
-					umaData.skeleton.BeginSkeletonUpdate();
-				}
-				UpdateUMABody(umaData);
-				umaData.isShapeDirty = false;
-				DnaChanged++;
-			}
-			else if (umaData.skeleton.isUpdating)
-			{
-				umaData.skeleton.EndSkeletonUpdate();
-			}
-
-			UMAReady();
-			*/
-            return true;
-		}
 
 		public virtual void OnDirtyUpdate()
 		{
@@ -639,6 +739,7 @@ namespace UMA
                 // guard against duplicates
                 if (!updatePending(umaToAdd))
                 {
+					//Debug.Log("Adding to dirty list");
                     umaDirtyList.Add(umaToAdd);
                     umaToAdd.MoveToList(dirtyUmas);
                 }
@@ -678,13 +779,15 @@ namespace UMA
                 }
 
                 umaData.FireCharacterCompletedEvents(fireEvents);
-				if (umaData.skeleton.boneCount > 600)
+#if UNITY_EDITOR
+                if (umaData.skeleton.boneCount > 600)
 				{
 					if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning("Skeleton has " + umaData.skeleton.boneCount + " bones, may be an error with slots!");
                     }
                 }
+#endif
 			}
 		}
 
@@ -698,25 +801,39 @@ namespace UMA
 
 		public virtual void UpdateUMABody(UMAData umaData)
 		{
-			if (umaData)
-			{
-				umaData.FirePreUpdateUMABody();
+			if (!umaData)
+                return;
 
-				umaData.skeleton.ResetAll();    // I don't think this needs to be called, because we overwrite all that in the next call.
-												// Put the skeleton into TPose so rotations will be valid for generating avatar
-				if (!umaData.rawAvatar)
-				{
-					umaData.GotoTPose();
-					umaData.ApplyDNA();
-				}
-				umaData.RestoreSavedItems();
-				// This has to happen for some reason, or the default models heads cave in.
-				umaData.skeleton.EndSkeletonUpdate();
-				UpdateAvatar(umaData);
-				// Blendshape DNA must be applied after the avatar is reset on the animator
-				umaData.PostApplyDNA();
-				umaData.FireDNAAppliedEvents();
-			}
+            umaData.FirePreUpdateUMABody();
+
+            // Keep this to ensure a clean baseline. Removing it caused skeleton issues.
+            umaData.skeleton.ResetAll();
+
+            // Put the skeleton into TPose so rotations will be valid for generating avatar
+            if (!umaData.rawAvatar)
+            {
+                umaData.GotoTPose();
+                umaData.ApplyDNA();
+            }
+
+            // Only restore items if enabled, as this can be expensive
+            if (SaveAndRestoreIgnoredItems)
+            {
+                umaData.RestoreSavedItems();
+            }
+
+            // End the batched skeleton update (begun in GenerateSingleUMA when isShapeDirty)
+            umaData.skeleton.EndSkeletonUpdate();
+
+            // Rebuild the avatar only if allowed. This is a measurable cost saver.
+            if (!umaData.KeepAvatar)
+            {
+                UpdateAvatar(umaData);
+            }
+
+            // Blendshape DNA must be applied after the avatar is reset on the animator
+            umaData.PostApplyDNA();
+            umaData.FireDNAAppliedEvents();
 		}
 #pragma warning restore 618
 	}

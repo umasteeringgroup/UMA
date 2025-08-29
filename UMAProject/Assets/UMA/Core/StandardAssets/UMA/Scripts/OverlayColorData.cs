@@ -10,10 +10,10 @@ namespace UMA
     [System.Serializable]
 	public class OverlayColorData :  System.IEquatable<OverlayColorData>
 	{
-		public static int currentinstance = 0;
+		/*public static int currentinstance = 0;
 		[NonSerialized]
-		public int instance;
-		public static Color EmptyAdditive = new Color(0, 0, 0, 0);
+		public int instance;*/
+		public readonly Color EmptyAdditive = new Color(0, 0, 0, 0);
 
 		public const string UNSHARED = "-";
 		public string name;
@@ -106,7 +106,7 @@ namespace UMA
 		/// </summary>
 		public OverlayColorData()
 		{
-			instance = currentinstance++;
+			/* instance = currentinstance++;*/
 		}
 
 		/// <summary>
@@ -374,6 +374,37 @@ namespace UMA
 				Array.Resize(ref channelAdditiveMask, channels);
 			}
 		}
+
+		public Color GetColor(int textureNumber, bool additive)
+		{
+            if (textureNumber < channelMask.Length)
+            {
+                if (additive)
+                {
+                    return channelAdditiveMask[textureNumber];
+                }
+                else
+                {
+                    return channelMask[textureNumber];
+                }
+            }
+            return Color.white;
+        }
+
+        public void SetColor(int textureNumber, bool additive, Color col)
+		{
+            if (textureNumber < channelMask.Length)
+            {
+                if (additive)
+                {
+                    channelAdditiveMask[textureNumber] = col;
+                }
+                else
+                {
+                    channelMask[textureNumber] = col;
+                }
+            }
+        }
 
         public void EnsureChannels(int channels)
         {

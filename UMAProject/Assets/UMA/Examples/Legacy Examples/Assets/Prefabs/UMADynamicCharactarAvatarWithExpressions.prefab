@@ -26,12 +26,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 171808}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000016292068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11483676
 MonoBehaviour:
@@ -45,13 +46,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  context: {fileID: 0}
-  umaData: {fileID: 0}
-  defaultRendererAsset: {fileID: 0}
-  umaRecipe: {fileID: 0}
-  umaAdditionalRecipes:
-  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
-  umaGenerator: {fileID: 0}
+  renderers: []
+  userInformation: 
+  dnaInstanceCollection:
+    dnaInstances: []
+  useNewDNA: 0
+  rawAvatar: 0
+  raceChanged: 0
+  hideRenderers: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  markNotReadable: 1
+  markDynamic: 0
+  force32bit: 0
   animationController: {fileID: 0}
   CharacterCreated:
     m_PersistentCalls:
@@ -68,16 +80,22 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
-  CharacterBegun:
-    m_PersistentCalls:
-      m_Calls: []
   CharacterDestroyed:
     m_PersistentCalls:
       m_Calls: []
   CharacterUpdated:
     m_PersistentCalls:
       m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
     m_PersistentCalls:
       m_Calls: []
   AnimatorStateSaved:
@@ -86,9 +104,27 @@ MonoBehaviour:
   AnimatorStateRestored:
     m_PersistentCalls:
       m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    dnaValues: []
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes:
+  - {fileID: 11400000, guid: 1f292487d7383514f97c491cadfb0442, type: 2}
   DelayUnload: 2
   BundleCheck: 1
   KeepAnimatorController: 0
+  RecreateAnimatorOnRaceChange: 1
   RecipeUpdated:
     m_PersistentCalls:
       m_Calls: []
@@ -98,9 +134,28 @@ MonoBehaviour:
   WardrobeRemoved:
     m_PersistentCalls:
       m_Calls: []
+  CharacterStart:
+    m_PersistentCalls:
+      m_Calls: []
+  BuildCharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  SlotsHidden:
+    m_PersistentCalls:
+      m_Calls: []
+  WardrobeSuppressed:
+    m_PersistentCalls:
+      m_Calls: []
   hide: 0
+  leanHiding: 0
   loadBlendShapes: 0
+  loadOnlyUsedBlendshapes: 1
+  loadBlendshapeNormals: 1
+  loadBlendshapeTangents: 1
+  loadAllFrames: 1
+  forceKeepBlendshapes: []
   keepAvatar: 0
+  keepPredefinedDNA: 0
   activeRace:
     name: HumanMale
   defaultChangeRaceOptions: 8
@@ -112,20 +167,30 @@ MonoBehaviour:
     loadDefaultRecipes: 0
     recipes:
     - _recipeName: StarCasterFemale
+      _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - ToonFemale
+      ForceLoad: 0
     - _recipeName: ToonHair1
+      _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - ToonFemale
+      ForceLoad: 0
     - _recipeName: ToonFemaleUnderwear1
+      _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - ToonFemale
+      ForceLoad: 0
     - _recipeName: FemaleHair1-Res
+      _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemaleResources
+      ForceLoad: 0
     - _recipeName: FemaleUndies-Res
+      _enabledInDefaultWardrobe: 1
       _compatibleRaces:
       - HumanFemaleResources
+      ForceLoad: 0
   raceAnimationControllers:
     defaultAnimationController: {fileID: 9100000, guid: ae859d58fdf844b73863d3833f955cdf, type: 2}
     animators:
@@ -153,8 +218,15 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       PropertyBlock:
         alwaysUpdate: 0
+        alwaysUpdateParms: 0
         serializedProperties: []
       foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: Hair
       _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -171,8 +243,15 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       PropertyBlock:
         alwaysUpdate: 0
+        alwaysUpdateParms: 0
         serializedProperties: []
       foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: Eyes
       _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -189,8 +268,15 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       PropertyBlock:
         alwaysUpdate: 0
+        alwaysUpdateParms: 0
         serializedProperties: []
       foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: Skin
       _color: {r: 0.9450981, g: 0.91372555, b: 0.7686275, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -207,8 +293,15 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       PropertyBlock:
         alwaysUpdate: 0
+        alwaysUpdateParms: 0
         serializedProperties: []
       foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
       _name: Pants1
       _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
@@ -221,7 +314,7 @@ MonoBehaviour:
   loadFilename: 
   loadString: 
   loadFileOnStart: 1
-  ForceSlotMaterials: 0
+  forceSlotMaterials: 0
   AtlasResolutionScale: 1
   defaultLoadOptions: 31
   savePathType: 0
@@ -238,6 +331,8 @@ MonoBehaviour:
   customRotation: {x: 0, y: 0, z: 0}
   previewColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   _buildCharacterEnabled: 1
+  nextBuildSlotsOnly: 0
+  debugVertexes: 1
 --- !u!114 &11468660
 MonoBehaviour:
   m_ObjectHideFlags: 0

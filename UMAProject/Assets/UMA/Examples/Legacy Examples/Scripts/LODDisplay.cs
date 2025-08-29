@@ -27,6 +27,7 @@ namespace UMA.Examples
                 tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
                 _lodDisplay = tm.GetComponent<TextMesh>();
             }
+#if UNITY_EDITOR
             else
             {
                 if (Debug.isDebugBuild)
@@ -34,6 +35,7 @@ namespace UMA.Examples
                     Debug.LogWarning("No LOD Display prefab set on " + gameObject.name);
                 }
             }
+#endif
         }
 
         // Update is called once per frame
@@ -46,11 +48,11 @@ namespace UMA.Examples
                     _lastSetLevel = _simpleLOD.CurrentLOD;
                     if (_lastSetLevel < 0)
                     {
-                        _lodDisplay.text = string.Format("LOD #0/{0}", _lastSetLevel);
+                        _lodDisplay.text = string.Concat("LOD #0/", _lastSetLevel.ToString());
                     }
                     else
                     {
-                        _lodDisplay.text = string.Format("LOD #{0}", _lastSetLevel);
+                        _lodDisplay.text = string.Concat("LOD #", _lastSetLevel.ToString());
                     }
                 }
                 var delta = transform.position - _cameraTransform.position;

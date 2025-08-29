@@ -48,6 +48,7 @@ namespace UMA
         public bool BlendshapeFoldout;
         public bool ClipPlaneFoldout;
         public bool isDeleted;
+        public bool slotAssetFoldout = false; // This is used in the editor to show/hide the slot in the recipe editor.
 #endif
         public int expandAlongNormal = 0; // 8 digits of fixed point resolution. Multiply by 0.00001f to get the float value.
 
@@ -202,6 +203,14 @@ namespace UMA
             smooshInvertY = true;
             smooshInvertDist = true;
             expandAlongNormal = 0;
+        }
+
+        public void UpdateFromAsset(SlotDataAsset asset)
+        {
+            tags = asset.tags.Length > 0 ? (string[])asset.tags.Clone() : new string[0];
+            Races = asset.Races;
+            overlayScale = asset.overlayScale;
+            rendererAsset = asset.RendererAsset;
         }
 
         /// <summary>
@@ -379,11 +388,21 @@ namespace UMA
                 string tag = HideTags[j];
                 for (int i = 0; i < overlayList.Count; i++)
                 {
-                    if (overlayList[i].asset.tags.Contains<string>(tag))
+                    // Manually check if the tag exists in overlayList[i].asset.tags
+                    string[] overlayTags = overlayList[i].asset.tags;
+                    bool tagFound = false;
+                    for (int t = 0; t < overlayTags.Length; t++)
+                    {
+                        if (overlayTags[t] == tag)
+                        {
+                            tagFound = true;
+                            break;
+                        }
+                    }
+                    if (tagFound)
                     {
                         overlayList.RemoveAt(i);
                         break;
-                        //newOverlays.Remove(overlayList[i]);
                     }
                 }
             }
@@ -624,6 +643,7 @@ namespace UMA
 
                         valid = false;
                     }
+#if UNITY_EDITOR
                     else
                     {
                         for (int i = 0; i < material.channels.Length; i++)
@@ -639,6 +659,7 @@ namespace UMA
                             }
                         }
                     }
+#endif
                 }
                 for (int i = 0; i < overlayList.Count; i++)
                 {
@@ -656,6 +677,7 @@ namespace UMA
 #endif
                 }
             }
+#if UNITY_EDITOR
             else
             {
                 if (material != null)
@@ -675,6 +697,7 @@ namespace UMA
                 }
 
             }
+#endif
             return valid;
         }
 

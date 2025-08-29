@@ -53,7 +53,7 @@ namespace UMA
         /// <param name="ai"></param>
         private void ClearAddressableAssetEntry(AssetItem ai)
         {
-            AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Path, out AddressableAssetGroup group);
+            AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Guid, out AddressableAssetGroup group);
             if (group != null)
             {
                 group.RemoveAssetEntry(ae);
@@ -77,42 +77,31 @@ namespace UMA
                 EditorUtility.DisplayDialog("Warning", "Addressable Asset Settings not found", "OK");
                 return;
             }
-                List<AddressableAssetGroup> GroupsToDelete = new List<AddressableAssetGroup>();
+            List<AddressableAssetGroup> GroupsToDelete = new List<AddressableAssetGroup>();
 
-                foreach (var group in AddressableUtility.AddressableSettings.groups)
+            foreach (var group in AddressableUtility.AddressableSettings.groups)
+            {
+                if (IsUMAGroup(group.name))
                 {
-                    if (IsUMAGroup(group.name))
+                    if (OnlyEmpty)
                     {
-                        if (OnlyEmpty)
-                        {
-                            if (group.entries.Count > 0) continue;
-                        }
-                        GroupsToDelete.Add(group);
+                        if (group.entries.Count > 0) continue;
                     }
+                    GroupsToDelete.Add(group);
                 }
+            }
 
-                float pos = 0.0f;
-                float inc = 1.0f / GroupsToDelete.Count;
+            float pos = 0.0f;
+            float inc = 1.0f / GroupsToDelete.Count;
 
-                foreach (AddressableAssetGroup group in GroupsToDelete)
-                {
-                    int iPos = Mathf.CeilToInt(pos);
-                    EditorUtility.DisplayProgressBar("Cleanup", "Removing " + group.Name, iPos);
-                    if (group.name.Contains(SharedGroupName))
-                    {
-                        List<AddressableAssetEntry> ItemsToClear = new List<AddressableAssetEntry>();
-                        ItemsToClear.AddRange(group.entries);
-                        foreach (AddressableAssetEntry ae in ItemsToClear)
-                        {
-                            group.RemoveAssetEntry(ae);
-                        }
-                    }
-                    else
-                    {
-                        AddressableUtility.AddressableSettings.RemoveGroup(group);
-                    }
-                    pos += inc;
-                }
+            foreach (AddressableAssetGroup group in GroupsToDelete)
+            {
+                int iPos = Mathf.CeilToInt(pos);
+
+                EditorUtility.DisplayProgressBar("Cleanup", "Removing " + group.Name, iPos);
+                AddressableUtility.AddressableSettings.RemoveGroup(group);
+                pos += inc;
+            }
 
             if (RemoveFlags)
             {
@@ -121,7 +110,7 @@ namespace UMA
             EditorUtility.ClearProgressBar();
         }
 
-        private void GenerateLookups(UMAContextBase context, List<AssetItem> wardrobe)
+        private void GenerateLookups(List<AssetItem> wardrobe)
         {
             float pos = 0.0f;
             float inc = 1.0f / wardrobe.Count;
@@ -136,7 +125,7 @@ namespace UMA
                 EditorUtility.DisplayProgressBar("Generating", "Calculating Usage: " + uwr.name, iPos);
 
                 // todo: cache this
-                UMAData.UMARecipe ur = UMAAssetIndexer.Instance.GetRecipe(uwr, context);
+                UMAData.UMARecipe ur = UMAAssetIndexer.Instance.GetRecipe(uwr);
 
                 if (ur.slotDataList == null) continue;
 
@@ -234,7 +223,7 @@ namespace UMA
 
         public void AddItemToSharedGroup(string GUID, string Address, List<string> labels, AddressableAssetGroup sharedGroup)
         {
-            AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, true);
+            AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, false);
             ae.SetAddress(Address);
             ae.SetLabel(umaBaseName, true, true, true);
             foreach (string s in labels)
@@ -491,7 +480,7 @@ namespace UMA
             {
                 if (ai.IsAddressable)
                 {
-                    AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Path);
+                    AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Guid);
                     if (ae != null && ae.parentGroup.Name == SharedGroupName)
                     {
                         continue;
@@ -612,9 +601,12 @@ namespace UMA
             }
         }
 
-        public void GenerateAddressables(IUMAAddressablePlugin plugin)
+        public void GenerateAddressables(IUMAAddressablePlugin plugin, UMAAssetIndexer Index = null)
         {
-            bool OK = plugin.Prepare();
+			if(Index == null) {
+				Index = UMAAssetIndexer.Instance;
+			}
+				bool OK = plugin.Prepare();
             if (!OK) return;
 
             foreach (Type t in UMAAssetIndexer.Instance.GetTypes())
@@ -712,8 +704,6 @@ namespace UMA
                 ClearAddressableFlags(typeof(SlotDataAsset));
                 ClearAddressableFlags(typeof(OverlayDataAsset));
 
-                UMAContextBase context = UMAContextBase.Instance;
-
                 // Create the shared group that has each item packed separately.
                 AddressableAssetGroup sharedGroup = AddressableUtility.AddressableSettings.CreateGroup(SharedGroupName, false, false, true, AddressableUtility.AddressableSettings.DefaultGroup.Schemas);
                 sharedGroup.GetSchema<BundledAssetGroupSchema>().BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
@@ -759,7 +749,7 @@ namespace UMA
 
                 GenerateCollectionLabels();
 
-                GenerateLookups(context, theRecipeItems);
+                GenerateLookups(theRecipeItems);
 
                 float pos = 0.0f;
                 float inc = 1.0f / theRecipes.Count;
@@ -810,17 +800,19 @@ namespace UMA
             finally
             {
                 EditorUtility.ClearProgressBar();
-                UMAAssetIndexer.Instance.DestroyEditorUMAContextBase();
                 UMAAssetIndexer.Instance.ForceSave();
             }
         }
 
-        public void AssignAddressableInformation()
+        public void AssignAddressableInformation(UMAAssetIndexer Index=null)
         {
-            List<AssetItem> SerializedItems = UMAAssetIndexer.Instance.SerializedItems;
+			if(Index == null) {
+				Index = UMAAssetIndexer.Instance;
+			}
+				List<AssetItem> SerializedItems = Index.SerializedItems;
             foreach (AssetItem ai in SerializedItems)
             {
-                AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Path);
+                AddressableAssetEntry ae = AddressableUtility.GetAddressableAssetEntry(ai._Guid);
                 if (ae != null)
                 {
                     ai.AddressableAddress = ae.address;

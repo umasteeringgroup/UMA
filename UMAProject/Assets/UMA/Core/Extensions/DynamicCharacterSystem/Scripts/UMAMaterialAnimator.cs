@@ -33,6 +33,7 @@ namespace UMA
             public Color MinColorValue;            // The minimum value of the property.
             public Color MaxColorValue;            // The maximum value of the property.
 
+
             public override string ToString()
             {
                 if (type == MaterialAnimationType.Float)
@@ -60,21 +61,21 @@ namespace UMA
             public void ApplyColor(MaterialAnimationInstance mat, float time, Color MinValue, Color MaxValue, int propertyIndex = 0)
             {
                 Color value = (curve.Evaluate(time) * MaxValue) + MinValue;
-                // First see if it has a shader-level property 
+                // Shader-level property
                 if (mat.material.HasProperty(propertyName))
                 {
                     mat.material.SetColor(propertyName, value);
                 }
-                // Then see if it has a layer-level property
-                string layerPropertyName = $"propertyName{mat.layer}";
-                if (mat.material.HasProperty(propertyName))
+                // Layer-level property
+                string layerPropertyName = string.Concat(propertyName, mat.layer.ToString());
+                if (mat.material.HasProperty(layerPropertyName))
                 {
-                    mat.material.SetColor(propertyName, value);
+                    mat.material.SetColor(layerPropertyName, value);
                 }
-                // only if we are using a channel do we need to set the channel property
+                // Channel-level property (only if using a channel)
                 if (useChannel)
                 {
-                    string layerChannelPropertyName = $"propertyName{mat.layer}_{channelNumber}";
+                    string layerChannelPropertyName = string.Concat(propertyName, mat.layer.ToString(), "_", channelNumber.ToString());
                     if (mat.material.HasProperty(layerChannelPropertyName))
                     {
                         mat.material.SetColor(layerChannelPropertyName, value);
@@ -82,25 +83,24 @@ namespace UMA
                 }
             }
 
-
             public void ApplyFloat(MaterialAnimationInstance mat, float time, float MinValue, float MaxValue, int propertyIndex = 0)
             {
                 float value = (curve.Evaluate(time) * MaxValue) + MinValue;
-                // First see if it has a shader-level property
+                // Shader-level property
                 if (mat.material.HasProperty(propertyName))
                 {
                     mat.material.SetFloat(propertyName, value);
                 }
-                // Then see if it has a layer-level property
-                string layerPropertyName = $"propertyName{mat.layer}";
-                if (mat.material.HasProperty(propertyName))
+                // Layer-level property
+                string layerPropertyName = string.Concat(propertyName, mat.layer.ToString());
+                if (mat.material.HasProperty(layerPropertyName))
                 {
-                    mat.material.SetFloat(propertyName, value);
+                    mat.material.SetFloat(layerPropertyName, value);
                 }
-                // only if we are using a channel do we need to set the channel property
+                // Channel-level property (only if using a channel)
                 if (useChannel)
                 {
-                    string layerChannelPropertyName = $"propertyName{mat.layer}_{channelNumber}";
+                    string layerChannelPropertyName = string.Concat(propertyName, mat.layer.ToString(), "_", channelNumber.ToString());
                     if (mat.material.HasProperty(layerChannelPropertyName))
                     {
                         mat.material.SetFloat(layerChannelPropertyName, value);
@@ -112,7 +112,7 @@ namespace UMA
 
         [SerializeField]
         public List<MaterialAnimation> animations = new List<MaterialAnimation>();
-
+        private List<Material> materials = new List<Material>();
         private bool initialized = false;
 
         public class MaterialAnimationInstance
@@ -151,6 +151,8 @@ namespace UMA
             var renderers = umaData.GetRenderers();
             // Generate a fresh list of material instances
             instances.Clear();
+
+
             for (int i = 0; i < animations.Count; i++)
             {
                 MaterialAnimation anim = animations[i];
@@ -171,7 +173,8 @@ namespace UMA
                                 if (renderer != null)
                                 {
                                     // Get the material for this slot
-                                    Material material = renderer.sharedMaterials[slot.submeshIndex];
+                                    renderer.GetSharedMaterials(materials);
+                                    Material material = materials[slot.submeshIndex];
                                     if (material != null)
                                     {
                                         var ovls = slot.GetOverlayList();
@@ -192,6 +195,7 @@ namespace UMA
                                             }
                                         }
                                     }
+                                    materials.Clear();
                                 }
                             }
                         }

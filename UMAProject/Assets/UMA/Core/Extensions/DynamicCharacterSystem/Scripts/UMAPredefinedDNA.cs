@@ -47,7 +47,14 @@ namespace UMA
 
 		public bool ContainsName(string Name)
         {
-			return PreloadValues.Count(x => x.Name == Name) > 0;
+            for (int i = 0; i < PreloadValues.Count; i++)
+            {
+                if (PreloadValues[i].Name == Name)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 		public void AddRange(UMAPredefinedDNA newDNA)
 		{
@@ -89,7 +96,47 @@ namespace UMA
             return 0;
         }
 
-		public UMAPredefinedDNA Clone()
+		public void Sort()
+        {
+            PreloadValues.Sort(
+                delegate (DnaValue a, DnaValue b)
+                {
+                    if (a == null && b == null)
+                    {
+                        return 0;
+                    }
+
+                    if (a == null)
+                    {
+                        return -1;
+                    }
+
+                    if (b == null)
+                    {
+                        return 1;
+                    }
+
+                    if (a.Name == null && b.Name == null)
+                    {
+                        return 0;
+                    }
+
+                    if (a.Name == null)
+                    {
+                        return -1;
+                    }
+
+                    if (b.Name == null)
+                    {
+                        return 1;
+                    }
+
+                    return string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+                }
+            );
+        }
+
+        public UMAPredefinedDNA Clone()
         {
 			UMAPredefinedDNA newdna = new UMAPredefinedDNA();
             for (int i = 0; i < PreloadValues.Count; i++)

@@ -15,9 +15,27 @@ namespace UMA
         {
             base.dnaTypeHash = typeHash;
         }
-		#endregion
+        #endregion
 
-		#region Properties
+        #region Properties
+
+        
+        public override int DNATypeHash
+        {
+            get
+            {
+                if (dnaTypeHash == 0)
+                {
+                    dnaTypeHash = UMAUtils.StringToHash("DynamicUMADna");
+                }
+                return dnaTypeHash;
+            }
+            set
+            {
+                dnaTypeHash = value;
+            }
+        }
+	
 
 		public override DynamicUMADnaAsset dnaAsset
         {
@@ -93,11 +111,12 @@ namespace UMA
 		/// </summary>
 		public static string[] GetNames()
 		{
-			if (Debug.isDebugBuild)
+#if UNITY_EDITOR
+            if (Debug.isDebugBuild)
             {
                 Debug.LogWarning("Calling the static GetNames() method of Dynamic DNA, result will be empty");
             }
-
+#endif
             return new string[0];
 		}
 
@@ -227,7 +246,7 @@ namespace UMA
                 return;
             }
 
-            _dnaAsset = UMAContext.Instance.GetDNA(dnaAssetName);
+            _dnaAsset = UMAAssetIndexer.Instance.GetDNA(dnaAssetName);
 
 			if (!_dnaAsset)
 			{
@@ -304,14 +323,15 @@ namespace UMA
 			{
 				res.SetDnaTypeHash(res.dnaAsset.dnaTypeHash);
 			}
-			else
-			{
+#if UNITY_EDITOR
+            else
+            {
 				if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("Deserialized DynamicUMADna with no matching asset!");
                 }
             }
-
+#endif
             return res;
         }
         public static DynamicUMADna_Byte FromDna(DynamicUMADnaBase dna )

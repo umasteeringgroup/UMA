@@ -18,7 +18,17 @@ namespace UMA
 		static int rightTwistHash;
 		static bool hashesFound = false;
 
-		public void OnDnaApplied(UMAData umaData)
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		public static void StaticInitializeOnLoad()
+		{
+			leftHandHash = 0;
+			rightHandHash = 0;
+			leftTwistHash = 0;
+			rightTwistHash = 0;
+            hashesFound = false;
+        }
+
+        public void OnDnaApplied(UMAData umaData)
 		{
 			if (!hashesFound)
 			{

@@ -42,7 +42,7 @@ namespace UMA
 
         private void PreloadLogger(string s)
         {
-            Debug.Log($"{Time.realtimeSinceStartup} Message: {s} ");
+            Debug.Log($"{Time.realtimeSinceStartup} Message: {s} gamobject {gameObject.name}");
         }
 
 
@@ -50,13 +50,26 @@ namespace UMA
         {
             yield return new WaitForSeconds(1);
             PreloadLogger("Starting Initialize");
-            InitAddressables();
+            Init();
         }
 
-        private async void InitAddressables()
+
+        private void Init()
         {
 #if UMA_ADDRESSABLES
-            PreloadLogger("Initializing Addressables");
+            InitAddressables();
+#else
+            if (LoadingSlider != null)
+            {
+                LoadingSlider.gameObject.SetActive(false);
+            }
+#endif
+        }
+
+#if UMA_ADDRESSABLES
+        private async void InitAddressables()
+        {
+            PreloadLogger("Initializing Addressables "+gameObject.name);
             op = Addressables.InitializeAsync();
             await op.Task;
             PreloadLogger($"Addressables Initialized");
@@ -76,16 +89,10 @@ namespace UMA
                     LoadingSlider.gameObject.SetActive(false);
                 }
             }
-            PreloadLogger("Downloading Dependencies completed" );
-#else
-                if (LoadingSlider != null)
-                {
-                    LoadingSlider.gameObject.SetActive(false);
-                }
-#endif
+            PreloadLogger("Downloading Dependencies completed "+gameObject.name );
+
         }
 
-#if UMA_ADDRESSABLES
         void Update()
     {
         if (LoadingSlider != null && LoadingSlider.isActiveAndEnabled && op.IsValid())

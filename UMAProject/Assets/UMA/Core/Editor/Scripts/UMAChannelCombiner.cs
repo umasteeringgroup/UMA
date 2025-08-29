@@ -231,7 +231,11 @@ namespace UMA
 
         public void SaveAs(string path)
         {
-            UMAAvatarLoadSaveMenuItems.SaveRenderTexture(textureCombined, path, false);
+            Texture2D rtex = UMAAvatarLoadSaveMenuItems.GetRTPixels(textureCombined);
+            byte[] pngdata = rtex.EncodeToPNG();
+            System.IO.File.WriteAllBytes(path, pngdata);
+
+            //UMAAvatarLoadSaveMenuItems.SaveRenderTexture(textureCombined, path, false);
         }
 
         private bool Load(Texture2D texture)

@@ -44,39 +44,24 @@ namespace UMA.PoseTools
 				expressionPlayer = gameObject.GetComponent<ExpressionPlayer>();
 				if (expressionPlayer == null)
 				{
-					if (Debug.isDebugBuild)
+#if UNITY_EDITOR
+                    if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning("Couldn't find expression player to preview!");
                     }
-
-                    return;
+#endif
+					return;
 				}
 			}
 
 			if (umaGenerator == null)
 			{
-                UMAContextBase uc = UMAContextBase.Instance;
-
-                if (uc == null)
-                {
-					Debug.LogWarning("Couldn't find UMA Context to preview!");
-                    return;
-                }
-                umaGenerator = uc.gameObject.GetComponentInChildren<UMAGeneratorBase>();
-
-                if (umaGenerator == null)
-				{
-                    if (Debug.isDebugBuild)
-					{
-                        Debug.LogWarning("Couldn't find UMA Generator to preview!");
-                    }
-                    return;
-                }
+				umaGenerator = UMAAssetIndexer.Instance.Generator;
             }
 
 			if (skeleton == null)
 			{
-				skeleton = new UMASkeleton(skeletonRoot,umaGenerator);
+				skeleton = new UMASkeleton(skeletonRoot);
 			}
 
 			expressionSet.RestoreBones(skeleton);

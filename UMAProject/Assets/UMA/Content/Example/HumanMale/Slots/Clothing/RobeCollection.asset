@@ -29,9 +29,14 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshModifiers: []
   OverrideDNA:
     PreloadValues: []
+  disabled: 0
   recipeString: '{"packedRecipeType":"WardrobeCollection","name":"New UMAWardrobeCollection","race":"","dna":[],"characterColors":[],"wardrobeSet":[],"raceAnimatorController":""}'
+  forceKeep: 0
+  labelLocalFiles: 0
+  noAutoAdd: 0
   coverImages: []
   wardrobeCollection:
     sets:

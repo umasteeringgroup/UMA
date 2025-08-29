@@ -34,10 +34,13 @@ namespace UMA
             {
                 if (nameMap.ContainsKey(mountInfos[i].objPrefab.name))
                 {
+#if UNITY_EDITOR
+
                     if (Debug.isDebugBuild)
                     {
                         Debug.LogWarning("ObjPrefab already added! " + mountInfos[i].objPrefab.name);
                     }
+#endif
                 }
                 nameMap.Add(mountInfos[i].objPrefab.name, i);
             }
@@ -74,6 +77,7 @@ namespace UMA
             {
                 mountInfos[index] = newInfo;
             }
+#if UNITY_EDITOR
             else
             {
                 if (Debug.isDebugBuild)
@@ -81,6 +85,7 @@ namespace UMA
                     Debug.LogWarning("ObjPrefab doesnt exist: " + mountInfos[index].objPrefab.name);
                 }
             }
+#endif
         }
 
         public void MountObject(string name)
@@ -91,10 +96,12 @@ namespace UMA
             }
             else
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning(name + " not found in list!");
                 }
+#endif
             }
         }
 
@@ -141,6 +148,7 @@ namespace UMA
             {
                 UnMountObject(nameMap[name]);
             }
+#if UNITY_EDITOR
             else
             {
                 if (Debug.isDebugBuild)
@@ -148,6 +156,7 @@ namespace UMA
                     Debug.LogWarning(name + " not found in list!");
                 }
             }
+#endif
         }
 
         public void UnMountObject(int index)

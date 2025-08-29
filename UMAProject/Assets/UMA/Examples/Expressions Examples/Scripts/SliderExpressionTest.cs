@@ -135,6 +135,7 @@ namespace UMA.PoseTools
 					}
 				}
 
+                /*
 				if (GUILayout.Button("Randomize"))
 				{
 					UMADnaHumanoid humanoidDna = umaAvatar.umaData.GetDna<UMADnaHumanoid>();
@@ -180,10 +181,11 @@ namespace UMA.PoseTools
 						umaAvatar.UpdateSameRace();
 					}
 				}
-			}
+				*/
+            }
 
 #if UNITY_EDITOR
-			if (GUILayout.Button("Save Expression"))
+            if (GUILayout.Button("Save Expression"))
 			{
 				string assetPath = UnityEditor.EditorUtility.SaveFilePanelInProject("Save Expression Clip", "Expression", "anim", null);
 				player.SaveExpressionClip(assetPath);

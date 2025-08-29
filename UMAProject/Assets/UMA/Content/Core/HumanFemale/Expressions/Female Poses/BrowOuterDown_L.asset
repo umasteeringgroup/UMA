@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -14,13 +15,15 @@ MonoBehaviour:
   poses:
   - bone: LeftEyebrowMiddle
     hash: -356417641
-    position: {x: -1.1920929e-07, y: 0, z: 0}
-    rotation: {x: 1.15438439e-07, y: -.0422302261, z: 4.41451009e-09, w: .999107897}
-    scale: {x: 1, y: 1, z: 1.00000024}
+    position: {x: -0.00000011920929, y: 0, z: 0}
+    rotation: {x: 0.00000011543844, y: -0.042230226, z: 0.00000000441451, w: 0.9991079}
+    scale: {x: 1, y: 1, z: 1.0000002}
+    category: 
   - bone: LeftEyebrowUp
     hash: 1123680177
     position: {x: 0, y: 0, z: 0}
-    rotation: {x: -2.2279832e-07, y: -.0758168623, z: -1.16781207e-08, w: .997121751}
-    scale: {x: .999999762, y: 1, z: 1}
+    rotation: {x: -0.00000022279832, y: -0.07581686, z: -0.000000011678121, w: 0.99712175}
+    scale: {x: 0.99999976, y: 1, z: 1}
+    category: 
   tweenPoses: []
   tweenWeights: []

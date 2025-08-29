@@ -739,17 +739,17 @@ namespace UMA
                 globalTransform.localRotation = wasGlobalRotation;
                 rootTransform.localRotation = wasRootRotation;*/
             }
-            thisDCA.umaData.manualMeshModifiers = new List<MeshModifier.Modifier>();
+            thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
             if (LoadMeshModifiers)
             {
-                thisDCA.umaData.manualMeshModifiers = DoModifierSplit(true);
+                thisDCA.umaData.ManualMeshModifiers = DoModifierSplit(true);
             }
             vertexEditorStage.RebuildMesh(forceTPose,buildCollisionMesh);
         }
 
         public void DoCharacterReset()
         {
-            thisDCA.umaData.manualMeshModifiers = new List<MeshModifier.Modifier>();
+            thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
             vertexEditorStage.RebuildMesh(false);
         }
 
@@ -832,8 +832,8 @@ namespace UMA
 
         public void DoCharacterRebuildWithActiveBulkModifier(MeshModifier.Modifier activeModifier)
         {
-            thisDCA.umaData.manualMeshModifiers = new List<MeshModifier.Modifier>();
-            SplitModifiersBySlot(thisDCA.umaData.manualMeshModifiers, activeModifier);
+            thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
+            SplitModifiersBySlot(thisDCA.umaData.ManualMeshModifiers, activeModifier);
             vertexEditorStage.RebuildMesh(false);
         }
 

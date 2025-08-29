@@ -301,8 +301,6 @@ namespace UnityEngine.UI
 
         private bool validTemplate;
 
-        private static DropdownWithColor.OptionData s_NoOptionData = new DropdownWithColor.OptionData();
-
         /// <summary>
         ///   <para>The Rect Transform of the template for the dropdown list.</para>
         /// </summary>
@@ -478,7 +476,7 @@ namespace UnityEngine.UI
         /// </summary>
         public void RefreshShownValue()
         {
-            DropdownWithColor.OptionData optionData = DropdownWithColor.s_NoOptionData;
+            DropdownWithColor.OptionData optionData = new DropdownWithColor.OptionData();
             if (this.options.Count > 0)
             {
                 optionData = this.options[Mathf.Clamp(this.m_Value, 0, this.options.Count - 1)];

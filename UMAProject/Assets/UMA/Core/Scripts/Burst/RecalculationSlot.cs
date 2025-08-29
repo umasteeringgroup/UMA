@@ -13,7 +13,7 @@ namespace UMA
         public void Recalculate(UMAData umaDATA)
         {
 #if UMA_BURSTCOMPILE
-            int rendererCount = umaDATA.rendererCount;
+            int rendererCount = umaDATA.RendererCount;
             for(int i=0;i<rendererCount;i++)
             {
                 var smr = umaDATA.GetRenderer(i);

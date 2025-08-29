@@ -29,7 +29,16 @@ namespace UMA
 			return triangles;
 		}
 
-		public void SetTriangles(int[] tris)
+		public int GetTriangleCount()
+        {
+            if (triangles == null)
+            {
+                return 0;
+            }
+            return triangles.Length;
+        }
+
+        public void SetTriangles(int[] tris)
 		{
 			triangles = tris;
 			if (nativeTriangles.IsCreated)
@@ -87,7 +96,14 @@ namespace UMA
 		}
 
 		public static UMATransformComparer TransformComparer = new UMATransformComparer();
-		public class UMATransformComparer : IComparer<UMATransform>
+
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+            TransformComparer = new UMATransformComparer();
+        }
+        public class UMATransformComparer : IComparer<UMATransform>
 		{
 			#region IComparer<UMATransform> Members
 
@@ -406,7 +422,14 @@ namespace UMA
 
         public static Dictionary<int, NativeArray<int>> SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
 
-		public int BoneWeightOffset(int vertexIndex)
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+            SubmeshBuffers = new Dictionary<int, NativeArray<int>>();
+        }
+
+        public int BoneWeightOffset(int vertexIndex)
         {
             int offset = 0;
             for (int i = 0; i < vertexIndex; i++)
@@ -1001,12 +1024,16 @@ namespace UMA
 			CreateTransforms(skeleton);
 
 			Mesh mesh = new Mesh();//renderer.sharedMesh;
-#if UMA_32BITBUFFERS
-			mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-#endif
-
+            if (UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
+            {
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            }
+            else
+            {
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt16;
+            }
 #if UNITY_EDITOR
-			if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
+            if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
 			{
 				if (Debug.isDebugBuild)
                 {
@@ -1409,7 +1436,9 @@ namespace UMA
                 SubMeshTriangles sm = submeshes[i];
                 if (sm.nativeTriangles.IsCreated)
                 {
+					Debug.Log("Disposing native triangles for submesh " + i + " in slot " + SlotName);
                     sm.nativeTriangles.Dispose();
+					sm.nativeTriangles = new NativeArray<int>();  // likely problem area
                 }
             }
 

@@ -115,11 +115,13 @@ namespace UMA.Dynamics
 
 			if (!Physics.GetIgnoreLayerCollision(ragdollLayer, playerLayer))
 			{
-				if (Debug.isDebugBuild)
+#if UNITY_EDITOR
+                if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("RagdollLayer and PlayerLayer are not ignoring each other! This will cause collision issues. Please update the collision matrix or 'Add Default Layers' in the Physics Slot Definition");
                 }
-            }
+#endif
+			}
 		}
 
 		void OnDestroy()
@@ -242,12 +244,14 @@ namespace UMA.Dynamics
 
                     if (bone == null)
                     {
+#if UNITY_EDITOR
 						if (Debug.isDebugBuild)
                         {
                             Debug.LogWarning("UMAPhysics: " + element.boneName + " not found!");
                         }
+#endif
 
-                        continue; //if we don't find the bone then go to the next iteration
+						continue; //if we don't find the bone then go to the next iteration
                     }
                 
                     if (!bone.GetComponent<Rigidbody>())
@@ -363,6 +367,7 @@ namespace UMA.Dynamics
 					{
                         cloth.sphereColliders = SphereColliders.ToArray();
                         cloth.capsuleColliders = CapsuleColliders.ToArray();
+#if UNITY_EDITOR
 						if ((cloth.capsuleColliders.Length + cloth.sphereColliders.Length) > 10)
 						{
 							if (Debug.isDebugBuild)
@@ -370,6 +375,7 @@ namespace UMA.Dynamics
                                 Debug.LogWarning("Cloth Collider count is high. You might experience strange behavior with the cloth simulation.");
                             }
                         }
+#endif
 					}
 				}
 			}

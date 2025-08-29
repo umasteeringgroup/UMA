@@ -19,9 +19,6 @@ namespace UMA
         }
 
         public enum CompressionSettings { None, Fast, HighQuality };
-        public bool translateSRP;
-        private bool srpSetup = false;
-        public bool AutoSetSRPMaterials = true;
 
         [SerializeField]
         [FormerlySerializedAs("material")]
@@ -30,123 +27,31 @@ namespace UMA
         [FormerlySerializedAs("secondPass")]
         private Material _secondPass;
 
-        [Serializable]
-        public struct SRPMaterial
-        {
-            [Tooltip("The SRP this material is used for.")]
-            public UMAUtils.PipelineType SRP;
-            [Tooltip("The material to use for this SRP. If 'Use Existing Textures' is set, this is the first pass material.")]
-            public Material material;
-            [Tooltip("Used as a second pass when 'Use Existing Textures' is set. Leave null for most cases.")]
-            public Material secondPass;
-            [Tooltip("The keywords to use for this material")]
-            public List<string> alternateKeywords;
-            private Dictionary<string, string> _alternateKeywordsLookup;
-            public SRPMaterial(UMAUtils.PipelineType SRP, Material material, Material secondPass, List<string> alternateKeywords)
-            {
-                this.SRP = SRP;
-                this.material = material;
-                this.secondPass = secondPass;
-                this.alternateKeywords = alternateKeywords;
-                _alternateKeywordsLookup = new Dictionary<string, string>();
-                for (int i = 0; i < alternateKeywords.Count; i++)
-                {
-                    _alternateKeywordsLookup.Add(alternateKeywords[i], alternateKeywords[i]);
-                }
-            }
-        };
-
         public void Awake()
         {
-            SetupSRP();
         }
 
-        public void SetupSRP(bool forceSetup = false)
+        private string _thisName;
+        public string objectName
         {
-#if UNITY_EDITOR
-            if (Application.isPlaying == false)
+            get
             {
-                srpSetup = false;
-            }
-#endif
-            if (forceSetup || srpSetup == false)
-            {
-                srpSetup = true;
-                var pipe = UMAUtils.DetectPipeline();
-
-                for (int i = 0; i < srpMaterials.Count; i++)
+                if (string.IsNullOrEmpty(_thisName))
                 {
-                    if (srpMaterials[i].SRP == pipe)
-                    {
-                        _material = srpMaterials[i].material;
-                        _secondPass = srpMaterials[i].secondPass;
-                        if (channels.Length != srpMaterials[i].alternateKeywords.Count)
-                        {
-                            List<MaterialChannel> newChannels = new List<MaterialChannel>();
-                            newChannels.AddRange(channels);
-                            if (newChannels.Count > srpMaterials[i].alternateKeywords.Count)
-                            {
-                                newChannels.RemoveRange(srpMaterials[i].alternateKeywords.Count, newChannels.Count - srpMaterials[i].alternateKeywords.Count);
-                            }
-                            else
-                            {
-                                for (int j = newChannels.Count; j < srpMaterials[i].alternateKeywords.Count; j++)
-                                {
-                                    newChannels.Add(new MaterialChannel());
-                                }
-                            }
-                            channels = newChannels.ToArray();
-                        }
-                        for (int j = 0; j < srpMaterials[i].alternateKeywords.Count; j++)
-                        {
-                            channels[j].materialPropertyName = srpMaterials[i].alternateKeywords[j];
-                        }
-                        return;
-                    }
+                    _thisName = name;
                 }
+                return _thisName;
             }
+            set
+            {
+                _thisName = value;
+            }
+
         }
-
-        public List<SRPMaterial> srpMaterials = new List<SRPMaterial>();
-        //private Dictionary<UMAUtils.PipelineType, SRPMaterial> _srpMaterialLookup = new Dictionary<UMAUtils.PipelineType, SRPMaterial>();
-        
-        public SRPMaterial CreateSRPMaterial(UMAUtils.PipelineType SRP)
-        {
-            List<string> _alternateKeywords = new List<string>();
-            foreach(var chan in this.channels)
-            {
-                _alternateKeywords.Add(chan.materialPropertyName);
-            }
-            return new SRPMaterial(SRP, _material,_secondPass, _alternateKeywords);
-        }
-
-      /*  private void SetupMaterialLookup(UMAUtils.PipelineType pipe)
-        {
-            if (_srpMaterialLookup.Count == 0)
-            {
-                for (int i = 0; i < srpMaterials.Count; i++)
-                {
-                    SRPMaterial srpMat = srpMaterials[i];
-                    _srpMaterialLookup.Add(srpMat.SRP, srpMat);
-                }
-            }
-            if (!_srpMaterialLookup.ContainsKey(pipe))
-            {
-                srpMaterials.Add(CreateSRPMaterial(pipe));
-                _srpMaterialLookup.Add(pipe, srpMaterials[srpMaterials.Count - 1]);
-            }
-        } */
-
-
         public Material  material
         {
             get 
             {
-                if (AutoSetSRPMaterials)
-                {
-                    SetupSRP();
-                }
-
                 return _material;
             }
             set { _material = value; }
@@ -157,28 +62,10 @@ namespace UMA
 
             get
             {
-                if (AutoSetSRPMaterials)
-                {
-                    SetupSRP();
-                }
                 return _secondPass;
-                /*
-                var pipe = UMAUtils.DetectPipeline();
-                if (_srpMaterialLookup.ContainsKey(pipe))
-                {
-                    return _srpMaterialLookup[pipe].secondPass;
-                }
-                else
-                {
-                    SetupMaterialLookup(pipe);
-                    return _srpMaterialLookup[pipe].secondPass;
-                }*/
             }
         }
 
-
-        [Tooltip("Used as a second pass when 'Use Existing Textures' is set. Leave null for most cases.")]
-        //public Material secondPass;
 
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels = new MaterialChannel[0];
@@ -222,11 +109,6 @@ namespace UMA
             DetailNormalMap = 5,
         }
 
-		static public Color GetBackgroundColor(ChannelType channelType)
-		{
-			return ChannelBackground[(int)channelType];
-		}
-
 		//The ChannelTypes index into this for it's corresponding background color.
 		//Needed to have normalMaps have a grey background for proper blending
 		static Color[] ChannelBackground =
@@ -238,6 +120,27 @@ namespace UMA
 			new Color(0,0,0,0),
 			new Color(0,0,0,0)
 		};
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+            ChannelBackground = new Color[]
+            {
+                new Color(0,0,0,0), // Texture
+                Color.grey,        // NormalMap
+                new Color(0,0,0,0), // MaterialColor
+                new Color(0,0,0,0), // TintedTexture
+                new Color(0,0,0,0), // DiffuseTexture
+                new Color(0,0,0,0)  // DetailNormalMap
+            };
+        }
+
+        static public Color GetBackgroundColor(ChannelType channelType)
+		{
+			return ChannelBackground[(int)channelType];
+		}
+
+
 
         [Serializable]
         public struct MaterialChannel
@@ -260,6 +163,7 @@ namespace UMA
 			UMA.CustomAssetUtility.CreateAsset<UMAMaterial>();
 		}
 #endif
+
 
         public List<string> GetTexturePropertyNames()
         {
@@ -319,7 +223,7 @@ namespace UMA
         /// <returns></returns>
         public bool Equals(UMAMaterial material)
         {
-            return name == material.name;
+            return objectName == material.objectName;
         }
 
     }

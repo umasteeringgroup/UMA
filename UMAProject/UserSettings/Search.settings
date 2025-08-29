@@ -1,53 +1,19 @@
 trackSelection = true
+refreshSearchWindowsInPlayMode = false
+pickerAdvancedUI = false
 fetchPreview = true
 defaultFlags = 0
-keepOpen = false
+keepOpen = true
 queryFolder = "Assets"
 onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
-	"last_search.DE949528" = "race=ToonFemale"
-	"OpenInspectorPreview.DE949528" = "0"
-	"currentGroup.DE949528" = "all"
-	"last_search.2138236A" = "race:HumanMale"
-	"OpenInspectorPreview.2138236A" = "0"
-	"currentGroup.2138236A" = "asset"
 }
 providers = {
-	adb = {
-		active = false
-		priority = 2500
-		defaultAction = null
-	}
 	asset = {
 		active = true
 		priority = 25
-		defaultAction = null
-	}
-	store = {
-		active = true
-		priority = 100
-		defaultAction = null
-	}
-	find = {
-		active = true
-		priority = 25
-		defaultAction = null
-	}
-	log = {
-		active = false
-		priority = 210
-		defaultAction = null
-	}
-	packages = {
-		active = true
-		priority = 90
-		defaultAction = null
-	}
-	performance = {
-		active = false
-		priority = 100
 		defaultAction = null
 	}
 	scene = {
@@ -55,48 +21,61 @@ providers = {
 		priority = 50
 		defaultAction = null
 	}
-	menu = {
-		active = true
-		priority = 80
+	adb = {
+		active = false
+		priority = 2500
 		defaultAction = null
 	}
-	settings = {
+	presets_provider = {
+		active = false
+		priority = -10
+		defaultAction = null
+	}
+	find = {
 		active = true
+		priority = 25
+		defaultAction = null
+	}
+	packages = {
+		active = false
+		priority = 90
+		defaultAction = null
+	}
+	profilermarkers = {
+		active = false
 		priority = 100
 		defaultAction = null
 	}
-	help = {
-		active = true
-		priority = -1
+	performance = {
+		active = false
+		priority = 100
 		defaultAction = null
 	}
-	calculator = {
-		active = true
-		priority = 10
+	store = {
+		active = false
+		priority = 100
 		defaultAction = null
 	}
-	static_methods = {
-		active = true
-		priority = 85
+	log = {
+		active = false
+		priority = 210
 		defaultAction = null
 	}
 }
 objectSelectors = {
 }
 recentSearches = [
-	"E"
-	"t:umawardroberecipe race:humanmale"
-	"t:umawardroberecipe"
-	"race:HumanMale"
-	"t:umawardroberecipe "
-	"t"
 ]
 searchItemFavorites = [
 ]
 savedSearchesSortOrder = 0
-showSavedSearchPanel = true
-expandedQueries = [961552606]
-queryBuilder = false
+showSavedSearchPanel = false
+hideTabs = false
+expandedQueries = [
+]
+queryBuilder = true
 ignoredProperties = "id;name;classname;imagecontentshash"
 helperWidgetCurrentArea = "all"
 disabledIndexers = ""
+minIndexVariations = 2
+findProviderIndexHelper = true

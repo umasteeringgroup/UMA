@@ -7,6 +7,7 @@ namespace UMA
 {
     public class DecalDefinition
     {
+        
         public string Name;
         public int InitialIndex;
         public GameObject DecalMeshObject;
@@ -29,13 +30,15 @@ namespace UMA
             SkinnedMeshRenderer smr = newDecal.GetComponent<SkinnedMeshRenderer>();
             if (smr == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("Unable to instantiate decal - no SMR");
+#endif
                 return null;
             }
 
             // Copy bindposes from main.
             // copy bones from main.
-            smr.sharedMesh.bindposes = baseRenderer.sharedMesh.bindposes;
+            smr.sharedMesh.SetBindposes(baseRenderer.sharedMesh.GetBindposes());
             smr.bones = baseRenderer.bones;
 
             return newDecal;
@@ -270,5 +273,7 @@ namespace UMA
         // To do this, we will need to track for each slot in the UMAData (during the build process)
         //    What SMR the slot is actually in, in case there are multiples
         //    what vertex position the slot starts at in the SMR
+        
     }
+        
 }

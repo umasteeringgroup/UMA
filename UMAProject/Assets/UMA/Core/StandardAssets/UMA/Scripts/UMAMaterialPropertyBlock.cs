@@ -13,12 +13,11 @@ namespace UMA
     [Serializable]
     public abstract class UMAProperty 
     {
-        public static string precision = "F4";
-        public static string splitter =  ";" ;
+        public const string precision = "F4";
+        public const string splitter =  ";" ;
 
-        public static string vectorprecision = "{0:F4},{1:F4},{2:F4},{3:F4}";
-        public static string transformprecision = "{0:F4},{1:F4},{2:F4},{3:F4},{4:F4}";
-        public static char[] vectorsplitter = { ',' }; // needs to correspond to the format string above.
+        public const string vectorprecision = "{0:F4},{1:F4},{2:F4},{3:F4}";
+        public const string transformprecision = "{0:F4},{1:F4},{2:F4},{3:F4},{4:F4}";
         public string stringRepresentation = "";
 
         public string name;
@@ -33,8 +32,9 @@ namespace UMA
                 return name;
             }
 
-            return $"{name}{overlayNumber}";
+            return name + overlayNumber;
         }
+
 
         public static UMAProperty FromString(string serializedString)
         {
@@ -61,7 +61,7 @@ namespace UMA
 
                     return new UMAColorProperty() { Value = c, name = str[2] };
                 case "Vector":
-                    string[] vector = str[1].Split(vectorsplitter);
+                    string[] vector = str[1].Split(',');
                     float x = Convert.ToSingle(vector[0], CultureInfo.InvariantCulture);
                     float y = Convert.ToSingle(vector[1], CultureInfo.InvariantCulture);
                     float z = Convert.ToSingle(vector[2], CultureInfo.InvariantCulture);
@@ -83,7 +83,7 @@ namespace UMA
                 case "ConstantComputeBuffer":
                     return new UMAConstantComputeBufferProperty() { name = str[2] };
                 case "OverlayTransform":
-                    string[] transform = str[1].Split(vectorsplitter);
+                    string[] transform = str[1].Split(',');
 
                     float transformx = Convert.ToSingle(transform[0], CultureInfo.InvariantCulture);
                     float transformy = Convert.ToSingle(transform[1], CultureInfo.InvariantCulture);
@@ -285,7 +285,12 @@ namespace UMA
         }
         public override string ToString()
         {
-            return "Vector" + splitter + string.Format(CultureInfo.InvariantCulture,vectorprecision, Value.x, Value.y, Value.z, Value.w) + ";" + name;
+            return "Vector" + splitter
+                + Value.x.ToString("F4", CultureInfo.InvariantCulture) + ","
+                + Value.y.ToString("F4", CultureInfo.InvariantCulture) + ","
+                + Value.z.ToString("F4", CultureInfo.InvariantCulture) + ","
+                + Value.w.ToString("F4", CultureInfo.InvariantCulture)
+                + ";" + name;
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
@@ -751,6 +756,15 @@ namespace UMA
         public bool alwaysUpdateParms;
         public static string[] PropertyTypeStrings = new string[0];
         public static List<Type> availableTypes = new List<Type>();
+
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+            PropertyTypeStrings = new string[0];
+            availableTypes = new List<Type>();
+        }
+
         public string[] GetPropertyStrings()
         {
             List<string> strings = new List<string>();
@@ -764,6 +778,21 @@ namespace UMA
             return strings.ToArray();
         }
 
+        public T GetProperty<T>(string propertyName) where T : UMAProperty
+        {
+            if (shaderProperties == null)
+            {
+                return null;
+            }
+            foreach (UMAProperty p in shaderProperties)
+            {
+                if (p.name == propertyName && p is T)
+                {
+                    return p as T;
+                }
+            }
+            return null;
+        }
         public void SetPropertyStrings(string[] strings)
         {
             shaderProperties = new List<UMAProperty>();
@@ -785,7 +814,11 @@ namespace UMA
             if (PropertyTypeStrings.Length == 0)
             {
                 availableTypes = UMAMaterialPropertyBlock.GetPropertyTypes();
-                PropertyTypeStrings = availableTypes.Select(i => i.ToString()).ToArray();
+                PropertyTypeStrings = new string[availableTypes.Count];
+                for (int i = 0; i < availableTypes.Count; i++)
+                {
+                    PropertyTypeStrings[i] = availableTypes[i].ToString();
+                }
             }
         }
 
@@ -794,13 +827,14 @@ namespace UMA
             CheckInitialize();
         }
 
+
         // Returns a list of types to load 
-   /*     public static List<Type> GetPropertyTypes()
-        {
-            return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-                 .Where(x => typeof(UMAProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-                 .Select(x => x).ToList();
-        }*/
+        /*     public static List<Type> GetPropertyTypes()
+             {
+                 return AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+                      .Where(x => typeof(UMAProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
+                      .Select(x => x).ToList();
+             }*/
         public static List<Type> GetPropertyTypes()
         {
             List<Type> theTypes = new List<Type>();

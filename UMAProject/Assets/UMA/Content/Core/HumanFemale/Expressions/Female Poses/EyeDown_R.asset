@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -14,18 +15,21 @@ MonoBehaviour:
   poses:
   - bone: RightEyeGlobe
     hash: 935779410
-    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
-    rotation: {x: -1.95403498e-08, y: -.258819163, z: 6.53159371e-14, w: .965925813}
+    position: {x: -0.0000000021883917, y: 3.907985e-14, z: 0.00000011375178}
+    rotation: {x: -0.00000001954035, y: -0.25881916, z: 6.531594e-14, w: 0.9659258}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   - bone: RightLowerLid
     hash: -945389519
-    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
-    rotation: {x: -9.67001057e-09, y: -.128252089, z: 2.21544796e-11, w: .991741657}
-    scale: {x: .999999881, y: .999999702, z: .999999404}
+    position: {x: -0.0000000021883917, y: 3.907985e-14, z: 0.00000011375178}
+    rotation: {x: -0.000000009670011, y: -0.12825209, z: 2.215448e-11, w: 0.99174166}
+    scale: {x: 0.9999999, y: 0.9999997, z: 0.9999994}
+    category: 
   - bone: RightUpperLid
     hash: 683767470
-    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
-    rotation: {x: -9.91895721e-09, y: -.13052614, z: 2.57724137e-11, w: .991444886}
-    scale: {x: 1, y: 1, z: 1.00000012}
+    position: {x: -0.0000000021883917, y: 3.907985e-14, z: 0.00000011375178}
+    rotation: {x: -0.000000009918957, y: -0.13052614, z: 2.5772414e-11, w: 0.9914449}
+    scale: {x: 1, y: 1, z: 1.0000001}
+    category: 
   tweenPoses: []
   tweenWeights: []

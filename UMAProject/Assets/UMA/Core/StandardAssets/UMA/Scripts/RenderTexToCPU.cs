@@ -34,6 +34,24 @@ namespace UMA
         public static int renderTexturesCleanedApplied = 0;
         public static int renderTexturesCleanedMissed = 0;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void StaticInitializeOnLoad()
+        {
+            renderTexturesToCPU = new Dictionary<int, RenderTexToCPU>();
+            renderTexturesToFree = new Dictionary<int, RenderTexture>();
+            QueuedCopies = new Queue<RenderTexToCPU>();
+            ApplyInline = false;
+            copiesEnqueued = 0;
+            copiesDequeued = 0;
+            unableToQueue = 0;
+            misseduploads = 0;
+            errorUploads = 0;
+            texturesUploaded = 0;
+            renderTexturesCleanedUMAData = 0;
+            renderTexturesCleanedApplied = 0;
+            renderTexturesCleanedMissed = 0;
+        }
+
         public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex, UMAGeneratorBase basegen)
         {
             this.texture = texture;
@@ -67,11 +85,16 @@ namespace UMA
                 var w = asyncAction.width;
                 var h = asyncAction.height;
 
+
                 if (w != texture.width || h != texture.height)
                 {
+#if UNITY_EDITOR
+
                     // the texture has changed since we started the copy, so we can't use it.
                     // we need to clean up the texture
                     Debug.LogWarning("Texture size changed during copy, discarding copy. RenderTexture will remain in VRAM");
+#endif
+
                     return;
                 }
 

@@ -332,6 +332,7 @@ namespace UMA
             {
                 _triangleFlags[submesh] = new BitArray(selection);
             }
+#if UNITY_EDITOR
             else
             {
                 if (Debug.isDebugBuild)
@@ -339,8 +340,9 @@ namespace UMA
                     Debug.LogWarning("SaveSelection: counts don't match!");
                 }
             }
+#endif
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
             #endif
         }

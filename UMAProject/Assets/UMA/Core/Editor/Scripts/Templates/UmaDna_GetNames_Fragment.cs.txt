@@ -1,3 +1,0 @@
-
-			if( dnaType == typeof({0:ClassName}) )
-				return {0:ClassName}.GetNames();

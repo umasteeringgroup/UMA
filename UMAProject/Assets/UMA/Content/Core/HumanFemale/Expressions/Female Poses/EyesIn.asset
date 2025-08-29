@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -14,13 +15,15 @@ MonoBehaviour:
   poses:
   - bone: LeftEyeGlobe
     hash: -326698209
-    position: {x: -8.72937278e-10, y: 7.10542736e-15, z: 1.21183291e-07}
-    rotation: {x: -1.13711658e-10, y: 2.92953127e-11, z: .244243056, w: .969895482}
+    position: {x: -8.729373e-10, y: 7.1054274e-15, z: 0.00000012118329}
+    rotation: {x: -1.1371166e-10, y: 2.9295313e-11, z: 0.24424306, w: 0.9698955}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   - bone: RightEyeGlobe
     hash: 935779410
-    position: {x: -2.18839169e-09, y: 3.90798505e-14, z: 1.13751781e-07}
-    rotation: {x: 1.13673362e-10, y: 2.92973597e-11, z: -.244243056, w: .969895482}
+    position: {x: -0.0000000021883917, y: 3.907985e-14, z: 0.00000011375178}
+    rotation: {x: 1.1367336e-10, y: 2.929736e-11, z: -0.24424306, w: 0.9698955}
     scale: {x: 1, y: 1, z: 1}
+    category: 
   tweenPoses: []
   tweenWeights: []

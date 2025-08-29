@@ -2,26 +2,15 @@ using System;
 
 namespace UMA.CharacterSystem
 {
-	public static class EnumExtensions
-	{
-		public static bool HasFlagSet(this Enum self, Enum flag)
-		{
-			if (self.GetType() != flag.GetType())
-			{
-				throw new ArgumentException("HasFlag : Flag is not of the type of Enum");
-			}
+    public static class EnumExtensions
+    {
 
-			try
-            {
-                var selfValue = Convert.ToUInt64(self);
-                var flagValue = Convert.ToUInt64(flag);
-
-                return (selfValue & flagValue) == flagValue;
-            }
-            catch  
-            {
-				return true;
-            }
-		}
-	}
+        public static bool HasFlagSet<T>(this T self, T flag) where T : struct, Enum
+        {
+            // No boxing occurs for generic value types
+            ulong selfValue = Convert.ToUInt64(self);
+            ulong flagValue = Convert.ToUInt64(flag);
+            return (selfValue & flagValue) == flagValue;
+        }
+    }
 }

@@ -1,5 +1,4 @@
 #define UMA_ADVANCED_BLENDMODES
-
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
@@ -217,18 +216,36 @@ namespace UMA
 
             if (tr.transform)
 			{
+#if true
 				// rotate texture here?
 				GL.PushMatrix();
+				tr.rect.x += tr.position.x;
+				tr.rect.y += tr.position.y;
 
-				// rotate around the pivot
-				pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f) , tr.rect.y + (tr.rect.height / 2.0f) );
+                // rotate around the pivot
+                pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f) , tr.rect.y + (tr.rect.height / 2.0f) );
 				
 				Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
 
 				GL.MultMatrix(newMat);
-			}
+#else
+                // rotate texture here?
+                GL.PushMatrix();
 
-			if (sharperFitTextures)
+                // rotate around the pivot
+                pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f), tr.rect.y + (tr.rect.height / 2.0f));
+				
+                tr.rect.width *= tr.scale.x;
+                tr.rect.height *= tr.scale.y;
+
+                Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), Vector3.one) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
+
+                GL.MultMatrix(newMat);
+
+#endif
+            }
+
+            if (sharperFitTextures)
 			{
 				tr.tex.mipMapBias = -1.0f;
 			}
@@ -386,7 +403,25 @@ namespace UMA
 					break;
 			}
 
-			textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
+#if debug_texturecombine
+            if (source.baseOverlay.textureList[textureType] != null)
+            {
+                Debug.Log("Base overlay: " + source.baseOverlay.textureList[textureType].name + " on slot: " + source.slotData.slotName);
+            }
+            else
+            {
+                Debug.Log("Base overlay: NULL on slot: " + source.slotData.slotName);
+            }
+			var multiplier = source.GetMultiplier(0, textureType);
+			var additive = source.GetAdditive(0, textureType);
+
+            //Debug.Log($"Base overlay multiplier: {multiplier} on slot: {source.slotData.slotName} TextureType {textureType}");
+            //Debug.Log($"Base overlay additive: {additive} on slot: {source.slotData.slotName} TextureType {textureType}");
+
+
+
+#endif
+            textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
 			textureMergeRect.mat.SetTexture("_ExtraTex", source.baseOverlay.alphaTexture);
 			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureType));
 			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(0, textureType));
@@ -481,8 +516,8 @@ namespace UMA
 				{
 					float xx = od.Translate.x * tex.width;
                     float yy = od.Translate.y * tex.height;
-
-                    textureMergeRects[textureMergeRectCount].rect = new Rect(overlayRect.x + xx, overlayRect.y + yy, overlayRect.width, overlayRect.height);
+					textureMergeRects[textureMergeRectCount].position = new Vector2(xx, yy);
+                    textureMergeRects[textureMergeRectCount].rect = new Rect(overlayRect.x, overlayRect.y, overlayRect.width, overlayRect.height);
                 }
 				else
 				{

@@ -38,7 +38,10 @@ namespace UMA.Examples
         {
             if (index < 0 || index >= transform.childCount)
             {
+#if UNITY_EDITOR
+
                 Debug.LogWarning("Invalid index in SetActivePreset");
+#endif
                 return;
             }
 

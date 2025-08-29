@@ -51,6 +51,8 @@ namespace UMA.Timeline
                             dcaUpdated = true;
                         }
                     }
+#if UNITY_EDITOR
+
                     else
                     {
                         if (Debug.isDebugBuild)
@@ -58,6 +60,7 @@ namespace UMA.Timeline
                             Debug.LogWarning("Wardrobe recipes not set!");
                         }
                     }
+#endif
                 }
 
                 if (wardrobeOption == UmaWardrobeBehaviour.WardrobeOptions.ClearSlots)

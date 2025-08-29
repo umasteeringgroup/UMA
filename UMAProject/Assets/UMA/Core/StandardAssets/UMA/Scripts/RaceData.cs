@@ -30,7 +30,16 @@ namespace UMA
 			get { return noAutoAdd; }
             set { noAutoAdd = value; }
         }
+        #region NEW DNA
+        /*
+		 * New DNA
+		 */
 
+		[Tooltip("The DNA groups assigned to this race")]
+        public DNACollection DNACollection = new DNACollection();
+
+
+        #endregion
         #region INameProvider
         public string GetAssetName()
         {
@@ -201,10 +210,12 @@ namespace UMA
                 {
                     _dnaConverterList[i].Prepare();
                 }
+#if UNITY_EDITOR
                 else
                 {
 					Debug.LogWarning($"Null converter list on race: {raceName} object {this.name} ");
                 }
+#endif
 			}
 	    }
 #pragma warning restore 618

@@ -35,7 +35,9 @@ namespace UMA.Examples
         {
             if (!fpsTextOutput)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("UtilityFramesPerSecond needs a Text component for output!");
+#endif
                 enabled = false;
                 return;
             }
@@ -54,7 +56,7 @@ namespace UMA.Examples
             {
                 // display two fractional digits (f2 format)
                 float fps = accum / frames;
-                string format = System.String.Format("{0:F2} FPS", fps);
+                string format = string.Concat(fps.ToString("F2"), " FPS");
                 fpsTextOutput.text = format;
 
                 if (fps < 30)

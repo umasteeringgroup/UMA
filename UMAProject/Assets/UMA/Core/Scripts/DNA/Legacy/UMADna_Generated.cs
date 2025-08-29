@@ -18,38 +18,15 @@ namespace UMA
 	{
 		public static string[] GetNames(System.Type dnaType)
 		{
-
-			if( dnaType == typeof(UMADnaHumanoid) )
-            {
-                return UMADnaHumanoid.GetNames();
-            }
-
-            if ( dnaType == typeof(UMADnaTutorial) )
-            {
-                return UMADnaTutorial.GetNames();
-            }
-
             if ( dnaType == typeof(DynamicUMADna) )
             {
                 return DynamicUMADna.GetNames();
             }
-
             return new string[0];
 		}
 
 		public static System.Type GetType(System.String className)
 		{
-
-			if( "UMADnaHumanoid" == className )
-            {
-                return typeof(UMADnaHumanoid);
-            }
-
-            if ( "UMADnaTutorial" == className )
-            {
-                return typeof(UMADnaTutorial);
-            }
-
             if ( "DynamicUMADna" == className )
             {
                 return typeof(DynamicUMADna);
@@ -62,26 +39,12 @@ namespace UMA
 		{
 			return new System.Type[]
 			{
-
-				typeof(UMADnaHumanoid),
-				typeof(UMADnaTutorial),
 				typeof(DynamicUMADna),
 			};
 		}
 
 		public static UMADnaBase LoadInstance(System.Type dnaType, System.String data)
 		{
-
-			if( dnaType == typeof(UMADnaHumanoid))
-            {
-                return UMADnaHumanoid.LoadInstance(data);
-            }
-
-            if ( dnaType == typeof(UMADnaTutorial))
-            {
-                return UMADnaTutorial.LoadInstance(data);
-            }
-
             if ( dnaType == typeof(DynamicUMADna))
             {
                 return DynamicUMADna.LoadInstance(data);
@@ -93,16 +56,6 @@ namespace UMA
 		public static System.String SaveInstance(UMADnaBase instance)
 		{
 			System.Type dnaType = instance.GetType();
-
-			if( dnaType == typeof(UMADnaHumanoid))
-            {
-                return UMADnaHumanoid.SaveInstance(instance as UMADnaHumanoid);
-            }
-
-            if ( dnaType == typeof(UMADnaTutorial))
-            {
-                return UMADnaTutorial.SaveInstance(instance as UMADnaTutorial);
-            }
 
             if ( dnaType == typeof(DynamicUMADna))
             {

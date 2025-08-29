@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 
 namespace UMA
 {
-	public partial class UMATextRecipe : UMAPackedRecipeBase
+	public partial class UMATextRecipe : UMAPackedRecipeBase 
 	{
 		//TODO use the recipeTypeOpts enum for this everywhere
 		public string recipeType = "Standard";
@@ -97,19 +97,6 @@ namespace UMA
 		}
 
 #endif
-
-#if UNITY_EDITOR
-		/// <summary>
-		/// Creates a temporary UMAContextBase for use when editing recipes when the open Scene does not have an UMAContextBase or libraries set up
-		/// </summary>
-		/// 
-		public override UMAContextBase CreateEditorContext()
-		{
-			//UMAContextBase.CreateEditorContext();
-			return UMAContextBase.Instance;
-		}
-#endif
-
 
 		/// <summary>
 		/// Gets the thumbnail for this WardrobeRecipe filtered by racename
@@ -241,59 +228,14 @@ namespace UMA
 			return wardrobeSet;
 		}
 
-		//Override Load from PackedRecipeBase
-		/// <summary>
-		/// Load this Recipe's recipeString into the specified UMAData.UMARecipe. If there is Wardrobe data in the recipe string, its values are set to this recipe assets 'activeWardrobeSet' field
-		/// </summary>
-		/// <param name="umaRecipe">UMA recipe.</param>
-		/// <param name="context">Context.</param>
-		public override void Load(UMA.UMAData.UMARecipe umaRecipe, UMAContextBase context = null, bool loadSlots = true)
-		{
-			try
-			{
-				//This check can be removed in future- If we set the recipeType properly from now on we should not need to do this check
-				var typeInRecipe = GetRecipesType(recipeString);
-				recipeType = typeInRecipe != "Standard" ? typeInRecipe : recipeType;
-				if (RecipeHasWardrobeSet(recipeString))
-				{
-					activeWardrobeSet = GetRecipesWardrobeSet(recipeString);
-				}
-				//if its an old UMARecipe there wont be an activeWardrobeSet field
-				if (activeWardrobeSet == null)
-				{
-					recipeType = "Standard";
-					base.Load(umaRecipe, context, loadSlots);
-					return;
-				}
-				//if it has a wardrobeSet or was saved using the DCSPackRecipe Model
-				if (activeWardrobeSet.Count > 0 || (recipeType == "DynamicCharacterAvatar" /*|| recipeType == "WardrobeCollection"*/))
-				{
-					var packedRecipe = PackedLoadDCSInternal(context/*, recipeString*/);
-					UnpackRecipe(umaRecipe, packedRecipe, context);
-				}
-				else //we can use standard UMALoading
-				{
-					base.Load(umaRecipe, context, loadSlots);
-				}
-			}
-			catch (UMAResourceNotFoundException e)
-			{
-                Debug.LogError($"UMAResourceNotFoundException on recipe {this.name} race {umaRecipe.raceData.raceName} file {umaRecipe.raceData.name}: {e.Message}"); 
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("Error loading recipe: " + name + " " + e.Message);
-            }
-        }
-
 		/// <summary>
 		/// Internal call to static PackedLoadDCS which uses the assets string and object and returns a DCSUniversalPackRecipe data model that can be used by any UMA
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		protected DCSUniversalPackRecipe PackedLoadDCSInternal(UMAContextBase context/*, string recipeToUnpack*/)
+		protected DCSUniversalPackRecipe PackedLoadDCSInternal()
 		{
-			return PackedLoadDCS(context, recipeString, this);
+			return PackedLoadDCS(recipeString, this);
 		}
 
 		/// <summary>
@@ -303,7 +245,7 @@ namespace UMA
 		/// <param name="recipeToUnpack"></param>
 		/// <param name="targetUTR">If set the wardrobeSet (if it exists) and the recipeType will assigned to UMATextRecipe assets fields (used by the Recipe Editor)</param>
 		/// <returns></returns>
-		public static DCSUniversalPackRecipe PackedLoadDCS(UMAContextBase context, string recipeToUnpack, UMATextRecipe targetUTR = null)
+		public static DCSUniversalPackRecipe PackedLoadDCS(string recipeToUnpack, UMATextRecipe targetUTR = null)
 		{
 			if ((recipeToUnpack == null) || (recipeToUnpack.Length == 0))
             {
@@ -344,7 +286,7 @@ namespace UMA
 		/// <summary>
 		/// Saves a 'Standard' UMATextRecipe. If saving a DynamicCharacterAvatar as 'Backwards Compatible' this will save a recipe that has slots/overlay data AND a wardrobe set
 		/// </summary>
-		public void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context, Dictionary<string, UMATextRecipe> wardrobeRecipes, bool backwardsCompatible = true)
+		public void Save(UMAData.UMARecipe umaRecipe, Dictionary<string, UMATextRecipe> wardrobeRecipes, bool backwardsCompatible = true)
 		{
 			if (wardrobeRecipes.Count > 0)
             {
@@ -352,15 +294,15 @@ namespace UMA
             }
 
             recipeType = backwardsCompatible ? "Standard" : "DynamicCharacterAvatar";
-			Save(umaRecipe, context);
+			Save(umaRecipe);
 		}
 
 		//This is used when an inspected recipe asset is saved
-		public override void Save(UMAData.UMARecipe umaRecipe, UMAContextBase context)
+		public override void Save(UMAData.UMARecipe umaRecipe)
 		{
 			if (recipeType == "Wardrobe")//Wardrobe Recipes can save the standard UMA way- they dont have WardrobeSets- although the recipe string wont have a packedRecipeType field
 			{
-				base.Save(umaRecipe, context);
+				base.Save(umaRecipe);
 			}
 			else if (recipeType != "Standard")//this will just be for type DynamicCharacterAvatar- and WardrobeCollection if we add that
 			{
@@ -529,7 +471,9 @@ namespace UMA
 			{
 				if (pRecipeType != "DynamicCharacterAvatar")
 				{
+#if UNITY_EDITOR
 					Debug.LogWarning("DCSPackRecipe Type can only be used for recipeTypes 'DynamicCharacterAvatar'");
+#endif
 					return;
 				}
 				var recipeToSave = dcaToSave.umaData.umaRecipe;

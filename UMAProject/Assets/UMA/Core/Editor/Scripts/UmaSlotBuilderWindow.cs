@@ -69,6 +69,7 @@ namespace UMA.Editors
 		public bool invertX;
         public bool invertY;
         public bool invertZ;
+		public bool updateExistingSlots = false;
 
         string GetAssetFolder()
 		{
@@ -149,8 +150,9 @@ namespace UMA.Editors
             slotMaterial = EditorGUILayout.ObjectField("UMAMaterial	 ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
             slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 
-			//EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-			EditorGUILayout.BeginHorizontal();
+            updateExistingSlots = EditorGUILayout.Toggle(new GUIContent("Update Existing Slots", "If true, existing slots will not be overwritten, but will be updated instead. This only works if the slot has the same name and path in the file system."), updateExistingSlots);
+            //EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+            EditorGUILayout.BeginHorizontal();
 			createOverlay = EditorGUILayout.Toggle("Create Overlay", createOverlay);
 			createRecipe = EditorGUILayout.Toggle("Create Wardrobe Recipe ", createRecipe);
 			EditorGUILayout.EndHorizontal();
@@ -457,6 +459,7 @@ namespace UMA.Editors
             sbp.invertX = invertX;
             sbp.invertY = invertY;
             sbp.invertZ = invertZ;
+			sbp.updateExistingSlots = updateExistingSlots;
 
 
             SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(sbp);

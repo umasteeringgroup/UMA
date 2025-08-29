@@ -71,11 +71,12 @@ namespace UMA
             gameObject.name = "GeometrySelector";
             if (_sharedMesh == null)
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
                 }
-
+#endif
                 return;
             }
 
@@ -144,17 +145,16 @@ namespace UMA
                 _Materials[1] = new Material(_Shader);
                 _Materials[1].name = "Selected";
                 _Materials[1].color = Color.red;
+                _Materials[1].hideFlags = HideFlags.HideInInspector;
 
                 //UnSelected
                 _Materials[0] = new Material(_Shader);
                 _Materials[0].name = "UnSelected";
                 _Materials[0].color = Color.gray;
+                _Materials[0].hideFlags = HideFlags.HideInInspector;
 
                 _sharedMesh.subMeshCount = 2;
                 _meshRenderer.sharedMaterials = _Materials;
-
-                _meshRenderer.sharedMaterials[0].hideFlags = HideFlags.HideInInspector;
-                _meshRenderer.sharedMaterials[1].hideFlags = HideFlags.HideInInspector;
             }
         }
 
@@ -171,9 +171,7 @@ namespace UMA
             }
 
             _sharedMesh = new Mesh();
-#if UMA_32BITBUFFERS
-				_sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-#endif
+			_sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             _sharedMesh.subMeshCount = 1; // we're only copying the current submesh
             _sharedMesh.vertices = meshData.vertices;
             _sharedMesh.normals = meshData.normals;
@@ -227,6 +225,7 @@ namespace UMA
 
                 UpdateSelectionMesh();
             }
+#if UNITY_EDITOR
             else
             {
                 if (Debug.isDebugBuild)
@@ -234,6 +233,7 @@ namespace UMA
                     Debug.LogWarning("selectedTriangles is null! Try starting editing again.");
                 }
             }
+#endif
         }
 
         public void UpdateSelectionMesh()
@@ -267,21 +267,23 @@ namespace UMA
 
             if (_sharedMesh.uv == null)
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("UpdateFromTexture: This mesh has no uv data!");
                 }
-
+#endif
                 return;
             }
 
             if (selectedTriangles == null)
             {
+#if UNITY_EDITOR
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogWarning("UpdateFromTexture: selectedTriangles is null!");
                 }
-
+#endif
                 return;
             }
 
@@ -362,9 +364,7 @@ namespace UMA
             if (_occlusionMesh == null)
             {
                 _occlusionMesh = new Mesh();
-#if UMA_32BITBUFFERS
 				_occlusionMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-#endif
             }
             else
             {
