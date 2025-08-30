@@ -798,10 +798,125 @@ namespace UMA
 			dest.x = source.collisionSphereDistance;
 			dest.y = source.maxDistance;
 		}
+
 #if UMA_BURSTCOMPILE
-		[BurstCompile]
+        [BurstCompile]
 #endif
-		private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
+        private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
+        {
+            if (umaTransforms == null || umaTransforms.Length == 0)
+            {
+                return;
+            }
+
+            // Ensure existing portion and incoming array are sorted by hash (ascending).
+            if (!IsSortedByHash(mergedTransforms, len1))
+            {
+                Array.Sort(mergedTransforms, 0, len1, TransformHashComparer.Instance);
+            }
+            if (!IsSortedByHash(umaTransforms, umaTransforms.Length))
+            {
+                Array.Sort(umaTransforms, 0, umaTransforms.Length, TransformHashComparer.Instance);
+            }
+
+            // Fast path: first merge (no existing entries)
+            if (len1 == 0)
+            {
+                if (umaTransforms.Length > mergedTransforms.Length)
+                {
+                    throw new IndexOutOfRangeException("MergeSortedTransforms: destination buffer too small for first copy.");
+                }
+                Array.Copy(umaTransforms, 0, mergedTransforms, 0, umaTransforms.Length);
+                len1 = umaTransforms.Length;
+                return;
+            }
+
+            int len2 = umaTransforms.Length;
+
+            // Upper bound size = len1 + len2 (duplicates will be removed).
+            // We merge into a temporary buffer then copy back into mergedTransforms (first segment only).
+            int maxRequired = len1 + len2;
+            if (maxRequired > mergedTransforms.Length)
+            {
+                // Allocate a larger temp array (cannot resize fixed destination).
+                // Fallback: allocate temp large enough, then copy result subset back to original array.
+                UMATransform[] tempDest = new UMATransform[maxRequired];
+                DoMerge(tempDest, 0, mergedTransforms, len1, umaTransforms, len2, out int newLen);
+                // Copy back only what fits
+                int copyCount = Math.Min(newLen, mergedTransforms.Length);
+                Array.Copy(tempDest, 0, mergedTransforms, 0, copyCount);
+                len1 = copyCount;
+                return;
+            }
+
+            // Use stack/heap temp buffer sized to maxRequired.
+            UMATransform[] buffer = new UMATransform[maxRequired];
+            DoMerge(buffer, 0, mergedTransforms, len1, umaTransforms, len2, out int mergedLen);
+            // Copy back to destination (fits because we checked capacity)
+            Array.Copy(buffer, 0, mergedTransforms, 0, mergedLen);
+            len1 = mergedLen;
+        }
+
+        private static void DoMerge(UMATransform[] dest, int destStart,
+                                    UMATransform[] a, int lenA,
+                                    UMATransform[] b, int lenB,
+                                    out int outLen)
+        {
+            int ia = 0;
+            int ib = 0;
+            int id = destStart;
+            while (ia < lenA && ib < lenB)
+            {
+                long diff = (long)a[ia].hash - (long)b[ib].hash;
+                if (diff == 0)
+                {
+                    // Same hash – keep first (a), skip duplicate
+                    dest[id++] = a[ia];
+                    ia++;
+                    ib++;
+                }
+                else if (diff < 0)
+                {
+                    dest[id++] = a[ia++];
+                }
+                else
+                {
+                    dest[id++] = b[ib++];
+                }
+            }
+            while (ia < lenA) dest[id++] = a[ia++];
+            while (ib < lenB) dest[id++] = b[ib++];
+            outLen = id - destStart;
+        }
+
+        private static bool IsSortedByHash(UMATransform[] arr, int length)
+        {
+            if (arr == null || length <= 1) return true;
+            long prev = arr[0].hash;
+            for (int i = 1; i < length; i++)
+            {
+                long h = arr[i].hash;
+                if (h < prev) return false;
+                prev = h;
+            }
+            return true;
+        }
+
+        private sealed class TransformHashComparer : IComparer<UMATransform>
+        {
+            public static readonly TransformHashComparer Instance = new TransformHashComparer();
+            public int Compare(UMATransform x, UMATransform y)
+            {
+                if (x == null && y == null) return 0;
+                if (x == null) return -1;
+                if (y == null) return 1;
+                return x.hash.CompareTo(y.hash);
+            }
+        }
+#if UMA_BURSTCOMPILE
+        [BurstCompile]
+#endif
+		private static void OldMergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
 		{
 			int newBones = 0;
 			int pos1 = 0;

@@ -30,7 +30,7 @@ namespace UMA.Examples
 
         private DynamicCharacterAvatar _avatar;
         [Tooltip("Current tattoo recipes")]
-        public List<UMATextRecipe> wearableItems;
+        public List<UMAWardrobeRecipe> wearableItems;
         private string bodySlot;
 
         public void OnEnable()
@@ -122,7 +122,7 @@ namespace UMA.Examples
         {
             if (string.IsNullOrEmpty(recipeName)) return;
 
-            UMATextRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMAWardrobeRecipe>(recipeName);
+            UMAWardrobeRecipe recipe = UMAAssetIndexer.Instance.GetAsset<UMAWardrobeRecipe>(recipeName);
 
             if (recipe.wardrobeSlot != WardrobeSlot) return; //If not the tattoo slot
 
@@ -174,7 +174,7 @@ namespace UMA.Examples
             }
 
             // Get the new recipe
-            UMATextRecipe newRecipe = UMAAssetIndexer.Instance.GetAsset<UMAWardrobeRecipe>(recipeName);
+            UMAWardrobeRecipe newRecipe = UMAAssetIndexer.Instance.GetAsset<UMAWardrobeRecipe>(recipeName);
             if (newRecipe == null)
             {
                 Debug.LogWarning($"Recipe '{recipeName}' not found");

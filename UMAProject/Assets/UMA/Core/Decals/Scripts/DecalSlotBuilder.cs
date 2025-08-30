@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -8,7 +8,9 @@ namespace UMA
 {
     /// <summary>
     /// Builds a runtime SlotDataAsset representing a decal extracted from existing combined UMA skinned meshes.
-    /// Includes (optionally) copying all frames of all contributing blendshapes, restricted to included vertices.
+    /// Copies source rest-pose mesh data (vertices/normals/tangents etc) directly (no transforms), projects ONLY the primary UV set.
+    /// Only bones actually referenced by the kept vertices are copied, with their bind poses and remapped weights.
+    /// No re-sorting or re-mapping of bones beyond what is required for the reduced set.
     /// </summary>
     public static class DecalSlotBuilder
     {
@@ -76,7 +78,7 @@ namespace UMA
                 list.Add((sd, start, end));
             }
 
-            // Gather baked meshes
+            // Gather baked meshes ONLY for selection & projection tests
             var perRendererData = new List<RendererTemp>();
             for (int r = 0; r < renderers.Length; r++)
             {
@@ -139,29 +141,25 @@ namespace UMA
             md.SlotName = sda.slotName;
             sda.tags = new string[] { "Decal" };
 
-            int vCount = output.Vertices.Count;
-            md.vertices = output.LocalVertices.ToArray();
-            md.normals = output.LocalNormals.ToArray();
+            int vCount = output.LocalVertices.Count;
+            md.vertices = output.LocalVertices.ToArray(); // exact rest-space vertices copied, no transform
+            md.normals = output.LocalNormals.ToArray();   // exact normals copied
+            md.tangents = output.LocalTangents.ToArray(); // exact tangents copied
+            md.uv = output.UVs.ToArray();                 // projected UVs (only thing we intentionally generate)
 
-            // Tangents (cheap orthogonal)
-            md.tangents = new Vector4[vCount];
-            for (int i = 0; i < vCount; i++)
-            {
-                var n = md.normals[i];
-                Vector3 t = Vector3.Cross(Vector3.up, n);
-                if (t.sqrMagnitude < 1e-4f) t = Vector3.Cross(Vector3.right, n);
-                t.Normalize();
-                md.tangents[i] = new Vector4(t.x, t.y, t.z, 1f);
-            }
+            // Copy optional color & other UV sets if present (rest unchanged)
+            if (output.LocalColors32.Count == vCount) md.colors32 = output.LocalColors32.ToArray();
+            if (output.LocalUV2.Count == vCount) md.uv2 = output.LocalUV2.ToArray();
+            if (output.LocalUV3.Count == vCount) md.uv3 = output.LocalUV3.ToArray();
+            if (output.LocalUV4.Count == vCount) md.uv4 = output.LocalUV4.ToArray();
 
-            md.uv = output.UVs.ToArray();
             md.subMeshCount = 1;
             md.submeshes = new SubMeshTriangles[1];
             var sub = new SubMeshTriangles();
             sub.SetTriangles(output.Triangles.ToArray());
             md.submeshes[0] = sub;
 
-            // Bones
+            // Bones (already trimmed to only those referenced)
             md.umaBones = output.BoneList.ToArray();
             md.umaBoneCount = md.umaBones.Length;
             md.bindPoses = output.BindPoses.ToArray();
@@ -172,26 +170,11 @@ namespace UMA
             }
 
             // Managed bone weights
-            int vertexCount = vCount;
-            var managedBonesPerVertex = new byte[vertexCount];
-            List<BoneWeight1> managedWeights = new List<BoneWeight1>();
-            for (int i = 0; i < vertexCount; i++)
-            {
-                var list = output.PerVertexWeights[i];
-                int count = list.Count;
-                if (count > 255) count = 255;
-                managedBonesPerVertex[i] = (byte)count;
-                for (int j = 0; j < count; j++)
-                    managedWeights.Add(list[j]);
-            }
-            md.ManagedBonesPerVertex = managedBonesPerVertex;
-            md.ManagedBoneWeights = managedWeights.ToArray();
-            md.vertexCount = vertexCount;
+            md.ManagedBonesPerVertex = output.BonesPerVertex.ToArray();
+            md.ManagedBoneWeights = output.FlattenedWeights.ToArray();
+            md.vertexCount = vCount;
 
-            // NEW: ensure bones are unique + sorted and weights remapped
-            FinalizeAndSortBones(md);
-
-            // Blendshapes (optional)
+            // Blendshapes (optional) - uses indices mapped earlier; copies raw deltas (rest-space)
             if (options.copyBlendshapes)
             {
                 BuildBlendshapes(md, output);
@@ -232,21 +215,30 @@ namespace UMA
 
         private class WorkerOutput
         {
-            public List<Vector3> Vertices = new List<Vector3>();          // world positions
-            public List<Vector3> LocalVertices = new List<Vector3>();     // stored
+            public List<Vector3> Vertices = new List<Vector3>();          // baked world (selection only)
+            public List<Vector3> LocalVertices = new List<Vector3>();     // copied rest-space
             public List<Vector3> LocalNormals = new List<Vector3>();
-            public List<Vector2> UVs = new List<Vector2>();
+            public List<Vector4> LocalTangents = new List<Vector4>();
+            public List<Color32> LocalColors32 = new List<Color32>();
+            public List<Vector2> LocalUV2 = new List<Vector2>();
+            public List<Vector2> LocalUV3 = new List<Vector2>();
+            public List<Vector2> LocalUV4 = new List<Vector2>();
+            public List<Vector2> UVs = new List<Vector2>();               // projected decal UV
             public List<int> Triangles = new List<int>();
 
-            // Bones
+            // Bone data
             public List<UMATransform> BoneList = new List<UMATransform>();
             public List<Matrix4x4> BindPoses = new List<Matrix4x4>();
-            public Dictionary<UMATransform, int> BoneIndexMap = new Dictionary<UMATransform, int>();
-            public List<List<BoneWeight1>> PerVertexWeights = new List<List<BoneWeight1>>();
+            public Dictionary<(SlotData slot, int oldBone), int> BoneRemap = new Dictionary<(SlotData, int), int>();
+            public List<byte> BonesPerVertex = new List<byte>();
+            public List<BoneWeight1> FlattenedWeights = new List<BoneWeight1>();
 
             // Blendshape source mapping
             public List<SlotData> VertexSourceSlots = new List<SlotData>();
             public List<int> VertexSourceLocalIndex = new List<int>();
+
+            // For accumulating blendshapes (name -> accumulator)
+            public Dictionary<string, BlendshapeAccum> BlendshapeAccums = new Dictionary<string, BlendshapeAccum>();
         }
 
         #endregion
@@ -259,8 +251,8 @@ namespace UMA
             BuildProjectionAxes(input.HitNormal, input.AngleDeg, out var axisX, out var axisY);
             float radiusSqr = input.Radius * input.Radius;
 
-            var vertexMap = new Dictionary<long, int>(); // (renderer<<32)|bakedIndex
-            var slotBoneMapCache = new Dictionary<SlotData, int[]>();
+            // Map to avoid duplicating the *same logical source vertex* (slot + local index).
+            var vertexMap = new Dictionary<(SlotData slot, int localIndex), int>();
 
             for (int r = 0; r < input.Renderers.Length; r++)
             {
@@ -279,11 +271,11 @@ namespace UMA
                     Vector3 w1 = rend.Renderer.transform.TransformPoint(rend.Vertices[i1]);
                     Vector3 w2 = rend.Renderer.transform.TransformPoint(rend.Vertices[i2]);
 
+                    // Facing test (use baked tri normal)
                     Vector3 triNormal = Vector3.Cross(w1 - w0, w2 - w0);
                     float mag = triNormal.magnitude;
                     if (mag < 1e-6f) continue;
                     triNormal /= mag;
-
                     if (Vector3.Dot(triNormal, input.RayDirection) > -input.FacingThreshold)
                         continue;
 
@@ -293,9 +285,9 @@ namespace UMA
                         (w2 - input.HitPoint).sqrMagnitude <= radiusSqr;
                     if (!inside) continue;
 
-                    int nv0 = AddVertex(rend, i0, r, w0, input, axisX, axisY, output, vertexMap, slotRanges, slotBoneMapCache);
-                    int nv1 = AddVertex(rend, i1, r, w1, input, axisX, axisY, output, vertexMap, slotRanges, slotBoneMapCache);
-                    int nv2 = AddVertex(rend, i2, r, w2, input, axisX, axisY, output, vertexMap, slotRanges, slotBoneMapCache);
+                    int nv0 = AddVertex(rend, i0, input, axisX, axisY, output, vertexMap, slotRanges);
+                    int nv1 = AddVertex(rend, i1, input, axisX, axisY, output, vertexMap, slotRanges);
+                    int nv2 = AddVertex(rend, i2, input, axisX, axisY, output, vertexMap, slotRanges);
 
                     output.Triangles.Add(nv0);
                     output.Triangles.Add(nv1);
@@ -310,20 +302,14 @@ namespace UMA
         private static int AddVertex(
             RendererTemp rend,
             int bakedIndex,
-            int rendererIndex,
-            Vector3 worldPos,
             WorkerInput input,
             Vector3 axisX,
             Vector3 axisY,
             WorkerOutput output,
-            Dictionary<long, int> vertexMap,
-            List<(SlotData slot, int start, int end)> slotRanges,
-            Dictionary<SlotData, int[]> slotBoneMapCache)
+            Dictionary<(SlotData slot, int localIndex), int> vertexMap,
+            List<(SlotData slot, int start, int end)> slotRanges)
         {
-            long key = (((long)rendererIndex) << 32) | (uint)bakedIndex;
-            if (vertexMap.TryGetValue(key, out int existing))
-                return existing;
-
+            // Determine source slot & local vertex index
             SlotData owner = null;
             int localVertexIndex = -1;
             int combinedIndex = bakedIndex;
@@ -337,21 +323,51 @@ namespace UMA
                 }
             }
 
+            if (owner == null || owner.asset?.meshData == null)
+            {
+                return -1; // Shouldn't happen for valid triangles; skip
+            }
+
+            var key = (owner, localVertexIndex);
+            if (vertexMap.TryGetValue(key, out int existing))
+                return existing;
+
+            var srcMD = owner.asset.meshData;
+
+            // Copy rest-space attributes directly
+            Vector3 restPos = (localVertexIndex < srcMD.vertices.Length) ? srcMD.vertices[localVertexIndex] : Vector3.zero;
+            Vector3 restNormal = (srcMD.normals != null && localVertexIndex < srcMD.normals.Length)
+                ? srcMD.normals[localVertexIndex]
+                : Vector3.up;
+            Vector4 restTangent = (srcMD.tangents != null && localVertexIndex < srcMD.tangents.Length)
+                ? srcMD.tangents[localVertexIndex]
+                : new Vector4(1, 0, 0, 1);
+
+            Color32 restColor = (srcMD.colors32 != null && localVertexIndex < srcMD.colors32.Length)
+                ? srcMD.colors32[localVertexIndex]
+                : new Color32(255, 255, 255, 255);
+            Vector2 uv2 = (srcMD.uv2 != null && localVertexIndex < srcMD.uv2.Length) ? srcMD.uv2[localVertexIndex] : Vector2.zero;
+            Vector2 uv3 = (srcMD.uv3 != null && localVertexIndex < srcMD.uv3.Length) ? srcMD.uv3[localVertexIndex] : Vector2.zero;
+            Vector2 uv4 = (srcMD.uv4 != null && localVertexIndex < srcMD.uv4.Length) ? srcMD.uv4[localVertexIndex] : Vector2.zero;
+
+            // For projection & selection we used baked world space; get worldPos again
+            Vector3 worldPos = rend.Renderer.transform.TransformPoint(rend.Vertices[bakedIndex]);
             Vector3 offset = worldPos - input.HitPoint;
             float u = (Vector3.Dot(offset, axisX) / input.Radius) * 0.5f + 0.5f;
             float v = (Vector3.Dot(offset, axisY) / input.Radius) * 0.5f + 0.5f;
 
-            Vector3 localPos = worldPos;
-            Vector3 localNormal = rend.Renderer.transform.TransformDirection(rend.Normals[bakedIndex]).normalized;
-
-            int newIndex = output.Vertices.Count;
-            vertexMap[key] = newIndex;
+            int newIndex = output.LocalVertices.Count;
+            vertexMap.Add(key, newIndex);
 
             output.Vertices.Add(worldPos);
-            output.LocalVertices.Add(localPos);
-            output.LocalNormals.Add(localNormal);
+            output.LocalVertices.Add(restPos);
+            output.LocalNormals.Add(restNormal);
+            output.LocalTangents.Add(restTangent);
+            output.LocalColors32.Add(restColor);
+            output.LocalUV2.Add(uv2);
+            output.LocalUV3.Add(uv3);
+            output.LocalUV4.Add(uv4);
             output.UVs.Add(new Vector2(u, v));
-            output.PerVertexWeights.Add(new List<BoneWeight1>());
 
             if (input.CaptureBlendshapeSourceInfo)
             {
@@ -359,209 +375,74 @@ namespace UMA
                 output.VertexSourceLocalIndex.Add(localVertexIndex);
             }
 
-            if (owner == null || owner.asset?.meshData == null)
-                return newIndex;
-
-            var srcMD = owner.asset.meshData;
-            if (srcMD.ManagedBonesPerVertex == null ||
-                localVertexIndex < 0 ||
-                localVertexIndex >= srcMD.ManagedBonesPerVertex.Length)
-                return newIndex;
-
-            if (!slotBoneMapCache.TryGetValue(owner, out var mapping))
+            // Bone weights: copy only weights actually used
+            if (srcMD.ManagedBonesPerVertex != null &&
+                localVertexIndex >= 0 &&
+                localVertexIndex < srcMD.ManagedBonesPerVertex.Length)
             {
-                mapping = BuildSlotBoneMap(srcMD, output);
-                slotBoneMapCache[owner] = mapping;
-            }
-
-            int count = srcMD.ManagedBonesPerVertex[localVertexIndex];
-            int bwStart = srcMD.BoneWeightOffset(localVertexIndex);
-            for (int i = 0; i < count; i++)
-            {
-                var bw1 = srcMD.ManagedBoneWeights[bwStart + i];
-                int srcBoneIndex = bw1.boneIndex;
-                if (srcBoneIndex < 0 || srcBoneIndex >= mapping.Length) continue;
-                int newBoneIndex = mapping[srcBoneIndex];
-                if (newBoneIndex < 0) continue;
-
-                output.PerVertexWeights[newIndex].Add(new BoneWeight1
+                int count = srcMD.ManagedBonesPerVertex[localVertexIndex];
+                int bwStart = srcMD.BoneWeightOffset(localVertexIndex);
+                byte storedCount = 0;
+                for (int w = 0; w < count; w++)
                 {
-                    boneIndex = newBoneIndex,
-                    weight = bw1.weight
-                });
+                    var bw1 = srcMD.ManagedBoneWeights[bwStart + w];
+                    if (bw1.weight <= 0f) continue;
+
+                    int oldBoneIndex = bw1.boneIndex;
+                    if (oldBoneIndex < 0 || oldBoneIndex >= srcMD.umaBones.Length) continue;
+
+                    var umaBone = srcMD.umaBones[oldBoneIndex];
+                    var mapKey = (owner, oldBoneIndex);
+                    if (!output.BoneRemap.TryGetValue(mapKey, out int newBoneIndex))
+                    {
+                        newBoneIndex = output.BoneList.Count;
+                        output.BoneList.Add(umaBone);
+                        Matrix4x4 bindPose = (srcMD.bindPoses != null && oldBoneIndex < srcMD.bindPoses.Length)
+                            ? srcMD.bindPoses[oldBoneIndex]
+                            : Matrix4x4.identity;
+                        output.BindPoses.Add(bindPose);
+                        output.BoneRemap.Add(mapKey, newBoneIndex);
+                    }
+
+                    output.FlattenedWeights.Add(new BoneWeight1
+                    {
+                        boneIndex = newBoneIndex,
+                        weight = bw1.weight
+                    });
+                    storedCount++;
+                }
+                output.BonesPerVertex.Add(storedCount);
+            }
+            else
+            {
+                output.BonesPerVertex.Add(0);
             }
 
             return newIndex;
         }
 
-        private static int[] BuildSlotBoneMap(UMAMeshData srcMD, WorkerOutput output)
-        {
-            int boneCount = srcMD.umaBones.Length;
-            int[] map = new int[boneCount];
-            for (int i = 0; i < boneCount; i++)
-            {
-                var umaBone = srcMD.umaBones[i];
-                if (!output.BoneIndexMap.TryGetValue(umaBone, out int idx))
-                {
-                    idx = output.BoneList.Count;
-                    output.BoneList.Add(umaBone);
-                    Matrix4x4 bindPose = (srcMD.bindPoses != null && i < srcMD.bindPoses.Length)
-                        ? srcMD.bindPoses[i]
-                        : Matrix4x4.identity;
-                    output.BindPoses.Add(bindPose);
-                    output.BoneIndexMap.Add(umaBone, idx);
-                }
-                map[i] = idx;
-            }
-            return map;
-        }
-
-        private static void BuildProjectionAxes(Vector3 normal, float angleDeg, out Vector3 axisX, out Vector3 axisY)
-        {
-            var up = Math.Abs(Vector3.Dot(normal, Vector3.up)) > 0.95f ? Vector3.forward : Vector3.up;
-            axisX = Vector3.Cross(up, normal).normalized;
-            axisY = Vector3.Cross(normal, axisX);
-            float rad = -angleDeg * Mathf.Deg2Rad; // clockwise
-            float c = Mathf.Cos(rad);
-            float s = Mathf.Sin(rad);
-            Vector3 rx = axisX * c + axisY * s;
-            Vector3 ry = -axisX * s + axisY * c;
-            axisX = rx.normalized;
-            axisY = ry.normalized;
-        }
-
-        #endregion
-
-        private static void FinalizeAndSortBones(UMAMeshData md)
-        {
-            if (md.umaBones == null || md.umaBones.Length == 0 ||
-                md.ManagedBoneWeights == null || md.ManagedBoneWeights.Length == 0)
-                return;
-
-            var oldBones = md.umaBones;
-            var oldBindPoses = md.bindPoses ?? Array.Empty<Matrix4x4>();
-
-            int oldCount = oldBones.Length;
-            var hashToNew = new Dictionary<int, int>(oldCount);
-            var uniqueBones = new List<UMATransform>(oldCount);
-            var uniqueBind = new List<Matrix4x4>(oldCount);
-            var oldIndexToUnique = new int[oldCount];
-
-            for (int i = 0; i < oldCount; i++)
-            {
-                var b = oldBones[i];
-                if (!hashToNew.TryGetValue(b.hash, out int uIdx))
-                {
-                    uIdx = uniqueBones.Count;
-                    hashToNew.Add(b.hash, uIdx);
-                    uniqueBones.Add(b);
-                    uniqueBind.Add(i < oldBindPoses.Length ? oldBindPoses[i] : Matrix4x4.identity);
-                }
-                oldIndexToUnique[i] = uIdx;
-            }
-
-            int uniqueCount = uniqueBones.Count;
-            if (uniqueCount == 0)
-                return;
-
-            // Sort by hash; build mapping uniqueOldIndex -> sortedIndex
-            var order = new int[uniqueCount];
-            for (int i = 0; i < uniqueCount; i++) order[i] = i;
-            Array.Sort(order, (a, b) => uniqueBones[a].hash.CompareTo(uniqueBones[b].hash));
-
-            var uniqueToSorted = new int[uniqueCount];
-            for (int sorted = 0; sorted < uniqueCount; sorted++)
-                uniqueToSorted[order[sorted]] = sorted;
-
-            // Remap bone indices in weights
-            var weights = md.ManagedBoneWeights;
-            for (int i = 0; i < weights.Length; i++)
-            {
-                var bw = weights[i];
-                int oldBoneIndex = bw.boneIndex;
-                if ((uint)oldBoneIndex >= (uint)oldIndexToUnique.Length)
-                {
-#if UNITY_EDITOR
-                    Debug.LogWarning($"DecalSlotBuilder: boneIndex {oldBoneIndex} out of range (len {oldIndexToUnique.Length}). Skipping remap.");
-#endif
-                    continue;
-                }
-                int uniqueIdx = oldIndexToUnique[oldBoneIndex];
-                bw.boneIndex = uniqueToSorted[uniqueIdx];
-                weights[i] = bw;
-            }
-            md.ManagedBoneWeights = weights;
-
-            // Build sorted arrays
-            var sortedBones = new UMATransform[uniqueCount];
-            var sortedBindPoses = new Matrix4x4[uniqueCount];
-            for (int sorted = 0; sorted < uniqueCount; sorted++)
-            {
-                int src = order[sorted];
-                sortedBones[sorted] = uniqueBones[src];
-                sortedBindPoses[sorted] = uniqueBind[src];
-            }
-
-            md.umaBones = sortedBones;
-            md.umaBoneCount = sortedBones.Length;
-            md.bindPoses = sortedBindPoses;
-
-            // Rebuild bone name hashes in sorted order
-            md.boneNameHashes = new int[md.umaBoneCount];
-            for (int i = 0; i < md.umaBoneCount; i++)
-            {
-                try
-                {
-                    md.boneNameHashes[i] = UMAUtils.StringToHash(sortedBones[i].name);
-                }
-                catch (Exception ex)
-                {
-#if UNITY_EDITOR
-                    Debug.LogError($"DecalSlotBuilder: Failed hashing bone name '{sortedBones[i].name}' : {ex.Message}");
-#endif
-                    md.boneNameHashes[i] = sortedBones[i].hash; // fallback
-                }
-            }
-        }
-
-
-        #region Blendshape Construction (Multi-frame)
-
         private static void BuildBlendshapes(UMAMeshData md, WorkerOutput output)
         {
+            // If no mapping info, skip
             if (output.VertexSourceSlots.Count != md.vertexCount ||
                 output.VertexSourceLocalIndex.Count != md.vertexCount)
-            {
                 return;
-            }
 
-            // Accumulator per blendshape name
-            // We preserve the frame structure (count & frameWeights) from the FIRST contributing slot that has that shape name.
-            // Subsequent slots with the same shape name:
-            //   - If frame count & frame weights match: merge (overwrite per-vertex deltas where provided).
-            //   - Else: ignore (shape incompatibility).
-            var accumulators = new Dictionary<string, BlendshapeAccum>();
-
-            int vCount = md.vertexCount;
-
-            for (int v = 0; v < vCount; v++)
+            // Accumulate shapes
+            for (int v = 0; v < md.vertexCount; v++)
             {
                 var slot = output.VertexSourceSlots[v];
                 int localIndex = output.VertexSourceLocalIndex[v];
                 if (slot == null || localIndex < 0) continue;
-
                 var srcMD = slot.asset.meshData;
                 var srcShapes = srcMD.blendShapes;
-                if (srcShapes == null || srcShapes.Length == 0) continue;
-
+                if (srcShapes == null) continue;
                 for (int s = 0; s < srcShapes.Length; s++)
                 {
                     var srcShape = srcShapes[s];
                     if (srcShape == null || string.IsNullOrEmpty(srcShape.shapeName) || srcShape.frames == null) continue;
-
-                    if (!accumulators.TryGetValue(srcShape.shapeName, out var acc))
+                    if (!output.BlendshapeAccums.TryGetValue(srcShape.shapeName, out var acc))
                     {
-                        // Initialize accumulator
                         acc = new BlendshapeAccum
                         {
                             name = srcShape.shapeName,
@@ -577,81 +458,68 @@ namespace UMA
                             acc.frames.Add(new BlendshapeFrameAccum
                             {
                                 frameWeight = sf.frameWeight,
-                                deltaVertices = new Vector3[vCount],
-                                deltaNormals = hasNormals ? new Vector3[vCount] : null,
-                                deltaTangents = hasTangents ? new Vector3[vCount] : null,
+                                deltaVertices = new Vector3[md.vertexCount],
+                                deltaNormals = hasNormals ? new Vector3[md.vertexCount] : null,
+                                deltaTangents = hasTangents ? new Vector3[md.vertexCount] : null,
                                 hasNormals = hasNormals,
                                 hasTangents = hasTangents
                             });
                         }
-                        accumulators.Add(srcShape.shapeName, acc);
+                        output.BlendshapeAccums.Add(srcShape.shapeName, acc);
                     }
                     else
                     {
-                        // Validate frame structure matches
-                        if (acc.frames.Count != srcShape.frames.Length)
-                        {
-                            // Incompatible frame count; skip this slot's contribution for this shape
-                            continue;
-                        }
-                        bool frameMismatch = false;
+                        if (acc.frames.Count != srcShape.frames.Length) continue;
+                        bool mismatch = false;
                         for (int f = 0; f < acc.frames.Count; f++)
                         {
                             if (Math.Abs(acc.frameWeights[f] - srcShape.frames[f].frameWeight) > 0.0001f)
                             {
-                                frameMismatch = true;
-                                break;
+                                mismatch = true; break;
                             }
                         }
-                        if (frameMismatch) continue;
+                        if (mismatch) continue;
                     }
 
-                    // Merge deltas for this vertex
                     for (int f = 0; f < srcShape.frames.Length; f++)
                     {
                         var srcFrame = srcShape.frames[f];
-                        var dstFrame = acc.frames[f];
-
-                        // Safety length checks
+                        var dst = output.BlendshapeAccums[srcShape.shapeName].frames[f];
                         if (srcFrame.deltaVertices != null && localIndex < srcFrame.deltaVertices.Length)
-                        {
-                            dstFrame.deltaVertices[v] = srcFrame.deltaVertices[localIndex];
-                        }
-                        if (dstFrame.hasNormals && srcFrame.deltaNormals != null && localIndex < srcFrame.deltaNormals.Length)
-                        {
-                            dstFrame.deltaNormals[v] = srcFrame.deltaNormals[localIndex];
-                        }
-                        if (dstFrame.hasTangents && srcFrame.deltaTangents != null && localIndex < srcFrame.deltaTangents.Length)
-                        {
-                            dstFrame.deltaTangents[v] = srcFrame.deltaTangents[localIndex];
-                        }
+                            dst.deltaVertices[v] = srcFrame.deltaVertices[localIndex];
+                        if (dst.hasNormals && srcFrame.deltaNormals != null && localIndex < srcFrame.deltaNormals.Length)
+                            dst.deltaNormals[v] = srcFrame.deltaNormals[localIndex];
+                        if (dst.hasTangents && srcFrame.deltaTangents != null && localIndex < srcFrame.deltaTangents.Length)
+                            dst.deltaTangents[v] = srcFrame.deltaTangents[localIndex];
                     }
                 }
             }
 
-            if (accumulators.Count == 0)
-                return;
+            if (output.BlendshapeAccums.Count == 0) return;
 
-            // Convert accumulators to UMABlendShape[]
-            var newShapes = new UMABlendShape[accumulators.Count];
-            int shapeIdx = 0;
-            foreach (var kv in accumulators)
+            var newShapes = new UMABlendShape[output.BlendshapeAccums.Count];
+            int idx = 0;
+            foreach (var kv in output.BlendshapeAccums)
             {
                 var acc = kv.Value;
-                var newShape = new UMABlendShape();
-                newShape.shapeName = acc.name;
-                newShape.frames = new UMABlendFrame[acc.frames.Count];
+                var shape = new UMABlendShape
+                {
+                    shapeName = acc.name,
+                    frames = new UMABlendFrame[acc.frames.Count]
+                };
                 for (int f = 0; f < acc.frames.Count; f++)
                 {
                     var fAcc = acc.frames[f];
-                    var frame = new UMABlendFrame();
-                    frame.frameWeight = fAcc.frameWeight;
-                    frame.deltaVertices = fAcc.deltaVertices;
+                    var frame = new UMABlendFrame
+                    {
+                        frameWeight = fAcc.frameWeight,
+                        deltaVertices = fAcc.deltaVertices
+                    };
                     if (fAcc.hasNormals) frame.deltaNormals = fAcc.deltaNormals;
                     if (fAcc.hasTangents) frame.deltaTangents = fAcc.deltaTangents;
-                    newShape.frames[f] = frame;
+                    shape.frames[f] = frame;
                 }
-                newShapes[shapeIdx++] = newShape;
+                newShapes[idx++] = shape;
             }
             md.blendShapes = newShapes;
         }
@@ -671,6 +539,22 @@ namespace UMA
             public Vector3[] deltaTangents;
             public bool hasNormals;
             public bool hasTangents;
+        }
+        #endregion
+        #region Helpers
+
+        private static void BuildProjectionAxes(Vector3 normal, float angleDeg, out Vector3 axisX, out Vector3 axisY)
+        {
+            var up = Math.Abs(Vector3.Dot(normal, Vector3.up)) > 0.95f ? Vector3.forward : Vector3.up;
+            axisX = Vector3.Cross(up, normal).normalized;
+            axisY = Vector3.Cross(normal, axisX);
+            float rad = -angleDeg * Mathf.Deg2Rad;
+            float c = Mathf.Cos(rad);
+            float s = Mathf.Sin(rad);
+            Vector3 rx = axisX * c + axisY * s;
+            Vector3 ry = -axisX * s + axisY * c;
+            axisX = rx.normalized;
+            axisY = ry.normalized;
         }
 
         #endregion

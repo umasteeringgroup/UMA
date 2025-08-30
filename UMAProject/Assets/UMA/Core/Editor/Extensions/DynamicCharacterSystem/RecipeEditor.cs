@@ -49,7 +49,8 @@ namespace UMA.Editors
 							 .Where(x => typeof(IUMAAddressablePlugin).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
 							 .Select(x => x).ToList();*/
 		}
-		public virtual void OnSceneDrag(SceneView view)
+
+		public virtual void OnSceneDrag(SceneView view, int index)
 		{
 			if (Event.current.type == EventType.DragUpdated)
 			{

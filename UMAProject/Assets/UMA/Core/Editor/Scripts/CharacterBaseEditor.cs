@@ -1941,6 +1941,10 @@ namespace UMA.Editors
 
             _foldout = OverlayExpanded[_overlayData.overlayName];
 
+            if (_overlayData.asset.material == null)
+            {
+                Debug.LogError($"Error - No material set in Overlay {_overlayData.overlayName}");
+            }
 
             int queue = 0;
             string matName = "Unknown";
