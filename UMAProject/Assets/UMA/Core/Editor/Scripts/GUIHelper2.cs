@@ -519,7 +519,8 @@ namespace UMA.Editors
 			// Exit if Editor event is not the end of a Drag in the Drop Area
 			if (evt.type != EventType.DragPerform || !dropArea.Contains(evt.mousePosition)) return false;
 
-			DragAndDrop.AcceptDrag();
+			Debug.Log($"Processing Drop {dropArea} mouse pos is {evt.mousePosition}");
+            DragAndDrop.AcceptDrag();
 
 			UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
 			for (int i = 0; i < draggedObjects.Length; i++)

@@ -130,8 +130,14 @@ namespace UMA.Editors
             EndVerticalPadded(2f);
 
             Rect listRect = GUILayoutUtility.GetLastRect();
-            Rect areaRect = new Rect(labelRect.xMin, labelRect.yMin, listRect.xMax, listRect.yMax);
-            DropAreaGUI((x) => addItemToList(randomizersList, x), areaRect, new GUIContent("", ""), new GUIStyle(GUI.skin.label));
+            Rect areaRect = new Rect(labelRect.xMin, labelRect.yMin, listRect.width, listRect.height + labelRect.height);
+            bool updated = false;
+            DropAreaGUI((x) => updated = addItemToList(randomizersList, x), areaRect, new GUIContent("", ""), new GUIStyle(GUI.skin.label));
+            if (updated)
+            {
+                EditorUtility.SetDirty(currentTarget);
+                AssetDatabase.SaveAssetIfDirty(currentTarget);
+            }
         }
 
         private static void RandomizerGUI(List<UMARandomizer> randomizersList, int i, UMARandomizer randomizer)

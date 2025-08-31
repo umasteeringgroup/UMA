@@ -330,47 +330,6 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 1d55460160bc861428e67152c0019388, type: 2}
-      Chance: 1
-      Colors: []
-      _slotName: 
-      GuiFoldout: 0
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors:
-      - Skin
-      - Hair
-      - Eyes
-    - WardrobeSlot: {fileID: 11400000, guid: 9d8d16d74d7897e4caae12ca4d56f223, type: 2}
-      Chance: 1
-      Colors: []
-      _slotName: 
-      GuiFoldout: 0
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors:
-      - Skin
-      - Hair
-      - Eyes
-    - WardrobeSlot: {fileID: 11400000, guid: 3a1edb5d395b68f4089d59c1f1217d81, type: 2}
-      Chance: 1
-      Colors: []
-      _slotName: 
-      GuiFoldout: 0
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors:
-      - Skin
-      - Hair
-      - Eyes
-    - WardrobeSlot: {fileID: 0}
-      Chance: 20
-      Colors: []
-      _slotName: Face
-      GuiFoldout: 0
-      Delete: 0
-      AddColorTable: 0
-      PossibleColors: []
     - WardrobeSlot: {fileID: 11400000, guid: 4d1e2980034c61e4197e51e6d5d2b2fc, type: 2}
       Chance: 1
       Colors: []
@@ -487,10 +446,10 @@ MonoBehaviour:
     - DnaName: jawsSize
       MinValue: 0.3243243
       MaxValue: 0.6216216
-    raceData: {fileID: 11400000, guid: 62688b7aa02fbc544916e522fcc239c7, type: 2}
+    raceData: {fileID: 11400000, guid: a88284a0175502f459c5496bda675fb1, type: 2}
     GuiFoldout: 1
     ColorsFoldout: 0
-    WardrobeFoldout: 0
+    WardrobeFoldout: 1
     DnaFoldout: 0
     Delete: 0
     AddColorTable: 0
