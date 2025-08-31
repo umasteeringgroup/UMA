@@ -6,6 +6,7 @@ using System.IO;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using System.Runtime.CompilerServices;
+using System;
 
 namespace UMA.Editors
 {
@@ -117,7 +118,62 @@ namespace UMA.Editors
 			}
 		}
 
-		public static void BeginVerticalPadded()
+        public static class Colors
+        {
+            private static Color grey = new Color(0.75f, 0.75f, 0.75f);
+            private static Color blue = new Color(0.75f, 0.875f, 1f, 0.7f);
+
+            public static Color Grey => grey;
+            public static Color Blue => blue;
+        }
+
+        /// <summary>
+        /// Common UMA Inspectors Styles
+        /// </summary>
+        public static class Styles
+        {
+            private static GUIStyle toggleButtonNormal = null;
+            private static GUIStyle toggleButtonToggled = null;
+            internal static GUIStyle ToggleButtonNormal
+            {
+                get
+                {
+                    if (toggleButtonNormal == null) toggleButtonNormal = new GUIStyle("Button");
+                    toggleButtonNormal.normal.background = MakeTex(4, 4, GUIHelper.Colors.Grey);
+                    return toggleButtonNormal;
+                }
+            }
+            internal static GUIStyle ToggleButtonToggled
+            {
+                get
+                {
+                    if (toggleButtonToggled == null)
+                    {
+                        toggleButtonToggled = new GUIStyle("Button");
+                        toggleButtonToggled.normal.background = MakeTex(4, 4, GUIHelper.Colors.Blue);
+                        // toggleButtonStyleToggled.active.background;
+                    }
+                    return toggleButtonToggled;
+                }
+            }
+
+            private static Texture2D MakeTex(int width, int height, Color col)
+            {
+                Color[] pix = new Color[width * height];
+                for (int i = 0; i < pix.Length; ++i)
+                {
+                    pix[i] = col;
+                }
+                Texture2D result = new Texture2D(width, height);
+                result.SetPixels(pix);
+                result.Apply();
+                return result;
+            }
+        }
+
+
+
+        public static void BeginVerticalPadded()
 		{
 			if (EditorGUIUtility.isProSkin)
 			{
@@ -169,8 +225,8 @@ namespace UMA.Editors
             GUILayout.EndArea();
         }
 
-		public static void BeginVerticalPadded(float padding, Color backgroundColor, GUIStyle theStyle = null)
-		{
+		public static void BeginVerticalPadded(float padding = 10f, Color backgroundColor = default, GUIStyle theStyle = null)
+        {
 			if (theStyle == null)
             {
                 theStyle = EditorStyles.textField;
@@ -313,6 +369,25 @@ namespace UMA.Editors
 			GUILayout.EndHorizontal();
 		}
 
+
+        /// <summary>
+        /// <see cref="FoldoutBar"/>, with Tooltip option
+        /// </summary>
+        /// <param name="tooltip"> GUIContent to use as tooltip - for ex new GUIContent("","tooltip")</param>
+        public static bool FoldoutBar(bool foldout, string content, GUIContent tooltip)
+        {
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            GUILayout.Space(10);
+            bool nfoldout = EditorGUILayout.Foldout(foldout, content, true);
+            if (tooltip != null)
+            {
+                Rect position = GUILayoutUtility.GetLastRect();
+                EditorGUI.LabelField(position, tooltip);
+            }
+            GUILayout.EndHorizontal();
+            return nfoldout;
+        }
+
         public static bool FoldoutBarWithDelete(bool foldout, string content, out bool delete)
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
@@ -429,78 +504,82 @@ namespace UMA.Editors
 		{
 			ToolbarStyleFoldout(rect, new GUIContent(label), help, ref isExpanded, ref helpExpanded, toolbarStyleOverride, labelStyleOverride);
 		}
-		/// <summary>
-		/// Draws a ToolBar style foldout with a centered foldout label. Optionally draws a help icon that will show the selected array of 'help' paragraphs
-		/// </summary>
-		/// <param name="rect"></param>
-		/// <param name="label"></param>
-		/// <param name="help">An array of help paragpahs. If supplied the help Icon will be shown</param>
-		/// <param name="isExpanded"></param>
-		/// <param name="helpExpanded"></param>
-		/// <param name="toolbarStyleOverride">Overrides EdiorStyles.toolbar as the background</param>
-		/// <param name="labelStyleOverride">Overrides EditorStyles.folodout as the label style</param>
-		public static void ToolbarStyleFoldout(Rect rect, GUIContent label, string[] help, ref bool isExpanded, ref bool helpExpanded, GUIStyle toolbarStyleOverride = null, GUIStyle labelStyleOverride = null)
-		{
-			GUIStyle toolbarStyle = toolbarStyleOverride;
-			GUIStyle labelStyle = labelStyleOverride;
-			if (toolbarStyle == null)
-            {
+        /// <summary>
+        /// Draws a ToolBar style foldout with a centered foldout label. Optionally draws a help icon that will show the selected array of 'help' paragraphs
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="label"></param>
+        /// <param name="help">An array of help paragpahs. If supplied the help Icon will be shown</param>
+        /// <param name="isExpanded"></param>
+        /// <param name="helpExpanded"></param>
+        /// <param name="toolbarStyleOverride">Overrides EdiorStyles.toolbar as the background</param>
+        /// <param name="labelStyleOverride">Overrides EditorStyles.folodout as the label style</param>
+        public static void ToolbarStyleFoldout(Rect rect, GUIContent label, string[] help, ref bool isExpanded, ref bool helpExpanded, GUIStyle toolbarStyleOverride = null, GUIStyle labelStyleOverride = null)
+        {
+            GUIStyle toolbarStyle = toolbarStyleOverride;
+            GUIStyle labelStyle = labelStyleOverride;
+            if (toolbarStyle == null)
                 toolbarStyle = EditorStyles.toolbar;
-            }
-
             if (labelStyle == null)
-            {
                 labelStyle = EditorStyles.foldout;
-            }
-
             var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
-			var helpGUI= new GUIContent("", "Show Help");
-			helpGUI.image = helpIcon;
-			Event current = Event.current;
-			if (current.type == EventType.Repaint)
-			{
-				toolbarStyle.Draw(rect, GUIContent.none, false, false, false, false);
-			}
-			var labelWidth = labelStyle.CalcSize(label);
-			labelWidth.x += 15f;//add the foldout arrow
-			var toolbarFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) + 30f, rect.yMin, ((rect.width / 2) + (labelWidth.x / 2f)) - 20f - 30f, rect.height);
-			isExpanded = EditorGUI.Foldout(toolbarFoldoutRect, isExpanded, label, true, labelStyle);
-			if (help.Length > 0)
-			{
-				helpExpanded = GUI.Toggle(helpIconRect, helpExpanded, helpGUI, iconLabel);
-				if (helpExpanded)
-				{
-					ToolbarStyleHelp(help);
-				}
-			}
-		}
 
-		public static void ToolbarStyleHeader(Rect rect, GUIContent label, string[] help, ref bool helpExpanded, GUIStyle toolbarStyleOverride = null, GUIStyle labelStyleOverride = null)
-		{
-			var toolbarStyle = toolbarStyleOverride != null ? toolbarStyleOverride : EditorStyles.toolbar;
-			var labelStyle = labelStyleOverride != null ? labelStyleOverride : EditorStyles.label;
-			var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
-			var helpGUI = new GUIContent("", "Show Help");
-			helpGUI.image = helpIcon;
-			Event current = Event.current;
-			if (current.type == EventType.Repaint)
-			{
-				toolbarStyle.Draw(rect, GUIContent.none, false, false, false, false);
-			}
-			var labelWidth = labelStyle.CalcSize(label);
-			var toolbarFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) + 30f, rect.yMin, ((rect.width / 2) + (labelWidth.x / 2f)) - 20f - 30f, rect.height);
-			EditorGUI.LabelField(toolbarFoldoutRect, label, labelStyle);
-			if (help.Length > 0)
-			{
-				helpExpanded = GUI.Toggle(helpIconRect, helpExpanded, helpGUI, iconLabel);
-				if (helpExpanded)
-				{
-					ToolbarStyleHelp(help);
-				}
-			}
-		}
+            Event current = Event.current;
+            if (current.type == EventType.Repaint)
+            {
+                toolbarStyle.Draw(rect, GUIContent.none, false, false, false, false);
+            }
+            var labelWidth = labelStyle.CalcSize(label);
+            labelWidth.x += 15f;//add the foldout arrow
+            var toolbarFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) + 30f, rect.yMin, ((rect.width / 2) + (labelWidth.x / 2f)) - 20f - 30f, rect.height);
+            isExpanded = EditorGUI.Foldout(toolbarFoldoutRect, isExpanded, label, true, labelStyle);
 
-		private static void ToolbarStyleHelp(string[] help)
+            if (help.Length > 0)
+            {
+                helpExpanded = HelpGUI(helpIconRect, help, helpExpanded);
+            }
+        }
+
+        public static void ToolbarStyleHeader(Rect rect, GUIContent label, string[] help, ref bool helpExpanded, GUIStyle toolbarStyleOverride = null, GUIStyle labelStyleOverride = null)
+        {
+            var toolbarStyle = toolbarStyleOverride != null ? toolbarStyleOverride : EditorStyles.toolbar;
+            var labelStyle = labelStyleOverride != null ? labelStyleOverride : EditorStyles.label;
+            var helpIconRect = new Rect(rect.xMax - 20f, rect.yMin, 20f, rect.height);
+
+            Event current = Event.current;
+            if (current.type == EventType.Repaint)
+            {
+                toolbarStyle.Draw(rect, GUIContent.none, false, false, false, false);
+            }
+            var labelWidth = labelStyle.CalcSize(label);
+            var toolbarFoldoutRect = new Rect((rect.xMax / 2f) - (labelWidth.x / 2f) + 30f, rect.yMin, ((rect.width / 2) + (labelWidth.x / 2f)) - 20f - 30f, rect.height);
+            EditorGUI.LabelField(toolbarFoldoutRect, label, labelStyle);
+
+            if (help.Length > 0)
+            {
+                helpExpanded = HelpGUI(helpIconRect, help, helpExpanded);
+            }
+        }
+
+        internal static bool HelpGUI(Rect helpIconRect, string[] help, bool helpExpanded)
+        {
+            var helpGUI = new GUIContent("", "Show Help");
+            helpGUI.image = helpIcon;
+
+            helpExpanded = GUI.Toggle(helpIconRect, helpExpanded, helpGUI, iconLabel);
+
+            if (!helpExpanded) return helpExpanded;
+
+            BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
+            for (int i = 0; i < help.Length; i++)
+            {
+                EditorGUILayout.HelpBox(help[i], MessageType.None);
+            }
+            EndVerticalPadded(3);
+
+            return helpExpanded;
+        }
+        private static void ToolbarStyleHelp(string[] help)
 		{
 			BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 			for (int i = 0; i < help.Length; i++)
@@ -830,7 +909,57 @@ namespace UMA.Editors
             tagsList.footerHeight = 0;
             return tagsList;
         }
+        /// <summary>
+        /// Creates a Drag & Drop area and manages basic editor events.
+        /// </summary>
+        /// <param name="processItem"> Processing method per Item dropped. Returns True if anything was successfully processed </param>
+        /// <param name="dropArea"> Rect of the Drop Area </param>
+        /// <param name="label"> Optional : Drop Area Label and tooltip. "Drop Area" by default </param>
+        /// <returns> True if any Item was processed </returns>
+        public static bool DropAreaGUI(Func<UnityEngine.Object, bool> processItem, Rect dropArea, GUIContent label = default, GUIStyle style = default)
+        {
+            if (style == default) style = new GUIStyle(GUI.skin.box);
+            GUI.Box(dropArea, label == default ? new GUIContent("Drop Area") : label, style);
 
+            bool processed = false;
+            var evt = Event.current;
+
+            if (evt.type == EventType.DragUpdated)
+            {
+                if (dropArea.Contains(evt.mousePosition))
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+
+                return false;
+            }
+
+            // Exit if Editor event is not the end of a Drag in the Drop Area
+            if (evt.type != EventType.DragPerform || !dropArea.Contains(evt.mousePosition)) return false;
+
+            Debug.Log($"Processing Drop {dropArea} mouse pos is {evt.mousePosition}");
+            DragAndDrop.AcceptDrag();
+
+            UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+            for (int i = 0; i < draggedObjects.Length; i++)
+            {
+                if (!draggedObjects[i]) continue;
+
+                processed |= processItem(draggedObjects[i]);
+            }
+            return processed;
+        }
+
+        /// <summary>
+        /// Creates a Drag & Drop area and manages basic editor events.
+        /// </summary>
+        /// <param name="processItem"> Processing method per Item dropped. Returns True if anything was successfully processed </param>
+        /// <param name="height"> Optional : The Height of the Drag & Drop Area. 50f by default. Area takes all the inspector width. </param>
+        /// <param name="label"> Optional : Drop Area Label and tooltip. "Drop Area" by default </param>
+        /// <returns> True if any Item was processed </returns>
+        public static bool DropAreaGUI(Func<UnityEngine.Object, bool> processItem, float height = 50f, GUIContent label = default, GUIStyle style = default)
+        {
+            Rect dropArea = GUILayoutUtility.GetRect(0.0f, height, GUILayout.ExpandWidth(true));
+            return DropAreaGUI(processItem, dropArea, label, style);
+        }
     }
 }
 #endif

@@ -178,7 +178,7 @@ namespace UMA.Editors
 		/// </summary>
 		private void UtilitiesGUI(ref bool foldout, string label, GUIContent tooltip)
 		{
-			foldout = GUIHelper2.FoldoutBar(foldout, label, tooltip);
+			foldout = GUIHelper.FoldoutBar(foldout, label, tooltip);
 
 			if (!foldout) return;
 
@@ -243,7 +243,7 @@ namespace UMA.Editors
 
 			// Drop Area
 			currentTarget.droppedItems.Clear(); currentTarget.droppedCollections.Clear();
-			GUIHelper2.DropAreaGUI(DropedItem, height: 50f, label: Tooltips.DropArea(currentTarget.races[currentTarget.currentRace]));
+			GUIHelper.DropAreaGUI(DropedItem, height: 50f, label: Tooltips.DropArea(currentTarget.races[currentTarget.currentRace]));
 
 			GUILayout.Space(5);
 		}
@@ -413,7 +413,7 @@ namespace UMA.Editors
 
 		private void SharedColorsGUI(ref bool foldout, List<RandomColors> SharedColors, string label, GUIContent tooltip = default)
 		{
-			foldout = GUIHelper2.FoldoutBar(foldout, label, tooltip);
+			foldout = GUIHelper.FoldoutBar(foldout, label, tooltip);
 
 			if (!foldout) return;
 

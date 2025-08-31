@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
 using System;
-using static UMA.Editors.GUIHelper2;
+using static UMA.Editors.GUIHelper;
 
 namespace UMA.Editors
 {

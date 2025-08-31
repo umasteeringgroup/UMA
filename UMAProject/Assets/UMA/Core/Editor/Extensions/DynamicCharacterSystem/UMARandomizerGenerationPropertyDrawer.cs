@@ -40,7 +40,7 @@ namespace UMA.Editors
             RandRotation.boolValue = EditorGUILayout.ToggleLeft("Apply Random Rotation", RandRotation.boolValue);
             GUIHelper.EndHorizontalPadded(0f);
 
-            GUIHelper2.BeginVerticalPadded(0f, GUIHelper2.Colors.Grey);
+            GUIHelper.BeginVerticalPadded(0f, GUIHelper.Colors.Grey);
             GenerateGrid.boolValue = EditorGUILayout.ToggleLeft("Generate Grid", GenerateGrid.boolValue);
 
             if (GenerateGrid.boolValue)
@@ -71,7 +71,7 @@ namespace UMA.Editors
 
         private void EventsGUI(SerializedProperty RandomAvatarGenerated)
         {
-            GUIHelper2.BeginVerticalPadded(0f, GUIHelper2.Colors.Grey);
+            GUIHelper.BeginVerticalPadded(0f, GUIHelper.Colors.Grey);
             Rect eventsRect = EditorGUILayout.GetControlRect();
             eventsRect.xMin += 12f;
             eventFoldout = EditorGUI.Foldout(eventsRect, eventFoldout, "Events", true);
