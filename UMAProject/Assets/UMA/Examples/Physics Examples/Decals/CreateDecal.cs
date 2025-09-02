@@ -159,6 +159,7 @@ public class CreateDecal : MonoBehaviour
         if (!hitInfo.collider.transform.IsChildOf(Avatar.transform))
             return;
 
+       // DecalSlotBuilder.enableDebug = true;
         // Build decal slot
         var slotAsset = DecalSlotBuilder.CreateDecalSlot(
             Avatar,
@@ -168,8 +169,8 @@ public class CreateDecal : MonoBehaviour
             DecalOverlay.material,  // Using UMAMaterial from overlay (requirement: use existing Material field -> we leverage overlay's UMAMaterial)
             new DecalSlotBuilder.DecalBuildOptions
             {
-                multithread = false,              // requirement: allocate per click, no async
-                copyBlendshapes = true,
+                //multithread = false,              // requirement: allocate per click, no async
+                // copyBlendshapes = true,
                 facingThreshold = 0.15f
             });
 

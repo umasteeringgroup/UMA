@@ -444,6 +444,9 @@ namespace UMA
                     float atlasYMin = tempAtlasRect.yMin / atlasResolution;
                     float atlasYMax = tempAtlasRect.yMax / atlasResolution;
                     float atlasYRange = atlasYMax - atlasYMin;
+                    SlotData sdTemp = fragment.slotData;
+                    UMAMeshData meshData = sdTemp.asset.meshData;
+
 
                     // code below is for UVs remap based on rel pos in the atlas
                     if (fragment.isRectShared && fragment.slotData.useAtlasOverlay)
@@ -477,8 +480,16 @@ namespace UMA
 
                     while (vertexCount-- > 0)
                     {
+                        try
+                        {
                         umaMesh.uv[idx].x = atlasXMin + atlasXRange * umaMesh.uv[idx].x;
                         umaMesh.uv[idx].y = atlasYMin + atlasYRange * umaMesh.uv[idx].y;
+                            }
+                        catch
+                        {
+                            Debug.LogError("Error adjusting UVs for " + sd.slotName + " atlasRect:" + tempAtlasRect + " atlasRes:" + atlasResolution + " uvArea:" + sd.UVArea + " idx:" + idx + " umaMesh.uv.len:" + umaMesh.uv.Length);
+                            throw;
+                        }
                         idx++;
                     }
                 }
