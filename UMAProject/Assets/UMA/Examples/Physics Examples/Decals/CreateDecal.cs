@@ -20,8 +20,13 @@ public class CreateDecal : MonoBehaviour
     [Header("Decal Settings")]
     [Tooltip("World-space radius for decal selection.")]
     public float DecalRadius = 0.05f;
+    [Tooltip("Fudge factor added to radius to ensure we capture edge cases.")]
+    public float fudgeRadius = 0.01f; // Small extra radius to ensure we capture edge cases
     [Tooltip("Rotation around surface normal (degrees, clockwise looking along normal).")]
     public float DecalRotationDegrees = 0f;
+
+    [Tooltip("Offset applied to decal slot along normal (fixed point 1/100 of a mm , to avoid z-fighting).")]
+    public int slotOffset = 3000;
 
     [Header("Orbit Settings")]
     [Tooltip("Offset from avatar root used as orbit pivot.")]
@@ -53,7 +58,7 @@ public class CreateDecal : MonoBehaviour
     private float _distance = 5f;
     private Vector3 _targetPos;
     private Rect ScreenArea = new Rect(20f, 20f, 400, 1024);
-
+    
     private bool _initialized;
 
     void Start()
@@ -85,21 +90,18 @@ public class CreateDecal : MonoBehaviour
     private void OnGUI()
     {
         GUILayout.BeginArea(ScreenArea);
+        GUILayout.Label("Left Click: Place Decal");
+        GUILayout.Label("Right Click + Drag: Orbit Camera");
+        GUILayout.Label("Mouse Wheel: Zoom");
+
+        GUILayout.Label("Decal Radius: ");
+                DecalRadius = GUILayout.HorizontalSlider(DecalRadius, 0.01f,0.5f);
+        GUILayout.Label("Decal Rotation: ");
+        DecalRotationDegrees = GUILayout.HorizontalSlider(DecalRotationDegrees, 0f, 360f);
+
         if (GUILayout.Button("Restart", GUILayout.Width(100)))
         {
             Avatar.BuildCharacter();
-        }
-        if (GUILayout.Button("Rebuild No Hair", GUILayout.Width(100)))
-        {
-            for(int i= Avatar.umaData.umaRecipe.slotDataList.Length - 1; i >= 0; i--)
-            {
-                var slot = Avatar.umaData.umaRecipe.slotDataList[i];
-                if (slot.slotName.ToLower().Contains("milcut"))
-                {
-                    Avatar.umaData.umaRecipe.RemoveSlot(slot);
-                }
-            }
-            Avatar.ForceUpdate(true, true, true);
         }
         GUILayout.EndArea();
     }
@@ -188,6 +190,7 @@ public class CreateDecal : MonoBehaviour
             Avatar,
             ray,
             DecalRadius,
+            fudgeRadius,
             DecalRotationDegrees,
             DecalOverlay.material,  // Using UMAMaterial from overlay (requirement: use existing Material field -> we leverage overlay's UMAMaterial)
             new DecalSlotBuilder.DecalBuildOptions
@@ -211,7 +214,7 @@ public class CreateDecal : MonoBehaviour
             var overlayInstance = new OverlayData(DecalOverlay);
             slotData.AddOverlay(overlayInstance);
         }
-        slotData.expandAlongNormal = 10000; // Slight expansion to avoid z-fighting
+        slotData.expandAlongNormal = slotOffset; // Slight expansion to avoid z-fighting
 
         // Add (accumulate) into existing UMA recipe
         Avatar.umaData.umaRecipe.MergeSlot(slotData, true);

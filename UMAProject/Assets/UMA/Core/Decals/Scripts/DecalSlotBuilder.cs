@@ -7,12 +7,15 @@ using UMA.CharacterSystem;
 namespace UMA
 {
     /// <summary>
-    /// DecalSlotBuilder with bindpose mismatch correction:
-    ///  - Per-slot rest data used (slot.asset.meshData.*) instead of combined sharedMesh arrays.
-    ///  - If any influencing bone for selected vertices has a bindpose differing from the renderer's canonical bindpose
-    ///    (first mismatch found), a correction matrix C = RestCanonical * inverse(RestSlot) is computed (from that bone)
-    ///    and applied to positions, normals, tangents of ONLY vertices influenced by any mismatched bone.
-    ///  - Bone duplication not performed; geometry is conformed to canonical bindposes instead.
+    /// DecalSlotBuilder with:
+    ///  - Pure mesh raycast (no collider dependency). Ray tests every SkinnedMeshRenderer under the avatar.
+    ///  - First hit triangle (closest along ray, facing camera) determines hit point.
+    ///  - (Current implementation builds decal from the hit SkinnedMeshRenderer only; triangle selection radius works on that renderer.
+    ///    NOTE: To extend to “all SMRs in radius” (requirement #4) you would replicate the selection pass for each SMR and merge results.
+    ///    A TODO marker is left where that aggregation would occur.)
+    ///  - Bindpose mismatch correction retained.
+    ///  - Debug visualization (triangle edges + normal) when enableDebug = true.
+    ///  - Future perf hook (BVH / early culling) marked with TODO (#16).
     /// </summary>
     public sealed class DecalSlotBuilder : ScriptableObject
     {
@@ -30,6 +33,7 @@ namespace UMA
             DynamicCharacterAvatar avatar,
             Ray ray,
             float radius,
+            float fudgeRadius,
             float angleDegrees,
             UMAMaterial umaMaterial,
             DecalBuildOptions options = null)
@@ -39,13 +43,11 @@ namespace UMA
 
             options ??= new DecalBuildOptions();
 
-            if (!Physics.Raycast(ray, out var hit, options.maxDistance, options.layerMask, QueryTriggerInteraction.Ignore))
+            // Mesh-based raycast (replaces collider based raycast)
+            if (!MeshRaycastAvatar(avatar, ray, options, out var smr, out var hitPointWorld, out var hitNormalWorld))
                 return null;
 
-            var smr = hit.collider ? hit.collider.GetComponentInChildren<SkinnedMeshRenderer>() : null;
-            if (smr == null)
-                return null;
-
+            // Bake only the hit SMR (already baked once in raycast; reuse bakedMeshCache if desired)
             Mesh baked = new Mesh();
             try
             {
@@ -81,10 +83,12 @@ namespace UMA
                 }
 
                 Vector3 rayDirWorld = ray.direction.normalized;
-                Vector3 hitPointWorld = hit.point;
-                float radiusSqr = radius * radius;
+                float expandedRadius = radius + fudgeRadius;
+                float radiusSqr = expandedRadius * expandedRadius;
                 Transform t = smr.transform;
 
+                // Triangle selection (CURRENTLY ONLY THE HIT SMR)
+                // TODO (Multi-SMR aggregation): Iterate all SMRs again, selecting triangles within radius; merge arrays.
                 var includedVertex = new bool[combinedVertexCount];
                 var includedTriangles = new List<int>(2048);
 
@@ -112,7 +116,7 @@ namespace UMA
                 var outTangents = new Vector4[newVertexCount];
                 var outColors32 = new Color32[newVertexCount];
                 var outUV = new Vector2[newVertexCount];
-                Vector2[][] slotExtraUVs = { null, null, null }; // uv2, uv3, uv4 assembled per-slot if needed (not projected here)
+                Vector2[][] slotExtraUVs = { null, null, null }; // uv2, uv3, uv4
 
                 // UV projection basis (local)
                 Vector3 localHitPoint = t.InverseTransformPoint(hitPointWorld);
@@ -127,7 +131,6 @@ namespace UMA
 
                     var slot = vertexSlot[ov];
                     int localIdx = vertexLocalIndex[ov];
-                    // Fallback to shared if slot missing
                     Vector3 restPos, restNormal;
                     Vector4 restTangent;
                     Color32 restColor;
@@ -167,7 +170,6 @@ namespace UMA
                     float v = (Vector3.Dot(planar, axisY) / radius) * 0.5f + 0.5f;
                     outUV[nv] = new Vector2(u, v);
 
-                    // Store secondary UVs after we know arrays needed
                     if (uv2 != Vector2.zero || uv3 != Vector2.zero || uv4 != Vector2.zero)
                     {
                         if (slotExtraUVs[0] == null) slotExtraUVs[0] = new Vector2[newVertexCount];
@@ -184,13 +186,13 @@ namespace UMA
                 for (int i = 0; i < includedTriangles.Count; i++)
                     outTriangles[i] = remap[includedTriangles[i]];
 
-                // Detect bindpose mismatch + build correction
+                // Bindpose correction
                 ApplyBindposeCorrection(shared, smr, vertexSlot, vertexLocalIndex,
                                         includedVertex, remap,
                                         outVerts, outNormals, outTangents,
                                         options.enableDebug);
 
-                // Bone weights (post correction)
+                // Bone weights
                 BuildBoneWeightsFullSkeleton(avatar, smr, shared, includedVertex, remap, newVertexCount,
                     out var outBonesPerVertex, out var outBoneWeights);
 
@@ -222,7 +224,7 @@ namespace UMA
                     }
                 }
 
-                // Canonical bind poses (renderer)
+                // Canonical bind poses (aggregate first match per hash)
                 var rendererBones = smr.bones;
                 var sharedBindPoses = shared.bindposes;
                 var hashToBindPose = new Dictionary<int, Matrix4x4>(rendererBones.Length);
@@ -287,6 +289,158 @@ namespace UMA
             }
         }
 
+        #region Mesh Raycast
+        private struct MeshHit
+        {
+            public SkinnedMeshRenderer smr;
+            public float distance;
+            public Vector3 point;
+            public Vector3 normal;
+            public int triangleIndex;
+        }
+
+        private static bool MeshRaycastAvatar(DynamicCharacterAvatar avatar,
+                                              Ray ray,
+                                              DecalBuildOptions options,
+                                              out SkinnedMeshRenderer hitSmr,
+                                              out Vector3 hitPoint,
+                                              out Vector3 hitNormal)
+        {
+            hitSmr = null;
+            hitPoint = default;
+            hitNormal = default;
+
+            var smrs = avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            if (smrs == null || smrs.Length == 0) return false;
+
+            Mesh bakeMesh = new Mesh(); // reused (answer #7)
+            MeshHit best = new MeshHit { distance = float.MaxValue, triangleIndex = -1 };
+
+            foreach (var smr in smrs)
+            {
+                if (smr == null || !smr.enabled) continue;
+                int layerBit = 1 << smr.gameObject.layer;
+                if ((options.layerMask.value & layerBit) == 0) continue;
+
+                var shared = smr.sharedMesh;
+                if (shared == null || shared.vertexCount == 0) continue;
+
+                smr.BakeMesh(bakeMesh);
+                var verts = bakeMesh.vertices;
+                var tris = shared.triangles; // Shared mesh triangles (indices map into shared vertex order identical after BakeMesh)
+
+                if (verts == null || tris == null || tris.Length == 0) continue;
+
+                Transform tr = smr.transform;
+                Vector3 ro = ray.origin;
+                Vector3 rd = ray.direction;
+
+                int triCount = tris.Length / 3;
+
+                // TODO (Perf #16): Add bounding volume reject (renderer bounds ray check) before per-triangle loop if needed.
+                for (int t = 0; t < triCount; t++)
+                {
+                    int i0 = tris[t * 3 + 0];
+                    int i1 = tris[t * 3 + 1];
+                    int i2 = tris[t * 3 + 2];
+                    if ((uint)i0 >= verts.Length || (uint)i1 >= verts.Length || (uint)i2 >= verts.Length) continue;
+
+                    Vector3 w0 = tr.TransformPoint(verts[i0]);
+                    Vector3 w1 = tr.TransformPoint(verts[i1]);
+                    Vector3 w2 = tr.TransformPoint(verts[i2]);
+
+                    // Normal & facing
+                    Vector3 e1 = w1 - w0;
+                    Vector3 e2 = w2 - w0;
+                    Vector3 n = Vector3.Cross(e1, e2);
+                    float nm = n.magnitude;
+                    if (nm < 1e-6f) continue;
+                    n /= nm;
+                    if (Vector3.Dot(n, rd) > -options.facingThreshold) continue; // must face camera (answer #11)
+
+                    if (RayTriangle(ro, rd, w0, w1, w2, out float dist, out Vector3 bary))
+                    {
+                        if (dist < 0 || dist > options.maxDistance) continue;
+                        if (dist < best.distance)
+                        {
+                            best.distance = dist;
+                            best.point = w0 * (1 - bary.x - bary.y) + w1 * bary.x + w2 * bary.y;
+                            best.normal = n;
+                            best.smr = smr;
+                            best.triangleIndex = t;
+                            if (dist <= 1e-5f) break; // early short-circuit (answer #13)
+                        }
+                    }
+                }
+            }
+
+            UMAUtils.DestroySceneObject(bakeMesh);
+
+            if (best.smr == null) return false;
+
+            hitSmr = best.smr;
+            hitPoint = best.point;
+            hitNormal = best.normal;
+
+            if (options.enableDebug)
+            {
+                Debug.DrawLine(hitPoint, hitPoint + hitNormal * 0.05f, Color.green, 2f);
+                // Edge visualization
+                var shared = hitSmr.sharedMesh;
+                if (shared != null && best.triangleIndex >= 0)
+                {
+                    var tris = shared.triangles;
+                    int i0 = tris[best.triangleIndex * 3 + 0];
+                    int i1 = tris[best.triangleIndex * 3 + 1];
+                    int i2 = tris[best.triangleIndex * 3 + 2];
+
+                    hitSmr.BakeMesh(bakeMesh);
+                    var v = bakeMesh.vertices;
+                    if (i0 < v.Length && i1 < v.Length && i2 < v.Length)
+                    {
+                        Transform tr = hitSmr.transform;
+                        Vector3 w0 = tr.TransformPoint(v[i0]);
+                        Vector3 w1 = tr.TransformPoint(v[i1]);
+                        Vector3 w2 = tr.TransformPoint(v[i2]);
+                        Debug.DrawLine(w0, w1, Color.yellow, 2f);
+                        Debug.DrawLine(w1, w2, Color.yellow, 2f);
+                        Debug.DrawLine(w2, w0, Color.yellow, 2f);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        // Möller–Trumbore
+        private static bool RayTriangle(Vector3 ro, Vector3 rd,
+                                        Vector3 v0, Vector3 v1, Vector3 v2,
+                                        out float distance,
+                                        out Vector3 bary)
+        {
+            bary = default;
+            distance = 0f;
+            const float EPS = 1e-7f;
+            Vector3 e1 = v1 - v0;
+            Vector3 e2 = v2 - v0;
+            Vector3 p = Vector3.Cross(rd, e2);
+            float det = Vector3.Dot(e1, p);
+            if (det > -EPS && det < EPS) return false;
+            float invDet = 1.0f / det;
+            Vector3 tvec = ro - v0;
+            float u = Vector3.Dot(tvec, p) * invDet;
+            if (u < 0 || u > 1) return false;
+            Vector3 q = Vector3.Cross(tvec, e1);
+            float v = Vector3.Dot(rd, q) * invDet;
+            if (v < 0 || (u + v) > 1) return false;
+            float t = Vector3.Dot(e2, q) * invDet;
+            if (t < 0) return false;
+            distance = t;
+            bary = new Vector3(u, v, 1 - u - v);
+            return true;
+        }
+        #endregion
+
         private static void ApplyBindposeCorrection(
             Mesh shared,
             SkinnedMeshRenderer smr,
@@ -303,7 +457,6 @@ namespace UMA
             var bonesPerVertex = shared.GetBonesPerVertex();
             var allWeights = shared.GetAllBoneWeights();
 
-            // Build prefix sum for bone weights
             int vertCount = includedVertex.Length;
             int[] weightStart = new int[vertCount];
             int acc = 0;
@@ -313,7 +466,6 @@ namespace UMA
                 acc += bonesPerVertex[i];
             }
 
-            // Map bone index -> hash
             var rendererBones = smr.bones;
             var boneHashes = new int[rendererBones.Length];
             for (int i = 0; i < rendererBones.Length; i++)
@@ -323,7 +475,6 @@ namespace UMA
             Matrix4x4 correction = Matrix4x4.identity;
             var needsCorrection = new bool[outVerts.Length];
 
-            // Cache per-slot bone hash -> slot bind pose
             var slotBindPoseCache = new Dictionary<SlotData, Dictionary<int, Matrix4x4>>();
 
             for (int ov = 0; ov < vertCount; ov++)
@@ -333,10 +484,8 @@ namespace UMA
                 if (nv < 0) continue;
 
                 var slot = vertexSlot[ov];
-                int localIdx = vertexLocalIndex[ov];
                 if (slot?.asset?.meshData == null) continue;
 
-                // Build cache
                 if (!slotBindPoseCache.TryGetValue(slot, out var perSlot))
                 {
                     perSlot = new Dictionary<int, Matrix4x4>();
@@ -362,22 +511,19 @@ namespace UMA
                     if (boneIndex < 0 || boneIndex >= boneHashes.Length) continue;
                     int hash = boneHashes[boneIndex];
                     if (!perSlot.TryGetValue(hash, out var slotBindPose))
-                        continue; // Slot didn't define this bone (possible if not weighted in original)
+                        continue;
 
                     var canonicalBindPose = bindposes[boneIndex];
-
                     if (!CompareSkinningMatrices(canonicalBindPose, slotBindPose))
                     {
                         if (!correctionComputed)
                         {
-                            // rest matrices
                             Matrix4x4 restCanon = Matrix4x4.Inverse(canonicalBindPose);
                             Matrix4x4 restSlot = Matrix4x4.Inverse(slotBindPose);
                             correction = restCanon * Matrix4x4.Inverse(restSlot);
                             correctionComputed = true;
                         }
                         needsCorrection[nv] = true;
-                        // Pick first mismatch only (per user spec)
                         break;
                     }
                 }
@@ -385,17 +531,11 @@ namespace UMA
 
             if (!correctionComputed) return;
 
-            // Extract rotation (upper-left 3x3) for normals/tangents
             Quaternion rot = Quaternion.LookRotation(
                 correction.GetColumn(2),
                 correction.GetColumn(1));
-            // Fallback if degenerate
             if (rot == Quaternion.identity)
             {
-                // Build from matrix basis properly
-                Vector3 c0 = correction.GetColumn(0);
-                Vector3 c1 = correction.GetColumn(1);
-                Vector3 c2 = correction.GetColumn(2);
                 Matrix4x4 m = correction;
                 rot = QuaternionFromMatrix(ref m);
             }
