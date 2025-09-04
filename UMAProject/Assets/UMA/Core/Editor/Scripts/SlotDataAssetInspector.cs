@@ -29,6 +29,10 @@ namespace UMA.Editors
 		SlotDataAsset slot;
 		SlotDataAsset WeldToSlot = null;
 
+		// New: Source slot for bindpose conformity
+		SlotDataAsset bindposeSourceSlot = null;
+		string lastBindposeInfo = "";
+
 		bool CopyNormals;
 		bool CopyBoneWeights;
 		UMA.SlotDataAsset.BlendshapeCopyMode blendshapeCopyMode;
@@ -124,31 +128,6 @@ namespace UMA.Editors
 			}
 		}
 
-		/*
-		private void InitTagList(SlotDataAsset _slotDataAsset)
-		{
-			
-			var HideTagsProperty = serializedObject.FindProperty("tags");
-			slot.tagList = new ReorderableList(serializedObject, HideTagsProperty, true, true, true, true);
-			slot.tagList.drawHeaderCallback = (Rect rect) => 
-			{
-				if (_slotDataAsset.isWildCardSlot)
-				{
-					EditorGUI.LabelField(rect, "Match the following tags:");
-				}
-				else
-				{
-					EditorGUI.LabelField(rect, "Tags");
-				}
-			};
-			slot.tagList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => 
-			{
-				var element = (target as SlotDataAsset).tagList.serializedProperty.GetArrayElementAtIndex(index);
-				rect.y += 2;
-				element.stringValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), element.stringValue);
-			};
-		} */
-
 		public void SetRaceLists()
 		{
 
@@ -166,14 +145,6 @@ namespace UMA.Editors
 				}
 			}
 		}
-
-		/*private void UpdateSourceAsset(SlotDataAsset sda)
-		{
-			if (sda != null)
-			{
-				lastWeld = slot.CalculateWelds(sda, CopyNormals, CopyBoneWeights, AverageNormals, Vector3.kEpsilon, SlotDataAsset.BlendshapeCopyMode.None);
-			}
-		}*/
 
 		public override void OnInspectorGUI() 
 		{
@@ -315,7 +286,6 @@ namespace UMA.Editors
 			if (slot.utilitiesFoldout)
 			{
                 #region UV_Utilities
-                // create a button and popup to select a UV channel to copy UV 0 to. This is on the same slot
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 				GUILayout.Label("UV Utilities", EditorStyles.boldLabel);
                 GUILayout.BeginHorizontal();
@@ -343,7 +313,6 @@ namespace UMA.Editors
                 }
 				GUILayout.EndHorizontal();
 
-                // create a button and popup to select UV channel to mirror left to right
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Mirror UV Channel ", GUILayout.Width(150));
                 uvChannelToMirror = EditorGUILayout.Popup(uvChannelToMirror, new string[] { "1", "2", "3", "4" }, GUILayout.Width(50));
@@ -395,12 +364,32 @@ namespace UMA.Editors
                     EditorUtility.DisplayDialog("Complete", "UV V" + (uvChannelToMirror + 1) + " mirrored", "OK");
                 }
 				GUILayout.EndHorizontal();
-
-
-
                 GUIHelper.EndVerticalPadded(10);
-
                 #endregion
+
+				#region Bindpose Conform
+				GUIHelper.BeginVerticalPadded(10, new Color(0.80f, 0.95f, 0.80f));
+				GUILayout.Label("Bindpose Conform", EditorStyles.boldLabel);
+				EditorGUILayout.HelpBox("Conform this slot's bindposes and vertex positions to those in the source slot. Vertices are adjusted using the dominant bone so skin output stays consistent. Bones not present in the source keep their original bindpose.", MessageType.Info);
+				bindposeSourceSlot = EditorGUILayout.ObjectField("Source Slot", bindposeSourceSlot, typeof(SlotDataAsset), false) as SlotDataAsset;
+
+				EditorGUI.BeginDisabledGroup(bindposeSourceSlot == null || bindposeSourceSlot.meshData == null || slot.meshData == null);
+				if (GUILayout.Button("Conform Bindposes && Vertices"))
+				{
+					lastBindposeInfo = ConformBindposesAndVertices(slot, bindposeSourceSlot);
+					EditorUtility.SetDirty(slot);
+					AssetDatabase.SaveAssetIfDirty(slot);
+					UMAUpdateProcessor.UpdateSlot(slot, false);
+				}
+				EditorGUI.EndDisabledGroup();
+
+				if (!string.IsNullOrEmpty(lastBindposeInfo))
+				{
+					EditorGUILayout.HelpBox(lastBindposeInfo, MessageType.None);
+				}
+				GUIHelper.EndVerticalPadded(10);
+				#endregion
+
                 #region WELDS
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
@@ -419,7 +408,6 @@ namespace UMA.Editors
 						{
 							if (GUILayout.Button(string.Format("{0} ({1})", sd.asset.name, sd.slotName)))
 							{
-								// UpdateSourceAsset(sd.asset);
 								WeldToSlot = sd.asset;
 							}
 						}
@@ -504,12 +492,6 @@ namespace UMA.Editors
                     GUILayout.Label($"{WeldToSlot.meshData.ManagedBoneWeights.Length}", GUILayout.Width(160));
                     GUILayout.Label("", GUILayout.ExpandWidth(true));
                     GUILayout.EndHorizontal();
-
-
-
-
-                    //GUILayout.Label("Vertices: " + WeldToSlot.meshData.vertices.Length);
-                    //GUILayout.Label("BoneWeights: " + WeldToSlot.meshData.boneWeights.Length);
                 }
 
                 GUIHelper.EndVerticalPadded(10);
@@ -761,6 +743,161 @@ namespace UMA.Editors
 			string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
 			AssetDatabase.ImportAsset(path);
 			UMAUpdateProcessor.UpdateSlot(slot);
+		}
+
+		/// <summary>
+		/// Conform this slot's bindposes & vertices to those of sourceSlot.
+		/// Vertices are transformed using the dominant bone (highest weight).
+		/// Bones absent in source retain original bindpose.
+		/// </summary>
+		private string ConformBindposesAndVertices(SlotDataAsset targetSlot, SlotDataAsset sourceSlot)
+		{
+			if (targetSlot == null || sourceSlot == null || targetSlot.meshData == null || sourceSlot.meshData == null)
+				return "Missing mesh data.";
+
+			var tMesh = targetSlot.meshData;
+			var sMesh = sourceSlot.meshData;
+
+			if (tMesh.bindPoses == null || sMesh.bindPoses == null ||
+				tMesh.boneNameHashes == null || sMesh.boneNameHashes == null)
+				return "Bindpose arrays missing.";
+
+			int tBoneCount = tMesh.bindPoses.Length;
+			int vCount = tMesh.vertexCount;
+			if (vCount == 0 || tBoneCount == 0) return "No vertices or bones.";
+
+			// Map source hash -> bindPose
+			var srcMap = new Dictionary<int, Matrix4x4>(sMesh.boneNameHashes.Length);
+			for (int i = 0; i < sMesh.boneNameHashes.Length && i < sMesh.bindPoses.Length; i++)
+			{
+				int h = sMesh.boneNameHashes[i];
+				if (!srcMap.ContainsKey(h))
+					srcMap.Add(h, sMesh.bindPoses[i]);
+			}
+
+			// Prepare transformation per target bone (identity if no change)
+			var boneTransforms = new Matrix4x4[tBoneCount];
+			bool anyChange = false;
+			for (int i = 0; i < tBoneCount; i++)
+            {
+                boneTransforms[i] = Matrix4x4.identity;
+                int hash = tMesh.boneNameHashes[i];
+                if (srcMap.TryGetValue(hash, out var srcBind))
+                {
+                    var oldBind = tMesh.bindPoses[i];
+                    if (!CompareBindpose(oldBind, srcBind))
+                    {
+                        // We want: srcBind * p_new = oldBind * p_old  =>  p_new = inverse(srcBind) * oldBind * p_old
+                        // So per-bone correction T = inverse(srcBind) * oldBind
+                        Matrix4x4 T = Matrix4x4.Inverse(srcBind) * oldBind;
+                        boneTransforms[i] = T;
+                         anyChange = true;
+                     }
+                 }
+             }
+			if (!anyChange) return "No differing bindposes found.";
+
+			// Bone weights
+			byte[] bonesPerVertex = tMesh.ManagedBonesPerVertex;
+			BoneWeight1[] weights = tMesh.ManagedBoneWeights;
+			if (bonesPerVertex == null || weights == null || bonesPerVertex.Length == 0 || weights.Length == 0)
+				return "Bone weights missing.";
+
+			Vector3[] verts = tMesh.vertices;
+			Vector3[] normals = tMesh.normals;
+			Vector4[] tangents = tMesh.tangents;
+
+			int wOffset = 0;
+			for (int v = 0; v < vCount; v++)
+			{
+				byte count = bonesPerVertex[v];
+				if (count == 0) { continue; }
+
+				int dominantIndex = -1;
+				float dominantWeight = -1f;
+				for (int j = 0; j < count; j++)
+				{
+					var bw = weights[wOffset + j];
+					if (bw.weight > dominantWeight)
+					{
+						dominantWeight = bw.weight;
+						dominantIndex = bw.boneIndex;
+					}
+				}
+
+				if (dominantIndex >= 0 && dominantIndex < boneTransforms.Length)
+				{
+                    Matrix4x4 T = boneTransforms[dominantIndex];
+                    if (!IsIdentity(T))
+                    {
+                        // Position
+                        Vector3 p = verts[v];
+                        Vector4 hp = new Vector4(p.x, p.y, p.z, 1f);
+                        hp = T * hp;
+                        verts[v] = new Vector3(hp.x, hp.y, hp.z);
+ 
+                        // Normal
+                        if (normals != null && v < normals.Length)
+                        {
+                            Vector3 n = normals[v];
+                            Vector3 tn = T.MultiplyVector(n);
+                             if (tn.sqrMagnitude > 0f) tn.Normalize();
+                             normals[v] = tn;
+                        }
+                        // Tangent
+                        if (tangents != null && v < tangents.Length)
+                        {
+                            Vector4 tan = tangents[v];
+                            Vector3 tv = new Vector3(tan.x, tan.y, tan.z);
+                            tv = T.MultiplyVector(tv);
+                             if (tv.sqrMagnitude > 0f) tv.Normalize();
+                             tangents[v] = new Vector4(tv.x, tv.y, tv.z, tan.w);
+                        }
+                    }
+                }
+				wOffset += count;
+			}
+
+			// Replace bindposes (only those with matches)
+			for (int i = 0; i < tBoneCount; i++)
+			{
+				int hash = tMesh.boneNameHashes[i];
+				if (srcMap.TryGetValue(hash, out var srcBind))
+				{
+					tMesh.bindPoses[i] = srcBind;
+				}
+			}
+
+			// Mark modifications
+			tMesh.verticesModified = true;
+			tMesh.normalsModified = true;
+			tMesh.tangentsModified = true;
+			targetSlot.ValidateMeshData();
+			EditorUtility.SetDirty(targetSlot);
+			return "Bindpose/vertex conformity complete.";
+		}
+
+		private static bool CompareBindpose(Matrix4x4 a, Matrix4x4 b)
+		{
+			const float eps = 0.0001f;
+			return
+				Mathf.Abs(a.m00 - b.m00) < eps &&
+				Mathf.Abs(a.m01 - b.m01) < eps &&
+				Mathf.Abs(a.m02 - b.m02) < eps &&
+				Mathf.Abs(a.m03 - b.m03) < eps &&
+				Mathf.Abs(a.m10 - b.m10) < eps &&
+				Mathf.Abs(a.m11 - b.m11) < eps &&
+				Mathf.Abs(a.m12 - b.m12) < eps &&
+				Mathf.Abs(a.m13 - b.m13) < eps &&
+				Mathf.Abs(a.m20 - b.m20) < eps &&
+				Mathf.Abs(a.m21 - b.m21) < eps &&
+				Mathf.Abs(a.m22 - b.m22) < eps &&
+				Mathf.Abs(a.m23 - b.m23) < eps;
+		}
+
+		private static bool IsIdentity(Matrix4x4 m)
+		{
+			return m == Matrix4x4.identity;
 		}
     }
 }

@@ -7,17 +7,12 @@ using UMA.CharacterSystem;
 namespace UMA
 {
     /// <summary>
-    /// DecalSlotBuilder:
-    ///  - Selects triangles on the hit SkinnedMeshRenderer baked pose.
-    ///  - A triangle is included if ANY vertex lies within radius OR any edge intersects the radius sphere.
-    ///  - Normal facing test uses facingThreshold only (dot(triNormal, rayDir) <= -facingThreshold).
-    ///  - angleDegrees ONLY rotates the UV projection axes around the ray direction (no filtering).
-    ///  - Rest (bind-pose) vertex data copied from sharedMesh.
-    ///  - UV0 planar projected using the POSED (baked) vertex positions (fixes 90° rotation on bones like hair),
-    ///    while geometry stored remains in rest space. (Previously used rest vertices -> UV rotation mismatch.)
-    ///  - Full UMA skeleton included; weights remapped by bone hash.
-    ///  - Blendshapes & cloth skipped (stubs).
-    ///  - Returns null if no triangles selected.
+    /// DecalSlotBuilder with bindpose mismatch correction:
+    ///  - Per-slot rest data used (slot.asset.meshData.*) instead of combined sharedMesh arrays.
+    ///  - If any influencing bone for selected vertices has a bindpose differing from the renderer's canonical bindpose
+    ///    (first mismatch found), a correction matrix C = RestCanonical * inverse(RestSlot) is computed (from that bone)
+    ///    and applied to positions, normals, tangents of ONLY vertices influenced by any mismatched bone.
+    ///  - Bone duplication not performed; geometry is conformed to canonical bindposes instead.
     /// </summary>
     public sealed class DecalSlotBuilder : ScriptableObject
     {
@@ -48,7 +43,7 @@ namespace UMA
                 return null;
 
             var smr = hit.collider ? hit.collider.GetComponentInChildren<SkinnedMeshRenderer>() : null;
-            if (smr == null)//  || !smr.transform.IsChildOf(avatar.transform))
+            if (smr == null)
                 return null;
 
             Mesh baked = new Mesh();
@@ -58,28 +53,39 @@ namespace UMA
                 var shared = smr.sharedMesh;
                 if (shared == null) return null;
 
-                var bakedVertsLocal = baked.vertices;   // posed local vertices (used for selection & UV projection)
+                var bakedVertsLocal = baked.vertices;
                 var triIndices = shared.triangles;
                 if (bakedVertsLocal == null || bakedVertsLocal.Length == 0 || triIndices == null || triIndices.Length == 0)
                     return null;
 
-                // Rest pose (shared mesh) attribute arrays
-                var restVerts = shared.vertices;
-                var restNormals = shared.normals;
-                var restTangents = shared.tangents;
-                var restColors32 = shared.colors32;
-                var restUV2 = shared.uv2;
-                var restUV3 = shared.uv3;
-                var restUV4 = shared.uv4;
-                int sharedVertexCount = restVerts.Length;
-                if (sharedVertexCount == 0) return null;
+                // Build vertex -> slot/localIndex mapping from current recipe
+                var recipe = avatar.umaData.umaRecipe;
+                if (recipe == null || recipe.slotDataList == null) return null;
+
+                int combinedVertexCount = shared.vertexCount;
+                var vertexSlot = new SlotData[combinedVertexCount];
+                var vertexLocalIndex = new int[combinedVertexCount];
+                for (int si = 0; si < recipe.slotDataList.Length; si++)
+                {
+                    var slot = recipe.slotDataList[si];
+                    if (slot?.asset?.meshData == null) continue;
+                    int start = slot.vertexOffset;
+                    int count = slot.asset.meshData.vertexCount;
+                    int end = start + count;
+                    if (start < 0 || end > combinedVertexCount) continue;
+                    for (int v = start; v < end; v++)
+                    {
+                        vertexSlot[v] = slot;
+                        vertexLocalIndex[v] = v - start;
+                    }
+                }
 
                 Vector3 rayDirWorld = ray.direction.normalized;
                 Vector3 hitPointWorld = hit.point;
                 float radiusSqr = radius * radius;
                 Transform t = smr.transform;
 
-                var includedVertex = new bool[sharedVertexCount];
+                var includedVertex = new bool[combinedVertexCount];
                 var includedTriangles = new List<int>(2048);
 
                 SelectTriangles(triIndices, bakedVertsLocal, t, rayDirWorld, hitPointWorld, radiusSqr,
@@ -87,16 +93,15 @@ namespace UMA
 
                 if (includedTriangles.Count == 0)
                 {
-                    if (options.enableDebug)
-                        Debug.Log("DecalSlotBuilder: No triangles within radius/facing constraints.");
+                    if (options.enableDebug) Debug.Log("DecalSlotBuilder: No triangles within radius/facing constraints.");
                     return null;
                 }
 
-                // Build vertex remap
-                var remap = new int[sharedVertexCount];
+                // Remap
+                var remap = new int[combinedVertexCount];
                 Array.Fill(remap, -1);
                 int newVertexCount = 0;
-                for (int i = 0; i < sharedVertexCount; i++)
+                for (int i = 0; i < combinedVertexCount; i++)
                     if (includedVertex[i])
                         remap[i] = newVertexCount++;
                 if (newVertexCount == 0) return null;
@@ -107,39 +112,71 @@ namespace UMA
                 var outTangents = new Vector4[newVertexCount];
                 var outColors32 = new Color32[newVertexCount];
                 var outUV = new Vector2[newVertexCount];
-                var outUV2 = (restUV2 != null && restUV2.Length == sharedVertexCount) ? new Vector2[newVertexCount] : null;
-                var outUV3 = (restUV3 != null && restUV3.Length == sharedVertexCount) ? new Vector2[newVertexCount] : null;
-                var outUV4 = (restUV4 != null && restUV4.Length == sharedVertexCount) ? new Vector2[newVertexCount] : null;
+                Vector2[][] slotExtraUVs = { null, null, null }; // uv2, uv3, uv4 assembled per-slot if needed (not projected here)
 
-                // UV projection setup (local space)
+                // UV projection basis (local)
                 Vector3 localHitPoint = t.InverseTransformPoint(hitPointWorld);
                 Vector3 localRayDir = t.InverseTransformDirection(rayDirWorld).normalized;
                 BuildProjectionAxesAroundRay(localRayDir, angleDegrees, out var axisX, out var axisY);
 
-                // Fill geometry (rest pose) & compute UV using POSED baked local vertex
-                for (int ov = 0; ov < sharedVertexCount; ov++)
+                // Copy per-slot rest attributes
+                for (int ov = 0; ov < combinedVertexCount; ov++)
                 {
                     int nv = remap[ov];
                     if (nv < 0) continue;
 
-                    // Rest geometry
-                    outVerts[nv] = restVerts[ov];
-                    outNormals[nv] = (restNormals != null && ov < restNormals.Length) ? restNormals[ov] : Vector3.up;
-                    outTangents[nv] = (restTangents != null && ov < restTangents.Length) ? restTangents[ov] : new Vector4(1, 0, 0, 1);
-                    outColors32[nv] = (restColors32 != null && ov < restColors32.Length) ? restColors32[ov] : new Color32(255, 255, 255, 255);
-                    if (outUV2 != null) outUV2[nv] = restUV2[ov];
-                    if (outUV3 != null) outUV3[nv] = restUV3[ov];
-                    if (outUV4 != null) outUV4[nv] = restUV4[ov];
+                    var slot = vertexSlot[ov];
+                    int localIdx = vertexLocalIndex[ov];
+                    // Fallback to shared if slot missing
+                    Vector3 restPos, restNormal;
+                    Vector4 restTangent;
+                    Color32 restColor;
+                    Vector2 uv2 = Vector2.zero, uv3 = Vector2.zero, uv4 = Vector2.zero;
 
-                    // Projection uses baked (posed) vertex (fixes 90° rotation issues on bones like hair)
+                    if (slot?.asset?.meshData != null && localIdx >= 0 && localIdx < slot.asset.meshData.vertexCount)
+                    {
+                        var mdSrc = slot.asset.meshData;
+                        restPos = SafeGet(mdSrc.vertices, localIdx, Vector3.zero);
+                        restNormal = SafeGet(mdSrc.normals, localIdx, Vector3.up);
+                        restTangent = SafeGet(mdSrc.tangents, localIdx, new Vector4(1, 0, 0, 1));
+                        restColor = SafeGet(mdSrc.colors32, localIdx, new Color32(255, 255, 255, 255));
+                        uv2 = SafeGet(mdSrc.uv2, localIdx, Vector2.zero);
+                        uv3 = SafeGet(mdSrc.uv3, localIdx, Vector2.zero);
+                        uv4 = SafeGet(mdSrc.uv4, localIdx, Vector2.zero);
+                    }
+                    else
+                    {
+                        // fallback shared
+                        restPos = SafeGet(shared.vertices, ov, Vector3.zero);
+                        restNormal = SafeGet(shared.normals, ov, Vector3.up);
+                        restTangent = SafeGet(shared.tangents, ov, new Vector4(1, 0, 0, 1));
+                        restColor = SafeGet(shared.colors32, ov, new Color32(255, 255, 255, 255));
+                    }
+
+                    outVerts[nv] = restPos;
+                    outNormals[nv] = restNormal;
+                    outTangents[nv] = restTangent;
+                    outColors32[nv] = restColor;
+
+                    // Projection uses baked posed vertex
                     Vector3 posedLocal = bakedVertsLocal[ov];
                     Vector3 offset = posedLocal - localHitPoint;
                     float along = Vector3.Dot(offset, localRayDir);
                     Vector3 planar = offset - along * localRayDir;
-
                     float u = (Vector3.Dot(planar, axisX) / radius) * 0.5f + 0.5f;
                     float v = (Vector3.Dot(planar, axisY) / radius) * 0.5f + 0.5f;
                     outUV[nv] = new Vector2(u, v);
+
+                    // Store secondary UVs after we know arrays needed
+                    if (uv2 != Vector2.zero || uv3 != Vector2.zero || uv4 != Vector2.zero)
+                    {
+                        if (slotExtraUVs[0] == null) slotExtraUVs[0] = new Vector2[newVertexCount];
+                        if (slotExtraUVs[1] == null) slotExtraUVs[1] = new Vector2[newVertexCount];
+                        if (slotExtraUVs[2] == null) slotExtraUVs[2] = new Vector2[newVertexCount];
+                        slotExtraUVs[0][nv] = uv2;
+                        slotExtraUVs[1][nv] = uv3;
+                        slotExtraUVs[2][nv] = uv4;
+                    }
                 }
 
                 // Remap triangles
@@ -147,30 +184,27 @@ namespace UMA
                 for (int i = 0; i < includedTriangles.Count; i++)
                     outTriangles[i] = remap[includedTriangles[i]];
 
-                // Bone weights
+                // Detect bindpose mismatch + build correction
+                ApplyBindposeCorrection(shared, smr, vertexSlot, vertexLocalIndex,
+                                        includedVertex, remap,
+                                        outVerts, outNormals, outTangents,
+                                        options.enableDebug);
+
+                // Bone weights (post correction)
                 BuildBoneWeightsFullSkeleton(avatar, smr, shared, includedVertex, remap, newVertexCount,
                     out var outBonesPerVertex, out var outBoneWeights);
 
-                // Full UMA skeleton (REST-POSE DATA, not current animated pose)
-                // Using live transforms previously caused rotated / offset hair (double transform) because
-                // umaBones must contain the REST local values that match the bind poses.
-                var skeleton          = avatar.umaData.GetSkeleton();
-                var skeletonHashes    = new List<int>(skeleton.boneHashData.Keys);
+                // Skeleton + bind poses (canonical)
+                var skeleton = avatar.umaData.GetSkeleton();
+                var skeletonHashes = new List<int>(skeleton.boneHashData.Keys);
                 skeletonHashes.Sort();
-
-                // Build rest pose map from TPose (preferred) or from an existing slot asset if available.
-                var restBoneMap = BuildRestBoneMap(avatar.umaData, skeletonHashes);
-
+                var skeletonTransforms = skeleton.HashesToTransforms(skeletonHashes);
                 var umaBones = new UMATransform[skeletonHashes.Count];
                 for (int i = 0; i < skeletonHashes.Count; i++)
                 {
-                    if (restBoneMap.TryGetValue(skeletonHashes[i], out var restUT))
+                    var bt = skeletonTransforms[i];
+                    if (bt == null)
                     {
-                        umaBones[i] = restUT;
-                    }
-                    else
-                    {
-                        // Fallback – identity (should be rare)
                         umaBones[i] = new UMATransform
                         {
                             hash = skeletonHashes[i],
@@ -181,12 +215,17 @@ namespace UMA
                             scale = Vector3.one
                         };
                     }
+                    else
+                    {
+                        int parentHash = bt.parent ? UMAUtils.StringToHash(bt.parent.name) : 0;
+                        umaBones[i] = new UMATransform(bt, skeletonHashes[i], parentHash);
+                    }
                 }
 
-                // Bind poses: use the renderer's bindposes keyed by bone hash (these already match REST pose)
-                var rendererBones    = smr.bones;
-                var sharedBindPoses  = shared.bindposes;
-                var hashToBindPose   = new Dictionary<int, Matrix4x4>(rendererBones.Length);
+                // Canonical bind poses (renderer)
+                var rendererBones = smr.bones;
+                var sharedBindPoses = shared.bindposes;
+                var hashToBindPose = new Dictionary<int, Matrix4x4>(rendererBones.Length);
                 for (int i = 0; i < rendererBones.Length && i < sharedBindPoses.Length; i++)
                 {
                     var rb = rendererBones[i];
@@ -199,7 +238,6 @@ namespace UMA
                 for (int i = 0; i < umaBones.Length; i++)
                     finalBindPoses[i] = hashToBindPose.TryGetValue(umaBones[i].hash, out var bp) ? bp : Matrix4x4.identity;
 
-                // Assemble UMAMeshData
                 var md = new UMAMeshData
                 {
                     SlotName = $"Decal_{umaMaterial.name}",
@@ -208,9 +246,9 @@ namespace UMA
                     tangents = outTangents,
                     colors32 = outColors32,
                     uv = outUV,
-                    uv2 = outUV2,
-                    uv3 = outUV3,
-                    uv4 = outUV4,
+                    uv2 = slotExtraUVs[0],
+                    uv3 = slotExtraUVs[1],
+                    uv4 = slotExtraUVs[2],
                     vertexCount = newVertexCount,
                     umaBones = umaBones,
                     umaBoneCount = umaBones.Length,
@@ -227,7 +265,6 @@ namespace UMA
                 sub.nativeTriangles = new NativeArray<int>(outTriangles, Allocator.Persistent);
                 md.submeshes[0] = sub;
 
-                // Future stubs
                 Stub_BlendshapeSupport(md);
                 Stub_ClothSupport(md);
 
@@ -248,6 +285,171 @@ namespace UMA
             {
                 UMAUtils.DestroySceneObject(baked);
             }
+        }
+
+        private static void ApplyBindposeCorrection(
+            Mesh shared,
+            SkinnedMeshRenderer smr,
+            SlotData[] vertexSlot,
+            int[] vertexLocalIndex,
+            bool[] includedVertex,
+            int[] remap,
+            Vector3[] outVerts,
+            Vector3[] outNormals,
+            Vector4[] outTangents,
+            bool debug)
+        {
+            var bindposes = shared.bindposes;
+            var bonesPerVertex = shared.GetBonesPerVertex();
+            var allWeights = shared.GetAllBoneWeights();
+
+            // Build prefix sum for bone weights
+            int vertCount = includedVertex.Length;
+            int[] weightStart = new int[vertCount];
+            int acc = 0;
+            for (int i = 0; i < vertCount; i++)
+            {
+                weightStart[i] = acc;
+                acc += bonesPerVertex[i];
+            }
+
+            // Map bone index -> hash
+            var rendererBones = smr.bones;
+            var boneHashes = new int[rendererBones.Length];
+            for (int i = 0; i < rendererBones.Length; i++)
+                boneHashes[i] = rendererBones[i] ? UMAUtils.StringToHash(rendererBones[i].name) : 0;
+
+            bool correctionComputed = false;
+            Matrix4x4 correction = Matrix4x4.identity;
+            var needsCorrection = new bool[outVerts.Length];
+
+            // Cache per-slot bone hash -> slot bind pose
+            var slotBindPoseCache = new Dictionary<SlotData, Dictionary<int, Matrix4x4>>();
+
+            for (int ov = 0; ov < vertCount; ov++)
+            {
+                if (!includedVertex[ov]) continue;
+                int nv = remap[ov];
+                if (nv < 0) continue;
+
+                var slot = vertexSlot[ov];
+                int localIdx = vertexLocalIndex[ov];
+                if (slot?.asset?.meshData == null) continue;
+
+                // Build cache
+                if (!slotBindPoseCache.TryGetValue(slot, out var perSlot))
+                {
+                    perSlot = new Dictionary<int, Matrix4x4>();
+                    var md = slot.asset.meshData;
+                    var slotBones = md.boneNameHashes;
+                    var slotBindPoses = md.bindPoses;
+                    if (slotBones != null && slotBindPoses != null)
+                    {
+                        int len = Math.Min(slotBones.Length, slotBindPoses.Length);
+                        for (int i = 0; i < len; i++)
+                            if (!perSlot.ContainsKey(slotBones[i]))
+                                perSlot.Add(slotBones[i], slotBindPoses[i]);
+                    }
+                    slotBindPoseCache.Add(slot, perSlot);
+                }
+
+                int weightCount = bonesPerVertex[ov];
+                int start = weightStart[ov];
+                for (int w = 0; w < weightCount; w++)
+                {
+                    var bw = allWeights[start + w];
+                    int boneIndex = bw.boneIndex;
+                    if (boneIndex < 0 || boneIndex >= boneHashes.Length) continue;
+                    int hash = boneHashes[boneIndex];
+                    if (!perSlot.TryGetValue(hash, out var slotBindPose))
+                        continue; // Slot didn't define this bone (possible if not weighted in original)
+
+                    var canonicalBindPose = bindposes[boneIndex];
+
+                    if (!CompareSkinningMatrices(canonicalBindPose, slotBindPose))
+                    {
+                        if (!correctionComputed)
+                        {
+                            // rest matrices
+                            Matrix4x4 restCanon = Matrix4x4.Inverse(canonicalBindPose);
+                            Matrix4x4 restSlot = Matrix4x4.Inverse(slotBindPose);
+                            correction = restCanon * Matrix4x4.Inverse(restSlot);
+                            correctionComputed = true;
+                        }
+                        needsCorrection[nv] = true;
+                        // Pick first mismatch only (per user spec)
+                        break;
+                    }
+                }
+            }
+
+            if (!correctionComputed) return;
+
+            // Extract rotation (upper-left 3x3) for normals/tangents
+            Quaternion rot = Quaternion.LookRotation(
+                correction.GetColumn(2),
+                correction.GetColumn(1));
+            // Fallback if degenerate
+            if (rot == Quaternion.identity)
+            {
+                // Build from matrix basis properly
+                Vector3 c0 = correction.GetColumn(0);
+                Vector3 c1 = correction.GetColumn(1);
+                Vector3 c2 = correction.GetColumn(2);
+                Matrix4x4 m = correction;
+                rot = QuaternionFromMatrix(ref m);
+            }
+
+            for (int i = 0; i < outVerts.Length; i++)
+            {
+                if (!needsCorrection[i]) continue;
+
+                Vector3 p = outVerts[i];
+                Vector4 hp = new Vector4(p.x, p.y, p.z, 1f);
+                hp = correction * hp;
+                outVerts[i] = new Vector3(hp.x, hp.y, hp.z);
+
+                Vector3 n = outNormals[i];
+                n = rot * n;
+                outNormals[i] = n.normalized;
+
+                if (outTangents != null && i < outTangents.Length)
+                {
+                    Vector4 tan = outTangents[i];
+                    Vector3 tv = new Vector3(tan.x, tan.y, tan.z);
+                    tv = rot * tv;
+                    tv.Normalize();
+                    outTangents[i] = new Vector4(tv.x, tv.y, tv.z, tan.w);
+                }
+            }
+        }
+
+        private static Vector3 SafeGet(Vector3[] arr, int i, Vector3 def) => (arr != null && i >= 0 && i < arr.Length) ? arr[i] : def;
+        private static Vector4 SafeGet(Vector4[] arr, int i, Vector4 def) => (arr != null && i >= 0 && i < arr.Length) ? arr[i] : def;
+        private static Color32 SafeGet(Color32[] arr, int i, Color32 def) => (arr != null && i >= 0 && i < arr.Length) ? arr[i] : def;
+        private static Vector2 SafeGet(Vector2[] arr, int i, Vector2 def) => (arr != null && i >= 0 && i < arr.Length) ? arr[i] : def;
+
+        private static bool CompareSkinningMatrices(Matrix4x4 a, Matrix4x4 b)
+        {
+            const float eps = 0.0001f;
+            return
+                Math.Abs(a.m00 - b.m00) <= eps &&
+                Math.Abs(a.m01 - b.m01) <= eps &&
+                Math.Abs(a.m02 - b.m02) <= eps &&
+                Math.Abs(a.m03 - b.m03) <= eps &&
+                Math.Abs(a.m10 - b.m10) <= eps &&
+                Math.Abs(a.m11 - b.m11) <= eps &&
+                Math.Abs(a.m12 - b.m12) <= eps &&
+                Math.Abs(a.m13 - b.m13) <= eps &&
+                Math.Abs(a.m20 - b.m20) <= eps &&
+                Math.Abs(a.m21 - b.m21) <= eps &&
+                Math.Abs(a.m22 - b.m22) <= eps &&
+                Math.Abs(a.m23 - b.m23) <= eps;
+        }
+
+        private static Quaternion QuaternionFromMatrix(ref Matrix4x4 m)
+        {
+            return Quaternion.LookRotation(m.GetColumn(2), m.GetColumn(1));
         }
 
         private static void SelectTriangles(
@@ -300,9 +502,7 @@ namespace UMA
                 if (!anyInside && !edgeIntersects)
                     continue;
 
-                includedTriangles.Add(i0);
-                includedTriangles.Add(i1);
-                includedTriangles.Add(i2);
+                includedTriangles.Add(i0); includedTriangles.Add(i1); includedTriangles.Add(i2);
                 includedVertex[i0] = includedVertex[i1] = includedVertex[i2] = true;
             }
 
@@ -408,81 +608,8 @@ namespace UMA
         #endregion
 
         #region Future Stubs
-         private static void Stub_BlendshapeSupport(UMAMeshData md) { }
-         private static void Stub_ClothSupport(UMAMeshData md) { }
-         #endregion
-
-        #region Rest Bone Map
-        // Build a dictionary of hash -> UMATransform representing REST pose (NOT current animation pose).
-        // Priority: TPose (race / override) > any existing slot meshData.umaBones (first hit) > identity.
-        private static Dictionary<int, UMATransform> BuildRestBoneMap(UMAData umaData, List<int> skeletonHashes)
-        {
-            var map = new Dictionary<int, UMATransform>(skeletonHashes.Count);
-
-            // 1. TPose data
-            var tp = umaData.GetTPose();
-            if (tp != null)
-            {
-                tp.DeSerialize(); // ensure boneInfo loaded
-                var bones = tp.boneInfo;
-                if (bones != null)
-                {
-                    for (int i = 0; i < bones.Length; i++)
-                    {
-                        var sb = bones[i];
-                        int h = UMAUtils.StringToHash(sb.name);
-                        if (!map.ContainsKey(h))
-                        {
-                            int parentHash = 0;
-                            // parent name is not stored in SkeletonBone; rely on existing skeleton for parent link
-                            var parentTf = umaData.skeleton.GetBoneTransform(h)?.parent;
-                            if (parentTf != null)
-                                parentHash = UMAUtils.StringToHash(parentTf.name);
-                            map.Add(h, new UMATransform
-                            {
-                                hash = h,
-                                name = sb.name,
-                                parent = parentHash,
-                                position = sb.position,
-                                rotation = sb.rotation,
-                                scale = sb.scale
-                            });
-                        }
-                    }
-                }
-            }
-
-            // 2. Existing slot assets (fill gaps)
-            var slots = umaData.umaRecipe?.slotDataList;
-            if (slots != null)
-            {
-                for (int s = 0; s < slots.Length; s++)
-                {
-                    var slot = slots[s];
-                    var md = slot?.asset?.meshData;
-                    if (md?.umaBones == null) continue;
-                    for (int b = 0; b < md.umaBones.Length; b++)
-                    {
-                        var ub = md.umaBones[b];
-                        if (!map.ContainsKey(ub.hash))
-                        {
-                            // Clone so we don't share instance
-                            map.Add(ub.hash, new UMATransform
-                            {
-                                hash = ub.hash,
-                                name = ub.name,
-                                parent = ub.parent,
-                                position = ub.position,
-                                rotation = ub.rotation,
-                                scale = ub.scale
-                            });
-                        }
-                    }
-                }
-            }
-
-            return map;
-        }
+        private static void Stub_BlendshapeSupport(UMAMeshData md) { }
+        private static void Stub_ClothSupport(UMAMeshData md) { }
         #endregion
-     }
- }
+    }
+}

@@ -1159,25 +1159,6 @@ namespace UMA
 		}
 
 
-		/*private static void BuildBoneWeights(NativeArray<BoneWeight1> source, NativeArray<BoneWeight1> dest, int destIndex, int destBoneweightIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
-		{
-			int[] boneMapping = new int[bones.Length];
-
-			for (int i = 0; i < boneMapping.Length; i++)
-			{
-				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
-			}
-
-			NativeArray<BoneWeight1>.Copy(source, 0, dest, destBoneweightIndex, source.Length);
-			BoneWeight1 b = new BoneWeight1();
-			for (int i=0;i<source.Length;i++)
-            {
-				b.boneIndex = boneMapping[source[i].boneIndex];
-				b.weight = source[i].weight;
-
-				dest[i + destBoneweightIndex] = b;
-            }
-		} */
 
 
         private static void BuildBoneWeights(UMAMeshData data, NativeArray<BoneWeight1> dest, NativeArray<byte> destBonesPerVertex, int destIndex, int destBoneweightIndex, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
@@ -1352,7 +1333,12 @@ namespace UMA
 					}
 				}
 				var idx = bindPosesList.Count;
-				entry.AddIndex(idx);
+                // Inside TranslateBoneIndex before 'entry.AddIndex(idx);'
+                if (entry != null)
+                {
+                    Debug.LogWarning($"Bind pose mismatch for bone hash {boneTransform} (adding alt index). Existing idx:{entry.index} New idx:{bindPosesList.Count}");
+                }
+                entry.AddIndex(idx);
 				bindPosesList.Add(bindPoses[index]);
 				bonesList.Add(boneTransform);
 				return idx;

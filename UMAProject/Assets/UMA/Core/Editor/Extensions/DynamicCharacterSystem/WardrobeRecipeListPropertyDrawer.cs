@@ -594,7 +594,7 @@ namespace UMA.CharacterSystem.Editors
                 Debug.LogError("EditorApplication.isPlaying: " + EditorApplication.isPlaying);
                 Debug.LogError("EditorApplication.isPaused: " + EditorApplication.isPaused);
                 Debug.LogError("EditorApplication.isPlayingOrWillChangePlaymode: " + EditorApplication.isPlayingOrWillChangePlaymode);
-                Debug.LogError("Error in WardrobeRecipeListPropertyDrawer: " + e.Message);
+                Debug.LogException(e);
             }
 
         }
