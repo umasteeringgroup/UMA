@@ -994,10 +994,10 @@ namespace UMA
 
         public void OnDisable()
         {
-            if (meshData != null)
-            {
-                meshData.FreeBoneWeights();
-            }
+            //if (meshData != null)
+            //{
+            //    meshData.FreeBoneWeights();
+            //}
         }
 
         public int GetTextureChannelCount(UMAGeneratorBase generator)

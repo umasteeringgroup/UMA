@@ -52,6 +52,7 @@ public class CreateDecal : MonoBehaviour
     private float _pitch;
     private float _distance = 5f;
     private Vector3 _targetPos;
+    private Rect ScreenArea = new Rect(20f, 20f, 400, 1024);
 
     private bool _initialized;
 
@@ -79,6 +80,28 @@ public class CreateDecal : MonoBehaviour
 
         _initialized = true;
         UpdateCameraTransform();
+    }
+
+    private void OnGUI()
+    {
+        GUILayout.BeginArea(ScreenArea);
+        if (GUILayout.Button("Restart", GUILayout.Width(100)))
+        {
+            Avatar.BuildCharacter();
+        }
+        if (GUILayout.Button("Rebuild No Hair", GUILayout.Width(100)))
+        {
+            for(int i= Avatar.umaData.umaRecipe.slotDataList.Length - 1; i >= 0; i--)
+            {
+                var slot = Avatar.umaData.umaRecipe.slotDataList[i];
+                if (slot.slotName.ToLower().Contains("milcut"))
+                {
+                    Avatar.umaData.umaRecipe.RemoveSlot(slot);
+                }
+            }
+            Avatar.ForceUpdate(true, true, true);
+        }
+        GUILayout.EndArea();
     }
 
     void Update()

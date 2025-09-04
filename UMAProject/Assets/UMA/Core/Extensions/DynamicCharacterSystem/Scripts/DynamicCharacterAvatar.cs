@@ -1,6 +1,6 @@
 #undef SUPER_LOGGINGCOLLECTIONS
 #define UMA_DCA_TIMING
-#define DCA_OPTIMIZED
+//#define DCA_OPTIMIZED
 
 using UnityEngine;
 //For loading a recipe directly from the web @2465
@@ -4363,7 +4363,7 @@ namespace UMA.CharacterSystem
         /// <param name="RestoreDNA">If updating the same race set this to true to restore the current DNA.</param>
         // MODIFY BuildCharacter (only the beginning and list initializations)
         // Find: public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
-        public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
+        public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true, bool forceBuild=false)
         {
 #if UMA_DCA_TIMING
             Stopwatch sw = new Stopwatch();
@@ -4515,7 +4515,7 @@ namespace UMA.CharacterSystem
                         if (list != null) allRecipes.AddRange(list);
                 }
 #else
-                List<UMATextRecipe> allRecipes = new List<UMATextRecipe>(WardrobeRecipes.Values);
+                List<UMATextRecipe> allRecipes = new List<UMATextRecipe>(this.WardrobeRecipes.Values);
                 if (_additiveRecipes != null && AdditiveRecipes.Count > 0)
                 {
                     foreach (List<UMATextRecipe> addlRecipes in _additiveRecipes.Values)
