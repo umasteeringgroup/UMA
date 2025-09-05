@@ -7,6 +7,10 @@ using UnityEngine;
 /// </summary>
 public class CreateDecal : MonoBehaviour
 {
+    public enum DecalMethod 
+        {
+            SlotDecal, RenderTexture
+        };
     [Header("References")]
     [Tooltip("Camera used for orbiting & raycasting.")]
     public Camera OrbitCamera;
@@ -18,12 +22,18 @@ public class CreateDecal : MonoBehaviour
     public Material DecalMaterialForSubmesh;
 
     [Header("Decal Settings")]
+    [Tooltip("Method used to create decals. SlotDecal uses DecalSlotBuilder, RenderTexture uses UMA's built-in render texture decal system.")]
+    public DecalMethod decalMethod = DecalMethod.SlotDecal;
+
     [Tooltip("World-space radius for decal selection.")]
     public float DecalRadius = 0.05f;
     [Tooltip("Fudge factor added to radius to ensure we capture edge cases.")]
     public float fudgeRadius = 0.01f; // Small extra radius to ensure we capture edge cases
     [Tooltip("Rotation around surface normal (degrees, clockwise looking along normal).")]
     public float DecalRotationDegrees = 0f;
+
+    [Tooltip("If true, randomize decal rotation instead of using DecalRotationDegrees.")]
+    public bool randomizeRotation = false;
 
     [Tooltip("Offset applied to decal slot along normal (fixed point 1/100 of a mm , to avoid z-fighting).")]
     public int slotOffset = 3000;
@@ -178,55 +188,101 @@ public class CreateDecal : MonoBehaviour
 
         Ray ray = OrbitCamera.ScreenPointToRay(Input.mousePosition);
 
-        // Ensure click hit avatar hierarchy: perform physics raycast manually
-        if (!Physics.Raycast(ray, out RaycastHit hitInfo, 1000f))
-            return;
-        if (!hitInfo.collider.transform.IsChildOf(Avatar.transform))
-            return;
+        if (randomizeRotation)
+        {
+            DecalRotationDegrees = Random.Range(0f, 360f);
+        }
 
-       // DecalSlotBuilder.enableDebug = true;
-        // Build decal slot
-        var slotAsset = DecalSlotBuilder.CreateDecalSlot(
-            Avatar,
-            ray,
-            DecalRadius,
-            fudgeRadius,
-            DecalRotationDegrees,
-            DecalOverlay.material,  // Using UMAMaterial from overlay (requirement: use existing Material field -> we leverage overlay's UMAMaterial)
-            new DecalSlotBuilder.DecalBuildOptions
+        if (decalMethod == DecalMethod.SlotDecal)
+        {
+            // DecalSlotBuilder.enableDebug = true;
+            // Build decal slot
+            var slotAsset = DecalSlotBuilder.CreateDecalSlot(
+                Avatar,
+                ray,
+                DecalRadius,
+                fudgeRadius,
+                DecalRotationDegrees,
+                DecalOverlay.material,  // Using UMAMaterial from overlay (requirement: use existing Material field -> we leverage overlay's UMAMaterial)
+                new DecalSlotBuilder.DecalBuildOptions
+                {
+                    //multithread = false,              // requirement: allocate per click, no async
+                    // copyBlendshapes = true,
+                    facingThreshold = 0.15f
+                });
+
+            if (slotAsset == null)
             {
-                //multithread = false,              // requirement: allocate per click, no async
-                // copyBlendshapes = true,
-                facingThreshold = 0.15f
-            });
+                Debug.Log("Decal creation produced no geometry (nothing within radius or facing threshold).");
+                return;
+            }
+            UMAAssetIndexer.Instance.ProcessNewItem(slotAsset, false, false); // Ensure new asset is indexed
 
-        if (slotAsset == null)
-        {
-            Debug.Log("Decal creation produced no geometry (nothing within radius or facing threshold).");
-            return;
+            // Wrap into SlotData and add overlay
+            SlotData slotData = new SlotData(slotAsset);
+            if (DecalOverlay != null)
+            {
+                var overlayInstance = new OverlayData(DecalOverlay);
+                slotData.AddOverlay(overlayInstance);
+            }
+            slotData.expandAlongNormal = slotOffset; // Slight expansion to avoid z-fighting
+
+            // Add (accumulate) into existing UMA recipe
+            Avatar.umaData.umaRecipe.MergeSlot(slotData, true);
+            Avatar.ForceUpdate(true, true, true);
         }
-        UMAAssetIndexer.Instance.ProcessNewItem(slotAsset, false, false); // Ensure new asset is indexed
-
-        // Wrap into SlotData and add overlay
-        SlotData slotData = new SlotData(slotAsset);
-        if (DecalOverlay != null)
+        else
         {
-            var overlayInstance = new OverlayData(DecalOverlay);
-            slotData.AddOverlay(overlayInstance);
-        }
-        slotData.expandAlongNormal = slotOffset; // Slight expansion to avoid z-fighting
+            // Example call
+            var options = new DecalRenderTexture.DecalRTOptions
+            {
+                layerMask = ~0,
+                facingThreshold = 0.15f,
+                enableDebug = false,
+                forceLinearSampling = false,
+                bleedPixels = 8
+            };
 
-        // Add (accumulate) into existing UMA recipe
-        Avatar.umaData.umaRecipe.MergeSlot(slotData, true);
-        Avatar.ForceUpdate(true, true, true);
+            SkinnedMeshRenderer smr = Avatar.GetComponentInChildren<SkinnedMeshRenderer>();
+            if (smr == null)
+            {
+                Debug.LogWarning("No SkinnedMeshRenderer found on avatar.");
+                return;
+            }
 
-        // Force rebuild – common UMA approach is to ask avatar to rebuild. If ForceUpdate exists in your version, prefer that.
-        // Fallback minimal triggers if rebuild API differs:
-        if (Avatar.umaData.Validate())
-        {
-            // Depending on UMA version you may need: Avatar.ForceUpdate(); or Avatar.BuildCharacter();
-            // Provided signatures do not show those, so we rely on UMA's generator pipeline to notice the change.
-            Debug.Log("Decal slot added: " + slotAsset.slotName);
+            Material m = smr.sharedMaterial;
+            var maintexName = DecalOverlay.material.GetTexturePropertyNames().Count > 0 ? DecalOverlay.material.GetTexturePropertyNames()[0] : "_BaseMap";
+
+            var rt = m.mainTexture;
+            if (m.HasProperty(maintexName) && m.GetTexture(maintexName) != null)
+                rt = m.GetTexture(maintexName);
+            if (rt == null)
+            {
+                                Debug.LogWarning("Could not determine main texture for avatar material.");
+                return;
+            }
+            if (! (rt is RenderTexture))
+            {
+                Debug.LogWarning("Avatar main texture is not Texture2D or RenderTexture, unsupported.");
+                return;
+            }
+            var result = DecalRenderTexture.CreateDecalLayer(
+                Avatar,
+                ray,
+                radius: DecalRadius,
+                fudgeRadius: fudgeRadius,
+                angleDegrees: DecalRotationDegrees,
+                targetRT: rt as RenderTexture,
+                overlay: DecalOverlay,
+                options: options
+            );
+
+            if (result.HasValue && result.Value.success)
+            {
+                //Debug.Log("Decal stamped. UV rect: " + result.Value.uvBounds);
+                // Store reference in avatar / materials as needed.
+            }
+
         }
     }
 

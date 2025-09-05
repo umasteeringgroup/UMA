@@ -17,7 +17,7 @@ namespace UMA
     ///  - Debug visualization (triangle edges + normal) when enableDebug = true.
     ///  - Future perf hook (BVH / early culling) marked with TODO (#16).
     /// </summary>
-    public sealed class DecalSlotBuilder : ScriptableObject
+    public sealed class DecalSlotBuilder
     {
         private DecalSlotBuilder() { }
 
@@ -267,8 +267,9 @@ namespace UMA
                 sub.nativeTriangles = new NativeArray<int>(outTriangles, Allocator.Persistent);
                 md.submeshes[0] = sub;
 
-                Stub_BlendshapeSupport(md);
-                Stub_ClothSupport(md);
+                // Build & assign blendshapes and cloth coefficients from contributing slots (selected vertices only)
+                md.blendShapes = BuildBlendshapesFromSources(vertexSlot, vertexLocalIndex, includedVertex, remap, newVertexCount);
+                md.clothSkinningSerialized = BuildClothCoefficients(vertexSlot, vertexLocalIndex, includedVertex, remap, newVertexCount);
 
                 var slotAsset = ScriptableObject.CreateInstance<SlotDataAsset>();
                 slotAsset.slotName = md.SlotName;
@@ -279,7 +280,7 @@ namespace UMA
                 slotAsset.tags = new[] { "Decal" };
 
                 if (options.enableDebug)
-                    Debug.Log($"DecalSlotBuilder: Created decal '{slotAsset.slotName}' Vertices={md.vertexCount} Tris={outTriangles.Length / 3}");
+                    Debug.Log($"DecalSlotBuilder: Created decal '{slotAsset.slotName}' Vertices={md.vertexCount} Tris={outTriangles.Length / 3} BlendShapes={(md.blendShapes != null ? md.blendShapes.Length : 0)} Cloth={(md.clothSkinningSerialized != null)}");
 
                 return slotAsset;
             }
@@ -313,7 +314,7 @@ namespace UMA
             var smrs = avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
             if (smrs == null || smrs.Length == 0) return false;
 
-            Mesh bakeMesh = new Mesh(); // reused (answer #7)
+            Mesh bakeMesh = new Mesh(); // reused
             MeshHit best = new MeshHit { distance = float.MaxValue, triangleIndex = -1 };
 
             foreach (var smr in smrs)
@@ -327,7 +328,7 @@ namespace UMA
 
                 smr.BakeMesh(bakeMesh);
                 var verts = bakeMesh.vertices;
-                var tris = shared.triangles; // Shared mesh triangles (indices map into shared vertex order identical after BakeMesh)
+                var tris = shared.triangles; // idx order maps shared->baked
 
                 if (verts == null || tris == null || tris.Length == 0) continue;
 
@@ -337,7 +338,7 @@ namespace UMA
 
                 int triCount = tris.Length / 3;
 
-                // TODO (Perf #16): Add bounding volume reject (renderer bounds ray check) before per-triangle loop if needed.
+                // TODO (Perf #16): Add bounds test here if needed
                 for (int t = 0; t < triCount; t++)
                 {
                     int i0 = tris[t * 3 + 0];
@@ -356,7 +357,7 @@ namespace UMA
                     float nm = n.magnitude;
                     if (nm < 1e-6f) continue;
                     n /= nm;
-                    if (Vector3.Dot(n, rd) > -options.facingThreshold) continue; // must face camera (answer #11)
+                    if (Vector3.Dot(n, rd) > -options.facingThreshold) continue;
 
                     if (RayTriangle(ro, rd, w0, w1, w2, out float dist, out Vector3 bary))
                     {
@@ -368,7 +369,7 @@ namespace UMA
                             best.normal = n;
                             best.smr = smr;
                             best.triangleIndex = t;
-                            if (dist <= 1e-5f) break; // early short-circuit (answer #13)
+                            if (dist <= 1e-5f) break;
                         }
                     }
                 }
@@ -713,6 +714,236 @@ namespace UMA
 
             outBoneWeights = boneWeightList.ToArray();
         }
+        #endregion
+
+        #region Blendshapes & Cloth support
+
+        private struct LocalRemap
+        {
+            public int localIndex;   // index within the source slot mesh
+            public int newIndex;     // index within the new decal mesh
+        }
+
+        private static UMABlendShape[] BuildBlendshapesFromSources(
+            SlotData[] vertexSlot,
+            int[] vertexLocalIndex,
+            bool[] includedVertex,
+            int[] remap,
+            int newVertexCount)
+        {
+            // Gather per-slot selected vertices mapping
+            var perSlot = BuildPerSlotSelection(vertexSlot, vertexLocalIndex, includedVertex, remap);
+            if (perSlot.Count == 0) return null;
+
+            // Collect shape metadata (by name): max frame count, OR of normals/tangents, frame weights from first/longest
+            var shapeMeta = new Dictionary<string, (int frameCount, bool hasNormals, bool hasTangents, float[] frameWeights)>(64);
+
+            foreach (var kv in perSlot)
+            {
+                var slot = kv.Key;
+                var md = slot?.asset?.meshData;
+                var shapes = md?.blendShapes;
+                if (shapes == null || shapes.Length == 0) continue;
+
+                for (int s = 0; s < shapes.Length; s++)
+                {
+                    var ubs = shapes[s];
+                    string name = ubs.shapeName ?? $"Blend_{s}";
+                    int framesHere = ubs.frames.Length;
+                    bool hasN = framesHere > 0 && ubs.frames[0].HasNormals();
+                    bool hasT = framesHere > 0 && ubs.frames[0].HasTangents();
+
+                    if (!shapeMeta.TryGetValue(name, out var meta))
+                    {
+                        meta.frameCount = framesHere;
+                        meta.hasNormals = hasN;
+                        meta.hasTangents = hasT;
+                        meta.frameWeights = new float[framesHere];
+                        for (int f = 0; f < framesHere; f++)
+                            meta.frameWeights[f] = ubs.frames[f].frameWeight;
+                        shapeMeta[name] = meta;
+                    }
+                    else
+                    {
+                        // Merge max frames and union flags
+                        if (framesHere > meta.frameCount)
+                        {
+                            var newWeights = new float[framesHere];
+                            Array.Copy(meta.frameWeights, newWeights, meta.frameCount);
+                            // fill any remaining with this source's weights
+                            for (int f = meta.frameCount; f < framesHere; f++)
+                                newWeights[f] = ubs.frames[Mathf.Clamp(f, 0, ubs.frames.Length - 1)].frameWeight;
+                            meta.frameWeights = newWeights;
+                            meta.frameCount = framesHere;
+                        }
+                        meta.hasNormals |= hasN;
+                        meta.hasTangents |= hasT;
+                        shapeMeta[name] = meta;
+                    }
+                }
+            }
+
+            if (shapeMeta.Count == 0) return null;
+
+            // Allocate destination shapes
+            var dest = new UMABlendShape[shapeMeta.Count];
+            var names = new string[shapeMeta.Count];
+            int idx = 0;
+            foreach (var kv in shapeMeta)
+            {
+                string name = kv.Key;
+                var meta = kv.Value;
+                var ubs = new UMABlendShape();
+                ubs.shapeName = name;
+                ubs.frames = new UMABlendFrame[meta.frameCount];
+                for (int f = 0; f < meta.frameCount; f++)
+                {
+                    ubs.frames[f] = new UMABlendFrame(newVertexCount, meta.hasNormals, meta.hasTangents);
+                    ubs.frames[f].frameWeight = meta.frameWeights[f];
+                }
+                dest[idx] = ubs;
+                names[idx] = name;
+                idx++;
+            }
+
+            // Name -> dest index
+            var nameToIndex = new Dictionary<string, int>(shapeMeta.Count);
+            for (int i = 0; i < names.Length; i++)
+                nameToIndex[names[i]] = i;
+
+            // Copy deltas for selected vertices only
+            foreach (var kv in perSlot)
+            {
+                var slot = kv.Key;
+                var md = slot?.asset?.meshData;
+                var shapes = md?.blendShapes;
+                if (shapes == null || shapes.Length == 0) continue;
+
+                var mapping = kv.Value; // list of (localIndex -> newIndex)
+
+                for (int s = 0; s < shapes.Length; s++)
+                {
+                    var srcShape = shapes[s];
+                    string name = srcShape.shapeName ?? $"Blend_{s}";
+                    if (!nameToIndex.TryGetValue(name, out int di)) continue;
+
+                    var dstShape = dest[di];
+                    int framesToCopy = Math.Min(dstShape.frames.Length, srcShape.frames.Length);
+                    for (int f = 0; f < framesToCopy; f++)
+                    {
+                        var sf = srcShape.frames[f];
+                        var df = dstShape.frames[f];
+                        CopyBlendShapeDeltas(mapping, sf, df);
+                    }
+                }
+            }
+
+            return dest;
+        }
+
+        private static void CopyBlendShapeDeltas(List<LocalRemap> mapping, UMABlendFrame src, UMABlendFrame dst)
+        {
+            var sV = src.deltaVertices;
+            var dV = dst.deltaVertices;
+            Vector3[] sN = src.HasNormals() ? src.deltaNormals : null;
+            Vector3[] dN = dst.HasNormals() ? dst.deltaNormals : null;
+            Vector3[] sT = src.HasTangents() ? src.deltaTangents : null;
+            Vector3[] dT = dst.HasTangents() ? dst.deltaTangents : null;
+
+            for (int i = 0; i < mapping.Count; i++)
+            {
+                int li = mapping[i].localIndex;
+                int ni = mapping[i].newIndex;
+                if (li < 0 || ni < 0) continue;
+
+                if (sV != null && li < sV.Length && ni < dV.Length)
+                    dV[ni] = sV[li];
+                if (sN != null && dN != null && li < sN.Length && ni < dN.Length)
+                    dN[ni] = sN[li];
+                if (sT != null && dT != null && li < sT.Length && ni < dT.Length)
+                    dT[ni] = sT[li];
+            }
+        }
+
+        private static Vector2[] BuildClothCoefficients(
+            SlotData[] vertexSlot,
+            int[] vertexLocalIndex,
+            bool[] includedVertex,
+            int[] remap,
+            int newVertexCount)
+        {
+            var perSlot = BuildPerSlotSelection(vertexSlot, vertexLocalIndex, includedVertex, remap);
+            if (perSlot.Count == 0) return null;
+
+            bool anyCloth = false;
+            Vector2 defaultCoeff = new Vector2(float.MaxValue, 0f); // (collisionSphereDistance, maxDistance)
+            var dest = new Vector2[newVertexCount];
+            for (int i = 0; i < newVertexCount; i++) dest[i] = defaultCoeff;
+
+            foreach (var kv in perSlot)
+            {
+                var slot = kv.Key;
+                var md = slot?.asset?.meshData;
+                if (md == null) continue;
+
+                Vector2[] srcSerialized = md.clothSkinningSerialized;
+                ClothSkinningCoefficient[] srcCloth = md.clothSkinning;
+
+                if ((srcSerialized == null || srcSerialized.Length == 0) &&
+                    (srcCloth == null || srcCloth.Length == 0))
+                    continue;
+
+                anyCloth = true;
+
+                var mapping = kv.Value;
+                for (int i = 0; i < mapping.Count; i++)
+                {
+                    int li = mapping[i].localIndex;
+                    int ni = mapping[i].newIndex;
+                    if (li < 0 || ni < 0) continue;
+
+                    if (srcSerialized != null && li < srcSerialized.Length)
+                    {
+                        dest[ni] = srcSerialized[li];
+                    }
+                    else if (srcCloth != null && li < srcCloth.Length)
+                    {
+                        var c = srcCloth[li];
+                        dest[ni] = new Vector2(c.collisionSphereDistance, c.maxDistance);
+                    }
+                }
+            }
+
+            return anyCloth ? dest : null;
+        }
+
+        private static Dictionary<SlotData, List<LocalRemap>> BuildPerSlotSelection(
+            SlotData[] vertexSlot,
+            int[] vertexLocalIndex,
+            bool[] includedVertex,
+            int[] remap)
+        {
+            var perSlot = new Dictionary<SlotData, List<LocalRemap>>(16);
+            int count = includedVertex.Length;
+            for (int ov = 0; ov < count; ov++)
+            {
+                if (!includedVertex[ov]) continue;
+                int nv = remap[ov];
+                if (nv < 0) continue;
+                var slot = vertexSlot[ov];
+                int li = vertexLocalIndex[ov];
+                if (slot == null || li < 0) continue;
+
+                if (!perSlot.TryGetValue(slot, out var list))
+                {
+                    list = new List<LocalRemap>(64);
+                    perSlot.Add(slot, list);
+                }
+                list.Add(new LocalRemap { localIndex = li, newIndex = nv });
+            }
+            return perSlot;
+        }
+
         #endregion
 
         #region Geometry Helpers
