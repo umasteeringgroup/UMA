@@ -968,7 +968,7 @@ namespace UMA
             axisX = Vector3.Cross(up, rayDirLocal).normalized;
             axisY = Vector3.Cross(rayDirLocal, axisX).normalized;
 
-            float rad = angleDeg * Mathf.Deg2Rad;
+            float rad = angleDeg * Mathf.Deg2Rad; 
             float c = Mathf.Cos(rad);
             float s = Mathf.Sin(rad);
             Vector3 rx = axisX * c + axisY * s;
