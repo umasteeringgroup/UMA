@@ -135,6 +135,7 @@ namespace UMA.PoseTools
 		public static UMAData saveUMAData;
 		// HACK for testing
 		public UMAData sourceUMA;
+		public SkinnedMeshRenderer targetSMR;
 		TreeViewState treeState;
 		BoneTreeView boneTreeView;
 
@@ -761,6 +762,8 @@ namespace UMA.PoseTools
 			{
 				EditorGUILayout.HelpBox("Select a built UMA (DynamicCharacterAvatar, DynamicAvatar, UMAData) to enable editing and addition of new bones.", MessageType.Info);
 				sourceUMA = EditorGUILayout.ObjectField("Source UMA", sourceUMA, typeof(UMAData), true) as UMAData;
+				targetSMR = EditorGUILayout.ObjectField("Target SkinnedMeshRenderer", targetSMR, typeof(SkinnedMeshRenderer), true) as SkinnedMeshRenderer;
+				
 				if ((saveUMAData == null)|| sourceUMA.GetInstanceID() != saveUMAData.GetInstanceID() && sourceUMA != null)
                 {
                     saveUMAData = sourceUMA;
@@ -860,6 +863,14 @@ namespace UMA.PoseTools
 						}
 					}*/
 					sourceUMA = null;
+				}
+			}
+			
+			if (sourceUMA != null && targetSMR != null)
+			{
+				if (GUILayout.Button("Generate Pose from Target SMR"))
+				{
+					GeneratePoseFromSkinnedMeshRenderer();
 				}
 			}
 
@@ -1067,6 +1078,128 @@ namespace UMA.PoseTools
 				GUILayout.EndScrollView();
 			}
             serializedObject.ApplyModifiedProperties();
+        }
+
+        /// <summary>
+        /// Generates a bone pose by comparing the sourceUMA skeleton with the targetSMR bones.
+        /// This allows transforming the sourceUMA rig to match the targetSMR rig for clothing remapping.
+        /// </summary>
+        private void GeneratePoseFromSkinnedMeshRenderer()
+        {
+            if (sourceUMA == null || targetSMR == null)
+            {
+                Debug.LogError("Both Source UMA and Target SkinnedMeshRenderer must be assigned.");
+                return;
+            }
+
+            if (sourceUMA.skeleton == null)
+            {
+                Debug.LogError("Source UMA skeleton is null.");
+                return;
+            }
+
+            // Clear existing poses
+            SerializedProperty poses = serializedObject.FindProperty("poses");
+            poses.ClearArray();
+
+            var targetBones = targetSMR.bones;
+            var sourceRootBone = sourceUMA.skeleton.GetRootTransform();
+            
+            if (sourceRootBone == null)
+            {
+                Debug.LogError("Source UMA root bone is null.");
+                return;
+            }
+
+            Dictionary<string, Transform> sourceBoneMap = new Dictionary<string, Transform>();
+            BuildBoneMap(sourceRootBone, sourceBoneMap);
+
+            List<string> addedBones = new List<string>();
+            
+            // Compare each target bone with corresponding source bone
+            foreach (Transform targetBone in targetBones)
+            {
+                if (targetBone == null) continue;
+
+                string boneName = targetBone.name;
+                Transform sourceBone;
+                
+                if (sourceBoneMap.TryGetValue(boneName, out sourceBone))
+                {
+                    // Calculate transform differences
+                    Vector3 positionDiff = targetBone.localPosition - sourceBone.localPosition;
+                    Quaternion rotationDiff = Quaternion.Inverse(sourceBone.localRotation) * targetBone.localRotation;
+                    Vector3 scaleDiff = new Vector3(
+                        sourceBone.localScale.x != 0 ? targetBone.localScale.x / sourceBone.localScale.x : 1f,
+                        sourceBone.localScale.y != 0 ? targetBone.localScale.y / sourceBone.localScale.y : 1f,
+                        sourceBone.localScale.z != 0 ? targetBone.localScale.z / sourceBone.localScale.z : 1f
+                    );
+
+                    // Only add bone if there are significant differences
+                    if (positionDiff.magnitude > 0.0001f || 
+                        Quaternion.Angle(Quaternion.identity, rotationDiff) > 0.1f || 
+                        Vector3.Distance(Vector3.one, scaleDiff) > 0.0001f)
+                    {
+                        AddBoneToTarget(poses, boneName, positionDiff, rotationDiff, scaleDiff);
+                        addedBones.Add(boneName);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"Bone '{boneName}' found in target but not in source UMA skeleton.");
+                }
+            }
+
+            serializedObject.ApplyModifiedProperties();
+            
+            if (addedBones.Count > 0)
+            {
+                Debug.Log($"Generated bone pose with {addedBones.Count} bones: {string.Join(", ", addedBones)}");
+            }
+            else
+            {
+                Debug.Log("No significant bone differences found between source UMA and target SkinnedMeshRenderer.");
+            }
+        }
+
+        /// <summary>
+        /// Builds a dictionary mapping bone names to transforms for quick lookup
+        /// </summary>
+        private void BuildBoneMap(Transform rootBone, Dictionary<string, Transform> boneMap)
+        {
+            if (rootBone == null) return;
+            
+            boneMap[rootBone.name] = rootBone;
+            
+            for (int i = 0; i < rootBone.childCount; i++)
+            {
+                BuildBoneMap(rootBone.GetChild(i), boneMap);
+            }
+        }
+
+        /// <summary>
+        /// Adds a bone with transform differences to the target pose
+        /// </summary>
+        private void AddBoneToTarget(SerializedProperty poses, string boneName, Vector3 positionDiff, Quaternion rotationDiff, Vector3 scaleDiff)
+        {
+            int addedIndex = poses.arraySize;
+            poses.InsertArrayElementAtIndex(addedIndex);
+            var pose = poses.GetArrayElementAtIndex(addedIndex);
+            
+            SerializedProperty bone = pose.FindPropertyRelative("bone");
+            bone.stringValue = boneName;
+            
+            SerializedProperty hash = pose.FindPropertyRelative("hash");
+            hash.intValue = UMASkeleton.StringToHash(boneName);
+            
+            SerializedProperty position = pose.FindPropertyRelative("position");
+            position.vector3Value = positionDiff;
+            
+            SerializedProperty rotation = pose.FindPropertyRelative("rotation");
+            rotation.quaternionValue = rotationDiff;
+            
+            SerializedProperty scale = pose.FindPropertyRelative("scale");
+            scale.vector3Value = scaleDiff;
         }
 
         private static void FlipBone(SerializedProperty poses, int i)
