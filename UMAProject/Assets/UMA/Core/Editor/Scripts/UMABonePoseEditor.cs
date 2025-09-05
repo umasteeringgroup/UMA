@@ -759,7 +759,8 @@ namespace UMA.PoseTools
 			// Convert list to array and assign to pose
 			newPose.poses = generatedPoses.ToArray();
 
-			Debug.Log($"Generated bone pose with {newPose.poses.Length} bones from target SMR: {targetSMR.name}");
+			Debug.Log($"Generated bone pose with {newPose.poses.Length} bones from target SMR: {targetSMR.name}. " +
+			         $"This pose can be applied to transform the source UMA ({sourceUMA.name}) to match the target skeleton.");
 			return newPose;
 		}
 
@@ -860,6 +861,7 @@ namespace UMA.PoseTools
 
 				// UI for generating bone pose from target SMR
 				EditorGUILayout.LabelField("Generate Bone Pose", EditorStyles.boldLabel);
+				EditorGUILayout.HelpBox("Generate a bone pose that transforms the Source UMA to match a target SkinnedMeshRenderer. This is useful for remapping clothing between different character rigs.", MessageType.Info);
 				targetSMR = EditorGUILayout.ObjectField("Target SMR", targetSMR, typeof(SkinnedMeshRenderer), true) as SkinnedMeshRenderer;
 				
 				EditorGUI.BeginDisabledGroup(sourceUMA == null || targetSMR == null);
@@ -868,11 +870,46 @@ namespace UMA.PoseTools
 					UMABonePose generatedPose = GenerateBonePoseFromSMR(targetSMR);
 					if (generatedPose != null)
 					{
-						// Replace the current target pose with the generated one
-						target = generatedPose;
-						targetPose = generatedPose;
-						serializedObject = new SerializedObject(target);
-						EditorUtility.SetDirty(generatedPose);
+						// Ask user what to do with the generated pose
+						int choice = EditorUtility.DisplayDialogComplex(
+							"Bone Pose Generated",
+							$"Generated bone pose with {generatedPose.poses.Length} bones.\n\nWhat would you like to do?",
+							"Replace Current Pose",
+							"Save as New Asset",
+							"Cancel"
+						);
+
+						switch (choice)
+						{
+							case 0: // Replace current pose
+								target = generatedPose;
+								targetPose = generatedPose;
+								serializedObject = new SerializedObject(target);
+								EditorUtility.SetDirty(generatedPose);
+								Debug.Log("Replaced current pose with generated bone pose");
+								break;
+							case 1: // Save as new asset
+								string path = EditorUtility.SaveFilePanel(
+									"Save Generated Bone Pose",
+									"Assets",
+									$"{targetSMR.name}_BonePose",
+									"asset"
+								);
+								if (!string.IsNullOrEmpty(path))
+								{
+									// Convert absolute path to relative path
+									path = "Assets" + path.Substring(Application.dataPath.Length);
+									AssetDatabase.CreateAsset(generatedPose, path);
+									AssetDatabase.SaveAssets();
+									AssetDatabase.Refresh();
+									EditorGUIUtility.PingObject(generatedPose);
+									Debug.Log($"Saved generated bone pose to: {path}");
+								}
+								break;
+							case 2: // Cancel
+								DestroyImmediate(generatedPose);
+								break;
+						}
 					}
 				}
 				EditorGUI.EndDisabledGroup();
