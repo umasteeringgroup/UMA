@@ -1198,8 +1198,7 @@ namespace UMA.PoseTools
             if (targetBone == null || sourceRoot == null)
                 return null;
 
-            Transform result;
-            if (boneMap.TryGetValue(targetBone, out result))
+            if (boneMap.TryGetValue(targetBone, out Transform result))
             {
                 return result;
             }
