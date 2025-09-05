@@ -206,6 +206,9 @@ namespace UMA.PoseTools
 		private static GUIContent previewGUIContent = new GUIContent(
 			"Preview Weight",
 			"Amount to apply bone pose to preview model. Inactive while editing.");
+		private static GUIContent generatePoseGUIContent = new GUIContent(
+			"Generate Pose from Target SMR",
+			"Generate bone pose by comparing the source UMA skeleton with the target SkinnedMeshRenderer bones. This creates pose data to transform the source UMA rig to match the target rig for clothing remapping.");
 
 		/// <summary>
 		/// Returns the last UMABonePose editor that was created when the 'Inspect' button next to an UMABonePose object field was pressed
@@ -868,9 +871,16 @@ namespace UMA.PoseTools
 			
 			if (sourceUMA != null && targetSMR != null)
 			{
-				if (GUILayout.Button("Generate Pose from Target SMR"))
+				EditorGUI.BeginDisabledGroup(targetSMR.bones == null || targetSMR.bones.Length == 0);
+				if (GUILayout.Button(generatePoseGUIContent))
 				{
 					GeneratePoseFromSkinnedMeshRenderer();
+				}
+				EditorGUI.EndDisabledGroup();
+				
+				if (targetSMR.bones == null || targetSMR.bones.Length == 0)
+				{
+					EditorGUILayout.HelpBox("Target SkinnedMeshRenderer has no bones assigned.", MessageType.Warning);
 				}
 			}
 
@@ -1098,6 +1108,12 @@ namespace UMA.PoseTools
                 return;
             }
 
+            if (targetSMR.bones == null || targetSMR.bones.Length == 0)
+            {
+                Debug.LogError("Target SkinnedMeshRenderer has no bones assigned.");
+                return;
+            }
+
             // Clear existing poses
             SerializedProperty poses = serializedObject.FindProperty("poses");
             poses.ClearArray();
@@ -1111,20 +1127,24 @@ namespace UMA.PoseTools
                 return;
             }
 
-            Dictionary<string, Transform> sourceBoneMap = new Dictionary<string, Transform>();
-            BuildBoneMap(sourceRootBone, sourceBoneMap);
+            Debug.Log($"Starting bone pose generation: Source has root '{sourceRootBone.name}', Target has {targetBones.Length} bones");
 
+            Dictionary<Transform, Transform> boneMap = new Dictionary<Transform, Transform>();
             List<string> addedBones = new List<string>();
+            List<string> unmappedBones = new List<string>();
             
-            // Compare each target bone with corresponding source bone
+            // Compare each target bone with corresponding source bone using hierarchical mapping
             foreach (Transform targetBone in targetBones)
             {
-                if (targetBone == null) continue;
+                if (targetBone == null) 
+                {
+                    Debug.LogWarning("Encountered null bone in target SkinnedMeshRenderer bones array");
+                    continue;
+                }
 
-                string boneName = targetBone.name;
-                Transform sourceBone;
+                Transform sourceBone = FindBoneInHierarchy(targetBone, sourceRootBone, boneMap);
                 
-                if (sourceBoneMap.TryGetValue(boneName, out sourceBone))
+                if (sourceBone != null)
                 {
                     // Calculate transform differences
                     Vector3 positionDiff = targetBone.localPosition - sourceBone.localPosition;
@@ -1140,13 +1160,13 @@ namespace UMA.PoseTools
                         Quaternion.Angle(Quaternion.identity, rotationDiff) > 0.1f || 
                         Vector3.Distance(Vector3.one, scaleDiff) > 0.0001f)
                     {
-                        AddBoneToTarget(poses, boneName, positionDiff, rotationDiff, scaleDiff);
-                        addedBones.Add(boneName);
+                        AddBoneToTarget(poses, targetBone.name, positionDiff, rotationDiff, scaleDiff);
+                        addedBones.Add(targetBone.name);
                     }
                 }
                 else
                 {
-                    Debug.LogWarning($"Bone '{boneName}' found in target but not in source UMA skeleton.");
+                    unmappedBones.Add(targetBone.name);
                 }
             }
 
@@ -1160,21 +1180,82 @@ namespace UMA.PoseTools
             {
                 Debug.Log("No significant bone differences found between source UMA and target SkinnedMeshRenderer.");
             }
+            
+            if (unmappedBones.Count > 0)
+            {
+                Debug.LogWarning($"Could not map {unmappedBones.Count} bones from target to source: {string.Join(", ", unmappedBones)}");
+            }
         }
 
         /// <summary>
-        /// Builds a dictionary mapping bone names to transforms for quick lookup
+        /// Finds a bone in the source hierarchy that corresponds to the target bone using hierarchical matching
         /// </summary>
-        private void BuildBoneMap(Transform rootBone, Dictionary<string, Transform> boneMap)
+        private Transform FindBoneInHierarchy(Transform targetBone, Transform sourceRoot, Dictionary<Transform, Transform> boneMap)
         {
-            if (rootBone == null) return;
-            
-            boneMap[rootBone.name] = rootBone;
-            
-            for (int i = 0; i < rootBone.childCount; i++)
+            if (targetBone == null || sourceRoot == null)
+                return null;
+
+            Transform result;
+            if (boneMap.TryGetValue(targetBone, out result))
             {
-                BuildBoneMap(rootBone.GetChild(i), boneMap);
+                return result;
             }
+
+            // Direct name match
+            if (string.Compare(sourceRoot.name, targetBone.name, System.StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                boneMap.Add(targetBone, sourceRoot);
+                return sourceRoot;
+            }
+
+            // Try to find in children
+            result = FindBoneRecursive(sourceRoot, targetBone.name);
+            if (result != null)
+            {
+                boneMap.Add(targetBone, result);
+                return result;
+            }
+
+            // If target bone has a parent, try to find the parent first, then look for this bone in that parent's children
+            if (targetBone.parent != null)
+            {
+                Transform sourceParent = FindBoneInHierarchy(targetBone.parent, sourceRoot, boneMap);
+                if (sourceParent != null)
+                {
+                    result = sourceParent.Find(targetBone.name);
+                    if (result != null)
+                    {
+                        boneMap.Add(targetBone, result);
+                        return result;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Recursively searches for a bone by name in the transform hierarchy
+        /// </summary>
+        private Transform FindBoneRecursive(Transform parent, string boneName)
+        {
+            if (parent == null) return null;
+
+            if (string.Compare(parent.name, boneName, System.StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                return parent;
+            }
+
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform result = FindBoneRecursive(parent.GetChild(i), boneName);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
