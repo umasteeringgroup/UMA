@@ -1150,9 +1150,12 @@ namespace UMA.PoseTools
                     Vector3 positionDiff = targetBone.localPosition - sourceBone.localPosition;
                     Quaternion rotationDiff = Quaternion.Inverse(sourceBone.localRotation) * targetBone.localRotation;
                     Vector3 scaleDiff = new Vector3(
-                        sourceBone.localScale.x != 0 ? targetBone.localScale.x / sourceBone.localScale.x : 1f,
-                        sourceBone.localScale.y != 0 ? targetBone.localScale.y / sourceBone.localScale.y : 1f,
-                        sourceBone.localScale.z != 0 ? targetBone.localScale.z / sourceBone.localScale.z : 1f
+                        (sourceBone.localScale.x == 0f && targetBone.localScale.x == 0f) ? 1f :
+                        (sourceBone.localScale.x != 0f ? targetBone.localScale.x / sourceBone.localScale.x : 1f),
+                        (sourceBone.localScale.y == 0f && targetBone.localScale.y == 0f) ? 1f :
+                        (sourceBone.localScale.y != 0f ? targetBone.localScale.y / sourceBone.localScale.y : 1f),
+                        (sourceBone.localScale.z == 0f && targetBone.localScale.z == 0f) ? 1f :
+                        (sourceBone.localScale.z != 0f ? targetBone.localScale.z / sourceBone.localScale.z : 1f)
                     );
 
                     // Only add bone if there are significant differences
