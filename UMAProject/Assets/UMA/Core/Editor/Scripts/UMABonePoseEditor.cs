@@ -754,12 +754,24 @@ namespace UMA.PoseTools
 			}
 
 			// Compare skeletons and generate pose data
-			GeneratePoseDataRecursive(sourceRoot, targetRoot, generatedPoses);
+			int totalBonesProcessed = 0;
+			int matchingBonesFound = 0;
+			GeneratePoseDataRecursive(sourceRoot, targetRoot, generatedPoses, ref totalBonesProcessed, ref matchingBonesFound);
+
+			// Provide feedback about the comparison
+			if (matchingBonesFound == 0)
+			{
+				Debug.LogWarning($"No matching bones found between source ({sourceUMA.name}) and target ({targetSMR.name}). " +
+				               "Ensure both skeletons have similar bone naming and hierarchy.");
+				DestroyImmediate(newPose);
+				return null;
+			}
 
 			// Convert list to array and assign to pose
 			newPose.poses = generatedPoses.ToArray();
 
 			Debug.Log($"Generated bone pose with {newPose.poses.Length} bones from target SMR: {targetSMR.name}. " +
+			         $"Processed {totalBonesProcessed} source bones, found {matchingBonesFound} matches. " +
 			         $"This pose can be applied to transform the source UMA ({sourceUMA.name}) to match the target skeleton.");
 			return newPose;
 		}
@@ -767,8 +779,11 @@ namespace UMA.PoseTools
 		/// <summary>
 		/// Recursively compares source and target skeleton transforms and generates pose data
 		/// </summary>
-		private void GeneratePoseDataRecursive(Transform sourceTransform, Transform targetTransform, List<UMABonePose.PoseBone> poses)
+		private void GeneratePoseDataRecursive(Transform sourceTransform, Transform targetTransform, List<UMABonePose.PoseBone> poses, ref int totalBonesProcessed, ref int matchingBonesFound)
 		{
+			totalBonesProcessed++;
+			matchingBonesFound++;
+
 			// Calculate the transformation difference
 			Vector3 positionDiff = targetTransform.localPosition - sourceTransform.localPosition;
 			Quaternion rotationDiff = Quaternion.Inverse(sourceTransform.localRotation) * targetTransform.localRotation;
@@ -802,8 +817,25 @@ namespace UMA.PoseTools
 
 				if (targetChild != null)
 				{
-					GeneratePoseDataRecursive(sourceChild, targetChild, poses);
+					GeneratePoseDataRecursive(sourceChild, targetChild, poses, ref totalBonesProcessed, ref matchingBonesFound);
 				}
+				else
+				{
+					// Count bones that were processed but not matched
+					CountBonesRecursive(sourceChild, ref totalBonesProcessed);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Helper method to count bones in a hierarchy for statistics
+		/// </summary>
+		private void CountBonesRecursive(Transform bone, ref int count)
+		{
+			count++;
+			for (int i = 0; i < bone.childCount; i++)
+			{
+				CountBonesRecursive(bone.GetChild(i), ref count);
 			}
 		}
 
