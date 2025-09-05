@@ -135,6 +135,7 @@ namespace UMA.PoseTools
 		public static UMAData saveUMAData;
 		// HACK for testing
 		public UMAData sourceUMA;
+		public SkinnedMeshRenderer targetSMR;
 		TreeViewState treeState;
 		BoneTreeView boneTreeView;
 
@@ -718,6 +719,93 @@ namespace UMA.PoseTools
 			BonePoseSavers.Clear();
 		}
 
+		/// <summary>
+		/// Generates an UMABonePose from a target SkinnedMeshRenderer that can transform 
+		/// the sourceUMA rig to match the target rig's scale, rotation, and position.
+		/// </summary>
+		/// <param name="targetSMR">The target SkinnedMeshRenderer to match</param>
+		/// <returns>A new UMABonePose that transforms sourceUMA to match targetSMR</returns>
+		public UMABonePose GenerateBonePoseFromSMR(SkinnedMeshRenderer targetSMR)
+		{
+			if (sourceUMA == null)
+			{
+				Debug.LogError("Source UMA is required to generate bone pose");
+				return null;
+			}
+
+			if (targetSMR == null)
+			{
+				Debug.LogError("Target SkinnedMeshRenderer is required to generate bone pose");
+				return null;
+			}
+
+			// Create a new UMABonePose
+			UMABonePose newPose = CreateInstance<UMABonePose>();
+			List<UMABonePose.PoseBone> generatedPoses = new List<UMABonePose.PoseBone>();
+
+			// Get the root transforms for both skeletons
+			Transform sourceRoot = UMA.SkeletonTools.LocateRoot(sourceUMA.umaRoot.transform);
+			Transform targetRoot = UMA.SkeletonTools.LocateRoot(targetSMR.transform.parent);
+
+			if (sourceRoot == null || targetRoot == null)
+			{
+				Debug.LogError("Could not locate skeleton root for source or target");
+				return null;
+			}
+
+			// Compare skeletons and generate pose data
+			GeneratePoseDataRecursive(sourceRoot, targetRoot, generatedPoses);
+
+			// Convert list to array and assign to pose
+			newPose.poses = generatedPoses.ToArray();
+
+			Debug.Log($"Generated bone pose with {newPose.poses.Length} bones from target SMR: {targetSMR.name}");
+			return newPose;
+		}
+
+		/// <summary>
+		/// Recursively compares source and target skeleton transforms and generates pose data
+		/// </summary>
+		private void GeneratePoseDataRecursive(Transform sourceTransform, Transform targetTransform, List<UMABonePose.PoseBone> poses)
+		{
+			// Calculate the transformation difference
+			Vector3 positionDiff = targetTransform.localPosition - sourceTransform.localPosition;
+			Quaternion rotationDiff = Quaternion.Inverse(sourceTransform.localRotation) * targetTransform.localRotation;
+			Vector3 scaleDiff = new Vector3(
+				sourceTransform.localScale.x != 0 ? targetTransform.localScale.x / sourceTransform.localScale.x : 1,
+				sourceTransform.localScale.y != 0 ? targetTransform.localScale.y / sourceTransform.localScale.y : 1,
+				sourceTransform.localScale.z != 0 ? targetTransform.localScale.z / sourceTransform.localScale.z : 1
+			);
+
+			// Only add bone data if there are meaningful differences
+			if (positionDiff.magnitude > 0.001f || 
+				Quaternion.Angle(Quaternion.identity, rotationDiff) > 0.1f || 
+				(scaleDiff - Vector3.one).magnitude > 0.001f)
+			{
+				UMABonePose.PoseBone poseBone = new UMABonePose.PoseBone();
+				poseBone.bone = sourceTransform.name;
+				poseBone.hash = UMAUtils.StringToHash(sourceTransform.name);
+				poseBone.position = positionDiff;
+				poseBone.rotation = rotationDiff;
+				poseBone.scale = scaleDiff;
+				poseBone.category = "Generated";
+
+				poses.Add(poseBone);
+			}
+
+			// Recurse through children
+			for (int i = 0; i < sourceTransform.childCount; i++)
+			{
+				Transform sourceChild = sourceTransform.GetChild(i);
+				Transform targetChild = targetTransform.Find(sourceChild.name);
+
+				if (targetChild != null)
+				{
+					GeneratePoseDataRecursive(sourceChild, targetChild, poses);
+				}
+			}
+		}
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -767,6 +855,36 @@ namespace UMA.PoseTools
                     SaveWeights();
                     ClearBonePoseWeights();
                 }
+
+				GUILayout.Space(EditorGUIUtility.singleLineHeight / 2f);
+
+				// UI for generating bone pose from target SMR
+				EditorGUILayout.LabelField("Generate Bone Pose", EditorStyles.boldLabel);
+				targetSMR = EditorGUILayout.ObjectField("Target SMR", targetSMR, typeof(SkinnedMeshRenderer), true) as SkinnedMeshRenderer;
+				
+				EditorGUI.BeginDisabledGroup(sourceUMA == null || targetSMR == null);
+				if (GUILayout.Button("Generate Bone Pose from Target SMR"))
+				{
+					UMABonePose generatedPose = GenerateBonePoseFromSMR(targetSMR);
+					if (generatedPose != null)
+					{
+						// Replace the current target pose with the generated one
+						target = generatedPose;
+						targetPose = generatedPose;
+						serializedObject = new SerializedObject(target);
+						EditorUtility.SetDirty(generatedPose);
+					}
+				}
+				EditorGUI.EndDisabledGroup();
+
+				if (sourceUMA == null)
+				{
+					EditorGUILayout.HelpBox("Source UMA is required to generate bone pose.", MessageType.Warning);
+				}
+				if (targetSMR == null)
+				{
+					EditorGUILayout.HelpBox("Target SkinnedMeshRenderer is required to generate bone pose.", MessageType.Warning);
+				}
 			}
 			else
 			{
