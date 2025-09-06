@@ -834,27 +834,38 @@ namespace UMA
             int len2 = umaTransforms.Length;
 
             // Upper bound size = len1 + len2 (duplicates will be removed).
-            // We merge into a temporary buffer then copy back into mergedTransforms (first segment only).
             int maxRequired = len1 + len2;
+
+            // When destination is too small, merge into a pooled temp, then copy back subset.
             if (maxRequired > mergedTransforms.Length)
             {
-                // Allocate a larger temp array (cannot resize fixed destination).
-                // Fallback: allocate temp large enough, then copy result subset back to original array.
-                UMATransform[] tempDest = new UMATransform[maxRequired];
-                DoMerge(tempDest, 0, mergedTransforms, len1, umaTransforms, len2, out int newLen);
-                // Copy back only what fits
-                int copyCount = Math.Min(newLen, mergedTransforms.Length);
-                Array.Copy(tempDest, 0, mergedTransforms, 0, copyCount);
-                len1 = copyCount;
+                var tempDest = System.Buffers.ArrayPool<UMATransform>.Shared.Rent(maxRequired);
+                try
+                {
+                    DoMerge(tempDest, 0, mergedTransforms, len1, umaTransforms, len2, out int newLen);
+                    int copyCount = Math.Min(newLen, mergedTransforms.Length);
+                    Array.Copy(tempDest, 0, mergedTransforms, 0, copyCount);
+                    len1 = copyCount;
+                }
+                finally
+                {
+                    System.Buffers.ArrayPool<UMATransform>.Shared.Return(tempDest, clearArray: false);
+                }
                 return;
             }
 
-            // Use stack/heap temp buffer sized to maxRequired.
-            UMATransform[] buffer = new UMATransform[maxRequired];
-            DoMerge(buffer, 0, mergedTransforms, len1, umaTransforms, len2, out int mergedLen);
-            // Copy back to destination (fits because we checked capacity)
-            Array.Copy(buffer, 0, mergedTransforms, 0, mergedLen);
-            len1 = mergedLen;
+            // Destination has enough capacity; merge via pooled buffer and copy back.
+            var buffer = System.Buffers.ArrayPool<UMATransform>.Shared.Rent(maxRequired);
+            try
+            {
+                DoMerge(buffer, 0, mergedTransforms, len1, umaTransforms, len2, out int mergedLen);
+                Array.Copy(buffer, 0, mergedTransforms, 0, mergedLen);
+                len1 = mergedLen;
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<UMATransform>.Shared.Return(buffer, clearArray: false);
+            }
         }
 
         private static void DoMerge(UMATransform[] dest, int destStart,
@@ -1158,58 +1169,60 @@ namespace UMA
 			return highestTargetIndex + 1;
 		}
 
-
-
-
         private static void BuildBoneWeights(UMAMeshData data, NativeArray<BoneWeight1> dest, NativeArray<byte> destBonesPerVertex, int destIndex, int destBoneweightIndex, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
-		{
-			var bones = data.boneNameHashes;
-			var bindPoses = data.bindPoses;
-			int count = data.vertices.Length;
+        {
+            var bones = data.boneNameHashes;
+            var bindPoses = data.bindPoses;
+            int count = data.vertices.Length;
 
-            int[] boneMapping = new int[bones.Length];
-
-			for (int i = 0; i < boneMapping.Length; i++)
-			{
-				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
-			}
+            int[] boneMapping = System.Buffers.ArrayPool<int>.Shared.Rent(bones.Length);
+            try
+            {
+                for (int i = 0; i < bones.Length; i++)
+                {
+                    boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+                }
 
 #if USE_NATIVE_ARRAYS
-			NativeArray<byte> sourceBonesPerIndex = data.unityBonesPerVertex;
-			int sourcecount = sourceBonesPerIndex.Length;
-			int destcount = destBonesPerVertex.Length; // should be 0.
+            NativeArray<byte> sourceBonesPerIndex = data.unityBonesPerVertex;
+            int sourcecount = sourceBonesPerIndex.Length;
+            int destcount = destBonesPerVertex.Length; // should be 0.
 
-			NativeArray<byte>.Copy(sourceBonesPerIndex, 0,destBonesPerVertex,destIndex, sourceBonesPerIndex.Length);
-			NativeArray<BoneWeight1>.Copy(data.unityBoneWeights, 0, dest, destBoneweightIndex, data.unityBoneWeights.Length);
-			BoneWeight1 b = new BoneWeight1();
-			for (int i = 0; i < data.unityBoneWeights.Length; i++)
-			{
-				b.boneIndex = boneMapping[data.unityBoneWeights[i].boneIndex];
-				b.weight = data.unityBoneWeights[i].weight;
+            NativeArray<byte>.Copy(sourceBonesPerIndex, 0,destBonesPerVertex,destIndex, sourceBonesPerIndex.Length);
+            NativeArray<BoneWeight1>.Copy(data.unityBoneWeights, 0, dest, destBoneweightIndex, data.unityBoneWeights.Length);
+            BoneWeight1 b = new BoneWeight1();
+            for (int i = 0; i < data.unityBoneWeights.Length; i++)
+            {
+                b.boneIndex = boneMapping[data.unityBoneWeights[i].boneIndex];
+                b.weight = data.unityBoneWeights[i].weight;
 
-				dest[i + destBoneweightIndex] = b;
-			}
-#else
-			try
-			{
-				NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
-				NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneweightIndex, data.ManagedBoneWeights.Length);
-			}
-			catch 
-			{
-                Debug.LogError("Error copying bone weights");
+                dest[i + destBoneweightIndex] = b;
             }
+#else
+                try
+                {
+                    NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
+                    NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneweightIndex, data.ManagedBoneWeights.Length);
+                }
+                catch
+                {
+                    Debug.LogError("Error copying bone weights");
+                }
 
-			BoneWeight1 b = new BoneWeight1();
-			for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
-			{
-				b.boneIndex = boneMapping[data.ManagedBoneWeights[i].boneIndex];
-				b.weight = data.ManagedBoneWeights[i].weight;
-				dest[i + destBoneweightIndex] = b;
-			}
-
+                BoneWeight1 b = new BoneWeight1();
+                for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
+                {
+                    b.boneIndex = boneMapping[data.ManagedBoneWeights[i].boneIndex];
+                    b.weight = data.ManagedBoneWeights[i].weight;
+                    dest[i + destBoneweightIndex] = b;
+                }
 #endif
-		}
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<int>.Shared.Return(boneMapping, clearArray: false);
+            }
+        }
 
 		private class BoneIndexEntry
 		{
