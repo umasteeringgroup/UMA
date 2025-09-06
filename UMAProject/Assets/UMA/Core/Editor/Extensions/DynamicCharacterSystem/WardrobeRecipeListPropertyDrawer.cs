@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System;
 
 namespace UMA.CharacterSystem.Editors
 {
@@ -14,78 +15,120 @@ namespace UMA.CharacterSystem.Editors
         public static int lastAdded = -1;
         public static int selectedSlotIndex = 0;
 
-
-        // float padding = 2f;
-        // public DynamicCharacterSystem thisDCS;
         public DynamicCharacterAvatar thisDCA;
-		public bool changed = false;
-		static bool defaultOpen = true;
+        public bool changed = false;
+        static bool defaultOpen = true;
         Texture warningIcon;
-		int wardrobeRecipePickerID = -1;
+        int wardrobeRecipePickerID = -1;
         bool recipesIndexed = false;
         public static bool ShowOnlyCompatibleRecipes = false;
         public static bool ShowOnlySelectedSlot = false;
         public static bool ShowOnlyActive = false;
         public static bool ToggleAll = false;
 
+        private static bool IsEditorBusy => EditorApplication.isCompiling || EditorApplication.isUpdating;
+
+        private static UMAAssetIndexer TryGetIndexer()
+        {
+            try { return UMAAssetIndexer.Instance; }
+            catch { return null; }
+        }
+
+        private void ScheduleRebuildRaceRecipes()
+        {
+            // Schedule when editor is idle and indexer is available
+            EditorApplication.delayCall += () =>
+            {
+                if (IsEditorBusy) { ScheduleRebuildRaceRecipes(); return; }
+                var idx = TryGetIndexer();
+                if (idx == null) { ScheduleRebuildRaceRecipes(); return; }
+                try { idx.RebuildRaceRecipes(); } catch { }
+            };
+        }
+
+        private void EnsureDCA(SerializedProperty property)
+        {
+            if (thisDCA == null)
+            {
+                try
+                {
+                    thisDCA = property?.serializedObject?.targetObject as DynamicCharacterAvatar;
+                }
+                catch { thisDCA = null; }
+            }
+        }
+
         public void SetupDropdown(string race)
         {
-            if (LastRace != race) 
+            if (LastRace != race)
             {
                 LastRace = race;
                 recipes.Clear();
                 recipeMenu.Clear();
                 if (thisDCA != null)
                 {
-                    var availableRecipes = thisDCA.AvailableRecipes;
-                    foreach (var slot in availableRecipes.Keys)
+                    try
                     {
-                        foreach (var recipe in availableRecipes[slot])
+                        var availableRecipes = thisDCA.AvailableRecipes;
+                        if (availableRecipes != null)
                         {
-                            recipes.Add(recipe.name);
-                            recipeMenu.Add(slot + "/" + recipe.name);
+                            foreach (var slot in availableRecipes.Keys)
+                            {
+                                var list = availableRecipes[slot];
+                                if (list == null) continue;
+                                foreach (var recipe in list)
+                                {
+                                    if (recipe == null) continue;
+                                    recipes.Add(recipe.name);
+                                    recipeMenu.Add(slot + "/" + recipe.name);
+                                }
+                            }
                         }
                     }
+                    catch { /* ignore during reload */ }
                 }
             }
         }
 
-		//Make a drop area for wardrobe recipes
-		private void DropAreaGUI(Rect dropArea, SerializedProperty thisRecipesProp)
+        //Make a drop area for wardrobe recipes
+        private void DropAreaGUI(Rect dropArea, SerializedProperty thisRecipesProp)
         {
+            if (thisRecipesProp == null) return;
             var evt = Event.current;
-			//make the box clickable so that the user can select raceData assets from the asset selection window
-			if (evt.type == EventType.MouseUp)
-			{
-				if (dropArea.Contains(evt.mousePosition))
-				{
-					wardrobeRecipePickerID = EditorGUIUtility.GetControlID(new GUIContent("wrObjectPicker"), FocusType.Passive);
-					EditorGUIUtility.ShowObjectPicker<UMAWardrobeRecipe>(null, false, "", wardrobeRecipePickerID);
-					Event.current.Use();//stops the Mismatched LayoutGroup errors
-					return;
-				}
-			}
-			if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == wardrobeRecipePickerID)
-			{
-				UMAWardrobeRecipe uwr = EditorGUIUtility.GetObjectPickerObject() as UMAWardrobeRecipe;
+            // Click-to-pick
+            if (evt.type == EventType.MouseUp)
+            {
+                if (dropArea.Contains(evt.mousePosition))
+                {
+                    wardrobeRecipePickerID = EditorGUIUtility.GetControlID(new GUIContent("wrObjectPicker"), FocusType.Passive);
+                    EditorGUIUtility.ShowObjectPicker<UMAWardrobeRecipe>(null, false, "", wardrobeRecipePickerID);
+                    Event.current.Use();//stops the Mismatched LayoutGroup errors
+                    return;
+                }
+            }
+            if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == wardrobeRecipePickerID)
+            {
+                if (IsEditorBusy) return;
+                UMAWardrobeRecipe uwr = EditorGUIUtility.GetObjectPickerObject() as UMAWardrobeRecipe;
                 recipesIndexed = false;
-				if (AddRecipe(thisRecipesProp, uwr))
+                if (uwr != null && AddRecipe(thisRecipesProp, uwr))
                 {
                     if (recipesIndexed)
                     {
                         recipesIndexed = false;
-                        UMAAssetIndexer.Instance.RebuildRaceRecipes();
+                        var idx = TryGetIndexer();
+                        if (idx != null) { try { idx.RebuildRaceRecipes(); } catch { ScheduleRebuildRaceRecipes(); } }
+                        else { ScheduleRebuildRaceRecipes(); }
                     }
                 }
-				if (evt.type != EventType.Layout)
+                if (evt.type != EventType.Layout)
                 {
                     Event.current.Use();//stops the Mismatched LayoutGroup errors
                 }
-
                 return;
-			}
+            }
 
-			if (evt.type == EventType.DragUpdated)
+            if (evt.type == EventType.DragUpdated)
             {
                 if (dropArea.Contains(evt.mousePosition))
                 {
@@ -95,48 +138,53 @@ namespace UMA.CharacterSystem.Editors
             if (evt.type == EventType.DragPerform)
             {
                 if (dropArea.Contains(evt.mousePosition))
-				{
-					DragAndDrop.AcceptDrag();
-
-					UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
-
-					ProcessDropeedRecipes(thisRecipesProp, draggedObjects);
-				}
-			}
+                {
+                    DragAndDrop.AcceptDrag();
+                    UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+                    ProcessDropeedRecipes(thisRecipesProp, draggedObjects);
+                }
+            }
         }
 
-		private void ProcessDropeedRecipes(SerializedProperty thisRecipesProp, Object[] draggedObjects)
-		{
+        private void ProcessDropeedRecipes(SerializedProperty thisRecipesProp, UnityEngine.Object[] draggedObjects)
+        {
+            if (thisRecipesProp == null || draggedObjects == null) return;
+            if (IsEditorBusy) return;
+
             recipesIndexed = false;
-			for (int i = 0; i < draggedObjects.Length; i++)
-			{
-				if (draggedObjects[i])
-				{
-					UMATextRecipe tempRecipeAsset = draggedObjects[i] as UMATextRecipe;
-					if (!tempRecipeAsset)
-					{
-						var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
-						if (System.IO.Directory.Exists(path))
-						{
-							RecursiveScanFoldersForAssets(path, thisRecipesProp);
-						}
-					}
-					if (tempRecipeAsset && (tempRecipeAsset.recipeType == "Wardrobe" || tempRecipeAsset.recipeType == "WardrobeCollection"))
+            for (int i = 0; i < draggedObjects.Length; i++)
+            {
+                if (!draggedObjects[i]) continue;
+
+                var tempRecipeAsset = draggedObjects[i] as UMATextRecipe;
+                if (tempRecipeAsset == null)
+                {
+                    var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
+                    if (System.IO.Directory.Exists(path))
                     {
-                        AddRecipe(thisRecipesProp, tempRecipeAsset);
-                        continue;
+                        RecursiveScanFoldersForAssets(path, thisRecipesProp);
                     }
+                    continue;
                 }
-			}
+
+                if (tempRecipeAsset.recipeType == "Wardrobe" || tempRecipeAsset.recipeType == "WardrobeCollection")
+                {
+                    AddRecipe(thisRecipesProp, tempRecipeAsset);
+                }
+            }
             if (recipesIndexed)
             {
                 recipesIndexed = false;
-                UMAAssetIndexer.Instance.RebuildRaceRecipes();
+                var idx = TryGetIndexer();
+                if (idx != null) { try { idx.RebuildRaceRecipes(); } catch { ScheduleRebuildRaceRecipes(); } }
+                else { ScheduleRebuildRaceRecipes(); }
             }
-		}
+        }
 
         private bool AddRecipe(SerializedProperty thisRecipesProp, UMATextRecipe tempRecipeAsset)
         {
+            if (thisRecipesProp == null || tempRecipeAsset == null) return false;
+
             bool needToAddNew = true;
             for (int ii = 0; ii < thisRecipesProp.arraySize; ii++)
             {
@@ -154,16 +202,25 @@ namespace UMA.CharacterSystem.Editors
             }
             if (needToAddNew)
             {
-                if (!UMAAssetIndexer.Instance.HasRecipe(tempRecipeAsset.name))
+                var idx = TryGetIndexer();
+                if (idx != null)
                 {
-                    UMAAssetIndexer.Instance.AddRecipe(tempRecipeAsset);
-                    recipesIndexed = true;
+                    try
+                    {
+                        if (!idx.HasRecipe(tempRecipeAsset.name))
+                        {
+                            idx.AddRecipe(tempRecipeAsset);
+                            recipesIndexed = true;
+                        }
+                    }
+                    catch { /* indexer might be mid-reload */ }
                 }
                 int newArrayElIndex = thisRecipesProp.arraySize;
                 thisRecipesProp.InsertArrayElementAtIndex(newArrayElIndex);
                 thisRecipesProp.serializedObject.ApplyModifiedProperties();
                 thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_recipeName").stringValue = tempRecipeAsset.name;
                 thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_enabledInDefaultWardrobe").boolValue = true;
+
                 int compatibleRacesArraySize = tempRecipeAsset.compatibleRaces.Count;
                 thisRecipesProp.GetArrayElementAtIndex(newArrayElIndex).FindPropertyRelative("_compatibleRaces").arraySize = compatibleRacesArraySize;
                 for (int cr = 0; cr < compatibleRacesArraySize; cr++)
@@ -179,91 +236,114 @@ namespace UMA.CharacterSystem.Editors
         }
 
         protected void RecursiveScanFoldersForAssets(string path, SerializedProperty thisRecipesProp)
-		{
-			List<Object> droppedItems = new List<Object>();
+        {
+            if (string.IsNullOrEmpty(path)) return;
+            List<UnityEngine.Object> droppedItems = new List<UnityEngine.Object>();
 
-			var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
+            string[] assetFiles;
+            try { assetFiles = System.IO.Directory.GetFiles(path, "*.asset"); }
+            catch { return; }
+
             for (int i = 0; i < assetFiles.Length; i++)
-			{
+            {
                 string assetFile = assetFiles[i];
                 var tempRecipe = AssetDatabase.LoadAssetAtPath(assetFile, typeof(UMAWardrobeRecipe)) as UMAWardrobeRecipe;
-				if (tempRecipe)
-				{
-					droppedItems.Add(tempRecipe);
-				}
-			}
-			if (droppedItems.Count > 0)
-			{
-				ProcessDropeedRecipes(thisRecipesProp, droppedItems.ToArray());
-			}
-            string[] array = System.IO.Directory.GetDirectories(path);
-            for (int i = 0; i < array.Length; i++)
-			{
-                string subFolder = array[i];
-                RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'), thisRecipesProp);
-			}
-		}
-
-        /*public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            float h = EditorGUIUtility.singleLineHeight + padding;
-            int extraLines = 0;
-            if (defaultOpen)
-            {
-                var thisRecipesProp = property.FindPropertyRelative("recipes");
-                extraLines = thisRecipesProp.arraySize;
-                h *= (extraLines + 3);// add space for button
-                h += 50f + padding;
+                if (tempRecipe)
+                {
+                    droppedItems.Add(tempRecipe);
+                }
             }
-            return h;
-        } */
+            if (droppedItems.Count > 0)
+            {
+                ProcessDropeedRecipes(thisRecipesProp, droppedItems.ToArray());
+            }
+            string[] subDirs;
+            try { subDirs = System.IO.Directory.GetDirectories(path); }
+            catch { return; }
+
+            for (int i = 0; i < subDirs.Length; i++)
+            {
+                string subFolder = subDirs[i];
+                RecursiveScanFoldersForAssets(subFolder.Replace('\\', '/'), thisRecipesProp);
+            }
+        }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            // Layout is handled by GUILayout; returning 0 keeps the drawer compact.
             return 0;
         }
+
+        private UMATextRecipe SafeGetRecipeByName(string recipeName, int indexFromDca)
+        {
+            // Prefer the live DCA list if available and aligned
+            try
+            {
+                if (thisDCA?.preloadWardrobeRecipes?.recipes != null &&
+                    indexFromDca >= 0 && indexFromDca < thisDCA.preloadWardrobeRecipes.recipes.Count)
+                {
+                    var item = thisDCA.preloadWardrobeRecipes.recipes[indexFromDca];
+                    if (item != null && item._recipe != null) return item._recipe;
+                }
+            }
+            catch { }
+
+            // Fallback to indexer by name
+            var idx = TryGetIndexer();
+            if (idx != null && !string.IsNullOrEmpty(recipeName))
+            {
+                try { return idx.GetRecipe(recipeName, false); } catch { }
+            }
+            return null;
+        }
+
+        private bool IndexerHasRecipe(string recipeName)
+        {
+            var idx = TryGetIndexer();
+            if (idx == null || string.IsNullOrEmpty(recipeName)) return false;
+            try { return idx.HasRecipe(recipeName); } catch { return false; }
+        }
+
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            if (IsEditorBusy)
             {
-                return; // don't draw the property if Unity is compiling or updating
+                return;
             }
-            changed = false;
+
             if (warningIcon == null)
             {
                 warningIcon = EditorGUIUtility.FindTexture("console.warnicon.sml");
             }
-            EditorGUI.BeginProperty(position, label, property);
-            //var r0 = new Rect(position.xMin, position.yMin, position.width, EditorGUIUtility.singleLineHeight);
 
-			defaultOpen = EditorGUILayout.Foldout(defaultOpen, "Default Wardrobe Recipes");
+            changed = false;
+            EnsureDCA(property);
+
+            EditorGUI.BeginProperty(position, label, property);
+
+            defaultOpen = EditorGUILayout.Foldout(defaultOpen, "Default Wardrobe Recipes");
             if (defaultOpen)
             {
-                //var valR = r0;
-                //valR = new Rect(valR.xMin, valR.yMax, valR.width, EditorGUIUtility.singleLineHeight);
-				EditorGUI.BeginChangeCheck();
-                EditorGUILayout.PropertyField(property.FindPropertyRelative("loadDefaultRecipes"));
-				if (EditorGUI.EndChangeCheck())
+                // Attempt to refresh live race recipes safely
+                try
                 {
-					 property.serializedObject.ApplyModifiedProperties();
-				}
-                //Rect dropArea = new Rect(valR.xMin, (valR.yMax + padding), valR.width, 50f);
-                GUILayout.Box("Drag Wardrobe Recipes here or click to pick",GUILayout.Height(50),GUILayout.ExpandWidth(true));
-                Rect dropArea = GUILayoutUtility.GetLastRect();
-                //GUI.Box(dropArea, "Drag Wardrobe Recipes here or click to pick");
+                    if (thisDCA?.preloadWardrobeRecipes != null)
+                    {
+                        thisDCA.preloadWardrobeRecipes.GetRecipesForRace();
+                    }
+                }
+                catch { }
 
-				// menu/submenus for Slot/RecipeName.
-				// Example:
-				//  [Head/DragonHelm    ][Add Item]
-
-               // valR = new Rect(valR.xMin, (valR.yMin + 50f + padding), valR.width, EditorGUIUtility.singleLineHeight);
                 var thisRecipesProp = property.FindPropertyRelative("recipes");
-                //float textFieldWidth = (valR.width - 20f);
-                var warningStyle = new GUIStyle(EditorStyles.label);
-                warningStyle.fixedHeight = warningIcon.height + 4f;
-                warningStyle.contentOffset = new Vector2(0, -2f);
-                //can we make these validate to the compatible races is upto date?
-                thisDCA.preloadWardrobeRecipes.GetRecipesForRace();
+                if (thisRecipesProp == null)
+                {
+                    EditorGUILayout.HelpBox("Recipes list not found or not serialized.", MessageType.Info);
+                    EditorGUI.EndProperty();
+                    return;
+                }
+
+                GUILayout.Box("Drag Wardrobe Recipes here or click to pick", GUILayout.Height(50), GUILayout.ExpandWidth(true));
+                Rect dropArea = GUILayoutUtility.GetLastRect();
 
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Enable All"))
@@ -274,6 +354,8 @@ namespace UMA.CharacterSystem.Editors
                         thisElement.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue = true;
                         changed = true;
                     }
+                    // Commit changes
+                    thisRecipesProp.serializedObject.ApplyModifiedProperties();
                 }
                 if (GUILayout.Button("Disable All"))
                 {
@@ -283,62 +365,51 @@ namespace UMA.CharacterSystem.Editors
                         thisElement.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue = false;
                         changed = true;
                     }
+                    // Commit changes
+                    thisRecipesProp.serializedObject.ApplyModifiedProperties();
                 }
-                if (GUILayout.Button("Add all"))
+                if (thisDCA != null && GUILayout.Button("Add all"))
                 {
-                    var availableRecipes = thisDCA.AvailableRecipes;
-                    foreach (var slot in availableRecipes.Keys)
+                    try
                     {
-                        foreach (var recipe in availableRecipes[slot])
+                        var availableRecipes = thisDCA.AvailableRecipes;
+                        if (availableRecipes != null)
                         {
-                            var recipeAsset = UMAAssetIndexer.Instance.GetRecipe(recipe.name, false);
-                            if (recipeAsset != null)
+                            foreach (var slot in availableRecipes.Keys)
                             {
-                                AddRecipe(thisRecipesProp, recipeAsset);
+                                var list = availableRecipes[slot];
+                                if (list == null) continue;
+                                foreach (var recipe in list)
+                                {
+                                    if (recipe == null) continue;
+                                    var recipeAsset = TryGetIndexer()?.GetRecipe(recipe.name, false);
+                                    if (recipeAsset != null)
+                                    {
+                                        AddRecipe(thisRecipesProp, recipeAsset);
+                                    }
+                                }
                             }
                         }
                     }
+                    catch { }
                 }
                 if (GUILayout.Button("Remove disabled"))
                 {
                     RemoveDisabled(thisRecipesProp);
                     changed = true;
+                    // Commit changes
+                    thisRecipesProp.serializedObject.ApplyModifiedProperties();
                 }
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-
-                if (GUILayout.Toggle(ShowOnlyActive, "Active Only", GUILayout.Width(100)))
-                {
-                    ShowOnlyActive = true;
-                }
-                else
-                {
-                    ShowOnlyActive = false;
-                }
-
-                if (GUILayout.Toggle(ShowOnlyCompatibleRecipes, "Compatible Only", GUILayout.ExpandWidth(true)))
-                {
-                    ShowOnlyCompatibleRecipes = true;
-                }
-                else
-                {
-                    ShowOnlyCompatibleRecipes = false;
-                }
-
-
-                //if (GUILayout.Toggle(ShowOnlySelectedSlot, "Selected WardrobeSlot", GUILayout.ExpandWidth(true)))
-                //{
-                //    ShowOnlySelectedSlot = true;
-                //}
-                //else
-                //{
-                //    ShowOnlySelectedSlot = false;
-                //}
+                ShowOnlyActive = GUILayout.Toggle(ShowOnlyActive, "Active Only", GUILayout.Width(100));
+                ShowOnlyCompatibleRecipes = GUILayout.Toggle(ShowOnlyCompatibleRecipes, "Compatible Only", GUILayout.ExpandWidth(true));
 
                 string selectedSlot = "";
+                bool hasRace = thisDCA?.activeRace != null && thisDCA.activeRace.data != null;
 
-                if (thisDCA.activeRace == null || thisDCA.activeRace.data == null)
+                if (!hasRace)
                 {
                     ShowOnlySelectedSlot = false;
                     EditorGUILayout.LabelField("Race is not set", GUILayout.Width(120));
@@ -356,17 +427,9 @@ namespace UMA.CharacterSystem.Editors
                     {
                         selectedSlot = thisDCA.activeRace.data.wardrobeSlots[selectedSlotIndex];
                     }
-
-
-                    if (selectedSlotIndex == 0)
-                    {
-                        ShowOnlySelectedSlot = false;
-                    }
-                    else
-                    {
-                        ShowOnlySelectedSlot = true;
-                    }
+                    ShowOnlySelectedSlot = selectedSlotIndex != 0;
                     GUILayout.EndHorizontal();
+
                     GUILayout.BeginHorizontal();
                     SetupDropdown(thisDCA.activeRace.name);
 
@@ -376,14 +439,14 @@ namespace UMA.CharacterSystem.Editors
                     {
                         SortBySlot(thisRecipesProp);
                     }
-                   
+
                     int added = -1;
                     EditorGUILayout.LabelField("Add Item", GUILayout.Width(60));
                     added = EditorGUILayout.Popup(added, recipeMenu.ToArray(), GUILayout.Width(150));
                     if (added >= 0)
                     {
                         var recipe = recipes[added];
-                        var recipeAsset = UMAAssetIndexer.Instance.GetRecipe(recipe, false);
+                        var recipeAsset = TryGetIndexer()?.GetRecipe(recipe, false);
                         if (recipeAsset != null)
                         {
                             AddRecipe(thisRecipesProp, recipeAsset);
@@ -394,201 +457,186 @@ namespace UMA.CharacterSystem.Editors
 
                 for (int i = 0; i < thisRecipesProp.arraySize; i++)
                 {
-                    string currentSlot = "";
-                    bool compatible = false;
-                   // var valRBut = new Rect((textFieldWidth + 18f), (valR.yMax + padding), 20f, EditorGUIUtility.singleLineHeight);
-                   // valR = new Rect(valR.xMin, (valR.yMax + padding), textFieldWidth, EditorGUIUtility.singleLineHeight);
                     SerializedProperty thisElement = thisRecipesProp.GetArrayElementAtIndex(i);
+                    if (thisElement == null) continue;
 
-                    //                    UMAWardrobeRecipe currentRecipe = thisElement.objectReferenceValue as UMAWardrobeRecipe;
-                    var recipeListItem = thisDCA.preloadWardrobeRecipes.recipes[i];
+                    string recipeName = thisElement.FindPropertyRelative("_recipeName").stringValue;
 
-                    var currentRecipe = thisDCA.preloadWardrobeRecipes.recipes[i]._recipe;
-                    if (ShowOnlySelectedSlot)
+                    var recipeAsset = SafeGetRecipeByName(recipeName, i);
+                    string recipeslot = recipeAsset != null ? recipeAsset.wardrobeSlot : "unknown";
+
+                    if (ShowOnlySelectedSlot && !string.IsNullOrEmpty(recipeslot) && hasRace)
                     {
-                        if (currentRecipe != null)
-                        {
-                            currentSlot = currentRecipe.wardrobeSlot;
-                            if (currentSlot != selectedSlot)
-                            {
-                                continue;
-                            }
-                        }
+                        if (recipeslot != selectedSlot) continue;
                     }
 
-                    if (ShowOnlyActive)
-                    {
-                        if (currentRecipe != null)
-                        {
-                            if (!recipeListItem._enabledInDefaultWardrobe)
-                            {
-                                continue;
-                            }
-                        }
-                    }
+                    bool compatible = false;
                     int compatibleRacesArraySize = thisElement.FindPropertyRelative("_compatibleRaces").arraySize;
                     string compatibleRaces = "";
                     for (int cr = 0; cr < compatibleRacesArraySize; cr++)
                     {
                         string race = thisElement.FindPropertyRelative("_compatibleRaces").GetArrayElementAtIndex(cr).stringValue;
-                        compatibleRaces = compatibleRaces + race;
-                        if (thisDCA.activeRace != null)
+                        if (!string.IsNullOrEmpty(race))
                         {
-                            if (thisDCA.activeRace.data != null)
+                            compatibleRaces += race;
+                        }
+                        if (hasRace)
+                        {
+                            try
                             {
-                                if (thisDCA.activeRace.data.IsCrossCompatibleWith(race))
+                                if (thisDCA.activeRace.data.IsCrossCompatibleWith(race) || race == thisDCA.activeRace.name)
                                 {
                                     compatible = true;
-                                }
-                                if (race == thisDCA.activeRace.name)
-                                {
-                                    compatible = true;
-                                }
-
-                                if (cr < compatibleRacesArraySize - 1)
-                                {
-                                    compatibleRaces = compatibleRaces + ", ";
                                 }
                             }
+                            catch { }
                         }
+                        if (cr < compatibleRacesArraySize - 1) compatibleRaces += ", ";
                     }
-
-                    if (ShowOnlyCompatibleRecipes && compatible == false)
-                    {
-                        continue;
-                    }
+                    if (ShowOnlyCompatibleRecipes && compatible == false) continue;
 
                     GUILayout.BeginHorizontal();
 
-                    var recipeIsLive = true;
-                    // var _recipe = thisElement.FindPropertyRelative("_recipe").objectReferenceValue;// as UMATextRecipe;
+                    bool enabledInDefault = thisElement.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue;
 
-                    string recipeName = "";
-                    if (recipeListItem != null)
+                    string prequel = enabledInDefault ? "+" : "-";
+
+                    if (enabledInDefault && thisDCA != null)
                     {
-                        string recipeslot = "unknown";
-                        if (recipeListItem._recipe != null)
+                        try
                         {
-                            recipeslot = recipeListItem._recipe.wardrobeSlot;
-                        }
-                        recipeName = thisElement.FindPropertyRelative("_recipeName").stringValue;
-
-                        recipeIsLive = UMAAssetIndexer.Instance.HasRecipe(recipeName);
-
-
-                        string prequel = "";
-
-                       if (recipeListItem._enabledInDefaultWardrobe)
-                        {
-                            EditorGUI.BeginDisabledGroup(false);
-                            prequel = "+";
                             var currentWardrobe = thisDCA.WardrobeRecipes;
-                            var values = currentWardrobe.Values;
-                            foreach (var rcp in values)
+                            if (currentWardrobe != null)
                             {
-                                if (rcp.name == recipeName)
+                                foreach (var rcp in currentWardrobe.Values)
                                 {
-                                    prequel = "*";
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            prequel = "-";
-                            EditorGUI.BeginDisabledGroup(true);
-                        }
-                        if (recipeListItem.ForceLoad)
-                        {
-                            prequel += "F";
-                        }
-                        EditorGUILayout.TextField($"{prequel}[{recipeslot}] { recipeName}  ({ compatibleRaces} )",GUILayout.ExpandWidth(true));
-                    }
-                    else
-                    {
-                        EditorGUILayout.TextField("Recipe is null.", GUILayout.ExpandWidth(true));
-                    }
-
-
-                    EditorGUI.EndDisabledGroup();
-                    if (!recipeIsLive && recipeListItem != null)
-                    {
-                        //var warningRect = new Rect((valRBut.xMin - 25f), valRBut.yMin, 20f, valRBut.height);
-						var warningGUIContent = new GUIContent("", recipeName + " was not Live. Click this button to add it to the Global Library.");
-						warningGUIContent.image = warningIcon;
-						//show a warning icon if the added recipe is not available from the global index (or assetBundles)
-						var foundRecipe = FindMissingRecipe(recipeName);
-						if (GUILayout.Button(warningGUIContent, warningStyle))
-						{
-							//the _recipe value is no longer serialized so we need to get it from AssetDatabase
-							if (foundRecipe != null)
-                            {
-                                UMAAssetIndexer.Instance.EvilAddAsset(foundRecipe.GetType(), foundRecipe);
-                            }
-                        }
-					}
-                    if (GUILayout.Button("0/1",GUILayout.Width(30)))
-                    {
-                        if (recipeListItem._enabledInDefaultWardrobe)
-                        {
-                            recipeListItem._enabledInDefaultWardrobe = false;
-                        }
-                        else
-                        {
-                            if (ToggleAll)
-                            {
-                                string wardrobeSlot = recipeListItem._recipe.wardrobeSlot;
-                                for (int j = 0; j < thisRecipesProp.arraySize; j++)
-                                {
-                                    SerializedProperty thisElement2 = thisRecipesProp.GetArrayElementAtIndex(j);
-                                    var toggleRecipe = thisDCA.preloadWardrobeRecipes.recipes[j];
-                                    if (toggleRecipe._recipe.wardrobeSlot == wardrobeSlot)
+                                    if (rcp != null && rcp.name == recipeName)
                                     {
-                                        toggleRecipe._enabledInDefaultWardrobe = false ;
+                                        prequel = "*";
+                                        break;
                                     }
                                 }
                             }
-                            recipeListItem._enabledInDefaultWardrobe = true;
                         }
-                        changed = true;
-                        thisRecipesProp.serializedObject.Update();
+                        catch { }
                     }
 
-                    if (recipeListItem._recipe != null)
+                    bool canToggleForce = false;
+                    bool forceLoad = false;
+                    try
+                    {
+                        if (thisDCA?.preloadWardrobeRecipes?.recipes != null &&
+                            i >= 0 && i < thisDCA.preloadWardrobeRecipes.recipes.Count &&
+                            thisDCA.preloadWardrobeRecipes.recipes[i] != null)
+                        {
+                            canToggleForce = true;
+                            forceLoad = thisDCA.preloadWardrobeRecipes.recipes[i].ForceLoad;
+                            if (forceLoad) prequel += "F";
+                        }
+                    }
+                    catch { }
+
+                    EditorGUI.BeginDisabledGroup(!enabledInDefault);
+                    EditorGUILayout.TextField($"{prequel}[{recipeslot}] {recipeName}  ({compatibleRaces})", GUILayout.ExpandWidth(true));
+                    EditorGUI.EndDisabledGroup();
+
+                    bool recipeIsLive = IndexerHasRecipe(recipeName);
+                    if (!recipeIsLive)
+                    {
+                        var warningGUIContent = new GUIContent("", recipeName + " was not Live. Click this button to add it to the Global Library.");
+                        warningGUIContent.image = warningIcon;
+                        if (GUILayout.Button(warningGUIContent, GUILayout.Width(20)))
+                        {
+                            var foundRecipe = FindMissingRecipe(recipeName);
+                            var idx = TryGetIndexer();
+                            if (foundRecipe != null && idx != null)
+                            {
+                                try { idx.EvilAddAsset(foundRecipe.GetType(), foundRecipe); } catch { }
+                            }
+                        }
+                    }
+
+                    // Toggle enabled
+                    if (GUILayout.Button("0/1", GUILayout.Width(30)))
+                    {
+                        bool newValue = !enabledInDefault;
+
+                        // ToggleAll by same wardrobe slot when enabling
+                        if (newValue && ToggleAll && recipeAsset != null)
+                        {
+                            string wardrobeSlot = recipeAsset.wardrobeSlot;
+                            for (int j = 0; j < thisRecipesProp.arraySize; j++)
+                            {
+                                SerializedProperty other = thisRecipesProp.GetArrayElementAtIndex(j);
+                                string otherName = other.FindPropertyRelative("_recipeName").stringValue;
+                                var otherAsset = SafeGetRecipeByName(otherName, j);
+                                if (otherAsset != null && otherAsset.wardrobeSlot == wardrobeSlot)
+                                {
+                                    other.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue = false;
+                                }
+                            }
+                        }
+
+                        thisElement.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue = newValue;
+                        changed = true;
+
+                        // Commit changes immediately so the toggle sticks
+                        thisRecipesProp.serializedObject.ApplyModifiedProperties();
+                    }
+
+                    if (recipeAsset != null)
                     {
                         if (GUILayout.Button("Ping", GUILayout.Width(40)))
                         {
-                            EditorGUIUtility.PingObject(recipeListItem._recipe);
+                            EditorGUIUtility.PingObject(recipeAsset);
                         }
                         if (GUILayout.Button("Insp", GUILayout.Width(40)))
                         {
-                            InspectorUtlity.InspectTarget(recipeListItem._recipe);
+                            // Defer popup to the next editor tick to avoid layout errors from drawers
+                            var toInspect = recipeAsset;
+                            EditorApplication.delayCall += () =>
+                            {
+                                try { InspectorUtlity.InspectTarget(toInspect); }
+                                catch (Exception ex) { Debug.LogException(ex); }
+                            };
+                            GUIUtility.ExitGUI();
                         }
-                        if (GUILayout.Button("Force", GUILayout.Width(48)))
+                        using (new EditorGUI.DisabledScope(!canToggleForce))
                         {
-                            //thisDCA.ForceWear(recipeListItem._recipe);
-                            recipeListItem.ForceLoad = !recipeListItem.ForceLoad;
-                            thisRecipesProp.serializedObject.Update();
-                            changed = true;
+                            if (GUILayout.Button("Force", GUILayout.Width(48)) && canToggleForce)
+                            {
+                                try
+                                {
+                                    var item = thisDCA.preloadWardrobeRecipes.recipes[i];
+                                    item.ForceLoad = !item.ForceLoad;
+                                    // ForceLoad is runtime-only; no Apply needed here
+                                    changed = true;
+                                }
+                                catch { }
+                            }
                         }
                     }
+
                     if (GUILayout.Button("x", GUILayout.Width(15)))
                     {
-						changed = true;
+                        changed = true;
                         thisRecipesProp.DeleteArrayElementAtIndex(i);
                         thisRecipesProp.serializedObject.ApplyModifiedProperties();
+                        GUILayout.EndHorizontal();
+                        continue;
                     }
                     GUILayout.EndHorizontal();
                 }
+
                 DropAreaGUI(dropArea, thisRecipesProp);
             }
+
             try
             {
                 EditorGUI.EndProperty();
             }
             catch (System.Exception e)
             {
-                // log all the EditorApplication states
                 Debug.LogError("EditorApplication.isCompiling: " + EditorApplication.isCompiling);
                 Debug.LogError("EditorApplication.isUpdating: " + EditorApplication.isUpdating);
                 Debug.LogError("EditorApplication.isPlaying: " + EditorApplication.isPlaying);
@@ -596,30 +644,40 @@ namespace UMA.CharacterSystem.Editors
                 Debug.LogError("EditorApplication.isPlayingOrWillChangePlaymode: " + EditorApplication.isPlayingOrWillChangePlaymode);
                 Debug.LogException(e);
             }
-
         }
 
+       
         private void SortBySlot(SerializedProperty thisRecipesProp)
         {
-            // Sort the list by slot
-            List<DynamicCharacterAvatar.WardrobeRecipeListItem> sortedList = new List<DynamicCharacterAvatar.WardrobeRecipeListItem>();
-            for (int i = 0; i < thisRecipesProp.arraySize; i++)
+            if (thisDCA?.preloadWardrobeRecipes?.recipes == null || thisRecipesProp == null) return;
+            try
             {
-               sortedList.Add(thisDCA.preloadWardrobeRecipes.recipes[i]);
+                List<DynamicCharacterAvatar.WardrobeRecipeListItem> sortedList = new List<DynamicCharacterAvatar.WardrobeRecipeListItem>();
+                for (int i = 0; i < thisRecipesProp.arraySize; i++)
+                {
+                    if (i < thisDCA.preloadWardrobeRecipes.recipes.Count)
+                        sortedList.Add(thisDCA.preloadWardrobeRecipes.recipes[i]);
+                }
+                sortedList.Sort((x, y) =>
+                {
+                    string a = x?._recipe != null ? x._recipe.wardrobeSlot : "";
+                    string b = y?._recipe != null ? y._recipe.wardrobeSlot : "";
+                    return string.Compare(a, b, StringComparison.Ordinal);
+                });
+                thisDCA.preloadWardrobeRecipes.recipes = sortedList;
+                changed = true;
+                thisRecipesProp.serializedObject.Update();
             }
-
-            sortedList.Sort((x, y) => x._recipe.wardrobeSlot.CompareTo(y._recipe.wardrobeSlot));
-            thisDCA.preloadWardrobeRecipes.recipes = sortedList;
-            changed = true;
-            thisRecipesProp.serializedObject.Update();
+            catch { }
         }
 
         private void RemoveDisabled(SerializedProperty thisRecipesProp)
         {
-            // For each recipe in the list, if it is disabled, remove it.
+            if (thisRecipesProp == null) return;
             for (int i = thisRecipesProp.arraySize - 1; i >= 0; i--)
             {
                 SerializedProperty thisElement = thisRecipesProp.GetArrayElementAtIndex(i);
+                if (thisElement == null) continue;
                 if (!thisElement.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue)
                 {
                     thisRecipesProp.DeleteArrayElementAtIndex(i);
@@ -628,53 +686,49 @@ namespace UMA.CharacterSystem.Editors
             }
         }
 
-        /// <summary>
-        /// with wardobeRecipes, DynamicCharacterSystem does not have a list of refrenced recipes like the other libraries
-        /// so the only way to get them is from DynamicAssetLoader (which is how DCS gets them) 
-        /// so they MUST be in an assetBundle or in Global Index or there is no way of finding them
-        /// </summary>
-        /// <param name="recipeName"></param>
-        /// <returns></returns>
-        /// 
-
         private UMARecipeBase FindMissingRecipe(string recipeName)
-		{
-			UMARecipeBase foundRecipe = null;
-			//the following will find things like femaleHair1 if 'maleHair1' is the recipe name
-			var foundWardrobeGUIDS = AssetDatabase.FindAssets("t:UMAWardrobeRecipe " + recipeName);
-			if (foundWardrobeGUIDS.Length > 0)
-			{
-                for (int i = 0; i < foundWardrobeGUIDS.Length; i++)
-				{
-                    string guid = foundWardrobeGUIDS[i];
-                    var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeRecipe>(AssetDatabase.GUIDToAssetPath(guid));
-					if (tempAsset.name == recipeName)
-					{
-						foundRecipe = tempAsset;
-						break;
-					}
-				}
-			}
-			//try searching for WardrobeCollections
-			if (foundRecipe == null)
-			{
-				var foundWardrobeCollectionGUIDS = AssetDatabase.FindAssets("t:UMAWardrobeCollection " + recipeName);
-				if (foundWardrobeCollectionGUIDS.Length > 0)
-				{
-                    for (int i = 0; i < foundWardrobeCollectionGUIDS.Length; i++)
-					{
-                        string guid = foundWardrobeCollectionGUIDS[i];
-                        var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeCollection>(AssetDatabase.GUIDToAssetPath(guid));
-						if (tempAsset.name == recipeName)
-						{
-							foundRecipe = tempAsset;
-							break;
-						}
-					}
-				}
-			}
-			return foundRecipe;
-		}
-	}
+        {
+            UMARecipeBase foundRecipe = null;
+            if (string.IsNullOrEmpty(recipeName)) return null;
+
+            try
+            {
+                var foundWardrobeGUIDS = AssetDatabase.FindAssets("t:UMAWardrobeRecipe " + recipeName);
+                if (foundWardrobeGUIDS.Length > 0)
+                {
+                    for (int i = 0; i < foundWardrobeGUIDS.Length; i++)
+                    {
+                        string guid = foundWardrobeGUIDS[i];
+                        var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeRecipe>(AssetDatabase.GUIDToAssetPath(guid));
+                        if (tempAsset != null && tempAsset.name == recipeName)
+                        {
+                            foundRecipe = tempAsset;
+                            break;
+                        }
+                    }
+                }
+                //try collections
+                if (foundRecipe == null)
+                {
+                    var foundWardrobeCollectionGUIDS = AssetDatabase.FindAssets("t:UMAWardrobeCollection " + recipeName);
+                    if (foundWardrobeCollectionGUIDS.Length > 0)
+                    {
+                        for (int i = 0; i < foundWardrobeCollectionGUIDS.Length; i++)
+                        {
+                            string guid = foundWardrobeCollectionGUIDS[i];
+                            var tempAsset = AssetDatabase.LoadAssetAtPath<UMAWardrobeCollection>(AssetDatabase.GUIDToAssetPath(guid));
+                            if (tempAsset != null && tempAsset.name == recipeName)
+                            {
+                                foundRecipe = tempAsset;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return foundRecipe;
+        }
+    }
 }
 #endif
