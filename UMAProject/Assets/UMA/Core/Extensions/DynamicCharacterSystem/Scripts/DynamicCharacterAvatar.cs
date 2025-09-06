@@ -329,7 +329,12 @@ namespace UMA.CharacterSystem
         {
             get
             {
-                return UMAAssetIndexer.Instance.GetRecipes(activeRace.name);
+                var idx = UMAAssetIndexer.Instance;
+                if (idx == null || string.IsNullOrEmpty(activeRace?.name))
+                {
+                    return new Dictionary<string, List<UMATextRecipe>>();
+                }
+                return idx.GetRecipes(activeRace.name);
             }
         }
 
@@ -2441,33 +2446,53 @@ namespace UMA.CharacterSystem
             return null;
         }
 
+        public void UnloadWardrobeCollection(UMAWardrobeCollection uwr)
+        {
+            if (uwr == null)
+            {
+                return;
+            }
+            // Delegate to the string overload which handles safe removal
+            UnloadWardrobeCollection(uwr.name);
+        }
+
         /// <summary>
         /// Removes the wardrobe collection of the given name from the avatars WardrobeCollection list and clears any recipes it loaded into the avatars wardrobe slots
         /// </summary>
         public void UnloadWardrobeCollection(string collectionToUnload)
         {
-            foreach (KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
+            // Find the entry first (avoid modifying during enumeration)
+            string keyToRemove = null;
+            UMAWardrobeCollection coll = null;
+
+            foreach (var kvp in _wardrobeCollections)
             {
-                if (kp.Value.name == collectionToUnload)
+                if (kvp.Value.name == collectionToUnload)
                 {
-                    var wardrobeSet = kp.Value.GetRacesWardrobeSet(activeRace.racedata);
-                    if (wardrobeSet.Count > 0)
-                    {
-                        for (int si = 0; si < wardrobeSet.Count; si++)
-                        {
-                            if (_wardrobeRecipes.ContainsKey(wardrobeSet[si].slot))
-                            {
-                                if (_wardrobeRecipes[wardrobeSet[si].slot].name == wardrobeSet[si].recipe)
-                                {
-                                    ClearSlot(wardrobeSet[si].slot);
-                                }
-                            }
-                        }
-                    }
-                    _wardrobeCollections.Remove(kp.Value.wardrobeSlot);
+                    keyToRemove = kvp.Key;
+                    coll = kvp.Value;
                     break;
                 }
             }
+            if (keyToRemove == null || coll == null)
+            {
+                return;
+            }
+
+            var wardrobeSet = coll.GetRacesWardrobeSet(activeRace.racedata);
+            if (wardrobeSet.Count > 0)
+            {
+                for (int si = 0; si < wardrobeSet.Count; si++)
+                {
+                    var ws = wardrobeSet[si];
+                    if (_wardrobeRecipes.ContainsKey(ws.slot) && _wardrobeRecipes[ws.slot].name == ws.recipe)
+                    {
+                        ClearSlot(ws.slot);
+                    }
+                }
+            }
+
+            _wardrobeCollections.Remove(keyToRemove);
         }
 
         /// <summary>
@@ -2512,13 +2537,14 @@ namespace UMA.CharacterSystem
         /// </summary>
         public void UnloadWardrobeCollectionGroup(string collectionGroupToUnload)
         {
-            foreach (KeyValuePair<string, UMAWardrobeCollection> kp in _wardrobeCollections)
+            if (string.IsNullOrEmpty(collectionGroupToUnload))
             {
-                if (kp.Key == collectionGroupToUnload)
-                {
-                    UnloadWardrobeCollection(kp.Value.name);
-                    break;
-                }
+                return;
+            }
+
+            if (_wardrobeCollections.TryGetValue(collectionGroupToUnload, out var coll))
+            {
+                UnloadWardrobeCollection(coll.name);
             }
         }
         /// <summary>
@@ -3419,7 +3445,15 @@ namespace UMA.CharacterSystem
             {
                 return;
             }
-            //turn this off if we are not Humanoid cos it wont work
+
+            // Guard against transient nulls during build/race changes
+            if (umaData == null || umaData.umaRecipe == null || umaData.umaRecipe.raceData == null)
+            {
+                thisExpressionPlayer.enabled = false;
+                return;
+            }
+
+            // turn this off if we are not Humanoid cos it wont work
             if (umaData.umaRecipe.raceData.umaTarget == RaceData.UMATarget.Humanoid)
             {
                 if (thisExpressionPlayer.expressionSet == null)
@@ -4404,7 +4438,7 @@ namespace UMA.CharacterSystem
             _isFirstSettingsBuild = false;
             wasCrossCompatibleBuild = false;
             crossCompatibleRaces.Clear();
-            HiddenSlots.Clear();
+            this.HiddenSlots.Clear();
 
             Dictionary<string, List<MeshHideAsset>> MeshHideDictionary =
 #if DCA_OPTIMIZED
