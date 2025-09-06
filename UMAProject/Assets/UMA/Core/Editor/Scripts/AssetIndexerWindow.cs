@@ -22,6 +22,27 @@ namespace UMA.Controls
 
         List<IUMAAddressablePlugin> addressablePlugins = new List<IUMAAddressablePlugin>();
 
+        private static bool IsEditorBusy()
+        {
+            return EditorApplication.isCompiling || EditorApplication.isUpdating;
+        }
+
+        private void OnBeforeAssemblyReload()
+        {
+            // nothing to unsubscribe currently, but ensure we drop heavy refs
+            try { m_Initialized = false; } catch { }
+        }
+
+        private void OnEnable()
+        {
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+        }
+
+        private void OnDisable()
+        {
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+        }
+
         #region Menus
         GenericMenu _FileMenu;
         GenericMenu _AddressablesMenu;
@@ -192,6 +213,11 @@ namespace UMA.Controls
 
         private void SetupMenus()
         {
+            if (IsEditorBusy())
+            {
+                EditorApplication.delayCall += SetupMenus;
+                return;
+            }
 
             _FileMenu = new GenericMenu();
             _AddressablesMenu = new GenericMenu();
@@ -205,6 +231,7 @@ namespace UMA.Controls
             // ***********************************************************************************
             AddMenuItemWithCallback(FileMenu, "Rebuild From Project", () =>
             {
+                if (UAI == null) return;
                 UAI.RebuildLibrary();
                 m_Initialized = false;
                 Repaint();
@@ -212,6 +239,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Rebuild From Project (include text assets)", () =>
             {
+                if (UAI == null) return;
                 UAI.SaveKeeps();
                 UAI.Clear();
                 UAI.BuildStringTypes();
@@ -224,6 +252,7 @@ namespace UMA.Controls
             });
             AddMenuItemWithCallback(FileMenu, "Clear References", () =>
             {
+                if (UAI == null) return;
                 UAI.RemoveReferences();
                 Resources.UnloadUnusedAssets();
                 m_Initialized = false;
@@ -233,6 +262,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Repair and remove invalid items", () =>
             {
+                if (UAI == null) return;
                 UAI.BuildStringTypes();
                 UAI.RepairAndCleanup();
                 Resources.UnloadUnusedAssets();
@@ -264,6 +294,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Empty Index", () =>
             {
+                if (UAI == null) return;
                 UAI.Clear();
                 m_Initialized = false;
                 Repaint();
@@ -272,6 +303,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Backup Index", () =>
             {
+                if (UAI == null) return;
                 // string index = UAI.Backup();
                 string filename = EditorUtility.SaveFilePanel("Backup Index", "", "librarybackup", "bak");
                 if (!string.IsNullOrEmpty(filename))
@@ -292,17 +324,20 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Save to disk", () =>
             {
+                if (UAI == null) return;
                 UMAAssetIndexer.Instance.ForceSave();
             });
 
             AddMenuItemWithCallback(FileMenu, "Rebuild Dictionaries", () =>
             {
+                if (UAI == null) return;
                 UMAAssetIndexer.Instance.UpdateSerializedDictionaryItems();
                 Repaint();
             });
 
             AddMenuItemWithCallback(FileMenu, "Restore Index", () =>
             {
+                if (UAI == null) return;
                 string filename = EditorUtility.OpenFilePanel("Restore", "", "bak");
                 if (!string.IsNullOrEmpty(filename))
                 {
@@ -333,6 +368,7 @@ namespace UMA.Controls
             {
                 AddMenuItemWithCallbackParm(_AddressablesMenu, "Generators/" + plugin.Menu, (object o) =>
                 {
+                    if (UAI == null) return;
                     IUMAAddressablePlugin addrplug = o as IUMAAddressablePlugin;
                     UMAAddressablesSupport.Instance.GenerateAddressables(addrplug);
                     Resources.UnloadUnusedAssets();
@@ -348,6 +384,7 @@ namespace UMA.Controls
             // ***********************************************************************************
             AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Groups (optimized)", () =>
             {
+                if (UAI == null) return;
                 UMAAddressablesSupport.Instance.CleanupAddressables();
                 UMAAddressablesSupport.Instance.GenerateAddressables();
                 Resources.UnloadUnusedAssets();
@@ -357,6 +394,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Single Group (Final Build Only)", () =>
             {
+                if (UAI == null) return;
                 UMAAddressablesSupport.Instance.CleanupAddressables();
                 SingleGroupGenerator sgs = new SingleGroupGenerator();
                 sgs.ClearMaterials = true;
@@ -375,6 +413,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(_AddressablesMenu, "Remove Addressables", () =>
             {
+                if (UAI == null) return;
                 UMAAddressablesSupport.Instance.CleanupAddressables(false, true);
                 m_Initialized = false;
                 Repaint();
@@ -479,6 +518,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(ToolsMenu, "Validate All Indexed Slots", () =>
             {
+                if (UAI == null) return;
                 EditorUtility.DisplayProgressBar("Validating", "Validating Slots", 0.0f);
                 List<SlotDataAsset> slots = UMAAssetIndexer.Instance.GetAllAssets<SlotDataAsset>();
                 List<SlotDataAsset> BadSlots = new List<SlotDataAsset>();
@@ -626,6 +666,7 @@ namespace UMA.Controls
 
         private void ClearSelection()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
             foreach (AssetTreeElement ate in treeElements)
@@ -638,6 +679,7 @@ namespace UMA.Controls
 
         private void SelectAll()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
             foreach (AssetTreeElement ate in treeElements)
@@ -651,6 +693,7 @@ namespace UMA.Controls
         private Dictionary<int, AssetTreeElement> GetAllItems()
         {
             Dictionary<int, AssetTreeElement> AllItems = new Dictionary<int, AssetTreeElement>();
+            if (treeView == null || treeView.treeModel == null) return AllItems;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -665,6 +708,7 @@ namespace UMA.Controls
         private List<AssetTreeElement> GetHighlightedItems()
         {
             Dictionary<int, AssetTreeElement> allItems = GetAllItems();
+            if (treeView == null) return new List<AssetTreeElement>();
             IList<int> list = treeView.GetSelection();
 
             var treeElements = new List<AssetTreeElement>();
@@ -686,7 +730,10 @@ namespace UMA.Controls
             {
                 ate.Checked = v;
             }
-            treeView.RecalcTypeChecks();
+            if (treeView != null)
+            {
+                treeView.RecalcTypeChecks();
+            }
             Repaint();
         }
 
@@ -731,8 +778,8 @@ namespace UMA.Controls
                     EditorUtility.SetDirty(uwr);
                 }
             }
-            UAI.ForceSave();
-            treeView.RecalcTypeChecks();
+            if (UAI != null) UAI.ForceSave();
+            if (treeView != null) treeView.RecalcTypeChecks();
             Repaint();
             EditorUtility.DisplayDialog("Copy", "Complete", "OK");
         }
@@ -842,8 +889,8 @@ namespace UMA.Controls
                 }
             }
 
-            UAI.ForceSave();
-            treeView.RecalcTypeChecks();
+            if (UAI != null) UAI.ForceSave();
+            if (treeView != null) treeView.RecalcTypeChecks();
             Repaint();
             EditorUtility.DisplayDialog("Copy", "Complete", "OK");
         }
@@ -891,7 +938,7 @@ namespace UMA.Controls
                     }
                     EditorUtility.SetDirty(uwr);
                 }
-                UAI.ForceSave();
+                if (UAI != null) UAI.ForceSave();
                 EditorUtility.DisplayDialog("Update Races", "Races assigned and index saved", "OK");
             }
             else
@@ -998,6 +1045,7 @@ namespace UMA.Controls
         private List<UnityEngine.Object> GetRecipeDependencies(UMATextRecipe uMATextRecipe)
         {
             List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+            if (UAI == null) return objects;
             List<AssetItem> dependencies = UMAAssetIndexer.Instance.GetAssetItems(uMATextRecipe, true);
 
             foreach (AssetItem ai in dependencies)
@@ -1215,6 +1263,7 @@ namespace UMA.Controls
         {
             int count = 0;
             int founditems = 0;
+            if (treeView == null || treeView.treeModel == null) return;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1258,6 +1307,7 @@ namespace UMA.Controls
         {
             List<AssetItem> assets = new List<AssetItem>();
 
+            if (treeView == null || treeView.treeModel == null) return assets;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1275,6 +1325,7 @@ namespace UMA.Controls
         {
             List<AssetItem> assets = new List<AssetItem>();
 
+            if (treeView == null || treeView.treeModel == null) return assets;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1429,6 +1480,7 @@ namespace UMA.Controls
 
         void SelectAllWardrobeRecipesForRace(RaceData race)
         {
+            if (UAI == null) return;
             List<AssetItem> allRecipes = UMAAssetIndexer.Instance.GetAssetItems<UMAWardrobeRecipe>();
             List<AssetItem> selectedItems = new List<AssetItem>();
             foreach (var ai in allRecipes)
@@ -1460,6 +1512,7 @@ namespace UMA.Controls
 
         void SelectBaseRecipeForRace(RaceData race)
         {
+            if (UAI == null) return;
             List<AssetItem> allRecipes = UMAAssetIndexer.Instance.GetAssetItems<UMATextRecipe>();
             List<AssetItem> selectedItems = new List<AssetItem>();
             foreach (var ai in allRecipes)
@@ -1483,6 +1536,7 @@ namespace UMA.Controls
         {
             int count = 0;
             int founditems = 0;
+            if (treeView == null || treeView.treeModel == null) return;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1522,6 +1576,7 @@ namespace UMA.Controls
         }
         void UpdateMaterials()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1536,6 +1591,7 @@ namespace UMA.Controls
 
         void MarkKeep(bool Keep)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1546,12 +1602,13 @@ namespace UMA.Controls
                     tr.ai.IsAlwaysLoaded = Keep;
                 }
             }
-            UMAAssetIndexer.Instance.ForceSave();
+            if (UAI != null) UMAAssetIndexer.Instance.ForceSave();
             RecountTypes();
         }
 
         void MarkIgnore(bool IgnoreFlag)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1562,12 +1619,13 @@ namespace UMA.Controls
                     tr.ai.Ignore = IgnoreFlag;
                 }
             }
-            UMAAssetIndexer.Instance.ForceSave();
+            if (UAI != null) UMAAssetIndexer.Instance.ForceSave();
             RecountTypes();
         }
 
         void SelectByAssetItems(List<AssetItem> items, bool recalculate = true)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             Dictionary<Type,List<AssetItem>> indexedItems = new Dictionary<Type, List<AssetItem>>();
 
             for (int i = 0;i < items.Count; i++)
@@ -1596,7 +1654,7 @@ namespace UMA.Controls
                 //    ate.Checked = true;
                 //}
             }
-            if (recalculate)
+            if (recalculate && treeView != null)
             {
                 treeView.RecalcTypeChecks();
             }
@@ -1604,6 +1662,7 @@ namespace UMA.Controls
 
         void FixupTextureChannels(UMAMaterial material)
         {
+            if (UAI == null) return;
             int ChannelLength = material.channels.Length;
 
             var Overlays = UMAAssetIndexer.Instance.GetAllAssets<OverlayDataAsset>();
@@ -1639,6 +1698,7 @@ namespace UMA.Controls
 
         void SelectMaterial(UMAMaterial material)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
             foreach (AssetTreeElement ate in treeElements)
@@ -1661,6 +1721,7 @@ namespace UMA.Controls
 
         void SelectByMaterial(UMAMaterial material, Type assetType)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1698,6 +1759,7 @@ namespace UMA.Controls
 
         void SelectByRace(object Race)
         {
+            if (UAI == null) return;
             RaceData rc = Race as RaceData;
             List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
             SelectByAssetItems(recipeItems);
@@ -1705,6 +1767,7 @@ namespace UMA.Controls
 
         void SelectSlotsByRace(object Race)
         {
+            if (UAI == null) return;
             RaceData rc = Race as RaceData;
             List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
 
@@ -1714,6 +1777,7 @@ namespace UMA.Controls
 
         void SelectOverlaysByRace(object Race)
         {
+            if (UAI == null) return;
             RaceData rc = Race as RaceData;
             List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
             recipeItems = recipeItems.Where(x => x._Type == typeof(OverlayDataAsset)).ToList();
@@ -1722,6 +1786,7 @@ namespace UMA.Controls
 
         public void RecountTypes()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1770,6 +1835,7 @@ namespace UMA.Controls
         {
             var treeElements = new List<AssetTreeElement>();
             var selectedElements = new List<AssetTreeElement>();
+            if (treeView == null || treeView.treeModel == null) return selectedElements;
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
             foreach (AssetTreeElement tr in treeElements)
@@ -1784,6 +1850,7 @@ namespace UMA.Controls
 
         private void ForceSave()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1819,6 +1886,7 @@ namespace UMA.Controls
 
         private void DeleteSelected()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1848,7 +1916,7 @@ namespace UMA.Controls
                 }
             }
             EditorUtility.DisplayProgressBar("Deleting Assets", "Save Index to Disk", 1.0f);
-            UAI.ForceSave();
+            if (UAI != null) UAI.ForceSave();
             EditorUtility.ClearProgressBar();
         }
 
@@ -1856,6 +1924,7 @@ namespace UMA.Controls
         {
             long kbytes = 0;
 
+            if (treeView == null || treeView.treeModel == null) return 0;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1874,6 +1943,7 @@ namespace UMA.Controls
 
         private void RemoveSelected()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1903,7 +1973,7 @@ namespace UMA.Controls
                 }
             }
             EditorUtility.DisplayProgressBar("Removing Assets", "Save Index to Disk", 1.0f);
-            UAI.ForceSave();
+            if (UAI != null) UAI.ForceSave();
             EditorUtility.ClearProgressBar();
         }
 
@@ -1993,33 +2063,33 @@ namespace UMA.Controls
         #region GUI
         void InitIfNeeded()
         {
-            if (!m_Initialized)
-            {
-                // Check if it already exists (deserialized from window layout file or scriptable object)
-                if (m_TreeViewState == null)
-                    m_TreeViewState = new TreeViewState();
+            if (m_Initialized) return;
+            if (IsEditorBusy()) return;
+            if (UAI == null) return;
+            // Check if it already exists (deserialized from window layout file or scriptable object)
+            if (m_TreeViewState == null)
+                m_TreeViewState = new TreeViewState();
 
-                bool firstInit = m_MultiColumnHeaderState == null;
-                var headerState = UMAAssetTreeView.CreateDefaultMultiColumnHeaderState(multiColumnTreeViewRect.width);
-                if (MultiColumnHeaderState.CanOverwriteSerializedFields(m_MultiColumnHeaderState, headerState))
-                    MultiColumnHeaderState.OverwriteSerializedFields(m_MultiColumnHeaderState, headerState);
-                m_MultiColumnHeaderState = headerState;
+            bool firstInit = m_MultiColumnHeaderState == null;
+            var headerState = UMAAssetTreeView.CreateDefaultMultiColumnHeaderState(multiColumnTreeViewRect.width);
+            if (MultiColumnHeaderState.CanOverwriteSerializedFields(m_MultiColumnHeaderState, headerState))
+                MultiColumnHeaderState.OverwriteSerializedFields(m_MultiColumnHeaderState, headerState);
+            m_MultiColumnHeaderState = headerState;
 
-                var multiColumnHeader = new MyMultiColumnHeader(headerState);
-                multiColumnHeader.mode = MyMultiColumnHeader.Mode.MinimumHeaderWithoutSorting;
+            var multiColumnHeader = new MyMultiColumnHeader(headerState);
+            multiColumnHeader.mode = MyMultiColumnHeader.Mode.MinimumHeaderWithoutSorting;
 
-                if (firstInit)
-                    multiColumnHeader.ResizeToFit();
+            if (firstInit)
+                multiColumnHeader.ResizeToFit();
 
-                var treeModel = new TreeModel<AssetTreeElement>(GetData());
+            var treeModel = new TreeModel<AssetTreeElement>(GetData());
 
-                treeView = new UMAAssetTreeView(this, m_TreeViewState, multiColumnHeader, treeModel);
+            treeView = new UMAAssetTreeView(this, m_TreeViewState, multiColumnHeader, treeModel);
 
-                m_SearchField = new SearchField();
-                m_SearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
+            m_SearchField = new SearchField();
+            m_SearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
 
-                m_Initialized = true;
-            }
+            m_Initialized = true;
         }
 
         bool ShouldLoad(eLoaded itemsToLoad, AssetItem ai)
@@ -2081,6 +2151,10 @@ namespace UMA.Controls
 
             treeElements.Add(root);
 
+            if (UAI == null)
+            {
+                return treeElements;
+            }
             System.Type[] Types = UAI.GetTypes();
 
 
@@ -2195,17 +2269,16 @@ namespace UMA.Controls
                         if (draggedObjects[i])
                         {
                             m_Initialized = false; // need to reload when we're done.
-
-                            UAI.AddIfIndexed(draggedObjects[i]);
+                            if (UAI != null) UAI.AddIfIndexed(draggedObjects[i]);
 
                             var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
                             if (System.IO.Directory.Exists(path))
                             {
-                                UAI.RecursiveScanFoldersForAssets(path);
+                                if (UAI != null) UAI.RecursiveScanFoldersForAssets(path);
                             }
                         }
                     }
-                    UAI.ForceSave();
+                    if (UAI != null) UAI.ForceSave();
                 }
             }
         }
@@ -2233,16 +2306,16 @@ namespace UMA.Controls
                         if (draggedObjects[i])
                         {
                             m_Initialized = false; // need to reload when we're done.
-                            UAI.RemoveIfIndexed(draggedObjects[i], true);
+                            if (UAI != null) UAI.RemoveIfIndexed(draggedObjects[i], true);
 
                             var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
                             if (System.IO.Directory.Exists(path))
                             {
-                                UAI.RecursiveScanFoldersForRemovingAssets(path);
+                                if (UAI != null) UAI.RecursiveScanFoldersForRemovingAssets(path);
                             }
                         }
                     }
-                    UAI.ForceSave();
+                    if (UAI != null) UAI.ForceSave();
                 }
             }
         }
@@ -2272,10 +2345,10 @@ namespace UMA.Controls
                         if (draggedObjects[i])
                         {
                             System.Type sType = draggedObjects[i].GetType();
-                            UAI.AddType(sType);
+                            if (UAI != null) UAI.AddType(sType);
                         }
                     }
-                    UAI.ForceSave();
+                    if (UAI != null) UAI.ForceSave();
                 }
             }
         }
@@ -2289,18 +2362,24 @@ namespace UMA.Controls
 
         void OnGUI()
         {
-            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            if (IsEditorBusy())
             {
                 dots += ".";
                 if (dots.Length > 20)
                     dots = "";
                 GUILayout.Space(30);
                 EditorGUILayout.LabelField("    Compile/update in progress  " + dots);
-                System.Threading.Thread.Sleep(100);
                 Repaint();
                 return;
             }
             InitIfNeeded();
+
+            if (UAI == null)
+            {
+                GUILayout.Space(30);
+                EditorGUILayout.HelpBox("UMAAssetIndexer not available during domain reload. Please wait for compilation to finish.", MessageType.Info);
+                return;
+            }
 
             GUILayout.BeginArea(new Rect(0, 0, positionwidth, position.height));
 
@@ -2768,6 +2847,7 @@ namespace UMA.Controls
 
         private void SelectUnusedMeshHideAssets()
         {
+            if (UAI == null) return;
             var MHAS = UAI.GetAssetItems<MeshHideAsset>();
             var NotUsed = new List<AssetItem>();
             var recipes = UAI.GetAssetItems<UMAWardrobeRecipe>();
@@ -2804,6 +2884,7 @@ namespace UMA.Controls
 
         private void SelectByMeshHide(MeshHideAsset addedMHA)
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
 
             var recipes = UAI.GetAssetItems<UMAWardrobeRecipe>();
@@ -2835,6 +2916,7 @@ namespace UMA.Controls
 
         private void FindBrokenMeshHideAssets()
         {
+            if (UAI == null) return;
             var MHAS = UAI.GetAssetItems<MeshHideAsset>();
             if (MHAS == null || MHAS.Count == 0)
             {
@@ -2895,6 +2977,7 @@ namespace UMA.Controls
 
         private void SelectUnusedMaterials()
         {
+            if (UAI == null) return;
             List<AssetItem> materials = new List<AssetItem>();
 
             var slots = UAI.GetAssetItems<SlotDataAsset>();
@@ -2952,6 +3035,7 @@ namespace UMA.Controls
 
         private void SelectSmooshableSlots()
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
 
             var slots = UAI.GetAssetItems<SlotDataAsset>();
@@ -2968,6 +3052,7 @@ namespace UMA.Controls
 
         private void SelectClippingSlots()
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
 
             var slots = UAI.GetAssetItems<SlotDataAsset>();
@@ -2984,6 +3069,7 @@ namespace UMA.Controls
 
         private void FindSlotsWithInvalidMeshes()
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
 
             var slots = UAI.GetAssetItems<SlotDataAsset>();
@@ -3028,6 +3114,7 @@ namespace UMA.Controls
 
         private void SelectWithSlot(SlotDataAsset umaSlot)
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
             items.Add(UAI.GetAssetItem<SlotDataAsset>(umaSlot.slotName));
             SelectByAssetItems(items);
@@ -3035,6 +3122,7 @@ namespace UMA.Controls
 
         private void FindOverlaysWithTexture(Texture2D tex)
         {
+            if (UAI == null) return;
             List<AssetItem> badItems = new List<AssetItem>();
             var ovls = UAI.GetAssetItems<OverlayDataAsset>();
             for (int i = 0; i < ovls.Count; i++)
@@ -3047,7 +3135,11 @@ namespace UMA.Controls
                     {
                         for (int j = 0; j < o.textureList.Length; j++)
                         {
-                            if (o.textureList[j].GetInstanceID() == tex.GetInstanceID())
+                            if (o.textureList[j] == null)
+                            {
+                                continue;
+                            }
+                            if (tex != null && o.textureList[j].GetInstanceID() == tex.GetInstanceID())
                             {
                                 badItems.Add(ovls[i]);
                             }
@@ -3060,6 +3152,7 @@ namespace UMA.Controls
 
         private void FindUMAMaterialsWithTexture(Texture2D tex)
         {
+            if (UAI == null) return;
             List<AssetItem> badItems = new List<AssetItem>();
             var umats = UAI.GetAssetItems<UMAMaterial>();
             for (int i = 0; i < umats.Count; i++)
@@ -3075,7 +3168,7 @@ namespace UMA.Controls
                         {
                             for(int j=0; j< m.GetTexturePropertyNames().Length; j++)
                             {
-                                if (m.GetTexture(m.GetTexturePropertyNames()[j]) == tex)
+                                if (tex != null && m.GetTexture(m.GetTexturePropertyNames()[j]) == tex)
                                 {
                                     badItems.Add(umats[i]);
                                 }
@@ -3089,6 +3182,7 @@ namespace UMA.Controls
 
         private void FindOverlaysWithInvalidTextures()
         {
+            if (UAI == null) return;
             List<AssetItem> badItems = new List<AssetItem>(); 
             var ovls = UAI.GetAssetItems<OverlayDataAsset>();
             for (int i = 0; i < ovls.Count; i++)
@@ -3121,6 +3215,7 @@ namespace UMA.Controls
 
         private void SelectWithOverlay(OverlayDataAsset umaOverlay)
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
             items.Add(UAI.GetAssetItem<OverlayDataAsset>(umaOverlay.overlayName));
             SelectByAssetItems(items);
@@ -3128,6 +3223,7 @@ namespace UMA.Controls
 
         private void SelectByChannelType(int channelType)
         {
+            if (UAI == null) return;
             var mats = UAI.GetAllAssets<UMAMaterial>();
             for (int i = 0; i < mats.Count; i++)
             {
@@ -3180,7 +3276,7 @@ namespace UMA.Controls
 
 			if (GUI.Button(MenuRect, new GUIContent("Collapse All"), EditorStyles.toolbarButton))
 			{
-				treeView.CollapseAll();
+				if (treeView != null) treeView.CollapseAll();
 			}
 
 			MenuRect.x += 100;
@@ -3188,7 +3284,7 @@ namespace UMA.Controls
 
 			if (GUI.Button(MenuRect, new GUIContent("Expand All"), EditorStyles.toolbarButton))
 			{
-				treeView.ExpandAll();
+				if (treeView != null) treeView.ExpandAll();
 			}
 
 			MenuRect.x += 100;
@@ -3202,7 +3298,7 @@ namespace UMA.Controls
                 Repaint();
 			}
 
-            if (EditorUtility.IsDirty(UAI))
+            if (UAI != null && EditorUtility.IsDirty(UAI))
             {
                 MenuRect.x += 100;
                 MenuRect.width = 150;
@@ -3213,47 +3309,7 @@ namespace UMA.Controls
 			FillRect.x += 530;
 			FillRect.width -= 530;
 			GUI.Box(FillRect, "", EditorStyles.toolbar);
-
-            /*
-			if (ShowUtilities)
-			{
-				rect.y += rect.height;
-				GUI.Box(rect, "");
-				GUILayout.BeginArea(rect);
-				GUILayout.BeginHorizontal();
-				if (GUILayout.Button("Apply MeshHideAssets to Selection", GUILayout.Width(259)))
-				{
-					UpdateMeshHideAssets();
-					AssetDatabase.SaveAssets();
-				}
-				AddedMHA = EditorGUILayout.ObjectField("", AddedMHA, typeof(MeshHideAsset), false, GUILayout.Width(250)) as MeshHideAsset;
-				GUILayout.EndHorizontal();
-				GUILayout.EndArea();
-				rect.y += rect.height;
-				GUI.Box(rect, "");
-				GUILayout.BeginArea(rect);
-				GUILayout.BeginHorizontal();
-				if (GUILayout.Button("Apply UMAMaterial to Selection", GUILayout.Width(259)))
-				{
-					UpdateMaterials();
-					AssetDatabase.SaveAssets();
-				}
-				umaMaterial = EditorGUILayout.ObjectField("", umaMaterial, typeof(UMAMaterial), false, GUILayout.Width(250)) as UMAMaterial;
-				if (GUILayout.Button("Select overlays with UMAMaterial", GUILayout.Width(259)))
-				{
-					SelectByMaterial(umaMaterial);
-				}
-				if (GUILayout.Button("Fixup Texture Channels",GUILayout.Width(150)))
-                {
-					FixupTextureChannels(umaMaterial);
-                }
-				GUILayout.EndHorizontal();
-				GUILayout.EndArea();
-
-
-			}
-            */
-		}
+        }
 
         void SearchBar (Rect rect)
 		{
@@ -3268,15 +3324,18 @@ namespace UMA.Controls
 				{
 					LoadOnly.Clear();
 					var treeElements = new List<AssetTreeElement>();
-					TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
-					foreach(AssetTreeElement ate in treeElements)
+					if (treeView != null && treeView.treeModel != null)
 					{
-						if (ate.ai != null && ate.Checked)
+						TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+						foreach(AssetTreeElement ate in treeElements)
 						{
-							LoadOnly.Add(ate.ai);
+							if (ate.ai != null && ate.Checked)
+							{
+								LoadOnly.Add(ate.ai);
+							}
 						}
+						treeView.ExpandAll();
 					}
-					treeView.ExpandAll();
 				}
 				m_Initialized = false;
 				Repaint();
@@ -3295,12 +3354,18 @@ namespace UMA.Controls
 
 			rect.x = DropDown.x+DropDown.width;
 			rect.width -= rect.x;
-			treeView.searchString = m_SearchField.OnGUI (rect, treeView.searchString);
+            if (treeView != null)
+            {
+			    treeView.searchString = m_SearchField.OnGUI (rect, treeView.searchString);
+            }
 		}
 
 		void DoTreeView (Rect rect)
 		{
-			treeView.OnGUI(rect);
+            if (treeView != null)
+            {
+		        treeView.OnGUI(rect);
+            }
 		}
 
 		void BottomToolBar (Rect rect)

@@ -61,6 +61,10 @@ namespace UMA
         NativeArray<BoneWeight1> baseboneWeights;
         List<string> boneNames = new List<string>();
 
+        private static bool IsEditorBusy()
+        {
+            return EditorApplication.isCompiling || EditorApplication.isUpdating;
+        }
 
         public DecalEditor()
         {
@@ -72,6 +76,11 @@ namespace UMA
         [MenuItem("UMA/Interactive Decals (EXPERIMENTAL)")]
         public static void Init()
         {
+            if (IsEditorBusy())
+            {
+                EditorUtility.DisplayDialog("Busy", "Please wait for the editor to finish compiling/updating.", "OK");
+                return;
+            }
             DecalEditor de = new DecalEditor();
             InteractiveUMAWindow.Init("UMA Decals - EXPERIMENTAL", de);
         }
@@ -138,7 +147,7 @@ namespace UMA
 #if SHOW_PLANES
             GameObject g1 = GameObject.Instantiate(PlanesMarker, v0, Quaternion.identity, Root);
             GameObject g2 = GameObject.Instantiate(PlanesMarker, v1, Quaternion.identity, Root);
-            GameObject g3 = GameObject.Instantiate(PlanesMarker, v2, Quaternion.identity, Root);
+            GameObject g3 = GameObject.Instantiate(PlanesMarker, v2, Quaternion.identity, Root); 
             SceneManager.MoveGameObjectToScene(g1, scene);
             SceneManager.MoveGameObjectToScene(g2, scene);
             SceneManager.MoveGameObjectToScene(g3, scene); 
@@ -230,6 +239,7 @@ namespace UMA
 
             if (GUILayout.Button("Change Race",GUILayout.ExpandWidth(false)))
             {
+                if (IsEditorBusy()) return;
                 if (raceNumber >= 0)
                 {
                     Debug.Log($"Changing race to {raceNumber}: {RaceNames[raceNumber]} ");
@@ -336,6 +346,7 @@ namespace UMA
 
             if (GUILayout.Button("Capture current decal"))
             {
+                if (IsEditorBusy()) return;
                 // Todo: get all meshes
                 Mesh bakedMesh = FreezeCurrentMesh(sceneView);
 
@@ -501,11 +512,12 @@ namespace UMA
 
         public void Cleanup(InteractiveUMAWindow scene)
         {
-
+            // nothing to cleanup in preview currently
         }
 
         public void OnSceneGUI(InteractiveUMAWindow sceneView)
         {
+            if (IsEditorBusy()) return;
             ProcessEvents(sceneView);
 
             const float WindowHeight = 140;
@@ -715,6 +727,7 @@ namespace UMA
             {
                 if (Event.current.button == 0)
                 {
+                    if (IsEditorBusy()) return;
                     FreezeCurrentMesh(sceneView);
                     Ray ray = sceneView.GUIPointToWorldRay(Event.current.mousePosition);
 
@@ -786,12 +799,13 @@ namespace UMA
 
         public void InitializationComplete(GameObject root)
         {
+            if (IsEditorBusy()) return;
             sceneRoot = root;
             float scale = EditorPrefs.GetFloat("DecalIndicatorScale", 1.0f);
             decalIndicator = root.GetComponentInChildren<DecalIndicator>();
 
             this.ScreenBlocker = FindBlockerMaterial(root);
-            string[] texs = ScreenBlocker.GetTexturePropertyNames();
+            string[] texs = ScreenBlocker != null ? ScreenBlocker.GetTexturePropertyNames() : new string[0];
             foreach(string s in texs)
             {
                 Texture tex = ScreenBlocker.GetTexture(s);
@@ -822,19 +836,21 @@ namespace UMA
             Character = avatar.gameObject;
             decalManager = root.GetComponentInChildren<DecalManager>();
 
-            var races = UMAAssetIndexer.Instance.GetAllAssets<RaceData>();
-
-
-            foreach(RaceData r in races)
+            var indexer = UMAAssetIndexer.Instance;
+            if (indexer != null)
             {
-                if (r.raceName == avatar.activeRace.name)
+                var races = indexer.GetAllAssets<RaceData>();
+                foreach(RaceData r in races)
                 {
-                    raceNumber = RaceNames.Count;
+                    if (avatar != null && r.raceName == avatar.activeRace.name)
+                    {
+                        raceNumber = RaceNames.Count;
+                    }
+                    RaceNames.Add(r.raceName);
                 }
-                RaceNames.Add(r.raceName);
             }
             
-            var mr = decalIndicator.visualPlane.GetComponent<MeshRenderer>();
+            var mr = decalIndicator != null ? decalIndicator.visualPlane.GetComponent<MeshRenderer>() : null;
             if (mr != null)
             {
                 decalMaterial = mr.sharedMaterial;

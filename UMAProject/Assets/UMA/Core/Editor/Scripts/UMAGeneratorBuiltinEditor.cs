@@ -16,7 +16,7 @@ namespace UMA.Editors
 		SerializedProperty garbageCollectionRate;
 		SerializedProperty processAllPending;
 		SerializedProperty applyInline;
-        SerializedProperty MaxQueuedConversionsPerFrame;
+		SerializedProperty MaxQueuedConversionsPerFrame;
 		SerializedProperty EditorInitialScaleFactor;
 		SerializedProperty editorAtlasResolution;
 		SerializedProperty collectGarbage;
@@ -26,23 +26,47 @@ namespace UMA.Editors
 		SerializedProperty showInHierarchy;
 		SerializedProperty Use32BitBuffers;
 
-        public static bool showGenerationSettings = false;
+		public static bool showGenerationSettings = false;
 		public static bool showAdvancedSettings = false;
 		public static bool showStatistics = true;
 		public static bool showEditTimeSettings = false;
 
+		private static bool IsEditorBusy()
+		{
+			return EditorApplication.isCompiling || EditorApplication.isUpdating;
+		}
+
+		private void OnBeforeAssemblyReload()
+		{
+			// No event subscriptions in this editor, but keep hook for parity and future safety
+		}
 
 #pragma warning disable 0108
-        public override void OnEnable()
+		public override void OnEnable()
 		{
 			base.OnEnable();
+
+			// Defer initialization until the editor is stable and target is valid
+			if (IsEditorBusy() || target == null || serializedObject == null)
+			{
+				EditorApplication.delayCall += () =>
+				{
+					if (this != null) OnEnable();
+				};
+				return;
+			}
+
+			AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+			AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+
+			// Find properties (guard against absent properties)
 			textureMerge = serializedObject.FindProperty("textureMerge");
 			meshCombiner = serializedObject.FindProperty("meshCombiner");
 			InitialScaleFactor = serializedObject.FindProperty("InitialScaleFactor");
 			IterationCount = serializedObject.FindProperty("IterationCount");
 			processAllPending = serializedObject.FindProperty("processAllPending");
-            applyInline = serializedObject.FindProperty("applyInline");
-            garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
+			applyInline = serializedObject.FindProperty("applyInline");
+			garbageCollectionRate = serializedObject.FindProperty("garbageCollectionRate");
 			EditorInitialScaleFactor = serializedObject.FindProperty("editorInitialScaleFactor");
 			editorAtlasResolution = serializedObject.FindProperty("editorAtlasResolution");
 			collectGarbage = serializedObject.FindProperty("collectGarbage");
@@ -50,62 +74,91 @@ namespace UMA.Editors
 			defaultOverlayAsset = serializedObject.FindProperty("defaultOverlayAsset");
 			MaxQueuedConversionsPerFrame = serializedObject.FindProperty("MaxQueuedConversionsPerFrame");
 			convertRenderTexture = serializedObject.FindProperty("convertRenderTexture");
-            showInHierarchy = serializedObject.FindProperty("showInHierarchy");
-            Use32BitBuffers = serializedObject.FindProperty("Use32BitBuffers");
-
-        }
+			showInHierarchy = serializedObject.FindProperty("showInHierarchy");
+			Use32BitBuffers = serializedObject.FindProperty("Use32BitBuffers");
+		}
 #pragma warning restore 0108
+
+		private void OnDisable()
+		{
+			AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+		}
+
+		private static void DrawIfPresent(SerializedProperty prop, string explicitLabel = null)
+		{
+			if (prop != null)
+			{
+				if (string.IsNullOrEmpty(explicitLabel))
+					EditorGUILayout.PropertyField(prop);
+				else
+					EditorGUILayout.PropertyField(prop, new GUIContent(explicitLabel));
+			}
+		}
 
 		public override void OnInspectorGUI()
 		{
+			if (IsEditorBusy())
+			{
+				EditorGUILayout.HelpBox("Compiling/Updating...", MessageType.Info);
+				return;
+			}
+			if (target == null || serializedObject == null || serializedObject.targetObject == null)
+			{
+				EditorGUILayout.HelpBox("Inspector target is not available (domain reload).", MessageType.Info);
+				return;
+			}
+
 			base.OnInspectorGUI();
 
 			serializedObject.Update();
 
-            showGenerationSettings = EditorGUILayout.Foldout(showGenerationSettings, "Generation Settings");
+			showGenerationSettings = EditorGUILayout.Foldout(showGenerationSettings, "Generation Settings");
 			if (showGenerationSettings)
 			{
-				EditorGUILayout.PropertyField(MaxQueuedConversionsPerFrame);
-				EditorGUILayout.PropertyField(InitialScaleFactor);
-				EditorGUILayout.PropertyField(IterationCount);
-				EditorGUILayout.PropertyField(collectGarbage);
-				EditorGUILayout.PropertyField(garbageCollectionRate);
-				EditorGUILayout.PropertyField(processAllPending);
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("SaveAndRestoreIgnoredItems"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("showInHierarchy"));
-            }
-            showEditTimeSettings = EditorGUILayout.Foldout(showEditTimeSettings, "Edit Time Settings");
+				DrawIfPresent(MaxQueuedConversionsPerFrame);
+				DrawIfPresent(InitialScaleFactor);
+				DrawIfPresent(IterationCount);
+				DrawIfPresent(collectGarbage);
+				DrawIfPresent(garbageCollectionRate);
+				DrawIfPresent(processAllPending);
+
+				var saveRestoreIgnored = serializedObject.FindProperty("SaveAndRestoreIgnoredItems");
+				DrawIfPresent(saveRestoreIgnored);
+				DrawIfPresent(showInHierarchy);
+			}
+
+			showEditTimeSettings = EditorGUILayout.Foldout(showEditTimeSettings, "Edit Time Settings");
 			if (showEditTimeSettings)
 			{
-                EditorGUILayout.HelpBox("Edit time generation options. Keep the atlas size down and the scale factor high to address possible problems loading large scene files.", MessageType.None);
-                EditorGUILayout.PropertyField(editorAtlasResolution);
-                EditorGUILayout.PropertyField(EditorInitialScaleFactor);
-            }
+				EditorGUILayout.HelpBox("Edit time generation options. Keep the atlas size down and the scale factor high to address possible problems loading large scene files.", MessageType.None);
+				DrawIfPresent(editorAtlasResolution);
+				DrawIfPresent(EditorInitialScaleFactor);
+			}
 
-            showAdvancedSettings = EditorGUILayout.Foldout(showAdvancedSettings, "Advanced Settings");
+			showAdvancedSettings = EditorGUILayout.Foldout(showAdvancedSettings, "Advanced Settings");
 			if (showAdvancedSettings)
 			{
 				GUILayout.Space(20);
 				EditorGUILayout.LabelField("Advanced Configuration", centeredLabel);
-				EditorGUILayout.HelpBox("Use Apply Inline when you want converted rendertextures to apply immediately on your platform",MessageType.None);
-				EditorGUILayout.PropertyField(applyInline);
-                EditorGUILayout.HelpBox("The default renderer asset is used to set rendering parameters for the generated SkinnedMeshRenderer. This is only used if no other renderer asset is specified on the character, slot, or renderer manager.", MessageType.None);
-				EditorGUILayout.PropertyField(defaultRendererAsset);
+				EditorGUILayout.HelpBox("Use Apply Inline when you want converted rendertextures to apply immediately on your platform", MessageType.None);
+				DrawIfPresent(applyInline);
+				EditorGUILayout.HelpBox("The default renderer asset is used to set rendering parameters for the generated SkinnedMeshRenderer. This is only used if no other renderer asset is specified on the character, slot, or renderer manager.", MessageType.None);
+				DrawIfPresent(defaultRendererAsset);
 				EditorGUILayout.HelpBox("The default overlay asset is used when an overay is not specified on a slot. This is for testing only.", MessageType.None);
-				EditorGUILayout.PropertyField(defaultOverlayAsset);
-                EditorGUILayout.PropertyField(Use32BitBuffers);
-				EditorGUILayout.PropertyField(showInHierarchy);
-                EditorGUILayout.PropertyField(textureMerge);
-				EditorGUILayout.PropertyField(meshCombiner);
+				DrawIfPresent(defaultOverlayAsset);
+				DrawIfPresent(Use32BitBuffers);
+				DrawIfPresent(showInHierarchy);
+				DrawIfPresent(textureMerge);
+				DrawIfPresent(meshCombiner);
 			}
 
-            showStatistics = EditorGUILayout.Foldout(showStatistics, "Statistics");
+			showStatistics = EditorGUILayout.Foldout(showStatistics, "Statistics");
 			if (showStatistics)
 			{
 				var generator = target as UMAGeneratorBuiltin;
 				EditorGUILayout.Space(10);
 				EditorGUILayout.LabelField("Generation Metrics", centeredLabel);
-				if (Application.isPlaying)
+				if (Application.isPlaying && generator != null)
 				{
 					EditorGUILayout.LabelField("Elapsed Time", string.Format("{0} ms", generator.ElapsedTicks / 10000));
 					EditorGUILayout.LabelField("Validation Time", string.Format("{0} ms", generator.validationTicks / 10000));
@@ -113,27 +166,35 @@ namespace UMA.Editors
 					EditorGUILayout.LabelField("Begun Events Time", string.Format("{0} ms", generator.BegunEventsTicks / 10000));
 					EditorGUILayout.LabelField("preApply Time", string.Format("{0} ms", generator.preapplyTicks / 10000));
 					EditorGUILayout.LabelField("Texture Processing Time", string.Format("{0} ms", generator.textureprocessingTicks / 10000));
-                    EditorGUILayout.LabelField("Mesh Updates Time", string.Format("{0} ms", generator.meshUpdatesTicks / 10000));
-                    EditorGUILayout.LabelField("Skeleton Updates Time", string.Format("{0} ms", generator.skeletonUpdatesTicks / 10000));
-                    EditorGUILayout.LabelField("Race Blendshapes Time", string.Format("{0} ms", generator.raceblendshapesTicks / 10000));
-                    EditorGUILayout.LabelField("End Events Time", string.Format("{0} ms", generator.endEventsTicks / 10000));
+					EditorGUILayout.LabelField("Mesh Updates Time", string.Format("{0} ms", generator.meshUpdatesTicks / 10000));
+					EditorGUILayout.LabelField("Skeleton Updates Time", string.Format("{0} ms", generator.skeletonUpdatesTicks / 10000));
+					EditorGUILayout.LabelField("Race Blendshapes Time", string.Format("{0} ms", generator.raceblendshapesTicks / 10000));
+					EditorGUILayout.LabelField("End Events Time", string.Format("{0} ms", generator.endEventsTicks / 10000));
 					EditorGUILayout.LabelField("Average Mesh Time", string.Format("{0:F4} ms", generator.averageMeshUpdatesTime));
-					EditorGUILayout.LabelField("Average Texture Time", string.Format("{0:F4} ms",generator.averageTextureProcessingTime));
+					EditorGUILayout.LabelField("Average Texture Time", string.Format("{0:F4} ms", generator.averageTextureProcessingTime));
 					EditorGUILayout.LabelField("Average Skeleton Time", string.Format("{0:F4} ms", generator.averageSkeletonUpdatesTime));
-                }
-                else
+				}
+				else
 				{
 					EditorGUILayout.LabelField("Elapsed Time", "N/A");
 				}
-				EditorGUILayout.LabelField("Pending UMAs", string.Format("{0}", generator.pendingUmas));
-				EditorGUILayout.LabelField("Shape Dirty", string.Format("{0}", generator.DnaChanged));
-				EditorGUILayout.LabelField("Texture Dirty", string.Format("{0}", generator.TextureChanged));
-				EditorGUILayout.LabelField("Mesh Dirty", string.Format("{0}", generator.SlotsChanged));
-				if (convertRenderTexture.boolValue == true)
+
+				if (generator != null)
+				{
+					EditorGUILayout.LabelField("Pending UMAs", string.Format("{0}", generator.pendingUmas));
+					EditorGUILayout.LabelField("Shape Dirty", string.Format("{0}", generator.DnaChanged));
+					EditorGUILayout.LabelField("Texture Dirty", string.Format("{0}", generator.TextureChanged));
+					EditorGUILayout.LabelField("Mesh Dirty", string.Format("{0}", generator.SlotsChanged));
+				}
+
+				if (convertRenderTexture != null && convertRenderTexture.boolValue == true)
 				{
 					EditorGUILayout.Space(10);
 					EditorGUILayout.LabelField("Texture Metrics", centeredLabel);
-					EditorGUILayout.LabelField("Textures Processed", string.Format("{0}", generator.TexturesProcessed));
+					if (generator != null)
+					{
+						EditorGUILayout.LabelField("Textures Processed", string.Format("{0}", generator.TexturesProcessed));
+					}
 					EditorGUILayout.LabelField("Copies Enqueued", string.Format("{0}", RenderTexToCPU.copiesEnqueued));
 					EditorGUILayout.LabelField("Copies Dequeued", string.Format("{0}", RenderTexToCPU.copiesDequeued));
 					EditorGUILayout.LabelField("Unable to Queue", string.Format("{0}", RenderTexToCPU.unableToQueue));
@@ -146,7 +207,7 @@ namespace UMA.Editors
 					EditorGUILayout.LabelField("Applied Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedApplied));
 					EditorGUILayout.LabelField("Not Applied Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedMissed));
 					EditorGUILayout.LabelField("Total Cleanup", string.Format("{0}", RenderTexToCPU.renderTexturesCleanedUMAData + RenderTexToCPU.renderTexturesCleanedApplied + RenderTexToCPU.renderTexturesCleanedMissed));
-                    if (GUILayout.Button("Reset editor statistics"))
+					if (GUILayout.Button("Reset editor statistics") && generator != null)
 					{
 						generator.ElapsedTicks = 0;
 						generator.DnaChanged = 0;
@@ -170,6 +231,7 @@ namespace UMA.Editors
 			{
 				if (GUILayout.Button("Rebuild all editor UMA"))
 				{
+					if (IsEditorBusy()) return;
 					Scene scene = SceneManager.GetActiveScene();
 					if (scene != null)
 					{
@@ -181,7 +243,7 @@ namespace UMA.Editors
 							{
 								foreach (DynamicCharacterAvatar dca in dcas)
 								{
-									if (dca.editorTimeGeneration)
+									if (dca != null && dca.editorTimeGeneration)
 									{
 										dca.GenerateSingleUMA();
 									}

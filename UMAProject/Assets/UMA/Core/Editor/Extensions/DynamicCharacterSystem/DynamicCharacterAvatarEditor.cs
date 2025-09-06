@@ -41,49 +41,68 @@ namespace UMA.CharacterSystem.Editors
         SerializedProperty animationController;
         protected Editor innerEditor;
 
+        private static bool IsEditorBusy()
+        {
+            return EditorApplication.isCompiling || EditorApplication.isUpdating;
+        }
+
+        private void OnBeforeAssemblyReload()
+        {
+            // Ensure events and temporary editors are cleaned up before reload
+            try
+            {
+                EditorApplication.update -= DoInspectors;
+                SceneView.duringSceneGui -= DoSceneGUI;
+            }
+            catch { }
+            if (innerEditor != null)
+            {
+                try { DestroyImmediate(innerEditor); } catch { }
+                innerEditor = null;
+            }
+        }
+
         public void OnEnable()
         {
+            if (IsEditorBusy() || target == null)
+            {
+                // Defer enable until editor is ready
+                EditorApplication.delayCall += () => { if (this != null) OnEnable(); };
+                return;
+            }
+
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+
             baseColorNames.Clear();
             baseColorNames.AddRange(new string[] { "skin", "hair", "eyes" });
             thisDCA = target as DynamicCharacterAvatar;
 
+            if (thisDCA == null)
+            {
+                return;
+            }
+
             innerEditor = (UMADataEditor)Editor.CreateEditor(thisDCA, typeof(UMADataEditor));
-            /*
-			if (thisDCA.context == null)
-			{
-				thisDCA.context = UMAContextBase.Instance;
-				if (thisDCA.context == null)
-				{
-					thisDCA.context = thisDCA.CreateEditorContext();
-				}
-			}
-			else if (thisDCA.context.gameObject.name == "UMAEditorContext")
-			{
-				//this will set also the existing Editorcontext if there is one
-				thisDCA.CreateEditorContext();
-			}
-			else if (thisDCA.context.gameObject.transform.parent != null)
-			{
-				//this will set also the existing Editorcontext if there is one
-				if (thisDCA.context.gameObject.transform.parent.gameObject.name == "UMAEditorContext")
-					thisDCA.CreateEditorContext();
-			}*/
             _racePropDrawer.thisDCA = thisDCA;
             _wardrobePropDrawer.thisDCA = thisDCA;
             _animatorPropDrawer.thisDCA = thisDCA;
 
             SceneView.duringSceneGui += DoSceneGUI;
             EditorApplication.update += DoInspectors;
-
-
         }
 
         private List<UnityEngine.Object> InspectMe = new List<UnityEngine.Object>();
 
         public void OnDisable()
         {
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             EditorApplication.update -= DoInspectors;
             SceneView.duringSceneGui -= DoSceneGUI;
+            if (innerEditor != null)
+            {
+                DestroyImmediate(innerEditor);
+                innerEditor = null;
+            }
         }
 
         private void DoInspectors()
@@ -103,7 +122,7 @@ namespace UMA.CharacterSystem.Editors
             var newcharacterColors = new List<DynamicCharacterAvatar.ColorValue>();
             for (int i = 0; i < colorCount; i++)
             {
-                if (thisDCA.characterColors.Colors.Count > i)
+                if (thisDCA != null && thisDCA.characterColors.Colors.Count > i)
                 {
                     newcharacterColors.Add(thisDCA.characterColors.Colors[i]);
                 }
@@ -112,7 +131,10 @@ namespace UMA.CharacterSystem.Editors
                     newcharacterColors.Add(new DynamicCharacterAvatar.ColorValue(3));
                 }
             }
-            thisDCA.characterColors.Colors = newcharacterColors;
+            if (thisDCA != null)
+            {
+                thisDCA.characterColors.Colors = newcharacterColors;
+            }
         }
 
         protected bool characterAvatarLoadSaveOpen;
@@ -136,13 +158,22 @@ namespace UMA.CharacterSystem.Editors
 
         public override void OnInspectorGUI()
         {
-            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            if (IsEditorBusy())
             {
                 EditorGUILayout.HelpBox("Compiling/Updating...", MessageType.Info);
                 return;
             }
+            if (target == null)
+            {
+                return;
+            }
             bool wasChanged = false;
             thisDCA = target as DynamicCharacterAvatar;
+            if (thisDCA == null)
+            {
+                EditorGUILayout.HelpBox("DynamicCharacterAvatar is missing.", MessageType.Warning);
+                return;
+            }
             SerializedProperty userInfo = serializedObject.FindProperty("userInformation");
             showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
             EditorGUI.BeginChangeCheck();
@@ -317,7 +348,10 @@ namespace UMA.CharacterSystem.Editors
             showUMAData = GUIHelper.FoldoutBar(showUMAData, "UMA Data");
             if (showUMAData)
             {
-                innerEditor.OnInspectorGUI();
+                if (innerEditor != null)
+                {
+                    innerEditor.OnInspectorGUI();
+                }
                // DrawFoldoutInspector(thisDCA, ref innerEditor);
             }
 
@@ -525,7 +559,7 @@ namespace UMA.CharacterSystem.Editors
             SerializedProperty newCharacterColors = characterColors.FindPropertyRelative("_colors");
             GUILayout.BeginHorizontal();
             GUILayout.Space(2);
-            //for ColorValues as OverlayColorDatas we need to outout something that looks like a list but actully uses a method to add/remove colors because we need the new OverlayColorData to have 3 channels	
+            //for ColorValues as OverlayColorDatas we need to outout something that looks like a list but actully uses a method to add/remove colors because we need the new OverlayColorData to have 3 channels 
             newCharacterColors.isExpanded = EditorGUILayout.Foldout(newCharacterColors.isExpanded, new GUIContent("Character Colors"));
             GUILayout.EndHorizontal();
             var n_origArraySize = newCharacterColors.arraySize;
@@ -672,6 +706,8 @@ namespace UMA.CharacterSystem.Editors
 
         private void DoSceneGUI(SceneView sceneView)
         {
+            if (IsEditorBusy()) return;
+            if (thisDCA == null) return;
             // Leaving this function here so I can later add some tools to the scene view to find/rebuild/modify UMAs
             // TODO: include all that in a project setting
             Event currentEvent = Event.current;
@@ -693,111 +729,7 @@ namespace UMA.CharacterSystem.Editors
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
-            /*
-            EditorGUI.BeginChangeCheck();
-            AllowVertexSelection = EditorGUILayout.Toggle("Enable Vertex Selection", AllowVertexSelection);
-            if (EditorGUI.EndChangeCheck())
-            {
-                if (AllowVertexSelection)
-                {
-                    // TODO: Create a new window, create a preview scene, show the window with the preview after moving the new VertexObject to the new scene.
-                    //
-                    SkinnedMeshRenderer smr = thisDCA.umaData.GetRenderers()[0];
-                    if (smr != null)
-                    {
-                        BakedMesh = new Mesh();
-                        BakedMesh.name = "BakedMesh";
-                        smr.BakeMesh(BakedMesh, true);
-                        GameObject go = new GameObject(vertexSelectionToolName);
-                        go.AddComponent<MeshFilter>().sharedMesh = BakedMesh;
-                        MeshRenderer renderer = go.GetComponent<MeshRenderer>();
-                        if (renderer == null)
-                        {
-                            renderer = go.AddComponent<MeshRenderer>();
-                        }
-                        // Material sharedMaterial = UMAUtils.GetDefaultDiffuseMaterial();
-                        renderer.sharedMaterials = new Material[BakedMesh.subMeshCount];
-                        go.transform.parent = thisDCA.gameObject.transform;
-                        go.transform.localPosition = Vector3.zero;
-                        go.transform.localRotation = Quaternion.identity;
-                        go.transform.localScale = Vector3.one;
-                        MeshCollider mc = go.AddComponent<MeshCollider>();
-                        mc.sharedMesh = BakedMesh;
-
-                        go.SetActive(true);
-                        smr.enabled = false;
-                        VertexObject = go;
-                        SetVertexMaterialColors(go);
-                    }
-                    else
-                    {
-                        Debug.LogError("No SkinnedMeshRenderer found");
-                    }
-                    SceneView.RepaintAll();
-                }
-                else
-                {
-                    CleanupFromVertexMode();
-                }
-            }
-            int deleted = -1;
-            bool changed = false;
-            Color save = GUI.color;
-
-            for (int i = 0; i < SelectedVertexes.Count; i++)
-            {
-                var sv = SelectedVertexes[i];
-                GUILayout.BeginHorizontal();
-                GUI.color = (i == selectedVertex) ? Color.yellow : Color.white;
-                // display the slot, vertexnumber.
-                // and create a button to delete sv
-                if (GUILayout.Button(sv.slot.slotName,EditorStyles.label,GUILayout.Width(220)))
-                {
-                    selectedVertex = i;
-                    changed = true;
-                }
-                if ( GUILayout.Button(sv.vertexIndexOnSlot.ToString(),EditorStyles.label,GUILayout.Width(60)))
-                {
-                    selectedVertex = i;
-                    changed = true;
-                }
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(20)))
-                {
-                    deleted = i;
-                    changed = true;
-                }
-                GUILayout.EndHorizontal();
-            }
-            GUI.color = save;
-
-            if (deleted >= 0)
-            {
-                SelectedVertexes.RemoveAt(deleted);
-                if (deleted == selectedVertex)
-                {
-                    selectedVertex = -1;
-                }
-                changed = true;
-            }
-            if (changed) 
-            {
-                SceneView.RepaintAll();
-            }
-            */
             GUILayout.BeginHorizontal();
-            /*if (GUILayout.Button("Clear"))
-            {
-                ClearSelectedVertexes();
-                SceneView.RepaintAll();
-            }
-            if (GUILayout.Button("Add to Ignore List"))
-            {
-                // Add to the ignore list of the SlotDataAsset.
-                // these vertexes will *not* be overridden by the slot vertex overrides.
-                
-            } */
-
             GUILayout.Label("MeshModifier:", GUILayout.Width(130));
             MeshModifier = (MeshModifier)EditorGUILayout.ObjectField( MeshModifier, typeof(MeshModifier), true, GUILayout.Width(130));
             if (GUILayout.Button("Edit"))
@@ -808,30 +740,7 @@ namespace UMA.CharacterSystem.Editors
             {
                 VertexEditorStage.ShowStage(thisDCA, null);
             }
-
-
-            /*if (GUILayout.Button("Open vertex adjuster"))
-            {
-                // Open the vertex adjuster window.
-                VertexAdjuster ve = new VertexAdjuster();
-                ve.Setup(thisDCA);
-                InteractiveUMAWindow.Init("UMA Vertex Adjuster - EXPERIMENTAL", ve);
-
-            }*/
-
             GUILayout.EndHorizontal();
-
-            /*GUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Force Rebuild"))
-            {
-                thisDCA.ForceUpdate(false, false, true);
-            }
-            GUILayout.EndHorizontal(); */
-
-
-            // Edit weights of the selected vertex on the slot. 
-            // Then force rebuild the character.
 
             GUIHelper.EndVerticalPadded(10);
         }
@@ -1073,9 +982,9 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.PropertyField(serializedObject.FindProperty("hide"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("leanHiding"));
 #if UMA_ADDRESSABLES
-			EditorGUILayout.HelpBox("DelayUnload: This option delays unloading the addressable asset for 2.0 seconds in case you are rebuilding an UMA immediately after freeing this one. Normally this should be unchecked.", MessageType.Info);
+            EditorGUILayout.HelpBox("DelayUnload: This option delays unloading the addressable asset for 2.0 seconds in case you are rebuilding an UMA immediately after freeing this one. Normally this should be unchecked.", MessageType.Info);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("DelayUnload"));
-			EditorGUILayout.HelpBox("BundleCheck: This option makes UMA check the addressable bundles and load if needed. If you are using addressables this should absolutely be checked. Only uncheck this if you have a special circumstance where you are building an UMA that has specific slots and overlays that are not addressable!", MessageType.Info);
+            EditorGUILayout.HelpBox("BundleCheck: This option makes UMA check the addressable bundles and load if needed. If you are using addressables this should absolutely be checked. Only uncheck this if you have a special circumstance where you are building an UMA that has specific slots and overlays that are not addressable!", MessageType.Info);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("BundleCheck"));
 #endif
             EditorGUILayout.PropertyField(serializedObject.FindProperty("forceSlotMaterials"));
@@ -1210,6 +1119,8 @@ namespace UMA.CharacterSystem.Editors
 
         void GenerateSingleUMA(bool rebuild = false)
         {
+            if (IsEditorBusy()) return;
+            if (thisDCA == null) return;
             if (Application.isPlaying)
             {
                 thisDCA.BuildCharacter(rebuild);
@@ -1229,7 +1140,15 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-            UMAGenerator ugb = UMAAssetIndexer.Instance.Generator;
+            var indexer = UMAAssetIndexer.Instance;
+            if (indexer == null || indexer.Generator == null)
+            {
+                Debug.Log("Cannot find generator!");
+                EditorUtility.DisplayDialog("Error", "Cannot find generator!", "OK");
+                return;
+            }
+
+            UMAGenerator ugb = indexer.Generator;
             if (ugb == null)
             {
                 Debug.Log("Cannot find generator!");
@@ -1309,6 +1228,8 @@ namespace UMA.CharacterSystem.Editors
 
         void UpdateCharacter()
         {
+            if (IsEditorBusy()) return;
+            if (thisDCA == null) return;
             if (thisDCA.gameObject.scene != default)
             {
                 if (thisDCA.editorTimeGeneration)
