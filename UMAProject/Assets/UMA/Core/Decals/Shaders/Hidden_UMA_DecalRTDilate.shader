@@ -46,7 +46,7 @@ Shader "Hidden/UMA/DecalRTDilate"
                 float2 dx = float2(_MainTex_TexelSize.x, 0);
                 float2 dy = float2(0, _MainTex_TexelSize.y);
 
-                // 8 neighbors
+                // Level 1: 8 neighbors at radius 1
                 fixed4 n0 = SampleClamp(i.uv + dx);
                 fixed4 n1 = SampleClamp(i.uv - dx);
                 fixed4 n2 = SampleClamp(i.uv + dy);
@@ -67,13 +67,46 @@ Shader "Hidden/UMA/DecalRTDilate"
                 if (n7.a > best.a) best = n7;
 
                 // Blend toward best based on how much alpha we are missing
-                // (keeps soft interiors soft)
                 if (best.a > baseCol.a)
                 {
                     float k = 1.0 - baseCol.a;
                     baseCol.rgb = lerp(baseCol.rgb, best.rgb, k);
                     baseCol.a = max(baseCol.a, best.a);
                 }
+
+                // Level 2: extend by one more texel if still not opaque enough
+                if (baseCol.a < 0.99)
+                {
+                    float2 dx2 = dx * 2.0;
+                    float2 dy2 = dy * 2.0;
+
+                    fixed4 m0 = SampleClamp(i.uv + dx2);
+                    fixed4 m1 = SampleClamp(i.uv - dx2);
+                    fixed4 m2 = SampleClamp(i.uv + dy2);
+                    fixed4 m3 = SampleClamp(i.uv - dy2);
+                    fixed4 m4 = SampleClamp(i.uv + dx2 + dy2);
+                    fixed4 m5 = SampleClamp(i.uv + dx2 - dy2);
+                    fixed4 m6 = SampleClamp(i.uv - dx2 + dy2);
+                    fixed4 m7 = SampleClamp(i.uv - dx2 - dy2);
+
+                    fixed4 best2 = baseCol;
+                    if (m0.a > best2.a) best2 = m0;
+                    if (m1.a > best2.a) best2 = m1;
+                    if (m2.a > best2.a) best2 = m2;
+                    if (m3.a > best2.a) best2 = m3;
+                    if (m4.a > best2.a) best2 = m4;
+                    if (m5.a > best2.a) best2 = m5;
+                    if (m6.a > best2.a) best2 = m6;
+                    if (m7.a > best2.a) best2 = m7;
+
+                    if (best2.a > baseCol.a)
+                    {
+                        float k2 = 1.0 - baseCol.a;
+                        baseCol.rgb = lerp(baseCol.rgb, best2.rgb, k2);
+                        baseCol.a = max(baseCol.a, best2.a);
+                    }
+                }
+
                 return baseCol;
             }
             ENDCG
