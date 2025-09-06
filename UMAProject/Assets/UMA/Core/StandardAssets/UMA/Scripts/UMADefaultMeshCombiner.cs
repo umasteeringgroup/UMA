@@ -48,7 +48,6 @@ namespace UMA
 
         protected void EnsureUMADataSetup(UMAData umaData)
         {
-            Debug.Log("EnsureUMADataSetup - updating mesh hide assets.");
             if (umaData.umaRecipe != null)
             {
                 umaData.umaRecipe.UpdateMeshHideMasks();
