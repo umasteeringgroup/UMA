@@ -1333,11 +1333,7 @@ namespace UMA
 					}
 				}
 				var idx = bindPosesList.Count;
-                // Inside TranslateBoneIndex before 'entry.AddIndex(idx);'
-                if (entry != null)
-                {
-                    Debug.LogWarning($"Bind pose mismatch for bone hash {boneTransform} (adding alt index). Existing idx:{entry.index} New idx:{bindPosesList.Count}");
-                }
+
                 entry.AddIndex(idx);
 				bindPosesList.Add(bindPoses[index]);
 				bonesList.Add(boneTransform);
