@@ -29,6 +29,13 @@ namespace UMA
 #pragma warning restore CS0414
         private DNACollection _DNACollection = null;
 
+
+        /// <summary>
+        /// The list of DNA instances.
+        /// </summary>
+        public List<DNAInstance> dnaInstances = new List<DNAInstance>();
+        /// <summary>
+
         public DNACollection dnaCollection
         {
             get
@@ -62,11 +69,7 @@ namespace UMA
             _DNACollection=collection;
         }
 
-        /// <summary>
-        /// The list of DNA instances.
-        /// </summary>
-        public List<DNAInstance> dnaInstances = new List<DNAInstance>();
-        /// <summary>
+
         /// Adds a new DNA instance to the collection.
         /// </summary>
         /// <param name="dnaInstance">The DNA instance to add.</param>
