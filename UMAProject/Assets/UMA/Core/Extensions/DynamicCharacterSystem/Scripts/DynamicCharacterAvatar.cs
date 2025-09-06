@@ -4996,6 +4996,10 @@ namespace UMA.CharacterSystem
                 WardrobeSuppressed.Invoke(SuppressedRecipes);
             }
 
+            // Rebuild MeshHide masks based on the current wardrobe and MeshHideDictionary.
+            // This clears stale masks when recipes are removed and applies current masks per slot.
+            umaRecipe.UpdateMeshHideMasks();
+
             List<SlotData> smooshSlots = new List<SlotData>();
             List<SlotData> clippingPlanes = new List<SlotData>();
 
