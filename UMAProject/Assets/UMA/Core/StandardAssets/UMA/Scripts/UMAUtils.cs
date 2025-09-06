@@ -8,6 +8,7 @@ using UnityEngine.Events;
 using UnityEditor.Events;
 #endif
 using System.Linq;
+using System.Buffers;
 
 
 
@@ -188,7 +189,7 @@ namespace UMA
 		/// <returns>Number of bits set to true.</returns>
 		/// <param name="bitArray">Bit array.</param>
 		//https://stackoverflow.com/questions/5063178/counting-bits-set-in-a-net-bitarray-class
-		public static System.Int32 GetCardinality(BitArray bitArray)
+		public static System.Int32 OldGetCardinality(BitArray bitArray)
 		{
 
 			System.Int32[] ints = new System.Int32[(bitArray.Count >> 5) + 1];
@@ -218,9 +219,63 @@ namespace UMA
 			}
 
 			return count;
-		}		
-	
-		public static string GetAssetFolder(string path)
+		}
+
+        /// <summary>
+        /// Fast way to get the number of bits set to true. Uses ArrayPool to avoid allocations.
+        /// </summary>
+        public static int GetCardinality(BitArray bitArray)
+        {
+            if (bitArray == null)
+            {
+                return 0;
+            }
+
+            int bitCount = bitArray.Count;
+            int intsLen = (bitCount + 31) >> 5; // number of 32-bit ints needed
+            if (intsLen == 0)
+            {
+                return 0;
+            }
+
+            int[] ints = ArrayPool<int>.Shared.Rent(intsLen);
+            try
+            {
+                // Copy only what we need; rented array can be larger.
+                bitArray.CopyTo(ints, 0);
+
+                // Mask off unused high bits in the last int if not multiple of 32
+                int remainder = (bitCount & 31);
+                if (remainder != 0)
+                {
+                    ints[intsLen - 1] &= ~(-1 << remainder);
+                }
+
+                int count = 0;
+                for (int i = 0; i < intsLen; i++)
+                {
+                    int c = ints[i];
+
+                    unchecked
+                    {
+                        c = c - ((c >> 1) & 0x55555555);
+                        c = (c & 0x33333333) + ((c >> 2) & 0x33333333);
+                        c = ((c + (c >> 4)) & 0x0F0F0F0F) * 0x01010101;
+                        c >>= 24;
+                    }
+
+                    count += c;
+                }
+
+                return count;
+            }
+            finally
+            {
+                ArrayPool<int>.Shared.Return(ints, clearArray: false);
+            }
+        }
+
+        public static string GetAssetFolder(string path)
 		{
 			int index = path.LastIndexOf('/');
 			if( index > 0 )
