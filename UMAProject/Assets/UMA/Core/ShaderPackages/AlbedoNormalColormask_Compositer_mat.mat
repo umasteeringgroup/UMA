@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: AlbedoNormalColormask_Compositer_mat
-  m_Shader: {fileID: -6465566751694194690, guid: 08d702ae7f5c47a4b9675564d0302123, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 00a785c0ebde240458a088cf1a70ac00, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -48,6 +48,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _AlphaMask3:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -119,19 +123,37 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaClip: 0
     - _BumpScale: 1
     - _ColorModulation: 1
+    - _CullMode: 2
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
+    - _DoubleSidedNormalMode: 1
     - _DstBlend: 0
+    - _EmissiveModulation: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _HalfLambertStrength: 1
     - _Metallic: 0
     - _MetallicModulation: 1
     - _Mode: 0
+    - _NormalStrength: 1
     - _NormalStrength0: 1
     - _NormalStrength1: 1
     - _NormalStrength2: 1
@@ -139,6 +161,10 @@ Material:
     - _OcclusionStrength: 1
     - _OverlayCount: 0
     - _Parallax: 0.02
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _RimLightPower: 4
+    - _RimLightingModulation: 0
     - _SmoothnessModulation: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -156,6 +182,7 @@ Material:
     - _Tile3_1: 1
     - _Tile3_2: 1
     - _UVSec: 0
+    - _UseHalfLambert: 0
     - _ZWrite: 1
     m_Colors:
     - _Add0_0: {r: 0, g: 0, b: 0, a: 0}
@@ -188,6 +215,7 @@ Material:
     - _RedColor1: {r: 1, g: 1, b: 1, a: 1}
     - _RedColor2: {r: 1, g: 1, b: 1, a: 1}
     - _RedColor3: {r: 1, g: 1, b: 1, a: 1}
+    - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _Tint0_0: {r: 1, g: 1, b: 1, a: 1}
     - _Tint0_1: {r: 1, g: 1, b: 1, a: 1}
     - _Tint0_2: {r: 1, g: 1, b: 1, a: 1}
