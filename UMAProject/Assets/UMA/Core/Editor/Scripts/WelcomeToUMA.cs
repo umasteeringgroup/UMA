@@ -372,7 +372,7 @@ namespace UMA
         {
             ClearLog();
             string path = UMAEditorUtilities.FindUMAFullPath();
-            path = Path.Combine(path,"Core", "ShaderPackages");
+            path = Path.Combine(path, "Core", "ShaderPackages");
 
             if (Directory.Exists(path))
             {
@@ -386,6 +386,15 @@ namespace UMA
                 int registryCount = 0;
                 int totalMaterials = 0;
                 int reassigned = 0;
+                var unresolvedErrorMats = new List<string>();
+
+                bool IsErrorShader(Shader s)
+                {
+                    if (s == null) return false;
+                    var n = s.name ?? string.Empty;
+                    return n.Equals("Hidden/InternalErrorShader", StringComparison.OrdinalIgnoreCase)
+                           || n.StartsWith("Hidden/Internal", StringComparison.OrdinalIgnoreCase);
+                }
 
                 var registryGuids = AssetDatabase.FindAssets("t:MaterialShaderRegistry");
                 foreach (var guid in registryGuids)
@@ -407,8 +416,20 @@ namespace UMA
 
                         totalMaterials++;
 
-                        // Resolve shader: prefer explicit entry.shader, then by name, then current mat.shader
-                        Shader resolved = Shader.Find(e.shaderName);
+                        // If the material is on the error shader AND we have no original shader name, notify and skip resolution.
+                        if (IsErrorShader(mat.shader) && (string.IsNullOrEmpty(e.shaderName) && e.shader == null))
+                        {
+                            unresolvedErrorMats.Add(mat.name);
+                            continue;
+                        }
+
+                        // Resolve shader: prefer by stored name after reimport
+                        Shader resolved = null;
+                        if (!string.IsNullOrEmpty(e.shaderName))
+                        {
+                            resolved = Shader.Find(e.shaderName);
+                        }
+
                         if (resolved != null && mat.shader != resolved)
                         {
                             mat.shader = resolved;
@@ -431,6 +452,19 @@ namespace UMA
                 }
 
                 AssetDatabase.SaveAssets();
+
+                // If any materials are stuck on the error shader without a known original name, alert the user.
+                if (unresolvedErrorMats.Count > 0)
+                {
+                    string list = string.Join("\n - ", unresolvedErrorMats);
+                    string msg = "The following materials are using the error shader and cannot be resolved because the original shader name is not available:\n - " + list + "\n\nPlease update their MaterialShaderRegistry entries with the correct shader name.";
+                    EditorUtility.DisplayDialog("UMA Shader Resolution Error", msg, "OK");
+                    AddText("Some materials could not be resolved and are using the error shader:", LogType.Error);
+                    foreach (var m in unresolvedErrorMats)
+                    {
+                        AddText($" - {m}", LogType.Error);
+                    }
+                }
 
                 // Rebuild all edit-time UMAs to pick up shader/material changes
                 try
