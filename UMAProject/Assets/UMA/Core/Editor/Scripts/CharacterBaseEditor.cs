@@ -2821,8 +2821,27 @@ namespace UMA.Editors
                 }
             }
 
+            // NEW: Open in Node Editor button
+            GUILayout.Space(4);
+            if (GUILayout.Button("Open in Node Recipe Editor"))
+            {
+                // Get or create the window
+                var win = EditorWindow.GetWindow<UMANodeRecipeEditorWindow>("UMA Node Recipe Editor");
+                // If this inspector is editing a UMATextRecipe, load it into the window
+                if (target is UMATextRecipe tr && win != null)
+                {
+                    var mi = typeof(UMANodeRecipeEditorWindow).GetMethod("LoadRecipe", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    if (mi != null)
+                    {
+                        mi.Invoke(win, new object[] { tr });
+                    }
+                }
+                win.Show();
+                win.Focus();
+            }
 
-           // scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
+
+            // scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
 
             if (target as UMATextRecipe != null)
             {

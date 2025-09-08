@@ -381,6 +381,79 @@ namespace UMA
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer | ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
                 StopProcessing();
                 AddText(path + " reimported successfully!");
+
+                // After shader reimport, fix up materials via all MaterialShaderRegistry assets
+                int registryCount = 0;
+                int totalMaterials = 0;
+                int reassigned = 0;
+
+                var registryGuids = AssetDatabase.FindAssets("t:MaterialShaderRegistry");
+                foreach (var guid in registryGuids)
+                {
+                    var regPath = AssetDatabase.GUIDToAssetPath(guid);
+                    var registry = AssetDatabase.LoadAssetAtPath<MaterialShaderRegistry>(regPath);
+                    if (registry == null) continue;
+
+                    registryCount++;
+                    registry.BuildIndex();
+
+                    var entries = registry.Entries;
+                    if (entries == null) continue;
+
+                    foreach (var e in entries)
+                    {
+                        var mat = e.material;
+                        if (mat == null) continue;
+
+                        totalMaterials++;
+
+                        // Resolve shader: prefer explicit entry.shader, then by name, then current mat.shader
+                        Shader resolved = Shader.Find(e.shaderName);
+                        if (resolved != null && mat.shader != resolved)
+                        {
+                            mat.shader = resolved;
+                            EditorUtility.SetDirty(mat);
+                            reassigned++;
+                        }
+
+                        // Keep registry entry synchronized if possible
+                        if (e.shader == null && resolved != null)
+                        {
+                            e.shader = resolved;
+                            EditorUtility.SetDirty(registry);
+                        }
+                        if (resolved != null && !string.IsNullOrEmpty(resolved.name) && e.shaderName != resolved.name)
+                        {
+                            e.shaderName = resolved.name;
+                            EditorUtility.SetDirty(registry);
+                        }
+                    }
+                }
+
+                AssetDatabase.SaveAssets();
+
+                // Rebuild all edit-time UMAs to pick up shader/material changes
+                try
+                {
+                    var avatars = UMAUpdateProcessor.GetSceneEditTimeAvatars();
+                    int rebuilt = 0;
+                    foreach (var dca in avatars)
+                    {
+                        if (dca != null && dca.editorTimeGeneration)
+                        {
+                            dca.GenerateSingleUMA();
+                            rebuilt++;
+                        }
+                    }
+                    AddText($"Rebuilt {rebuilt} edit-time UMA(s).");
+                }
+                catch (Exception ex)
+                {
+                    AddText($"Error rebuilding edit-time UMAs: {ex.Message}", LogType.Error);
+                }
+
+                AddText($"MaterialShaderRegistry processed: {registryCount} asset(s).");
+                AddText($"Materials scanned: {totalMaterials}, shaders reassigned: {reassigned}.");
             }
             else
             {
