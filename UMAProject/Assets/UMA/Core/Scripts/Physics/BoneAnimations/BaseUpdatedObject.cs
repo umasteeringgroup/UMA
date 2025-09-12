@@ -7,6 +7,7 @@ public class BaseUpdatedObject : ScriptableObject
 {
     protected bool initialized = false;
     protected UMAData umaData;
+    protected bool wasWarned = false;
 
     public virtual void Initialize(UMAData umaData, SlotData sd)
     {
@@ -29,7 +30,11 @@ public class BaseUpdatedObject : ScriptableObject
 #if UNITY_EDITOR
         else
         {
-            Debug.LogWarning("BaseBoneAnimator not initialized or UMAData is null. Please call Initialize() before using DoUpdate().");
+            if (!wasWarned)
+            {
+                Debug.LogWarning("BaseBoneAnimator not initialized or UMAData is null. Please call Initialize() before using DoUpdate().");
+                wasWarned = true;
+            }
         }
 #endif
     }

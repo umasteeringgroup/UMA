@@ -35,13 +35,15 @@ namespace UMA
 
         public override void Initialize(UMAData umaData, SlotData sd)
         {
+            base.Initialize(umaData, sd);
+            initialized = true;
+
             if (AnimatedRootBoneNames == null || AnimatedRootBoneNames.Length == 0)
             {
                 Debug.LogError("No animated root bone names specified. Please set AnimatedRootBoneNames in the inspector.");
                 return;
             }
 
-            base.Initialize(umaData, sd);
 
             for (int i = 0; i < AnimatedRootBoneNames.Length; i++)
             {
@@ -52,13 +54,10 @@ namespace UMA
                     AddMCBoneJiggle(umaData, boneXform);
                 }
             }
-            initialized = true;
         }
 
         public void AddMCBoneJiggle(UMAData umaData, Transform rootBone)
         {
-
-
             if (rootBone != null)
             {
 #if MAGICACLOTH2
