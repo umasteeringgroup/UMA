@@ -2542,7 +2542,7 @@ namespace UMA
             ClearOverrides();
 			CleanTextures();
 			CleanMesh(true);
-			CleanAvatar();
+			CleanAvatar();			
 			if (umaRoot != null)
 			{
 				// Edit time UMAs
@@ -2571,6 +2571,7 @@ namespace UMA
 				}
 			}
 		}
+
 
 		/// <summary>
 		/// Destroy textures used to render mesh.

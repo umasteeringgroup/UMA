@@ -36,7 +36,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ai.navigation": {
-      "version": "2.0.8",
+      "version": "2.0.9",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -75,7 +75,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.collab-proxy": {
-      "version": "2.8.2",
+      "version": "2.9.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {},

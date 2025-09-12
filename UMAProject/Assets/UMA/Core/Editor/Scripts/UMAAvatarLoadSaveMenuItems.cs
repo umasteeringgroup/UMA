@@ -6,6 +6,7 @@ using System.IO;
 using UMA.Examples;
 using UMA.PoseTools;
 using static UMA.UMAData;
+using UnityEngine.Rendering;
 
 namespace UMA.Editors
 {
@@ -88,11 +89,11 @@ namespace UMA.Editors
 					// update the material with that material.
 					List<Texture> allTexture = new List<Texture>();
 					Shader shader = m.shader;
-					for (int i = 0; i < ShaderUtil.GetPropertyCount(shader); i++)
+					for (int i = 0; i < shader.GetPropertyCount(); i++)
 					{
-						if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
+						if (shader.GetPropertyType(i) == ShaderPropertyType.Texture)
 						{
-							string propertyName = ShaderUtil.GetPropertyName(shader, i);
+							string propertyName = shader.GetPropertyName(i);
 							Texture texture = m.GetTexture(propertyName);
 							if (texture is Texture2D || texture is RenderTexture)
 							{

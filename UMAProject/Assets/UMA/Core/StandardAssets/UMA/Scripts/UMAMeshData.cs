@@ -8,9 +8,12 @@ using UnityEngine;
 using UMA.Dynamics;
 using Unity.Collections;
 using UnityEngine.Serialization;
-using System.Text;
 using System.Runtime.InteropServices;
 using UnityEngine.Rendering;
+#if UNITY_EDITOR
+using System.Text;
+#endif
+
 
 namespace UMA
 {
@@ -21,6 +24,7 @@ namespace UMA
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct SubMeshTriangles
 	{
+		public static List<NativeArray<int>> nativeTrianglesAllocated = new List<NativeArray<int>>();
 		[SerializeField]
 		private int[] triangles;
 
@@ -38,13 +42,23 @@ namespace UMA
             return triangles.Length;
         }
 
+		public void DisposeNativeTriangles()
+		{
+			if (nativeTriangles.IsCreated)
+			{
+				if (nativeTrianglesAllocated.Remove(nativeTriangles)) 
+				{
+					Debug.Log("Disposing native triangles for submesh of size " + nativeTriangles.Length);
+					nativeTriangles.Dispose();
+				}
+			}
+		}
+
+
         public void SetTriangles(int[] tris)
 		{
 			triangles = tris;
-			if (nativeTriangles.IsCreated)
-			{
-				nativeTriangles.Dispose();
-			}
+			DisposeNativeTriangles();
 		}
 
 		public NativeArray<int> nativeTriangles;
@@ -53,7 +67,9 @@ namespace UMA
         {
 			if (nativeTriangles.IsCreated == false)
 		    {
-				nativeTriangles = new NativeArray<int>(triangles,Allocator.Persistent);
+				//Debug.Log("Allocating native triangles for submesh of size " + triangles.Length);
+                nativeTriangles = new NativeArray<int>(triangles,Allocator.Persistent);
+				nativeTrianglesAllocated.Add(nativeTriangles);
             }
 			return nativeTriangles;
 		}
@@ -444,9 +460,18 @@ namespace UMA
 			AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
 		}
 
-        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
-        {
-			CleanupGlobalBuffers();
+		private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+		{
+			//Debug.Log("AppDomain unloading, cleaning up UMA global buffers");
+            CleanupGlobalBuffers();
+			foreach(var ta in SubMeshTriangles.nativeTrianglesAllocated)
+			{
+				if (ta.IsCreated)
+				{
+					ta.Dispose();
+				}
+            }
+			SubMeshTriangles.nativeTrianglesAllocated.Clear();
         }
 
         public static void CleanupGlobalBuffers()
@@ -1434,12 +1459,7 @@ namespace UMA
             for (int i = 0; i < submeshes.Length; i++)
             {
                 SubMeshTriangles sm = submeshes[i];
-                if (sm.nativeTriangles.IsCreated)
-                {
-					Debug.Log("Disposing native triangles for submesh " + i + " in slot " + SlotName);
-                    sm.nativeTriangles.Dispose();
-					sm.nativeTriangles = new NativeArray<int>();  // likely problem area
-                }
+				sm.DisposeNativeTriangles();
             }
 
 #if USE_NATIVE_ARRAYS
