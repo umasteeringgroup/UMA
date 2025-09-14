@@ -1,49 +1,118 @@
-using System.Collections;
-using System.Collections.Generic;
 using UMA;
 using UnityEditor;
-using UnityEditor.TerrainTools;
 using UnityEngine;
 
 namespace UMA
 {
-
-    // MeshModifier is a ScriptableObject that contains lists of VertexAdjustments.
-    // Note: You will be asked to name the MeshModifier when you create it.
-    // The slot name will be added to the MeshModifier So if you name it "HideBelly", and you edit the torso, you will get a slot named "HideBelly_Torso".
-    // The editor will allow you to choose a different slot. If it does, another MeshModifier will be created with the new slot name.
-
     [CustomEditor(typeof(MeshModifier))]
     public class MeshModifierInspector : Editor
     {
-        // A vertex group must be selected.
-        // You add and remove vertexes from the selected group. 
-        // Should we allow multiple slots to be selected?
-        // in one MeshModifier?
-        public int selectedGroupIndex = 0;
+        private SerializedProperty _modifiersProp;
+        private GUIStyle _headerStyle;
+        private GUIStyle _foldoutStyle;
 
-
-        // Start is called before the first frame update
-        void Start()
+        private void OnEnable()
         {
-
+            _modifiersProp = serializedObject.FindProperty("modifiers");
+            _headerStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 11 };
+            _foldoutStyle = new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold };
         }
 
         public override void OnInspectorGUI()
         {
-            MeshModifier meshModifier = (MeshModifier)target;
-            /*
-            EditorGUILayout.LabelField("Slot Name", meshModifier.SlotName);
-            EditorGUILayout.LabelField("DNA Name", meshModifier.DNAName);
-            EditorGUILayout.LabelField("Scale", meshModifier.Scale.ToString());
+            serializedObject.Update();
 
-            EditorGUILayout.LabelField("Normal Adjustments", meshModifier.normalAdjustments.ToString());
-            EditorGUILayout.LabelField("Color Adjustments", meshModifier.colorAdjustments.ToString());
-            EditorGUILayout.LabelField("Delta Adjustments", meshModifier.deltaAdjustments.ToString());
-            EditorGUILayout.LabelField("Scale Adjustments", meshModifier.scaleAdjustments.ToString());
-            EditorGUILayout.LabelField("UV Adjustments", meshModifier.uvAdjustments.ToString());
-            EditorGUILayout.LabelField("Blendshape Adjustments", meshModifier.blendshapeAdjustments.ToString());
-            EditorGUILayout.LabelField("User Adjustments", meshModifier.userAdjustments.ToString());*/
+            EditorGUILayout.LabelField("Mesh Modifier", _headerStyle);
+            EditorGUILayout.Space(2);
+
+            if (_modifiersProp == null)
+            {
+                EditorGUILayout.HelpBox("Modifiers list not found.", MessageType.Error);
+                return;
+            }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Modifiers", EditorStyles.boldLabel);
+
+                if (_modifiersProp.arraySize == 0)
+                {
+                    EditorGUILayout.HelpBox("No modifiers defined.", MessageType.Info);
+                }
+
+                for (int i = 0; i < _modifiersProp.arraySize; i++)
+                {
+                    var element = _modifiersProp.GetArrayElementAtIndex(i);
+
+                    // Pull out slot name first to avoid escaping quotes inside interpolation.
+                    string slotName = element.FindPropertyRelative("SlotName").stringValue;
+
+                    element.isExpanded = EditorGUILayout.Foldout(
+                        element.isExpanded,
+                        $"Modifier {i + 1}: {slotName}",
+                        true,
+                        _foldoutStyle);
+
+                    if (!element.isExpanded) continue;
+
+                    using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                    {
+                        EditorGUI.indentLevel++;
+
+                        var slotNameProp = element.FindPropertyRelative("SlotName");
+                        var dnaNameProp = element.FindPropertyRelative("DNAName");
+                        var scaleProp = element.FindPropertyRelative("Scale");
+
+#if UNITY_EDITOR
+                        var modName = element.FindPropertyRelative("ModifierName");
+                        if (modName != null)
+                        {
+                            EditorGUILayout.PropertyField(modName, new GUIContent("Modifier Name"));
+                        }
+#endif
+                        EditorGUILayout.PropertyField(slotNameProp, new GUIContent("Slot Name"));
+                        EditorGUILayout.PropertyField(dnaNameProp, new GUIContent("DNA Name"));
+                        EditorGUILayout.Slider(scaleProp, 0f, 5f, new GUIContent("Scale"));
+
+                        EditorGUI.indentLevel--;
+                    }
+                }
+            }
+
+            EditorGUILayout.Space();
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Add Modifier"))
+                {
+                    int newIndex = _modifiersProp.arraySize;
+                    _modifiersProp.InsertArrayElementAtIndex(newIndex);
+                    var newElement = _modifiersProp.GetArrayElementAtIndex(newIndex);
+                    InitializeNewModifier(newElement);
+                }
+
+                if (_modifiersProp.arraySize > 0)
+                {
+                    if (GUILayout.Button("Remove Last"))
+                    {
+                        _modifiersProp.DeleteArrayElementAtIndex(_modifiersProp.arraySize - 1);
+                    }
+                }
+            }
+
+            if (serializedObject.ApplyModifiedProperties())
+            {
+                EditorUtility.SetDirty(target);
+            }
+        }
+
+        private void InitializeNewModifier(SerializedProperty modifierProp)
+        {
+            modifierProp.FindPropertyRelative("SlotName")?.SetString(string.Empty);
+            modifierProp.FindPropertyRelative("DNAName")?.SetString(string.Empty);
+            var scale = modifierProp.FindPropertyRelative("Scale");
+            if (scale != null) scale.floatValue = 1f;
         }
     }
+
 }
