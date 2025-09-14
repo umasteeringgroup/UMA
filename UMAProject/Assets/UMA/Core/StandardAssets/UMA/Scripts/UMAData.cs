@@ -115,11 +115,28 @@ namespace UMA
 
 		public void AddMeshModifier(MeshModifier.Modifier modifier)
 		{
+			if (modifier == null || string.IsNullOrEmpty(modifier.SlotName))
+			{
+				return;
+            }
             if (!meshModifiers.ContainsKey(modifier.SlotName))
             {
                 meshModifiers.Add(modifier.SlotName, new List<MeshModifier.Modifier>());
             }
             meshModifiers[modifier.SlotName].Add(modifier);
+        }
+
+		public void AddMeshModifiers(UMATextRecipe recipe)
+		{
+			if (recipe == null || recipe.MeshModifiers == null || recipe.MeshModifiers.Count == 0)
+			{
+				return;
+            }
+
+			foreach (var modifier in recipe.MeshModifiers)
+			{
+				AddMeshModifiers(modifier.modifiers);
+            }
         }
 
         public void AddMeshModifiers(List<MeshModifier.Modifier> modifiers)

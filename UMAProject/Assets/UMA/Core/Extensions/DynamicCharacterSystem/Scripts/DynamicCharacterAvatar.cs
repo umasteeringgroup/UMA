@@ -5021,7 +5021,10 @@ namespace UMA.CharacterSystem
             for (int i = 0; i < Replaces.Count; i++)
             {
                 UMAWardrobeRecipe umr = Replaces[i];
-                ReplaceSlot(umr);
+                if (ReplaceSlot(umr))
+                {
+                    AddMeshModifiers(umr);
+                }
             }
 
             // Send wardrobe slots in LoadCharacter so we can be sure that the slots are loaded.
@@ -5184,6 +5187,14 @@ namespace UMA.CharacterSystem
                     umaRecipe.AddDna(ud);
                 }
             }
+            
+            AddMeshModifiers(baseRaceRecipe as UMATextRecipe);
+            for(int i=0;i<wardrobeRecipes.Count;i++)
+            {
+                AddMeshModifiers(wardrobeRecipes[i] as UMATextRecipe);
+            }
+
+            //AddMeshModifiers(baseRaceRecipe, List < UMAWardrobeRecipe > Replaces, List < UMARecipeBase > wardrobeRecipes, UMARecipeBase[] AdditionalRecipes);
             ApplyDNAToModifiers();
             tm.Stop();
             Ticks_LoadPhase4 += tm.ElapsedTicks;
@@ -5192,6 +5203,11 @@ namespace UMA.CharacterSystem
             Ticks_LoadCharacter += sw.ElapsedTicks;
 #endif
         }
+
+     /*   private void AddMeshModifiers(UMARecipeBase baseRaceRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> wardrobeRecipes, UMARecipeBase[] AdditionalRecipes)
+        {
+
+        } */
 
         private void ApplyDNAToModifiers()
         {
@@ -5711,8 +5727,9 @@ namespace UMA.CharacterSystem
             }
         }
 
-        void ReplaceSlot(UMAWardrobeRecipe Replacer)
+        bool ReplaceSlot(UMAWardrobeRecipe Replacer)
         {
+            bool replaced = false;
             //we need to check if *this* recipe is directly or only cross compatible with this race
             bool isCrossCompatibleRecipe = (activeRace.racedata.IsCrossCompatibleWith(Replacer.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(Replacer.wardrobeSlot));
             string replaceSlot = Replacer.replaces;
@@ -5750,6 +5767,7 @@ namespace UMA.CharacterSystem
                         newSlot.AddOverlayList(newOverlays);
                         ReplacedOverlays = newSlot.GetOverlayList();
                         umaData.umaRecipe.slotDataList[i] = newSlot;
+                        replaced = true;
                     }
                 }
             }
@@ -5772,6 +5790,7 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
+            return replaced;
         }
 
 
