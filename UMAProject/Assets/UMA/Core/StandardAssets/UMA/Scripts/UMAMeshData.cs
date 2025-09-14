@@ -1034,21 +1034,21 @@ namespace UMA
 		/// <param name="renderer">Target renderer.</param>
 		/// <param name="skeleton">Skeleton.</param>
 		public void ApplyDataToUnityMesh(SkinnedMeshRenderer renderer, UMASkeleton skeleton, UMAData umaData)
-		{
-			var recipe = umaData.umaRecipe;
-			if (renderer == null)
-			{
-				if (Debug.isDebugBuild)
+        {
+            var recipe = umaData.umaRecipe;
+            if (renderer == null)
+            {
+                if (Debug.isDebugBuild)
                 {
                     Debug.LogError("Renderer is null!");
                 }
 
                 return;
-			}
+            }
 
-			CreateTransforms(skeleton);
+            CreateTransforms(skeleton);
 
-			Mesh mesh = new Mesh();//renderer.sharedMesh;
+            Mesh mesh = new Mesh();//renderer.sharedMesh;
             if (UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
             {
                 mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
@@ -1059,109 +1059,83 @@ namespace UMA
             }
 #if UNITY_EDITOR
             if (UnityEditor.PrefabUtility.IsAddedComponentOverride(renderer))
-			{
-				if (Debug.isDebugBuild)
+            {
+                if (Debug.isDebugBuild)
                 {
                     Debug.LogError("Cannot apply changes to prefab!");
                 }
             }
-			if (mesh != null)
-			{
-				if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
-				{
-					if (Debug.isDebugBuild)
+            if (mesh != null)
+            {
+                if (UnityEditor.AssetDatabase.IsSubAsset(mesh))
+                {
+                    if (Debug.isDebugBuild)
                     {
                         Debug.LogError("Cannot apply changes to asset mesh!");
                     }
                 }
-			}
+            }
 #endif
-			mesh.subMeshCount = 1;
-			mesh.triangles = new int[0];
+            mesh.subMeshCount = 1;
+            mesh.triangles = new int[0];
 
-				NativeArray<Vector3> verts = new NativeArray<Vector3>(vertices, Allocator.Temp);
-				 
-				mesh.SetVertices(verts);
+            NativeArray<Vector3> verts = new NativeArray<Vector3>(vertices, Allocator.Temp);
 
-				SetBoneWeightsFromMeshData(mesh);                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
+            mesh.SetVertices(verts);
 
-				mesh.normals = normals;
-				mesh.tangents = tangents;
-				mesh.uv = uv;
-				mesh.uv2 = uv2;
-				mesh.uv3 = uv3;
-				mesh.uv4 = uv4;
-				mesh.colors32 = colors32;
+            SetBoneWeightsFromMeshData(mesh);                //mesh.boneWeights = unityBoneWeights != null ? unityBoneWeights : UMABoneWeight.Convert(boneWeights);
 
-			mesh.bindposes = bindPoses;
+            mesh.normals = normals;
+            mesh.tangents = tangents;
+            mesh.uv = uv;
+            mesh.uv2 = uv2;
+            mesh.uv3 = uv3;
+            mesh.uv4 = uv4;
+            mesh.colors32 = colors32;
 
-#if true
-			var subMeshCount = submeshes.Length;
-			mesh.subMeshCount = subMeshCount;
-			var Descriptors = new SubMeshDescriptor[subMeshCount];
-			for (int i = 0; i < subMeshCount; i++)
-			{
-                mesh.SetIndices(submeshes[i].GetTriangles(),MeshTopology.Triangles,i);
-			}
-#else
-			// TODO: Gather all the triangles and vertexes here into a native arrays and then set them all at once.
-			int[] triangles = new int[0];
-
-            mesh.Clear();
-
-            mesh.SetVertexBufferParams(vertices.Length, GetVertexLayout());
-            mesh.SetVertexBufferData(vertices, 0, 0, vertexCount);
-
-            mesh.SetIndexBufferParams(indexCount, IndexFormat.UInt32);
-            mesh.SetIndexBufferData(meshData.Indices.AsArray(), 0, 0, indexCount);
-            mesh.SetIndexBufferData(triangles,0,0, triangles.Length, MeshUpdateFlags.DontValidateIndices);
-			mesh.SetIndexBufferParams(triangles.Length, UnityEngine.Rendering.IndexFormat.UInt32);
+            mesh.bindposes = bindPoses;
 
             var subMeshCount = submeshes.Length;
             mesh.subMeshCount = subMeshCount;
             var Descriptors = new SubMeshDescriptor[subMeshCount];
             for (int i = 0; i < subMeshCount; i++)
             {
-                Descriptors[i] = new SubMeshDescriptor(0, submeshes[i].GetTriangles().Length, MeshTopology.Triangles);
+                mesh.SetIndices(submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
             }
-            mesh.SetSubMeshes(Descriptors, 0, subMeshCount,MeshUpdateFlags.DontValidateIndices);
-#endif            
-			//SubMeshDescriptor subMeshDescriptor = new SubMeshDescriptor(0, submeshes[i].GetTriangles().Length, MeshTopology.Triangles);
-			//mesh.SetSubMesh(i, subMeshDescriptor);
 
-			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
-			#region Blendshape
-			mesh.ClearBlendShapes();
-			if (blendShapes != null && blendShapes.Length > 0)
-			{
-				for (int shapeIndex = 0; shapeIndex < blendShapes.Length; shapeIndex++)
-				{
-					if (blendShapes[shapeIndex] == null)
-					{
-						//Debug.LogError ("blendShapes [shapeIndex] == null!");
-						//No longer an error, this will be null if the blendshape got baked.
-						break;
-					}
-
-					int frameIndex = 0;
-
-					//if (blendshapeS)
-					if (!umaData.blendShapeSettings.loadAllFrames)
-					{
-						frameIndex = blendShapes[shapeIndex].frames.Length - 1;
+            //Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
+            #region Blendshape
+            mesh.ClearBlendShapes();
+            if (blendShapes != null && blendShapes.Length > 0)
+            {
+                for (int shapeIndex = 0; shapeIndex < blendShapes.Length; shapeIndex++)
+                {
+                    if (blendShapes[shapeIndex] == null)
+                    {
+                        //Debug.LogError ("blendShapes [shapeIndex] == null!");
+                        //No longer an error, this will be null if the blendshape got baked.
+                        break;
                     }
 
-					for (; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
-					{
-						//There might be an extreme edge case where someone has the same named blendshapes on different meshes that end up on different renderers.
-						string name = blendShapes[shapeIndex].shapeName;
+                    int frameIndex = 0;
 
-						float frameWeight = blendShapes[shapeIndex].frames[frameIndex].frameWeight;
-						Vector3[] deltaVertices = blendShapes[shapeIndex].frames[frameIndex].deltaVertices;
-						Vector3[] deltaNormals = blendShapes[shapeIndex].frames[frameIndex].deltaNormals;
-						Vector3[] deltaTangents = blendShapes[shapeIndex].frames[frameIndex].deltaTangents;
+                    //if (blendshapeS)
+                    if (!umaData.blendShapeSettings.loadAllFrames)
+                    {
+                        frameIndex = blendShapes[shapeIndex].frames.Length - 1;
+                    }
 
-						if (UMABlendFrame.isAllZero(deltaNormals))
+                    for (; frameIndex < blendShapes[shapeIndex].frames.Length; frameIndex++)
+                    {
+                        //There might be an extreme edge case where someone has the same named blendshapes on different meshes that end up on different renderers.
+                        string name = blendShapes[shapeIndex].shapeName;
+
+                        float frameWeight = blendShapes[shapeIndex].frames[frameIndex].frameWeight;
+                        Vector3[] deltaVertices = blendShapes[shapeIndex].frames[frameIndex].deltaVertices;
+                        Vector3[] deltaNormals = blendShapes[shapeIndex].frames[frameIndex].deltaNormals;
+                        Vector3[] deltaTangents = blendShapes[shapeIndex].frames[frameIndex].deltaTangents;
+
+                        if (UMABlendFrame.isAllZero(deltaNormals))
                         {
                             deltaNormals = null;
                         }
@@ -1171,46 +1145,52 @@ namespace UMA
                             deltaTangents = null;
                         }
 
-						try
-						{
-                        mesh.AddBlendShapeFrame(name, frameWeight, deltaVertices, deltaNormals, deltaTangents);
-						}
-						catch(Exception ex)
-						{
+                        try
+                        {
+                            mesh.AddBlendShapeFrame(name, frameWeight, deltaVertices, deltaNormals, deltaTangents);
+                        }
+                        catch (Exception ex)
+                        {
                             Debug.LogError("Error adding blendshape frame: " + ex.Message);
                         }
-					}
-				}
-			}
-#endregion
+                    }
+                }
+            }
+            #endregion
 
-			mesh.RecalculateBounds();
-			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
-			UMAUtils.DestroySceneObject(renderer.sharedMesh);
-			//			GameObject.Destroy(renderer.sharedMesh);
-			renderer.sharedMesh = mesh;
-			renderer.rootBone = rootBone;
+            Debug.Log("Recalculating bounds");
+            mesh.RecalculateBounds();
+            renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
+            UMAUtils.DestroySceneObject(renderer.sharedMesh);
+            //			GameObject.Destroy(renderer.sharedMesh);
+            renderer.sharedMesh = mesh;
+            renderer.rootBone = rootBone;
 
-			if (clothSkinning != null && clothSkinning.Length > 0)
-			{
-				Cloth cloth = renderer.GetComponent<Cloth>();
-				if (cloth != null)
-				{
-					GameObject.DestroyImmediate(cloth);
-					cloth = null;
-				}
+            ApplyCloth(renderer);
+        }
 
-				cloth = renderer.gameObject.AddComponent<Cloth>();
-				UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponentInParent<UMAPhysicsAvatar>();
-				if (physicsAvatar != null)
-				{
-					cloth.sphereColliders = physicsAvatar.SphereColliders.ToArray();
-					cloth.capsuleColliders = physicsAvatar.CapsuleColliders.ToArray();
-				}
+        private void ApplyCloth(SkinnedMeshRenderer renderer)
+        {
+            if (clothSkinning != null && clothSkinning.Length > 0)
+            {
+                Cloth cloth = renderer.GetComponent<Cloth>();
+                if (cloth != null)
+                {
+                    GameObject.DestroyImmediate(cloth);
+                    cloth = null;
+                }
 
-				cloth.coefficients = clothSkinning;
-			}
-		}
+                cloth = renderer.gameObject.AddComponent<Cloth>();
+                UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponentInParent<UMAPhysicsAvatar>();
+                if (physicsAvatar != null)
+                {
+                    cloth.sphereColliders = physicsAvatar.SphereColliders.ToArray();
+                    cloth.capsuleColliders = physicsAvatar.CapsuleColliders.ToArray();
+                }
+
+                cloth.coefficients = clothSkinning;
+            }
+        }
 
         private VertexAttributeDescriptor[] GetVertexLayout()
         {
@@ -1373,7 +1353,8 @@ namespace UMA
 			renderer.bones = bones;
 			renderer.rootBone = rootBone;
 
-			mesh.RecalculateBounds();
+			Debug.Log("Recalculating bounds");
+            mesh.RecalculateBounds();
 			renderer.sharedMesh = mesh;
 		}
 

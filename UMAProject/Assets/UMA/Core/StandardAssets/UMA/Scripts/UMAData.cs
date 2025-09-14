@@ -72,6 +72,7 @@ namespace UMA
 		// NEW DNA
 		public DNAInstanceCollection dnaInstanceCollection = new();
 		public bool useNewDNA;
+		public bool alwaysAdjustBounds;
 
         #region MESH MODIFIERS
         // MeshModifers are used to modify the mesh during creation.
@@ -617,7 +618,9 @@ namespace UMA
 		// this is calculated from the slots when the mesh generation starts.
 		public bool force32bit = false;
 
-		public BlendShapeSettings blendShapeSettings = new BlendShapeSettings();
+		public Bounds originalMeshBounds { get; set; }
+
+        public BlendShapeSettings blendShapeSettings = new BlendShapeSettings();
 
 		public RuntimeAnimatorController animationController;
 

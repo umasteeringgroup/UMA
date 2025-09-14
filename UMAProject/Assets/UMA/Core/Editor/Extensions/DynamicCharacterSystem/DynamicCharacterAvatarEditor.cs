@@ -992,6 +992,8 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.PropertyField(serializedObject.FindProperty("BoundsOffset"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("markNotReadable"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("markDynamic"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("alwaysAdjustBounds"));
+           // EditorGUILayout.PropertyField(serializedObject.FindProperty("optimizeMesh"));
 
             if (EditorGUI.EndChangeCheck())
             {

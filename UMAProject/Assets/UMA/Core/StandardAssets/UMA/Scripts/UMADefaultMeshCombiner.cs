@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Rendering;
+using UMA.Dynamics;
 
 namespace UMA
 {
@@ -291,7 +292,6 @@ namespace UMA
 #if UMA_COMBINER_TIMINGS
                 swPerRendererSkeleton.Stop();
                 Ticks_SkeletonEnsure += swPerRendererSkeleton.ElapsedTicks;
-
 #endif
 #if UNITY_2022_2_OR_NEWER
                 if (UMASettings.UseMeshAPICombiner)
@@ -305,8 +305,8 @@ namespace UMA
                         bakedBlendshapes ?? new Dictionary<string, float>(),
                         umaData.markDynamic,
                         umaData.markNotReadable);
-
-                    ApplyClothIfNeeded(clothCoeffs);
+                    SetupCloth(clothCoeffs);
+                    //ApplyClothIfNeeded(clothCoeffs);
                 }
                 else
 #endif
@@ -350,7 +350,11 @@ namespace UMA
                     }
                     ApplyClothIfNeeded(null);
                 }
-
+                    if (currentRendererIndex == 0 && renderers[0].sharedMesh != null)
+                    {
+                        // Cache original bounds from first renderer only
+                        umaData.originalMeshBounds = renderers[0].sharedMesh.bounds;
+                    }
                 // Materials assignment
 #if UMA_COMBINER_TIMINGS
                 var swMatzi = System.Diagnostics.Stopwatch.StartNew();
@@ -388,20 +392,45 @@ namespace UMA
             swRendererTotal.Stop();
 #endif
         }
+        private void SetupCloth(ClothSkinningCoefficient[] clothSkinning)
+        {
+            SkinnedMeshRenderer renderer = renderers[currentRendererIndex];
+            if (clothSkinning != null && clothSkinning.Length > 0)
+            {
+                Cloth cloth = renderer.GetComponent<Cloth>();
+                if (cloth != null)
+                {
+                    GameObject.DestroyImmediate(cloth);
+                    cloth = null;
+                }
 
-        private void ApplyClothIfNeeded(ClothSkinningCoefficient[] coeffs)
+                cloth = renderer.gameObject.AddComponent<Cloth>();
+                UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponentInParent<UMAPhysicsAvatar>();
+                if (physicsAvatar != null)
+                {
+                    cloth.sphereColliders = physicsAvatar.SphereColliders.ToArray();
+                    cloth.capsuleColliders = physicsAvatar.CapsuleColliders.ToArray();
+                }
+
+                cloth.coefficients = clothSkinning;
+                clothProperties.ApplyValues(cloth);
+            }
+        }
+
+        private void ApplyClothIfNeeded(ClothSkinningCoefficient[] clothSkinning)
         {
             var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
-            if (cloth != null)
+            if (clothProperties != null)
             {
-                if (clothProperties != null)
-                {
-                    if (cloth == null) cloth = renderers[currentRendererIndex].gameObject.AddComponent<Cloth>();
-                    if (coeffs != null && coeffs.Length > 0)
-                        cloth.coefficients = coeffs;
-                    clothProperties.ApplyValues(cloth);
-                }
-                else
+                if (cloth == null) cloth = renderers[currentRendererIndex].gameObject.AddComponent<Cloth>();
+                if (clothSkinning != null && clothSkinning.Length > 0)
+                    cloth.coefficients = clothSkinning;
+                clothProperties.ApplyValues(cloth);
+
+            }
+            else
+            {
+                if (cloth != null)
                 {
                     UMAUtils.DestroySceneObject(cloth);
                 }
@@ -508,7 +537,9 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
             foreach (var kv in settings.blendShapes)
             {
                 if (kv.Value != null && kv.Value.isBaked)
-                    dict[kv.Key] = 100f; // if value stored elsewhere you can use kv.Value.value; original code used provided value
+                {
+                    dict[kv.Key] = kv.Value.value; // if value stored elsewhere you can use kv.Value.value; original code used provided value
+                }
             }
             return dict;
         }

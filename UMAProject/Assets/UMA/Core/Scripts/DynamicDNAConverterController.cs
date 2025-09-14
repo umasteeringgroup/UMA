@@ -376,7 +376,10 @@ namespace UMA
 		{
 			_overallModifiers.UpdateCharacterHeightMassRadius(umaData, umaData.skeleton);
 			//remove this listener from this umaData
-			umaData.OnCharacterBeforeUpdated -= ApplyHeightMassRadius;
+			if (umaData.alwaysAdjustBounds != true)
+			{
+				umaData.OnCharacterBeforeUpdated -= ApplyHeightMassRadius;
+			}
 		}
 
 		public void ApplyDnaCallbackDelegates(UMAData umaData)
