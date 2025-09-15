@@ -172,8 +172,8 @@ namespace UMA.Editors
             udimAdjustment = EditorGUILayout.Toggle("Adjust for UDIM", udimAdjustment);
             EditorGUILayout.EndHorizontal();
 			EditorGUILayout.BeginHorizontal();
-			clearNormals = EditorGUILayout.Toggle("Clear Normals", clearNormals);
-			clearTangents = EditorGUILayout.Toggle("Clear Tangents", clearTangents);
+			clearNormals = EditorGUILayout.Toggle("Clear Blendshape Normals", clearNormals);
+			clearTangents = EditorGUILayout.Toggle("Clear Blendshape Tangents", clearTangents);
             EditorGUILayout.EndHorizontal();
 			EditorGUILayout.BeginHorizontal();
             useRootFolder = EditorGUILayout.Toggle("Write to Root Folder", useRootFolder);

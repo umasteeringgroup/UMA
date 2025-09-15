@@ -1015,7 +1015,7 @@ namespace UMA
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;
             meshData.RootBoneName = rootBoneName;
-            meshData.RetrieveDataFromUnityMesh(meshRenderer,submeshIndex,udimAdjustment);
+            meshData.RetrieveDataFromUnityMesh(meshRenderer,submeshIndex,udimAdjustment, clearNormals, clearTangents);
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
