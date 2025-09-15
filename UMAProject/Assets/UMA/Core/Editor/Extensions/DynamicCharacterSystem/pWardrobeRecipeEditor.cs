@@ -661,7 +661,6 @@ namespace UMA.Editors
 						}
 						if (draggedObjects[i] is MeshModifier)
                         {
-							Debug.Log("Dragged object is a Mesh Modifier");
                             MeshModifier mm = draggedObjects[i] as MeshModifier;
                             Modifiers.Add(mm);
                         }

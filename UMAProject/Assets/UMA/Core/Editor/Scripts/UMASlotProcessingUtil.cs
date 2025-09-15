@@ -19,7 +19,7 @@ namespace UMA.Editors
         /// <param name="material">Material.</param>
         /// <param name="prefabMesh">Prefab mesh.</param>
         /// <param name="rootBone">Root bone.</param>
-        public static void UpdateSlotData( SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents)
+        public static void UpdateSlotData( SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents, bool clearNormals, bool clearTangents)
         {
 			int subMesh = slot.subMeshIndex;
 			if (slot.sourceSubmeshIndex > 0)
@@ -117,7 +117,7 @@ namespace UMA.Editors
             var meshgo = skinnedResult.transform.Find(mesh.name);
             var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
 
-            slot.UpdateMeshData(finalMeshRenderer,rootBone, false, subMesh);
+            slot.UpdateMeshData(finalMeshRenderer,rootBone, false, subMesh, clearNormals,clearTangents);
 			slot.meshData.SlotName = slot.slotName;
             var cloth = mesh.GetComponent<Cloth>();
             if (cloth != null)
@@ -311,7 +311,7 @@ namespace UMA.Editors
 			slot.sourceSubmeshIndex = 0;
             try
 			{
-				slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, sbp.udimAdjustment, 0);
+				slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, sbp.udimAdjustment, 0, sbp.clearNormals, sbp.clearTangents );
 			}
 			catch (Exception ex)
 			{
@@ -339,7 +339,7 @@ namespace UMA.Editors
             {
                 string existingRootBone = slot.meshData.RootBoneName;
 
-                UMASlotProcessingUtil.UpdateSlotData(OldAsset, finalMeshRenderer, OldAsset.material, OldAsset.normalReferenceMesh, existingRootBone, true);
+                UMASlotProcessingUtil.UpdateSlotData(OldAsset, finalMeshRenderer, OldAsset.material, OldAsset.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
                 return OldAsset;
 				/*
                 slot.slotName = OldAsset.slotName;
@@ -423,7 +423,7 @@ namespace UMA.Editors
 				var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
 				additionalSlot.slotName = theSlotName;//  string.Format("{0}_{1}", slotName, i);
 				additionalSlot.material = sbp.material;
-				additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, sbp.udimAdjustment, i);
+				additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, sbp.udimAdjustment, i, sbp.clearNormals,sbp.clearTangents);
 				TransformMeshData(additionalSlot, sbp);
 
 				additionalSlot.sourceSubmeshIndex = i;

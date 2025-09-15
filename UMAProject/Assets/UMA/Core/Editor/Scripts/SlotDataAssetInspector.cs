@@ -35,6 +35,8 @@ namespace UMA.Editors
 
         bool CopyNormals;
         bool CopyBoneWeights;
+        bool clearNormals;
+        bool clearTangents;
         UMA.SlotDataAsset.BlendshapeCopyMode blendshapeCopyMode;
         UMA.SlotDataAsset.NormalCopyMode normalCopyMode;
         bool AverageNormals;
@@ -652,6 +654,10 @@ namespace UMA.Editors
                 Rect updateDropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
                 GUI.Box(updateDropArea, "Drag SkinnedMeshRenderers here to update the slot meshData.");
                 GUILayout.Space(10);
+                GUILayout.BeginHorizontal();
+                clearNormals = EditorGUILayout.ToggleLeft("Force Clear Normals", clearNormals);
+                clearTangents = EditorGUILayout.ToggleLeft("Force Clear Tangents", clearTangents);
+                GUILayout.EndHorizontal();
                 UpdateSlotDropAreaGUI(updateDropArea);
 
                 GUILayout.Space(10);
@@ -852,7 +858,7 @@ namespace UMA.Editors
 
             string existingRootBone = s.meshData != null ? s.meshData.RootBoneName : string.Empty;
 
-            UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, s.material, seamsMesh, existingRootBone, true);
+            UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, s.material, seamsMesh, existingRootBone, true, clearNormals, clearTangents);
             string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
             AssetDatabase.ImportAsset(path);
             UMAUpdateProcessor.UpdateSlot(s);

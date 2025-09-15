@@ -634,9 +634,9 @@ namespace UMA
 		/// Initialize UMA mesh data from Unity mesh.
 		/// </summary>
 		/// <param name="renderer">Source renderer.</param>
-		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer, int submeshIndex, bool udimAdjustment = false)
+		public void RetrieveDataFromUnityMesh(SkinnedMeshRenderer renderer, int submeshIndex, bool udimAdjustment = false, bool clearNormals = false, bool clearTangents = false)
 		{
-			RetrieveDataFromUnityMesh(renderer.sharedMesh, udimAdjustment, submeshIndex);
+			RetrieveDataFromUnityMesh(renderer.sharedMesh, udimAdjustment, submeshIndex, clearNormals, clearTangents);
 
 			UpdateBones(renderer.rootBone, renderer.bones);
 		}
@@ -659,7 +659,7 @@ namespace UMA
         /// Initialize UMA mesh data from Unity mesh.
         /// </summary>
         /// <param name="sharedMesh">Source mesh.</param>
-        public void RetrieveDataFromUnityMesh(Mesh sharedMesh, bool udimAdjustment=false, int subMeshInd = -1)
+        public void RetrieveDataFromUnityMesh(Mesh sharedMesh, bool udimAdjustment=false, int subMeshInd = -1, bool clearNormals = false, bool clearTangents = false)
         {
 
             if (subMeshInd >= sharedMesh.subMeshCount)
@@ -795,6 +795,16 @@ namespace UMA
                     blendShapes[shapeIndex].frames[frameIndex].frameWeight = sharedMesh.GetBlendShapeFrameWeight(shapeIndex, frameIndex);
 
                     blendShapes[shapeIndex].frames[frameIndex].deltaVertices = deltaVertices;
+					if (clearNormals)
+					{
+						hasNormals = false;
+						blendShapes[shapeIndex].frames[frameIndex].deltaNormals = new Vector3[0];
+                    }
+					if (clearTangents)
+					{
+						hasTangents = false;
+						blendShapes[shapeIndex].frames[frameIndex].deltaTangents = new Vector3[0];
+                    }
                     if (hasNormals)
                         blendShapes[shapeIndex].frames[frameIndex].deltaNormals = deltaNormals;
                     if (hasTangents)
