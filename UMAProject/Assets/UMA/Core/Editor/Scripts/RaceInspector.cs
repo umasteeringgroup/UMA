@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using System.Collections.Generic;
 using System;
+using Codice.Client.Common.GameUI;
 
 namespace UMA.Editors
 {
@@ -26,9 +27,9 @@ namespace UMA.Editors
 		private bool doSave = false;
 		//pRaceInspector needs to get unpacked UMATextRecipes so we might need a virtual UMAContextBase
 		GameObject EditorUMAContextBase;
-
-		#region DCS variables
-		private ReorderableList wardrobeSlotList;
+		List<string> ValidationMessages = new List<string>();
+        #region DCS variables
+        private ReorderableList wardrobeSlotList;
 		private bool wardrobeSlotListInitialized = false;
 
 		private int compatibleRacePickerID;
@@ -119,7 +120,141 @@ namespace UMA.Editors
 				}
 			}
 
-			try {
+			#region Validation
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Validate RaceData"))
+			{
+				ValidationMessages.Clear();
+				DoValidate();
+			}
+			if (GUILayout.Button("  Clear Messages  "))
+			{
+				ValidationMessages.Clear();
+            }
+            GUILayout.EndHorizontal();
+            if (ValidationMessages.Count > 0)
+			{
+				// draw the validation messages one by one, with a little space between them. Each message should be in a helpbox.
+				// if the message starts with "Error:" it should be a error helpbox, if it starts with "Warning:" it should be a warning helpbox, otherwise it should be an info helpbox.
+				// put an "x" button on each message to clear it.
+				List<string> displayedMessages = new List<string>();
+				displayedMessages.AddRange(ValidationMessages);
+				GUILayout.Label("Validation Messages:", EditorStyles.boldLabel);
+                for (int i = displayedMessages.Count - 1; i >= 0; i--)
+				{
+					MessageType messageType = MessageType.Info;
+					if (displayedMessages[i].StartsWith("Error:"))
+					{
+						messageType = MessageType.Error;
+					}
+					else if (displayedMessages[i].StartsWith("Warning:"))
+					{
+						messageType = MessageType.Warning;
+					}
+					GUILayout.BeginHorizontal();
+					EditorGUILayout.HelpBox(displayedMessages[i], messageType);
+					if (GUILayout.Button("x", GUILayout.Width(20)))
+					{
+						ValidationMessages.RemoveAt(i);
+					}
+					GUILayout.EndHorizontal();
+                }
+            }
+			else
+			{
+				EditorGUILayout.HelpBox("No validation messages.", MessageType.Info);
+            }
+
+            void DoValidate()
+			{
+				RaceData race = target as RaceData;
+				if (race == null)
+				{
+					ValidationMessages.Add("Error: RaceData is null. How is this even possible???");
+					return;
+				}
+				if (race.baseRaceRecipe == null)
+				{
+					ValidationMessages.Add("Error: baseRaceRecipe is null");
+				}
+				if (race.TPose == null)
+				{
+					ValidationMessages.Add("Error: TPose is not set! This is required to build an avatar and store the base bone positions");
+				}
+                // validate all wardrobe slots are not null or empty
+                if (race.wardrobeSlots == null)
+				{
+					ValidationMessages.Add("Error: wardrobeSlots is null");
+				}
+				else
+				{
+					for (int i = 0; i < race.wardrobeSlots.Count; i++)
+					{
+						if (String.IsNullOrWhiteSpace(race.wardrobeSlots[i]))
+						{
+							ValidationMessages.Add("Error: wardrobeSlots[" + i + "] is null or empty. This could cause a problem with recipes loading.");
+						}
+					}
+				}
+				if (race.umaTarget == RaceData.UMATarget.Generic && String.IsNullOrWhiteSpace(race.genericRootMotionTransformName))
+				{
+					ValidationMessages.Add("Error: genericRootMotionTransformName is null or empty. This is required for Generic UMA Targets.");
+                }
+
+                if (race.dnaConverterList == null)
+				{
+					ValidationMessages.Add("Error: dnaConverterList is null");
+				}
+				else
+				{
+					for (int i = 0; i < race.dnaConverterList.Length; i++)
+					{
+						var cvt = race.dnaConverterList[i];
+						if (cvt == null)
+						{
+							ValidationMessages.Add("Error: dnaConverterList[" + i + "] is null");
+						}
+						else
+						{
+							if (cvt.dnaAsset == null)
+							{
+								ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a null dnaAsset");
+							}
+							else
+							{
+								if (cvt.dnaAsset.dnaTypeHash == 0)
+								{
+									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with a 0 dnaType Hash");
+								}
+								if (cvt.PluginCount == 0)
+								{
+									ValidationMessages.Add("Warning: dnaConverterList[" + i + "] has no DNA Converter Plugins. Is that intentional?");
+								}
+								for (int j = 0; j < cvt.PluginCount; j++)
+								{
+									var plugin = cvt.GetPlugin(j);
+									if (plugin == null)
+									{
+										ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a null plugin at index " + j);
+									}
+								}
+							}
+						}
+
+					}
+				}
+				if(ValidationMessages.Count == 0)
+				{
+					ValidationMessages.Add("Info: No problems found. This RaceData looks good!");
+                }
+            }
+
+            #endregion
+
+
+
+            try
+            {
 				PreInspectorGUI(ref _needsUpdate);
 				if(_needsUpdate == true){
 					_needsUpdate = false;
