@@ -3357,6 +3357,13 @@ namespace UMA.CharacterSystem
             for (int i1 = 0; i1 < dnaBase.Length; i1++)
             {
                 UMADnaBase db = dnaBase[i1];
+                if (db == null)
+                {
+#if UNITY_EDITOR
+                    Debug.LogError($"Null DNA found on character {gameObject.name}");
+#endif
+                    continue;
+                }
                 string Category = db.GetType().ToString();
 
                 //TODO racedata.GetConverter is obsolete because lots of converters can use the same dna names (dnaAsset) now 
@@ -3369,14 +3376,26 @@ namespace UMA.CharacterSystem
 
                 for (int i = 0; i < db.Count; i++)
                 {
-                    if (dna.ContainsKey(db.Names[i]))
+                    if (db.Names != null && db.Names[i] != null)
                     {
-                        dna[db.Names[i]] = new DnaSetter(db.Names[i], db.Values[i], i, db, Category);
+                        if (dna.ContainsKey(db.Names[i]))
+                        {
+                            dna[db.Names[i]] = new DnaSetter(db.Names[i], db.Values[i], i, db, Category);
+                        }
+                        else
+                        {
+                            dna.Add(db.Names[i], new DnaSetter(db.Names[i], db.Values[i], i, db, Category));
+                        }
                     }
+#if UNITY_EDITOR
                     else
                     {
-                        dna.Add(db.Names[i], new DnaSetter(db.Names[i], db.Values[i], i, db, Category));
+                        if (db.Names == null)
+                            Debug.Log(db.GetType().ToString() + " has a null names array on character " + gameObject.name);
+                        else
+                            Debug.Log(db.GetType().ToString() + " has a null name at index " + i + " on character " + gameObject.name);
                     }
+#endif
                 }
             }
             return dna;

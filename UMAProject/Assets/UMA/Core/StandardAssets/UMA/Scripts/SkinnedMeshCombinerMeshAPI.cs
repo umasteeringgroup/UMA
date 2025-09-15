@@ -119,7 +119,12 @@ namespace UMA
         {
             if (shape == null || shape.frames == null || shape.frames.Length == 0) return;
 
-            Debug.Log($"Baking shape {shape.shapeName} at weight {weightInput}");
+#if UNITY_EDITOR
+            if (Debug.isDebugBuild)
+            {
+                Debug.Log($"Baking shape {shape.shapeName} at weight {weightInput}");
+            }
+#endif
 
             float weight = (weightInput <= 1f) ? weightInput * 100f : weightInput; // allow 0..1 or 0..100
             if (weight <= 0f || Mathf.Approximately(weight, 0f)) return; // Early out: nothing to bake
