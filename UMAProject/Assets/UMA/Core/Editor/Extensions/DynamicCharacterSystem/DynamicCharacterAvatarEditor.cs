@@ -5,6 +5,7 @@ using UnityEditor.SceneManagement;
 using System;
 using UMA.Editors;
 using UMA.CharacterSystem;
+using UMA; // Added for MeshModifier
 
 
 namespace UMA.CharacterSystem.Editors
@@ -109,7 +110,7 @@ namespace UMA.CharacterSystem.Editors
         {
             if (InspectMe.Count > 0)
             {
-                for (int i = 0;i < InspectMe.Count; i++)
+                for (int i = 0; i < InspectMe.Count; i++)
                 {
                     InspectorUtlity.InspectTarget(InspectMe[i]);
                 }
@@ -272,7 +273,7 @@ namespace UMA.CharacterSystem.Editors
 
             //**************************************
             // End In-Editor customization
-            //**************************************
+            //********************************
 
 
             //the ChangeRaceOptions
@@ -352,7 +353,7 @@ namespace UMA.CharacterSystem.Editors
                 {
                     innerEditor.OnInspectorGUI();
                 }
-               // DrawFoldoutInspector(thisDCA, ref innerEditor);
+                // DrawFoldoutInspector(thisDCA, ref innerEditor);
             }
 
             if (Application.isPlaying || thisDCA.editorTimeGeneration)
@@ -512,12 +513,13 @@ namespace UMA.CharacterSystem.Editors
                 EditorGUILayout.EndHorizontal();
             }
             EditorGUI.BeginChangeCheck();
-				bool wasEnabled = GUI.enabled; //VES added
-				if(wasEnabled && PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) != null) { //VES added, checks if in prefab
-					GUI.enabled = false; //VES added (we don't want anyone generating the character in the patient prefabs as it breaks inheritance, and we setup patients via code)
-				}
+            bool wasEnabled = GUI.enabled; //VES added
+            if (wasEnabled && PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) != null)
+            { //VES added, checks if in prefab
+                GUI.enabled = false; //VES added (we don't want anyone generating the character in the patient prefabs as it breaks inheritance, and we setup patients via code)
+            }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
-				GUI.enabled = wasEnabled; //VES added
+            GUI.enabled = wasEnabled; //VES added
             if (EditorGUI.EndChangeCheck())
             {
                 wasChanged = true;
@@ -729,18 +731,55 @@ namespace UMA.CharacterSystem.Editors
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("MeshModifier:", GUILayout.Width(130));
-            MeshModifier = (MeshModifier)EditorGUILayout.ObjectField( MeshModifier, typeof(MeshModifier), true, GUILayout.Width(130));
-            if (GUILayout.Button("Edit"))
-            {
-                VertexEditorStage.ShowStage(thisDCA,MeshModifier);
-            }
-            if (GUILayout.Button("Create"))
+            GUILayout.Label("Mesh Modifier", EditorStyles.boldLabel);
+
+            // Buttons row
+            if (GUILayout.Button("Create New Modifier"))
             {
                 VertexEditorStage.ShowStage(thisDCA, null);
             }
-            GUILayout.EndHorizontal();
+
+            // Drag & Drop Area
+            Rect dropRect = GUILayoutUtility.GetRect(0, 40, GUILayout.ExpandWidth(true));
+            GUIContent dropLabel;
+            dropLabel = new GUIContent("Drag & Drop a MeshModifier here to edit", "Drop a MeshModifier asset");
+
+            GUI.Box(dropRect, dropLabel, EditorStyles.helpBox);
+
+            Event evt = Event.current;
+            if (dropRect.Contains(evt.mousePosition))
+            {
+                if (evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform)
+                {
+                    bool valid = false;
+                    foreach (UnityEngine.Object o in DragAndDrop.objectReferences)
+                    {
+                        if (o is MeshModifier)
+                        {
+                            valid = true;
+                            break;
+                        }
+                    }
+                    if (valid)
+                    {
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                        if (evt.type == EventType.DragPerform)
+                        {
+                            DragAndDrop.AcceptDrag();
+                            foreach (UnityEngine.Object o in DragAndDrop.objectReferences)
+                            {
+                                if (o is MeshModifier mm)
+                                {
+                                    MeshModifier = mm;
+                                    VertexEditorStage.ShowStage(thisDCA, MeshModifier);
+                                    break; // only first
+                                }
+                            }
+                        }
+                        evt.Use();
+                    }
+                }
+            }
 
             GUIHelper.EndVerticalPadded(10);
         }
@@ -1317,7 +1356,7 @@ namespace UMA.CharacterSystem.Editors
             if (EditorGUI.EndChangeCheck())
             {
                 serializedObject.ApplyModifiedProperties();
-                bool updated = thisDCA.characterColors.RemoveDeletedItems();               
+                bool updated = thisDCA.characterColors.RemoveDeletedItems();
                 serializedObject.Update();
 
 
