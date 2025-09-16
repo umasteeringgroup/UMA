@@ -204,6 +204,7 @@ public class CreateDecal : MonoBehaviour
                 fudgeRadius,
                 DecalRotationDegrees,
                 DecalOverlay.material,  // Using UMAMaterial from overlay (requirement: use existing Material field -> we leverage overlay's UMAMaterial)
+                DecalOverlay,
                 new DecalSlotBuilder.DecalBuildOptions
                 {
                     //multithread = false,              // requirement: allocate per click, no async
