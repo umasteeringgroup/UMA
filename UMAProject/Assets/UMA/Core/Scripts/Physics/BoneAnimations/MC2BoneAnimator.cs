@@ -61,24 +61,44 @@ namespace UMA
             if (rootBone != null)
             {
 #if MAGICACLOTH2
-            // Check if rootBone already has MagicaCloth component and abort if it does
-            if (rootBone.GetComponent<MagicaCloth>() != null) return;
+                // Check if rootBone already has MagicaCloth component and abort if it does
+                if (rootBone.GetComponent<MagicaCloth>() != null) return;
 
-            // Add MagicaCloth component to the root bone
-            var cloth = rootBone.gameObject.AddComponent<MagicaCloth>();
-            var sdata = cloth.SerializeData;
+                // Add MagicaCloth component to the root bone
+                var cloth = rootBone.gameObject.AddComponent<MagicaCloth>();
+                var sdata = cloth.SerializeData;
+                var sdata2 = cloth.GetSerializeData2();
 
-            // Setup bone cloth
-            sdata.clothType = ClothProcess.ClothType.BoneCloth;
-            sdata.rootBones.Add(rootBone.transform);
-            if (presetFile != null)
-            {
-                // If a preset file is provided, import the settings from it
-                sdata.ImportJson(presetFile.text);
-            }
+                // Setup bone cloth
+                sdata.clothType = ClothProcess.ClothType.BoneCloth;
+                sdata.rootBones.Add(rootBone.transform);
+                if (presetFile != null)
+                {
+                    // If a preset file is provided, import the settings from it
+                    sdata.ImportJson(presetFile.text);
+                }
 
-            // Build MagicaCloth2
-            cloth.BuildAndRun();
+                // Exclude specified bones from animation by marking them as Fixed
+                if (BoneToExcludeNames != null && BoneToExcludeNames.Length > 0)
+                {
+
+                    for (int i = 0; i < BoneToExcludeNames.Length; i++)
+                    {
+                        string boneName = BoneToExcludeNames[i];
+                        if (!string.IsNullOrEmpty(boneName))
+                        {
+                            Transform boneToExclude = umaData.skeleton.GetBoneTransform(boneName);
+                            if (boneToExclude != null)
+                            {
+                                sdata2.boneAttributeDict.Add(boneToExclude, VertexAttribute.Invalid);
+                            }
+                        }
+                    }
+
+                }
+
+                // Build MagicaCloth2
+                cloth.BuildAndRun();
 #endif
             }
         }

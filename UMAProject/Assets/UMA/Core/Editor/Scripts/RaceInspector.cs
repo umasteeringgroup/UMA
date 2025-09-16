@@ -222,7 +222,11 @@ namespace UMA.Editors
 							}
 							else
 							{
-								if (cvt.dnaAsset.dnaTypeHash == 0)
+								if (cvt.dnaAsset.Names == null || cvt.dnaAsset.Names.Length == 0)
+								{
+									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with no DNA names");
+                                }
+                                if (cvt.dnaAsset.dnaTypeHash == 0)
 								{
 									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with a 0 dnaType Hash");
 								}
