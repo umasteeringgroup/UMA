@@ -477,70 +477,7 @@ namespace UMA
             }
         }
 
-        private class RuntimeSlotData
-        {
-            public string slotName;
-            public string material;
-            public Vector3[] vertices;
-            public Vector3[] normals;
-            public Vector4[] tangents;
-            public Color32[] colors32;
-            public Vector2[] uv;
-            public Vector2[] uv2;
-            public Vector2[] uv3;
-            public Vector2[] uv4;
-            // Serializable forms
-            public SubmeshDTO[] submeshes;
-            public Matrix4x4[] bindPoses;
-            public int vertexCount;
-            public int[] boneNameHashes;
-            public BoneDTO[] bones;
-            public byte[] bonesPerVertex;
-            public BoneWeightDTO[] boneWeights;
-            public BlendShapeDTO[] blendShapes;
-            public Vector2[] clothCoeffs;
-            public string overlayAssetName;
-        }
 
-        [Serializable]
-        private struct SubmeshDTO { public int[] triangles; }
-
-        [Serializable]
-        private struct BoneDTO
-        {
-            public int hash;
-            public string name;
-            public int parent;
-            public Vector3 position;
-            public Quaternion rotation;
-            public Vector3 scale;
-        }
-
-        [Serializable]
-        private struct BoneWeightDTO { public int boneIndex; public float weight; }
-
-        [Serializable]
-        private struct BlendShapeFrameDTO
-        {
-            public float frameWeight;
-            public Vector3[] deltaVertices;
-            public Vector3[] deltaNormals;
-            public Vector3[] deltaTangents;
-        }
-
-        [Serializable]
-        private struct BlendShapeDTO
-        {
-            public string name;
-            public BlendShapeFrameDTO[] frames;
-        }
-
-        [Serializable]
-        private class CompressedWrapper
-        {
-            public bool compressed;
-            public string payload; // base64 gzip of inner JSON
-        }
 
         private static string SerializeDecalSlotToJson(SlotDataAsset slot, bool compress)
         {
