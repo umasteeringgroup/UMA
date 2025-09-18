@@ -32,6 +32,8 @@ public class CreateDecal : MonoBehaviour
     [Tooltip("Rotation around surface normal (degrees, clockwise looking along normal).")]
     public float DecalRotationDegrees = 0f;
 
+    public bool useHitNormalForProjection = true;
+
     [Tooltip("If true, randomize decal rotation instead of using DecalRotationDegrees.")]
     public bool randomizeRotation = false;
 
@@ -207,9 +209,10 @@ public class CreateDecal : MonoBehaviour
                 DecalOverlay,
                 new DecalSlotBuilder.DecalBuildOptions
                 {
+                    useHitNormalForProjection = this.useHitNormalForProjection,
                     //multithread = false,              // requirement: allocate per click, no async
                     // copyBlendshapes = true,
-                    facingThreshold = 0.15f
+                    facingThreshold = 0.2f
                 });
 
             if (slotAsset == null)

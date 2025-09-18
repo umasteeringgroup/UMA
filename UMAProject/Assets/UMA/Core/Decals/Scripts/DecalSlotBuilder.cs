@@ -55,6 +55,8 @@ namespace UMA
             public float maxDistance = 100f;
             public float facingThreshold = 0.15f;
             public bool enableDebug = false;
+            // When true, use the hit triangle's normal as the projection direction instead of the ray direction.
+            public bool useHitNormalForProjection = false;
         }
 
         public static SlotDataAsset CreateDecalSlot(
@@ -160,7 +162,9 @@ namespace UMA
 
                 Vector3 localHitPoint = t.InverseTransformPoint(hitPointWorld);
                 Vector3 localRayDir = t.InverseTransformDirection(rayDirWorld).normalized;
-                BuildProjectionAxesAroundRay(localRayDir, angleDegrees, out var axisX, out var axisY);
+                Vector3 localHitNormal = t.InverseTransformDirection(hitNormalWorld).normalized;
+                Vector3 projectionDir = options.useHitNormalForProjection ? localHitNormal : localRayDir;
+                BuildProjectionAxesAroundRay(projectionDir, angleDegrees, out var axisX, out var axisY);
 
                 for (int ov = 0; ov < combinedVertexCount; ov++)
                 {
@@ -200,8 +204,8 @@ namespace UMA
 
                     Vector3 posedLocal = bakedVertsLocal[ov];
                     Vector3 offset = posedLocal - localHitPoint;
-                    float along = Vector3.Dot(offset, localRayDir);
-                    Vector3 planar = offset - along * localRayDir;
+                    float along = Vector3.Dot(offset, projectionDir);
+                    Vector3 planar = offset - along * projectionDir;
                     float u = (Vector3.Dot(planar, axisX) / radius) * 0.5f + 0.5f;
                     float v = (Vector3.Dot(planar, axisY) / radius) * 0.5f + 0.5f;
                     outUV[nv] = new Vector2(u, v);
@@ -301,13 +305,15 @@ namespace UMA
                 md.blendShapes = BuildBlendshapesFromSources(vertexSlot, vertexLocalIndex, includedVertex, remap, newVertexCount);
                 md.clothSkinningSerialized = BuildClothCoefficients(vertexSlot, vertexLocalIndex, includedVertex, remap, newVertexCount);
 
-                var slotAsset = ScriptableObject.CreateInstance<SlotDataAsset>();
-                slotAsset.slotName = md.SlotName;
-                slotAsset.material = umaMaterial;
-                slotAsset.meshData = md;
-                slotAsset.subMeshIndex = 0;
-                slotAsset.sourceSubmeshIndex = 0;
-                slotAsset.tags = new[] { "Decal" };
+                // Build RuntimeSlotData DTO and then create a SlotDataAsset via ToSlot
+                string overlayName = overlayAsset ? overlayAsset.name : null;
+                var dto = RuntimeSlotData.FromMeshData(md, md.SlotName, umaMaterial, overlayName, new[] { "Decal" });
+                var ret = dto.ToSlot();
+                var slotAsset = ret.slot;
+                if (umaMaterial != null && slotAsset != null)
+                {
+                    slotAsset.material = umaMaterial;
+                }
 
                 EnsureOverlayTag(slotAsset); // overlay tag based on tracked asset
 
@@ -482,60 +488,14 @@ namespace UMA
         private static string SerializeDecalSlotToJson(SlotDataAsset slot, bool compress)
         {
             if (slot == null || slot.meshData == null) return "{}";
-            var md = slot.meshData;
             string overlayName = null;
             if (slot == LastCreatedDecalSlot)
             {
                 if (LastDecalOverlaySent != null) overlayName = LastDecalOverlaySent.name;
                 else if (LastCreatedDecalOverlayAsset != null) overlayName = LastCreatedDecalOverlayAsset.name;
             }
-            var dto = new RuntimeSlotData
-            {
-                slotName = slot.slotName,
-                material = slot.material ? slot.material.name : "",
-                vertices = md.vertices,
-                normals = md.normals,
-                tangents = md.tangents,
-                colors32 = md.colors32,
-                uv = md.uv,
-                uv2 = md.uv2,
-                uv3 = md.uv3,
-                uv4 = md.uv4,
-                submeshes = md.submeshes != null ? md.submeshes.Select(sm => new SubmeshDTO { triangles = sm.getBaseTriangles() }).ToArray() : null,
-                vertexCount = md.vertexCount,
-                boneNameHashes = md.boneNameHashes,
-                bonesPerVertex = md.ManagedBonesPerVertex,
-                boneWeights = md.ManagedBoneWeights != null ? md.ManagedBoneWeights.Select(bw => new BoneWeightDTO { boneIndex = bw.boneIndex, weight = bw.weight }).ToArray() : null,
-                bones = md.umaBones != null ? md.umaBones.Select(b => new BoneDTO { hash = b.hash, name = b.name, parent = b.parent, position = b.position, rotation = b.rotation, scale = b.scale }).ToArray() : null,
-                bindPoses = md.bindPoses,
-                blendShapes = md.blendShapes != null ? md.blendShapes.Select(bs => new BlendShapeDTO
-                {
-                    name = bs.shapeName,
-                    frames = bs.frames.Select(fr => new BlendShapeFrameDTO
-                    {
-                        frameWeight = fr.frameWeight,
-                        deltaVertices = fr.deltaVertices,
-                        deltaNormals = fr.HasNormals() ? fr.deltaNormals : null,
-                        deltaTangents = fr.HasTangents() ? fr.deltaTangents : null
-                    }).ToArray()
-                }).ToArray() : null,
-                clothCoeffs = md.clothSkinningSerialized,
-                overlayAssetName = overlayName
-            };
-            string inner = JsonUtility.ToJson(dto, false);
-            if (!compress) return inner;
-            // compress into base64 wrapper
-            byte[] raw = Encoding.UTF8.GetBytes(inner);
-            using (var ms = new MemoryStream())
-            {
-                using (var gz = new GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal, true))
-                {
-                    gz.Write(raw, 0, raw.Length);
-                }
-                string b64 = Convert.ToBase64String(ms.ToArray());
-                var wrapper = new CompressedWrapper { compressed = true, payload = b64 };
-                return JsonUtility.ToJson(wrapper, false);
-            }
+            var dto = RuntimeSlotData.FromMeshData(slot.meshData, slot.slotName, slot.material, overlayName, slot.tags);
+            return dto.ToJSON(compress);
         }
 
         private static float[] MatrixToArray(Matrix4x4 m)

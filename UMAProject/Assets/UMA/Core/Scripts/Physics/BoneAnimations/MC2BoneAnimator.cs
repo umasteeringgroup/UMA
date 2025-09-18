@@ -31,7 +31,8 @@ namespace UMA
         [SerializeField]
         [Tooltip("Add Magica CLoth2 preset file. If not set, the default settings will be used.")]
         private TextAsset presetFile;
-
+        [Tooltip("Add the bones you want to exclude from the animated chains.")]
+        public string[] BoneToExcludeNames;
 
         public override void Initialize(UMAData umaData, SlotData sd)
         {

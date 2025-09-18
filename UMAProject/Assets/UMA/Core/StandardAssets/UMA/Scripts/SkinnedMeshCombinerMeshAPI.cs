@@ -702,7 +702,7 @@ namespace UMA
                             dv = resized;
                         }
 #endif
-#if UMA_UNSAFE
+#if UMA_UNSAFE && UNITY_6000_0_OR_NEWER
                         ReadOnlySpan<Vector3> verts = new ReadOnlySpan<Vector3>(dv, 0, vertexCount);
                         ReadOnlySpan<Vector3> norms = null;
                         ReadOnlySpan<Vector3> tangs = null;

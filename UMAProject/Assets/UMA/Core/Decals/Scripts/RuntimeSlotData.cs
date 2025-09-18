@@ -32,6 +32,110 @@ namespace UMA
         public Vector2[] clothCoeffs;
         public string overlayAssetName;
         public string[] tags;
+
+        // Backward-compatible convenience overload (no UDIM or clearing)
+        public static RuntimeSlotData FromSkinnedMesh(SkinnedMeshRenderer smr, int SubMesh)
+        {
+            return FromSkinnedMesh(smr, SubMesh, udimAdjustment: false, clearNormals: false, clearTangents: false);
+        }
+
+        // New overload: control UDIM UV adjustment and clearing normals/tangents
+        public static RuntimeSlotData FromSkinnedMesh(SkinnedMeshRenderer smr, int SubMesh, bool udimAdjustment, bool clearNormals, bool clearTangents)
+        {
+            if (smr == null || smr.sharedMesh == null)
+            {
+                return null;
+            }
+
+            // Build UMAMeshData from the SkinnedMeshRenderer (handles submesh remap)
+            var md = new UMAMeshData();
+            try
+            {
+                // SubMesh < 0 means "all"; otherwise export a single submesh remapped to its own vertex buffer
+                md.RetrieveDataFromUnityMesh(smr, SubMesh, udimAdjustment, clearNormals, clearTangents);
+                // Ensure bone tables and UMA transform hierarchy are captured
+                md.UpdateBones(smr.rootBone, smr.bones);
+
+                // Optional cloth
+                var cloth = smr.GetComponent<Cloth>();
+                if (cloth != null)
+                {
+                    md.RetrieveDataFromUnityCloth(cloth);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"RuntimeSlotData.FromSkinnedMesh: failed extracting mesh data: {ex.Message}");
+                return null;
+            }
+
+            // Material name best-effort: prefer the submesh's material, else first material, else empty
+            string matName = string.Empty;
+            var mats = smr.sharedMaterials;
+            if (mats != null && mats.Length > 0)
+            {
+                int mi = (SubMesh >= 0 && SubMesh < mats.Length) ? SubMesh : 0;
+                var m = mats[mi];
+                if (m != null) matName = m.name;
+            }
+
+            var dto = new RuntimeSlotData
+            {
+                slotName = (SubMesh >= 0) ? ($"{smr.name}_{SubMesh}") : smr.name,
+                material = matName,
+                tags = new string[0],
+
+                // Mesh data
+                vertices = md.vertices,
+                normals = md.normals,
+                tangents = md.tangents,
+                colors32 = md.colors32,
+                uv = md.uv,
+                uv2 = md.uv2,
+                uv3 = md.uv3,
+                uv4 = md.uv4,
+                submeshes = md.submeshes != null ? md.submeshes.Select(sm => new SubmeshDTO { triangles = sm.getBaseTriangles() }).ToArray() : null,
+                vertexCount = md.vertexCount,
+                bindPoses = md.bindPoses,
+
+                // Skinning
+                boneNameHashes = md.boneNameHashes,
+                bonesPerVertex = md.ManagedBonesPerVertex,
+                boneWeights = (md.ManagedBoneWeights != null)
+                    ? md.ManagedBoneWeights.Select(bw => new BoneWeightDTO { boneIndex = bw.boneIndex, weight = bw.weight }).ToArray()
+                    : Array.Empty<BoneWeightDTO>(),
+                bones = (md.umaBones != null)
+                    ? md.umaBones.Select(b => new BoneDTO
+                    {
+                        hash = b.hash,
+                        name = b.name,
+                        parent = b.parent,
+                        position = b.position,
+                        rotation = b.rotation,
+                        scale = b.scale
+                    }).ToArray()
+                    : Array.Empty<BoneDTO>(),
+
+                // Blendshapes
+                blendShapes = (md.blendShapes != null) ? md.blendShapes.Select(bs => new BlendShapeDTO
+                {
+                    name = bs.shapeName,
+                    frames = bs.frames.Select(fr => new BlendShapeFrameDTO
+                    {
+                        frameWeight = fr.frameWeight,
+                        deltaVertices = fr.deltaVertices,
+                        deltaNormals = fr.HasNormals() ? fr.deltaNormals : null,
+                        deltaTangents = fr.HasTangents() ? fr.deltaTangents : null
+                    }).ToArray()
+                }).ToArray() : null,
+
+                // Cloth (serialized two-float coefficients)
+                clothCoeffs = md.clothSkinningSerialized
+            };
+
+            return dto;
+        }
+
         public static RuntimeSlotData FromSlot(SlotDataAsset slot, string overlayName)
         {
             if (slot == null)
@@ -44,6 +148,47 @@ namespace UMA
                 slotName = slot.slotName,
                 material = slot.material ? slot.material.name : "",
                 tags = slot.tags,
+                vertices = md.vertices,
+                normals = md.normals,
+                tangents = md.tangents,
+                colors32 = md.colors32,
+                uv = md.uv,
+                uv2 = md.uv2,
+                uv3 = md.uv3,
+                uv4 = md.uv4,
+                submeshes = md.submeshes != null ? md.submeshes.Select(sm => new SubmeshDTO { triangles = sm.getBaseTriangles() }).ToArray() : null,
+                vertexCount = md.vertexCount,
+                boneNameHashes = md.boneNameHashes,
+                bonesPerVertex = md.ManagedBonesPerVertex,
+                boneWeights = md.ManagedBoneWeights != null ? md.ManagedBoneWeights.Select(bw => new BoneWeightDTO { boneIndex = bw.boneIndex, weight = bw.weight }).ToArray() : null,
+                bones = md.umaBones != null ? md.umaBones.Select(b => new BoneDTO { hash = b.hash, name = b.name, parent = b.parent, position = b.position, rotation = b.rotation, scale = b.scale }).ToArray() : null,
+                bindPoses = md.bindPoses,
+                blendShapes = md.blendShapes != null ? md.blendShapes.Select(bs => new BlendShapeDTO
+                {
+                    name = bs.shapeName,
+                    frames = bs.frames.Select(fr => new BlendShapeFrameDTO
+                    {
+                        frameWeight = fr.frameWeight,
+                        deltaVertices = fr.deltaVertices,
+                        deltaNormals = fr.HasNormals() ? fr.deltaNormals : null,
+                        deltaTangents = fr.HasTangents() ? fr.deltaTangents : null
+                    }).ToArray()
+                }).ToArray() : null,
+                clothCoeffs = md.clothSkinningSerialized,
+                overlayAssetName = overlayName
+            };
+            return dto;
+        }
+
+        // Build a RuntimeSlotData from an existing UMAMeshData (used by DecalSlotBuilder)
+        public static RuntimeSlotData FromMeshData(UMAMeshData md, string slotName, UMAMaterial material, string overlayName = null, string[] tags = null)
+        {
+            if (md == null) return null;
+            var dto = new RuntimeSlotData
+            {
+                slotName = string.IsNullOrEmpty(slotName) ? (md.SlotName ?? "RuntimeSlot") : slotName,
+                material = material ? material.name : string.Empty,
+                tags = tags,
                 vertices = md.vertices,
                 normals = md.normals,
                 tangents = md.tangents,
