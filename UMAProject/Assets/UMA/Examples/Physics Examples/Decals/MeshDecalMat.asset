@@ -10,20 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
-  m_Name: DecalMat
+  m_Name: MeshDecalMat
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   _material: {fileID: 2100000, guid: 03aac4b393dbb924ba3769e3b1cddf2a, type: 2}
   _secondPass: {fileID: 0}
-  materialType: 1
-  channels:
-  - channelType: 0
-    textureFormat: 0
-    materialPropertyName: _BaseMap
-    sourceTextureName: 
-    Compression: 0
-    DownSample: 0
-    ConvertRenderTexture: 0
-    NonShaderTexture: 0
+  materialType: 4
+  channels: []
   MipMapBias: 0
   AnisoLevel: 1
   MatFilterMode: 1

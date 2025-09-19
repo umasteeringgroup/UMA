@@ -48,7 +48,7 @@ namespace UMA
 			{
 				if (nativeTrianglesAllocated.Remove(nativeTriangles)) 
 				{
-					Debug.Log("Disposing native triangles for submesh of size " + nativeTriangles.Length);
+					//Debug.Log("Disposing native triangles for submesh of size " + nativeTriangles.Length);
 					nativeTriangles.Dispose();
 				}
 			}

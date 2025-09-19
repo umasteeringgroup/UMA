@@ -277,7 +277,7 @@ namespace UMA
                     var sm = new SubMeshTriangles();
                     var tris = dto.submeshes[i].triangles ?? Array.Empty<int>();
                     sm.SetTriangles(tris);
-                    sm.nativeTriangles = new NativeArray<int>(tris, Allocator.Persistent);
+                    // Avoid allocating persistent NativeArray to prevent leaks
                     md.submeshes[i] = sm;
                 }
             }

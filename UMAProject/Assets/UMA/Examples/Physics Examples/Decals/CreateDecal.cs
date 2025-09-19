@@ -17,9 +17,9 @@ public class CreateDecal : MonoBehaviour
     [Tooltip("UMA avatar to target.")]
     public DynamicCharacterAvatar Avatar;
     [Tooltip("OverlayDataAsset used for the decal (must reference the correct UMAMaterial).")]
-    public OverlayDataAsset DecalOverlay;
-    [Tooltip("(Optional) Unity Material for visual reference (not used by DecalSlotBuilder).")]
-    public Material DecalMaterialForSubmesh;
+    public OverlayDataAsset MeshDecalOverlay;
+    [Tooltip("OverlayDataAsset used for texture-based decals (must reference the correct UMAMaterial).")]
+    public OverlayDataAsset TextureDecalOverlay;
 
     [Header("Decal Settings")]
     [Tooltip("Method used to create decals. SlotDecal uses DecalSlotBuilder, RenderTexture uses UMA's built-in render texture decal system.")]
@@ -39,6 +39,8 @@ public class CreateDecal : MonoBehaviour
 
     [Tooltip("Offset applied to decal slot along normal (fixed point 1/100 of a mm , to avoid z-fighting).")]
     public int slotOffset = 3000;
+    [Tooltip("Dilation factor for decal render texture method (in pixels, to avoid edge artifacts).")]
+    public int decalRTDilation = 8;
 
     [Header("Orbit Settings")]
     [Tooltip("Offset from avatar root used as orbit pivot.")]
@@ -176,7 +178,7 @@ public class CreateDecal : MonoBehaviour
         if (!Input.GetMouseButtonDown(PlaceMouseButton))
             return;
 
-        if (DecalOverlay == null || DecalOverlay.material == null)
+        if (MeshDecalOverlay == null || MeshDecalOverlay.material == null)
         {
             Debug.LogWarning("DecalOverlay or its UMAMaterial is missing. Cannot place decal.");
             return;
@@ -205,11 +207,12 @@ public class CreateDecal : MonoBehaviour
                 DecalRadius,
                 fudgeRadius,
                 DecalRotationDegrees,
-                DecalOverlay.material,  // Using UMAMaterial from overlay (requirement: use existing Material field -> we leverage overlay's UMAMaterial)
-                DecalOverlay,
+                MeshDecalOverlay.material,  // Using UMAMaterial from overlay (requirement: use existing Material field -> we leverage overlay's UMAMaterial)
+                MeshDecalOverlay,
                 new DecalSlotBuilder.DecalBuildOptions
                 {
                     useHitNormalForProjection = this.useHitNormalForProjection,
+                    backOffset = 0.04f, // Slight offset back to ensure we capture edges
                     //multithread = false,              // requirement: allocate per click, no async
                     // copyBlendshapes = true,
                     facingThreshold = 0.2f
@@ -224,9 +227,9 @@ public class CreateDecal : MonoBehaviour
 
             // Wrap into SlotData and add overlay
             SlotData slotData = new SlotData(slotAsset);
-            if (DecalOverlay != null)
+            if (MeshDecalOverlay != null)
             {
-                var overlayInstance = new OverlayData(DecalOverlay);
+                var overlayInstance = new OverlayData(MeshDecalOverlay);
                 slotData.AddOverlay(overlayInstance);
             }
             slotData.expandAlongNormal = slotOffset; // Slight expansion to avoid z-fighting
@@ -242,9 +245,9 @@ public class CreateDecal : MonoBehaviour
             {
                 layerMask = ~0,
                 facingThreshold = 0.15f,
-                enableDebug = false,
+                enableDebug = true,
                 forceLinearSampling = false,
-                bleedPixels = 8
+                bleedPixels = decalRTDilation
             };
 
             SkinnedMeshRenderer smr = Avatar.GetComponentInChildren<SkinnedMeshRenderer>();
@@ -253,13 +256,19 @@ public class CreateDecal : MonoBehaviour
                 Debug.LogWarning("No SkinnedMeshRenderer found on avatar.");
                 return;
             }
+            Debug.Log("Using SkinnedMeshRenderer: " + smr.name);
+
 
             Material m = smr.sharedMaterial;
-            var maintexName = DecalOverlay.material.GetTexturePropertyNames().Count > 0 ? DecalOverlay.material.GetTexturePropertyNames()[0] : "_BaseMap";
+            var maintexName = TextureDecalOverlay.material.GetTexturePropertyNames().Count > 0 ? TextureDecalOverlay.material.GetTexturePropertyNames()[0] : "_BaseMap";
+            Debug.Log("Using main texture property name: " + maintexName);
 
             var rt = m.mainTexture;
             if (m.HasProperty(maintexName) && m.GetTexture(maintexName) != null)
+            {
+                Debug.Log("Found main texture on property: " + maintexName);
                 rt = m.GetTexture(maintexName);
+            }
             if (rt == null)
             {
                                 Debug.LogWarning("Could not determine main texture for avatar material.");
@@ -270,6 +279,7 @@ public class CreateDecal : MonoBehaviour
                 Debug.LogWarning("Avatar main texture is not Texture2D or RenderTexture, unsupported.");
                 return;
             }
+            Debug.Log("Using avatar main texture: " + rt.name + " (" + rt.width + "x" + rt.height + ")");
             var result = DecalRenderTexture.CreateDecalLayer(
                 Avatar,
                 ray,
@@ -277,7 +287,7 @@ public class CreateDecal : MonoBehaviour
                 fudgeRadius: fudgeRadius,
                 angleDegrees: DecalRotationDegrees,
                 targetRT: rt as RenderTexture,
-                overlay: DecalOverlay,
+                overlay: TextureDecalOverlay,
                 options: options
             );
 

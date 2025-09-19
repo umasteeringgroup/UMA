@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -57,7 +59,59 @@ namespace UMA
             public bool enableDebug = false;
             // When true, use the hit triangle's normal as the projection direction instead of the ray direction.
             public bool useHitNormalForProjection = false;
+            // Length of the selection cylinder along the projection direction (in world units).
+            public float cylinderDepth = 0.15f;
+            // Optional override for how far behind the hit point the cylinder starts. Negative = auto compute.
+            public float backOffset = -1f;
         }
+
+#if UNITY_EDITOR
+        // Expose the last selection cylinder for editor gizmos
+        public static Vector3 LastCylinderStart { get; private set; }
+        public static Vector3 LastCylinderEnd { get; private set; }
+        public static float LastCylinderRadius { get; private set; }
+        private static void DrawSelectionCylinderGizmo(Vector3 c0, Vector3 c1, float radius, float duration = 30f)
+        {
+            Vector3 axisDir = (c1 - c0);
+            float axisLen = axisDir.magnitude;
+            if (axisLen < 1e-8f) return;
+            axisDir /= axisLen;
+
+            // Build an orthonormal basis around axisDir
+            Vector3 up = (Mathf.Abs(Vector3.Dot(axisDir, Vector3.up)) > 0.95f) ? Vector3.right : Vector3.up;
+            Vector3 axisX = Vector3.Cross(up, axisDir).normalized;
+            Vector3 axisY = Vector3.Cross(axisDir, axisX).normalized;
+
+            Color col = Color.cyan;
+
+            // Draw axis line for reference
+            Debug.DrawLine(c0, c1, col, duration, false);
+
+            // Dodecagon approximation
+            const int SEG = 12;
+            float step = Mathf.PI * 2f / SEG;
+            Vector3 prev0 = Vector3.zero, prev1 = Vector3.zero;
+            for (int i = 0; i <= SEG; i++)
+            {
+                float ang = i * step;
+                Vector3 rim = axisX * Mathf.Cos(ang) + axisY * Mathf.Sin(ang);
+                Vector3 p0 = c0 + rim * radius;
+                Vector3 p1 = c1 + rim * radius;
+
+                if (i > 0)
+                {
+                    // Rings (caps)
+                    Debug.DrawLine(prev0, p0, col, duration, false);
+                    Debug.DrawLine(prev1, p1, col, duration, false);
+                }
+
+                // Sides
+                Debug.DrawLine(p0, p1, col, duration, false);
+
+                prev0 = p0; prev1 = p1;
+            }
+        }
+#endif
 
         public static SlotDataAsset CreateDecalSlot(
             DynamicCharacterAvatar avatar,
@@ -136,7 +190,26 @@ namespace UMA
                 var includedVertex = new bool[combinedVertexCount];
                 var includedTriangles = new List<int>(2048);
 
-                SelectTriangles(triIndices, bakedVertsLocal, t, rayDirWorld, hitPointWorld, radiusSqr,
+                // Use cylinder selection along the ray direction; projection for UVs can still use hit normal
+                Vector3 selectionDirWorld = rayDirWorld;
+                float depth = Mathf.Max(options.cylinderDepth, 1e-5f);
+                // Start a little behind the hit to handle surface bumpiness
+                float backOffset = options.backOffset >= 0f ? options.backOffset : Mathf.Max(1e-4f, Mathf.Min(fudgeRadius, expandedRadius * 0.25f));
+
+#if UNITY_EDITOR
+                // Cache and draw the last cylinder used for selection
+                Vector3 gizmoC0 = hitPointWorld - selectionDirWorld * backOffset;
+                Vector3 gizmoC1 = gizmoC0 + selectionDirWorld * depth;
+                LastCylinderStart = gizmoC0;
+                LastCylinderEnd = gizmoC1;
+                LastCylinderRadius = expandedRadius;
+                DrawSelectionCylinderGizmo(gizmoC0, gizmoC1, expandedRadius, options.enableDebug ? 6f : 3f);
+#endif
+
+                SelectTriangles(triIndices, bakedVertsLocal, t,
+                                selectionDirWorld, // selection axis is the ray
+                                rayDirWorld,        // facing cull direction stays the ray
+                                hitPointWorld, expandedRadius, depth, backOffset,
                                 options.facingThreshold, includedTriangles, includedVertex, options.enableDebug);
 
                 if (includedTriangles.Count == 0)
@@ -299,7 +372,6 @@ namespace UMA
 
                 var sub = new SubMeshTriangles();
                 sub.SetTriangles(outTriangles);
-                sub.nativeTriangles = new NativeArray<int>(outTriangles, Allocator.Persistent);
                 md.submeshes[0] = sub;
 
                 md.blendShapes = BuildBlendshapesFromSources(vertexSlot, vertexLocalIndex, includedVertex, remap, newVertexCount);
@@ -629,7 +701,6 @@ namespace UMA
                     var sm = new SubMeshTriangles();
                     var tris = dto.submeshes[i].triangles ?? Array.Empty<int>();
                     sm.SetTriangles(tris);
-                    sm.nativeTriangles = new NativeArray<int>(tris, Allocator.Persistent);
                     md.submeshes[i] = sm;
                 }
             }
@@ -993,14 +1064,22 @@ namespace UMA
             int[] triIndices,
             Vector3[] bakedVertsLocal,
             Transform rendererTransform,
-            Vector3 rayDirWorld,
+            Vector3 selectionDirWorld,
+            Vector3 facingDirWorld,
             Vector3 hitPointWorld,
-            float radiusSqr,
+            float radius,
+            float depth,
+            float backOffset,
             float facingThreshold,
             List<int> includedTriangles,
             bool[] includedVertex,
             bool debug)
         {
+            Vector3 axisDir = selectionDirWorld.normalized;
+            Vector3 c0 = hitPointWorld - axisDir * backOffset;
+            Vector3 c1 = c0 + axisDir * depth;
+            float radiusSqr = radius * radius;
+
             int triCount = triIndices.Length / 3;
             for (int tri = 0; tri < triCount; tri++)
             {
@@ -1019,21 +1098,42 @@ namespace UMA
                 if (nm < 1e-7f) continue;
                 n /= nm;
 
-                if (Vector3.Dot(n, rayDirWorld) > -facingThreshold)
+                // Use the ray direction for facing cull to reject back side of mesh
+                if (Vector3.Dot(n, facingDirWorld) > -facingThreshold)
                     continue;
 
+                // Axial positions relative to cylinder start plane
+                float s0 = Vector3.Dot(w0 - c0, axisDir);
+                float s1 = Vector3.Dot(w1 - c0, axisDir);
+                float s2 = Vector3.Dot(w2 - c0, axisDir);
+                float minS = Mathf.Min(s0, Mathf.Min(s1, s2));
+                float maxS = Mathf.Max(s0, Mathf.Max(s1, s2));
+
+                // Entire triangle is behind the cylinder start plane -> discard
+                if (maxS < 0f)
+                    continue;
+
+                bool v0InAxial = (s0 >= 0f && s0 <= depth);
+                bool v1InAxial = (s1 >= 0f && s1 <= depth);
+                bool v2InAxial = (s2 >= 0f && s2 <= depth);
+
+                // Check vertices inside cylinder lateral surface (restricted to axial interval)
                 bool anyInside =
-                    (w0 - hitPointWorld).sqrMagnitude <= radiusSqr ||
-                    (w1 - hitPointWorld).sqrMagnitude <= radiusSqr ||
-                    (w2 - hitPointWorld).sqrMagnitude <= radiusSqr;
+                    (v0InAxial && DistancePointSegmentSqr(w0, c0, c1) <= radiusSqr) ||
+                    (v1InAxial && DistancePointSegmentSqr(w1, c0, c1) <= radiusSqr) ||
+                    (v2InAxial && DistancePointSegmentSqr(w2, c0, c1) <= radiusSqr);
 
                 bool edgeIntersects = false;
                 if (!anyInside)
                 {
-                    if (SegmentSphereIntersect(w0, w1, hitPointWorld, radiusSqr) ||
-                        SegmentSphereIntersect(w1, w2, hitPointWorld, radiusSqr) ||
-                        SegmentSphereIntersect(w2, w0, hitPointWorld, radiusSqr))
-                        edgeIntersects = true;
+                    // Only consider edges that span into axial interval [0, depth]
+                    bool edge01Axial = (Mathf.Max(s0, s1) >= 0f && Mathf.Min(s0, s1) <= depth);
+                    bool edge12Axial = (Mathf.Max(s1, s2) >= 0f && Mathf.Min(s1, s2) <= depth);
+                    bool edge20Axial = (Mathf.Max(s2, s0) >= 0f && Mathf.Min(s2, s0) <= depth);
+
+                    if (edge01Axial && SegmentSegmentDistanceSqr(w0, w1, c0, c1) <= radiusSqr) edgeIntersects = true;
+                    else if (edge12Axial && SegmentSegmentDistanceSqr(w1, w2, c0, c1) <= radiusSqr) edgeIntersects = true;
+                    else if (edge20Axial && SegmentSegmentDistanceSqr(w2, w0, c0, c1) <= radiusSqr) edgeIntersects = true;
                 }
 
                 if (!anyInside && !edgeIntersects)
@@ -1044,7 +1144,342 @@ namespace UMA
             }
 
             if (debug)
-                Debug.Log($"DecalSlotBuilder.SelectTriangles: {includedTriangles.Count / 3} tris selected.");
+                Debug.Log($"DecalSlotBuilder.SelectTriangles: {includedTriangles.Count / 3} tris selected (cylinder forward from hit). Depth={depth:F3} BackOffset={backOffset:F3}");
+        }
+
+        // Squared distance from point p to segment a-b
+        private static float DistancePointSegmentSqr(Vector3 p, Vector3 a, Vector3 b)
+        {
+            Vector3 ab = b - a;
+            float t = Vector3.Dot(p - a, ab);
+            float denom = Vector3.Dot(ab, ab);
+            if (denom > 1e-12f) t /= denom; else t = 0f;
+            t = Mathf.Clamp01(t);
+            Vector3 c = a + t * ab;
+            return (p - c).sqrMagnitude;
+        }
+
+        // Squared distance between two segments p1-q1 and p2-q2
+        private static float SegmentSegmentDistanceSqr(Vector3 p1, Vector3 q1, Vector3 p2, Vector3 q2)
+        {
+            Vector3 d1 = q1 - p1; // Direction vector of segment S1
+            Vector3 d2 = q2 - p2; // Direction vector of segment S2
+            Vector3 r = p1 - p2;
+            float a = Vector3.Dot(d1, d1); // Squared length of segment S1
+            float e = Vector3.Dot(d2, d2); // Squared length of segment S2
+            float f = Vector3.Dot(d2, r);
+
+            float s, t;
+
+            if (a <= 1e-12f && e <= 1e-12f)
+            {
+                // Both segments degenerate to points
+                return (p1 - p2).sqrMagnitude;
+            }
+            if (a <= 1e-12f)
+            {
+                // First segment degenerates to a point
+                s = 0.0f;
+                t = Mathf.Clamp01(f / e);
+            }
+            else
+            {
+                float c = Vector3.Dot(d1, r);
+                if (e <= 1e-12f)
+                {
+                    // Second segment degenerates to a point
+                    t = 0.0f;
+                    s = Mathf.Clamp01(-c / a);
+                }
+                else
+                {
+                    float b = Vector3.Dot(d1, d2);
+                    float denom = a * e - b * b;
+                    if (denom != 0.0f)
+                        s = Mathf.Clamp01((b * f - c * e) / denom);
+                    else
+                        s = 0.0f;
+                    t = (b * s + f) / e;
+                    if (t < 0.0f)
+                    {
+                        t = 0.0f;
+                        s = Mathf.Clamp01(-c / a);
+                    }
+                    else if (t > 1.0f)
+                    {
+                        t = 1.0f;
+                        s = Mathf.Clamp01((b - c) / a);
+                    }
+                }
+            }
+
+            Vector3 c1 = p1 + d1 * s;
+            Vector3 c2 = p2 + d2 * t;
+            return (c1 - c2).sqrMagnitude;
+        }
+        #endregion
+
+#if UNITY_EDITOR
+        // Editor menu helpers (JSON/Asset)
+        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot Asset...")]
+        private static void MenuSaveAsset()
+        {
+            if (LastCreatedDecalSlot == null)
+            {
+                UnityEditor.EditorUtility.DisplayDialog("Save Decal Slot", "No decal slot has been created yet.", "OK");
+                return;
+            }
+            string path = UnityEditor.EditorUtility.SaveFilePanel("Save Decal Slot Asset", "Assets", (LastCreatedDecalSlot.slotName ?? "DecalSlot") + ".asset", "asset");
+            if (string.IsNullOrEmpty(path)) return;
+            string norm = path.Replace('\\', '/');
+            int idx = norm.IndexOf("/Assets/", StringComparison.OrdinalIgnoreCase);
+            if (idx < 0)
+            {
+                UnityEditor.EditorUtility.DisplayDialog("Invalid Path", "Path must be inside the project's Assets folder.", "OK");
+                return;
+            }
+            string rel = norm.Substring(idx + 1); // remove leading '/'
+            string folder = Path.GetDirectoryName(rel).Replace('\\', '/');
+            string name = Path.GetFileNameWithoutExtension(rel);
+            SaveDecalSlotAsset(LastCreatedDecalSlot, folder, name);
+        }
+
+        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot JSON (Uncompressed)...")] 
+        private static void MenuSaveJson()
+        {
+            if (LastCreatedDecalSlot == null)
+            {
+                UnityEditor.EditorUtility.DisplayDialog("Save Decal JSON", "No decal slot has been created yet.", "OK");
+                return;
+            }
+            string path = UnityEditor.EditorUtility.SaveFilePanel("Save Decal JSON", Application.dataPath, (LastCreatedDecalSlot.slotName ?? "DecalSlot") + ".json", "json");
+            if (string.IsNullOrEmpty(path)) return;
+            string json = SerializeDecalSlotToJson(LastCreatedDecalSlot, false);
+            File.WriteAllText(path, json);
+            UnityEditor.EditorUtility.RevealInFinder(path);
+        }
+
+        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot JSON (Compressed)...")] 
+        private static void MenuSaveJsonCompressed()
+        {
+            if (LastCreatedDecalSlot == null)
+            {
+                UnityEditor.EditorUtility.DisplayDialog("Save Decal JSON (Compressed)", "No decal slot has been created yet.", "OK");
+                return;
+            }
+            string path = UnityEditor.EditorUtility.SaveFilePanel("Save Decal JSON (Compressed)", Application.dataPath, (LastCreatedDecalSlot.slotName ?? "DecalSlot") + ".cjson", "cjson");
+            if (string.IsNullOrEmpty(path)) return;
+            string json = SerializeDecalSlotToJson(LastCreatedDecalSlot, true);
+            File.WriteAllText(path, json);
+            UnityEditor.EditorUtility.RevealInFinder(path);
+        }
+
+        [UnityEditor.MenuItem("UMA/Decals/Load Decal Slot JSON...")]
+        private static void MenuLoadJson()
+        {
+            string path;
+#if UNITY_2020_1_OR_NEWER
+            path = UnityEditor.EditorUtility.OpenFilePanelWithFilters(
+                "Load Decal JSON",
+                Application.dataPath,
+                new[] { "Decal JSON", "json", "Compressed JSON", "cjson" });
+#else
+            path = UnityEditor.EditorUtility.OpenFilePanel("Load Decal JSON", Application.dataPath, "json");
+#endif
+            if (string.IsNullOrEmpty(path)) return;
+            try
+            {
+                string json = File.ReadAllText(path);
+                UMAMaterial mat = null; // optional, try resolve by name in JSON
+                var slot = LoadDecalSlotFromJson(json, mat);
+                if (slot != null)
+                {
+                    if (Application.isPlaying)
+                    {
+                        UnityEditor.EditorUtility.DisplayDialog("Decal Loaded", $"Loaded decal slot: {slot.slotName}", "OK");
+                    }
+                    else
+                    {
+                        UnityEditor.EditorUtility.DisplayDialog("Decal Loaded", $"Loaded decal slot: {slot.slotName}. Decals are not applied at edit time.", "OK");
+                    }
+                }
+                else
+                {
+                    UnityEditor.EditorUtility.DisplayDialog("Load Failed", "Unable to load decal JSON.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("Failed to load decal JSON: " + ex.Message);
+            }
+        }
+
+        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot Binary GZip...")]
+        private static void MenuSaveBinaryGZip()
+        {
+            if (LastCreatedDecalSlot == null)
+            {
+                UnityEditor.EditorUtility.DisplayDialog("Save Decal Binary GZip", "No decal slot has been created yet.", "OK");
+                return;
+            }
+            string defaultName = string.IsNullOrEmpty(LastCreatedDecalSlot.slotName) ? "DecalSlot" : LastCreatedDecalSlot.slotName;
+            string path = UnityEditor.EditorUtility.SaveFilePanel("Save Decal Binary GZip", Application.dataPath, defaultName + ".dgz", "dgz");
+            if (string.IsNullOrEmpty(path)) return;
+            try
+            {
+                string json = SerializeDecalSlotToJson(LastCreatedDecalSlot, false);
+                byte[] data = CompressStringToGzip(json);
+                File.WriteAllBytes(path, data);
+                UnityEditor.EditorUtility.RevealInFinder(path);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("Failed to save binary gzip decal: " + ex.Message);
+            }
+        }
+
+        [UnityEditor.MenuItem("UMA/Decals/Load Decal Slot Binary GZip...")]
+        private static void MenuLoadBinaryGZip()
+        {
+            string path = UnityEditor.EditorUtility.OpenFilePanel("Load Decal Binary GZip", Application.dataPath, "dgz");
+            if (string.IsNullOrEmpty(path)) return;
+            try
+            {
+                var slot = LoadDecalSlotFromBinaryGZipFile(path, null, false);
+                if (slot != null)
+                {
+                    UnityEditor.EditorUtility.DisplayDialog("Decal Loaded", $"Loaded decal slot: {slot.slotName}", "OK");
+                }
+                else
+                {
+                    UnityEditor.EditorUtility.DisplayDialog("Load Failed", "Unable to load binary gzip decal.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("Failed to load binary gzip decal: " + ex.Message);
+            }
+        }
+#endif
+
+        private static void BuildProjectionAxesAroundRay(Vector3 rayDirLocal, float angleDeg, out Vector3 axisX, out Vector3 axisY)
+        {
+            Vector3 up = (Mathf.Abs(Vector3.Dot(rayDirLocal, Vector3.up)) > 0.95f) ? Vector3.right : Vector3.up;
+            axisX = Vector3.Cross(up, rayDirLocal).normalized;
+            axisY = Vector3.Cross(rayDirLocal, axisX).normalized;
+            float rad = angleDeg * Mathf.Deg2Rad;
+            float c = Mathf.Cos(rad);
+            float s = Mathf.Sin(rad);
+            Vector3 rx = axisX * c + axisY * s;
+            Vector3 ry = -axisX * s + axisY * c;
+            axisX = rx.normalized;
+            axisY = ry.normalized;
+        }
+
+        private static UMABlendShape[] BuildBlendshapesFromSources(
+            SlotData[] vertexSlot,
+            int[] vertexLocalIndex,
+            bool[] includedVertex,
+            int[] remap,
+            int newVertexCount)
+        {
+            var perSlot = BuildPerSlotSelection(vertexSlot, vertexLocalIndex, includedVertex, remap);
+            if (perSlot.Count == 0) return null;
+            var shapeMeta = new Dictionary<string, (int frameCount, bool hasNormals, bool hasTangents, float[] frameWeights)>(64);
+            foreach (var kv in perSlot)
+            {
+                var slot = kv.Key;
+                var md = slot?.asset?.meshData;
+                var shapes = md?.blendShapes;
+                if (shapes == null || shapes.Length == 0) continue;
+                for (int s = 0; s < shapes.Length; s++)
+                {
+                    var ubs = shapes[s];
+                    string name = ubs.shapeName ?? $"Blend_{s}";
+                    int framesHere = ubs.frames.Length;
+                    bool hasN = framesHere > 0 && ubs.frames[0].HasNormals();
+                    bool hasT = framesHere > 0 && ubs.frames[0].HasTangents();
+                    if (!shapeMeta.TryGetValue(name, out var meta))
+                    {
+                        meta.frameCount = framesHere;
+                        meta.hasNormals = hasN;
+                        meta.hasTangents = hasT;
+                        meta.frameWeights = new float[framesHere];
+                        for (int f = 0; f < framesHere; f++) meta.frameWeights[f] = ubs.frames[f].frameWeight;
+                        shapeMeta[name] = meta;
+                    }
+                    else
+                    {
+                        if (framesHere > meta.frameCount)
+                        {
+                            var newWeights = new float[framesHere];
+                            Array.Copy(meta.frameWeights, newWeights, meta.frameCount);
+                            for (int f = meta.frameCount; f < framesHere; f++) newWeights[f] = ubs.frames[Mathf.Clamp(f, 0, ubs.frames.Length - 1)].frameWeight;
+                            meta.frameWeights = newWeights;
+                            meta.frameCount = framesHere;
+                        }
+                        meta.hasNormals |= hasN;
+                        meta.hasTangents |= hasT;
+                        shapeMeta[name] = meta;
+                    }
+                }
+            }
+            if (shapeMeta.Count == 0) return null;
+            var dest = new UMABlendShape[shapeMeta.Count];
+            var names = new string[shapeMeta.Count];
+            int idx = 0;
+            foreach (var kv in shapeMeta)
+            {
+                var meta = kv.Value; string name = kv.Key;
+                var ubs = new UMABlendShape();
+                ubs.shapeName = name;
+                ubs.frames = new UMABlendFrame[meta.frameCount];
+                for (int f = 0; f < meta.frameCount; f++)
+                {
+                    ubs.frames[f] = new UMABlendFrame(newVertexCount, meta.hasNormals, meta.hasTangents);
+                    ubs.frames[f].frameWeight = meta.frameWeights[f];
+                }
+                dest[idx] = ubs; names[idx] = name; idx++;
+            }
+            var nameToIndex = new Dictionary<string, int>(shapeMeta.Count);
+            for (int i = 0; i < names.Length; i++) nameToIndex[names[i]] = i;
+            foreach (var kv in perSlot)
+            {
+                var slot = kv.Key; var md = slot?.asset?.meshData; var shapes = md?.blendShapes; if (shapes == null || shapes.Length == 0) continue; var mapping = kv.Value;
+                for (int s = 0; s < shapes.Length; s++)
+                {
+                    var srcShape = shapes[s]; string name = srcShape.shapeName ?? $"Blend_{s}"; if (!nameToIndex.TryGetValue(name, out int di)) continue; var dstShape = dest[di]; int framesToCopy = Math.Min(dstShape.frames.Length, srcShape.frames.Length);
+                    for (int f = 0; f < framesToCopy; f++)
+                    {
+                        var sf = srcShape.frames[f]; var df = dstShape.frames[f]; CopyBlendShapeDeltas(mapping, sf, df);
+                    }
+                }
+            }
+            return dest;
+        }
+
+        private static Vector2[] BuildClothCoefficients(
+            SlotData[] vertexSlot,
+            int[] vertexLocalIndex,
+            bool[] includedVertex,
+            int[] remap,
+            int newVertexCount)
+        {
+            var perSlot = BuildPerSlotSelection(vertexSlot, vertexLocalIndex, includedVertex, remap);
+            if (perSlot.Count == 0) return null;
+            bool anyCloth = false; Vector2 defaultCoeff = new Vector2(float.MaxValue, 0f); var dest = new Vector2[newVertexCount]; for (int i = 0; i < newVertexCount; i++) dest[i] = defaultCoeff;
+            foreach (var kv in perSlot)
+            {
+                var slot = kv.Key; var md = slot?.asset?.meshData; if (md == null) continue; Vector2[] srcSerialized = md.clothSkinningSerialized; ClothSkinningCoefficient[] srcCloth = md.clothSkinning;
+                if ((srcSerialized == null || srcSerialized.Length == 0) && (srcCloth == null || srcCloth.Length == 0)) continue; anyCloth = true; var mapping = kv.Value;
+                for (int i = 0; i < mapping.Count; i++)
+                {
+                    int li = mapping[i].localIndex; int ni = mapping[i].newIndex; if (li < 0 || ni < 0) continue;
+                    if (srcSerialized != null && li < srcSerialized.Length) dest[ni] = srcSerialized[li];
+                    else if (srcCloth != null && li < srcCloth.Length) { var c = srcCloth[li]; dest[ni] = new Vector2(c.collisionSphereDistance, c.maxDistance); }
+                }
+            }
+            return anyCloth ? dest : null;
         }
 
         private static void ApplyBindposeCorrection(
@@ -1233,131 +1668,7 @@ namespace UMA
             outBoneWeights = boneWeightList.ToArray();
         }
 
-        private static void BuildProjectionAxesAroundRay(Vector3 rayDirLocal, float angleDeg, out Vector3 axisX, out Vector3 axisY)
-        {
-            Vector3 up = (Mathf.Abs(Vector3.Dot(rayDirLocal, Vector3.up)) > 0.95f) ? Vector3.right : Vector3.up;
-            axisX = Vector3.Cross(up, rayDirLocal).normalized;
-            axisY = Vector3.Cross(rayDirLocal, axisX).normalized;
-            float rad = angleDeg * Mathf.Deg2Rad;
-            float c = Mathf.Cos(rad);
-            float s = Mathf.Sin(rad);
-            Vector3 rx = axisX * c + axisY * s;
-            Vector3 ry = -axisX * s + axisY * c;
-            axisX = rx.normalized;
-            axisY = ry.normalized;
-        }
-
-        private static UMABlendShape[] BuildBlendshapesFromSources(
-            SlotData[] vertexSlot,
-            int[] vertexLocalIndex,
-            bool[] includedVertex,
-            int[] remap,
-            int newVertexCount)
-        {
-            var perSlot = BuildPerSlotSelection(vertexSlot, vertexLocalIndex, includedVertex, remap);
-            if (perSlot.Count == 0) return null;
-            var shapeMeta = new Dictionary<string, (int frameCount, bool hasNormals, bool hasTangents, float[] frameWeights)>(64);
-            foreach (var kv in perSlot)
-            {
-                var slot = kv.Key;
-                var md = slot?.asset?.meshData;
-                var shapes = md?.blendShapes;
-                if (shapes == null || shapes.Length == 0) continue;
-                for (int s = 0; s < shapes.Length; s++)
-                {
-                    var ubs = shapes[s];
-                    string name = ubs.shapeName ?? $"Blend_{s}";
-                    int framesHere = ubs.frames.Length;
-                    bool hasN = framesHere > 0 && ubs.frames[0].HasNormals();
-                    bool hasT = framesHere > 0 && ubs.frames[0].HasTangents();
-                    if (!shapeMeta.TryGetValue(name, out var meta))
-                    {
-                        meta.frameCount = framesHere;
-                        meta.hasNormals = hasN;
-                        meta.hasTangents = hasT;
-                        meta.frameWeights = new float[framesHere];
-                        for (int f = 0; f < framesHere; f++) meta.frameWeights[f] = ubs.frames[f].frameWeight;
-                        shapeMeta[name] = meta;
-                    }
-                    else
-                    {
-                        if (framesHere > meta.frameCount)
-                        {
-                            var newWeights = new float[framesHere];
-                            Array.Copy(meta.frameWeights, newWeights, meta.frameCount);
-                            for (int f = meta.frameCount; f < framesHere; f++) newWeights[f] = ubs.frames[Mathf.Clamp(f, 0, ubs.frames.Length - 1)].frameWeight;
-                            meta.frameWeights = newWeights;
-                            meta.frameCount = framesHere;
-                        }
-                        meta.hasNormals |= hasN;
-                        meta.hasTangents |= hasT;
-                        shapeMeta[name] = meta;
-                    }
-                }
-            }
-            if (shapeMeta.Count == 0) return null;
-            var dest = new UMABlendShape[shapeMeta.Count];
-            var names = new string[shapeMeta.Count];
-            int idx = 0;
-            foreach (var kv in shapeMeta)
-            {
-                var meta = kv.Value; string name = kv.Key;
-                var ubs = new UMABlendShape();
-                ubs.shapeName = name;
-                ubs.frames = new UMABlendFrame[meta.frameCount];
-                for (int f = 0; f < meta.frameCount; f++)
-                {
-                    ubs.frames[f] = new UMABlendFrame(newVertexCount, meta.hasNormals, meta.hasTangents);
-                    ubs.frames[f].frameWeight = meta.frameWeights[f];
-                }
-                dest[idx] = ubs; names[idx] = name; idx++;
-            }
-            var nameToIndex = new Dictionary<string, int>(shapeMeta.Count);
-            for (int i = 0; i < names.Length; i++) nameToIndex[names[i]] = i;
-            foreach (var kv in perSlot)
-            {
-                var slot = kv.Key; var md = slot?.asset?.meshData; var shapes = md?.blendShapes; if (shapes == null || shapes.Length == 0) continue; var mapping = kv.Value;
-                for (int s = 0; s < shapes.Length; s++)
-                {
-                    var srcShape = shapes[s]; string name = srcShape.shapeName ?? $"Blend_{s}"; if (!nameToIndex.TryGetValue(name, out int di)) continue; var dstShape = dest[di]; int framesToCopy = Math.Min(dstShape.frames.Length, srcShape.frames.Length);
-                    for (int f = 0; f < framesToCopy; f++)
-                    {
-                        var sf = srcShape.frames[f]; var df = dstShape.frames[f]; CopyBlendShapeDeltas(mapping, sf, df);
-                    }
-                }
-            }
-            return dest;
-        }
-
-        private static Vector2[] BuildClothCoefficients(
-            SlotData[] vertexSlot,
-            int[] vertexLocalIndex,
-            bool[] includedVertex,
-            int[] remap,
-            int newVertexCount)
-        {
-            var perSlot = BuildPerSlotSelection(vertexSlot, vertexLocalIndex, includedVertex, remap);
-            if (perSlot.Count == 0) return null;
-            bool anyCloth = false; Vector2 defaultCoeff = new Vector2(float.MaxValue, 0f); var dest = new Vector2[newVertexCount]; for (int i = 0; i < newVertexCount; i++) dest[i] = defaultCoeff;
-            foreach (var kv in perSlot)
-            {
-                var slot = kv.Key; var md = slot?.asset?.meshData; if (md == null) continue; Vector2[] srcSerialized = md.clothSkinningSerialized; ClothSkinningCoefficient[] srcCloth = md.clothSkinning;
-                if ((srcSerialized == null || srcSerialized.Length == 0) && (srcCloth == null || srcCloth.Length == 0)) continue; anyCloth = true; var mapping = kv.Value;
-                for (int i = 0; i < mapping.Count; i++)
-                {
-                    int li = mapping[i].localIndex; int ni = mapping[i].newIndex; if (li < 0 || ni < 0) continue;
-                    if (srcSerialized != null && li < srcSerialized.Length) dest[ni] = srcSerialized[li];
-                    else if (srcCloth != null && li < srcCloth.Length) { var c = srcCloth[li]; dest[ni] = new Vector2(c.collisionSphereDistance, c.maxDistance); }
-                }
-            }
-            return anyCloth ? dest : null;
-        }
-
-        private static bool SegmentSphereIntersect(Vector3 a, Vector3 b, Vector3 center, float radiusSqr)
-        {
-            Vector3 ab = b - a; float lenSqr = ab.sqrMagnitude; if (lenSqr < 1e-12f) return (a - center).sqrMagnitude <= radiusSqr; float t = Vector3.Dot(center - a, ab) / lenSqr; t = Mathf.Clamp01(t); Vector3 closest = a + t * ab; return (closest - center).sqrMagnitude <= radiusSqr;
-        }
-
+        // Build per-slot remap of original vertex indices to new decal vertex indices
         private static Dictionary<SlotData, List<LocalRemap>> BuildPerSlotSelection(
             SlotData[] vertexSlot,
             int[] vertexLocalIndex,
@@ -1384,6 +1695,7 @@ namespace UMA
             return perSlot;
         }
 
+        // Copy deltas for a single blendshape frame using the mapping
         private static void CopyBlendShapeDeltas(List<LocalRemap> mapping, UMABlendFrame src, UMABlendFrame dst)
         {
             var sV = src.deltaVertices; var dV = dst.deltaVertices;
@@ -1397,149 +1709,5 @@ namespace UMA
                 if (sT != null && dT != null && li < sT.Length && ni < dT.Length) dT[ni] = sT[li];
             }
         }
-        #endregion
-
-#if UNITY_EDITOR
-        // Editor menu helpers (JSON/Asset)
-        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot Asset...")]
-        private static void MenuSaveAsset()
-        {
-            if (LastCreatedDecalSlot == null)
-            {
-                UnityEditor.EditorUtility.DisplayDialog("Save Decal Slot", "No decal slot has been created yet.", "OK");
-                return;
-            }
-            string path = UnityEditor.EditorUtility.SaveFilePanel("Save Decal Slot Asset", "Assets", (LastCreatedDecalSlot.slotName ?? "DecalSlot") + ".asset", "asset");
-            if (string.IsNullOrEmpty(path)) return;
-            string norm = path.Replace('\\', '/');
-            int idx = norm.IndexOf("/Assets/", StringComparison.OrdinalIgnoreCase);
-            if (idx < 0)
-            {
-                UnityEditor.EditorUtility.DisplayDialog("Invalid Path", "Path must be inside the project's Assets folder.", "OK");
-                return;
-            }
-            string rel = norm.Substring(idx + 1); // remove leading '/'
-            string folder = Path.GetDirectoryName(rel).Replace('\\', '/');
-            string name = Path.GetFileNameWithoutExtension(rel);
-            SaveDecalSlotAsset(LastCreatedDecalSlot, folder, name);
-        }
-
-        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot JSON (Uncompressed)...")] 
-        private static void MenuSaveJson()
-        {
-            if (LastCreatedDecalSlot == null)
-            {
-                UnityEditor.EditorUtility.DisplayDialog("Save Decal JSON", "No decal slot has been created yet.", "OK");
-                return;
-            }
-            string path = UnityEditor.EditorUtility.SaveFilePanel("Save Decal JSON", Application.dataPath, (LastCreatedDecalSlot.slotName ?? "DecalSlot") + ".json", "json");
-            if (string.IsNullOrEmpty(path)) return;
-            string json = SerializeDecalSlotToJson(LastCreatedDecalSlot, false);
-            File.WriteAllText(path, json);
-            UnityEditor.EditorUtility.RevealInFinder(path);
-        }
-
-        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot JSON (Compressed)...")] 
-        private static void MenuSaveJsonCompressed()
-        {
-            if (LastCreatedDecalSlot == null)
-            {
-                UnityEditor.EditorUtility.DisplayDialog("Save Decal JSON (Compressed)", "No decal slot has been created yet.", "OK");
-                return;
-            }
-            string path = UnityEditor.EditorUtility.SaveFilePanel("Save Decal JSON (Compressed)", Application.dataPath, (LastCreatedDecalSlot.slotName ?? "DecalSlot") + ".cjson", "cjson");
-            if (string.IsNullOrEmpty(path)) return;
-            string json = SerializeDecalSlotToJson(LastCreatedDecalSlot, true);
-            File.WriteAllText(path, json);
-            UnityEditor.EditorUtility.RevealInFinder(path);
-        }
-
-        [UnityEditor.MenuItem("UMA/Decals/Load Decal Slot JSON...")]
-        private static void MenuLoadJson()
-        {
-            string path;
-#if UNITY_2020_1_OR_NEWER
-            path = UnityEditor.EditorUtility.OpenFilePanelWithFilters(
-                "Load Decal JSON",
-                Application.dataPath,
-                new[] { "Decal JSON", "json", "Compressed JSON", "cjson" });
-#else
-            path = UnityEditor.EditorUtility.OpenFilePanel("Load Decal JSON", Application.dataPath, "json");
-#endif
-            if (string.IsNullOrEmpty(path)) return;
-            try
-            {
-                string json = File.ReadAllText(path);
-                UMAMaterial mat = null; // optional, try resolve by name in JSON
-                var slot = LoadDecalSlotFromJson(json, mat);
-                if (slot != null)
-                {
-                    if (Application.isPlaying)
-                    {
-                        UnityEditor.EditorUtility.DisplayDialog("Decal Loaded", $"Loaded decal slot: {slot.slotName}", "OK");
-                    }
-                    else
-                    {
-                        UnityEditor.EditorUtility.DisplayDialog("Decal Loaded", $"Loaded decal slot: {slot.slotName}. Decals are not applied at edit time.", "OK");
-                    }
-                }
-                else
-                {
-                    UnityEditor.EditorUtility.DisplayDialog("Load Failed", "Unable to load decal JSON.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("Failed to load decal JSON: " + ex.Message);
-            }
-        }
-
-        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot Binary GZip...")]
-        private static void MenuSaveBinaryGZip()
-        {
-            if (LastCreatedDecalSlot == null)
-            {
-                UnityEditor.EditorUtility.DisplayDialog("Save Decal Binary GZip", "No decal slot has been created yet.", "OK");
-                return;
-            }
-            string defaultName = string.IsNullOrEmpty(LastCreatedDecalSlot.slotName) ? "DecalSlot" : LastCreatedDecalSlot.slotName;
-            string path = UnityEditor.EditorUtility.SaveFilePanel("Save Decal Binary GZip", Application.dataPath, defaultName + ".dgz", "dgz");
-            if (string.IsNullOrEmpty(path)) return;
-            try
-            {
-                string json = SerializeDecalSlotToJson(LastCreatedDecalSlot, false);
-                byte[] data = CompressStringToGzip(json);
-                File.WriteAllBytes(path, data);
-                UnityEditor.EditorUtility.RevealInFinder(path);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("Failed to save binary gzip decal: " + ex.Message);
-            }
-        }
-
-        [UnityEditor.MenuItem("UMA/Decals/Load Decal Slot Binary GZip...")]
-        private static void MenuLoadBinaryGZip()
-        {
-            string path = UnityEditor.EditorUtility.OpenFilePanel("Load Decal Binary GZip", Application.dataPath, "dgz");
-            if (string.IsNullOrEmpty(path)) return;
-            try
-            {
-                var slot = LoadDecalSlotFromBinaryGZipFile(path, null, false);
-                if (slot != null)
-                {
-                    UnityEditor.EditorUtility.DisplayDialog("Decal Loaded", $"Loaded decal slot: {slot.slotName}", "OK");
-                }
-                else
-                {
-                    UnityEditor.EditorUtility.DisplayDialog("Load Failed", "Unable to load binary gzip decal.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("Failed to load binary gzip decal: " + ex.Message);
-            }
-        }
-#endif
     }
 }

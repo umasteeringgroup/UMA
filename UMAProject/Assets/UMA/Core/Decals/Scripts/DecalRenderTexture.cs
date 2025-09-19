@@ -217,10 +217,12 @@ namespace UMA
                     return null;
                 }
                 stampMat.SetTexture("_OverlayTex", overlay.textureList[0]);
+                Debug.Log("Texture name: " + overlay.textureList[0].name);
 
                 // Fudge factor for falloff: portion between radius and expanded radius
                 float fudgeFactor = (fudgeRadius <= 0f) ? 0.0001f : (fudgeRadius / (radius + fudgeRadius));
                 stampMat.SetFloat("_Fudge", fudgeFactor);
+                Debug.Log("Fudge factor: " + fudgeFactor);
 
                 // Draw into RT (alpha blend)
                 var prevRT = RenderTexture.active;
@@ -235,6 +237,7 @@ namespace UMA
                 // Optional dilation (bleed)
                 if (options.bleedPixels > 0)
                 {
+                    Debug.Log($"DecalRenderTexture: Running dilation pass ({options.bleedPixels} pixels) to reduce mip seam artifacts.");
                     RunDilation(targetRT, options.bleedPixels);
                 }
 
