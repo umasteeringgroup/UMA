@@ -2971,8 +2971,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: UMA_Examples::CreateDecal
   OrbitCamera: {fileID: 746427355}
   Avatar: {fileID: 655638726778137636}
-  DecalOverlay: {fileID: 11400000, guid: af89317529518d44bb1f250e44441d02, type: 2}
-  DecalMaterialForSubmesh: {fileID: 2100000, guid: 03aac4b393dbb924ba3769e3b1cddf2a, type: 2}
+  MeshDecalOverlay: {fileID: 11400000, guid: e75971b608087764e9b350107b1266a9, type: 2}
+  TextureDecalOverlay: {fileID: 11400000, guid: af89317529518d44bb1f250e44441d02, type: 2}
   decalMethod: 1
   DecalRadius: 0.04
   fudgeRadius: 0.01
@@ -2980,6 +2980,7 @@ MonoBehaviour:
   useHitNormalForProjection: 1
   randomizeRotation: 0
   slotOffset: 3000
+  decalRTDilation: 8
   OrbitOffset: {x: 0, y: 1, z: 0}
   OrbitSensitivityX: 180
   OrbitSensitivityY: 120
