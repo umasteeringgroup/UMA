@@ -23,6 +23,100 @@ namespace UMA
         public static OverlayDataAsset LastCreatedDecalOverlayAsset { get; private set; }
         public static OverlayDataAsset LastDecalOverlaySent { get; private set; }
 
+        // Debug state for last created slot decal
+        private static SkinnedMeshRenderer _dbgSmr;
+        private static int[] _dbgSmrTriangles;
+        private static Dictionary<int, int> _dbgTriToOrdinal; // combined tri index -> ordinal
+        private static int _dbgSequence;
+
+        // Mapping from output triangles to selection ordinals for last decal slot
+        private static int[] _lastOutputTriangles;
+        private static int[] _lastOutputTriOrdinals; // length = _lastOutputTriangles/3
+
+        // New: projection context for rebuilding with added triangles
+        private static Vector3 _lastHitPointWorld;
+        private static Vector3 _lastProjectionDirWorld;
+        private static Vector3 _lastAxisXWorld;
+        private static Vector3 _lastAxisYWorld;
+        private static float _lastRadius;
+
+        // Local storage for vertex index mapping per created SlotDataAsset (avoid adding fields to SlotDataAsset)
+        private sealed class VertexMap
+        {
+            public readonly Dictionary<int, int> TheirToOur = new Dictionary<int, int>();
+            public readonly Dictionary<int, int> OurToTheir = new Dictionary<int, int>();
+        }
+        private static readonly ConditionalWeakTable<SlotDataAsset, VertexMap> _vertexMaps = new ConditionalWeakTable<SlotDataAsset, VertexMap>();
+        private static VertexMap GetOrCreateVertexMap(SlotDataAsset slot)
+        {
+            if (slot == null) return null;
+            if (!_vertexMaps.TryGetValue(slot, out var map))
+            {
+                map = new VertexMap();
+                _vertexMaps.Add(slot, map);
+            }
+            return map;
+        }
+        private static VertexMap GetVertexMap(SlotDataAsset slot)
+        {
+            if (slot == null) return null;
+            _vertexMaps.TryGetValue(slot, out var map);
+            return map;
+        }
+
+        public static bool TryGetLastDebug(out SkinnedMeshRenderer smr, out int[] triIndices, out Dictionary<int, int> triToOrdinal, out int sequence)
+        {
+            smr = _dbgSmr;
+            triIndices = _dbgSmrTriangles;
+            triToOrdinal = _dbgTriToOrdinal;
+            sequence = _dbgSequence;
+            return smr != null && triIndices != null && triToOrdinal != null;
+        }
+
+        /// <summary>
+        /// Remove triangles by selection ordinals from the last created decal slot.
+        /// </summary>
+        public static bool RemoveTrianglesFromLastDecal(HashSet<int> ordinalsToRemove)
+        {
+            if (LastCreatedDecalSlot == null || LastCreatedDecalSlot.meshData == null) return false;
+            if (_lastOutputTriangles == null || _lastOutputTriOrdinals == null || _lastOutputTriOrdinals.Length * 3 != _lastOutputTriangles.Length) return false;
+            if (ordinalsToRemove == null || ordinalsToRemove.Count == 0) return false;
+
+            var filtered = new List<int>(_lastOutputTriangles.Length);
+            for (int tri = 0, idx = 0; tri < _lastOutputTriOrdinals.Length; tri++, idx += 3)
+            {
+                int ord = _lastOutputTriOrdinals[tri];
+                if (ordinalsToRemove.Contains(ord)) continue;
+                filtered.Add(_lastOutputTriangles[idx + 0]);
+                filtered.Add(_lastOutputTriangles[idx + 1]);
+                filtered.Add(_lastOutputTriangles[idx + 2]);
+            }
+
+            if (filtered.Count == _lastOutputTriangles.Length) return false; // nothing removed
+
+            // Apply to mesh data
+            if (LastCreatedDecalSlot.meshData.submeshes == null || LastCreatedDecalSlot.meshData.submeshes.Length == 0)
+            {
+                LastCreatedDecalSlot.meshData.submeshes = new SubMeshTriangles[1];
+                LastCreatedDecalSlot.meshData.submeshes[0] = new SubMeshTriangles();
+            }
+            LastCreatedDecalSlot.meshData.submeshes[0].SetTriangles(filtered.ToArray());
+            LastCreatedDecalSlot.meshData.subMeshCount = 1;
+
+            // Update caches
+            _lastOutputTriangles = filtered.ToArray();
+            var newOrdinals = new List<int>(filtered.Count / 3);
+            for (int i = 0; i < _lastOutputTriOrdinals.Length; i++)
+            {
+                int ord = _lastOutputTriOrdinals[i];
+                if (ordinalsToRemove.Contains(ord)) continue;
+                newOrdinals.Add(ord);
+            }
+            _lastOutputTriOrdinals = newOrdinals.ToArray();
+
+            return true;
+        }
+
         /// <summary>
         /// Record the overlay assigned to the last created decal (call after you apply your overlay).
         /// </summary>
@@ -145,7 +239,6 @@ namespace UMA
             if (radius <= 0.00001f) return null;
 
             options ??= new DecalBuildOptions();
-
             if (!MeshRaycastAvatar(avatar, ray, options, out var smr, out var hitPointWorld, out var hitNormalWorld))
                 return null;
 
@@ -184,11 +277,11 @@ namespace UMA
 
                 Vector3 rayDirWorld = ray.direction.normalized;
                 float expandedRadius = radius + fudgeRadius;
-                float radiusSqr = expandedRadius * expandedRadius;
                 Transform t = smr.transform;
 
                 var includedVertex = new bool[combinedVertexCount];
                 var includedTriangles = new List<int>(2048);
+                var selectedTriIds = new List<int>(512);
 
                 // Use cylinder selection along the chosen direction (ray by default, hit normal when requested)
                 Vector3 selectionDirWorld = options.useHitNormalForProjection ? -hitNormalWorld : rayDirWorld;
@@ -213,13 +306,38 @@ namespace UMA
                                 selectionDirWorld, // selection axis
                                 facingDirWorld,     // facing cull direction
                                 hitPointWorld, expandedRadius, depth, backOffset,
-                                options.facingThreshold, includedTriangles, includedVertex, options.enableDebug);
+                                options.facingThreshold, includedTriangles, includedVertex, options.enableDebug, selectedTriIds);
 
                 if (includedTriangles.Count == 0)
                 {
                     if (options.enableDebug) Debug.Log("DecalSlotBuilder: No triangles within radius/facing constraints.");
                     return null;
                 }
+
+                // Capture debug mapping for UI
+                _dbgSmr = smr;
+                _dbgSmrTriangles = triIndices;
+                _dbgTriToOrdinal = new Dictionary<int, int>(selectedTriIds.Count);
+                for (int ord = 0; ord < selectedTriIds.Count; ord++)
+                {
+                    int combTri = selectedTriIds[ord];
+                    if (!_dbgTriToOrdinal.ContainsKey(combTri)) _dbgTriToOrdinal.Add(combTri, ord);
+                }
+                _dbgSequence++;
+
+                // Save projection context for later rebuilds
+                _lastHitPointWorld = hitPointWorld;
+                _lastProjectionDirWorld = options.useHitNormalForProjection ? hitNormalWorld : rayDirWorld;
+
+                // Compute local axes and also cache them in world space
+                Vector3 localHitPoint = t.InverseTransformPoint(hitPointWorld);
+                Vector3 localRayDir = t.InverseTransformDirection(rayDirWorld).normalized;
+                Vector3 localHitNormal = t.InverseTransformDirection(hitNormalWorld).normalized;
+                Vector3 projectionDir = options.useHitNormalForProjection ? localHitNormal : localRayDir;
+                BuildProjectionAxesAroundRay(projectionDir, angleDegrees, out var axisX, out var axisY);
+                _lastAxisXWorld = t.TransformDirection(axisX).normalized;
+                _lastAxisYWorld = t.TransformDirection(axisY).normalized;
+                _lastRadius = radius;
 
                 var remap = new int[combinedVertexCount];
                 Array.Fill(remap, -1);
@@ -235,12 +353,6 @@ namespace UMA
                 var outColors32 = new Color32[newVertexCount];
                 var outUV = new Vector2[newVertexCount];
                 Vector2[][] slotExtraUVs = { null, null, null };
-
-                Vector3 localHitPoint = t.InverseTransformPoint(hitPointWorld);
-                Vector3 localRayDir = t.InverseTransformDirection(rayDirWorld).normalized;
-                Vector3 localHitNormal = t.InverseTransformDirection(hitNormalWorld).normalized;
-                Vector3 projectionDir = options.useHitNormalForProjection ? localHitNormal : localRayDir;
-                BuildProjectionAxesAroundRay(projectionDir, angleDegrees, out var axisX, out var axisY);
 
                 for (int ov = 0; ov < combinedVertexCount; ov++)
                 {
@@ -300,6 +412,10 @@ namespace UMA
                 var outTriangles = new int[includedTriangles.Count];
                 for (int i = 0; i < includedTriangles.Count; i++)
                     outTriangles[i] = remap[includedTriangles[i]];
+
+                // Track output triangle ordinals aligned to outTriangles
+                _lastOutputTriangles = outTriangles.ToArray();
+                _lastOutputTriOrdinals = selectedTriIds.ToArray();
 
                 ApplyBindposeCorrection(shared, smr, vertexSlot, vertexLocalIndex,
                                         includedVertex, remap,
@@ -390,13 +506,235 @@ namespace UMA
                     slotAsset.material = umaMaterial;
                 }
 
+                // Record mapping from combined vertex index -> decal vertex index for future edits (store locally)
+                if (slotAsset != null)
+                {
+                    var map = GetOrCreateVertexMap(slotAsset);
+                    map.TheirToOur.Clear();
+                    map.OurToTheir.Clear();
+                    for (int ov = 0; ov < combinedVertexCount; ov++)
+                    {
+                        int nv = remap[ov];
+                        if (nv >= 0)
+                        {
+                            map.TheirToOur[ov] = nv;
+                            map.OurToTheir[nv] = ov;
+                        }
+                    }
+                }
+
                 EnsureOverlayTag(slotAsset); // overlay tag based on tracked asset
 
                 if (options.enableDebug)
-                    Debug.Log($"DecalSlotBuilder: Created decal '{slotAsset.slotName}' Vertices={md.vertexCount} Tris={outTriangles.Length / 3} BlendShapes={(md.blendShapes != null ? md.blendShapes.Length : 0)} Cloth={(md.clothSkinningSerialized != null)} Overlay={(overlayAsset!=null ? overlayAsset.name : "None")}");
+                    Debug.Log($"DecalSlotBuilder: Created decal '{slotAsset.slotName}' Vertices={md.vertexCount} Tris={outTriangles.Length / 3} BlendShapes={(md.blendShapes != null ? md.blendShapes.Length : 0)} Cloth={(md.clothSkinningSerialized != null)} Overlay={(overlayAsset!=null ? overlayAsset.name : "None")} ");
 
                 LastCreatedDecalSlot = slotAsset;
                 return slotAsset;
+            }
+            finally
+            {
+                UMAUtils.DestroySceneObject(baked);
+            }
+        }
+
+        /// <summary>
+        /// Rebuild last decal slot by adding combined-triangle indices and removing selection ordinals.
+        /// </summary>
+        public static bool ApplyAddRemoveToLastDecal(DynamicCharacterAvatar avatar, HashSet<int> addCombinedTriIndices, HashSet<int> removeOrdinals, bool enableDebug = false)
+        {
+            // Minimal implementation: rebuild included set and regenerate mesh using cached projection context
+            if (avatar == null || avatar.umaData == null) return false;
+            if (LastCreatedDecalSlot == null) return false;
+            if (_dbgSmr == null || _dbgSmrTriangles == null) return false;
+            if (_lastRadius <= 0f) return false;
+
+            // Build starting set from all currently cached decal triangles
+            var includeSet = new HashSet<int>(_dbgTriToOrdinal != null ? _dbgTriToOrdinal.Keys : Array.Empty<int>());
+            if (removeOrdinals != null && _dbgTriToOrdinal != null)
+            {
+                foreach (var kv in _dbgTriToOrdinal)
+                {
+                    if (removeOrdinals.Contains(kv.Value)) includeSet.Remove(kv.Key);
+                }
+            }
+            if (addCombinedTriIndices != null)
+            {
+                foreach (var i in addCombinedTriIndices) includeSet.Add(i);
+            }
+            if (includeSet.Count == 0) return false;
+
+            // Prepare access to previous decal mapping and UVs
+            var prevMap = GetVertexMap(LastCreatedDecalSlot)?.TheirToOur;
+            var prevUV = LastCreatedDecalSlot.meshData != null ? LastCreatedDecalSlot.meshData.uv : null;
+
+            // Bake and reconstruct using cached axes
+            Mesh baked = new Mesh();
+            _dbgSmr.BakeMesh(baked);
+            try
+            {
+                var shared = _dbgSmr.sharedMesh;
+                if (shared == null) return false;
+                var bakedVertsLocal = baked.vertices;
+                var triIndices = shared.triangles;
+                int triCount = triIndices.Length / 3;
+                var includedTriangles = new List<int>(includeSet.Count * 3);
+                var includedVertex = new bool[shared.vertexCount];
+                var newSelectedTriIds = new List<int>(includeSet.Count);
+                foreach (var tri in includeSet)
+                {
+                    if (tri < 0 || tri >= triCount) continue;
+                    int i0 = triIndices[tri * 3 + 0];
+                    int i1 = triIndices[tri * 3 + 1];
+                    int i2 = triIndices[tri * 3 + 2];
+                    if ((uint)i0 >= bakedVertsLocal.Length || (uint)i1 >= bakedVertsLocal.Length || (uint)i2 >= bakedVertsLocal.Length) continue;
+                    includedTriangles.Add(i0); includedTriangles.Add(i1); includedTriangles.Add(i2);
+                    includedVertex[i0] = includedVertex[i1] = includedVertex[i2] = true;
+                    newSelectedTriIds.Add(tri);
+                }
+                if (includedTriangles.Count == 0) return false;
+
+                // Reconstruct per-vertex slot mapping to rebuild shapes/cloth correctly
+                var recipe = avatar.umaData.umaRecipe;
+                var vertexSlot = new SlotData[shared.vertexCount];
+                var vertexLocalIndex = new int[shared.vertexCount];
+                if (recipe != null && recipe.slotDataList != null)
+                {
+                    for (int si = 0; si < recipe.slotDataList.Length; si++)
+                    {
+                        var slot = recipe.slotDataList[si];
+                        if (slot?.asset?.meshData == null) continue;
+                        int start = slot.vertexOffset;
+                        int count = slot.asset.meshData.vertexCount;
+                        int end = start + count;
+                        if (start < 0 || end > shared.vertexCount) continue;
+                        for (int v = start; v < end; v++)
+                        {
+                            vertexSlot[v] = slot;
+                            vertexLocalIndex[v] = v - start;
+                        }
+                    }
+                }
+
+                // Remap vertices
+                int[] remap = new int[shared.vertexCount];
+                Array.Fill(remap, -1);
+                int newVertexCount = 0;
+                for (int v = 0; v < shared.vertexCount; v++)
+                    if (includedVertex[v]) remap[v] = newVertexCount++;
+                if (newVertexCount == 0) return false;
+
+                var outVerts = new Vector3[newVertexCount];
+                var outNormals = new Vector3[newVertexCount];
+                var outTangents = new Vector4[newVertexCount];
+                var outColors32 = new Color32[newVertexCount];
+                var outUV = new Vector2[newVertexCount];
+
+                // Map base data from shared mesh; preserve old UVs for vertices that already existed in the decal
+                var sharedNormals = shared.normals;
+                var sharedTangents = shared.tangents;
+                var sharedColors = shared.colors32;
+
+                Transform t = _dbgSmr.transform;
+                Vector3 localHit = t.InverseTransformPoint(_lastHitPointWorld);
+                Vector3 localProj = t.InverseTransformDirection(_lastProjectionDirWorld).normalized;
+                Vector3 axisXLocal = t.InverseTransformDirection(_lastAxisXWorld).normalized;
+                Vector3 axisYLocal = t.InverseTransformDirection(_lastAxisYWorld).normalized;
+
+                for (int ov = 0; ov < shared.vertexCount; ov++)
+                {
+                    int nv = remap[ov];
+                    if (nv < 0) continue;
+                    outVerts[nv] = shared.vertices[ov];
+                    outNormals[nv] = (sharedNormals != null && ov < sharedNormals.Length) ? sharedNormals[ov] : Vector3.up;
+                    outTangents[nv] = (sharedTangents != null && ov < sharedTangents.Length) ? sharedTangents[ov] : new Vector4(1, 0, 0, 1);
+                    outColors32[nv] = (sharedColors != null && ov < sharedColors.Length) ? sharedColors[ov] : new Color32(255, 255, 255, 255);
+
+                    bool uvSet = false;
+                    if (prevMap != null && prevUV != null && prevUV.Length > 0)
+                    {
+                        if (prevMap.TryGetValue(ov, out int oldIdx))
+                        {
+                            if (oldIdx >= 0 && oldIdx < prevUV.Length)
+                            {
+                                outUV[nv] = prevUV[oldIdx];
+                                uvSet = true;
+                            }
+                        }
+                    }
+
+                    if (!uvSet)
+                    {
+                        Vector3 posedLocal = bakedVertsLocal[ov];
+                        Vector3 offset = posedLocal - localHit;
+                        float along = Vector3.Dot(offset, localProj);
+                        Vector3 planar = offset - along * localProj;
+                        float u = (Vector3.Dot(planar, axisXLocal) / _lastRadius) * 0.5f + 0.5f;
+                        float v = (Vector3.Dot(planar, axisYLocal) / _lastRadius) * 0.5f + 0.5f;
+                        outUV[nv] = new Vector2(u, v);
+                    }
+                }
+
+                var outTriangles = new int[includedTriangles.Count];
+                for (int i = 0; i < includedTriangles.Count; i++) outTriangles[i] = remap[includedTriangles[i]];
+
+                // Update caches for UI
+                _dbgTriToOrdinal = new Dictionary<int, int>(newSelectedTriIds.Count);
+                for (int ord = 0; ord < newSelectedTriIds.Count; ord++)
+                {
+                    int combTri = newSelectedTriIds[ord];
+                    if (!_dbgTriToOrdinal.ContainsKey(combTri)) _dbgTriToOrdinal.Add(combTri, ord);
+                }
+                _lastOutputTriangles = outTriangles.ToArray();
+                _lastOutputTriOrdinals = newSelectedTriIds.ToArray();
+                _dbgSequence++;
+
+                // Replace triangles and vertex streams on slot mesh data
+                var md = LastCreatedDecalSlot.meshData ?? new UMAMeshData();
+                md.vertices = outVerts;
+                md.normals = outNormals;
+                md.tangents = outTangents;
+                md.colors32 = outColors32;
+                md.uv = outUV;
+                md.vertexCount = newVertexCount;
+                if (md.submeshes == null || md.submeshes.Length == 0)
+                {
+                    md.submeshes = new SubMeshTriangles[1];
+                }
+                var sub = new SubMeshTriangles();
+                sub.SetTriangles(outTriangles);
+                md.submeshes[0] = sub;
+                md.subMeshCount = 1;
+
+                // Rebuild bone weights to keep combiner in sync
+                BuildBoneWeightsFullSkeleton(avatar, _dbgSmr, shared, includedVertex, remap, newVertexCount,
+                    out var outBonesPerVertex, out var outBoneWeights);
+                md.ManagedBonesPerVertex = outBonesPerVertex;
+                md.ManagedBoneWeights = outBoneWeights;
+
+                // Rebuild blendshapes and cloth coefficients based on new mapping
+                md.blendShapes = BuildBlendshapesFromSources(vertexSlot, vertexLocalIndex, includedVertex, remap, newVertexCount);
+                md.clothSkinningSerialized = BuildClothCoefficients(vertexSlot, vertexLocalIndex, includedVertex, remap, newVertexCount);
+
+                // Clear optional extra UV streams which may no longer align (they can be regenerated if needed)
+                md.uv2 = null; md.uv3 = null; md.uv4 = null;
+
+                LastCreatedDecalSlot.meshData = md;
+
+                // Update mapping dictionaries to reflect current selection for future edits
+                var map = GetOrCreateVertexMap(LastCreatedDecalSlot);
+                map.TheirToOur.Clear();
+                map.OurToTheir.Clear();
+                for (int ov = 0; ov < shared.vertexCount; ov++)
+                {
+                    int nv = remap[ov];
+                    if (nv >= 0)
+                    {
+                        map.TheirToOur[ov] = nv;
+                        map.OurToTheir[nv] = ov;
+                    }
+                }
+
+                return true;
             }
             finally
             {
@@ -765,6 +1103,10 @@ namespace UMA
 
             LastCreatedDecalSlot = slotAsset;
 
+            // Reset debug caches since we don't know selection mapping for loaded decals
+            _dbgSmr = null; _dbgSmrTriangles = null; _dbgTriToOrdinal = null; _dbgSequence++;
+            _lastOutputTriangles = null; _lastOutputTriOrdinals = null;
+
 #if UNITY_EDITOR
             // If a DynamicCharacterAvatar is currently selected in the editor, auto-apply the loaded decal
             var selectedGO = UnityEditor.Selection.activeGameObject;
@@ -1076,7 +1418,8 @@ namespace UMA
             float facingThreshold,
             List<int> includedTriangles,
             bool[] includedVertex,
-            bool debug)
+            bool debug,
+            List<int> selectedTriIds)
         {
             Vector3 axisDir = selectionDirWorld.normalized;
             Vector3 c0 = hitPointWorld - axisDir * backOffset;
@@ -1109,7 +1452,6 @@ namespace UMA
                 float s0 = Vector3.Dot(w0 - c0, axisDir);
                 float s1 = Vector3.Dot(w1 - c0, axisDir);
                 float s2 = Vector3.Dot(w2 - c0, axisDir);
-                float minS = Mathf.Min(s0, Mathf.Min(s1, s2));
                 float maxS = Mathf.Max(s0, Mathf.Max(s1, s2));
 
                 // Entire triangle is behind the cylinder start plane -> discard
@@ -1144,6 +1486,7 @@ namespace UMA
 
                 includedTriangles.Add(i0); includedTriangles.Add(i1); includedTriangles.Add(i2);
                 includedVertex[i0] = includedVertex[i1] = includedVertex[i2] = true;
+                selectedTriIds?.Add(tri);
             }
 
             if (debug)
@@ -1247,7 +1590,7 @@ namespace UMA
             SaveDecalSlotAsset(LastCreatedDecalSlot, folder, name);
         }
 
-        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot JSON (Uncompressed)...")] 
+        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot JSON (Uncompressed)...")]
         private static void MenuSaveJson()
         {
             if (LastCreatedDecalSlot == null)
@@ -1262,7 +1605,7 @@ namespace UMA
             UnityEditor.EditorUtility.RevealInFinder(path);
         }
 
-        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot JSON (Compressed)...")] 
+        [UnityEditor.MenuItem("UMA/Decals/Save Last Decal Slot JSON (Compressed)...")]
         private static void MenuSaveJsonCompressed()
         {
             if (LastCreatedDecalSlot == null)
@@ -1713,4 +2056,4 @@ namespace UMA
             }
         }
     }
-}
+} 

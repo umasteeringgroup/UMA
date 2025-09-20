@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
+using System.Collections; // added
 
 namespace UMA
 {
@@ -48,6 +49,34 @@ namespace UMA
             public bool useHitNormalForProjection = false; // project using hit triangle normal instead of ray dir
         }
 
+        private static int _dbgSequence;
+        private static SkinnedMeshRenderer _dbgSmr;
+        private static int[] _dbgSmrTriangles;
+        private static Dictionary<int, int> _dbgTriToOrdinal;
+
+        // Lightweight logging helpers
+        private static void LogInfo(string msg)
+        {
+            if (Debug.isDebugBuild) Debug.Log("[DecalRT] " + msg);
+        }
+        private static void LogWarn(string msg)
+        {
+            Debug.LogWarning("[DecalRT] " + msg);
+        }
+        private static void LogError(string msg)
+        {
+            Debug.LogError("[DecalRT] " + msg);
+        }
+
+        public static bool TryGetLastDebug(out SkinnedMeshRenderer smr, out int[] triIndices, out Dictionary<int, int> triToOrdinal, out int sequence)
+        {
+            smr = _dbgSmr;
+            triIndices = _dbgSmrTriangles;
+            triToOrdinal = _dbgTriToOrdinal;
+            sequence = _dbgSequence;
+            return smr != null && triIndices != null && triToOrdinal != null;
+        }
+
         /// <summary>
         /// CreateDecalLayer: stamps an overlay's textures into all UMA-generated RenderTextures for that overlay's UMAMaterial and channels.
         /// Each channel uses the same projected triangle set and UVs.
@@ -74,18 +103,18 @@ namespace UMA
             var result = new DecalLayerResult { success = false };
             if (avatar == null || avatar.umaData == null)
             {
-                Debug.LogError("DecalRenderTexture: Avatar or UMAData null.");
+                LogError("DecalRenderTexture: Avatar or UMAData null.");
                 return null;
             }
             if (umaData == null)
             {
-                Debug.LogError("DecalRenderTexture: Provided UMAData is null.");
+                LogError("DecalRenderTexture: Provided UMAData is null.");
                 return null;
             }
             if (overlay == null || overlay.textureList == null || overlay.textureList.Length == 0)
             {
                 if (options?.enableDebug == true)
-                    Debug.LogWarning("DecalRenderTexture: Overlay missing or has no textures. Aborting.");
+                    LogWarn("DecalRenderTexture: Overlay missing or has no textures. Aborting.");
                 return null;
             }
             if (radius <= 0.00001f) return null;
@@ -95,7 +124,7 @@ namespace UMA
             if (!MeshRaycastAvatar(avatar, ray, options, out var smr, out var hitPointWorld, out var hitNormalWorld))
             {
                 if (options.enableDebug)
-                    Debug.LogWarning("DecalRenderTexture: Mesh raycast failed / no facing triangle.");
+                    LogWarn("DecalRenderTexture: Mesh raycast failed / no facing triangle.");
                 return null;
             }
 
@@ -125,6 +154,7 @@ namespace UMA
 
                 var includedVertex = new bool[bakedVertsLocal.Length];
                 var selectedTris = new List<int>(2048);
+                var selectedTriIds = new List<int>(512);
 
                 // Choose facing cull direction: when projecting using hit normal, face cull should also use hit normal (inverted)
                 Vector3 facingDirWorld = options.useHitNormalForProjection ? -hitNormalWorld : ray.direction.normalized;
@@ -139,14 +169,26 @@ namespace UMA
                     options.facingThreshold,
                     selectedTris,
                     includedVertex,
-                    options.enableDebug);
+                    options.enableDebug,
+                    selectedTriIds);
 
                 if (selectedTris.Count == 0)
                 {
                     if (options.enableDebug)
-                        Debug.LogWarning("DecalRenderTexture: No triangles selected inside radius.");
+                        LogWarn("DecalRenderTexture: No triangles selected inside radius.");
                     return null;
                 }
+
+                // Build tri->ordinal map using selected tri ids
+                _dbgSmr = smr;
+                _dbgSmrTriangles = triIndices;
+                _dbgTriToOrdinal = new Dictionary<int, int>(selectedTriIds.Count);
+                for (int ord = 0; ord < selectedTriIds.Count; ord++)
+                {
+                    int combTri = selectedTriIds[ord];
+                    if (!_dbgTriToOrdinal.ContainsKey(combTri)) _dbgTriToOrdinal.Add(combTri, ord);
+                }
+                _dbgSequence++;
 
                 // Remap vertices for a compact dynamic mesh
                 int[] remap = new int[bakedVertsLocal.Length];
@@ -229,9 +271,10 @@ namespace UMA
                     }
                 }
 
-                // Group selected triangles by SlotData
+                // Group selected triangles by SlotData, track ordinals per-triangle
                 var slotTriMap = new Dictionary<SlotData, List<int>>();
-                for (int i = 0; i < selectedTris.Count; i += 3)
+                var slotTriOrdinals = new Dictionary<SlotData, List<int>>();
+                for (int i = 0, ord = 0; i < selectedTris.Count; i += 3, ord++)
                 {
                     int i0 = selectedTris[i + 0];
                     int i1 = selectedTris[i + 1];
@@ -246,12 +289,19 @@ namespace UMA
                         slotTriMap.Add(s0, list);
                     }
                     list.Add(i0); list.Add(i1); list.Add(i2);
+                    if (!slotTriOrdinals.TryGetValue(s0, out var olist))
+                    {
+                        olist = new List<int>(256);
+                        slotTriOrdinals.Add(s0, olist);
+                    }
+                    // Store the ordinal index (0..N-1) that corresponds to this selected triangle.
+                    olist.Add(ord);
                 }
 
                 if (slotTriMap.Count == 0)
                 {
                     if (options.enableDebug)
-                        Debug.LogWarning("DecalRenderTexture: No per-slot triangles found after grouping.");
+                        LogWarn("DecalRenderTexture: No per-slot triangles found after grouping.");
                     return null;
                 }
 
@@ -363,6 +413,7 @@ namespace UMA
                                 // Temporarily swap the atlas entry to RT so subsequent passes see RT
                                 gm.resultingAtlasList[ch] = rt;
                                 createdTempRT = true;
+                                LogInfo($"CreateDecalLayer: Created temp RT for material '{gm.material?.name}', channel {ch}, size {w}x{h}.");
                             }
 
                             stampMat.SetTexture("_OverlayTex", src);
@@ -410,6 +461,7 @@ namespace UMA
                                 {
                                     propName = gm.umaMaterial.channels[ch].materialPropertyName;
                                 }
+                                LogInfo($"CreateDecalLayer: Rebinding baked texture to material '{gm.material?.name}', channel {ch}, property '{propName}'.");
                                 RebindTextureOnMaterials(gm, ch, newTex, propName);
 
                                 RenderTexture.ReleaseTemporary(rt);
@@ -428,7 +480,8 @@ namespace UMA
                         umaMaterialName = slot.material != null ? slot.material.name : string.Empty,
                         normBaseUV = new Vector2[uv0List.Count],
                         overlayUV = uv1List.ToArray(),
-                        triangles = newIndices
+                        triangles = newIndices,
+                        triOrdinals = slotTriOrdinals.TryGetValue(slot, out var ords) ? ords.ToArray() : null
                     };
 
                     // normalize base UVs against the slot UVArea
@@ -457,7 +510,7 @@ namespace UMA
 
                 if (options.enableDebug)
                 {
-                    Debug.Log($"DecalRenderTexture: Stamped overlay '{overlay.overlayName}' on {stampedCount} target(s). UVRect clipping per slot.");
+                    LogInfo($"DecalRenderTexture: Stamped overlay '{overlay.overlayName}' on {stampedCount} target(s). UVRect clipping per slot.");
                 }
 
                 result.success = stampedCount > 0;
@@ -469,6 +522,7 @@ namespace UMA
 
                 // Cache last stamp asset for later save/restore
                 _lastStamp = result.success ? stampAsset : null;
+                Debug.Log($"DecalRenderTexture: Created DecalRTStampAsset with {stampAsset.slots.Count} slot entries. lastStamp: {_lastStamp}");
 
                 return result.success ? result : (DecalLayerResult?)null;
             }
@@ -490,9 +544,11 @@ namespace UMA
         {
             if (avatar == null || umaData == null || stamp == null)
             {
-                Debug.LogWarning("DecalRenderTexture.ApplyStampToUMA: Missing avatar, UMAData, or stamp.");
+                LogWarn("DecalRenderTexture.ApplyStampToUMA: Missing avatar, UMAData, or stamp.");
                 return false;
             }
+
+            LogInfo($"ApplyStampToUMA: Begin. overlay='{stamp.overlayName}', slots={stamp.slots?.Count ?? 0}.");
 
             // Find overlay asset to source textures, prefer overlays already in the recipe
             OverlayDataAsset overlay = null;
@@ -500,19 +556,21 @@ namespace UMA
             if (od != null && od.asset != null)
             {
                 overlay = od.asset;
+                LogInfo($"ApplyStampToUMA: Found overlay in recipe: '{overlay.name}', channels={overlay.textureCount}.");
             }
             if (overlay == null)
             {
                 try { overlay = UMAAssetIndexer.Instance.GetAsset<OverlayDataAsset>(stamp.overlayName); } catch { }
+                if (overlay != null) LogInfo($"ApplyStampToUMA: Found overlay in indexer: '{overlay.name}', channels={overlay.textureCount}.");
             }
             if (overlay == null)
             {
-                Debug.LogWarning($"DecalRenderTexture.ApplyStampToUMA: Could not find OverlayDataAsset with overlayName '{stamp.overlayName}'.");
+                LogWarn($"DecalRenderTexture.ApplyStampToUMA: Could not find OverlayDataAsset with overlayName '{stamp.overlayName}'.");
                 return false;
             }
             if (overlay.textureList == null || overlay.textureList.Length == 0)
             {
-                Debug.LogWarning("DecalRenderTexture.ApplyStampToUMA: Overlay has no textures.");
+                LogWarn("DecalRenderTexture.ApplyStampToUMA: Overlay has no textures.");
                 return false;
             }
 
@@ -534,14 +592,14 @@ namespace UMA
                 var slot = umaData.umaRecipe.GetSlot(s.slotName);
                 if (slot == null || slot.asset == null)
                 {
-                    Debug.LogWarning($"DecalRenderTexture.ApplyStampToUMA: Slot '{s.slotName}' not found on UMA.");
+                    LogWarn($"ApplyStampToUMA: Slot '{s.slotName}' not found on UMA.");
                     continue;
                 }
 
                 int vcount = (s.normBaseUV != null) ? s.normBaseUV.Length : 0;
                 if (vcount == 0 || s.overlayUV == null || s.triangles == null)
                 {
-                    Debug.LogWarning($"DecalRenderTexture.ApplyStampToUMA: Slot '{s.slotName}' has invalid stamp data.");
+                    LogWarn($"ApplyStampToUMA: Slot '{s.slotName}' has invalid stamp data (vcount={vcount}, overlayUV={(s.overlayUV==null?"null":s.overlayUV.Length.ToString())}, tris={(s.triangles==null?"null":s.triangles.Length.ToString())}).");
                     continue;
                 }
 
@@ -590,12 +648,16 @@ namespace UMA
                 stampMat.SetVector("_UVRect", new Vector4(uvRect.xMin, uvRect.yMin, uvRect.xMax, uvRect.yMax));
 
                 // Stamp into any generated material whose umaMaterial matches the slot's material (across any SMR)
+                int gmMatches = 0;
                 for (int gi = 0; gi < umaData.generatedMaterials.materials.Count; gi++)
                 {
                     var gm = umaData.generatedMaterials.materials[gi];
                     if (gm == null) continue;
                     if (gm.umaMaterial == null || !gm.umaMaterial.Equals(slot.material)) continue;
-                    if (gm.resultingAtlasList == null) continue;
+                    if (gm.resultingAtlasList == null) { LogWarn($"ApplyStampToUMA: gm '{gm.material?.name}' has null resultingAtlasList."); continue; }
+
+                    gmMatches++;
+                    LogInfo($"ApplyStampToUMA: Target gm material='{gm.material?.name}', smr='{gm.skinnedMeshRenderer?.name}', channels={gm.resultingAtlasList.Length}.");
 
                     int targetChannels = gm.resultingAtlasList.Length;
                     int sourceChannels = overlay.textureList.Length;
@@ -604,9 +666,9 @@ namespace UMA
                     for (int ch = 0; ch < channels; ch++)
                     {
                         var src = overlay.textureList[ch];
-                        if (src == null) continue;
+                        if (src == null) { LogWarn($"ApplyStampToUMA: overlay channel {ch} is null."); continue; }
                         var tgtTex = gm.resultingAtlasList[ch];
-                        if (tgtTex == null) continue;
+                        if (tgtTex == null) { LogWarn($"ApplyStampToUMA: gm channel {ch} target texture is null."); continue; }
 
                         var existingRT = tgtTex as RenderTexture;
                         bool createdTempRT = false;
@@ -622,6 +684,7 @@ namespace UMA
                             Graphics.Blit(originalTex2D, rt);
                             gm.resultingAtlasList[ch] = rt;
                             createdTempRT = true;
+                            LogInfo($"ApplyStampToUMA: Created temp RT for material '{gm.material?.name}', channel {ch}, size {w}x{h}.");
                         }
 
                         stampMat.SetTexture("_OverlayTex", src);
@@ -667,6 +730,7 @@ namespace UMA
                             {
                                 propName = gm.umaMaterial.channels[ch].materialPropertyName;
                             }
+                            LogInfo($"ApplyStampToUMA: Rebinding baked texture to material '{gm.material?.name}', channel {ch}, property '{propName}'.");
                             RebindTextureOnMaterials(gm, ch, newTex, propName);
 
                             RenderTexture.ReleaseTemporary(rt);
@@ -678,13 +742,147 @@ namespace UMA
                     }
                 }
 
+                if (gmMatches == 0) LogWarn($"ApplyStampToUMA: No generated materials matched slot.material for slot '{slot.slotName}'.");
+
+                LogInfo($"ApplyStampToUMA: Stamped slot '{s.slotName}' on {gmMatches} generated material(s).");
                 UMAUtils.DestroySceneObject(stampMesh);
             }
 
             GL.PopMatrix();
             RenderTexture.active = prevRTGlobal;
 
+            if (totalStamped == 0)
+            {
+                LogWarn("ApplyStampToUMA: Completed with totalStamped=0. Nothing was drawn.");
+            }
+            else
+            {
+                LogInfo($"ApplyStampToUMA: Completed. totalStamped={totalStamped} draws.");
+            }
+
             return totalStamped > 0;
+        }
+
+        public static bool RemoveTrianglesFromLastStamp(HashSet<int> ordinalsToRemove, DynamicCharacterAvatar avatar, UMAData umaData)
+        {
+            if (_lastStamp == null || ordinalsToRemove == null || ordinalsToRemove.Count == 0)
+            {
+                LogWarn("RemoveTrianglesFromLastStamp: No last stamp or no ordinals to remove.");
+                return false;
+            }
+
+            LogInfo($"RemoveTrianglesFromLastStamp: Removing {ordinalsToRemove.Count} ordinals from last stamp with {(_lastStamp.slots?.Count ?? 0)} slot(s).");
+
+            // Build a filtered copy of the current stamp, excluding removed ordinals per-slot
+            var filtered = ScriptableObject.CreateInstance<DecalRTStampAsset>();
+            filtered.overlayName = _lastStamp.overlayName;
+            filtered.bleedPixels = _lastStamp.bleedPixels;
+            filtered.forceLinearSampling = _lastStamp.forceLinearSampling;
+
+            foreach (var s in _lastStamp.slots)
+            {
+                if (s == null || s.triangles == null) continue;
+
+                var newSlot = new DecalRTStampAsset.SlotStamp
+                {
+                    slotName = s.slotName,
+                    umaMaterialName = s.umaMaterialName,
+                    normBaseUV = s.normBaseUV,
+                    overlayUV = s.overlayUV,
+                    triangles = null,
+                    triOrdinals = s.triOrdinals
+                };
+
+                if (s.triOrdinals == null)
+                {
+                    // No ordinal mapping available; keep as-is
+                    newSlot.triangles = s.triangles;
+                }
+                else
+                {
+                    // Filter triangles by ordinals
+                    var filteredTris = new List<int>(s.triangles.Length);
+                    for (int ti = 0, triOrdIdx = 0; ti < s.triangles.Length; ti += 3, triOrdIdx++)
+                    {
+                        int ord = (triOrdIdx < s.triOrdinals.Length) ? s.triOrdinals[triOrdIdx] : -1;
+                        if (ord >= 0 && ordinalsToRemove.Contains(ord))
+                            continue;
+                        filteredTris.Add(s.triangles[ti + 0]);
+                        filteredTris.Add(s.triangles[ti + 1]);
+                        filteredTris.Add(s.triangles[ti + 2]);
+                    }
+                    newSlot.triangles = filteredTris.ToArray();
+                    LogInfo($"RemoveTrianglesFromLastStamp: Slot '{s.slotName}' kept {newSlot.triangles.Length / 3} triangles.");
+                }
+
+                filtered.slots.Add(newSlot);
+            }
+
+            // Cache filtered stamp
+            _lastStamp = filtered;
+
+            // Update debug caches so UI reflects removals right away
+            if (_dbgTriToOrdinal != null)
+            {
+                var keysToRemove = new List<int>();
+                foreach (var kv in _dbgTriToOrdinal)
+                {
+                    if (ordinalsToRemove.Contains(kv.Value))
+                        keysToRemove.Add(kv.Key);
+                }
+                for (int i = 0; i < keysToRemove.Count; i++)
+                    _dbgTriToOrdinal.Remove(keysToRemove[i]);
+                _dbgSequence++;
+            }
+
+            // Synchronous texture rebuild, then re-stamp immediately.
+            if (avatar != null && umaData != null)
+            {
+                try
+                {
+                    // Mark textures dirty and rebuild atlases now
+                    umaData.isTextureDirty = true;
+                    LogInfo("RemoveTrianglesFromLastStamp: Trigger GenerateSingleUMA for texture rebuild.");
+                    UMAAssetIndexer.Instance.generator.GenerateTexturesOnly(umaData, false); // don't fire completed events in the editor
+
+                    //UMAAssetIndexer.Instance.generator.GenerateSingleUMA(umaData, false); // don't fire completed events in the editor
+                }
+                catch (Exception ex)
+                {
+                    LogWarn("DecalRenderTexture: GenerateSingleUMA failed: " + ex.Message);
+                }
+
+                // Apply edited stamp onto freshly rebuilt atlases
+                bool ok = ApplyStampToUMA(avatar, umaData, _lastStamp);
+                LogInfo($"RemoveTrianglesFromLastStamp: ApplyStampToUMA returned {ok}.");
+                return ok;
+            }
+
+            LogWarn("RemoveTrianglesFromLastStamp: Missing avatar or umaData.");
+            return false;
+        }
+
+        // Lightweight runtime runner for deferred work
+        private sealed class DecalRTDeferredRunner : MonoBehaviour
+        {
+            private static DecalRTDeferredRunner _instance;
+
+            public static void Run(IEnumerator routine)
+            {
+                if (_instance == null)
+                {
+                    var go = new GameObject("DecalRTDeferredRunner");
+                    go.hideFlags = HideFlags.HideAndDontSave;
+                    DontDestroyOnLoad(go);
+                    _instance = go.AddComponent<DecalRTDeferredRunner>();
+                }
+                _instance.StartCoroutine(routine);
+            }
+
+            private void OnDestroy()
+            {
+                if (_instance == this) _instance = null;
+            }
         }
 
         #region Mesh Raycast (copied style from DecalSlotBuilder)
@@ -823,7 +1021,8 @@ namespace UMA
             float facingThreshold,
             List<int> includedTriangles,
             bool[] includedVertex,
-            bool debug)
+            bool debug,
+            List<int> selectedTriIds)
         {
             int triCount = triIndices.Length / 3;
             for (int tri = 0; tri < triCount; tri++)
@@ -864,10 +1063,11 @@ namespace UMA
 
                 includedTriangles.Add(i0); includedTriangles.Add(i1); includedTriangles.Add(i2);
                 includedVertex[i0] = includedVertex[i1] = includedVertex[i2] = true;
+                selectedTriIds?.Add(tri);
             }
 
             if (debug)
-                Debug.Log($"DecalRenderTexture.SelectTriangles: {includedTriangles.Count / 3} tris selected.");
+                LogInfo($"DecalRenderTexture.SelectTriangles: {includedTriangles.Count / 3} tris selected.");
         }
 
         private static bool SegmentSphereIntersect(Vector3 a, Vector3 b, Vector3 center, float radiusSqr)
@@ -906,7 +1106,7 @@ namespace UMA
             Shader stampShader = Shader.Find("Hidden/UMA/DecalRTStamp");
             if (stampShader == null)
             {
-                Debug.LogWarning("DecalRenderTexture: stamp shader 'Hidden/UMA/DecalRTStamp' not found.");
+                LogWarn("DecalRenderTexture: stamp shader 'Hidden/UMA/DecalRTStamp' not found.");
                 return null;
             }
             var mat = new Material(stampShader) { name = "DecalRTStamp_Mat" };
@@ -930,14 +1130,23 @@ namespace UMA
                 propName = gm.umaMaterial.channels[channel].materialPropertyName;
             }
 
+            bool rebound = false;
             // Bind only to the resolved property, if it exists on the materials
             if (!string.IsNullOrEmpty(propName))
             {
                 if (gm.material != null && gm.material.HasProperty(propName))
+                {
                     gm.material.SetTexture(propName, newTex);
+                    rebound = true;
+                    LogInfo($"RebindTextureOnMaterials: Set '{propName}' on '{gm.material.name}'.");
+                }
                 if (gm.secondPassMaterial != null && gm.secondPassMaterial.HasProperty(propName))
+                {
                     gm.secondPassMaterial.SetTexture(propName, newTex);
-                return;
+                    rebound = true;
+                    LogInfo($"RebindTextureOnMaterials: Set '{propName}' on second pass '{gm.secondPassMaterial.name}'.");
+                }
+                if (rebound) return;
             }
 
             // If property name could not be resolved, only fall back for Diffuse channels
@@ -948,7 +1157,11 @@ namespace UMA
                 canFallbackToCommon = (chType == UMAMaterial.ChannelType.DiffuseTexture);
             }
 
-            if (!canFallbackToCommon) return;
+            if (!canFallbackToCommon)
+            {
+                LogWarn($"RebindTextureOnMaterials: Could not resolve property for channel {channel} on material '{gm.material?.name}'. No fallback used (not Diffuse). Texture may not display.");
+                return;
+            }
 
             // 3) Last resort for Diffuse: common albedo property names (_BaseMap for URP, _MainTex for legacy)
             string[] commonProps = { "_BaseMap", "_MainTex", "_BaseColorMap" };
@@ -957,6 +1170,8 @@ namespace UMA
                 if (gm.material != null && gm.material.HasProperty(p))
                 {
                     gm.material.SetTexture(p, newTex);
+                    LogInfo($"RebindTextureOnMaterials: Fallback set '{p}' on '{gm.material.name}'.");
+                    rebound = true;
                     break;
                 }
             }
@@ -965,8 +1180,14 @@ namespace UMA
                 if (gm.secondPassMaterial != null && gm.secondPassMaterial.HasProperty(p))
                 {
                     gm.secondPassMaterial.SetTexture(p, newTex);
+                    LogInfo($"RebindTextureOnMaterials: Fallback set '{p}' on second pass '{gm.secondPassMaterial.name}'.");
+                    rebound = true;
                     break;
                 }
+            }
+            if (!rebound)
+            {
+                LogWarn($"RebindTextureOnMaterials: No matching property found on materials for channel {channel}. Texture may not be visible.");
             }
         }
 
@@ -976,7 +1197,7 @@ namespace UMA
             Shader dilateShader = Shader.Find("Hidden/UMA/DecalRTDilate");
             if (dilateShader == null)
             {
-                Debug.LogWarning("DecalRenderTexture: Dilation shader 'Hidden/UMA/DecalRTDilate' not found.");
+                LogWarn("DecalRenderTexture: Dilation shader 'Hidden/UMA/DecalRTDilate' not found.");
                 return;
             }
             var mat = new Material(dilateShader) { name = "DecalRT_DilateMat" };

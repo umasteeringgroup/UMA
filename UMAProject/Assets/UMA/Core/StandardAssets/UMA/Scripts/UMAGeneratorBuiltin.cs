@@ -305,6 +305,7 @@ namespace UMA
 
         public bool GenerateTexturesOnly(UMAData data, bool fireEvents)
         {
+            Debug.Log("GenerateTexturesOnly");
             if (data == null)
             {
                 return true;
@@ -327,15 +328,10 @@ namespace UMA
                 PreApply(umaData);
             }
 
-
-            if (umaData.isTextureDirty)
-            {
-                UMAGeneratorPro ugp = new UMAGeneratorPro();
-                ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
-                umaData.isTextureDirty = false;
-                umaData.isAtlasDirty |= umaData.isMeshDirty;
-                TextureChanged++;
-            }
+            UMAGeneratorPro ugp = new UMAGeneratorPro();
+            ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
+            umaData.isAtlasDirty |= umaData.isMeshDirty;
+            TextureChanged++;
 
             RenderTexture.active = rbackup;
 
@@ -355,6 +351,8 @@ namespace UMA
 
         public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
+            Debug.Log("GenerateSingleUMA");
+
 #if DEBUG_TIMING
             System.Diagnostics.Stopwatch gstopWatch = System.Diagnostics.Stopwatch.StartNew();
             gstopWatch.Start();
