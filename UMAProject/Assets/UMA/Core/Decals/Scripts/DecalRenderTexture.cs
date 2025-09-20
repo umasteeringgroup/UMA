@@ -41,6 +41,7 @@ namespace UMA
             public bool enableDebug = false;
             public bool forceLinearSampling = false;   // #16.2
             public int bleedPixels = 2;                // #15.2 edge dilation
+            public bool useHitNormalForProjection = false; // project using hit triangle normal instead of ray dir
         }
 
         /// <summary>
@@ -93,6 +94,9 @@ namespace UMA
                 return null;
             }
 
+            // Draw a gizmo line showing the hit normal direction for 30 seconds
+            Debug.DrawLine(hitPointWorld, hitPointWorld + hitNormalWorld.normalized * 0.1f, Color.magenta, 30f, false);
+
             // Bake SMR (we only need vertex positions for selection & projection)
             Mesh baked = new Mesh();
             smr.BakeMesh(baked);
@@ -117,11 +121,14 @@ namespace UMA
                 var includedVertex = new bool[bakedVertsLocal.Length];
                 var selectedTris = new List<int>(2048);
 
+                // Choose facing cull direction: when projecting using hit normal, face cull should also use hit normal (inverted)
+                Vector3 facingDirWorld = options.useHitNormalForProjection ? -hitNormalWorld : ray.direction.normalized;
+
                 SelectTriangles(
                     triIndices,
                     bakedVertsLocal,
                     t,
-                    ray.direction.normalized,
+                    facingDirWorld,
                     hitPointWorld,
                     radiusSqr,
                     options.facingThreshold,
@@ -147,71 +154,52 @@ namespace UMA
                 }
                 if (newVertexCount == 0) return null;
 
-                var outPositions = new Vector3[newVertexCount]; // will store clip-space XY from UV0 later
-                var outOverlayUV = new Vector2[newVertexCount]; // UV1: planar projected local circle
-                var outMainUV = new Vector2[newVertexCount];    // UV0: original UV0
-                var outColors = new Color32[newVertexCount];    // optional debug/neutral (white)
+                // Precompute per-vertex data for included verts (base UV0, overlay UV1, clip-space pos)
+                Vector2[] baseUVAll = new Vector2[bakedVertsLocal.Length];
+                Vector2[] overlayUVAll = new Vector2[bakedVertsLocal.Length];
+                Vector3[] posCSAll = new Vector3[bakedVertsLocal.Length];
+
+                Vector2 uvMin = new Vector2(1f, 1f);
+                Vector2 uvMax = new Vector2(0f, 0f);
 
                 // Build projection axes (planar) like DecalSlotBuilder
                 Vector3 localHit = t.InverseTransformPoint(hitPointWorld);
                 Vector3 localRayDir = t.InverseTransformDirection(ray.direction).normalized;
-                BuildProjectionAxesAroundRay(localRayDir, angleDegrees, out var axisX, out var axisY);
-
-                // Fill vertex data
-                Vector2 uvMin = new Vector2(1f, 1f);
-                Vector2 uvMax = new Vector2(0f, 0f);
+                Vector3 localHitNormal = t.InverseTransformDirection(hitNormalWorld).normalized;
+                Vector3 projectionDir = options.useHitNormalForProjection ? localHitNormal : localRayDir;
+                BuildProjectionAxesAroundRay(projectionDir, angleDegrees, out var axisX, out var axisY);
 
                 for (int v = 0; v < bakedVertsLocal.Length; v++)
                 {
-                    int nv = remap[v];
-                    if (nv < 0) continue;
+                    if (!includedVertex[v]) continue;
 
-                    // Main UV
+                    // Base UV0
                     Vector2 uv = meshUV[v];
                     uv.x = Mathf.Clamp01(uv.x);
                     uv.y = Mathf.Clamp01(uv.y);
-                    outMainUV[nv] = uv;
+                    baseUVAll[v] = uv;
 
                     uvMin = Vector2.Min(uvMin, uv);
                     uvMax = Vector2.Max(uvMax, uv);
 
-                    // Planar projection around hit for overlay space
+                    // Planar projection around hit for overlay space (must use projectionDir)
                     Vector3 posedLocal = bakedVertsLocal[v];
                     Vector3 offset = posedLocal - localHit;
-                    float along = Vector3.Dot(offset, localRayDir);
-                    Vector3 planar = offset - along * localRayDir;
+                    float along = Vector3.Dot(offset, projectionDir);
+                    Vector3 planar = offset - along * projectionDir;
 
                     float px = Vector3.Dot(planar, axisX);
                     float py = Vector3.Dot(planar, axisY);
                     float u = (px / radius) * 0.5f + 0.5f;
                     float v2 = (py / radius) * 0.5f + 0.5f;
-                    outOverlayUV[nv] = new Vector2(u, v2);
-
-                    outColors[nv] = new Color32(255, 255, 255, 255);
+                    overlayUVAll[v] = new Vector2(u, v2);
 
                     // Vertex position for stamping mesh: map UV0 -> clip space (-1..1)
-                    outPositions[nv] = new Vector3(uv.x * 2f - 1f, uv.y * 2f - 1f, 0f);
+                    posCSAll[v] = new Vector3(uv.x * 2f - 1f, uv.y * 2f - 1f, 0f);
                 }
 
-                // Remap triangle indices
-                int[] outIndices = new int[selectedTris.Count];
-                for (int i = 0; i < selectedTris.Count; i++)
-                {
-                    outIndices[i] = remap[selectedTris[i]];
-                }
-
-                // Build dynamic mesh (positions already in clip space)
-                var stampMesh = new Mesh { name = "DecalRT_StampMesh" };
-                stampMesh.indexFormat = (newVertexCount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
-                stampMesh.vertices = outPositions;
-                stampMesh.triangles = outIndices;
-                stampMesh.uv = outMainUV;
-                stampMesh.uv2 = outOverlayUV;
-                stampMesh.colors32 = outColors;
-                stampMesh.RecalculateBounds();
-
-                var recipe = umaData.umaRecipe;
                 // Map combined vertices to their originating SlotData
+                var recipe = umaData.umaRecipe;
                 SlotData[] vertexSlot = null;
                 if (recipe != null && shared != null)
                 {
@@ -236,107 +224,38 @@ namespace UMA
                     }
                 }
 
-                // Collect UMAMaterials from the slots that contributed to the selected region
-                var selectedMaterials = new HashSet<UMAMaterial>();
-                if (vertexSlot != null)
+                // Group selected triangles by SlotData
+                var slotTriMap = new Dictionary<SlotData, List<int>>();
+                for (int i = 0; i < selectedTris.Count; i += 3)
                 {
-                    for (int ov = 0; ov < includedVertex.Length; ov++)
+                    int i0 = selectedTris[i + 0];
+                    int i1 = selectedTris[i + 1];
+                    int i2 = selectedTris[i + 2];
+                    var s0 = vertexSlot != null ? vertexSlot[i0] : null;
+                    var s1 = vertexSlot != null ? vertexSlot[i1] : null;
+                    var s2 = vertexSlot != null ? vertexSlot[i2] : null;
+                    if (s0 == null || s1 != s0 || s2 != s0) continue; // ensure triangle is wholly inside a slot
+                    if (!slotTriMap.TryGetValue(s0, out var list))
                     {
-                        if (!includedVertex[ov]) continue;
-                        var slot = vertexSlot[ov];
-                        if (slot == null) continue;
-                        var mat = slot.material;
-                        if (mat != null)
-                        {
-                            selectedMaterials.Add(mat);
-                        }
+                        list = new List<int>(256);
+                        slotTriMap.Add(s0, list);
                     }
+                    list.Add(i0); list.Add(i1); list.Add(i2);
                 }
 
-                // Build list of generated materials that belong to the hit SMR and selected UMAMaterials
-                var targetGeneratedMaterials = new List<UMAData.GeneratedMaterial>();
-                var gms = umaData.generatedMaterials.materials;
-                for (int i = 0; i < gms.Count; i++)
+                if (slotTriMap.Count == 0)
                 {
-                    var gm = gms[i];
-                    if (gm == null) continue;
-                    if (gm.skinnedMeshRenderer != smr) continue;
-                    if (gm.umaMaterial == null) continue;
-                    if (selectedMaterials.Count > 0)
-                    {
-                        // Use UMA's Equals to handle cross-bundle equality
-                        foreach (var sel in selectedMaterials)
-                        {
-                            if (gm.umaMaterial.Equals(sel))
-                            {
-                                targetGeneratedMaterials.Add(gm);
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Fallback: if we couldn't map slots, still target this renderer's materials
-                        targetGeneratedMaterials.Add(gm);
-                    }
-                }
-                if (targetGeneratedMaterials.Count == 0)
-                {
-                    if (options.enableDebug) Debug.LogWarning("DecalRenderTexture: No matching generated materials found on hit renderer.");
-                    UnityEngine.Object.DestroyImmediate(stampMesh);
+                    if (options.enableDebug)
+                        Debug.LogWarning("DecalRenderTexture: No per-slot triangles found after grouping.");
                     return null;
                 }
 
-                // Build per-material UV clipping rect from SlotData.UVArea (generated atlas rects)
-                var matToUVRect = new Dictionary<UMAMaterial, Rect>();
-                if (vertexSlot != null)
-                {
-                    for (int ov = 0; ov < includedVertex.Length; ov++)
-                    {
-                        if (!includedVertex[ov]) continue;
-                        var slot = vertexSlot[ov];
-                        if (slot == null) continue;
-                        var mat = slot.material;
-                        if (mat == null) continue;
-                        var r = slot.UVArea;
-                        if (matToUVRect.TryGetValue(mat, out var existing))
-                        {
-                            // Union with existing
-                            float minX = Mathf.Min(existing.xMin, r.xMin);
-                            float minY = Mathf.Min(existing.yMin, r.yMin);
-                            float maxX = Mathf.Max(existing.xMax, r.xMax);
-                            float maxY = Mathf.Max(existing.yMax, r.yMax);
-                            matToUVRect[mat] = Rect.MinMaxRect(minX, minY, maxX, maxY);
-                        }
-                        else
-                        {
-                            matToUVRect[mat] = r;
-                        }
-                    }
-                }
-
-                // Fallback UV bounds from selected vertices (if UVArea data not present)
-                float minU = 1f, minV = 1f, maxU = 0f, maxV = 0f;
-                for (int v = 0; v < outMainUV.Length; v++)
-                {
-                    float u = outMainUV[v].x;
-                    float vv = outMainUV[v].y;
-                    if (u < minU) minU = u;
-                    if (vv < minV) minV = vv;
-                    if (u > maxU) maxU = u;
-                    if (vv > maxV) maxV = vv;
-                }
-                var fallbackRect = Rect.MinMaxRect(minU, minV, maxU, maxV);
-
-                // Acquire material & shader
+                // Prepare stamp material
                 Material stampMat = GetOrCreateStampMaterial(options.forceLinearSampling);
                 if (stampMat == null)
                 {
-                    UnityEngine.Object.DestroyImmediate(stampMesh);
                     return null;
                 }
-
-                // Fudge factor for falloff: portion between radius and expanded radius
                 float fudgeFactor = (fudgeRadius <= 0f) ? 0.0001f : (fudgeRadius / (radius + fudgeRadius));
                 stampMat.SetFloat("_Fudge", fudgeFactor);
                 stampMat.SetFloat("_UseUVRect", 1.0f);
@@ -348,49 +267,88 @@ namespace UMA
 
                 int stampedCount = 0;
 
-                // Iterate target generated materials and stamp per channel
-                for (int mg = 0; mg < targetGeneratedMaterials.Count; mg++)
+                // Iterate each affected slot, build a mesh for that slot only, and clip to SlotData.UVArea
+                foreach (var kv in slotTriMap)
                 {
-                    var gm = targetGeneratedMaterials[mg];
-                    if (gm.resultingAtlasList == null) continue;
+                    var slot = kv.Key;
+                    var tris = kv.Value;
 
-                    // Choose UVRect based on this generated material's UMA material
-                    Rect clipRect;
-                    if (gm.umaMaterial != null && matToUVRect.TryGetValue(gm.umaMaterial, out var cr))
+                    // Build remap for this slot
+                    var remapDict = new Dictionary<int, int>(tris.Count);
+                    var vertsList = new List<Vector3>();
+                    var uv0List = new List<Vector2>();
+                    var uv1List = new List<Vector2>();
+                    var colList = new List<Color32>();
+                    var newIndices = new int[tris.Count];
+
+                    for (int ti = 0; ti < tris.Count; ti++)
                     {
-                        clipRect = cr;
-                    }
-                    else
-                    {
-                        clipRect = fallbackRect;
-                    }
-                    stampMat.SetVector("_UVRect", new Vector4(clipRect.xMin, clipRect.yMin, clipRect.xMax, clipRect.yMax));
-
-                    int targetChannels = gm.resultingAtlasList.Length;
-                    int sourceChannels = overlay.textureList.Length;
-                    int channels = Mathf.Min(targetChannels, sourceChannels);
-
-                    for (int ch = 0; ch < channels; ch++)
-                    {
-                        var src = overlay.textureList[ch];
-                        if (src == null) continue;
-                        var tgt = gm.resultingAtlasList[ch];
-                        if (!(tgt is RenderTexture rt)) continue;
-
-                        stampMat.SetTexture("_OverlayTex", src);
-
-                        // Draw into RT (alpha blend)
-                        RenderTexture.active = rt;
-                        stampMat.SetPass(0);
-                        Graphics.DrawMeshNow(stampMesh, Matrix4x4.identity);
-                        stampedCount++;
-
-                        // Optional dilation per RT
-                        if (options.bleedPixels > 0)
+                        int orig = tris[ti];
+                        if (!remapDict.TryGetValue(orig, out int newIndex))
                         {
-                            RunDilation(rt, options.bleedPixels);
+                            newIndex = remapDict.Count;
+                            remapDict.Add(orig, newIndex);
+                            vertsList.Add(posCSAll[orig]);
+                            uv0List.Add(baseUVAll[orig]);
+                            uv1List.Add(overlayUVAll[orig]);
+                            colList.Add(new Color32(255, 255, 255, 255));
+                        }
+                        newIndices[ti] = newIndex;
+                    }
+
+                    var stampMesh = new Mesh { name = $"DecalRT_StampMesh_{slot.slotName}" };
+                    stampMesh.indexFormat = (vertsList.Count > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+                    stampMesh.SetVertices(vertsList);
+                    stampMesh.SetTriangles(newIndices, 0);
+                    stampMesh.SetUVs(0, uv0List);
+                    stampMesh.SetUVs(1, uv1List);
+                    stampMesh.SetColors(colList);
+                    stampMesh.RecalculateBounds();
+
+                    // Clip to this slot's UVArea
+                    var clip = slot.UVArea;
+                    if (clip.width <= 0f || clip.height <= 0f)
+                    {
+                        // fallback to overall bounds from selected verts
+                        clip = Rect.MinMaxRect(uvMin.x, uvMin.y, uvMax.x, uvMax.y);
+                    }
+                    stampMat.SetVector("_UVRect", new Vector4(clip.xMin, clip.yMin, clip.xMax, clip.yMax));
+
+                    // Find generated materials for this slot on the hit SMR
+                    for (int gi = 0; gi < umaData.generatedMaterials.materials.Count; gi++)
+                    {
+                        var gm = umaData.generatedMaterials.materials[gi];
+                        if (gm == null) continue;
+                        if (gm.skinnedMeshRenderer != smr) continue;
+                        if (gm.umaMaterial == null || !gm.umaMaterial.Equals(slot.material)) continue;
+                        if (gm.resultingAtlasList == null) continue;
+
+                        int targetChannels = gm.resultingAtlasList.Length;
+                        int sourceChannels = overlay.textureList.Length;
+                        int channels = Mathf.Min(targetChannels, sourceChannels);
+
+                        for (int ch = 0; ch < channels; ch++)
+                        {
+                            var src = overlay.textureList[ch];
+                            if (src == null) continue;
+                            var tgt = gm.resultingAtlasList[ch];
+                            if (!(tgt is RenderTexture rt)) continue;
+
+                            stampMat.SetTexture("_OverlayTex", src);
+
+                            RenderTexture.active = rt;
+                            stampMat.SetPass(0);
+                            Graphics.DrawMeshNow(stampMesh, Matrix4x4.identity);
+                            stampedCount++;
+
+                            if (options.bleedPixels > 0)
+                            {
+                                RunDilation(rt, options.bleedPixels);
+                            }
                         }
                     }
+
+                    UnityEngine.Object.DestroyImmediate(stampMesh);
                 }
 
                 // Restore global state
@@ -399,17 +357,15 @@ namespace UMA
 
                 if (options.enableDebug)
                 {
-                    Debug.Log($"DecalRenderTexture: Stamped overlay '{overlay.name}' on {stampedCount} target(s). Verts={newVertexCount} Tris={outIndices.Length / 3}");
+                    Debug.Log($"DecalRenderTexture: Stamped overlay '{overlay.name}' on {stampedCount} target(s). UVRect clipping per slot.");
                 }
 
                 result.success = stampedCount > 0;
-                result.vertexCount = newVertexCount;
-                result.triangleCount = outIndices.Length / 3;
+                result.vertexCount = 0; // per-slot meshes vary; not meaningful aggregated
+                result.triangleCount = 0;
                 result.uvBounds = Rect.MinMaxRect(uvMin.x, uvMin.y, uvMax.x, uvMax.y);
                 result.hitPoint = hitPointWorld;
                 result.hitNormal = hitNormalWorld;
-
-                UnityEngine.Object.DestroyImmediate(stampMesh);
 
                 return result.success ? result : (DecalLayerResult?)null;
             }

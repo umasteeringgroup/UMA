@@ -247,6 +247,7 @@ public class CreateDecal : MonoBehaviour
                 facingThreshold = 0.15f,
                 enableDebug = true,
                 forceLinearSampling = false,
+                useHitNormalForProjection = this.useHitNormalForProjection,
                 bleedPixels = decalRTDilation
             };
 
