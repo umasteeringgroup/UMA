@@ -343,8 +343,27 @@ namespace UMA
                         {
                             var src = overlay.textureList[ch];
                             if (src == null) continue;
-                            var tgt = gm.resultingAtlasList[ch];
-                            if (!(tgt is RenderTexture rt)) continue;
+                            var tgtTex = gm.resultingAtlasList[ch];
+                            if (tgtTex == null) continue;
+
+                            // Ensure we have a RenderTexture target. If the atlas is a Texture2D, convert -> composite -> back to Texture2D.
+                            var existingRT = tgtTex as RenderTexture;
+                            bool createdTempRT = false;
+                            Texture2D originalTex2D = tgtTex as Texture2D;
+                            RenderTexture rt = existingRT;
+
+                            if (rt == null)
+                            {
+                                // Create temp RT matching the Texture2D dimensions
+                                int w = originalTex2D.width;
+                                int h = originalTex2D.height;
+                                rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+                                rt.name = $"UMA_RT_Temp_{slot.slotName}_{ch}";
+                                Graphics.Blit(originalTex2D, rt);
+                                // Temporarily swap the atlas entry to RT so subsequent passes see RT
+                                gm.resultingAtlasList[ch] = rt;
+                                createdTempRT = true;
+                            }
 
                             stampMat.SetTexture("_OverlayTex", src);
 
@@ -356,6 +375,48 @@ namespace UMA
                             if (options.bleedPixels > 0)
                             {
                                 RunDilation(rt, options.bleedPixels);
+                            }
+
+                            if (createdTempRT)
+                            {
+                                // Bake RT back to Texture2D and replace atlas entry
+                                var prev = RenderTexture.active;
+                                RenderTexture.active = rt;
+                                var newTex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, true, false)
+                                {
+                                    name = $"UMA_Atlas_{slot.slotName}_{ch}"
+                                };
+                                // Preserve sampler settings
+                                if (originalTex2D != null)
+                                {
+                                    newTex.wrapMode = originalTex2D.wrapMode;
+                                    newTex.filterMode = originalTex2D.filterMode;
+                                    newTex.anisoLevel = originalTex2D.anisoLevel;
+                                }
+                                newTex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0, false);
+                                newTex.Apply(true, false);
+                                RenderTexture.active = prev;
+
+                                // Replace atlas entry
+                                gm.resultingAtlasList[ch] = newTex;
+
+                                // Robust rebind on generated materials
+                                string propName = null;
+                                if (gm.textureNameList != null && ch >= 0 && ch < gm.textureNameList.Length)
+                                {
+                                    propName = gm.textureNameList[ch];
+                                }
+                                if (string.IsNullOrEmpty(propName) && gm.umaMaterial != null && gm.umaMaterial.channels != null && ch < gm.umaMaterial.channels.Length)
+                                {
+                                    propName = gm.umaMaterial.channels[ch].materialPropertyName;
+                                }
+                                RebindTextureOnMaterials(gm, ch, newTex, propName);
+
+                                RenderTexture.ReleaseTemporary(rt);
+                                if (originalTex2D != null)
+                                {
+                                    UMAUtils.DestroySceneObject(originalTex2D);
+                                }
                             }
                         }
                     }
@@ -544,8 +605,24 @@ namespace UMA
                     {
                         var src = overlay.textureList[ch];
                         if (src == null) continue;
-                        var tgt = gm.resultingAtlasList[ch];
-                        if (!(tgt is RenderTexture rt)) continue;
+                        var tgtTex = gm.resultingAtlasList[ch];
+                        if (tgtTex == null) continue;
+
+                        var existingRT = tgtTex as RenderTexture;
+                        bool createdTempRT = false;
+                        Texture2D originalTex2D = tgtTex as Texture2D;
+                        RenderTexture rt = existingRT;
+
+                        if (rt == null)
+                        {
+                            int w = originalTex2D.width;
+                            int h = originalTex2D.height;
+                            rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+                            rt.name = $"UMA_RT_Temp_Replay_{slot.slotName}_{ch}";
+                            Graphics.Blit(originalTex2D, rt);
+                            gm.resultingAtlasList[ch] = rt;
+                            createdTempRT = true;
+                        }
 
                         stampMat.SetTexture("_OverlayTex", src);
 
@@ -557,6 +634,46 @@ namespace UMA
                         if (stamp.bleedPixels > 0)
                         {
                             RunDilation(rt, stamp.bleedPixels);
+                        }
+
+                        if (createdTempRT)
+                        {
+                            var prev = RenderTexture.active;
+                            RenderTexture.active = rt;
+                            var newTex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, true, false)
+                            {
+                                name = $"UMA_Atlas_{slot.slotName}_{ch}"
+                            };
+                            // Preserve sampler settings
+                            if (originalTex2D != null)
+                            {
+                                newTex.wrapMode = originalTex2D.wrapMode;
+                                newTex.filterMode = originalTex2D.filterMode;
+                                newTex.anisoLevel = originalTex2D.anisoLevel;
+                            }
+                            newTex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0, false);
+                            newTex.Apply(true, false);
+                            RenderTexture.active = prev;
+
+                            gm.resultingAtlasList[ch] = newTex;
+
+                            // Robust rebind on generated materials
+                            string propName = null;
+                            if (gm.textureNameList != null && ch >= 0 && ch < gm.textureNameList.Length)
+                            {
+                                propName = gm.textureNameList[ch];
+                            }
+                            if (string.IsNullOrEmpty(propName) && gm.umaMaterial != null && gm.umaMaterial.channels != null && ch < gm.umaMaterial.channels.Length)
+                            {
+                                propName = gm.umaMaterial.channels[ch].materialPropertyName;
+                            }
+                            RebindTextureOnMaterials(gm, ch, newTex, propName);
+
+                            RenderTexture.ReleaseTemporary(rt);
+                            if (originalTex2D != null)
+                            {
+                                UMAUtils.DestroySceneObject(originalTex2D);
+                            }
                         }
                     }
                 }
@@ -795,6 +912,62 @@ namespace UMA
             var mat = new Material(stampShader) { name = "DecalRTStamp_Mat" };
             mat.SetFloat("_ForceLinear", forceLinear ? 1f : 0f);
             return mat;
+        }
+
+        // Ensure material texture properties are rebound after we swap atlas Texture2D
+        private static void RebindTextureOnMaterials(UMAData.GeneratedMaterial gm, int channel, Texture newTex, string explicitPropertyName)
+        {
+            if (gm == null || newTex == null) return;
+
+            // Resolve the target property name priority: explicit -> textureNameList -> UMA material channel mapping
+            string propName = explicitPropertyName;
+            if (string.IsNullOrEmpty(propName) && gm.textureNameList != null && channel >= 0 && channel < gm.textureNameList.Length)
+            {
+                propName = gm.textureNameList[channel];
+            }
+            if (string.IsNullOrEmpty(propName) && gm.umaMaterial != null && gm.umaMaterial.channels != null && channel < gm.umaMaterial.channels.Length)
+            {
+                propName = gm.umaMaterial.channels[channel].materialPropertyName;
+            }
+
+            // Bind only to the resolved property, if it exists on the materials
+            if (!string.IsNullOrEmpty(propName))
+            {
+                if (gm.material != null && gm.material.HasProperty(propName))
+                    gm.material.SetTexture(propName, newTex);
+                if (gm.secondPassMaterial != null && gm.secondPassMaterial.HasProperty(propName))
+                    gm.secondPassMaterial.SetTexture(propName, newTex);
+                return;
+            }
+
+            // If property name could not be resolved, only fall back for Diffuse channels
+            var canFallbackToCommon = false;
+            if (gm.umaMaterial != null && gm.umaMaterial.channels != null && channel >= 0 && channel < gm.umaMaterial.channels.Length)
+            {
+                var chType = gm.umaMaterial.channels[channel].channelType;
+                canFallbackToCommon = (chType == UMAMaterial.ChannelType.DiffuseTexture);
+            }
+
+            if (!canFallbackToCommon) return;
+
+            // 3) Last resort for Diffuse: common albedo property names (_BaseMap for URP, _MainTex for legacy)
+            string[] commonProps = { "_BaseMap", "_MainTex", "_BaseColorMap" };
+            foreach (var p in commonProps)
+            {
+                if (gm.material != null && gm.material.HasProperty(p))
+                {
+                    gm.material.SetTexture(p, newTex);
+                    break;
+                }
+            }
+            foreach (var p in commonProps)
+            {
+                if (gm.secondPassMaterial != null && gm.secondPassMaterial.HasProperty(p))
+                {
+                    gm.secondPassMaterial.SetTexture(p, newTex);
+                    break;
+                }
+            }
         }
 
         private static void RunDilation(RenderTexture rt, int bleedPixels)
