@@ -503,13 +503,19 @@ namespace UMA
             }
             var mat = new Material(dilateShader) { name = "DecalRT_DilateMat" };
 
-            // Perform N single-pixel 8-neighbor dilations
-            for (int i = 0; i < bleedPixels; i++)
+            // Use the new radius parameter to reduce passes. Max radius per pass is 16.
+            int remaining = Mathf.Max(0, bleedPixels);
+            while (remaining > 0)
             {
+                int step = Mathf.Min(remaining, 16);
+                mat.SetFloat("_Radius", step);
+
                 RenderTexture tmp = RenderTexture.GetTemporary(rt.descriptor);
-                Graphics.Blit(rt, tmp);          // input
-                Graphics.Blit(tmp, rt, mat);     // dilated output
+                Graphics.Blit(rt, tmp);          // input copy
+                Graphics.Blit(tmp, rt, mat);     // dilated output with radius=step
                 RenderTexture.ReleaseTemporary(tmp);
+
+                remaining -= step;
             }
             UnityEngine.Object.DestroyImmediate(mat);
         }
