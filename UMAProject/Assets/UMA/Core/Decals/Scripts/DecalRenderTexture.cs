@@ -7,20 +7,15 @@ namespace UMA
 {
     /// <summary>
     /// DecalRenderTexture:
-    ///  - Parallel in spirit to DecalSlotBuilder but writes a stamped overlay texture into a RenderTexture (UV space).
+    ///  - Parallel in spirit to DecalSlotBuilder but writes a stamped overlay texture into UMA's generated RenderTextures (UV space).
     ///  - Raycasts (mesh-based) against first SkinnedMeshRenderer hit (closest facing triangle).
     ///  - Selects triangles within (radius + fudgeRadius) sphere around hit point (world space).
-    ///  - Uses existing UV0 to position fragments in the target RenderTexture.
+    ///  - Uses existing UV0 to position fragments in the target RenderTexture(s).
     ///  - Generates overlay UV (planar projected + rotation) in UV1 for circular mask + falloff.
-    ///  - Alpha blends (straight alpha) using overlay texture RGBA (overlay.textureList[0]) * radial falloff.
+    ///  - Alpha blends (straight alpha) using overlay texture RGBA (overlay.textureList[channel]) per UMA material channel.
     ///  - Optional smooth edge falloff controlled by fudgeRadius (simple smoothstep).
-    ///  - Optional dilation pass (bleedPixels > 0) to reduce mip seam artifacts.
+    ///  - Optional dilation pass (bleedPixels > 0) to reduce mip seam artifacts (applied per stamped RenderTexture).
     ///  - Returns DecalLayerResult with UV bounding rect and stats.
-    /// 
-    /// Future extensions (mirroring TODOs in DecalSlotBuilder):
-    ///  - Multi-SMR aggregation (merge triangle sets across all SMRs sharing rig).
-    ///  - BVH / bounds pre-filter (performance).
-    ///  - Advanced blend modes (additive/multiply/premultiplied).
     /// </summary>
     public sealed class DecalRenderTexture : ScriptableObject
     {
@@ -49,15 +44,24 @@ namespace UMA
         }
 
         /// <summary>
-        /// CreateDecalLayer: stamps overlay first texture into targetRT using UV islands of the hit SMR.
+        /// CreateDecalLayer: stamps an overlay's textures into all UMA-generated RenderTextures for that overlay's UMAMaterial and channels.
+        /// Each channel uses the same projected triangle set and UVs.
         /// </summary>
+        /// <param name="avatar">Target avatar used for mesh raycast and skeleton.</param>
+        /// <param name="ray">Ray to project decal from.</param>
+        /// <param name="radius">World-space radius.</param>
+        /// <param name="fudgeRadius">Extra radius to soften edges.</param>
+        /// <param name="angleDegrees">Rotation around normal in degrees.</param>
+        /// <param name="umaData">UMAData that holds generated RenderTextures.</param>
+        /// <param name="overlay">OverlayDataAsset providing per-channel source textures and UMAMaterial mapping.</param>
+        /// <param name="options">Stamping options.</param>
         public static DecalLayerResult? CreateDecalLayer(
             DynamicCharacterAvatar avatar,
             Ray ray,
             float radius,
             float fudgeRadius,
             float angleDegrees,
-            RenderTexture targetRT,
+            UMAData umaData,
             OverlayDataAsset overlay,
             DecalRTOptions options = null)
         {
@@ -67,15 +71,15 @@ namespace UMA
                 Debug.LogError("DecalRenderTexture: Avatar or UMAData null.");
                 return null;
             }
-            if (overlay == null || overlay.textureList == null || overlay.textureList.Length == 0 || overlay.textureList[0] == null)
+            if (umaData == null)
             {
-                if (options?.enableDebug == true)
-                    Debug.LogWarning("DecalRenderTexture: Overlay or first texture missing. Aborting.");
+                Debug.LogError("DecalRenderTexture: Provided UMAData is null.");
                 return null;
             }
-            if (targetRT == null)
+            if (overlay == null || overlay.textureList == null || overlay.textureList.Length == 0)
             {
-                Debug.LogError("DecalRenderTexture: Target RenderTexture is null.");
+                if (options?.enableDebug == true)
+                    Debug.LogWarning("DecalRenderTexture: Overlay missing or has no textures. Aborting.");
                 return null;
             }
             if (radius <= 0.00001f) return null;
@@ -164,7 +168,6 @@ namespace UMA
 
                     // Main UV
                     Vector2 uv = meshUV[v];
-                    // clamp to [0,1]
                     uv.x = Mathf.Clamp01(uv.x);
                     uv.y = Mathf.Clamp01(uv.y);
                     outMainUV[nv] = uv;
@@ -180,7 +183,6 @@ namespace UMA
 
                     float px = Vector3.Dot(planar, axisX);
                     float py = Vector3.Dot(planar, axisY);
-                    // Normalize by radius (NOT expanded) so circle radius=1 -> final falloff uses fudge
                     float u = (px / radius) * 0.5f + 0.5f;
                     float v2 = (py / radius) * 0.5f + 0.5f;
                     outOverlayUV[nv] = new Vector2(u, v2);
@@ -206,8 +208,125 @@ namespace UMA
                 stampMesh.uv = outMainUV;
                 stampMesh.uv2 = outOverlayUV;
                 stampMesh.colors32 = outColors;
-                stampMesh.RecalculateBounds(); // bounds should be within clip plane
-                // No normals needed; vertex shader bypasses
+                stampMesh.RecalculateBounds();
+
+                var recipe = umaData.umaRecipe;
+                // Map combined vertices to their originating SlotData
+                SlotData[] vertexSlot = null;
+                if (recipe != null && shared != null)
+                {
+                    int combinedVertexCount = shared.vertexCount;
+                    vertexSlot = new SlotData[combinedVertexCount];
+                    var slots = recipe.slotDataList;
+                    if (slots != null)
+                    {
+                        for (int si = 0; si < slots.Length; si++)
+                        {
+                            var slot = slots[si];
+                            if (slot?.asset?.meshData == null) continue;
+                            int start = slot.vertexOffset;
+                            int count = slot.asset.meshData.vertexCount;
+                            int end = start + count;
+                            if (start < 0 || end > combinedVertexCount) continue;
+                            for (int v = start; v < end; v++)
+                            {
+                                vertexSlot[v] = slot;
+                            }
+                        }
+                    }
+                }
+
+                // Collect UMAMaterials from the slots that contributed to the selected region
+                var selectedMaterials = new HashSet<UMAMaterial>();
+                if (vertexSlot != null)
+                {
+                    for (int ov = 0; ov < includedVertex.Length; ov++)
+                    {
+                        if (!includedVertex[ov]) continue;
+                        var slot = vertexSlot[ov];
+                        if (slot == null) continue;
+                        var mat = slot.material;
+                        if (mat != null)
+                        {
+                            selectedMaterials.Add(mat);
+                        }
+                    }
+                }
+
+                // Build list of generated materials that belong to the hit SMR and selected UMAMaterials
+                var targetGeneratedMaterials = new List<UMAData.GeneratedMaterial>();
+                var gms = umaData.generatedMaterials.materials;
+                for (int i = 0; i < gms.Count; i++)
+                {
+                    var gm = gms[i];
+                    if (gm == null) continue;
+                    if (gm.skinnedMeshRenderer != smr) continue;
+                    if (gm.umaMaterial == null) continue;
+                    if (selectedMaterials.Count > 0)
+                    {
+                        // Use UMA's Equals to handle cross-bundle equality
+                        foreach (var sel in selectedMaterials)
+                        {
+                            if (gm.umaMaterial.Equals(sel))
+                            {
+                                targetGeneratedMaterials.Add(gm);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: if we couldn't map slots, still target this renderer's materials
+                        targetGeneratedMaterials.Add(gm);
+                    }
+                }
+                if (targetGeneratedMaterials.Count == 0)
+                {
+                    if (options.enableDebug) Debug.LogWarning("DecalRenderTexture: No matching generated materials found on hit renderer.");
+                    UnityEngine.Object.DestroyImmediate(stampMesh);
+                    return null;
+                }
+
+                // Build per-material UV clipping rect from SlotData.UVArea (generated atlas rects)
+                var matToUVRect = new Dictionary<UMAMaterial, Rect>();
+                if (vertexSlot != null)
+                {
+                    for (int ov = 0; ov < includedVertex.Length; ov++)
+                    {
+                        if (!includedVertex[ov]) continue;
+                        var slot = vertexSlot[ov];
+                        if (slot == null) continue;
+                        var mat = slot.material;
+                        if (mat == null) continue;
+                        var r = slot.UVArea;
+                        if (matToUVRect.TryGetValue(mat, out var existing))
+                        {
+                            // Union with existing
+                            float minX = Mathf.Min(existing.xMin, r.xMin);
+                            float minY = Mathf.Min(existing.yMin, r.yMin);
+                            float maxX = Mathf.Max(existing.xMax, r.xMax);
+                            float maxY = Mathf.Max(existing.yMax, r.yMax);
+                            matToUVRect[mat] = Rect.MinMaxRect(minX, minY, maxX, maxY);
+                        }
+                        else
+                        {
+                            matToUVRect[mat] = r;
+                        }
+                    }
+                }
+
+                // Fallback UV bounds from selected vertices (if UVArea data not present)
+                float minU = 1f, minV = 1f, maxU = 0f, maxV = 0f;
+                for (int v = 0; v < outMainUV.Length; v++)
+                {
+                    float u = outMainUV[v].x;
+                    float vv = outMainUV[v].y;
+                    if (u < minU) minU = u;
+                    if (vv < minV) minV = vv;
+                    if (u > maxU) maxU = u;
+                    if (vv > maxV) maxV = vv;
+                }
+                var fallbackRect = Rect.MinMaxRect(minU, minV, maxU, maxV);
 
                 // Acquire material & shader
                 Material stampMat = GetOrCreateStampMaterial(options.forceLinearSampling);
@@ -216,37 +335,74 @@ namespace UMA
                     UnityEngine.Object.DestroyImmediate(stampMesh);
                     return null;
                 }
-                stampMat.SetTexture("_OverlayTex", overlay.textureList[0]);
-                Debug.Log("Texture name: " + overlay.textureList[0].name);
 
                 // Fudge factor for falloff: portion between radius and expanded radius
                 float fudgeFactor = (fudgeRadius <= 0f) ? 0.0001f : (fudgeRadius / (radius + fudgeRadius));
                 stampMat.SetFloat("_Fudge", fudgeFactor);
-                Debug.Log("Fudge factor: " + fudgeFactor);
+                stampMat.SetFloat("_UseUVRect", 1.0f);
 
-                // Draw into RT (alpha blend)
-                var prevRT = RenderTexture.active;
-                RenderTexture.active = targetRT;
+                // Shared draw state for stamping
+                var prevRTGlobal = RenderTexture.active;
                 GL.PushMatrix();
-                GL.LoadOrtho(); // since our vertices are in clip space, we'll treat them as already in -1..1 -> we can still use custom shader ignoring MVP
-                stampMat.SetPass(0);
-                Graphics.DrawMeshNow(stampMesh, Matrix4x4.identity);
-                GL.PopMatrix();
-                RenderTexture.active = prevRT;
+                GL.LoadOrtho();
 
-                // Optional dilation (bleed)
-                if (options.bleedPixels > 0)
+                int stampedCount = 0;
+
+                // Iterate target generated materials and stamp per channel
+                for (int mg = 0; mg < targetGeneratedMaterials.Count; mg++)
                 {
-                    Debug.Log($"DecalRenderTexture: Running dilation pass ({options.bleedPixels} pixels) to reduce mip seam artifacts.");
-                    RunDilation(targetRT, options.bleedPixels);
+                    var gm = targetGeneratedMaterials[mg];
+                    if (gm.resultingAtlasList == null) continue;
+
+                    // Choose UVRect based on this generated material's UMA material
+                    Rect clipRect;
+                    if (gm.umaMaterial != null && matToUVRect.TryGetValue(gm.umaMaterial, out var cr))
+                    {
+                        clipRect = cr;
+                    }
+                    else
+                    {
+                        clipRect = fallbackRect;
+                    }
+                    stampMat.SetVector("_UVRect", new Vector4(clipRect.xMin, clipRect.yMin, clipRect.xMax, clipRect.yMax));
+
+                    int targetChannels = gm.resultingAtlasList.Length;
+                    int sourceChannels = overlay.textureList.Length;
+                    int channels = Mathf.Min(targetChannels, sourceChannels);
+
+                    for (int ch = 0; ch < channels; ch++)
+                    {
+                        var src = overlay.textureList[ch];
+                        if (src == null) continue;
+                        var tgt = gm.resultingAtlasList[ch];
+                        if (!(tgt is RenderTexture rt)) continue;
+
+                        stampMat.SetTexture("_OverlayTex", src);
+
+                        // Draw into RT (alpha blend)
+                        RenderTexture.active = rt;
+                        stampMat.SetPass(0);
+                        Graphics.DrawMeshNow(stampMesh, Matrix4x4.identity);
+                        stampedCount++;
+
+                        // Optional dilation per RT
+                        if (options.bleedPixels > 0)
+                        {
+                            RunDilation(rt, options.bleedPixels);
+                        }
+                    }
                 }
+
+                // Restore global state
+                GL.PopMatrix();
+                RenderTexture.active = prevRTGlobal;
 
                 if (options.enableDebug)
                 {
-                    Debug.Log($"DecalRenderTexture: Stamped overlay '{overlay.name}' verts={newVertexCount} tris={outIndices.Length / 3} uvBounds={uvMin}..{uvMax}");
+                    Debug.Log($"DecalRenderTexture: Stamped overlay '{overlay.name}' on {stampedCount} target(s). Verts={newVertexCount} Tris={outIndices.Length / 3}");
                 }
 
-                result.success = true;
+                result.success = stampedCount > 0;
                 result.vertexCount = newVertexCount;
                 result.triangleCount = outIndices.Length / 3;
                 result.uvBounds = Rect.MinMaxRect(uvMin.x, uvMin.y, uvMax.x, uvMax.y);
@@ -255,7 +411,7 @@ namespace UMA
 
                 UnityEngine.Object.DestroyImmediate(stampMesh);
 
-                return result;
+                return result.success ? result : (DecalLayerResult?)null;
             }
             finally
             {
@@ -309,7 +465,6 @@ namespace UMA
                 Vector3 rd = ray.direction;
                 int triCount = tris.Length / 3;
 
-                // TODO (Perf) insert bounding check here.
                 for (int t = 0; t < triCount; t++)
                 {
                     int i0 = tris[t * 3 + 0];
@@ -480,7 +635,6 @@ namespace UMA
         #region Materials & Shaders
         private static Material GetOrCreateStampMaterial(bool forceLinear)
         {
-            // Try to find pre-existing shader
             Shader stampShader = Shader.Find("Hidden/UMA/DecalRTStamp");
             if (stampShader == null)
             {

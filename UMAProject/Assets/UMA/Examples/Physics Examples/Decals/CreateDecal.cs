@@ -146,7 +146,7 @@ public class CreateDecal : MonoBehaviour
         float normX = dx / Mathf.Max(1f, Screen.width);
         float normY = dy / Mathf.Max(1f, Screen.height);
 
-        _yaw += normX * OrbitSensitivityX * Time.deltaTime * Screen.width;   // scale back by width to keep same overall sensitivity
+        _yaw += normX * OrbitSensitivityX * Time.deltaTime * Screen.width;   // scale back to keep same overall sensitivity
         _pitch -= normY * OrbitSensitivityY * Time.deltaTime * Screen.height;
 
         _pitch = Mathf.Clamp(_pitch, MinPitch, MaxPitch);
@@ -250,53 +250,27 @@ public class CreateDecal : MonoBehaviour
                 bleedPixels = decalRTDilation
             };
 
-            SkinnedMeshRenderer smr = Avatar.GetComponentInChildren<SkinnedMeshRenderer>();
-            if (smr == null)
+            if (Avatar.umaData == null)
             {
-                Debug.LogWarning("No SkinnedMeshRenderer found on avatar.");
+                Debug.LogWarning("UMAData not ready on avatar.");
                 return;
             }
-            Debug.Log("Using SkinnedMeshRenderer: " + smr.name);
 
-
-            Material m = smr.sharedMaterial;
-            var maintexName = TextureDecalOverlay.material.GetTexturePropertyNames().Count > 0 ? TextureDecalOverlay.material.GetTexturePropertyNames()[0] : "_BaseMap";
-            Debug.Log("Using main texture property name: " + maintexName);
-
-            var rt = m.mainTexture;
-            if (m.HasProperty(maintexName) && m.GetTexture(maintexName) != null)
-            {
-                Debug.Log("Found main texture on property: " + maintexName);
-                rt = m.GetTexture(maintexName);
-            }
-            if (rt == null)
-            {
-                                Debug.LogWarning("Could not determine main texture for avatar material.");
-                return;
-            }
-            if (! (rt is RenderTexture))
-            {
-                Debug.LogWarning("Avatar main texture is not Texture2D or RenderTexture, unsupported.");
-                return;
-            }
-            Debug.Log("Using avatar main texture: " + rt.name + " (" + rt.width + "x" + rt.height + ")");
             var result = DecalRenderTexture.CreateDecalLayer(
                 Avatar,
                 ray,
                 radius: DecalRadius,
                 fudgeRadius: fudgeRadius,
                 angleDegrees: DecalRotationDegrees,
-                targetRT: rt as RenderTexture,
+                umaData: Avatar.umaData,
                 overlay: TextureDecalOverlay,
                 options: options
             );
 
             if (result.HasValue && result.Value.success)
             {
-                //Debug.Log("Decal stamped. UV rect: " + result.Value.uvBounds);
-                // Store reference in avatar / materials as needed.
+                // Stamped
             }
-
         }
     }
 
