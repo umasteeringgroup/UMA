@@ -190,8 +190,8 @@ namespace UMA
                 var includedVertex = new bool[combinedVertexCount];
                 var includedTriangles = new List<int>(2048);
 
-                // Use cylinder selection along the ray direction; projection for UVs can still use hit normal
-                Vector3 selectionDirWorld = rayDirWorld;
+                // Use cylinder selection along the chosen direction (ray by default, hit normal when requested)
+                Vector3 selectionDirWorld = options.useHitNormalForProjection ? -hitNormalWorld : rayDirWorld;
                 float depth = Mathf.Max(options.cylinderDepth, 1e-5f);
                 // Start a little behind the hit to handle surface bumpiness
                 float backOffset = options.backOffset >= 0f ? options.backOffset : Mathf.Max(1e-4f, Mathf.Min(fudgeRadius, expandedRadius * 0.25f));
@@ -206,9 +206,12 @@ namespace UMA
                 DrawSelectionCylinderGizmo(gizmoC0, gizmoC1, expandedRadius, options.enableDebug ? 6f : 3f);
 #endif
 
+                // Facing cull uses face normal when projecting with hit normal; otherwise use ray
+                Vector3 facingDirWorld = options.useHitNormalForProjection ? -hitNormalWorld : rayDirWorld;
+
                 SelectTriangles(triIndices, bakedVertsLocal, t,
-                                selectionDirWorld, // selection axis is the ray
-                                rayDirWorld,        // facing cull direction stays the ray
+                                selectionDirWorld, // selection axis
+                                facingDirWorld,     // facing cull direction
                                 hitPointWorld, expandedRadius, depth, backOffset,
                                 options.facingThreshold, includedTriangles, includedVertex, options.enableDebug);
 

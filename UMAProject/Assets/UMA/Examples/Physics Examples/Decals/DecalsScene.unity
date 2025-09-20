@@ -2973,7 +2973,7 @@ MonoBehaviour:
   Avatar: {fileID: 655638726778137636}
   MeshDecalOverlay: {fileID: 11400000, guid: e75971b608087764e9b350107b1266a9, type: 2}
   TextureDecalOverlay: {fileID: 11400000, guid: af89317529518d44bb1f250e44441d02, type: 2}
-  decalMethod: 1
+  decalMethod: 0
   DecalRadius: 0.04
   fudgeRadius: 0.01
   DecalRotationDegrees: 0
