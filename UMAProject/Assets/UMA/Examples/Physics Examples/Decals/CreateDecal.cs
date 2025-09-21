@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Runtime helper to orbit a camera around an UMA avatar and place decal slots on left click.
@@ -546,6 +547,10 @@ public class CreateDecal : MonoBehaviour
         if (!Input.GetMouseButtonDown(PlaceMouseButton))
             return;
 
+        // Do not place decals when clicking over UI (uGUI or this window area)
+        if (IsPointerOverUI())
+            return;
+
         if (MeshDecalOverlay == null || MeshDecalOverlay.material == null)
         {
             Debug.LogWarning("DecalOverlay or its UMAMaterial is missing. Cannot place decal.");
@@ -916,5 +921,41 @@ public class CreateDecal : MonoBehaviour
         _undo.Push(new HashSet<int>(_selectedOrdinals));
         _selectedOrdinals.Clear();
         foreach (var s in state) _selectedOrdinals.Add(s);
+    }
+
+    // Returns true if the current pointer is over any UI element (uGUI) or inside this script's IMGUI panel.
+    private bool IsPointerOverUI()
+    {
+        // Check uGUI (EventSystem)
+        if (EventSystem.current != null)
+        {
+            // Mouse
+            if (EventSystem.current.IsPointerOverGameObject())
+                return true;
+
+#if (UNITY_IOS || UNITY_ANDROID)
+            // Touches
+            if (Input.touchCount > 0)
+            {
+                for (int i = 0; i < Input.touchCount; i++)
+                {
+                    if (EventSystem.current.IsPointerOverGameObject(Input.touches[i].fingerId))
+                        return true;
+                }
+            }
+#endif
+        }
+
+        // Check IMGUI area used by this component
+        Vector2 mp = Input.mousePosition;
+        Vector2 guiPos = new Vector2(mp.x, Screen.height - mp.y); // convert to IMGUI coords (top-left origin)
+        if (ScreenArea.Contains(guiPos))
+            return true;
+
+        // If any IMGUI control currently has the mouse captured
+        if (GUIUtility.hotControl != 0)
+            return true;
+
+        return false;
     }
 }

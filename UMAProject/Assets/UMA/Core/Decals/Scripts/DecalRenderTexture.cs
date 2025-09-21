@@ -55,6 +55,7 @@ namespace UMA
         private static Dictionary<int, int> _dbgTriToOrdinal;
 
         // Lightweight logging helpers
+        [System.Diagnostics.Conditional("UMA_DECALRT_VERBOSE")]
         private static void LogInfo(string msg)
         {
             if (Debug.isDebugBuild) Debug.Log("[DecalRT] " + msg);
@@ -541,7 +542,8 @@ namespace UMA
 
                 // Cache last stamp asset for later save/restore
                 _lastStamp = result.success ? stampAsset : null;
-                Debug.Log($"DecalRenderTexture: Created DecalRTStampAsset with {stampAsset.slots.Count} slot entries. lastStamp: {_lastStamp}");
+                if (options.enableDebug)
+                    LogInfo($"DecalRenderTexture: Created DecalRTStampAsset with {stampAsset.slots.Count} slot entries. lastStamp: {_lastStamp}");
 
                 return result.success ? result : (DecalLayerResult?)null;
             }

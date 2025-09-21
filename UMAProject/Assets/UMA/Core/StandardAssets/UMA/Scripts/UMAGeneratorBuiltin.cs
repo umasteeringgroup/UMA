@@ -351,8 +351,6 @@ namespace UMA
 
         public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
-            Debug.Log("GenerateSingleUMA");
-
 #if DEBUG_TIMING
             System.Diagnostics.Stopwatch gstopWatch = System.Diagnostics.Stopwatch.StartNew();
             gstopWatch.Start();

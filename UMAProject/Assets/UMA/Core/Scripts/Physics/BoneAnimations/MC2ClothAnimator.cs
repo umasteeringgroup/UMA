@@ -24,10 +24,8 @@ namespace UMA
             UMA.CustomAssetUtility.CreateAsset<MC2ClothAnimator>();
         }
 #endif
+        
         [Header("General Settings")]
-        [Tooltip("Add the Renderer name")]
-        public string RendererName;
-
         [SerializeField]
         [Tooltip("Provide the MC2 paint-map texture. Fixed(Red) Move(Green) Ignore(Black)")]
         private Texture2D MC_PaintMap;
@@ -37,14 +35,22 @@ namespace UMA
         private TextAsset presetFile;
 
         private GameObject MC_MeshGO;
+        private string RendererName;
 #if MAGICACLOTH2
-    private MagicaCloth c_cloth;
+        private MagicaCloth c_cloth;
 #endif
         public override void Initialize(UMAData umaData, SlotData sd)
         {
-            if (MC_PaintMap == null || RendererName == null)
+            if (MC_PaintMap == null)
             {
-                Debug.LogError("No paint-map or RendererName set. Please set them in the inspector.");
+                Debug.LogError("No paint-map set. Please set it in the inspector.");
+                return;
+            }
+
+            if (sd.rendererAsset.RendererName != null) RendererName = sd.rendererAsset.RendererName;
+            else
+            {
+                Debug.LogError("No Renderer found in the SlotData. Please assign a Renderer to the Slot");
                 return;
             }
 
@@ -69,8 +75,8 @@ namespace UMA
         c_cloth = MC_MeshGO.GetComponent<MagicaCloth>();
         if (c_cloth != null)
         {
-            Debug.Log("MagicaCloth component already exists on the GameObject.");
-            return;
+            //We need to destroy the existing component and add a new one for properly initializing it.
+            DestroyImmediate(c_cloth);
         }
 
         // Add MagicaCloth component to the GameObject
