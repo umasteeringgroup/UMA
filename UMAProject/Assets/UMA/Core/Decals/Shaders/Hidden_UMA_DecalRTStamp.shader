@@ -15,11 +15,13 @@ Shader "Hidden/UMA/DecalRTStamp"
         #pragma target 3.0
         #include "UnityCG.cginc"
 
-        UNITY_DECLARE_TEX2D(_OverlayTex);
+    UNITY_DECLARE_TEX2D(_OverlayTex);
+    UNITY_DECLARE_TEX2D(_MaskTex);
         float _Fudge;        // reserved
         float _ForceLinear;  // reserved
         float4 _UVRect;     // x=minx, y=miny, z=maxx, w=maxy
         float _UseUVRect;   // 0/1 toggle
+    float _UseMask;     // 0/1 toggle
 
         struct appdata
         {
@@ -57,6 +59,13 @@ Shader "Hidden/UMA/DecalRTStamp"
 
             float2 uv = clamp(i.overlayUV, 0.0, 1.0);
             fixed4 c = UNITY_SAMPLE_TEX2D(_OverlayTex, uv);
+
+            // Apply global coverage mask (from overlay.textureList[0] alpha or explicit mask)
+            if (_UseMask > 0.5)
+            {
+                fixed ma = UNITY_SAMPLE_TEX2D(_MaskTex, uv).a;
+                c.a *= ma;
+            }
 
             // If needed, enable linearization:
             // if (_ForceLinear > 0.5) c.rgb = GammaToLinearSpace(c.rgb);

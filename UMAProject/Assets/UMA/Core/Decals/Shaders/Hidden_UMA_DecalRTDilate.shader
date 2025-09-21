@@ -3,6 +3,8 @@ Shader "Hidden/UMA/DecalRTDilate"
     Properties
     {
         _Radius("Dilation Radius (px, 0-16)", Range(0,16)) = 2
+        [Toggle]_PreserveAlpha("Preserve Original Alpha", Float) = 1
+        _MinNeighborAlpha("Min Neighbor Alpha", Range(0,1)) = 0.10
     }
     SubShader 
     { 
@@ -21,6 +23,8 @@ Shader "Hidden/UMA/DecalRTDilate"
             UNITY_DECLARE_TEX2D(_MainTex);
             float4 _MainTex_TexelSize; // x=1/w, y=1/h (y can be negative depending on RT flip)
             float _Radius;             // dilation radius in pixels (0..16)
+            float _PreserveAlpha;      // 0/1: keep original alpha
+            float _MinNeighborAlpha;   // threshold for considering a neighbor valid
 
             struct v2f {
                 float4 pos : SV_POSITION;
@@ -61,7 +65,8 @@ Shader "Hidden/UMA/DecalRTDilate"
             // Compare by alpha, keep the color with higher alpha
             inline void KeepBestAlpha(in fixed4 candidate, inout fixed4 best)
             {
-                if (candidate.a > best.a) best = candidate;
+                // Only consider neighbors with enough coverage to be meaningful
+                if (candidate.a >= _MinNeighborAlpha && candidate.a > best.a) best = candidate;
             }
 
             fixed4 frag(v2f i) : SV_Target
@@ -69,6 +74,9 @@ Shader "Hidden/UMA/DecalRTDilate"
                 fixed4 baseCol = SampleClamp(i.uv);
                 // Early out if already fully opaque
                 if (baseCol.a >= 0.99) return baseCol;
+
+                // Remember original alpha to optionally preserve coverage
+                float origA = baseCol.a;
 
                 // Magnitudes (positive) for pixel step in UV units
                 float2 stepX = float2(_MainTex_TexelSize.x, 0.0);
@@ -104,9 +112,13 @@ Shader "Hidden/UMA/DecalRTDilate"
                 // (keeps soft interiors soft)
                 if (best.a > baseCol.a)
                 {
-                    float k = 1.0 - baseCol.a;
+                    float k = saturate(1.0 - baseCol.a);
                     baseCol.rgb = lerp(baseCol.rgb, best.rgb, k);
-                    baseCol.a = max(baseCol.a, best.a);
+                    // Optionally preserve alpha to avoid expanding decal coverage
+                    if (_PreserveAlpha > 0.5)
+                        baseCol.a = origA;
+                    else
+                        baseCol.a = max(baseCol.a, best.a);
                 }
                 return baseCol;
             }

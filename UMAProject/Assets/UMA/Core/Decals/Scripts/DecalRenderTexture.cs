@@ -315,6 +315,19 @@ namespace UMA
                 stampMat.SetFloat("_Fudge", fudgeFactor);
                 stampMat.SetFloat("_UseUVRect", 1.0f);
 
+                // Bind a global mask to gate coverage for all channels: prefer overlay.alphaMask, else overlay.textureList[0].a
+                Texture maskTex = null;
+                try { if (overlay.alphaMask != null) maskTex = overlay.alphaMask; } catch { }
+                if (maskTex == null && overlay.textureList != null && overlay.textureList.Length > 0)
+                {
+                    maskTex = overlay.textureList[0];
+                }
+                stampMat.SetFloat("_UseMask", maskTex != null ? 1f : 0f);
+                if (maskTex != null)
+                {
+                    stampMat.SetTexture("_MaskTex", maskTex);
+                }
+
                 // Prepare Stamp Asset cache
                 var stampAsset = ScriptableObject.CreateInstance<DecalRTStampAsset>();
                 stampAsset.overlayName = overlay.overlayName; // use overlay.overlayName for restore
@@ -508,6 +521,12 @@ namespace UMA
                 GL.PopMatrix();
                 RenderTexture.active = prevRTGlobal;
 
+                // Destroy temp stamp material
+                if (Application.isPlaying)
+                    UnityEngine.Object.Destroy(stampMat);
+                else
+                    UnityEngine.Object.DestroyImmediate(stampMat);
+
                 if (options.enableDebug)
                 {
                     LogInfo($"DecalRenderTexture: Stamped overlay '{overlay.overlayName}' on {stampedCount} target(s). UVRect clipping per slot.");
@@ -578,6 +597,19 @@ namespace UMA
             if (stampMat == null) return false;
             stampMat.SetFloat("_Fudge", 0.0001f); // minimal edge smoothing
             stampMat.SetFloat("_UseUVRect", 1.0f);
+
+            // Bind a global mask for all channels on replay: prefer overlay.alphaMask, else overlay.textureList[0].a
+            Texture maskTex = null;
+            try { if (overlay.alphaMask != null) maskTex = overlay.alphaMask; } catch { }
+            if (maskTex == null && overlay.textureList != null && overlay.textureList.Length > 0)
+            {
+                maskTex = overlay.textureList[0];
+            }
+            stampMat.SetFloat("_UseMask", maskTex != null ? 1f : 0f);
+            if (maskTex != null)
+            {
+                stampMat.SetTexture("_MaskTex", maskTex);
+            }
 
             var prevRTGlobal = RenderTexture.active;
             GL.PushMatrix();
@@ -750,6 +782,12 @@ namespace UMA
 
             GL.PopMatrix();
             RenderTexture.active = prevRTGlobal;
+
+            // Destroy temp stamp material
+            if (Application.isPlaying)
+                UnityEngine.Object.Destroy(stampMat);
+            else
+                UnityEngine.Object.DestroyImmediate(stampMat);
 
             if (totalStamped == 0)
             {
@@ -1201,6 +1239,9 @@ namespace UMA
                 return;
             }
             var mat = new Material(dilateShader) { name = "DecalRT_DilateMat" };
+            // Preserve alpha by default; use a small neighbor alpha threshold to avoid smearing from extremely faint samples
+            mat.SetFloat("_PreserveAlpha", 1.0f);
+            mat.SetFloat("_MinNeighborAlpha", 0.1f);
 
             // Use the new radius parameter to reduce passes. Max radius per pass is 16.
             int remaining = Mathf.Max(0, bleedPixels);
@@ -1216,7 +1257,10 @@ namespace UMA
 
                 remaining -= step;
             }
-            UnityEngine.Object.DestroyImmediate(mat);
+            if (Application.isPlaying)
+                UnityEngine.Object.Destroy(mat);
+            else
+                UnityEngine.Object.DestroyImmediate(mat);
         }
         #endregion
     }
