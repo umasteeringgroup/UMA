@@ -39,11 +39,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 56810f26d68fc524a819c376a3297d39, type: 3}
+        m_Texture: {fileID: 2800000, guid: c8c1232c65fae1c4c8e4f19ceb14542b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: c67ba9914027dbd40a6fb0388c6c1f98, type: 3}
+        m_Texture: {fileID: 2800000, guid: 7af57f4730b581f40acbc747d0f4b683, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -67,7 +67,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: ce84ac6354b628f4389fb7327538e10b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -129,7 +129,7 @@ Material:
     - _RimLightPower: 4
     - _RimLightingModulation: 0
     - _Smoothness: 0.5
-    - _SmoothnessModulation: 1
+    - _SmoothnessModulation: 1.537
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
