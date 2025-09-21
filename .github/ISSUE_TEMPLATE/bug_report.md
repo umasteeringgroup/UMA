@@ -1,16 +1,33 @@
 ---
-name: Test
-about: Used as a sub-issue for a task that needs testing
+name: Bug report
+about: Create a report to help us improve
 title: ''
-labels: Test
+labels: bug
 assignees: ''
 
 ---
-**Requirements**
-What you need to have setup/enabled to test this.
 
-**How to test**
-A clear and concise description of how to validate that this is fixed.
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**Environment (please complete the following information):**
+ - Unity Version:
+ - UMA Version:
+ - Rendering Pipeline:
+ - Platform Build (if not editor):
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
 
 **Additional context**
-Add any other context here.
+Add any other context about the problem here.
