@@ -171,7 +171,7 @@ Material:
     - __dirty: 1
     m_Colors:
     - _BaseColor: {r: 0.49056602, g: 0.29511556, b: 0.22677104, a: 1}
-    - _Color: {r: 0.7264151, g: 0.57967776, b: 0.500267, a: 1}
+    - _Color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _HairTint: {r: 1, g: 1, b: 1, a: 1}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}

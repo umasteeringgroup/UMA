@@ -33,12 +33,6 @@ MonoBehaviour:
   wardrobeSlot: Helmet
   Appended: 0
   Hides:
-  - MaleTorso
-  - MaleLegs
-  - FR_High_MaleEyes
-  - FemaleEyelashfix
-  - FemaleFeet
-  - FemaleTorso
   - Bowler
   - Bottoms_Female_Hot_Pants_1
   HideTags:
