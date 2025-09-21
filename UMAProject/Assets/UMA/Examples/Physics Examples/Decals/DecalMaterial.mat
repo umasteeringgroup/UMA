@@ -97,14 +97,14 @@ Material:
     m_Ints: []
     m_Floats:
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0.5
+    - _AlphaClip: 0.059
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
-    - _ColorModulation: 1
+    - _ColorModulation: 1.9
     - _Cull: 2
     - _CullMode: 2
     - _Cutoff: 0.5
@@ -117,19 +117,19 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _HalfLambertStrength: 1
+    - _HalfLambertStrength: 1.49
     - _Metallic: 0
-    - _MetallicModulation: 1
+    - _MetallicModulation: 0
     - _NormalStrength: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueControl: -1
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _RimLightPower: 4
+    - _RimLightPower: 5.16
     - _RimLightingModulation: 0
     - _Smoothness: 0.5
-    - _SmoothnessModulation: 1.537
+    - _SmoothnessModulation: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
