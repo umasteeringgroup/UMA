@@ -482,7 +482,7 @@ namespace UMA.CharacterSystem
                 SwapSlots.Clear();
                 WildCards.Clear();
                 NewSlots.Clear();
-                // MeshHideDictionary: we do NOT Clear() each time – we reuse list instances if contents identical.
+                // MeshHideDictionary: we do NOT Clear() each time ï¿½ we reuse list instances if contents identical.
             }
         }
 
@@ -763,7 +763,7 @@ namespace UMA.CharacterSystem
                 foreach (var s in forceRemovedTags)             h = h * 31 + s.GetHashCode();
                 foreach (var s in forceSuppressSlotsContaining) h = h * 31 + s.GetHashCode();
 
-                // Cross compat influence (rare; only when present) – we re-add when discovered but if race rarely changes
+                // Cross compat influence (rare; only when present) ï¿½ we re-add when discovered but if race rarely changes
                 return h;
             }
         }
@@ -4467,7 +4467,7 @@ namespace UMA.CharacterSystem
 #endif
             ;
 #if DCA_OPTIMIZED
-            // Early out if wardrobe identical & race same & no overrideDNA (and we are allowed to restore DNA) – skip heavy collection phase
+            // Early out if wardrobe identical & race same & no overrideDNA (and we are allowed to restore DNA) ï¿½ skip heavy collection phase
             int wardrobeHash = ComputeWardrobeHash();
             bool wardrobeUnchanged = (wardrobeHash == cache.LastWardrobeHash) && cache.LastRaceName == activeRace.name;
 
@@ -4524,11 +4524,11 @@ namespace UMA.CharacterSystem
                 new List<UMAWardrobeRecipe>()
 #endif
             ;
-            List<UMARecipeBase> WardrobeRecipes =
+            List<UMATextRecipe> WardrobeRecipes =
 #if DCA_OPTIMIZED
                 scratch.Recipes
 #else
-                new List<UMARecipeBase>()
+                new List<UMATextRecipe>()
 #endif
             ;
             List<string> SuppressSlotsStrings =
@@ -4606,25 +4606,7 @@ namespace UMA.CharacterSystem
                     if (utr.HideTags.Count > 0)
                         HideTags.AddRange(utr.HideTags);
 
-                    if (utr.MeshHideAssets != null)
-                    {
-                        for (int mh = 0; mh < utr.MeshHideAssets.Count; mh++)
-                        {
-                            var meshHide = utr.MeshHideAssets[mh];
-                            if (meshHide == null) continue;
-                            var slotName = meshHide.AssetSlotName;
-                            if (!MeshHideDictionary.TryGetValue(slotName, out var list))
-                            {
-                                list = new List<MeshHideAsset>(4);
-                                MeshHideDictionary[slotName] = list;
-                            }
-                            // avoid duplicates
-                            bool exists = false;
-                            for (int e = 0; e < list.Count; e++)
-                                if (list[e] == meshHide) { exists = true; break; }
-                            if (!exists) list.Add(meshHide);
-                        }
-                    }
+
                 }
 
                 SuppressedRecipes.Clear();
@@ -4760,6 +4742,35 @@ namespace UMA.CharacterSystem
 #endif
         }
 
+        private static void ProcessMeshHides(Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<UMATextRecipe> allRecipes)
+        {
+            for (int i = 0; i < allRecipes.Count; i++)
+            {
+                var utr = allRecipes[i];
+                if (utr == null || utr.disabled) continue;
+
+                if (utr.MeshHideAssets != null)
+                {
+                    for (int mh = 0; mh < utr.MeshHideAssets.Count; mh++)
+                    {
+                        var meshHide = utr.MeshHideAssets[mh];
+                        if (meshHide == null) continue;
+                        var slotName = meshHide.AssetSlotName;
+                        if (!MeshHideDictionary.TryGetValue(slotName, out var list))
+                        {
+                            list = new List<MeshHideAsset>(4);
+                            MeshHideDictionary[slotName] = list;
+                        }
+                        // avoid duplicates
+                        bool exists = false;
+                        for (int e = 0; e < list.Count; e++)
+                            if (list[e] == meshHide) { exists = true; break; }
+                        if (!exists) list.Add(meshHide);
+                    }
+                }
+            }
+        }
+
         public void SetAndSaveOverrideDNA(UMAData udata)
         {
             //Debug.Log("Setting and saving override DNA");
@@ -4808,7 +4819,7 @@ namespace UMA.CharacterSystem
         {
             public UMARecipeBase _umaRecipe;
             public List<UMAWardrobeRecipe> _Replaces;
-            public List<UMARecipeBase> _umaAdditionalSerializedRecipes;
+            public List<UMATextRecipe> _umaAdditionalSerializedRecipes;
             public UMARecipeBase[] _AdditionalRecipes;
             public List<string> _hiddenSlots;
             public bool _restoreDNA;
@@ -4816,7 +4827,7 @@ namespace UMA.CharacterSystem
             public Dictionary<string, List<MeshHideAsset>> _MeshHideDictionary;
             public List<string> _HideTags;
 
-            public BuildSave(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA)
+            public BuildSave(UMARecipeBase umaRecipe, List<UMAWardrobeRecipe> Replaces, List<UMATextRecipe> umaAdditionalSerializedRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA)
             {
                 _umaRecipe = umaRecipe;
                 _Replaces = Replaces;
@@ -4943,7 +4954,7 @@ namespace UMA.CharacterSystem
         /// <param name="Replaces"></param>
         /// <param name="wardrobeRecipes"></param>
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
-        private void LoadCharacter(UMARecipeBase baseRaceRecipe, List<UMAWardrobeRecipe> Replaces, List<UMARecipeBase> wardrobeRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
+        private void LoadCharacter(UMARecipeBase baseRaceRecipe, List<UMAWardrobeRecipe> Replaces, List<UMATextRecipe> wardrobeRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
         {
 #if UMA_DCA_TIMING
             Stopwatch sw = Stopwatch.StartNew();
@@ -5054,6 +5065,7 @@ namespace UMA.CharacterSystem
 
             // Rebuild MeshHide masks based on the current wardrobe and MeshHideDictionary.
             // This clears stale masks when recipes are removed and applies current masks per slot.
+            ProcessMeshHides(MeshHideDictionary, wardrobeRecipes);
             umaRecipe.UpdateMeshHideMasks();
 
             List<SlotData> smooshSlots = new List<SlotData>();
@@ -5599,7 +5611,7 @@ namespace UMA.CharacterSystem
 
 
 
-        public void AddWardrobeRecipes(List<UMARecipeBase> wardrobeRecipes)
+        public void AddWardrobeRecipes(List<UMATextRecipe> wardrobeRecipes)
         {
             if (wardrobeRecipes != null)
             {

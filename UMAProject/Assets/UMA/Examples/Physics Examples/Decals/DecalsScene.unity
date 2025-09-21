@@ -2974,21 +2974,24 @@ MonoBehaviour:
   MeshDecalOverlay: {fileID: 11400000, guid: e75971b608087764e9b350107b1266a9, type: 2}
   TextureDecalOverlay: {fileID: 11400000, guid: af89317529518d44bb1f250e44441d02, type: 2}
   decalMethod: 0
-  DecalRadius: 0.04
+  DecalRadius: 0.1
   fudgeRadius: 0.01
   DecalRotationDegrees: 0
   useHitNormalForProjection: 1
   randomizeRotation: 0
   slotOffset: 3000
   decalRTDilation: 16
+  EnableTriangleDebug: 0
+  PauseAvatarAnimation: 0
   OrbitOffset: {x: 0, y: 1, z: 0}
   OrbitSensitivityX: 180
   OrbitSensitivityY: 120
   MinPitch: -80
   MaxPitch: 80
-  ZoomSensitivity: 2
-  MinDistance: 2
-  MaxDistance: 10
+  ZoomSensitivity: 1
+  MinDistance: 1
+  MaxDistance: 6
+  PanSensitivityY: 1.5
   OrbitMouseButton: 1
   PlaceMouseButton: 0
 --- !u!4 &1070496451
