@@ -843,8 +843,9 @@ namespace UMA
 		public event Action<UMAData> OnAnimatorStateSaved { add { if (AnimatorStateSaved == null) { AnimatorStateSaved = new UMADataEvent(); } AnimatorStateSaved.AddAction(value); } remove { if (AnimatorStateSaved == null) { return; } AnimatorStateSaved.RemoveAction(value); } }
 		public event Action<UMAData> OnAnimatorStateRestored { add { if (AnimatorStateRestored == null) { AnimatorStateRestored = new UMADataEvent(); } AnimatorStateRestored.AddAction(value); } remove { if (AnimatorStateRestored == null) { return; } AnimatorStateRestored.RemoveAction(value); } }
 		public event Action<UMAData> OnPreUpdateUMABody { add { if(PreUpdateUMABody == null) { PreUpdateUMABody = new UMADataEvent(); } PreUpdateUMABody.AddAction(value); } remove { if (PreUpdateUMABody == null) { return; } PreUpdateUMABody.RemoveAction(value); } } //VES added
+		public event Action<UMAData, TextureEventParms> OnAtlasUpdated { add { if (AtlasUpdated == null) { AtlasUpdated = new UMATextureEvent(); } AtlasUpdated.AddAction(value); } remove { if (AtlasUpdated == null) { return; } AtlasUpdated.RemoveAction(value); } }
 
-		public UMADataEvent CharacterCreated;
+        public UMADataEvent CharacterCreated;
 		public UMADataEvent CharacterDestroyed;
 		public UMADataEvent CharacterUpdated;
 		public UMADataEvent CharacterBeforeUpdated;
@@ -854,6 +855,7 @@ namespace UMA
 		public UMADataEvent AnimatorStateSaved;
 		public UMADataEvent AnimatorStateRestored;
 		public UMADataEvent PreUpdateUMABody;
+		public UMATextureEvent AtlasUpdated;
 
 		public GameObject umaRoot;
 
@@ -1107,18 +1109,18 @@ namespace UMA
 			public Color baseColor;
 			public UMAMaterial umaMaterial;
 			public Rect[] rects;
-			public textureData[] overlays;
-			public Color32[] overlayColors;
+			public textureData[] AdditionalOverlays; // additional overlays to blend on top of the base overlay
+            public Color32[] overlayColors;
 			public Color[][] channelMask;
 			public Color[][] channelAdditiveMask;
 			public SlotData slotData;
-			public OverlayData[] overlayData;
+			public OverlayData[] overlayData; 
 			public Rect atlasRegion;
 			public bool isRectShared;
 			public bool isNoTextures;
-			public List<OverlayData> overlayList;
-			public MaterialFragment rectFragment;
-			public textureData baseOverlay;
+			public List<OverlayData> overlayList; // all overlays on slot (base overlay + additional overlays)
+            public MaterialFragment rectFragment;
+			public textureData baseOverlay;       // the base overlay for this fragment
             public int baseVertexInMesh;
 			public List<Dictionary<int, Texture>> overrides = new List<Dictionary<int,Texture>>();
 
@@ -2462,12 +2464,20 @@ namespace UMA
 			}
 		}
 
+		public void FireAtlasUpdatedEvent(TextureEventParms tp)
+		{
+			if (AtlasUpdated != null)
+			{
+				AtlasUpdated.Invoke(this,tp);
+            }
+        }
 
-		/// <summary>
-		/// Fire the Animator State Saved event.
-		/// This happens before the Animator State is saved.
-		/// </summary>
-		public void FireAnimatorStateSavedEvent()
+
+        /// <summary>
+        /// Fire the Animator State Saved event.
+        /// This happens before the Animator State is saved.
+        /// </summary>
+        public void FireAnimatorStateSavedEvent()
 		{
 			if (AnimatorStateSaved != null)
 			{

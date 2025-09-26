@@ -1417,6 +1417,17 @@ namespace UMA.CharacterSystem
                 UMATextRecipe utr = UMAAssetIndexer.Instance.GetRecipe(s, false);
                 if (utr != null)
                 {
+                    UMAWardrobeRecipe uwr = utr as UMAWardrobeRecipe;
+                    string wardrobeSlot = utr.wardrobeSlot;
+                    if (!string.IsNullOrEmpty(wardrobeSlot) && uwr != null)
+                    {
+                        if (_wardrobeRecipes.ContainsKey(wardrobeSlot))
+                        {
+                            AppendWearableItem(uwr);
+                            continue;
+                        }
+                        // drop through to add it if not appended
+                    }
                     SetSlot(utr);
                 }
             }

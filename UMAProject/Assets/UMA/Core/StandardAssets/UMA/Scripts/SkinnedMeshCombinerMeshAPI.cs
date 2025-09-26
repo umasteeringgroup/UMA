@@ -562,10 +562,6 @@ namespace UMA
             int[] sourceVertexOffsets,
             int vertexCount)
         {
-            if (vertexCount == 8192)
-            {
-                Debug.Break();
-            }
             if (meta == null || vertexCount <= 0 || mesh == null) return;
 
             foreach (var kv in meta)
@@ -577,10 +573,10 @@ namespace UMA
                 for (int f = 0; f < info.frameCount; f++)
                 {
                     var pool = ArrayPool<Vector3>.Shared;
-
+                    Vector3[] dv;
                     // Always rent full-size vertex arrays for vertices.
 #if UMA_UNSAFE
-                    Vector3[] dv = pool.Rent(vertexCount);
+                    dv = pool.Rent(vertexCount);
                     Array.Clear(dv, 0, vertexCount);
 
                     // Only rent normal/tangent buffers if required. Keep original references so we only return pooled arrays.
@@ -808,11 +804,18 @@ namespace UMA
             var dstPtr = (UV23*)((byte*)NativeArrayUnsafeUtility.GetUnsafePtr(dst) + dstStart * UnsafeUtility.SizeOf<UV23>());
             bool u2Valid = hasUV2 && uv2 != null && uv2.Length >= count; bool u3Valid = hasUV3 && uv3 != null && uv3.Length >= count; for (int i = 0; i < count; i++) { dstPtr[i].uv2 = u2Valid ? uv2[i] : default; dstPtr[i].uv3 = u3Valid ? uv3[i] : default; }
         }
-#endif
         [BurstCompile] private struct CopyIndicesJobInt : IJob { [ReadOnly] public NativeArray<int> Src; [NativeDisableContainerSafetyRestriction] public NativeArray<int> Dst; public int DstStart; public int Add; public void Execute() { for (int i = 0; i < Src.Length; i++) Dst[DstStart + i] = Src[i] + Add; } }
         [BurstCompile] private struct CopyIndicesJobU16 : IJob { [ReadOnly] public NativeArray<int> Src; [NativeDisableContainerSafetyRestriction] public NativeArray<ushort> Dst; public int DstStart; public ushort Add; public void Execute() { for (int i = 0; i < Src.Length; i++) Dst[DstStart + i] = (ushort)(Src[i] + Add); } }
         [BurstCompile] private struct MaskedCopyIndicesJobInt : IJob { [ReadOnly] public NativeArray<int> Src; [ReadOnly, DeallocateOnJobCompletion] public NativeArray<byte> Mask; [NativeDisableContainerSafetyRestriction] public NativeArray<int> Dst; public int DstStart; public int Add; public void Execute() { int dst = DstStart; for (int t = 0; t < Mask.Length; t++) { if (Mask[t] != 0) continue; int i3 = t * 3; Dst[dst++] = Src[i3] + Add; Dst[dst++] = Src[i3 + 1] + Add; Dst[dst++] = Src[i3 + 2] + Add; } } }
         [BurstCompile] private struct MaskedCopyIndicesJobU16 : IJob { [ReadOnly] public NativeArray<int> Src; [ReadOnly, DeallocateOnJobCompletion] public NativeArray<byte> Mask; [NativeDisableContainerSafetyRestriction] public NativeArray<ushort> Dst; public int DstStart; public ushort Add; public void Execute() { int dst = DstStart; for (int t = 0; t < Mask.Length; t++) { if (Mask[t] != 0) continue; int i3 = t * 3; Dst[dst++] = (ushort)(Src[i3] + Add); Dst[dst++] = (ushort)(Src[i3 + 1] + Add); Dst[dst++] = (ushort)(Src[i3 + 2] + Add); } } }
+
+#else
+        [BurstCompile] private struct CopyIndicesJobInt : IJob { [ReadOnly] public NativeArray<int> Src;  public NativeArray<int> Dst; public int DstStart; public int Add; public void Execute() { for (int i = 0; i < Src.Length; i++) Dst[DstStart + i] = Src[i] + Add; } }
+        [BurstCompile] private struct CopyIndicesJobU16 : IJob { [ReadOnly] public NativeArray<int> Src;  public NativeArray<ushort> Dst; public int DstStart; public ushort Add; public void Execute() { for (int i = 0; i < Src.Length; i++) Dst[DstStart + i] = (ushort)(Src[i] + Add); } }
+        [BurstCompile] private struct MaskedCopyIndicesJobInt : IJob { [ReadOnly] public NativeArray<int> Src; [ReadOnly, DeallocateOnJobCompletion] public NativeArray<byte> Mask; public NativeArray<int> Dst; public int DstStart; public int Add; public void Execute() { int dst = DstStart; for (int t = 0; t < Mask.Length; t++) { if (Mask[t] != 0) continue; int i3 = t * 3; Dst[dst++] = Src[i3] + Add; Dst[dst++] = Src[i3 + 1] + Add; Dst[dst++] = Src[i3 + 2] + Add; } } }
+        [BurstCompile] private struct MaskedCopyIndicesJobU16 : IJob { [ReadOnly] public NativeArray<int> Src; [ReadOnly, DeallocateOnJobCompletion] public NativeArray<byte> Mask; public NativeArray<ushort> Dst; public int DstStart; public ushort Add; public void Execute() { int dst = DstStart; for (int t = 0; t < Mask.Length; t++) { if (Mask[t] != 0) continue; int i3 = t * 3; Dst[dst++] = (ushort)(Src[i3] + Add); Dst[dst++] = (ushort)(Src[i3 + 1] + Add); Dst[dst++] = (ushort)(Src[i3 + 2] + Add); } } }
+
+#endif
         private static NativeArray<byte> BitArrayToNative(BitArray ba, Allocator allocator) { var arr = new NativeArray<byte>(ba.Count, allocator, NativeArrayOptions.UninitializedMemory); for (int i = 0; i < ba.Count; i++) arr[i] = ba[i] ? (byte)1 : (byte)0; return arr; }
         #endregion
 

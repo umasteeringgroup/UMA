@@ -31,7 +31,6 @@ namespace UMA.CharacterSystem.Editors
         private string cachedRace = "";
         private string[] cachedRaceDNA = { };
         private string[] rawcachedRaceDNA = { };
-        private SceneView sceneView;
 
         private MeshModifier MeshModifier = null;
 
@@ -41,6 +40,9 @@ namespace UMA.CharacterSystem.Editors
         protected RaceAnimatorListPropertyDrawer _animatorPropDrawer = new RaceAnimatorListPropertyDrawer();
         SerializedProperty animationController;
         protected Editor innerEditor;
+
+        // Track any deferred OnEnable callback so it can be removed on cleanup
+        private EditorApplication.CallbackFunction delayedEnableHandler;
 
         private static bool IsEditorBusy()
         {
@@ -54,6 +56,11 @@ namespace UMA.CharacterSystem.Editors
             {
                 EditorApplication.update -= DoInspectors;
                 SceneView.duringSceneGui -= DoSceneGUI;
+                if (delayedEnableHandler != null)
+                {
+                    EditorApplication.delayCall -= delayedEnableHandler;
+                    delayedEnableHandler = null;
+                }
             }
             catch { }
             if (innerEditor != null)
@@ -61,6 +68,27 @@ namespace UMA.CharacterSystem.Editors
                 try { DestroyImmediate(innerEditor); } catch { }
                 innerEditor = null;
             }
+
+            // Clear references to avoid leaking editor targets
+            InspectMe.Clear();
+            MeshModifier = null;
+            if (_racePropDrawer != null)
+            {
+                _racePropDrawer.thisDCA = null;
+            }
+
+            if (_wardrobePropDrawer != null)
+            {
+                _wardrobePropDrawer.thisDCA = null;
+            }
+
+            if (_animatorPropDrawer != null)
+            {
+                _animatorPropDrawer.thisDCA = null;
+            }
+
+            thisDCA = null;
+            animationController = null;
         }
 
         public void OnEnable()
@@ -68,7 +96,22 @@ namespace UMA.CharacterSystem.Editors
             if (IsEditorBusy() || target == null)
             {
                 // Defer enable until editor is ready
-                EditorApplication.delayCall += () => { if (this != null) OnEnable(); };
+                if (delayedEnableHandler == null)
+                {
+                    delayedEnableHandler = () =>
+                    {
+                        // Unsubscribe this handler to avoid multiple invocations
+                        EditorApplication.delayCall -= delayedEnableHandler;
+                        delayedEnableHandler = null;
+                        if (this != null)
+                        {
+                            OnEnable();
+                        }
+                    };
+                }
+                // Ensure it's only added once
+                EditorApplication.delayCall -= delayedEnableHandler;
+                EditorApplication.delayCall += delayedEnableHandler;
                 return;
             }
 
@@ -99,11 +142,39 @@ namespace UMA.CharacterSystem.Editors
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             EditorApplication.update -= DoInspectors;
             SceneView.duringSceneGui -= DoSceneGUI;
+
+            if (delayedEnableHandler != null)
+            {
+                EditorApplication.delayCall -= delayedEnableHandler;
+                delayedEnableHandler = null;
+            }
+
             if (innerEditor != null)
             {
                 DestroyImmediate(innerEditor);
                 innerEditor = null;
             }
+
+            // Clear pending inspections and editor references
+            InspectMe.Clear();
+            MeshModifier = null;
+            if (_racePropDrawer != null)
+            {
+                _racePropDrawer.thisDCA = null;
+            }
+
+            if (_wardrobePropDrawer != null)
+            {
+                _wardrobePropDrawer.thisDCA = null;
+            }
+
+            if (_animatorPropDrawer != null)
+            {
+                _animatorPropDrawer.thisDCA = null;
+            }
+
+            thisDCA = null;
+            animationController = null;
         }
 
         private void DoInspectors()
@@ -708,8 +779,15 @@ namespace UMA.CharacterSystem.Editors
 
         private void DoSceneGUI(SceneView sceneView)
         {
-            if (IsEditorBusy()) return;
-            if (thisDCA == null) return;
+            if (IsEditorBusy())
+            {
+                return;
+            }
+
+            if (thisDCA == null)
+            {
+                return;
+            }
             // Leaving this function here so I can later add some tools to the scene view to find/rebuild/modify UMAs
             // TODO: include all that in a project setting
             Event currentEvent = Event.current;
@@ -796,7 +874,10 @@ namespace UMA.CharacterSystem.Editors
             {
                 string prepend = "*";
                 if (item.Value.disabled)
+                {
                     prepend = "-";
+                }
+
                 GUILayout.BeginHorizontal();
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUILayout.LabelField(prepend + item.Key, GUILayout.Width(88.0f));
@@ -1050,7 +1131,10 @@ namespace UMA.CharacterSystem.Editors
             if (EditorGUI.EndChangeCheck())
             {
                 if (buildCharacterEnabledNewValue != buildCharacterEnabledValue)
+                {
                     thisDCA.BuildCharacterEnabled = buildCharacterEnabledNewValue;
+                }
+
                 serializedObject.ApplyModifiedProperties();
             }
             if (showHelp)
@@ -1160,8 +1244,16 @@ namespace UMA.CharacterSystem.Editors
 
         void GenerateSingleUMA(bool rebuild = false)
         {
-            if (IsEditorBusy()) return;
-            if (thisDCA == null) return;
+            if (IsEditorBusy())
+            {
+                return;
+            }
+
+            if (thisDCA == null)
+            {
+                return;
+            }
+
             if (Application.isPlaying)
             {
                 thisDCA.BuildCharacter(rebuild);
@@ -1269,8 +1361,16 @@ namespace UMA.CharacterSystem.Editors
 
         void UpdateCharacter()
         {
-            if (IsEditorBusy()) return;
-            if (thisDCA == null) return;
+            if (IsEditorBusy())
+            {
+                return;
+            }
+
+            if (thisDCA == null)
+            {
+                return;
+            }
+
             if (thisDCA.gameObject.scene != default)
             {
                 if (thisDCA.editorTimeGeneration)

@@ -1,69 +1,66 @@
-# UMA (Unity Multipurpose Avatar) – Concise Dev & Test Guide
+# UMA (Unity Multipurpose Avatar) — Short Dev Guide
 
-Purpose
-- This is a Unity 6000.2.4f1 project (asset/package), not a standalone app.
-- Goal: keep edits minimal and validate via example scenes (Play Mode).
+Scope
+- Unity package (no standalone builds). Validate in Play Mode.
+- Unity: 6000.2.4f1 (exact). .NET Framework 4.7.1, C# 9.
 
-Prerequisites
-- Unity Hub + Unity 6000.2.4f1 (exact).
-- 10GB+ disk, 8GB+ RAM (16GB recommended), GPU with SRP support.
-- Internet access only for Unity install/licensing.
+Open
+- Open in Unity Hub with 6000.2.4f1. First import/compile can take minutes.
 
-Open Project
-- Add the project folder in Unity Hub and open with unity 6000.2.4f1
-- First import/compile can take several minutes; allow time.
-
-Build/Run Model
-- Do not produce standalone builds; validate by entering Play Mode in example scenes.
-
-Primary Validation Flow
+Validate (Play Mode)
 1) Scene Loader
-   - Open: Assets/UMA/Examples/SceneLoader/SceneLoader.unity
-   - Play; verify the example menu appears.
+   - Assets/UMA/Examples/SceneLoader/SceneLoader.unity
+   - Play → menu visible
+2) DCS Demo (primary)
+   - Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Simple Setup.unity
+   - In Play: race switch, DNA sliders, wardrobe apply; no pink/errors
 
-2) DCS Demo (main check)
-   - From Scene Loader choose “UMA DCS Demo - Simple Setup”
-     or open directly:
-     Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Simple Setup.unity
-   - In Play Mode verify:
-     - Race switch (Male/Female) works.
-     - DNA sliders update body.
-     - Wardrobe changes apply.
-     - Each action updates within a few seconds; no errors/pink materials.
+Optional checks (as needed)
+- UMA DCS Demo - Random Characters.unity
+- UMA Core Demo - Crowd.unity
+- Blendshape Example.unity
+- AddressablesScene.unity
+- UMA Timeline Example.unity
 
-Additional Quick Checks (optional but helpful)
-- Random Characters: UMA DCS Demo - Random Characters.unity
-- Crowd: UMA Core Demo - Crowd.unity
-- Blendshapes: Blendshape Example.unity
-- Addressables: AddressablesScene.unity
-- Timeline: UMA Timeline Example.unity
+Done Criteria
+- No console errors on open.
+- Scene Loader menu OK.
+- DCS Demo: race/DNA/wardrobe OK, no UMA warnings/errors.
 
-Expected Timings (approx, first-time may be slower)
-- First import: minutes.
-- First Play in a scene: 1–3 minutes.
-- Character updates: typically under ~10s.
+Troubleshooting
+- Pink/missing: check shaders/RP and Console.
+- Generation fails: overlays/slots exist; try UMA > Race Updater.
+- Assembly errors: verify asmdefs and manifest deps.
 
-Minimal Pre-Commit Checklist
-- [ ] Opens in Unity 6000.2.4f1 without console errors.
-- [ ] Scene Loader menu works.
-- [ ] DCS Demo:
-  - [ ] Race switch OK
-  - [ ] DNA sliders OK
-  - [ ] Wardrobe OK
-  - [ ] No pink/missing textures
-  - [ ] No UMA errors/warnings
-- [ ] Optional: Addressables/Timeline scenes (if related changes).
-
-Troubleshooting (fast path)
-- Pink/missing textures: check shaders/RP, review console errors.
-- Generation failures: ensure overlays/slots exist; try UMA > Race Updater.
-- Assembly errors: confirm asmdefs and manifest dependencies.
+Assistant Rules (GPT-5)
+- Keep answers short; use bullets. Avoid heavy markup.
+- File edits: use exact paths; minimal diffs; preserve style.
+- Code blocks MUST include: 
+  - language and target path header:
+    ```<language> <relative file path>
+    <code>
+    ```
+- Editor code:
+  - Wrap in `#if UNITY_EDITOR`.
+  - Use `SerializedObject/SerializedProperty`; call `ApplyModifiedProperties`.
+  - Call `Repaint()` and `EditorUtility.SetDirty(target)` when UI changes.
+  - Support Undo: `Undo.RecordObject(target, "Change")` before mutations.
+- Runtime code:
+  - Avoid new packages/deps; respect existing asmdefs.
+  - Prefer existing UMA APIs (e.g., `UMAAssetIndexer`, `DynamicCharacterAvatar`).
+  - Keep allocations low in per-frame paths; avoid LINQ in hot loops.
+- Compatibility:
+  - Use APIs available in Unity 6000.2.4f1, .NET 4.7.1, C# 9.
+  - Editor-only API guarded; no `AssetDatabase` in runtime.
+- Behavior:
+  - Don’t rename public APIs or break serialization.
+  - Ask for missing context only when necessary (list exact files/lines needed).
+  - Prefer incremental changes; avoid large refactors.
+- Diagrams:
+  - Use mermaid; follow workspace rules for escaping and quoting.
 
 Key Folders
 - Core: Assets/UMA/Core/
 - Examples: Assets/UMA/Examples/
 - Content: Assets/UMA/Content/
 - Editor tools: Assets/UMA/Core/Editor/
-
-When Unity is unavailable
-- Focus on code structure, asmdef references, script compilation, and UMA API usage (no Play Mode).

@@ -44,7 +44,7 @@ namespace UMA.Dynamics.Examples
 				AudioSource src = gameObject.GetComponent<AudioSource>();
 				if (src != null)
                 {
-					Debug.Log("Playing Bang");
+					//Debug.Log("Playing Bang");
 					if (Bang != null)
 					{
 						src.PlayOneShot(Bang, 1.0f);

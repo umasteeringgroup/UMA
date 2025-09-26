@@ -803,6 +803,185 @@ namespace UMA
             return totalStamped > 0;
         }
 
+        /// <summary>
+        /// Apply a specific slot's stamp into a provided target RenderTexture during compositing.
+        /// Limits drawing to SlotStamp with the exact slotName, resolves overlay channel by materialPropertyName
+        /// against the overlay's UMAMaterial channels, clips to the runtime slot UVArea, and uses the same masking rule.
+        /// Returns true if anything was drawn.
+        /// </summary>
+        public static bool ApplyStampToUMA(
+            DynamicCharacterAvatar avatar,
+            UMAData umaData,
+            DecalRTStampAsset stamp,
+            string slotName,
+            string materialPropertyName,
+            RenderTexture targetTexture)
+        {
+            if (avatar == null || umaData == null || stamp == null || string.IsNullOrEmpty(slotName) || string.IsNullOrEmpty(materialPropertyName) || targetTexture == null)
+            {
+                LogWarn("ApplyStampToUMA(slotName,prop,rt): Missing required parameters.");
+                return false;
+            }
+
+            // Resolve overlay
+            OverlayDataAsset overlay = null;
+            var od = umaData.umaRecipe != null ? umaData.umaRecipe.FindFirstOverlay(stamp.overlayName) : null;
+            if (od != null && od.asset != null) overlay = od.asset;
+            if (overlay == null)
+            {
+                try { overlay = UMAAssetIndexer.Instance.GetAsset<OverlayDataAsset>(stamp.overlayName); } catch { }
+            }
+            if (overlay == null || overlay.material == null || overlay.textureList == null || overlay.textureList.Length == 0)
+            {
+                LogWarn("ApplyStampToUMA(slotName,prop,rt): Overlay or textures not found.");
+                return false;
+            }
+
+            // Resolve channel by materialPropertyName
+            int channelIndex = -1;
+            var channels = overlay.material != null ? overlay.material.channels : null;
+            if (channels != null)
+            {
+                for (int i = 0; i < channels.Length; i++)
+                {
+                    if (string.Equals(channels[i].materialPropertyName, materialPropertyName, StringComparison.Ordinal))
+                    {
+                        channelIndex = i;
+                        break;
+                    }
+                }
+            }
+            if (channelIndex < 0 || channelIndex >= overlay.textureList.Length)
+            {
+                LogWarn($"ApplyStampToUMA(slotName,prop,rt): Channel not found for property '{materialPropertyName}'.");
+                return false;
+            }
+
+            // Find matching SlotStamp by exact slotName
+            DecalRTStampAsset.SlotStamp s = null;
+            for (int i = 0; i < stamp.slots.Count; i++)
+            {
+                var ss = stamp.slots[i];
+                if (ss != null && string.Equals(ss.slotName, slotName, StringComparison.Ordinal))
+                {
+                    s = ss; break;
+                }
+            }
+            if (s == null)
+            {
+                LogWarn($"ApplyStampToUMA(slotName,prop,rt): SlotStamp for '{slotName}' not found in stamp.");
+                return false;
+            }
+
+            // Resolve runtime slot for UVArea mapping
+            var slot = umaData.umaRecipe != null ? umaData.umaRecipe.GetSlot(slotName) : null;
+            if (slot == null)
+            {
+                LogWarn($"ApplyStampToUMA(slotName,prop,rt): Runtime slot '{slotName}' not found on UMA.");
+                return false;
+            }
+
+            int vcount = (s.normBaseUV != null) ? s.normBaseUV.Length : 0;
+            if (vcount == 0 || s.overlayUV == null || s.triangles == null)
+            {
+                LogWarn($"ApplyStampToUMA(slotName,prop,rt): Invalid stamp data for '{slotName}'.");
+                return false;
+            }
+
+            // Build mesh from saved UVs -> atlas/global UV -> clip-space
+            var vertsList = new List<Vector3>(vcount);
+            var uv0List = new List<Vector2>(vcount);
+            var uv1List = new List<Vector2>(vcount);
+            var colList = new List<Color32>(vcount);
+            for (int v = 0; v < vcount; v++)
+            {
+                Vector2 normUV = s.normBaseUV[v];
+                // convert normalized 0..1 in slot area -> atlas/global UV
+                Vector2 globalUV;
+                if (slot.UVArea.width > 0f && slot.UVArea.height > 0f)
+                {
+                    globalUV = slot.ConvertToAtlasUV(normUV);
+                }
+                else
+                {
+                    // if slot UVArea isn't valid, assume already global
+                    globalUV = normUV;
+                }
+
+                uv0List.Add(globalUV);
+                uv1List.Add(s.overlayUV[v]);
+                vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
+                colList.Add(new Color32(255, 255, 255, 255));
+            }
+
+            var stampMesh = new Mesh { name = $"DecalRT_Compose_{slot.slotName}" };
+            stampMesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+            stampMesh.SetVertices(vertsList);
+            stampMesh.SetTriangles(s.triangles, 0);
+            stampMesh.SetUVs(0, uv0List);
+            stampMesh.SetUVs(1, uv1List);
+            stampMesh.SetColors(colList);
+            stampMesh.RecalculateBounds();
+
+            // Prepare stamp material
+            var stampMat = GetOrCreateStampMaterial(stamp.forceLinearSampling);
+            if (stampMat == null)
+            {
+                UMAUtils.DestroySceneObject(stampMesh);
+                return false;
+            }
+            stampMat.SetFloat("_Fudge", 0.0001f);
+            stampMat.SetFloat("_UseUVRect", 1.0f);
+
+            // Clip to runtime slot UVArea
+            var uvRect = slot.UVArea;
+            if (uvRect.width <= 0f || uvRect.height <= 0f) uvRect = new Rect(0f, 0f, 1f, 1f);
+            stampMat.SetVector("_UVRect", new Vector4(uvRect.xMin, uvRect.yMin, uvRect.xMax, uvRect.yMax));
+
+            // Masking rule
+            Texture maskTex = null;
+            try { if (overlay.alphaMask != null) maskTex = overlay.alphaMask; } catch { }
+            if (maskTex == null && overlay.textureList != null && overlay.textureList.Length > 0)
+            {
+                maskTex = overlay.textureList[0];
+            }
+            stampMat.SetFloat("_UseMask", maskTex != null ? 1f : 0f);
+            if (maskTex != null) stampMat.SetTexture("_MaskTex", maskTex);
+
+            // Source texture for resolved channel
+            var srcTex = overlay.textureList[channelIndex];
+            if (srcTex == null)
+            {
+                UMAUtils.DestroySceneObject(stampMesh);
+                if (Application.isPlaying) UnityEngine.Object.Destroy(stampMat); else UnityEngine.Object.DestroyImmediate(stampMat);
+                LogWarn($"ApplyStampToUMA(slotName,prop,rt): Source texture null for channel {channelIndex}.");
+                return false;
+            }
+            stampMat.SetTexture("_OverlayTex", srcTex);
+
+            // Draw to provided target texture
+            var prev = RenderTexture.active;
+            GL.PushMatrix();
+            GL.LoadOrtho();
+            RenderTexture.active = targetTexture;
+            stampMat.SetPass(0);
+            Graphics.DrawMeshNow(stampMesh, Matrix4x4.identity);
+            GL.PopMatrix();
+            RenderTexture.active = prev;
+
+            // Dilation phase (optional)
+            if (stamp.bleedPixels > 0)
+            {
+                RunDilation(targetTexture, stamp.bleedPixels);
+            }
+
+            // Cleanup
+            UMAUtils.DestroySceneObject(stampMesh);
+            if (Application.isPlaying) UnityEngine.Object.Destroy(stampMat); else UnityEngine.Object.DestroyImmediate(stampMat);
+
+            return true;
+        }
+
         public static bool RemoveTrianglesFromLastStamp(HashSet<int> ordinalsToRemove, DynamicCharacterAvatar avatar, UMAData umaData)
         {
             if (_lastStamp == null || ordinalsToRemove == null || ordinalsToRemove.Count == 0)
