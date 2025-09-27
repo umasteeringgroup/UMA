@@ -64,6 +64,14 @@ namespace UMA
         {
             Debug.LogWarning("[DecalRT] " + msg);
         }
+        private static void LogDebugSkip(string reason)
+        {
+            if (Debug.isDebugBuild)
+            {
+                Debug.Log("[DecalRT][Skip] " + reason);
+            }
+        }
+
         private static void LogError(string msg)
         {
             Debug.LogError("[DecalRT] " + msg);
@@ -104,21 +112,22 @@ namespace UMA
             var result = new DecalLayerResult { success = false };
             if (avatar == null || avatar.umaData == null)
             {
-                LogError("DecalRenderTexture: Avatar or UMAData null.");
+                LogDebugSkip("CreateDecalLayer: avatar or avatar.umaData null");
                 return null;
             }
             if (umaData == null)
             {
-                LogError("DecalRenderTexture: Provided UMAData is null.");
+                LogDebugSkip("CreateDecalLayer: provided umaData null");
                 return null;
             }
             if (overlay == null || overlay.textureList == null || overlay.textureList.Length == 0)
             {
                 if (options?.enableDebug == true)
                     LogWarn("DecalRenderTexture: Overlay missing or has no textures. Aborting.");
+                LogDebugSkip("CreateDecalLayer: overlay null or no textures");
                 return null;
             }
-            if (radius <= 0.00001f) return null;
+            if (radius <= 0.00001f) { LogDebugSkip("CreateDecalLayer: radius <= 0"); return null; }
 
             options ??= new DecalRTOptions();
 
@@ -126,6 +135,7 @@ namespace UMA
             {
                 if (options.enableDebug)
                     LogWarn("DecalRenderTexture: Mesh raycast failed / no facing triangle.");
+                LogDebugSkip("CreateDecalLayer: mesh raycast failed");
                 return null;
             }
 
@@ -138,7 +148,7 @@ namespace UMA
             try
             {
                 var shared = smr.sharedMesh;
-                if (shared == null) return null;
+                if (shared == null) { LogDebugSkip("CreateDecalLayer: shared mesh null"); return null; }
 
                 var bakedVertsLocal = baked.vertices;
                 var triIndices = shared.triangles;
@@ -146,7 +156,7 @@ namespace UMA
                 if (bakedVertsLocal == null || bakedVertsLocal.Length == 0 ||
                     triIndices == null || triIndices.Length == 0 ||
                     meshUV == null || meshUV.Length != bakedVertsLocal.Length)
-                    return null;
+                    { LogDebugSkip("CreateDecalLayer: invalid baked vertex/uv data"); return null; }
 
                 // Prepare selection
                 float expandedRadius = radius + fudgeRadius;
@@ -177,6 +187,7 @@ namespace UMA
                 {
                     if (options.enableDebug)
                         LogWarn("DecalRenderTexture: No triangles selected inside radius.");
+                    LogDebugSkip("CreateDecalLayer: no triangles selected");
                     return null;
                 }
 
@@ -200,7 +211,7 @@ namespace UMA
                     if (includedVertex[i])
                         remap[i] = newVertexCount++;
                 }
-                if (newVertexCount == 0) return null;
+                if (newVertexCount == 0) { LogDebugSkip("CreateDecalLayer: newVertexCount == 0 after remap"); return null; }
 
                 // Precompute per-vertex data for included verts (base UV0, overlay UV1, clip-space pos)
                 Vector2[] baseUVAll = new Vector2[bakedVertsLocal.Length];
@@ -280,22 +291,21 @@ namespace UMA
                     int i0 = selectedTris[i + 0];
                     int i1 = selectedTris[i + 1];
                     int i2 = selectedTris[i + 2];
-                    var s0 = vertexSlot != null ? vertexSlot[i0] : null;
+                    var s = vertexSlot != null ? vertexSlot[i0] : null;
                     var s1 = vertexSlot != null ? vertexSlot[i1] : null;
                     var s2 = vertexSlot != null ? vertexSlot[i2] : null;
-                    if (s0 == null || s1 != s0 || s2 != s0) continue; // ensure triangle is wholly inside a slot
-                    if (!slotTriMap.TryGetValue(s0, out var list))
+                    if (s == null || s1 != s || s2 != s) continue; // ensure triangle is wholly inside a slot
+                    if (!slotTriMap.TryGetValue(s, out var list))
                     {
                         list = new List<int>(256);
-                        slotTriMap.Add(s0, list);
+                        slotTriMap.Add(s, list);
                     }
                     list.Add(i0); list.Add(i1); list.Add(i2);
-                    if (!slotTriOrdinals.TryGetValue(s0, out var olist))
+                    if (!slotTriOrdinals.TryGetValue(s, out var olist))
                     {
                         olist = new List<int>(256);
-                        slotTriOrdinals.Add(s0, olist);
+                        slotTriOrdinals.Add(s, olist);
                     }
-                    // Store the ordinal index (0..N-1) that corresponds to this selected triangle.
                     olist.Add(ord);
                 }
 
@@ -303,6 +313,7 @@ namespace UMA
                 {
                     if (options.enableDebug)
                         LogWarn("DecalRenderTexture: No per-slot triangles found after grouping.");
+                    LogDebugSkip("CreateDecalLayer: slotTriMap.Count == 0");
                     return null;
                 }
 
@@ -310,6 +321,7 @@ namespace UMA
                 Material stampMat = GetOrCreateStampMaterial(options.forceLinearSampling);
                 if (stampMat == null)
                 {
+                    LogDebugSkip("CreateDecalLayer: GetOrCreateStampMaterial returned null");
                     return null;
                 }
                 float fudgeFactor = (fudgeRadius <= 0f) ? 0.0001f : (fudgeRadius / (radius + fudgeRadius));
@@ -319,10 +331,20 @@ namespace UMA
                 // Bind a global mask to gate coverage for all channels: prefer overlay.alphaMask, else overlay.textureList[0].a
                 Texture maskTex = null;
                 try { if (overlay.alphaMask != null) maskTex = overlay.alphaMask; } catch { }
-                if (maskTex == null && overlay.textureList != null && overlay.textureList.Length > 0)
+                if (maskTex == null && overlay.material != null && overlay.material.channels != null)
                 {
-                    maskTex = overlay.textureList[0];
+                    for (int i = 0; i < overlay.material.channels.Length && i < overlay.textureList.Length; i++)
+                    {
+                        if (overlay.material.channels[i].channelType == UMAMaterial.ChannelType.DiffuseTexture &&
+                            overlay.textureList[i] != null)
+                        {
+                            maskTex = overlay.textureList[i];
+                            break;
+                        }
+                    }
                 }
+                if (maskTex == null && overlay.textureList != null && overlay.textureList.Length > 0)
+                    maskTex = overlay.textureList[0];
                 stampMat.SetFloat("_UseMask", maskTex != null ? 1f : 0f);
                 if (maskTex != null)
                 {
@@ -349,7 +371,6 @@ namespace UMA
                     var slot = kv.Key;
                     var tris = kv.Value;
 
-                    // Build remap for this slot
                     var remapDict = new Dictionary<int, int>(tris.Count);
                     var vertsList = new List<Vector3>();
                     var uv0List = new List<Vector2>();
@@ -518,7 +539,6 @@ namespace UMA
                     UnityEngine.Object.DestroyImmediate(stampMesh);
                 }
 
-                // Restore global state
                 GL.PopMatrix();
                 RenderTexture.active = prevRTGlobal;
 
@@ -534,7 +554,7 @@ namespace UMA
                 }
 
                 result.success = stampedCount > 0;
-                result.vertexCount = 0; // per-slot meshes vary; not meaningful aggregated
+                result.vertexCount = 0;
                 result.triangleCount = 0;
                 result.uvBounds = Rect.MinMaxRect(uvMin.x, uvMin.y, uvMax.x, uvMax.y);
                 result.hitPoint = hitPointWorld;
@@ -557,21 +577,21 @@ namespace UMA
         /// Apply a previously saved DecalRTStampAsset to the specified UMAData.
         /// This replays the stamping using saved per-slot geometry and overlay-space UVs.
         /// </summary>
-        /// <param name="avatar">Target avatar for renderer context. Used to locate SMRs.</param>
-        /// <param name="umaData">UMAData that holds generated RenderTextures.</param>
-        /// <param name="stamp">The DecalRTStampAsset to apply.</param>
-        /// <returns>True if any stamp was applied.</returns>
-        public static bool ApplyStampToUMA(DynamicCharacterAvatar avatar, UMAData umaData, DecalRTStampAsset stamp)
+        public static bool ApplyStampToUMA(DynamicCharacterAvatar avatar, UMAData umaData, DecalRTStampAsset stamp, string materialPropertyName, RenderTexture targetTexture)
         {
             if (avatar == null || umaData == null || stamp == null)
             {
-                LogWarn("DecalRenderTexture.ApplyStampToUMA: Missing avatar, UMAData, or stamp.");
+                var missing = new List<string>(3);
+                if (avatar == null) missing.Add("avatar");
+                if (umaData == null) missing.Add("umaData");
+                if (stamp == null) missing.Add("stamp");
+                LogWarn("DecalRenderTexture.ApplyStampToUMA: Missing required parameter(s): " + string.Join(", ", missing));
+                LogDebugSkip("ApplyStampToUMA(all): required parameter missing");
                 return false;
             }
 
             LogInfo($"ApplyStampToUMA: Begin. overlay='{stamp.overlayName}', slots={stamp.slots?.Count ?? 0}.");
 
-            // Find overlay asset to source textures, prefer overlays already in the recipe
             OverlayDataAsset overlay = null;
             var od = umaData.umaRecipe != null ? umaData.umaRecipe.FindFirstOverlay(stamp.overlayName) : null;
             if (od != null && od.asset != null)
@@ -582,25 +602,25 @@ namespace UMA
             if (overlay == null)
             {
                 try { overlay = UMAAssetIndexer.Instance.GetAsset<OverlayDataAsset>(stamp.overlayName); } catch { }
-                if (overlay != null) LogInfo($"ApplyStampToUMA: Found overlay in indexer: '{overlay.name}', channels={overlay.textureCount}.");
             }
             if (overlay == null)
             {
                 LogWarn($"DecalRenderTexture.ApplyStampToUMA: Could not find OverlayDataAsset with overlayName '{stamp.overlayName}'.");
+                LogDebugSkip("ApplyStampToUMA(all): overlay not found");
                 return false;
             }
             if (overlay.textureList == null || overlay.textureList.Length == 0)
             {
                 LogWarn("DecalRenderTexture.ApplyStampToUMA: Overlay has no textures.");
+                LogDebugSkip("ApplyStampToUMA(all): overlay has no textures");
                 return false;
             }
 
             Material stampMat = GetOrCreateStampMaterial(stamp.forceLinearSampling);
-            if (stampMat == null) return false;
-            stampMat.SetFloat("_Fudge", 0.0001f); // minimal edge smoothing
+            if (stampMat == null) { LogDebugSkip("ApplyStampToUMA(all): stamp material null"); return false; }
+            stampMat.SetFloat("_Fudge", 0.0001f);
             stampMat.SetFloat("_UseUVRect", 1.0f);
 
-            // Bind a global mask for all channels on replay: prefer overlay.alphaMask, else overlay.textureList[0].a
             Texture maskTex = null;
             try { if (overlay.alphaMask != null) maskTex = overlay.alphaMask; } catch { }
             if (maskTex == null && overlay.textureList != null && overlay.textureList.Length > 0)
@@ -622,22 +642,21 @@ namespace UMA
             for (int si = 0; si < stamp.slots.Count; si++)
             {
                 var s = stamp.slots[si];
-                if (s == null) continue;
+                if (s == null) { LogDebugSkip($"ApplyStampToUMA(all): slot index {si} null"); continue; }
                 var slot = umaData.umaRecipe.GetSlot(s.slotName);
                 if (slot == null || slot.asset == null)
                 {
-                    LogWarn($"ApplyStampToUMA: Slot '{s.slotName}' not found on UMA.");
+                    LogDebugSkip($"ApplyStampToUMA(all): runtime slot '{s?.slotName}' not found");
                     continue;
                 }
 
                 int vcount = (s.normBaseUV != null) ? s.normBaseUV.Length : 0;
                 if (vcount == 0 || s.overlayUV == null || s.triangles == null)
                 {
-                    LogWarn($"ApplyStampToUMA: Slot '{s.slotName}' has invalid stamp data (vcount={vcount}, overlayUV={(s.overlayUV==null?"null":s.overlayUV.Length.ToString())}, tris={(s.triangles==null?"null":s.triangles.Length.ToString())}).");
+                    LogDebugSkip($"ApplyStampToUMA(all): invalid stamp data for slot '{s.slotName}'");
                     continue;
                 }
 
-                // Build mesh from saved UVs (convert baseUV from normalized slot space back to atlas UV, then to clip-space)
                 var vertsList = new List<Vector3>(vcount);
                 var uv0List = new List<Vector2>(vcount);
                 var uv1List = new List<Vector2>(vcount);
@@ -646,7 +665,6 @@ namespace UMA
                 for (int v = 0; v < vcount; v++)
                 {
                     Vector2 normUV = s.normBaseUV[v];
-                    // convert normalized 0..1 in slot area -> atlas/global UV
                     Vector2 globalUV;
                     if (slot.UVArea.width > 0f && slot.UVArea.height > 0f)
                     {
@@ -654,132 +672,45 @@ namespace UMA
                     }
                     else
                     {
-                        // if slot UVArea isn't valid, assume already global
                         globalUV = normUV;
                     }
-
                     uv0List.Add(globalUV);
                     uv1List.Add(s.overlayUV[v]);
                     vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
                     colList.Add(new Color32(255, 255, 255, 255));
                 }
+                var mesh = new Mesh { name = $"DecalRT_ApplyStampAsset_{s.slotName}" };
+                mesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+                mesh.SetVertices(vertsList);
+                mesh.SetTriangles(s.triangles, 0);
+                mesh.SetUVs(0, uv0List);
+                mesh.SetUVs(1, uv1List);
+                mesh.SetColors(colList);
+                mesh.RecalculateBounds();
 
-                var stampMesh = new Mesh { name = $"DecalRT_Replay_{slot.slotName}" };
-                stampMesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
-                stampMesh.SetVertices(vertsList);
-                stampMesh.SetTriangles(s.triangles, 0);
-                stampMesh.SetUVs(0, uv0List);
-                stampMesh.SetUVs(1, uv1List);
-                stampMesh.SetColors(colList);
-                stampMesh.RecalculateBounds();
-
-                // Clip to slot UV area
                 var uvRect = slot.UVArea;
-                if (uvRect.width <= 0f || uvRect.height <= 0f)
-                {
-                    uvRect = new Rect(0f, 0f, 1f, 1f);
-                }
+                if (uvRect.width <= 0f || uvRect.height <= 0f) uvRect = new Rect(0f, 0f, 1f, 1f);
                 stampMat.SetVector("_UVRect", new Vector4(uvRect.xMin, uvRect.yMin, uvRect.xMax, uvRect.yMax));
 
-                // Stamp into any generated material whose umaMaterial matches the slot's material (across any SMR)
-                int gmMatches = 0;
-                for (int gi = 0; gi < umaData.generatedMaterials.materials.Count; gi++)
+                Texture2D texToStamp = overlay.GetTexture(materialPropertyName);
+                if (texToStamp == null)
                 {
-                    var gm = umaData.generatedMaterials.materials[gi];
-                    if (gm == null) continue;
-                    if (gm.umaMaterial == null || !gm.umaMaterial.Equals(slot.material)) continue;
-                    if (gm.resultingAtlasList == null) { LogWarn($"ApplyStampToUMA: gm '{gm.material?.name}' has null resultingAtlasList."); continue; }
-
-                    gmMatches++;
-                    LogInfo($"ApplyStampToUMA: Target gm material='{gm.material?.name}', smr='{gm.skinnedMeshRenderer?.name}', channels={gm.resultingAtlasList.Length}.");
-
-                    int targetChannels = gm.resultingAtlasList.Length;
-                    int sourceChannels = overlay.textureList.Length;
-                    int channels = Mathf.Min(targetChannels, sourceChannels);
-
-                    for (int ch = 0; ch < channels; ch++)
-                    {
-                        var src = overlay.textureList[ch];
-                        if (src == null) { LogWarn($"ApplyStampToUMA: overlay channel {ch} is null."); continue; }
-                        var tgtTex = gm.resultingAtlasList[ch];
-                        if (tgtTex == null) { LogWarn($"ApplyStampToUMA: gm channel {ch} target texture is null."); continue; }
-
-                        var existingRT = tgtTex as RenderTexture;
-                        bool createdTempRT = false;
-                        Texture2D originalTex2D = tgtTex as Texture2D;
-                        RenderTexture rt = existingRT;
-
-                        if (rt == null)
-                        {
-                            int w = originalTex2D.width;
-                            int h = originalTex2D.height;
-                            rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
-                            rt.name = $"UMA_RT_Temp_Replay_{slot.slotName}_{ch}";
-                            Graphics.Blit(originalTex2D, rt);
-                            gm.resultingAtlasList[ch] = rt;
-                            createdTempRT = true;
-                            LogInfo($"ApplyStampToUMA: Created temp RT for material '{gm.material?.name}', channel {ch}, size {w}x{h}.");
-                        }
-
-                        stampMat.SetTexture("_OverlayTex", src);
-
-                        RenderTexture.active = rt;
-                        stampMat.SetPass(0);
-                        Graphics.DrawMeshNow(stampMesh, Matrix4x4.identity);
-                        totalStamped++;
-
-                        if (stamp.bleedPixels > 0)
-                        {
-                            RunDilation(rt, stamp.bleedPixels);
-                        }
-
-                        if (createdTempRT)
-                        {
-                            var prev = RenderTexture.active;
-                            RenderTexture.active = rt;
-                            var newTex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, true, false)
-                            {
-                                name = $"UMA_Atlas_{slot.slotName}_{ch}"
-                            };
-                            // Preserve sampler settings
-                            if (originalTex2D != null)
-                            {
-                                newTex.wrapMode = originalTex2D.wrapMode;
-                                newTex.filterMode = originalTex2D.filterMode;
-                                newTex.anisoLevel = originalTex2D.anisoLevel;
-                            }
-                            newTex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0, false);
-                            newTex.Apply(true, false);
-                            RenderTexture.active = prev;
-
-                            gm.resultingAtlasList[ch] = newTex;
-
-                            // Robust rebind on generated materials
-                            string propName = null;
-                            if (gm.textureNameList != null && ch >= 0 && ch < gm.textureNameList.Length)
-                            {
-                                propName = gm.textureNameList[ch];
-                            }
-                            if (string.IsNullOrEmpty(propName) && gm.umaMaterial != null && gm.umaMaterial.channels != null && ch < gm.umaMaterial.channels.Length)
-                            {
-                                propName = gm.umaMaterial.channels[ch].materialPropertyName;
-                            }
-                            LogInfo($"ApplyStampToUMA: Rebinding baked texture to material '{gm.material?.name}', channel {ch}, property '{propName}'.");
-                            RebindTextureOnMaterials(gm, ch, newTex, propName);
-
-                            RenderTexture.ReleaseTemporary(rt);
-                            if (originalTex2D != null)
-                            {
-                                UMAUtils.DestroySceneObject(originalTex2D);
-                            }
-                        }
-                    }
+                    LogDebugSkip($"ApplyStampToUMA(all): slot '{s.slotName}' overlay texture for property '{materialPropertyName}' not found");
+                    UMAUtils.DestroySceneObject(mesh);
+                    continue;
                 }
 
-                if (gmMatches == 0) LogWarn($"ApplyStampToUMA: No generated materials matched slot.material for slot '{slot.slotName}'.");
+                stampMat.SetTexture("_OverlayTex", texToStamp);
 
-                LogInfo($"ApplyStampToUMA: Stamped slot '{s.slotName}' on {gmMatches} generated material(s).");
-                UMAUtils.DestroySceneObject(stampMesh);
+                RenderTexture.active = targetTexture;
+                stampMat.SetPass(0);
+                Graphics.DrawMeshNow(mesh, Matrix4x4.identity);
+                totalStamped++;
+
+                if (stamp.bleedPixels > 0)
+                    RunDilation(targetTexture, stamp.bleedPixels);
+
+                UMAUtils.DestroySceneObject(mesh);
             }
 
             GL.PopMatrix();
@@ -791,15 +722,7 @@ namespace UMA
             else
                 UnityEngine.Object.DestroyImmediate(stampMat);
 
-            if (totalStamped == 0)
-            {
-                LogWarn("ApplyStampToUMA: Completed with totalStamped=0. Nothing was drawn.");
-            }
-            else
-            {
-                LogInfo($"ApplyStampToUMA: Completed. totalStamped={totalStamped} draws.");
-            }
-
+            if (totalStamped == 0) LogDebugSkip("ApplyStampAsset(all): totalStamped==0");
             return totalStamped > 0;
         }
 
@@ -809,17 +732,176 @@ namespace UMA
         /// against the overlay's UMAMaterial channels, clips to the runtime slot UVArea, and uses the same masking rule.
         /// Returns true if anything was drawn.
         /// </summary>
-        public static bool ApplyStampToUMA(
+        public static bool ApplySlotStamps(
             DynamicCharacterAvatar avatar,
             UMAData umaData,
             DecalRTStampAsset stamp,
-            string slotName,
             string materialPropertyName,
             RenderTexture targetTexture)
         {
-            if (avatar == null || umaData == null || stamp == null || string.IsNullOrEmpty(slotName) || string.IsNullOrEmpty(materialPropertyName) || targetTexture == null)
+            if (avatar == null || umaData == null || stamp == null || string.IsNullOrEmpty(materialPropertyName) || targetTexture == null)
             {
-                LogWarn("ApplyStampToUMA(slotName,prop,rt): Missing required parameters.");
+                var missing = new List<string>(6);
+                if (avatar == null) missing.Add("avatar");
+                if (umaData == null) missing.Add("umaData");
+                if (stamp == null) missing.Add("stamp");
+                if (string.IsNullOrEmpty(materialPropertyName)) missing.Add("materialPropertyName");
+                if (targetTexture == null) missing.Add("targetTexture");
+                LogWarn("ApplySlotStamps: Missing required parameter(s): " + string.Join(", ", missing));
+                return false;
+            }
+
+            // Resolve overlay
+            OverlayDataAsset overlay = null;
+
+            try { overlay = UMAAssetIndexer.Instance.GetAsset<OverlayDataAsset>(stamp.overlayName); } catch { }
+            if (overlay == null || overlay.material == null || overlay.textureList == null || overlay.textureList.Length == 0)
+            {
+                LogDebugSkip("ApplyStampToUMA(slot,prop,rt): overlay or textures missing");
+                return false;
+            }
+
+
+            int channelIndex = overlay.material.GetChannelIndex(materialPropertyName);
+            if (channelIndex < 0 || channelIndex >= overlay.textureList.Length)
+            {
+                LogDebugSkip($"ApplyStampToUMA(slot,prop,rt): channel '{materialPropertyName}' not resolved");
+                return false;
+            }
+
+            var stampMat = GetOrCreateStampMaterial(stamp.forceLinearSampling);
+            try
+            {
+                if (stampMat == null)
+                {
+                    LogDebugSkip("ApplyStampToUMA(slot,prop,rt): stamp material null");
+                    return false;
+                }
+                stampMat.SetFloat("_Fudge", 0.0001f);
+                stampMat.SetFloat("_UseUVRect", 1.0f);
+                // Source texture for resolved channel
+                var srcTex = overlay.textureList[channelIndex];
+                if (srcTex == null)
+                {
+                    if (Application.isPlaying) UnityEngine.Object.Destroy(stampMat); else UnityEngine.Object.DestroyImmediate(stampMat);
+                    LogWarn($"ApplyStampToUMA(slotName,prop,rt): Source texture null for channel {channelIndex}.");
+                    LogDebugSkip("ApplyStampToUMA(slot,prop,rt): srcTex null");
+                    return false;
+                }
+                Debug.Log($"ApplyStampToUMA(slotName,prop,rt): Using source texture '{srcTex.name}' for channel {channelIndex}. PropertyName is {materialPropertyName}");
+                stampMat.SetTexture("_OverlayTex", srcTex);
+
+                for (int si = 0; si < stamp.slots.Count; si++)
+                {
+                    var slotStamp = stamp.slots[si];
+                    if (slotStamp == null) continue;
+                    SlotData slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
+                    if (slot == null || slot.asset == null) continue;
+
+                    int vcount = (slotStamp.normBaseUV != null) ? slotStamp.normBaseUV.Length : 0;
+                    if (vcount == 0 || slotStamp.overlayUV == null || slotStamp.triangles == null)
+                    {
+                        LogDebugSkip($"ApplyStampToUMA(slot,prop,rt): invalid stamp data (vcount={vcount})");
+                        continue;
+                    }
+
+                    // Build mesh from saved UVs (convert baseUV from normalized slot space back to atlas UV, then to clip-space)
+                    var vertsList = new List<Vector3>(vcount);
+                    var uv0List = new List<Vector2>(vcount);
+                    var uv1List = new List<Vector2>(vcount);
+                    var colList = new List<Color32>(vcount);
+
+                    for (int v = 0; v < vcount; v++)
+                    {
+                        Vector2 normUV = slotStamp.normBaseUV[v];
+                        Vector2 globalUV;
+                        if (slot.UVArea.width > 0f && slot.UVArea.height > 0f)
+                        {
+                            globalUV = slot.ConvertToAtlasUV(normUV);
+                        }
+                        else
+                        {
+                            globalUV = normUV;
+                        }
+                        uv0List.Add(globalUV);
+                        uv1List.Add(slotStamp.overlayUV[v]);
+                        vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
+                        colList.Add(new Color32(255, 255, 255, 255));
+                    }
+                    var mesh = new Mesh { name = $"DecalRT_Compose_{slotStamp.slotName}" };
+                    try
+                    {
+                        mesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+                        mesh.SetVertices(vertsList);
+                        mesh.SetTriangles(slotStamp.triangles, 0);
+                        mesh.SetUVs(0, uv0List);
+                        mesh.SetUVs(1, uv1List);
+                        mesh.SetColors(colList);
+                        mesh.RecalculateBounds();
+
+                        // Clip to runtime slot UVArea
+                        var uvRect2 = slot.UVArea;
+                        if (uvRect2.width <= 0f || uvRect2.height <= 0f) uvRect2 = new Rect(0f, 0f, 1f, 1f);
+                        stampMat.SetVector("_UVRect", new Vector4(uvRect2.xMin, uvRect2.yMin, uvRect2.xMax, uvRect2.yMax));
+
+                        // Masking rule
+                        Texture maskTex2 = null;
+                        try { if (overlay.alphaMask != null) maskTex2 = overlay.alphaMask; } catch { }
+                        if (maskTex2 == null && overlay.textureList != null && overlay.textureList.Length > 0)
+                        {
+                            maskTex2 = overlay.textureList[0];
+                        }
+                        stampMat.SetFloat("_UseMask", maskTex2 != null ? 1f : 0f);
+                        if (maskTex2 != null) stampMat.SetTexture("_MaskTex", maskTex2);
+
+                        // Draw to provided target texture
+                        var prev = RenderTexture.active;
+                        GL.PushMatrix();
+                        GL.LoadOrtho();
+                        RenderTexture.active = targetTexture;
+                        stampMat.SetPass(0);
+                        Graphics.DrawMeshNow(mesh, Matrix4x4.identity);
+                        GL.PopMatrix();
+                        RenderTexture.active = prev;
+                    }
+                    finally
+                    {
+                        UMAUtils.DestroySceneObject(mesh);
+                    }
+                }
+
+                // Dilation phase (optional)
+                if (stamp.bleedPixels > 0)
+                {
+                    RunDilation(targetTexture, stamp.bleedPixels);
+                }
+            }
+            finally
+            {
+                // Cleanup
+                if (Application.isPlaying) UnityEngine.Object.Destroy(stampMat); else UnityEngine.Object.DestroyImmediate(stampMat);
+            }
+
+            return true;
+        }
+
+        // NEW OVERLOADS: Full-stamp replay across generated atlases (all channels or single property)
+        public static bool ApplyStampToUMA(DynamicCharacterAvatar avatar, UMAData umaData, DecalRTStampAsset stamp)
+        {
+            return ApplyStampToUMA_Internal(avatar, umaData, stamp, null);
+        }
+
+        public static bool ApplyStampToUMA(DynamicCharacterAvatar avatar, UMAData umaData, DecalRTStampAsset stamp, string materialPropertyName)
+        {
+            return ApplyStampToUMA_Internal(avatar, umaData, stamp, materialPropertyName);
+        }
+
+        private static bool ApplyStampToUMA_Internal(DynamicCharacterAvatar avatar, UMAData umaData, DecalRTStampAsset stamp, string singleProperty)
+        {
+            if (avatar == null || umaData == null || stamp == null)
+            {
+                LogWarn("ApplyStampToUMA: Missing avatar/umaData/stamp.");
+                LogDebugSkip("ApplyStampToUMA(multi): missing params");
                 return false;
             }
 
@@ -831,155 +913,193 @@ namespace UMA
             {
                 try { overlay = UMAAssetIndexer.Instance.GetAsset<OverlayDataAsset>(stamp.overlayName); } catch { }
             }
-            if (overlay == null || overlay.material == null || overlay.textureList == null || overlay.textureList.Length == 0)
+            if (overlay == null || overlay.textureList == null || overlay.textureList.Length == 0)
             {
-                LogWarn("ApplyStampToUMA(slotName,prop,rt): Overlay or textures not found.");
+                LogWarn($"ApplyStampToUMA: Overlay '{stamp.overlayName}' not found or empty.");
+                LogDebugSkip("ApplyStampToUMA(multi): overlay missing");
                 return false;
             }
 
-            // Resolve channel by materialPropertyName
-            int channelIndex = -1;
-            var channels = overlay.material != null ? overlay.material.channels : null;
-            if (channels != null)
+            // Determine single channel index if property provided
+            int singleChannelIndex = -1;
+            if (!string.IsNullOrEmpty(singleProperty) && overlay.material != null && overlay.material.channels != null)
             {
-                for (int i = 0; i < channels.Length; i++)
+                var chs = overlay.material.channels;
+                for (int i = 0; i < chs.Length; i++)
                 {
-                    if (string.Equals(channels[i].materialPropertyName, materialPropertyName, StringComparison.Ordinal))
+                    if (string.Equals(chs[i].materialPropertyName, singleProperty, StringComparison.Ordinal))
                     {
-                        channelIndex = i;
-                        break;
+                        singleChannelIndex = i; break;
                     }
                 }
-            }
-            if (channelIndex < 0 || channelIndex >= overlay.textureList.Length)
-            {
-                LogWarn($"ApplyStampToUMA(slotName,prop,rt): Channel not found for property '{materialPropertyName}'.");
-                return false;
-            }
-
-            // Find matching SlotStamp by exact slotName
-            DecalRTStampAsset.SlotStamp s = null;
-            for (int i = 0; i < stamp.slots.Count; i++)
-            {
-                var ss = stamp.slots[i];
-                if (ss != null && string.Equals(ss.slotName, slotName, StringComparison.Ordinal))
+                if (singleChannelIndex < 0)
                 {
-                    s = ss; break;
+                    LogWarn($"ApplyStampToUMA: Property '{singleProperty}' not found on overlay material channels.");
+                    LogDebugSkip("ApplyStampToUMA(multi): property not found");
+                    return false;
                 }
             }
-            if (s == null)
-            {
-                LogWarn($"ApplyStampToUMA(slotName,prop,rt): SlotStamp for '{slotName}' not found in stamp.");
-                return false;
-            }
 
-            // Resolve runtime slot for UVArea mapping
-            var slot = umaData.umaRecipe != null ? umaData.umaRecipe.GetSlot(slotName) : null;
-            if (slot == null)
-            {
-                LogWarn($"ApplyStampToUMA(slotName,prop,rt): Runtime slot '{slotName}' not found on UMA.");
-                return false;
-            }
-
-            int vcount = (s.normBaseUV != null) ? s.normBaseUV.Length : 0;
-            if (vcount == 0 || s.overlayUV == null || s.triangles == null)
-            {
-                LogWarn($"ApplyStampToUMA(slotName,prop,rt): Invalid stamp data for '{slotName}'.");
-                return false;
-            }
-
-            // Build mesh from saved UVs -> atlas/global UV -> clip-space
-            var vertsList = new List<Vector3>(vcount);
-            var uv0List = new List<Vector2>(vcount);
-            var uv1List = new List<Vector2>(vcount);
-            var colList = new List<Color32>(vcount);
-            for (int v = 0; v < vcount; v++)
-            {
-                Vector2 normUV = s.normBaseUV[v];
-                // convert normalized 0..1 in slot area -> atlas/global UV
-                Vector2 globalUV;
-                if (slot.UVArea.width > 0f && slot.UVArea.height > 0f)
-                {
-                    globalUV = slot.ConvertToAtlasUV(normUV);
-                }
-                else
-                {
-                    // if slot UVArea isn't valid, assume already global
-                    globalUV = normUV;
-                }
-
-                uv0List.Add(globalUV);
-                uv1List.Add(s.overlayUV[v]);
-                vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
-                colList.Add(new Color32(255, 255, 255, 255));
-            }
-
-            var stampMesh = new Mesh { name = $"DecalRT_Compose_{slot.slotName}" };
-            stampMesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
-            stampMesh.SetVertices(vertsList);
-            stampMesh.SetTriangles(s.triangles, 0);
-            stampMesh.SetUVs(0, uv0List);
-            stampMesh.SetUVs(1, uv1List);
-            stampMesh.SetColors(colList);
-            stampMesh.RecalculateBounds();
-
-            // Prepare stamp material
-            var stampMat = GetOrCreateStampMaterial(stamp.forceLinearSampling);
-            if (stampMat == null)
-            {
-                UMAUtils.DestroySceneObject(stampMesh);
-                return false;
-            }
+            Material stampMat = GetOrCreateStampMaterial(stamp.forceLinearSampling);
+            if (stampMat == null) { LogDebugSkip("ApplyStampToUMA(multi): stampMat null"); return false; }
             stampMat.SetFloat("_Fudge", 0.0001f);
             stampMat.SetFloat("_UseUVRect", 1.0f);
 
-            // Clip to runtime slot UVArea
-            var uvRect = slot.UVArea;
-            if (uvRect.width <= 0f || uvRect.height <= 0f) uvRect = new Rect(0f, 0f, 1f, 1f);
-            stampMat.SetVector("_UVRect", new Vector4(uvRect.xMin, uvRect.yMin, uvRect.xMax, uvRect.yMax));
-
-            // Masking rule
+            // Mask selection
             Texture maskTex = null;
             try { if (overlay.alphaMask != null) maskTex = overlay.alphaMask; } catch { }
-            if (maskTex == null && overlay.textureList != null && overlay.textureList.Length > 0)
-            {
-                maskTex = overlay.textureList[0];
-            }
+            if (maskTex == null && overlay.textureList.Length > 0) maskTex = overlay.textureList[0];
             stampMat.SetFloat("_UseMask", maskTex != null ? 1f : 0f);
             if (maskTex != null) stampMat.SetTexture("_MaskTex", maskTex);
 
-            // Source texture for resolved channel
-            var srcTex = overlay.textureList[channelIndex];
-            if (srcTex == null)
-            {
-                UMAUtils.DestroySceneObject(stampMesh);
-                if (Application.isPlaying) UnityEngine.Object.Destroy(stampMat); else UnityEngine.Object.DestroyImmediate(stampMat);
-                LogWarn($"ApplyStampToUMA(slotName,prop,rt): Source texture null for channel {channelIndex}.");
-                return false;
-            }
-            stampMat.SetTexture("_OverlayTex", srcTex);
-
-            // Draw to provided target texture
-            var prev = RenderTexture.active;
+            var prevRTGlobal = RenderTexture.active;
             GL.PushMatrix();
             GL.LoadOrtho();
-            RenderTexture.active = targetTexture;
-            stampMat.SetPass(0);
-            Graphics.DrawMeshNow(stampMesh, Matrix4x4.identity);
-            GL.PopMatrix();
-            RenderTexture.active = prev;
 
-            // Dilation phase (optional)
-            if (stamp.bleedPixels > 0)
+            int totalStamped = 0;
+
+            // Iterate slots in stamp
+            for (int si = 0; si < stamp.slots.Count; si++)
             {
-                RunDilation(targetTexture, stamp.bleedPixels);
+                var s = stamp.slots[si];
+                if (s == null || s.triangles == null || s.normBaseUV == null || s.overlayUV == null)
+                {
+                    LogDebugSkip($"ApplyStampToUMA(multi): slot index {si} invalid");
+                    continue;
+                }
+                var runtimeSlot = umaData.umaRecipe != null ? umaData.umaRecipe.GetSlot(s.slotName) : null;
+                if (runtimeSlot == null)
+                {
+                    LogDebugSkip($"ApplyStampToUMA(multi): runtime slot '{s.slotName}' missing");
+                    continue;
+                }
+
+                int vcount = s.normBaseUV.Length;
+                if (vcount == 0) continue;
+
+                // Build mesh from saved data
+                var vertsList = new List<Vector3>(vcount);
+                var uv0List = new List<Vector2>(vcount);
+                var uv1List = new List<Vector2>(vcount);
+                var colList = new List<Color32>(vcount);
+                for (int v = 0; v < vcount; v++)
+                {
+                    Vector2 normUV = s.normBaseUV[v];
+                    Vector2 globalUV = (runtimeSlot.UVArea.width > 0f && runtimeSlot.UVArea.height > 0f) ? runtimeSlot.ConvertToAtlasUV(normUV) : normUV;
+                    uv0List.Add(globalUV);
+                    uv1List.Add(s.overlayUV[v]);
+                    vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
+                    colList.Add(new Color32(255, 255, 255, 255));
+                }
+                var mesh = new Mesh { name = $"DecalRT_Replay_{s.slotName}" };
+                mesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+                mesh.SetVertices(vertsList);
+                mesh.SetTriangles(s.triangles, 0);
+                mesh.SetUVs(0, uv0List);
+                mesh.SetUVs(1, uv1List);
+                mesh.SetColors(colList);
+                mesh.RecalculateBounds();
+
+                // Clip rect
+                var uvRect = runtimeSlot.UVArea;
+                if (uvRect.width <= 0f || uvRect.height <= 0f) uvRect = new Rect(0f, 0f, 1f, 1f);
+                stampMat.SetVector("_UVRect", new Vector4(uvRect.xMin, uvRect.yMin, uvRect.xMax, uvRect.yMax));
+
+                // Find generated materials for this slot (match by umaMaterial name if stored)
+                for (int gi = 0; gi < umaData.generatedMaterials.materials.Count; gi++)
+                {
+                    var gm = umaData.generatedMaterials.materials[gi];
+                    if (gm == null) continue;
+                    if (gm.skinnedMeshRenderer == null) continue;
+                    // We cannot reliably map slot->renderer directly here, so allow any renderer if material matches
+                    if (!string.IsNullOrEmpty(s.umaMaterialName) && gm.umaMaterial != null && !string.Equals(gm.umaMaterial.name, s.umaMaterialName, StringComparison.Ordinal))
+                        continue;
+                    if (gm.resultingAtlasList == null) continue;
+                    if (gm.umaMaterial == null) continue;
+
+                    int targetChannels = gm.resultingAtlasList.Length;
+                    int sourceChannels = overlay.textureList.Length;
+                    if (targetChannels == 0 || sourceChannels == 0) continue;
+
+                    int startCh = 0;
+                    int endCh = Mathf.Min(targetChannels, sourceChannels) - 1;
+                    if (singleChannelIndex >= 0)
+                    {
+                        if (singleChannelIndex >= targetChannels || singleChannelIndex >= sourceChannels) continue;
+                        startCh = endCh = singleChannelIndex;
+                    }
+
+                    for (int ch = startCh; ch <= endCh; ch++)
+                    {
+                        var src = overlay.textureList[ch];
+                        if (src == null) continue;
+                        var tgtTex = gm.resultingAtlasList[ch];
+                        if (tgtTex == null) continue;
+
+                        // Ensure render target
+                        var existingRT = tgtTex as RenderTexture;
+                        bool createdTempRT = false;
+                        Texture2D originalTex2D = tgtTex as Texture2D;
+                        RenderTexture rt = existingRT;
+                        if (rt == null && originalTex2D != null)
+                        {
+                            int w = originalTex2D.width;
+                            int h = originalTex2D.height;
+                            rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+                            rt.name = $"UMA_RT_Replay_{s.slotName}_{ch}";
+                            Graphics.Blit(originalTex2D, rt);
+                            gm.resultingAtlasList[ch] = rt;
+                            createdTempRT = true;
+                        }
+                        if (rt == null) continue; // could not create
+
+                        stampMat.SetTexture("_OverlayTex", src);
+                        RenderTexture.active = rt;
+                        stampMat.SetPass(0);
+                        Graphics.DrawMeshNow(mesh, Matrix4x4.identity);
+                        totalStamped++;
+
+                        if (stamp.bleedPixels > 0)
+                            RunDilation(rt, stamp.bleedPixels);
+
+                        if (createdTempRT)
+                        {
+                            var prev = RenderTexture.active;
+                            RenderTexture.active = rt;
+                            var newTex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, true, false)
+                            {
+                                name = $"UMA_Atlas_{s.slotName}_{ch}"
+                            };
+                            if (originalTex2D != null)
+                            {
+                                newTex.wrapMode = originalTex2D.wrapMode;
+                                newTex.filterMode = originalTex2D.filterMode;
+                                newTex.anisoLevel = originalTex2D.anisoLevel;
+                            }
+                            newTex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0, false);
+                            newTex.Apply(true, false);
+                            RenderTexture.active = prev;
+                            gm.resultingAtlasList[ch] = newTex;
+                            string propName = null;
+                            if (gm.textureNameList != null && ch < gm.textureNameList.Length) propName = gm.textureNameList[ch];
+                            if (string.IsNullOrEmpty(propName) && gm.umaMaterial.channels != null && ch < gm.umaMaterial.channels.Length)
+                                propName = gm.umaMaterial.channels[ch].materialPropertyName;
+                            RebindTextureOnMaterials(gm, ch, newTex, propName);
+                            RenderTexture.ReleaseTemporary(rt);
+                            if (originalTex2D != null) UMAUtils.DestroySceneObject(originalTex2D);
+                        }
+                    }
+                }
+
+                UMAUtils.DestroySceneObject(mesh);
             }
 
-            // Cleanup
-            UMAUtils.DestroySceneObject(stampMesh);
+            GL.PopMatrix();
+            RenderTexture.active = prevRTGlobal;
             if (Application.isPlaying) UnityEngine.Object.Destroy(stampMat); else UnityEngine.Object.DestroyImmediate(stampMat);
 
-            return true;
+            if (totalStamped == 0) LogDebugSkip("ApplyStampToUMA(multi): nothing stamped");
+            return totalStamped > 0;
         }
 
         public static bool RemoveTrianglesFromLastStamp(HashSet<int> ordinalsToRemove, DynamicCharacterAvatar avatar, UMAData umaData)
@@ -987,6 +1107,7 @@ namespace UMA
             if (_lastStamp == null || ordinalsToRemove == null || ordinalsToRemove.Count == 0)
             {
                 LogWarn("RemoveTrianglesFromLastStamp: No last stamp or no ordinals to remove.");
+                LogDebugSkip("RemoveTrianglesFromLastStamp: missing stamp or ordinals");
                 return false;
             }
 
@@ -1078,7 +1199,14 @@ namespace UMA
             }
 
             LogWarn("RemoveTrianglesFromLastStamp: Missing avatar or umaData.");
+            LogDebugSkip("RemoveTrianglesFromLastStamp: avatar or umaData missing");
             return false;
+        }
+
+        // Backward compatibility wrapper (older code called ApplyStampAsset, which now maps to ApplyStampToUMA for whole-stamp application)
+        public static bool ApplyStampAsset(DynamicCharacterAvatar avatar, UMAData umaData, DecalRTStampAsset stamp, string materialPropertyName)
+        {
+            return ApplyStampToUMA(avatar, umaData, stamp, materialPropertyName);
         }
 
         // Lightweight runtime runner for deferred work
@@ -1308,7 +1436,6 @@ namespace UMA
             Vector3 up = (Mathf.Abs(Vector3.Dot(rayDirLocal, Vector3.up)) > 0.95f) ? Vector3.right : Vector3.up;
             axisX = Vector3.Cross(up, rayDirLocal).normalized;
             axisY = Vector3.Cross(rayDirLocal, axisX).normalized;
-
             float rad = angleDeg * Mathf.Deg2Rad;
             float c = Mathf.Cos(rad);
             float s = Mathf.Sin(rad);
@@ -1333,12 +1460,9 @@ namespace UMA
             return mat;
         }
 
-        // Ensure material texture properties are rebound after we swap atlas Texture2D
         private static void RebindTextureOnMaterials(UMAData.GeneratedMaterial gm, int channel, Texture newTex, string explicitPropertyName)
         {
             if (gm == null || newTex == null) return;
-
-            // Resolve the target property name priority: explicit -> textureNameList -> UMA material channel mapping
             string propName = explicitPropertyName;
             if (string.IsNullOrEmpty(propName) && gm.textureNameList != null && channel >= 0 && channel < gm.textureNameList.Length)
             {
@@ -1348,9 +1472,7 @@ namespace UMA
             {
                 propName = gm.umaMaterial.channels[channel].materialPropertyName;
             }
-
             bool rebound = false;
-            // Bind only to the resolved property, if it exists on the materials
             if (!string.IsNullOrEmpty(propName))
             {
                 if (gm.material != null && gm.material.HasProperty(propName))
@@ -1367,22 +1489,17 @@ namespace UMA
                 }
                 if (rebound) return;
             }
-
-            // If property name could not be resolved, only fall back for Diffuse channels
             var canFallbackToCommon = false;
             if (gm.umaMaterial != null && gm.umaMaterial.channels != null && channel >= 0 && channel < gm.umaMaterial.channels.Length)
             {
                 var chType = gm.umaMaterial.channels[channel].channelType;
                 canFallbackToCommon = (chType == UMAMaterial.ChannelType.DiffuseTexture);
             }
-
             if (!canFallbackToCommon)
             {
                 LogWarn($"RebindTextureOnMaterials: Could not resolve property for channel {channel} on material '{gm.material?.name}'. No fallback used (not Diffuse). Texture may not display.");
                 return;
             }
-
-            // 3) Last resort for Diffuse: common albedo property names (_BaseMap for URP, _MainTex for legacy)
             string[] commonProps = { "_BaseMap", "_MainTex", "_BaseColorMap" };
             foreach (var p in commonProps)
             {
@@ -1420,22 +1537,17 @@ namespace UMA
                 return;
             }
             var mat = new Material(dilateShader) { name = "DecalRT_DilateMat" };
-            // Preserve alpha by default; use a small neighbor alpha threshold to avoid smearing from extremely faint samples
             mat.SetFloat("_PreserveAlpha", 1.0f);
             mat.SetFloat("_MinNeighborAlpha", 0.1f);
-
-            // Use the new radius parameter to reduce passes. Max radius per pass is 16.
             int remaining = Mathf.Max(0, bleedPixels);
             while (remaining > 0)
             {
                 int step = Mathf.Min(remaining, 16);
                 mat.SetFloat("_Radius", step);
-
                 RenderTexture tmp = RenderTexture.GetTemporary(rt.descriptor);
-                Graphics.Blit(rt, tmp);          // input copy
-                Graphics.Blit(tmp, rt, mat);     // dilated output with radius=step
+                Graphics.Blit(rt, tmp);
+                Graphics.Blit(tmp, rt, mat);
                 RenderTexture.ReleaseTemporary(tmp);
-
                 remaining -= step;
             }
             if (Application.isPlaying)

@@ -164,6 +164,15 @@ namespace UMA
 		}
 #endif
 
+        public int GetChannelIndex(string materialPropertyName)
+        {
+            for (int i = 0; i < channels.Length; i++)
+            {
+                if (channels[i].materialPropertyName == materialPropertyName)
+                    return i;
+            }
+            return -1;
+        }
 
         public List<string> GetTexturePropertyNames()
         {

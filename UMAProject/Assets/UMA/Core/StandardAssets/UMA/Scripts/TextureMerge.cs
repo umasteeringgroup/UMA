@@ -55,7 +55,7 @@ namespace UMA
 			public Vector3 scale;
 			public Vector2 position;
 			public bool advancedBlending;
-			public int textureType;
+			public int textureChannel;
 			public UMAMaterial.ChannelType channelType;
 			// Needed for decals
 			public TextureEventParms textureEventParms;
@@ -153,7 +153,8 @@ namespace UMA
 				{
 					var tr = textureMergeRects[i];
 
-					if (tr.advancedBlending)
+					//Debug.Log("Drawing rect for texture: " + (tr.tex != null ? tr.tex.name : "null") + " at " + tr.rect + " advancedBlending: " + tr.advancedBlending + " channelType: " + tr.channelType);
+                    if (tr.advancedBlending)
 					{
                         // Create a temporary texture that is the size of the overlay rect in atlas space.
                         scratch = RenderTexture.GetTemporary((int)tr.rect.width, (int)tr.rect.height, 0, target.format, RenderTextureReadWrite.Linear);
@@ -270,9 +271,14 @@ namespace UMA
 			{
 				GL.PopMatrix();
 			}
-			if (tr.textureEventParms != null)
+			if (tr.tex.name.Contains("M_H_bod_Normal"))
 			{
-				tr.textureEventParms.renderTexture = tr.tex as RenderTexture;
+				Debug.Log("Here");
+            }
+
+            if (tr.textureEventParms != null)
+			{
+				tr.textureEventParms.renderTexture = RenderTexture.active;
                 tr.textureEventParms.umaData.FireAtlasUpdatedEvent(tr.textureEventParms);
             }
         }
@@ -375,30 +381,32 @@ namespace UMA
 			}
 		}
 
-		private void SetupMaterialAndBaseOverlay(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType, UMAData umaData)
+		private void SetupMaterialAndBaseOverlay(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureChannel, UMAData umaData)
 		{
 			if (source.isNoTextures)
             {
                 return;
             }
 
-            camBackgroundColor = source.GetMultiplier(0, textureType);
+            camBackgroundColor = source.GetMultiplier(0, textureChannel);
 			camBackgroundColor.a = 0.0f;
 
-			if (textureType >= source.baseOverlay.textureList.Length)
+			if (textureChannel >= source.baseOverlay.textureList.Length)
 			{
 				// Debug.Log("Out of range (" + textureType + ") on base overlay: " + source.overlayData[0].overlayName + " on slot: " + source.slotData.slotName);
 				return;
 			}
-			textureMergeRect.tex = source.baseOverlay.textureList[textureType];
+			textureMergeRect.tex = source.baseOverlay.textureList[textureChannel];
             textureMergeRect.advancedBlending = false;
-			TextureEventParms tep = new TextureEventParms(null, source.overlayData[0], source.slotData, umaData, 0 );
+			TextureEventParms tep = new TextureEventParms(null, source.overlayData[0], source.slotData, umaData, textureChannel );
 
             // JRRM debug
-            textureMergeRect.textureType = textureType;
-			textureMergeRect.channelType = source.slotData.material.channels[textureType].channelType;
+            textureMergeRect.textureChannel = textureChannel;
+			textureMergeRect.channelType = source.slotData.material.channels[textureChannel].channelType;
+			textureMergeRect.textureChannel = textureChannel;
+            textureMergeRect.textureEventParms = tep;
 
-            switch (source.slotData.material.channels[textureType].channelType)
+            switch (source.slotData.material.channels[textureChannel].channelType)
 			{
 				case UMAMaterial.ChannelType.NormalMap:
 					textureMergeRect.mat.shader = normalShader;
@@ -433,13 +441,13 @@ namespace UMA
 
 
 #endif
-            textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
+            textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureChannel]);
 			textureMergeRect.mat.SetTexture("_ExtraTex", source.baseOverlay.alphaTexture);
-			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureType));
-			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(0, textureType));
+			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureChannel));
+			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(0, textureChannel));
 		}
 
-		public void SetupMaterialAndBaseOverlay(UMAData.MaterialFragment source, int textureType, UMAData umaData)
+		public void SetupMaterialAndBaseOverlay(UMAData.MaterialFragment source, int textureChannel, UMAData umaData)
 		{
 			if (!source.isNoTextures)
 			{
@@ -447,7 +455,7 @@ namespace UMA
 				textureMergeRects[textureMergeRectCount].rect = source.atlasRegion;
 				textureMergeRects[textureMergeRectCount].rect.y = height - textureMergeRects[textureMergeRectCount].rect.y - textureMergeRects[textureMergeRectCount].rect.height;
 				atlasRect = textureMergeRects[textureMergeRectCount].rect;
-				SetupMaterialAndBaseOverlay(ref textureMergeRects[textureMergeRectCount], source, textureType, umaData);
+				SetupMaterialAndBaseOverlay(ref textureMergeRects[textureMergeRectCount], source, textureChannel, umaData);
 			}
 			textureMergeRectCount++;
 		}
@@ -470,11 +478,15 @@ namespace UMA
         /// </summary>
         /// <param name="atlas"></param>
         /// <param name="idx"></param>
-        /// <param name="textureType"></param>
-        public void SetupSlotAndOverlayStack(UMAData.GeneratedMaterial atlas, int idx, int textureType, UMAData umaData)
+        /// <param name="textureChannel"></param>
+        public void SetupSlotAndOverlayStack(UMAData.GeneratedMaterial atlas, int idx, int textureChannel, UMAData umaData)
 		{
 			var atlasElement = atlas.materialFragments[idx];
-			if (atlasElement.isRectShared)
+			if (atlasElement.slotData.slotName.Contains("Torso"))
+			{
+                Debug.Log($"Processing torso. index {idx} textureChannel {textureChannel}");
+            }
+            if (atlasElement.isRectShared)
             {
                 return;
             }
@@ -482,7 +494,7 @@ namespace UMA
             height = Mathf.FloorToInt(atlas.cropResolution.y);
 
             // Here we setup the material and the base overlay TextureMergeRect.
-            SetupMaterialAndBaseOverlay(atlasElement, textureType, umaData);
+            SetupMaterialAndBaseOverlay(atlasElement, textureChannel, umaData);
 			resolutionScale = atlas.resolutionScale * atlasElement.slotData.overlayScale;
 
 			if (atlasElement.AdditionalOverlays == null)
@@ -503,9 +515,9 @@ namespace UMA
 				if (atlasElement.AdditionalOverlays[i] != null)
 				{
 
-					if (textureType < atlasElement.AdditionalOverlays[i].textureList.Length)
+					if (textureChannel < atlasElement.AdditionalOverlays[i].textureList.Length)
 					{
-						var tex = atlasElement.AdditionalOverlays[i].textureList[textureType];
+						var tex = atlasElement.AdditionalOverlays[i].textureList[textureChannel];
 
 						if (tex != null)
 						{
@@ -528,7 +540,7 @@ namespace UMA
 
 				//Debug.Log($"SetupOverlay [{i}] Slot [{atlasElement.slotData.slotName}], Overlay [{atlasElement.overlayList[i].overlayName}] texture [{texname}] Channel [{textureType}]");
 				//DebugCSV($"{atlasElement.slotData.slotName}, {i}, {atlasElement.overlayList[i].overlayName}, {texname}, {textureType}");
-                SetupOverlay(atlasElement, i, textureType, umaData);
+                SetupOverlay(atlasElement, i, textureChannel, umaData);
 			}
 		}
 
@@ -537,19 +549,19 @@ namespace UMA
 			System.IO.File.AppendAllText("c:\\tmp\\TextureMerge.csv", msg + "\n");
         }
 
-        private void SetupOverlay(UMAData.MaterialFragment source, int AdditionalOverlayIndex, int textureType, UMAData umaData)
+        private void SetupOverlay(UMAData.MaterialFragment source, int AdditionalOverlayIndex, int textureChannel, UMAData umaData)
 		{
 			if (source.AdditionalOverlays[AdditionalOverlayIndex] == null)
             {
                 return;
             }
 
-            if (textureType >= source.AdditionalOverlays[AdditionalOverlayIndex].textureList.Length)
+            if (textureChannel >= source.AdditionalOverlays[AdditionalOverlayIndex].textureList.Length)
             {
                 return;
             }
 
-            if (source.AdditionalOverlays[AdditionalOverlayIndex].textureList[textureType] == null)
+            if (source.AdditionalOverlays[AdditionalOverlayIndex].textureList[textureChannel] == null)
             {
                 return;
             }
@@ -570,10 +582,10 @@ namespace UMA
 				overlayRect = atlasRect;
 			}
 
-			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, AdditionalOverlayIndex, ref overlayRect, textureType);
+			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, AdditionalOverlayIndex, ref overlayRect, textureChannel);
 
             /* set the parameters for decal overlays */
-            textureMergeRects[textureMergeRectCount].textureEventParms = new TextureEventParms(null,  source.overlayData[AdditionalOverlayIndex + 1], source.slotData, umaData, AdditionalOverlayIndex+1);
+            textureMergeRects[textureMergeRectCount].textureEventParms = new TextureEventParms(null,  source.overlayData[AdditionalOverlayIndex + 1], source.slotData, umaData, textureChannel);
 
             /* Event parameters setup */
 
@@ -654,7 +666,7 @@ namespace UMA
 			textureMergeRect.tex = source.AdditionalOverlays[i2].textureList[textureType];
 			textureMergeRect.advancedBlending = false;
             // JRRM debug
-            textureMergeRect.textureType = textureType;
+            textureMergeRect.textureChannel = textureType;
             textureMergeRect.channelType = source.slotData.material.channels[textureType].channelType;
 
 

@@ -682,26 +682,6 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-            /*
-            System.Collections.Generic.HashSet<string> Blendshapes = new HashSet<string>();
-            foreach (SlotData sd in umaData.umaRecipe.slotDataList)
-            {
-                if (sd.asset.meshData.blendShapes != null)
-                {
-                    foreach (var bs in sd.asset.meshData.blendShapes)
-                    {
-                        if (blendShapes.Contains(bs.shapeName) == false)
-                        {
-                            Blendshapes.Add(bs.shapeName);
-                        }
-                    }
-                }
-            }
-            foreach(string s in Blendshapes)
-            {
-                Debug.Log("Found Blendshape: " + s);
-            } */
-
             if (Application.isPlaying)
             {
                 if (_isFirstSettingsBuild)
@@ -4429,6 +4409,7 @@ namespace UMA.CharacterSystem
         // Find: public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true, bool forceBuild=false)
         {
+            Debug.Log("BuildCharacter called");
 #if UMA_DCA_TIMING
             Stopwatch sw = new Stopwatch();
             sw.Start();

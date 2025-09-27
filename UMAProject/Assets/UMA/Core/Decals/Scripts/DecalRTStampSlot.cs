@@ -9,7 +9,7 @@ namespace UMA
     /// Attach this component to your avatar (via a slot) and wire its OnCharacterBegun handler
     /// to the SlotDataAsset CharacterBegun event. It subscribes to UMAData.OnAtlasUpdated and,
     /// when a matching overlay channel render target is ready, applies configured DecalRTStampAssets
-    /// into the generated atlas using DecalRenderTexture.ApplyStampToUMA.
+    /// into the generated atlas using DecalRenderTexture.ApplyStampAsset.
     /// </summary>
     [DisallowMultipleComponent]
     public class DecalRTStampSlot : MonoBehaviour
@@ -25,14 +25,13 @@ namespace UMA
             [Tooltip("Optional overlay names to trigger this stamp set (legacy/fallback). Match occurs if ANY name equals OverlayData.overlayName.")]
             public List<string> overlayNames = new List<string>();
 
-            [Tooltip("Stamp assets to apply for matching overlays (applied for each channel event emitted).")]
+            [Tooltip("Stamp assets to apply for matching overlays (applied for each matching atlas update event).")]
             public DecalRTStampAsset[] stamps;
 
             public bool Matches(OverlayData overlayData)
             {
                 if (overlayData == null) return false;
 
-                // Prefer direct asset match when available
                 if (overlays != null && overlays.Count > 0)
                 {
                     var odAsset = overlayData.asset;
@@ -40,8 +39,6 @@ namespace UMA
                     {
                         var a = overlays[i];
                         if (a == null) continue;
-
-                        // Match by reference or by overlayName for robustness
                         if (ReferenceEquals(a, odAsset)) return true;
                         if (odAsset != null && !string.IsNullOrEmpty(odAsset.overlayName) &&
                             string.Equals(a.overlayName, odAsset.overlayName, StringComparison.Ordinal))
@@ -51,16 +48,15 @@ namespace UMA
                     }
                 }
 
-                // Fallback: match by configured names (case-sensitive to match UMA overlayName usage)
                 if (overlayNames != null && overlayNames.Count > 0)
                 {
-                    string name = overlayData.overlayName;
-                    if (!string.IsNullOrEmpty(name))
+                    string oname = overlayData.overlayName;
+                    if (!string.IsNullOrEmpty(oname))
                     {
                         for (int i = 0; i < overlayNames.Count; i++)
                         {
                             var cfg = overlayNames[i];
-                            if (!string.IsNullOrEmpty(cfg) && string.Equals(cfg, name, StringComparison.Ordinal))
+                            if (!string.IsNullOrEmpty(cfg) && string.Equals(cfg, oname, StringComparison.Ordinal))
                             {
                                 return true;
                             }
@@ -88,9 +84,9 @@ namespace UMA
             if (umaData == null) return;
 
             _avatar = _avatar ?? GetComponentInParent<DynamicCharacterAvatar>();
-            if (_avatar == null)
+            if (_avatar == null && enableDebug)
             {
-                if (enableDebug) Debug.LogWarning("[DecalRTStampSlot] No DynamicCharacterAvatar found in parents.");
+                Debug.LogWarning("[DecalRTStampSlot] No DynamicCharacterAvatar found in parents.");
             }
 
             // Avoid double subscription and handle avatar rebuilds
@@ -125,49 +121,89 @@ namespace UMA
             _umaData = null;
         }
 
+        private static void DebugSkip(string reason, UnityEngine.Object ctx)
+        {
+            if (Debug.isDebugBuild)
+            {
+                Debug.Log("[DecalRTStampSlot][Skip] " + reason, ctx);
+            }
+        }
+
         private void HandleAtlasUpdated(UMAData umaData, TextureEventParms parms)
         {
             try
             {
-                if (umaData == null || parms == null) return;
-                if (parms.overlayData == null || parms.slotData == null || parms.renderTexture == null) return;
+                if (umaData == null) { DebugSkip("UMAData null in HandleAtlasUpdated", this); return; }
+                if (parms == null) { DebugSkip("TextureEventParms null", this); return; }
+                if (parms.overlayData == null) { DebugSkip("Event overlayData null (nothing to match)", this); return; }
 
-                // Locate the first set that matches ANY overlay in its list
-                var set = FindStampSet(parms.overlayData);
-                if (set == null || set.stamps == null || set.stamps.Length == 0) return;
+                if (_avatar == null)
+                    _avatar = umaData as DynamicCharacterAvatar;
+                if (_avatar == null) { DebugSkip("No DynamicCharacterAvatar found (cannot stamp)", this); return; }
 
-                // Material property name maps to the UMAMaterial channel for this overlay
-                string propName = parms.materialPropertyName;
-                string slotName = parms.slotData.slotName;
-                RenderTexture target = parms.renderTexture;
+                if (overlayStamps == null || overlayStamps.Count == 0) { DebugSkip("overlayStamps list empty", this); return; }
 
-                for (int i = 0; i < set.stamps.Length; i++)
+                bool anyAttempted = false;
+                bool anyApplied = false;
+
+                // Iterate ALL sets; do not early exit so multiple sets can react to the same overlay
+                for (int si = 0; si < overlayStamps.Count; si++)
                 {
-                    var stamp = set.stamps[i];
-                    if (stamp == null) continue;
-
-                    bool ok = DecalRenderTexture.ApplyStampToUMA(
-                        _avatar,
-                        umaData,
-                        stamp,
-                        slotName,
-                        propName,
-                        target
-                    );
-
-                    if (enableDebug && !ok)
+                    var set = overlayStamps[si];
+                    if (set == null)
                     {
-                        var ovName = parms.overlayData.overlayName;
-                        Debug.LogWarning($"[DecalRTStampSlot] ApplyStampToUMA returned false. overlay='{ovName}', slot='{slotName}', prop='{propName}', stamp='{stamp.name}'.");
+                        DebugSkip($"OverlayStampSet index {si} is null", this);
+                        continue;
                     }
+                    if (set.stamps == null || set.stamps.Length == 0)
+                    {
+                        DebugSkip($"OverlayStampSet '{set.name}' has no stamps", this);
+                        continue;
+                    }
+                    if (!set.Matches(parms.overlayData))
+                    {
+                        DebugSkip($"OverlayStampSet '{set.name}' did not match overlay '{parms.overlayData.overlayName}'", this);
+                        continue;
+                    }
+
+                    // Matching set
+                    for (int st = 0; st < set.stamps.Length; st++)
+                    {
+                        anyAttempted = true;
+                        var stamp = set.stamps[st];
+                        if (stamp == null)
+                        {
+                            DebugSkip($"Stamp index {st} in set '{set.name}' is null", this);
+                            continue;
+                        }
+                        bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms.materialPropertyName, parms.renderTexture);
+                        if (!ok)
+                        {
+                            DebugSkip($"ApplyStampAsset returned false for set '{set.name}' stamp '{stamp.name}'", this);
+                        }
+                        else
+                        {
+                            anyApplied = true;
+                        }
+                    }
+                }
+
+                if (!anyAttempted)
+                {
+                    DebugSkip("No stamps attempted (no matching sets)", this);
+                }
+                else if (!anyApplied)
+                {
+                    DebugSkip("Stamps attempted but none applied successfully", this);
                 }
             }
             catch (Exception ex)
             {
-                if (enableDebug) Debug.LogException(ex, this);
+                if (enableDebug || Debug.isDebugBuild) Debug.LogException(ex, this);
             }
         }
 
+        // Legacy helper kept for backward compatibility (no longer used in new logic)
         private OverlayStampSet FindStampSet(OverlayData overlayData)
         {
             if (overlayStamps == null) return null;

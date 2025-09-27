@@ -49,7 +49,16 @@ MonoBehaviour:
     overlays:
     - {fileID: 11400000, guid: 03e5bfa4f7f2fd445974ed61bdf5d9cf, type: 2}
     - {fileID: 11400000, guid: 19ca51fa9b344074ebeaad4c873fd125, type: 2}
-    overlayNames: []
-    stamps:
-    - {fileID: 11400000, guid: 2b1c3656fdcd10241844e288ab275bfc, type: 2}
+    overlayNames:
+    - M_Bod Overlay 1
+    - MaleUnderwear01
+    - M_Face
+    - Maincap_Overlay
+    - InnerMouth
+    - Eye Overlay
+    - Default Eye Adjust
+    - M_Face 1 eyebrows2
+    - F_H_Eyelash
+    - MaleHairSlick01_Overlay
+    stamps: []
   enableDebug: 0

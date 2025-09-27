@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UMA;
 using UMA.CharacterSystem;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -807,8 +808,8 @@ namespace UMA.Decals
                             var safeName = clone.name.Replace('/', '_').Replace('\\', '_');
                             var path = UnityEditor.AssetDatabase.GenerateUniqueAssetPath($"{folder}/{safeName}.asset");
                             UnityEditor.AssetDatabase.CreateAsset(clone, path);
-                            UnityEditor.AssetDatabase.SaveAssets();
-                            UnityEditor.AssetDatabase.Refresh();
+                            EditorUtility.SetDirty(clone);
+                            UnityEditor.AssetDatabase.SaveAssetIfDirty(clone);
                         }
                         catch { /* ignore editor persistence errors */ }
 #endif
@@ -892,7 +893,7 @@ namespace UMA.Decals
                         {
                             if (UMAAssetIndexer.Instance != null && UMAAssetIndexer.Instance.generator != null)
                             {
-                                UMAAssetIndexer.Instance.generator.GenerateTexturesOnly(Avatar.umaData, false);
+                                //UMAAssetIndexer.Instance.generator.GenerateTexturesOnly(Avatar.umaData, false);
                             }
                         }
                         catch (System.Exception ex)
