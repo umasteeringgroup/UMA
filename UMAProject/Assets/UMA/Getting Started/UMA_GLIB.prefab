@@ -71,7 +71,7 @@ MonoBehaviour:
   processAllPending: 1
   applyInline: 0
   showInHierarchy: 1
-  garbageCollectionRate: 8
+  garbageCollectionRate: 128
   collectGarbage: 1
   autoSetRaceBlendshapes: 0
   AllowReadFromMesh: 0

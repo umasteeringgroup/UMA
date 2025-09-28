@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
+    path: Assets/UMA/Examples/Physics Examples/RagdollExample.unity
+    guid: 5cc55c23c33870e49a6f3c5aa01a6ab0
+  - enabled: 1
     path: Assets/UMA/Examples/DynamicCharacterSystem Examples/UMA DCS Demo - Random
       Characters.unity
     guid: 23bb4999598a61e4989ccef2415039cf

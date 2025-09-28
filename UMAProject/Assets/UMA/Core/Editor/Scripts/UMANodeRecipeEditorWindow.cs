@@ -147,10 +147,6 @@ namespace UMA.Editors
         private SlotData _dragOverlaySourceSlot;
         private Vector2 _dragOverlayMousePos; // graph-space
 
-        // Overlay reorder within a slot (preview)
-        private int _overlayInsertPreviewIndex = -1;
-        private float _overlayInsertPreviewY;
-
         // Slot reorder (drag slot node)
         private bool _isDraggingSlot;
         private Node _dragSlotNode;
@@ -768,7 +764,6 @@ namespace UMA.Editors
                 _isDraggingOverlay = false;
                 _dragOverlayNode = null;
                 _dragOverlaySourceSlot = null;
-                _overlayInsertPreviewIndex = -1;
                 e.Use();
                 Repaint();
             }
@@ -778,7 +773,6 @@ namespace UMA.Editors
                 _isDraggingOverlay = false;
                 _dragOverlayNode = null;
                 _dragOverlaySourceSlot = null;
-                _overlayInsertPreviewIndex = -1;
                 e.Use();
                 Repaint();
             }

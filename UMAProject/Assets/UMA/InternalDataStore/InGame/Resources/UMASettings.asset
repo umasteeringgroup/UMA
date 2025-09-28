@@ -64,6 +64,7 @@ MonoBehaviour:
   AssetStoreURL: https://assetstore.unity.com/packages/3d/characters/uma-2-35611
   GithubURL: https://github.com/umasteeringgroup/UMA
   YoutubeURL: https://www.youtube.com/@SecretAnorak/videos
-  ShaderFolder: UMA/Core/ShaderPackages
+  ShaderFolder: Assets/UMA/Core/ShaderPackages
+  UMAFolder: Assets/UMA
   Overlays: {fileID: 2800000, guid: d422cb0fca0d49043a75d8e2f72a0834, type: 3}
   Slots: {fileID: 2800000, guid: 2baa5f36ef4c6fd47922ddd177e6a20e, type: 3}

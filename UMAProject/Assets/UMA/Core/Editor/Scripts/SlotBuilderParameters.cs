@@ -31,5 +31,7 @@ namespace UMA.Editors
         public bool invertX;
         public bool invertY;
         public bool invertZ;
+        public bool clearNormals;
+        public bool clearTangents;
     }
 }

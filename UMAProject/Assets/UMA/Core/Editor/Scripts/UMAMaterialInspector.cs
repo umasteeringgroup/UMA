@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
 using UMA.CharacterSystem;
+using UnityEngine.Rendering;
 
 namespace UMA.Editors
 {
@@ -436,7 +437,7 @@ namespace UMA.Editors
 
         private static string[] FindTexProperties( Shader shader)
         {
-            int count = ShaderUtil.GetPropertyCount(shader);
+            int count = shader.GetPropertyCount();
             if (count <= 0)
             {
                 return null;
@@ -446,9 +447,9 @@ namespace UMA.Editors
             texProperties.Add("Select");
             for (int i = 0; i < count; i++)
             {
-                if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
+                if (shader.GetPropertyType(i) == ShaderPropertyType.Texture)
                 {
-                    texProperties.Add(ShaderUtil.GetPropertyName(shader, i));
+                    texProperties.Add(shader.GetPropertyName(i));
                 }
             }
 

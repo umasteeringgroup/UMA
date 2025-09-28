@@ -71,6 +71,9 @@ namespace UMA
         [Header("Shader Folder")]
         [Tooltip("The folder where the UMA shaders are located, relative to the Assets folder. Usually UMA/Core/ShaderPackages")]
         public string ShaderFolder;
+        [Header("Default UMA Folder")]
+        [Tooltip("The UMA folder, relative to the Assets folder. Usually Assets/UMA")]
+        public string UMAFolder = "Assets/UMA";
 
         [Header("Welcome page textures")]
         public Texture2D Overlays;

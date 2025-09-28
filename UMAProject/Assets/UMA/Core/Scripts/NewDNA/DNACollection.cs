@@ -39,6 +39,12 @@ namespace UMA
                 {
                     foreach (var dna in collection.dnaList)
                     {
+                        if (DNADictionary == null)
+                        {
+                            DNADictionary = new Dictionary<string, DNA>();
+                        }
+                        if (dna == null || string.IsNullOrEmpty(dna.dnaName))
+                            continue;
                         if (!DNADictionary.ContainsKey(dna.dnaName))
                         {
                             DNADictionary.Add(dna.name, dna);

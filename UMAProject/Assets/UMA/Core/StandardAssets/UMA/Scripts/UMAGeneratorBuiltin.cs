@@ -220,7 +220,9 @@ namespace UMA
                 {
                     // TODO: Test this on IOS when I get it building. 
                     // GC.Collect(0, GCCollectionMode.Forced, true, true);
+#if !UNITY_EDITOR
                     GC.Collect();
+#endif
                     forceGarbageCollect = 0;
                 }
 
@@ -254,10 +256,6 @@ namespace UMA
 #endif
 				stopWatch.Stop();
 				UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
-                if (garbageCollectionRate == 0)
-                {
-                    GC.Collect(0);
-                }
             }
             if (RenderTexToCPU.PendingCopies() > 0)
             {
@@ -305,6 +303,7 @@ namespace UMA
 
         public bool GenerateTexturesOnly(UMAData data, bool fireEvents)
         {
+            Debug.Log("GenerateTexturesOnly");
             if (data == null)
             {
                 return true;
@@ -327,15 +326,10 @@ namespace UMA
                 PreApply(umaData);
             }
 
-
-            if (umaData.isTextureDirty)
-            {
-                UMAGeneratorPro ugp = new UMAGeneratorPro();
-                ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
-                umaData.isTextureDirty = false;
-                umaData.isAtlasDirty |= umaData.isMeshDirty;
-                TextureChanged++;
-            }
+            UMAGeneratorPro ugp = new UMAGeneratorPro();
+            ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
+            umaData.isAtlasDirty |= umaData.isMeshDirty;
+            TextureChanged++;
 
             RenderTexture.active = rbackup;
 

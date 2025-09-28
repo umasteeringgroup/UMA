@@ -53,8 +53,13 @@ namespace UMA
 
 		public RaceThumbnails raceThumbnails;
 
+		public override string ToString()
+		{
+			return $"{name}.{raceName}";
+        }
 
-		public List<OverlayColorData> GetDefaultColors()
+
+        public List<OverlayColorData> GetDefaultColors()
         {
 			if (RaceColorValues.Count > 0)
             {

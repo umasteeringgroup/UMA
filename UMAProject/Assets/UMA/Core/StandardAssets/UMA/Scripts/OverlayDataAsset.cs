@@ -156,6 +156,17 @@ namespace UMA
 				overlayBlend = new OverlayBlend[textureList.Length];
 			}
 		}
+
+		public Texture2D GetTexture(string MaterialPropertyName)
+		{
+			int index = material.GetChannelIndex(MaterialPropertyName);
+			if (index >= 0 && index < textureList.Length)
+			{
+				return textureList[index] as Texture2D;
+            }
+			return null;
+        }
+
 #if false
 		/// <summary>
 		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
@@ -217,14 +228,14 @@ namespace UMA
 			}*/
 		}
 #endif
-		/// <summary>
-		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
-		/// It is important that the OcclusionEntries be sorted by slotNameHash ascending to allow fast binary lookup
-		/// </summary>
-		//[Tooltip("Occlusion Entries for occluding triangles, currently only supported by powertools.")]
-		//public OcclusionEntry[] OcclusionEntries;
+        /// <summary>
+        /// Occlusion Entries for occluding triangles, currently only supported by powertools.
+        /// It is important that the OcclusionEntries be sorted by slotNameHash ascending to allow fast binary lookup
+        /// </summary>
+        //[Tooltip("Occlusion Entries for occluding triangles, currently only supported by powertools.")]
+        //public OcclusionEntry[] OcclusionEntries;
 
-		public OverlayDataAsset()
+        public OverlayDataAsset()
 		{
 
 		}

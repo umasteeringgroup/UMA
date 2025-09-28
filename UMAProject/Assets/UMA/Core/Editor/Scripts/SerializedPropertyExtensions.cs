@@ -39,6 +39,12 @@ namespace UMA
             return (T)obj;
         }
 
+        public static void SetString(this SerializedProperty prop, string value)
+        {
+            if (prop != null && prop.propertyType == SerializedPropertyType.String)
+                prop.stringValue = value;
+        }
+    
         public static bool SetValue<T>(this SerializedProperty property, T value) where T : class
         {
             object obj = property.serializedObject.targetObject;

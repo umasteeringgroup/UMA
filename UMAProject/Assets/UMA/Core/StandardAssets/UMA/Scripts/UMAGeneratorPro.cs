@@ -318,7 +318,7 @@ namespace UMA
 						tempMaterialDefinition.baseColor = overlay0.colorData.color;
 						tempMaterialDefinition.size = overlay0.pixelCount;
 
-						tempMaterialDefinition.overlays = new UMAData.textureData[validOverlayCount - 1];
+						tempMaterialDefinition.AdditionalOverlays = new UMAData.textureData[validOverlayCount - 1];
 						tempMaterialDefinition.overlayColors = new Color32[validOverlayCount - 1];
 						tempMaterialDefinition.rects = new Rect[validOverlayCount - 1];
 						tempMaterialDefinition.overlayData = new OverlayData[validOverlayCount];
@@ -354,10 +354,10 @@ namespace UMA
 						{
 							tempMaterialDefinition.rects[overlayID] = overlay.rect; // JRRM: Convert here into base overlay coordinates?
 						}
-						tempMaterialDefinition.overlays[overlayID] = new UMAData.textureData();
-						tempMaterialDefinition.overlays[overlayID].textureList = overlay.textureArray;
-						tempMaterialDefinition.overlays[overlayID].alphaTexture = overlay.alphaMask;
-						tempMaterialDefinition.overlays[overlayID].overlayType = overlay.overlayType;
+						tempMaterialDefinition.AdditionalOverlays[overlayID] = new UMAData.textureData();
+						tempMaterialDefinition.AdditionalOverlays[overlayID].textureList = overlay.textureArray;
+						tempMaterialDefinition.AdditionalOverlays[overlayID].alphaTexture = overlay.alphaMask;
+						tempMaterialDefinition.AdditionalOverlays[overlayID].overlayType = overlay.overlayType;
 						tempMaterialDefinition.overlayColors[overlayID] = overlay.colorData.color;
 						// This hurts my head. Some of the data is in overlay# -1, And some on Overlay#
 						overlayID++;

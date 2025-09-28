@@ -53,7 +53,9 @@ namespace UMA.Editors
 		public bool addToGlobalLibrary;
 		public bool binarySerialization;
 		public bool calcTangents=true;
-		public bool udimAdjustment = true;
+		public bool clearNormals=false;
+		public bool clearTangents=false;
+        public bool udimAdjustment = true;
         public string errmsg = "";
 		public List<string> Tags = new List<string>();
 		public bool showTags;
@@ -168,6 +170,10 @@ namespace UMA.Editors
 			EditorGUILayout.BeginHorizontal();
             calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
             udimAdjustment = EditorGUILayout.Toggle("Adjust for UDIM", udimAdjustment);
+            EditorGUILayout.EndHorizontal();
+			EditorGUILayout.BeginHorizontal();
+			clearNormals = EditorGUILayout.Toggle("Clear Blendshape Normals", clearNormals);
+			clearTangents = EditorGUILayout.Toggle("Clear Blendshape Tangents", clearTangents);
             EditorGUILayout.EndHorizontal();
 			EditorGUILayout.BeginHorizontal();
             useRootFolder = EditorGUILayout.Toggle("Write to Root Folder", useRootFolder);
@@ -460,6 +466,8 @@ namespace UMA.Editors
             sbp.invertY = invertY;
             sbp.invertZ = invertZ;
 			sbp.updateExistingSlots = updateExistingSlots;
+			sbp.clearNormals = clearNormals;
+			sbp.clearTangents = clearTangents;
 
 
             SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(sbp);

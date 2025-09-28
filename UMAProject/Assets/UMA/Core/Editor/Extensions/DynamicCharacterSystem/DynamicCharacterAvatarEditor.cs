@@ -5,6 +5,7 @@ using UnityEditor.SceneManagement;
 using System;
 using UMA.Editors;
 using UMA.CharacterSystem;
+using UMA; // Added for MeshModifier
 
 
 namespace UMA.CharacterSystem.Editors
@@ -30,7 +31,6 @@ namespace UMA.CharacterSystem.Editors
         private string cachedRace = "";
         private string[] cachedRaceDNA = { };
         private string[] rawcachedRaceDNA = { };
-        private SceneView sceneView;
 
         private MeshModifier MeshModifier = null;
 
@@ -40,6 +40,9 @@ namespace UMA.CharacterSystem.Editors
         protected RaceAnimatorListPropertyDrawer _animatorPropDrawer = new RaceAnimatorListPropertyDrawer();
         SerializedProperty animationController;
         protected Editor innerEditor;
+
+        // Track any deferred OnEnable callback so it can be removed on cleanup
+        private EditorApplication.CallbackFunction delayedEnableHandler;
 
         private static bool IsEditorBusy()
         {
@@ -53,6 +56,11 @@ namespace UMA.CharacterSystem.Editors
             {
                 EditorApplication.update -= DoInspectors;
                 SceneView.duringSceneGui -= DoSceneGUI;
+                if (delayedEnableHandler != null)
+                {
+                    EditorApplication.delayCall -= delayedEnableHandler;
+                    delayedEnableHandler = null;
+                }
             }
             catch { }
             if (innerEditor != null)
@@ -60,6 +68,27 @@ namespace UMA.CharacterSystem.Editors
                 try { DestroyImmediate(innerEditor); } catch { }
                 innerEditor = null;
             }
+
+            // Clear references to avoid leaking editor targets
+            InspectMe.Clear();
+            MeshModifier = null;
+            if (_racePropDrawer != null)
+            {
+                _racePropDrawer.thisDCA = null;
+            }
+
+            if (_wardrobePropDrawer != null)
+            {
+                _wardrobePropDrawer.thisDCA = null;
+            }
+
+            if (_animatorPropDrawer != null)
+            {
+                _animatorPropDrawer.thisDCA = null;
+            }
+
+            thisDCA = null;
+            animationController = null;
         }
 
         public void OnEnable()
@@ -67,7 +96,22 @@ namespace UMA.CharacterSystem.Editors
             if (IsEditorBusy() || target == null)
             {
                 // Defer enable until editor is ready
-                EditorApplication.delayCall += () => { if (this != null) OnEnable(); };
+                if (delayedEnableHandler == null)
+                {
+                    delayedEnableHandler = () =>
+                    {
+                        // Unsubscribe this handler to avoid multiple invocations
+                        EditorApplication.delayCall -= delayedEnableHandler;
+                        delayedEnableHandler = null;
+                        if (this != null)
+                        {
+                            OnEnable();
+                        }
+                    };
+                }
+                // Ensure it's only added once
+                EditorApplication.delayCall -= delayedEnableHandler;
+                EditorApplication.delayCall += delayedEnableHandler;
                 return;
             }
 
@@ -98,18 +142,46 @@ namespace UMA.CharacterSystem.Editors
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             EditorApplication.update -= DoInspectors;
             SceneView.duringSceneGui -= DoSceneGUI;
+
+            if (delayedEnableHandler != null)
+            {
+                EditorApplication.delayCall -= delayedEnableHandler;
+                delayedEnableHandler = null;
+            }
+
             if (innerEditor != null)
             {
                 DestroyImmediate(innerEditor);
                 innerEditor = null;
             }
+
+            // Clear pending inspections and editor references
+            InspectMe.Clear();
+            MeshModifier = null;
+            if (_racePropDrawer != null)
+            {
+                _racePropDrawer.thisDCA = null;
+            }
+
+            if (_wardrobePropDrawer != null)
+            {
+                _wardrobePropDrawer.thisDCA = null;
+            }
+
+            if (_animatorPropDrawer != null)
+            {
+                _animatorPropDrawer.thisDCA = null;
+            }
+
+            thisDCA = null;
+            animationController = null;
         }
 
         private void DoInspectors()
         {
             if (InspectMe.Count > 0)
             {
-                for (int i = 0;i < InspectMe.Count; i++)
+                for (int i = 0; i < InspectMe.Count; i++)
                 {
                     InspectorUtlity.InspectTarget(InspectMe[i]);
                 }
@@ -272,7 +344,7 @@ namespace UMA.CharacterSystem.Editors
 
             //**************************************
             // End In-Editor customization
-            //**************************************
+            //********************************
 
 
             //the ChangeRaceOptions
@@ -352,7 +424,7 @@ namespace UMA.CharacterSystem.Editors
                 {
                     innerEditor.OnInspectorGUI();
                 }
-               // DrawFoldoutInspector(thisDCA, ref innerEditor);
+                // DrawFoldoutInspector(thisDCA, ref innerEditor);
             }
 
             if (Application.isPlaying || thisDCA.editorTimeGeneration)
@@ -512,12 +584,13 @@ namespace UMA.CharacterSystem.Editors
                 EditorGUILayout.EndHorizontal();
             }
             EditorGUI.BeginChangeCheck();
-				bool wasEnabled = GUI.enabled; //VES added
-				if(wasEnabled && PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) != null) { //VES added, checks if in prefab
-					GUI.enabled = false; //VES added (we don't want anyone generating the character in the patient prefabs as it breaks inheritance, and we setup patients via code)
-				}
+            bool wasEnabled = GUI.enabled; //VES added
+            if (wasEnabled && PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) != null)
+            { //VES added, checks if in prefab
+                GUI.enabled = false; //VES added (we don't want anyone generating the character in the patient prefabs as it breaks inheritance, and we setup patients via code)
+            }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("editorTimeGeneration"));
-				GUI.enabled = wasEnabled; //VES added
+            GUI.enabled = wasEnabled; //VES added
             if (EditorGUI.EndChangeCheck())
             {
                 wasChanged = true;
@@ -706,8 +779,15 @@ namespace UMA.CharacterSystem.Editors
 
         private void DoSceneGUI(SceneView sceneView)
         {
-            if (IsEditorBusy()) return;
-            if (thisDCA == null) return;
+            if (IsEditorBusy())
+            {
+                return;
+            }
+
+            if (thisDCA == null)
+            {
+                return;
+            }
             // Leaving this function here so I can later add some tools to the scene view to find/rebuild/modify UMAs
             // TODO: include all that in a project setting
             Event currentEvent = Event.current;
@@ -729,18 +809,55 @@ namespace UMA.CharacterSystem.Editors
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("MeshModifier:", GUILayout.Width(130));
-            MeshModifier = (MeshModifier)EditorGUILayout.ObjectField( MeshModifier, typeof(MeshModifier), true, GUILayout.Width(130));
-            if (GUILayout.Button("Edit"))
-            {
-                VertexEditorStage.ShowStage(thisDCA,MeshModifier);
-            }
-            if (GUILayout.Button("Create"))
+            GUILayout.Label("Mesh Modifier", EditorStyles.boldLabel);
+
+            // Buttons row
+            if (GUILayout.Button("Create New Modifier"))
             {
                 VertexEditorStage.ShowStage(thisDCA, null);
             }
-            GUILayout.EndHorizontal();
+
+            // Drag & Drop Area
+            Rect dropRect = GUILayoutUtility.GetRect(0, 40, GUILayout.ExpandWidth(true));
+            GUIContent dropLabel;
+            dropLabel = new GUIContent("Drag & Drop a MeshModifier here to edit", "Drop a MeshModifier asset");
+
+            GUI.Box(dropRect, dropLabel, EditorStyles.helpBox);
+
+            Event evt = Event.current;
+            if (dropRect.Contains(evt.mousePosition))
+            {
+                if (evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform)
+                {
+                    bool valid = false;
+                    foreach (UnityEngine.Object o in DragAndDrop.objectReferences)
+                    {
+                        if (o is MeshModifier)
+                        {
+                            valid = true;
+                            break;
+                        }
+                    }
+                    if (valid)
+                    {
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                        if (evt.type == EventType.DragPerform)
+                        {
+                            DragAndDrop.AcceptDrag();
+                            foreach (UnityEngine.Object o in DragAndDrop.objectReferences)
+                            {
+                                if (o is MeshModifier mm)
+                                {
+                                    MeshModifier = mm;
+                                    VertexEditorStage.ShowStage(thisDCA, MeshModifier);
+                                    break; // only first
+                                }
+                            }
+                        }
+                        evt.Use();
+                    }
+                }
+            }
 
             GUIHelper.EndVerticalPadded(10);
         }
@@ -757,7 +874,10 @@ namespace UMA.CharacterSystem.Editors
             {
                 string prepend = "*";
                 if (item.Value.disabled)
+                {
                     prepend = "-";
+                }
+
                 GUILayout.BeginHorizontal();
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUILayout.LabelField(prepend + item.Key, GUILayout.Width(88.0f));
@@ -992,6 +1112,8 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.PropertyField(serializedObject.FindProperty("BoundsOffset"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("markNotReadable"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("markDynamic"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("alwaysAdjustBounds"));
+           // EditorGUILayout.PropertyField(serializedObject.FindProperty("optimizeMesh"));
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -1009,7 +1131,10 @@ namespace UMA.CharacterSystem.Editors
             if (EditorGUI.EndChangeCheck())
             {
                 if (buildCharacterEnabledNewValue != buildCharacterEnabledValue)
+                {
                     thisDCA.BuildCharacterEnabled = buildCharacterEnabledNewValue;
+                }
+
                 serializedObject.ApplyModifiedProperties();
             }
             if (showHelp)
@@ -1119,8 +1244,16 @@ namespace UMA.CharacterSystem.Editors
 
         void GenerateSingleUMA(bool rebuild = false)
         {
-            if (IsEditorBusy()) return;
-            if (thisDCA == null) return;
+            if (IsEditorBusy())
+            {
+                return;
+            }
+
+            if (thisDCA == null)
+            {
+                return;
+            }
+
             if (Application.isPlaying)
             {
                 thisDCA.BuildCharacter(rebuild);
@@ -1228,8 +1361,16 @@ namespace UMA.CharacterSystem.Editors
 
         void UpdateCharacter()
         {
-            if (IsEditorBusy()) return;
-            if (thisDCA == null) return;
+            if (IsEditorBusy())
+            {
+                return;
+            }
+
+            if (thisDCA == null)
+            {
+                return;
+            }
+
             if (thisDCA.gameObject.scene != default)
             {
                 if (thisDCA.editorTimeGeneration)
@@ -1315,7 +1456,7 @@ namespace UMA.CharacterSystem.Editors
             if (EditorGUI.EndChangeCheck())
             {
                 serializedObject.ApplyModifiedProperties();
-                bool updated = thisDCA.characterColors.RemoveDeletedItems();               
+                bool updated = thisDCA.characterColors.RemoveDeletedItems();
                 serializedObject.Update();
 
 

@@ -3,6 +3,11 @@ using UnityEditor.IMGUI.Controls;
 using UMA.Editors;
 using System.CodeDom;
 using System.Runtime.Serialization.Json;
+#if UNITY_6000_2_OR_NEWER
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
 
 
 #if UNITY_EDITOR

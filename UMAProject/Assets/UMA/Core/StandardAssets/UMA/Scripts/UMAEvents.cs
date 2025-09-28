@@ -6,6 +6,60 @@ using UnityEngine.Events;
 
 namespace UMA
 {
+    public class TextureEventParms
+        {
+        public RenderTexture renderTexture;
+        public OverlayData overlayData;
+        public SlotData slotData;
+        public UMAData umaData;
+        public int propertyIndex = 0;
+
+
+        public string overlayName
+        {
+            get
+            {
+                if (overlayData == null)
+                    return null;
+                return overlayData.overlayName;
+            }
+        }   
+
+        public string materialPropertyName
+        {
+            get
+            {
+                if (slotData == null || propertyIndex < 0)
+                    return null;
+
+                UMAMaterial mat = slotData.material;
+                if (mat == null || mat.channels == null || propertyIndex >= mat.channels.Length)
+                    return null;
+
+                return mat.channels[propertyIndex].materialPropertyName;
+            }
+        }
+
+        public UMAMaterial UMAMaterial 
+        {
+            get
+            {
+                if (slotData == null)
+                    return null;
+                return slotData.material;
+            }
+        }
+
+        public TextureEventParms(RenderTexture rt, OverlayData od, SlotData sd, UMAData ud, int pi)
+        {
+            renderTexture = rt;
+            overlayData = od;
+            slotData = sd;
+            umaData = ud;
+            propertyIndex = pi;
+        }
+    }
+
     /// <summary>
     /// UMALabelsEvent is a UnityEvent that happens when a list of labels is processed
     /// </summary>
@@ -247,4 +301,36 @@ namespace UMA
 			}
 		}
 	}
+
+    // New event: UMATextureEvent following the pattern of UMASlotsEvent
+    [Serializable]
+    public class UMATextureEvent : UnityEvent<UMAData, TextureEventParms>
+    {
+        public UMATextureEvent()
+        {
+        }
+
+        public UMATextureEvent(UMATextureEvent source)
+        {
+            for (int i = 0; i < source.GetPersistentEventCount(); i++)
+            {
+                var target = source.GetPersistentTarget(i);
+                AddListener(target, UnityEventBase.GetValidMethodInfo(
+                    target,
+                    source.GetPersistentMethodName(i),
+                    new Type[] { typeof(UMAData), typeof(TextureEventParms)  }
+                ));
+            }
+        }
+
+        public void AddAction(Action<UMAData, TextureEventParms> action)
+        {
+            this.AddListener(action.Target, action.Method);
+        }
+
+        public void RemoveAction(Action<UMAData, TextureEventParms> action)
+        {
+            this.RemoveListener(action.Target, action.Method);
+        }
+    }
 }

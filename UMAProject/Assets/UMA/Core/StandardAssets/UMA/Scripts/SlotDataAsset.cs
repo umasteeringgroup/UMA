@@ -1010,12 +1010,12 @@ namespace UMA
             return "SlotData: " + slotName;
         }
 
-        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment, int submeshIndex)
+        public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment, int submeshIndex, bool clearNormals, bool clearTangents)
         {
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;
             meshData.RootBoneName = rootBoneName;
-            meshData.RetrieveDataFromUnityMesh(meshRenderer,submeshIndex,udimAdjustment);
+            meshData.RetrieveDataFromUnityMesh(meshRenderer,submeshIndex,udimAdjustment, clearNormals, clearTangents);
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif

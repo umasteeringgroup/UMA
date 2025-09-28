@@ -144,7 +144,7 @@ namespace UMA
                         if (!generatedMaterial.materialFragments[i].isRectShared && !generatedMaterial.materialFragments[i].isNoTextures)
                         {
                             moduleCount++;
-                            moduleCount = moduleCount + generatedMaterial.materialFragments[i].overlays.Length;
+                            moduleCount = moduleCount + generatedMaterial.materialFragments[i].AdditionalOverlays.Length;
                         }
                     }
                     textureMerge.EnsureCapacity(moduleCount);
@@ -176,7 +176,7 @@ namespace UMA
                                     textureMerge.Reset();
                                     for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                                     {
-                                        textureMerge.SetupModule(generatedMaterial, i, textureChannelNumber);
+                                        textureMerge.SetupSlotAndOverlayStack(generatedMaterial, i, textureChannelNumber, umaData);
                                     }
 
                                     //last element for this textureType
@@ -266,6 +266,10 @@ namespace UMA
 
                                     //PostProcess
                                     textureMerge.PostProcess(destinationTexture, channels[textureChannelNumber].channelType);
+
+                                    /*
+
+                                    */
 
                                     if (CopyRTtoTex)
                                     {
@@ -434,12 +438,12 @@ namespace UMA
 
         public static void SetCompositingProperties(UMAData.GeneratedMaterial generatedMaterial, Material material, UMAData.MaterialFragment fragment)
         {
-            if (fragment == null || fragment.baseOverlay == null || fragment.baseOverlay.textureList == null || fragment.overlays == null)
+            if (fragment == null || fragment.baseOverlay == null || fragment.baseOverlay.textureList == null || fragment.AdditionalOverlays == null)
             {
                 return;
             }
             int numChannels = fragment.baseOverlay.textureList.Length;
-            int numOverlays = 1 + fragment.overlays.Length;
+            int numOverlays = 1 + fragment.AdditionalOverlays.Length;
 
             var overlays = fragment.slotData.GetOverlayList();
 
