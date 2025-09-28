@@ -4409,7 +4409,6 @@ namespace UMA.CharacterSystem
         // Find: public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true, bool forceBuild=false)
         {
-            Debug.Log("BuildCharacter called");
 #if UMA_DCA_TIMING
             Stopwatch sw = new Stopwatch();
             sw.Start();

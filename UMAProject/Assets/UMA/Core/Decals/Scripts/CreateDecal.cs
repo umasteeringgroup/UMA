@@ -59,6 +59,12 @@ namespace UMA.Decals
         [Tooltip("Pause the Animator(s) on the selected avatar while working.")]
         public bool PauseAvatarAnimation = false;
 
+        [Header("Decal Overlay Handling")]
+        [Tooltip("If true, automatically add affected overlays to a rt decal slot when using RenderTexture decals.")]
+        public bool AutoAddOverlays = true; // If true, automatically add the overlay used for decal creation to the decal slot
+        [Tooltip("If true, call Draw on the decal RTs immediately after stamping (otherwise they are drawn during UMAData.Update")]
+        public bool DrawRenderTexturesImmediately = true; // If true, call Draw on the decal RTs immediately after stamping (otherwise they are drawn during UMAData.Update)
+
         // Internal debug state
         private SkinnedMeshRenderer _dbgSmr;
         private int[] _dbgSmrTriangles;                 // Combined SMR triangles (tri indices)
@@ -122,6 +128,10 @@ namespace UMA.Decals
         void Start()
         {
             InitializeOrbit();
+            if (StampField != null && Avatar != null)
+            {
+                StampField.OnCharacterBegun(Avatar.umaData);
+            }
         }
 
         private void OnDisable()
@@ -857,8 +867,10 @@ namespace UMA.Decals
                                 if (!string.IsNullOrEmpty(oname)) triggerNames.Add(oname);
                             }
                         }
+                        bool empty = targetSet.overlays == null || targetSet.overlays.Count == 0;
                         // Merge into set.overlayNames
-                        if (targetSet.overlayNames == null) targetSet.overlayNames = new List<string>();
+                        if (targetSet.overlayNames == null) 
+                            targetSet.overlayNames = new List<string>();
                         foreach (var n in triggerNames)
                         {
                             bool exists = false;
@@ -869,7 +881,10 @@ namespace UMA.Decals
                                     exists = true; break;
                                 }
                             }
-                            if (!exists) targetSet.overlayNames.Add(n);
+                            if (empty || AutoAddOverlays)
+                            {
+                                if (!exists) targetSet.overlayNames.Add(n);
+                            }
                         }
 
                         // Append the new stamp to the set
@@ -891,9 +906,9 @@ namespace UMA.Decals
                         // Trigger textures-only generation so atlas changes (if any) propagate and slot can re-stamp via OnAtlasUpdated
                         try
                         {
-                            if (UMAAssetIndexer.Instance != null && UMAAssetIndexer.Instance.generator != null)
+                            if (UMAAssetIndexer.Instance != null && UMAAssetIndexer.Instance.generator != null && !DrawRenderTexturesImmediately)
                             {
-                                //UMAAssetIndexer.Instance.generator.GenerateTexturesOnly(Avatar.umaData, false);
+                                Avatar.ForceUpdate(false, true, false);
                             }
                         }
                         catch (System.Exception ex)

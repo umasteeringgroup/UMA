@@ -765,7 +765,7 @@ namespace UMA
             int channelIndex = overlay.material.GetChannelIndex(materialPropertyName);
             if (channelIndex < 0 || channelIndex >= overlay.textureList.Length)
             {
-                LogDebugSkip($"ApplyStampToUMA(slot,prop,rt): channel '{materialPropertyName}' not resolved");
+                //LogDebugSkip($"ApplyStampToUMA(slot,prop,rt): channel '{materialPropertyName}' not resolved");
                 return false;
             }
 
@@ -784,11 +784,10 @@ namespace UMA
                 if (srcTex == null)
                 {
                     if (Application.isPlaying) UnityEngine.Object.Destroy(stampMat); else UnityEngine.Object.DestroyImmediate(stampMat);
-                    LogWarn($"ApplyStampToUMA(slotName,prop,rt): Source texture null for channel {channelIndex}.");
-                    LogDebugSkip("ApplyStampToUMA(slot,prop,rt): srcTex null");
+                    //LogWarn($"ApplyStampToUMA(slotName,prop,rt): Source texture null for channel {channelIndex}.");
+                    //LogDebugSkip("ApplyStampToUMA(slot,prop,rt): srcTex null");
                     return false;
                 }
-                Debug.Log($"ApplyStampToUMA(slotName,prop,rt): Using source texture '{srcTex.name}' for channel {channelIndex}. PropertyName is {materialPropertyName}");
                 stampMat.SetTexture("_OverlayTex", srcTex);
 
                 for (int si = 0; si < stamp.slots.Count; si++)

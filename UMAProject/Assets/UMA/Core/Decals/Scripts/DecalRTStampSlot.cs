@@ -121,27 +121,20 @@ namespace UMA
             _umaData = null;
         }
 
-        private static void DebugSkip(string reason, UnityEngine.Object ctx)
-        {
-            if (Debug.isDebugBuild)
-            {
-                Debug.Log("[DecalRTStampSlot][Skip] " + reason, ctx);
-            }
-        }
 
         private void HandleAtlasUpdated(UMAData umaData, TextureEventParms parms)
         {
             try
             {
-                if (umaData == null) { DebugSkip("UMAData null in HandleAtlasUpdated", this); return; }
-                if (parms == null) { DebugSkip("TextureEventParms null", this); return; }
-                if (parms.overlayData == null) { DebugSkip("Event overlayData null (nothing to match)", this); return; }
+                if (umaData == null) {  return; }
+                if (parms == null) {  return; }
+                if (parms.overlayData == null) {  return; }
 
                 if (_avatar == null)
                     _avatar = umaData as DynamicCharacterAvatar;
-                if (_avatar == null) { DebugSkip("No DynamicCharacterAvatar found (cannot stamp)", this); return; }
+                if (_avatar == null) {  return; }
 
-                if (overlayStamps == null || overlayStamps.Count == 0) { DebugSkip("overlayStamps list empty", this); return; }
+                if (overlayStamps == null || overlayStamps.Count == 0) {return; }
 
                 bool anyAttempted = false;
                 bool anyApplied = false;
@@ -152,17 +145,17 @@ namespace UMA
                     var set = overlayStamps[si];
                     if (set == null)
                     {
-                        DebugSkip($"OverlayStampSet index {si} is null", this);
+                        //DebugSkip($"OverlayStampSet index {si} is null", this);
                         continue;
                     }
                     if (set.stamps == null || set.stamps.Length == 0)
                     {
-                        DebugSkip($"OverlayStampSet '{set.name}' has no stamps", this);
+                        //DebugSkip($"OverlayStampSet '{set.name}' has no stamps", this);
                         continue;
                     }
                     if (!set.Matches(parms.overlayData))
                     {
-                        DebugSkip($"OverlayStampSet '{set.name}' did not match overlay '{parms.overlayData.overlayName}'", this);
+                        //DebugSkip($"OverlayStampSet '{set.name}' did not match overlay '{parms.overlayData.overlayName}'", this);
                         continue;
                     }
 
@@ -173,13 +166,13 @@ namespace UMA
                         var stamp = set.stamps[st];
                         if (stamp == null)
                         {
-                            DebugSkip($"Stamp index {st} in set '{set.name}' is null", this);
+                            //DebugSkip($"Stamp index {st} in set '{set.name}' is null", this);
                             continue;
                         }
                         bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms.materialPropertyName, parms.renderTexture);
                         if (!ok)
                         {
-                            DebugSkip($"ApplyStampAsset returned false for set '{set.name}' stamp '{stamp.name}'", this);
+                            //DebugSkip($"ApplyStampAsset returned false for set '{set.name}' stamp '{stamp.name}'", this);
                         }
                         else
                         {
@@ -190,11 +183,11 @@ namespace UMA
 
                 if (!anyAttempted)
                 {
-                    DebugSkip("No stamps attempted (no matching sets)", this);
+                   // DebugSkip("No stamps attempted (no matching sets)", this);
                 }
                 else if (!anyApplied)
                 {
-                    DebugSkip("Stamps attempted but none applied successfully", this);
+                    //DebugSkip("Stamps attempted but none applied successfully", this);
                 }
             }
             catch (Exception ex)

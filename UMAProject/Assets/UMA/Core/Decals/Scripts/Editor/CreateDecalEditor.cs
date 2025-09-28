@@ -12,6 +12,8 @@ namespace UMA.Decals
         private SerializedProperty _meshDecalOverlayProp;
         private SerializedProperty _textureDecalOverlayProp;
         private SerializedProperty _stampFieldProp;
+        private SerializedProperty _drawRenderTexturesImmediatelyProp;
+        private SerializedProperty _autoAddOverlaysProp;
 
         private Editor _stampFieldEditor;
         private Object _lastStampObj;
@@ -24,6 +26,8 @@ namespace UMA.Decals
             _meshDecalOverlayProp    = serializedObject.FindProperty("MeshDecalOverlay");
             _textureDecalOverlayProp = serializedObject.FindProperty("TextureDecalOverlay");
             _stampFieldProp          = serializedObject.FindProperty("StampField");
+            _drawRenderTexturesImmediatelyProp = serializedObject.FindProperty("DrawRenderTexturesImmediately");
+            _autoAddOverlaysProp     = serializedObject.FindProperty("AutoAddOverlays");
             CreateOrUpdateInnerEditor();
         }
 
@@ -42,8 +46,15 @@ namespace UMA.Decals
             EditorGUILayout.PropertyField(_orbitCameraProp);
             EditorGUILayout.PropertyField(_avatarProp);
             EditorGUILayout.PropertyField(_meshDecalOverlayProp);
+            EditorGUILayout.HelpBox("RenderTexture decals",MessageType.None);
             EditorGUILayout.PropertyField(_textureDecalOverlayProp);
+            EditorGUILayout.PropertyField(_autoAddOverlaysProp);
+            EditorGUILayout.HelpBox("When Auto Add Overlays is true, affected overlays are automatically added to the generated overlay set on the Stamp Slot. Otherwise, they are only added the first time and should be edited.", MessageType.None);
+            EditorGUILayout.PropertyField(_drawRenderTexturesImmediatelyProp);
+            EditorGUILayout.HelpBox("When Draw RenderTextures Immediately is true, the decal is stamped on the render texture as-is. This is faster, but may not represent the end result. Turn this off to trigger a build that will show the result obeying the layers.", MessageType.None);
             EditorGUILayout.PropertyField(_stampFieldProp);
+
+
 
             if (_stampFieldProp != null && _stampFieldProp.objectReferenceValue != null)
             {
@@ -72,7 +83,9 @@ namespace UMA.Decals
                 "Avatar",
                 "MeshDecalOverlay",
                 "TextureDecalOverlay",
-                "StampField"
+                "StampField",
+                "AutoAddOverlays",
+                "DrawRenderTexturesImmediately"
             );
 
             if (serializedObject.ApplyModifiedProperties())

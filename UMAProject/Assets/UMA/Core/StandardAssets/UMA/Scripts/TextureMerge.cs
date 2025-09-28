@@ -271,10 +271,6 @@ namespace UMA
 			{
 				GL.PopMatrix();
 			}
-			if (tr.tex.name.Contains("M_H_bod_Normal"))
-			{
-				Debug.Log("Here");
-            }
 
             if (tr.textureEventParms != null)
 			{
@@ -482,10 +478,7 @@ namespace UMA
         public void SetupSlotAndOverlayStack(UMAData.GeneratedMaterial atlas, int idx, int textureChannel, UMAData umaData)
 		{
 			var atlasElement = atlas.materialFragments[idx];
-			if (atlasElement.slotData.slotName.Contains("Torso"))
-			{
-                Debug.Log($"Processing torso. index {idx} textureChannel {textureChannel}");
-            }
+
             if (atlasElement.isRectShared)
             {
                 return;
