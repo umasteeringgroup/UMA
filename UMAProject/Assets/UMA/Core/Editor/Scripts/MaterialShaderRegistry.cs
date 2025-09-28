@@ -38,6 +38,17 @@ namespace UMA
 
         public IReadOnlyList<Entry> Entries => _entries;
 
+        private static bool IsHiddenInternalShaderName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            return name.StartsWith("Hidden/Internal", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsHiddenInternal(Shader s)
+        {
+            return s != null && IsHiddenInternalShaderName(s.name);
+        }
+
         private void OnEnable()
         {
             BuildIndex();
@@ -80,7 +91,7 @@ namespace UMA
                 }
             }
 
-            // Auto-fill shader from material if requested
+            // Auto-fill shader from material if requested (do not touch shaderName here)
             if (_autoSyncShaderFromMaterial)
             {
                 foreach (var e in _entries)
@@ -97,11 +108,11 @@ namespace UMA
                 }
             }
 
-            // Keep shaderName in sync with any available reference
+            // Keep shaderName in sync with any available reference, but skip hidden/internal shaders
             foreach (var e in _entries)
             {
                 var nameFromRef = e.shader != null ? e.shader.name : (e.material != null ? e.material.shader?.name : null);
-                if (!string.IsNullOrEmpty(nameFromRef) && e.shaderName != nameFromRef)
+                if (!string.IsNullOrEmpty(nameFromRef) && !IsHiddenInternalShaderName(nameFromRef) && e.shaderName != nameFromRef)
                 {
                     e.shaderName = nameFromRef;
                     changed = true;
@@ -207,13 +218,16 @@ namespace UMA
 
             var idx = _entries.FindIndex(e => ReferenceEquals(e.material, material));
             var chosenShader = shader != null ? shader : material.shader;
-            var chosenName = chosenShader != null ? chosenShader.name : material.shader != null ? material.shader.name : null;
+            var chosenName = chosenShader != null ? chosenShader.name : (material.shader != null ? material.shader.name : null);
 
             if (idx >= 0)
             {
                 _entries[idx].shader = chosenShader;
-                if (!string.IsNullOrEmpty(chosenName))
+                // Only set shaderName if it's not a hidden/internal shader
+                if (!string.IsNullOrEmpty(chosenName) && !IsHiddenInternalShaderName(chosenName))
+                {
                     _entries[idx].shaderName = chosenName;
+                }
             }
             else
             {
@@ -221,7 +235,7 @@ namespace UMA
                 {
                     material = material,
                     shader = chosenShader,
-                    shaderName = chosenName
+                    shaderName = (!string.IsNullOrEmpty(chosenName) && !IsHiddenInternalShaderName(chosenName)) ? chosenName : string.Empty
                 });
             }
 
@@ -262,7 +276,7 @@ namespace UMA
                 if (e.material != null)
                 {
                     e.shader = e.material.shader;
-                    if (e.shader != null)
+                    if (e.shader != null && !IsHiddenInternal(e.shader))
                         e.shaderName = e.shader.name;
                 }
             }
@@ -310,11 +324,11 @@ namespace UMA
         {
             if (e == null) return null;
 
-            // If we have a shader ref, keep its name in sync and return it
+            // If we have a shader ref, keep its name in sync (skip hidden/internal) and return it
             if (e.shader != null)
             {
                 var name = e.shader.name;
-                if (!string.IsNullOrEmpty(name) && e.shaderName != name)
+                if (!string.IsNullOrEmpty(name) && !IsHiddenInternalShaderName(name) && e.shaderName != name)
                 {
                     e.shaderName = name;
                 }
@@ -325,8 +339,9 @@ namespace UMA
             Shader matShader = e.material != null ? e.material.shader : null;
             if (matShader != null)
             {
-                if (string.IsNullOrEmpty(e.shaderName) || e.shaderName != matShader.name)
-                    e.shaderName = matShader.name;
+                var n = matShader.name;
+                if (!string.IsNullOrEmpty(n) && !IsHiddenInternalShaderName(n) && (string.IsNullOrEmpty(e.shaderName) || e.shaderName != n))
+                    e.shaderName = n;
                 if (cache) e.shader = matShader;
                 return matShader;
             }

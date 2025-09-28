@@ -33,9 +33,19 @@ namespace UMA
 
         public static void Update()
         {
-            UMASettings settings = UMASettings.GetOrCreateSettings();
+            UMASettings settings = null;
+            try
+            {
+                settings = UMASettings.GetOrCreateSettings();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"WelcomeToUMA: Failed to get settings. {ex.Message}");
+            }
+
             if (settings == null)
             {
+                EditorApplication.update -= Update;
                 return;
             }
             if (settings.showWelcomeToUMA)
@@ -45,13 +55,26 @@ namespace UMA
             EditorApplication.update -= Update;
         }
 
-        [MenuItem("UMA/Welcome to UMA",false,0)]
+        [MenuItem("UMA/Welcome to UMA", false, 0)]
         public static void ShowWindow()
         {
-            Texture umaTex = Resources.Load("UMABanner") as Texture;
-            WelcomeToUMA win = EditorWindow.GetWindow<WelcomeToUMA>();
-            win.position = new Rect(100, 100, 800, 600);
-            win.titleContent = new GUIContent("Welcome to UMA", umaTex);
+            Texture umaTex = null;
+            try
+            {
+                umaTex = Resources.Load("UMABanner") as Texture;
+            }
+            catch { /* ignore */ }
+
+            try
+            {
+                WelcomeToUMA win = EditorWindow.GetWindow<WelcomeToUMA>();
+                win.position = new Rect(100, 100, 800, 600);
+                win.titleContent = new GUIContent("Welcome to UMA", umaTex);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"WelcomeToUMA: Unable to open window. {ex.Message}");
+            }
         }
 
         // Delegate that takes a LogLine   
@@ -90,7 +113,7 @@ namespace UMA
                 Image = image;
             }
 
-            public LogLine(string message, GUIStyle style, LogLineAction buttonAction,int index, LogType logType = LogType.Info)
+            public LogLine(string message, GUIStyle style, LogLineAction buttonAction, int index, LogType logType = LogType.Info)
             {
                 Message = message;
                 Style = style;
@@ -101,13 +124,13 @@ namespace UMA
 
             public void Resolve(string message)
             {
-                Message = "---> "+message;
+                Message = "---> " + message;
                 ButtonAction = null;
                 logType = LogType.Resolution;
             }
             public void Error(string message)
             {
-                Message = "!!-> "+message;
+                Message = "!!-> " + message;
                 ButtonAction = null;
                 logType = LogType.Error;
             }
@@ -139,6 +162,10 @@ namespace UMA
 
         public UMASettings initialSettings;
 
+        private static bool IsHiddenInternalShader(string shaderName)
+        {
+            return !string.IsNullOrEmpty(shaderName) && shaderName.StartsWith("Hidden/Internal", StringComparison.OrdinalIgnoreCase);
+        }
 
         public void OnEnable()
         {
@@ -157,45 +184,59 @@ namespace UMA
 
         public void DelayAwake()
         {
-            ActiveLargeStyle = new GUIStyle(EditorStyles.largeLabel);
-            ActiveLargeStyle.richText = true;
-            ActiveLargeStyle.wordWrap = true;
-            ActiveLargeStyle.fontSize = 32;
-            ActiveLargeStyle.alignment = TextAnchor.MiddleCenter;
+            try
+            {
+                ActiveLargeStyle = new GUIStyle(EditorStyles.largeLabel);
+                ActiveLargeStyle.richText = true;
+                ActiveLargeStyle.wordWrap = true;
+                ActiveLargeStyle.fontSize = 32;
+                ActiveLargeStyle.alignment = TextAnchor.MiddleCenter;
 
-            Hyperlink = new GUIStyle(EditorStyles.label);
-            Hyperlink.hover.textColor = Color.cyan;
-            Hyperlink.active.textColor = Color.white;
-            Hyperlink.richText = true;
-            Hyperlink.alignment = TextAnchor.MiddleLeft;
+                Hyperlink = new GUIStyle(EditorStyles.label);
+                Hyperlink.hover.textColor = Color.cyan;
+                Hyperlink.active.textColor = Color.white;
+                Hyperlink.richText = true;
+                Hyperlink.alignment = TextAnchor.MiddleLeft;
 
-            ErrorFound = new GUIStyle(EditorStyles.label);
-            ErrorFound.normal.textColor = new Color(0.3f, 0, 0, 1);
-            ErrorFound.richText = true;
-            ErrorFound.alignment = TextAnchor.MiddleLeft;
+                ErrorFound = new GUIStyle(EditorStyles.label);
+                ErrorFound.normal.textColor = new Color(0.3f, 0, 0, 1);
+                ErrorFound.richText = true;
+                ErrorFound.alignment = TextAnchor.MiddleLeft;
 
-            Warning = new GUIStyle(EditorStyles.label);
-            Warning.normal.textColor = Color.yellow;
-            Warning.richText = true;
-            Warning.alignment = TextAnchor.MiddleLeft;
+                Warning = new GUIStyle(EditorStyles.label);
+                Warning.normal.textColor = Color.yellow;
+                Warning.richText = true;
+                Warning.alignment = TextAnchor.MiddleLeft;
 
-            InfoStyle = new GUIStyle(EditorStyles.label);
-            InfoStyle.alignment = TextAnchor.MiddleLeft;
-            InfoStyle.richText = true;
+                InfoStyle = new GUIStyle(EditorStyles.label);
+                InfoStyle.alignment = TextAnchor.MiddleLeft;
+                InfoStyle.richText = true;
 
-            DescriptionStyle = new GUIStyle(EditorStyles.label);
-            DescriptionStyle.wordWrap = true;
-            DescriptionStyle.richText = true;
-            DescriptionStyle.alignment = TextAnchor.UpperLeft;
+                DescriptionStyle = new GUIStyle(EditorStyles.label);
+                DescriptionStyle.wordWrap = true;
+                DescriptionStyle.richText = true;
+                DescriptionStyle.alignment = TextAnchor.UpperLeft;
 
-            SceneTitleStyle = new GUIStyle(EditorStyles.label);
-            SceneTitleStyle.wordWrap = false;
-            SceneTitleStyle.richText = true;
-            SceneTitleStyle.alignment = TextAnchor.UpperLeft;
+                SceneTitleStyle = new GUIStyle(EditorStyles.label);
+                SceneTitleStyle.wordWrap = false;
+                SceneTitleStyle.richText = true;
+                SceneTitleStyle.alignment = TextAnchor.UpperLeft;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"WelcomeToUMA: Failed to initialize styles. {ex.Message}");
+            }
 
-            //DescriptionStyle.fixedHeight = 48;
+            try
+            {
+                initialSettings = UMASettings.GetOrCreateSettings();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"WelcomeToUMA: Failed to load UMASettings. {ex.Message}");
+                initialSettings = null;
+            }
 
-            initialSettings = UMASettings.GetOrCreateSettings();
             currentButton = 0;
             DoWelcome();
             initialized = true;
@@ -216,11 +257,6 @@ namespace UMA
         {
             if (!initialized)
             {
-                // this is here because the "awake" function is called before EditorStyles are loaded.
-                // Causing an error when the window is initialized. So that was delayed.
-                // now this is here because we have to be sure that initial delay happened.
-                // Seems like this could have been better if the editor initialized itself before calling the awake functions.
-                // Just saying.
                 Repaint();
                 return;
             }
@@ -237,9 +273,16 @@ namespace UMA
 
         public void DrawHeader()
         {
-            var settings = UMASettings.GetOrCreateSettings();
+            UMASettings settings = null;
+            try
+            {
+                settings = UMASettings.GetOrCreateSettings();
+            }
+            catch { /* ignore */ }
+
             GUIHelper.BeginInsetArea(PanelColor, HeaderRect, 2, 0, 4);
-            EditorGUILayout.LabelField($"Welcome to {settings.UMAVersion}", ActiveLargeStyle);
+            var version = settings != null && !string.IsNullOrEmpty(settings.UMAVersion) ? settings.UMAVersion : "UMA";
+            EditorGUILayout.LabelField($"Welcome to {version}", ActiveLargeStyle);
             GUIHelper.EndInsetArea();
         }
 
@@ -276,13 +319,27 @@ namespace UMA
                 AddText("<b>Base parts of an UMA</b>");
                 AddText(" ");
                 AddText("   <b>SlotData:</b>");
-                AddImage(initialSettings.Slots,"");
+                if (initialSettings != null && initialSettings.Slots != null)
+                {
+                    AddImage(initialSettings.Slots, "");
+                }
+                else
+                {
+                    AddText("(Preview image not available)", LogType.Info);
+                }
                 AddText("A SlotData contains a mesh part, along with any rig parts needed.");
                 AddText("These are combined into a Skinned Mesh when the character is built.");
 
                 AddText(" ");
                 AddText("   <b>OverlayData:</b>");
-                AddImage(initialSettings.Overlays,"");
+                if (initialSettings != null && initialSettings.Overlays != null)
+                {
+                    AddImage(initialSettings.Overlays, "");
+                }
+                else
+                {
+                    AddText("(Preview image not available)", LogType.Info);
+                }
                 AddText("An OverlayData contains texture parts that are colorized and combined to build textures.");
                 AddText("Overlays contain all the textures needed for a single layer - for example, the albedo, normal, and metallic.");
                 AddText("Overlays are layered on top of each other to build the final texture for a slotdata.");
@@ -293,12 +350,6 @@ namespace UMA
                 AddSeperator();
                 AddText("We recommend to watch the videos on youtube for a deeper dive into how UMA works");
                 AddText("https://www.youtube.com/@SecretAnorak/videos");
-                // explain about the generator
-                // about the library
-                // about races
-                // about recipes
-                // about slots
-                // about overlays
                 currentButton = 1;
             }
             if (GUILayout.Button("View Documentation", GUILayout.Height(40)))
@@ -347,21 +398,32 @@ namespace UMA
             if (GUILayout.Button("Links", GUILayout.Height(40)))
             {
                 ClearLog();
-                // Links page has to be done in content window
                 currentButton = 5;
             }
-            if (initialSettings.showWelcomeToUMA)
+            if (initialSettings != null && initialSettings.showWelcomeToUMA)
             {
                 if (GUILayout.Button("Turn this off!!"))
                 {
                     currentButton = 9;
                     ClearLog();
-                    UMASettings settings = UMASettings.GetOrCreateSettings();
-                    settings.showWelcomeToUMA = false;
-                    EditorUtility.SetDirty(settings);
-                    AddText("The welcome window will no longer show when Unity is opened");
-                    AddText("To view it at any time, you can use the 'UMA/Welcome to UMA' menu item");
-                    AddText("You can re-enable this in the UMA project settings.");
+                    UMASettings settings = null;
+                    try
+                    {
+                        settings = UMASettings.GetOrCreateSettings();
+                    }
+                    catch { /* ignore */ }
+                    if (settings != null)
+                    {
+                        settings.showWelcomeToUMA = false;
+                        EditorUtility.SetDirty(settings);
+                        AddText("The welcome window will no longer show when Unity is opened");
+                        AddText("To view it at any time, you can use the 'UMA/Welcome to UMA' menu item");
+                        AddText("You can re-enable this in the UMA project settings.");
+                    }
+                    else
+                    {
+                        AddText("Unable to update UMASettings to turn off welcome screen.", LogType.Error);
+                    }
                 }
             }
             GUILayout.EndVertical();
@@ -371,15 +433,50 @@ namespace UMA
         private void ReimportShaderFolder()
         {
             ClearLog();
-            string path = UMAEditorUtilities.FindUMAFullPath();
-            path = Path.Combine(path, "Core", "ShaderPackages");
+
+            string path = null;
+            try
+            {
+                path = UMAEditorUtilities.FindUMAFullPath();
+            }
+            catch (Exception ex)
+            {
+                AddText($"Error locating UMA folder: {ex.Message}", LogType.Error);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(path))
+            {
+                AddText("UMA folder path is empty.", LogType.Error);
+                return;
+            }
+
+            try
+            {
+                path = Path.Combine(path, "Core", "ShaderPackages");
+            }
+            catch (Exception ex)
+            {
+                AddText($"Error building shader path: {ex.Message}", LogType.Error);
+                return;
+            }
 
             if (Directory.Exists(path))
             {
                 AddText($"Reimporting shaders in {path}");
-                StartProcessing();
-                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer | ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
-                StopProcessing();
+                try
+                {
+                    StartProcessing();
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer | ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
+                    StopProcessing();
+                }
+                catch (Exception ex)
+                {
+                    StopProcessing();
+                    AddText($"Error during shader reimport: {ex.Message}", LogType.Error);
+                    return;
+                }
+
                 AddText(path + " reimported successfully!");
 
                 // After shader reimport, fix up materials via all MaterialShaderRegistry assets
@@ -396,62 +493,73 @@ namespace UMA
                            || n.StartsWith("Hidden/Internal", StringComparison.OrdinalIgnoreCase);
                 }
 
-                var registryGuids = AssetDatabase.FindAssets("t:MaterialShaderRegistry");
-                foreach (var guid in registryGuids)
+                try
                 {
-                    var regPath = AssetDatabase.GUIDToAssetPath(guid);
-                    var registry = AssetDatabase.LoadAssetAtPath<MaterialShaderRegistry>(regPath);
-                    if (registry == null) continue;
-
-                    registryCount++;
-                    registry.BuildIndex();
-
-                    var entries = registry.Entries;
-                    if (entries == null) continue;
-
-                    foreach (var e in entries)
+                    var registryGuids = AssetDatabase.FindAssets("t:MaterialShaderRegistry");
+                    foreach (var guid in registryGuids)
                     {
-                        var mat = e.material;
-                        if (mat == null) continue;
+                        var regPath = AssetDatabase.GUIDToAssetPath(guid);
+                        if (string.IsNullOrEmpty(regPath)) continue;
 
-                        totalMaterials++;
+                        var registry = AssetDatabase.LoadAssetAtPath<MaterialShaderRegistry>(regPath);
+                        if (registry == null) continue;
 
-                        // If the material is on the error shader AND we have no original shader name, notify and skip resolution.
-                        if (IsErrorShader(mat.shader) && (string.IsNullOrEmpty(e.shaderName) && e.shader == null))
-                        {
-                            unresolvedErrorMats.Add(mat.name);
-                            continue;
-                        }
+                        registryCount++;
+                        registry.BuildIndex();
 
-                        // Resolve shader: prefer by stored name after reimport
-                        Shader resolved = null;
-                        if (!string.IsNullOrEmpty(e.shaderName))
-                        {
-                            resolved = Shader.Find(e.shaderName);
-                        }
+                        var entries = registry.Entries;
+                        if (entries == null) continue;
 
-                        if (resolved != null && mat.shader != resolved)
+                        foreach (var e in entries)
                         {
-                            mat.shader = resolved;
-                            EditorUtility.SetDirty(mat);
-                            reassigned++;
-                        }
+                            if (e == null) continue;
 
-                        // Keep registry entry synchronized if possible
-                        if (e.shader == null && resolved != null)
-                        {
-                            e.shader = resolved;
-                            EditorUtility.SetDirty(registry);
-                        }
-                        if (resolved != null && !string.IsNullOrEmpty(resolved.name) && e.shaderName != resolved.name)
-                        {
-                            e.shaderName = resolved.name;
-                            EditorUtility.SetDirty(registry);
+                            var mat = e.material;
+                            if (mat == null) continue;
+
+                            totalMaterials++;
+
+                            // If the material is on the error shader AND we have no original shader name, notify and skip resolution.
+                            if (IsErrorShader(mat.shader) && (string.IsNullOrEmpty(e.shaderName) && e.shader == null))
+                            {
+                                unresolvedErrorMats.Add(mat.name);
+                                continue;
+                            }
+
+                            // Resolve shader: prefer by stored name after reimport
+                            Shader resolved = null;
+                            if (!string.IsNullOrEmpty(e.shaderName))
+                            {
+                                resolved = Shader.Find(e.shaderName);
+                            }
+
+                            if (resolved != null && mat.shader != resolved)
+                            {
+                                mat.shader = resolved;
+                                EditorUtility.SetDirty(mat);
+                                reassigned++;
+                            }
+
+                            // Keep registry entry synchronized if possible
+                            if (e.shader == null && resolved != null)
+                            {
+                                e.shader = resolved;
+                                EditorUtility.SetDirty(registry);
+                            }
+                            if (resolved != null && !string.IsNullOrEmpty(resolved.name) && e.shaderName != resolved.name && !IsHiddenInternalShader(resolved.name))
+                            {
+                                e.shaderName = resolved.name;
+                                EditorUtility.SetDirty(registry);
+                            }
                         }
                     }
-                }
 
-                AssetDatabase.SaveAssets();
+                    AssetDatabase.SaveAssets();
+                }
+                catch (Exception ex)
+                {
+                    AddText($"Error while resolving shaders/materials: {ex.Message}", LogType.Error);
+                }
 
                 // If any materials are stuck on the error shader without a known original name, alert the user.
                 if (unresolvedErrorMats.Count > 0)
@@ -499,7 +607,17 @@ namespace UMA
         private void RebuildLibrary()
         {
             AddText("Rebuilding UMA Asset Library...");
-            var UAI = UMAAssetIndexer.Instance;
+            UMAAssetIndexer UAI = null;
+            try
+            {
+                UAI = UMAAssetIndexer.Instance;
+            }
+            catch (Exception ex)
+            {
+                AddText($"Error accessing UMAAssetIndexer: {ex.Message}", LogType.Error);
+                return;
+            }
+
             if (UAI == null)
             {
                 AddText("UMA Asset Indexer not found!", LogType.Error);
@@ -515,9 +633,12 @@ namespace UMA
                 AddText("Library rebuild found:");
                 UAI.RebuildLibrary();
                 var counts = UAI.GetCounts();
-                foreach(var count in counts)
+                if (counts != null)
                 {
-                    AddText($"{count.Key}: ({count.Value}) item(s)");
+                    foreach (var count in counts)
+                    {
+                        AddText($"{count.Key}: ({count.Value}) item(s)");
+                    }
                 }
                 AddSeperator();
                 AddText("UMA Asset Library rebuilt successfully!");
@@ -535,18 +656,50 @@ namespace UMA
             ClearLog();
             AddText("Opening UMA Documentation.PDF");
 
-            // Open Assets/UMA/UMA Documentation.PDF
-            string path = Path.Combine(UMAEditorUtilities.FindUMAFullPath(), "UMA Documentation.PDF");
-
-            if (System.IO.File.Exists(path))
+            string basePath = null;
+            try
             {
-                AddText($"PDF File \"{path}\" should open in a new window");
-                System.Diagnostics.Process.Start(path);
+                basePath = UMAEditorUtilities.FindUMAFullPath();
             }
-            else
+            catch (Exception ex)
             {
-                AddText($"UMA Documentation file not found: {path}", LogType.Error);
-                EditorUtility.DisplayDialog("UMA Documentation", "The UMA Documentation file is missing. Please reinstall UMA to get the documentation.", "OK");
+                AddText($"Error finding UMA base path: {ex.Message}", LogType.Error);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(basePath))
+            {
+                AddText("UMA base path not found.", LogType.Error);
+                return;
+            }
+
+            string path = string.Empty;
+            try
+            {
+                path = Path.Combine(basePath, "UMA Documentation.PDF");
+            }
+            catch (Exception ex)
+            {
+                AddText($"Error building documentation path: {ex.Message}", LogType.Error);
+                return;
+            }
+
+            try
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    AddText($"PDF File \"{path}\" should open in a new window");
+                    System.Diagnostics.Process.Start(path);
+                }
+                else
+                {
+                    AddText($"UMA Documentation file not found: {path}", LogType.Error);
+                    EditorUtility.DisplayDialog("UMA Documentation", "The UMA Documentation file is missing. Please reinstall UMA to get the documentation.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                AddText($"Error opening documentation: {ex.Message}", LogType.Error);
             }
         }
 
@@ -566,7 +719,6 @@ namespace UMA
                     showLog = false;
                     break;
             }
-            /* now show the logged items */
             if (showLog)
             {
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition);
@@ -580,9 +732,13 @@ namespace UMA
         {
             LogLineAction ButtonAction = null;
             LogLine ButtonActionLine = null;
-           
+
+            if (LoggedItems == null) return;
+
             foreach (var item in LoggedItems)
             {
+                if (item == null) continue;
+
                 if (item.Image != null)
                 {
                     GUILayout.BeginHorizontal();
@@ -594,7 +750,7 @@ namespace UMA
                     GUILayout.EndHorizontal();
                     continue;
                 }
-                GUILayout.BeginHorizontal();                
+                GUILayout.BeginHorizontal();
                 if (item.logType == LogType.Error)
                 {
                     GUILayout.Label("Error: ", ErrorFound, GUILayout.Width(60));
@@ -603,13 +759,9 @@ namespace UMA
                 {
                     GUILayout.Label("Warning: ", Warning, GUILayout.Width(60));
                 }
-                else
-                {
-                    // GUILayout.Label("Info: ", InfoStyle, GUILayout.Width(60));
-                }
                 if (item.ButtonAction != null)
                 {
-                    if (GUILayout.Button(item.Message))
+                    if (GUILayout.Button(item.Message ?? string.Empty))
                     {
                         ButtonAction = item.ButtonAction;
                         ButtonActionLine = item;
@@ -617,27 +769,34 @@ namespace UMA
                 }
                 else
                 {
-                    GUILayout.Label(item.Message, item.Style);
+                    GUILayout.Label(item.Message ?? string.Empty, item.Style ?? InfoStyle);
                 }
                 GUILayout.EndHorizontal();
             }
-            // Have to do the buttonaction outside of the loop in case the
-            // action adds loglines (modifies the list).
             if (ButtonAction != null && ButtonActionLine != null)
             {
-                ButtonAction(ButtonActionLine);
+                try
+                {
+                    ButtonAction(ButtonActionLine);
+                }
+                catch (Exception ex)
+                {
+                    AddText($"Button action failed: {ex.Message}", LogType.Error);
+                }
             }
         }
 
         private void ClearLog()
         {
+            if (LoggedItems == null) LoggedItems = new List<LogLine>();
             LoggedItems.Clear();
             Repaint();
         }
 
         private LogLine AddLargeText(string text)
         {
-            LogLine line = new LogLine(text, ActiveLargeStyle,LoggedItems.Count);            
+            if (LoggedItems == null) LoggedItems = new List<LogLine>();
+            LogLine line = new LogLine(text ?? string.Empty, ActiveLargeStyle, LoggedItems.Count);
             LoggedItems.Add(line);
             Repaint();
             return line;
@@ -645,21 +804,22 @@ namespace UMA
 
         private void AddSeperator()
         {
-            AddText("--------------------------------------------------",LogType.None);
+            AddText("--------------------------------------------------", LogType.None);
         }
 
-        private LogLine AddText(string text, LogType logType = LogType.Info, GUIStyle style= null)
+        private LogLine AddText(string text, LogType logType = LogType.Info, GUIStyle style = null)
         {
+            if (LoggedItems == null) LoggedItems = new List<LogLine>();
             if (style == null)
             {
-                LogLine line = new(text, InfoStyle,LoggedItems.Count,logType);
+                LogLine line = new(text ?? string.Empty, InfoStyle, LoggedItems.Count, logType);
                 LoggedItems.Add(line);
                 Repaint();
                 return line;
             }
             else
             {
-                LogLine line = new(text, style, LoggedItems.Count,logType);
+                LogLine line = new(text ?? string.Empty, style, LoggedItems.Count, logType);
                 LoggedItems.Add(line);
                 Repaint();
                 return line;
@@ -668,6 +828,7 @@ namespace UMA
 
         private LogLine AddImage(Texture2D image, string message)
         {
+            if (LoggedItems == null) LoggedItems = new List<LogLine>();
             LogLine line = new LogLine("", InfoStyle, LoggedItems.Count);
             line.Image = image;
             LoggedItems.Add(line);
@@ -677,7 +838,8 @@ namespace UMA
 
         private LogLine AddText(string text, GUIStyle style, LogLineAction buttonAction)
         {
-            LogLine line = new(text, style, buttonAction, LoggedItems.Count);
+            if (LoggedItems == null) LoggedItems = new List<LogLine>();
+            LogLine line = new(text ?? string.Empty, style ?? InfoStyle, buttonAction, LoggedItems.Count);
             LoggedItems.Add(line);
             Repaint();
             return line;
@@ -686,12 +848,22 @@ namespace UMA
         #region Scene Scan Button
         private void ScanScene()
         {
-            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsInactive.Include,FindObjectsSortMode.None);
+            UMAGenerator[] generators;
+            try
+            {
+                generators = FindObjectsByType<UMAGenerator>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            }
+            catch (Exception ex)
+            {
+                AddText($"Error scanning scene for UMAGenerator: {ex.Message}", LogType.Error);
+                return;
+            }
+
             AddText("Checking for generator");
-            if (generators.Length == 0)
+            if (generators == null || generators.Length == 0)
             {
                 AddText("UMA Generator not found in scene", LogType.Error);
-                LogLine l = AddText(text:"Add UMA Generator to Scene", LogType.Error);
+                LogLine l = AddText(text: "Add UMA Generator to Scene", LogType.Error);
                 l.ButtonAction = (line) => DoAddGenerator(l);
             }
             else if (generators.Length > 1)
@@ -699,7 +871,6 @@ namespace UMA
                 AddText("Multiple UMA Generators found in scene!", LogType.Error);
                 AddText("This can cause problems, please remove all but one generator from the scene", LogType.Error);
 #if UNITY_6000_0_OR_NEWER
-                // can we filter the view to the generators?
 #else
                 AddText("Note: You can use the 'Filter' field in the hierarchy with t:UMAGENARATOR to find them", LogType.Error);
 #endif
@@ -707,6 +878,12 @@ namespace UMA
             else
             {
                 UMAGenerator gen = generators[0];
+                if (gen == null || gen.gameObject == null)
+                {
+                    AddText("UMA Generator reference is invalid", LogType.Error);
+                    return;
+                }
+
                 if (!gen.gameObject.activeInHierarchy)
                 {
                     AddText("UMA Generator is not active in the scene", LogType.Error);
@@ -799,25 +976,17 @@ namespace UMA
                     LogLine l = AddText(text: "Set optimal generator settings", LogType.Warning);
                     l.ButtonAction = (line) => DoSetAtlasGenerationParms(l);
                 }
-
-                // check all the UMA's in the scene.
-                // If RaceData is not set, then give warning
-                // Does the character have animators assigned? If not, does it have an animator and "keep animator" checked.
-                // if race has blendshape DNA, but "Load Blendshapes" is not checked.
-                // if race is NOT in library, give error
             }
         }
         #endregion
 
         private void ScanProject()
         {
-            // Check library... if it's empty, rebuild
-            // Check library filters.
-            // if no filters for animators, then complain
-            // make sure there are slots, overlays, racedata assigned
-            // scan all UMAMaterials. If they are type "Use Existing Textures" make sure they are using the Tinted Texture in channels
             AddText("Checking library");
-            if (UMAAssetIndexer.Instance == null)
+            UMAAssetIndexer indexer = null;
+            try { indexer = UMAAssetIndexer.Instance; } catch { /* ignore */ }
+
+            if (indexer == null)
             {
                 AddText("Cannot load Global Library from resources! Please reimport or restore the file.");
                 AddText("The library is normaly at the following location:");
@@ -847,7 +1016,10 @@ namespace UMA
         private void CheckLibrary()
         {
             AddText("Checking UMA Global Library");
-            if (UMAAssetIndexer.Instance.IsValid() == false)
+            UMAAssetIndexer idx = null;
+            try { idx = UMAAssetIndexer.Instance; } catch { /* ignore */ }
+
+            if (idx == null || !idx.IsValid())
             {
                 AddText("UMA Global Library is empty. Please rebuild library");
                 LogLine l = AddText("Rebuild Library");
@@ -856,20 +1028,21 @@ namespace UMA
                 return;
             }
 
-
-            var counts = UMAAssetIndexer.Instance.GetCounts();
-            foreach (var count in counts)
+            Dictionary<string, int> counts = null;
+            try { counts = idx.GetCounts(); } catch { /* ignore */ }
+            if (counts != null)
             {
-                AddText($"{count.Key}: ({count.Value}) item(s)");
+                foreach (var count in counts)
+                {
+                    AddText($"{count.Key}: ({count.Value}) item(s)");
+                }
             }
 
-            var filters = UMAAssetIndexer.Instance.TypeFolderSearch;
-
-            // get a list of keys from the filters
+            var filters = idx.TypeFolderSearch ?? new Dictionary<string, List<string>>();
             List<string> types = new List<string>(filters.Keys);
 
             bool foundAnimatorController = false;
-            for(int i=0;i < types.Count; i++)
+            for (int i = 0; i < types.Count; i++)
             {
                 if (types[i].ToLower().IndexOf("animatorcontroller") > -1)
                 {
@@ -877,8 +1050,6 @@ namespace UMA
                     break;
                 }
             }
-
-
 
             if (!foundAnimatorController)
             {
@@ -896,10 +1067,46 @@ namespace UMA
             AddText("UMA Global Library check complete");
         }
 
+        private static bool NormalizeTags(ref string[] tags)
+        {
+            if (tags == null || tags.Length == 0) return false;
+
+            List<string> result = new List<string>(tags.Length);
+            HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
+            bool changed = false;
+
+            for (int i = 0; i < tags.Length; i++)
+            {
+                string t = tags[i] ?? "";
+                string trimmed = t.Trim();
+                if (trimmed.Length == 0)
+                {
+                    if (!string.IsNullOrEmpty(t)) changed = true;
+                    continue;
+                }
+                if (!seen.Contains(trimmed))
+                {
+                    seen.Add(trimmed);
+                    result.Add(trimmed);
+                }
+                else
+                {
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                tags = result.ToArray();
+            }
+            return changed;
+        }
+
         private void CheckSlots()
         {
             AddText("Checking Slots");
-            var slots = UMAAssetIndexer.Instance.GetAssetItems<SlotDataAsset>();
+            List<AssetItem> slots = null;
+            try { slots = UMAAssetIndexer.Instance.GetAssetItems<SlotDataAsset>(); } catch { /* ignore */ }
 
             if (slots == null || slots.Count == 0)
             {
@@ -909,13 +1116,19 @@ namespace UMA
             {
                 foreach (var AI in slots)
                 {
+                    if (AI == null)
+                    {
+                        continue;
+                    }
                     if (AI.Item == null)
                     {
                         AddText($"Error: SlotDataAsset {AI._Name} is missing!", LogType.Error);
                         LogLine l = AddText("Repair Library");
                         l.ButtonAction = (line) => DoLibraryRepair(l);
                     }
-                    SlotDataAsset sd = AI.GetItem<SlotDataAsset>();
+                    SlotDataAsset sd = null;
+                    try { sd = AI.GetItem<SlotDataAsset>(); } catch { /* ignore */ }
+
                     if (sd != null)
                     {
                         if (string.IsNullOrEmpty(sd.slotName))
@@ -923,20 +1136,53 @@ namespace UMA
                             AddText($"Error: Error: SlotDataAsset {AI._Name} has no SlotName. Please fix, then rebuild library.");
                             ReviewAssetItem(AI, "SlotDataAsset");
                         }
+
+                        // Auto-fix materialName if material assigned
+                        if (sd.material != null)
+                        {
+                            if (string.IsNullOrEmpty(sd.materialName) || sd.materialName != sd.material.name)
+                            {
+                                sd.materialName = sd.material.name;
+                                EditorUtility.SetDirty(sd);
+                                AssetDatabase.SaveAssetIfDirty(sd);
+                                AddText($"Fixed SlotDataAsset '{AI._Name}' materialName to '{sd.materialName}'.");
+                            }
+                        }
+
+                        // Normalize and deduplicate tags if present
+                        if (sd.tags != null && sd.tags.Length > 0)
+                        {
+                            string[] oldTags = sd.tags;
+                            if (NormalizeTags(ref sd.tags))
+                            {
+                                EditorUtility.SetDirty(sd);
+                                AssetDatabase.SaveAssetIfDirty(sd);
+                                AddText($"Normalized tags for SlotDataAsset '{AI._Name}'.");
+                            }
+                        }
+
                         if (sd.meshData != null && sd.meshData.vertices != null && sd.meshData.vertexCount > 0)
                         {
                             if (sd.material == null)
                             {
-                                var material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(sd.materialName);
+                                UMAMaterial material = null;
+                                try { material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(sd.materialName); } catch { /* ignore */ }
                                 if (material != null)
                                 {
                                     sd.material = material;
                                     AddText($"Warning: SlotDataAsset {AI._Name} did not have material set. This has been fixed.", LogType.Warning);
+                                    // Also sync name
+                                    if (string.IsNullOrEmpty(sd.materialName) || sd.materialName != material.name)
+                                    {
+                                        sd.materialName = material.name;
+                                    }
+                                    EditorUtility.SetDirty(sd);
+                                    AssetDatabase.SaveAssetIfDirty(sd);
                                 }
                             }
                             if (sd.material == null) // still not fixed
                             {
-                                AddText($"Warning: SlotDataAsset {AI._Name} did not have material set, and Material was not found for slot material named '{sd.material}'", LogType.Error);
+                                AddText($"Warning: SlotDataAsset {AI._Name} did not have material set, and Material was not found for slot material named '{sd.materialName}'", LogType.Error);
                                 LogLine l = AddText("Review slot");
                                 l.ButtonAction = (line) => ReviewItem(l);
                                 l.ReviewItem = AI;
@@ -984,7 +1230,8 @@ namespace UMA
         private void CheckOverlays()
         {
             AddText("Checking Overlays");
-            var overlays = UMAAssetIndexer.Instance.GetAssetItems<OverlayDataAsset>();
+            List<AssetItem> overlays = null;
+            try { overlays = UMAAssetIndexer.Instance.GetAssetItems<OverlayDataAsset>(); } catch { /* ignore */ }
 
             if (overlays == null || overlays.Count == 0)
             {
@@ -995,6 +1242,10 @@ namespace UMA
             {
                 foreach (var AI in overlays)
                 {
+                    if (AI == null)
+                    {
+                        continue;
+                    }
                     if (AI.Item == null)
                     {
                         AddText($"Error: OverlayDataAsset {AI._Name} is missing!", LogType.Error);
@@ -1002,19 +1253,48 @@ namespace UMA
                         l.ButtonAction = (line) => DoLibraryRepair(l);
                         return;
                     }
-                    OverlayDataAsset od = AI.GetItem<OverlayDataAsset>();
+                    OverlayDataAsset od = null;
+                    try { od = AI.GetItem<OverlayDataAsset>(); } catch { /* ignore */ }
+
+                    if (od == null)
+                    {
+                        AddText($"Error: OverlayDataAsset entry invalid: {AI._Name}", LogType.Error);
+                        continue;
+                    }
+
                     if (string.IsNullOrEmpty(od.overlayName))
                     {
                         AddText("Error: Error: OverlayDataAsset {AI._Name} has no OverlayName. Please fix, then rebuild library.");
                         ReviewAssetItem(AI, "OverlayDataAsset");
                     }
+
+                    // Auto-fix materialName if material assigned
+                    if (od.material != null)
+                    {
+                        if (string.IsNullOrEmpty(od.materialName) || od.materialName != od.material.name)
+                        {
+                            od.materialName = od.material.name;
+                            EditorUtility.SetDirty(od);
+                            AssetDatabase.SaveAssetIfDirty(od);
+                            AddText($"Fixed OverlayDataAsset '{AI._Name}' materialName to '{od.materialName}'.");
+                        }
+                    }
+
                     if (od.material == null)
                     {
-                        var material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(od.materialName);
+                        UMAMaterial material = null;
+                        try { material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(od.materialName); } catch { /* ignore */ }
                         if (material != null)
                         {
                             od.material = material;
-                            AddText($"Warning: SlotDataAsset {AI._Name} did not have material set. This has been fixed.", LogType.Warning);
+                            AddText($"Warning: OverlayDataAsset {AI._Name} did not have material set. This has been fixed.", LogType.Warning);
+                            // also sync name
+                            if (string.IsNullOrEmpty(od.materialName) || od.materialName != material.name)
+                            {
+                                od.materialName = material.name;
+                            }
+                            EditorUtility.SetDirty(od);
+                            AssetDatabase.SaveAssetIfDirty(od);
                         }
                     }
                     if (od.material == null) // still not fixed
@@ -1039,7 +1319,7 @@ namespace UMA
                     {
                         if (od.material != null && od.textureCount != od.material.channels.Length)
                         {
-                            AddText($"Texture Count on overlay {AI._Name} does not match material channel count!", LogType.Error);
+                            AddText($"Texture Count on overlay {AI._Name} does not match material channel count ({od.textureCount} vs {od.material.channels.Length})!", LogType.Error);
                             ReviewAssetItem(AI);
                         }
                         bool texturesOK = true;
@@ -1048,7 +1328,7 @@ namespace UMA
                         {
                             if (od.textureList[ii] == null)
                             {
-                                texturesOK = false;       
+                                texturesOK = false;
                             }
                         }
                         if (!texturesOK)
@@ -1065,6 +1345,12 @@ namespace UMA
 
         private void ReviewAssetItem(AssetItem AI, string type = "")
         {
+            if (AI == null)
+            {
+                AddText("Cannot review null asset item.", LogType.Error);
+                return;
+            }
+
             if (type == "")
             {
                 type = AI._BaseTypeName;
@@ -1076,6 +1362,11 @@ namespace UMA
 
         private void RebuildFromAssetItem(AssetItem AI)
         {
+            if (AI == null)
+            {
+                AddText("Cannot rebuild from null asset item.", LogType.Error);
+                return;
+            }
             LogLine l = AddText("Rebuild Library");
             l.ButtonAction = (line) => DoLibraryRebuild(l);
         }
@@ -1083,17 +1374,27 @@ namespace UMA
         private void CheckWardrobeCollections()
         {
             AddText("Checking Wardrobe Collections");
-            UMAAssetIndexer lib = UMAAssetIndexer.Instance;
+            UMAAssetIndexer lib = null;
+            try { lib = UMAAssetIndexer.Instance; } catch { /* ignore */ }
+            if (lib == null)
+            {
+                AddText("UMAAssetIndexer unavailable.", LogType.Error);
+                return;
+            }
 
-            var collections = UMAAssetIndexer.Instance.GetAssetItems<UMAWardrobeCollection>();
+            var collections = lib.GetAssetItems<UMAWardrobeCollection>();
             foreach (var c in collections)
             {
+                if (c == null) continue;
+
                 if (c.Item == null)
                 {
                     AddText($"Wardrobe Collection {c._Name} was not found. Please repair library and rerun");
                     RebuildFromAssetItem(c);
                 }
-                UMAWardrobeCollection uwc = c.GetItem<UMAWardrobeCollection>();
+                UMAWardrobeCollection uwc = null;
+                try { uwc = c.GetItem<UMAWardrobeCollection>(); } catch { /* ignore */ }
+
                 if (uwc == null)
                 {
                     AddText($"Wardrobe Collection {c._Name} is not a valid Wardrobe Collection", LogType.Error);
@@ -1130,12 +1431,15 @@ namespace UMA
                             }
                             var raceRecipes = uwc.GetRacesRecipes(r);
                             var raceRecipeNames = uwc.GetRacesRecipeNames(r);
-                            for (int ii = 0; ii < raceRecipes.Count; ii++)
+                            if (raceRecipes != null)
                             {
-                                if (raceRecipes[ii] == null)
+                                for (int ii = 0; ii < raceRecipes.Count; ii++)
                                 {
-                                    AddText($"Wardrobe Collection {c._Name} has an invalid recipe '{raceRecipeNames[ii]}' assigned for race {r}", LogType.Error);
-                                    invalid = true;
+                                    if (raceRecipes[ii] == null)
+                                    {
+                                        AddText($"Wardrobe Collection {c._Name} has an invalid recipe '{raceRecipeNames?[ii]}' assigned for race {r}", LogType.Error);
+                                        invalid = true;
+                                    }
                                 }
                             }
                         }
@@ -1147,22 +1451,39 @@ namespace UMA
                 }
             }
         }
-        
+
         private void CheckWardrobeRecipes()
         {
-            UMAAssetIndexer lib = UMAAssetIndexer.Instance;
+            UMAAssetIndexer lib = null;
+            try { lib = UMAAssetIndexer.Instance; } catch { /* ignore */ }
+            if (lib == null)
+            {
+                AddText("UMAAssetIndexer unavailable.", LogType.Error);
+                return;
+            }
 
             AddText("Checking Wardrobe Recipes");
-            var recipes = UMAAssetIndexer.Instance.GetAssetItems<UMAWardrobeRecipe>();
+            var recipes = lib.GetAssetItems<UMAWardrobeRecipe>();
             foreach (var r in recipes)
             {
+                if (r == null) continue;
+
                 if (r.Item == null)
                 {
                     AddText($"Wardrobe recipe {r._Name} was not found. Please repair library and rerun");
                     RebuildFromAssetItem(r);
                 }
-                UMAWardrobeRecipe uwr = r.GetItem<UMAWardrobeRecipe>();
-                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = uwr.PackedLoad();
+                UMAWardrobeRecipe uwr = null;
+                try { uwr = r.GetItem<UMAWardrobeRecipe>(); } catch { /* ignore */ }
+
+                if (uwr == null)
+                {
+                    AddText($"Wardrobe recipe entry invalid: {r._Name}", LogType.Error);
+                    continue;
+                }
+
+                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = null;
+                try { PackRecipe = uwr.PackedLoad(); } catch { /* ignore */ }
 
                 bool invalid = false;
 
@@ -1203,7 +1524,7 @@ namespace UMA
                     ReviewAssetItem(r);
                 }
 
-                var Slots = PackRecipe.slotsV3;
+                var Slots = PackRecipe?.slotsV3;
                 if (Slots == null)
                 {
                     AddText($"Wardrobe Recipe {uwr.name} has no slots assigned!", LogType.Error);
@@ -1219,7 +1540,6 @@ namespace UMA
                     }
                     if (string.IsNullOrEmpty(s.id))
                     {
-                        // this is OK
                         continue;
                     }
                     if (!lib.HasAsset<SlotDataAsset>(s.id))
@@ -1229,18 +1549,28 @@ namespace UMA
                     }
                     else
                     {
-                        // if slot is not a utility slot, verify it has overlays assigned.
-                        SlotDataAsset sd = lib.GetAsset<SlotDataAsset>(s.id);
-                        if (sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot)
-                        {
-                            // nothing for now?
-                        }
-                        else
+                        SlotDataAsset sd = null;
+                        try { sd = lib.GetAsset<SlotDataAsset>(s.id); } catch { /* ignore */ }
+
+                        if (sd != null && !(sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot))
                         {
                             if (s.overlays == null || s.overlays.Length == 0)
                             {
                                 AddText($"Wardrobe Recipe {uwr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
                                 ReviewAssetItem(r);
+                            }
+                            else
+                            {
+                                // Validate overlay references exist in the library
+                                for (int oi = 0; oi < s.overlays.Length; oi++)
+                                {
+                                    var ov = s.overlays[oi];
+                                    if (ov == null || string.IsNullOrEmpty(ov.id)) continue;
+                                    if (!lib.HasAsset<OverlayDataAsset>(ov.id))
+                                    {
+                                        AddText($"Wardrobe Recipe {uwr.name} slot '{s.id}' references missing Overlay '{ov.id}'!", LogType.Error);
+                                    }
+                                }
                             }
                         }
                     }
@@ -1251,24 +1581,40 @@ namespace UMA
 
         private void CheckTextRecipes()
         {
-            UMAAssetIndexer lib = UMAAssetIndexer.Instance;
+            UMAAssetIndexer lib = null;
+            try { lib = UMAAssetIndexer.Instance; } catch { /* ignore */ }
+            if (lib == null)
+            {
+                AddText("UMAAssetIndexer unavailable.", LogType.Error);
+                return;
+            }
 
             AddText("Checking Text Recipes");
-            var recipes = UMAAssetIndexer.Instance.GetAssetItems<UMATextRecipe>();
+            var recipes = lib.GetAssetItems<UMATextRecipe>();
             foreach (var r in recipes)
             {
+                if (r == null) continue;
+
                 if (r.Item == null)
                 {
                     AddText($"Text recipe {r._Name} was not found. Please rebuild library and rerun");
                     RebuildFromAssetItem(r);
                 }
-                UMATextRecipe utr = r.GetItem<UMATextRecipe>();
-                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = utr.PackedLoad();
+                UMATextRecipe utr = null;
+                try { utr = r.GetItem<UMATextRecipe>(); } catch { /* ignore */ }
+
+                if (utr == null)
+                {
+                    AddText($"Text Recipe entry invalid: {r._Name}", LogType.Error);
+                    continue;
+                }
+
+                UMAPackedRecipeBase.UMAPackRecipe PackRecipe = null;
+                try { PackRecipe = utr.PackedLoad(); } catch { /* ignore */ }
 
                 bool invalid = false;
 
-                // is DNA assigned?
-                if (string.IsNullOrEmpty(PackRecipe.race))
+                if (string.IsNullOrEmpty(PackRecipe?.race))
                 {
                     AddText($"Text Recipe {utr.name} does not have an assigned race!");
                     invalid = true;
@@ -1281,7 +1627,7 @@ namespace UMA
                         invalid = true;
                     }
                 }
-                if (PackRecipe.umaDna == null || PackRecipe.umaDna.Count == 0)
+                if (PackRecipe == null || PackRecipe.umaDna == null || PackRecipe.umaDna.Count == 0)
                 {
                     AddText($"Text Recipe {utr.name} does not have any DNA assigned!");
                     invalid = true;
@@ -1292,12 +1638,11 @@ namespace UMA
                     ReviewAssetItem(r);
                 }
 
-                var Slots = PackRecipe.slotsV3;
-                var Slot2 = PackRecipe.slotsV2;
+                var Slots = PackRecipe?.slotsV3;
+                var Slot2 = PackRecipe?.slotsV2;
 
                 if (Slots == null && Slot2 == null)
                 {
-                    
                     AddText($"Text Recipe {utr.name} has no slots assigned!", LogType.Error);
                     ReviewAssetItem(r);
                 }
@@ -1314,7 +1659,6 @@ namespace UMA
                             }
                             if (string.IsNullOrEmpty(s.id))
                             {
-                                // this is OK
                                 continue;
                             }
                             if (!lib.HasAsset<SlotDataAsset>(s.id))
@@ -1324,26 +1668,32 @@ namespace UMA
                             }
                             else
                             {
-                                // if slot is not a utility slot, verify it has overlays assigned.
-                                SlotDataAsset sd = lib.GetAsset<SlotDataAsset>(s.id);
-                                if (sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot)
-                                {
-                                    // nothing for now?
-                                }
-                                else
+                                SlotDataAsset sd = null;
+                                try { sd = lib.GetAsset<SlotDataAsset>(s.id); } catch { /* ignore */ }
+
+                                if (sd != null && !(sd.isUtilitySlot || sd.isClippingPlane || sd.isWildCardSlot))
                                 {
                                     if (s.overlays == null || s.overlays.Length == 0)
                                     {
                                         AddText($"Text Recipe {utr.name} has a slot '{s.id}' does not have any overlays assigned!", LogType.Warning);
                                         ReviewAssetItem(r);
                                     }
+                                    else
+                                    {
+                                        // Validate overlay references exist in the library
+                                        for (int oi = 0; oi < s.overlays.Length; oi++)
+                                        {
+                                            var ov = s.overlays[oi];
+                                            if (ov == null || string.IsNullOrEmpty(ov.id)) continue;
+                                            if (!lib.HasAsset<OverlayDataAsset>(ov.id))
+                                            {
+                                                AddText($"Text Recipe {utr.name} slot '{s.id}' references missing Overlay '{ov.id}'!", LogType.Error);
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                    if (Slot2 == null)
-                    {
-
                     }
                 }
             }
@@ -1353,17 +1703,30 @@ namespace UMA
         private void CheckRaces()
         {
             AddText("Checking Races");
-            var races = UMAAssetIndexer.Instance.GetAssetItems<RaceData>();
+            List<AssetItem> races = null;
+            try { races = UMAAssetIndexer.Instance.GetAssetItems<RaceData>(); } catch { /* ignore */ }
+
+            if (races == null)
+            {
+                AddText("Unable to enumerate races.", LogType.Error);
+                return;
+            }
+
             foreach (var r in races)
             {
                 bool invalid = false;
-                if (r.Item == null)
+                if (r == null || r.Item == null)
                 {
-                    AddText($"RaceData {r._Name} was not found. Please rebuild library and rerun", LogType.Error);
-                    RebuildFromAssetItem(r);
+                    AddText($"RaceData {r?._Name ?? "(unknown)"} was not found. Please rebuild library and rerun", LogType.Error);
+                    if (r != null) RebuildFromAssetItem(r);
                     return;
                 }
                 RaceData race = r.Item as RaceData;
+                if (race == null)
+                {
+                    AddText($"Invalid RaceData entry: {r._Name}", LogType.Error);
+                    continue;
+                }
                 if (string.IsNullOrEmpty(race.raceName))
                 {
                     AddText($"Race {race.name} has no 'raceName' - This has been set to the asset name. ", LogType.Warning);
@@ -1390,7 +1753,7 @@ namespace UMA
                         {
                             var cvt = race.dnaConverterList[i];
                             var dnaasset = cvt.dnaAsset;
-                            if (!UMAAssetIndexer.Instance.HasAsset<DynamicUMADnaAsset>(dnaasset.name))
+                            if (dnaasset != null && !UMAAssetIndexer.Instance.HasAsset<DynamicUMADnaAsset>(dnaasset.name))
                             {
                                 AddText($"DynamicDNAConvertController {i} on Race {dnaasset.name} is not indexed! Adding...", LogType.Warning);
                                 var ai = new AssetItem(typeof(DynamicUMADna), dnaasset);
@@ -1400,11 +1763,52 @@ namespace UMA
                         }
                     }
                 }
-                if (race.baseRaceRecipe == null)
+                // Validate base race recipe alignment with race name
+                if (race.baseRaceRecipe != null)
+                {
+                    try
+                    {
+                        var packedBase = race.baseRaceRecipe as UMAPackedRecipeBase;
+                        if (packedBase != null)
+                        {
+                            var pack = packedBase.PackedLoad();
+                            if (pack != null && !string.IsNullOrEmpty(pack.race) && !string.Equals(pack.race, race.raceName, StringComparison.Ordinal))
+                            {
+                                AddText($"Warning: Base race recipe for '{race.raceName}' is set up for race '{pack.race}'. Verify this is intended.", LogType.Warning);
+                                ReviewAssetItem(r);
+                            }
+                        }
+                        else
+                        {
+                            // Base recipe is not a packed recipe type we can inspect
+                            AddText($"Warning: Base race recipe for '{race.raceName}' is not a packed recipe type (UMAPackedRecipeBase).", LogType.Warning);
+                        }
+                    }
+                    catch { /* ignore */ }
+                }
+                else
                 {
                     AddText($"Warning: RaceData {race.raceName} has no base race recipe assigned!", LogType.Error);
                     invalid = true;
                 }
+
+                // Validate cross compatible races exist
+                try
+                {
+                    var compat = race.GetCrossCompatibleRaces();
+                    if (compat != null && compat.Count > 0)
+                    {
+                        foreach (var rn in compat)
+                        {
+                            if (!UMAAssetIndexer.Instance.HasAsset<RaceData>(rn))
+                            {
+                                AddText($"Warning: Race '{race.raceName}' lists cross-compatible race '{rn}' which is not in the library.", LogType.Warning);
+                            }
+                        }
+                    }
+                }
+                catch { /* some races may not implement or may return null */ }
+
                 if (invalid)
                 {
                     ReviewAssetItem(r);
@@ -1495,19 +1899,25 @@ namespace UMA
 
         private void ReviewItem(LogLine line)
         {
+            if (line == null || line.ReviewItem == null)
+            {
+                AddText("Nothing selected to inspect.", LogType.Warning);
+                return;
+            }
             StartCoroutine(InspectObject(line.ReviewItem));
             Repaint();
         }
 
         private IEnumerator InspectObject(AssetItem ai)
         {
+            if (ai == null || ai.Item == null) yield break;
             InspectorUtlity.InspectTarget(ai.Item);
-            return null;
+            yield break;
         }
         private void DoSetAtlasGenerationParms(LogLine line)
         {
             UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-            if (generators.Length == 1)
+            if (generators.Length == 1 && generators[0] != null)
             {
                 generators[0].fitAtlas = true;
                 generators[0].SharperFitTextures = true;
@@ -1515,65 +1925,76 @@ namespace UMA
                 generators[0].SaveAndRestoreIgnoredItems = true;
                 generators[0].convertMipMaps = true;
                 generators[0].atlasResolution = 2048;
-                line.Resolve("Atlas Generation parameters set. Please verify the settings on the generator!");
+                line?.Resolve("Atlas Generation parameters set. Please verify the settings on the generator!");
                 Repaint();
+            }
+            else
+            {
+                line?.Error("No or Multiple UMA Generators found in scene!");
             }
         }
 
         private void DoSetInitialScaleFactor(LogLine line)
         {
             UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-            if (generators.Length == 1)
+            if (generators.Length == 1 && generators[0] != null)
             {
                 generators[0].InitialScaleFactor = 1;
-                line.Resolve("Initial Scale Factor set");
+                line?.Resolve("Initial Scale Factor set");
+            }
+            else
+            {
+                line?.Error("No or Multiple UMA Generators found in scene!");
             }
         }
 
         private void DoSetEditorInitialScaleFactor(LogLine line)
         {
             UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-            if (generators.Length == 1)
+            if (generators.Length == 1 && generators[0] != null)
             {
                 generators[0].editorInitialScaleFactor = 4;
-                line.Resolve("Editor Initial Scale Factor set");
+                line?.Resolve("Editor Initial Scale Factor set");
+            }
+            else
+            {
+                line?.Error("No or Multiple UMA Generators found in scene!");
             }
         }
 
         private void DoAddMeshCombiner(LogLine line)
         {
             UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-            if (generators.Length == 1)
+            if (generators.Length == 1 && generators[0] != null)
             {
                 UMAMeshCombiner uc = generators[0].gameObject.AddComponent<UMAMeshCombiner>();
-                line.Resolve("MeshCombiner added to generator. Be sure to save!");
+                line?.Resolve("MeshCombiner added to generator. Be sure to save!");
             }
             else
             {
-                line.Error("No or Multiple UMA Generators found in scene!");
+                line?.Error("No or Multiple UMA Generators found in scene!");
             }
         }
 
         private void DoAddTextureMerge(LogLine line)
         {
             var settings = UMASettings.GetOrCreateSettings();
-            // first find the 
-            var tx = settings.textureMerge;
+            var tx = settings != null ? settings.textureMerge : null;
             if (tx == null)
             {
-                line.Error("Texture Merge not found in project!");
+                line?.Error("Texture Merge not found in project!");
             }
             else
             {
                 UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
-                if (generators.Length == 1)
+                if (generators.Length == 1 && generators[0] != null)
                 {
                     generators[0].textureMerge = tx;
-                    line.Resolve("Texture Merge assigned to UMA Generator");
+                    line?.Resolve("Texture Merge assigned to UMA Generator");
                 }
                 else
                 {
-                    line.Error("Multiple UMA Generators found in scene!");
+                    line?.Error("No or Multiple UMA Generators found in scene!");
                 }
             }
             Repaint();
@@ -1581,20 +2002,31 @@ namespace UMA
 
         private void DoAddGenerator(LogLine line)
         {
-            var m_settings = UMASettings.GetOrCreateSettings();
-            GameObject go = GameObject.Instantiate(m_settings.generatorPrefab);
-            go.name = "UMAGenerator";
-            if (line != null)
+            UMASettings m_settings = null;
+            try { m_settings = UMASettings.GetOrCreateSettings(); } catch { /* ignore */ }
+            if (m_settings == null || m_settings.generatorPrefab == null)
             {
-                line.Resolve("UMA Generator added to scene. Be sure to save.");
+                line?.Error("Generator prefab not found in project settings!");
+                return;
+            }
+            GameObject go = null;
+            try
+            {
+                go = GameObject.Instantiate(m_settings.generatorPrefab);
+                if (go != null) go.name = "UMAGenerator";
+                line?.Resolve("UMA Generator added to scene. Be sure to save.");
                 Repaint();
+            }
+            catch (Exception ex)
+            {
+                line?.Error($"Failed to add UMA Generator: {ex.Message}");
             }
         }
 
         private void DoActivateGenerator(LogLine line)
         {
-            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsInactive.Include,FindObjectsSortMode.None);
-            if (generators.Length == 1)
+            UMAGenerator[] generators = FindObjectsByType<UMAGenerator>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (generators.Length == 1 && generators[0] != null && generators[0].gameObject != null)
             {
                 generators[0].gameObject.SetActive(true);
                 if (line != null)
@@ -1603,26 +2035,44 @@ namespace UMA
                     Repaint();
                 }
             }
+            else
+            {
+                line?.Error("No or Multiple UMA Generators found in scene!");
+            }
         }
 
         private void DoLibraryRebuild(LogLine line)
-        {            
+        {
             RebuildLibrary();
-            line.Resolve("Library Rebuilt");
+            line?.Resolve("Library Rebuilt");
         }
 
         private void DoLibraryRepair(LogLine line)
         {
-            UMAAssetIndexer.Instance.RepairAndCleanup();
-            line.Resolve("Library Repaired. Please rerun scan");
+            try
+            {
+                UMAAssetIndexer.Instance.RepairAndCleanup();
+                line?.Resolve("Library Repaired. Please rerun scan");
+            }
+            catch (Exception ex)
+            {
+                line?.Error($"Library repair failed: {ex.Message}");
+            }
         }
         #endregion
 
         private void DoAddToScenePage()
         {
-            UMASettings settings = UMASettings.GetOrCreateSettings();
+            UMASettings settings = null;
+            try { settings = UMASettings.GetOrCreateSettings(); } catch { /* ignore */ }
 
             ClearLog();
+
+            if (settings == null)
+            {
+                AddText("UMASettings not found!", LogType.Error);
+                return;
+            }
 
             if (settings.characterPrefab == null)
             {
@@ -1632,9 +2082,9 @@ namespace UMA
                 return;
             }
 
-
-
-            var generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None);
+            UMAGenerator[] generators = null;
+            try { generators = FindObjectsByType<UMAGenerator>(FindObjectsSortMode.None); } catch { /* ignore */ }
+            generators = generators ?? Array.Empty<UMAGenerator>();
 
             if (generators.Length == 0)
             {
@@ -1645,17 +2095,32 @@ namespace UMA
                     AddText("By defalt this is the UMA_GLIB prefab in the 'Getting Started' folder");
                     return;
                 }
-                GameObject gen = GameObject.Instantiate(settings.generatorPrefab);
-                gen.name = settings.generatorPrefab.name;
-                AddText($"UMA Generator {settings.generatorPrefab.name} added to scene. Be sure to save.");
+                try
+                {
+                    GameObject gen = GameObject.Instantiate(settings.generatorPrefab);
+                    if (gen != null) gen.name = settings.generatorPrefab.name;
+                    AddText($"UMA Generator {settings.generatorPrefab.name} added to scene. Be sure to save.");
+                }
+                catch (Exception ex)
+                {
+                    AddText($"Failed to add UMA Generator: {ex.Message}", LogType.Error);
+                }
             }
             else
             {
                 AddText("UMA Generator already found in scene - Not added.");
             }
-            GameObject go = GameObject.Instantiate(settings.characterPrefab);
-            go.name = settings.characterPrefab.name;
-            AddText($"UMA Character {settings.characterPrefab.name} added to scene. Be sure to save.");
+
+            try
+            {
+                GameObject go = GameObject.Instantiate(settings.characterPrefab);
+                if (go != null) go.name = settings.characterPrefab.name;
+                AddText($"UMA Character {settings.characterPrefab.name} added to scene. Be sure to save.");
+            }
+            catch (Exception ex)
+            {
+                AddText($"Failed to add UMA Character: {ex.Message}", LogType.Error);
+            }
         }
 
         private void DoWelcome()
@@ -1674,8 +2139,6 @@ namespace UMA
             AddText("");
             AddText("To check out UMA in action, please open the sample scene using the button to the right");
             AddText("");
-            // AddText("We are <b><i>definitely not</i></b> amused");
-
             AddText("Please join the <b>UMA Discord</b> for help and support (see Links)");
             AddText("You can also check out the <b>UMA Wiki</b> for documentation (see Links)");
             l.ButtonAction = (line) => DoLibraryRebuild(l);
@@ -1684,12 +2147,18 @@ namespace UMA
         #region LinksButton
         private void ShowLink(string label, string text, string URL)
         {
-
             GUILayout.BeginHorizontal();
-            GUILayout.Label(label, EditorStyles.boldLabel, GUILayout.Width(96));
-            if (GUILayout.Button(text, Hyperlink))
+            GUILayout.Label(label ?? "Link", EditorStyles.boldLabel, GUILayout.Width(96));
+            if (!string.IsNullOrEmpty(URL))
             {
-                Application.OpenURL(URL);
+                if (GUILayout.Button(text ?? "(open)", Hyperlink))
+                {
+                    Application.OpenURL(URL);
+                }
+            }
+            else
+            {
+                GUILayout.Label(text ?? "(unavailable)", InfoStyle);
             }
             GUILayout.EndHorizontal();
         }
@@ -1698,6 +2167,11 @@ namespace UMA
         {
             var settings = UMASettings.GetOrCreateSettings();
             ClearLog();
+            if (settings == null)
+            {
+                AddText("UMASettings not found, cannot display links.", LogType.Error);
+                return;
+            }
             ShowLink("Invite", "Join the UMA Discord", settings.DiscordInvite);
             ShowLink("Discord", "Go Directly to UMA Discord", settings.DiscordURL);
             ShowLink("Wiki", "UMA Wiki", settings.WikiURL);
@@ -1713,15 +2187,13 @@ namespace UMA
         {
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
-            Color darkerRect = new Color(PanelColor.r * 0.75f, PanelColor.g * 0.75f, PanelColor.b * 0.75f, 0.5f);
-
             float ht = 60;
             Rect SceneRect = new Rect(0, 0, ContentRect.width, ht);
 
+            UMAWelcomeScenes scenes = null;
+            try { scenes = (UMAWelcomeScenes)Resources.Load("UMAWelcomeScenes"); } catch { /* ignore */ }
 
-            UMAWelcomeScenes scenes = (UMAWelcomeScenes)Resources.Load("UMAWelcomeScenes");
-           // UMAWelcomeScenes scenes = (UMAWelcomeScenes)AssetDatabase.LoadAssetAtPath("Assets/UMA/InternalDataStore/Resources/UMAWelcomeScenes.asset", typeof(UMAWelcomeScenes));
-            if (scenes != null)
+            if (scenes != null && scenes.umaScenes != null)
             {
                 foreach (var scene in scenes.umaScenes)
                 {
@@ -1735,28 +2207,45 @@ namespace UMA
             {
                 GUILayout.Label("No welcome scenes found. Please create a UMAWelcomeScenes asset in the project.");
             }
-            // create a GUILayout area right at the bottom.
-            GUILayout.Label("", GUILayout.Width(ContentRect.width-48), GUILayout.Height(SceneRect.y));
+            GUILayout.Label("", GUILayout.Width(ContentRect.width - 48), GUILayout.Height(SceneRect.y));
             GUILayout.EndScrollView();
         }
 
         private void DisplayScene(UMAWelcomeScenes.UMAScene scene, Rect SceneRect)
         {
+            if (scene == null)
+            {
+                GUILayout.Label("Invalid scene entry.", Warning);
+                return;
+            }
+
             float gutter = 2f;
             float sqrSide = SceneRect.height - (gutter * 2.0f);
-            Rect TitleRect = new Rect(sqrSide+(gutter * 2), gutter, SceneRect.width - (sqrSide + (gutter*2)), sqrSide);
-            Rect InfoRect = new Rect(TitleRect.x, TitleRect.y, TitleRect.width-32, TitleRect.height);
+            Rect TitleRect = new Rect(sqrSide + (gutter * 2), gutter, SceneRect.width - (sqrSide + (gutter * 2)), sqrSide);
+            Rect InfoRect = new Rect(TitleRect.x, TitleRect.y, TitleRect.width - 32, TitleRect.height);
             Rect textureRect = new Rect(gutter, gutter, sqrSide, sqrSide);
 
-            //GUI.DrawTexture(textureRect, scene.sceneTexture);
-            if (GUI.Button(textureRect, new GUIContent(scene.sceneTexture)))
+            var preview = scene.sceneTexture != null ? new GUIContent(scene.sceneTexture) : new GUIContent("Open");
+            bool canOpen = !string.IsNullOrEmpty(scene.scenePath);
+            using (new EditorGUI.DisabledScope(!canOpen))
             {
-                var sc = EditorSceneManager.OpenScene(scene.scenePath);
+                if (GUI.Button(textureRect, preview) && canOpen)
+                {
+                    try
+                    {
+                        EditorSceneManager.OpenScene(scene.scenePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        AddText($"Failed to open scene '{scene.sceneName}': {ex.Message}", LogType.Error);
+                    }
+                }
             }
-            GUI.Label(InfoRect, scene.sceneName, SceneTitleStyle);
+
+            GUI.Label(InfoRect, scene.sceneName ?? "(Unnamed Scene)", SceneTitleStyle);
             InfoRect.y += EditorGUIUtility.singleLineHeight;
             InfoRect.height -= EditorGUIUtility.singleLineHeight;
-            GUI.TextArea(InfoRect, scene.sceneDescription,DescriptionStyle);
+            GUI.TextArea(InfoRect, scene.sceneDescription ?? string.Empty, DescriptionStyle);
         }
         #endregion
 
@@ -1771,10 +2260,18 @@ namespace UMA
                     EditorApplication.update -= updateCallback;
                     return;
                 }
-                if (!routine.MoveNext())
+                try
                 {
+                    if (!routine.MoveNext())
+                    {
+                        EditorApplication.update -= updateCallback;
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"WelcomeToUMA coroutine error: {ex.Message}");
                     EditorApplication.update -= updateCallback;
-                    return;
                 }
             };
             EditorApplication.update += updateCallback;
