@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UMA;
 using UMA.CharacterSystem;
 using UnityEditor;
@@ -89,6 +89,10 @@ namespace UMA.Decals
 
         // GL line material
         private static Material _lineMat;
+
+        // UI state for improved interface
+        private Vector2 _scrollPosition;
+        private bool _showDebugSettings = false;
 
         [Header("Orbit Settings")]
         [Tooltip("Offset from avatar root used as orbit pivot.")]
@@ -189,106 +193,227 @@ namespace UMA.Decals
         private void OnGUI()
         {
             GUILayout.BeginArea(ScreenArea, GUI.skin.window);
-            GUILayout.Label("Left Click: Place Decal (disabled in Debug)");
-            GUILayout.Label("Shift + Left Click: Paint Select/Deselect (in Debug)");
-
-            GUILayout.Label("Right Click + Drag: Orbit Camera");
-            GUILayout.Label("Shift + Right Click + Drag: Pan Vertically");
-
-            GUILayout.Label("Mouse Wheel: Zoom");
-
-            GUILayout.Label("Decal size: ");
-            DecalRadius = GUILayout.HorizontalSlider(DecalRadius, 0.01f, 0.5f);
-            GUILayout.Label("Decal Rotation: ");
-            DecalRotationDegrees = GUILayout.HorizontalSlider(DecalRotationDegrees, 0f, 360f);
-
+            
+            // Use scroll view for expandable content
+            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition);
+            
+            // Decal Method Toggle
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Toggle Decal Mode", GUILayout.Width(150)))
+            GUILayout.Label("Decal Method:", GUILayout.Width(100));
+            if (GUILayout.Button($"{decalMethod}", GUILayout.Width(150)))
             {
                 decalMethod = decalMethod == DecalMethod.SlotDecal ? DecalMethod.RenderTexture : DecalMethod.SlotDecal;
             }
-            GUILayout.Label($"Decal Method: {decalMethod}");
-
             GUILayout.EndHorizontal();
-
+            
+            GUILayout.Space(5);
+            
+            // Active Overlay Selection
+            GUILayout.Label("Active Overlay:");
+            if (decalMethod == DecalMethod.SlotDecal)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Mesh Decal:", GUILayout.Width(100));
+#if UNITY_EDITOR
+                MeshDecalOverlay = (OverlayDataAsset)EditorGUI.ObjectField(GUILayoutUtility.GetRect(200, 18), MeshDecalOverlay, typeof(OverlayDataAsset), false);
+#else
+                GUILayout.Label(MeshDecalOverlay != null ? MeshDecalOverlay.name : "None", GUILayout.Width(200));
+#endif
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Texture Decal:", GUILayout.Width(100));
+#if UNITY_EDITOR
+                TextureDecalOverlay = (OverlayDataAsset)EditorGUI.ObjectField(GUILayoutUtility.GetRect(200, 18), TextureDecalOverlay, typeof(OverlayDataAsset), false);
+#else
+                GUILayout.Label(TextureDecalOverlay != null ? TextureDecalOverlay.name : "None", GUILayout.Width(200));
+#endif
+                GUILayout.EndHorizontal();
+                
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Stamp Field:", GUILayout.Width(100));
+#if UNITY_EDITOR
+                StampField = (DecalRTStampSlot)EditorGUI.ObjectField(GUILayoutUtility.GetRect(200, 18), StampField, typeof(DecalRTStampSlot), true);
+#else
+                GUILayout.Label(StampField != null ? StampField.name : "None", GUILayout.Width(200));
+#endif
+                GUILayout.EndHorizontal();
+            }
+            
+            GUILayout.Space(5);
+            
+            // Radius/Rotation Controls
+            GUILayout.Label("Decal Settings:");
+            
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Restart", GUILayout.Width(100)))
+            GUILayout.Label($"Radius: {DecalRadius:F3}", GUILayout.Width(100));
+            float newRadius = GUILayout.HorizontalSlider(DecalRadius, 0.01f, 0.5f, GUILayout.Width(150));
+            if (System.Math.Abs(newRadius - DecalRadius) > 0.001f)
+            {
+                DecalRadius = newRadius;
+                UpdateLastDecalIfExists();
+            }
+            GUILayout.EndHorizontal();
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Fudge Radius:", GUILayout.Width(100));
+            string fudgeStr = GUILayout.TextField(fudgeRadius.ToString("F4"), GUILayout.Width(80));
+            if (float.TryParse(fudgeStr, out float newFudge))
+            {
+                fudgeRadius = newFudge;
+            }
+            GUILayout.EndHorizontal();
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Rotation: {DecalRotationDegrees:F1}°", GUILayout.Width(100));
+            float newRotation = GUILayout.HorizontalSlider(DecalRotationDegrees, 0f, 360f, GUILayout.Width(150));
+            if (System.Math.Abs(newRotation - DecalRotationDegrees) > 0.1f)
+            {
+                DecalRotationDegrees = newRotation;
+                UpdateLastDecalIfExists();
+            }
+            GUILayout.EndHorizontal();
+            
+            GUILayout.BeginHorizontal();
+            randomizeRotation = GUILayout.Toggle(randomizeRotation, "Randomize Rotation", GUILayout.Width(150));
+            useHitNormalForProjection = GUILayout.Toggle(useHitNormalForProjection, "Use Hit Normal", GUILayout.Width(150));
+            GUILayout.EndHorizontal();
+            
+            // Method-specific settings
+            if (decalMethod == DecalMethod.SlotDecal)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Slot Offset:", GUILayout.Width(100));
+                string offsetStr = GUILayout.TextField(slotOffset.ToString(), GUILayout.Width(80));
+                if (int.TryParse(offsetStr, out int newOffset))
+                {
+                    slotOffset = newOffset;
+                }
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("RT Dilation:", GUILayout.Width(100));
+                string dilationStr = GUILayout.TextField(decalRTDilation.ToString(), GUILayout.Width(80));
+                if (int.TryParse(dilationStr, out int newDilation))
+                {
+                    decalRTDilation = newDilation;
+                }
+                GUILayout.EndHorizontal();
+                
+                GUILayout.BeginHorizontal();
+                AutoAddOverlays = GUILayout.Toggle(AutoAddOverlays, "Auto Add Overlays", GUILayout.Width(140));
+                DrawRenderTexturesImmediately = GUILayout.Toggle(DrawRenderTexturesImmediately, "Draw RT Immediately", GUILayout.Width(140));
+                GUILayout.EndHorizontal();
+            }
+            
+            GUILayout.Space(5);
+            
+            // Place Decal Functionality
+            GUILayout.Label("Controls:");
+            GUILayout.Label("Left Click: Place Decal (disabled in Debug)");
+            GUILayout.Label("Right Click + Drag: Orbit Camera");
+            GUILayout.Label("Shift + Right Click + Drag: Pan Vertically");
+            GUILayout.Label("Mouse Wheel: Zoom");
+            
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Restart Avatar", GUILayout.Width(120)))
             {
                 Avatar.BuildCharacter();
             }
-            GUILayout.FlexibleSpace();
-
-            // Toggle with auto-pause when enabling debug
-            bool prevDebug = EnableTriangleDebug;
-            EnableTriangleDebug = GUILayout.Toggle(EnableTriangleDebug, "Debug Select", GUILayout.Width(120));
-            if (!prevDebug && EnableTriangleDebug)
-            {
-                PauseAvatarAnimation = true;
-                ApplyAnimationPauseState();
-            }
-
             PauseAvatarAnimation = GUILayout.Toggle(PauseAvatarAnimation, "Pause Animation", GUILayout.Width(140));
             GUILayout.EndHorizontal();
-
-            if (EnableTriangleDebug)
+            
+            GUILayout.Space(5);
+            
+            // Debug Settings (Collapsible)
+#if UNITY_EDITOR
+            _showDebugSettings = EditorGUI.Foldout(GUILayoutUtility.GetRect(300, 18), _showDebugSettings, "Debug Settings", true);
+#else
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(_showDebugSettings ? "▼ Debug Settings" : "▶ Debug Settings", GUILayout.Width(150)))
             {
-                if (_dbgTriToOrdinal == null)
-                {
-                    RefreshLastDecalDebug();
-                }
-
-
-                GUILayout.BeginHorizontal();
-                GUI.enabled = _dbgTriToOrdinal != null;
-                if (GUILayout.Button("Apply Changes", GUILayout.Width(110)))
-                {
-                    ApplySelectedChanges();
-                }
-                if (GUILayout.Button("Cancel", GUILayout.Width(70)))
-                {
-                    _selectedOrdinals.Clear();
-                    _selectedAddCombinedTris.Clear();
-                    _undo.Clear();
-                    _redo.Clear();
-                }
-                GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Clear", GUILayout.Width(70)))
-                {
-                    PushUndo();
-                    _selectedOrdinals.Clear();
-                    _selectedAddCombinedTris.Clear();
-                }
-                if (GUILayout.Button("Select All", GUILayout.Width(90)))
-                {
-                    PushUndo();
-                    SelectAll();
-                }
-                if (GUILayout.Button("Invert", GUILayout.Width(70)))
-                {
-                    PushUndo();
-                    InvertSelection();
-                }
-                GUI.enabled = true;
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                GUI.enabled = _undo.Count > 0;
-                if (GUILayout.Button("Undo", GUILayout.Width(70)))
-                {
-                    PopUndo();
-                }
-                GUI.enabled = _redo.Count > 0;
-                if (GUILayout.Button("Redo", GUILayout.Width(70)))
-                {
-                    PopRedo();
-                }
-                GUI.enabled = true;
-                GUILayout.EndHorizontal();
-
-                GUILayout.Label($"Remove (red): {_selectedOrdinals.Count}  Add (green): {_selectedAddCombinedTris.Count}");
+                _showDebugSettings = !_showDebugSettings;
             }
-
+            GUILayout.EndHorizontal();
+#endif
+            if (_showDebugSettings)
+            {
+                // Toggle with auto-pause when enabling debug
+                bool prevDebug = EnableTriangleDebug;
+                EnableTriangleDebug = GUILayout.Toggle(EnableTriangleDebug, "Enable Triangle Debug");
+                if (!prevDebug && EnableTriangleDebug)
+                {
+                    PauseAvatarAnimation = true;
+                    ApplyAnimationPauseState();
+                }
+                
+                if (EnableTriangleDebug)
+                {
+                    if (_dbgTriToOrdinal == null)
+                    {
+                        RefreshLastDecalDebug();
+                    }
+                    
+                    GUILayout.Label("Debug Selection (Shift + Left Click to paint)");
+                    
+                    GUILayout.BeginHorizontal();
+                    GUI.enabled = _dbgTriToOrdinal != null;
+                    if (GUILayout.Button("Apply Changes", GUILayout.Width(110)))
+                    {
+                        ApplySelectedChanges();
+                    }
+                    if (GUILayout.Button("Cancel", GUILayout.Width(70)))
+                    {
+                        _selectedOrdinals.Clear();
+                        _selectedAddCombinedTris.Clear();
+                        _undo.Clear();
+                        _redo.Clear();
+                    }
+                    GUILayout.EndHorizontal();
+                    
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Clear", GUILayout.Width(70)))
+                    {
+                        PushUndo();
+                        _selectedOrdinals.Clear();
+                        _selectedAddCombinedTris.Clear();
+                    }
+                    if (GUILayout.Button("Select All", GUILayout.Width(90)))
+                    {
+                        PushUndo();
+                        SelectAll();
+                    }
+                    if (GUILayout.Button("Invert", GUILayout.Width(70)))
+                    {
+                        PushUndo();
+                        InvertSelection();
+                    }
+                    GUI.enabled = true;
+                    GUILayout.EndHorizontal();
+                    
+                    GUILayout.BeginHorizontal();
+                    GUI.enabled = _undo.Count > 0;
+                    if (GUILayout.Button("Undo", GUILayout.Width(70)))
+                    {
+                        PopUndo();
+                    }
+                    GUI.enabled = _redo.Count > 0;
+                    if (GUILayout.Button("Redo", GUILayout.Width(70)))
+                    {
+                        PopRedo();
+                    }
+                    GUI.enabled = true;
+                    GUILayout.EndHorizontal();
+                    
+                    GUILayout.Label($"Remove (red): {_selectedOrdinals.Count}  Add (green): {_selectedAddCombinedTris.Count}");
+                }
+            }
+            
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
 
             // Apply pause state from the toggle each GUI frame
@@ -1273,7 +1398,7 @@ namespace UMA.Decals
             {
                 _selectedOrdinals.Add(ord);
             }
-        }
+       }
 
         private void PushUndo()
         {
@@ -1353,6 +1478,17 @@ namespace UMA.Decals
             }
 
             return false;
+        }
+
+        // Method to update last decal when settings change
+        private void UpdateLastDecalIfExists()
+        {
+            if (!EnableTriangleDebug)
+                return;
+                
+            // For now, we'll just refresh the debug data
+            // In the future, this could be extended to actually modify the last decal
+            RefreshLastDecalDebug();
         }
     }
 }
