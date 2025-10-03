@@ -1,3 +1,4 @@
+#define UMA_DECALRT_VERBOSE
 using System;
 using System.Collections.Generic;
 using UnityEngine;

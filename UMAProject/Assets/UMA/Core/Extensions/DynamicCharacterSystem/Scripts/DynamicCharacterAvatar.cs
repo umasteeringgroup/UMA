@@ -6031,6 +6031,21 @@ namespace UMA.CharacterSystem
             }
         }
 
+        public void RegenerateTextures()
+        {
+            //Debug.Log("Updating Textures");
+            umaData.Dirty(false, true, false);
+        }
+
+        public void RegenerateMesh()
+        {
+            umaData.Dirty(false, true, true);
+        }
+
+        public void RegenerateAll ()
+        {
+            umaData.Dirty(true, true, true);
+        }
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
         {
