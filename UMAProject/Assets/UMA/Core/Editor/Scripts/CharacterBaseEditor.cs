@@ -2823,7 +2823,7 @@ namespace UMA.Editors
 
             // NEW: Open in Node Editor button
             GUILayout.Space(4);
-            if (GUILayout.Button("Open in Node Recipe Editor"))
+            if (GUILayout.Button("Open in Node Recipe Editor (Do not use!)"))
             {
                 // Get or create the window
                 var win = EditorWindow.GetWindow<UMANodeRecipeEditorWindow>("UMA Node Recipe Editor");

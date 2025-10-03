@@ -12,6 +12,11 @@ namespace UMA.Editors
 
         private GUIStyle _dropStyle;
 
+        private static bool IsHiddenInternalName(string name)
+        {
+            return !string.IsNullOrEmpty(name) && name.StartsWith("Hidden/Internal", System.StringComparison.OrdinalIgnoreCase);
+        }
+
         private void OnEnable()
         {
             _entriesProp = serializedObject.FindProperty("_entries");
@@ -173,7 +178,7 @@ namespace UMA.Editors
                                 changed = true;
                             }
                             var sn = s != null ? s.name : string.Empty;
-                            if (nameProp.stringValue != sn)
+                            if (!IsHiddenInternalName(sn) && nameProp.stringValue != sn)
                             {
                                 nameProp.stringValue = sn;
                                 changed = true;
@@ -275,7 +280,11 @@ namespace UMA.Editors
                     var mat = matProp.objectReferenceValue as Material;
                     // Best-effort: keep shader and name in sync on material change
                     shaderProp.objectReferenceValue = mat != null ? mat.shader : null;
-                    nameProp.stringValue = mat != null && mat.shader != null ? mat.shader.name : nameProp.stringValue;
+                    var n = (mat != null && mat.shader != null) ? mat.shader.name : string.Empty;
+                    if (!IsHiddenInternalName(n))
+                    {
+                        nameProp.stringValue = n;
+                    }
                     needSave = true;
                 }
 
@@ -283,9 +292,9 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(shaderProp, new GUIContent("Shader"));
                 if (EditorGUI.EndChangeCheck())
                 {
-                    // Keep shaderName synced when shader changes
+                    // Keep shaderName synced when shader changes (skip hidden/internal)
                     var shader = shaderProp.objectReferenceValue as Shader;
-                    if (shader != null)
+                    if (shader != null && !IsHiddenInternalName(shader.name))
                     {
                         nameProp.stringValue = shader.name;
                     }
@@ -325,7 +334,11 @@ namespace UMA.Editors
                         if (mat != null)
                         {
                             shaderProp.objectReferenceValue = mat.shader;
-                            nameProp.stringValue = mat.shader != null ? mat.shader.name : nameProp.stringValue;
+                            var n = mat.shader != null ? mat.shader.name : string.Empty;
+                            if (!IsHiddenInternalName(n))
+                            {
+                                nameProp.stringValue = n;
+                            }
                             needSave = true;
                         }
                     }
