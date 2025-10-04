@@ -22,6 +22,8 @@ Shader "Hidden/UMA/DecalRTStamp"
         float4 _UVRect;     // x=minx, y=miny, z=maxx, w=maxy
         float _UseUVRect;   // 0/1 toggle
     float _UseMask;     // 0/1 toggle
+    float _UseFixedLOD;  // 0/1 toggle: force a fixed LOD for sampling to avoid cross-island mip seams
+    float _FixedLOD;     // LOD level when _UseFixedLOD==1
 
         struct appdata
         {
@@ -48,6 +50,30 @@ Shader "Hidden/UMA/DecalRTStamp"
             return o;
         }
 
+        inline fixed4 SampleOverlay(float2 uv)
+        {
+            uv = saturate(uv);
+            #if defined(SHADER_API_D3D11) || defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)
+                if (_UseFixedLOD > 0.5)
+                {
+                    return UNITY_SAMPLE_TEX2D_LOD(_OverlayTex, uv, _FixedLOD);
+                }
+            #endif
+            return UNITY_SAMPLE_TEX2D(_OverlayTex, uv);
+        }
+
+        inline fixed SampleMask(float2 uv)
+        {
+            uv = saturate(uv);
+            #if defined(SHADER_API_D3D11) || defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)
+                if (_UseFixedLOD > 0.5)
+                {
+                    return UNITY_SAMPLE_TEX2D_LOD(_MaskTex, uv, _FixedLOD).a;
+                }
+            #endif
+            return UNITY_SAMPLE_TEX2D(_MaskTex, uv).a;
+        }
+
         fixed4 frag(v2f i) : SV_Target
         {
             // Optional UV clipping to the provided rect (atlas region)
@@ -58,12 +84,12 @@ Shader "Hidden/UMA/DecalRTStamp"
             }
 
             float2 uv = clamp(i.overlayUV, 0.0, 1.0);
-            fixed4 c = UNITY_SAMPLE_TEX2D(_OverlayTex, uv);
+            fixed4 c = SampleOverlay(uv);
 
             // Apply global coverage mask (from overlay.textureList[0] alpha or explicit mask)
             if (_UseMask > 0.5)
             {
-                fixed ma = UNITY_SAMPLE_TEX2D(_MaskTex, uv).a;
+                fixed ma = SampleMask(uv);
                 c.a *= ma;
             }
 

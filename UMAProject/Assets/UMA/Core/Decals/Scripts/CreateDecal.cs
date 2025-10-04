@@ -50,6 +50,8 @@ namespace UMA.Decals
         public int slotOffset = 3000;
         [Tooltip("Dilation factor for decal render texture method (in pixels, to avoid edge artifacts).")]
         public int decalRTDilation = 8;
+        [Tooltip("Expand stamped triangles in UV space (pixels) to reduce seams in RT decals.")]
+        public float DecalRTUVExpandPixels = 0.75f;
 
         [Header("Debug Selection")]
         [Tooltip("Enable triangle debug mode for the last created decal.")]
@@ -280,7 +282,12 @@ namespace UMA.Decals
             randomizeRotation = GUILayout.Toggle(randomizeRotation, "Randomize Rotation", GUILayout.Width(150));
             useHitNormalForProjection = GUILayout.Toggle(useHitNormalForProjection, "Use Hit Normal", GUILayout.Width(150));
             GUILayout.EndHorizontal();
-            
+
+            if (GUILayout.Button("Clear All Decals"))
+            {
+                ClearAllDecals();
+            }
+
             // Method-specific settings
             if (decalMethod == DecalMethod.SlotDecal)
             {
@@ -303,12 +310,22 @@ namespace UMA.Decals
                     decalRTDilation = newDilation;
                 }
                 GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("RT UV Expand (px):", GUILayout.Width(120));
+                string expandStr = GUILayout.TextField(DecalRTUVExpandPixels.ToString("F2"), GUILayout.Width(80));
+                if (float.TryParse(expandStr, out float newExpand))
+                {
+                    DecalRTUVExpandPixels = Mathf.Clamp(newExpand, 0f, 8f);
+                }
+                GUILayout.EndHorizontal();
                 
                 GUILayout.BeginHorizontal();
                 AutoAddOverlays = GUILayout.Toggle(AutoAddOverlays, "Auto Add Overlays", GUILayout.Width(140));
                 DrawRenderTexturesImmediately = GUILayout.Toggle(DrawRenderTexturesImmediately, "Draw RT Immediately", GUILayout.Width(140));
                 GUILayout.EndHorizontal();
             }
+
             
             GUILayout.Space(5);
             
@@ -420,6 +437,15 @@ namespace UMA.Decals
             ApplyAnimationPauseState();
         }
 
+        private void ClearAllDecals()
+        {
+            if (StampField != null)
+            {
+                StampField.ClearAllStamps();
+                Avatar.BuildCharacter();
+            }
+        }
+
         void Update()
         {
             if (!_initialized)
@@ -443,17 +469,18 @@ namespace UMA.Decals
             HandleZoom();
             UpdateCameraTransform();
 
+
+
+            if (!EnableTriangleDebug)
+            {
+                PauseAvatarAnimation = true; // always pause when placing decals
+                HandlePlacement();
+            }
             // Keep pause state applied across avatar rebuilds
             if (PauseAvatarAnimation)
             {
                 ApplyAnimationPauseState();
             }
-
-            if (!EnableTriangleDebug)
-            {
-                HandlePlacement();
-            }
-
             if (EnableTriangleDebug)
             {
                 EnsureDebugBake();
@@ -873,6 +900,7 @@ namespace UMA.Decals
                     enableDebug = true,
                     forceLinearSampling = false,
                     useHitNormalForProjection = this.useHitNormalForProjection,
+                    uvExpandPixels = DecalRTUVExpandPixels,
                     bleedPixels = decalRTDilation
                 };
 
@@ -948,7 +976,7 @@ namespace UMA.Decals
                         }
                         catch { /* ignore editor persistence errors */ }
 #endif
-
+                        bool addedNew = false;
                         // Find or create an overlay stamp set that will be triggered by base overlays on affected slots (not the decal overlay itself)
                         DecalRTStampSlot.OverlayStampSet targetSet = null;
                         if (StampField.overlayStamps != null)
@@ -972,6 +1000,7 @@ namespace UMA.Decals
                                 overlayNames = new List<string>()
                             };
                             StampField.overlayStamps.Add(targetSet);
+                            addedNew = true;
                         }
 
                         // Ensure trigger overlay names include the overlays currently used on the affected slots

@@ -48,29 +48,6 @@ public static class DecalRTStampEditor
         EditorGUIUtility.PingObject(clone);
     }
 
-    [MenuItem("UMA/Decals/Restore Last Decal Stamp To Selected Avatar", priority = 2001)]
-    private static void RestoreLastStampToSelected()
-    {
-        var avatar = GetSelectedAvatar();
-        if (avatar == null || avatar.umaData == null)
-        {
-            EditorUtility.DisplayDialog("Restore Decal Stamp", "Select a GameObject with DynamicCharacterAvatar (with built UMAData).", "OK");
-            return;
-        }
-        var stamp = DecalRenderTexture.LastStamp;
-        if (stamp == null)
-        {
-            EditorUtility.DisplayDialog("Restore Decal Stamp", "No cached stamp found. Stamp one first, or use 'Restore From Asset' / 'Restore From JSON'.", "OK");
-            return;
-        }
-
-        bool ok = DecalRenderTexture.ApplyStampToUMA(avatar, avatar.umaData, stamp);
-        if (!ok)
-        {
-            EditorUtility.DisplayDialog("Restore Decal Stamp", "Failed to apply stamp. See Console for details.", "OK");
-        }
-    }
-
     [MenuItem("UMA/Decals/Restore Decal Stamp From Asset To Selected Avatar", priority = 2002)]
     private static void RestoreStampFromAssetToSelected()
     {

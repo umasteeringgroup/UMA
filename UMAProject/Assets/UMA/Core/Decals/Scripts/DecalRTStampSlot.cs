@@ -78,6 +78,12 @@ namespace UMA
         private DynamicCharacterAvatar _avatar;
         private bool _subscribed;
 
+        // Dilation material cache for final-RT bleed (to kill seams)
+        private static Material _dilateMat;
+        [Header("Dilation")]
+        [Tooltip("If true, dilate RGB colors across padding regardless of alpha (fixes seams across opaque islands).")]
+        public bool rgbOnlyDilation = true;
+
         // Called from SlotDataAsset.CharacterBegun (UMADataEvent) in the slot that owns this script.
         public void OnCharacterBegun(UMAData umaData)
         {
@@ -126,68 +132,48 @@ namespace UMA
         {
             try
             {
-                if (umaData == null) {  return; }
-                if (parms == null) {  return; }
-                if (parms.overlayData == null) {  return; }
+                if (umaData == null || parms == null || parms.overlayData == null) return;
 
-                if (_avatar == null)
-                    _avatar = umaData as DynamicCharacterAvatar;
-                if (_avatar == null) {  return; }
+                if (_avatar == null) _avatar = umaData as DynamicCharacterAvatar;
+                if (_avatar == null) return;
+                if (overlayStamps == null || overlayStamps.Count == 0) return;
 
-                if (overlayStamps == null || overlayStamps.Count == 0) {return; }
+                Debug.Log($"Stamping for slot {parms.slotData.slotName}, overlay {parms.overlayData.overlayName} on material property {parms.materialPropertyName}");
+
 
                 bool anyAttempted = false;
                 bool anyApplied = false;
+                int maxBleedPixels = 0;
 
                 // Iterate ALL sets; do not early exit so multiple sets can react to the same overlay
                 for (int si = 0; si < overlayStamps.Count; si++)
                 {
                     var set = overlayStamps[si];
-                    if (set == null)
-                    {
-                        //DebugSkip($"OverlayStampSet index {si} is null", this);
-                        continue;
-                    }
-                    if (set.stamps == null || set.stamps.Length == 0)
-                    {
-                        //DebugSkip($"OverlayStampSet '{set.name}' has no stamps", this);
-                        continue;
-                    }
-                    if (!set.Matches(parms.overlayData))
-                    {
-                        //DebugSkip($"OverlayStampSet '{set.name}' did not match overlay '{parms.overlayData.overlayName}'", this);
-                        continue;
-                    }
+                    if (set == null || set.stamps == null || set.stamps.Length == 0) continue;
+                    if (!set.Matches(parms.overlayData)) continue;
 
                     // Matching set
                     for (int st = 0; st < set.stamps.Length; st++)
                     {
                         anyAttempted = true;
                         var stamp = set.stamps[st];
-                        if (stamp == null)
-                        {
-                            //DebugSkip($"Stamp index {st} in set '{set.name}' is null", this);
-                            continue;
-                        }
+                        if (stamp == null) continue;
+
                         bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms.materialPropertyName, parms.renderTexture);
-                        if (!ok)
-                        {
-                            //DebugSkip($"ApplyStampAsset returned false for set '{set.name}' stamp '{stamp.name}'", this);
-                        }
-                        else
+                        if (ok)
                         {
                             anyApplied = true;
+                            if (stamp.bleedPixels > maxBleedPixels) maxBleedPixels = stamp.bleedPixels;
                         }
                     }
                 }
 
-                if (!anyAttempted)
+                // If we applied any stamps to this final RT, run a dilation pass that expands color into transparent padding
+                if (anyApplied && parms.renderTexture != null)
                 {
-                   // DebugSkip("No stamps attempted (no matching sets)", this);
-                }
-                else if (!anyApplied)
-                {
-                    //DebugSkip("Stamps attempted but none applied successfully", this);
+                    // Use the largest bleed requested by any applied stamp. Clamp to shader range [1..16].
+                    int bleed = Mathf.Clamp(maxBleedPixels <= 0 ? 2 : maxBleedPixels, 1, 64); // allow multiple rounds if >16
+                    RunFinalDilation(parms.renderTexture, bleed, rgbOnlyDilation);
                 }
             }
             catch (Exception ex)
@@ -196,17 +182,62 @@ namespace UMA
             }
         }
 
-        // Legacy helper kept for backward compatibility (no longer used in new logic)
-        private OverlayStampSet FindStampSet(OverlayData overlayData)
+        private static void EnsureDilateMat()
         {
-            if (overlayStamps == null) return null;
-            for (int i = 0; i < overlayStamps.Count; i++)
+            var shader = Shader.Find("Hidden/UMA/DecalRTDilate");
+            if (shader == null)
             {
-                var s = overlayStamps[i];
-                if (s != null && s.Matches(overlayData))
-                    return s;
+                Debug.LogWarning("[DecalRTStampSlot] Dilation shader 'Hidden/UMA/DecalRTDilate' not found.");
+                return;
             }
-            return null;
+            if (_dilateMat == null || _dilateMat.shader != shader)
+            {
+                if (_dilateMat != null)
+                {
+                    if (Application.isPlaying) Destroy(_dilateMat); else DestroyImmediate(_dilateMat);
+                }
+                _dilateMat = new Material(shader) { name = "UMA_DecalRT_DilateMat" };
+                _dilateMat.hideFlags = HideFlags.HideAndDontSave;
+            }
+        }
+
+        private static void RunFinalDilation(RenderTexture rt, int bleedPixels, bool rgbOnly)
+        {
+            if (rt == null || bleedPixels <= 0) return;
+            EnsureDilateMat();
+            if (_dilateMat == null) return;
+
+
+            _dilateMat.SetFloat("_PreserveAlpha", rgbOnly ? 1.0f : 0.0f);   // in RGB-only we keep alpha
+            _dilateMat.SetFloat("_MinNeighborAlpha", rgbOnly ? 0.0f : 0.0f);// allow any neighbor
+            _dilateMat.SetFloat("_RGBOnly", rgbOnly ? 1.0f : 0.0f);
+            // Ensure the stamp sampling LOD is locked during the final pass to avoid introducing fresh mip transitions
+            if (_dilateMat.HasProperty("_UseFixedLOD"))
+            {
+                _dilateMat.SetFloat("_UseFixedLOD", 1.0f);
+                _dilateMat.SetFloat("_FixedLOD", 0.0f);
+            }
+
+            //Debug.Log($"[DecalRTStampSlot] Running final dilation pass, bleedPixels={bleedPixels}, rgbOnly={rgbOnly}, _MinNeighborAlpha={_dilateMat.GetFloat("_MinNeighborAlpha")}");
+
+
+            int remaining = Mathf.Clamp(bleedPixels, 1, 256);
+            while (remaining > 0)
+            {
+                int step = Mathf.Min(remaining, 16);
+                _dilateMat.SetFloat("_Radius", step);
+                var tmp = RenderTexture.GetTemporary(rt.descriptor);
+                Graphics.Blit(rt, tmp);
+                Graphics.Blit(tmp, rt, _dilateMat);
+                RenderTexture.ReleaseTemporary(tmp);
+                remaining -= step;
+            }
+        }
+
+        internal void ClearAllStamps()
+        {
+            // clear the stamps
+            overlayStamps.Clear();
         }
     }
 }

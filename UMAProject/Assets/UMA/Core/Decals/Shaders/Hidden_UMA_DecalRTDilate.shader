@@ -5,6 +5,7 @@ Shader "Hidden/UMA/DecalRTDilate"
         _Radius("Dilation Radius (px, 0-16)", Range(0,16)) = 2
         [Toggle]_PreserveAlpha("Preserve Original Alpha", Float) = 1
         _MinNeighborAlpha("Min Neighbor Alpha", Range(0,1)) = 0.10
+        [Toggle]_RGBOnly("Dilate RGB Only (ignore alpha gating)", Float) = 0
     }
     SubShader 
     { 
@@ -25,6 +26,7 @@ Shader "Hidden/UMA/DecalRTDilate"
             float _Radius;             // dilation radius in pixels (0..16)
             float _PreserveAlpha;      // 0/1: keep original alpha
             float _MinNeighborAlpha;   // threshold for considering a neighbor valid
+            float _RGBOnly;            // 0/1: modify only RGB, do not gate by base alpha or change alpha
 
             struct v2f {
                 float4 pos : SV_POSITION;
@@ -72,8 +74,9 @@ Shader "Hidden/UMA/DecalRTDilate"
             fixed4 frag(v2f i) : SV_Target
             {
                 fixed4 baseCol = SampleClamp(i.uv);
-                // Early out if already fully opaque
-                if (baseCol.a >= 0.99) return baseCol;
+
+                // Early out for legacy alpha-based dilation only
+                if (_RGBOnly < 0.5 && baseCol.a >= 0.99) return baseCol;
 
                 // Remember original alpha to optionally preserve coverage
                 float origA = baseCol.a;
@@ -103,18 +106,28 @@ Shader "Hidden/UMA/DecalRTDilate"
                     KeepBestAlpha(SampleClamp(i.uv + dx - dy), best);
                     KeepBestAlpha(SampleClamp(i.uv - dx + dy), best);
                     KeepBestAlpha(SampleClamp(i.uv - dx - dy), best);
-
-                    // Optional extra directions could be added for smoother disks,
-                    // but 8 directions per step generally suffice for decal bleeding.
                 }
 
-                // Blend toward best based on how much alpha we are missing
-                // (keeps soft interiors soft)
+                if (_RGBOnly > 0.5)
+                {
+                    // In RGB-only mode, always adopt best RGB if it has any meaningful alpha
+                    if (best.a >= _MinNeighborAlpha)
+                    {
+                        baseCol.rgb = best.rgb;
+                        // Alpha preserved by default, but allow optional expansion if desired
+                        if (_PreserveAlpha > 0.5)
+                            baseCol.a = origA;
+                        else
+                            baseCol.a = max(baseCol.a, best.a);
+                    }
+                    return baseCol;
+                }
+
+                // Alpha-aware mode: Blend toward best based on how much alpha we are missing
                 if (best.a > baseCol.a)
                 {
                     float k = saturate(1.0 - baseCol.a);
                     baseCol.rgb = lerp(baseCol.rgb, best.rgb, k);
-                    // Optionally preserve alpha to avoid expanding decal coverage
                     if (_PreserveAlpha > 0.5)
                         baseCol.a = origA;
                     else

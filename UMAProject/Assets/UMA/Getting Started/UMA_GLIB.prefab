@@ -50,8 +50,8 @@ MonoBehaviour:
   convertRenderTexture: 0
   useAsyncConversion: 0
   asyncMipRegen: 1
-  convertMipMaps: 1
-  atlasResolution: 2048
+  convertMipMaps: 0
+  atlasResolution: 8192
   editorAtlasResolution: 2048
   AtlasOverflowFitMethod: 2
   FitPercentageDecrease: 0.5
