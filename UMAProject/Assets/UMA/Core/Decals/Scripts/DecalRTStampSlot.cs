@@ -138,10 +138,7 @@ namespace UMA
                 if (_avatar == null) return;
                 if (overlayStamps == null || overlayStamps.Count == 0) return;
 
-                Debug.Log($"Stamping for slot {parms.slotData.slotName}, overlay {parms.overlayData.overlayName} on material property {parms.materialPropertyName}");
 
-
-                bool anyAttempted = false;
                 bool anyApplied = false;
                 int maxBleedPixels = 0;
 
@@ -155,7 +152,6 @@ namespace UMA
                     // Matching set
                     for (int st = 0; st < set.stamps.Length; st++)
                     {
-                        anyAttempted = true;
                         var stamp = set.stamps[st];
                         if (stamp == null) continue;
 

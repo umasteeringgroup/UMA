@@ -209,6 +209,7 @@ namespace UMA.EditorTools
             }
 
             // Current overlay assets
+            EditorGUILayout.HelpBox("Important: only add the last overlay in the overlay stack that you want the decal to affect. Adding overlays in the same stack will cause double stamping.", MessageType.Warning);
             int removeIdx = -1;
             for (int i = 0; i < overlaysProp.arraySize; i++)
             {
