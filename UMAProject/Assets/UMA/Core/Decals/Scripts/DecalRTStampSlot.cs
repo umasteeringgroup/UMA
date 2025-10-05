@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
+using UnityEditor;
 
 namespace UMA
 {
@@ -141,6 +142,7 @@ namespace UMA
 
                 bool anyApplied = false;
                 int maxBleedPixels = 0;
+                int currenttime = Time.frameCount;
 
                 // Iterate ALL sets; do not early exit so multiple sets can react to the same overlay
                 for (int si = 0; si < overlayStamps.Count; si++)
@@ -149,13 +151,16 @@ namespace UMA
                     if (set == null || set.stamps == null || set.stamps.Length == 0) continue;
                     if (!set.Matches(parms.overlayData)) continue;
 
+                    Debug.Log($"[DecalRTStampSlot] Overlay '{parms.overlayData.overlayName}' matched stamp set '{set.name}'", this);
+
                     // Matching set
                     for (int st = 0; st < set.stamps.Length; st++)
                     {
                         var stamp = set.stamps[st];
                         if (stamp == null) continue;
 
-                        bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms.materialPropertyName, parms.renderTexture);
+
+                        bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms.materialPropertyName, parms.renderTexture, parms.overlayData.asset.nameHash);
                         if (ok)
                         {
                             anyApplied = true;

@@ -372,6 +372,14 @@ namespace UMA
                     var slot = kv.Key;
                     var tris = kv.Value;
 
+                    // Skip slots with UMAMaterial type UseExistingMaterial or UseExistingTextures
+                    if (slot.material != null &&
+                        (slot.material.materialType == UMAMaterial.MaterialType.UseExistingMaterial ||
+                         slot.material.materialType == UMAMaterial.MaterialType.UseExistingTextures))
+                    {
+                        continue;
+                    }
+
                     var remapDict = new Dictionary<int, int>(tris.Count);
                     var uv0List = new List<Vector2>();
                     var uv1List = new List<Vector2>();
@@ -507,6 +515,7 @@ namespace UMA
                     var slotStamp = new DecalRTStampAsset.SlotStamp
                     {
                         slotName = slot.slotName,
+                        slotHash = UMAUtils.StringToHash(slot.slotName),
                         umaMaterialName = slot.material != null ? slot.material.name : string.Empty,
                         normBaseUV = new Vector2[uv0List.Count],
                         overlayUV = uv1List.ToArray(),
@@ -528,6 +537,7 @@ namespace UMA
                         var nv = (normRect.height > 0f) ? (uv.y - normRect.yMin) / normRect.height : uv.y;
                         slotStamp.normBaseUV[iuv] = new Vector2(Mathf.Clamp01(nu), Mathf.Clamp01(nv));
                     }
+                    slotStamp.recordedUVArea = normRect; // Store the UVArea used for normalization
 
                     stampAsset.slots.Add(slotStamp);
                 }
@@ -636,7 +646,7 @@ namespace UMA
             {
                 var s = stamp.slots[si];
                 if (s == null) { LogDebugSkip($"ApplyStampToUMA(all): slot index {si} null"); continue; }
-                var slot = umaData.umaRecipe.GetSlot(s.slotName);
+                var slot = umaData.umaRecipe.GetSlot(s.slotName); 
                 if (slot == null || slot.asset == null)
                 {
                     LogDebugSkip($"ApplyStampToUMA(all): runtime slot '{s?.slotName}' not found");
@@ -650,11 +660,27 @@ namespace UMA
                     continue;
                 }
 
-                var vertsList = new List<Vector3>(vcount);
+                // If the runtime UVArea differs from the recorded one, re-normalize the UVs
+                if (s.recordedUVArea != slot.UVArea && slot.UVArea.width > 0f && slot.UVArea.height > 0f && s.recordedUVArea.width > 0f && s.recordedUVArea.height > 0f)
+                {
+                    for (int v = 0; v < vcount; v++)
+                    {
+                        // Convert recorded normalized UV to atlas UV using recorded area
+                        Vector2 atlasUV = new Vector2(
+                            s.recordedUVArea.xMin + s.normBaseUV[v].x * s.recordedUVArea.width,
+                            s.recordedUVArea.yMin + s.normBaseUV[v].y * s.recordedUVArea.height);
+                        // Re-normalize to current slot UVArea
+                        float nu = (atlasUV.x - slot.UVArea.xMin) / slot.UVArea.width;
+                        float nv = (atlasUV.y - slot.UVArea.yMin) / slot.UVArea.height;
+                        s.normBaseUV[v] = new Vector2(Mathf.Clamp01(nu), Mathf.Clamp01(nv));
+                    }
+                }
+
+                // Build UV lists; convert normalized slot UVs back to atlas UVs
                 var uv0List = new List<Vector2>(vcount);
                 var uv1List = new List<Vector2>(vcount);
                 var colList = new List<Color32>(vcount);
-
+                var vertsList = new List<Vector3>(vcount);
                 for (int v = 0; v < vcount; v++)
                 {
                     Vector2 normUV = s.normBaseUV[v];
@@ -669,8 +695,8 @@ namespace UMA
                     }
                     uv0List.Add(globalUV);
                     uv1List.Add(s.overlayUV[v]);
-                    vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
                     colList.Add(new Color32(255, 255, 255, 255));
+                    vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
                 }
                 var mesh = new Mesh { name = $"DecalRT_ApplyStampAsset_{s.slotName}" };
                 mesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
@@ -739,7 +765,7 @@ namespace UMA
             UMAData umaData,
             DecalRTStampAsset stamp,
             string materialPropertyName,
-            RenderTexture targetTexture)
+            RenderTexture targetTexture, int overlayNameHash)
         {
             if (avatar == null || umaData == null || stamp == null || string.IsNullOrEmpty(materialPropertyName) || targetTexture == null)
             {
@@ -790,13 +816,23 @@ namespace UMA
             GL.LoadOrtho();
 
             bool stampedAny = false;
+            int currenttime = Time.frameCount;
 
             for (int si = 0; si < stamp.slots.Count; si++)
             {
                 var slotStamp = stamp.slots[si];
                 if (slotStamp == null) continue;
+                if (slotStamp.debugDontUse) continue;
                 SlotData slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
                 if (slot == null || slot.asset == null) continue;
+                if (slot.hasOverlay(overlayNameHash) == false) continue;
+                if (slotStamp.lastframe == currenttime)
+                {
+                    // Already applied this stamp this frame (another overlay in the set matched)
+                    //if (enableDebug) Debug.Log($"[DecalRTStampSlot] Stamp '{stamp.overlayName}' already applied this frame, skipping.", this);
+                    continue;
+                }
+                slotStamp.lastframe = currenttime;
 
                 int vcount = (slotStamp.normBaseUV != null) ? slotStamp.normBaseUV.Length : 0;
                 if (vcount == 0 || slotStamp.overlayUV == null || slotStamp.triangles == null)
@@ -805,10 +841,27 @@ namespace UMA
                     continue;
                 }
 
+                // If the runtime UVArea differs from the recorded one, re-normalize the UVs
+                if (slotStamp.recordedUVArea != slot.UVArea && slot.UVArea.width > 0f && slot.UVArea.height > 0f && slotStamp.recordedUVArea.width > 0f && slotStamp.recordedUVArea.height > 0f)
+                {
+                    for (int v = 0; v < vcount; v++)
+                    {
+                        // Convert recorded normalized UV to atlas UV using recorded area
+                        Vector2 atlasUV = new Vector2(
+                            slotStamp.recordedUVArea.xMin + slotStamp.normBaseUV[v].x * slotStamp.recordedUVArea.width,
+                            slotStamp.recordedUVArea.yMin + slotStamp.normBaseUV[v].y * slotStamp.recordedUVArea.height);
+                        // Re-normalize to current slot UVArea
+                        float nu = (atlasUV.x - slot.UVArea.xMin) / slot.UVArea.width;
+                        float nv = (atlasUV.y - slot.UVArea.yMin) / slot.UVArea.height;
+                        slotStamp.normBaseUV[v] = new Vector2(Mathf.Clamp01(nu), Mathf.Clamp01(nv));
+                    }
+                }
+
                 // Build UV lists; convert normalized slot UVs back to atlas UVs
                 var uv0List = new List<Vector2>(vcount);
                 var uv1List = new List<Vector2>(vcount);
                 var colList = new List<Color32>(vcount);
+                var vertsList = new List<Vector3>(vcount);
                 for (int v = 0; v < vcount; v++)
                 {
                     Vector2 normUV = slotStamp.normBaseUV[v];
@@ -824,6 +877,7 @@ namespace UMA
                     uv0List.Add(globalUV);
                     uv1List.Add(slotStamp.overlayUV[v]);
                     colList.Add(new Color32(255, 255, 255, 255));
+                    vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
                 }
 
                 // Clip to runtime slot UVArea
@@ -839,13 +893,7 @@ namespace UMA
                 // Build a mesh for stamping this slot
                 var stampMeshSlot = new Mesh { name = $"DecalRT_SlotStamp_{slot.slotName}" };
                 stampMeshSlot.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
-                var vertsCS = new List<Vector3>(vcount);
-                for (int vi = 0; vi < vcount; vi++)
-                {
-                    var uvp = uv0List[vi];
-                    vertsCS.Add(new Vector3(uvp.x * 2f - 1f, uvp.y * 2f - 1f, 0f));
-                }
-                stampMeshSlot.SetVertices(vertsCS);
+                stampMeshSlot.SetVertices(vertsList);
                 stampMeshSlot.SetTriangles(slotStamp.triangles, 0);
                 stampMeshSlot.SetUVs(0, uv0List);
                 stampMeshSlot.SetUVs(1, uv1List);
