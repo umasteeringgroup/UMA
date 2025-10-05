@@ -50,6 +50,7 @@ namespace UMA
         public string addrSharedGroupName = "UMAShared";
         public string addrDefaultLabel = "UMA_Default";
         public bool addrStripMaterials = true; //VES fixed missing r in addStripMaterials
+        public bool addrStripTextures = false;
         public bool addrIncludeRecipes = false;
         public bool addrIncludeOther = false;
 
@@ -219,6 +220,7 @@ namespace UMA
         public static string AddrSharedGroupName { get { var settings = GetOrCreateSettings(); return settings.addrSharedGroupName; } }
         public static string AddrDefaultLabel { get { var settings = GetOrCreateSettings(); return settings.addrDefaultLabel; } }
         public static bool AddrStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addrStripMaterials; } } //VES fixed missing r in AddStripMaterials
+        public static bool AddrStripTextures { get { var settings = GetOrCreateSettings(); return settings.addrStripTextures; } }
         public static bool AddrIncludeRecipes { get { var settings = GetOrCreateSettings(); return settings.addrIncludeRecipes; } }
         public static bool AddrIncludeOther { get { var settings = GetOrCreateSettings(); return settings.addrIncludeOther; } }
 #endif

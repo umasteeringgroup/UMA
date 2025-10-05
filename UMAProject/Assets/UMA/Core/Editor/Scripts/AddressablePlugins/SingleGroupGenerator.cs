@@ -54,6 +54,8 @@ namespace UMA
 			}
             // if the preference is turned on, then force the build flag to clear materials
             bool stripUmaMaterials = UMAEditorUtilities.StripUMAMaterials();
+            bool stripTextures = UMAEditorUtilities.StripTextures();
+
             if (stripUmaMaterials)
                 ClearMaterials = true;
 
@@ -198,6 +200,14 @@ namespace UMA
                 pos = 0.0f;
                 inc = 1.0f / AddressableItems.Count;
 
+                // if we are stripping textures, then we need to ensure the index is indexing Texture type objects.
+                if (stripTextures)
+                {
+                    Index.AddType(typeof(Texture));
+                } 
+
+
+
                 StringBuilder sb = new StringBuilder();
                 foreach (AssetItem ai in AddressableItems.Keys)
                 {
@@ -256,6 +266,89 @@ namespace UMA
                         {
                             Debug.Log("Invalid overlay in recipe: " + ai._Name + ". Skipping.");
                             continue;
+                        }
+                        if (stripTextures)
+                        {
+                            // Ensure textures get the same labels and are added to the index as addressable items before stripping
+                            var overlayLabels = AddressableItems[ai];
+                            for (int i = 0; i < od.textureList.Length; i++)
+                            {
+                                var tex = od.textureList[i];
+                                if (od.textureNames == null || od.textureNames.Length != od.textureList.Length)
+                                {
+                                    od.textureNames = new string[od.textureList.Length];
+                                }
+                                if (tex != null)
+                                {
+                                    // 1) Add texture to UMA index (if not already)
+                                    Index.AddIfIndexed(tex);
+                                    var texAI = Index.GetAssetItemForObject(tex);
+
+                                    // 2) Create or move the texture entry to the shared group with the same labels
+                                    string texPath = AssetDatabase.GetAssetPath(tex.GetInstanceID());
+                                    string address = AssetItem.AddressableFolder + "Texture2D-" + tex.name + "-" + texPath.GetHashCode();
+                                    bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texLocalId);
+                                    if (texFound)
+                                    {
+                                        UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, address, overlayLabels, sharedGroup);
+                                    }
+
+                                    // 3) Mark the texture AssetItem as addressable, with the same labels
+                                    if (texAI != null)
+                                    {
+                                        texAI.IsAddressable = true;
+                                        texAI.AddressableGroup = sharedGroup.name;
+                                        texAI.AddressableAddress = address;
+                                        // Build labels string
+                                        sb.Clear();
+                                        for (int li = 0; li < overlayLabels.Count; li++)
+                                        {
+                                            sb.Append(overlayLabels[li]);
+                                            sb.Append(';');
+                                        }
+                                        texAI.AddressableLabels = sb.ToString();
+                                    }
+
+                                    // 4) Store texture name then strip reference
+                                    od.textureNames[i] = tex.name;
+                                    od.textureList[i] = null;
+                                    EditorUtility.SetDirty(od);
+                                }
+                                else
+                                {
+                                    od.textureNames[i] = "";
+                                }
+                            }
+
+                            // Also handle alphaMask if present
+                            if (od.alphaMask != null)
+                            {
+                                var tex = od.alphaMask;
+                                Index.AddIfIndexed(tex);
+                                var texAI = Index.GetAssetItemForObject(tex);
+                                string texPath = AssetDatabase.GetAssetPath(tex.GetInstanceID());
+                                string address = AssetItem.AddressableFolder + "Texture2D-" + tex.name + "-" + texPath.GetHashCode();
+                                bool texFound = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(tex.GetInstanceID(), out string texGUID, out long texLocalId);
+                                if (texFound)
+                                {
+                                    UMAAddressablesSupport.Instance.AddItemToSharedGroup(texGUID, address, AddressableItems[ai], sharedGroup);
+                                }
+                                if (texAI != null)
+                                {
+                                    texAI.IsAddressable = true;
+                                    texAI.AddressableGroup = sharedGroup.name;
+                                    texAI.AddressableAddress = address;
+                                    sb.Clear();
+                                    foreach (var lbl in AddressableItems[ai])
+                                    {
+                                        sb.Append(lbl);
+                                        sb.Append(';');
+                                    }
+                                    texAI.AddressableLabels = sb.ToString();
+                                }
+
+                                // do not null alphaMask reference here; only stripping overlay.textureList[]
+                            }
                         }
                         if (od.material != null)
                         {

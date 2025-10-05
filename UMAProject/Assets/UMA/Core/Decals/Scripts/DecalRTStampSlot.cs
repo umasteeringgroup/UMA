@@ -151,8 +151,6 @@ namespace UMA
                     if (set == null || set.stamps == null || set.stamps.Length == 0) continue;
                     if (!set.Matches(parms.overlayData)) continue;
 
-                    Debug.Log($"[DecalRTStampSlot] Overlay '{parms.overlayData.overlayName}' matched stamp set '{set.name}'", this);
-
                     // Matching set
                     for (int st = 0; st < set.stamps.Length; st++)
                     {

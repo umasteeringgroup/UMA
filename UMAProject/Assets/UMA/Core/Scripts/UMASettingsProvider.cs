@@ -29,6 +29,7 @@ namespace UMA
         public const string ConfigToggle_IncludeRecipes = "UMA_SHAREDGROUP_INCLUDERECIPES";
         public const string ConfigToggle_IncludeOther = "UMA_SHAREDGROUP_INCLUDEOTHERINDEXED";
         public const string ConfigToggle_StripUmaMaterials = "UMA_SHAREDGROUP_STRIPUMAMATERIALS";
+        public const string ConfigToggle_StripUmaTextures = "UMA_SHAREDGROUP_STRIPUMATEXTURES";
         public const string ConfigToggle_PostProcessAllAssets = "UMA_POSTPROCESS_ALL_ASSETS";
         public const string ConfigToggle_IndexAutoRepair = "UMA_INDEX_AUTOREPAIR";
 
@@ -446,7 +447,7 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("UMA Addressables Options", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These settings are only used if 'Use Addressables' is enabled", MessageType.Info);
-            DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrIncludeRecipes", "addrIncludeOther" });
+            DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrStripTextures", "addrIncludeRecipes", "addrIncludeOther" });
             EndVerticalPadded(10);
 
             m_CustomSettings.ApplyModifiedPropertiesWithoutUndo();

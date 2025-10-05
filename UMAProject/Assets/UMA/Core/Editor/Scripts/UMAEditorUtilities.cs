@@ -170,7 +170,12 @@ namespace UMA
         {
 			return UMASettings.AddrStripMaterials;
         }
-		public static bool PostProcessAllAssets()
+
+        public static bool StripTextures()
+        {
+            return UMASettings.AddrStripTextures;
+        }
+        public static bool PostProcessAllAssets()
 		{
 			return UMASettings.PostProcessAllAssets;
         }

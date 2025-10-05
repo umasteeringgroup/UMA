@@ -2546,9 +2546,38 @@ namespace UMA
                     {
                         ProcessNewItem(o, true, false);
                     }
+                    PostProcessItems(Op);
                 }
-			}
-		}
+            }
+        }
+
+        private void PostProcessItems(AsyncOp Op)
+        {
+            foreach (var o in Op.Result)
+            {
+                PostProcessItem(o);
+            }
+        }
+
+        private void PostProcessItem(UnityEngine.Object o)
+        {
+            if (o is OverlayDataAsset)
+            {
+                OverlayDataAsset od = o as OverlayDataAsset;
+                if (od.textureList != null)
+                {
+                    for (int i = 0; i < od.textureList.Length; i++)
+                    {
+                        if (od.textureList[i] == null && !string.IsNullOrEmpty(od.textureNames[i]))
+                        {
+                            od.textureList[i] = GetAsset<Texture2D>(od.textureNames[i]);
+                        }
+                    }
+                }
+            }
+        }
+
+
 
 #endif
 

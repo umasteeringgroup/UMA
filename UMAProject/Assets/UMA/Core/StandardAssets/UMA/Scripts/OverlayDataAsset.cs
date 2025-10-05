@@ -77,8 +77,11 @@ namespace UMA
 		/// </summary>
 		[Tooltip("Array of textures required for the overlay material.")]
 		public Texture[] textureList = new Texture[1];
-
-        [Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
+		[Tooltip("Optional names for the textures, used for reloading textures when stripped.")]
+#if UMA_ADDRESSABLES
+		public string[] textureNames = new string[1];
+#endif
+		[Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
         public OverlayBlend[] overlayBlend = new OverlayBlend[1];
 
         /// <summary>
