@@ -1262,7 +1262,7 @@ namespace UMA.CharacterSystem
                 {
                     if (skipColorDefaults)
                     {
-                        if (!col.isDefault(i))
+                        if (!col.isDefault(i) || scd.shaderParms.Length > 0)
                         {
                             Color Mask = col.channelMask[i];
                             Color Additive = col.channelAdditiveMask[i];
