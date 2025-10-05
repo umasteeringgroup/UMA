@@ -645,9 +645,9 @@ namespace UMA.CharacterSystem.Examples
 			int numSlots = avatarToPhoto.umaData.GetSlotArraySize();
 			for (int i = 0; i < numSlots; i++)
 			{
-				if (avatarToPhoto.umaData.GetSlot(i))
+				if (avatarToPhoto.umaData.GetSlotByIndex(i))
 				{
-					var thisSlot = avatarToPhoto.umaData.GetSlot(i);
+					var thisSlot = avatarToPhoto.umaData.GetSlotByIndex(i);
 					var thisSlotOverlays = thisSlot.GetOverlayList();
 					for (int ii = 0; ii < thisSlotOverlays.Count; ii++)
 					{
@@ -724,10 +724,10 @@ namespace UMA.CharacterSystem.Examples
 			}
 			for (int i = 0; i < numAvatarSlots; i++)
 			{
-				if (avatarToPhoto.umaData.GetSlot(i) != null)
+				if (avatarToPhoto.umaData.GetSlotByIndex(i) != null)
 				{
-					var overlaysInAvatarSlot = avatarToPhoto.umaData.GetSlot(i).GetOverlayList();
-					if (slotsInRecipe.Contains(avatarToPhoto.umaData.GetSlot(i).asset.name))
+					var overlaysInAvatarSlot = avatarToPhoto.umaData.GetSlotByIndex(i).GetOverlayList();
+					if (slotsInRecipe.Contains(avatarToPhoto.umaData.GetSlotByIndex(i).asset.name))
 					{
 						if (neutralizeTargetColors || dimAllButTarget)
 						{

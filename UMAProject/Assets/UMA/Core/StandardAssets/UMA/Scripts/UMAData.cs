@@ -1760,7 +1760,7 @@ namespace UMA
 			/// </summary>
 			/// <returns>The slot.</returns>
 			/// <param name="index">Index.</param>
-			public SlotData GetSlot(int index)
+			public SlotData GetSlotByIndex(int index)
 			{
 				if (index < slotDataList.Length)
                 {
@@ -1770,21 +1770,27 @@ namespace UMA
                 return null;
 			}
 
+
+			public SlotData GetSlotByHash(int nameHash)
+			{
+				for (int i = 0; i < slotDataList.Length; i++)
+				{
+					if (slotDataList[i] == null)
+					{
+						continue;
+					}
+					if (slotDataList[i].asset.nameHash == nameHash)
+					{
+						return slotDataList[i];
+					}
+				}
+				return null;
+            }
+
 			public SlotData GetSlot(string name)
             {
-                for (int i = 0; i < slotDataList.Length; i++)
-                {
-                    if (slotDataList[i] == null)
-                    {
-                        continue;
-                    }
-
-                    if (slotDataList[i].slotName == name)
-                    {
-                        return slotDataList[i];
-                    }
-                }
-                return null;
+				int hash = UMAUtils.StringToHash(name);
+				return GetSlotByHash(hash);
             }
 
             /// <summary>
@@ -2855,16 +2861,21 @@ namespace UMA
 		/// </summary>
 		/// <returns>The slot.</returns>
 		/// <param name="index">Index.</param>
-		public SlotData GetSlot(int index)
+		public SlotData GetSlotByIndex(int index)
 		{
-			return umaRecipe.GetSlot(index);
+			return umaRecipe.GetSlotByIndex(index);
 		}
 
-		/// <summary>
-		/// Gets the number of slots.
-		/// </summary>
-		/// <returns>The slot array size.</returns>
-		public int GetSlotArraySize()
+		public SlotData GetSlotByHash(int nameHash)
+		{
+			return umaRecipe.GetSlotByHash(nameHash);
+        }
+
+        /// <summary>
+        /// Gets the number of slots.
+        /// </summary>
+        /// <returns>The slot array size.</returns>
+        public int GetSlotArraySize()
 		{
 			return umaRecipe.GetSlotArraySize();
 		}

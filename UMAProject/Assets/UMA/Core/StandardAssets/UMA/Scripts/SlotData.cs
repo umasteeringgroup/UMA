@@ -231,6 +231,23 @@ namespace UMA
             return null;
         }
 
+        public bool hasOverlay(int overlayHash)
+        {
+            for (int i = 0; i < overlayList.Count; i++)
+            {
+                if (overlayList[i].asset.nameHash == overlayHash)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool hasOverlay(string overlayName)
+        {
+            int hash = UMAUtils.StringToHash(overlayName);
+            return hasOverlay(hash);
+        }
 
         public bool HasRace(string raceName)
         {

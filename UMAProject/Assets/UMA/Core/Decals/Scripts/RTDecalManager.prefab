@@ -48,19 +48,11 @@ MonoBehaviour:
   - name: AutoRTDecals
     overlays: []
     overlayNames:
-    - M_Bod Overlay 1
-    - MaleUnderwear01
-    - M_Face
-    - Maincap_Overlay
-    - MaleHairSlick01_Overlay
+    - M_Face 1 eyebrows2
     stamps:
-    - {fileID: 11400000, guid: 223180727c3cb7f46b4ff3efce9425e8, type: 2}
-    - {fileID: 11400000, guid: 3a84768fc867a964693c2f54a86f7e03, type: 2}
-    - {fileID: 11400000, guid: 3a545f4f7426378408d01e858abb39b0, type: 2}
-    - {fileID: 11400000, guid: 2db6ca028db1c1e43a847d45cba2db0a, type: 2}
-    - {fileID: 11400000, guid: 87c454dd9fd30b14a84f7c5663f7d39c, type: 2}
-    - {fileID: 11400000, guid: fb662f12a8ae692458fc6c679696f490, type: 2}
-    - {fileID: 11400000, guid: fb5d3640e3308e147a99ad26a6955312, type: 2}
-    - {fileID: 11400000, guid: 3beefda36e2d6314cac7ae05a5df3131, type: 2}
+    - {fileID: 11400000, guid: 5db0b97b6bc4a61448a9f1cb0e10e28e, type: 2}
+    - {fileID: 11400000, guid: 821f0474fc6da424aa82a8e20da3ffff, type: 2}
+    - {fileID: 11400000, guid: 3c38d720c230255428f16037cffbd682, type: 2}
+    - {fileID: 11400000, guid: 87d15b6aac0f5b2469b1c0b42c643fd7, type: 2}
   enableDebug: 0
   rgbOnlyDilation: 1
