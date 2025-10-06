@@ -2839,6 +2839,7 @@ namespace UMA.CharacterSystem
         public void SetRawColor(string Name, OverlayColorData colorData, bool UpdateTexture = true)
         {
             // avoid using reference of the colorData in case it is modified later
+            colorData.name = Name;
             var tempColor = colorData.Duplicate();
             characterColors.SetRawColor(Name, tempColor);
             if (UpdateTexture)
