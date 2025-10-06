@@ -2575,6 +2575,42 @@ namespace UMA
                     }
                 }
             }
+            if (o is SlotDataAsset)
+            {
+                SlotDataAsset sd = o as SlotDataAsset;
+                if (sd.SlotProcessed != null)
+                {
+                    var evt = sd.SlotProcessed;
+                    int count = evt.GetPersistentEventCount();
+                    for (int i = 0; i < count; i++)
+                    {
+                        UnityEngine.Object target = evt.GetPersistentTarget(i);
+                        GameObject go = target as GameObject;
+                        if (go != null)
+                        {
+                            var uvItem = go.GetComponent<UMAUVAttachedItemLauncher>();
+                            if (uvItem != null)
+                            {
+                                MeshRenderer mr = go.GetComponentInChildren<MeshRenderer>();
+                                if (mr != null)
+                                {
+                                    Material mat = mr.sharedMaterial;
+                                    if (mat.shader.name == "Hidden/InternalErrorShader")
+                                    {
+                                        string shaderName = mat.GetTag("OriginalShader", false, "");
+                                        if (!string.IsNullOrEmpty(shaderName))
+                                        {
+                                            Shader s = Shader.Find(shaderName);
+                                            if (s != null)
+                                                mat.shader = s;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
 

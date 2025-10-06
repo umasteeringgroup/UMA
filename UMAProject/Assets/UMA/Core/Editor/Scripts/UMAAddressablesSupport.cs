@@ -260,10 +260,10 @@ namespace UMA
                                 Debug.LogWarning("Warning: No wardrobe found for item: " + kp.Key);
                                 continue;
                             case 1:
-                                ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, GroupTracker[kp.Value[0].GetInstanceID()], false, true);
+                                ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, GroupTracker[kp.Value[0].GetInstanceID()], false, false);
                                 break;
                             default:
-                                ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, true);
+                                ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(GUID, sharedGroup, false, false);
                                 break;
                         }
 
@@ -455,7 +455,7 @@ namespace UMA
             bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(theItem.Item.GetInstanceID(), out string itemGUID, out long localID);
             if (found)
             {
-                AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(itemGUID, theGroup, false, true);
+                AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(itemGUID, theGroup, false, false);
                 ae.SetAddress(Address);
                 ae.labels.Add(Label);
             }
@@ -465,7 +465,7 @@ namespace UMA
             bool found = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(theItem.GetInstanceID(), out string itemGUID, out long localID);
             if (found)
             {
-                AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(itemGUID, theGroup, false, true);
+                AddressableAssetEntry ae = AddressableUtility.AddressableSettings.CreateOrMoveEntry(itemGUID, theGroup, false, false);
                 ae.SetAddress(Address);
                 ae.labels.Add(Label);
             }

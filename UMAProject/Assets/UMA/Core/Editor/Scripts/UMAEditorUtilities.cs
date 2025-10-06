@@ -171,6 +171,10 @@ namespace UMA
 			return UMASettings.AddrStripMaterials;
         }
 
+        public static bool StripUVAttachedShaders()
+        {
+            return UMASettings.AddrStripUVAttachedShaders;
+        }
         public static bool StripTextures()
         {
             return UMASettings.AddrStripTextures;

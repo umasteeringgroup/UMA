@@ -53,6 +53,7 @@ namespace UMA
         public bool addrStripTextures = false;
         public bool addrIncludeRecipes = false;
         public bool addrIncludeOther = false;
+        public bool addrStripUVAttachedShaders = false;
 
         public bool showWelcomeToUMA = true;
 #endif
@@ -221,6 +222,7 @@ namespace UMA
         public static string AddrDefaultLabel { get { var settings = GetOrCreateSettings(); return settings.addrDefaultLabel; } }
         public static bool AddrStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addrStripMaterials; } } //VES fixed missing r in AddStripMaterials
         public static bool AddrStripTextures { get { var settings = GetOrCreateSettings(); return settings.addrStripTextures; } }
+        public static bool AddrStripUVAttachedShaders { get { var settings = GetOrCreateSettings(); return settings.addrStripUVAttachedShaders; } }
         public static bool AddrIncludeRecipes { get { var settings = GetOrCreateSettings(); return settings.addrIncludeRecipes; } }
         public static bool AddrIncludeOther { get { var settings = GetOrCreateSettings(); return settings.addrIncludeOther; } }
 #endif

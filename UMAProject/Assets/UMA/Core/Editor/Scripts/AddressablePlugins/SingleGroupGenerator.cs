@@ -55,6 +55,7 @@ namespace UMA
             // if the preference is turned on, then force the build flag to clear materials
             bool stripUmaMaterials = UMAEditorUtilities.StripUMAMaterials();
             bool stripTextures = UMAEditorUtilities.StripTextures();
+            bool stripUVAttachedShaders = UMAEditorUtilities.StripUVAttachedShaders();
 
             if (stripUmaMaterials)
                 ClearMaterials = true;
@@ -240,6 +241,39 @@ namespace UMA
                         {
                             Debug.Log("Invalid Slotdata in recipe: " + ai._Name + ". Skipping.");
                             continue;
+                        }
+                        if (stripUVAttachedShaders && sda.SlotProcessed != null)
+                        {
+                            var evt = sda.SlotProcessed;
+                            int count = evt.GetPersistentEventCount();
+                            for (int i = 0; i < count; i++)
+                            {
+                                UnityEngine.Object target = evt.GetPersistentTarget(i);
+                                if (target is GameObject)
+                                {
+                                    GameObject go = target as GameObject;
+                                    var UVitem = go.GetComponent<UMA.UMAUVAttachedItemLauncher>();
+                                    if (UVitem != null)
+                                    {
+                                        GameObject prefab = UVitem.prefab;
+                                        if (prefab != null)
+                                        {
+                                            MeshRenderer mr = prefab.GetComponentInChildren<MeshRenderer>();
+                                            if (mr == null) continue;
+                                            Material mat = mr.sharedMaterial;
+                                            if (mat.shader.name.Contains("Hidden/InternalErrorShader"))
+                                                continue; // already stripped
+
+                                            // Store shader name in a tag
+                                            mat.SetOverrideTag("OriginalShader", mat.shader.name);
+                                            // Strip shader reference
+                                            mat.shader = Shader.Find("Hidden/InternalErrorShader");
+                                            EditorUtility.SetDirty(mat);
+                                        }
+                                    }
+                                }
+                            }
+
                         }
                         if (sda.material != null)
                         {

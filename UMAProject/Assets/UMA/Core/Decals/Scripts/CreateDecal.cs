@@ -61,6 +61,8 @@ namespace UMA.Decals
         [Tooltip("Pause the Animator(s) on the selected avatar while working.")]
         public bool PauseAvatarAnimation = false;
 
+        public Color TattooColor;
+
         [Header("Decal Overlay Handling")]
         [Tooltip("If true, automatically add affected overlays to a rt decal slot when using RenderTexture decals.")]
         public bool AutoAddOverlays = true; // If true, automatically add the overlay used for decal creation to the decal slot
@@ -345,9 +347,17 @@ namespace UMA.Decals
             GUILayout.EndHorizontal();
             
             GUILayout.Space(5);
-            
+
+
             // Debug Settings (Collapsible)
 #if UNITY_EDITOR
+            TattooColor = EditorGUILayout.ColorField("Tattoo Color", TattooColor);
+            if (GUILayout.Button("Update Tattoo Color"))
+            {
+                OverlayColorData ocd = new OverlayColorData(1);
+                ocd.SetColor(0, false, TattooColor);
+                Avatar.SetRawColor("Tattoo", ocd);
+            }
             _showDebugSettings = EditorGUI.Foldout(GUILayoutUtility.GetRect(300, 18), _showDebugSettings, "Debug Settings", true);
 #else
             GUILayout.BeginHorizontal();
