@@ -62,7 +62,7 @@ namespace UMA
         public bool Use32BitBuffers = true;
 
         [Tooltip("Always regenerate the renderers when updating the UMA. This is needed if you attach objects to the renderer.")]
-        public bool alwaysRegenerateRenderers = true;
+        public bool alwaysRegenerateRenderers = false;
 
         [NonSerialized]
         public bool FreezeTime;
