@@ -2564,10 +2564,14 @@ namespace UMA
             if (o is OverlayDataAsset)
             {
                 OverlayDataAsset od = o as OverlayDataAsset;
-                if (od.textureList != null)
+                if (od.textureList != null && od.textureNames != null)
                 {
                     for (int i = 0; i < od.textureList.Length; i++)
                     {
+                        if (i >= od.textureNames.Length)
+                        {
+                            break;
+                        }
                         if (od.textureList[i] == null && !string.IsNullOrEmpty(od.textureNames[i]))
                         {
                             od.textureList[i] = GetAsset<Texture2D>(od.textureNames[i]);
