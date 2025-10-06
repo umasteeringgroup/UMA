@@ -61,6 +61,9 @@ namespace UMA
         [Tooltip("Use 32 bit buffers for the generated meshes. This is required for meshes with more than 65535 vertices,boneweights, or trianges. Will use more memory.")]
         public bool Use32BitBuffers = true;
 
+        [Tooltip("Always regenerate the renderers when updating the UMA. This is needed if you attach objects to the renderer.")]
+        public bool alwaysRegenerateRenderers = true;
+
         [NonSerialized]
         public bool FreezeTime;
 

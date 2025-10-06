@@ -82,6 +82,24 @@ namespace UMA
                 }
                 umaData.CleanMesh(false);
 
+                if (UMAAssetIndexer.Instance.generator.alwaysRegenerateRenderers)
+                {
+                    Debug.Log ("Regenerating renderers as per setting in UMA Generator");
+                    if (renderers != null)
+                    {
+                        for (int i = 0; i < renderers.Length; i++)
+                        {
+                            if (renderers[i] != null)
+                            {
+                                DestroyImmediate(renderers[i].gameObject);
+                            }
+                        }
+                    }
+                    renderers = null;
+                    umaData.SetRenderers(null);
+                    umaData.SetRendererAssets(null);
+                }
+
                 if ((umaData.RendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets)))
                 {
                     renderers = umaData.GetRenderers();

@@ -58,7 +58,7 @@ namespace UMA
         /// </summary>
         [Tooltip("Number of character updates before triggering garbage collection.")]
 		[Range(0.0f, 128.0f)]
-		public int garbageCollectionRate = 8;
+		public int garbageCollectionRate = 0;
 
 		public bool collectGarbage = true;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();

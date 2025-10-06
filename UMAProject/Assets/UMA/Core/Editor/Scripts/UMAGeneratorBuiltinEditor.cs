@@ -25,8 +25,10 @@ namespace UMA.Editors
 		SerializedProperty convertRenderTexture;
 		SerializedProperty showInHierarchy;
 		SerializedProperty Use32BitBuffers;
+		SerializedProperty alwaysRegenerateRenderers;
 
-		public static bool showGenerationSettings = false;
+
+        public static bool showGenerationSettings = false;
 		public static bool showAdvancedSettings = false;
 		public static bool showStatistics = true;
 		public static bool showEditTimeSettings = false;
@@ -76,7 +78,8 @@ namespace UMA.Editors
 			convertRenderTexture = serializedObject.FindProperty("convertRenderTexture");
 			showInHierarchy = serializedObject.FindProperty("showInHierarchy");
 			Use32BitBuffers = serializedObject.FindProperty("Use32BitBuffers");
-		}
+			alwaysRegenerateRenderers = serializedObject.FindProperty("alwaysRegenerateRenderers");
+        }
 #pragma warning restore 0108
 
 		private void OnDisable()
@@ -146,7 +149,8 @@ namespace UMA.Editors
 				DrawIfPresent(defaultRendererAsset);
 				EditorGUILayout.HelpBox("The default overlay asset is used when an overay is not specified on a slot. This is for testing only.", MessageType.None);
 				DrawIfPresent(defaultOverlayAsset);
-				DrawIfPresent(Use32BitBuffers);
+				DrawIfPresent(alwaysRegenerateRenderers, "Always Regenerate Renderers");
+                DrawIfPresent(Use32BitBuffers);
 				DrawIfPresent(showInHierarchy);
 				DrawIfPresent(textureMerge);
 				DrawIfPresent(meshCombiner);
