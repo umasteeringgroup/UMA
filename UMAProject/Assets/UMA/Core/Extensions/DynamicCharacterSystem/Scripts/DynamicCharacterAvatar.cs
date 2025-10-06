@@ -1984,6 +1984,31 @@ namespace UMA.CharacterSystem
         }
 
         /// <summary>
+        /// Text recipe version of RemoveWearableItem
+        /// </summary>
+        /// <param name="utr"></param>
+        /// <param name="removeAllMatching"></param>
+        public void RemoveWearableItem(UMATextRecipe utr, bool removeAllMatching = false)
+        {
+            string thisRecipeSlot = utr.wardrobeSlot;
+            if (!_additiveRecipes.ContainsKey(thisRecipeSlot))
+            {
+                return;
+            }
+            if (removeAllMatching)
+            {
+                int instanceID = utr.GetInstanceID();
+                AdditiveRecipes[thisRecipeSlot].RemoveAll((x => x.GetInstanceID() == instanceID));
+            }
+            else
+            {
+                // Remove the first instance of the recipe
+                AdditiveRecipes[thisRecipeSlot].Remove(utr);
+            }
+        }
+
+
+        /// <summary>
         /// Gets all wearable items that were appended to the given slot.
         /// </summary>
         /// <param name="SlotName"></param>
@@ -2005,6 +2030,20 @@ namespace UMA.CharacterSystem
                 return result;
             }
             return new List<UMAWardrobeRecipe>();
+        }
+
+        /// <summary>
+        /// Text recipe version of GetAppendedWearableItems
+        /// </summary>
+        /// <param name="SlotName"></param>
+        /// <returns></returns>
+        public List<UMATextRecipe> GetAppendedItems(string SlotName)
+        {
+            if (_additiveRecipes.ContainsKey(SlotName))
+            {
+                return _additiveRecipes[SlotName];
+            }
+            return new List<UMATextRecipe>();
         }
 
         /// <summary>
