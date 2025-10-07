@@ -987,7 +987,6 @@ namespace UMA.Decals
                         }
                         catch { /* ignore editor persistence errors */ }
 #endif
-                        bool addedNew = false;
                         // Find or create an overlay stamp set that will be triggered by base overlays on affected slots (not the decal overlay itself)
                         DecalRTStampSlot.OverlayStampSet targetSet = null;
                         if (StampField.overlayStamps != null)
@@ -1011,7 +1010,6 @@ namespace UMA.Decals
                                 overlayNames = new List<string>()
                             };
                             StampField.overlayStamps.Add(targetSet);
-                            addedNew = true;
                         }
 
                         // Ensure trigger overlay names include the overlays currently used on the affected slots

@@ -82,9 +82,9 @@ namespace UMA
                 }
                 umaData.CleanMesh(false);
 
+                renderers = umaData.GetRenderers();
                 if (UMAAssetIndexer.Instance.generator.alwaysRegenerateRenderers)
                 {
-                    Debug.Log ("Regenerating renderers as per setting in UMA Generator");
                     if (renderers != null)
                     {
                         for (int i = 0; i < renderers.Length; i++)
@@ -102,12 +102,11 @@ namespace UMA
 
                 if ((umaData.RendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets)))
                 {
-                    renderers = umaData.GetRenderers();
                     umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
                 }
                 else
                 {
-                    var oldRenderers = umaData.GetRenderers();
+                    var oldRenderers = renderers;
                     var globalTransform = umaData.GetGlobalTransform();
 
                     renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererAssets.Count];
@@ -177,6 +176,7 @@ namespace UMA
             newSMRGO.gameObject.layer = umaData.gameObject.layer;
 
             var newRenderer = newSMRGO.AddComponent<SkinnedMeshRenderer>();
+            newSMRGO.AddComponent<DestroyDebugger>();
             newRenderer.enabled = false;
             newRenderer.sharedMesh = new Mesh();
             if (umaData.markDynamic)

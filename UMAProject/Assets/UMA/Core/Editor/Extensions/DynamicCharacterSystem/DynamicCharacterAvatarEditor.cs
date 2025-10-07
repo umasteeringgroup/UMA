@@ -1107,6 +1107,7 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.HelpBox("BundleCheck: This option makes UMA check the addressable bundles and load if needed. If you are using addressables this should absolutely be checked. Only uncheck this if you have a special circumstance where you are building an UMA that has specific slots and overlays that are not addressable!", MessageType.Info);
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("BundleCheck"));
 #endif
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("defaultRendererAsset"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("forceSlotMaterials"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("AtlasResolutionScale"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("BoundsOffset"));

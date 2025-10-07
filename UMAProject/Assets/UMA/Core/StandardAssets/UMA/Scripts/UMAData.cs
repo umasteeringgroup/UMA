@@ -61,8 +61,8 @@ namespace UMA
 		private SkinnedMeshRenderer[] renderers;
 		private UMARendererAsset[] rendererAssets = new UMARendererAsset[0];
 
-        [Tooltip("The default renderer asset to use for this avatar. This lets you set parameters for the generated SkinnedMeshRenderer")]
-        public UMARendererAsset defaultRendererAsset { get; set; }
+		[Tooltip("The default renderer asset to use for this avatar. This lets you set parameters for the generated SkinnedMeshRenderer")]
+		public UMARendererAsset defaultRendererAsset;
 		public int RendererCount { get { return renderers == null ? 0 : renderers.Length; } }
 
 		//public List<SlotTracker> slotTrackers = new();
@@ -1211,7 +1211,13 @@ namespace UMA
 		{
 			for (int i = 0; i < RendererCount; i++)
             {
-                GetRenderer(i).enabled = false;
+				var renderer = GetRenderer(i);
+				if (renderer == null)
+				{
+					Debug.Log($"Renderer {i} is null on GameObject {gameObject.name}");
+					continue;
+                }
+                renderer.enabled = false;
             }
         }
 
