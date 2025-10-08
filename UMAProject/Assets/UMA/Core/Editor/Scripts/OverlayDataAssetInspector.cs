@@ -14,6 +14,7 @@ namespace UMA.Editors
         private SerializedProperty _overlayType;
         private SerializedProperty _umaMaterial;
         private SerializedProperty _textureList;
+        private SerializedProperty _textureNames;
         private SerializedProperty _blendList;
         private SerializedProperty _channels;
         private SerializedProperty _rect;
@@ -44,6 +45,7 @@ namespace UMA.Editors
             _overlayType = serializedObject.FindProperty("overlayType");
             _umaMaterial = serializedObject.FindProperty("material");
             _textureList = serializedObject.FindProperty("textureList");
+            _textureNames = serializedObject.FindProperty("textureNames");
             _blendList = serializedObject.FindProperty("overlayBlend");
             _dontMergeDuplicates = serializedObject.FindProperty("dontMergeDuplicates");
             _rect = serializedObject.FindProperty("rect");
@@ -210,6 +212,15 @@ namespace UMA.Editors
                         SerializedProperty blendElement = (i < _blendList.arraySize) ? _blendList.GetArrayElementAtIndex(i) : null;
                         string materialName = "Unknown";
 
+                        string texName = "";
+                        if (_textureNames != null && i < _textureNames.arraySize)
+                        {
+                            var texNameProp = _textureNames.GetArrayElementAtIndex(i);
+                            if (texNameProp != null)
+                            {
+                                texName = texNameProp.stringValue;
+                            }
+                        }
                         // Try to resolve channel display name
                         try
                         {
@@ -228,14 +239,32 @@ namespace UMA.Editors
                         }
                         catch { /* ignore */ }
 
+                        string textureLabel = (textureElement != null && textureElement.objectReferenceValue != null) ? "" : "(Texture is Unloaded)";
+
                         GUILayout.BeginHorizontal();
                         if (textureElement != null)
                         {
                             EditorGUILayout.PropertyField(textureElement, new GUIContent(materialName), GUILayout.ExpandWidth(true));
                         }
+
                         if (blendElement != null)
                         {
                             EditorGUILayout.PropertyField(blendElement, GUIContent.none, GUILayout.Width(110));
+                        }
+                        GUILayout.EndHorizontal();
+
+                        GUILayout.BeginHorizontal();
+                        if (textureElement != null)
+                        {
+                            if (!string.IsNullOrEmpty(texName))
+                            {
+                                EditorGUILayout.LabelField($"Texture Name: {texName}", EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                            }
+                            else
+                            {
+                                EditorGUILayout.LabelField("Texture Name: (not set)", EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                            }
+                            EditorGUILayout.LabelField(textureLabel, EditorStyles.miniLabel, GUILayout.Width(150));
                         }
                         GUILayout.EndHorizontal();
                     }
@@ -263,9 +292,28 @@ namespace UMA.Editors
                             break;
                         }
                     }
-                    if (!allValid)
+                    if (_textureNames != null && _textureNames.arraySize == _textureList.arraySize)
                     {
-                        EditorGUILayout.HelpBox("Not all textures in Texture List set. This overlay will only work as an additional overlay in a recipe", MessageType.Warning);
+                        allValid = true;
+                        for (int i = 0; i < _textureNames.arraySize; i++)
+                        {
+                            if (_textureNames.GetArrayElementAtIndex(i).stringValue == null)
+                            {
+                                allValid = false;
+                                break;
+                            }
+                        }
+                        if (!allValid)
+                        {
+                            EditorGUILayout.HelpBox("Not all texture names in Texture Names set. This overlay will only work as an additional overlay in a recipe", MessageType.Warning);
+                        }
+                    }
+                    else
+                    {
+                        if (!allValid)
+                        {
+                            EditorGUILayout.HelpBox("Not all textures in Texture List set. This overlay will only work as an additional overlay in a recipe", MessageType.Warning);
+                        }
                     }
                 }
             }

@@ -204,7 +204,7 @@ namespace UMA
                 // if we are stripping textures, then we need to ensure the index is indexing Texture type objects.
                 if (stripTextures)
                 {
-                    Index.AddType(typeof(Texture));
+                    Index.AddType(typeof(Texture2D));
                 } 
 
 
@@ -430,6 +430,7 @@ namespace UMA
                             }
                         }
 #endif
+
                     }
                     pos += inc;
                 }

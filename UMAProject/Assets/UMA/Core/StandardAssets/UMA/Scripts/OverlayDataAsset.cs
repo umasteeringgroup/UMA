@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
+
 #if UNITY_EDITOR
 using UnityEditorInternal;
 #endif
@@ -76,10 +78,38 @@ namespace UMA
 		/// Array of textures required for the overlay material.
 		/// </summary>
 		[Tooltip("Array of textures required for the overlay material.")]
-		public Texture[] textureList = new Texture[1];
-		[Tooltip("Optional names for the textures, used for reloading textures when stripped.")]
+		[SerializeField]
+		[FormerlySerializedAs("textureList")]
+		private Texture[] _textureList = new Texture[1];
+        public Texture[] textureList
+		{
+			get
+			{
+#if UNITY_EDITOR
 #if UMA_ADDRESSABLES
-		public string[] textureNames = new string[1];
+				for (int i = 0; i < _textureList.Length; i++)
+				{
+					if (_textureList[i] == null && i < textureNames.Length)
+					{
+						string texName = textureNames[i];
+						if (!string.IsNullOrEmpty(texName))
+						{
+							_textureList[i] = UMAAssetIndexer.Instance.GetAsset<Texture2D>(texName);
+						}
+					}
+				}
+#endif
+#endif
+				return _textureList;
+			}
+			set
+			{
+				_textureList = value;
+			}
+		}
+#if UMA_ADDRESSABLES
+        [Tooltip("Optional names for the textures, used for reloading textures when stripped.")]
+        public string[] textureNames = new string[1];
 #endif
 		[Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
         public OverlayBlend[] overlayBlend = new OverlayBlend[1];

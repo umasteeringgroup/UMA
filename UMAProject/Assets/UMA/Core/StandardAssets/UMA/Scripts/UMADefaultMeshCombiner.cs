@@ -176,7 +176,7 @@ namespace UMA
             newSMRGO.gameObject.layer = umaData.gameObject.layer;
 
             var newRenderer = newSMRGO.AddComponent<SkinnedMeshRenderer>();
-            newSMRGO.AddComponent<DestroyDebugger>();
+            // newSMRGO.AddComponent<DestroyDebugger>();
             newRenderer.enabled = false;
             newRenderer.sharedMesh = new Mesh();
             if (umaData.markDynamic)
@@ -330,8 +330,9 @@ namespace UMA
 #endif
                 {
                     // Legacy path
-                    if (combinedMeshList.Count == 1)
+                    if (combinedMeshList.Count == 1 && umaData.blendShapeSettings.blendShapes.Count == 0)
                     {
+                        // Do a quick copy if there's only one mesh and no blendshapes to bake
                         var inst = combinedMeshList[0];
                         var tempMesh = SkinnedMeshCombiner.ShallowInstanceMesh(inst.meshData, inst.triangleMask);
                         if (umaData.umaRecipe.BlendshapeSlots.ContainsKey(inst.meshData.SlotName))

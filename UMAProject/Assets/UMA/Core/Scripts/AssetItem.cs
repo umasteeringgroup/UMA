@@ -86,7 +86,18 @@ namespace UMA
                 }
                 if (_TheType == null)
                 {
-                    Debug.LogError("The type " + _BaseTypeName + " is not a valid type. Please check the AssetItem.");
+                    if (_BaseTypeName == "Object")
+                    {
+                        _TheType = typeof(UnityEngine.Object);
+                    }
+                    else if (_BaseTypeName == "Texture2D")
+                    {
+                        _TheType = typeof(Texture2D);
+                    }
+                    else
+                    {
+                        Debug.LogError("The type " + _BaseTypeName + " is not a valid type. Please check the AssetItem.");
+                    }
                     return typeof(UnityEngine.Object);
                 }
                 return _TheType;

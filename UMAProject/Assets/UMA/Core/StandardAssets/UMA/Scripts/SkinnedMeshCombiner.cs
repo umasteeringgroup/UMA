@@ -1340,7 +1340,16 @@ namespace UMA
 				for (int i = 0; i < entry.Count; i++)
 				{
 					var res = entry[i];
-					if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index]))
+					if (res >= bindPosesList.Count)
+					{
+						continue;
+                    }
+					if (index >= bindPoses.Length)
+					{
+						continue;
+					}
+
+                    if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index]))
 					{
 						return res;
 					}

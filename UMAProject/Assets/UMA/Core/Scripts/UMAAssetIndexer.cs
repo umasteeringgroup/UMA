@@ -542,13 +542,26 @@ namespace UMA
             {
                 TypeLookup[type] = new Dictionary<string, AssetItem>();
             }
+
+            bool added = false;
             foreach (var item in SerializedItems)
             {
-                if (item != null && item._Type != null && TypeLookup.ContainsKey(item._Type))
+                if (item != null && item._Type != null)
                 {
+                    if (!TypeLookup.ContainsKey(item._Type))
+                    {
+                        added = true;
+                        Debug.LogWarning("TypeLookup missing type " + item._Type + " Adding it.");
+                        AddType(item._Type);                    
+                        TypeLookup[item._Type] = new Dictionary<string, AssetItem>();   
+                    }
                     TypeLookup[item._Type][item._Name] = item;
                 }
             }
+            //if (added)
+            //{
+                BuildStringTypes();
+           // }
         }
 
 
@@ -1401,27 +1414,32 @@ namespace UMA
         public void AddType(System.Type sType)
         {
             string QualifiedName = sType.AssemblyQualifiedName;
-            if (IsAdditionalIndexedType(QualifiedName))
-            {
-                return;
-            }
 
-            List<System.Type> newTypes = new List<System.Type>();
-            newTypes.AddRange(Types);
-            newTypes.Add(sType);
-            Types = newTypes.ToArray();
-            TypeToLookup.Add(sType, sType);
-            IndexedTypeNames.Add(sType.AssemblyQualifiedName);
+            if (!Types.Contains(sType))
+            {
+                List<System.Type> newTypes = new List<System.Type>();
+                newTypes.AddRange(Types);
+                newTypes.Add(sType);
+                Types = newTypes.ToArray();
+            }
+            if (!TypeLookup.ContainsKey(sType))
+            {
+                TypeLookup.Add(sType, new Dictionary<string, AssetItem>());
+            }
+            if (!TypeToLookup.ContainsKey(sType))
+            {
+                TypeToLookup.Add(sType, sType);
+            }
+            if (!IndexedTypeNames.Contains(QualifiedName))
+            {
+                IndexedTypeNames.Add(QualifiedName);
+            }
             BuildStringTypes();
         }
 
         public void RemoveType(System.Type sType)
         {
             string QualifiedName = sType.AssemblyQualifiedName;
-            if (!IsAdditionalIndexedType(QualifiedName))
-            {
-                return;
-            }
 
             TypeToLookup.Remove(sType);
 
@@ -1430,7 +1448,7 @@ namespace UMA
             newTypes.Remove(sType);
             Types = newTypes.ToArray();
             TypeLookup.Remove(sType);
-            IndexedTypeNames.Remove(sType.AssemblyQualifiedName);
+            IndexedTypeNames.Remove(QualifiedName);
             BuildStringTypes();
         }
         #endregion
@@ -1520,6 +1538,7 @@ namespace UMA
             if (!TypeToLookup.ContainsKey(ot))
             {
                 Debug.LogError($"Unknown type: {ot.ToString()} for item {Name}");
+                return null;
             }
             System.Type theType = TypeToLookup[ot];
 
@@ -4001,6 +4020,7 @@ namespace UMA
             if (TypeLookup.ContainsKey(LookupType) == false)
             {
                 DebugSerialization("Creating new dictionary for type: " + LookupType.ToString());
+                Debug.Log("Creating new dictionary for type: " + LookupType.ToString());
                 TypeLookup[LookupType] = new Dictionary<string, AssetItem>();
             }
             return TypeLookup[LookupType];
@@ -4094,6 +4114,7 @@ namespace UMA
         public void ClearDictionaries()
         {
             DebugSerialization("Clearing dictionaries");
+            Debug.Log("Clearing dictionaries");
             TypeLookup.Clear();
             GuidTypes.Clear();
             raceRecipes.Clear();

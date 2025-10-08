@@ -446,7 +446,7 @@ namespace UMA
 
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("UMA Addressables Options", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("These settings are only used if 'Use Addressables' is enabled", MessageType.Info);
+            EditorGUILayout.HelpBox("These settings are only used if 'Use Addressables' is enabled. Note: Stripping Textures *requires* that you are indexing Texture2D type!", MessageType.Info); 
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrStripTextures", "addrIncludeRecipes", "addrIncludeOther" });
             EndVerticalPadded(10);
 
