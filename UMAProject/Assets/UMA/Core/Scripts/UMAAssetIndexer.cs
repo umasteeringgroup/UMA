@@ -543,15 +543,15 @@ namespace UMA
                 TypeLookup[type] = new Dictionary<string, AssetItem>();
             }
 
-            bool added = false;
             foreach (var item in SerializedItems)
             {
                 if (item != null && item._Type != null)
                 {
                     if (!TypeLookup.ContainsKey(item._Type))
                     {
-                        added = true;
-                        Debug.LogWarning("TypeLookup missing type " + item._Type + " Adding it.");
+#if UNITY_EDITOR
+                        Debug.Log("TypeLookup missing type " + item._Type + " Adding it.");
+#endif
                         AddType(item._Type);                    
                         TypeLookup[item._Type] = new Dictionary<string, AssetItem>();   
                     }

@@ -2830,6 +2830,10 @@ namespace UMA.Controls
                 {
                     SelectSmooshableSlots();
                 }
+                if (GUILayout.Button("Select all LOD slots")) //PigEdit
+                {
+                    SelectLODSlots();
+                }
                 GUIHelper.EndVerticalPadded(10);
             }
 
@@ -3054,6 +3058,24 @@ namespace UMA.Controls
 
             SelectByAssetItems(items);
         }
+
+        private void SelectLODSlots() //PigEdit
+        {
+            if (UAI == null) return;
+            List<AssetItem> items = new List<AssetItem>();
+
+            var slots = UAI.GetAssetItems<SlotDataAsset>();
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i] != null && (slots[i].Item as SlotDataAsset).maxLOD != -1)
+                {
+                    items.Add(slots[i]);
+                }
+            }
+
+            SelectByAssetItems(items);
+        }
+        
 
         private void SelectClippingSlots()
         {

@@ -63,6 +63,11 @@ namespace UMA
 
                 if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
                 {
+                    if (this._SerializedItem != null)
+                    {
+                        _TheType = this._SerializedItem.GetType();
+                        return _TheType;
+                    }
                     if (_BaseTypeName.Contains("SlotData"))
                     {
                         _TheType = typeof(SlotDataAsset);

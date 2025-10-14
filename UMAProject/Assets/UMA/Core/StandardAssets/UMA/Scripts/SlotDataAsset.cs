@@ -1063,6 +1063,11 @@ namespace UMA
         }
 
 
+        public SlotDataAsset BurnNewSlotData()
+        {
+        }
+
+
         public void UpdateMeshData()
         {
         }
