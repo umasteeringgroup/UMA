@@ -249,7 +249,6 @@ namespace UMA
 
 
 
-
             /*
 
 
@@ -892,6 +891,7 @@ namespace UMA
         /// but we may find other uses for it, like with decals or the Mesh Hide editor.
         /// This data *could* be serialized, but for now, it is not. TODO: serialize it, and generate it during
         /// the slot build process.
+        /// </summary>
         [System.NonSerialized]
         public Vector3[] TransformedLocalVertexes;
 
@@ -1063,10 +1063,107 @@ namespace UMA
         }
 
 
-        public SlotDataAsset BurnNewSlotData()
+        public SlotDataAsset BakeNewSlotData(List<SlotBurnOptions> burnOptions, bool copyUnbakedBlendshapes)
         {
+            // Create the destination SlotDataAsset and copy metadata
+            var newSlotData = ScriptableObject.CreateInstance<SlotDataAsset>();
+            newSlotData.Assign(this);
+
+            if (meshData == null)
+            {
+                // Nothing to bake; keep as-is
+                newSlotData.meshData = null;
+                return newSlotData;
+            }
+
+            // Deep copy the mesh so we don't mutate the source asset
+            var md = meshData.DeepCopy();
+            if (md == null)
+            {
+                newSlotData.meshData = null;
+                return newSlotData;
+            }
+
+            // Early-out if no blendshapes or no options
+            if (md.blendShapes == null || md.blendShapes.Length == 0 || burnOptions == null || burnOptions.Count == 0)
+            {
+                newSlotData.meshData = md;
+                return newSlotData;
+            }
+
+            // Build dictionary for SkinnedMeshCombiner baking API
+            var bakeDict = new Dictionary<string, BlendShapeData>(burnOptions.Count);
+            var bakedNames = new HashSet<string>();
+            for (int i = 0; i < burnOptions.Count; i++)
+            {
+                var opt = burnOptions[i];
+                if (opt == null || string.IsNullOrEmpty(opt.BlendShape)) continue;
+                if (!bakeDict.ContainsKey(opt.BlendShape))
+                {
+                    bakeDict.Add(opt.BlendShape, new BlendShapeData { value = opt.value, isBaked = true });
+                    bakedNames.Add(opt.BlendShape);
+                }
+            }
+
+            if (bakeDict.Count == 0)
+            {
+                newSlotData.meshData = md;
+                return newSlotData;
+            }
+
+            // Prepare arrays and flags
+            var verts = md.vertices;
+            var norms = md.normals;
+            var tans = md.tangents;
+            bool hasNormals = (norms != null && norms.Length == verts.Length);
+            bool hasTangents = (tans != null && tans.Length == verts.Length);
+
+            // Bake each requested blendshape (single mesh => vertexIndex starts at 0)
+            int vertexStart = 0;
+            var shapes = md.blendShapes;
+            for (int s = 0; s < shapes.Length; s++)
+            {
+                UMABlendShape shape = shapes[s];
+                if (shape == null) continue;
+                // Use combiner's bake helper which matches runtime mesh combining
+                SkinnedMeshCombiner.BakeBlendShape(bakeDict, shape, ref vertexStart, verts, norms, tans, hasNormals, hasTangents);
+                // Reset vertexStart for next shape (BakeBlendShape iterates same vertex range)
+                vertexStart = 0;
+            }
+
+            // Assign modified arrays back (DeepCopy already gave us owned arrays)
+            md.vertices = verts;
+            if (hasNormals) md.normals = norms;
+            if (hasTangents) md.tangents = tans;
+
+            // Filter remaining blendshapes: remove those that were baked; optionally keep others
+            if (copyUnbakedBlendshapes)
+            {
+                var kept = new List<UMABlendShape>(shapes.Length);
+                for (int i = 0; i < shapes.Length; i++)
+                {
+                    var sh = shapes[i];
+                    if (sh == null) continue;
+                    if (!bakedNames.Contains(sh.shapeName)) kept.Add(sh);
+                }
+                md.blendShapes = kept.ToArray();
+            }
+            else
+            {
+                md.blendShapes = System.Array.Empty<UMABlendShape>();
+            }
+
+            // Finalize new slot
+            newSlotData.meshData = md;
+            return newSlotData;
         }
 
+
+        public SlotDataAsset BakeNewSlotData(List<SlotBurnOptions> burnOptions, bool copyUnbakedBlendshapes, bool dummy)
+        {
+            // legacy overload placeholder if needed in future
+            return BakeNewSlotData(burnOptions, copyUnbakedBlendshapes);
+        }
 
         public void UpdateMeshData()
         {
