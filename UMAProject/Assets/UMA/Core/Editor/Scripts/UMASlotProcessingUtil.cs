@@ -197,11 +197,15 @@ namespace UMA.Editors
 				resultingMesh.RecalculateTangents();
 			}
 
-			var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh, KeepBoneIndexes);
-			if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
-			{
-				resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
-			}
+            // Preserve all bones in UDIM mode; otherwise optionally reduce
+            if (!sbp.udimAdjustment)
+            {
+                var usedBonesDictionary = CompileUsedBonesDictionary(resultingMesh, KeepBoneIndexes);
+                if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
+                {
+                    resultingMesh = BuildNewReduceBonesMesh(resultingMesh, usedBonesDictionary);
+                }
+            }
 
 			string theMesh = sbp.slotFolder + '/' + sbp.assetName + '/' + sbp.slotMesh.name + "_TempMesh.asset";
 			if (sbp.useRootFolder)
@@ -254,11 +258,15 @@ namespace UMA.Editors
 				return null;
 			}
 
-			if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
-			{
+            if (!sbp.udimAdjustment)
+            {
+                var usedBonesDictionary = CompileUsedBonesDictionary(resultingSkinnedMesh.sharedMesh, KeepBoneIndexes);
+                if (usedBonesDictionary.Count != resultingSkinnedMesh.bones.Length)
+                {
 
-				resultingSkinnedMesh.bones = BuildNewReducedBonesList(resultingSkinnedMesh.bones, usedBonesDictionary);
-			}
+                    resultingSkinnedMesh.bones = BuildNewReducedBonesList(resultingSkinnedMesh.bones, usedBonesDictionary);
+                }
+            }
 			resultingSkinnedMesh.sharedMesh = resultingMesh;
 
 			string SkinnedName = sbp.slotFolder + '/' + sbp.assetName + '/' + sbp.assetName + "_TempSkinned.prefab";
@@ -302,6 +310,18 @@ namespace UMA.Editors
 				Debug.Log("Final Mesh Renderer shareMesh is null!!!");
 				finalMeshRenderer.sharedMesh = resultingMesh;
 			}
+
+            // In UDIM mode, generate per-tile slots per submesh and return
+            if (sbp.udimAdjustment)
+            {
+                var firstCreated = GenerateUDIMSlots(sbp, finalMeshRenderer);
+                AssetDatabase.SaveAssets();
+                GameObject.DestroyImmediate(tempGameObject);
+                GameObject.DestroyImmediate(newObject);
+                AssetDatabase.DeleteAsset(SkinnedName);
+                AssetDatabase.DeleteAsset(theMesh);
+                return firstCreated;
+            }
 
 			var slot = ScriptableObject.CreateInstance<SlotDataAsset>();
 			slot.slotName = sbp.slotName;
@@ -563,6 +583,157 @@ namespace UMA.Editors
             float z = sbp.invertZ ? -inVector.z : inVector.z;
             return new Vector3(x, y, z);
 		}
+
+            // Helper: Generate one slot per UDIM tile per submesh
+            private static SlotDataAsset GenerateUDIMSlots(SlotBuilderParameters sbp, SkinnedMeshRenderer sourceRenderer)
+            {
+                Mesh mesh = sourceRenderer.sharedMesh;
+                if (mesh == null)
+                {
+                    Debug.LogError("[UDIM] Source mesh is null");
+                    return null;
+                }
+                if (mesh.uv == null || mesh.uv.Length != mesh.vertexCount)
+                {
+                    Debug.LogError("[UDIM] Mesh has no primary UVs to classify UDIM tiles");
+                    return null;
+                }
+
+                int tilesU = sbp.udimTilesU > 0 ? sbp.udimTilesU : 10;
+                int tilesV = sbp.udimTilesV > 0 ? sbp.udimTilesV : 10;
+
+                Vector2[] uv = mesh.uv;
+                var firstCreated = (SlotDataAsset)null;
+
+                for (int sub = 0; sub < mesh.subMeshCount; sub++)
+                {
+                    int[] tris = mesh.GetTriangles(sub);
+                    // Classify triangles by tile
+                    var tileToTris = new Dictionary<(int u,int v), List<int>>();
+
+                    for (int t = 0; t < tris.Length; t += 3)
+                    {
+                        int a = tris[t];
+                        int b = tris[t + 1];
+                        int c = tris[t + 2];
+
+                        Vector2 uva = uv[a];
+                        Vector2 uvb = uv[b];
+                        Vector2 uvc = uv[c];
+
+                        int ua = Mathf.FloorToInt(uva.x);
+                        int va = Mathf.FloorToInt(uva.y);
+                        int ub = Mathf.FloorToInt(uvb.x);
+                        int vb = Mathf.FloorToInt(uvb.y);
+                        int uc = Mathf.FloorToInt(uvc.x);
+                        int vc = Mathf.FloorToInt(uvc.y);
+
+                        // Spanning across tiles? Error out
+                        if (ua != ub || ua != uc || va != vb || va != vc)
+                        {
+                            Debug.LogError($"[UDIM] Triangle spans UDIM tiles in submesh {sub} at indices ({a},{b},{c}). Aborting.");
+                            return null;
+                        }
+
+                        // Ignore outside configured UDIM grid
+                        if (ua < 0 || va < 0 || ua >= tilesU || va >= tilesV)
+                        {
+                            continue;
+                        }
+
+                        var key = (ua, va);
+                        if (!tileToTris.TryGetValue(key, out var list))
+                        {
+                            list = new List<int>(6);
+                            tileToTris.Add(key, list);
+                        }
+                        list.Add(a);
+                        list.Add(b);
+                        list.Add(c);
+                    }
+
+                    // Create a slot per used tile
+                    foreach (var kvp in tileToTris)
+                    {
+                        int tu = kvp.Key.u;
+                        int tv = kvp.Key.v;
+                        int udimNumber = 1001 + tu + (tv * 10);
+
+                        // Base name logic like existing code
+                        string baseName = (sub == 0) ? sbp.slotName : string.Format("{0}_{1}", sbp.slotName, sub);
+                        if (sub < sbp.slotMesh.sharedMaterials.Length && sbp.nameByMaterial)
+                        {
+                            var mat = sbp.slotMesh.sharedMaterials[sub];
+                            if (mat != null && !string.IsNullOrEmpty(mat.name))
+                            {
+                                string titlecase = mat.name.ToTitleCase();
+                                if (!string.IsNullOrWhiteSpace(titlecase))
+                                {
+                                    baseName = titlecase;
+                                }
+                            }
+                        }
+                        string theSlotName = string.Format("{0}_UDIM{1}", baseName, udimNumber);
+
+                        // Build a temporary mesh limited to this tile for submesh -> 0
+                        Mesh tileMesh = UnityEngine.Object.Instantiate(mesh);
+                        tileMesh.subMeshCount = 1;
+                        tileMesh.SetTriangles(kvp.Value, 0);
+
+                        // Create temp renderer to feed UpdateMeshData
+                        var go = new GameObject("UDIM_Tile_TempSMR");
+                        var smr = go.AddComponent<SkinnedMeshRenderer>();
+                        smr.sharedMesh = tileMesh;
+                        smr.bones = sourceRenderer.bones;
+                        smr.rootBone = sourceRenderer.rootBone;
+
+                        try
+                        {
+                            var sda = ScriptableObject.CreateInstance<SlotDataAsset>();
+                            sda.slotName = theSlotName;
+                            sda.nameHash = UMAUtils.StringToHash(sda.slotName);
+                            sda.material = sbp.material;
+                            sda.sourceSubmeshIndex = sub;
+
+                            // Normalize UVs via udimAdjustment flag
+                            sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
+                            TransformMeshData(sda, sbp);
+
+                            var cloth = sbp.slotMesh.GetComponent<Cloth>();
+                            if (cloth != null)
+                            {
+                                sda.meshData.RetrieveDataFromUnityCloth(cloth);
+                            }
+
+                            string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + "_slot.asset";
+                            if (sbp.useRootFolder)
+                            {
+                                theSlotPath = sbp.slotFolder + '/' + theSlotName + "_slot.asset";
+                            }
+
+                            AssetDatabase.CreateAsset(sda, theSlotPath);
+                            if (firstCreated == null)
+                            {
+                                firstCreated = sda;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogException(ex);
+                            UnityEngine.Object.DestroyImmediate(go);
+                            UnityEngine.Object.DestroyImmediate(tileMesh);
+                            return firstCreated;
+                        }
+                        finally
+                        {
+                            UnityEngine.Object.DestroyImmediate(go);
+                            UnityEngine.Object.DestroyImmediate(tileMesh);
+                        }
+                    }
+                }
+
+                return firstCreated;
+            }
 	}
 }
 #endif

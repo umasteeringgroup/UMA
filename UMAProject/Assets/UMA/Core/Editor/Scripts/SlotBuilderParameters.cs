@@ -33,5 +33,9 @@ namespace UMA.Editors
         public bool invertZ;
         public bool clearNormals;
         public bool clearTangents;
+
+        // UDIM grid dimensions (e.g., 10x10). If 0, defaults will be used.
+        public int udimTilesU;
+        public int udimTilesV;
     }
 }

@@ -73,6 +73,10 @@ namespace UMA.Editors
         public bool invertZ;
 		public bool updateExistingSlots = false;
 
+        // UDIM grid size (default 10x10)
+        public int udimTilesU = 10;
+        public int udimTilesV = 10;
+
         string GetAssetFolder()
 		{
             int index = slotName.LastIndexOf('/');
@@ -149,7 +153,7 @@ namespace UMA.Editors
 			GUILayout.Label("Common Parameters", EditorStyles.boldLabel);
             normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 
-            slotMaterial = EditorGUILayout.ObjectField("UMAMaterial	 ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
+            slotMaterial = EditorGUILayout.ObjectField("UMAMaterial\t ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
             slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 
             updateExistingSlots = EditorGUILayout.Toggle(new GUIContent("Update Existing Slots", "If true, existing slots will not be overwritten, but will be updated instead. This only works if the slot has the same name and path in the file system."), updateExistingSlots);
@@ -171,6 +175,14 @@ namespace UMA.Editors
             calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
             udimAdjustment = EditorGUILayout.Toggle("Adjust for UDIM", udimAdjustment);
             EditorGUILayout.EndHorizontal();
+            // UDIM tile dimensions
+            EditorGUI.indentLevel++;
+            using (new EditorGUI.DisabledScope(!udimAdjustment))
+            {
+                udimTilesU = EditorGUILayout.IntField(new GUIContent("UDIM Tiles U", "Number of tiles horizontally (e.g., 10)"), Mathf.Max(0, udimTilesU));
+                udimTilesV = EditorGUILayout.IntField(new GUIContent("UDIM Tiles V", "Number of tiles vertically (e.g., 10)"), Mathf.Max(0, udimTilesV));
+            }
+            EditorGUI.indentLevel--;
 			EditorGUILayout.BeginHorizontal();
 			clearNormals = EditorGUILayout.Toggle("Clear Blendshape Normals", clearNormals);
 			clearTangents = EditorGUILayout.Toggle("Clear Blendshape Tangents", clearTangents);
@@ -468,7 +480,8 @@ namespace UMA.Editors
 			sbp.updateExistingSlots = updateExistingSlots;
 			sbp.clearNormals = clearNormals;
 			sbp.clearTangents = clearTangents;
-
+            sbp.udimTilesU = udimTilesU;
+            sbp.udimTilesV = udimTilesV;
 
             SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(sbp);
 			if (slot == null)
