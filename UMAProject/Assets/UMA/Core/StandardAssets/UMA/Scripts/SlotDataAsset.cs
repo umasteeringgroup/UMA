@@ -279,16 +279,16 @@ namespace UMA
             } */
         }
 
-        public void BuildVertexLookups(SlotDataAsset theirSlot)
+        public void BuildVertexLookups(SlotDataAsset theirsSlot)
         {
             TheirVertexToOurVertex.Clear();
-            for (int Thiers = 0; Thiers < theirSlot.meshData.vertices.Length; Thiers++)
+            for (int Thiers = 0; Thiers < theirsSlot.meshData.vertices.Length; Thiers++)
             {
                 float Closest = float.MaxValue;
                 int ClosestOurs = -1;
                 for (int ours = 0; ours < meshData.vertices.Length; ours++)
                 {
-                    float Len = (theirSlot.meshData.vertices[Thiers] - meshData.vertices[ours]).magnitude;
+                    float Len = (theirsSlot.meshData.vertices[Thiers] - meshData.vertices[ours]).magnitude;
                     if (Len < Closest)
                     {
                         Closest = Len;
@@ -303,9 +303,9 @@ namespace UMA
             {
                 float Closest = float.MaxValue;
                 int ClosestTheirs = -1;
-                for (int Thiers = 0; Thiers < theirSlot.meshData.vertices.Length; Thiers++)
+                for (int Thiers = 0; Thiers < theirsSlot.meshData.vertices.Length; Thiers++)
                 {
-                    float Len = (theirSlot.meshData.vertices[Thiers] - meshData.vertices[ours]).magnitude;
+                    float Len = (theirsSlot.meshData.vertices[Thiers] - meshData.vertices[ours]).magnitude;
                     if (Len < Closest)
                     {
                         Closest = Len;
@@ -447,152 +447,7 @@ namespace UMA
             return "";
         }
 
-        /*
-        public Welding CalculateWelds(SlotDataAsset sourceSlot, bool CopyNormals, bool CopyBoneWeights, bool AverageNormals, float weldDistance, BlendshapeCopyMode bscopyMode )
-        {
-            Welding thisWeld = new Welding();
-
-
-            thisWeld.MisMatchCount = 0;
-            thisWeld.WeldedToSlot = sourceSlot.slotName;
-
-
-            // managed Boneweights 
-            // public BoneWeight1[] ManagedBoneWeights;
-            // public byte[] ManagedBonesPerVertex;
-
-            // ManagedBonesPerVertex is a byte array that contains the number of bones that affect each vertex.
-            // ManagedBoneWeights is a BoneWeight1 array that contains the bone index and weight for each bone that affects each vertex.
-
-            // to convert the boneweights, we need to match each of our vertexes to the source vertexes.
-            // and then match the source bones to our bones.
-            // then we can copy the boneweights from the source to our boneweights, but using our bone indexes.
-            // Each of our vertexes must have a matching set of boneweights.  
-            // Any of the bones in the source mesh (not our mesh) that are weighted must have a corresponding bone in our mesh.
-            // But non-weighted bones in the source mesh do not need to be in our mesh.
-
-            // So go through, and map our vertexes to the closest vertex in their mesh. Then build a reverse lookup for the vertexes.
-            // the go through all the mapped bones, and build a reverse lookup for the bones.
-            // Then build a new boneweight array, using our vertexes and bone indexes, but their weights.
-
-
-
-            for (int Dest = 0; Dest < sourceSlot.meshData.vertices.Length; Dest++)
-            {
-                for (int Src = 0; Src < meshData.vertices.Length; Src++)
-                {
-                    Vector3 TheirVert = sourceSlot.meshData.vertices[Dest];
-                    Vector3 ourVert = meshData.vertices[Src];
-                    float Len = (TheirVert - ourVert).magnitude;
-                    if (Len < weldDistance)
-                    {
-                        bool misMatch = false;
-                        float Normaldiff = (meshData.normals[Src] - sourceSlot.meshData.normals[Dest]).magnitude;
-                        if (Normaldiff > Vector3.kEpsilon)
-                        {
-                            thisWeld.MisMatchCount++;
-                            misMatch = true;
-                        }
-                        if (CopyNormals)
-                        {
-                            meshData.normals[Src] = sourceSlot.meshData.normals[Dest];
-                            if (meshData.tangents != null && sourceSlot.meshData.tangents != null)
-                            {
-                                meshData.tangents[Src] = sourceSlot.meshData.tangents[Dest];
-                            }
-                            if (AverageNormals)
-                            {
-                                meshData.normals[Src] = (sourceSlot.meshData.normals[Dest] + meshData.normals[Src]).normalized;
-                            }
-                        }
-
-                        WeldPoint wp = new WeldPoint(Src, Dest, sourceSlot.meshData.normals[Dest], misMatch);
-                        thisWeld.WeldPoints.Add(wp);
-                    }
-                }
-            }
-
-            if (CopyBoneWeights)
-            {
-                int foundcount = 0;
-                int notfoundcount = 0;
-                EnsureBoneWeights();
-                sourceSlot.EnsureBoneWeights();
-
-                BuildVertexLookups(sourceSlot);
-                BuildBoneLookups(sourceSlot);
-                BuildOurAndTheirBoneWeights(sourceSlot);
-
-                Dictionary<int,List<BoneWeight1>> NewBoneWeights = new Dictionary<int,List<BoneWeight1>>();
-
-                for (int ourVertex = 0; ourVertex < meshData.ManagedBonesPerVertex.Length;ourVertex++)
-                {
-
-                    bool found = false;
-                    int theirVertex = OurVertextoTheirVertex[ourVertex];
-                    if (theirVertex == 1785)
-                    {
-                        Debug.Log("RightEar hash is " + UMAUtils.StringToHash("RightEar"));
-                        Debug.Log("Breakpoint");
-                    }
-                    List<BoneWeight1> CurrentWeights = new List<BoneWeight1>();
-                    if (TheirBoneWeights.ContainsKey(theirVertex))
-                    {
-                        var ourBones = OurBoneWeights[ourVertex];
-                        var theirBones = TheirBoneWeights[theirVertex];
-
-                        for (int i = 0; i < theirBones.Count; i++)
-                        {
-                            BoneWeight1 bw = theirBones[i];
-                            if (!TheirBonesToOurBones.ContainsKey(bw.boneIndex))
-                            {
-                                found = false;
-                                break;
-                            }
-                            found = true;
-                            int ourBone = TheirBonesToOurBones[bw.boneIndex];
-
-                            BoneWeight1 newBW = new BoneWeight1();
-                            newBW.boneIndex = ourBone;
-                            newBW.weight = bw.weight;
-                            CurrentWeights.Add(newBW);
-                        }
-                    }
-
-                    // if we found all of them, use those boneweights.
-                    if (found)
-                    {
-                        NewBoneWeights.Add(ourVertex, CurrentWeights);
-                        foundcount++;
-                    }
-                    else
-                    {
-                        // if we didn't find all of them, use the boneweights we already have.
-                        List<BoneWeight1> oldWeights = OurBoneWeights[ourVertex];
-                        NewBoneWeights.Add(ourVertex, oldWeights);
-                        notfoundcount++;
-                    }
-                }
-                List<BoneWeight1> allNewWeights = new List<BoneWeight1>();
-                // now save all the boneweights.
-                for (int ourVertex = 0; ourVertex < meshData.ManagedBonesPerVertex.Length;ourVertex++)
-                {
-                    int numWeights = meshData.ManagedBonesPerVertex[ourVertex];
-                    List<BoneWeight1> weights = NewBoneWeights[ourVertex];
-                    allNewWeights.AddRange(weights);
-                    meshData.ManagedBonesPerVertex[ourVertex] = (byte)weights.Count;
-                }
-                Debug.Log($"Old weights {meshData.ManagedBoneWeights.Length} new weights is {allNewWeights.Count} Found {foundcount} boneweights, and {notfoundcount} boneweights were not found.");
-                meshData.ManagedBoneWeights = allNewWeights.ToArray();
-            }
-
-            if (bscopyMode != BlendshapeCopyMode.None)
-            {
-                CopyBlendShapes(sourceSlot, bscopyMode);
-            }
-
-            return thisWeld;
-        } */
+      
 
         int FindBlendshape(string Name)
         {
@@ -1063,15 +918,72 @@ namespace UMA
         }
 
 
-        public SlotDataAsset BakeNewSlotData(List<SlotBurnOptions> burnOptions, bool copyUnbakedBlendshapes)
+        [System.Serializable]
+        public struct BakeSlotParams
         {
-            // Create the destination SlotDataAsset and copy metadata
+            public List<SlotBurnOptions> burnOptions;
+            public bool copyUnbakedBlendshapes;
+            public float smoothingAngleDegrees;
+            public string newSlotName;          // Optional: rename baked slot asset
+            public bool addToIndexer;           // Optional: register with UMAAssetIndexer
+        }
+
+        /// <summary>
+        /// Bake a new SlotDataAsset from this asset using the provided parameters.
+        /// </summary>
+        public SlotDataAsset BakeNewSlotData(BakeSlotParams p)
+        {
+            // If there are bake targets but this asset has none of them, return the current slot unchanged
+            if (p.burnOptions != null && p.burnOptions.Count > 0)
+            {
+                bool hasAny = false;
+                if (meshData != null && meshData.blendShapes != null && meshData.blendShapes.Length > 0)
+                {
+                    // Build a small set of requested shape names
+                    // Avoid LINQ to reduce allocs
+                    for (int i = 0; i < meshData.blendShapes.Length && !hasAny; i++)
+                    {
+                        var bs = meshData.blendShapes[i];
+                        if (bs == null || string.IsNullOrEmpty(bs.shapeName)) continue;
+                        string shapeName = bs.shapeName;
+                        for (int j = 0; j < p.burnOptions.Count; j++)
+                        {
+                            var opt = p.burnOptions[j];
+                            if (opt == null || string.IsNullOrEmpty(opt.BlendShape)) continue;
+                            if (opt.BlendShape == shapeName)
+                            {
+                                hasAny = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!hasAny)
+                {
+                    return this;
+                }
+            }
+
+            // If requested, and a slot with this name already exists in the indexer, return it immediately
+            if (p.addToIndexer && !string.IsNullOrEmpty(p.newSlotName))
+            {
+                var indexer = UMAAssetIndexer.Instance;
+                if (indexer != null)
+                {
+                    var existing = indexer.GetAsset<SlotDataAsset>(p.newSlotName, recursionGuard: false, inStartup: false);
+                    if (existing != null)
+                    {
+                        return existing;
+                    }
+                }
+            }
+
+            // Create destination SlotDataAsset and copy metadata
             var newSlotData = ScriptableObject.CreateInstance<SlotDataAsset>();
             newSlotData.Assign(this);
 
             if (meshData == null)
             {
-                // Nothing to bake; keep as-is
                 newSlotData.meshData = null;
                 return newSlotData;
             }
@@ -1084,89 +996,164 @@ namespace UMA
                 return newSlotData;
             }
 
-            // Early-out if no blendshapes or no options
-            if (md.blendShapes == null || md.blendShapes.Length == 0 || burnOptions == null || burnOptions.Count == 0)
+            // Blendshape bake phase
+            if (md.blendShapes != null && md.blendShapes.Length > 0 && p.burnOptions != null && p.burnOptions.Count > 0)
             {
-                newSlotData.meshData = md;
-                return newSlotData;
-            }
-
-            // Build dictionary for SkinnedMeshCombiner baking API
-            var bakeDict = new Dictionary<string, BlendShapeData>(burnOptions.Count);
-            var bakedNames = new HashSet<string>();
-            for (int i = 0; i < burnOptions.Count; i++)
-            {
-                var opt = burnOptions[i];
-                if (opt == null || string.IsNullOrEmpty(opt.BlendShape)) continue;
-                if (!bakeDict.ContainsKey(opt.BlendShape))
+                // Build dictionary for SkinnedMeshCombiner baking API
+                var bakeDict = new Dictionary<string, BlendShapeData>(p.burnOptions.Count);
+                var bakedNames = new HashSet<string>();
+                for (int i = 0; i < p.burnOptions.Count; i++)
                 {
-                    bakeDict.Add(opt.BlendShape, new BlendShapeData { value = opt.value, isBaked = true });
-                    bakedNames.Add(opt.BlendShape);
+                    var opt = p.burnOptions[i];
+                    if (opt == null || string.IsNullOrEmpty(opt.BlendShape)) continue;
+                    if (!bakeDict.ContainsKey(opt.BlendShape))
+                    {
+                        bakeDict.Add(opt.BlendShape, new BlendShapeData { value = opt.value, isBaked = true });
+                        bakedNames.Add(opt.BlendShape);
+                    }
+                }
+
+                if (bakeDict.Count > 0)
+                {
+                    var verts = md.vertices;
+                    var norms = md.normals;
+                    var tans = md.tangents;
+                    bool hasNormals = (norms != null && norms.Length == verts.Length);
+                    bool hasTangents = (tans != null && tans.Length == verts.Length);
+
+                    int vertexStart = 0;
+                    var shapes = md.blendShapes;
+                    for (int s = 0; s < shapes.Length; s++)
+                    {
+                        UMABlendShape shape = shapes[s];
+                        if (shape == null) continue;
+                        SkinnedMeshCombiner.BakeBlendShape(bakeDict, shape, ref vertexStart, verts, norms, tans, hasNormals, hasTangents);
+                        vertexStart = 0;
+                    }
+
+                    // Assign modified arrays back (DeepCopy already gave us owned arrays)
+                    md.vertices = verts;
+                    if (hasNormals) md.normals = norms;
+                    if (hasTangents) md.tangents = tans;
+
+                    // Filter remaining blendshapes: remove those that were baked; optionally keep others
+                    if (p.copyUnbakedBlendshapes)
+                    {
+                        var kept = new List<UMABlendShape>(shapes.Length);
+                        for (int i = 0; i < shapes.Length; i++)
+                        {
+                            var sh = shapes[i];
+                            if (sh == null) continue;
+                            if (!bakedNames.Contains(sh.shapeName)) kept.Add(sh);
+                        }
+                        md.blendShapes = kept.ToArray();
+                    }
+                    else
+                    {
+                        md.blendShapes = System.Array.Empty<UMABlendShape>();
+                    }
                 }
             }
 
-            if (bakeDict.Count == 0)
-            {
-                newSlotData.meshData = md;
-                return newSlotData;
-            }
-
-            // Prepare arrays and flags
-            var verts = md.vertices;
-            var norms = md.normals;
-            var tans = md.tangents;
-            bool hasNormals = (norms != null && norms.Length == verts.Length);
-            bool hasTangents = (tans != null && tans.Length == verts.Length);
-
-            // Bake each requested blendshape (single mesh => vertexIndex starts at 0)
-            int vertexStart = 0;
-            var shapes = md.blendShapes;
-            for (int s = 0; s < shapes.Length; s++)
-            {
-                UMABlendShape shape = shapes[s];
-                if (shape == null) continue;
-                // Use combiner's bake helper which matches runtime mesh combining
-                SkinnedMeshCombiner.BakeBlendShape(bakeDict, shape, ref vertexStart, verts, norms, tans, hasNormals, hasTangents);
-                // Reset vertexStart for next shape (BakeBlendShape iterates same vertex range)
-                vertexStart = 0;
-            }
-
-            // Assign modified arrays back (DeepCopy already gave us owned arrays)
-            md.vertices = verts;
-            if (hasNormals) md.normals = norms;
-            if (hasTangents) md.tangents = tans;
-
-            // Filter remaining blendshapes: remove those that were baked; optionally keep others
-            if (copyUnbakedBlendshapes)
-            {
-                var kept = new List<UMABlendShape>(shapes.Length);
-                for (int i = 0; i < shapes.Length; i++)
-                {
-                    var sh = shapes[i];
-                    if (sh == null) continue;
-                    if (!bakedNames.Contains(sh.shapeName)) kept.Add(sh);
-                }
-                md.blendShapes = kept.ToArray();
-            }
-            else
-            {
-                md.blendShapes = System.Array.Empty<UMABlendShape>();
-            }
-
-            // Finalize new slot
+            // Assign mesh to new slot
             newSlotData.meshData = md;
+
+            // Recalculate normals/tangents if requested (angle >= 0)
+            float angle = (p.smoothingAngleDegrees == 0f) ? 0f : (p.smoothingAngleDegrees == 0f ? 0f : p.smoothingAngleDegrees);
+            if (p.smoothingAngleDegrees >= 0f && md.vertices != null && md.vertices.Length > 0 && md.submeshes != null && md.submeshes.Length > 0)
+            {
+                int vCount = md.vertices.Length;
+                if (md.uv == null || md.uv.Length != vCount) md.uv = new Vector2[vCount];
+                if (md.normals == null || md.normals.Length != vCount) md.normals = new Vector3[vCount];
+                if (md.tangents == null || md.tangents.Length != vCount) md.tangents = new Vector4[vCount];
+
+                int totalIdx = 0;
+                for (int i = 0; i < md.submeshes.Length; i++)
+                {
+                    var tris = md.submeshes[i].getBaseTriangles();
+                    if (tris != null) totalIdx += tris.Length;
+                }
+                if (totalIdx > 0 && (totalIdx % 3) == 0)
+                {
+                    int[] allTriangles = new int[totalIdx];
+                    int write = 0;
+                    for (int i = 0; i < md.submeshes.Length; i++)
+                    {
+                        var tris = md.submeshes[i].getBaseTriangles();
+                        if (tris == null || tris.Length == 0) continue;
+                        System.Array.Copy(tris, 0, allTriangles, write, tris.Length);
+                        write += tris.Length;
+                    }
+#if UMA_BURSTCOMPILE
+                    {
+                        Unity.Collections.NativeArray<UnityEngine.Vector3> v = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.vertices, Unity.Collections.Allocator.TempJob);
+                        Unity.Collections.NativeArray<UnityEngine.Vector3> n = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.normals, Unity.Collections.Allocator.TempJob);
+                        Unity.Collections.NativeArray<UnityEngine.Vector2> uv = new Unity.Collections.NativeArray<UnityEngine.Vector2>(md.uv, Unity.Collections.Allocator.TempJob);
+                        Unity.Collections.NativeArray<UnityEngine.Vector4> t = new Unity.Collections.NativeArray<UnityEngine.Vector4>(md.tangents, Unity.Collections.Allocator.TempJob);
+                        Unity.Collections.NativeArray<int> tri = new Unity.Collections.NativeArray<int>(allTriangles, Unity.Collections.Allocator.TempJob);
+
+                        var handle = UMA.MeshUtilities.RecalculateNormalsTangentsJobified(v, n, uv, t, tri, (p.smoothingAngleDegrees == 0f ? 180f : p.smoothingAngleDegrees));
+                        handle.Complete();
+
+                        md.normals = n.ToArray();
+                        md.tangents = t.ToArray();
+
+                        v.Dispose();
+                        n.Dispose();
+                        uv.Dispose();
+                        t.Dispose();
+                        tri.Dispose();
+                        md.normalsModified = true;
+                        md.tangentsModified = true;
+                    }
+#else
+                    {
+                        var mesh = new UnityEngine.Mesh();
+                        if (UMA.UMAAssetIndexer.Instance != null && UMA.UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
+                        {
+                            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                        }
+                        mesh.vertices = md.vertices;
+                        mesh.uv = md.uv;
+                        mesh.subMeshCount = md.submeshes.Length;
+                        for (int i = 0; i < md.submeshes.Length; i++)
+                        {
+                            var tris = md.submeshes[i].getBaseTriangles();
+                            mesh.SetIndices(tris ?? System.Array.Empty<int>(), UnityEngine.MeshTopology.Triangles, i);
+                        }
+                        mesh.RecalculateNormals(p.smoothingAngleDegrees == 0f ? 180f : p.smoothingAngleDegrees);
+                        mesh.RecalculateTangents();
+                        md.normals = mesh.normals;
+                        md.tangents = mesh.tangents;
+                        md.normalsModified = true;
+                        md.tangentsModified = true;
+                    }
+#endif
+                }
+            }
+
+            // Optional rename
+            if (!string.IsNullOrEmpty(p.newSlotName))
+            {
+                newSlotData.slotName = p.newSlotName;
+                newSlotData.nameHash = UMAUtils.StringToHash(newSlotData.slotName);
+                if (newSlotData.meshData != null)
+                {
+                    newSlotData.meshData.SlotName = newSlotData.slotName;
+                }
+            }
+
+            // Optional indexer registration
+            if (p.addToIndexer)
+            {
+                var indexer = UMAAssetIndexer.Instance;
+                if (indexer != null)
+                {
+                    indexer.ProcessNewItem(newSlotData, false, false);
+                }
+            }
+
             return newSlotData;
-        }
-
-
-        public SlotDataAsset BakeNewSlotData(List<SlotBurnOptions> burnOptions, bool copyUnbakedBlendshapes, bool dummy)
-        {
-            // legacy overload placeholder if needed in future
-            return BakeNewSlotData(burnOptions, copyUnbakedBlendshapes);
-        }
-
-        public void UpdateMeshData()
-        {
         }
 
         public void OnAfterDeserialize()

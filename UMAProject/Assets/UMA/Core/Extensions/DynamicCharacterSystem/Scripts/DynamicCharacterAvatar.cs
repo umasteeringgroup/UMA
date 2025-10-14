@@ -5049,10 +5049,11 @@ namespace UMA.CharacterSystem
                 animator = this.gameObject.GetComponent<Animator>();
             }
 
-            serializedRecipe = baseRaceRecipe; //??? This seems to be pulling the recipe from the character, and then resetting it to itself.
+            serializedRecipe = baseRaceRecipe; 
 
             tm.Restart();
-            baseRaceRecipe.Load(umaRecipe);
+            baseRaceRecipe.Load(umaRecipe,activeRace.data);
+
             tm.Stop();
             Ticks_LoadPhase1 += tm.ElapsedTicks;
             tm.Restart();

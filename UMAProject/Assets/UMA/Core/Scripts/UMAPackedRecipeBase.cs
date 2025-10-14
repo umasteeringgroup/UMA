@@ -36,6 +36,13 @@ static void ClearUnpackCaches()
 			UnpackRecipe(umaRecipe, packedRecipe, loadSlots);
 		}
 
+        public override void Load(UMAData.UMARecipe umaRecipe, RaceData raceData)
+        {
+			var packed = PackedLoad();
+			UnpackRecipeWithRaceDefaults(umaRecipe, packed, raceData);
+        }
+
+
 		public static UMAData.UMARecipe UnpackRecipe(UMAPackRecipe umaPackRecipe)
 		{
 			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
@@ -43,7 +50,8 @@ static void ClearUnpackCaches()
 			return umaRecipe;
 		}
 
-		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe,  bool loadSlots = true)
+
+        public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe,  bool loadSlots = true)
 		{
 			switch (umaPackRecipe.version)
 			{
@@ -933,12 +941,31 @@ static void ClearUnpackCaches()
 			}
 		}
 
-		public static UMAData.UMARecipe UnpackRecipeVersion3(UMAPackRecipe umaPackRecipe, bool loadSlots = true)
+		public static UMAData.UMARecipe UnpackRecipeWithRaceDefaults(UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, RaceData race)
 		{
-			UMAData.UMARecipe umaRecipe = new UMAData.UMARecipe();
-			UnpackRecipeVersion3(umaRecipe, umaPackRecipe, loadSlots);
+			UnpackRecipe(umaRecipe, umaPackRecipe, true);
+			if (race.PrebakedBlendshapes.Count > 0)
+			{
+                SlotDataAsset.BakeSlotParams options = new SlotDataAsset.BakeSlotParams();
+				options.burnOptions = race.PrebakedBlendshapes;
+				options.addToIndexer = true;
+
+                for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
+				{
+					if (umaRecipe.slotDataList[i] != null)
+					{
+						SlotData slot = umaRecipe.slotDataList[i];
+						SlotDataAsset original = slot.asset;
+                        options.newSlotName = original.name + "_baked_"+race.raceName;
+
+                        slot.asset = original.BakeNewSlotData(options);
+                    }
+				}
+
+			}
 			return umaRecipe;
 		}
+
 #if UMA_UNPACK_OPTIMIZED
 public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, bool loadSlots = true)
 {

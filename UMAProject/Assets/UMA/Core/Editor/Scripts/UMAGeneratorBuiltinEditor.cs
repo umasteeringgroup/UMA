@@ -182,6 +182,7 @@ namespace UMA.Editors
 				{
 					EditorGUILayout.LabelField("Elapsed Time", "N/A");
 				}
+				
 
 				if (generator != null)
 				{
@@ -189,7 +190,7 @@ namespace UMA.Editors
 					EditorGUILayout.LabelField("Shape Dirty", string.Format("{0}", generator.DnaChanged));
 					EditorGUILayout.LabelField("Texture Dirty", string.Format("{0}", generator.TextureChanged));
 					EditorGUILayout.LabelField("Mesh Dirty", string.Format("{0}", generator.SlotsChanged));
-				}
+                }
 
 				if (convertRenderTexture != null && convertRenderTexture.boolValue == true)
 				{
@@ -228,10 +229,33 @@ namespace UMA.Editors
 						RenderTexToCPU.renderTexturesCleanedApplied = 0;
 						RenderTexToCPU.renderTexturesCleanedMissed = 0;
 					}
-				}
-			}
+                }
+                SerializedProperty umaDatasGenerated = serializedObject.FindProperty("umaDatasGenerated");
 
-			if (!EditorApplication.isPlaying)
+                if (umaDatasGenerated != null)
+                {
+					if (GUILayout.Button("Make All UMA's visible in Hierarchy"))
+					{
+						long numberofUmas = umaDatasGenerated.arraySize;
+						for (int i = 0; i < umaDatasGenerated.arraySize; i++)
+						{
+							SerializedProperty umaDataProp = umaDatasGenerated.GetArrayElementAtIndex(i);
+							if (umaDataProp != null)
+							{
+								UMAData umaData = umaDataProp.objectReferenceValue as UMAData;
+								if (umaData != null && umaData.gameObject != null)
+								{
+									umaData.gameObject.hideFlags = HideFlags.None;
+								}
+							}
+						}
+					}
+                    EditorGUILayout.PropertyField(umaDatasGenerated);
+                }
+
+            }
+
+            if (!EditorApplication.isPlaying)
 			{
 				if (GUILayout.Button("Rebuild all editor UMA"))
 				{

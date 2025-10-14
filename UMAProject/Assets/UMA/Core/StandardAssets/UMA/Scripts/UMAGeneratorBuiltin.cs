@@ -1,5 +1,5 @@
 #define DEBUG_TIMING
-
+#define UMA_DEBUG
 using System;
 using UnityEngine;
 using System.Collections.Generic;
@@ -345,10 +345,18 @@ namespace UMA
             FreezeTime = false;
             return true;
         }
-
+#if UMA_DEBUG
+        public List<UMAData> umaDatasGenerated = new List<UMAData>();
+#endif
 
         public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
+#if UMA_DEBUG
+            if (!umaDatasGenerated.Contains(data))
+            {
+                umaDatasGenerated.Add(data);
+            }
+#endif
 #if DEBUG_TIMING
             System.Diagnostics.Stopwatch gstopWatch = System.Diagnostics.Stopwatch.StartNew();
             gstopWatch.Start();

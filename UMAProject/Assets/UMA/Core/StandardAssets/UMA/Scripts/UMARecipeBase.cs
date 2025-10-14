@@ -16,12 +16,16 @@ namespace UMA
 		/// <param name="umaRecipe">UMA recipe.</param>
 		/// <param name="context">Context.</param>
 		public abstract void Load(UMAData.UMARecipe umaRecipe, bool loadSlots = true);
-		/// <summary>
-		/// Save data from the specified umaRecipe.
-		/// </summary>
-		/// <param name="umaRecipe">UMA recipe.</param>
-		/// <param name="context">Context.</param>
-		public abstract void Save(UMAData.UMARecipe umaRecipe);
+
+
+		public abstract void Load(UMAData.UMARecipe umaRecipe, RaceData raceData);
+
+        /// <summary>
+        /// Save data from the specified umaRecipe.
+        /// </summary>
+        /// <param name="umaRecipe">UMA recipe.</param>
+        /// <param name="context">Context.</param>
+        public abstract void Save(UMAData.UMARecipe umaRecipe);
 		public abstract string GetInfo();
 		public abstract byte[] GetBytes();
 		public abstract void SetBytes(byte[] data);

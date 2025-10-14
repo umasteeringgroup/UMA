@@ -20,8 +20,8 @@ namespace UMA
 	    public string raceName;
 		public List<string> KeepBoneNames = new List<string>();
 		public List<string> tags = new List<string>();
-
-		public bool disableDNAConverters = false;
+		public  List<SlotBurnOptions> PrebakedBlendshapes = new List<SlotBurnOptions>();
+        public bool disableDNAConverters = false;
 		[Tooltip("if true, this will not be added to the index when all items are scanned.")]
         public bool noAutoAdd = false;
 
