@@ -14,6 +14,10 @@ namespace UMA.Editors
         public bool nameByMaterial;
         public bool keepAllBones;
         public bool updateExistingSlots;
+        public bool createOverlays;
+        public bool createRecipe;
+        public bool isBaseRaceRecipe;
+        public bool addToGlobalLibrary; // new
 
         public string stripBones;
         public string rootBone;
@@ -37,5 +41,9 @@ namespace UMA.Editors
         // UDIM grid dimensions (e.g., 10x10). If 0, defaults will be used.
         public int udimTilesU;
         public int udimTilesV;
+
+        // Optional: persisted asset paths for reference/debugging
+        public string slotMaterialPath;
+        public string slotFolderPath;
     }
 }

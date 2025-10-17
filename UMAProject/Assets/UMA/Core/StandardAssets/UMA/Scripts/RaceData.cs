@@ -25,6 +25,12 @@ namespace UMA
 		[Tooltip("if true, this will not be added to the index when all items are scanned.")]
         public bool noAutoAdd = false;
 
+        [Header("Renderer Bounds")]
+        [Tooltip("When enabled, the UMA renderers will use this manual bounds (extents) instead of calculated bounds. The extents are scaled by the scale on the 'Position' bone.")]
+        public bool useManualRendererBounds = false;
+        [Tooltip("Manual bounds extents to apply to the UMA renderers when 'Use Manual Renderer Bounds' is enabled. Values are extents (half-size) in local space before scaling by the 'Position' bone.")]
+        public Vector3 manualRendererBounds = Vector3.zero;
+
 		public bool NoAutoAdd
 		{
 			get { return noAutoAdd; }

@@ -78,6 +78,17 @@ namespace UMA.Editors
 			race.expressionSet = EditorGUILayout.ObjectField(new GUIContent("Expression Set", "The Expression Set asset is used by the Expression player."), race.expressionSet, typeof(UMA.PoseTools.UMAExpressionSet), false) as UMA.PoseTools.UMAExpressionSet;
 			EditorGUILayout.HelpBox("Fixup Rotations should be true for Blender FBX slots", MessageType.Info);
 			race.FixupRotations = EditorGUILayout.Toggle("Fixup Rotations",race.FixupRotations);
+
+			// Renderer Bounds section
+			EditorGUILayout.Space();
+			GUILayout.Label("Renderer Bounds", EditorStyles.boldLabel);
+			SerializedProperty useManualBoundsProp = serializedObject.FindProperty("useManualRendererBounds");
+			SerializedProperty manualBoundsProp = serializedObject.FindProperty("manualRendererBounds");
+			EditorGUILayout.PropertyField(useManualBoundsProp, new GUIContent("Use Manual Renderer Bounds", "When enabled, UMA renderers will use these manual bounds (extents) instead of calculated bounds."));
+			using (new EditorGUI.DisabledScope(!useManualBoundsProp.boolValue))
+			{
+				EditorGUILayout.PropertyField(manualBoundsProp, new GUIContent("Manual Bounds (Extents)", "Extents in local space before scaling by the 'Position' bone."));
+			}
 			EditorGUILayout.Space();
 
 #if UMA_DNACOLLECTIONS

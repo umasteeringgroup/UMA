@@ -177,7 +177,11 @@ namespace UMA
             this.asset = asset;
             if (asset)
             {
-				tags = asset.tags.Length > 0 ? (string[])asset.tags.Clone() : new string[0];
+                if (asset.tags == null)
+                {
+                    asset.tags = new string[0];
+                }
+                tags = asset.tags.Length > 0 ? (string[])asset.tags.Clone() : new string[0];
                 Races = asset.Races;
                 overlayScale = asset.overlayScale;
                 rendererAsset = asset.RendererAsset;

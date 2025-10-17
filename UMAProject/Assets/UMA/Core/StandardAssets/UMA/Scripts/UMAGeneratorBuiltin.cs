@@ -513,6 +513,9 @@ namespace UMA
 				}
 			}
 
+			// Apply manual renderer bounds if configured on RaceData
+			ApplyManualRendererBounds(umaData, renderers);
+
 			umaData.SetupEmbeddedPhysics();
 
 #if DEBUG_TIMING
@@ -551,6 +554,41 @@ namespace UMA
             Debug.Log($"Ticks = {System.Diagnostics.Stopwatch.Frequency}");
 #endif
             return true;
+		}
+
+		private static void ApplyManualRendererBounds(UMAData umaData, SkinnedMeshRenderer[] renderers)
+		{
+			if (umaData == null || umaData.umaRecipe == null || umaData.umaRecipe.raceData == null)
+			{
+				return;
+			}
+			var race = umaData.umaRecipe.raceData;
+			if (!race.useManualRendererBounds)
+			{
+				return;
+			}
+			Vector3 baseExtents = race.manualRendererBounds;
+			if (baseExtents == Vector3.zero)
+			{
+				return; // nothing to apply
+			}
+
+			// Scale extents using the scale from the 'Position' bone if present
+			int posHash = UMAUtils.StringToHash("Position");
+			Transform posBone = umaData.skeleton != null ? umaData.skeleton.GetBoneTransform(posHash) : null;
+			Vector3 scaledExtents = baseExtents;
+			if (posBone != null)
+			{
+				scaledExtents = Vector3.Scale(baseExtents, posBone.localScale);
+			}
+
+			Bounds b = new Bounds(Vector3.zero, scaledExtents * 2f);
+			for (int i = 0; i < renderers.Length; i++)
+			{
+				var smr = renderers[i];
+				if (smr == null) continue;
+				smr.localBounds = b;
+			}
 		}
 
 		class Calc32

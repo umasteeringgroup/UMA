@@ -3,30 +3,31 @@ using UnityEditor;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
 using UnityEditorInternal;
+using System.IO; // Added for JSON save/load
 
 namespace UMA.Editors
 {
-	public class UmaSlotBuilderWindow : EditorWindow 
-	{
-		/// <summary>
-		/// This class is pretty dumb. It exists solely because "string" has no default constructor, so can't be created using reflection.
-		/// </summary>
-		public class BoneName : Object
-		{
-			public string strValue;
-			public static implicit operator BoneName(string value)
-			{
-				return new BoneName(value);
-			}
-
-			public static BoneName operator +(BoneName first, BoneName second)
-			{
-				return new BoneName(first.strValue + second.strValue);
-			}
-
-			public BoneName()
+    public class UmaSlotBuilderWindow : EditorWindow 
+    {
+        /// <summary>
+        /// This class is pretty dumb. It exists solely because "string" has no default constructor, so can't be created using reflection.
+        /// </summary>
+        public class BoneName : Object
+        {
+            public string strValue;
+            public static implicit operator BoneName(string value)
             {
-				strValue = "";
+                return new BoneName(value);
+            }
+
+            public static BoneName operator +(BoneName first, BoneName second)
+            {
+                return new BoneName(first.strValue + second.strValue);
+            }
+
+            public BoneName()
+            {
+                strValue = "";
             }
 
             public override string ToString()
@@ -36,121 +37,297 @@ namespace UMA.Editors
 
             public BoneName(string val)
             {
-				strValue = val;
+                strValue = val;
             }
-		}
+        }
 
-		public string slotName;
-		public string RootBone = "Global";
-		public UnityEngine.Object slotFolder;
-		public UnityEngine.Object relativeFolder;
-		public SkinnedMeshRenderer normalReferenceMesh;
-		public SkinnedMeshRenderer slotMesh;
-		public GameObject AllSlots;
-		public UMAMaterial slotMaterial;
-		public bool createOverlay;
-		public bool createRecipe;
-		public bool addToGlobalLibrary;
-		public bool binarySerialization;
-		public bool calcTangents=true;
-		public bool clearNormals=false;
-		public bool clearTangents=false;
+        // Persisted state for window parameters
+        [System.Serializable]
+        private class SlotBuilderWindowState
+        {
+            public string slotName;
+            public string RootBone;
+            public bool createOverlay;
+            public bool createRecipe;
+            public bool isBaseRaceRecipe;
+            public bool addToGlobalLibrary;
+            public bool binarySerialization;
+            public bool calcTangents;
+            public bool clearNormals;
+            public bool clearTangents;
+            public bool udimAdjustment;
+            public int udimTilesU;
+            public int udimTilesV;
+            public bool nameAfterMaterial;
+            public List<string> KeepBones = new List<string>();
+            public string BoneStripper;
+            public bool useRootFolder;
+            public bool keepAllBones;
+            public bool rotationEnabled;
+            public Vector3 rotationEuler;
+            public bool invertX;
+            public bool invertY;
+            public bool invertZ;
+            public bool updateExistingSlots;
+            public List<string> Tags = new List<string>();
+            // New: persist material and folder by asset path
+            public string slotMaterialPath;
+            public string slotFolderPath;
+        }
+
+        public string slotName;
+        public string RootBone = "Global";
+        public UnityEngine.Object slotFolder;
+        public UnityEngine.Object relativeFolder;
+        public SkinnedMeshRenderer normalReferenceMesh;
+        public SkinnedMeshRenderer slotMesh;
+        public GameObject AllSlots;
+        public UMAMaterial slotMaterial;
+        public bool createOverlay;
+        public bool createRecipe;
+        public bool isBaseRaceRecipe = false;
+        public bool addToGlobalLibrary;
+        public bool binarySerialization;
+        public bool calcTangents=true;
+        public bool clearNormals=false;
+        public bool clearTangents=false;
         public bool udimAdjustment = true;
         public string errmsg = "";
-		public List<string> Tags = new List<string>();
-		public bool showTags;
-		public bool nameAfterMaterial=false;
-		public List<BoneName> KeepBones = new List<BoneName>();
-		private ReorderableList boneList;
-		private bool boneListInitialized;
-		public string BoneStripper;
-		private bool useRootFolder=false;
-		public bool keepAllBones = false;
-		public bool rotationEnabled = false;
+        public List<string> Tags = new List<string>();
+        public bool showTags;
+        public bool nameAfterMaterial=false;
+        public List<BoneName> KeepBones = new List<BoneName>();
+        private ReorderableList boneList;
+        private bool boneListInitialized;
+        public string BoneStripper;
+        private bool useRootFolder=false;
+        public bool keepAllBones = false;
+        public bool rotationEnabled = false;
         public Quaternion rotation = Quaternion.identity;
-		public bool invertX;
+        public bool invertX;
         public bool invertY;
         public bool invertZ;
-		public bool updateExistingSlots = false;
+        public bool updateExistingSlots = false;
 
         // UDIM grid size (default 10x10)
         public int udimTilesU = 10;
         public int udimTilesV = 10;
 
+        // File path in UMA root folder for persistence
+        private static string GetPersistFilePath()
+        {
+#if UNITY_EDITOR
+            string umaRoot = UMA.UMASettings.FindUMAFullPath(); // e.g., "Assets/UMA"
+            if (string.IsNullOrEmpty(umaRoot)) umaRoot = "Assets/UMA";
+            // Convert to absolute path
+            string rel = umaRoot.StartsWith("Assets/") ? umaRoot.Substring("Assets/".Length) : umaRoot.TrimStart('/');
+            string absRoot = Path.Combine(Application.dataPath, rel.Replace('/', Path.DirectorySeparatorChar));
+            return Path.Combine(absRoot, "SlotBuilderParameters.json");
+#else
+            return string.Empty;
+#endif
+        }
+
+        private void SaveStateToJson()
+        {
+            try
+            {
+                var state = new SlotBuilderWindowState();
+                state.slotName = slotName;
+                state.RootBone = RootBone;
+                state.createOverlay = createOverlay;
+                state.createRecipe = createRecipe;
+                state.isBaseRaceRecipe = isBaseRaceRecipe;
+                state.addToGlobalLibrary = addToGlobalLibrary;
+                state.binarySerialization = binarySerialization;
+                state.calcTangents = calcTangents;
+                state.clearNormals = clearNormals;
+                state.clearTangents = clearTangents;
+                state.udimAdjustment = udimAdjustment;
+                state.udimTilesU = udimTilesU;
+                state.udimTilesV = udimTilesV;
+                state.nameAfterMaterial = nameAfterMaterial;
+                state.BoneStripper = BoneStripper;
+                state.useRootFolder = useRootFolder;
+                state.keepAllBones = keepAllBones;
+                state.rotationEnabled = rotationEnabled;
+                state.rotationEuler = rotation.eulerAngles;
+                state.invertX = invertX;
+                state.invertY = invertY;
+                state.invertZ = invertZ;
+                state.updateExistingSlots = updateExistingSlots;
+                // Copy KeepBones strings
+                state.KeepBones = new List<string>(KeepBones != null ? KeepBones.Count : 0);
+                if (KeepBones != null)
+                {
+                    for (int i = 0; i < KeepBones.Count; i++)
+                    {
+                        state.KeepBones.Add(KeepBones[i]?.strValue ?? string.Empty);
+                    }
+                }
+                // Tags
+                state.Tags = new List<string>(Tags ?? new List<string>());
+                // New: persist paths for material and folder
+                state.slotMaterialPath = slotMaterial != null ? AssetDatabase.GetAssetPath(slotMaterial) : string.Empty;
+                state.slotFolderPath = slotFolder != null ? AssetDatabase.GetAssetPath(slotFolder) : string.Empty;
+
+                string json = JsonUtility.ToJson(state, true);
+                string fp = GetPersistFilePath();
+                string dir = Path.GetDirectoryName(fp);
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllText(fp, json);
+#if UNITY_EDITOR
+                AssetDatabase.Refresh();
+#endif
+            }
+            catch { }
+        }
+
+        private void LoadStateFromJson()
+        {
+            try
+            {
+                string fp = GetPersistFilePath();
+                if (string.IsNullOrEmpty(fp) || !File.Exists(fp)) return;
+                string json = File.ReadAllText(fp);
+                if (string.IsNullOrEmpty(json)) return;
+                var state = JsonUtility.FromJson<SlotBuilderWindowState>(json);
+                if (state == null) return;
+
+                slotName = state.slotName;
+                RootBone = string.IsNullOrEmpty(state.RootBone) ? RootBone : state.RootBone;
+                createOverlay = state.createOverlay;
+                createRecipe = state.createRecipe;
+                isBaseRaceRecipe = state.isBaseRaceRecipe;
+                addToGlobalLibrary = state.addToGlobalLibrary;
+                binarySerialization = state.binarySerialization;
+                calcTangents = state.calcTangents;
+                clearNormals = state.clearNormals;
+                clearTangents = state.clearTangents;
+                udimAdjustment = state.udimAdjustment;
+                udimTilesU = state.udimTilesU;
+                udimTilesV = state.udimTilesV;
+                nameAfterMaterial = state.nameAfterMaterial;
+                BoneStripper = state.BoneStripper;
+                useRootFolder = state.useRootFolder;
+                keepAllBones = state.keepAllBones;
+                rotationEnabled = state.rotationEnabled;
+                rotation = Quaternion.Euler(state.rotationEuler);
+                invertX = state.invertX;
+                invertY = state.invertY;
+                invertZ = state.invertZ;
+                updateExistingSlots = state.updateExistingSlots;
+
+                // Restore KeepBones list
+                KeepBones = new List<BoneName>();
+                if (state.KeepBones != null)
+                {
+                    for (int i = 0; i < state.KeepBones.Count; i++)
+                    {
+                        KeepBones.Add(new BoneName(state.KeepBones[i] ?? string.Empty));
+                    }
+                }
+                // Restore Tags
+                Tags = state.Tags ?? new List<string>();
+                // New: restore slotMaterial and slotFolder from paths
+                if (!string.IsNullOrEmpty(state.slotMaterialPath))
+                {
+                    var mat = AssetDatabase.LoadAssetAtPath<UMAMaterial>(state.slotMaterialPath);
+                    if (mat != null) slotMaterial = mat;
+                }
+                if (!string.IsNullOrEmpty(state.slotFolderPath))
+                {
+                    var folderObj = AssetDatabase.LoadMainAssetAtPath(state.slotFolderPath);
+                    if (folderObj != null) slotFolder = folderObj;
+                }
+            }
+            catch { }
+        }
+
+        private void OnEnable()
+        {
+            LoadStateFromJson();
+        }
+
+        private void OnDisable()
+        {
+            SaveStateToJson();
+        }
+
         string GetAssetFolder()
-		{
+        {
             int index = slotName.LastIndexOf('/');
-			if( index > 0 )
-			{
-				return slotName.Substring(0, index+1);
-			}
-			return "";
-		}
+            if( index > 0 )
+            {
+                return slotName.Substring(0, index+1);
+            }
+            return "";
+        }
 
-		string GetAssetName()
-		{
-			int index = slotName.LastIndexOf('/');
-			if (index > 0)
-			{
-				return slotName.Substring(index + 1);
-			}
-			return slotName;
-		}
+        string GetAssetName()
+        {
+            int index = slotName.LastIndexOf('/');
+            if (index > 0)
+            {
+                return slotName.Substring(index + 1);
+            }
+            return slotName;
+        }
 
-		string GetSlotName(SkinnedMeshRenderer smr)
-		{
-			if (nameAfterMaterial)
-			{
-				return smr.sharedMaterial.name.ToTitleCase();
-			}
-			int index = slotName.LastIndexOf('/');
-			if (index > 0)
-			{
-				return slotName.Substring(index + 1);
-			}
-			return slotName;
-		}
+        string GetSlotName(SkinnedMeshRenderer smr)
+        {
+            if (nameAfterMaterial)
+            {
+                return smr.sharedMaterial.name.ToTitleCase();
+            }
+            int index = slotName.LastIndexOf('/');
+            if (index > 0)
+            {
+                return slotName.Substring(index + 1);
+            }
+            return slotName;
+        }
 
-		public void EnforceFolder(ref UnityEngine.Object folderObject)
-		{
-			if (folderObject != null)
-			{
-				string destpath = AssetDatabase.GetAssetPath(folderObject);
-				if (string.IsNullOrEmpty(destpath))
-				{
-					folderObject = null;
-				}
-				else if (!System.IO.Directory.Exists(destpath))
-				{
-					destpath = destpath.Substring(0, destpath.LastIndexOf('/'));
-					folderObject = AssetDatabase.LoadMainAssetAtPath(destpath);
-				}
-			}
-		}
+        public void EnforceFolder(ref UnityEngine.Object folderObject)
+        {
+            if (folderObject != null)
+            {
+                string destpath = AssetDatabase.GetAssetPath(folderObject);
+                if (string.IsNullOrEmpty(destpath))
+                {
+                    folderObject = null;
+                }
+                else if (!System.IO.Directory.Exists(destpath))
+                {
+                    destpath = destpath.Substring(0, destpath.LastIndexOf('/'));
+                    folderObject = AssetDatabase.LoadMainAssetAtPath(destpath);
+                }
+            }
+        }
 
-		private void InitBoneList()
-		{
-			boneList = new ReorderableList(KeepBones,typeof(BoneName), true, true, true, true);
+        private void InitBoneList()
+        {
+            boneList = new ReorderableList(KeepBones,typeof(BoneName), true, true, true, true);
             boneList.drawHeaderCallback = (Rect rect) =>
             {
-				EditorGUI.LabelField(rect, "Keep Bones Containing");
-			};
+                EditorGUI.LabelField(rect, "Keep Bones Containing");
+            };
             boneList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
             {
-				rect.y += 2;
-				KeepBones[index].strValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), KeepBones[index].strValue);
-			};
-			boneListInitialized = true;
-		}
+                rect.y += 2;
+                KeepBones[index].strValue = EditorGUI.TextField(new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight), KeepBones[index].strValue);
+            };
+            boneListInitialized = true;
+        }
 
-		void OnGUI()
+        void OnGUI()
         {
-			if (!boneListInitialized || boneList == null)
-			{
-				InitBoneList();
-			}
-			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
-			GUILayout.Label("Common Parameters", EditorStyles.boldLabel);
+            if (!boneListInitialized || boneList == null)
+            {
+                InitBoneList();
+            }
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
+            GUILayout.Label("Common Parameters", EditorStyles.boldLabel);
             normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
 
             slotMaterial = EditorGUILayout.ObjectField("UMAMaterial\t ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
@@ -159,19 +336,30 @@ namespace UMA.Editors
             updateExistingSlots = EditorGUILayout.Toggle(new GUIContent("Update Existing Slots", "If true, existing slots will not be overwritten, but will be updated instead. This only works if the slot has the same name and path in the file system."), updateExistingSlots);
             //EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             EditorGUILayout.BeginHorizontal();
-			createOverlay = EditorGUILayout.Toggle("Create Overlay", createOverlay);
-			createRecipe = EditorGUILayout.Toggle("Create Wardrobe Recipe ", createRecipe);
-			EditorGUILayout.EndHorizontal();
-			//EditorGUILayout.LabelField(slotName + "_Overlay");
-			//EditorGUILayout.EndHorizontal();
-			//EditorGUILayout.BeginHorizontal();
-			//EditorGUILayout.LabelField(slotName + "_Recipe");
-			//EditorGUILayout.EndHorizontal();
-			EditorGUILayout.BeginHorizontal();
-			binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
-			addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
-			EditorGUILayout.EndHorizontal();
-			EditorGUILayout.BeginHorizontal();
+            isBaseRaceRecipe = EditorGUILayout.Toggle("Is Base Race Recipe", isBaseRaceRecipe);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            createOverlay = EditorGUILayout.Toggle("Create Overlay", createOverlay);
+            if (!isBaseRaceRecipe)
+            {
+                createRecipe = EditorGUILayout.Toggle("Create Wardrobe Recipe ", createRecipe);
+            }
+            else
+            {
+                createRecipe = EditorGUILayout.Toggle("Create Base Recipe ", createRecipe);
+            }
+
+            EditorGUILayout.EndHorizontal();
+            //EditorGUILayout.LabelField(slotName + "_Overlay");
+            //EditorGUILayout.EndHorizontal();
+            //EditorGUILayout.BeginHorizontal();
+            //EditorGUILayout.LabelField(slotName + "_Recipe");
+            //EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
+            addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
             calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
             udimAdjustment = EditorGUILayout.Toggle("Adjust for UDIM", udimAdjustment);
             EditorGUILayout.EndHorizontal();
@@ -183,18 +371,18 @@ namespace UMA.Editors
                 udimTilesV = EditorGUILayout.IntField(new GUIContent("UDIM Tiles V", "Number of tiles vertically (e.g., 10)"), Mathf.Max(0, udimTilesV));
             }
             EditorGUI.indentLevel--;
-			EditorGUILayout.BeginHorizontal();
-			clearNormals = EditorGUILayout.Toggle("Clear Blendshape Normals", clearNormals);
-			clearTangents = EditorGUILayout.Toggle("Clear Blendshape Tangents", clearTangents);
+            EditorGUILayout.BeginHorizontal();
+            clearNormals = EditorGUILayout.Toggle("Clear Blendshape Normals", clearNormals);
+            clearTangents = EditorGUILayout.Toggle("Clear Blendshape Tangents", clearTangents);
             EditorGUILayout.EndHorizontal();
-			EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginHorizontal();
             useRootFolder = EditorGUILayout.Toggle("Write to Root Folder", useRootFolder);
             keepAllBones = EditorGUILayout.Toggle("Keep All Bones", keepAllBones);
             EditorGUILayout.EndHorizontal();
             BoneStripper = EditorGUILayout.TextField("Strip from Bones:", BoneStripper);
             rotationEnabled = EditorGUILayout.Toggle("Enable Rotation", rotationEnabled);
             rotation = Quaternion.Euler(EditorGUILayout.Vector3Field("Rotation", rotation.eulerAngles));
-			invertX = EditorGUILayout.Toggle("Invert X", invertX);
+            invertX = EditorGUILayout.Toggle("Invert X", invertX);
             invertY = EditorGUILayout.Toggle("Invert Y", invertY);
             invertZ = EditorGUILayout.Toggle("Invert Z", invertZ);
             if (rotationEnabled)
@@ -203,21 +391,21 @@ namespace UMA.Editors
             }
 
             boneList.DoLayoutList();
-			GUIHelper.EndVerticalPadded(10);
+            GUIHelper.EndVerticalPadded(10);
 
 
-			DoDragDrop();
+            DoDragDrop();
 
-			EnforceFolder(ref slotFolder);
-			//
-			// For now, we will disable this option.
-			// It doesn't work in most cases.
-			// RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
-			// 
-			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f),EditorStyles.helpBox);
-			GUILayout.Label("Single Slot Processing", EditorStyles.boldLabel);
+            EnforceFolder(ref slotFolder);
+            //
+            // For now, we will disable this option.
+            // It doesn't work in most cases.
+            // RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
+            // 
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f),EditorStyles.helpBox);
+            GUILayout.Label("Single Slot Processing", EditorStyles.boldLabel);
 
-			var newslotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+            var newslotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
             if (newslotMesh != slotMesh)
             {
                 errmsg = "";
@@ -229,65 +417,60 @@ namespace UMA.Editors
 
 
 
-			if (GUILayout.Button("Verify Slot"))
-			{
-				if (slotMesh == null)
-				{
-					errmsg = "Slot is null.";
-				}
-				else
-				{
-					Vector2[] uv = slotMesh.sharedMesh.uv;
-					foreach (Vector2 v in uv)
-					{
-						if (v.x > 1.0f || v.x < 0.0f || v.y > 1.0f || v.y < 0.0f)
-						{
-							errmsg = "UV Coordinates are out of range and will likely have issues with atlassed materials. Textures should not be tiled unless using non-atlassed materials. If this slot is using UDIMs, please check the box to adjust for UDIM in the slot options.";
-							break;
-						}
-					}
-					if (string.IsNullOrEmpty(errmsg))
-					{
-						errmsg = "No errors found";
-					}
-				}
-			}
+            if (GUILayout.Button("Verify Slot"))
+            {
+                if (slotMesh == null)
+                {
+                    errmsg = "Slot is null.";
+                }
+                else
+                {
+                    Vector2[] uv = slotMesh.sharedMesh.uv;
+                    foreach (Vector2 v in uv)
+                    {
+                        if (v.x > 1.0f || v.x < 0.0f || v.y > 1.0f || v.y < 0.0f)
+                        {
+                            errmsg = "UV Coordinates are out of range and will likely have issues with atlassed materials. Textures should not be tiled unless using non-atlassed materials. If this slot is using UDIMs, please check the box to adjust for UDIM in the slot options.";
+                            break;
+                        }
+                    }
+                    if (string.IsNullOrEmpty(errmsg))
+                    {
+                        errmsg = "No errors found";
+                    }
+                }
+            }
 
-			if (!string.IsNullOrEmpty(errmsg))
-			{
-				EditorGUILayout.HelpBox(errmsg, MessageType.Warning);
-			}
+            if (!string.IsNullOrEmpty(errmsg))
+            {
+                EditorGUILayout.HelpBox(errmsg, MessageType.Warning);
+            }
 
-			if (GUILayout.Button("Create Slot"))
-			{
-				Debug.Log("Processing...");
-				SlotDataAsset sd = CreateSlot();
-				if (sd != null)
-				{
-					Debug.Log("Success.");
-					string AssetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
-					if (addToGlobalLibrary)
-					{
-						UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);
-					}
-					OverlayDataAsset od = null;
-					if (createOverlay)
-					{
-						od = CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
-					}
-					if (createRecipe)
-					{
-						CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"), sd, od);
-					}
-				}
-			}
+            if (GUILayout.Button("Create Slot"))
+            {
+                // Save current parameters before creating
+                SaveStateToJson();
 
-			GUIHelper.EndVerticalPadded(10);
+                Debug.Log("Processing...");
+                SlotDataAsset sd = CreateSlot();
+                if (sd != null)
+                {
+                    Debug.Log("Success.");
+                    string AssetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
+                    if (addToGlobalLibrary)
+                    {
+                        UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);
+                    }
+                    // Overlay and Recipe creation moved to UMASlotProcessingUtil via SlotBuilderParameters flags
+                }
+            }
+
+            GUIHelper.EndVerticalPadded(10);
 
             GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
             GUILayout.Space(10);
             showTags = EditorGUILayout.Foldout(showTags, "Tags");
-			GUILayout.EndHorizontal();
+            GUILayout.EndHorizontal();
             if (showTags)
             {
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f),EditorStyles.helpBox);
@@ -357,103 +540,92 @@ namespace UMA.Editors
 
         private void DoDragDrop()
         {
-			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
-			GUILayout.Label("Automatic Drag and Drop processing", EditorStyles.boldLabel);
-			Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-			nameAfterMaterial = GUILayout.Toggle(nameAfterMaterial, "Name slot by material");
-			Color save = GUI.color;
-			GUI.color = Color.white;
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
+            GUILayout.Label("Automatic Drag and Drop processing", EditorStyles.boldLabel);
+            Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+            nameAfterMaterial = GUILayout.Toggle(nameAfterMaterial, "Name slot by material");
+            Color save = GUI.color;
+            GUI.color = Color.white;
             GUI.Box(dropArea, "Drag FBX GameObject or meshes here to generate all slots and overlays for the GameObject");
             relativeFolder = EditorGUILayout.ObjectField("Relative Folder", relativeFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
             EnforceFolder(ref relativeFolder);
 
-            DropAreaGUI(dropArea);			
-			GUI.color = save;
-			GUIHelper.EndVerticalPadded(10);
+            DropAreaGUI(dropArea);
+            GUI.color = save;
+            GUIHelper.EndVerticalPadded(10);
         }
 
         private SlotDataAsset CreateSlot()
-		{
+        {
             if (slotName == null || slotName == "")
             {
-				Debug.LogError("slotName must be specified.");
-				return null;
-			}
+                Debug.LogError("slotName must be specified.");
+                return null;
+            }
 
-			SlotDataAsset sd = CreateSlot_Internal();
-            if (sd == null)
+            var result = CreateSlot_Internal_WithResult();
+            if (result == null || result.Slots == null || result.Slots.Count == 0)
             {
                 return null;
             }
 
-			UMAUpdateProcessor.UpdateSlot(sd);
-			return sd;
-		}
-
-		private OverlayDataAsset CreateOverlay(string path, SlotDataAsset sd)
-		{
-			OverlayDataAsset asset = ScriptableObject.CreateInstance<OverlayDataAsset>();
-			asset.overlayName = slotName + "_Overlay";
-			asset.material = sd.material;
-			AssetDatabase.CreateAsset(asset, path);
-			AssetDatabase.SaveAssets();
-			if (addToGlobalLibrary)
-			{
-				UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), asset);
-			}
-			return asset;
-		}
-
-		private void CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od)
-		{
-			UMAEditorUtilities.CreateRecipe(path, sd, od, sd.name, addToGlobalLibrary);
-		}
-
-		private SlotDataAsset CreateSlot_Internal()
-		{
-			var material = slotMaterial;
-			if (slotName == null || slotName == "")
-			{
-				Debug.LogError("slotName must be specified.");
-				return null;
-			}
-			
-			if (material == null)
-			{
-				Debug.LogError("No UMAMaterial specified! You must specify an UMAMaterial to build a slot.");
-				return null;
-			}
-
-			if (slotFolder == null)
-			{
-				Debug.LogError("Slot folder not supplied");
-				return null;
-			}
-
-			if (slotMesh == null)
-			{
-				Debug.LogError("Slot Mesh not supplied.");
-				return null;
-			}
-
-			List<string> KeepList = new List<string>();
-			foreach(BoneName b in KeepBones)
+            // After building slots (non-UDIM and UDIM cases), optionally create one recipe containing ALL slots
+            if (createRecipe)
             {
-				KeepList.Add(b.strValue);
+                CreateRecipeFromResult(result);
             }
-			if (!string.IsNullOrEmpty(BoneStripper))
-			{
-				int stripCount = 0;
-				foreach (Transform t in slotMesh.bones)
-				{
-					if (t.name.Contains(BoneStripper))
-					{
-						t.name = t.name.Replace(BoneStripper, "");
-						stripCount++;
-					}
-				}
-				Debug.Log("Stripped " + stripCount + " Bones");
-			}
+
+            // Return first created slot for backward compatibility
+            var first = result.Slots[0];
+            UMAUpdateProcessor.UpdateSlot(first);
+            return first;
+        }
+
+        private UMASlotProcessingUtil.SlotBuildResult CreateSlot_Internal_WithResult()
+        {
+            var material = slotMaterial;
+            if (slotName == null || slotName == "")
+            {
+                Debug.LogError("slotName must be specified.");
+                return null;
+            }
+            
+            if (material == null)
+            {
+                Debug.LogError("No UMAMaterial specified! You must specify an UMAMaterial to build a slot.");
+                return null;
+            }
+
+            if (slotFolder == null)
+            {
+                Debug.LogError("Slot folder not supplied");
+                return null;
+            }
+
+            if (slotMesh == null)
+            {
+                Debug.LogError("Slot Mesh not supplied.");
+                return null;
+            }
+
+            List<string> KeepList = new List<string>();
+            foreach(BoneName b in KeepBones)
+            {
+                KeepList.Add(b.strValue);
+            }
+            if (!string.IsNullOrEmpty(BoneStripper))
+            {
+                int stripCount = 0;
+                foreach (Transform t in slotMesh.bones)
+                {
+                    if (t.name.Contains(BoneStripper))
+                    {
+                        t.name = t.name.Replace(BoneStripper, "");
+                        stripCount++;
+                    }
+                }
+                Debug.Log("Stripped " + stripCount + " Bones");
+            }
 
             SlotBuilderParameters sbp = new SlotBuilderParameters();
             sbp.calculateTangents = calcTangents;
@@ -471,150 +643,259 @@ namespace UMA.Editors
             sbp.material = material;
             sbp.udimAdjustment = udimAdjustment;
             sbp.useRootFolder = false;
-			sbp.keepAllBones = keepAllBones;
-			sbp.rotation = rotation;
-			sbp.rotationEnabled = rotationEnabled;
+            sbp.keepAllBones = keepAllBones;
+            sbp.rotation = rotation;
+            sbp.rotationEnabled = rotationEnabled;
             sbp.invertX = invertX;
             sbp.invertY = invertY;
             sbp.invertZ = invertZ;
-			sbp.updateExistingSlots = updateExistingSlots;
-			sbp.clearNormals = clearNormals;
-			sbp.clearTangents = clearTangents;
+            sbp.updateExistingSlots = updateExistingSlots;
+            sbp.clearNormals = clearNormals;
+            sbp.clearTangents = clearTangents;
             sbp.udimTilesU = udimTilesU;
             sbp.udimTilesV = udimTilesV;
+            sbp.createOverlays = createOverlay;
+            sbp.createRecipe = false; // moved out of util
+            sbp.isBaseRaceRecipe = isBaseRaceRecipe;
+            sbp.slotMaterialPath = material != null ? AssetDatabase.GetAssetPath(material) : string.Empty;
+            sbp.slotFolderPath = slotFolder != null ? AssetDatabase.GetAssetPath(slotFolder) : string.Empty;
+            sbp.addToGlobalLibrary = addToGlobalLibrary;
 
-            SlotDataAsset slot = UMASlotProcessingUtil.CreateSlotData(sbp);
-			if (slot == null)
+            var result = UMASlotProcessingUtil.CreateSlotData(sbp);
+            if (result == null)
             {
-                Debug.LogError("Failed to create SlotDataAsset");
+                Debug.LogError("Failed to create SlotDataAsset(s)");
                 return null;
             }
-            slot.tags = Tags.ToArray();
-			return slot;
-		}
 
-		private void DropAreaGUI(Rect dropArea)
-		{
-			var evt = Event.current;
+            // Apply tags to all created slot assets
+            if (result.Slots != null)
+            {
+                for (int i = 0; i < result.Slots.Count; i++)
+                {
+                    var sd = result.Slots[i];
+                    if (sd == null) continue;
+                    sd.tags = Tags.ToArray();
+                    EditorUtility.SetDirty(sd);
+                }
+                AssetDatabase.SaveAssets();
+            }
+            return result;
+        }
 
-			if (evt.type == EventType.DragUpdated)
-			{
-				if (dropArea.Contains(evt.mousePosition))
-				{
-					DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-				}
-			}
+        private void CreateRecipeFromResult(UMASlotProcessingUtil.SlotBuildResult result)
+        {
+            if (result == null || result.Slots == null || result.Slots.Count == 0)
+            {
+                return;
+            }
 
-			if (evt.type == EventType.DragPerform)
-			{
-				if (dropArea.Contains(evt.mousePosition))
-				{
-					DragAndDrop.AcceptDrag();
-					UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
-					var meshes = new HashSet<SkinnedMeshRenderer>();
-					for (int i = 0; i < draggedObjects.Length; i++)
-					{
-						RecurseObject(draggedObjects[i], meshes);
-					}
+            // Build UMA recipe that includes ALL slots and their overlays
+            var recipe = new UMA.UMAData.UMARecipe();
+            recipe.ClearDna();
+            int index = 0;
+            for (int i = 0; i < result.Slots.Count; i++)
+            {
+                var sda = result.Slots[i];
+                if (sda == null) continue;
+                var sd = new SlotData(sda);
+                if (result.SlotToOverlay != null && result.SlotToOverlay.TryGetValue(sda, out var oda) && oda != null)
+                {
+                    var od = new OverlayData(oda);
+                    sd.AddOverlay(od);
+                }
+                recipe.SetSlot(index++, sd);
+            }
 
-					SlotDataAsset sd = null;
-					float current = 1f;
-					float total = (float)meshes.Count;
+            string assetDir = AssetDatabase.GetAssetPath(slotFolder);
+            string recipeBaseName = GetSlotName(slotMesh) + (isBaseRaceRecipe ? "_BaseRaceRecipe" : "_Recipe");
+            string recipePath = Path.Combine(assetDir, recipeBaseName + ".asset").Replace('\\','/');
+            recipePath = AssetDatabase.GenerateUniqueAssetPath(recipePath);
 
-					foreach(var mesh in meshes)
-					{
-						EditorUtility.DisplayProgressBar(string.Format("Creating Slots {0} of {1}", current, total), string.Format("Slot: {0}", mesh.name), (current / total));
-						slotMesh = mesh;
-						GetMaterialName(mesh.name, mesh);
-						sd = CreateSlot();
-						if (sd != null)
-						{
-							Debug.Log("Batch importer processed mesh: " + slotName);
-							string AssetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
-							if (createOverlay)
-							{
-								CreateOverlay(AssetPath.Replace(sd.name, sd.slotName + "_Overlay"), sd);
-							}
-							if (createRecipe)
-							{
-								CreateRecipe(AssetPath.Replace(sd.name, sd.slotName + "_Recipe"), sd, null);
-							}
-						}
-						current++;
-					}
-					EditorUtility.ClearProgressBar();
-				}
-			}
-		}
+            if (isBaseRaceRecipe)
+            {
+                var utr = ScriptableObject.CreateInstance<UMATextRecipe>();
+                utr.name = recipeBaseName;
+                utr.Save(recipe);
+                AssetDatabase.CreateAsset(utr, recipePath);
+                if (addToGlobalLibrary)
+                {
+                    UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMATextRecipe), utr);
+                }
+            }
+            else
+            {
+                var uwr = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+                uwr.name = recipeBaseName;
+                uwr.Save(recipe);
+                AssetDatabase.CreateAsset(uwr, recipePath);
+                if (addToGlobalLibrary)
+                {
+                    UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMAWardrobeRecipe), uwr);
+                }
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        // Restored helpers for drag & drop batch processing
+        private void DropAreaGUI(Rect dropArea)
+        {
+            var evt = Event.current;
+
+            if (evt.type == EventType.DragUpdated)
+            {
+                if (dropArea.Contains(evt.mousePosition))
+                {
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                }
+            }
+
+            if (evt.type == EventType.DragPerform)
+            {
+                if (dropArea.Contains(evt.mousePosition))
+                {
+                    DragAndDrop.AcceptDrag();
+                    UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
+                    var meshes = new HashSet<SkinnedMeshRenderer>();
+                    for (int i = 0; i < draggedObjects.Length; i++)
+                    {
+                        RecurseObject(draggedObjects[i], meshes);
+                    }
+
+                    // Aggregate results from all processed meshes
+                    var aggregate = new UMASlotProcessingUtil.SlotBuildResult
+                    {
+                        Slots = new List<SlotDataAsset>(),
+                        SlotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>(),
+                        IsUDIM = false
+                    };
+
+                    float current = 1f;
+                    float total = (float)meshes.Count;
+
+                    // Preserve original slotName and slotMesh to restore later
+                    string originalSlotName = slotName;
+                    var originalSlotMesh = slotMesh;
+
+                    foreach(var mesh in meshes)
+                    {
+                        EditorUtility.DisplayProgressBar(string.Format("Creating Slots {0} of {1}", current, total), string.Format("Slot: {0}", mesh.name), (current / total));
+                        slotMesh = mesh;
+                        GetMaterialName(mesh.name, mesh);
+
+                        // Build result for this mesh without creating a recipe per mesh
+                        var result = CreateSlot_Internal_WithResult();
+                        if (result != null && result.Slots != null && result.Slots.Count > 0)
+                        {
+                            // Merge slots
+                            aggregate.Slots.AddRange(result.Slots);
+                            // Merge overlays map
+                            if (result.SlotToOverlay != null)
+                            {
+                                foreach (var kv in result.SlotToOverlay)
+                                {
+                                    if (!aggregate.SlotToOverlay.ContainsKey(kv.Key))
+                                    {
+                                        aggregate.SlotToOverlay.Add(kv.Key, kv.Value);
+                                    }
+                                }
+                            }
+                            // Track UDIM presence if any
+                            aggregate.IsUDIM = aggregate.IsUDIM || result.IsUDIM;
+
+                            Debug.Log("Batch importer processed mesh: " + slotName);
+                        }
+                        current++;
+                    }
+
+                    // Restore UI state
+                    slotName = originalSlotName;
+                    slotMesh = originalSlotMesh;
+
+                    // Create a single recipe for the whole batch if requested
+                    if (createRecipe && aggregate.Slots.Count > 0)
+                    {
+                        CreateRecipeFromResult(aggregate);
+                    }
+
+                    if (addToGlobalLibrary)
+                    {
+                        UMAAssetIndexer.Instance.ForceSave();
+                    }
+
+                    EditorUtility.ClearProgressBar();
+                }
+            }
+        }
 
         private string AsciiName(string name)
         {
-			return name.ToTitleCase();
+            return name.ToTitleCase();
         }
 
         private void RecurseObject(Object obj, HashSet<SkinnedMeshRenderer> meshes)
-		{
-			GameObject go = obj as GameObject;
-			if (go != null)
-			{
-				foreach (var smr in go.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-				{
-					meshes.Add(smr);
-				}
-				return;
-			}
-			var path = AssetDatabase.GetAssetPath(obj);
-			if (!string.IsNullOrEmpty(path) && System.IO.Directory.Exists(path))
-			{
-				foreach (var guid in AssetDatabase.FindAssets("t:GameObject", new string[] {path}))
-				{
-					RecurseObject(AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(GameObject)), meshes);
-				}
-			}
-		}
+        {
+            GameObject go = obj as GameObject;
+            if (go != null)
+            {
+                foreach (var smr in go.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                {
+                    meshes.Add(smr);
+                }
+                return;
+            }
+            var path = AssetDatabase.GetAssetPath(obj);
+            if (!string.IsNullOrEmpty(path) && System.IO.Directory.Exists(path))
+            {
+                foreach (var guid in AssetDatabase.FindAssets("t:GameObject", new string[] {path}))
+                {
+                    RecurseObject(AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(GameObject)), meshes);
+                }
+            }
+        }
 
-		private string ProcessTextureTypeAndName(Texture2D tex)
-		{
-			var suffixes = new string[] { "_dif", "_spec", "_nor" };
-		   
-			int index = 0;
-			foreach( var suffix in suffixes )
-			{
-				index = tex.name.IndexOf(suffix, System.StringComparison.InvariantCultureIgnoreCase);
-				if( index > 0 )
-				{
-					string name = tex.name.Substring(0,index);
-					GetMaterialName(name, tex);
-					return suffix;
-				}
-			}
-			return "";
-		}
+        private string ProcessTextureTypeAndName(Texture2D tex)
+        {
+            var suffixes = new string[] { "_dif", "_spec", "_nor" };
+           
+            int index = 0;
+            foreach( var suffix in suffixes )
+            {
+                index = tex.name.IndexOf(suffix, System.StringComparison.InvariantCultureIgnoreCase);
+                if( index > 0 )
+                {
+                    string name = tex.name.Substring(0,index);
+                    GetMaterialName(name, tex);
+                    return suffix;
+                }
+            }
+            return "";
+        }
 
-		private void GetMaterialName(string name, UnityEngine.Object obj)
-		{
-			if (relativeFolder != null)
-			{
-				var relativeLocation = AssetDatabase.GetAssetPath(relativeFolder);
-				var assetLocation = AssetDatabase.GetAssetPath(obj);
-				if (assetLocation.StartsWith(relativeLocation, System.StringComparison.InvariantCultureIgnoreCase))
-				{
-					string temp = assetLocation.Substring(relativeLocation.Length + 1); // remove the prefix
-					temp = temp.Substring(0, temp.LastIndexOf('/') + 1); // remove the asset name
-					slotName = temp + name; // add the cleaned name
-				}
-			}
-			else
-			{
-				slotName = name;
-			}
-		}
+        private void GetMaterialName(string name, UnityEngine.Object obj)
+        {
+            if (relativeFolder != null)
+            {
+                var relativeLocation = AssetDatabase.GetAssetPath(relativeFolder);
+                var assetLocation = AssetDatabase.GetAssetPath(obj);
+                if (assetLocation.StartsWith(relativeLocation, System.StringComparison.InvariantCultureIgnoreCase))
+                {
+                    string temp = assetLocation.Substring(relativeLocation.Length + 1); // remove the prefix
+                    temp = temp.Substring(0, temp.LastIndexOf('/') + 1); // remove the asset name
+                    slotName = temp + name; // add the cleaned name
+                }
+            }
+            else
+            {
+                slotName = name;
+            }
+        }
 
-		[MenuItem("UMA/Slot Builder", priority = 20)]
-		public static void OpenUmaTexturePrepareWindow()
-		{
-			UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
-			window.titleContent.text = "Slot Builder";
-		}
-	}
+        [MenuItem("UMA/Slot Builder", priority = 20)]
+        public static void OpenUmaTexturePrepareWindow()
+        {
+            UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
+            window.titleContent.text = "Slot Builder";
+        }
+    }
 }
