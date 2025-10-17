@@ -52,9 +52,15 @@ namespace UMA.Editors
         public override bool HasPreviewGUI() => true;
         MeshPreview MeshPreview;
         Mesh meshToPreview;
-        static Vector3 previewRotation = Vector3.zero;
+        // Make rotation per-inspector (not static) so multi-inspector drags don't conflict
+        Vector3 previewRotation = Vector3.zero;
+        // Track last built rotation to know when to rebuild
+        Vector3 lastBuiltRotation = new Vector3(9999, 9999, 9999);
         SlotPreviewMode previewMode = SlotPreviewMode.ThisSlot;
         int previewVertex = -1;
+
+        // Track which target the current preview was built for
+        private SlotDataAsset previewForTarget = null;
 
         private static bool IsEditorBusy => EditorApplication.isCompiling || EditorApplication.isUpdating;
 
@@ -147,6 +153,7 @@ namespace UMA.Editors
                 try { MeshPreview.Dispose(); } catch { }
                 MeshPreview = null;
             }
+            previewForTarget = null;
         }
 
         private void OnDisable()
@@ -600,7 +607,7 @@ namespace UMA.Editors
                     }
                     if (GUILayout.Button("Dump Vert", GUILayout.Width(80)))
                     {
-                        ShowDebugVertInfo(previewVertex);
+                        ShowDebugVertInfo(target as SlotDataAsset, previewVertex);
                     }
                     EditorGUILayout.EndHorizontal();
                 }
@@ -628,7 +635,9 @@ namespace UMA.Editors
                         DestroyImmediate(meshToPreview);
                         meshToPreview = null;
                     }
-                    meshToPreview = GetPreviewMesh();
+                    meshToPreview = GetPreviewMeshFor(target as SlotDataAsset);
+                    previewForTarget = target as SlotDataAsset;
+                    lastBuiltRotation = previewRotation;
                     if (meshToPreview != null)
                     {
                         MeshPreview = new MeshPreview(meshToPreview);
@@ -663,6 +672,20 @@ namespace UMA.Editors
                 GUILayout.Space(10);
             }
 
+            // Bottom quick-rotate controls for the preview
+            GUILayout.Space(12);
+            GUIHelper.BeginVerticalPadded(8, new Color(0.90f, 0.95f, 1f));
+            GUILayout.Label("Quick Rotate (90°)", EditorStyles.boldLabel);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("X +90")) { previewRotation.x = Wrap360(previewRotation.x + 90f); reConfigurePreview = true; Repaint(); }
+            if (GUILayout.Button("X -90")) { previewRotation.x = Wrap360(previewRotation.x - 90f); reConfigurePreview = true; Repaint(); }
+            if (GUILayout.Button("Y +90")) { previewRotation.y = Wrap360(previewRotation.y + 90f); reConfigurePreview = true; Repaint(); }
+            if (GUILayout.Button("Y -90")) { previewRotation.y = Wrap360(previewRotation.y - 90f); reConfigurePreview = true; Repaint(); }
+            if (GUILayout.Button("Z +90")) { previewRotation.z = Wrap360(previewRotation.z + 90f); reConfigurePreview = true; Repaint(); }
+            if (GUILayout.Button("Z -90")) { previewRotation.z = Wrap360(previewRotation.z - 90f); reConfigurePreview = true; Repaint(); }
+            GUILayout.EndHorizontal();
+            GUIHelper.EndVerticalPadded(8);
+
             serializedObject.ApplyModifiedProperties();
 
             if (EditorGUI.EndChangeCheck() || forceUpdate)
@@ -675,9 +698,16 @@ namespace UMA.Editors
             }
         }
 
-        private void ShowDebugVertInfo(int previewVertex)
+        private static float Wrap360(float angle)
         {
-            if (slot == null || WeldToSlot == null || slot.meshData == null || WeldToSlot.meshData == null)
+            angle %= 360f;
+            if (angle < 0) angle += 360f;
+            return angle;
+        }
+
+        private void ShowDebugVertInfo(SlotDataAsset current, int previewVertex)
+        {
+            if (current == null || WeldToSlot == null || current.meshData == null || WeldToSlot.meshData == null)
             {
                 Debug.Log("Missing mesh data for debug info.");
                 return;
@@ -685,26 +715,26 @@ namespace UMA.Editors
 
             StringBuilder sb = new StringBuilder();
 
-            slot.BuildVertexLookups(WeldToSlot);
-            slot.BuildOurAndTheirBoneWeights(WeldToSlot);
-            slot.BuildBoneLookups(WeldToSlot);
+            current.BuildVertexLookups(WeldToSlot);
+            current.BuildOurAndTheirBoneWeights(WeldToSlot);
+            current.BuildBoneLookups(WeldToSlot);
 
-            if (previewVertex < 0 || previewVertex >= (slot.meshData.vertices?.Length ?? 0))
+            if (previewVertex < 0 || previewVertex >= (current.meshData.vertices?.Length ?? 0))
             {
                 Debug.Log("Preview vertex out of range.");
                 return;
             }
 
-            foreach (var bw in slot.OurBoneWeights[previewVertex])
+            foreach (var bw in current.OurBoneWeights[previewVertex])
             {
-                string boneName = slot.meshData.umaBones[bw.boneIndex].name;
+                string boneName = current.meshData.umaBones[bw.boneIndex].name;
                 sb.Append($"Bone {boneName}({bw.boneIndex}): Weight {bw.weight}");
                 sb.Append(Environment.NewLine);
             }
             Debug.Log("Our vertex " + previewVertex + Environment.NewLine + sb.ToString());
 
-            int theirVertex = slot.OurVertextoTheirVertex[previewVertex];
-            foreach (var bw in slot.TheirBoneWeights[theirVertex])
+            int theirVertex = current.OurVertextoTheirVertex[previewVertex];
+            foreach (var bw in current.TheirBoneWeights[theirVertex])
             {
                 string boneName = WeldToSlot.meshData.umaBones[bw.boneIndex].name;
                 sb.Append($"Bone {boneName}({bw.boneIndex}): Weight {bw.weight}");
@@ -727,15 +757,15 @@ namespace UMA.Editors
             }
         }
 
-        private Mesh GetPreviewMesh()
+        private Mesh GetPreviewMeshFor(SlotDataAsset which)
         {
             try
             {
                 Quaternion pRot = Quaternion.Euler(previewRotation);
                 if (previewMode == SlotPreviewMode.ThisSlot)
                 {
-                    if (slot == null) return null;
-                    return SlotToMesh.ConvertSlotToMesh(slot, pRot, previewVertex);
+                    if (which == null) return null;
+                    return SlotToMesh.ConvertSlotToMesh(which, pRot, previewVertex);
                 }
                 if (previewMode == SlotPreviewMode.WeldSlot)
                 {
@@ -746,8 +776,8 @@ namespace UMA.Editors
                 }
                 if (previewMode == SlotPreviewMode.BothSlots)
                 {
-                    if (slot == null) return null;
-                    Mesh mesh = SlotToMesh.ConvertSlotToMesh(slot, pRot, previewVertex);
+                    if (which == null) return null;
+                    Mesh mesh = SlotToMesh.ConvertSlotToMesh(which, pRot, previewVertex);
                     if (WeldToSlot != null)
                     {
                         Mesh weldMesh = SlotToMesh.ConvertSlotToMesh(WeldToSlot, pRot, previewVertex);
@@ -775,18 +805,112 @@ namespace UMA.Editors
 
         public override void OnInteractivePreviewGUI(Rect r, GUIStyle background)
         {
-            if (meshToPreview == null)
+            var currentTarget = target as SlotDataAsset;
+            // Rebuild preview if first time, settings changed, or the target changed
+            if (meshToPreview == null || previewForTarget != currentTarget)
             {
-                meshToPreview = GetPreviewMesh();
+                if (MeshPreview != null)
+                {
+                    MeshPreview.Dispose();
+                    MeshPreview = null;
+                }
+                if (meshToPreview != null)
+                {
+                    DestroyImmediate(meshToPreview);
+                    meshToPreview = null;
+                }
+                meshToPreview = GetPreviewMeshFor(currentTarget);
+                previewForTarget = currentTarget;
+                lastBuiltRotation = previewRotation;
                 if (meshToPreview != null)
                 {
                     MeshPreview = new MeshPreview(meshToPreview);
                 }
             }
+
+            // Handle mouse drag to rotate (per inspector), independent of MeshPreview
+            HandlePreviewDrag(r);
+
+            // If rotation changed since last mesh build, rebuild the mesh for this target
+            if (meshToPreview != null && (lastBuiltRotation != previewRotation))
+            {
+                if (MeshPreview != null)
+                {
+                    MeshPreview.Dispose();
+                    MeshPreview = null;
+                }
+                DestroyImmediate(meshToPreview);
+                meshToPreview = GetPreviewMeshFor(currentTarget);
+                lastBuiltRotation = previewRotation;
+                if (meshToPreview != null)
+                {
+                    MeshPreview = new MeshPreview(meshToPreview);
+                }
+            }
+
             if (meshToPreview != null && MeshPreview != null)
             {
                 MeshPreview.OnPreviewGUI(r, background);
-                GUI.Label(r, MeshPreview.GetInfoString(meshToPreview));
+
+                // Only draw overlay during repaint so we don't intercept mouse events (fixes rotate with multiple previews)
+                if (Event.current.type == EventType.Repaint)
+                {
+                    string info = MeshPreview.GetInfoString(meshToPreview);
+                    float pad = 6f;
+                    float line = EditorGUIUtility.singleLineHeight;
+                    Rect labelRect = new Rect(r.x + pad, r.yMax - line - pad, r.width - (pad * 2f), line);
+
+                    var bgRect = new Rect(labelRect.x - 2, labelRect.y - 1, labelRect.width + 4, labelRect.height + 2);
+                    EditorGUI.DrawRect(bgRect, new Color(0f, 0f, 0f, 0.4f));
+
+                    var style = new GUIStyle(EditorStyles.whiteMiniLabel)
+                    {
+                        alignment = TextAnchor.LowerLeft,
+                        clipping = TextClipping.Clip,
+                        wordWrap = false,
+                        richText = false
+                    };
+
+                    GUI.Label(labelRect, info, style);
+                }
+            }
+        }
+
+        // Mouse drag handler to update previewRotation per inspector
+        private void HandlePreviewDrag(Rect r)
+        {
+            int controlID = GUIUtility.GetControlID("UMASlotPreviewDrag".GetHashCode(), FocusType.Passive);
+            Event evt = Event.current;
+            switch (evt.GetTypeForControl(controlID))
+            {
+                case EventType.MouseDown:
+                    if (r.Contains(evt.mousePosition) && evt.button == 0)
+                    {
+                        GUIUtility.hotControl = controlID;
+                        evt.Use();
+                        EditorGUIUtility.SetWantsMouseJumping(1);
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (GUIUtility.hotControl == controlID)
+                    {
+                        GUIUtility.hotControl = 0;
+                        evt.Use();
+                    }
+                    EditorGUIUtility.SetWantsMouseJumping(0);
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIUtility.hotControl == controlID)
+                    {
+                        // Scale drag by rect size similar to Unity's preview controls
+                        float scale = 140f / Mathf.Min(Mathf.Max(1f, r.width), Mathf.Max(1f, r.height));
+                        // Yaw around Y with horizontal drag; Pitch around X with vertical drag
+                        previewRotation.y = Wrap360(previewRotation.y - evt.delta.x * scale);
+                        previewRotation.x = Mathf.Clamp(previewRotation.x + evt.delta.y * scale, -90f, 90f);
+                        evt.Use();
+                        Repaint();
+                    }
+                    break;
             }
         }
 

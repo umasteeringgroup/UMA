@@ -55,41 +55,6 @@ namespace UMA.ShaderPackager
 #endif
         }
 
-#if __BETTERSHADERS__
-        [MenuItem("Window/Better Lit Shader/Development Mode/Enable")]
-        static void EnableDevMode()
-        {
-            var flags = GetFlags();
-            if (!flags.Contains("__BETTERLIT_DEVMODE__"))
-            {
-                flags.Add("__BETTERLIT_DEVMODE__");
-                SetFlags(flags);
-            }
-        }
-
-        [MenuItem("Window/Better Lit Shader/Development Mode/Disable")]
-        static void DisableDevMode()
-        {
-            var flags = GetFlags();
-            if (flags.Remove("__BETTERLIT_DEVMODE__"))
-                SetFlags(flags);
-        }
-
-        // Validate the menu item defined by the function above.
-        // The menu item will be disabled if this function returns false.
-        [MenuItem("Window/Better Lit Shader/Development Mode/Enable", true)]
-        static bool ValidateEnableDevMode()
-        {
-            var flags = GetFlags();
-            return !flags.Contains("__BETTERLIT_DEVMODE__");
-        }
-        [MenuItem("Window/Better Lit Shader/Development Mode/Disable", true)]
-        static bool ValidateDisableDevMode()
-        {
-            return GetFlags().Contains("__BETTERLIT_DEVMODE__");
-        }
-#endif
-
         public enum SRPTarget
         {
             Standard,

@@ -53,7 +53,7 @@ namespace UMA
         public bool addrStripTextures = false;
         public bool addrIncludeRecipes = false;
         public bool addrIncludeOther = false;
-        public bool addrStripUVAttachedShaders = false;
+        public bool addrStripUVAttachedShaders = false; 
 
         public bool showWelcomeToUMA = true;
 #endif

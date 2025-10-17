@@ -44,7 +44,7 @@ namespace UMA.Editors
             _overlayName = serializedObject.FindProperty("overlayName");
             _overlayType = serializedObject.FindProperty("overlayType");
             _umaMaterial = serializedObject.FindProperty("material");
-            _textureList = serializedObject.FindProperty("textureList");
+            _textureList = serializedObject.FindProperty("_textureList");
             _textureNames = serializedObject.FindProperty("textureNames");
             _blendList = serializedObject.FindProperty("overlayBlend");
             _dontMergeDuplicates = serializedObject.FindProperty("dontMergeDuplicates");
@@ -195,78 +195,141 @@ namespace UMA.Editors
                 int overlayTextureCount = _textureList != null ? _textureList.arraySize : 0;
                 od.textureFoldout = GUIHelper.FoldoutBar(od.textureFoldout, $"Texture Channels ({textureChannelCount}) Material Channels ({overlayTextureCount})");
 
-                if (od.textureFoldout && _textureList != null && _blendList != null)
+                if (od.textureFoldout)
                 {
                     GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-                    // Show Array.size editor safely
-                    var arraySizeProp = _textureList.FindPropertyRelative("Array.size");
-                    if (arraySizeProp != null)
+                    if (_textureList != null && _blendList != null)
                     {
-                        EditorGUILayout.PropertyField(arraySizeProp);
-                        _blendList.arraySize = _textureList.arraySize;
-                    }
-
-                    for (int i = 0; i < _textureList.arraySize; i++)
-                    {
-                        SerializedProperty textureElement = _textureList.GetArrayElementAtIndex(i);
-                        SerializedProperty blendElement = (i < _blendList.arraySize) ? _blendList.GetArrayElementAtIndex(i) : null;
-                        string materialName = "Unknown";
-
-                        string texName = "";
-                        if (_textureNames != null && i < _textureNames.arraySize)
+                        // Show Array.size editor safely
+                        var arraySizeProp = _textureList.FindPropertyRelative("Array.size");
+                        if (arraySizeProp != null)
                         {
-                            var texNameProp = _textureNames.GetArrayElementAtIndex(i);
-                            if (texNameProp != null)
-                            {
-                                texName = texNameProp.stringValue;
-                            }
+                            EditorGUILayout.PropertyField(arraySizeProp);
+                            _blendList.arraySize = _textureList.arraySize;
                         }
-                        // Try to resolve channel display name
-                        try
+
+                        for (int i = 0; i < _textureList.arraySize; i++)
                         {
-                            if (_channels != null && i < _channels.arraySize)
+                            SerializedProperty textureElement = _textureList.GetArrayElementAtIndex(i);
+                            SerializedProperty blendElement = (i < _blendList.arraySize) ? _blendList.GetArrayElementAtIndex(i) : null;
+                            string materialName = "Unknown";
+
+                            string texName = "";
+                            if (_textureNames != null && i < _textureNames.arraySize)
                             {
-                                SerializedProperty channel = _channels.GetArrayElementAtIndex(i);
-                                if (channel != null)
+                                var texNameProp = _textureNames.GetArrayElementAtIndex(i);
+                                if (texNameProp != null)
                                 {
-                                    SerializedProperty materialPropertyName = channel.FindPropertyRelative("materialPropertyName");
-                                    if (materialPropertyName != null)
+                                    texName = texNameProp.stringValue;
+                                }
+                            }
+                            // Try to resolve channel display name
+                            try
+                            {
+                                if (_channels != null && i < _channels.arraySize)
+                                {
+                                    SerializedProperty channel = _channels.GetArrayElementAtIndex(i);
+                                    if (channel != null)
                                     {
-                                        materialName = materialPropertyName.stringValue;
+                                        SerializedProperty materialPropertyName = channel.FindPropertyRelative("materialPropertyName");
+                                        if (materialPropertyName != null)
+                                        {
+                                            materialName = materialPropertyName.stringValue;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        catch { /* ignore */ }
+                            catch { /* ignore */ }
 
-                        string textureLabel = (textureElement != null && textureElement.objectReferenceValue != null) ? "" : "(Texture is Unloaded)";
+                            string textureLabel = (textureElement != null && textureElement.objectReferenceValue != null) ? "" : "(Texture is Unloaded)";
 
-                        GUILayout.BeginHorizontal();
-                        if (textureElement != null)
-                        {
-                            EditorGUILayout.PropertyField(textureElement, new GUIContent(materialName), GUILayout.ExpandWidth(true));
-                        }
-
-                        if (blendElement != null)
-                        {
-                            EditorGUILayout.PropertyField(blendElement, GUIContent.none, GUILayout.Width(110));
-                        }
-                        GUILayout.EndHorizontal();
-
-                        GUILayout.BeginHorizontal();
-                        if (textureElement != null)
-                        {
-                            if (!string.IsNullOrEmpty(texName))
+                            GUILayout.BeginHorizontal();
+                            if (textureElement != null)
                             {
-                                EditorGUILayout.LabelField($"Texture Name: {texName}", EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                                EditorGUILayout.PropertyField(textureElement, new GUIContent(materialName), GUILayout.ExpandWidth(true));
                             }
-                            else
+
+                            if (blendElement != null)
                             {
-                                EditorGUILayout.LabelField("Texture Name: (not set)", EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                                EditorGUILayout.PropertyField(blendElement, GUIContent.none, GUILayout.Width(110));
                             }
-                            EditorGUILayout.LabelField(textureLabel, EditorStyles.miniLabel, GUILayout.Width(150));
+                            GUILayout.EndHorizontal();
+
+                            GUILayout.BeginHorizontal();
+                            if (textureElement != null)
+                            {
+                                if (!string.IsNullOrEmpty(texName))
+                                {
+                                    EditorGUILayout.LabelField($"Texture Name: {texName}", EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                                }
+                                else
+                                {
+                                    EditorGUILayout.LabelField("Texture Name: (not set)", EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                                }
+                                EditorGUILayout.LabelField(textureLabel, EditorStyles.miniLabel, GUILayout.Width(150));
+                            }
+                            GUILayout.EndHorizontal();
                         }
-                        GUILayout.EndHorizontal();
+                    }
+                    if (_textureNames != null)
+                    {
+                        // Show Array.size editor safely
+                        EditorGUILayout.HelpBox("Textures have been removed. To reload, select the reload button below",MessageType.Info);
+                        var arraySizeProp = _textureNames.FindPropertyRelative("Array.size");
+                        for (int i = 0; i < _textureNames.arraySize; i++)
+                        {
+                            SerializedProperty textureElement = _textureNames.GetArrayElementAtIndex(i);
+                            EditorGUILayout.PropertyField(textureElement); 
+                        }
+
+                        if (GUILayout.Button("Reload Textures"))
+                        {
+                            var ovl = target as OverlayDataAsset;
+                            if (ovl == null) return;
+
+                            Undo.RecordObject(ovl, "Reload Textures");
+
+                            // Ensure arrays exist
+                            ovl.textureNames = ovl.textureNames ?? Array.Empty<string>();
+                            ovl.textureList = ovl.textureList ?? Array.Empty<Texture>();
+                            ovl.overlayBlend = ovl.overlayBlend ?? Array.Empty<OverlayDataAsset.OverlayBlend>();
+
+                            // Resize backing arrays on the object (SerializedProperty can be null when all refs are null)
+                            if (ovl.textureList.Length != ovl.textureNames.Length)
+                            {
+                                // textureList: resize via local, then assign back (properties cannot be passed by ref)
+                                var texArray = ovl.textureList;
+                                Array.Resize(ref texArray, ovl.textureNames.Length);
+                                ovl.textureList = texArray;
+                            }
+                            if (ovl.overlayBlend.Length != ovl.textureNames.Length)
+                            {
+                                int oldLen = ovl.overlayBlend.Length;
+                                Array.Resize(ref ovl.overlayBlend, ovl.textureNames.Length);
+                                // Initialize new entries to Normal
+                                for (int i = oldLen; i < ovl.overlayBlend.Length; i++)
+                                    ovl.overlayBlend[i] = OverlayDataAsset.OverlayBlend.Normal;
+                            }
+
+                            // Optionally try to resolve textures by name
+                            for (int i = 0; i < ovl.textureNames.Length; i++)
+                            {
+                                string texName = ovl.textureNames[i];
+                                if (string.IsNullOrEmpty(texName)) continue;
+
+                                Texture2D tex = UMAAssetIndexer.Instance.GetAsset<Texture2D>(texName);
+                                ovl.textureList[i] = tex; // may be null if not found
+                            }
+
+                            EditorUtility.SetDirty(ovl);
+                            AssetDatabase.SaveAssetIfDirty(ovl);
+                            UMAUpdateProcessor.UpdateOverlay(ovl);
+                            serializedObject.Update();
+                            // refind properties, since serializedObject.Update may reset them, and unity can be weird about it
+                            _textureList = serializedObject.FindProperty("textureList");
+                            _textureNames = serializedObject.FindProperty("textureNames");
+                            Repaint();
+                        }
                     }
                     GUIHelper.EndVerticalPadded(10);
                 }

@@ -220,68 +220,68 @@ namespace UMA.Controls
 			switch (column)
 			{
 				case AssetColumns.Selection:
-				{
-
-					// EditorGUI.Toggle(cellRect, item.data.ai._SerializedItem != null);
-					if (item.data.AmountChecked == Amount.Mixed)
 					{
-						EditorGUI.showMixedValue = true;
-					}
-					bool checkval = item.data.AmountChecked == Amount.All;
-					bool newval = EditorGUI.Toggle(cellRect, checkval);
-					EditorGUI.showMixedValue = false;
 
-					if (checkval != newval)
-					{
-						SetAllChildren(item.data.type,newval);
+						// EditorGUI.Toggle(cellRect, item.data.ai._SerializedItem != null);
+						if (item.data.AmountChecked == Amount.Mixed)
+						{
+							EditorGUI.showMixedValue = true;
+						}
+						bool checkval = item.data.AmountChecked == Amount.All;
+						bool newval = EditorGUI.Toggle(cellRect, checkval);
+						EditorGUI.showMixedValue = false;
+
+						if (checkval != newval)
+						{
+							SetAllChildren(item.data.type, newval);
+						}
+						// checking/unchecking this will toggle ALL the items below.
 					}
-					// checking/unchecking this will toggle ALL the items below.
-				}
-				break;
+					break;
 
 				case AssetColumns.Always:
-				{
-					GUI.Label(cellRect, ate.Keepcount.ToString());
-				}
-				break;
+					{
+						GUI.Label(cellRect, ate.Keepcount.ToString());
+					}
+					break;
 
-                case AssetColumns.Ignore:
-                    {
-                        GUI.Label(cellRect, ate.IgnoreCount.ToString());
-                    }
-                    break;
+				case AssetColumns.Ignore:
+					{
+						GUI.Label(cellRect, ate.IgnoreCount.ToString());
+					}
+					break;
 
-                case AssetColumns.IsResource:
-				{
-					GUI.Label(cellRect, ate.IsResourceCount.ToString());
-				}
-				break;
+				case AssetColumns.IsResource:
+					{
+						GUI.Label(cellRect, ate.IsResourceCount.ToString());
+					}
+					break;
 
 				case AssetColumns.Name:
-				{
-					Rect toggleRect = cellRect;
-					toggleRect.x += GetContentIndent(item);
-					// Default icon and label
-					args.rowRect = cellRect;
-					base.RowGUI(args);
-//					DefaultGUI.Label(cellRect, item.data.name, false, false);
-				}
-				break;
+					{
+						Rect toggleRect = cellRect;
+						toggleRect.x += GetContentIndent(item);
+						// Default icon and label
+						args.rowRect = cellRect;
+						base.RowGUI(args);
+						//					DefaultGUI.Label(cellRect, item.data.name, false, false);
+					}
+					break;
 
-					case AssetColumns.Actions:
+				case AssetColumns.Actions:
 					break;
 
 				case AssetColumns.IsAddressable:
-				{
-					GUI.Label(cellRect, ate.IsAddrCount.ToString());
-				}
-				break;
+					{
+						GUI.Label(cellRect, ate.IsAddrCount.ToString());
+					}
+					break;
 
-                case AssetColumns.Total:
-                    {
-                        GUI.Label(cellRect, ate.totalCount.ToString());
-                    }
-                    break;
+				case AssetColumns.Total:
+					{
+						GUI.Label(cellRect, ate.totalCount.ToString());
+					}
+					break;
 
 				case AssetColumns.Group:
 					break;
@@ -290,23 +290,41 @@ namespace UMA.Controls
 					break;
 
 				case AssetColumns.Buttons:
-				{
-
-					string QualifiedName = item.data.type.AssemblyQualifiedName;
-					if (UMAAssetIndexer.Instance.IsAdditionalIndexedType(QualifiedName))
 					{
-						if (GUI.Button(cellRect, "Del Type", EditorStyles.toolbarButton))
+
+						string QualifiedName = item.data.type.AssemblyQualifiedName;
+						if (UMAAssetIndexer.Instance.IsAdditionalIndexedType(QualifiedName))
 						{
-							UMAAssetIndexer.Instance.RemoveType(item.data.type);
-							List<AssetTreeElement> RemoveMe = new List<AssetTreeElement>();
-							RemoveMe.Add(item.data);
-							this.treeModel.RemoveElements(RemoveMe);
+							Rect firsthalf = new Rect(cellRect);
+							firsthalf.width = cellRect.width / 2;
+							Rect secondhalf = new Rect(cellRect);
+							secondhalf.width = cellRect.width / 2;
+							secondhalf.x = cellRect.x + (cellRect.width / 2);
+							string removeText = "N";
+						
+							if (UMAAssetIndexer.Instance.isRemoveUnlabelledType(QualifiedName))
+							{
+								removeText = "Y";
+							}
+
+                            if (GUI.Button(firsthalf, $"Trim Unlabeled ({removeText})", EditorStyles.toolbarButton))
+							{
+								UMAAssetIndexer.Instance.toggleRemoveUnabelledType(QualifiedName);
+                                owningWindow.Repaint();
+                            }
+
+                            if (GUI.Button(secondhalf, "Del Type", EditorStyles.toolbarButton))
+							{
+								UMAAssetIndexer.Instance.RemoveType(item.data.type);
+								List<AssetTreeElement> RemoveMe = new List<AssetTreeElement>();
+								RemoveMe.Add(item.data);
+								this.treeModel.RemoveElements(RemoveMe);
+							}
 						}
+						//string QualifiedName = sType.AssemblyQualifiedName;
+						//if (!IsAdditionalIndexedType(QualifiedName)) return;
 					}
-					//string QualifiedName = sType.AssemblyQualifiedName;
-					//if (!IsAdditionalIndexedType(QualifiedName)) return;
-				}
-				break;
+					break;
 			}
 		}
 

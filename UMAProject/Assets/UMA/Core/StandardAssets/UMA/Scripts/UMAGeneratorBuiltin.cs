@@ -828,10 +828,10 @@ namespace UMA
             umaData.skeleton.EndSkeletonUpdate();
 
             // Rebuild the avatar only if allowed. This is a measurable cost saver.
-            if (!umaData.KeepAvatar)
-            {
+            //if (!umaData.KeepAvatar)
+            //{
                 UpdateAvatar(umaData);
-            }
+            //}
 
             // Blendshape DNA must be applied after the avatar is reset on the animator
             umaData.PostApplyDNA();

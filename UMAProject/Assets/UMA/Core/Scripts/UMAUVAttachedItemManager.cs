@@ -65,6 +65,11 @@ namespace UMA
             // pendingAttachedItemsList with prefabStatus = ShouldBeDeactivated.
             // (all non-hidden items should be on the pendingAttachedItemsList with prefabStatus = ShouldBeActivated already
             //  this happens in the OnDnaAppliedBootstrapper function in UMAUVAttachedItemLauncher.cs )
+            if (uMAUVAttachedItemPreprocessor == null)
+            {
+                Debug.LogWarning("No UMAUVAttachedItemPreprocessor found on UMAData. Cannot process attached items.");
+                return;
+            }
             foreach (UMAUVAttachedItemLauncher ul in uMAUVAttachedItemPreprocessor.launchers)
             {
 				if(ul != null) {

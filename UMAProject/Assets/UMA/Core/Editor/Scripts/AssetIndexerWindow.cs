@@ -369,6 +369,7 @@ namespace UMA.Controls
 
 #if UMA_ADDRESSABLES
 
+
             foreach (IUMAAddressablePlugin plugin in addressablePlugins)
             {
                 AddMenuItemWithCallbackParm(_AddressablesMenu, "Generators/" + plugin.Menu, (object o) =>
@@ -415,6 +416,12 @@ namespace UMA.Controls
                 Repaint();
             });
 
+            AddMenuItemWithCallback(_AddressablesMenu, "Reset stripped shaders", () =>
+            {
+                int total = UMAAssetIndexer.Instance.ResetStrippedShaders();
+                EditorUtility.DisplayDialog("Reset Stripped Shaders", $"Reset shaders on {total} materials", "OK");
+                Repaint();
+            });
 
             AddMenuItemWithCallback(_AddressablesMenu, "Remove Addressables", () =>
             {

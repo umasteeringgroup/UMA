@@ -163,6 +163,7 @@ namespace UMA
 
         // The names of the fully qualified types.
         public List<string> IndexedTypeNames = new List<string>();
+        public List<string> RemoveUnlabeledTypeNames = new List<string>();
         // These list is used so Unity will serialize the data
         public List<AssetItem> SerializedItems = new List<AssetItem>();
         // This is really where we keep the data.
@@ -1395,6 +1396,52 @@ namespace UMA
             return false;
         }
 
+        public bool isRemoveUnlabelledType(string QualifiedName)
+        {
+            for (int i = 0; i < RemoveUnlabeledTypeNames.Count; i++)
+            {
+                string s = RemoveUnlabeledTypeNames[i];
+                if (s == QualifiedName)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void toggleRemoveUnabelledType(string QualifiedName)
+        {
+            if (isRemoveUnlabelledType(QualifiedName))
+            {
+                RemoveUnlabeledTypeNames.Remove(QualifiedName);
+            }
+            else
+            {
+                RemoveUnlabeledTypeNames.Add(QualifiedName);
+            }
+        }
+
+        public bool setRemoveUnlabelledType(string QualifiedName, bool remove)
+        {
+            if (remove)
+            {
+                if (!isRemoveUnlabelledType(QualifiedName))
+                {
+                    RemoveUnlabeledTypeNames.Add(QualifiedName);
+                    return true;
+                }
+            }
+            else
+            {
+                if (isRemoveUnlabelledType(QualifiedName))
+                {
+                    RemoveUnlabeledTypeNames.Remove(QualifiedName);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public bool IsAdditionalIndexedType(string QualifiedName)
         {
             for (int i = 0; i < IndexedTypeNames.Count; i++)
@@ -1830,13 +1877,8 @@ namespace UMA
 
             foreach (KeyValuePair<string, AssetItem> kp in TypeDic)
             {
-                //if (AssetFolderCheck(kp.Value, foldersToSearch))
-                //{
-                //    if (kp.Value.Item != null)
-                //    {
+
                         ret.Add((kp.Value.Item as T));
-                 //   }
-                //}
             }
             StopTimer(st, "GetAllAssets type=" + typeof(T).Name);
             return ret;
@@ -2614,18 +2656,23 @@ namespace UMA
                             var uvItem = go.GetComponent<UMAUVAttachedItemLauncher>();
                             if (uvItem != null)
                             {
-                                MeshRenderer mr = go.GetComponentInChildren<MeshRenderer>();
-                                if (mr != null)
+                                MeshRenderer[] mrs = go.GetComponentsInChildren<MeshRenderer>();
+                                if (mrs != null)
                                 {
-                                    Material mat = mr.sharedMaterial;
-                                    if (mat.shader.name == "Hidden/InternalErrorShader")
+                                    if (mrs.Length == 0) continue;
+                                    for (int j = 0; j < mrs.Length; j++)
                                     {
-                                        string shaderName = mat.GetTag("OriginalShader", false, "");
-                                        if (!string.IsNullOrEmpty(shaderName))
+                                        MeshRenderer mr = mrs[j];
+                                        Material mat = mr.sharedMaterial;
+                                        if (mat.shader.name == "Hidden/InternalErrorShader")
                                         {
-                                            Shader s = Shader.Find(shaderName);
-                                            if (s != null)
-                                                mat.shader = s;
+                                            string shaderName = mat.GetTag("OriginalShader", false, "");
+                                            if (!string.IsNullOrEmpty(shaderName))
+                                            {
+                                                Shader s = Shader.Find(shaderName);
+                                                if (s != null)
+                                                    mat.shader = s;
+                                            }
                                         }
                                     }
                                 }
@@ -2746,6 +2793,69 @@ namespace UMA
                     }
                 }
             }
+        }
+
+        public int ResetStrippedShaders()
+        {
+#if UNITY_EDITOR
+            int totcount = 0;
+            var slots = GetAllAssets<SlotDataAsset>();
+            foreach (var slot in slots)
+            {
+                if (slot == null)
+                {
+                    Debug.LogError("Null slot found in index!");
+                    continue;
+                }
+
+                // if the slot has a UVAttachedItemLauncher, we need to check the materials on the connected prefab
+                if (slot.SlotProcessed != null)
+                {
+                    var evt = slot.SlotProcessed;
+                    int count = evt.GetPersistentEventCount();
+                    for (int i = 0; i < count; i++)
+                    {
+                        UnityEngine.Object target = evt.GetPersistentTarget(i);
+                        var uvItem = target as UMAUVAttachedItemLauncher;
+                        if (uvItem != null)
+                        {
+                            GameObject prefab = uvItem.prefab;
+                            MeshRenderer[] mrs = prefab.GetComponentsInChildren<MeshRenderer>();
+                            if (mrs != null)
+                            {
+                                if (mrs.Length == 0) continue;
+                                for (int j = 0; j < mrs.Length; j++)
+                                {
+                                    MeshRenderer mr = mrs[j];
+                                    Material mat = mr.sharedMaterial;
+                                    if (mat.shader.name == "Hidden/InternalErrorShader")
+                                    {
+                                        string shaderName = mat.GetTag("OriginalShader", false, "");
+                                        if (!string.IsNullOrEmpty(shaderName))
+                                        {
+                                            Shader s = Shader.Find(shaderName);
+                                            if (s != null)
+                                            {
+                                                mat.shader = s;
+                                                totcount++;
+                                            }
+                                            else
+                                            {
+                                                Debug.LogError("Unable to find shader " + shaderName + " for material " + mat.name + " on slot " + slot.name);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+            return totcount;
+#else
+            return 0;
+#endif
         }
 
         public void PostBuildMaterialFixup()
@@ -3389,6 +3499,28 @@ namespace UMA
             UpdateSerializedDictionaryItems();
             ForceSave();
         }
+
+        public void RemoveUnlabelledAssetsForType(Type type)
+        {
+            // For each item of this type, if it is addressable, and has no labels, remove it from the index.
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(type);
+            List<string> toRemove = new List<string>();
+            foreach (var kvp in TypeDic)
+            {
+                AssetItem ai = kvp.Value;
+                if (ai.IsAddressable)
+                {
+                    if (ai.AddressableLabels == null || ai.AddressableLabels.Length == 0)
+                    {
+                        toRemove.Add(kvp.Key);
+                    }
+                }
+            }
+            foreach (string s in toRemove)
+            {
+                RemoveAsset(type, s);
+            }
+        }
 #endif
 #endif
         /// <summary>
@@ -3692,6 +3824,7 @@ namespace UMA
             {
                 string s = types[i];
                 System.Type CurrentType = TypeFromString[s];
+
                 if (!includeText)
                 {
                     if (IsText(CurrentType))
@@ -3721,6 +3854,9 @@ namespace UMA
 				logAdds = true;
 				Debug.Log("Adding type " + CurrentType.ToString() + " to index");
 			}
+            string qualifiedName = CurrentType.AssemblyQualifiedName;
+            bool removeUnlabeled = isRemoveUnlabelledType(qualifiedName);
+
             string[] guids = AssetDatabase.FindAssets("t:" + s);
 			if(logAdds) {
 				Debug.Log("Found " + guids.Length + " items of type " + s + " to add to index");
@@ -3780,25 +3916,19 @@ namespace UMA
                             continue;
                         }
                     }
+#if UMA_ADDRESSABLES
+                    if (removeUnlabeled)
+                    {
+                        AddressableInfo ainfo = AddressableUtility.GetAddressableInfo(guids[i]);
+                        if (ainfo == null || ainfo.AddressableLabels == null || ainfo.AddressableLabels.Length == 0)
+                        {
+                            // if we are removing unlabeled assets, and there are no labels, skip this asset.
+                            continue;
+                        }
+                    }
+#endif
                     AssetItem ai = new AssetItem(CurrentType, o);
                     AddAssetItem(ai);
-                }
-                else
-                {
-                    if (assetPath == null)
-                    {
-                        if (Debug.isDebugBuild)
-                        {
-                            Debug.LogWarning("Cannot instantiate item " + guids[i]);
-                        }
-                    }
-                    else
-                    {
-                        if (Debug.isDebugBuild)
-                        {
-                            Debug.LogWarning("Cannot instantiate item " + assetPath);
-                        }
-                    }
                 }
             }
             EditorUtility.ClearProgressBar();

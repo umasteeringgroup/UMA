@@ -8,6 +8,7 @@ using UnityEditorInternal;
 #endif
 using UnityEngine;
 using UnityEngine.Serialization;
+using System.Text.RegularExpressions;
 
 namespace UMA
 {
@@ -246,37 +247,6 @@ namespace UMA
                 }
             }
 
-
-
-
-            /*
-
-
-
-            for (int i = 0; i < theirSlot.meshData.umaBones.Length; i++)
-            {
-                string theirBoneName = theirSlot.meshData.umaBones[i].name;
-                int ourBoneIndex = FindOurBone(theirBoneName);
-                if (ourBoneIndex == -1)
-                {
-                    Debug.LogError($"Could not find bone {theirBoneName} in our bones");
-                    return;
-                }
-                TheirBonesToOurBones.Add(i, ourBoneIndex);
-            }
-
-            OurBonesToTheirBones.Clear();
-            for (int i = 0; i < meshData.umaBones.Length; i++)
-            {
-                string ourBoneName = meshData.umaBones[i].name;
-                int theirBoneIndex = theirSlot.FindOurBone(ourBoneName);
-                if (theirBoneIndex == -1)
-                {
-                    Debug.LogError($"Could not find bone {ourBoneName} in their bones");
-                    return;
-                }
-                OurBonesToTheirBones.Add(i, theirBoneIndex);
-            } */
         }
 
         public void BuildVertexLookups(SlotDataAsset theirsSlot)
@@ -922,9 +892,15 @@ namespace UMA
         public struct BakeSlotParams
         {
             public List<SlotBurnOptions> burnOptions;
+            [Tooltip("If true, any blendshapes not listed in burnOptions will be copied to the new slot")]
             public bool copyUnbakedBlendshapes;
+            [Tooltip("These shapes will be included even if not baked, if copyUnbakedBlendshapes is true. If copyUnbakedBlendshapes is true, and this is empty, then all shapes will be included.")]
+            public List<string> ShapesToInclude; // Optional: if set, these shapes will be included even if not baked, if copyUnbakedBlendshapes is true
+            [Tooltip("If >= 0, recalculate normals and tangents using this smoothing angle (in degrees). If < 0, do not recalculate. Do not set for multi-part models unless you want edges to have sharp normals")]
             public float smoothingAngleDegrees;
+            [Tooltip("The new slotname")]
             public string newSlotName;          // Optional: rename baked slot asset
+            [Tooltip("if true, this will be added to the indexer. If a slot with the same name already exists, it will be returned instead of creating a new one.")]
             public bool addToIndexer;           // Optional: register with UMAAssetIndexer
         }
 
@@ -1040,11 +1016,51 @@ namespace UMA
                     if (p.copyUnbakedBlendshapes)
                     {
                         var kept = new List<UMABlendShape>(shapes.Length);
+                        bool includeAll = (p.ShapesToInclude == null || p.ShapesToInclude.Count == 0);
+                        List<Regex> includePatterns = null;
+                        if (!includeAll)
+                        {
+                            includePatterns = new List<Regex>(p.ShapesToInclude.Count);
+                            for (int i = 0; i < p.ShapesToInclude.Count; i++)
+                            {
+                                var pattern = p.ShapesToInclude[i];
+                                if (string.IsNullOrEmpty(pattern)) continue;
+                                try
+                                {
+                                    includePatterns.Add(new Regex(pattern));
+                                }
+                                catch
+                                {
+                                    // Fallback to literal match if regex is invalid
+                                    includePatterns.Add(new Regex(Regex.Escape(pattern)));
+                                }
+                            }
+                        }
+
                         for (int i = 0; i < shapes.Length; i++)
                         {
                             var sh = shapes[i];
                             if (sh == null) continue;
-                            if (!bakedNames.Contains(sh.shapeName)) kept.Add(sh);
+                            if (bakedNames.Contains(sh.shapeName)) continue; // skip baked
+
+                            if (includeAll)
+                            {
+                                kept.Add(sh);
+                            }
+                            else
+                            {
+                                bool match = false;
+                                string name = sh.shapeName ?? string.Empty;
+                                for (int r = 0; r < includePatterns.Count; r++)
+                                {
+                                    if (includePatterns[r].IsMatch(name))
+                                    {
+                                        match = true;
+                                        break;
+                                    }
+                                }
+                                if (match) kept.Add(sh);
+                            }
                         }
                         md.blendShapes = kept.ToArray();
                     }
@@ -1121,7 +1137,7 @@ namespace UMA
                             var tris = md.submeshes[i].getBaseTriangles();
                             mesh.SetIndices(tris ?? System.Array.Empty<int>(), UnityEngine.MeshTopology.Triangles, i);
                         }
-                        mesh.RecalculateNormals(p.smoothingAngleDegrees == 0f ? 180f : p.smoothingAngleDegrees);
+                        mesh.RecalculateNormals();
                         mesh.RecalculateTangents();
                         md.normals = mesh.normals;
                         md.tangents = mesh.tangents;

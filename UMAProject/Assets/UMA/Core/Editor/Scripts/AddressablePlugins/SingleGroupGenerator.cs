@@ -242,38 +242,49 @@ namespace UMA
                             Debug.Log("Invalid Slotdata in recipe: " + ai._Name + ". Skipping.");
                             continue;
                         }
-                        if (stripUVAttachedShaders && sda.SlotProcessed != null)
+                        if (sda.SlotProcessed != null)
                         {
-                            var evt = sda.SlotProcessed;
-                            int count = evt.GetPersistentEventCount();
-                            for (int i = 0; i < count; i++)
+                            if (stripUVAttachedShaders)
                             {
-                                UnityEngine.Object target = evt.GetPersistentTarget(i);
-                                if (target is GameObject)
+                                var evt = sda.SlotProcessed;
+                                int count = evt.GetPersistentEventCount();
+                                for (int i = 0; i < count; i++)
                                 {
-                                    GameObject go = target as GameObject;
-                                    var UVitem = go.GetComponent<UMA.UMAUVAttachedItemLauncher>();
-                                    if (UVitem != null)
-                                    {
-                                        GameObject prefab = UVitem.prefab;
-                                        if (prefab != null)
-                                        {
-                                            MeshRenderer mr = prefab.GetComponentInChildren<MeshRenderer>();
-                                            if (mr == null) continue;
-                                            Material mat = mr.sharedMaterial;
-                                            if (mat.shader.name.Contains("Hidden/InternalErrorShader"))
-                                                continue; // already stripped
+                                    Debug.Log("Stripping UVAttachedItem shaders for slot " + sda.name);
 
-                                            // Store shader name in a tag
-                                            mat.SetOverrideTag("OriginalShader", mat.shader.name);
-                                            // Strip shader reference
-                                            mat.shader = Shader.Find("Hidden/InternalErrorShader");
-                                            EditorUtility.SetDirty(mat);
+                                    UnityEngine.Object target = evt.GetPersistentTarget(i);
+                                    if (target is UMA.UMAUVAttachedItemLauncher)
+                                    {
+                                        var UVitem = target as UMA.UMAUVAttachedItemLauncher;
+                                        if (UVitem != null)
+                                        {
+                                            GameObject prefab = UVitem.prefab;
+                                            if (prefab != null)
+                                            {
+                                                MeshRenderer[] mrs = prefab.GetComponentsInChildren<MeshRenderer>();
+                                                if (mrs == null) continue;
+                                                if (mrs.Length == 0) continue;
+                                                for (int j = 0; j < mrs.Length; j++)
+                                                {
+                                                    MeshRenderer mr = mrs[j];
+                                                    if (mr == null) continue;
+                                                    if (mr.sharedMaterial == null) continue;
+                                                    Material mat = mr.sharedMaterial;
+                                                    if (mat.shader.name.Contains("Hidden/InternalErrorShader"))
+                                                        continue; // already stripped
+
+                                                    // Store shader name in a tag
+                                                    mat.SetOverrideTag("OriginalShader", mat.shader.name);
+                                                    // Strip shader reference
+                                                    mat.shader = Shader.Find("Hidden/InternalErrorShader");
+                                                    EditorUtility.SetDirty(mat);
+                                                }
+                                            }
                                         }
                                     }
                                 }
-                            }
 
+                            }
                         }
                         if (sda.material != null)
                         {
