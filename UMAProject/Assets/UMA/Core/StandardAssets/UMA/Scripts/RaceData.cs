@@ -30,6 +30,8 @@ namespace UMA
         public bool useManualRendererBounds = false;
         [Tooltip("Manual bounds extents to apply to the UMA renderers when 'Use Manual Renderer Bounds' is enabled. Values are extents (half-size) in local space before scaling by the 'Position' bone.")]
         public Vector3 manualRendererBounds = Vector3.zero;
+        [Tooltip("Manual bounds center offset to apply to the UMA renderers when 'Use Manual Renderer Bounds' is enabled. Value is in local space before scaling by the 'Position' bone.")]
+        public Vector3 manualRendererBoundsCenter = Vector3.zero;
 
 		public bool NoAutoAdd
 		{

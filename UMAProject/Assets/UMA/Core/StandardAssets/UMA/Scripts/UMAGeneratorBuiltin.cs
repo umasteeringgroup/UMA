@@ -557,39 +557,42 @@ namespace UMA
 		}
 
 		private static void ApplyManualRendererBounds(UMAData umaData, SkinnedMeshRenderer[] renderers)
-		{
-			if (umaData == null || umaData.umaRecipe == null || umaData.umaRecipe.raceData == null)
-			{
-				return;
-			}
-			var race = umaData.umaRecipe.raceData;
-			if (!race.useManualRendererBounds)
-			{
-				return;
-			}
-			Vector3 baseExtents = race.manualRendererBounds;
-			if (baseExtents == Vector3.zero)
-			{
-				return; // nothing to apply
-			}
+        {
+            if (umaData == null || umaData.umaRecipe == null || umaData.umaRecipe.raceData == null)
+            {
+                return;
+            }
+            var race = umaData.umaRecipe.raceData;
+            if (!race.useManualRendererBounds)
+            {
+                return;
+            }
+            Vector3 baseExtents = race.manualRendererBounds;
+            Vector3 baseCenter = race.manualRendererBoundsCenter;
+            if (baseExtents == Vector3.zero && baseCenter == Vector3.zero)
+            {
+                return; // nothing to apply
+            }
 
-			// Scale extents using the scale from the 'Position' bone if present
-			int posHash = UMAUtils.StringToHash("Position");
-			Transform posBone = umaData.skeleton != null ? umaData.skeleton.GetBoneTransform(posHash) : null;
-			Vector3 scaledExtents = baseExtents;
-			if (posBone != null)
-			{
-				scaledExtents = Vector3.Scale(baseExtents, posBone.localScale);
-			}
+            // Scale using the scale from the 'Position' bone if present
+            int posHash = UMAUtils.StringToHash("Position");
+            Transform posBone = umaData.skeleton != null ? umaData.skeleton.GetBoneTransform(posHash) : null;
+            Vector3 scaledExtents = baseExtents;
+            Vector3 scaledCenter = baseCenter;
+            if (posBone != null)
+            {
+                scaledExtents = Vector3.Scale(baseExtents, posBone.localScale);
+                scaledCenter = Vector3.Scale(baseCenter, posBone.localScale);
+            }
 
-			Bounds b = new Bounds(Vector3.zero, scaledExtents * 2f);
-			for (int i = 0; i < renderers.Length; i++)
-			{
-				var smr = renderers[i];
-				if (smr == null) continue;
-				smr.localBounds = b;
-			}
-		}
+            Bounds b = new Bounds(scaledCenter, scaledExtents * 2f);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                var smr = renderers[i];
+                if (smr == null) continue;
+                smr.localBounds = b;
+            }
+        }
 
 		class Calc32
         {

@@ -1,4 +1,5 @@
-﻿#if UNITY_EDITOR
+﻿#pragma warning disable 0472 // disable warnings about result of comparison being unused (because of if/else usage)
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor;
@@ -84,10 +85,12 @@ namespace UMA.Editors
 			GUILayout.Label("Renderer Bounds", EditorStyles.boldLabel);
 			SerializedProperty useManualBoundsProp = serializedObject.FindProperty("useManualRendererBounds");
 			SerializedProperty manualBoundsProp = serializedObject.FindProperty("manualRendererBounds");
+            SerializedProperty manualBoundsCenterProp = serializedObject.FindProperty("manualRendererBoundsCenter");
 			EditorGUILayout.PropertyField(useManualBoundsProp, new GUIContent("Use Manual Renderer Bounds", "When enabled, UMA renderers will use these manual bounds (extents) instead of calculated bounds."));
 			using (new EditorGUI.DisabledScope(!useManualBoundsProp.boolValue))
 			{
 				EditorGUILayout.PropertyField(manualBoundsProp, new GUIContent("Manual Bounds (Extents)", "Extents in local space before scaling by the 'Position' bone."));
+                EditorGUILayout.PropertyField(manualBoundsCenterProp, new GUIContent("Manual Bounds Center", "Center offset in local space before scaling by the 'Position' bone."));
 			}
 			EditorGUILayout.Space();
 
@@ -477,7 +480,7 @@ namespace UMA.Editors
 #pragma warning restore 618
 			SerializedProperty _crossCompatibilitySettings = serializedObject.FindProperty("_crossCompatibilitySettings");
 			SerializedProperty _crossCompatibilitySettingsData = _crossCompatibilitySettings.FindPropertyRelative("settingsData");
-			//draw the new version of the crossCompatibility list that allows users to define what slots in this races base recipe equate to in the backwards compatible races base recipe
+			//draw the new version of the crossCompatibility list that allows users to define what slots in THIS races base recipe equate to in the backwards compatible races base recipe
 			_crossCompatibilitySettings.isExpanded = EditorGUILayout.Foldout(_crossCompatibilitySettings.isExpanded, "Cross Compatibility Settings");
 			if (_crossCompatibilitySettings.isExpanded)
 			{
@@ -531,11 +534,11 @@ namespace UMA.Editors
 						//this could be missing- we should show that
 						var label = ccRaceName;
 						if (GetCompatibleRaceData(ccRaceName) == null)
-                        {
-                            label += " (missing)";
-                        }
+                		{
+                			label += " (missing)";
+                		}
 
-                        GUIHelper.FoldoutBar(ref _BCFoldouts[i], label, out del);
+                		GUIHelper.FoldoutBar(ref _BCFoldouts[i], label, out del);
 						if (del)
 						{
 							crossCompatibleSettingsToDelete.Add(i);
@@ -757,3 +760,4 @@ namespace UMA.Editors
 	}
 }
 #endif
+#pragma warning restore 0472

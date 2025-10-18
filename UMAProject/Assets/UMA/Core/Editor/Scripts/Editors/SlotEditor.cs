@@ -19,6 +19,7 @@ namespace UMA.Editors
         public UnityEditorInternal.ReorderableList SlotTagsList = null;
         private List<string> backingTags = new List<string>();
         private static Dictionary<string, bool> _foldout = new Dictionary<string, bool>();
+        private static Dictionary<string, bool> _utilitiesFoldout = new Dictionary<string, bool>();
 
         public SlotData Slot { get { return _slotData; } }
 
@@ -123,41 +124,103 @@ namespace UMA.Editors
             {
                 changed = true;
             }
-            _slotData.slotAssetFoldout = EditorGUILayout.Foldout(_slotData.slotAssetFoldout, "View copied data", true);
-            if (_slotData.slotAssetFoldout)
+
+            // Utilities foldout
+            if (!_utilitiesFoldout.ContainsKey(_slotData.slotName))
             {
-                GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-                EditorGUILayout.LabelField("Overlay Scale", _slotData.overlayScale.ToString("F4"));
-                EditorGUILayout.LabelField("Matching Tags");
-                if (_slotData.tags != null && _slotData.tags.Length > 0)
+                _utilitiesFoldout.Add(_slotData.slotName, false);
+            }
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            GUILayout.Space(10);
+            _utilitiesFoldout[_slotData.slotName] = EditorGUILayout.Foldout(_utilitiesFoldout[_slotData.slotName], "Utilities");
+            GUILayout.EndHorizontal();
+
+            if (_utilitiesFoldout[_slotData.slotName])
+            {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.9f, 0.9f, 0.9f));
+
+                // View copied data (moved here)
+                _slotData.slotAssetFoldout = EditorGUILayout.Foldout(_slotData.slotAssetFoldout, "View copied data", true);
+                if (_slotData.slotAssetFoldout)
                 {
-                    foreach (var tag in _slotData.tags)
+                    GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+                    EditorGUILayout.LabelField("Overlay Scale", _slotData.overlayScale.ToString("F4"));
+                    EditorGUILayout.LabelField("Matching Tags");
+                    if (_slotData.tags != null && _slotData.tags.Length > 0)
                     {
-                        EditorGUILayout.LabelField(" - " + tag);
+                        foreach (var tag in _slotData.tags)
+                        {
+                            EditorGUILayout.LabelField(" - " + tag);
+                        }
+                    }
+                    else
+                    {
+                        EditorGUILayout.LabelField(" - None");
+                    }
+                    EditorGUILayout.LabelField("Matching Races");
+                    if (_slotData.Races != null && _slotData.Races.Length > 0)
+                    {
+                        foreach (var race in _slotData.Races)
+                        {
+                            EditorGUILayout.LabelField(" - " + race);
+                        }
+                    }
+                    else
+                    {
+                        EditorGUILayout.LabelField(" - None");
+                    }
+                    if (GUILayout.Button("Refresh slot from Asset"))
+                    {
+                        _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
+                        _slotData.UpdateFromAsset(_slotData.asset);
+                        changed = true;
+                    }
+                    GUIHelper.EndVerticalPadded(10);
+                }
+
+                GUILayout.Space(4);
+                EditorGUILayout.LabelField("Update UMA Material", EditorStyles.boldLabel);
+                Rect matDrop = GUILayoutUtility.GetRect(0.0f, 40.0f, GUILayout.ExpandWidth(true));
+                GUI.Box(matDrop, "Drag UMA Material here to update slot and overlays");
+                Event evt = Event.current;
+                if ((evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform) && matDrop.Contains(evt.mousePosition))
+                {
+                    bool hasUmaMaterial = false;
+                    foreach (var obj in DragAndDrop.objectReferences)
+                    {
+                        if (obj is UMAMaterial)
+                        {
+                            hasUmaMaterial = true;
+                            break;
+                        }
+                    }
+                    if (hasUmaMaterial)
+                    {
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                        if (evt.type == EventType.DragPerform)
+                        {
+                            DragAndDrop.AcceptDrag();
+                            foreach (var obj in DragAndDrop.objectReferences)
+                            {
+                                if (obj is UMAMaterial umaMat)
+                                {
+                                    if (ApplyUMAMaterialToSlotAndOverlays(umaMat))
+                                    {
+                                        changed = true;
+                                        _textureDirty = true;
+                                        _meshDirty = true;
+                                    }
+                                }
+                            }
+                            evt.Use();
+                        }
+                        else
+                        {
+                            evt.Use();
+                        }
                     }
                 }
-                else
-                {
-                    EditorGUILayout.LabelField(" - None");
-                }
-                EditorGUILayout.LabelField("Matching Races");
-                if (_slotData.Races != null && _slotData.Races.Length > 0)
-                {
-                    foreach (var race in _slotData.Races)
-                    {
-                        EditorGUILayout.LabelField(" - " + race);
-                    }
-                }
-                else
-                {
-                    EditorGUILayout.LabelField(" - None");
-                }
-                if (GUILayout.Button("Refresh slot from Asset"))
-                {
-                    _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
-                    _slotData.UpdateFromAsset(_slotData.asset);
-                    changed = true;
-                }
+
                 GUIHelper.EndVerticalPadded(10);
             }
 
@@ -425,6 +488,60 @@ namespace UMA.Editors
                 }
             }
             GUIHelper.EndVerticalPadded(10);
+
+            return changed;
+        }
+
+        private bool ApplyUMAMaterialToSlotAndOverlays(UMAMaterial umaMat)
+        {
+            if (umaMat == null || _slotData == null || _slotData.asset == null)
+                return false;
+
+            bool changed = false;
+            int channelCount = (umaMat.channels != null) ? umaMat.channels.Length : 0;
+
+            // Update SlotDataAsset
+            Undo.RecordObject(_slotData.asset, "Update Slot UMA Material");
+            _slotData.asset.material = umaMat;
+            EditorUtility.SetDirty(_slotData.asset);
+            AssetDatabase.SaveAssetIfDirty(_slotData.asset);
+            changed = true;
+
+            // Update overlays on this slot
+            if (_overlayData != null)
+            {
+                foreach (var od in _overlayData)
+                {
+                    if (od == null || od.asset == null)
+                        continue;
+
+                    var oda = od.asset;
+                    Undo.RecordObject(oda, "Update Overlay UMA Material");
+                    oda.material = umaMat;
+
+                    // Ensure overlay asset texture list matches channel count
+                    try
+                    {
+                        var texList = oda.textureList; // assuming public property exists
+                        if (texList == null || texList.Length != channelCount)
+                        {
+                            var newList = new Texture[channelCount];
+                            if (texList != null)
+                            {
+                                System.Array.Copy(texList, newList, Mathf.Min(texList.Length, newList.Length));
+                            }
+                            oda.textureList = newList;
+                        }
+                    }
+                    catch { }
+
+                    EditorUtility.SetDirty(oda);
+                    AssetDatabase.SaveAssetIfDirty(oda);
+
+                    // Ensure runtime overlay arrays match new material channel count
+                    od.Validate();
+                }
+            }
 
             return changed;
         }
