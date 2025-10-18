@@ -11867,6 +11867,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -13329,6 +13330,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -17940,6 +17942,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -19032,6 +19035,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -20572,6 +20576,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -21832,6 +21837,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -28863,6 +28869,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -30084,6 +30091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -36598,6 +36606,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -38060,6 +38069,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -39679,6 +39689,7 @@ GameObject:
   - component: {fileID: 951770133}
   - component: {fileID: 951770137}
   - component: {fileID: 951770138}
+  - component: {fileID: 951770139}
   m_Layer: 3
   m_Name: UMADynamicCharacterAvatar (5)
   m_TagString: Untagged
@@ -39776,11 +39787,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
   useNewDNA: 0
-  alwaysAdjustBounds: 0
+  alwaysAdjustBounds: 1
   rawAvatar: 0
   raceChanged: 1
   hideRenderers: 0
@@ -39879,7 +39891,7 @@ MonoBehaviour:
       tempHidden: 0
       isDisabled: 0
       UVSet: 0
-      altMaterial: {fileID: 0}
+      altMaterial: {fileID: 11400000, guid: 9baec5f7e5dc828408f9350562791968, type: 2}
       BlendshapeSlotNames: []
       Suppressed: 0
       dontSerialize: 0
@@ -39918,7 +39930,7 @@ MonoBehaviour:
       tempHidden: 0
       isDisabled: 0
       UVSet: 0
-      altMaterial: {fileID: 0}
+      altMaterial: {fileID: 11400000, guid: 9baec5f7e5dc828408f9350562791968, type: 2}
       BlendshapeSlotNames: []
       Suppressed: 0
       dontSerialize: 0
@@ -39988,7 +40000,7 @@ MonoBehaviour:
       swapTag: 
       skinnedMeshRenderer: 0
       submeshIndex: 1
-      vertexOffset: 10427
+      vertexOffset: 8332
       UVArea:
         serializedVersion: 2
         x: 0
@@ -40029,7 +40041,7 @@ MonoBehaviour:
       swapTag: 
       skinnedMeshRenderer: 0
       submeshIndex: 1
-      vertexOffset: 10621
+      vertexOffset: 8526
       UVArea:
         serializedVersion: 2
         x: 0
@@ -40068,7 +40080,7 @@ MonoBehaviour:
       swapTag: 
       skinnedMeshRenderer: 0
       submeshIndex: 2
-      vertexOffset: 10997
+      vertexOffset: 8902
       UVArea:
         serializedVersion: 2
         x: 0
@@ -40108,7 +40120,7 @@ MonoBehaviour:
       swapTag: 
       skinnedMeshRenderer: 0
       submeshIndex: 3
-      vertexOffset: 11027
+      vertexOffset: 8932
       UVArea:
         serializedVersion: 2
         x: 0
@@ -40237,7 +40249,7 @@ MonoBehaviour:
       Suppressed: 0
       dontSerialize: 0
       rendererAsset: {fileID: 0}
-    - asset: {fileID: 11400000, guid: 2be54f8bb776cf440b3f9cc8d1fa9b31, type: 2}
+    - asset: {fileID: 11400000, guid: 50c2c84e0828ab649b57226e7e17b498, type: 2}
       overlayScale: 1
       tags: []
       Races: []
@@ -40248,19 +40260,19 @@ MonoBehaviour:
       isDeleted: 0
       slotAssetFoldout: 0
       expandAlongNormal: 0
-      overSmoosh: 0
-      smooshDistance: 0
+      overSmoosh: 0.01
+      smooshDistance: 0.001
       smooshInvertX: 0
-      smooshInvertY: 0
+      smooshInvertY: 1
       smooshInvertZ: 0
-      smooshInvertDist: 0
+      smooshInvertDist: 1
       smooshTargetTag: 
       smooshableTag: 
       isSwapSlot: 0
-      swapTag: 
+      swapTag: LongHair
       skinnedMeshRenderer: 0
-      submeshIndex: 1
-      vertexOffset: 8024
+      submeshIndex: 0
+      vertexOffset: 0
       UVArea:
         serializedVersion: 2
         x: 0
@@ -40298,7 +40310,7 @@ MonoBehaviour:
       swapTag: 
       skinnedMeshRenderer: 0
       submeshIndex: 1
-      vertexOffset: 10119
+      vertexOffset: 8024
       UVArea:
         serializedVersion: 2
         x: 0
@@ -40690,7 +40702,7 @@ MonoBehaviour:
       - HumanMale
       ForceLoad: 0
     - _recipeName: MaleSweatPants_Recipe
-      _enabledInDefaultWardrobe: 1
+      _enabledInDefaultWardrobe: 0
       _compatibleRaces:
       - HumanMale
       ForceLoad: 0
@@ -41078,6 +41090,135 @@ MonoBehaviour:
       _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
       Raw: 0
       valuesConverted: 0
+    - name: TeethClaws
+      channelMask:
+      - {r: 1, g: 0.98039216, b: 0.827451, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      displayColor: {r: 1, g: 0.98039216, b: 0.827451, a: 1}
+      _name: 
+      _color: {r: 1, g: 1, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
+    - name: InnerMouth
+      channelMask:
+      - {r: 0.60784316, g: 0.09803922, b: 0.09803922, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      displayColor: {r: 0.60784316, g: 0.09803922, b: 0.09803922, a: 1}
+      _name: 
+      _color: {r: 1, g: 1, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
+    - name: WerewolfSkin
+      channelMask:
+      - {r: 0.32156864, g: 0.2509804, b: 0.09411765, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      displayColor: {r: 0.32156864, g: 0.2509804, b: 0.09411765, a: 1}
+      _name: 
+      _color: {r: 1, g: 1, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
+    - name: WerewolfEyes
+      channelMask:
+      - {r: 1, g: 0.96862745, b: 0.8352941, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      displayColor: {r: 1, g: 0.96862745, b: 0.8352941, a: 1}
+      _name: 
+      _color: {r: 1, g: 1, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
+    - name: Lips
+      channelMask:
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
+      _name: 
+      _color: {r: 1, g: 1, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
   predefinedDNA:
     PreloadValues: []
   loadPathType: 2
@@ -41112,8 +41253,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 951770132}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071067}
-  m_LocalPosition: {x: -3.4, y: 0.94, z: 0.1}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071067}
+  m_LocalPosition: {x: -3.3999999, y: 0.94, z: 0.10000038}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -41134,6 +41275,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -41981,7 +42123,20 @@ MonoBehaviour:
   characterHeight: 2
   characterRadius: 0.25
   characterMass: 50
---- !u!95 &951770138
+--- !u!114 &951770138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 951770132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f773531af850a84980ca50fd4ca63fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAUVAttachedItemPreprocessor
+  launchers: []
+--- !u!95 &951770139
 Animator:
   serializedVersion: 7
   m_ObjectHideFlags: 0
@@ -45018,6 +45173,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -46480,6 +46636,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -56571,6 +56728,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -57959,6 +58117,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -71543,6 +71702,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -73005,6 +73165,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -78462,6 +78623,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -79863,6 +80025,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -82235,6 +82398,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -83697,6 +83861,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -89139,6 +89304,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -90601,6 +90767,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
   dnaInstanceCollection:
     dnaInstances: []
@@ -91666,8 +91833,8 @@ SceneRoots:
   - {fileID: 491856410}
   - {fileID: 1944390150}
   - {fileID: 755643399}
-  - {fileID: 516963717}
   - {fileID: 951770135}
+  - {fileID: 516963717}
   - {fileID: 397708210}
   - {fileID: 1327072060}
   - {fileID: 1973255602}

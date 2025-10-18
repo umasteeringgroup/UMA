@@ -829,7 +829,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Standalone: UMA_DNACOLLECTIONS;__BETTERSHADERS__;UMA_ALWAYSGETADDR_NO_PRO;UMA_BURSTCOMPILE;ZUMA_UNSAFE;UMA_ADDRESSABLES
+    Standalone: UMA_DNACOLLECTIONS;__BETTERSHADERS__;UMA_ALWAYSGETADDR_NO_PRO;UMA_BURSTCOMPILE;ZUMA_UNSAFE
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

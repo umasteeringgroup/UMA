@@ -1,0 +1,339 @@
+BEGIN_OPTIONS
+   ShaderName "UMA/Compositing/2_Albedo_PackedMask_Emission_Cutout"
+   Stackable "False"
+   Workflow "Metallic
+END_OPTIONS
+
+BEGIN_PROPERTIES
+
+    [BetterHeader(Material Specific)]
+	_OverlayCount ("OverlayCount", Float) = 0
+	_ColorModulation ("Color Modulation", Range(0,2)) = 1
+	_OcclusionModulation ("Occlusion Level", Range(0,2)) = 1
+	_SmoothnessModulation ("Smoothness Level", Range(0,2)) = 1
+    _EmissionModulation("Emission Level", Range(0,2)) = 1
+    _Metallic("Metallic", Range(0,1)) = 0
+    _Cutoff("Alpha cutoff", Range(0,1)) = 0.5
+
+    [Enum(Off,0,Front,1,Back,2)]_CullMode("Culling Mode", Float) = 2
+    [Enum(Flip, 0, Mirror, 1, None, 2)] _DoubleSidedNormalMode("Double sided normal mode", Float) = 1
+
+    [GroupRollout(Base Overlay)]
+    [Group(Base Overlay)][NoScaleOffset]_Albedo("Albedo", 2D) = "white" {}
+    [Group(Base Overlay)][NoScaleOffset]_NormalMask("NormalMask", 2D) = "bump" {}
+    [Group(Base Overlay)][NoScaleOffset]_Emmission("Emission", 2D) = "black" {}
+    // no AlphaMask for the base.
+    [Group(Base Overlay)]_Tile0_0 ("Tile0_0", Float) = 1
+    [Group(Base Overlay)]_Tile0_1 ("Tile0_1", Float) = 1
+    [Group(Base Overlay)]_Tile0_2 ("Tile0_2", Float) = 1
+    [Group(Base Overlay)]_NormalStrength0("Normal Strength 0", Range(0,2)) = 1
+    [Group(Base Overlay)]_Tint0_0 ("Tint 0_0",Color) = (1,1,1,1)
+    [Group(Base Overlay)]_Tint0_1 ("Tint 0_1",Color) = (1,1,1,1)
+    [Group(Base Overlay)]_Tint0_2 ("Tint 0_2",Color) = (1,1,1,1)
+    [Group(Base Overlay)]_Add0_0 ("Add 0_0",Color) = (0,0,0,0)
+    [Group(Base Overlay)]_Add0_1 ("Add 0_1",Color) = (0,0,0,0)
+    [Group(Base Overlay)]_Add0_2 ("Add 0_2",Color) = (0,0,0,0)
+
+    [GroupRollout(Overlay 1)]
+    [Group(Overlay 1)][NoScaleOffset]_Albedo1("Albedo1", 2D) = "white" {}
+    [Group(Overlay 1)][NoScaleOffset]_NormalMask1("NormalMask1", 2D) = "bump" {}
+    [Group(Overlay 1)][NoScaleOffset]_AlphaMask1("Mask1", 2D) = "white" {} 
+    [Group(Overlay 1)][NoScaleOffset]_Emmission1("Emission1", 2D) = "black" {}
+    [Group(Overlay 1)]_Tile1_0 ("Tile1_0", Float) = 1
+    [Group(Overlay 1)]_Tile1_1 ("Tile1_1", Float) = 1
+    [Group(Overlay 1)]_Tile1_2 ("Tile1_2", Float) = 1
+    [Group(Overlay 1)]_NormalStrength1("Normal Strength 1", Range(0,2)) = 1
+    [Group(Overlay 1)]_Tint1_0 ("Tint 1_0",Color) = (1,1,1,1)
+    [Group(Overlay 1)]_Tint1_1 ("Tint 1_1",Color) = (1,1,1,1)
+    [Group(Overlay 1)]_Tint1_2 ("Tint 1_2",Color) = (1,1,1,1)
+    [Group(Overlay 1)]_Add1_0 ("Add 1_0",Color) = (0,0,0,0)
+    [Group(Overlay 1)]_Add1_1 ("Add 1_1",Color) = (0,0,0,0)
+    [Group(Overlay 1)]_Add1_2 ("Add 1_2",Color) = (0,0,0,0)
+
+    [GroupRollout(Overlay 2)]
+    [Group(Overlay 2)][NoScaleOffset]_Albedo2("Albedo2", 2D) = "white" {}
+    [Group(Overlay 2)][NoScaleOffset]_NormalMask2("NormalMask2", 2D) = "bump" {}
+    [Group(Overlay 2)][NoScaleOffset]_AlphaMask2("Mask2", 2D) = "white" {}
+    [Group(Overlay 2)][NoScaleOffset]_Emmission2("Emission2", 2D) = "black" {}
+ 
+    [Group(Overlay 2)]_Tile2_0 ("Tile2_0", Float) = 1
+    [Group(Overlay 2)]_Tile2_1 ("Tile2_1", Float) = 1
+    [Group(Overlay 2)]_Tile2_2 ("Tile2_2", Float) = 1
+    [Group(Overlay 2)]_NormalStrength2("Normal Strength 2", Range(0,2)) = 1
+    [Group(Overlay 2)]_Tint2_0 ("Tint 2_0",Color) = (1,1,1,1)
+    [Group(Overlay 2)]_Tint2_1 ("Tint 2_1",Color) = (1,1,1,1)
+    [Group(Overlay 2)]_Tint2_2 ("Tint 2_2",Color) = (1,1,1,1)
+    [Group(Overlay 2)]_Add2_0 ("Add 2_0",Color) = (0,0,0,0)
+    [Group(Overlay 2)]_Add2_1 ("Add 2_1",Color) = (0,0,0,0)
+    [Group(Overlay 2)]_Add2_2 ("Add 2_2",Color) = (0,0,0,0)
+
+    // Overlay 3
+    [GroupRollout(Overlay 3)]
+    [Group(Overlay 3)][NoScaleOffset]_Albedo3("Albedo3", 2D) = "white" {}
+    [Group(Overlay 3)][NoScaleOffset]_NormalMask3("NormalMask3", 2D) = "bump" {}
+    [Group(Overlay 3)][NoScaleOffset]_AlphaMask3("Mask3", 2D) = "white" {} 
+    [Group(Overlay 2)][NoScaleOffset]_Emmission3("Emission3", 2D) = "black" {}
+
+    [Group(Overlay 3)]_Tile3_0 ("Tile3_0", Float) = 1
+    [Group(Overlay 3)]_Tile3_1 ("Tile3_1", Float) = 1
+    [Group(Overlay 3)]_Tile3_2 ("Tile3_2", Float) = 1
+    [Group(Overlay 3)]_NormalStrength3("Normal Strength 3", Range(0,2)) = 1
+    [Group(Overlay 3)]_Tint3_0 ("Tint 3_0",Color) = (1,1,1,1)
+    [Group(Overlay 3)]_Tint3_1 ("Tint 3_1",Color) = (1,1,1,1)
+    [Group(Overlay 3)]_Tint3_2 ("Tint 3_2",Color) = (1,1,1,1)
+    [Group(Overlay 3)]_Add3_0 ("Add 3_0",Color) = (0,0,0,0)
+    [Group(Overlay 3)]_Add3_1 ("Add 3_1",Color) = (0,0,0,0)
+    [Group(Overlay 3)]_Add3_2 ("Add 3_2",Color) = (0,0,0,0)
+
+END_PROPERTIES
+
+
+BEGIN_PASS("All")
+   Cull [_CullMode]
+END_PASS
+
+// Any variables you want to have in the per material CBuffer go here.
+BEGIN_CBUFFER
+
+    half  _OverlayCount;
+	half  _ColorModulation;
+	half  _SmoothnessModulation;
+	half  _OcclusionModulation;
+	half  _EmissionModulation;
+    half  _Metallic;
+    half  _Cutoff;
+    
+    float _DoubleSidedNormalMode;
+
+    // These should ALL BE IN ARRAYS!!!!!
+    // But unity will not save/restore arrays on appdomain reload,NOR CAN YOU EDIT THEM IN THE INSPECTOR -  so properties on materials are LOST
+    // unless you write your own save/restore routine. But there are no events to know when they are lost or will be lost!!!!
+    // so until I can write a utility to save/restore these, but only in edit time, this is what they will be.
+    half  _Tile0_0;
+    half  _Tile0_1; 
+    half  _Tile0_2; 
+    half _NormalStrength0;
+    half4 _Tint0_0;
+    half4 _Tint0_1;
+    half4 _Tint0_2;
+    half4 _Add0_0;
+    half4 _Add0_1;
+    half4 _Add0_2;
+    half4 _HasTextures0;
+
+    half  _Tile1_0;
+    half  _Tile1_1;
+    half  _Tile1_2;
+    half _NormalStrength1;
+    half4 _Tint1_0;
+    half4 _Tint1_1;
+    half4 _Tint1_2;
+    half4 _Add1_0;
+    half4 _Add1_1;
+    half4 _Add1_2;
+    half4 _HasTextures1;
+
+    half  _Tile2_0;
+    half  _Tile2_1;
+    half  _Tile2_2;
+    half _NormalStrength2;
+    half4 _Tint2_0;
+    half4 _Tint2_1;
+    half4 _Tint2_2;
+    half4 _Add2_0;
+    half4 _Add2_1;
+    half4 _Add2_2;
+    half4 _HasTextures2;
+
+    half  _Tile3_0;
+    half  _Tile3_1;
+    half  _Tile3_2;
+    half _NormalStrength3;
+    half4 _Tint3_0;
+    half4 _Tint3_1;
+    half4 _Tint3_2;
+    half4 _Add3_0;
+    half4 _Add3_1;
+    half4 _Add3_2;
+    half4 _HasTextures3;
+END_CBUFFER
+
+
+// if you are writing a subshader, any defines that should be set on the main
+// shader are defined here
+//BEGIN_DEFINES
+//	#define _SIMPLELIT 1	// compile as SimpleLit shader in URP, or as BlinPhong in standard
+//END_DEFINES
+
+
+// All code goes here
+
+BEGIN_CODE
+
+   TEXTURE2D(_Albedo);
+   SAMPLER(sampler_Albedo);
+   TEXTURE2D(_NormalMask);
+   TEXTURE2D(_Emission);
+ 
+   TEXTURE2D(_Albedo1);
+   TEXTURE2D(_NormalMask1);
+   TEXTURE2D(_AlphaMask1);
+   TEXTURE2D(_Emission1);
+
+   TEXTURE2D(_Albedo2);
+   TEXTURE2D(_NormalMask2);
+   TEXTURE2D(_AlphaMask2);
+   TEXTURE2D(_Emission2);
+
+   TEXTURE2D(_Albedo3);
+   TEXTURE2D(_NormalMask3);
+   TEXTURE2D(_AlphaMask3);
+   TEXTURE2D(_Emission3);
+
+    // Packed Format
+    // R = Smooth
+    // G = Normal Y
+    // B = Occlusion
+    // A = Normal X
+
+    half3 UMAUnpackBLSScaleNormal(half4 packednormal, half bumpScale)
+    {
+        half3 normal;
+        normal.xy = (packednormal.ag * 2 - 1);
+        #if (SHADER_TARGET >= 30)
+            // SM2.0: normal scaler is not supported
+            normal.xy *= bumpScale;
+        #endif
+        normal.z = sqrt(1.0 - saturate(dot(normal.xy, normal.xy)));
+        return normal;
+    }
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+      // Base Overlay always exists.   Uses Textures 0,1,2 (2 is not currently used)
+      float2 auv = d.texcoord0.xy * _Tile0_0;
+      float2 nuv = d.texcoord0.xy * _Tile0_1;
+
+	  half4 base_c = (SAMPLE_TEXTURE2D(_Albedo, sampler_Albedo, auv) * _Tint0_0)+_Add0_0;
+	  half4 basepackednormal = (SAMPLE_TEXTURE2D(_NormalMask, sampler_Albedo,nuv) * _Tint0_1) + _Add0_1;
+      half4 base_emission = (SAMPLE_TEXTURE2D(_Emission,sampler_Albedo, auv) * _Tint0_2) + _Add0_2;
+	  half3 base_n = UMAUnpackBLSScaleNormal(basepackednormal,_NormalStrength0);
+	  half base_smooth = basepackednormal.r;
+	  half base_Occlusion = basepackednormal.b;
+
+      clip(base_c.a - _Cutoff);  
+
+	  o.Alpha = base_c.a; 
+
+
+	  if (_OverlayCount > 1)
+	  {         
+          float2 auv = d.texcoord0.xy * _Tile1_0;
+
+          // IF HASALPHAMASK
+          half alpha = SAMPLE_TEXTURE2D(_AlphaMask1, sampler_Albedo, auv).a;
+          half oneminus = 1.0f - alpha;
+          // ELSE
+          // alpha = 1.0f
+          // oneminus = 0.0f;
+          //
+
+	      half4 add_c = (SAMPLE_TEXTURE2D(_Albedo1, sampler_Albedo, auv) * _Tint1_0) + _Add1_0;
+
+		  base_c = (add_c * alpha) + (base_c * oneminus);
+
+          // IF HASNORMAL
+          float2 nuv = d.texcoord0.xy * _Tile1_1;
+	      half4 addpackednormal = (SAMPLE_TEXTURE2D(_NormalMask1, sampler_Albedo,nuv) * _Tint1_1) + _Add1_1;
+
+	      half3 add_n = UMAUnpackBLSScaleNormal(addpackednormal,_NormalStrength1);
+	      half add_smooth = addpackednormal.r;
+	      half add_Occlusion = addpackednormal.b;
+		  base_n = (add_n * alpha) + (base_n * oneminus);
+		  base_smooth = (addpackednormal.r * alpha) + (base_smooth * oneminus);
+		  base_Occlusion = (addpackednormal.b * alpha) + (base_Occlusion * oneminus);
+
+          half4 addemission = (SAMPLE_TEXTURE2D(_Emission1,sampler_Albedo, auv) * _Tint1_2) + _Add1_2;
+          base_emission = (addemission * alpha) + (base_emission * oneminus);
+	  }
+
+
+	  if (_OverlayCount > 2)
+	  {
+          float2 auv = d.texcoord0.xy * _Tile2_0;
+
+          // IF HASALPHAMASK
+          half alpha = SAMPLE_TEXTURE2D(_AlphaMask2, sampler_Albedo, auv).a;
+          half oneminus = 1.0f - alpha;
+          // ELSE
+          // alpha = 1.0f
+          // oneminus = 0.0f;
+          //
+
+	      half4 add_c = (SAMPLE_TEXTURE2D(_Albedo2, sampler_Albedo, auv)* _Tint2_0) + _Add2_0;
+
+		  base_c = (add_c * alpha) + (base_c * oneminus);
+
+          // IF HASNORMAL
+          float2 nuv = d.texcoord0.xy * _Tile2_1;
+	      half4 addpackednormal = (SAMPLE_TEXTURE2D(_NormalMask2, sampler_Albedo,nuv) * _Tint2_1) + _Add2_1;
+	      half3 add_n = UMAUnpackBLSScaleNormal(addpackednormal,_NormalStrength2);
+	      half add_smooth = addpackednormal.r;
+	      half add_Occlusion = addpackednormal.b;
+		  base_n = (add_n * alpha) + (base_n * oneminus);
+		  base_smooth = (addpackednormal.r * alpha) + (base_smooth * oneminus);
+		  base_Occlusion = (addpackednormal.b * alpha) + (base_Occlusion * oneminus);
+          //
+          half4 addemission = (SAMPLE_TEXTURE2D(_Emission2,sampler_Albedo, auv) * _Tint2_2) + _Add2_2;
+          base_emission = (addemission * alpha) + (base_emission * oneminus);
+ 	  }
+
+	  if (_OverlayCount > 3)
+	  {
+          float2 auv = d.texcoord0.xy * _Tile3_0;
+
+          // IF HASALPHAMASK
+          half alpha = SAMPLE_TEXTURE2D(_AlphaMask3, sampler_Albedo, auv).a;
+          half oneminus = 1.0f - alpha;
+          // ELSE
+          // alpha = 1.0f
+          // oneminus = 0.0f;
+          //
+
+	      half4 add_c = (SAMPLE_TEXTURE2D(_Albedo3, sampler_Albedo, auv)* _Tint3_0) + _Add3_0;
+
+		  base_c = (add_c * alpha) + (base_c * oneminus);
+
+          // IF HASNORMAL
+          float2 nuv = d.texcoord0.xy * _Tile3_1;
+	      half4 addpackednormal = (SAMPLE_TEXTURE2D(_NormalMask1, sampler_Albedo,nuv) * _Tint3_1) + _Add3_1;
+	      half3 add_n = UMAUnpackBLSScaleNormal(addpackednormal,_NormalStrength2);
+	      half add_smooth = addpackednormal.r;
+	      half add_Occlusion = addpackednormal.b;
+		  base_n = (add_n * alpha) + (base_n * oneminus);
+		  base_smooth = (addpackednormal.r * alpha) + (base_smooth * oneminus);
+		  base_Occlusion = (addpackednormal.b * alpha) + (base_Occlusion * oneminus);
+          //
+          half4 addemission = (SAMPLE_TEXTURE2D(_Emission3,sampler_Albedo, auv) * _Tint3_2) + _Add3_2;
+          base_emission = (addemission * alpha) + (base_emission * oneminus);
+ 	  }
+	  
+      o.Albedo = base_c.rgb * _ColorModulation;
+      o.Emission = base_emission.rgb * _EmissionModulation;
+	  o.Normal = base_n;
+	  o.Occlusion = base_Occlusion * _OcclusionModulation;
+	  o.Smoothness = base_smooth * _SmoothnessModulation;
+      o.Metallic = _Metallic;
+      
+      if (_DoubleSidedNormalMode == 0)
+      {
+         o.Normal *= d.isFrontFace ? 1 : -1;
+      }
+      else if (_DoubleSidedNormalMode == 1)
+      {
+		 o.Normal.z *= d.isFrontFace ? 1 : -1;
+      }
+	}
+
+END_CODE
+

@@ -107,10 +107,8 @@ namespace UMA
 				_textureList = value;
 			}
 		}
-#if UMA_ADDRESSABLES
         [Tooltip("Optional names for the textures, used for reloading textures when stripped.")]
         public string[] textureNames = new string[1];
-#endif
 		[Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
         public OverlayBlend[] overlayBlend = new OverlayBlend[1];
 

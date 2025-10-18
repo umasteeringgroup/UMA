@@ -1,0 +1,33 @@
+{
+    "slotName": "UMA30_InnerMouth",
+    "RootBone": "Global",
+    "createOverlay": false,
+    "createRecipe": false,
+    "isBaseRaceRecipe": true,
+    "addToGlobalLibrary": false,
+    "binarySerialization": false,
+    "calcTangents": true,
+    "clearNormals": false,
+    "clearTangents": false,
+    "udimAdjustment": true,
+    "udimTilesU": 10,
+    "udimTilesV": 10,
+    "nameAfterMaterial": false,
+    "KeepBones": [],
+    "BoneStripper": "",
+    "useRootFolder": false,
+    "keepAllBones": false,
+    "rotationEnabled": false,
+    "rotationEuler": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "invertX": false,
+    "invertY": false,
+    "invertZ": false,
+    "updateExistingSlots": false,
+    "Tags": [],
+    "slotMaterialPath": "Assets/UMA/Content/Core/HumanShared/Materials/Standard/UMA_Diffuse_Normal_Thickness_Occlusion_Gloss.asset",
+    "slotFolderPath": "Assets/Test/FBX"
+}

@@ -1,0 +1,30 @@
+﻿
+BEGIN_OPTIONS
+    Workflow "Unlit"
+    ShaderName "UMA/UnlitInstanced"
+    Stackable "False"
+END_OPTIONS
+
+BEGIN_PROPERTIES
+	_Color ("Main Color", Color) = (0, 1, 0, 1)
+END_PROPERTIES
+
+BEGIN_CBUFFER
+	//half4 _Color;
+UNITY_INSTANCING_BUFFER_START(Props)
+ UNITY_DEFINE_INSTANCED_PROP(fixed4, _Color)
+UNITY_INSTANCING_BUFFER_END(Props)
+END_CBUFFER
+
+
+BEGIN_CODE
+
+	void SurfaceFunction(inout Surface o, ShaderData d)
+	{
+		fixed4 COL = UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
+		o.Albedo = COL.rgb;
+		o.Alpha = COL.a;
+	}
+
+END_CODE
+
