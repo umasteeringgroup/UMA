@@ -957,6 +957,7 @@ static void ClearUnpackCaches()
 						SlotData slot = umaRecipe.slotDataList[i];
 						SlotDataAsset original = slot.asset;
                         options.newSlotName = original.name + "_baked_"+race.raceName;
+						options.smoothingAngleDegrees = 0.0f; // use imported normals for multi-part slots
 
                         slot.asset = original.BakeNewSlotData(options);
                     }

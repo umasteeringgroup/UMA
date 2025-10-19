@@ -6,7 +6,6 @@ using UnityEditor;
 using UnityEditorInternal;
 using System.Collections.Generic;
 using System;
-using Codice.Client.Common.GameUI;
 
 namespace UMA.Editors
 {
@@ -32,6 +31,9 @@ namespace UMA.Editors
         #region DCS variables
         private ReorderableList wardrobeSlotList;
 		private bool wardrobeSlotListInitialized = false;
+
+        private ReorderableList prebakedBlendshapeList;
+        private bool prebakedBlendshapeListInitialized = false;
 
 		private int compatibleRacePickerID;
 		static bool[] _BCFoldouts = new bool[0];
@@ -103,6 +105,9 @@ namespace UMA.Editors
 
             SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
 			EditorGUILayout.PropertyField(dnaConverterListprop, true);
+
+            // Prebaked Blendshapes list
+            DrawPrebakedBlendshapeList();
 
 			SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");
 			EditorGUILayout.PropertyField(dnaRanges, true);
@@ -363,6 +368,56 @@ namespace UMA.Editors
 				}
 			}
 		}
+
+        private void InitPrebakedBlendshapeList()
+        {
+            var listProp = serializedObject.FindProperty("PrebakedBlendshapes");
+            prebakedBlendshapeList = new ReorderableList(serializedObject, listProp, true, true, true, true);
+            prebakedBlendshapeList.drawHeaderCallback = rect =>
+            {
+                EditorGUI.LabelField(rect, "Prebaked Blendshapes");
+            };
+            prebakedBlendshapeList.elementHeight = EditorGUIUtility.singleLineHeight + 6;
+            prebakedBlendshapeList.drawElementCallback = (rect, index, isActive, isFocused) =>
+            {
+                var element = prebakedBlendshapeList.serializedProperty.GetArrayElementAtIndex(index);
+                var blendShapeProp = element.FindPropertyRelative("BlendShape");
+                var valueProp = element.FindPropertyRelative("value");
+
+                rect.y += 2;
+                float half = (rect.width - 20f) * 0.6f;
+                var nameRect = new Rect(rect.x + 10, rect.y, half, EditorGUIUtility.singleLineHeight);
+                var valueRect = new Rect(nameRect.xMax + 5, rect.y, rect.width - nameRect.width - 25f, EditorGUIUtility.singleLineHeight);
+
+                EditorGUI.PropertyField(nameRect, blendShapeProp, GUIContent.none);
+                EditorGUI.PropertyField(valueRect, valueProp, GUIContent.none);
+            };
+            prebakedBlendshapeList.onAddCallback = l =>
+            {
+                var idx = l.serializedProperty.arraySize;
+                l.serializedProperty.InsertArrayElementAtIndex(idx);
+                var el = l.serializedProperty.GetArrayElementAtIndex(idx);
+                el.FindPropertyRelative("BlendShape").stringValue = string.Empty;
+                el.FindPropertyRelative("value").floatValue = 0f;
+                serializedObject.ApplyModifiedProperties();
+            };
+            prebakedBlendshapeListInitialized = true;
+        }
+
+        private void DrawPrebakedBlendshapeList()
+        {
+            if (!prebakedBlendshapeListInitialized || prebakedBlendshapeList == null)
+            {
+                InitPrebakedBlendshapeList();
+            }
+            EditorGUI.BeginChangeCheck();
+            prebakedBlendshapeList.DoLayoutList();
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+                _needsUpdate = true;
+            }
+        }
 
 		private void RecursiveScanFoldersForAssets(string path, SerializedProperty crossCompatibilitySettingsData)
 		{
