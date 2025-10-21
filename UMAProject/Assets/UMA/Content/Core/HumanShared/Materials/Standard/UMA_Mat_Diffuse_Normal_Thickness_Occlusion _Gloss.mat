@@ -97,27 +97,27 @@ Material:
     m_Ints: []
     m_Floats:
     - _BumpScale: 1
-    - _ColorModulation: 0.836
-    - _Contrast: 1.312
+    - _ColorModulation: 1
+    - _Contrast: 1
     - _CullMode: 2
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DoubleSidedNormalMode: 1
     - _DstBlend: 0
-    - _EmissiveModulation: 1
+    - _EmissiveModulation: 1.01
     - _FuzzAmount: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _HalfLambertStrength: 1
-    - _InvertThickness: 0
+    - _HalfLambertStrength: 2.69
+    - _InvertThickness: 1
     - _MaxSmooth: 0.816
     - _Metallic: 0
     - _MetallicModulation: 1
-    - _MinSmooth: 0.35
+    - _MinSmooth: 0.218
     - _Mode: 0
     - _NormalStrength: 0.612
-    - _Occlusion: 1
+    - _Occlusion: 1.01
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _QueueControl: -1
@@ -126,7 +126,7 @@ Material:
     - _RimLightingModulation: 0
     - _SSSGlow: 0.3
     - _SSSLevel: 0.3
-    - _Saturation: 1.49
+    - _Saturation: 1
     - _SmoothnessAdd: 0
     - _SmoothnessModulation: 1
     - _SmoothnessTextureChannel: 0
