@@ -137,18 +137,14 @@ namespace UMA.Editors
                 ? string.Format("{0}_{1}_UDIM{2}", slot.slotName, matName, udimNumber.Value)
                 : string.Format("{0}_{1}", slot.slotName, matName);
 
-            var oda = ScriptableObject.CreateInstance<OverlayDataAsset>();
-            oda.overlayName = overlayName;
-            oda.material = sbp.material;
-
-            // Build texture list based on UMAMaterial channels
+            // Build texture list based on UMAMaterial channels from the source material
             int channelCount = (sbp.material.channels != null) ? sbp.material.channels.Length : 0;
             if (channelCount < 0) channelCount = 0;
-            oda.textureList = new Texture[channelCount];
-            oda.overlayBlend = new OverlayDataAsset.OverlayBlend[channelCount];
+            Texture[] newTextureList = new Texture[channelCount];
+            OverlayDataAsset.OverlayBlend[] newBlend = new OverlayDataAsset.OverlayBlend[channelCount];
             for (int i = 0; i < channelCount; i++)
             {
-                oda.overlayBlend[i] = OverlayDataAsset.OverlayBlend.Normal;
+                newBlend[i] = OverlayDataAsset.OverlayBlend.Normal;
                 try
                 {
                     if (srcMat != null)
@@ -159,7 +155,7 @@ namespace UMA.Editors
                             var tex = srcMat.GetTexture(prop);
                             if (tex != null)
                             {
-                                oda.textureList[i] = tex;
+                                newTextureList[i] = tex;
                             }
                         }
                     }
@@ -167,10 +163,47 @@ namespace UMA.Editors
                 catch { }
             }
 
-            // Save asset
+            // Compute target asset path (no unique name generation)
             string fileName = overlayName + "_overlay.asset";
             string overlayPath = sbp.useRootFolder ? (sbp.slotFolder + '/' + fileName) : (assetDir + '/' + fileName);
-            overlayPath = AssetDatabase.GenerateUniqueAssetPath(overlayPath);
+
+            // If an overlay already exists at this path, update it in place
+            var existing = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(overlayPath);
+            if (existing != null)
+            {
+                Undo.RecordObject(existing, "Update OverlayDataAsset");
+                existing.overlayName = overlayName;
+                existing.material = sbp.material;
+                // Resize arrays if needed
+                if (existing.textureList == null || existing.textureList.Length != channelCount)
+                {
+                    existing.textureList = new Texture[channelCount];
+                }
+                if (existing.overlayBlend == null || existing.overlayBlend.Length != channelCount)
+                {
+                    existing.overlayBlend = new OverlayDataAsset.OverlayBlend[channelCount];
+                }
+                // Assign values
+                for (int i = 0; i < channelCount; i++)
+                {
+                    existing.textureList[i] = newTextureList[i];
+                    existing.overlayBlend[i] = newBlend[i];
+                }
+                EditorUtility.SetDirty(existing);
+                if (sbp.addToGlobalLibrary)
+                {
+                    UMAAssetIndexer.Instance.AddIfIndexed(existing);
+                }
+                return existing;
+            }
+
+            // Create a new overlay asset
+            var oda = ScriptableObject.CreateInstance<OverlayDataAsset>();
+            oda.overlayName = overlayName;
+            oda.material = sbp.material;
+            oda.textureList = newTextureList;
+            oda.overlayBlend = newBlend;
+
             AssetDatabase.CreateAsset(oda, overlayPath);
             // Add to index if requested
             if (sbp.addToGlobalLibrary)
@@ -287,8 +320,8 @@ namespace UMA.Editors
                     if (bname.Contains(sbp.stripBones))
                     {
                         bname = bname.Replace(sbp.stripBones, "");
-                    }
-                    transformList[i].name = bname;
+                      }
+                      transformList[i].name = bname;
                 }
                 if (transformList[i].name == sbp.rootBone)
                 {
@@ -396,6 +429,7 @@ namespace UMA.Editors
             var materialToOverlay = new Dictionary<Material, OverlayDataAsset>();
             string assetDir = sbp.useRootFolder ? sbp.slotFolder : (sbp.slotFolder + '/' + sbp.assetName);
 
+            // Base slot
             var slot = ScriptableObject.CreateInstance<SlotDataAsset>();
             slot.slotName = sbp.slotName;
             //Make sure slots get created with a name hash
@@ -427,46 +461,35 @@ namespace UMA.Editors
 
             SlotDataAsset OldAsset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(slotPath);
 
-            if (OldAsset != null && sbp.updateExistingSlots)
+            if (OldAsset != null)
             {
+                // Overwrite existing slot in place
                 string existingRootBone = slot.meshData.RootBoneName;
-
-                UMASlotProcessingUtil.UpdateSlotData(OldAsset, finalMeshRenderer, OldAsset.material, OldAsset.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
-                // Cleanup temp
-                AssetDatabase.SaveAssets();
-                GameObject.DestroyImmediate(tempGameObject);
-                GameObject.DestroyImmediate(newObject);
-                AssetDatabase.DeleteAsset(SkinnedName);
-                AssetDatabase.DeleteAsset(theMesh);
-                // Return result containing the updated asset only
-                var updatedResult = new SlotBuildResult();
-                updatedResult.Slots.Add(OldAsset);
-                updatedResult.IsUDIM = false;
-                return updatedResult;
+                UpdateSlotData(OldAsset, finalMeshRenderer, OldAsset.material, OldAsset.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
+                EditorUtility.SetDirty(OldAsset);
+                createdSlots.Add(OldAsset);
+                // Replace working reference with existing for overlay mapping
+                UnityEngine.Object.DestroyImmediate(slot);
+                slot = OldAsset;
             }
-            AssetDatabase.CreateAsset(slot, slotPath);
-            if (sbp.addToGlobalLibrary)
+            else
             {
-                UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), slot);
+                AssetDatabase.CreateAsset(slot, slotPath);
+                if (sbp.addToGlobalLibrary)
+                {
+                    UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), slot);
+                }
+                createdSlots.Add(slot);
             }
-            createdSlots.Add(slot);
 
-            // Create overlay for submesh 0 if requested (non-UDIM reuse rule applies)
+            // Create/overwrite overlay for submesh 0 if requested (non-UDIM reuse rule applies)
             if (sbp.createOverlays)
             {
                 var srcMat0 = (sbp.slotMesh.sharedMaterials != null && sbp.slotMesh.sharedMaterials.Length > 0) ? sbp.slotMesh.sharedMaterials[0] : null;
                 if (srcMat0 != null)
                 {
-                    if (!materialToOverlay.TryGetValue(srcMat0, out var existing))
-                    {
-                        var oda = CreateOverlayFromMaterial(sbp, slot, srcMat0, null, assetDir);
-                        materialToOverlay[srcMat0] = oda;
-                        slotToOverlay[slot] = oda;
-                    }
-                    else
-                    {
-                        slotToOverlay[slot] = existing;
-                    }
+                    var oda = CreateOverlayFromMaterial(sbp, slot, srcMat0, null, assetDir);
+                    slotToOverlay[slot] = oda;
                 }
                 else
                 {
@@ -476,6 +499,7 @@ namespace UMA.Editors
                 }
             }
 
+            // Additional submeshes
             for (int i = 1; i < finalMeshRenderer.sharedMesh.subMeshCount; i++)
             {
                 string theSlotName = string.Format("{0}_{1}", sbp.slotName, i);
@@ -491,20 +515,42 @@ namespace UMA.Editors
                         }
                     }
                 }
-                var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
-                additionalSlot.slotName = theSlotName;//  string.Format("{0}_{1}", slotName, i);
-                additionalSlot.material = sbp.material;
-                // Non-UDIM path: ensure udimAdjustment=false
-                additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, i, sbp.clearNormals,sbp.clearTangents);
-                TransformMeshData(additionalSlot, sbp);
-
-                additionalSlot.sourceSubmeshIndex = i;
 
                 string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + "_slot.asset";
                 if (sbp.useRootFolder)
                 {
                     theSlotPath = sbp.slotFolder + '/' + theSlotName + "_slot.asset";
                 }
+
+                var existingAdditional = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(theSlotPath);
+                if (existingAdditional != null)
+                {
+                    // Update existing submesh slot
+                    string existingRootBone = slot.meshData.RootBoneName;
+                    UpdateSlotData(existingAdditional, finalMeshRenderer, existingAdditional.material, existingAdditional.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
+                    existingAdditional.sourceSubmeshIndex = i;
+                    EditorUtility.SetDirty(existingAdditional);
+                    createdSlots.Add(existingAdditional);
+
+                    // Overlay for this submesh
+                    if (sbp.createOverlays)
+                    {
+                        Material srcMat = (sbp.slotMesh.sharedMaterials != null && i < sbp.slotMesh.sharedMaterials.Length) ? sbp.slotMesh.sharedMaterials[i] : null;
+                        var oda = CreateOverlayFromMaterial(sbp, existingAdditional, srcMat, null, assetDir);
+                        slotToOverlay[existingAdditional] = oda;
+                    }
+                    continue;
+                }
+
+                // Create new additional slot
+                var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
+                additionalSlot.slotName = theSlotName;
+                additionalSlot.material = sbp.material;
+                // Non-UDIM path: ensure udimAdjustment=false
+                additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, i, sbp.clearNormals,sbp.clearTangents);
+                TransformMeshData(additionalSlot, sbp);
+
+                additionalSlot.sourceSubmeshIndex = i;
 
                 AssetDatabase.CreateAsset(additionalSlot, theSlotPath);
                 if (sbp.addToGlobalLibrary)
@@ -517,24 +563,8 @@ namespace UMA.Editors
                 if (sbp.createOverlays)
                 {
                     Material srcMat = (sbp.slotMesh.sharedMaterials != null && i < sbp.slotMesh.sharedMaterials.Length) ? sbp.slotMesh.sharedMaterials[i] : null;
-                    if (srcMat != null)
-                    {
-                        if (!materialToOverlay.TryGetValue(srcMat, out var existing))
-                        {
-                            var oda = CreateOverlayFromMaterial(sbp, additionalSlot, srcMat, null, assetDir);
-                            materialToOverlay[srcMat] = oda;
-                            slotToOverlay[additionalSlot] = oda;
-                        }
-                        else
-                        {
-                            slotToOverlay[additionalSlot] = existing; // reuse overlay for same material
-                        }
-                    }
-                    else
-                    {
-                        var oda = CreateOverlayFromMaterial(sbp, additionalSlot, null, null, assetDir);
-                        slotToOverlay[additionalSlot] = oda;
-                    }
+                    var oda = CreateOverlayFromMaterial(sbp, additionalSlot, srcMat, null, assetDir);
+                    slotToOverlay[additionalSlot] = oda;
                 }
             }
             AssetDatabase.SaveAssets();
@@ -773,36 +803,61 @@ namespace UMA.Editors
 
                     try
                     {
-                        var sda = ScriptableObject.CreateInstance<SlotDataAsset>();
-                        sda.slotName = theSlotName;
-                        sda.nameHash = UMAUtils.StringToHash(sda.slotName);
-                        sda.material = sbp.material;
-                        sda.sourceSubmeshIndex = sub;
-
-                        // Normalize UVs via udimAdjustment flag
-                        sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
-                        TransformMeshData(sda, sbp);
-
-                        var cloth = sbp.slotMesh.GetComponent<Cloth>();
-                        if (cloth != null)
-                        {
-                            sda.meshData.RetrieveDataFromUnityCloth(cloth);
-                        }
-
+                        // Determine target path
                         string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + "_slot.asset";
                         if (sbp.useRootFolder)
                         {
                             theSlotPath = sbp.slotFolder + '/' + theSlotName + "_slot.asset";
                         }
 
-                        AssetDatabase.CreateAsset(sda, theSlotPath);
-                        if (sbp.addToGlobalLibrary)
+                        var existing = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(theSlotPath);
+                        SlotDataAsset sda;
+                        if (existing != null)
                         {
-                            UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sda);
+                            // Update existing asset in place
+                            sda = existing;
+                            sda.slotName = theSlotName;
+                            sda.nameHash = UMAUtils.StringToHash(sda.slotName);
+                            sda.material = sbp.material;
+                            sda.sourceSubmeshIndex = sub;
+                            sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
+                            TransformMeshData(sda, sbp);
+                            var cloth = sbp.slotMesh.GetComponent<Cloth>();
+                            if (cloth != null)
+                            {
+                                sda.meshData.RetrieveDataFromUnityCloth(cloth);
+                            }
+                            EditorUtility.SetDirty(sda);
                         }
+                        else
+                        {
+                            // Create a new slot asset
+                            sda = ScriptableObject.CreateInstance<SlotDataAsset>();
+                            sda.slotName = theSlotName;
+                            sda.nameHash = UMAUtils.StringToHash(sda.slotName);
+                            sda.material = sbp.material;
+                            sda.sourceSubmeshIndex = sub;
+
+                            // Normalize UVs via udimAdjustment flag
+                            sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
+                            TransformMeshData(sda, sbp);
+
+                            var cloth = sbp.slotMesh.GetComponent<Cloth>();
+                            if (cloth != null)
+                            {
+                                sda.meshData.RetrieveDataFromUnityCloth(cloth);
+                            }
+
+                            AssetDatabase.CreateAsset(sda, theSlotPath);
+                            if (sbp.addToGlobalLibrary)
+                            {
+                                UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sda);
+                            }
+                        }
+
                         createdSlots.Add(sda);
 
-                        // UDIM rule: always create overlay per tile
+                        // UDIM rule: always create/overwrite overlay per tile
                         if (sbp.createOverlays)
                         {
                             Material srcMat = (sbp.slotMesh.sharedMaterials != null && sub < sbp.slotMesh.sharedMaterials.Length) ? sbp.slotMesh.sharedMaterials[sub] : null;

@@ -12,6 +12,7 @@ namespace UMA.Editors
         private float origLabelWidth;
         private int origIndentLevel;
         private int _pickerControlId = -1;
+        private static TextureEditor _activePickerOwner = null; // ensures only one editor handles the picker
 
         public TextureEditor(Texture texture, int channel, OverlayData overlay)
         {
@@ -96,21 +97,28 @@ namespace UMA.Editors
                 selectBtnRect = new Rect(previewRect.x + 2, previewRect.yMax - (btnH + 2), btnW, btnH);
                 if (GUI.Button(selectBtnRect, "Select", EditorStyles.miniButton))
                 {
-                    // Use a unique seed for the picker control ID to avoid collisions
-                    string seed = ($"texPicker_{(_overlay != null ? _overlay.overlayName : "overlay")}_{_channel}_{GetHashCode()}");
-                    _pickerControlId = EditorGUIUtility.GetControlID(new GUIContent(seed), FocusType.Passive);
+                    // Mark this editor as the active picker owner and open the picker with a unique control id
+                    _activePickerOwner = this;
+                    _pickerControlId = GUIUtility.GetControlID(FocusType.Passive);
                     EditorGUIUtility.ShowObjectPicker<Texture>(_texture, false, string.Empty, _pickerControlId);
                 }
 
-                // Handle the object picker selection
-                if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == _pickerControlId)
+                // Handle the object picker selection; only the active owner processes the event
+                if ((_activePickerOwner == this) &&
+                    (evt.commandName == "ObjectSelectorUpdated" || evt.commandName == "ObjectSelectorClosed") &&
+                    EditorGUIUtility.GetObjectPickerControlID() == _pickerControlId)
                 {
                     Texture picked = EditorGUIUtility.GetObjectPickerObject() as Texture;
                     if (picked != null && picked != _texture)
                     {
                         SetTexture(picked, ref changed);
                     }
-                    // Consume non-layout events to prevent layout mismatches
+                    // Release ownership on close, and consume non-layout events to prevent layout mismatches
+                    if (evt.commandName == "ObjectSelectorClosed")
+                    {
+                        _activePickerOwner = null;
+                        _pickerControlId = -1;
+                    }
                     if (Event.current.type != EventType.Layout)
                     {
                         Event.current.Use();
@@ -161,6 +169,28 @@ namespace UMA.Editors
                 if (runtimeTextures != null && _channel < runtimeTextures.Length)
                 {
                     runtimeTextures[_channel] = newTexture;
+                }
+
+                // Also persist the change to the underlying OverlayDataAsset and save it
+                var asset = _overlay.asset;
+                if (asset != null)
+                {
+                    try
+                    {
+                        var so = new SerializedObject(asset);
+                        var texList = so.FindProperty("_textureList");
+                        if (texList != null && _channel >= 0 && _channel < texList.arraySize)
+                        {
+                            // Record for undo and assign new texture to the asset at the corresponding channel
+                            Undo.RecordObject(asset, "Set Overlay Texture");
+                            texList.GetArrayElementAtIndex(_channel).objectReferenceValue = newTexture;
+                            so.ApplyModifiedPropertiesWithoutUndo();
+
+                            EditorUtility.SetDirty(asset);
+                            AssetDatabase.SaveAssetIfDirty(asset);
+                        }
+                    }
+                    catch { /* ignore editor-time exceptions during reload */ }
                 }
             }
 
