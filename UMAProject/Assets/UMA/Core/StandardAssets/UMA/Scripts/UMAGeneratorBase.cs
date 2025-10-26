@@ -453,7 +453,6 @@ namespace UMA
         /// <param name="animator">Animator.</param>
         public static void SetAvatar(UMAData umaData, Animator animator)
         {
-            Debug.Log("Setting Avatar for " + umaData.name);
             var umaTPose = umaData.GetTPose();
 
             switch (umaData.umaRecipe.raceData.umaTarget)

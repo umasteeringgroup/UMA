@@ -314,6 +314,9 @@ namespace UMA
 #if UNITY_2022_2_OR_NEWER
                 if (UMASettings.UseMeshAPICombiner)
                 {
+					if(updatedAtlas)
+						SetSlotUVAreasForRendererFiltered(_filteredMaterials);
+
                     var clothCoeffs = SkinnedMeshCombinerMeshAPI.CombineIntoRenderer(
                         renderers[currentRendererIndex],
                         combinedMeshList.ToArray(),
@@ -435,6 +438,60 @@ namespace UMA
                 clothProperties.ApplyValues(cloth);
             }
         }
+
+		// Add this helper inside UMADefaultMeshCombiner (e.g., below RecalculateUV)
+		private void SetSlotUVAreasForRendererFiltered(List<UMAData.GeneratedMaterial> materialsForRenderer) {
+			for(int materialIndex = 0; materialIndex < materialsForRenderer.Count; materialIndex++) {
+				var generatedMaterial = materialsForRenderer[materialIndex];
+				// Only process materials for this renderer
+				if(generatedMaterial.rendererAsset != umaData.GetRendererAsset(currentRendererIndex))
+					continue;
+
+				for(int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++) {
+					var fragment = generatedMaterial.materialFragments[materialDefinitionIndex];
+					if(fragment?.slotData == null || fragment.slotData.asset?.meshData == null)
+						continue;
+
+					var sdTemp = fragment.slotData;
+					var tempAtlasRect = fragment.atlasRegion;
+					int vertexCount = sdTemp.asset.meshData.vertices.Length;
+
+					// Normalize rect by atlas resolution
+					float atlasXMin = tempAtlasRect.xMin / atlasResolution;
+					float atlasXMax = tempAtlasRect.xMax / atlasResolution;
+					float atlasYMin = tempAtlasRect.yMin / atlasResolution;
+					float atlasYMax = tempAtlasRect.yMax / atlasResolution;
+					float atlasXRange = atlasXMax - atlasXMin;
+					float atlasYRange = atlasYMax - atlasYMin;
+
+					// Shared-rect adjustment (matches RecalculateUV conditions)
+					if(fragment.isRectShared && sdTemp.useAtlasOverlay) {
+						OverlayData foundRect = null;
+						for(int i = 0; i < fragment.overlayList.Count; i++) {
+							var szname = fragment.overlayList[i];
+							if(sdTemp.slotName != null && szname.overlayName != null && szname.overlayName.Contains(sdTemp.slotName)) {
+								foundRect = szname;
+								break;
+							}
+						}
+						if(foundRect != null && foundRect.rect != Rect.zero) {
+							var size = foundRect.rect.size * generatedMaterial.resolutionScale;
+							var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale.x;
+							var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale.x;
+
+							atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
+							atlasXRange = size.x / generatedMaterial.cropResolution.x;
+
+							atlasYMin += (offsetY / generatedMaterial.cropResolution.y);
+							atlasYRange = size.y / generatedMaterial.cropResolution.y;
+						}
+					}
+
+					// Set UV area (normalized 0..1)
+					sdTemp.UVArea.Set(atlasXMin, atlasYMin, atlasXRange, atlasYRange);
+				}
+			}
+		}
 
         private void ApplyClothIfNeeded(ClothSkinningCoefficient[] clothSkinning)
         {

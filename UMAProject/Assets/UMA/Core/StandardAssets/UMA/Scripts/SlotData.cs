@@ -346,6 +346,18 @@ namespace UMA
             return false;
         }
 
+		public bool OwnsVertex(int vertex) {
+			if(vertex >= vertexOffset) {
+				int LocalToSlot = vertex - vertexOffset;
+				if(LocalToSlot < asset.meshData.vertexCount) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+
+
         /// <summary>
         /// Deep copy of the SlotData.
         /// </summary>

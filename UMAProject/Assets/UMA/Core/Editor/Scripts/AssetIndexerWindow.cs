@@ -2451,8 +2451,13 @@ namespace UMA.Controls
 		private UMAAssetIndexer beforeIndex;
 		private UMAAssetIndexer afterIndex;
 		private UMAAssetIndexer AnalyzeIndex;
+        private UMABonePose PoseConverter;
+        private RaceData raceForPose;
+        private SlotDataAsset donorSlot;
+        float rotX, rotY, rotZ; 
 
-		void ShowSidebar()
+
+        void ShowSidebar()
         {
             GUILayout.Label("Utilities Panel", EditorStyles.toolbarButton,GUILayout.ExpandWidth(true));
             GUILayout.BeginHorizontal();
@@ -2841,6 +2846,41 @@ namespace UMA.Controls
                 {
                     SelectLODSlots();
                 }
+                if (GUILayout.Button("Clear Legacy Flag on slots"))
+                {
+                    SetLegacyFlagOnSelectedSlots(false);
+                }
+                if (GUILayout.Button("Set Legacy Flag on slots"))
+                {
+                    SetLegacyFlagOnSelectedSlots(true);
+                }
+                GUILayout.Label("Slot Conversion",EditorStyles.boldLabel);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("BonePose:");
+                PoseConverter = EditorGUILayout.ObjectField("", PoseConverter, typeof(UMABonePose), false, GUILayout.Width(175)) as UMABonePose;
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("RaceData:");
+                raceForPose = EditorGUILayout.ObjectField("", raceForPose,  typeof(RaceData), false, GUILayout.Width(175)) as RaceData;
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Donor:");
+                donorSlot = EditorGUILayout.ObjectField("", donorSlot, typeof(SlotDataAsset), false, GUILayout.Width(175)) as SlotDataAsset;
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("X:", GUILayout.Width(22));
+                rotX = EditorGUILayout.FloatField(rotX,GUILayout.Width(60));
+                EditorGUILayout.LabelField("Y:", GUILayout.Width(22));
+                rotY = EditorGUILayout.FloatField(rotY, GUILayout.Width(60));
+                EditorGUILayout.LabelField("Z:", GUILayout.Width(22));
+                rotZ = EditorGUILayout.FloatField(rotZ, GUILayout.Width(60));
+                GUILayout.EndHorizontal();
+
+
+                if (GUILayout.Button("Convert to new format", GUILayout.Width(150)))
+                {
+                    ConvertSlotFromLegacy(donorSlot, PoseConverter, raceForPose, rotX, rotY, rotZ);
+                }
                 GUIHelper.EndVerticalPadded(10);
             }
 
@@ -2859,6 +2899,51 @@ namespace UMA.Controls
                 }
             }
             GUILayout.EndScrollView();
+        }
+
+
+        private void ConvertSlotFromLegacy(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x=0f, float y=0f, float z = 0f)
+        {
+            if (poseConverter == null)
+            {
+                //EditorUtility.DisplayDialog("Error", "Please select a UMABonePose to convert selected slots.", "OK");
+                //return;
+            }
+            var selectedSlots = GetSelectedAssets(typeof(SlotDataAsset));
+            foreach (var slotItem in selectedSlots)
+            {
+                SlotDataAsset slot = slotItem.Item as SlotDataAsset;
+                if (slot != null)
+                {
+                    if (donor != null)
+                    {
+                        slot.ConvertBonePosesFromLegacy(donor, poseConverter, raceData, x, y, z);
+                    }
+                    else
+                    {
+                        slot.ConvertBonePosesFromLegacy(poseConverter, raceData, x, y, z);
+                    }
+                    Debug.Log("Updating converted slot");
+                    EditorUtility.SetDirty(slot);
+                    AssetDatabase.SaveAssetIfDirty(slot);
+                    UMAUpdateProcessor.UpdateSlot(slot, false);
+                }
+            }
+        }
+
+        private void SetLegacyFlagOnSelectedSlots(bool legacyFlag)
+        {
+            var selectedSlots = GetSelectedAssets(typeof(SlotDataAsset));
+            foreach(var slotItem in selectedSlots)
+            {
+                SlotDataAsset slot = slotItem.Item as SlotDataAsset;
+                if (slot != null)
+                {
+                    slot.isLegacySlot = legacyFlag;
+                    EditorUtility.SetDirty(slot);
+                }
+            }
+            AssetDatabase.SaveAssets();
         }
 
         private void SelectUnusedMeshHideAssets()

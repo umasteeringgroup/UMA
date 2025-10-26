@@ -614,6 +614,8 @@ namespace UMA.CharacterSystem
         {
             StartGuard = false;
             _isFirstSettingsBuild = true;
+
+#if UMA_NODOMAINRELOAD
             blendShapes = new HashSet<string>();
             previousRace = null;
             _wardrobeRecipes = new Dictionary<string, UMATextRecipe>();
@@ -634,6 +636,7 @@ namespace UMA.CharacterSystem
 #if DCA_OPTIMIZED
             if (_buildCache == null) _buildCache = new BuildCache();
             else _buildCache.Invalidate();
+#endif
 #endif
             InitialStartup();
         }

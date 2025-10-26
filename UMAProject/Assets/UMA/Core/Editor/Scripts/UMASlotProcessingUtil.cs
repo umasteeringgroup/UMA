@@ -80,7 +80,7 @@ namespace UMA.Editors
 
             GameObject newObject = new GameObject();
 
-            for (int i = 0; i < transformList.Length; i++)
+            for (int i =0; i < transformList.Length; i++)
             {
                 if (transformList[i].name == rootBone)
                 {
@@ -367,7 +367,7 @@ namespace UMA.Editors
             SkinnedMeshRenderer finalMeshRenderer = null;
 
             int childCount = skinnedResult.transform.childCount;
-            for (int i = 0; i < childCount; i++)
+            for (int i =0; i < childCount; i++)
             {
                 var child = skinnedResult.transform.GetChild(i);
                 if (child.name == sbp.slotMesh.name)
@@ -399,11 +399,11 @@ namespace UMA.Editors
                 var uv = mesh.uv;
                 if (uv != null && uv.Length == mesh.vertexCount)
                 {
-                    for (int i = 0; i < uv.Length; i++)
+                    for (int i =0; i < uv.Length; i++)
                     {
                         int u = Mathf.FloorToInt(uv[i].x);
                         int v = Mathf.FloorToInt(uv[i].y);
-                        if (u != 0 || v != 0)
+                        if (u !=0 || v !=0)
                         {
                             isUdimMesh = true;
                             break;

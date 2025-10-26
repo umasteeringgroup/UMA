@@ -9,6 +9,7 @@ using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Serialization;
 using System.Text.RegularExpressions;
+using UnityEditor;
 
 namespace UMA
 {
@@ -19,18 +20,13 @@ namespace UMA
     [PreferBinarySerialization]
     public partial class SlotDataAsset : ScriptableObject, ISerializationCallbackReceiver, INameProvider, IUMAIndexOptions
     {
-        #region internalClasses
-        [System.Serializable]
-        public class BonePoseToRace
-        {
-            public string RaceName;
-            public UMABonePose BonePose;
-        };
-        #endregion
         #region enums
         public enum BlendshapeCopyMode {UpdateAndAdd, ClearAndReplace, AddNewOnly }
         public enum NormalCopyMode {CopyNormals, AverageNormals }
         #endregion
+
+        // Legacy flag to identify old slots that mayNeedConverting to new Bone Pose.
+        public bool isLegacySlot = true;
 
         public string slotName;
         [System.NonSerialized]
@@ -44,8 +40,6 @@ namespace UMA
         public bool noAutoAdd = false;
         public bool NoAutoAdd { get { return noAutoAdd; } set { noAutoAdd = value; } }
         #endregion
-
-        public List<BonePoseToRace> bonePoseToRaces = new List<BonePoseToRace>();
 
 #if UNITY_EDITOR
         [Tooltip("This is only used when updating the slot with drag and drop below. It is not used at runtime nor is it included in the build")]
@@ -758,6 +752,14 @@ namespace UMA
         {
         }
 
+        UMAMeshData Convert(UMABonePose bonePose, RaceData raceData, float x, float y, float z )
+        {
+            Quaternion adjustRot = Quaternion.Euler(x, y, z);
+            Matrix4x4 adjustMatrix = Matrix4x4.TRS(Vector3.zero, adjustRot, Vector3.one);
+            UMAMeshData convertedMeshData = meshData.ApplyBonePose(bonePose, adjustMatrix, raceData);
+            return convertedMeshData;
+        }
+
         public void Begin(UMAData umaData)
         {
             if (SlotObject != null)
@@ -833,6 +835,34 @@ namespace UMA
         public override string ToString()
         {
             return "SlotData: " + slotName;
+        }
+
+
+        public void ConvertBonePosesFromLegacy(UMABonePose bonePose, RaceData race, float x, float y, float z)
+        {
+            //if (isLegacySlot && bonePose != null)
+            //{
+                meshData = Convert(bonePose,race,x,y,z);
+                isLegacySlot = false;
+                Debug.Log($"Converted legacy SlotDataAsset {slotName} to new bone pose system.");
+                // you will need to set this as dirty and save the asset after calling this function.
+            //}
+        }
+
+        public void ConvertBonePosesFromLegacy(SlotDataAsset donor, UMABonePose bonePose, RaceData race, float x, float y, float z)
+        {
+            if (donor == null && isLegacySlot == false)
+            {
+                return;
+            }
+
+            //if (bonePose != null)
+            //{
+                meshData = donor.Convert(bonePose, race, x, y, z);
+                isLegacySlot = false;
+                Debug.Log($"Converted legacy SlotDataAsset {slotName} to new bone pose system.");
+                // you will need to set this as dirty and save the asset after calling this function.
+            //}
         }
 
         public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment, int submeshIndex, bool clearNormals, bool clearTangents)

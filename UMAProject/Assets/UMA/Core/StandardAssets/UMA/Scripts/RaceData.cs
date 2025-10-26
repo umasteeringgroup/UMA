@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using UMA.PoseTools;
 
 namespace UMA
 {
@@ -121,6 +122,11 @@ namespace UMA
         public bool ForceKeep { get => forceKeep; set => forceKeep = value; }
 		public bool labelLocalFiles;
         public bool LabelLocalFiles { get => labelLocalFiles; set => labelLocalFiles = value; }
+
+
+		[Tooltip("The compatibility pose for old UMA2 rigs. Old slots are converted to this race using this pose.")]		
+		public UMABonePose LegacyCompatibilityPose;
+
 
         public DynamicDNAConverterController[] GetConverters(UMADnaBase DNA)
 		{

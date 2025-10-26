@@ -944,7 +944,8 @@ static void ClearUnpackCaches()
 		public static UMAData.UMARecipe UnpackRecipeWithRaceDefaults(UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, RaceData race)
 		{
 			UnpackRecipe(umaRecipe, umaPackRecipe, true);
-			if (race.PrebakedBlendshapes.Count > 0)
+
+			if (race.PrebakedBlendshapes != null && race.PrebakedBlendshapes.Count > 0)
 			{
                 SlotDataAsset.BakeSlotParams options = new SlotDataAsset.BakeSlotParams();
 				options.burnOptions = race.PrebakedBlendshapes;

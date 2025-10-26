@@ -113,26 +113,26 @@ namespace UMA
 
         public static string FindUMAFullPath()
         {
-            string folder = "/UMA";
-            string OSFolderName = Path.Combine(Application.dataPath, "UMA");
-            if (Directory.Exists(OSFolderName))
+            // Try to locate the InternalDataStore folder anywhere in the project
+            string[] folderGuids = AssetDatabase.FindAssets("InternalDataStore t:Folder");
+            if (folderGuids != null && folderGuids.Length >0)
             {
-                // If the UMA folder exists in the Assets directory, return its path
-                return "Assets/UMA";
-            }
-
-            // Not in the default location, so we need to search for it
-            // search the project for the UMA folder
-            string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
-            if (folders != null && folders.Length > 0)
-            {
-                foreach (string guid in folders)
+                for (int i =0; i < folderGuids.Length; i++)
                 {
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    if (path.EndsWith(folder, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // If we find a folder path that ends with "/UMA", return its path
-                        return path;
+                    string path = AssetDatabase.GUIDToAssetPath(folderGuids[i]);
+                    if (string.IsNullOrEmpty(path)) continue;
+
+                    string normalized = path.Replace('\\', '/').TrimEnd('/');
+                    int idx = normalized.LastIndexOf("/InternalDataStore", StringComparison.OrdinalIgnoreCase);
+                    if (idx >=0)
+            {
+                        // parent of InternalDataStore
+                        string parent = normalized.Substring(0, idx);
+                        if (string.IsNullOrEmpty(parent))
+                {
+                            parent = "Assets";
+                        }
+                        return parent;
                     }
                 }
             }
@@ -147,6 +147,13 @@ namespace UMA
             {
                 return instance;
             }
+
+			var o = Resources.Load<UMASettings>("UMASettings");
+			if (o != null)
+			{
+				return o;
+			}
+
             string path = FindUMAFullPath() + "/InternalDataStore/InGame/Resources/UMASettings.asset";
             var settings = AssetDatabase.LoadAssetAtPath<UMASettings>(path);
 #if UNITY_EDITOR

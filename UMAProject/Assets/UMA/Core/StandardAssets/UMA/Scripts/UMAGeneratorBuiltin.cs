@@ -868,11 +868,7 @@ namespace UMA
             // End the batched skeleton update (begun in GenerateSingleUMA when isShapeDirty)
             umaData.skeleton.EndSkeletonUpdate();
 
-            // Rebuild the avatar only if allowed. This is a measurable cost saver.
-            //if (!umaData.KeepAvatar)
-            //{
-                UpdateAvatar(umaData);
-            //}
+            UpdateAvatar(umaData);
 
             // Blendshape DNA must be applied after the avatar is reset on the animator
             umaData.PostApplyDNA();

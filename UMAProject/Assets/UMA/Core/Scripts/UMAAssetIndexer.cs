@@ -568,6 +568,12 @@ namespace UMA
 
         private void CreateGenerator()
         {
+#if UMA_VES //VES added
+			if(SceneManager.GetActiveScene().name.StartsWith("Init")) {
+				generator = GameObject.Find("CoreManagers").GetComponentInChildren<UMAGenerator>();
+				return;
+			}
+#endif
             UMASettings settings = UMASettings.GetSettingsFromResources();
             if (settings == null)
             {
@@ -4150,7 +4156,6 @@ namespace UMA
             if (TypeLookup.ContainsKey(LookupType) == false)
             {
                 DebugSerialization("Creating new dictionary for type: " + LookupType.ToString());
-                Debug.Log("Creating new dictionary for type: " + LookupType.ToString());
                 TypeLookup[LookupType] = new Dictionary<string, AssetItem>();
             }
             return TypeLookup[LookupType];
@@ -4244,7 +4249,6 @@ namespace UMA
         public void ClearDictionaries()
         {
             DebugSerialization("Clearing dictionaries");
-            Debug.Log("Clearing dictionaries");
             TypeLookup.Clear();
             GuidTypes.Clear();
             raceRecipes.Clear();
