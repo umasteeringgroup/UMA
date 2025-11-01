@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#define DEBUG_BAKING
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using System.Text;
 #endif
@@ -10,6 +11,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using System.Linq;
 
 namespace UMA
 {
@@ -69,11 +71,21 @@ namespace UMA
         public class Welding
         {
             public string WeldedToSlot;
-            public int MisMatchCount = 0;
+            public int MisMatchCount =0;
             public List<WeldPoint> WeldPoints = new List<WeldPoint>();
         }
 
         public List<Welding> Welds = new List<Welding>();
+
+        // Editor-only: per-slot mapping of UDIM shared (seam) vertex original indices to the new local indices.
+        [System.Serializable]
+        public class UdimSeamMap
+        {
+            public int[] originalIndices;
+            public int[] localIndices;
+        }
+
+        [Tooltip("Editor-only: mapping of shared UDIM seam vertex indices (original -> local) for this split slot")] public UdimSeamMap UdimSharedVertexMap;
 
         public Dictionary<int, int> TheirVertexToOurVertex = new Dictionary<int, int>();
         public Dictionary<int,int> OurVertextoTheirVertex = new Dictionary<int, int>();
@@ -84,7 +96,7 @@ namespace UMA
 
         public int FindOurBone(string boneName)
         {
-            for (int i = 0; i < meshData.umaBones.Length; i++)
+            for (int i =0; i < meshData.umaBones.Length; i++)
             {
                 if (meshData.umaBones[i].name == boneName)
                 {
@@ -99,7 +111,7 @@ namespace UMA
         {
             int[] boneMapping = new int[bones.Length];
 
-            for (int i = 0; i < boneMapping.Length; i++)
+            for (int i =0; i < boneMapping.Length; i++)
             {
                 boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
             }
@@ -111,7 +123,7 @@ namespace UMA
             BoneIndexEntry entry;
             if (bonesCollection.TryGetValue(boneTransform, out entry))
             {
-                for (int i = 0; i < entry.Count; i++)
+                for (int i =0; i < entry.Count; i++)
                 {
                     var res = entry[i];
                     if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index]))
@@ -141,7 +153,7 @@ namespace UMA
             TheirBoneWeights.Clear();
             // Loop through all the boneweights, and build a dictionary of bone indexes to weights.
 
-            int BoneWeightPos = 0;
+            int BoneWeightPos =0;
             for(int ourVertex=0; ourVertex< meshData.vertices.Length;ourVertex++)
             {
                 OurBoneWeights.Add(ourVertex, new List<BoneWeight1>());
@@ -152,8 +164,8 @@ namespace UMA
                 }
             }
 
-            BoneWeightPos = 0;
-            for(int theirVertex = 0; theirVertex < theirSlot.meshData.vertices.Length; theirVertex++)
+            BoneWeightPos =0;
+            for(int theirVertex =0; theirVertex < theirSlot.meshData.vertices.Length; theirVertex++)
             {
                 TheirBoneWeights.Add(theirVertex, new List<BoneWeight1>());
                 for(int i=0; i < theirSlot.meshData.ManagedBonesPerVertex[theirVertex]; i++)
@@ -246,11 +258,11 @@ namespace UMA
         public void BuildVertexLookups(SlotDataAsset theirsSlot)
         {
             TheirVertexToOurVertex.Clear();
-            for (int Thiers = 0; Thiers < theirsSlot.meshData.vertices.Length; Thiers++)
+            for (int Thiers =0; Thiers < theirsSlot.meshData.vertices.Length; Thiers++)
             {
                 float Closest = float.MaxValue;
                 int ClosestOurs = -1;
-                for (int ours = 0; ours < meshData.vertices.Length; ours++)
+                for (int ours =0; ours < meshData.vertices.Length; ours++)
                 {
                     float Len = (theirsSlot.meshData.vertices[Thiers] - meshData.vertices[ours]).magnitude;
                     if (Len < Closest)
@@ -263,11 +275,11 @@ namespace UMA
             }
 
             OurVertextoTheirVertex.Clear();
-            for (int ours = 0; ours < meshData.vertices.Length; ours++)
+            for (int ours =0; ours < meshData.vertices.Length; ours++)
             {
                 float Closest = float.MaxValue;
                 int ClosestTheirs = -1;
-                for (int Thiers = 0; Thiers < theirsSlot.meshData.vertices.Length; Thiers++)
+                for (int Thiers =0; Thiers < theirsSlot.meshData.vertices.Length; Thiers++)
                 {
                     float Len = (theirsSlot.meshData.vertices[Thiers] - meshData.vertices[ours]).magnitude;
                     if (Len < Closest)
@@ -284,8 +296,8 @@ namespace UMA
 
         public string CopyBoneweightsFrom(SlotDataAsset sourceSlot)
         {
-            int foundcount = 0;
-            int notfoundcount = 0;
+            int foundcount =0;
+            int notfoundcount =0;
             EnsureBoneWeights();
             sourceSlot.EnsureBoneWeights();
 
@@ -295,12 +307,12 @@ namespace UMA
 
             Dictionary<int, List<BoneWeight1>> NewBoneWeights = new Dictionary<int, List<BoneWeight1>>();
 
-            for (int ourVertex = 0; ourVertex < meshData.ManagedBonesPerVertex.Length; ourVertex++)
+            for (int ourVertex =0; ourVertex < meshData.ManagedBonesPerVertex.Length; ourVertex++)
             {
 
                 bool found = false;
                 int theirVertex = OurVertextoTheirVertex[ourVertex];
-                if (theirVertex == 1785)
+                if (theirVertex ==1785)
                 {
                     Debug.Log("RightEar hash is " + UMAUtils.StringToHash("RightEar"));
                     Debug.Log("Breakpoint");
@@ -311,7 +323,7 @@ namespace UMA
                     var ourBones = OurBoneWeights[ourVertex];
                     var theirBones = TheirBoneWeights[theirVertex];
 
-                    for (int i = 0; i < theirBones.Count; i++)
+                    for (int i =0; i < theirBones.Count; i++)
                     {
                         BoneWeight1 bw = theirBones[i];
                         if (!TheirBonesToOurBones.ContainsKey(bw.boneIndex))
@@ -345,7 +357,7 @@ namespace UMA
             }
             List<BoneWeight1> allNewWeights = new List<BoneWeight1>();
             // now save all the boneweights.
-            for (int ourVertex = 0; ourVertex < meshData.ManagedBonesPerVertex.Length; ourVertex++)
+            for (int ourVertex =0; ourVertex < meshData.ManagedBonesPerVertex.Length; ourVertex++)
             {
                 int numWeights = meshData.ManagedBonesPerVertex[ourVertex];
                 List<BoneWeight1> weights = NewBoneWeights[ourVertex];
@@ -363,13 +375,13 @@ namespace UMA
 
         public string CopyNormalsFrom(SlotDataAsset sourceSlot, float weldDistance, NormalCopyMode nm)
         {
-            int foundVerts = 0;
-            int unfoundVerts = 0;
-            int changedVertexes = 0;
+            int foundVerts =0;
+            int unfoundVerts =0;
+            int changedVertexes =0;
 
-            for (int Dest = 0; Dest < sourceSlot.meshData.vertices.Length; Dest++)
+            for (int Dest =0; Dest < sourceSlot.meshData.vertices.Length; Dest++)
             {
-                for (int Src = 0; Src < meshData.vertices.Length; Src++)
+                for (int Src =0; Src < meshData.vertices.Length; Src++)
                 {
                     Vector3 TheirVert = sourceSlot.meshData.vertices[Dest];
                     Vector3 ourVert = meshData.vertices[Src];
@@ -378,7 +390,7 @@ namespace UMA
                     {
                         foundVerts++;
                         float Normaldiff = (meshData.normals[Src] - sourceSlot.meshData.normals[Dest]).magnitude;
-                        if (Normaldiff != 0)
+                        if (Normaldiff !=0)
                         {
                             changedVertexes++;
                             if (nm == NormalCopyMode.CopyNormals)
@@ -499,7 +511,7 @@ namespace UMA
 
         private void AddError(string v)
         {
-            if (errorBuilder.Length == 0)
+            if (errorBuilder.Length ==0)
             {
                 errorBuilder.Append(v);
             }
@@ -569,7 +581,7 @@ namespace UMA
         /// <summary>
         /// Default overlay scale for slots using the asset.
         /// </summary>
-        public float overlayScale = 1.0f;
+        public float overlayScale =1.0f;
         /// <summary>
         /// The animated bone names.
         /// </summary>
@@ -602,7 +614,7 @@ namespace UMA
         public GameObject SlotObject;
         private bool SlotObjectHookedUp = false;
 
-        //UMA 2.8 FixDNAPrefabs: this is a new field that can take DNAConverter Prefabs *and* DNAConverterControllers
+        //UMA2.8 FixDNAPrefabs: this is a new field that can take DNAConverter Prefabs *and* DNAConverterControllers
         [SerializeField]
         [Tooltip("Optional DNA converter specific to the slot. Accepts a DNAConverterController asset or a legacy DNAConverterBehaviour prefab.")]
         private DNAConverterField _slotDNA = new DNAConverterField();
@@ -610,7 +622,7 @@ namespace UMA
         [Tooltip("If isWildCardSlot = true, then the overlays on this slot are applied to any slot or overlay with a matching tag when the recipe is built. This is used in Wardrobe Recipes to apply overlays to other slots.")]
         public bool isWildCardSlot;
 
-        //UMA 2.8 FixDNAPrefabs: I'm putting the required property for this here because theres no properties anywhere else!
+        //UMA2.8 FixDNAPrefabs: I'm putting the required property for this here because theres no properties anywhere else!
         public IDNAConverter slotDNA
         {
             get { return _slotDNA.Value; }
@@ -626,7 +638,7 @@ namespace UMA
                     return true;
                 }
 
-                if (meshData != null || meshData.vertexCount > 0)
+                if (meshData != null || meshData.vertexCount >0)
                 {
                     return false;
                 }
@@ -636,22 +648,22 @@ namespace UMA
                     return true;
                 }
 
-                if (CharacterBegun != null && CharacterBegun.GetPersistentEventCount() > 0)
+                if (CharacterBegun != null && CharacterBegun.GetPersistentEventCount() >0)
                 {
                     return true;
                 }
 
-                if (SlotAtlassed != null && SlotAtlassed.GetPersistentEventCount() > 0)
+                if (SlotAtlassed != null && SlotAtlassed.GetPersistentEventCount() >0)
                 {
                     return true;
                 }
 
-                if (DNAApplied != null && DNAApplied.GetPersistentEventCount() > 0)
+                if (DNAApplied != null && DNAApplied.GetPersistentEventCount() >0)
                 {
                     return true;
                 }
 
-                if (CharacterCompleted != null && CharacterCompleted.GetPersistentEventCount() > 0)
+                if (CharacterCompleted != null && CharacterCompleted.GetPersistentEventCount() >0)
                 {
                     return true;
                 }
@@ -679,7 +691,7 @@ namespace UMA
         /// </remarks>
         public UMAMeshData meshData;
         /// <summary>
-        /// Index of the submesh in the MeshData. Later versions will always have 1 submesh, but this is kept for 
+        /// Index of the submesh in the MeshData. Later versions will always have1 submesh, but this is kept for 
         /// compatibility with older versions.
         /// </summary>
         public int subMeshIndex;
@@ -765,7 +777,7 @@ namespace UMA
             if (SlotObject != null)
             {
                 HookupObjectEvents();
-                for (int i = 0; i < EventHookups.Count; i++)
+                for (int i =0; i < EventHookups.Count; i++)
                 {
                     IUMAEventHookup ih = EventHookups[i];
                     ih.Begun(umaData);
@@ -777,7 +789,7 @@ namespace UMA
         {
             if (SlotObject != null)
             {
-                for (int i = 0; i < EventHookups.Count; i++)
+                for (int i =0; i < EventHookups.Count; i++)
                 {
                     IUMAEventHookup ih = EventHookups[i];
                     ih.Completed(umaData, this.SlotObject);
@@ -789,7 +801,7 @@ namespace UMA
         {
             if (this.SlotObject != null)
             {
-                if (SlotObjectHookedUp && EventHookups.Count > 0)
+                if (SlotObjectHookedUp && EventHookups.Count >0)
                 {
                     return;
                 }
@@ -798,7 +810,7 @@ namespace UMA
                 var Behaviors = SlotObject.GetComponents<MonoBehaviour>();
                 Debug.Log($"There are {Behaviors.Length} components");
 
-                for (int i = 0; i < Behaviors.Length; i++)
+                for (int i =0; i < Behaviors.Length; i++)
                 {
                     MonoBehaviour mb = Behaviors[i];
                     if (mb is IUMAEventHookup)
@@ -899,11 +911,11 @@ namespace UMA
                 // already loaded. just return.
                 return;
             }
-            if (meshData.ManagedBoneWeights != null && meshData.ManagedBoneWeights.Length > 0)
+            if (meshData.ManagedBoneWeights != null && meshData.ManagedBoneWeights.Length >0)
             {
                 meshData.LoadVariableBoneWeights();
             }
-            else if (meshData.boneWeights != null && meshData.boneWeights.Length > 0)
+            else if (meshData.boneWeights != null && meshData.boneWeights.Length >0)
             {
                 meshData.LoadBoneWeights();
             }
@@ -911,7 +923,7 @@ namespace UMA
 
         public void EnsureBoneWeights()
         {
-            if (meshData.ManagedBonesPerVertex == null || meshData.ManagedBonesPerVertex.Length == 0)
+            if (meshData.ManagedBonesPerVertex == null || meshData.ManagedBonesPerVertex.Length ==0)
             {
                 meshData.LoadBoneWeights();
             }
@@ -926,7 +938,7 @@ namespace UMA
             public bool copyUnbakedBlendshapes;
             [Tooltip("These shapes will be included even if not baked, if copyUnbakedBlendshapes is true. If copyUnbakedBlendshapes is true, and this is empty, then all shapes will be included.")]
             public List<string> ShapesToInclude; // Optional: if set, these shapes will be included even if not baked, if copyUnbakedBlendshapes is true
-            [Tooltip("If >= 0, recalculate normals and tangents using this smoothing angle (in degrees). If < 0, do not recalculate. Do not set for multi-part models unless you want edges to have sharp normals")]
+            [Tooltip("If >=0, recalculate normals and tangents using this smoothing angle (in degrees). If <0, do not recalculate. Do not set for multi-part models unless you want edges to have sharp normals")]
             public float smoothingAngleDegrees;
             [Tooltip("The new slotname")]
             public string newSlotName;          // Optional: rename baked slot asset
@@ -939,20 +951,40 @@ namespace UMA
         /// </summary>
         public SlotDataAsset BakeNewSlotData(BakeSlotParams p)
         {
+#if DEBUG_BAKING
+            Debug.LogWarning("BakeNewSlotData called on slot: " + slotName);
+#endif
+            // If requested, and a slot with this name already exists in the indexer, return it immediately
+            if (p.addToIndexer && !string.IsNullOrEmpty(p.newSlotName))
+            {
+                var indexer = UMAAssetIndexer.Instance;
+                if (indexer != null)
+                {
+                    var existing = indexer.GetAsset<SlotDataAsset>(p.newSlotName, recursionGuard: false, inStartup: false);
+                    if (existing != null)
+                    {
+#if DEBUG_BAKING
+                        Debug.LogWarning("BakeNewSlotData called with existing slot in indexer: " + p.newSlotName+" Returning existing slot");
+#endif
+                        return existing;
+                    }
+                }
+            }
+
             // If there are bake targets but this asset has none of them, return the current slot unchanged
-            if (p.burnOptions != null && p.burnOptions.Count > 0)
+            if (p.burnOptions != null && p.burnOptions.Count >0)
             {
                 bool hasAny = false;
-                if (meshData != null && meshData.blendShapes != null && meshData.blendShapes.Length > 0)
+                if (meshData != null && meshData.blendShapes != null && meshData.blendShapes.Length >0)
                 {
                     // Build a small set of requested shape names
                     // Avoid LINQ to reduce allocs
-                    for (int i = 0; i < meshData.blendShapes.Length && !hasAny; i++)
+                    for (int i =0; i < meshData.blendShapes.Length && !hasAny; i++)
                     {
                         var bs = meshData.blendShapes[i];
                         if (bs == null || string.IsNullOrEmpty(bs.shapeName)) continue;
                         string shapeName = bs.shapeName;
-                        for (int j = 0; j < p.burnOptions.Count; j++)
+                        for (int j =0; j < p.burnOptions.Count; j++)
                         {
                             var opt = p.burnOptions[j];
                             if (opt == null || string.IsNullOrEmpty(opt.BlendShape)) continue;
@@ -966,23 +998,24 @@ namespace UMA
                 }
                 if (!hasAny)
                 {
+#if DEBUG_BAKING
+                    Debug.LogWarning("BakeNewSlotData called with no bake targets found on slot: " + slotName);
+                    Debug.LogWarning("Requested blendshapes: " + string.Join(", ", p.burnOptions.Where(o => o != null).Select(o => o.BlendShape)));
+#endif
                     return this;
                 }
             }
-
-            // If requested, and a slot with this name already exists in the indexer, return it immediately
-            if (p.addToIndexer && !string.IsNullOrEmpty(p.newSlotName))
+            else
             {
-                var indexer = UMAAssetIndexer.Instance;
-                if (indexer != null)
-                {
-                    var existing = indexer.GetAsset<SlotDataAsset>(p.newSlotName, recursionGuard: false, inStartup: false);
-                    if (existing != null)
-                    {
-                        return existing;
-                    }
-                }
+                // No bake targets, nothing to do
+#if DEBUG_BAKING
+                Debug.LogWarning("BakeNewSlotData called with no bake targets on slot: " + slotName);
+#endif
+
+                return this;
             }
+
+
 
             // Create destination SlotDataAsset and copy metadata
             var newSlotData = ScriptableObject.CreateInstance<SlotDataAsset>();
@@ -991,6 +1024,9 @@ namespace UMA
             if (meshData == null)
             {
                 newSlotData.meshData = null;
+#if DEBUG_BAKING
+                Debug.LogWarning("BakeNewSlotData called with null mesh data on slot: " + slotName);
+#endif
                 return newSlotData;
             }
 
@@ -998,17 +1034,20 @@ namespace UMA
             var md = meshData.DeepCopy();
             if (md == null)
             {
+#if DEBUG_BAKING
+                Debug.LogWarning("BakeNewSlotData called but DeepCopy returned null mesh data on slot: " + slotName);
+#endif
                 newSlotData.meshData = null;
                 return newSlotData;
             }
 
             // Blendshape bake phase
-            if (md.blendShapes != null && md.blendShapes.Length > 0 && p.burnOptions != null && p.burnOptions.Count > 0)
+            if (md.blendShapes != null && md.blendShapes.Length >0 && p.burnOptions != null && p.burnOptions.Count >0)
             {
                 // Build dictionary for SkinnedMeshCombiner baking API
                 var bakeDict = new Dictionary<string, BlendShapeData>(p.burnOptions.Count);
                 var bakedNames = new HashSet<string>();
-                for (int i = 0; i < p.burnOptions.Count; i++)
+                for (int i =0; i < p.burnOptions.Count; i++)
                 {
                     var opt = p.burnOptions[i];
                     if (opt == null || string.IsNullOrEmpty(opt.BlendShape)) continue;
@@ -1019,7 +1058,7 @@ namespace UMA
                     }
                 }
 
-                if (bakeDict.Count > 0)
+                if (bakeDict.Count >0)
                 {
                     var verts = md.vertices;
                     var norms = md.normals;
@@ -1027,9 +1066,9 @@ namespace UMA
                     bool hasNormals = (norms != null && norms.Length == verts.Length);
                     bool hasTangents = (tans != null && tans.Length == verts.Length);
 
-                    int vertexStart = 0;
+                    int vertexStart =0;
                     var shapes = md.blendShapes;
-                    for (int s = 0; s < shapes.Length; s++)
+                    for (int s =0; s < shapes.Length; s++)
                     {
                         UMABlendShape shape = shapes[s];
                         if (shape == null) continue;
@@ -1046,12 +1085,12 @@ namespace UMA
                     if (p.copyUnbakedBlendshapes)
                     {
                         var kept = new List<UMABlendShape>(shapes.Length);
-                        bool includeAll = (p.ShapesToInclude == null || p.ShapesToInclude.Count == 0);
+                        bool includeAll = (p.ShapesToInclude == null || p.ShapesToInclude.Count ==0);
                         List<Regex> includePatterns = null;
                         if (!includeAll)
                         {
                             includePatterns = new List<Regex>(p.ShapesToInclude.Count);
-                            for (int i = 0; i < p.ShapesToInclude.Count; i++)
+                            for (int i =0; i < p.ShapesToInclude.Count; i++)
                             {
                                 var pattern = p.ShapesToInclude[i];
                                 if (string.IsNullOrEmpty(pattern)) continue;
@@ -1067,7 +1106,7 @@ namespace UMA
                             }
                         }
 
-                        for (int i = 0; i < shapes.Length; i++)
+                        for (int i =0; i < shapes.Length; i++)
                         {
                             var sh = shapes[i];
                             if (sh == null) continue;
@@ -1081,7 +1120,7 @@ namespace UMA
                             {
                                 bool match = false;
                                 string name = sh.shapeName ?? string.Empty;
-                                for (int r = 0; r < includePatterns.Count; r++)
+                                for (int r =0; r < includePatterns.Count; r++)
                                 {
                                     if (includePatterns[r].IsMatch(name))
                                     {
@@ -1104,30 +1143,30 @@ namespace UMA
             // Assign mesh to new slot
             newSlotData.meshData = md;
 
-            // Recalculate normals/tangents if requested (angle >= 0)
-            float angle = (p.smoothingAngleDegrees == 0f) ? 0f : (p.smoothingAngleDegrees == 0f ? 0f : p.smoothingAngleDegrees);
-            if (p.smoothingAngleDegrees >= 0f && md.vertices != null && md.vertices.Length > 0 && md.submeshes != null && md.submeshes.Length > 0)
+            // Recalculate normals/tangents if requested (angle >=0)
+            float angle = (p.smoothingAngleDegrees ==0f) ?0f : (p.smoothingAngleDegrees ==0f ?0f : p.smoothingAngleDegrees);
+            if (p.smoothingAngleDegrees >0.1f && md.vertices != null && md.vertices.Length >0 && md.submeshes != null && md.submeshes.Length >0)
             {
                 int vCount = md.vertices.Length;
                 if (md.uv == null || md.uv.Length != vCount) md.uv = new Vector2[vCount];
                 if (md.normals == null || md.normals.Length != vCount) md.normals = new Vector3[vCount];
                 if (md.tangents == null || md.tangents.Length != vCount) md.tangents = new Vector4[vCount];
 
-                int totalIdx = 0;
-                for (int i = 0; i < md.submeshes.Length; i++)
+                int totalIdx =0;
+                for (int i =0; i < md.submeshes.Length; i++)
                 {
                     var tris = md.submeshes[i].getBaseTriangles();
                     if (tris != null) totalIdx += tris.Length;
                 }
-                if (totalIdx > 0 && (totalIdx % 3) == 0)
+                if (totalIdx >0 && (totalIdx %3) ==0)
                 {
                     int[] allTriangles = new int[totalIdx];
-                    int write = 0;
-                    for (int i = 0; i < md.submeshes.Length; i++)
+                    int write =0;
+                    for (int i =0; i < md.submeshes.Length; i++)
                     {
                         var tris = md.submeshes[i].getBaseTriangles();
-                        if (tris == null || tris.Length == 0) continue;
-                        System.Array.Copy(tris, 0, allTriangles, write, tris.Length);
+                        if (tris == null || tris.Length ==0) continue;
+                        System.Array.Copy(tris,0, allTriangles, write, tris.Length);
                         write += tris.Length;
                     }
 #if UMA_BURSTCOMPILE
@@ -1162,7 +1201,7 @@ namespace UMA
                         mesh.vertices = md.vertices;
                         mesh.uv = md.uv;
                         mesh.subMeshCount = md.submeshes.Length;
-                        for (int i = 0; i < md.submeshes.Length; i++)
+                        for (int i =0; i < md.submeshes.Length; i++)
                         {
                             var tris = md.submeshes[i].getBaseTriangles();
                             mesh.SetIndices(tris ?? System.Array.Empty<int>(), UnityEngine.MeshTopology.Triangles, i);
@@ -1197,6 +1236,12 @@ namespace UMA
                 {
                     indexer.ProcessNewItem(newSlotData, false, false);
                 }
+            }
+            else
+            {
+#if DEBUG_BAKING
+                Debug.LogWarning("BakeNewSlotData created new slot but did not add to indexer: " + newSlotData.slotName);
+#endif
             }
 
             return newSlotData;

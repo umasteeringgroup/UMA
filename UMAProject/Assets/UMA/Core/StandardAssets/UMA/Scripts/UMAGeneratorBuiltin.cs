@@ -421,7 +421,10 @@ namespace UMA
             preapplyTicks += preapply;
             gstopWatch.Restart();
 #endif
-			DNABuildType dnaUpdateFlags = umaData.DNAPreApply();
+            if (useNewDNA)
+            {
+                DNABuildType dnaUpdateFlags = umaData.DNAPreApply();
+            }
 
             if (umaData.isTextureDirty)
 			{
@@ -836,7 +839,7 @@ namespace UMA
 
 		public virtual void PreApply(UMAData umaData)
 		{
-			if (umaData)
+			if (umaData && useNewDNA == false)
             {
                 umaData.PreApplyDNA();
             }
@@ -856,7 +859,10 @@ namespace UMA
             if (!umaData.rawAvatar)
             {
                 umaData.GotoTPose();
-                umaData.ApplyDNA();
+                if (useNewDNA == false)
+                {
+                    umaData.ApplyDNA();
+                }
             }
 
             // Only restore items if enabled, as this can be expensive
@@ -871,7 +877,10 @@ namespace UMA
             UpdateAvatar(umaData);
 
             // Blendshape DNA must be applied after the avatar is reset on the animator
-            umaData.PostApplyDNA();
+            if (useNewDNA == false)
+            {
+                umaData.PostApplyDNA();
+            }
             umaData.FireDNAAppliedEvents();
 		}
 #pragma warning restore 618

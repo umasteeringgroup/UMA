@@ -37,6 +37,7 @@ namespace UMA.Editors
         public bool invertZ;
         public bool clearNormals;
         public bool clearTangents;
+        public bool batchMode;
 
         // UDIM grid dimensions (e.g., 10x10). If 0, defaults will be used.
         public int udimTilesU;
@@ -45,5 +46,8 @@ namespace UMA.Editors
         // Optional: persisted asset paths for reference/debugging
         public string slotMaterialPath;
         public string slotFolderPath;
+
+        // Optional: weld UDIM seam normals/tangents across split tiles by averaging
+        public bool weldUdimNormals;
     }
 }

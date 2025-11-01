@@ -14,7 +14,7 @@ namespace UMA.Editors
     {
         protected readonly string[] toolbar =
         {
-            "DNA", "Slots"
+           "Slots", "DNA"
         };
         public static bool _AutomaticUpdates = true;
         protected Vector2 scrollPosition;
@@ -384,14 +384,14 @@ namespace UMA.Editors
             {
                 switch (_toolbarIndex)
                 {
-                    case 0:
+                    case 1:
                         if (!dnaEditor.IsValid)
                         {
                             return false;
                         }
 
                         return dnaEditor.OnGUI(ref _dnaDirty, ref _textureDirty, ref _meshDirty);
-                    case 1:
+                    case 0:
                         return slotEditor.OnGUI(target.name, ref _dnaDirty, ref _textureDirty, ref _meshDirty);
                 }
             }

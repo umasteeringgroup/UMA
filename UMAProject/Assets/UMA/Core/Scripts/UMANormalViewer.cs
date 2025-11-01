@@ -102,7 +102,7 @@ namespace UMA
 
             if (_skinnedMesh == null)
             {
-                _skinnedMesh = GetComponent<SkinnedMeshRenderer>();
+                _skinnedMesh = GetComponentInChildren<SkinnedMeshRenderer>();
                 if (_skinnedMesh == null)
                 {
                     return;

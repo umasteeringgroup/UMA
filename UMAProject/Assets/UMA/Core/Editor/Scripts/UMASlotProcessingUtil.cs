@@ -11,18 +11,22 @@ namespace UMA.Editors
 {
     public static class UMASlotProcessingUtil
     {
+        public static SkinnedMeshRenderer finalMeshRenderer;
+
         // Result object returned to the caller with all created assets
         public class SlotBuildResult
         {
             public List<SlotDataAsset> Slots = new List<SlotDataAsset>();
             public Dictionary<SlotDataAsset, OverlayDataAsset> SlotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>();
             public bool IsUDIM;
+            // New: paths to temporary assets to delete later (when in batch mode)
+            public List<string> TempAssetsToDelete = new List<string>();
         }
 
         /// <summary>
-        ///  Updates an Existing SlotDataAsset.
+        /// Updates an Existing SlotDataAsset.
         /// </summary>
-        public static void UpdateSlotData( SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents, bool clearNormals, bool clearTangents)
+        public static void UpdateSlotData(SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents, bool clearNormals, bool clearTangents)
         {
             int subMesh = slot.subMeshIndex;
             if (slot.sourceSubmeshIndex > 0)
@@ -52,7 +56,7 @@ namespace UMA.Editors
             Mesh resultingMesh;
             if (prefabMesh != null)
             {
-                resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, prefabMesh, 0.0001f,calcTangents);
+                resultingMesh = SeamRemoval.PerformSeamRemoval(resultingSkinnedMesh, prefabMesh, 0.0001f, calcTangents);
                 resultingSkinnedMesh.sharedMesh = resultingMesh;
                 SkinnedMeshAligner.AlignBindPose(prefabMesh, resultingSkinnedMesh);
             }
@@ -73,14 +77,14 @@ namespace UMA.Editors
 
             string meshAssetName = path + '/' + mesh.name + "_TempMesh.asset";
 
-            AssetDatabase.CreateAsset(resultingMesh, meshAssetName );
+            AssetDatabase.CreateAsset(resultingMesh, meshAssetName);
 
             tempGameObject.name = mesh.transform.parent.gameObject.name;
             Transform[] transformList = tempGameObject.GetComponentsInChildren<Transform>();
 
             GameObject newObject = new GameObject();
 
-            for (int i =0; i < transformList.Length; i++)
+            for (int i = 0; i < transformList.Length; i++)
             {
                 if (transformList[i].name == rootBone)
                 {
@@ -110,9 +114,9 @@ namespace UMA.Editors
             var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName);
 
             var meshgo = skinnedResult.transform.Find(mesh.name);
-            var finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
+            finalMeshRenderer = meshgo.GetComponent<SkinnedMeshRenderer>();
 
-            slot.UpdateMeshData(finalMeshRenderer,rootBone, false, subMesh, clearNormals,clearTangents);
+            slot.UpdateMeshData(finalMeshRenderer, rootBone, false, subMesh, clearNormals, clearTangents);
             slot.meshData.SlotName = slot.slotName;
             var cloth = mesh.GetComponent<Cloth>();
             if (cloth != null)
@@ -120,6 +124,7 @@ namespace UMA.Editors
                 slot.meshData.RetrieveDataFromUnityCloth(cloth);
             }
             AssetDatabase.SaveAssets();
+            // Always clean up here; batch deferral is handled only in CreateSlotData
             AssetDatabase.DeleteAsset(SkinnedName);
             AssetDatabase.DeleteAsset(meshAssetName);
         }
@@ -134,8 +139,8 @@ namespace UMA.Editors
 
             string matName = (srcMat != null && !string.IsNullOrEmpty(srcMat.name)) ? srcMat.name : "Material";
             string overlayName = udimNumber.HasValue
-                ? string.Format("{0}_{1}_UDIM{2}", slot.slotName, matName, udimNumber.Value)
-                : string.Format("{0}_{1}", slot.slotName, matName);
+            ? string.Format("{0}_{1}_UDIM{2}", slot.slotName, matName, udimNumber.Value)
+            : string.Format("{0}_{1}", slot.slotName, matName);
 
             // Build texture list based on UMAMaterial channels from the source material
             int channelCount = (sbp.material.channels != null) ? sbp.material.channels.Length : 0;
@@ -320,8 +325,8 @@ namespace UMA.Editors
                     if (bname.Contains(sbp.stripBones))
                     {
                         bname = bname.Replace(sbp.stripBones, "");
-                      }
-                      transformList[i].name = bname;
+                    }
+                    transformList[i].name = bname;
                 }
                 if (transformList[i].name == sbp.rootBone)
                 {
@@ -358,16 +363,16 @@ namespace UMA.Editors
                 SkinnedName = sbp.slotFolder + '/' + sbp.assetName + "_TempSkinned.prefab";
             }
 
-            var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName,out bool success);
+            var skinnedResult = PrefabUtility.SaveAsPrefabAsset(newObject, SkinnedName, out bool success);
             if (!success)
             {
-                Debug.Log($"failed saving {SkinnedName} prefab"); 
+                Debug.Log($"failed saving {SkinnedName} prefab");
             }
 
             SkinnedMeshRenderer finalMeshRenderer = null;
 
             int childCount = skinnedResult.transform.childCount;
-            for (int i =0; i < childCount; i++)
+            for (int i = 0; i < childCount; i++)
             {
                 var child = skinnedResult.transform.GetChild(i);
                 if (child.name == sbp.slotMesh.name)
@@ -399,11 +404,11 @@ namespace UMA.Editors
                 var uv = mesh.uv;
                 if (uv != null && uv.Length == mesh.vertexCount)
                 {
-                    for (int i =0; i < uv.Length; i++)
+                    for (int i = 0; i < uv.Length; i++)
                     {
                         int u = Mathf.FloorToInt(uv[i].x);
                         int v = Mathf.FloorToInt(uv[i].y);
-                        if (u !=0 || v !=0)
+                        if (u != 0 || v != 0)
                         {
                             isUdimMesh = true;
                             break;
@@ -418,8 +423,20 @@ namespace UMA.Editors
                 AssetDatabase.SaveAssets();
                 GameObject.DestroyImmediate(tempGameObject);
                 GameObject.DestroyImmediate(newObject);
-                AssetDatabase.DeleteAsset(SkinnedName);
-                AssetDatabase.DeleteAsset(theMesh);
+                if (sbp.batchMode)
+                {
+                    // Defer deletion to caller (batch window)
+                    if (result != null)
+                    {
+                        result.TempAssetsToDelete.Add(SkinnedName);
+                        result.TempAssetsToDelete.Add(theMesh);
+                    }
+                }
+                else
+                {
+                    AssetDatabase.DeleteAsset(SkinnedName);
+                    AssetDatabase.DeleteAsset(theMesh);
+                }
                 return result;
             }
 
@@ -439,7 +456,7 @@ namespace UMA.Editors
             try
             {
                 // Non-UDIM path: ensure udimAdjustment=false in UpdateMeshData
-                slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, 0, sbp.clearNormals, sbp.clearTangents );
+                slot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, 0, sbp.clearNormals, sbp.clearTangents);
             }
             catch (Exception ex)
             {
@@ -460,6 +477,14 @@ namespace UMA.Editors
             }
 
             SlotDataAsset OldAsset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(slotPath);
+            if (sbp.batchMode)
+            {
+                if (OldAsset != null)
+                {
+                    AssetDatabase.DeleteAsset(slotPath);
+                    OldAsset = null;
+                }
+            }
 
             if (OldAsset != null)
             {
@@ -482,7 +507,7 @@ namespace UMA.Editors
                 createdSlots.Add(slot);
             }
 
-            // Create/overwrite overlay for submesh 0 if requested (non-UDIM reuse rule applies)
+            // Create/overwrite overlay for submesh0 if requested (non-UDIM reuse rule applies)
             if (sbp.createOverlays)
             {
                 var srcMat0 = (sbp.slotMesh.sharedMaterials != null && sbp.slotMesh.sharedMaterials.Length > 0) ? sbp.slotMesh.sharedMaterials[0] : null;
@@ -499,8 +524,12 @@ namespace UMA.Editors
                 }
             }
 
+            var frenderer = finalMeshRenderer;
+            var shmesh = finalMeshRenderer.sharedMesh;
+            int meshCount = finalMeshRenderer.sharedMesh.subMeshCount;
+
             // Additional submeshes
-            for (int i = 1; i < finalMeshRenderer.sharedMesh.subMeshCount; i++)
+            for (int i = 1; i < meshCount; i++)
             {
                 string theSlotName = string.Format("{0}_{1}", sbp.slotName, i);
 
@@ -547,7 +576,7 @@ namespace UMA.Editors
                 additionalSlot.slotName = theSlotName;
                 additionalSlot.material = sbp.material;
                 // Non-UDIM path: ensure udimAdjustment=false
-                additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, i, sbp.clearNormals,sbp.clearTangents);
+                additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, i, sbp.clearNormals, sbp.clearTangents);
                 TransformMeshData(additionalSlot, sbp);
 
                 additionalSlot.sourceSubmeshIndex = i;
@@ -571,6 +600,18 @@ namespace UMA.Editors
             GameObject.DestroyImmediate(tempGameObject);
             GameObject.DestroyImmediate(newObject);
 
+            if (sbp.batchMode)
+            {
+                // Defer deletion to caller
+                var resultBatch = new SlotBuildResult();
+                resultBatch.Slots = createdSlots;
+                resultBatch.SlotToOverlay = slotToOverlay;
+                resultBatch.IsUDIM = false;
+                resultBatch.TempAssetsToDelete.Add(SkinnedName);
+                resultBatch.TempAssetsToDelete.Add(theMesh);
+                return resultBatch;
+            }
+
             AssetDatabase.DeleteAsset(SkinnedName);
             AssetDatabase.DeleteAsset(theMesh);
 
@@ -587,7 +628,7 @@ namespace UMA.Editors
             var meshData = slot.meshData;
             var Vertices = meshData.vertices;
             Vector3[] newVerts = new Vector3[meshData.vertices.Length];
-            for (int i=0; i < Vertices.Length; i++)
+            for (int i = 0; i < Vertices.Length; i++)
             {
                 if (sbp.rotationEnabled)
                 {
@@ -606,11 +647,11 @@ namespace UMA.Editors
             if (smr == null) return;
             var mesh = smr.sharedMesh;
 
-            var usedBonesDictionary = CompileUsedBonesDictionary(mesh,KeepBonesList);
+            var usedBonesDictionary = CompileUsedBonesDictionary(mesh, KeepBonesList);
             var smrOldBones = smr.bones.Length;
             if (usedBonesDictionary.Count != smrOldBones)
             {
-                mesh.SetBoneWeights(mesh.GetBonesPerVertex(),BuildNewBoneWeights(mesh.GetAllBoneWeights(), usedBonesDictionary));
+                mesh.SetBoneWeights(mesh.GetBonesPerVertex(), BuildNewBoneWeights(mesh.GetAllBoneWeights(), usedBonesDictionary));
                 mesh.bindposes = BuildNewBindPoses(mesh.bindposes, usedBonesDictionary);
                 EditorUtility.SetDirty(mesh);
                 smr.bones = BuildNewReducedBonesList(smr.bones, usedBonesDictionary);
@@ -622,7 +663,7 @@ namespace UMA.Editors
         private static Mesh BuildNewReduceBonesMesh(Mesh sourceMesh, Dictionary<int, int> usedBonesDictionary)
         {
             Mesh newMesh = GameObject.Instantiate<Mesh>(sourceMesh);
-            newMesh.SetBoneWeights(sourceMesh.GetBonesPerVertex(),BuildNewBoneWeights(sourceMesh.GetAllBoneWeights(), usedBonesDictionary));
+            newMesh.SetBoneWeights(sourceMesh.GetBonesPerVertex(), BuildNewBoneWeights(sourceMesh.GetAllBoneWeights(), usedBonesDictionary));
             newMesh.bindposes = BuildNewBindPoses(sourceMesh.bindposes, usedBonesDictionary);
 
             return newMesh;
@@ -647,7 +688,7 @@ namespace UMA.Editors
 
                 if (usedBonesDictionary.ContainsKey(boneWeight[i].boneIndex))
                 {
-                    bone.boneIndex = usedBonesDictionary[boneWeight[i].boneIndex]; 
+                    bone.boneIndex = usedBonesDictionary[boneWeight[i].boneIndex];
                 }
                 newBoneWeights[i] = bone;
             }
@@ -670,13 +711,13 @@ namespace UMA.Editors
             var usedBones = new Dictionary<int, int>();
             var boneWeights = resultingMesh.GetAllBoneWeights();
 
-            foreach(int boneIndex in keepBones)
+            foreach (int boneIndex in keepBones)
             {
                 usedBones.Add(boneIndex, usedBones.Count);
             }
             for (int i = 0; i < boneWeights.Length; i++)
             {
-                
+
                 BoneWeight1 boneWeight = boneWeights[i];
                 if (boneWeight.weight > 0 && !usedBones.ContainsKey(boneWeight.boneIndex))
                 {
@@ -692,6 +733,357 @@ namespace UMA.Editors
             float y = sbp.invertY ? -inVector.y : inVector.y;
             float z = sbp.invertZ ? -inVector.z : inVector.z;
             return new Vector3(x, y, z);
+        }
+
+        // Build a compact mesh from a subset of triangles, remapping all vertex attributes and bone weights
+        private static Mesh BuildCompactTriangleMesh(Mesh source, IList<int> triangleIndices)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (triangleIndices == null) throw new ArgumentNullException("triangleIndices");
+
+            int srcVertexCount = source.vertexCount;
+
+            // Build remap from old vertex index -> new compact index, preserving discovery order
+            var oldToNew = new Dictionary<int, int>(1024);
+            var newToOld = new List<int>(1024);
+            int triCount = triangleIndices.Count;
+            for (int i = 0; i < triCount; i++)
+            {
+                int oldIndex = triangleIndices[i];
+                if (!oldToNew.ContainsKey(oldIndex))
+                {
+                    int newIndex = newToOld.Count;
+                    oldToNew.Add(oldIndex, newIndex);
+                    newToOld.Add(oldIndex);
+                }
+            }
+
+            int newVertexCount = newToOld.Count;
+
+            // Prepare source attributes
+            var srcVertices = source.vertices;
+            var srcNormals = source.normals;
+            var srcTangents = source.tangents;
+            var srcColors32 = source.colors32;
+            var srcUV0 = source.uv;
+            var srcUV1 = source.uv2;
+            var srcUV2 = source.uv3;
+            var srcUV3 = source.uv4;
+
+            // Allocate new attributes
+            var newVertices = new Vector3[newVertexCount];
+            Vector3[] newNormals = (srcNormals != null && srcNormals.Length == srcVertexCount) ? new Vector3[newVertexCount] : null;
+            Vector4[] newTangents = (srcTangents != null && srcTangents.Length == srcVertexCount) ? new Vector4[newVertexCount] : null;
+            Color32[] newColors32 = (srcColors32 != null && srcColors32.Length == srcVertexCount) ? new Color32[newVertexCount] : null;
+            Vector2[] newUV0 = (srcUV0 != null && srcUV0.Length == srcVertexCount) ? new Vector2[newVertexCount] : null;
+            Vector2[] newUV1 = (srcUV1 != null && srcUV1.Length == srcVertexCount) ? new Vector2[newVertexCount] : null;
+            Vector2[] newUV2 = (srcUV2 != null && srcUV2.Length == srcVertexCount) ? new Vector2[newVertexCount] : null;
+            Vector2[] newUV3 = (srcUV3 != null && srcUV3.Length == srcVertexCount) ? new Vector2[newVertexCount] : null;
+
+            for (int i = 0; i < newVertexCount; i++)
+            {
+                int old = newToOld[i];
+                newVertices[i] = srcVertices[old];
+                if (newNormals != null) newNormals[i] = srcNormals[old];
+                if (newTangents != null) newTangents[i] = srcTangents[old];
+                if (newColors32 != null) newColors32[i] = srcColors32[old];
+                if (newUV0 != null) newUV0[i] = srcUV0[old];
+                if (newUV1 != null) newUV1[i] = srcUV1[old];
+                if (newUV2 != null) newUV2[i] = srcUV2[old];
+                if (newUV3 != null) newUV3[i] = srcUV3[old];
+            }
+
+            // Remap triangles
+            var newTris = new int[triCount];
+            for (int i = 0; i < triCount; i++)
+            {
+                newTris[i] = oldToNew[triangleIndices[i]];
+            }
+
+            // Bone weights
+            NativeArray<byte> srcBPV = default;
+            NativeArray<BoneWeight1> srcAllBW = default;
+            bool hasSkinning = false;
+            try
+            {
+                srcBPV = source.GetBonesPerVertex();
+                srcAllBW = source.GetAllBoneWeights();
+                hasSkinning = srcBPV.IsCreated && srcBPV.Length == srcVertexCount && srcAllBW.IsCreated;
+            }
+            catch
+            {
+                hasSkinning = false;
+            }
+
+            NativeArray<byte> newBPV = default;
+            NativeArray<BoneWeight1> newAllBW = default;
+
+            if (hasSkinning)
+            {
+                // Build offsets for source bone weights
+                var offsets = new int[srcVertexCount];
+                int acc = 0;
+                for (int v = 0; v < srcVertexCount; v++)
+                {
+                    offsets[v] = acc;
+                    acc += (v < srcBPV.Length ? srcBPV[v] : (byte)0);
+                }
+
+                // Build new arrays
+                var bpvManaged = new byte[newVertexCount];
+                var bwManaged = new List<BoneWeight1>(acc);
+
+                for (int i = 0; i < newVertexCount; i++)
+                {
+                    int old = newToOld[i];
+                    byte count = (old < srcBPV.Length) ? srcBPV[old] : (byte)0;
+                    bpvManaged[i] = count;
+                    int srcOffset = offsets[old];
+                    for (int j = 0; j < count; j++)
+                    {
+                        bwManaged.Add(srcAllBW[srcOffset + j]);
+                    }
+                }
+
+                newBPV = new NativeArray<byte>(bpvManaged, Allocator.Temp);
+                var bwArray = bwManaged.Count > 0 ? bwManaged.ToArray() : Array.Empty<BoneWeight1>();
+                newAllBW = new NativeArray<BoneWeight1>(bwArray, Allocator.Temp);
+            }
+
+            // Build mesh
+            var compact = new Mesh();
+            compact.name = source.name + "_Compact";
+            compact.indexFormat = (newVertexCount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+            compact.vertices = newVertices;
+            if (newNormals != null) compact.normals = newNormals;
+            if (newTangents != null) compact.tangents = newTangents;
+            if (newColors32 != null) compact.colors32 = newColors32;
+            if (newUV0 != null) compact.uv = newUV0;
+            if (newUV1 != null) compact.uv2 = newUV1;
+            if (newUV2 != null) compact.uv3 = newUV2;
+            if (newUV3 != null) compact.uv4 = newUV3;
+
+            compact.bindposes = source.bindposes; // keep original bones layout
+
+            compact.subMeshCount = 1;
+            compact.SetTriangles(newTris, 0, true);
+
+            if (hasSkinning && newBPV.IsCreated && newAllBW.IsCreated)
+            {
+                compact.SetBoneWeights(newBPV, newAllBW);
+            }
+
+            // Copy blendshapes with remapped vertices
+            int shapeCount = source.blendShapeCount;
+            if (shapeCount > 0)
+            {
+                var dv = new Vector3[srcVertexCount];
+                var dn = new Vector3[srcVertexCount];
+                var dt = new Vector3[srcVertexCount];
+
+                for (int si = 0; si < shapeCount; si++)
+                {
+                    string shapeName = source.GetBlendShapeName(si);
+                    int frameCount = source.GetBlendShapeFrameCount(si);
+                    for (int fi = 0; fi < frameCount; fi++)
+                    {
+                        float w = source.GetBlendShapeFrameWeight(si, fi);
+                        source.GetBlendShapeFrameVertices(si, fi, dv, dn, dt);
+                        var ndv = new Vector3[newVertexCount];
+                        var ndn = new Vector3[newVertexCount];
+                        var ndt = new Vector3[newVertexCount];
+                        for (int vi = 0; vi < newVertexCount; vi++)
+                        {
+                            int old = newToOld[vi];
+                            ndv[vi] = dv[old];
+                            ndn[vi] = dn[old];
+                            ndt[vi] = dt[old];
+                        }
+                        compact.AddBlendShapeFrame(shapeName, w, ndv, ndn, ndt);
+                    }
+                }
+            }
+
+            compact.RecalculateBounds();
+
+            // Cleanup NativeArrays
+            if (srcBPV.IsCreated) srcBPV.Dispose();
+            if (srcAllBW.IsCreated) srcAllBW.Dispose();
+            if (newBPV.IsCreated) newBPV.Dispose();
+            if (newAllBW.IsCreated) newAllBW.Dispose();
+
+            return compact;
+        }
+
+        // Build a compact mesh and also return the mapping between original indices and new indices
+        private struct CompactMeshResult
+        {
+            public Mesh Mesh;
+            public Dictionary<int, int> OldToNew; // original -> local
+            public List<int> NewToOld; // local -> original
+        }
+        private static CompactMeshResult BuildCompactTriangleMeshWithMap(Mesh source, IList<int> triangleIndices)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (triangleIndices == null) throw new ArgumentNullException("triangleIndices");
+
+            int srcVertexCount = source.vertexCount;
+
+            // Build remap from old vertex index -> new compact index, preserving discovery order
+            var oldToNew = new Dictionary<int, int>(1024);
+            var newToOld = new List<int>(1024);
+            int triCount = triangleIndices.Count;
+            for (int i = 0; i < triCount; i++)
+            {
+                int oldIndex = triangleIndices[i];
+                if (!oldToNew.ContainsKey(oldIndex))
+                {
+                    int newIndex = newToOld.Count;
+                    oldToNew.Add(oldIndex, newIndex);
+                    newToOld.Add(oldIndex);
+                }
+            }
+
+            int newVertexCount = newToOld.Count;
+
+            // Prepare attributes
+            var srcVertices = source.vertices;
+            var srcNormals = source.normals;
+            var srcTangents = source.tangents;
+            var srcColors32 = source.colors32;
+            var srcUV0 = source.uv;
+            var srcUV1 = source.uv2;
+            var srcUV2 = source.uv3;
+            var srcUV3 = source.uv4;
+
+            var newVertices = new Vector3[newVertexCount];
+            Vector3[] newNormals = (srcNormals != null && srcNormals.Length == srcVertexCount) ? new Vector3[newVertexCount] : null;
+            Vector4[] newTangents = (srcTangents != null && srcTangents.Length == srcVertexCount) ? new Vector4[newVertexCount] : null;
+            Color32[] newColors32 = (srcColors32 != null && srcColors32.Length == srcVertexCount) ? new Color32[newVertexCount] : null;
+            Vector2[] newUV0 = (srcUV0 != null && srcUV0.Length == srcVertexCount) ? new Vector2[newVertexCount] : null;
+            Vector2[] newUV1 = (srcUV1 != null && srcUV1.Length == srcVertexCount) ? new Vector2[newVertexCount] : null;
+            Vector2[] newUV2 = (srcUV2 != null && srcUV2.Length == srcVertexCount) ? new Vector2[newVertexCount] : null;
+            Vector2[] newUV3 = (srcUV3 != null && srcUV3.Length == srcVertexCount) ? new Vector2[newVertexCount] : null;
+
+            for (int i = 0; i < newVertexCount; i++)
+            {
+                int old = newToOld[i];
+                newVertices[i] = srcVertices[old];
+                if (newNormals != null) newNormals[i] = srcNormals[old];
+                if (newTangents != null) newTangents[i] = srcTangents[old];
+                if (newColors32 != null) newColors32[i] = srcColors32[old];
+                if (newUV0 != null) newUV0[i] = srcUV0[old];
+                if (newUV1 != null) newUV1[i] = srcUV1[old];
+                if (newUV2 != null) newUV2[i] = srcUV2[old];
+                if (newUV3 != null) newUV3[i] = srcUV3[old];
+            }
+
+            // Remap triangles
+            var newTris = new int[triCount];
+            for (int i = 0; i < triCount; i++)
+            {
+                newTris[i] = oldToNew[triangleIndices[i]];
+            }
+
+            // Bone weights
+            NativeArray<byte> srcBPV = default;
+            NativeArray<BoneWeight1> srcAllBW = default;
+            bool hasSkinning = false;
+            try
+            {
+                srcBPV = source.GetBonesPerVertex();
+                srcAllBW = source.GetAllBoneWeights();
+                hasSkinning = srcBPV.IsCreated && srcBPV.Length == srcVertexCount && srcAllBW.IsCreated;
+            }
+            catch { hasSkinning = false; }
+
+            NativeArray<byte> newBPV = default;
+            NativeArray<BoneWeight1> newAllBW = default;
+            if (hasSkinning)
+            {
+                var offsets = new int[srcVertexCount];
+                int acc = 0;
+                for (int v = 0; v < srcVertexCount; v++)
+                {
+                    offsets[v] = acc;
+                    acc += (v < srcBPV.Length ? srcBPV[v] : (byte)0);
+                }
+                var bpvManaged = new byte[newVertexCount];
+                var bwManaged = new List<BoneWeight1>(acc);
+                for (int i = 0; i < newVertexCount; i++)
+                {
+                    int old = newToOld[i];
+                    byte count = (old < srcBPV.Length) ? srcBPV[old] : (byte)0;
+                    bpvManaged[i] = count;
+                    int srcOffset = offsets[old];
+                    for (int j = 0; j < count; j++)
+                    {
+                        bwManaged.Add(srcAllBW[srcOffset + j]);
+                    }
+                }
+                newBPV = new NativeArray<byte>(bpvManaged, Allocator.Temp);
+                var bwArray = bwManaged.Count > 0 ? bwManaged.ToArray() : Array.Empty<BoneWeight1>();
+                newAllBW = new NativeArray<BoneWeight1>(bwArray, Allocator.Temp);
+            }
+
+            // Build mesh
+            var compact = new Mesh();
+            compact.name = source.name + "_Compact";
+            compact.indexFormat = (newVertexCount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+            compact.vertices = newVertices;
+            if (newNormals != null) compact.normals = newNormals;
+            if (newTangents != null) compact.tangents = newTangents;
+            if (newColors32 != null) compact.colors32 = newColors32;
+            if (newUV0 != null) compact.uv = newUV0;
+            if (newUV1 != null) compact.uv2 = newUV1;
+            if (newUV2 != null) compact.uv3 = newUV2;
+            if (newUV3 != null) compact.uv4 = newUV3;
+            compact.bindposes = source.bindposes;
+            compact.subMeshCount = 1;
+            compact.SetTriangles(newTris, 0, true);
+            if (hasSkinning && newBPV.IsCreated && newAllBW.IsCreated)
+            {
+                compact.SetBoneWeights(newBPV, newAllBW);
+            }
+
+            // Blendshapes remap
+            int shapeCount = source.blendShapeCount;
+            if (shapeCount > 0)
+            {
+                var dv = new Vector3[srcVertexCount];
+                var dn = new Vector3[srcVertexCount];
+                var dt = new Vector3[srcVertexCount];
+                for (int si = 0; si < shapeCount; si++)
+                {
+                    string shapeName = source.GetBlendShapeName(si);
+                    int frameCount = source.GetBlendShapeFrameCount(si);
+                    for (int fi = 0; fi < frameCount; fi++)
+                    {
+                        float w = source.GetBlendShapeFrameWeight(si, fi);
+                        source.GetBlendShapeFrameVertices(si, fi, dv, dn, dt);
+                        var ndv = new Vector3[newVertexCount];
+                        var ndn = new Vector3[newVertexCount];
+                        var ndt = new Vector3[newVertexCount];
+                        for (int vi = 0; vi < newVertexCount; vi++)
+                        {
+                            int old = newToOld[vi];
+                            ndv[vi] = dv[old];
+                            ndn[vi] = dn[old];
+                            ndt[vi] = dt[old];
+                        }
+                        compact.AddBlendShapeFrame(shapeName, w, ndv, ndn, ndt);
+                    }
+                }
+            }
+
+            compact.RecalculateBounds();
+
+            if (srcBPV.IsCreated) srcBPV.Dispose();
+            if (srcAllBW.IsCreated) srcAllBW.Dispose();
+            if (newBPV.IsCreated) newBPV.Dispose();
+            if (newAllBW.IsCreated) newAllBW.Dispose();
+
+            return new CompactMeshResult { Mesh = compact, OldToNew = oldToNew, NewToOld = newToOld };
         }
 
         // Helper: Generate one slot per UDIM tile per submesh, return result set
@@ -719,11 +1111,15 @@ namespace UMA.Editors
             var createdSlots = new List<SlotDataAsset>();
             var slotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>();
 
+            // First pass: gather triangles per (submesh, tile) and record which original vertices belong to multiple tiles.
+            var perSubTileToTris = new Dictionary<int, Dictionary<(int u, int v), List<int>>>();
+            var oldIndexToTiles = new Dictionary<int, HashSet<(int u, int v)>>();
+
             for (int sub = 0; sub < mesh.subMeshCount; sub++)
             {
                 int[] tris = mesh.GetTriangles(sub);
                 // Classify triangles by tile
-                var tileToTris = new Dictionary<(int u,int v), List<int>>();
+                var tileToTris = new Dictionary<(int u, int v), List<int>>();
 
                 for (int t = 0; t < tris.Length; t += 3)
                 {
@@ -764,6 +1160,33 @@ namespace UMA.Editors
                     list.Add(a);
                     list.Add(b);
                     list.Add(c);
+
+                    // Record tile membership for each original vertex index
+                    if (!oldIndexToTiles.TryGetValue(a, out var setA)) { setA = new HashSet<(int, int)>(); oldIndexToTiles.Add(a, setA); }
+                    setA.Add(key);
+                    if (!oldIndexToTiles.TryGetValue(b, out var setB)) { setB = new HashSet<(int, int)>(); oldIndexToTiles.Add(b, setB); }
+                    setB.Add(key);
+                    if (!oldIndexToTiles.TryGetValue(c, out var setC)) { setC = new HashSet<(int, int)>(); oldIndexToTiles.Add(c, setC); }
+                    setC.Add(key);
+                }
+
+                // Store per submesh tile map
+                perSubTileToTris[sub] = tileToTris;
+            }
+
+            // Determine which original vertices are shared across multiple tiles.
+            var sharedOldIndices = new HashSet<int>();
+            foreach (var kv in oldIndexToTiles)
+            {
+                if (kv.Value != null && kv.Value.Count > 1)
+                    sharedOldIndices.Add(kv.Key);
+            }
+
+            for (int sub = 0; sub < mesh.subMeshCount; sub++)
+            {
+                if (!perSubTileToTris.TryGetValue(sub, out var tileToTris) || tileToTris.Count == 0)
+                {
+                    continue;
                 }
 
                 // Create a slot per used tile
@@ -789,15 +1212,14 @@ namespace UMA.Editors
                     }
                     string theSlotName = string.Format("{0}_UDIM{1}", baseName, udimNumber);
 
-                    // Build a temporary mesh limited to this tile for submesh -> 0
-                    Mesh tileMesh = UnityEngine.Object.Instantiate(mesh);
-                    tileMesh.subMeshCount = 1;
-                    tileMesh.SetTriangles(kvp.Value, 0);
+                    // Build a compact temporary mesh limited to this tile for submesh ->0, with index map
+                    Mesh tileMeshSrc = UnityEngine.Object.Instantiate(mesh);
+                    var cmr = BuildCompactTriangleMeshWithMap(tileMeshSrc, kvp.Value);
 
                     // Create temp renderer to feed UpdateMeshData
                     var go = new GameObject("UDIM_Tile_TempSMR");
                     var smr = go.AddComponent<SkinnedMeshRenderer>();
-                    smr.sharedMesh = tileMesh;
+                    smr.sharedMesh = cmr.Mesh;
                     smr.bones = sourceRenderer.bones;
                     smr.rootBone = sourceRenderer.rootBone;
 
@@ -855,6 +1277,27 @@ namespace UMA.Editors
                             }
                         }
 
+                        // Save seam map for shared vertices (original -> local index)
+                        if (sda != null && cmr.OldToNew != null && cmr.OldToNew.Count > 0)
+                        {
+                            var seamOriginal = new List<int>();
+                            var seamLocal = new List<int>();
+                            foreach (var pair in cmr.OldToNew)
+                            {
+                                if (sharedOldIndices.Contains(pair.Key))
+                                {
+                                    seamOriginal.Add(pair.Key);
+                                    seamLocal.Add(pair.Value);
+                                }
+                            }
+                            sda.UdimSharedVertexMap = new SlotDataAsset.UdimSeamMap
+                            {
+                                originalIndices = seamOriginal.ToArray(),
+                                localIndices = seamLocal.ToArray()
+                            };
+                            EditorUtility.SetDirty(sda);
+                        }
+
                         createdSlots.Add(sda);
 
                         // UDIM rule: always create/overwrite overlay per tile
@@ -869,19 +1312,97 @@ namespace UMA.Editors
                     {
                         Debug.LogException(ex);
                         UnityEngine.Object.DestroyImmediate(go);
-                        UnityEngine.Object.DestroyImmediate(tileMesh);
+                        UnityEngine.Object.DestroyImmediate(cmr.Mesh);
+                        UnityEngine.Object.DestroyImmediate(tileMeshSrc);
                         return new SlotBuildResult { Slots = createdSlots, SlotToOverlay = slotToOverlay, IsUDIM = true };
                     }
                     finally
                     {
                         UnityEngine.Object.DestroyImmediate(go);
-                        UnityEngine.Object.DestroyImmediate(tileMesh);
+                        UnityEngine.Object.DestroyImmediate(cmr.Mesh);
+                        UnityEngine.Object.DestroyImmediate(tileMeshSrc);
                     }
                 }
             }
 
+            // Optional: weld normals/tangents across UDIM seams by averaging
+            if (sbp.weldUdimNormals)
+            {
+                WeldUdimSeamNormalsAverage(createdSlots);
+                foreach (var s in createdSlots) { EditorUtility.SetDirty(s); }
+            }
+
             // Build result for UDIM; recipe creation happens in caller
             return new SlotBuildResult { Slots = createdSlots, SlotToOverlay = slotToOverlay, IsUDIM = true };
+        }
+
+        private static void WeldUdimSeamNormalsAverage(List<SlotDataAsset> slots)
+        {
+            if (slots == null || slots.Count == 0) return;
+            // Build map: original index -> list of (slot, local index)
+            var map = new Dictionary<int, List<(SlotDataAsset s, int idx)>>();
+            foreach (var s in slots)
+            {
+                if (s == null || s.meshData == null) continue;
+                var m = s.UdimSharedVertexMap;
+                if (m == null || m.originalIndices == null || m.localIndices == null) continue;
+                int count = Math.Min(m.originalIndices.Length, m.localIndices.Length);
+                for (int i = 0; i < count; i++)
+                {
+                    int orig = m.originalIndices[i];
+                    int loc = m.localIndices[i];
+                    if (loc < 0 || s.meshData.vertices == null || loc >= s.meshData.vertices.Length) continue;
+                    if (!map.TryGetValue(orig, out var list)) { list = new List<(SlotDataAsset, int)>(); map.Add(orig, list); }
+                    list.Add((s, loc));
+                }
+            }
+
+            // Average normals/tangents per original vertex across participating slots
+            foreach (var kv in map)
+            {
+                var list = kv.Value;
+                if (list == null || list.Count <= 1) continue; // nothing to weld
+
+                // Compute average normal
+                Vector3 sumNormal = Vector3.zero;
+                bool haveNormals = true;
+                foreach (var r in list)
+                {
+                    var md = r.s.meshData;
+                    if (md.normals == null || md.normals.Length != md.vertices.Length) { haveNormals = false; break; }
+                    sumNormal += md.normals[r.idx];
+                }
+                if (haveNormals && sumNormal != Vector3.zero)
+                {
+                    Vector3 avgN = sumNormal.normalized;
+                    foreach (var r in list)
+                    {
+                        r.s.meshData.normals[r.idx] = avgN;
+                    }
+                }
+
+                // Average tangents if present
+                bool haveTangents = true;
+                Vector3 sumTan = Vector3.zero;
+                float wSign = 1f;
+                foreach (var r in list)
+                {
+                    var md = r.s.meshData;
+                    if (md.tangents == null || md.tangents.Length != md.vertices.Length) { haveTangents = false; break; }
+                    Vector4 t = md.tangents[r.idx];
+                    sumTan += new Vector3(t.x, t.y, t.z);
+                    wSign = t.w; // keep any
+                }
+                if (haveTangents && sumTan != Vector3.zero)
+                {
+                    Vector3 avgT = sumTan.normalized;
+                    Vector4 t4 = new Vector4(avgT.x, avgT.y, avgT.z, wSign);
+                    foreach (var r in list)
+                    {
+                        r.s.meshData.tangents[r.idx] = t4;
+                    }
+                }
+            }
         }
     }
 }

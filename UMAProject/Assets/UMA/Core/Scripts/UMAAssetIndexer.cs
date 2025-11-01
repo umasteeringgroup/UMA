@@ -3799,6 +3799,10 @@ namespace UMA
 
             foreach (AssetItem ai in SerializedItems)
             {
+                if (ai == null)
+                {
+                    continue;
+                }
                 if (ai.IsAlwaysLoaded)
                 {
                     Keeps.Add(ai);

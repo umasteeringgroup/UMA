@@ -14,6 +14,7 @@ namespace UMA.Editors
         SerializedProperty FitPercentageDecrease;
         SerializedProperty SharperFitTextures;
         SerializedProperty useAsyncConversion;
+        SerializedProperty useNewDNA;
         SerializedProperty asyncMipRegen;
         public static bool showAtlasSettings = false;
         public static bool showConversionSettings = false;
@@ -34,6 +35,7 @@ namespace UMA.Editors
             SharperFitTextures = serializedObject.FindProperty("SharperFitTextures");
             useAsyncConversion = serializedObject.FindProperty("useAsyncConversion");
             asyncMipRegen = serializedObject.FindProperty("asyncMipRegen");
+            useNewDNA = serializedObject.FindProperty("useNewDNA");
         }
 
         public override void OnInspectorGUI()
@@ -54,6 +56,7 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(AtlasOverflowFitMethod);
                 EditorGUILayout.PropertyField(FitPercentageDecrease);
                 EditorGUILayout.PropertyField(convertMipMaps);
+                EditorGUILayout.PropertyField(useNewDNA, new GUIContent("Use New DNA System"));
                 EditorGUILayout.IntPopup(atlasResolution, atlasLabels, atlasValues);
                 GUIHelper.EndVerticalPadded();
 
@@ -67,7 +70,7 @@ namespace UMA.Editors
                                         /*"Async Mip Regen will only copy the top level mip, and recalculate the mips when the texture is applied"*/, MessageType.None);
                 EditorGUILayout.PropertyField(convertRenderTexture);
                 EditorGUILayout.PropertyField(useAsyncConversion);
-                //EditorGUILayout.PropertyField(asyncMipRegen);
+                EditorGUILayout.PropertyField(asyncMipRegen);
                 GUIHelper.EndVerticalPadded();
             }
 

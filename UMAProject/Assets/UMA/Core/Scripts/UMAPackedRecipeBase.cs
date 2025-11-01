@@ -950,6 +950,7 @@ static void ClearUnpackCaches()
                 SlotDataAsset.BakeSlotParams options = new SlotDataAsset.BakeSlotParams();
 				options.burnOptions = race.PrebakedBlendshapes;
 				options.addToIndexer = true;
+				options.smoothingAngleDegrees = -1.0f; // use default smoothing
 
                 for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
 				{

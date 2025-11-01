@@ -563,7 +563,7 @@ namespace UMA.Editors
                 return null;
             }
 
-            var result = CreateSlot_Internal_WithResult();
+            var result = CreateSlot_Internal_WithResult(false);
             if (result == null || result.Slots == null || result.Slots.Count == 0)
             {
                 return null;
@@ -581,7 +581,7 @@ namespace UMA.Editors
             return first;
         }
 
-        private UMASlotProcessingUtil.SlotBuildResult CreateSlot_Internal_WithResult()
+        private UMASlotProcessingUtil.SlotBuildResult CreateSlot_Internal_WithResult(bool batchMode)
         {
             var material = slotMaterial;
             if (slotName == null || slotName == "")
@@ -660,6 +660,7 @@ namespace UMA.Editors
             sbp.slotMaterialPath = material != null ? AssetDatabase.GetAssetPath(material) : string.Empty;
             sbp.slotFolderPath = slotFolder != null ? AssetDatabase.GetAssetPath(slotFolder) : string.Empty;
             sbp.addToGlobalLibrary = addToGlobalLibrary;
+            sbp.batchMode = batchMode;
 
             var result = UMASlotProcessingUtil.CreateSlotData(sbp);
             if (result == null)
@@ -767,8 +768,11 @@ namespace UMA.Editors
                     {
                         Slots = new List<SlotDataAsset>(),
                         SlotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>(),
-                        IsUDIM = false
+                        IsUDIM = false,
+                        TempAssetsToDelete = new List<string>()
                     };
+
+                    var deferredDeletes = new HashSet<string>();
 
                     float current = 1f;
                     float total = (float)meshes.Count;
@@ -784,7 +788,7 @@ namespace UMA.Editors
                         GetMaterialName(mesh.name, mesh);
 
                         // Build result for this mesh without creating a recipe per mesh
-                        var result = CreateSlot_Internal_WithResult();
+                        var result = CreateSlot_Internal_WithResult(true);
                         if (result != null && result.Slots != null && result.Slots.Count > 0)
                         {
                             // Merge slots
@@ -802,6 +806,16 @@ namespace UMA.Editors
                             }
                             // Track UDIM presence if any
                             aggregate.IsUDIM = aggregate.IsUDIM || result.IsUDIM;
+
+                            // Collect temp asset paths to delete later
+                            if (result.TempAssetsToDelete != null)
+                            {
+                                for (int i = 0; i < result.TempAssetsToDelete.Count; i++)
+                                {
+                                    var p = result.TempAssetsToDelete[i];
+                                    if (!string.IsNullOrEmpty(p)) deferredDeletes.Add(p);
+                                }
+                            }
 
                             Debug.Log("Batch importer processed mesh: " + slotName);
                         }
@@ -822,6 +836,24 @@ namespace UMA.Editors
                     {
                         UMAAssetIndexer.Instance.ForceSave();
                     }
+
+                    // Now delete deferred temp assets
+                    foreach (var path in deferredDeletes)
+                    {
+                        try
+                        {
+                            if (!string.IsNullOrEmpty(path))
+                            {
+                                AssetDatabase.DeleteAsset(path);
+                            }
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Debug.LogWarning($"Could not delete temp asset '{path}': {ex.Message}");
+                        }
+                    }
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
 
                     EditorUtility.ClearProgressBar();
                 }
@@ -880,8 +912,8 @@ namespace UMA.Editors
                 var assetLocation = AssetDatabase.GetAssetPath(obj);
                 if (assetLocation.StartsWith(relativeLocation, System.StringComparison.InvariantCultureIgnoreCase))
                 {
-                    string temp = assetLocation.Substring(relativeLocation.Length + 1); // remove the prefix
-                    temp = temp.Substring(0, temp.LastIndexOf('/') + 1); // remove the asset name
+                    string temp = assetLocation.Substring(relativeLocation.Length +1); // remove the prefix
+                    temp = temp.Substring(0, temp.LastIndexOf('/') +1); // remove the asset name
                     slotName = temp + name; // add the cleaned name
                 }
             }

@@ -137,11 +137,62 @@ namespace UMA.Editors
                 }
             }
 
+            // Below-preview controls: Blend (Atlas/NoAtlas) or Tile (UseExistingTextures)
+            var umaMat = _overlay != null ? _overlay.asset?.material : null;
+            if (umaMat != null)
+            {
+                GUILayout.Space(2);
+                // Ensure blend array size if we might edit blends
+                bool canEditBlend = (umaMat.materialType == UMAMaterial.MaterialType.Atlas || umaMat.materialType == UMAMaterial.MaterialType.NoAtlas);
+                bool canEditTile = (umaMat.materialType == UMAMaterial.MaterialType.UseExistingTextures);
+
+                if (canEditBlend)
+                {
+                    EnsureBlendArrayLength();
+                    var currentBlendMode = _overlay.GetOverlayBlend(_channel);
+                    EditorGUI.BeginChangeCheck();
+                    var newBlendMode = (OverlayDataAsset.OverlayBlend)EditorGUILayout.EnumPopup(currentBlendMode, GUILayout.Width(100));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        if (newBlendMode != currentBlendMode)
+                        {
+                            _overlay.SetOverlayBlend(_channel, newBlendMode);
+                            changed = true;
+                        }
+                    }
+                }
+                else if (canEditTile)
+                {
+                    // Default tile is1 (true) per requirements; show toggle for channel
+                    var currentTile = _overlay.IsTextureTiled(_channel);
+                    EditorGUI.BeginChangeCheck();
+                    var newTile = (bool)EditorGUILayout.ToggleLeft("Tile", currentTile, GUILayout.Width(100));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        if (currentTile != newTile)
+                        {
+                            _overlay.SetTextureTiling(_channel, newTile);
+                            changed = true;
+                        }
+                    }
+                }
+            }
+
             GUILayout.EndVertical();
 
             RestoreEditor();
 
             return changed;
+        }
+
+        private void EnsureBlendArrayLength()
+        {
+            if (_overlay == null) return;
+            int targetLen = _overlay.asset != null ? _overlay.asset.textureCount : Mathf.Max(_channel + 1, _overlay.GetOverlayBlendsLength());
+            if (_overlay.GetOverlayBlendsLength() != targetLen)
+            {
+                _overlay.SetOverlayBlendsLength(targetLen);
+            }
         }
 
         private string GetMaterialPropertyName()
