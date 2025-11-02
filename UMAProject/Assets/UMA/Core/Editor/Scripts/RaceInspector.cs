@@ -6,18 +6,19 @@ using UnityEditor;
 using UnityEditorInternal;
 using System.Collections.Generic;
 using System;
+using System.Text.RegularExpressions;
 
 namespace UMA.Editors
 {
 	[CustomEditor(typeof(RaceData))]
-	public class RaceInspector : Editor 
+	public class RaceInspector : Editor
 	{
 		[MenuItem("Assets/Create/UMA/Core/RaceData")]
 		public static void CreateRaceMenuItem()
 		{
 			CustomAssetUtility.CreateAsset<RaceData>();
 		}
-
+		public static bool showRaceGeneration = false;
 		protected RaceData race;
 		protected bool _needsUpdate;
 		protected string _errorMessage;
@@ -28,17 +29,31 @@ namespace UMA.Editors
 		//pRaceInspector needs to get unpacked UMATextRecipes so we might need a virtual UMAContextBase
 		GameObject EditorUMAContextBase;
 		List<string> ValidationMessages = new List<string>();
-        #region DCS variables
-        private ReorderableList wardrobeSlotList;
+		#region DCS variables
+		private ReorderableList wardrobeSlotList;
 		private bool wardrobeSlotListInitialized = false;
 
-        private ReorderableList prebakedBlendshapeList;
-        private bool prebakedBlendshapeListInitialized = false;
+		private ReorderableList prebakedBlendshapeList;
+		private bool prebakedBlendshapeListInitialized = false;
+
+		private ReorderableList unbakedShapesList;
+		private bool unbakedShapesListInitialized = false;
 
 		private int compatibleRacePickerID;
 		static bool[] _BCFoldouts = new bool[0];
 		List<SlotData> baseSlotsList = new List<SlotData>();
 		List<string> baseSlotsNamesList = new List<string>();
+
+		// Cached blendshape lookup for baseRaceRecipe slots
+		private string[] _bsSlotNames = Array.Empty<string>();
+		private Dictionary<string, string[]> _bsBySlot = new Dictionary<string, string[]>();
+		private int _lastBaseRecipeId = 0;
+		private bool _bsCacheValid = false;
+		// UI selections for add-from-slot
+		private int _prebakeAddSlotIndex = 0;
+		private int _prebakeAddShapeIndex = 0;
+		private int _unbakedAddSlotIndex = 0;
+		private int _unbakedAddShapeIndex = 0;
 		#endregion
 
 		public void OnEnable() {
@@ -49,7 +64,7 @@ namespace UMA.Editors
 		void OnDestroy()
 		{
 			EditorApplication.update -= DoDelayedSave;
-        }
+		}
 
 		void DoDelayedSave()
 		{
@@ -64,59 +79,124 @@ namespace UMA.Editors
 			}
 		}
 
+		private void EnsureBlendshapeCache()
+		{
+			// Pull the baseRaceRecipe reference
+			var baseRecipeProp = serializedObject.FindProperty("baseRaceRecipe");
+			var baseRecipe = baseRecipeProp != null ? baseRecipeProp.objectReferenceValue as UMARecipeBase : null;
+			int recipeId = baseRecipe != null ? baseRecipe.GetInstanceID() : 0;
+			if (_bsCacheValid && recipeId == _lastBaseRecipeId)
+			{
+				return;
+			}
 
+			_bsSlotNames = Array.Empty<string>();
+			_bsBySlot.Clear();
+			_bsCacheValid = true;
+			_lastBaseRecipeId = recipeId;
+
+			if (baseRecipe == null)
+			{
+				return;
+			}
+			var cached = baseRecipe.GetCachedRecipe();
+			if (cached == null)
+			{
+				return;
+			}
+			var slots = cached.GetAllSlots();
+			if (slots == null)
+			{
+				return;
+			}
+			var slotNames = new List<string>();
+			for (int i = 0; i < slots.Length; i++)
+			{
+				var sd = slots[i];
+				if (sd == null || sd.asset == null || sd.asset.meshData == null) continue;
+				var md = sd.asset.meshData;
+				var shapes = md.blendShapes;
+				if (shapes == null || shapes.Length == 0) continue;
+				// collect unique names for this slot
+				var names = new List<string>();
+				for (int s = 0; s < shapes.Length; s++)
+				{
+					var sh = shapes[s];
+					if (sh == null || string.IsNullOrEmpty(sh.shapeName)) continue;
+					if (!names.Contains(sh.shapeName)) names.Add(sh.shapeName);
+				}
+				if (names.Count == 0) continue;
+				_bsBySlot[sd.slotName] = names.ToArray();
+				slotNames.Add(sd.slotName);
+			}
+			slotNames.Sort(StringComparer.Ordinal);
+			_bsSlotNames = slotNames.ToArray();
+			// reset indices if out of range
+			_prebakeAddSlotIndex = Mathf.Clamp(_prebakeAddSlotIndex, 0, Math.Max(0, _bsSlotNames.Length - 1));
+			_unbakedAddSlotIndex = Mathf.Clamp(_unbakedAddSlotIndex, 0, Math.Max(0, _bsSlotNames.Length - 1));
+			_prebakeAddShapeIndex = 0;
+			_unbakedAddShapeIndex = 0;
+		}
 
 		public override void OnInspectorGUI()
 		{
 			if (lastActionTime == 0)
-            {
-                lastActionTime = Time.realtimeSinceStartup;
-            }
+			{
+				lastActionTime = Time.realtimeSinceStartup;
+			}
 
 			EditorGUI.BeginChangeCheck();
-            race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
+			race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
 			race.umaTarget = (UMA.RaceData.UMATarget)EditorGUILayout.EnumPopup(new GUIContent("UMA Target", "The Mecanim animation rig type."), race.umaTarget);
 			race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
 			race.TPose = EditorGUILayout.ObjectField(new GUIContent("T-Pose", "The UMA T-Pose asset can be created by selecting the race fbx and choosing the Extract T-Pose dropdown. Only needs to be done once per race."), race.TPose, typeof(UmaTPose), false) as UmaTPose;
 			race.expressionSet = EditorGUILayout.ObjectField(new GUIContent("Expression Set", "The Expression Set asset is used by the Expression player."), race.expressionSet, typeof(UMA.PoseTools.UMAExpressionSet), false) as UMA.PoseTools.UMAExpressionSet;
 			EditorGUILayout.HelpBox("Fixup Rotations should be true for Blender FBX slots", MessageType.Info);
-			race.FixupRotations = EditorGUILayout.Toggle("Fixup Rotations",race.FixupRotations);
+			race.FixupRotations = EditorGUILayout.Toggle("Fixup Rotations", race.FixupRotations);
 
 			// Renderer Bounds section
 			EditorGUILayout.Space();
 			GUILayout.Label("Renderer Bounds", EditorStyles.boldLabel);
 			SerializedProperty useManualBoundsProp = serializedObject.FindProperty("useManualRendererBounds");
 			SerializedProperty manualBoundsProp = serializedObject.FindProperty("manualRendererBounds");
-            SerializedProperty manualBoundsCenterProp = serializedObject.FindProperty("manualRendererBoundsCenter");
+			SerializedProperty manualBoundsCenterProp = serializedObject.FindProperty("manualRendererBoundsCenter");
 			EditorGUILayout.PropertyField(useManualBoundsProp, new GUIContent("Use Manual Renderer Bounds", "When enabled, UMA renderers will use these manual bounds (extents) instead of calculated bounds."));
 			using (new EditorGUI.DisabledScope(!useManualBoundsProp.boolValue))
 			{
 				EditorGUILayout.PropertyField(manualBoundsProp, new GUIContent("Manual Bounds (Extents)", "Extents in local space before scaling by the 'Position' bone."));
-                EditorGUILayout.PropertyField(manualBoundsCenterProp, new GUIContent("Manual Bounds Center", "Center offset in local space before scaling by the 'Position' bone."));
+				EditorGUILayout.PropertyField(manualBoundsCenterProp, new GUIContent("Manual Bounds Center", "Center offset in local space before scaling by the 'Position' bone."));
 			}
 			EditorGUILayout.Space();
 
 #if UMA_DNACOLLECTIONS
 			EditorGUILayout.HelpBox("DNA Collection is the ongoing rewrite of DNA. It's not done, and won't be for some time, please ignore it", MessageType.Warning);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("DNACollection"));
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("DNACollection"));
 #endif
-            EditorGUILayout.Space();
+			EditorGUILayout.Space();
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("disableDNAConverters"));
 
-            SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
+			SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
 			EditorGUILayout.PropertyField(dnaConverterListprop, true);
 
-            // Prebaked Blendshapes list
-            DrawPrebakedBlendshapeList();
+			showRaceGeneration = EditorGUILayout.Foldout(showRaceGeneration, "Race Generation");
+			if (showRaceGeneration)
+			{
+
+				// Prebaked Blendshapes list
+				DrawPrebakedBlendshapeList();
+
+				// Unbaked Shapes To Include list
+				DrawUnbakedShapesToIncludeList();
+			}
 
 			SerializedProperty dnaRanges = serializedObject.FindProperty("dnaRanges");
 			EditorGUILayout.PropertyField(dnaRanges, true);
 			/* tags GUI */
 			SerializedProperty tags = serializedObject.FindProperty("tags");
 			EditorGUILayout.PropertyField(tags, true);
-			if(EditorGUI.EndChangeCheck())
+			if (EditorGUI.EndChangeCheck())
 			{
-                serializedObject.ApplyModifiedProperties();
+				serializedObject.ApplyModifiedProperties();
 				_needsUpdate = true;
 			}
 
@@ -146,12 +226,12 @@ namespace UMA.Editors
 				ValidationMessages.Clear();
 				DoValidate();
 			}
-			if (GUILayout.Button("  Clear Messages  "))
+			if (GUILayout.Button(" Clear Messages "))
 			{
 				ValidationMessages.Clear();
-            }
-            GUILayout.EndHorizontal();
-            if (ValidationMessages.Count > 0)
+			}
+			GUILayout.EndHorizontal();
+			if (ValidationMessages.Count > 0)
 			{
 				// draw the validation messages one by one, with a little space between them. Each message should be in a helpbox.
 				// if the message starts with "Error:" it should be a error helpbox, if it starts with "Warning:" it should be a warning helpbox, otherwise it should be an info helpbox.
@@ -159,7 +239,7 @@ namespace UMA.Editors
 				List<string> displayedMessages = new List<string>();
 				displayedMessages.AddRange(ValidationMessages);
 				GUILayout.Label("Validation Messages:", EditorStyles.boldLabel);
-                for (int i = displayedMessages.Count - 1; i >= 0; i--)
+				for (int i = displayedMessages.Count - 1; i >= 0; i--)
 				{
 					MessageType messageType = MessageType.Info;
 					if (displayedMessages[i].StartsWith("Error:"))
@@ -177,14 +257,14 @@ namespace UMA.Editors
 						ValidationMessages.RemoveAt(i);
 					}
 					GUILayout.EndHorizontal();
-                }
-            }
+				}
+			}
 			else
 			{
 				EditorGUILayout.HelpBox("No validation messages.", MessageType.Info);
-            }
+			}
 
-            void DoValidate()
+			void DoValidate()
 			{
 				RaceData race = target as RaceData;
 				if (race == null)
@@ -200,8 +280,8 @@ namespace UMA.Editors
 				{
 					ValidationMessages.Add("Error: TPose is not set! This is required to build an avatar and store the base bone positions");
 				}
-                // validate all wardrobe slots are not null or empty
-                if (race.wardrobeSlots == null)
+				// validate all wardrobe slots are not null or empty
+				if (race.wardrobeSlots == null)
 				{
 					ValidationMessages.Add("Error: wardrobeSlots is null");
 				}
@@ -218,9 +298,9 @@ namespace UMA.Editors
 				if (race.umaTarget == RaceData.UMATarget.Generic && String.IsNullOrWhiteSpace(race.genericRootMotionTransformName))
 				{
 					ValidationMessages.Add("Error: genericRootMotionTransformName is null or empty. This is required for Generic UMA Targets.");
-                }
+				}
 
-                if (race.dnaConverterList == null)
+				if (race.dnaConverterList == null)
 				{
 					ValidationMessages.Add("Error: dnaConverterList is null");
 				}
@@ -244,10 +324,10 @@ namespace UMA.Editors
 								if (cvt.dnaAsset.Names == null || cvt.dnaAsset.Names.Length == 0)
 								{
 									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with no DNA names");
-                                }
-                                if (cvt.dnaAsset.dnaTypeHash == 0)
+								}
+								if (cvt.dnaAsset.dnaTypeHash == 0)
 								{
-									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with a 0 dnaType Hash");
+									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with a0 dnaType Hash");
 								}
 								if (cvt.PluginCount == 0)
 								{
@@ -266,24 +346,24 @@ namespace UMA.Editors
 
 					}
 				}
-				if(ValidationMessages.Count == 0)
+				if (ValidationMessages.Count == 0)
 				{
 					ValidationMessages.Add("Info: No problems found. This RaceData looks good!");
-                }
-            }
-
-            #endregion
-
-
-
-            try
-            {
-				PreInspectorGUI(ref _needsUpdate);
-				if(_needsUpdate == true){
-					_needsUpdate = false;
-						DoUpdate();
 				}
-			}catch (UMAResourceNotFoundException e){
+			}
+
+			#endregion
+
+
+
+			try
+			{
+				PreInspectorGUI(ref _needsUpdate);
+				if (_needsUpdate == true) {
+					_needsUpdate = false;
+					DoUpdate();
+				}
+			} catch (UMAResourceNotFoundException e) {
 				_errorMessage = e.Message;
 			}
 
@@ -298,8 +378,8 @@ namespace UMA.Editors
 		/// <summary>
 		/// Add to this method in extender editors if you need to do anything extra when updating the data.
 		/// </summary>
-		protected virtual void DoUpdate() 
-		{ 		
+		protected virtual void DoUpdate()
+		{
 
 		}
 
@@ -327,11 +407,11 @@ namespace UMA.Editors
 					AddRaceDataAsset(tempRaceDataAsset, crossCompatibilitySettingsData);
 				}
 				if (Event.current.type != EventType.Layout)
-                {
-                    Event.current.Use();//stops the Mismatched LayoutGroup errors
-                }
+				{
+					Event.current.Use();//stops the Mismatched LayoutGroup errors
+				}
 
-                return;
+				return;
 			}
 			if (evt.type == EventType.DragUpdated)
 			{
@@ -369,55 +449,229 @@ namespace UMA.Editors
 			}
 		}
 
-        private void InitPrebakedBlendshapeList()
-        {
-            var listProp = serializedObject.FindProperty("PrebakedBlendshapes");
-            prebakedBlendshapeList = new ReorderableList(serializedObject, listProp, true, true, true, true);
-            prebakedBlendshapeList.drawHeaderCallback = rect =>
-            {
-                EditorGUI.LabelField(rect, "Prebaked Blendshapes");
-            };
-            prebakedBlendshapeList.elementHeight = EditorGUIUtility.singleLineHeight + 6;
-            prebakedBlendshapeList.drawElementCallback = (rect, index, isActive, isFocused) =>
-            {
-                var element = prebakedBlendshapeList.serializedProperty.GetArrayElementAtIndex(index);
-                var blendShapeProp = element.FindPropertyRelative("BlendShape");
-                var valueProp = element.FindPropertyRelative("value");
+		private void InitPrebakedBlendshapeList()
+		{
+			var listProp = serializedObject.FindProperty("PrebakedBlendshapes");
+			prebakedBlendshapeList = new ReorderableList(serializedObject, listProp, true, true, true, true);
+			prebakedBlendshapeList.drawHeaderCallback = rect =>
+			{
+				EditorGUI.LabelField(rect, "Prebaked Blendshapes");
+			};
+			prebakedBlendshapeList.elementHeight = EditorGUIUtility.singleLineHeight + 6;
+			prebakedBlendshapeList.drawElementCallback = (rect, index, isActive, isFocused) =>
+			{
+				var element = prebakedBlendshapeList.serializedProperty.GetArrayElementAtIndex(index);
+				var blendShapeProp = element.FindPropertyRelative("BlendShape");
+				var valueProp = element.FindPropertyRelative("value");
 
-                rect.y += 2;
-                float half = (rect.width - 20f) * 0.6f;
-                var nameRect = new Rect(rect.x + 10, rect.y, half, EditorGUIUtility.singleLineHeight);
-                var valueRect = new Rect(nameRect.xMax + 5, rect.y, rect.width - nameRect.width - 25f, EditorGUIUtility.singleLineHeight);
+				rect.y += 2;
+				float half = (rect.width - 20f) * 0.6f;
+				var nameRect = new Rect(rect.x + 10, rect.y, half, EditorGUIUtility.singleLineHeight);
+				var valueRect = new Rect(nameRect.xMax + 5, rect.y, rect.width - nameRect.width - 25f, EditorGUIUtility.singleLineHeight);
 
-                EditorGUI.PropertyField(nameRect, blendShapeProp, GUIContent.none);
-                EditorGUI.PropertyField(valueRect, valueProp, GUIContent.none);
-            };
-            prebakedBlendshapeList.onAddCallback = l =>
-            {
-                var idx = l.serializedProperty.arraySize;
-                l.serializedProperty.InsertArrayElementAtIndex(idx);
-                var el = l.serializedProperty.GetArrayElementAtIndex(idx);
-                el.FindPropertyRelative("BlendShape").stringValue = string.Empty;
-                el.FindPropertyRelative("value").floatValue = 0f;
-                serializedObject.ApplyModifiedProperties();
-            };
-            prebakedBlendshapeListInitialized = true;
-        }
+				EditorGUI.PropertyField(nameRect, blendShapeProp, GUIContent.none);
+				EditorGUI.PropertyField(valueRect, valueProp, GUIContent.none);
+			};
+			prebakedBlendshapeList.onAddCallback = l =>
+			{
+				var idx = l.serializedProperty.arraySize;
+				l.serializedProperty.InsertArrayElementAtIndex(idx);
+				var el = l.serializedProperty.GetArrayElementAtIndex(idx);
+				el.FindPropertyRelative("BlendShape").stringValue = string.Empty;
+				el.FindPropertyRelative("value").floatValue = 0f;
+				serializedObject.ApplyModifiedProperties();
+			};
+			prebakedBlendshapeListInitialized = true;
+		}
 
-        private void DrawPrebakedBlendshapeList()
-        {
-            if (!prebakedBlendshapeListInitialized || prebakedBlendshapeList == null)
-            {
-                InitPrebakedBlendshapeList();
-            }
-            EditorGUI.BeginChangeCheck();
-            prebakedBlendshapeList.DoLayoutList();
-            if (EditorGUI.EndChangeCheck())
-            {
-                serializedObject.ApplyModifiedProperties();
-                _needsUpdate = true;
-            }
-        }
+		private void DrawPrebakedBlendshapeList()
+		{
+			if (!prebakedBlendshapeListInitialized || prebakedBlendshapeList == null)
+			{
+				InitPrebakedBlendshapeList();
+			}
+			EditorGUI.BeginChangeCheck();
+			prebakedBlendshapeList.DoLayoutList();
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+				_needsUpdate = true;
+			}
+
+			// Add-from-slot UI
+			EnsureBlendshapeCache();
+			GUI.enabled = (_bsSlotNames.Length > 0);
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.PrefixLabel("Add from Base Recipe");
+			if (_bsSlotNames.Length == 0)
+			{
+				EditorGUILayout.LabelField("No slots with blendshapes found.");
+			}
+			else
+			{
+				_prebakeAddSlotIndex = EditorGUILayout.Popup(_prebakeAddSlotIndex, _bsSlotNames, GUILayout.MaxWidth(220));
+				var slotName = _bsSlotNames.Length > 0 ? _bsSlotNames[Mathf.Clamp(_prebakeAddSlotIndex, 0, _bsSlotNames.Length - 1)] : null;
+				string[] shapes;
+				if (!string.IsNullOrEmpty(slotName) && _bsBySlot.TryGetValue(slotName, out var arr0))
+				{
+					shapes = arr0;
+				}
+				else
+				{
+					shapes = Array.Empty<string>();
+				}
+				_prebakeAddShapeIndex = Mathf.Clamp(_prebakeAddShapeIndex, 0, Math.Max(0, shapes.Length - 1));
+				_prebakeAddShapeIndex = EditorGUILayout.Popup(_prebakeAddShapeIndex, shapes, GUILayout.MaxWidth(260));
+				EditorGUI.BeginDisabledGroup(shapes.Length == 0);
+				if (GUILayout.Button("Add", GUILayout.Width(60)))
+				{
+					var shapeName = shapes[_prebakeAddShapeIndex];
+					var listProp = serializedObject.FindProperty("PrebakedBlendshapes");
+					// prevent duplicates
+					bool exists = false;
+					for (int i = 0; i < listProp.arraySize; i++)
+					{
+						var el = listProp.GetArrayElementAtIndex(i);
+						var n = el.FindPropertyRelative("BlendShape");
+						if (n != null && n.stringValue == shapeName) { exists = true; break; }
+					}
+					if (!exists)
+					{
+						int idx = listProp.arraySize;
+						listProp.InsertArrayElementAtIndex(idx);
+						var el = listProp.GetArrayElementAtIndex(idx);
+						el.FindPropertyRelative("BlendShape").stringValue = shapeName;
+						el.FindPropertyRelative("value").floatValue = 0f;
+						serializedObject.ApplyModifiedProperties();
+						_needsUpdate = true;
+					}
+				}
+				EditorGUI.EndDisabledGroup();
+			}
+			EditorGUILayout.EndHorizontal();
+			GUI.enabled = true;
+		}
+
+		private void InitUnbakedShapesToIncludeList()
+		{
+			var listProp = serializedObject.FindProperty("UnbakedShapesToInclude");
+			unbakedShapesList = new ReorderableList(serializedObject, listProp, true, true, true, true);
+			unbakedShapesList.drawHeaderCallback = rect =>
+			{
+				EditorGUI.LabelField(rect, "Unbaked Shapes To Include");
+			};
+			unbakedShapesList.elementHeightCallback = index =>
+			{
+				if (unbakedShapesList.serializedProperty == null || index < 0 || index >= unbakedShapesList.serializedProperty.arraySize)
+					return EditorGUIUtility.singleLineHeight + 6;
+				var el = unbakedShapesList.serializedProperty.GetArrayElementAtIndex(index);
+				var str = el != null ? el.stringValue : string.Empty;
+				if (string.IsNullOrEmpty(str)) return EditorGUIUtility.singleLineHeight + 6;
+				// Try to validate as regex; if invalid, add a second line for warning
+				try { _ = new Regex(str); }
+				catch (ArgumentException) { return (EditorGUIUtility.singleLineHeight * 2f) + 10f; }
+				return EditorGUIUtility.singleLineHeight + 6;
+			};
+			unbakedShapesList.drawElementCallback = (rect, index, isActive, isFocused) =>
+			{
+				var element = unbakedShapesList.serializedProperty.GetArrayElementAtIndex(index);
+				rect.y += 2;
+				var textRect = new Rect(rect.x + 10, rect.y, rect.width - 10, EditorGUIUtility.singleLineHeight);
+				EditorGUI.BeginChangeCheck();
+				var newVal = EditorGUI.TextField(textRect, GUIContent.none, element.stringValue);
+				if (EditorGUI.EndChangeCheck())
+				{
+					element.stringValue = newVal ?? string.Empty;
+				}
+				if (!string.IsNullOrEmpty(element.stringValue))
+				{
+					try { _ = new Regex(element.stringValue); }
+					catch (ArgumentException ex)
+					{
+						var warnRect = new Rect(rect.x + 10, textRect.yMax + 2, rect.width - 10, EditorGUIUtility.singleLineHeight);
+						EditorGUI.HelpBox(warnRect, $"Invalid Regex: {ex.Message}", MessageType.Warning);
+					}
+				}
+			};
+			unbakedShapesList.onAddCallback = l =>
+			{
+				var idx = l.serializedProperty.arraySize;
+				l.serializedProperty.InsertArrayElementAtIndex(idx);
+				var el = l.serializedProperty.GetArrayElementAtIndex(idx);
+				el.stringValue = string.Empty;
+				serializedObject.ApplyModifiedProperties();
+			};
+			unbakedShapesListInitialized = true;
+		}
+
+		private void DrawUnbakedShapesToIncludeList()
+		{
+			if (!unbakedShapesListInitialized || unbakedShapesList == null)
+			{
+				InitUnbakedShapesToIncludeList();
+			}
+			EditorGUILayout.HelpBox(
+			"Enter exact blendshape names to include when not prebaked, or use Regular Expressions to match multiple shapes. Examples: '^Eye.*', '.*Smile.*'. Invalid regex patterns will be highlighted.",
+			MessageType.Info);
+			EditorGUI.BeginChangeCheck();
+			unbakedShapesList.DoLayoutList();
+			if (EditorGUI.EndChangeCheck())
+			{
+				serializedObject.ApplyModifiedProperties();
+				_needsUpdate = true;
+			}
+
+			// Add-from-slot UI
+			EnsureBlendshapeCache();
+			GUI.enabled = (_bsSlotNames.Length > 0);
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.PrefixLabel("Add from Base Recipe");
+			if (_bsSlotNames.Length == 0)
+			{
+				EditorGUILayout.LabelField("No slots with blendshapes found.");
+			}
+			else
+			{
+				_unbakedAddSlotIndex = EditorGUILayout.Popup(_unbakedAddSlotIndex, _bsSlotNames, GUILayout.MaxWidth(220));
+				var slotName = _bsSlotNames.Length > 0 ? _bsSlotNames[Mathf.Clamp(_unbakedAddSlotIndex, 0, _bsSlotNames.Length - 1)] : null;
+				string[] shapes;
+				if (!string.IsNullOrEmpty(slotName) && _bsBySlot.TryGetValue(slotName, out var arr1))
+				{
+					shapes = arr1;
+				}
+				else
+				{
+					shapes = Array.Empty<string>();
+				}
+				_unbakedAddShapeIndex = Mathf.Clamp(_unbakedAddShapeIndex, 0, Math.Max(0, shapes.Length - 1));
+				_unbakedAddShapeIndex = EditorGUILayout.Popup(_unbakedAddShapeIndex, shapes, GUILayout.MaxWidth(260));
+				EditorGUI.BeginDisabledGroup(shapes.Length == 0);
+				if (GUILayout.Button("Add", GUILayout.Width(60)))
+				{
+					var shapeName = shapes[_unbakedAddShapeIndex];
+					var listProp = serializedObject.FindProperty("UnbakedShapesToInclude");
+					// prevent duplicates
+					bool exists = false;
+					for (int i = 0; i < listProp.arraySize; i++)
+					{
+						var el = listProp.GetArrayElementAtIndex(i);
+						if (el != null && el.stringValue == shapeName) { exists = true; break; }
+					}
+					if (!exists)
+					{
+						int idx = listProp.arraySize;
+						listProp.InsertArrayElementAtIndex(idx);
+						var el = listProp.GetArrayElementAtIndex(idx);
+						el.stringValue = shapeName;
+						serializedObject.ApplyModifiedProperties();
+						_needsUpdate = true;
+					}
+				}
+				EditorGUI.EndDisabledGroup();
+			}
+			EditorGUILayout.EndHorizontal();
+			GUI.enabled = true;
+		}
 
 		private void RecursiveScanFoldersForAssets(string path, SerializedProperty crossCompatibilitySettingsData)
 		{
@@ -439,19 +693,19 @@ namespace UMA.Editors
 		private void AddRaceDataAsset(RaceData raceDataAsset, SerializedProperty crossCompatibilitySettingsData)
 		{
 			if (raceDataAsset.raceName == serializedObject.FindProperty("raceName").stringValue)
-            {
-                return;
-            }
+			{
+				return;
+			}
 
-            bool found = false;
+			bool found = false;
 			for (int i = 0; i < crossCompatibilitySettingsData.arraySize; i++)
 			{
 				var ccRaceName = crossCompatibilitySettingsData.GetArrayElementAtIndex(i).FindPropertyRelative("ccRace").stringValue;
 				if (ccRaceName == raceDataAsset.raceName)
-                {
-                    found = true;
-                }
-            }
+				{
+					found = true;
+				}
+			}
 			if (!found)
 			{
 				crossCompatibilitySettingsData.InsertArrayElementAtIndex(crossCompatibilitySettingsData.arraySize);
@@ -503,6 +757,7 @@ namespace UMA.Editors
 			if (EditorGUI.EndChangeCheck())
 			{
 				serializedObject.ApplyModifiedProperties();
+				_bsCacheValid = false; // force rebuild of blendshape cache when recipe changes
 			}
 			if (wardrobeSlotList == null)
 			{
@@ -523,16 +778,16 @@ namespace UMA.Editors
 			}
 			//new CrossCompatibilitySettings
 			//To push any old settings in RaceData.backwardsCompatibleWith into the new crossCompatibilitySettings we have to call GetCrossCompatibleRaces() directly on the target
-#pragma warning disable 618
+#pragma warning disable618
 			if (race.backwardsCompatibleWith.Count > 0)
 			{
 				var cc = race.GetCrossCompatibleRaces();
 				if (cc.Count > 0)
-                {
-                    serializedObject.Update();
-                }
-            }
-#pragma warning restore 618
+				{
+					serializedObject.Update();
+				}
+			}
+#pragma warning restore618
 			SerializedProperty _crossCompatibilitySettings = serializedObject.FindProperty("_crossCompatibilitySettings");
 			SerializedProperty _crossCompatibilitySettingsData = _crossCompatibilitySettings.FindPropertyRelative("settingsData");
 			//draw the new version of the crossCompatibility list that allows users to define what slots in THIS races base recipe equate to in the backwards compatible races base recipe
@@ -589,11 +844,11 @@ namespace UMA.Editors
 						//this could be missing- we should show that
 						var label = ccRaceName;
 						if (GetCompatibleRaceData(ccRaceName) == null)
-                		{
-                			label += " (missing)";
-                		}
+						{
+							label += " (missing)";
+						}
 
-                		GUIHelper.FoldoutBar(ref _BCFoldouts[i], label, out del);
+						GUIHelper.FoldoutBar(ref _BCFoldouts[i], label, out del);
 						if (del)
 						{
 							crossCompatibleSettingsToDelete.Add(i);
@@ -710,10 +965,10 @@ namespace UMA.Editors
 							for (int ccsd = 0; ccsd < thisCCSettings.arraySize; ccsd++)
 							{
 								if (DrawCCUISetting(ccsd, thisCCSettings, ccSlotsNamesList))
-                                {
-                                    serializedObject.ApplyModifiedProperties();
-                                }
-                            }
+								{
+									serializedObject.ApplyModifiedProperties();
+								}
+							}
 
 						}
 						else
@@ -783,7 +1038,7 @@ namespace UMA.Editors
 					thisCCSettings.GetArrayElementAtIndex(ccsd).FindPropertyRelative("compatibleRaceSlot").stringValue = ccSlotsNamesList[newCompatibleSlotIndex];
 					/*var ccSlotsOverlays = ccSlotsList[newCompatibleSlotIndex].GetOverlayList();
 					thisCCSettings.GetArrayElementAtIndex(ccsd).FindPropertyRelative("compatibleRaceSlotOverlays").arraySize = ccSlotsOverlays.Count;
-					for (int ccai = 0; ccai < ccSlotsOverlays.Count; ccai++)
+					for (int ccai =0; ccai < ccSlotsOverlays.Count; ccai++)
 						thisCCSettings.GetArrayElementAtIndex(ccsd).FindPropertyRelative("compatibleRaceSlotOverlays").GetArrayElementAtIndex(ccai).stringValue = ccSlotsOverlays[ccai].overlayName;*/
 					changed = true;
 				}
