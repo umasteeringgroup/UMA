@@ -1,9 +1,9 @@
 {
-    "slotName": "UMA30_InnerMouth",
+    "slotName": "UMA30_Body",
     "RootBone": "Global",
     "createOverlay": false,
     "createRecipe": false,
-    "isBaseRaceRecipe": true,
+    "isBaseRaceRecipe": false,
     "addToGlobalLibrary": false,
     "binarySerialization": false,
     "calcTangents": true,
@@ -29,5 +29,5 @@
     "updateExistingSlots": false,
     "Tags": [],
     "slotMaterialPath": "Assets/UMA/Content/Core/HumanShared/Materials/Standard/UMA_Diffuse_Normal_Thickness_Occlusion_Gloss.asset",
-    "slotFolderPath": "Assets/Test/FBX"
+    "slotFolderPath": "Assets/UMA/UMA3"
 }

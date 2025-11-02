@@ -14,6 +14,7 @@ namespace UMA
         [Tooltip("DNA Default Value. Must be in the range of 0..1")]
         public float defaultValue = 0.5f; // Default value. Can be overriden in the inspector. Must be in the 0..1 range.
         [Tooltip("The list of DNA effects that this DNA applies. Each effect can modify the character in different ways.")]
+        [SerializeReference]
         public List<DNAEffect> effects = new List<DNAEffect>();
 
         private string _name;

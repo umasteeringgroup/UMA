@@ -678,6 +678,371 @@ namespace UMA.CharacterSystem.Editors
             showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Predefined DNA");
             if (showPrefinedDNA)
             {
+                var generator = UMAAssetIndexer.Instance.generator;
+                if (generator == null)
+                {
+                    EditorGUILayout.HelpBox("UMA Generator could not be instantiated.", MessageType.Warning);
+                    return false;
+                }
+                else
+                {
+                    if (generator.useNewDNA)
+                    {
+                        wasChanged = DoNewDNA(wasChanged);
+                    }
+                    else
+                    {
+                        wasChanged = ShowDNA(wasChanged);
+                    }
+                }
+            }
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("Predefined DNA is loaded onto the character in the initial character build. Select the DNA in the dropdown, and add it to the list of DNA to load, then edit the values as needed.", MessageType.Info);
+            }
+            EndVerticalPadded();
+
+            return wasChanged;
+        }
+
+        private bool DoNewDNA(bool wasChanged)
+        {
+            // Ensure active race and collection
+            var dca = thisDCA;
+            var raceData = (dca != null && dca.activeRace != null) ? dca.activeRace.data : null;
+            if (raceData == null)
+            {
+                EditorGUILayout.HelpBox("No active race. Select a race to add DNA from RaceData.DNACollection.", MessageType.Info);
+                return wasChanged;
+            }
+
+            // Initialize DNACollection if needed
+            if (raceData.DNACollection == null)
+            {
+                raceData.DNACollection = new DNACollection();
+            }
+            var collection = raceData.DNACollection;
+            collection.LoadDictionary();
+
+            // UMAData is the same component (DCA derives from UMAData)
+            var umaData = dca as UMAData;
+
+            // If a collection exists, let user tweak values live
+            if (umaData != null && umaData.dnaInstanceCollection != null && umaData.dnaInstanceCollection.dnaInstances != null)
+            {
+                // Ensure internal dictionary restored after domain reloads
+                umaData.dnaInstanceCollection.Initialize(collection);
+
+                EditorGUILayout.LabelField("Assigned New DNA", EditorStyles.boldLabel);
+                EditorGUI.indentLevel++;
+                var instances = umaData.dnaInstanceCollection.dnaInstances;
+                for (int i = 0; i < instances.Count; i++)
+                {
+                    var inst = instances[i];
+                    if (inst == null) continue;
+
+                    EditorGUILayout.BeginHorizontal();
+                    bool newEnabled = EditorGUILayout.ToggleLeft(inst.name, inst.enabled, GUILayout.Width(140));
+                    float oldValue = inst.value;
+                    inst.value = EditorGUILayout.Slider(inst.value, 0f, 1f);
+                    EditorGUILayout.EndHorizontal();
+
+                    if (!Mathf.Approximately(oldValue, inst.value))
+                    {
+                        Undo.RecordObject(umaData, "Change DNA Value");
+                        EditorUtility.SetDirty(umaData);
+                        wasChanged = true;
+                        GenerateSingleUMA();
+                    }
+                    if (newEnabled != inst.enabled)
+                    {
+                        Undo.RecordObject(umaData, "Toggle DNA Instance");
+                        inst.enabled = newEnabled;
+                        EditorUtility.SetDirty(umaData);
+                        wasChanged = true;
+                    }
+                }
+                EditorGUI.indentLevel--;
+                EditorGUILayout.Space();
+            }
+            else
+            {
+                // Guide the user; we’ll create it automatically on first add
+                EditorGUILayout.HelpBox("No New DNA collection exists yet. It will be created when you add the first entry.", MessageType.Info);
+            }
+
+            // Picker grouped by DNAGroup (always show all DNA)
+            EditorGUILayout.LabelField("Add New DNA", EditorStyles.boldLabel);
+            var groups = collection.DNAGroups ?? new List<DNAGroup>();
+            if (groups.Count == 0)
+            {
+                EditorGUILayout.HelpBox("Race DNACollection has no DNA groups.", MessageType.Info);
+                return wasChanged;
+            }
+
+            // Build popup of groups
+            if (_newDnaGroupIndex < 0 || _newDnaGroupIndex >= groups.Count) _newDnaGroupIndex = 0;
+            List<string> groupNames = new List<string>(groups.Count);
+            for (int g = 0; g < groups.Count; g++)
+            {
+                var grp = groups[g];
+                groupNames.Add(grp == null || string.IsNullOrEmpty(grp.DNAArea) ? $"Group {g}" : grp.DNAArea);
+            }
+            _newDnaGroupIndex = EditorGUILayout.Popup("Group", _newDnaGroupIndex, groupNames.ToArray());
+
+            var selGroup = groups[_newDnaGroupIndex];
+            var dnaList = (selGroup != null && selGroup.dnaList != null) ? selGroup.dnaList : new List<DNA>();
+            if (dnaList.Count == 0)
+            {
+                EditorGUILayout.HelpBox("Selected group has no DNA entries.", MessageType.Info);
+                return wasChanged;
+            }
+
+            // Build popup of DNA within selected group
+            List<string> dnaNames = new List<string>(dnaList.Count);
+            for (int i = 0; i < dnaList.Count; i++)
+            {
+                var d = dnaList[i];
+                if (d != null) dnaNames.Add(d.dnaName);
+            }
+            if (dnaNames.Count == 0)
+            {
+                EditorGUILayout.HelpBox("Selected group has no DNA entries.", MessageType.Info);
+                return wasChanged;
+            }
+            if (_newDnaInGroupIndex < 0 || _newDnaInGroupIndex >= dnaNames.Count) _newDnaInGroupIndex = 0;
+            _newDnaInGroupIndex = EditorGUILayout.Popup("DNA", _newDnaInGroupIndex, dnaNames.ToArray());
+
+            if (GUILayout.Button("Add DNA Instance"))
+            {
+                if (umaData == null)
+                {
+                    EditorUtility.DisplayDialog("UMAData Missing", "UMAData component not found.", "OK");
+                    return wasChanged;
+                }
+
+                // Ensure collection exists and is initialized
+                if (umaData.dnaInstanceCollection == null)
+                {
+                    Undo.RecordObject(umaData, "Create DNA Collection");
+                    umaData.dnaInstanceCollection = new DNAInstanceCollection();
+                    umaData.dnaInstanceCollection.Initialize(collection);
+                    EditorUtility.SetDirty(umaData);
+                }
+                else
+                {
+                    umaData.dnaInstanceCollection.Initialize(collection);
+                }
+
+                string selected = dnaNames[_newDnaInGroupIndex];
+
+                // Prevent duplicate
+                var current = umaData.dnaInstanceCollection.dnaInstances;
+                bool duplicate = false;
+                if (current != null)
+                {
+                    for (int i = 0; i < current.Count; i++)
+                    {
+                        var inst = current[i];
+                        if (inst != null && inst.name == selected) { duplicate = true; break; }
+                    }
+                }
+                if (duplicate)
+                {
+                    EditorUtility.DisplayDialog("Duplicate DNA", $"DNA '{selected}' is already assigned.", "OK");
+                    return wasChanged;
+                }
+
+                // Add with default value (if available)
+                float defaultValue = 0.5f;
+                var dict = collection.dnaDictionary;
+                if (dict != null && dict.TryGetValue(selected, out var dnaAsset) && dnaAsset != null)
+                {
+                    defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
+                }
+
+                Undo.RecordObject(umaData, "Add DNA Instance");
+                if (umaData.dnaInstanceCollection.dnaInstances == null)
+                {
+                    umaData.dnaInstanceCollection.dnaInstances = new List<DNAInstance>();
+                }
+                umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance
+                {
+                    name = selected,
+                    value = defaultValue,
+                    enabled = true
+                });
+                EditorUtility.SetDirty(umaData);
+                wasChanged = true;
+            }
+
+            return wasChanged;
+        }
+
+        private bool DoNewDNAOld(bool wasChanged)
+        {
+            // Ensure active race and collection
+            var dca = thisDCA;
+            var raceData = (dca != null && dca.activeRace != null) ? dca.activeRace.data : null;
+            if (raceData == null)
+            {
+                EditorGUILayout.HelpBox("No active race. Select a race to add DNA from RaceData.DNACollection.", MessageType.Info);
+                return wasChanged;
+            }
+
+            // Initialize DNACollection if needed
+            if (raceData.DNACollection == null)
+            {
+                raceData.DNACollection = new DNACollection();
+            }
+            var collection = raceData.DNACollection;
+            collection.LoadDictionary();
+
+            // Ensure UMAData collection exists when available
+            var umaData = dca as UMAData;
+            // Assigned instances: enable/disable only
+            if (umaData.dnaInstanceCollection != null && umaData.dnaInstanceCollection.dnaInstances != null)
+            {
+                EditorGUILayout.LabelField("Assigned New DNA", EditorStyles.boldLabel);
+                EditorGUI.indentLevel++;
+                var instances = umaData.dnaInstanceCollection.dnaInstances;
+                for (int i =0; i < instances.Count; i++)
+                {
+                    var inst = instances[i];
+                    if (inst == null) continue;
+                    GUILayout.BeginHorizontal();
+                    bool newEnabled = EditorGUILayout.ToggleLeft(inst.name, inst.enabled, GUILayout.Width(100));
+                    float oldValue = inst.value;
+                    inst.value = EditorGUILayout.Slider(inst.value, 0f, 1f);
+                    GUILayout.EndHorizontal();
+                    if (oldValue != inst.value)
+                    {
+                        Undo.RecordObject(dca, "Change DNA Value");
+                        EditorUtility.SetDirty(dca);
+                        wasChanged = true;
+                        GenerateSingleUMA();
+                    }
+                    if (newEnabled != inst.enabled)
+                    {
+                        Undo.RecordObject(dca, "Toggle DNA Instance");
+                        inst.enabled = newEnabled;
+                        EditorUtility.SetDirty(dca);
+                        wasChanged = true;
+                    }
+                }
+                EditorGUI.indentLevel--;
+                EditorGUILayout.Space();
+            }
+
+            // Picker grouped by DNAGroup (always show all DNA)
+            EditorGUILayout.LabelField("Add New DNA", EditorStyles.boldLabel);
+            var groups = collection.DNAGroups ?? new List<DNAGroup>();
+            if (groups.Count ==0)
+            {
+                EditorGUILayout.HelpBox("Race DNACollection has no DNA groups.", MessageType.Info);
+                return wasChanged;
+            }
+
+            // Build popup of groups
+            if (_newDnaGroupIndex <0 || _newDnaGroupIndex >= groups.Count) _newDnaGroupIndex =0;
+            List<string> groupNames = new List<string>(groups.Count);
+            for (int g =0; g < groups.Count; g++)
+            {
+                var grp = groups[g];
+                groupNames.Add(grp == null || string.IsNullOrEmpty(grp.DNAArea) ? $"Group {g}" : grp.DNAArea);
+            }
+            _newDnaGroupIndex = EditorGUILayout.Popup("Group", _newDnaGroupIndex, groupNames.ToArray());
+
+            var selGroup = groups[_newDnaGroupIndex];
+            var dnaList = (selGroup != null && selGroup.dnaList != null) ? selGroup.dnaList : new List<DNA>();
+            if (dnaList.Count ==0)
+            {
+                EditorGUILayout.HelpBox("Selected group has no DNA entries.", MessageType.Info);
+                return wasChanged;
+            }
+
+            // Build popup of DNA within selected group
+            List<string> dnaNames = new List<string>(dnaList.Count);
+            for (int i =0; i < dnaList.Count; i++)
+            {
+                var d = dnaList[i];
+                if (d != null) dnaNames.Add(d.dnaName);
+            }
+            if (dnaNames.Count ==0)
+            {
+                EditorGUILayout.HelpBox("Selected group has no DNA entries.", MessageType.Info);
+                return wasChanged;
+            }
+            if (_newDnaInGroupIndex <0 || _newDnaInGroupIndex >= dnaNames.Count) _newDnaInGroupIndex =0;
+            _newDnaInGroupIndex = EditorGUILayout.Popup("DNA", _newDnaInGroupIndex, dnaNames.ToArray());
+
+            using (new EditorGUI.DisabledScope(umaData == null))
+            {
+                if (GUILayout.Button("Add DNA Instance"))
+                {
+                    if (umaData == null || umaData.dnaInstanceCollection == null)
+                    {
+                        EditorUtility.DisplayDialog("UMAData Missing", "UMAData is not available. Build the avatar to create UMAData before adding DNA.", "OK");
+                        return wasChanged;
+                    }
+
+                    string selected = dnaNames[_newDnaInGroupIndex];
+                    // Prevent duplicate
+                    bool duplicate = false;
+                    var current = umaData.dnaInstanceCollection.dnaInstances;
+                    if (current != null)
+                    {
+                        for (int i =0; i < current.Count; i++)
+                        {
+                            var inst = current[i];
+                            if (inst != null && inst.name == selected)
+                            {
+                                duplicate = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (duplicate)
+                    {
+                        EditorUtility.DisplayDialog("Duplicate DNA", $"DNA '{selected}' is already assigned.", "OK");
+                        return wasChanged;
+                    }
+
+                    // Add with default value
+                    var dict = collection.dnaDictionary;
+                    if (dict != null && dict.TryGetValue(selected, out var dnaAsset) && dnaAsset != null)
+                    {
+                        Undo.RecordObject(dca, "Add DNA Instance");
+                        if (umaData.dnaInstanceCollection.dnaInstances == null)
+                        {
+                            umaData.dnaInstanceCollection.dnaInstances = new List<DNAInstance>();
+                        }
+                        umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance
+                        {
+                            name = dnaAsset.dnaName,
+                            value = Mathf.Clamp01(dnaAsset.defaultValue),
+                            enabled = true
+                        });
+                        EditorUtility.SetDirty(dca);
+                        wasChanged = true;
+                    }
+                    else
+                    {
+                        EditorUtility.DisplayDialog("DNA Not Found", $"DNA '{selected}' not found in Race DNACollection.", "OK");
+                    }
+                }
+            }
+
+            return wasChanged;
+        }
+
+        // state for New DNA picker
+        private static int _newDnaGroupIndex =0;
+        private static int _newDnaInGroupIndex =0;
+
+        private bool ShowDNA(bool wasChanged)
+        {
+            {
                 EditorGUI.BeginChangeCheck();
                 if (showHelp)
                 {
@@ -752,7 +1117,7 @@ namespace UMA.CharacterSystem.Editors
                     {
                         GUILayout.BeginHorizontal();
                         GUILayout.Label(ObjectNames.NicifyVariableName(pd.Name), GUILayout.Width(100));
-                        float newValue = GUILayout.HorizontalSlider(pd.Value,0.0f,1.0f);
+                        float newValue = GUILayout.HorizontalSlider(pd.Value, 0.0f, 1.0f);
                         if (newValue != pd.Value)
                         {
                             pd.Value = newValue;
@@ -781,11 +1146,6 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
             }
-            if (showHelp)
-            {
-                EditorGUILayout.HelpBox("Predefined DNA is loaded onto the character in the initial character build. Select the DNA in the dropdown, and add it to the list of DNA to load, then edit the values as needed.", MessageType.Info);
-            }
-            EndVerticalPadded();
 
             return wasChanged;
         }

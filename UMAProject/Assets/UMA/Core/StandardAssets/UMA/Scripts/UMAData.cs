@@ -71,7 +71,6 @@ namespace UMA
 
 		// NEW DNA
 		public DNAInstanceCollection dnaInstanceCollection = new();
-		public bool useNewDNA;
 		public bool alwaysAdjustBounds;
 
         #region MESH MODIFIERS
@@ -673,7 +672,7 @@ namespace UMA
 		}
 
 
-		public DNABuildType DNAPreApply()
+		public DNABuildType NewDNAPreApply()
 		{
 			if (dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances.Count == 0)
 			{
@@ -686,9 +685,52 @@ namespace UMA
 			{
 				//dnaInstanceCollection.
 				var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
-                updateFlags |= dna.PreApply(this, dnainstance.value);
+				if (dna != null)
+				{
+					updateFlags |= dna.PreApply(this, dnainstance.value);
+				}
 			}
 			return updateFlags;
+        }
+
+        public DNABuildType NewDNAApply()
+        {
+            if (dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances.Count == 0)
+            {
+                return DNABuildType.None;
+            }
+
+            DNABuildType updateFlags = DNABuildType.None;
+
+            foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+            {
+                var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
+				if (dna != null)
+				{
+					updateFlags |= dna.Apply(this, dnainstance.value);
+				}
+            }
+            return updateFlags;
+        }
+
+        public DNABuildType NewDNAPostApply()
+        {
+            if (dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances.Count == 0)
+            {
+                return DNABuildType.None;
+            }
+
+            DNABuildType updateFlags = DNABuildType.None;
+
+            foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
+            {
+                var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
+				if (dna != null)
+				{
+					updateFlags |= dna.PostApply(this, dnainstance.value);
+				}
+            }
+            return updateFlags;
         }
 
         public void SetupSkeleton()

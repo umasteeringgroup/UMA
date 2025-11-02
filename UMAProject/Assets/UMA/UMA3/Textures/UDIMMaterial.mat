@@ -139,15 +139,15 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _HalfLambertStrength: 1
+    - _HalfLambertStrength: 4.52
     - _InvertThickness: 0
     - _MaxSmooth: 1
     - _Metallic: 0
     - _MinSmooth: 0.1
     - _NormalArrayEncoding: 2
-    - _NormalStrength: 1
-    - _Occlusion: 1
-    - _OcclusionAdd: 0
+    - _NormalStrength: 0.78
+    - _Occlusion: 1.08
+    - _OcclusionAdd: 0.81
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueControl: -1
@@ -173,7 +173,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 0.85849047, b: 0.85849047, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _EmissiveAdd: {r: 0, g: 0, b: 0, a: 0}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}

@@ -52,7 +52,7 @@ MonoBehaviour:
   asyncMipRegen: 1
   convertMipMaps: 0
   atlasResolution: 8192
-  editorAtlasResolution: 2048
+  editorAtlasResolution: 4096
   AtlasOverflowFitMethod: 2
   FitPercentageDecrease: 0.5
   SharperFitTextures: 1
@@ -63,6 +63,8 @@ MonoBehaviour:
   MultiThreadTextureConversion: 1
   MaxQueuedConversionsPerFrame: 8
   Use32BitBuffers: 0
+  alwaysRegenerateRenderers: 0
+  useNewDNA: 1
   SaveAndRestoreIgnoredItems: 0
   meshCombiner: {fileID: 7275351159514515506}
   InitialScaleFactor: 1
@@ -75,6 +77,7 @@ MonoBehaviour:
   collectGarbage: 1
   autoSetRaceBlendshapes: 0
   AllowReadFromMesh: 0
+  umaDatasGenerated: []
 --- !u!114 &7275351159514515506
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -121,7 +121,7 @@ namespace UMA
             for (int i = 0; i < dnaInstances.Count; i++)
             {
                 var inst = dnaInstances[i];
-                if (inst == null || string.IsNullOrEmpty(inst.name)) continue;
+                if (inst == null || string.IsNullOrEmpty(inst.name) || inst.enabled == false) continue;
 
                 if (!dict.TryGetValue(inst.name, out var dna) || dna == null)
                 {
@@ -156,7 +156,7 @@ namespace UMA
             for (int i = 0; i < dnaInstances.Count; i++)
             {
                 var inst = dnaInstances[i];
-                if (inst == null || string.IsNullOrEmpty(inst.name)) continue;
+                if (inst == null || string.IsNullOrEmpty(inst.name) || inst.enabled == false) continue;
 
                 if (!dict.TryGetValue(inst.name, out var dna) || dna == null)
                 {
@@ -190,7 +190,7 @@ namespace UMA
             for (int i = 0; i < dnaInstances.Count; i++)
             {
                 var inst = dnaInstances[i];
-                if (inst == null || string.IsNullOrEmpty(inst.name)) continue;
+                if (inst == null || string.IsNullOrEmpty(inst.name) || inst.enabled == false) continue;
 
                 if (!dict.TryGetValue(inst.name, out var dna) || dna == null)
                 {
@@ -224,7 +224,7 @@ namespace UMA
             for (int i = 0; i < dnaInstances.Count; i++)
             {
                 var inst = dnaInstances[i];
-                if (inst == null || string.IsNullOrEmpty(inst.name)) continue;
+                if (inst == null || string.IsNullOrEmpty(inst.name) || inst.enabled == false) continue;
 
                 if (!dict.TryGetValue(inst.name, out var dna) || dna == null)
                 {

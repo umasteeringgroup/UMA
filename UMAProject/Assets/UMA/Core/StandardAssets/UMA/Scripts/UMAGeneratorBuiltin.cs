@@ -423,7 +423,7 @@ namespace UMA
 #endif
             if (useNewDNA)
             {
-                DNABuildType dnaUpdateFlags = umaData.DNAPreApply();
+                DNABuildType dnaUpdateFlags = umaData.NewDNAPreApply();
             }
 
             if (umaData.isTextureDirty)
@@ -457,10 +457,6 @@ namespace UMA
 
             if (umaData.isShapeDirty)
 			{
-				if (!umaData.skeleton.isUpdating)
-				{
-					umaData.skeleton.BeginSkeletonUpdate();
-				}
 				UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
 				DnaChanged++;
@@ -850,6 +846,11 @@ namespace UMA
 			if (!umaData)
                 return;
 
+            if (!umaData.skeleton.isUpdating)
+            {
+                umaData.skeleton.BeginSkeletonUpdate();
+            }
+
             umaData.FirePreUpdateUMABody();
 
             // Keep this to ensure a clean baseline. Removing it caused skeleton issues.
@@ -862,6 +863,10 @@ namespace UMA
                 if (useNewDNA == false)
                 {
                     umaData.ApplyDNA();
+                }
+                else
+                {
+                    umaData.NewDNAApply();
                 }
             }
 
@@ -880,6 +885,10 @@ namespace UMA
             if (useNewDNA == false)
             {
                 umaData.PostApplyDNA();
+            }
+            else
+            {
+                umaData.NewDNAPostApply();
             }
             umaData.FireDNAAppliedEvents();
 		}

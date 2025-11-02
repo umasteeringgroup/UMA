@@ -18,8 +18,12 @@ MonoBehaviour:
   DisplayValue: 
   compatibleRaces:
   - HumanMale
+  - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: HumanMale
+    filename: 
+    thumb: {fileID: 0}
+  - race: Human Male 3.0
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: FullOutfit
@@ -33,7 +37,7 @@ MonoBehaviour:
   OverrideDNA:
     PreloadValues: []
   disabled: 0
-  recipeString: '{"packedRecipeType":"WardrobeCollection","name":"New UMAWardrobeCollection","race":"","dna":[],"characterColors":[],"wardrobeSet":[],"raceAnimatorController":""}'
+  recipeString: '{"packedRecipeType":"WardrobeCollection","name":"RobeCollection","race":"","dna":[],"characterColors":[],"wardrobeSet":[],"raceAnimatorController":""}'
   forceKeep: 0
   labelLocalFiles: 0
   noAutoAdd: 0
@@ -48,4 +52,6 @@ MonoBehaviour:
         recipe: MaleRobe Hood
       - slot: Chest
         recipe: MaleRobe
+    - targetRace: Human Male 3.0
+      wardrobeSet: []
   arbitraryRecipes: []

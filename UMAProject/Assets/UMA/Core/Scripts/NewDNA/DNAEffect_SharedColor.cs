@@ -9,6 +9,7 @@ namespace UMA
     {
         public enum CombinationMethod
         {
+            Range,
             Additive,
             Subtractive,
             Multiply,
@@ -58,6 +59,9 @@ namespace UMA
                 // Combine the base modifier with the existing color based on the combination method
                 switch (colorCombineMethod)
                 {
+                    case CombinationMethod.Range:
+                        col += (ToColor - FromColor) * value;
+                        break;
                     case CombinationMethod.Additive:
                         col += ToColor * value;
                         break;

@@ -23,6 +23,7 @@ MonoBehaviour:
     _updateBounds: 0
     _tightenBounds: 0
     _adjustBounds: 0
+    _manuallySetBounds: 0
     _scale: 1
     _bone: Position
     _scaleBoneHash: -1084586333
@@ -31,6 +32,7 @@ MonoBehaviour:
     _radiusAdjust: {x: 0.23, y: 0}
     _massAdjust: {x: 46, y: 26, z: 26}
     _boundsAdjust: {x: 0, y: 0, z: 0}
+    _manualSetBounds: {x: 0, y: 0, z: 0}
   _displayValue: 
 --- !u!114 &114460033789141442
 MonoBehaviour:
@@ -176,7 +178,7 @@ MonoBehaviour:
               outWeight: 0.33333334
             m_PreInfinity: 2
             m_PostInfinity: 2
-            m_RotationOrder: 0
+            m_RotationOrder: 4
         _multiplier: 1
         _initialized: 1
       _aggregationMethod: 0

@@ -37,7 +37,9 @@ namespace UMA
                 Transform boneTransform = avatar.skeleton.GetBoneTransform(BoneName);
                 if (boneTransform != null)
                 {
-                    boneTransform.localScale = Vector3.Scale(boneTransform.localScale, ScaleFactor * GetMappedValue(value));
+                    Vector3 ScaleAmount = ScaleFactor * GetMappedValue(value);
+                    Vector3 ResultScale = Vector3.one + ScaleAmount; 
+                    boneTransform.localScale = Vector3.Scale(boneTransform.localScale, ResultScale);
                 }
             }
         }

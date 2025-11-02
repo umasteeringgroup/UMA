@@ -9,5 +9,6 @@ namespace UMA
     {
         public string name;
         public float value;
+        public bool enabled = true;
     }
 }

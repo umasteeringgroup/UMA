@@ -104,20 +104,20 @@ Material:
     - _DetailNormalMapScale: 1
     - _DoubleSidedNormalMode: 1
     - _DstBlend: 0
-    - _EmissiveModulation: 1.01
+    - _EmissiveModulation: 1.36
     - _FuzzAmount: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _HalfLambertStrength: 2.69
     - _InvertThickness: 1
-    - _MaxSmooth: 0.816
+    - _MaxSmooth: 0.83
     - _Metallic: 0
     - _MetallicModulation: 1
-    - _MinSmooth: 0.218
+    - _MinSmooth: 0
     - _Mode: 0
     - _NormalStrength: 0.612
-    - _Occlusion: 1.01
+    - _Occlusion: 2
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _QueueControl: -1
@@ -127,7 +127,7 @@ Material:
     - _SSSGlow: 0.3
     - _SSSLevel: 0.3
     - _Saturation: 1
-    - _SmoothnessAdd: 0
+    - _SmoothnessAdd: 0.305
     - _SmoothnessModulation: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -136,7 +136,7 @@ Material:
     - _UseHalfLambert: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 1, g: 0.9213836, b: 0.9213836, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _EmissiveAdd: {r: 0, g: 0, b: 0, a: 0}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
