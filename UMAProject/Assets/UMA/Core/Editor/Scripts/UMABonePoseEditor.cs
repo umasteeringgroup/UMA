@@ -58,6 +58,71 @@ namespace UMA.PoseTools
 			return null;
 		} */
 
+        public List<string> GetSelectedBonesWithMirrors()
+        {
+            List<string> selectedBones = GetSelectedBones();
+            List<string> mirroredBones = new List<string>();
+
+            for (int i =0; i < selectedBones.Count; i++)
+            {
+                string bone = selectedBones[i];
+                // Check if the bone has a mirror counterpart
+                string mirroredBone = GetMirroredBoneName(bone);
+                if (!string.IsNullOrEmpty(mirroredBone) && BoneExistsInTree(mirroredBone))
+                {
+
+                    mirroredBones.Add(mirroredBone);
+                }
+            }
+            selectedBones.AddRange(mirroredBones);  
+            return selectedBones;
+        }
+
+        private bool BoneExistsInTree(string boneName)
+        {
+            if (RootNode == null || string.IsNullOrEmpty(boneName)) return false;
+            return FindNodeByNameRecursive(RootNode, boneName) != null;
+        }
+
+        private TreeViewItem FindNodeByNameRecursive(TreeViewItem node, string boneName)
+        {
+            if (node == null) return null;
+            if (node.displayName == boneName) return node;
+            if (node.children != null)
+            {
+                for (int i =0; i < node.children.Count; i++)
+                {
+                    var child = node.children[i];
+                    var found = FindNodeByNameRecursive(child, boneName);
+                    if (found != null) return found;
+                }
+            }
+            return null;
+        }
+
+        public string GetMirroredBoneName(string boneName)
+        {
+            // Simple example of mirroring logic based on common naming conventions
+            if (boneName.EndsWith("_L"))
+            {
+                return boneName.Substring(0, boneName.Length -2) + "_R";
+            }
+            else if (boneName.EndsWith("_R"))
+            {
+                return boneName.Substring(0, boneName.Length -2) + "_L";
+            }
+            else if (boneName.StartsWith("Left"))
+            {
+                return "Right" + boneName.Substring(4);
+            }
+            else if (boneName.StartsWith("Right"))
+            {
+                return "Left" + boneName.Substring(5);
+            }
+            // Add more naming conventions as needed
+            return null; // No mirror found
+        }
+
         public List<string> GetSelectedBones()
         {
             List<string> boneNames = new List<string>();
@@ -67,7 +132,7 @@ namespace UMA.PoseTools
                 return boneNames;
             }
 
-            if (boneIDs.Count == 0)
+            if (boneIDs.Count ==0)
             {
                 return boneNames;
             }
@@ -86,16 +151,16 @@ namespace UMA.PoseTools
         public void Initialize(string RootName)
         {
             RootNode = new TreeViewItem(0, -1, RootName);
-            NodeCount = 0;
+            NodeCount =0;
         }
 
         /*
 		public void AddBone(string BoneName,int level)
 		{
 			string[] Keywords = BoneName.SplitCamelCase();
-			if (Keywords.Length == 1)
+			if (Keywords.Length ==1)
 			{
-				TreeViewItem tv = new TreeViewItem(NodeCount++, 1 , BoneName);
+				TreeViewItem tv = new TreeViewItem(NodeCount++,1 , BoneName);
 				RootNode.AddChild(tv);
 				NodeCount++;
 				return;
@@ -104,11 +169,11 @@ namespace UMA.PoseTools
 			TreeViewItem FirstLevel = FindNode(RootNode,Keywords[0]);
 			if (FirstLevel == null)
 			{
-				FirstLevel = new TreeViewItem(NodeCount++, 1, Keywords[0]);
+				FirstLevel = new TreeViewItem(NodeCount++,1, Keywords[0]);
 				RootNode.AddChild(FirstLevel);
 			}
 
-			TreeViewItem childNode = new TreeViewItem(NodeCount++, 2, BoneName);
+			TreeViewItem childNode = new TreeViewItem(NodeCount++,2, BoneName);
 			FirstLevel.AddChild(childNode);
 		}
 		*/
@@ -128,9 +193,9 @@ namespace UMA.PoseTools
     public class UMABonePoseEditor : Editor
     {
         private static UMABonePoseEditor _livePopupEditor = null;
-        public static int MirrorAxis = 1;
+        public static int MirrorAxis =1;
         public static string[] MirrorAxises = { "X Axis (raw)", "Y Axis (UMA Internal)", "Z Axis" };
-        public static int displayMode = 0;
+        public static int displayMode =0;
         public static string[] strings = { "Pose Bones", "Filtered", "All", "None" };
         public enum DisplayMode { PoseBones, Filtered, All, None };
         public static UMAData saveUMAData;
@@ -156,12 +221,12 @@ namespace UMA.PoseTools
             get { return (editBoneIndex != BAD_INDEX); }
         }
 
-        private float previewWeight = 1.0f;
+        private float previewWeight =1.0f;
 
         public bool dynamicDNAConverterMode = false;
 
-        const float addRemovePadding = 20f;
-        const float buttonVerticalOffset = 4f;
+        const float addRemovePadding =20f;
+        const float buttonVerticalOffset =4f;
 
         private int drawBoneIndex = BAD_INDEX;
         private int editBoneIndex = BAD_INDEX;
@@ -173,7 +238,7 @@ namespace UMA.PoseTools
         private bool doBoneRemove = false;
         private int removeBoneIndex = BAD_INDEX;
         private int addBoneIndex = BAD_INDEX;
-        const int minBoneNameLength = 4;
+        const int minBoneNameLength =4;
         private string addBoneName = "";
         private List<string> addBoneNames = new List<string>();
         private Vector2 scrollPosition;
@@ -309,7 +374,7 @@ namespace UMA.PoseTools
                     activeBoneIndex = BAD_INDEX;
                     mirrorBoneIndex = BAD_INDEX;
 
-                    if (targetPose.poses != null && editBoneIndex != BAD_INDEX && editBoneIndex >= 0 && editBoneIndex < targetPose.poses.Length)
+                    if (targetPose.poses != null && editBoneIndex != BAD_INDEX && editBoneIndex >=0 && editBoneIndex < targetPose.poses.Length)
                     {
                         var skeleton = context?.activeUMA?.skeleton;
                         if (skeleton != null)
@@ -324,12 +389,26 @@ namespace UMA.PoseTools
                             if (context.mirrorTransform != null)
                             {
                                 int mirrorHash = UMASkeleton.StringToHash(context.mirrorTransform.name);
-                                for (int i = 0; i < targetPose.poses.Length; i++)
+                                for (int i =0; i < targetPose.poses.Length; i++)
                                 {
                                     if (targetPose.poses[i].hash == mirrorHash)
                                     {
                                         mirrorBoneIndex = i;
                                         break;
+                                    }
+                                }
+                                // Fallback to name match if hash lookup failed (stale hash safety)
+                                if (mirrorBoneIndex == BAD_INDEX)
+                                {
+                                    string mirrorName = context.mirrorTransform.name;
+                                    for (int i =0; i < targetPose.poses.Length; i++)
+                                    {
+                                        var pose = targetPose.poses[i];
+                                        if (pose != null && pose.bone == mirrorName)
+                                        {
+                                            mirrorBoneIndex = i;
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -410,6 +489,17 @@ namespace UMA.PoseTools
             }
         }
 
+        // Mirror-name derivation matching BoneTreeView.GetMirroredBoneName
+        private static string DeriveMirrorName(string boneName)
+        {
+            if (string.IsNullOrEmpty(boneName)) return null;
+            if (boneName.EndsWith("_L")) return boneName.Substring(0, boneName.Length -2) + "_R";
+            if (boneName.EndsWith("_R")) return boneName.Substring(0, boneName.Length -2) + "_L";
+            if (boneName.StartsWith("Left")) return "Right" + boneName.Substring(4);
+            if (boneName.StartsWith("Right")) return "Left" + boneName.Substring(5);
+            return null;
+        }
+
         private void DrawSkeletonBones()
         {
             if (IsEditorBusy) return;
@@ -462,7 +552,7 @@ namespace UMA.PoseTools
 
                 string filterLower = (BoneListFilter ?? string.Empty).ToLowerInvariant();
 
-                for (int i = 0; i < poses.arraySize; i++)
+                for (int i =0; i < poses.arraySize; i++)
                 {
                     SerializedProperty pose = poses.GetArrayElementAtIndex(i);
                     if (pose == null) continue;
@@ -479,7 +569,7 @@ namespace UMA.PoseTools
                             Transform parent = xform.parent;
                             if (parent != null)
                             {
-                                Handles.color = xform == context.activeTransform ? Color.green : (xform == context.mirrorTransform ? new Color(0, 0.5f, 1) : Color.white);
+                                Handles.color = xform == context.activeTransform ? Color.green : (xform == context.mirrorTransform ? new Color(0,0.5f,1) : Color.white);
                                 Handles.DrawLine(xform.position, parent.position);
                             }
                         }
@@ -497,14 +587,14 @@ namespace UMA.PoseTools
         {
             if (parentBone == null) return;
 
-            float leaflen = 0.01f;
+            float leaflen =0.01f;
 
-            for (int i = 0; i < parentBone.childCount; i++)
+            for (int i =0; i < parentBone.childCount; i++)
             {
                 Transform child = parentBone.GetChild(i);
                 if (child == null) continue;
 
-                Color NextColor = child == context.activeTransform ? Color.green : (parentBone.GetChild(i) == context.mirrorTransform ? new Color(0, 0.5f, 1) : Color.white);
+                Color NextColor = child == context.activeTransform ? Color.green : (parentBone.GetChild(i) == context.mirrorTransform ? new Color(0,0.5f,1) : Color.white);
 
                 Handles.color = col;
                 bool boneVisible = true;
@@ -520,7 +610,7 @@ namespace UMA.PoseTools
                 {
                     Handles.DrawLine(parentBone.position, parentBone.GetChild(i).position);
                 }
-                if (parentBone.GetChild(i).childCount > 0)
+                if (parentBone.GetChild(i).childCount >0)
                 {
                     DrawSkeletonBonesRecursive(parentBone.GetChild(i), NextColor);
                 }
@@ -712,7 +802,7 @@ namespace UMA.PoseTools
 
         public void SaveWeights()
         {
-            if (BonePoseSavers.Count > 0)
+            if (BonePoseSavers.Count >0)
             {
                 RestoreWeights();
             }
@@ -760,10 +850,10 @@ namespace UMA.PoseTools
                         BonePoseDNAConverterPlugin bc = boneplug as BonePoseDNAConverterPlugin;
                         if (bc != null)
                         {
-                            bc.masterWeight.globalWeight = 0.0f;
+                            bc.masterWeight.globalWeight =0.0f;
                             foreach (BonePoseDNAConverterPlugin.BonePoseDNAConverter converter in bc.poseDNAConverters)
                             {
-                                converter.startingPoseWeight = 0.0f;
+                                converter.startingPoseWeight =0.0f;
                             }
                         }
                     }
@@ -817,7 +907,7 @@ namespace UMA.PoseTools
 
             if (doBoneAdd)
             {
-                if (addBoneNames != null && addBoneNames.Count > 0)
+                if (addBoneNames != null && addBoneNames.Count >0)
                 {
                     foreach (string s in addBoneNames)
                     {
@@ -832,23 +922,23 @@ namespace UMA.PoseTools
                 activeBoneIndex = BAD_INDEX;
                 editBoneIndex = BAD_INDEX;
                 mirrorBoneIndex = BAD_INDEX;
-                addBoneIndex = 0;
+                addBoneIndex =0;
                 addBoneName = "";
                 addBoneNames.Clear();
                 doBoneAdd = false;
             }
             if (doBoneRemove)
             {
-                if (removeBoneIndex > 0 && removeBoneIndex - 1 < poses.arraySize)
+                if (removeBoneIndex >0 && removeBoneIndex -1 < poses.arraySize)
                 {
-                    poses.DeleteArrayElementAtIndex(removeBoneIndex - 1);
+                    poses.DeleteArrayElementAtIndex(removeBoneIndex -1);
                     _poseEdited = true;
                 }
 
                 activeBoneIndex = BAD_INDEX;
                 editBoneIndex = BAD_INDEX;
                 mirrorBoneIndex = BAD_INDEX;
-                removeBoneIndex = 0;
+                removeBoneIndex =0;
                 doBoneRemove = false;
             }
 
@@ -890,13 +980,13 @@ namespace UMA.PoseTools
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Space(addRemovePadding);
                 EditorGUI.BeginDisabledGroup(haveEditTarget);
-                previewWeight = EditorGUILayout.Slider(previewGUIContent, previewWeight, 0f, 1f);
+                previewWeight = EditorGUILayout.Slider(previewGUIContent, previewWeight,0f,1f);
                 EditorGUI.EndDisabledGroup();
                 GUILayout.Space(addRemovePadding);
                 EditorGUILayout.EndHorizontal();
             }
 
-            GUILayout.Space(EditorGUIUtility.singleLineHeight / 2f);
+            GUILayout.Space(EditorGUIUtility.singleLineHeight /2f);
 
             GUIHelper.BeginVerticalPadded();
             MirrorAxis = EditorGUILayout.Popup("Mirror Axis", MirrorAxis, MirrorAxises);
@@ -938,7 +1028,7 @@ namespace UMA.PoseTools
 
             if (sourceUMA != null && targetSMR != null)
             {
-                EditorGUI.BeginDisabledGroup(targetSMR.bones == null || targetSMR.bones.Length == 0);
+                EditorGUI.BeginDisabledGroup(targetSMR.bones == null || targetSMR.bones.Length ==0);
                 if (GUILayout.Button(generatePoseGUIContent))
                 {
                     GeneratePoseFromSkinnedMeshRenderer();
@@ -946,7 +1036,7 @@ namespace UMA.PoseTools
                 }
                 EditorGUI.EndDisabledGroup();
 
-                if (targetSMR.bones == null || targetSMR.bones.Length == 0)
+                if (targetSMR.bones == null || targetSMR.bones.Length ==0)
                 {
                     EditorGUILayout.HelpBox("Target SkinnedMeshRenderer has no bones assigned.", MessageType.Warning);
                 }
@@ -957,7 +1047,7 @@ namespace UMA.PoseTools
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Convert all Left/Right"))
             {
-                for (int i = 0; i < poses.arraySize; i++)
+                for (int i =0; i < poses.arraySize; i++)
                 {
                     FlipBone(poses, i);
                 }
@@ -974,7 +1064,7 @@ namespace UMA.PoseTools
             if (GUILayout.Button("x", GUILayout.Width(22)))
             {
                 BoneListFilter = "";
-                GUIUtility.keyboardControl = 0;
+                GUIUtility.keyboardControl =0;
             }
             GUILayout.EndHorizontal();
 
@@ -986,18 +1076,18 @@ namespace UMA.PoseTools
                 return;
             }
 
-            string[] removeBoneOptions = new string[targetPose.poses.Length + 1];
+            string[] removeBoneOptions = new string[targetPose.poses.Length +1];
             removeBoneOptions[0] = " ";
-            for (int i = 0; i < targetPose.poses.Length; i++)
+            for (int i =0; i < targetPose.poses.Length; i++)
             {
-                removeBoneOptions[i + 1] = targetPose.poses[i].bone;
+                removeBoneOptions[i +1] = targetPose.poses[i].bone;
             }
             string[] addBoneOptions = new string[1];
             if (haveValidContext)
             {
                 List<string> addList = new List<string>(context.boneList);
                 addList.Insert(0, " ");
-                for (int i = 0; i < targetPose.poses.Length; i++)
+                for (int i =0; i < targetPose.poses.Length; i++)
                 {
                     addList.Remove(targetPose.poses[i].bone);
                 }
@@ -1024,7 +1114,58 @@ namespace UMA.PoseTools
             poses.isExpanded = EditorGUILayout.Foldout(poses.isExpanded, "Pose Bones (" + poses.arraySize + ")");
             if (poses.isExpanded)
             {
-                for (int i = 0; i < poses.arraySize; i++)
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Expand All"))
+                {
+                    for (int i = 0; i < poses.arraySize; i++)
+                    {
+                        SerializedProperty pose = poses.GetArrayElementAtIndex(i);
+                        var boneProp = pose.FindPropertyRelative("bone");
+                        if (boneProp != null) boneProp.isExpanded = true;
+                    }
+                    Repaint();
+                }
+                if (GUILayout.Button("Collapse All"))
+                {
+                    for (int i = 0; i < poses.arraySize; i++)
+                    {
+                        SerializedProperty pose = poses.GetArrayElementAtIndex(i);
+                        var boneProp = pose.FindPropertyRelative("bone");
+                        if (boneProp != null) boneProp.isExpanded = false;
+                    }
+                    Repaint();
+                }
+                if (GUILayout.Button("Remove Unmodified Bones"))
+                {
+                    List<int> toRemove = new List<int>();
+                    for (int i =0; i < poses.arraySize; i++)
+                    {
+                        SerializedProperty pose = poses.GetArrayElementAtIndex(i);
+                        SerializedProperty position = pose.FindPropertyRelative("position");
+                        SerializedProperty rotation = pose.FindPropertyRelative("rotation");
+                        SerializedProperty scale = pose.FindPropertyRelative("scale");
+                        bool isDefaultPosition = position.vector3Value == Vector3.zero;
+                        bool isDefaultRotation = rotation.quaternionValue == Quaternion.identity;
+                        bool isDefaultScale = scale.vector3Value == Vector3.one;
+                        if (isDefaultPosition && isDefaultRotation && isDefaultScale)
+                        {
+                            toRemove.Add(i);
+                        }
+                    }
+                    // Remove from the end to avoid index shifting
+                    toRemove.Sort();
+                    toRemove.Reverse();
+                    foreach (int index in toRemove)
+                    {
+                        poses.DeleteArrayElementAtIndex(index);
+                    }
+                    if (toRemove.Count >0)
+                    {
+                        _poseEdited = true;
+                    }
+                }
+                GUILayout.EndHorizontal();
+                for (int i =0; i < poses.arraySize; i++)
                 {
                     SerializedProperty pose = poses.GetArrayElementAtIndex(i);
                     drawBoneIndex = i;
@@ -1044,10 +1185,10 @@ namespace UMA.PoseTools
             GUILayout.Space(addRemovePadding);
             if (haveValidContext)
             {
-                EditorGUI.BeginDisabledGroup(addBoneIndex < 1);
+                EditorGUI.BeginDisabledGroup(addBoneIndex <1);
                 if (GUILayout.Button(addBoneGUIContent, GUILayout.Width(90f)))
                 {
-                    addBoneName = addBoneOptions[Mathf.Clamp(addBoneIndex, 0, addBoneOptions.Length - 1)];
+                    addBoneName = addBoneOptions[Mathf.Clamp(addBoneIndex,0, addBoneOptions.Length -1)];
                     doBoneAdd = true;
                 }
                 EditorGUI.EndDisabledGroup();
@@ -1076,7 +1217,7 @@ namespace UMA.PoseTools
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(addRemovePadding);
-            EditorGUI.BeginDisabledGroup(removeBoneIndex < 1);
+            EditorGUI.BeginDisabledGroup(removeBoneIndex <1);
             if (GUILayout.Button(removeBoneGUIContent, GUILayout.Width(90f)))
             {
                 doBoneRemove = true;
@@ -1112,6 +1253,11 @@ namespace UMA.PoseTools
                     addBoneNames = boneTreeView.GetSelectedBones();
                     doBoneAdd = true;
                 }
+                if (GUILayout.Button("Add + Mirror"))
+                {
+                    addBoneNames = boneTreeView.GetSelectedBonesWithMirrors();
+                    doBoneAdd = true;
+                }
                 EditorGUI.EndDisabledGroup();
                 EditorGUILayout.EndHorizontal();
 
@@ -1140,7 +1286,7 @@ namespace UMA.PoseTools
 
                 Rect r = GUILayoutUtility.GetLastRect();
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, true);
-                r.yMin = 0;
+                r.yMin =0;
                 r.height = boneTreeView.totalHeight;
 
                 GUILayout.Space(boneTreeView.totalHeight);
@@ -1165,7 +1311,7 @@ namespace UMA.PoseTools
                 return;
             }
 
-            if (targetSMR.bones == null || targetSMR.bones.Length == 0)
+            if (targetSMR.bones == null || targetSMR.bones.Length ==0)
             {
                 Debug.LogError("Target SkinnedMeshRenderer has no bones assigned.");
                 return;
@@ -1204,17 +1350,17 @@ namespace UMA.PoseTools
                     Vector3 positionDiff = targetBone.localPosition - sourceBone.localPosition;
                     Quaternion rotationDiff = Quaternion.Inverse(sourceBone.localRotation) * targetBone.localRotation;
                     Vector3 scaleDiff = new Vector3(
-                        (sourceBone.localScale.x == 0f && targetBone.localScale.x == 0f) ? 1f :
-                        (sourceBone.localScale.x != 0f ? targetBone.localScale.x / sourceBone.localScale.x : 1f),
-                        (sourceBone.localScale.y == 0f && targetBone.localScale.y == 0f) ? 1f :
-                        (sourceBone.localScale.y != 0f ? targetBone.localScale.y / sourceBone.localScale.y : 1f),
-                        (sourceBone.localScale.z == 0f && targetBone.localScale.z == 0f) ? 1f :
-                        (sourceBone.localScale.z != 0f ? targetBone.localScale.z / sourceBone.localScale.z : 1f)
+                        (sourceBone.localScale.x ==0f && targetBone.localScale.x ==0f) ?1f :
+                        (sourceBone.localScale.x !=0f ? targetBone.localScale.x / sourceBone.localScale.x :1f),
+                        (sourceBone.localScale.y ==0f && targetBone.localScale.y ==0f) ?1f :
+                        (sourceBone.localScale.y !=0f ? targetBone.localScale.y / sourceBone.localScale.y :1f),
+                        (sourceBone.localScale.z ==0f && targetBone.localScale.z ==0f) ?1f :
+                        (sourceBone.localScale.z !=0f ? targetBone.localScale.z / sourceBone.localScale.z :1f)
                     );
 
-                    if (positionDiff.magnitude > 0.0001f ||
-                        Quaternion.Angle(Quaternion.identity, rotationDiff) > 0.1f ||
-                        Vector3.Distance(Vector3.one, scaleDiff) > 0.0001f)
+                    if (positionDiff.magnitude >0.0001f ||
+                        Quaternion.Angle(Quaternion.identity, rotationDiff) >0.1f ||
+                        Vector3.Distance(Vector3.one, scaleDiff) >0.0001f)
                     {
                         AddBoneToTarget(poses, targetBone.name, positionDiff, rotationDiff, scaleDiff);
                         addedBones.Add(targetBone.name);
@@ -1229,7 +1375,7 @@ namespace UMA.PoseTools
             serializedObject.ApplyModifiedProperties();
             _poseEdited = true;
 
-            if (addedBones.Count > 0)
+            if (addedBones.Count >0)
             {
                 Debug.Log($"Generated bone pose with {addedBones.Count} bones: {string.Join(", ", addedBones)}");
             }
@@ -1238,7 +1384,7 @@ namespace UMA.PoseTools
                 Debug.Log("No significant bone differences found between source UMA and target SkinnedMeshRenderer.");
             }
 
-            if (unmappedBones.Count > 0)
+            if (unmappedBones.Count >0)
             {
                 Debug.LogWarning($"Could not map {unmappedBones.Count} bones from target to source: {string.Join(", ", unmappedBones)}");
             }
@@ -1254,7 +1400,7 @@ namespace UMA.PoseTools
                 return result;
             }
 
-            if (string.Compare(sourceRoot.name, targetBone.name, System.StringComparison.OrdinalIgnoreCase) == 0)
+            if (string.Compare(sourceRoot.name, targetBone.name, System.StringComparison.OrdinalIgnoreCase) ==0)
             {
                 boneMap.Add(targetBone, sourceRoot);
                 return sourceRoot;
@@ -1288,12 +1434,12 @@ namespace UMA.PoseTools
         {
             if (parent == null) return null;
 
-            if (string.Compare(parent.name, boneName, System.StringComparison.OrdinalIgnoreCase) == 0)
+            if (string.Compare(parent.name, boneName, System.StringComparison.OrdinalIgnoreCase) ==0)
             {
                 return parent;
             }
 
-            for (int i = 0; i < parent.childCount; i++)
+            for (int i =0; i < parent.childCount; i++)
             {
                 Transform result = FindBoneRecursive(parent.GetChild(i), boneName);
                 if (result != null)
@@ -1331,7 +1477,7 @@ namespace UMA.PoseTools
 
         private static void FlipBone(SerializedProperty poses, int i)
         {
-            if (poses == null || i < 0 || i >= poses.arraySize) return;
+            if (poses == null || i <0 || i >= poses.arraySize) return;
 
             SerializedProperty pose = poses.GetArrayElementAtIndex(i);
             SerializedProperty bone = pose.FindPropertyRelative("bone");
@@ -1395,11 +1541,11 @@ namespace UMA.PoseTools
             var Global = context.activeUMA.umaRoot.transform.Find("Global");
             if (Global != null)
             {
-                AddFilteredNodesRecursive(boneTreeView.RootNode, Global, 0, filter);
+                AddFilteredNodesRecursive(boneTreeView.RootNode, Global,0, filter);
             }
-            if (boneTreeView.RootNode.children == null || boneTreeView.RootNode.children.Count == 0)
+            if (boneTreeView.RootNode.children == null || boneTreeView.RootNode.children.Count ==0)
             {
-                boneTreeView.RootNode.AddChild(new TreeViewItem(1, 0, "No bones found"));
+                boneTreeView.RootNode.AddChild(new TreeViewItem(1,0, "No bones found"));
             }
             boneTreeView.Reload();
             boneTreeView.ExpandAll();
@@ -1423,7 +1569,7 @@ namespace UMA.PoseTools
                 AddNodeRecursive(boneTreeView.RootNode, Global);
             }
             boneTreeView.Reload();
-            ExpandDepthRecursive(boneTreeView.RootNode, 5);
+            ExpandDepthRecursive(boneTreeView.RootNode,5);
         }
 
         private void ExpandDepthRecursive(TreeViewItem theNode, int depth)
@@ -1441,7 +1587,7 @@ namespace UMA.PoseTools
             }
         }
 
-        private void AddNodeRecursive(TreeViewItem rootNode, Transform theTransform, int depth = 0)
+        private void AddNodeRecursive(TreeViewItem rootNode, Transform theTransform, int depth =0)
         {
             if (theTransform == null) return;
             boneTreeView.NodeCount++;
@@ -1449,11 +1595,11 @@ namespace UMA.PoseTools
             rootNode.AddChild(Node);
             foreach (Transform t in theTransform)
             {
-                AddNodeRecursive(Node, t, depth + 1);
+                AddNodeRecursive(Node, t, depth +1);
             }
         }
 
-        private void AddFilteredNodesRecursive(TreeViewItem rootNode, Transform theTransform, int depth = 0, string Filter = "")
+        private void AddFilteredNodesRecursive(TreeViewItem rootNode, Transform theTransform, int depth =0, string Filter = "")
         {
             if (theTransform == null) return;
             boneTreeView.NodeCount++;
@@ -1465,7 +1611,7 @@ namespace UMA.PoseTools
             }
             foreach (Transform t in theTransform)
             {
-                AddFilteredNodesRecursive(rootNode, t, depth + 1, Filter);
+                AddFilteredNodesRecursive(rootNode, t, depth +1, Filter);
             }
         }
 
@@ -1491,7 +1637,7 @@ namespace UMA.PoseTools
             }
             else if (drawBoneIndex == mirrorBoneIndex)
             {
-                Color lightBlue = Color.Lerp(Color.blue, Color.cyan, 0.66f);
+                Color lightBlue = Color.Lerp(Color.blue, Color.cyan,0.66f);
                 if (mirrorActive)
                 {
                     GUI.color = lightBlue;
@@ -1502,7 +1648,7 @@ namespace UMA.PoseTools
                 }
                 else
                 {
-                    GUI.color = Color.Lerp(lightBlue, Color.white, 0.66f);
+                    GUI.color = Color.Lerp(lightBlue, Color.white,0.66f);
                     if (GUILayout.Button("Mirror", EditorStyles.miniButton, GUILayout.Width(60f)))
                     {
                         mirrorActive = true;
@@ -1517,7 +1663,7 @@ namespace UMA.PoseTools
                 }
                 if (GUILayout.Button("x", EditorStyles.miniButton, GUILayout.Width(32)))
                 {
-                    removeBoneIndex = drawBoneIndex + 1;
+                    removeBoneIndex = drawBoneIndex +1;
                     doBoneRemove = true;
                 }
             }
@@ -1543,7 +1689,7 @@ namespace UMA.PoseTools
                     if (!mirrorActive || string.IsNullOrEmpty(mirrorBoneName) || posesRoot == null)
                         return null;
 
-                    for (int i = 0; i < posesRoot.arraySize; i++)
+                    for (int i =0; i < posesRoot.arraySize; i++)
                     {
                         var p = posesRoot.GetArrayElementAtIndex(i);
                         var pb = p.FindPropertyRelative("bone");
@@ -1553,7 +1699,7 @@ namespace UMA.PoseTools
                         }
                     }
                     AddABone(posesRoot, mirrorBoneName);
-                    var newPose = posesRoot.GetArrayElementAtIndex(posesRoot.arraySize - 1);
+                    var newPose = posesRoot.GetArrayElementAtIndex(posesRoot.arraySize -1);
                     return newPose;
                 }
 
@@ -1582,7 +1728,7 @@ namespace UMA.PoseTools
                 }
 
                 var rotation = property.FindPropertyRelative("rotation");
-                Rect rotationRect = new Rect(0, 0, 0, 0);
+                Rect rotationRect = new Rect(0,0,0,0);
                 EditorGUI.BeginProperty(rotationRect, GUIContent.none, rotation);
 
                 Vector3 currentRotationEuler = ((Quaternion)rotation.quaternionValue).eulerAngles;
@@ -1644,11 +1790,11 @@ namespace UMA.PoseTools
                 if (!Mathf.Approximately(scaleValue.x, scaleValue.y) || !Mathf.Approximately(scaleValue.y, scaleValue.z))
                 {
                     EditorGUILayout.BeginHorizontal();
-                    GUILayout.Space(EditorGUIUtility.labelWidth / 2f);
+                    GUILayout.Space(EditorGUIUtility.labelWidth /2f);
                     if (warningIcon != null)
                     {
                         scaleWarningGUIContent.image = warningIcon;
-                        EditorGUILayout.LabelField(scaleWarningGUIContent, GUILayout.MinHeight(warningIcon.height + 4f));
+                        EditorGUILayout.LabelField(scaleWarningGUIContent, GUILayout.MinHeight(warningIcon.height +4f));
                     }
                     else
                     {

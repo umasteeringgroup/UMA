@@ -949,6 +949,7 @@ static void ClearUnpackCaches()
 			{
                 SlotDataAsset.BakeSlotParams options = new SlotDataAsset.BakeSlotParams();
 				options.burnOptions = race.PrebakedBlendshapes;
+				options.ShapesToInclude = race.UnbakedShapesToInclude;
 				options.addToIndexer = true;
 				options.smoothingAngleDegrees = -1.0f; // use default smoothing
 

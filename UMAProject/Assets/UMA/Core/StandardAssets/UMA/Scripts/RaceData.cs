@@ -22,6 +22,8 @@ namespace UMA
 		public List<string> KeepBoneNames = new List<string>();
 		public List<string> tags = new List<string>();
 		public  List<SlotBurnOptions> PrebakedBlendshapes = new List<SlotBurnOptions>();
+		public List<string> UnbakedShapesToInclude = new List<string>();
+		public bool keepUnbakedBlendshapes = false;
         public bool disableDNAConverters = false;
 		[Tooltip("if true, this will not be added to the index when all items are scanned.")]
         public bool noAutoAdd = false;
