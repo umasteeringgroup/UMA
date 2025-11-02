@@ -236,7 +236,7 @@ namespace UMA
                 int sourceVertexCount = source.meshData.vertices.Length;
 				BuildBoneWeights(source.meshData, nativeBoneWeights, nativeBonesPerVertex, vertexIndex, boneWeightIndex, bonesCollection, bindPoses, bonesList);
 
-                if (source.slotData.expandAlongNormal > 0)
+                if (source.slotData.expandAlongNormal > 0 || source.slotData.expandAlongNormal < 0)
                 {
                     ArrayCopyandExpand(source.meshData, source.slotData.expandAlongNormal, ref vertices, vertexIndex, sourceVertexCount);
                 }
