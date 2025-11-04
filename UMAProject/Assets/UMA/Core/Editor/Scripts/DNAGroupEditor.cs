@@ -4,17 +4,50 @@ using UMA;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.SceneManagement;
+using UMA.CharacterSystem;
 
 [CustomEditor(typeof(DNAGroup))]
 public class DNAGroupEditor : Editor
 {
     private SerializedProperty dnaAreaProp;
     private SerializedProperty dnaListProp;
+    private bool _changedThisGUI;
+    private bool _pendingSave;
+    private float _lastActionTime;
+    private const float SaveDelaySeconds =0.5f;
 
     private void OnEnable()
     {
         dnaAreaProp = serializedObject.FindProperty("DNAArea");
         dnaListProp = serializedObject.FindProperty("dnaList");
+        EditorApplication.update += DelayedSaveTick;
+    }
+
+    private void OnDisable()
+    {
+        EditorApplication.update -= DelayedSaveTick;
+    }
+
+    private void MarkGroupDirtyAndQueueSave(UnityEngine.Object alsoDirty = null)
+    {
+        // Mark the owning DNAGroup asset dirty and optionally another related object
+        if (alsoDirty != null)
+        {
+            EditorUtility.SetDirty(alsoDirty);
+        }
+        EditorUtility.SetDirty(target);
+        _pendingSave = true;
+        _lastActionTime = Time.realtimeSinceStartup;
+    }
+
+    private void DelayedSaveTick()
+    {
+        if (_pendingSave && (Time.realtimeSinceStartup - _lastActionTime) >= SaveDelaySeconds)
+        {
+            _pendingSave = false;
+            AssetDatabase.SaveAssets();
+        }
     }
 
     public override void OnInspectorGUI()
@@ -26,8 +59,33 @@ public class DNAGroupEditor : Editor
         }
 
         serializedObject.Update();
+        _changedThisGUI = false;
 
+        GUILayout.Label("DNA Group Editor", EditorStyles.boldLabel);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Ping DNAGroup Asset", GUILayout.Width(150)))
+        {
+            EditorGUIUtility.PingObject(target);
+        }
+        if (GUILayout.Button("Save Now", GUILayout.Width(100)))
+        {
+            EditorUtility.SetDirty(target);
+            AssetDatabase.SaveAssetIfDirty(target);
+        }
+        if (GUILayout.Button("Rebuild Characters", GUILayout.Width(150)))
+        {
+            UMAAssetIndexer.RebuildAllUMAS();
+        }
+        GUILayout.EndHorizontal();
+
+
+        EditorGUI.BeginChangeCheck();
         EditorGUILayout.PropertyField(dnaAreaProp, new GUIContent("DNA Area"));
+        if (EditorGUI.EndChangeCheck())
+        {
+            serializedObject.ApplyModifiedProperties();
+            _changedThisGUI = true;
+        }
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("DNA List", EditorStyles.boldLabel);
@@ -51,7 +109,8 @@ public class DNAGroupEditor : Editor
                     Undo.RecordObject(target, "Remove DNA from Group");
                     dnaListProp.DeleteArrayElementAtIndex(i);
                     serializedObject.ApplyModifiedProperties();
-                    EditorUtility.SetDirty(target);
+                    _changedThisGUI = true;
+                    MarkGroupDirtyAndQueueSave();
                     EditorGUILayout.EndHorizontal();
                     EditorGUILayout.EndVertical();
                     break;
@@ -70,11 +129,21 @@ public class DNAGroupEditor : Editor
             dnaListProp.arraySize++;
             // leave as null initially (user can assign or create)
             serializedObject.ApplyModifiedProperties();
-            EditorUtility.SetDirty(target);
+            _changedThisGUI = true;
+            MarkGroupDirtyAndQueueSave();
         }
         EditorGUILayout.EndHorizontal();
 
-        serializedObject.ApplyModifiedProperties();
+        // Final apply and persistence if anything changed in this GUI pass
+        if (_changedThisGUI)
+        {
+            serializedObject.ApplyModifiedProperties();
+            MarkGroupDirtyAndQueueSave();
+        }
+        else
+        {
+            serializedObject.ApplyModifiedProperties();
+        }
     }
 
     private void DrawDNAEntry(SerializedProperty dnaProp, int index)
@@ -126,7 +195,10 @@ public class DNAGroupEditor : Editor
 
         if (so.ApplyModifiedProperties())
         {
+            // mark both the inline DNA asset and the group as dirty; queue save to persist
             EditorUtility.SetDirty(dnaObj);
+            _changedThisGUI = true;
+            MarkGroupDirtyAndQueueSave(dnaObj);
         }
     }
 
@@ -148,7 +220,8 @@ public class DNAGroupEditor : Editor
 
         dnaProp.objectReferenceValue = dna;
         serializedObject.ApplyModifiedProperties();
-        EditorUtility.SetDirty(target);
+        _changedThisGUI = true;
+        MarkGroupDirtyAndQueueSave(dna);
         EditorGUIUtility.PingObject(dna);
     }
 
@@ -213,6 +286,13 @@ public class DNAGroupEditor : Editor
             {
                 effectsProp.DeleteArrayElementAtIndex(j);
                 dnaSO.ApplyModifiedProperties();
+                // mark both DNA and group as dirty and queue save
+                if (dnaSO.targetObject != null)
+                {
+                    EditorUtility.SetDirty(dnaSO.targetObject);
+                }
+                _changedThisGUI = true;
+                MarkGroupDirtyAndQueueSave(dnaSO.targetObject);
                 EditorGUILayout.EndHorizontal();
                 EditorGUILayout.EndVertical();
                 break;
@@ -238,6 +318,12 @@ public class DNAGroupEditor : Editor
                 // Fallback: add a null entry so user can assign later if not using SerializeReference
                 effectsProp.arraySize++;
                 dnaSO.ApplyModifiedProperties();
+                if (dnaSO.targetObject != null)
+                {
+                    EditorUtility.SetDirty(dnaSO.targetObject);
+                }
+                _changedThisGUI = true;
+                MarkGroupDirtyAndQueueSave(dnaSO.targetObject);
             }
             else
             {
@@ -255,6 +341,12 @@ public class DNAGroupEditor : Editor
                         }
                         // If not managed reference, leave as default/null
                         dnaSO.ApplyModifiedProperties();
+                        if (dnaSO.targetObject != null)
+                        {
+                            EditorUtility.SetDirty(dnaSO.targetObject);
+                        }
+                        _changedThisGUI = true;
+                        MarkGroupDirtyAndQueueSave(dnaSO.targetObject);
                     });
                 }
                 menu.ShowAsContext();

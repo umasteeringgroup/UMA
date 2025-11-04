@@ -181,9 +181,11 @@ namespace UMA.Editors
 			showRaceGeneration = EditorGUILayout.Foldout(showRaceGeneration, "Race Generation");
 			if (showRaceGeneration)
 			{
-
-				// Prebaked Blendshapes list
-				DrawPrebakedBlendshapeList();
+				EditorGUILayout.HelpBox("Force Rebuild Race Slots should only be enabled for testing during design phase! it forces the slots to be rebuilt every generation!", MessageType.Warning);
+				SerializedProperty ForceRebuildRaceSlots = serializedObject.FindProperty("forceRebuildRaceSlots");
+                ForceRebuildRaceSlots.boolValue = EditorGUILayout.Toggle(new GUIContent("Force Rebuild Race Slots", "If true, the race slots will be rebuilt when characters are generated."), ForceRebuildRaceSlots.boolValue);
+                // Prebaked Blendshapes list
+                DrawPrebakedBlendshapeList();
 
 				// Unbaked Shapes To Include list
 				DrawUnbakedShapesToIncludeList();
@@ -486,7 +488,8 @@ namespace UMA.Editors
 
 		private void DrawPrebakedBlendshapeList()
 		{
-			if (!prebakedBlendshapeListInitialized || prebakedBlendshapeList == null)
+            GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
+            if (!prebakedBlendshapeListInitialized || prebakedBlendshapeList == null)
 			{
 				InitPrebakedBlendshapeList();
 			}
@@ -520,20 +523,30 @@ namespace UMA.Editors
 				{
 					shapes = Array.Empty<string>();
 				}
-				_prebakeAddShapeIndex = Mathf.Clamp(_prebakeAddShapeIndex, 0, Math.Max(0, shapes.Length - 1));
+				_prebakeAddShapeIndex = Mathf.Clamp(_prebakeAddShapeIndex,0, Math.Max(0, shapes.Length -1));
 				_prebakeAddShapeIndex = EditorGUILayout.Popup(_prebakeAddShapeIndex, shapes, GUILayout.MaxWidth(260));
-				EditorGUI.BeginDisabledGroup(shapes.Length == 0);
+				EditorGUI.BeginDisabledGroup(shapes.Length ==0);
 				if (GUILayout.Button("Add", GUILayout.Width(60)))
 				{
 					var shapeName = shapes[_prebakeAddShapeIndex];
 					var listProp = serializedObject.FindProperty("PrebakedBlendshapes");
 					// prevent duplicates
 					bool exists = false;
-					for (int i = 0; i < listProp.arraySize; i++)
+					for (int i =0; i < listProp.arraySize; i++)
 					{
 						var el = listProp.GetArrayElementAtIndex(i);
 						var n = el.FindPropertyRelative("BlendShape");
 						if (n != null && n.stringValue == shapeName) { exists = true; break; }
+					}
+					// also prevent if the shape exists in UnbakedShapesToInclude
+					if (!exists)
+					{
+						var otherList = serializedObject.FindProperty("UnbakedShapesToInclude");
+						for (int i =0; i < otherList.arraySize; i++)
+						{
+							var el = otherList.GetArrayElementAtIndex(i);
+							if (el != null && el.stringValue == shapeName) { exists = true; break; }
+						}
 					}
 					if (!exists)
 					{
@@ -541,7 +554,45 @@ namespace UMA.Editors
 						listProp.InsertArrayElementAtIndex(idx);
 						var el = listProp.GetArrayElementAtIndex(idx);
 						el.FindPropertyRelative("BlendShape").stringValue = shapeName;
-						el.FindPropertyRelative("value").floatValue = 0f;
+						el.FindPropertyRelative("value").floatValue =0f;
+						serializedObject.ApplyModifiedProperties();
+						_needsUpdate = true;
+					}
+				}
+				// Add all missing shapes from the selected slot
+				if (GUILayout.Button("Add all from slot", GUILayout.Width(150)))
+				{
+					var listProp = serializedObject.FindProperty("PrebakedBlendshapes");
+					// Build set of existing names
+					var existing = new HashSet<string>(StringComparer.Ordinal);
+					for (int i =0; i < listProp.arraySize; i++)
+					{
+						var el = listProp.GetArrayElementAtIndex(i);
+						var n = el.FindPropertyRelative("BlendShape");
+						if (n != null && !string.IsNullOrEmpty(n.stringValue)) existing.Add(n.stringValue);
+					}
+					// include names from UnbakedShapesToInclude to avoid cross-adding
+					var otherList = serializedObject.FindProperty("UnbakedShapesToInclude");
+					for (int i =0; i < otherList.arraySize; i++)
+					{
+						var el = otherList.GetArrayElementAtIndex(i);
+						if (el != null && !string.IsNullOrEmpty(el.stringValue)) existing.Add(el.stringValue);
+					}
+					int added =0;
+					for (int s =0; s < shapes.Length; s++)
+					{
+						var shapeName = shapes[s];
+						if (string.IsNullOrEmpty(shapeName) || existing.Contains(shapeName)) continue;
+						int idx = listProp.arraySize;
+						listProp.InsertArrayElementAtIndex(idx);
+						var el = listProp.GetArrayElementAtIndex(idx);
+						el.FindPropertyRelative("BlendShape").stringValue = shapeName;
+						el.FindPropertyRelative("value").floatValue =0f;
+						existing.Add(shapeName);
+						added++;
+					}
+					if (added >0)
+					{
 						serializedObject.ApplyModifiedProperties();
 						_needsUpdate = true;
 					}
@@ -550,7 +601,8 @@ namespace UMA.Editors
 			}
 			EditorGUILayout.EndHorizontal();
 			GUI.enabled = true;
-		}
+			GUIHelper.EndVerticalPadded(5.0f);
+        }
 
 		private void InitUnbakedShapesToIncludeList()
 		{
@@ -606,7 +658,8 @@ namespace UMA.Editors
 
 		private void DrawUnbakedShapesToIncludeList()
 		{
-			if (!unbakedShapesListInitialized || unbakedShapesList == null)
+            GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.875f, 1f));
+            if (!unbakedShapesListInitialized || unbakedShapesList == null)
 			{
 				InitUnbakedShapesToIncludeList();
 			}
@@ -643,19 +696,30 @@ namespace UMA.Editors
 				{
 					shapes = Array.Empty<string>();
 				}
-				_unbakedAddShapeIndex = Mathf.Clamp(_unbakedAddShapeIndex, 0, Math.Max(0, shapes.Length - 1));
+				_unbakedAddShapeIndex = Mathf.Clamp(_unbakedAddShapeIndex,0, Math.Max(0, shapes.Length -1));
 				_unbakedAddShapeIndex = EditorGUILayout.Popup(_unbakedAddShapeIndex, shapes, GUILayout.MaxWidth(260));
-				EditorGUI.BeginDisabledGroup(shapes.Length == 0);
+				EditorGUI.BeginDisabledGroup(shapes.Length ==0);
 				if (GUILayout.Button("Add", GUILayout.Width(60)))
 				{
 					var shapeName = shapes[_unbakedAddShapeIndex];
 					var listProp = serializedObject.FindProperty("UnbakedShapesToInclude");
 					// prevent duplicates
 					bool exists = false;
-					for (int i = 0; i < listProp.arraySize; i++)
+					for (int i =0; i < listProp.arraySize; i++)
 					{
 						var el = listProp.GetArrayElementAtIndex(i);
 						if (el != null && el.stringValue == shapeName) { exists = true; break; }
+					}
+					// also prevent if the shape exists in PrebakedBlendshapes
+					if (!exists)
+					{
+						var otherList = serializedObject.FindProperty("PrebakedBlendshapes");
+						for (int i =0; i < otherList.arraySize; i++)
+						{
+							var el = otherList.GetArrayElementAtIndex(i);
+							var n = el.FindPropertyRelative("BlendShape");
+							if (n != null && n.stringValue == shapeName) { exists = true; break; }
+						}
 					}
 					if (!exists)
 					{
@@ -667,11 +731,49 @@ namespace UMA.Editors
 						_needsUpdate = true;
 					}
 				}
+				// Add all missing shapes from the selected slot
+				if (GUILayout.Button("Add all from slot", GUILayout.Width(150)))
+				{
+					var listProp = serializedObject.FindProperty("UnbakedShapesToInclude");
+					// Build set of existing names
+					var existing = new HashSet<string>(StringComparer.Ordinal);
+					for (int i =0; i < listProp.arraySize; i++)
+					{
+						var el = listProp.GetArrayElementAtIndex(i);
+						if (el != null && !string.IsNullOrEmpty(el.stringValue)) existing.Add(el.stringValue);
+					}
+					// include names from PrebakedBlendshapes to avoid cross-adding
+					var otherList = serializedObject.FindProperty("PrebakedBlendshapes");
+					for (int i =0; i < otherList.arraySize; i++)
+					{
+						var el = otherList.GetArrayElementAtIndex(i);
+						var n = el.FindPropertyRelative("BlendShape");
+						if (n != null && !string.IsNullOrEmpty(n.stringValue)) existing.Add(n.stringValue);
+					}
+					int added =0;
+					for (int s =0; s < shapes.Length; s++)
+					{
+						var shapeName = shapes[s];
+						if (string.IsNullOrEmpty(shapeName) || existing.Contains(shapeName)) continue;
+						int idx = listProp.arraySize;
+						listProp.InsertArrayElementAtIndex(idx);
+						var el = listProp.GetArrayElementAtIndex(idx);
+						el.stringValue = shapeName;
+						existing.Add(shapeName);
+						added++;
+					}
+					if (added >0)
+					{
+						serializedObject.ApplyModifiedProperties();
+						_needsUpdate = true;
+					}
+				}
 				EditorGUI.EndDisabledGroup();
 			}
 			EditorGUILayout.EndHorizontal();
 			GUI.enabled = true;
-		}
+            GUIHelper.EndVerticalPadded(5.0f);
+        }
 
 		private void RecursiveScanFoldersForAssets(string path, SerializedProperty crossCompatibilitySettingsData)
 		{

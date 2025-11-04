@@ -412,6 +412,15 @@ namespace UMA
             CleanupUMAS(scene);
         }
 
+        public static void RebuildAllUMAS()
+        {
+            Scene scene = SceneManager.GetActiveScene();
+            if (scene != null)
+            {
+                RebuildUMAS(scene);
+            }
+        }
+
         public static void RebuildUMAS(Scene scene)
         {
             GameObject[] sceneObjs = scene.GetRootGameObjects();

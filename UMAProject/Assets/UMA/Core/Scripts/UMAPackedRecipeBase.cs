@@ -951,7 +951,12 @@ static void ClearUnpackCaches()
 				options.burnOptions = race.PrebakedBlendshapes;
 				options.ShapesToInclude = race.UnbakedShapesToInclude;
 				options.addToIndexer = true;
-				options.smoothingAngleDegrees = -1.0f; // use default smoothing
+				options.smoothingAngleDegrees = -1.0f; // use imported smoothing
+				options.forceRebuildRaceSlots = race.forceRebuildRaceSlots;
+				if (race.UnbakedShapesToInclude != null && race.UnbakedShapesToInclude.Count > 0)
+				{
+                    options.copyUnbakedBlendshapes = true;
+				}
 
                 for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
 				{
@@ -960,8 +965,6 @@ static void ClearUnpackCaches()
 						SlotData slot = umaRecipe.slotDataList[i];
 						SlotDataAsset original = slot.asset;
                         options.newSlotName = original.name + "_baked_"+race.raceName;
-						options.smoothingAngleDegrees = 0.0f; // use imported normals for multi-part slots
-
                         slot.asset = original.BakeNewSlotData(options);
                     }
 				}

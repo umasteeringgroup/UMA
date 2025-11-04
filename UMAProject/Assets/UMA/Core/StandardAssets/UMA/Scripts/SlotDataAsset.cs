@@ -944,6 +944,7 @@ namespace UMA
             public string newSlotName;          // Optional: rename baked slot asset
             [Tooltip("if true, this will be added to the indexer. If a slot with the same name already exists, it will be returned instead of creating a new one.")]
             public bool addToIndexer;           // Optional: register with UMAAssetIndexer
+            public bool forceRebuildRaceSlots;   // Optional: if true, will not get cached slot, and will rebuild. Used for testing only.
         }
 
         /// <summary>
@@ -954,23 +955,26 @@ namespace UMA
 #if DEBUG_BAKING
             Debug.LogWarning("BakeNewSlotData called on slot: " + slotName);
 #endif
-            // If requested, and a slot with this name already exists in the indexer, return it immediately
-            if (p.addToIndexer && !string.IsNullOrEmpty(p.newSlotName))
+            if (p.forceRebuildRaceSlots == false)
             {
-                var indexer = UMAAssetIndexer.Instance;
-                if (indexer != null)
+                // Check for existing
+                // If requested, and a slot with this name already exists in the indexer, return it immediately
+                if (p.addToIndexer && !string.IsNullOrEmpty(p.newSlotName))
                 {
-                    var existing = indexer.GetAsset<SlotDataAsset>(p.newSlotName, recursionGuard: false, inStartup: false);
-                    if (existing != null)
+                    var indexer = UMAAssetIndexer.Instance;
+                    if (indexer != null)
                     {
+                        var existing = indexer.GetAsset<SlotDataAsset>(p.newSlotName, recursionGuard: false, inStartup: false);
+                        if (existing != null)
+                        {
 #if DEBUG_BAKING
-                        Debug.LogWarning("BakeNewSlotData called with existing slot in indexer: " + p.newSlotName+" Returning existing slot");
+                            Debug.LogWarning("BakeNewSlotData called with existing slot in indexer: " + p.newSlotName + " Returning existing slot");
 #endif
-                        return existing;
+                            return existing;
+                        }
                     }
                 }
             }
-
             // If there are bake targets but this asset has none of them, return the current slot unchanged
             if (p.burnOptions != null && p.burnOptions.Count >0)
             {

@@ -25,6 +25,8 @@ namespace UMA
 		public List<string> UnbakedShapesToInclude = new List<string>();
 		public bool keepUnbakedBlendshapes = false;
         public bool disableDNAConverters = false;
+		public bool forceRebuildRaceSlots = false;
+
 		[Tooltip("if true, this will not be added to the index when all items are scanned.")]
         public bool noAutoAdd = false;
 

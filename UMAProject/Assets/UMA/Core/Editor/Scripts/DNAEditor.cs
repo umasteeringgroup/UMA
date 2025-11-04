@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using UMA.Editors;
+using UnityEngine.SceneManagement;
+using UMA.CharacterSystem;
 
 [CustomEditor(typeof(DNA))]
 public class DNAEditor : Editor
@@ -60,6 +62,22 @@ public class DNAEditor : Editor
 
         serializedObject.Update();
 
+        GUILayout.Label("DNA Editor", EditorStyles.boldLabel);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Ping DNA Asset", GUILayout.Width(150)))
+        {
+            EditorGUIUtility.PingObject(target);
+        }
+        if (GUILayout.Button("Save Now", GUILayout.Width(100)))
+        {
+            EditorUtility.SetDirty(target);
+            AssetDatabase.SaveAssetIfDirty(target);
+        }
+        if (GUILayout.Button("Rebuild Characters", GUILayout.Width(150)))
+        {
+            UMAAssetIndexer.RebuildAllUMAS();
+        }
+        GUILayout.EndHorizontal();
         targetDNA.description = EditorGUILayout.DelayedTextField("Description", targetDNA.description);
         targetDNA.defaultValue = EditorGUILayout.Slider("Default Value", targetDNA.defaultValue, 0f, 1f);
         EditorGUILayout.Space();
