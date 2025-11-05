@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Events;
+using UMA;
 
 namespace UMA.Editors
 {
@@ -12,8 +13,10 @@ namespace UMA.Editors
     [CustomEditor(typeof(DynamicDNAConverterController),true)]
 	public class DynamicDNAConverterControllerInspector : Editor
 	{
+		public static GameObject folder = null;
+		public static string folderPath = "Assets/UMA";
 
-		[MenuItem("Assets/Create/UMA/DNA/Legacy/Dynamic DNA Converter Controller")]
+        [MenuItem("Assets/Create/UMA/DNA/Legacy/Dynamic DNA Converter Controller")]
 		public static void CreateDynamicDNAConverterController()
 		{
 			DynamicDNAConverterController.CreateDynamicDNAConverterControllerAsset();
@@ -82,6 +85,9 @@ namespace UMA.Editors
 		private float _addPluginBtnWidth = 50f;
 
 		private bool _initialized = false;
+
+		// Cache for found DNA assets by name to avoid repeated AssetDatabase searches
+		private readonly Dictionary<string, DNA> _foundDnaCache = new Dictionary<string, DNA>();
 
 		private string[] _help = new string[]
 		{
@@ -328,8 +334,45 @@ namespace UMA.Editors
 			GUIHelper.EndVerticalPadded(3);
 		}
 
-		//Draws the 'View' tabs allowing the user to switch between viewing data 'By Plugin' or 'By DNA'
-		private void DrawControllersViewTabs()
+		private bool ConvertedDNAExists(string dnaName, string folderPath)
+		{
+			// Editor-only lookup for DNA assets by name within the specified folder, with caching
+			if (string.IsNullOrEmpty(dnaName) || string.IsNullOrEmpty(folderPath)) return false;
+
+
+			if (_foundDnaCache.ContainsKey(dnaName))
+			{
+				var dna = _foundDnaCache[dnaName];
+				return dna != null;
+            }
+
+			try
+			{
+				// Restrict search to provided folder (and its subfolders)
+				string[] searchInFolders = new[] { folderPath };
+				// Search by type and name; we'll still validate exact name match below
+				string filter = "t:DNA name:" + dnaName;
+				string[] guids = AssetDatabase.FindAssets(filter, searchInFolders);
+				for (int i = 0; i < guids.Length; i++)
+				{
+					string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+					var dna = AssetDatabase.LoadAssetAtPath<DNA>(path);
+					if (dna != null && dna.name == dnaName)
+					{
+						_foundDnaCache[dnaName] = dna; // cache found asset
+						return true;
+					}
+				}
+			}
+			catch { }
+
+			_foundDnaCache[dnaName] = null; // cache as not found
+
+            return false;
+        }
+
+        //Draws the 'View' tabs allowing the user to switch between viewing data 'By Plugin' or 'By DNA'
+        private void DrawControllersViewTabs()
 		{
 			//Tabs for viewing by modifier or by dna
 			var tabsRect = EditorGUILayout.GetControlRect();
@@ -406,7 +449,15 @@ namespace UMA.Editors
 				//Draw the search field
 				var activeNamesToDraw = DrawDNASearchArea(EditorGUILayout.GetControlRect(), namesToDraw);
 
-				DynamicDNAPlugin plugin;
+				folder = EditorGUILayout.ObjectField("Conversion Folder", folder, typeof(GameObject), false) as GameObject;
+				if (folder != null)
+				{
+					folderPath = AssetDatabase.GetAssetPath(folder);
+				}
+				EditorGUILayout.LabelField("Folder Path: " + folderPath);
+
+
+                DynamicDNAPlugin plugin;
 
 				for (int i = 0; i < activeNamesToDraw.Count; i++)
 				{
@@ -416,8 +467,24 @@ namespace UMA.Editors
 					}
 					GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
 					EditorGUI.indentLevel++;
+					EditorGUILayout.BeginHorizontal();
 					_expandedDNANames[activeNamesToDraw[i]] = EditorGUILayout.Foldout(_expandedDNANames[activeNamesToDraw[i]], activeNamesToDraw[i]);
-					EditorGUI.indentLevel--;
+					
+					GUILayout.FlexibleSpace();
+                    if (ConvertedDNAExists(activeNamesToDraw[i], folderPath))
+					{
+						GUILayout.Label("Converted", GUILayout.Width(75));
+					}
+					else
+					{
+						GUILayout.Label("Not Converted");
+                    }
+					if (GUILayout.Button("Convert DNA", EditorStyles.miniButton, GUILayout.Width(100)))
+					{
+						
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUI.indentLevel--;
 					GUILayout.EndHorizontal();
 					if (_expandedDNANames[activeNamesToDraw[i]])
 					{
@@ -439,6 +506,10 @@ namespace UMA.Editors
                                 continue;
                             }
 
+							if (!_pluginsEditors[plugin].UsesDNAMember(activeNamesToDraw[i]))
+							{
+								continue;
+                            }
                             //make a space like the other view
                             if (pi > 0)
                             {

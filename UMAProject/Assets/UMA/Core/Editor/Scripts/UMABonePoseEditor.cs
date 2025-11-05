@@ -193,11 +193,13 @@ namespace UMA.PoseTools
     public class UMABonePoseEditor : Editor
     {
         private static UMABonePoseEditor _livePopupEditor = null;
-        public static int MirrorAxis =1;
-        public static string[] MirrorAxises = { "X Axis (raw)", "Y Axis (UMA Internal)", "Z Axis" };
+        public static int MirrorAxis =0;
+        public static string[] MirrorAxises = { "X Axis", "Y Axis (Legacy UMA)", "Z Axis" };
         public static int displayMode =0;
         public static string[] strings = { "Pose Bones", "Filtered", "All", "None" };
         public enum DisplayMode { PoseBones, Filtered, All, None };
+        // Global mirroring disable switch for UI/scene edits
+        public static bool disableMirroring = false;
         public static UMAData saveUMAData;
         public UMAData sourceUMA;
         public SkinnedMeshRenderer targetSMR;
@@ -659,10 +661,31 @@ namespace UMA.PoseTools
                 {
                     mirrorPose = poses.GetArrayElementAtIndex(mirrorBoneIndex);
                 }
+                else if (activePose != null)
+                {
+                    // Fallback: auto-resolve mirror pose by name when index is unknown
+                    var activeBoneProp = activePose.FindPropertyRelative("bone");
+                    string activeBoneName = activeBoneProp != null ? activeBoneProp.stringValue : null;
+                    string mirrorName = DeriveMirrorName(activeBoneName);
+                    if (!string.IsNullOrEmpty(mirrorName))
+                    {
+                        for (int i =0; i < poses.arraySize; i++)
+                        {
+                            var p = poses.GetArrayElementAtIndex(i);
+                            var pb = p.FindPropertyRelative("bone");
+                            if (pb != null && pb.stringValue == mirrorName)
+                            {
+                                mirrorBoneIndex = i;
+                                mirrorPose = p;
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 Transform activeTrans = context.activeTransform;
                 Transform mirrorTrans = context.mirrorTransform;
-                if (!mirrorActive || (mirrorBoneIndex == BAD_INDEX))
+                if (disableMirroring || !mirrorActive)
                 {
                     mirrorTrans = null;
                 }
@@ -783,6 +806,17 @@ namespace UMA.PoseTools
         private void AddABone(SerializedProperty poses, string boneName)
         {
             if (poses == null || string.IsNullOrEmpty(boneName)) return;
+
+            // Prevent duplicates: if the bone already exists in the list, do not add again
+            for (int i =0; i < poses.arraySize; i++)
+            {
+                var existing = poses.GetArrayElementAtIndex(i);
+                var existingBone = existing.FindPropertyRelative("bone");
+                if (existingBone != null && existingBone.stringValue == boneName)
+                {
+                    return; // already present
+                }
+            }
 
             int addedIndex = poses.arraySize;
             poses.InsertArrayElementAtIndex(addedIndex);
@@ -989,9 +1023,17 @@ namespace UMA.PoseTools
             GUILayout.Space(EditorGUIUtility.singleLineHeight /2f);
 
             GUIHelper.BeginVerticalPadded();
-            MirrorAxis = EditorGUILayout.Popup("Mirror Axis", MirrorAxis, MirrorAxises);
-            displayMode = EditorGUILayout.Popup("Bone Display Mode", displayMode, strings);
-            GUILayout.BeginHorizontal();
+            // Global toggle to disable mirroring logic
+            bool prevDisableMirroring = disableMirroring;
+            disableMirroring = EditorGUILayout.Toggle("Disable Mirroring", disableMirroring);
+            if (disableMirroring && !prevDisableMirroring)
+            {
+            // Clear mirror index so UI does not show mirroring status when disabled
+            mirrorBoneIndex = BAD_INDEX;
+            }
+ MirrorAxis = EditorGUILayout.Popup("Mirror Axis", MirrorAxis, MirrorAxises);
+ displayMode = EditorGUILayout.Popup("Bone Display Mode", displayMode, strings);
+ GUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Find UMA in scene"))
             {
@@ -1527,6 +1569,28 @@ namespace UMA.PoseTools
             position.vector3Value = localPos;
         }
 
+        // Helpers for mirroring only one component type (position or rotation)
+        private static Vector3 MirrorPositionOnly(Vector3 pos)
+        {
+            switch (MirrorAxis)
+            {
+                case 0: pos.x = -pos.x; break;
+                case 1: pos.y = -pos.y; break;
+                case 2: pos.z = -pos.z; break;
+            }
+            return pos;
+        }
+        private static Quaternion MirrorRotationOnly(Quaternion rot)
+        {
+            switch (MirrorAxis)
+            {
+                case 0: rot.x *= -1; rot.w *= -1; break;
+                case 1: rot.y *= -1; rot.w *= -1; break;
+                case 2: rot.z *= -1; rot.w *= -1; break;
+            }
+            return rot;
+        }
+
         private void ReloadFilteredTree()
         {
             filtered = true;
@@ -1657,6 +1721,16 @@ namespace UMA.PoseTools
             }
             else
             {
+                if (GUILayout.Button("Reset", EditorStyles.miniButton, GUILayout.Width(60f)))
+                {
+                    var positionProp = property.FindPropertyRelative("position");
+                    positionProp.vector3Value = Vector3.zero;
+                    var rotationProp = property.FindPropertyRelative("rotation");
+                    rotationProp.quaternionValue = Quaternion.identity;
+                    var scaleProp = property.FindPropertyRelative("scale");
+                    scaleProp.vector3Value = Vector3.one;
+                    _poseEdited = true;
+                }
                 if (GUILayout.Button("Edit", EditorStyles.miniButton, GUILayout.Width(60f)))
                 {
                     editBoneIndex = drawBoneIndex;
@@ -1678,15 +1752,11 @@ namespace UMA.PoseTools
 
                 SerializedProperty posesRoot = serializedObject.FindProperty("poses");
 
-                string mirrorBoneName = null;
-                if (bone.stringValue.StartsWith("Left"))
-                    mirrorBoneName = bone.stringValue.Replace("Left", "Right");
-                else if (bone.stringValue.StartsWith("Right"))
-                    mirrorBoneName = bone.stringValue.Replace("Right", "Left");
+                string mirrorBoneName = DeriveMirrorName(bone.stringValue);
 
                 SerializedProperty GetOrCreateMirrorPose()
                 {
-                    if (!mirrorActive || string.IsNullOrEmpty(mirrorBoneName) || posesRoot == null)
+                    if (disableMirroring || !mirrorActive || string.IsNullOrEmpty(mirrorBoneName) || posesRoot == null)
                         return null;
 
                     for (int i =0; i < posesRoot.arraySize; i++)
@@ -1695,36 +1765,53 @@ namespace UMA.PoseTools
                         var pb = p.FindPropertyRelative("bone");
                         if (pb != null && pb.stringValue == mirrorBoneName)
                         {
+                            // ensure UI reflects mirror status immediately
+                            mirrorBoneIndex = i;
+                            Repaint();
                             return p;
                         }
                     }
                     AddABone(posesRoot, mirrorBoneName);
-                    var newPose = posesRoot.GetArrayElementAtIndex(posesRoot.arraySize -1);
+                    var newIndex = posesRoot.arraySize -1;
+                    var newPose = posesRoot.GetArrayElementAtIndex(newIndex);
+                    mirrorBoneIndex = newIndex;
+                    Repaint();
                     return newPose;
                 }
 
                 int controlIDLow = GUIUtility.GetControlID(0, FocusType.Passive);
                 var positionProp = property.FindPropertyRelative("position");
                 EditorGUI.BeginChangeCheck();
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PropertyField(positionProp, positionGUIContent);
+                if (GUILayout.Button("O", EditorStyles.miniButton, GUILayout.Width(32)))
+                {
+                positionProp.vector3Value = Vector3.zero;
+                _poseEdited = true;
+                var mirrorPose = GetOrCreateMirrorPose();
+                if (mirrorPose != null)
+                {
+                var mPos = mirrorPose.FindPropertyRelative("position");
+                mPos.vector3Value = MirrorPositionOnly(Vector3.zero);
+                }
+                }
+                EditorGUILayout.EndHorizontal();
                 int controlIDHigh = GUIUtility.GetControlID(0, FocusType.Passive);
                 if ((GUIUtility.keyboardControl > controlIDLow) && (GUIUtility.keyboardControl < controlIDHigh))
                 {
-                    if (context != null)
-                        context.activeTool = UMABonePoseEditorContext.EditorTool.Tool_Position;
+                if (context != null)
+                context.activeTool = UMABonePoseEditorContext.EditorTool.Tool_Position;
                 }
                 if (EditorGUI.EndChangeCheck() && isEditingThisBone)
                 {
-                    _poseEdited = true;
-                    var mirrorPose = GetOrCreateMirrorPose();
-                    if (mirrorPose != null)
-                    {
-                        var mPos = mirrorPose.FindPropertyRelative("position");
-                        var mRot = mirrorPose.FindPropertyRelative("rotation");
-                        mPos.vector3Value = positionProp.vector3Value;
-                        var tmpRot = mRot.quaternionValue;
-                        FlipSingleBone(mPos, mRot);
-                    }
+                _poseEdited = true;
+                var mirrorPose = GetOrCreateMirrorPose();
+                if (mirrorPose != null)
+                {
+                // Mirror only the position; do not touch rotation when editing position
+                var mPos = mirrorPose.FindPropertyRelative("position");
+                mPos.vector3Value = MirrorPositionOnly(positionProp.vector3Value);
+                }
                 }
 
                 var rotation = property.FindPropertyRelative("rotation");
@@ -1735,55 +1822,81 @@ namespace UMA.PoseTools
                 Vector3 newRotationEuler = currentRotationEuler;
                 EditorGUI.BeginChangeCheck();
                 controlIDLow = GUIUtility.GetControlID(0, FocusType.Passive);
+                EditorGUILayout.BeginHorizontal();
                 newRotationEuler = EditorGUILayout.Vector3Field(rotationGUIContent, newRotationEuler);
+                if (GUILayout.Button("O", EditorStyles.miniButton, GUILayout.Width(32)))
+                {
+                rotation.quaternionValue = Quaternion.identity;
+                _poseEdited = true;
+                if (isEditingThisBone)
+                {
+                var mirrorPose = GetOrCreateMirrorPose();
+                if (mirrorPose != null)
+                {
+                var mRot = mirrorPose.FindPropertyRelative("rotation");
+                mRot.quaternionValue = MirrorRotationOnly(Quaternion.identity);
+                }
+                }
+                }
+                EditorGUILayout.EndHorizontal();
                 controlIDHigh = GUIUtility.GetControlID(0, FocusType.Passive);
                 if ((GUIUtility.keyboardControl > controlIDLow) && (GUIUtility.keyboardControl < controlIDHigh))
                 {
-                    if (context != null)
-                        context.activeTool = UMABonePoseEditorContext.EditorTool.Tool_Rotation;
+                if (context != null)
+                context.activeTool = UMABonePoseEditorContext.EditorTool.Tool_Rotation;
                 }
                 if (EditorGUI.EndChangeCheck())
                 {
-                    if (newRotationEuler != currentRotationEuler)
-                    {
-                        rotation.quaternionValue = Quaternion.Euler(newRotationEuler);
-                        _poseEdited = true;
+                if (newRotationEuler != currentRotationEuler)
+                {
+                rotation.quaternionValue = Quaternion.Euler(newRotationEuler);
+                _poseEdited = true;
 
-                        if (isEditingThisBone)
-                        {
-                            var mirrorPose = GetOrCreateMirrorPose();
-                            if (mirrorPose != null)
-                            {
-                                var mPos = mirrorPose.FindPropertyRelative("position");
-                                var mRot = mirrorPose.FindPropertyRelative("rotation");
-                                mRot.quaternionValue = rotation.quaternionValue;
-                                var tmpPos = mPos.vector3Value;
-                                FlipSingleBone(mPos, mRot);
-                            }
-                        }
-                    }
+                if (isEditingThisBone)
+                {
+                var mirrorPose = GetOrCreateMirrorPose();
+                if (mirrorPose != null)
+                {
+                var mRot = mirrorPose.FindPropertyRelative("rotation");
+                mRot.quaternionValue = MirrorRotationOnly(rotation.quaternionValue);
+                }
+                }
+                }
                 }
                 EditorGUI.EndProperty();
 
                 var scaleProperty = property.FindPropertyRelative("scale");
                 controlIDLow = GUIUtility.GetControlID(0, FocusType.Passive);
                 EditorGUI.BeginChangeCheck();
+                EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PropertyField(scaleProperty, scaleGUIContent);
+                if (GUILayout.Button("O", EditorStyles.miniButton, GUILayout.Width(32)))
+                {
+                scaleProperty.vector3Value = Vector3.one;
+                _poseEdited = true;
+                var mirrorPose = GetOrCreateMirrorPose();
+                if (mirrorPose != null)
+                {
+                var mScale = mirrorPose.FindPropertyRelative("scale");
+                mScale.vector3Value = Vector3.one;
+                }
+                }
+                EditorGUILayout.EndHorizontal();
                 controlIDHigh = GUIUtility.GetControlID(0, FocusType.Passive);
                 if ((GUIUtility.keyboardControl > controlIDLow) && (GUIUtility.keyboardControl < controlIDHigh))
                 {
-                    if (context != null)
-                        context.activeTool = UMABonePoseEditorContext.EditorTool.Tool_Scale;
+                if (context != null)
+                context.activeTool = UMABonePoseEditorContext.EditorTool.Tool_Scale;
                 }
                 if (EditorGUI.EndChangeCheck() && isEditingThisBone)
                 {
-                    _poseEdited = true;
-                    var mirrorPose = GetOrCreateMirrorPose();
-                    if (mirrorPose != null)
-                    {
-                        var mScale = mirrorPose.FindPropertyRelative("scale");
-                        mScale.vector3Value = scaleProperty.vector3Value;
-                    }
+                _poseEdited = true;
+                var mirrorPose = GetOrCreateMirrorPose();
+                if (mirrorPose != null)
+                {
+                var mScale = mirrorPose.FindPropertyRelative("scale");
+                mScale.vector3Value = scaleProperty.vector3Value;
+                }
                 }
 
                 Vector3 scaleValue = scaleProperty.vector3Value;

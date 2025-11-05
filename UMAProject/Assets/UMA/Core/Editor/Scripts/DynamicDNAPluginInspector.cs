@@ -344,7 +344,34 @@ namespace UMA.Editors
 			serializedObject.ApplyModifiedProperties();
 		}
 
-		public virtual void OnInspectorForDNAGUI(string dnaName)
+		public virtual int CountForDNA(string dnaName)
+		{
+			if (!Init())
+			{
+				return 0;
+			}
+			int count = 0;
+			if (_target.IndexesForDnaNames.ContainsKey(dnaName))
+			{
+				count = _target.IndexesForDnaNames[dnaName].Count;
+			}
+			return count;
+        }
+
+		public bool UsesDNAMember(string dnaName)
+		{
+			if (!Init())
+			{
+				return false;
+			}
+			if (_target.IndexesForDnaNames.ContainsKey(dnaName))
+			{
+				return _target.IndexesForDnaNames[dnaName].Count > 0;
+			}
+			return false;
+        }
+
+        public virtual void OnInspectorForDNAGUI(string dnaName)
 		{
 			if (!Init())
             {
