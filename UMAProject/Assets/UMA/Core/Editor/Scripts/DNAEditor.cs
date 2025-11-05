@@ -1,4 +1,3 @@
-
 using UnityEditor;
 using UnityEngine;
 using UMA;
@@ -25,6 +24,19 @@ public class DNAEditor : Editor
     private string[] effectTypeNames;
     private bool editorExpanded = true;
     private bool initialized = false;
+    private const string PrefKey_AddNewExpanded = "UMA.DNAEditor.AddNewEffectExpanded";
+
+    private void OnEnable()
+    {
+        // Load persisted UI state
+        editorExpanded = EditorPrefs.GetBool(PrefKey_AddNewExpanded, true);
+    }
+
+    private void OnDisable()
+    {
+        // Save UI state
+        EditorPrefs.SetBool(PrefKey_AddNewExpanded, editorExpanded);
+    }
 
     void Initialize()
     {
@@ -83,8 +95,13 @@ public class DNAEditor : Editor
         EditorGUILayout.Space();
 
 
-        //editorExpanded = EditorGUILayout.Foldout(editorExpanded, "Add New Effect", true);
+        // Foldout for Add New Effect with persistence
+        bool prevExpanded = editorExpanded;
         editorExpanded = GUIHelper.FoldoutBar(editorExpanded, "Add New Effect Settings");
+        if (editorExpanded != prevExpanded)
+        {
+            EditorPrefs.SetBool(PrefKey_AddNewExpanded, editorExpanded);
+        }
         if (editorExpanded)
         {
             ShowAddNew(targetDNA);

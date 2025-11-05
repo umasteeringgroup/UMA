@@ -6,6 +6,7 @@ using UnityEditorInternal;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Events;
 using UMA;
+using UMA.CharacterSystem;
 
 namespace UMA.Editors
 {
@@ -13,7 +14,7 @@ namespace UMA.Editors
     [CustomEditor(typeof(DynamicDNAConverterController),true)]
 	public class DynamicDNAConverterControllerInspector : Editor
 	{
-		public static GameObject folder = null;
+		public static UnityEngine.Object folder = null;
 		public static string folderPath = "Assets/UMA";
 
         [MenuItem("Assets/Create/UMA/DNA/Legacy/Dynamic DNA Converter Controller")]
@@ -334,23 +335,187 @@ namespace UMA.Editors
 			GUIHelper.EndVerticalPadded(3);
 		}
 
+		private void ConvertDNA(string dnaName, string folderPath)
+		{
+			// Editor-only creation of DNA assets by name within the specified folder, with caching
+			if (string.IsNullOrEmpty(dnaName) || string.IsNullOrEmpty(folderPath)) return;
+			// Check if DNA already exists to avoid duplicates
+			if (ConvertedDNAExists(dnaName, folderPath))
+			{
+				// DNA already exists, delete and re-convert
+				AssetDatabase.DeleteAsset(System.IO.Path.Combine(folderPath, dnaName + ".asset")); 
+				// Clear cache so it is recreated
+				if (_foundDnaCache.ContainsKey(dnaName)) _foundDnaCache.Remove(dnaName);
+             }
+             try
+             {
+                 // Create a new DNA asset
+                 DNA newDna = ScriptableObject.CreateInstance<DNA>();
+                 newDna.name = dnaName;
+                 // Ensure the folder path exists
+                 if (!AssetDatabase.IsValidFolder(folderPath))
+                 {
+                     Debug.LogError($"The specified folder path '{folderPath}' is not valid.");
+                     return;
+                 }
+                 
+                 newDna.description = "Converted DNA Asset for " + dnaName;
+                 newDna.defaultValue = 0.5f;
+
+
+
+
+
+                // Build effects from existing plugins that reference this dna name
+                if (_target != null)
+                {
+                    var plugins = _target.GetPlugins();
+                    for (int p = 0; p < plugins.Count; p++)
+                    {
+                        var plugin = plugins[p];
+                        if (plugin == null) continue;
+                        var indexesMap = plugin.IndexesForDnaNames;
+                        if (indexesMap == null || !indexesMap.TryGetValue(dnaName, out var indices) || indices == null || indices.Count == 0)
+                            continue;
+
+                        // Blendshape DNA -> DNAEffect_BlendShape per entry
+                        var blendshapePlugin = plugin as BlendshapeDNAConverterPlugin;
+                        if (blendshapePlugin != null)
+                        {
+                            var list = blendshapePlugin.blendshapeDNAConverters;
+                            if (list == null) continue;
+                            for (int i = 0; i < indices.Count; i++)
+                            {
+                                int idx = indices[i];
+                                if (idx < 0 || idx >= list.Count) continue;
+                                var conv = list[idx];
+                                if (conv == null) continue;
+                                var eff = new DNAEffect_BlendShape
+                                {
+                                    BlendShapeName = conv.blendshapeToApply
+                                };
+                                // Approximate evaluator mapping via min/max only (leave defaults 0..1)
+                                // conv.modifyingDNA could be inspected, but we keep linear mapping per spec.
+                                newDna.effects.Add(eff);
+                            }
+                            continue; // go to next plugin
+                        }
+
+                        // Bone Pose DNA -> DNAEffect_BonePose per entry
+                        var bonePosePlugin = plugin as BonePoseDNAConverterPlugin;
+                        if (bonePosePlugin != null)
+                        {
+                            var list = bonePosePlugin.poseDNAConverters;
+                            if (list == null) continue;
+                            for (int i = 0; i < indices.Count; i++)
+                            {
+                                int idx = indices[i];
+                                if (idx < 0 || idx >= list.Count) continue;
+                                var conv = list[idx];
+                                if (conv == null || conv.poseToApply == null) continue;
+                                var eff = new DNAEffect_BonePose
+                                {
+                                    bonePose = conv.poseToApply
+                                };
+                                // Linear curve/mapping left as default per spec
+                                newDna.effects.Add(eff);
+                            }
+                            continue; // next plugin
+                        }
+
+                        // Skeleton modifiers -> BoneTranslate/Rotate/Scale per modifier
+                        var skeletonPlugin = plugin as SkeletonDNAConverterPlugin;
+                        if (skeletonPlugin != null)
+                        {
+                            var list = skeletonPlugin.skeletonModifiers;
+                            if (list == null) continue;
+                            for (int i = 0; i < indices.Count; i++)
+                            {
+                                int idx = indices[i];
+                                if (idx < 0 || idx >= list.Count) continue;
+                                var mod = list[idx];
+                                if (mod == null) continue;
+
+                                string boneName = mod.hashName;
+                                if (string.IsNullOrEmpty(boneName)) continue;
+
+                                // Gather base values
+                                float vx = 0f, vy = 0f, vz = 0f;
+                                try { if (mod.valuesX != null && mod.valuesX.val != null) vx = mod.valuesX.val.value; } catch {}
+                                try { if (mod.valuesY != null && mod.valuesY.val != null) vy = mod.valuesY.val.value; } catch {}
+                                try { if (mod.valuesZ != null && mod.valuesZ.val != null) vz = mod.valuesZ.val.value; } catch {}
+
+                                switch (mod.property)
+                                {
+                                    case SkeletonModifier.SkeletonPropType.Position:
+                                        {
+                                            var eff = new DNAEffect_BoneTranslate
+                                            {
+                                                BoneName = boneName,
+                                                Translation = new Vector3(vx, vy, vz)
+                                            };
+                                            newDna.effects.Add(eff);
+                                            break;
+                                        }
+                                    case SkeletonModifier.SkeletonPropType.Scale:
+                                        {
+                                            var eff = new DNAEffect_BoneScale
+                                            {
+                                                BoneName = boneName,
+                                                ScaleFactor = new Vector3(vx, vy, vz)
+                                            };
+                                            newDna.effects.Add(eff);
+                                            break;
+                                        }
+                                    case SkeletonModifier.SkeletonPropType.Rotation:
+                                        {
+                                            Vector3 euler = new Vector3(vx, vy, vz);
+                                            float angle = euler.magnitude;
+                                            Vector3 axis = angle > 0.0001f ? euler.normalized : Vector3.up; // default up if zero
+                                            var eff = new DNAEffect_BoneRotate
+                                            {
+                                                BoneName = boneName,
+                                                RotationAxis = axis,
+                                                RotationAngle = angle
+                                            };
+                                            newDna.effects.Add(eff);
+                                            break;
+                                        }
+                                }
+                            }
+                            continue;
+                        }
+                    }
+                }
+ 
+                 // Save the new DNA asset to the specified folder
+                 string assetPath = System.IO.Path.Combine(folderPath, dnaName + ".asset");
+                 AssetDatabase.CreateAsset(newDna, assetPath);
+                 AssetDatabase.SaveAssets();
+                 AssetDatabase.Refresh();
+                 // Cache the newly created DNA asset
+                 _foundDnaCache[dnaName] = newDna;
+             }
+             catch (Exception ex)
+             {
+                 Debug.LogError($"Failed to convert DNA '{dnaName}': {ex.Message}");
+             }
+         }
+
 		private bool ConvertedDNAExists(string dnaName, string folderPath)
 		{
 			// Editor-only lookup for DNA assets by name within the specified folder, with caching
 			if (string.IsNullOrEmpty(dnaName) || string.IsNullOrEmpty(folderPath)) return false;
 
-
 			if (_foundDnaCache.ContainsKey(dnaName))
 			{
 				var dna = _foundDnaCache[dnaName];
 				return dna != null;
-            }
+			}
 
 			try
 			{
-				// Restrict search to provided folder (and its subfolders)
 				string[] searchInFolders = new[] { folderPath };
-				// Search by type and name; we'll still validate exact name match below
 				string filter = "t:DNA name:" + dnaName;
 				string[] guids = AssetDatabase.FindAssets(filter, searchInFolders);
 				for (int i = 0; i < guids.Length; i++)
@@ -367,14 +532,12 @@ namespace UMA.Editors
 			catch { }
 
 			_foundDnaCache[dnaName] = null; // cache as not found
+			return false;
+		}
 
-            return false;
-        }
-
-        //Draws the 'View' tabs allowing the user to switch between viewing data 'By Plugin' or 'By DNA'
-        private void DrawControllersViewTabs()
+		//Draws the 'View' tabs allowing the user to switch between viewing data 'By Plugin' or 'By DNA'
+		private void DrawControllersViewTabs()
 		{
-			//Tabs for viewing by modifier or by dna
 			var tabsRect = EditorGUILayout.GetControlRect();
 			var tabsLabel = new Rect(tabsRect.xMin, tabsRect.yMin, 60f, tabsRect.height);
 			var tabsButRect = new Rect(tabsLabel.xMax, tabsRect.yMin, (tabsRect.width - tabsLabel.width), tabsRect.height);
@@ -387,7 +550,6 @@ namespace UMA.Editors
 			if (EditorGUI.EndChangeCheck())
 			{
 				_view = scopeViewInt == 0 ? false : true;
-				//refresh the used dnaNames
 				_target.GetUsedDNANames(true);
 			}
 		}
@@ -417,18 +579,15 @@ namespace UMA.Editors
 			var inUseNames = _target.GetUsedDNANames();
 			List<string> namesToDraw;
 
-			//if we have a dnanames asset we will loop through those names
 			if (_dnaAsset != null && _dnaAsset.Names.Length > 0)
 			{
 				namesToDraw = new List<string>(_dnaAsset.Names);
 			}
-			//otherwise we will used the inUseNames from the plugins
 			else
 			{
 				namesToDraw = inUseNames;
 			}
 
-			//Draw the output
 			if (namesToDraw.Count == 0)
 			{
 				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
@@ -446,18 +605,23 @@ namespace UMA.Editors
 			{
 				GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 
-				//Draw the search field
 				var activeNamesToDraw = DrawDNASearchArea(EditorGUILayout.GetControlRect(), namesToDraw);
 
-				folder = EditorGUILayout.ObjectField("Conversion Folder", folder, typeof(GameObject), false) as GameObject;
-				if (folder != null)
+				folder = EditorGUILayout.ObjectField("Conversion Folder", folder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
+				if (GUILayout.Button("Convert All DNA Names"))
+				{
+					for (int i = 0; i < activeNamesToDraw.Count; i++)
+					{
+						ConvertDNA(activeNamesToDraw[i], folderPath);
+					}
+                }
+                if (folder != null)
 				{
 					folderPath = AssetDatabase.GetAssetPath(folder);
 				}
 				EditorGUILayout.LabelField("Folder Path: " + folderPath);
 
-
-                DynamicDNAPlugin plugin;
+				DynamicDNAPlugin plugin;
 
 				for (int i = 0; i < activeNamesToDraw.Count; i++)
 				{
@@ -469,64 +633,42 @@ namespace UMA.Editors
 					EditorGUI.indentLevel++;
 					EditorGUILayout.BeginHorizontal();
 					_expandedDNANames[activeNamesToDraw[i]] = EditorGUILayout.Foldout(_expandedDNANames[activeNamesToDraw[i]], activeNamesToDraw[i]);
-					
 					GUILayout.FlexibleSpace();
-                    if (ConvertedDNAExists(activeNamesToDraw[i], folderPath))
+					if (ConvertedDNAExists(activeNamesToDraw[i], folderPath))
 					{
 						GUILayout.Label("Converted", GUILayout.Width(75));
 					}
 					else
 					{
 						GUILayout.Label("Not Converted");
-                    }
+					}
 					if (GUILayout.Button("Convert DNA", EditorStyles.miniButton, GUILayout.Width(100)))
 					{
-						
-                    }
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUI.indentLevel--;
+						ConvertDNA(activeNamesToDraw[i], folderPath);
+					}
+					EditorGUILayout.EndHorizontal();
+					EditorGUI.indentLevel--;
 					GUILayout.EndHorizontal();
 					if (_expandedDNANames[activeNamesToDraw[i]])
 					{
 						GUI.color = new Color(0.75f, 0.875f, 1f, 0.3f);
 						GUILayout.BeginVertical(_pluginsByDNAAreaStyle);
 						GUI.color = Color.white;
-
-						//these would be a reorderable list in the other view so draw a reorderable list box around this whole list so it looks the same
-						//(plugins are not reorderable in this view because that would sort of suggest you can have plugins output in a different order
-						//depending on the dna name- which you cant)
 						GUILayout.BeginVertical(_pluginChooserAreaStyle);
 
 						for (int pi = 0; pi < _target.PluginCount; pi++)
 						{
 							plugin = _target.GetPlugin(pi);
-
-							if (plugin == null)
-                            {
-                                continue;
-                            }
-
-							if (!_pluginsEditors[plugin].UsesDNAMember(activeNamesToDraw[i]))
-							{
-								continue;
-                            }
-                            //make a space like the other view
-                            if (pi > 0)
-                            {
-                                GUILayout.Space(EditorGUIUtility.standardVerticalSpacing *2);
-                            }
-
-                            //tell the plugin to draw its entry for this dna name, plugins might use more than one dna name so its up to their drawers to sort out what to draw
-                            //the general idea is that if this dna name appears anywhere in the plugin, then it should draw the relevant entry
-                            _pluginsEditors[plugin].OnInspectorForDNAGUI(activeNamesToDraw[i]);
+							if (plugin == null) { continue; }
+							if (!_pluginsEditors[plugin].UsesDNAMember(activeNamesToDraw[i])) { continue; }
+							if (pi > 0) { GUILayout.Space(EditorGUIUtility.standardVerticalSpacing * 2); }
+							_pluginsEditors[plugin].OnInspectorForDNAGUI(activeNamesToDraw[i]);
 						}
 
 						GUILayout.EndVertical();
-
 						GUILayout.EndVertical();
 					}
 				}
-				//TODO after we have drawn all the namesToDraw if there are any inUseNames that have not been drawn, draw those too
 				GUIHelper.EndVerticalPadded(3);
 			}
 		}
@@ -539,7 +681,6 @@ namespace UMA.Editors
 			var overallModsLabel = EditorGUI.BeginProperty(overallModsFoldoutRect, new GUIContent(overallModifiersProp.displayName), overallModifiersProp);
 
 			overallModsLabel.text = overallModsLabel.text.ToUpper();
-			//TODO Id actually like an import settings thing here now, so that you can import overallModifiers from another converterController or converterBehaviour
 			GUIHelper.ToolbarStyleFoldout(overallModsFoldoutRect, overallModsLabel.text.ToUpper(), new string[] { overallModsLabel.tooltip }, ref _overallModifiersExpanded, ref _overallModifiersHelpExpanded);
 
 			if (_overallModifiersExpanded)
@@ -549,7 +690,6 @@ namespace UMA.Editors
 				EditorGUILayout.PropertyField(overallModifiersProp);
 				GUIHelper.EndVerticalPadded(3);
 			}
-
 		}
 
 		#endregion
@@ -558,42 +698,28 @@ namespace UMA.Editors
 
 		private void DrawConverterListHeaderCallback(Rect rect)
 		{
-			//Hide the header unless needed
 			_convertersROL.headerHeight = 0f;
 		}
 
 		private float GetConverterListEntryHeightCallback(int index)
 		{
 			var plugin = _target.GetPlugin(index);
-
-			if (plugin == null)
-            {
-                return 0f;
-            }
-
-            return _pluginsEditors[plugin].GetInspectorHeight();
+			if (plugin == null) { return 0f; }
+			return _pluginsEditors[plugin].GetInspectorHeight();
 		}
 
 		private void DrawConverterListEntryCallback(Rect rect, int index, bool isActive, bool isFocused)
 		{
 			var plugin = _target.GetPlugin(index);
-
-			if (plugin == null)
-            {
-                return;
-            }
-
-            var prevIndent = EditorGUI.indentLevel;
+			if (plugin == null) { return; }
+			var prevIndent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel = 0;
-
 			_pluginsEditors[plugin].DrawInspectorGUI(rect);
-			
 			EditorGUI.indentLevel = prevIndent;
 		}
 
 		private void DrawConverterListFooterCallback(Rect rect)
 		{
-			//Draw the Add Converter popup instead of the +/- buttons
 			DrawAddConverterPopup(rect);
 		}
 
@@ -601,7 +727,6 @@ namespace UMA.Editors
 
 		#region GUI UTILS
 
-		//Draws a popup showing the available plugins for the project
 		private void DrawAddConverterPopup(Rect position)
 		{
 			var ROLDefaults = new ReorderableList.Defaults();
@@ -609,7 +734,6 @@ namespace UMA.Editors
 			_availablePlugins = DynamicDNAPlugin.GetAvailablePluginTypes();
 
 			Rect addRect = Rect.zero;
-
 			if (position == Rect.zero)
 			{
 				GUILayout.BeginVertical(_pluginChooserAreaStyle);
@@ -635,30 +759,20 @@ namespace UMA.Editors
 			var dropdownLabel = _pluginToAdd != null ? _pluginToAdd.Name : "Add Converters...";
 			if (EditorGUI.DropdownButton(addPopupRect, new GUIContent(dropdownLabel, "Add converters of the selected type to the " + _dnaConvertersLabel + " list"), FocusType.Keyboard))
 			{
-				// create the menu and add items to it
 				GenericMenu popupMenu = new GenericMenu();
-
-				//add the choose entry- clears the selection
 				AddMenuItemForAddConvertersPopup(popupMenu, null);
-
-				//add the actual entries
 				for (int i = 0; i < _availablePlugins.Count; i++)
-                {
-                    AddMenuItemForAddConvertersPopup(popupMenu, _availablePlugins[i]);
-                }
-
-                // display the menu
-                popupMenu.DropDown(addPopupRect);
+				{
+					AddMenuItemForAddConvertersPopup(popupMenu, _availablePlugins[i]);
+				}
+				popupMenu.DropDown(addPopupRect);
 			}
 
 			EditorGUI.BeginDisabledGroup(_pluginToAdd == null);
 			if (GUI.Button(addBtnRect, new GUIContent("Add", (_pluginToAdd == null ? "Choose converters to add first" : ""))))
 			{
-				//do it!
 				_target.AddPlugin(_pluginToAdd);
-				//reset the choice
 				_pluginToAdd = null;
-				//reInit the plugins
 				InitPlugins();
 			}
 			EditorGUI.EndDisabledGroup();
@@ -669,12 +783,9 @@ namespace UMA.Editors
 			}
 		}
 
-		/// <summary>
-		/// Adds a menu item to the custom popup we draw for selecting a plugin to add
-		/// </summary>
 		private void AddMenuItemForAddConvertersPopup(GenericMenu menu, Type pluginType)
 		{
-			if (pluginType == null)//the choose Plugin Entry
+			if (pluginType == null)
 			{
 				var cbObj = new ConverterToChoose(pluginType);
 				var selected = _pluginToAdd == null;
@@ -684,38 +795,30 @@ namespace UMA.Editors
 			{
 				var cbObj = new ConverterToChoose(pluginType);
 				var selected = (_pluginToAdd != null && _pluginToAdd.Equals(pluginType)) ? true : false;
-				menu.AddItem(new GUIContent(pluginType.Name.Replace("Plugin", "")+"s"), selected, OnAddConvertersPopupItemSelected, cbObj);
+				menu.AddItem(new GUIContent(pluginType.Name.Replace("Plugin", "") + "s"), selected, OnAddConvertersPopupItemSelected, cbObj);
 			}
 		}
 
-		/// <summary>
-		/// Callback for the custom menu items in the popup we draw for selecting a plugin to add
-		/// </summary>
 		private void OnAddConvertersPopupItemSelected(object pluginToChoose)
 		{
 			_pluginToAdd = ((ConverterToChoose)pluginToChoose).converterType;
 		}
 
-		/// <summary>
-		/// Draws a search area for the dna view
-		/// </summary>
-		/// <returns>returns a list of names with the search filter applied</returns>
 		private List<string> DrawDNASearchArea(Rect position, List<string> namesList)
 		{
 			if (_dnaSearchField == null)
-            {
-                _dnaSearchField = new UnityEditor.IMGUI.Controls.SearchField();
-            }
+			{
+				_dnaSearchField = new UnityEditor.IMGUI.Controls.SearchField();
+			}
 
-            _DNASearchString = _dnaSearchField.OnToolbarGUI(position, _DNASearchString);
+			_DNASearchString = _dnaSearchField.OnToolbarGUI(position, _DNASearchString);
 
 			if (String.IsNullOrEmpty(_DNASearchString))
-            {
-                return namesList;
-            }
+			{
+				return namesList;
+			}
 
-            List<string> filteredNames = new List<string>();
-			//loop backwards over the list so we can remove stuff without out of range shiz
+			List<string> filteredNames = new List<string>();
 			for (int i = namesList.Count - 1; i >= 0; i--)
 			{
 				if (namesList[i].IndexOf(_DNASearchString, StringComparison.CurrentCultureIgnoreCase) > -1)
@@ -734,18 +837,11 @@ namespace UMA.Editors
 		public static void SetLivePopupEditor(DynamicDNAConverterControllerInspector liveDDCCEditor)
 		{
 			if (Application.isPlaying)
-            {
-                _livePopupEditor = liveDDCCEditor;
-            }
-        }
+			{
+				_livePopupEditor = liveDDCCEditor;
+			}
+		}
 
-
-		//Id really like this to show 'Choose DNA Name' in the field and 'None' as the 'Un-Choose' option in the list
-		//but for that we need a generic menu
-		//I also want a customOption that shows the textfield until you press return and then asks you if you want to add the name to the dna asset
-		/// <summary>
-		/// Draws a popup for selecting a dna name from the converters DynamicDNAAsset (if set) otherwise draws a text field
-		/// </summary>
 		public static void DNANamesPopup(Rect position, SerializedProperty property, string selected, DynamicUMADnaAsset DNAAsset)
 		{
 			if (DNAAsset == null)
@@ -753,7 +849,7 @@ namespace UMA.Editors
 				EditorGUI.BeginChangeCheck();
 				property.stringValue = EditorGUI.TextField(position, selected);
 				if (EditorGUI.EndChangeCheck())
-				{	
+				{
 					property.serializedObject.ApplyModifiedProperties();
 					GUI.changed = true;
 				}
@@ -792,7 +888,7 @@ namespace UMA.Editors
 				}
 			}
 		}
-		//gets the names for the above popup, keeps missing names in the list too so that users can reselect them
+
 		private static List<string> GetDNANamesForPopup(DynamicUMADnaAsset DNAAsset)
 		{
 			var _dnaNamesForPopup = new List<string>();
@@ -808,9 +904,6 @@ namespace UMA.Editors
 
 		#region SPECIAL TYPES
 
-		/// <summary>
-		/// a special type to hold the data for choosing given plugin type. Used by plugins popup chooser
-		/// </summary>
 		private class ConverterToChoose
 		{
 			public Type converterType;
@@ -825,5 +918,5 @@ namespace UMA.Editors
 
 		#endregion
 
-	}
+    }
 }

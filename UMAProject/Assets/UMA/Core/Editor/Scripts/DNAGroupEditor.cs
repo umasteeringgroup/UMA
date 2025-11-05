@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.SceneManagement;
 using UMA.CharacterSystem;
+using UMA.Editors;
 
 [CustomEditor(typeof(DNAGroup))]
 public class DNAGroupEditor : Editor
@@ -50,6 +51,8 @@ public class DNAGroupEditor : Editor
         }
     }
 
+    private static bool[] _foldoutStates = new bool[0];
+
     public override void OnInspectorGUI()
     {
         if (EditorApplication.isCompiling || EditorApplication.isUpdating)
@@ -77,6 +80,9 @@ public class DNAGroupEditor : Editor
             UMAAssetIndexer.RebuildAllUMAS();
         }
         GUILayout.EndHorizontal();
+        EditorGUILayout.Space();
+        DrawDragAndDropArea();
+        EditorGUILayout.Space();
 
 
         EditorGUI.BeginChangeCheck();
@@ -96,32 +102,44 @@ public class DNAGroupEditor : Editor
         }
         else
         {
-            for (int i =0; i < dnaListProp.arraySize; i++)
+            if (_foldoutStates.Length != dnaListProp.arraySize)
+            {
+                _foldoutStates = new bool[dnaListProp.arraySize];
+            }
+            for (int i = 0; i < dnaListProp.arraySize; i++)
             {
                 SerializedProperty dnaProp = dnaListProp.GetArrayElementAtIndex(i);
-                EditorGUILayout.BeginVertical("box");
-                DrawDNAEntry(dnaProp, i);
+                DNA dnaObj = dnaProp.objectReferenceValue as DNA;
 
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Remove DNA", GUILayout.Width(100)))
+                string header = dnaObj != null ? dnaObj.name : $"DNA {i}";
+                GUIHelper.FoldoutBarButton(ref _foldoutStates[i], header, "ping", out bool pressed, out bool delete);
+                if (delete)
                 {
                     Undo.RecordObject(target, "Remove DNA from Group");
                     dnaListProp.DeleteArrayElementAtIndex(i);
                     serializedObject.ApplyModifiedProperties();
                     _changedThisGUI = true;
                     MarkGroupDirtyAndQueueSave();
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUILayout.EndVertical();
                     break;
                 }
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.EndVertical();
-                EditorGUILayout.Space();
+                if (pressed)
+                {
+                    if (dnaObj != null)
+                    {
+                        InspectorUtlity.InspectTarget(dnaObj);
+                    }
+                }
+                bool isExpanded = _foldoutStates[i];
+                if (isExpanded)
+                {
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    DrawDNAEntry(dnaProp, i);
+                    EditorGUILayout.EndVertical();
+                }
             }
         }
 
-        EditorGUILayout.Space();
+
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Add DNA", GUILayout.Width(100)))
         {
@@ -146,26 +164,101 @@ public class DNAGroupEditor : Editor
         }
     }
 
-    private void DrawDNAEntry(SerializedProperty dnaProp, int index)
+    private void DrawDragAndDropArea()
     {
-        // Draw object field for the DNA reference first
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.PropertyField(dnaProp, new GUIContent($"DNA {index +1}"));
-        if (dnaProp.objectReferenceValue != null)
+        // Visual box for drag & drop
+        Rect dropArea = GUILayoutUtility.GetRect(0.0f, 48.0f, GUILayout.ExpandWidth(true));
+        GUI.Box(dropArea, "Drag & Drop DNA assets here to add to group", EditorStyles.helpBox);
+
+        Event evt = Event.current;
+        if (!dropArea.Contains(evt.mousePosition))
+            return;
+
+        // Determine if any dragged objects are DNA
+        bool hasDNA = false;
+        if (evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform)
         {
-            if (GUILayout.Button("Ping", GUILayout.Width(50)))
+            var objs = DragAndDrop.objectReferences;
+            for (int i = 0; i < objs.Length; i++)
             {
-                EditorGUIUtility.PingObject(dnaProp.objectReferenceValue);
+                if (objs[i] is DNA)
+                {
+                    hasDNA = true;
+                    break;
+                }
+            }
+
+            if (hasDNA)
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+
+                if (evt.type == EventType.DragPerform)
+                {
+                    DragAndDrop.AcceptDrag();
+
+                    // Build a set of existing DNA assets to avoid duplicates
+                    HashSet<UnityEngine.Object> existing = new HashSet<UnityEngine.Object>();
+                    for (int i = 0; i < dnaListProp.arraySize; i++)
+                    {
+                        var e = dnaListProp.GetArrayElementAtIndex(i);
+                        if (e != null && e.objectReferenceValue != null)
+                        {
+                            existing.Add(e.objectReferenceValue);
+                        }
+                    }
+
+                    bool anyAdded = false;
+                    for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+                    {
+                        var obj = DragAndDrop.objectReferences[i];
+                        if (obj is DNA dna && !existing.Contains(dna))
+                        {
+                            Undo.RecordObject(target, "Add DNA (Drag & Drop)");
+                            int newIndex = dnaListProp.arraySize;
+                            dnaListProp.arraySize++;
+                            var elem = dnaListProp.GetArrayElementAtIndex(newIndex);
+                            elem.objectReferenceValue = dna;
+                            existing.Add(dna);
+                            anyAdded = true;
+                        }
+                    }
+
+                    if (anyAdded)
+                    {
+                        serializedObject.ApplyModifiedProperties();
+                        _changedThisGUI = true;
+                        MarkGroupDirtyAndQueueSave();
+                    }
+
+                    evt.Use();
+                }
+                else
+                {
+                    // Drag is over the box
+                    evt.Use();
+                }
             }
         }
-        EditorGUILayout.EndHorizontal();
+    }
 
-        UnityEngine.Object dnaObj = dnaProp.objectReferenceValue;
+    private void DrawDNAEntry(SerializedProperty dnaProp, int index)
+    {
+        // DNA asset field
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(dnaProp, new GUIContent("DNA Asset"));
+        if (EditorGUI.EndChangeCheck())
+        {
+            serializedObject.ApplyModifiedProperties();
+            _changedThisGUI = true;
+            MarkGroupDirtyAndQueueSave(dnaProp.objectReferenceValue);
+        }
+
+        var dnaObj = dnaProp.objectReferenceValue as DNA;
         if (dnaObj == null)
         {
-            EditorGUILayout.HelpBox("No DNA asset assigned.", MessageType.Info);
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Create DNA Asset"))
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Create New DNA", GUILayout.Width(140)))
             {
                 CreateAndAssignDNAAsset(dnaProp);
             }
@@ -173,33 +266,82 @@ public class DNAGroupEditor : Editor
             return;
         }
 
-        // Inline edit the DNA asset
-        var so = new SerializedObject(dnaObj);
-        so.Update();
-        SerializedProperty descriptionProp = so.FindProperty("description");
-        SerializedProperty defaultValueProp = so.FindProperty("defaultValue");
-        SerializedProperty effectsProp = so.FindProperty("effects");
+        // Show DNA name
+        EditorGUILayout.LabelField("DNA Name", dnaObj.dnaName);
 
-        if (descriptionProp != null)
+        // Effects list (read-only summary: Effect Name + Type)
+        using (new EditorGUI.IndentLevelScope())
         {
-            EditorGUILayout.PropertyField(descriptionProp, new GUIContent("Description"));
-        }
-        if (defaultValueProp != null)
-        {
-            defaultValueProp.floatValue = EditorGUILayout.Slider("Default Value", defaultValueProp.floatValue,0f,1f);
+            var dnaSO = new SerializedObject(dnaObj);
+            var effectsProp = dnaSO.FindProperty("effects");
+
+            if (effectsProp == null)
+            {
+                EditorGUILayout.HelpBox("Effects property not found on DNA.", MessageType.Error);
+                return;
+            }
+
+            int count = effectsProp.isArray ? effectsProp.arraySize : 0;
+            EditorGUILayout.LabelField("Effects", EditorStyles.boldLabel);
+            if (count == 0)
+            {
+                EditorGUILayout.LabelField("(no effects)");
+            }
+            else
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    SerializedProperty effProp = effectsProp.GetArrayElementAtIndex(i);
+                    string effectName = string.Empty;
+                    try
+                    {
+                        var nameProp = effProp.FindPropertyRelative("EffectName");
+                        if (nameProp != null)
+                        {
+                            effectName = nameProp.stringValue;
+                        }
+                    }
+                    catch { }
+
+                    string typeName = effProp.managedReferenceFullTypename;
+                    if (!string.IsNullOrEmpty(typeName))
+                    {
+                        // format: AssemblyName TypeNamespace.TypeName
+                        int lastDot = typeName.LastIndexOf('.');
+                        if (lastDot >= 0 && lastDot < typeName.Length - 1)
+                        {
+                            typeName = typeName.Substring(lastDot + 1);
+                        }
+                    }
+                    else if (effProp.objectReferenceValue != null)
+                    {
+                        typeName = effProp.objectReferenceValue.GetType().Name;
+                    }
+                    else
+                    {
+                        typeName = "Unknown";
+                    }
+
+                    string left = string.IsNullOrEmpty(effectName) ? "(unnamed effect)" : effectName;
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField(left, GUILayout.MinWidth(100));
+                    EditorGUILayout.LabelField(typeName, GUILayout.MinWidth(80));
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
         }
 
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("DNA Effects", EditorStyles.boldLabel);
-        DrawDNAEffectsList(so, effectsProp);
-
-        if (so.ApplyModifiedProperties())
+        // Utility buttons
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("Ping", GUILayout.Width(60)))
         {
-            // mark both the inline DNA asset and the group as dirty; queue save to persist
-            EditorUtility.SetDirty(dnaObj);
-            _changedThisGUI = true;
-            MarkGroupDirtyAndQueueSave(dnaObj);
+            EditorGUIUtility.PingObject(dnaObj);
         }
+        if (GUILayout.Button("Inspect", GUILayout.Width(60)))
+        {
+            InspectorUtlity.InspectTarget(dnaObj);
+        }
+        EditorGUILayout.EndHorizontal();
     }
 
     private void CreateAndAssignDNAAsset(SerializedProperty dnaProp)
@@ -264,94 +406,5 @@ public class DNAGroupEditor : Editor
         list = list.OrderBy(t => t.Name).ToList();
         _cachedEffectTypes = list;
         return _cachedEffectTypes;
-    }
-
-    private void DrawDNAEffectsList(SerializedObject dnaSO, SerializedProperty effectsProp)
-    {
-        if (effectsProp == null)
-        {
-            EditorGUILayout.HelpBox("Effects property not found on DNA.", MessageType.Warning);
-            return;
-        }
-
-        // Draw existing effects
-        for (int j =0; j < effectsProp.arraySize; j++)
-        {
-            SerializedProperty effectProp = effectsProp.GetArrayElementAtIndex(j);
-            EditorGUILayout.BeginVertical("box");
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField($"Effect {j +1}", EditorStyles.boldLabel);
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Remove", GUILayout.Width(70)))
-            {
-                effectsProp.DeleteArrayElementAtIndex(j);
-                dnaSO.ApplyModifiedProperties();
-                // mark both DNA and group as dirty and queue save
-                if (dnaSO.targetObject != null)
-                {
-                    EditorUtility.SetDirty(dnaSO.targetObject);
-                }
-                _changedThisGUI = true;
-                MarkGroupDirtyAndQueueSave(dnaSO.targetObject);
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.EndVertical();
-                break;
-            }
-            EditorGUILayout.EndHorizontal();
-
-            // Support both SerializeReference and basic struct/class drawing
-            if (effectProp.propertyType == SerializedPropertyType.ManagedReference)
-            {
-                string typeName = string.IsNullOrEmpty(effectProp.managedReferenceFullTypename) ? "(None)" : effectProp.managedReferenceFullTypename.Split(' ').Last();
-                EditorGUILayout.LabelField("Type", typeName);
-            }
-            EditorGUILayout.PropertyField(effectProp, GUIContent.none, true);
-            EditorGUILayout.EndVertical();
-        }
-
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("Add DNAEffect"))
-        {
-            var types = GetDNAEffectTypes();
-            if (types.Count ==0)
-            {
-                // Fallback: add a null entry so user can assign later if not using SerializeReference
-                effectsProp.arraySize++;
-                dnaSO.ApplyModifiedProperties();
-                if (dnaSO.targetObject != null)
-                {
-                    EditorUtility.SetDirty(dnaSO.targetObject);
-                }
-                _changedThisGUI = true;
-                MarkGroupDirtyAndQueueSave(dnaSO.targetObject);
-            }
-            else
-            {
-                var menu = new GenericMenu();
-                foreach (var t in types)
-                {
-                    var typeLocal = t; // capture loop variable
-                    menu.AddItem(new GUIContent(typeLocal.Name), false, () =>
-                    {
-                        effectsProp.arraySize++;
-                        var elem = effectsProp.GetArrayElementAtIndex(effectsProp.arraySize -1);
-                        if (elem.propertyType == SerializedPropertyType.ManagedReference)
-                        {
-                            elem.managedReferenceValue = Activator.CreateInstance(typeLocal);
-                        }
-                        // If not managed reference, leave as default/null
-                        dnaSO.ApplyModifiedProperties();
-                        if (dnaSO.targetObject != null)
-                        {
-                            EditorUtility.SetDirty(dnaSO.targetObject);
-                        }
-                        _changedThisGUI = true;
-                        MarkGroupDirtyAndQueueSave(dnaSO.targetObject);
-                    });
-                }
-                menu.ShowAsContext();
-            }
-        }
-        EditorGUILayout.EndHorizontal();
     }
 }
