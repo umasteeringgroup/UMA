@@ -17,16 +17,16 @@ namespace UMA
         [SerializeReference]
         public List<DNAEffect> effects = new List<DNAEffect>();
 
-        private string _name;
+        public string displayName;
         public string dnaName
         {
             get
             {
-                if (_name == null)
+                if (string.IsNullOrEmpty(displayName))
                 {
-                    _name = name;
+                    return name;
                 }
-                return _name;
+                return displayName;
             }
         }
 

@@ -1,0 +1,165 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad596f39ce5a904d93ccd9240c400e1, type: 3}
+  m_Name: lipsSize
+  m_EditorClassIdentifier: UMA_Core::UMA.DNA
+  description: Converted DNA Asset for lipsSize
+  defaultValue: 0.5
+  effects:
+  - rid: 7828207344866296449
+  - rid: 7828207344866296450
+  - rid: 7828207344866296451
+  - rid: 7828207344866296452
+  - rid: 7828207344866296453
+  - rid: 7828207344866296454
+  - rid: 7828207344866296455
+  - rid: 7828207344866296456
+  - rid: 7828207344866296457
+  displayName: lipsSize
+  references:
+    version: 2
+    RefIds:
+    - rid: 7828207344866296449
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        EffectName: LipsSuperiorAdjust
+        BoneName: LipsSuperiorAdjust
+        ScaleFactor: {x: 1, y: 1, z: 1}
+    - rid: 7828207344866296450
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        EffectName: LipsInferiorAdjust
+        BoneName: LipsInferiorAdjust
+        ScaleFactor: {x: 1, y: 1, z: 1}
+    - rid: 7828207344866296451
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        EffectName: LeftLipsSuperiorMiddleAdjust
+        BoneName: LeftLipsSuperiorMiddleAdjust
+        ScaleFactor: {x: 1, y: 1, z: 1}
+    - rid: 7828207344866296452
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        EffectName: RightLipsSuperiorMiddleAdjust
+        BoneName: RightLipsSuperiorMiddleAdjust
+        ScaleFactor: {x: 1, y: 1, z: 1}
+    - rid: 7828207344866296453
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        EffectName: LeftLipsInferiorAdjust
+        BoneName: LeftLipsInferiorAdjust
+        ScaleFactor: {x: 1, y: 1, z: 1}
+    - rid: 7828207344866296454
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        EffectName: RightLipsInferiorAdjust
+        BoneName: RightLipsInferiorAdjust
+        ScaleFactor: {x: 1, y: 1, z: 1}
+    - rid: 7828207344866296455
+      type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        EffectName: LipsInferiorAdjust
+        BoneName: LipsInferiorAdjust
+        Translation: {x: 0, y: 0, z: 0}
+    - rid: 7828207344866296456
+      type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        EffectName: LeftLipsInferiorAdjust
+        BoneName: LeftLipsInferiorAdjust
+        Translation: {x: 0, y: 0, z: 0}
+    - rid: 7828207344866296457
+      type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        EffectName: RightLipsInferiorAdjust
+        BoneName: RightLipsInferiorAdjust
+        Translation: {x: 0, y: 0, z: 0}

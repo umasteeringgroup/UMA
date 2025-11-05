@@ -745,6 +745,47 @@ namespace UMA.CharacterSystem.Editors
                     bool newEnabled = EditorGUILayout.ToggleLeft(inst.name, inst.enabled, GUILayout.Width(140));
                     float oldValue = inst.value;
                     inst.value = EditorGUILayout.Slider(inst.value, 0f, 1f);
+                    if (GUILayout.Button("Def", GUILayout.Width(40)))
+                    {
+                        // Reset to default value
+                        if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.name, out var dnaAsset) && dnaAsset != null)
+                        {
+                            float defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
+                            Undo.RecordObject(umaData, "Reset DNA Value to Default");
+                            inst.value = defaultValue;
+                            EditorUtility.SetDirty(umaData);
+                            wasChanged = true;
+                            GenerateSingleUMA();
+                        }
+                        else
+                        {
+                            EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.name}' not found in collection.", "OK");
+                        }
+                    }
+                    if (GUILayout.Button("Edit", GUILayout.Width(40)))
+                    {
+                        // Open DNA asset in inspector
+                        if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.name, out var dnaAsset) && dnaAsset != null)
+                        {
+                            InspectorUtlity.InspectTarget(dnaAsset);
+                        }
+                        else
+                        {
+                            EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.name}' not found in collection.", "OK");
+                        }
+                    }
+                    if (GUILayout.Button("X", GUILayout.Width(20)))
+                    {
+                        // Remove this DNAInstance
+                        Undo.RecordObject(umaData, "Remove DNA Instance");
+                        umaData.dnaInstanceCollection.dnaInstances.RemoveAt(i);
+                        EditorUtility.SetDirty(umaData);
+                        wasChanged = true;
+                        GenerateSingleUMA();
+                        // Exit to avoid modifying collection during iteration
+                        EditorGUILayout.EndHorizontal();
+                        break;
+                    }
                     EditorGUILayout.EndHorizontal();
 
                     if (!Mathf.Approximately(oldValue, inst.value))

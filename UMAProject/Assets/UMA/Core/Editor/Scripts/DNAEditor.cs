@@ -90,6 +90,7 @@ public class DNAEditor : Editor
             UMAAssetIndexer.RebuildAllUMAS();
         }
         GUILayout.EndHorizontal();
+        targetDNA.displayName = EditorGUILayout.DelayedTextField(targetDNA.displayName);
         targetDNA.description = EditorGUILayout.DelayedTextField("Description", targetDNA.description);
         targetDNA.defaultValue = EditorGUILayout.Slider("Default Value", targetDNA.defaultValue, 0f, 1f);
         EditorGUILayout.Space();

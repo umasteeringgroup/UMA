@@ -14,7 +14,6 @@ Material:
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _METALLICGLOSSMAP
-  - _USEHALFLAMBERT_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -140,7 +139,7 @@ Material:
     - _GlossyReflections: 1
     - _HalfLambertStrength: 5.83
     - _Metallic: 0
-    - _MetallicModulation: 1
+    - _MetallicModulation: 0
     - _Mode: 0
     - _NormalStrength: 1
     - _NormalStrength0: 1
@@ -154,7 +153,7 @@ Material:
     - _QueueOffset: 0
     - _RimLightPower: 5.46
     - _RimLightingModulation: -0.03
-    - _SmoothnessModulation: 0.86
+    - _SmoothnessModulation: 0.064
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -172,7 +171,7 @@ Material:
     - _Tile3_2: 1
     - _UVSec: 0
     - _UberTile: 1
-    - _UseHalfLambert: 1
+    - _UseHalfLambert: 0
     - _UseTiling1: 0
     - _UseTiling2: 0
     - _UseTiling3: 0

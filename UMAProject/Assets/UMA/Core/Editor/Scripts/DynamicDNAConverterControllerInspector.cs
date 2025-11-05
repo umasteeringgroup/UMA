@@ -358,7 +358,8 @@ namespace UMA.Editors
                      Debug.LogError($"The specified folder path '{folderPath}' is not valid.");
                      return;
                  }
-                 
+
+                 newDna.displayName = dnaName;
                  newDna.description = "Converted DNA Asset for " + dnaName;
                  newDna.defaultValue = 0.5f;
 
@@ -394,6 +395,7 @@ namespace UMA.Editors
                                 {
                                     BlendShapeName = conv.blendshapeToApply
                                 };
+								eff.EffectName = conv.blendshapeToApply;
                                 // Approximate evaluator mapping via min/max only (leave defaults 0..1)
                                 // conv.modifyingDNA could be inspected, but we keep linear mapping per spec.
                                 newDna.effects.Add(eff);
@@ -417,6 +419,7 @@ namespace UMA.Editors
                                 {
                                     bonePose = conv.poseToApply
                                 };
+								eff.EffectName = conv.poseToApply.name;
                                 // Linear curve/mapping left as default per spec
                                 newDna.effects.Add(eff);
                             }
@@ -449,11 +452,14 @@ namespace UMA.Editors
                                 {
                                     case SkeletonModifier.SkeletonPropType.Position:
                                         {
-                                            var eff = new DNAEffect_BoneTranslate
-                                            {
-                                                BoneName = boneName,
-                                                Translation = new Vector3(vx, vy, vz)
+											var eff = new DNAEffect_BoneTranslate
+											{
+												BoneName = boneName,
+												Translation = new Vector3(vx, vy, vz),
+												minMapping = -1f,
+												maxMapping = 1f
                                             };
+											eff.EffectName= boneName;
                                             newDna.effects.Add(eff);
                                             break;
                                         }
@@ -462,8 +468,11 @@ namespace UMA.Editors
                                             var eff = new DNAEffect_BoneScale
                                             {
                                                 BoneName = boneName,
-                                                ScaleFactor = new Vector3(vx, vy, vz)
+                                                ScaleFactor = new Vector3(vx, vy, vz),
+												minMapping = -1f,
+												maxMapping = 1f
                                             };
+                                            eff.EffectName = boneName;
                                             newDna.effects.Add(eff);
                                             break;
                                         }
@@ -476,8 +485,11 @@ namespace UMA.Editors
                                             {
                                                 BoneName = boneName,
                                                 RotationAxis = axis,
-                                                RotationAngle = angle
+                                                RotationAngle = angle,
+												minMapping = -1f,
+												maxMapping = 1f
                                             };
+                                            eff.EffectName = boneName;
                                             newDna.effects.Add(eff);
                                             break;
                                         }
