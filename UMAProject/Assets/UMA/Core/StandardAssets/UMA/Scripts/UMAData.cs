@@ -684,10 +684,13 @@ namespace UMA
 			foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
 			{
 				//dnaInstanceCollection.
-				var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
-				if (dna != null)
+				if (dnainstance != null && dnainstance.enabled)
 				{
-					updateFlags |= dna.PreApply(this, dnainstance.value);
+					var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
+					if (dna != null)
+					{
+						updateFlags |= dna.PreApply(this, dnainstance.value);
+					}
 				}
 			}
 			return updateFlags;
@@ -704,10 +707,13 @@ namespace UMA
 
             foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
             {
-                var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
-				if (dna != null)
+				if (dnainstance != null && dnainstance.enabled)
 				{
-					updateFlags |= dna.Apply(this, dnainstance.value);
+					var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
+					if (dna != null)
+					{
+						updateFlags |= dna.Apply(this, dnainstance.value);
+					}
 				}
             }
             return updateFlags;
@@ -724,10 +730,13 @@ namespace UMA
 
             foreach (var dnainstance in dnaInstanceCollection.dnaInstances)
             {
-                var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
-				if (dna != null)
+				if (dnainstance != null && dnainstance.enabled)
 				{
-					updateFlags |= dna.PostApply(this, dnainstance.value);
+					var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
+					if (dna != null)
+					{
+						updateFlags |= dna.PostApply(this, dnainstance.value);
+					}
 				}
             }
             return updateFlags;

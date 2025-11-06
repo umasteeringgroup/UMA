@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace UMA
 {
+    /// <summary>
+    /// DNA effect that translates a specified bone by Translation * mappedValue in local space.
+    /// </summary>
     [System.Serializable]
     public class DNAEffect_BoneTranslate : DNAEffect
     {
@@ -12,12 +15,14 @@ namespace UMA
 
         [Tooltip("The translation vector to apply to the bone.")]
         public Vector3 Translation;
-        public override string Description => "Translates a bone by a specified vector.";
+        public override string Description => "Translates a bone by a specified vector. Normal values for min/max are -1 to 1. The curve takes the incoming 0..1 values and maps to the output values. Create a middle point on the curve at 0.5 for no effect in the center.";
+
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Rig;
 #if UNITY_EDITOR
-        override public void DoGui(bool showDescription, bool showHelp)
+        /// <inheritdoc />
+        public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
-            base.DoGui(showDescription, showHelp);
+            base.DoGui(showDescription, showHelp, out curveToCopy);
             BoneName = UnityEditor.EditorGUILayout.TextField("Bone Name", BoneName);
             if (string.IsNullOrEmpty(BoneName))
             {
@@ -30,6 +35,7 @@ namespace UMA
             Translation = UnityEditor.EditorGUILayout.Vector3Field("Translation", Translation);
         }
 #endif
+        /// <inheritdoc />
         public override void PostApply(UMAData avatar, DNA dna, float value)
         {
             base.PostApply(avatar, dna, value);

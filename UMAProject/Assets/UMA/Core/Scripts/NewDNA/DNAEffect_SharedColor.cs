@@ -5,6 +5,10 @@ using static UMA.DNAInstanceCollection;
 
 namespace UMA
 {
+    /// <summary>
+    /// DNA effect that calculates a color from FromColor/ToColor and the mapped DNA value, then combines it
+    /// into a named SharedColor on the avatar using the chosen combination method.
+    /// </summary>
     public class DNAEffect_SharedColor : DNAEffect
     {
         public enum CombinationMethod
@@ -27,9 +31,10 @@ namespace UMA
 
         public override string Description => "Sets a shared color value for the avatar. This can be used to modify the color of specific channels in a shared color, using a combination method to apply the base modifier.";
 #if UNITY_EDITOR
-        public override void DoGui(bool showDescription, bool showHelp)
+        /// <inheritdoc />
+        public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
-            base.DoGui(showDescription, showHelp);
+            base.DoGui(showDescription, showHelp, out curveToCopy);
             sharedColorName = UnityEditor.EditorGUILayout.TextField("Shared Color Name", sharedColorName);
             FromColor = UnityEditor.EditorGUILayout.ColorField("From Color", FromColor);
             ToColor = UnityEditor.EditorGUILayout.ColorField("To Color", ToColor);
@@ -40,6 +45,7 @@ namespace UMA
 #endif
         // Updating a sharedcolor only touches textures
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Texture;
+        /// <inheritdoc />
         public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {            
             base.AfterRecipeGenerated(avatar, dna, value);

@@ -18,17 +18,6 @@ namespace UMA
         public List<DNAEffect> effects = new List<DNAEffect>();
 
         public string displayName;
-        public string dnaName
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(displayName))
-                {
-                    return name;
-                }
-                return displayName;
-            }
-        }
 
 #if UNITY_EDITOR
         [UnityEditor.MenuItem("Assets/Create/UMA/DNA/DNA Item")]

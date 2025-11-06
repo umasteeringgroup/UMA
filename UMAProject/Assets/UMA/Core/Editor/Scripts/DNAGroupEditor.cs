@@ -139,19 +139,6 @@ public class DNAGroupEditor : Editor
             }
         }
 
-
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("Add DNA", GUILayout.Width(100)))
-        {
-            Undo.RecordObject(target, "Add DNA to Group");
-            dnaListProp.arraySize++;
-            // leave as null initially (user can assign or create)
-            serializedObject.ApplyModifiedProperties();
-            _changedThisGUI = true;
-            MarkGroupDirtyAndQueueSave();
-        }
-        EditorGUILayout.EndHorizontal();
-
         // Final apply and persistence if anything changed in this GUI pass
         if (_changedThisGUI)
         {
@@ -267,7 +254,7 @@ public class DNAGroupEditor : Editor
         }
 
         // Show DNA name
-        EditorGUILayout.LabelField("DNA Name", dnaObj.dnaName);
+        EditorGUILayout.LabelField("DNA Name", dnaObj.name);
 
         // Effects list (read-only summary: Effect Name + Type)
         using (new EditorGUI.IndentLevelScope())

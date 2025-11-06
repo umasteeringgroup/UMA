@@ -20,8 +20,8 @@ namespace UMA
         [SerializeField, HideInInspector]
         public bool editorFoldout;
 
-        [UnityEditor.MenuItem("Assets/Create/UMA/DNA/DNA Collection")]
-        public static void CreateDNACollection()
+        [UnityEditor.MenuItem("Assets/Create/UMA/DNA/DNA Group")]
+        public static void CreateDNAGroup()
         {
             UMA.CustomAssetUtility.CreateAsset<DNAGroup>();
         }

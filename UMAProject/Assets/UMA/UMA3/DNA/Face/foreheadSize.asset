@@ -37,10 +37,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: NoseTopAdjust
         BoneName: NoseTopAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.012, z: 0}
     - rid: 7828207344866296436
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -52,10 +52,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftEyebrowLowAdjust
         BoneName: LeftEyebrowLowAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.012, z: 0}
     - rid: 7828207344866296437
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -67,10 +67,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftEyebrowMiddleAdjust
         BoneName: LeftEyebrowMiddleAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.012, z: 0}
     - rid: 7828207344866296438
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -82,10 +82,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftEyebrowUpAdjust
         BoneName: LeftEyebrowUpAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.012, z: 0}
     - rid: 7828207344866296439
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -97,10 +97,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightEyebrowLowAdjust
         BoneName: RightEyebrowLowAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.012, z: 0}
     - rid: 7828207344866296440
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -112,10 +112,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightEyebrowMiddleAdjust
         BoneName: RightEyebrowMiddleAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.012, z: 0}
     - rid: 7828207344866296441
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -127,7 +127,7 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightEyebrowUpAdjust
         BoneName: RightEyebrowUpAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.012, z: 0}

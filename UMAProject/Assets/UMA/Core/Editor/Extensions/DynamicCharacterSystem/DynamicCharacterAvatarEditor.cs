@@ -194,6 +194,8 @@ namespace UMA.CharacterSystem.Editors
             {
                 for (int i =0; i < InspectMe.Count; i++)
                 {
+                    // Provide calling-editor context to DNAEditor safely via weak-ref bridge
+                    DNAEditor.SetDcaContext(this);
                     InspectorUtlity.InspectTarget(InspectMe[i]);
                 }
                 InspectMe.Clear();
@@ -788,7 +790,7 @@ namespace UMA.CharacterSystem.Editors
                     {
                         var d = grp.dnaList[j];
                         if (d == null) continue;
-                        var n = d.dnaName;
+                        var n = d.name;
                         if (string.IsNullOrEmpty(n)) continue;
                         if (!_nameToGroupCache.ContainsKey(n)) _nameToGroupCache.Add(n, grp);
                         if (!_nameToDnaCache.ContainsKey(n)) _nameToDnaCache.Add(n, d);
@@ -936,7 +938,6 @@ namespace UMA.CharacterSystem.Editors
                     if (entries == null || entries.Count == 0) continue;
 
                     string groupLabel = string.IsNullOrEmpty(grp.DNAArea) ? "Group" : grp.DNAArea;
-#if UNITY_EDITOR
                     EditorGUI.BeginChangeCheck();
                     grp.editorFoldout = EditorGUILayout.Foldout(grp.editorFoldout, groupLabel, true);
                     if (EditorGUI.EndChangeCheck())
@@ -944,10 +945,6 @@ namespace UMA.CharacterSystem.Editors
                         EditorUtility.SetDirty(grp);
                     }
                     if (!grp.editorFoldout) continue;
-#else
-                    bool tempFold = EditorGUILayout.Foldout(true, groupLabel, true);
-                    if (!tempFold) continue;
-#endif
                     // Sort entries by name once before drawing
                     entries.Sort((x, y) => string.Compare(x.inst?.name, y.inst?.name, StringComparison.OrdinalIgnoreCase));
 
@@ -1026,6 +1023,7 @@ namespace UMA.CharacterSystem.Editors
                             Undo.RecordObject(umaData, "Toggle DNA Instance");
                             inst.enabled = newEnabled;
                             EditorUtility.SetDirty(umaData);
+                            GenerateSingleUMA();
                             wasChanged = true;
                         }
                     }
@@ -1157,9 +1155,9 @@ namespace UMA.CharacterSystem.Editors
             for (int i = 0; i < dnaList.Count; i++)
             {
                 var d = dnaList[i];
-                if (d != null && !assigned.Contains(d.dnaName))
+                if (d != null && !assigned.Contains(d.name))
                 {
-                    dnaNames.Add(d.dnaName);
+                    dnaNames.Add(d.name);
                 }
             }
             // Sort for stable ordering
@@ -1271,7 +1269,7 @@ namespace UMA.CharacterSystem.Editors
                 {
                     var d = dnaList[i];
                     if (d == null) continue;
-                    string name = d.dnaName;
+                    string name = d.name;
                     if (assigned.Contains(name)) continue; // skip duplicates
                     float defaultValue = 0.5f;
                     if (dict != null && dict.TryGetValue(name, out var dnaAsset) && dnaAsset != null)
@@ -2059,7 +2057,7 @@ namespace UMA.CharacterSystem.Editors
             }
         }
 
-        void GenerateSingleUMA(bool rebuild = false)
+        public void GenerateSingleUMA(bool rebuild = false)
         {
             if (IsEditorBusy())
             {
@@ -2089,6 +2087,8 @@ namespace UMA.CharacterSystem.Editors
             {
                 return;
             }
+
+            Debug.Log("Generating UMA in editor for " + thisDCA.name);
 
             var indexer = UMAAssetIndexer.Instance;
             if (indexer == null || indexer.Generator == null)

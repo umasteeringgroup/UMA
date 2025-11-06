@@ -4,8 +4,8 @@ using UnityEngine;
 namespace UMA
 {
     /// <summary>
-    /// Shared color channel for DNA effects.
-    /// This class is a placeholder for shared color channel functionality.
+    /// DNA effect that modifies a single component (R/G/B/A) of a SharedColor channel on the avatar.
+    /// The mapped DNA value is multiplied by ChannelValue and written back to the chosen component.
     /// </summary>
     [System.Serializable]
     public class DNAEffect_SharedColorChannel : DNAEffect
@@ -40,6 +40,7 @@ namespace UMA
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Texture;
 
+        /// <inheritdoc />
         public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {
             base.PreApply(avatar, dna, value);
@@ -86,9 +87,10 @@ namespace UMA
             }
         }
 #if UNITY_EDITOR
-        public override void DoGui(bool showDescription, bool showHelp)
+        /// <inheritdoc />
+        public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
-            base.DoGui(showDescription, showHelp);
+            base.DoGui(showDescription, showHelp, out curveToCopy);
             SharedColorName = UnityEditor.EditorGUILayout.TextField("Shared Color Name", SharedColorName);
             ChannelValue = UnityEditor.EditorGUILayout.Slider("Component Value", ChannelValue, 0.0f, 1.0f);
             colorComponent = (ColorComponent)UnityEditor.EditorGUILayout.EnumPopup("Color Component", colorComponent);

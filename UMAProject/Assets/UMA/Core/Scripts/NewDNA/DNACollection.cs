@@ -43,9 +43,9 @@ namespace UMA
                         {
                             DNADictionary = new Dictionary<string, DNA>();
                         }
-                        if (dna == null || string.IsNullOrEmpty(dna.dnaName))
+                        if (dna == null || string.IsNullOrEmpty(dna.name))
                             continue;
-                        if (!DNADictionary.ContainsKey(dna.dnaName))
+                        if (!DNADictionary.ContainsKey(dna.name))
                         {
                             DNADictionary.Add(dna.name, dna);
                         }

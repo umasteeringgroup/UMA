@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: lipsSize
   m_EditorClassIdentifier: UMA_Core::UMA.DNA
   description: Converted DNA Asset for lipsSize
-  defaultValue: 0
+  defaultValue: 0.5
   effects:
   - rid: 7828207344866296449
   - rid: 7828207344866296450
@@ -30,13 +30,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0.0037994385
+            value: 0.26776123
+            inSlope: 0.46763298
+            outSlope: 0.46763298
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.49962616
+            value: 0.49962616
+            inSlope: 0.7338165
+            outSlope: 0.7338165
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-        minMapping: -0.3
+        minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 0
         EffectName: LipsSuperiorAdjust
         BoneName: LipsSuperiorAdjust
         ScaleFactor: {x: 0.4, y: 0.4, z: 0.4}
@@ -45,13 +73,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0.0037994385
+            value: 0.26776123
+            inSlope: 0.46763298
+            outSlope: 0.46763298
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.49962616
+            value: 0.49962616
+            inSlope: 0.7338165
+            outSlope: 0.7338165
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-        minMapping: -0.3
+        minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 1
         EffectName: LipsInferiorAdjust
         BoneName: LipsInferiorAdjust
         ScaleFactor: {x: 0.4, y: 0.4, z: 0.4}
@@ -60,13 +116,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0.0037994385
+            value: 0.26776123
+            inSlope: 0.46763298
+            outSlope: 0.46763298
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.49962616
+            value: 0.49962616
+            inSlope: 0.7338165
+            outSlope: 0.7338165
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-        minMapping: -0.3
+        minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 1
         EffectName: LeftLipsSuperiorMiddleAdjust
         BoneName: LeftLipsSuperiorMiddleAdjust
         ScaleFactor: {x: 0.4, y: 0.4, z: 0.4}
@@ -75,13 +159,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0.0037994385
+            value: 0.26776123
+            inSlope: 0.46763298
+            outSlope: 0.46763298
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.49962616
+            value: 0.49962616
+            inSlope: 0.7338165
+            outSlope: 0.7338165
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-        minMapping: -0.3
+        minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 1
         EffectName: RightLipsSuperiorMiddleAdjust
         BoneName: RightLipsSuperiorMiddleAdjust
         ScaleFactor: {x: 0.4, y: 0.4, z: 0.4}
@@ -90,13 +202,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0.0037994385
+            value: 0.26776123
+            inSlope: 0.46763298
+            outSlope: 0.46763298
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.49962616
+            value: 0.49962616
+            inSlope: 0.7338165
+            outSlope: 0.7338165
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-        minMapping: -0.3
+        minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 1
         EffectName: LeftLipsInferiorAdjust
         BoneName: LeftLipsInferiorAdjust
         ScaleFactor: {x: 0.4, y: 0.4, z: 0.4}
@@ -107,38 +247,39 @@ MonoBehaviour:
           serializedVersion: 2
           m_Curve:
           - serializedVersion: 3
-            time: 0
-            value: 0
-            inSlope: -1.9950278
-            outSlope: 0.025141278
-            tangentMode: 1
+            time: 0.0037994385
+            value: 0.26776123
+            inSlope: 0.46763298
+            outSlope: 0.46763298
+            tangentMode: 34
             weightedMode: 0
             inWeight: 0
-            outWeight: 0.14011624
+            outWeight: 0.33333334
           - serializedVersion: 3
-            time: 0.3
-            value: 0.15
-            inSlope: 0.9447622
-            outSlope: 0.9447622
-            tangentMode: 0
+            time: 0.49962616
+            value: 0.49962616
+            inSlope: 0.7338165
+            outSlope: 0.7338165
+            tangentMode: 34
             weightedMode: 0
             inWeight: 0.33333334
-            outWeight: 0.103192225
+            outWeight: 0.33333334
           - serializedVersion: 3
             time: 1
             value: 1
-            inSlope: 1.2142857
-            outSlope: 0
-            tangentMode: 5
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
             weightedMode: 0
-            inWeight: 0.112462044
+            inWeight: 0.33333334
             outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-        minMapping: 0
+        minMapping: -1
         maxMapping: 1
         expanded: 1
+        selected: 1
         EffectName: RightLipsInferiorAdjust
         BoneName: RightLipsInferiorAdjust
         ScaleFactor: {x: 0.4, y: 0.4, z: 0.4}

@@ -34,10 +34,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftForeArmAdjust
         BoneName: LeftForeArmAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.4, y: 0, z: 0.4}
     - rid: 7828207344866296349
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
@@ -49,10 +49,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightForeArmAdjust
         BoneName: RightForeArmAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.4, y: 0, z: 0.4}
     - rid: 7828207344866296350
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
@@ -64,10 +64,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftForeArmTwistAdjust
         BoneName: LeftForeArmTwistAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.4, y: 0, z: 0.4}
     - rid: 7828207344866296351
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
@@ -79,7 +79,7 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightForeArmTwistAdjust
         BoneName: RightForeArmTwistAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.4, y: 0, z: 0.4}

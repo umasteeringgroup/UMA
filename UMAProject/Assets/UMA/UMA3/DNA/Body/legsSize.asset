@@ -15,135 +15,227 @@ MonoBehaviour:
   description: Converted DNA Asset for legsSize
   defaultValue: 0.5
   effects:
-  - rid: 7828207344866296385
-  - rid: 7828207344866296386
-  - rid: 7828207344866296387
-  - rid: 7828207344866296388
-  - rid: 7828207344866296389
-  - rid: 7828207344866296390
-  - rid: 7828207344866296391
-  - rid: 7828207344866296392
+  - rid: 7828207344866296481
+  - rid: 7828207344866296482
+  - rid: 7828207344866296483
+  - rid: 7828207344866296484
+  - rid: 7828207344866296487
   displayName: legsSize
   references:
     version: 2
     RefIds:
-    - rid: 7828207344866296385
+    - rid: 7828207344866296481
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.4
+            inSlope: 0.19999999
+            outSlope: 0.19999999
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.1707555
+            outSlope: 0.1707555
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0.1106202
+            outWeight: 0.11494652
+          - serializedVersion: 3
+            time: 1.0058594
+            value: 0.5482826
+            inSlope: 0.09544673
+            outSlope: 0.09544673
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 0
-        EffectName: LeftUpLegAdjust
-        BoneName: LeftUpLegAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
-    - rid: 7828207344866296386
+        selected: 0
+        EffectName: RightLeg
+        BoneName: RightLeg
+        ScaleFactor: {x: 0.4, y: 1, z: 0.4}
+    - rid: 7828207344866296482
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.4
+            inSlope: 0.19999999
+            outSlope: 0.19999999
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.1707555
+            outSlope: 0.1707555
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0.1106202
+            outWeight: 0.11494652
+          - serializedVersion: 3
+            time: 1.0058594
+            value: 0.5482826
+            inSlope: 0.09544673
+            outSlope: 0.09544673
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 0
-        EffectName: RightUpLegAdjust
-        BoneName: RightUpLegAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
-    - rid: 7828207344866296387
+        selected: 1
+        EffectName: LeftLeg
+        BoneName: LeftLeg
+        ScaleFactor: {x: 0.4, y: 1, z: 0.4}
+    - rid: 7828207344866296483
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.4
+            inSlope: 0.19999999
+            outSlope: 0.19999999
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.1707555
+            outSlope: 0.1707555
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0.1106202
+            outWeight: 0.11494652
+          - serializedVersion: 3
+            time: 1.0058594
+            value: 0.5482826
+            inSlope: 0.09544673
+            outSlope: 0.09544673
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 0
-        EffectName: LeftLegAdjust
-        BoneName: LeftLegAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
-    - rid: 7828207344866296388
-      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
-      data:
-        curve:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        minMapping: -1
-        maxMapping: 1
-        expanded: 0
-        EffectName: RightLegAdjust
-        BoneName: RightLegAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
-    - rid: 7828207344866296389
-      type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
-      data:
-        curve:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        minMapping: -1
-        maxMapping: 1
-        expanded: 0
+        selected: 1
         EffectName: LeftUpLeg
         BoneName: LeftUpLeg
-        Translation: {x: 0, y: 0, z: 0}
-    - rid: 7828207344866296390
+        ScaleFactor: {x: 0.4, y: 1, z: 0.4}
+    - rid: 7828207344866296484
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.4
+            inSlope: 0.19999999
+            outSlope: 0.19999999
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.1707555
+            outSlope: 0.1707555
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0.1106202
+            outWeight: 0.11494652
+          - serializedVersion: 3
+            time: 1.0058594
+            value: 0.5482826
+            inSlope: 0.09544673
+            outSlope: 0.09544673
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        selected: 1
+        EffectName: RightUpLeg
+        BoneName: RightUpLeg
+        ScaleFactor: {x: 0.4, y: 1, z: 0.4}
+    - rid: 7828207344866296487
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0.0008239746
+            value: -0.5472412
+            inSlope: 2.099466
+            outSlope: 2.099466
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.49930695
+            value: 0.49930698
+            inSlope: 1.5497329
+            outSlope: 1.5497329
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0.9999999
+            outSlope: 0.9999999
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
-        EffectName: RightUpLeg
-        BoneName: RightUpLeg
-        Translation: {x: 0, y: 0, z: 0}
-    - rid: 7828207344866296391
-      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
-      data:
-        curve:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        minMapping: -1
-        maxMapping: 1
-        expanded: 0
-        EffectName: Position
+        expanded: 1
+        selected: 0
+        EffectName: 'UMA.Effect_BoneTranslate: Position'
         BoneName: Position
-        ScaleFactor: {x: 1, y: 1, z: 1}
-    - rid: 7828207344866296392
-      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
-      data:
-        curve:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        minMapping: -1
-        maxMapping: 1
-        expanded: 0
-        EffectName: LowerBack
-        BoneName: LowerBack
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        Translation: {x: 0, y: 0.15, z: 0}

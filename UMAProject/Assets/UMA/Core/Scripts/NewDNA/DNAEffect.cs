@@ -20,12 +20,13 @@ namespace UMA
 
         // The curve is used to modify the value before applying it.
         [SerializeField]
-        public AnimationCurve curve = new AnimationCurve();
-        public float minMapping = 0.0f; // The minimum value to map. This will be the base value when the adjusted input is 0.
+        public AnimationCurve curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 0.5f), new Keyframe(1, 0));
+        public float minMapping = -1.0f; // The minimum value to map. This will be the base value when the adjusted input is 0.
         public float maxMapping = 1.0f; // The maximum value to map. This will be the maximum value when the adjusted input is 1.
 #if UNITY_EDITOR
         private DNACurve _TemplateCurve = null;
         public bool expanded;
+        public bool selected;
         public string title
         {
             get
@@ -64,9 +65,9 @@ namespace UMA
         public virtual string Description { get; }
 
 #if UNITY_EDITOR
-        public virtual void DoGui(bool showDescription, bool showHelp = false)
+        public virtual void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
-
+            curveToCopy = null;
             if (showHelp)
             {
                 EditorGUILayout.HelpBox($"{baseEffectName}: {this.Description}", MessageType.None);
@@ -77,7 +78,28 @@ namespace UMA
             // select: 0,1,0
             // select: 1,0,1
             EffectName = EditorGUILayout.DelayedTextField("Effect Name", EffectName);
+            GUILayout.BeginHorizontal();
             curve = EditorGUILayout.CurveField("Curve", curve);
+            if (curve != null)
+            {
+                if (GUILayout.Button("Reset", GUILayout.MaxWidth(50)))
+                {
+                    curve = AnimationCurve.Linear(0, 0, 1, 1);
+                }
+                if (GUILayout.Button("Copy to Selected", GUILayout.MaxWidth(120)))
+                {
+                    // Copy this curve to all selected effects
+                    curveToCopy = curve;
+                }   
+            }
+            else
+            {
+                if (GUILayout.Button("Set Linear", GUILayout.MaxWidth(100)))
+                {
+                    curve = AnimationCurve.Linear(0, 0, 1, 1);
+                }
+            }
+            GUILayout.EndHorizontal();
             minMapping = EditorGUILayout.DelayedFloatField("Min", minMapping);
             maxMapping = EditorGUILayout.DelayedFloatField("Max", maxMapping);
             EditorGUILayout.HelpBox("You can load a template curve here. This will set the Min, Max and Curve values to the values in the template curve. The template curve is not saved.", MessageType.Info);

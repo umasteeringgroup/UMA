@@ -32,10 +32,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftGluteus
         BoneName: LeftGluteus
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.2, y: 0.8, z: 0.2}
     - rid: 7828207344866296396
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
@@ -47,7 +47,7 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightGluteus
         BoneName: RightGluteus
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.2, y: 0.8, z: 0.2}

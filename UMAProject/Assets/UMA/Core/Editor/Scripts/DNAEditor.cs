@@ -9,6 +9,7 @@ using UMA.Editors;
 using UnityEngine.SceneManagement;
 using UMA.CharacterSystem;
 using System.Text;
+using UMA.CharacterSystem.Editors;
 
 [CustomEditor(typeof(DNA))]
 public class DNAEditor : Editor
@@ -25,18 +26,36 @@ public class DNAEditor : Editor
     private string[] effectTypeNames;
     private bool editorExpanded = true;
     private bool initialized = false;
+    private bool showHelp = false;
     private const string PrefKey_AddNewExpanded = "UMA.DNAEditor.AddNewEffectExpanded";
+    public DynamicCharacterAvatarEditor dcaContext = null;
+
+    // Static, editor-only context bridge (weak reference to avoid leaks)
+    private static WeakReference<DynamicCharacterAvatarEditor> _lastDcaCtx;
+
+    public static void SetDcaContext(DynamicCharacterAvatarEditor editor)
+    {
+        if (editor == null) return;
+        _lastDcaCtx = new WeakReference<DynamicCharacterAvatarEditor>(editor);
+    }
 
     private void OnEnable()
     {
         // Load persisted UI state
         editorExpanded = EditorPrefs.GetBool(PrefKey_AddNewExpanded, true);
+
+        // Attempt to capture the calling DCA editor if provided
+        if (dcaContext == null && _lastDcaCtx != null && _lastDcaCtx.TryGetTarget(out var ctx) && ctx != null)
+        {
+            dcaContext = ctx;
+        }
     }
 
     private void OnDisable()
     {
         // Save UI state
         EditorPrefs.SetBool(PrefKey_AddNewExpanded, editorExpanded);
+        dcaContext = null;
     }
 
     void Initialize()
@@ -91,7 +110,7 @@ public class DNAEditor : Editor
             UMAAssetIndexer.RebuildAllUMAS();
         }
         GUILayout.EndHorizontal();
-        targetDNA.displayName = EditorGUILayout.DelayedTextField(targetDNA.displayName);
+        targetDNA.displayName = EditorGUILayout.DelayedTextField("Display Name", targetDNA.displayName);
         targetDNA.description = EditorGUILayout.DelayedTextField("Description", targetDNA.description);
         targetDNA.defaultValue = EditorGUILayout.Slider("Default Value", targetDNA.defaultValue, 0f, 1f);
         EditorGUILayout.Space();
@@ -111,7 +130,48 @@ public class DNAEditor : Editor
 
         // Draw existing effects
         EditorGUILayout.Space();
+        GUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Existing Effects", EditorStyles.boldLabel);
+        GUILayout.FlexibleSpace();
+        showHelp = GUILayout.Toggle(showHelp, "Show Help", "Button", GUILayout.Width(100));
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Select All", GUILayout.Width(80)))
+        {
+            foreach (var effect in targetDNA.effects)
+            {
+                effect.selected = true;
+            }
+        }
+        if (GUILayout.Button("Deselect All", GUILayout.Width(100)))
+        {
+            foreach (var effect in targetDNA.effects)
+            {
+                effect.selected = false;
+            }
+        }
+        if (GUILayout.Button("Remove Selected", GUILayout.Width(130)))
+        {
+            targetDNA.effects.RemoveAll(e => e.selected);
+            serializedObject.Update();
+        }
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Expand All", GUILayout.Width(100)))
+        {
+            foreach (var effect in targetDNA.effects)
+            {
+                effect.expanded = true;
+            }
+        }
+        if (GUILayout.Button("Collapse All", GUILayout.Width(100)))
+        {
+            foreach (var effect in targetDNA.effects)
+            {
+                effect.expanded = false;
+            }
+        }
+        GUILayout.EndHorizontal();
         int deleteme = -1;
         for (int i = 0; i < targetDNA.effects.Count; i++)
         {
@@ -131,6 +191,7 @@ public class DNAEditor : Editor
 
     private int ShowEffect(DNA targetDNA, int deleteme, int i)
     {
+        EditorGUI.BeginChangeCheck();
         var effect = targetDNA.effects[i];
         if (effect == null)
         {
@@ -145,7 +206,9 @@ public class DNAEditor : Editor
             return deleteme;
         }
         bool deletemeFlag = false;
-        effect.expanded = GUIHelper.FoldoutBarWithDelete(effect.expanded, effect.title, out deletemeFlag);
+        bool selected = effect.selected;
+        effect.expanded = GUIHelper.FoldoutBarWithDeleteAndSelect(effect.expanded, effect.title, ref selected, out deletemeFlag);
+        effect.selected = selected;
 
         if (deletemeFlag)
         {
@@ -166,10 +229,11 @@ public class DNAEditor : Editor
             EditorGUILayout.EndHorizontal();
 
             // Custom drawing for bone effects to add bone picker next to text field
-            if (!DrawBoneEffectGUIWithPicker(effect, targetDNA))
+            if (!DrawBoneEffectGUIWithPicker(effect, targetDNA, showHelp))
             {
                 // Fallback to default GUI
-                effect.DoGui(true);
+                effect.DoGui(true, showHelp, out AnimationCurve curveToCopy);
+                CopyCurveToSelected(effect, targetDNA, curveToCopy);
             }
 
             // Extra utility button for bone-based effects
@@ -177,7 +241,41 @@ public class DNAEditor : Editor
 
             GUIHelper.EndVerticalPadded();
         }
+        if (EditorGUI.EndChangeCheck())
+        {
+            BuildCharacterIfPossible();
+        }
         return deleteme;
+    }
+
+    private void CopyCurveToSelected(DNAEffect effect, DNA targetDNA, AnimationCurve curveToCopy)
+    {
+        if (curveToCopy != null)
+        {
+            // Copy curve data to all effects that are selected
+            foreach (var e in targetDNA.effects)
+            {
+                if (e != effect && e != null)
+                {
+                    if (e.selected)
+                    {
+                        e.curve = curveToCopy;
+                    }
+                }
+            }
+            EditorUtility.SetDirty(target);
+            AssetDatabase.SaveAssetIfDirty(target);
+            BuildCharacterIfPossible();
+        }
+    }
+
+    private void BuildCharacterIfPossible()
+    {
+        // If we have a DCA context, trigger a rebuild
+        if (dcaContext != null)
+        {
+            dcaContext.GenerateSingleUMA();
+        }
     }
 
     private void ShowAddNew(DNA targetDNA)
@@ -185,7 +283,7 @@ public class DNAEditor : Editor
         GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
         EditorGUILayout.LabelField("Add the New Effect", EditorStyles.boldLabel);
 
-        if (effectTypes.Length > 0)
+        if (effectTypes != null && effectTypes.Length > 0)
         {
             selectedEffectTypeIndex = EditorGUILayout.Popup("Effect Type", selectedEffectTypeIndex, effectTypeNames);
 
@@ -200,9 +298,13 @@ public class DNAEditor : Editor
             if (newEffectInstance != null)
             {
                 // If it's a bone effect, draw using our picker-enabled GUI to match inspector behavior
-                if (!DrawBoneEffectGUIWithPicker(newEffectInstance, target as DNA))
+                if (!DrawBoneEffectGUIWithPicker(newEffectInstance, target as DNA, showHelp))
                 {
-                    newEffectInstance.DoGui(true);
+                    newEffectInstance.DoGui(true, showHelp, out AnimationCurve curveToCopy);
+                    if (curveToCopy != null)
+                    {
+                        CopyCurveToSelected(null, targetDNA, curveToCopy);
+                    }
                 }
 
                 if (GUILayout.Button("Add Effect"))
@@ -212,6 +314,8 @@ public class DNAEditor : Editor
                     (target as DNA).effects.Add(clone);
                     newEffectInstance = (DNAEffect)Activator.CreateInstance(selectedType); // reset for next add
                     EditorUtility.SetDirty(target);
+                    AssetDatabase.SaveAssetIfDirty(target);
+                    BuildCharacterIfPossible();
                 }
             }
         }
@@ -327,7 +431,7 @@ public class DNAEditor : Editor
     }
 
     // Returns true if handled with custom drawer
-    private bool DrawBoneEffectGUIWithPicker(DNAEffect effect, DNA owner)
+    private bool DrawBoneEffectGUIWithPicker(DNAEffect effect, DNA owner, bool showHelp)
     {
         // Only show picker when active selection has a DCA
         var activeGO = Selection.activeGameObject;
@@ -335,44 +439,97 @@ public class DNAEditor : Editor
 
         if (effect is DNAEffect_BoneTranslate e1)
         {
-            DrawBoneFieldWithMenu(() => e1.BoneName, v => e1.BoneName = v, dca, owner, "Bone Name");
+            DrawBoneFieldWithMenu(() => e1.BoneName, v => e1.BoneName = v, dca, owner, "Bone Name", effect);
             e1.Translation = EditorGUILayout.Vector3Field("Translation", e1.Translation);
             // Draw common controls from base
-            DrawEffectCommon(effect);
+            DrawEffectCommon(effect, showHelp);
             return true;
         }
         if (effect is DNAEffect_BoneRotate e2)
         {
-            DrawBoneFieldWithMenu(() => e2.BoneName, v => e2.BoneName = v, dca, owner, "Bone Name");
+            DrawBoneFieldWithMenu(() => e2.BoneName, v => e2.BoneName = v, dca, owner, "Bone Name", effect);
             e2.RotationAxis = EditorGUILayout.Vector3Field("Rotation Axis", e2.RotationAxis);
             e2.RotationAngle = EditorGUILayout.FloatField("Rotation Angle (degrees)", e2.RotationAngle);
-            DrawEffectCommon(effect);
+            DrawEffectCommon(e2, showHelp);
             return true;
         }
         if (effect is DNAEffect_BoneScale e3)
         {
-            DrawBoneFieldWithMenu(() => e3.BoneName, v => e3.BoneName = v, dca, owner, "Bone Name");
+            DrawBoneFieldWithMenu(() => e3.BoneName, v => e3.BoneName = v, dca, owner, "Bone Name", effect);
+            GUILayout.BeginHorizontal();
             e3.ScaleFactor = EditorGUILayout.Vector3Field("Scale Factor", e3.ScaleFactor);
-            DrawEffectCommon(effect);
+            if (GUILayout.Button("Uniform", GUILayout.MaxWidth(80)))
+            {
+                float uniform = EditorGUILayout.FloatField("Uniform Scale", e3.ScaleFactor.x);
+                e3.ScaleFactor = new Vector3(uniform, uniform, uniform);
+            }
+            if (GUILayout.Button("Copy to Selected", GUILayout.MaxWidth(120)))
+            {
+                foreach (var otherEffect in (owner as DNA).effects)
+                {
+                    if (otherEffect != effect && otherEffect is DNAEffect_BoneScale otherScaleEffect)
+                    {
+                        if (otherScaleEffect.selected)
+                        {
+                            otherScaleEffect.ScaleFactor = e3.ScaleFactor;
+                        }
+                    }
+                }
+                EditorUtility.SetDirty(owner);
+                AssetDatabase.SaveAssetIfDirty(owner);
+                BuildCharacterIfPossible();
+            }
+            GUILayout.EndHorizontal();
+            DrawEffectCommon(effect, showHelp);
             return true;
         }
         if (effect is DNAEffect_BoneTransform e4)
         {
-            DrawBoneFieldWithMenu(() => e4.boneName, v => e4.boneName = v, dca, owner, "Bone Name");
+            DrawBoneFieldWithMenu(() => e4.boneName, v => e4.boneName = v, dca, owner, "Bone Name", effect);
             e4.Position = EditorGUILayout.Vector3Field("Position", e4.Position);
             e4.Rotation = EditorGUILayout.Vector3Field("Rotation", e4.Rotation);
             e4.Scale = EditorGUILayout.Vector3Field("Scale", e4.Scale);
-            DrawEffectCommon(effect);
+            DrawEffectCommon(effect, showHelp);
             return true;
         }
         return false;
     }
 
-    private void DrawEffectCommon(DNAEffect effect)
+    private void DrawEffectCommon(DNAEffect effect, bool showHelp)
     {
         // Replicate the common fields from DNAEffect.DoGui
         effect.EffectName = EditorGUILayout.DelayedTextField("Effect Name", effect.EffectName);
+        GUILayout.BeginHorizontal();
         effect.curve = EditorGUILayout.CurveField("Curve", effect.curve);
+        if (effect.curve != null)
+        {
+            if (GUILayout.Button("Reset", GUILayout.MaxWidth(50)))
+            {
+                effect.curve = null;
+            }
+            if (GUILayout.Button("Zero", GUILayout.MaxWidth(50)))
+            {
+                effect.curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 0));
+            }
+            if (GUILayout.Button("Copy to Selected", GUILayout.MaxWidth(120)))
+            {
+                // Copy this curve to all selected effects
+                // Fix: Use owner reference instead of missing targetDNA
+                CopyCurveToSelected(effect, target as DNA, effect.curve);
+            }
+        }
+        else
+        {
+            if (GUILayout.Button("Set Linear", GUILayout.MaxWidth(100)))
+            {
+                effect.curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 0.5f), new Keyframe(1, 1));
+            }
+        }
+        GUILayout.EndHorizontal();
+        if (showHelp)
+        {
+            EditorGUILayout.HelpBox(effect.Description, MessageType.Info);
+        }
         effect.minMapping = EditorGUILayout.DelayedFloatField("Min", effect.minMapping);
         effect.maxMapping = EditorGUILayout.DelayedFloatField("Max", effect.maxMapping);
         EditorGUILayout.HelpBox("You can load a template curve here. This will set the Min, Max and Curve values to the values in the template curve. The template curve is not saved.", MessageType.Info);
@@ -385,7 +542,7 @@ public class DNAEditor : Editor
         }
     }
 
-    private void DrawBoneFieldWithMenu(Func<string> getBone, Action<string> setBone, DynamicCharacterAvatar dca, DNA owner, string label)
+    private void DrawBoneFieldWithMenu(Func<string> getBone, Action<string> setBone, DynamicCharacterAvatar dca, DNA owner, string label, DNAEffect effect)
     {
         EditorGUILayout.BeginHorizontal();
         string current = getBone();
@@ -395,6 +552,7 @@ public class DNAEditor : Editor
             Undo.RecordObject(owner, "Set Bone Name");
             setBone(edited);
             EditorUtility.SetDirty(owner);
+            BuildCharacterIfPossible();
         }
         using (new EditorGUI.DisabledScope(dca == null))
         {
@@ -404,6 +562,11 @@ public class DNAEditor : Editor
                 {
                     Undo.RecordObject(owner, "Set Bone Name");
                     setBone(picked);
+                    // If EffectName is blank, set a helpful default label
+                    if (string.IsNullOrEmpty(effect.EffectName))
+                    {
+                        effect.EffectName = $"{effect.baseEffectName}: {picked}";
+                    }
                     EditorUtility.SetDirty(owner);
                     Repaint();
                 });

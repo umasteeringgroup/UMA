@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using UnityEditorInternal;
 using System.Runtime.CompilerServices;
 using System;
+using PlasticGui.Gluon.WorkspaceWindow.Views.IncomingChanges;
 
 namespace UMA.Editors
 {
@@ -393,6 +394,20 @@ namespace UMA.Editors
             GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
             GUILayout.Space(10);
             foldout = EditorGUILayout.Foldout(foldout, content, true);
+            delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            return foldout;
+        }
+
+        const string checkedBox = "\u2611";
+        const string uncheckedBox = "\u2610";
+
+        public static bool FoldoutBarWithDeleteAndSelect(bool foldout, string content, ref bool selected, out bool delete)
+        {
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            GUILayout.Space(10);
+            foldout = EditorGUILayout.Foldout(foldout, content, true);
+            selected = GUILayout.Toggle(selected, selected ? checkedBox : uncheckedBox, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
             delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             return foldout;

@@ -74,6 +74,15 @@ namespace UMA
             {
                 return dna;
             }
+
+            // Not found - maybe added /removed at runtime or after dictionary load.
+            // find the DNA in the collection list and reload the dictionary.
+            _DNACollection.LoadDictionary();
+            if (dict != null && dict.TryGetValue(dnaName, out dna))
+            {
+                return dna;
+            }
+
 #if UNITY_EDITOR
             Debug.LogWarning($"DNA '{dnaName}' not found in the collection dictionary.");
 #endif
