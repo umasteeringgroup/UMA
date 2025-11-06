@@ -16,6 +16,10 @@ namespace UMA
         public List<DNA> dnaList = new List<DNA>();
 
 #if UNITY_EDITOR
+        // Editor-only persisted foldout state for inspectors
+        [SerializeField, HideInInspector]
+        public bool editorFoldout;
+
         [UnityEditor.MenuItem("Assets/Create/UMA/DNA/DNA Collection")]
         public static void CreateDNACollection()
         {

@@ -42,3 +42,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5fecd924b39c28d4692ba6b373bb4491, type: 2}
   - {fileID: 11400000, guid: 64b845266346105459a88d09415c18b8, type: 2}
   - {fileID: 11400000, guid: c429bee64972929428fd20a6d491faf7, type: 2}
+  - {fileID: 11400000, guid: 1e48083733fdc4f49a859d36d749fe61, type: 2}
+  - {fileID: 11400000, guid: bc5ec9f1492e9234e9bde914eff7a854, type: 2}
+  editorFoldout: 1

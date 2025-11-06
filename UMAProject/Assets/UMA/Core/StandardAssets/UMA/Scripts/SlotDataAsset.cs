@@ -1,4 +1,4 @@
-﻿#define DEBUG_BAKING
+﻿//#define DEBUG_BAKING
 using System.Collections.Generic;
 #if UNITY_EDITOR
 using System.Text;

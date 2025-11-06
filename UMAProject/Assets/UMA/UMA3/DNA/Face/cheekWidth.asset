@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ad596f39ce5a904d93ccd9240c400e1, type: 3}
-  m_Name: noseWidth
+  m_Name: cheekWidth
   m_EditorClassIdentifier: UMA_Core::UMA.DNA
-  description: Converted DNA Asset for noseWidth
+  description: Converted DNA Asset for cheekPosition
   defaultValue: 0.5
   effects:
-  - rid: 7828207344866296406
-  - rid: 7828207344866296407
-  displayName: noseWidth
+  - rid: 7828207344866296429
+  - rid: 7828207344866296430
+  displayName: cheekPosition
   references:
     version: 2
     RefIds:
-    - rid: 7828207344866296406
-      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+    - rid: 7828207344866296429
+      type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
@@ -33,11 +33,11 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
-        EffectName: NoseBaseAdjust
-        BoneName: NoseBaseAdjust
-        ScaleFactor: {x: 0.3, y: 0, z: 0}
-    - rid: 7828207344866296407
-      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+        EffectName: LeftCheekAdjust
+        BoneName: LeftCheekAdjust
+        Translation: {x: 0.01, y: 0, z: 0}
+    - rid: 7828207344866296430
+      type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
@@ -48,6 +48,6 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
-        EffectName: NoseMiddleAdjust
-        BoneName: NoseMiddleAdjust
-        ScaleFactor: {x: 0.1, y: 0, z: 0}
+        EffectName: RightCheekAdjust
+        BoneName: RightCheekAdjust
+        Translation: {x: -0.01, y: 0, z: 0}

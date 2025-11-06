@@ -880,7 +880,7 @@ namespace UMA.Editors
 			}
 			//new CrossCompatibilitySettings
 			//To push any old settings in RaceData.backwardsCompatibleWith into the new crossCompatibilitySettings we have to call GetCrossCompatibleRaces() directly on the target
-#pragma warning disable618
+#pragma warning disable 618
 			if (race.backwardsCompatibleWith.Count > 0)
 			{
 				var cc = race.GetCrossCompatibleRaces();
@@ -889,7 +889,7 @@ namespace UMA.Editors
 					serializedObject.Update();
 				}
 			}
-#pragma warning restore618
+#pragma warning restore 618
 			SerializedProperty _crossCompatibilitySettings = serializedObject.FindProperty("_crossCompatibilitySettings");
 			SerializedProperty _crossCompatibilitySettingsData = _crossCompatibilitySettings.FindPropertyRelative("settingsData");
 			//draw the new version of the crossCompatibility list that allows users to define what slots in THIS races base recipe equate to in the backwards compatible races base recipe
