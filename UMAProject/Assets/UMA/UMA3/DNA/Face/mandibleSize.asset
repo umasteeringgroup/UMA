@@ -16,6 +16,7 @@ MonoBehaviour:
   defaultValue: 0.5
   effects:
   - rid: 7828207344866296422
+  - rid: 7828207344866296477
   displayName: mandibleSize
   references:
     version: 2
@@ -31,7 +32,22 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: Mandible
         BoneName: Mandible
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.2, y: 0, z: 0.2}
+    - rid: 7828207344866296477
+      type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 1
+        EffectName: Mandible Translate
+        BoneName: Mandible
+        Translation: {x: 0, y: 0, z: 0.01}

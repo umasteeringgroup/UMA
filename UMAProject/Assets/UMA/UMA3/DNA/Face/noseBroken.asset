@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ad596f39ce5a904d93ccd9240c400e1, type: 3}
-  m_Name: eyeRotation
+  m_Name: noseBroken
   m_EditorClassIdentifier: UMA_Core::UMA.DNA
-  description: Converted DNA Asset for eyeRotation
+  description: Converted DNA Asset for noseInclination
   defaultValue: 0.5
   effects:
-  - rid: 7828207344866296464
-  - rid: 7828207344866296465
-  displayName: eyeRotation
+  - rid: 7828207344866296408
+  - rid: 7828207344866296480
+  displayName: noseBroken
   references:
     version: 2
     RefIds:
-    - rid: 7828207344866296464
+    - rid: 7828207344866296408
       type: {class: DNAEffect_BoneRotate, ns: UMA, asm: UMA_Core}
       data:
         curve:
@@ -33,25 +33,25 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
-        EffectName: LeftEyeAdjust
-        BoneName: LeftEyeAdjust
-        boneHash: 3699935594
-        RotationAxis: {x: 0, y: 1, z: 0}
-        RotationAngle: -20
-    - rid: 7828207344866296465
-      type: {class: DNAEffect_BoneRotate, ns: UMA, asm: UMA_Core}
-      data:
-        curve:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        minMapping: -1
-        maxMapping: 1
-        expanded: 1
-        EffectName: RightEyeAdjust
-        BoneName: RightEyeAdjust
-        boneHash: 3560895584
-        RotationAxis: {x: 0, y: 1, z: 0}
+        EffectName: NoseBaseAdjust
+        BoneName: NoseBaseAdjust
+        boneHash: 3609600096
+        RotationAxis: {x: 0, y: 0, z: 1}
         RotationAngle: 20
+    - rid: 7828207344866296480
+      type: {class: DNAEffect_BoneRotate, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 1
+        EffectName: NoseMiddleAdjust
+        BoneName: NoseMiddleAdjust
+        boneHash: 0
+        RotationAxis: {x: 0, y: 0, z: 1}
+        RotationAngle: 10

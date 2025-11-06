@@ -36,10 +36,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftLipsAdjust
         BoneName: LeftLipsAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0.01, y: 0, z: 0}
     - rid: 7828207344866296459
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -51,10 +51,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightLipsAdjust
         BoneName: RightLipsAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: -0.01, y: 0, z: 0}
     - rid: 7828207344866296460
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -66,10 +66,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftLipsSuperiorMiddleAdjust
         BoneName: LeftLipsSuperiorMiddleAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0.001, y: 0, z: 0}
     - rid: 7828207344866296461
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -81,10 +81,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightLipsSuperiorMiddleAdjust
         BoneName: RightLipsSuperiorMiddleAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: -0.001, y: 0, z: 0}
     - rid: 7828207344866296462
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -96,10 +96,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftLipsInferiorAdjust
         BoneName: LeftLipsInferiorAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0.001, y: 0, z: 0}
     - rid: 7828207344866296463
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -111,7 +111,7 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightLipsInferiorAdjust
         BoneName: RightLipsInferiorAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: -0.001, y: 0, z: 0}

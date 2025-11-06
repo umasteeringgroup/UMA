@@ -33,10 +33,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: HeadAdjust
         BoneName: HeadAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.1, y: 0, z: 0}
     - rid: 7828207344866296339
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -48,10 +48,10 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftEarAdjust
         BoneName: LeftEarAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: -0.013, y: 0, z: 0}
     - rid: 7828207344866296340
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -63,7 +63,7 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightEarAdjust
         BoneName: RightEarAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0.013, y: 0, z: 0}

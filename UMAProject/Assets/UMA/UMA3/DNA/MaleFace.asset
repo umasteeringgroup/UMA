@@ -44,4 +44,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c429bee64972929428fd20a6d491faf7, type: 2}
   - {fileID: 11400000, guid: 1e48083733fdc4f49a859d36d749fe61, type: 2}
   - {fileID: 11400000, guid: bc5ec9f1492e9234e9bde914eff7a854, type: 2}
-  editorFoldout: 1
+  - {fileID: 11400000, guid: f75db3431def2e2488955e6760dbb23d, type: 2}
+  - {fileID: 11400000, guid: 45964a73ab552ba48a7418e8d5c4bebb, type: 2}
+  - {fileID: 11400000, guid: dbb8bace0ebeaf84db86bb6930153b7f, type: 2}
+  editorFoldout: 0

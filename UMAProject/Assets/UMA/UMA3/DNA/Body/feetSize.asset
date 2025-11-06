@@ -27,22 +27,58 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: -1.3
+            inSlope: 2.3
+            outSlope: 2.3
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 2.3
+            outSlope: 2.3
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: Position
         BoneName: Position
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.02, z: 0}
     - rid: 7828207344866296355
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.5
+            inSlope: 0.79999995
+            outSlope: 0.79999995
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1.3
+            inSlope: 0.79999995
+            outSlope: 0.79999995
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
@@ -51,13 +87,31 @@ MonoBehaviour:
         expanded: 0
         EffectName: LeftFoot
         BoneName: LeftFoot
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.5, y: 0.5, z: 0.5}
     - rid: 7828207344866296356
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.5
+            inSlope: 0.79999995
+            outSlope: 0.79999995
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1.3
+            inSlope: 0.79999995
+            outSlope: 0.79999995
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
@@ -66,4 +120,4 @@ MonoBehaviour:
         expanded: 0
         EffectName: RightFoot
         BoneName: RightFoot
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.5, y: 0.5, z: 0.5}

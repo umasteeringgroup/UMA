@@ -32,12 +32,12 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: LeftEarAdjust
         BoneName: LeftEarAdjust
-        boneHash: 0
-        RotationAxis: {x: 0, y: 1, z: 0}
-        RotationAngle: 0
+        boneHash: 3517907380
+        RotationAxis: {x: 1, y: 0, z: 0}
+        RotationAngle: 20
     - rid: 7828207344866296402
       type: {class: DNAEffect_BoneRotate, ns: UMA, asm: UMA_Core}
       data:
@@ -49,9 +49,9 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
         EffectName: RightEarAdjust
         BoneName: RightEarAdjust
-        boneHash: 0
-        RotationAxis: {x: 0, y: 1, z: 0}
-        RotationAngle: 0
+        boneHash: 3642326206
+        RotationAxis: {x: 1, y: 0, z: 0}
+        RotationAngle: -20
