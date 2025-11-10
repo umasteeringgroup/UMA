@@ -421,7 +421,8 @@ namespace UMA
             preapplyTicks += preapply;
             gstopWatch.Restart();
 #endif
-            if (useNewDNA)
+            RaceData race = umaData.umaRecipe.raceData;
+            if (race.useNewDNA)
             {
                 DNABuildType dnaUpdateFlags = umaData.NewDNAPreApply();
             }
@@ -835,7 +836,7 @@ namespace UMA
 
 		public virtual void PreApply(UMAData umaData)
 		{
-			if (umaData && useNewDNA == false)
+			if (umaData && umaData.umaRecipe.raceData.useNewDNA == false)
             {
                 umaData.PreApplyDNA();
             }
@@ -860,7 +861,7 @@ namespace UMA
             if (!umaData.rawAvatar)
             {
                 umaData.GotoTPose();
-                if (useNewDNA == false)
+                if (umaData.umaRecipe.raceData.useNewDNA == false)
                 {
                     umaData.ApplyDNA();
                 }
@@ -882,7 +883,7 @@ namespace UMA
             UpdateAvatar(umaData);
 
             // Blendshape DNA must be applied after the avatar is reset on the animator
-            if (useNewDNA == false)
+            if (umaData.umaRecipe.raceData.useNewDNA == false)
             {
                 umaData.PostApplyDNA();
             }

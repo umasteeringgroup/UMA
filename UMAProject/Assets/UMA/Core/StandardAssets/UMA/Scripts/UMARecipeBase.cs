@@ -62,7 +62,7 @@ namespace UMA
         /// </summary>
         /// <returns>The cached recipe.</returns>
         /// <param name="context">Context.</param>
-        public UMAData.UMARecipe GetCachedRecipe( bool loadSlots = true, bool loadRaceData=false)
+        public UMAData.UMARecipe GetCachedRecipe( bool loadSlots= true, bool loadRaceData=false)
 		{
 			Stopwatch sw = Stopwatch.StartNew();
 

@@ -221,6 +221,15 @@ public class DNAEditor : Editor
             GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"{effect.GetType().Name}: {effect.EffectName}", EditorStyles.boldLabel);
+            if (GUILayout.Button("Duplicate", GUILayout.Width(100)))
+            {
+                // Deep clone the effect and add it
+                var clone = CloneDNAEffect(effect);
+                (target as DNA).effects.Add(clone);
+                EditorUtility.SetDirty(target);
+                AssetDatabase.SaveAssetIfDirty(target);
+                BuildCharacterIfPossible();
+            }
             if (GUILayout.Button("Remove", GUILayout.Width(60)))
             {
                 effectsProp?.DeleteArrayElementAtIndex(i);
@@ -522,7 +531,7 @@ public class DNAEditor : Editor
         {
             if (GUILayout.Button("Set Linear", GUILayout.MaxWidth(100)))
             {
-                effect.curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 0.5f), new Keyframe(1, 1));
+                effect.curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
             }
         }
         GUILayout.EndHorizontal();

@@ -18,8 +18,12 @@ MonoBehaviour:
   DisplayValue: 
   compatibleRaces:
   - Human Male 3.0
+  - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
+    filename: 
+    thumb: {fileID: 0}
+  - race: Human Female 3.0
     filename: 
     thumb: {fileID: 0}
   wardrobeSlot: None

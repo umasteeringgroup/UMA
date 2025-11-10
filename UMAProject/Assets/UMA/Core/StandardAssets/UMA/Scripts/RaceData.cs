@@ -47,7 +47,8 @@ namespace UMA
         /*
 		 * New DNA
 		 */
-
+        [Tooltip("Use the new DNA system. The older DNA will not be used or called.")]
+        public bool useNewDNA;
 		[Tooltip("The DNA groups assigned to this race")]
         public DNACollection DNACollection = new DNACollection();
 
@@ -69,9 +70,13 @@ namespace UMA
 		private DNAConverterList _dnaConverterList = new DNAConverterList();
 
 
-		public List<string> GetDNANames()
+        public List<string> GetDNANames()
 		{
-			List<string> Names = new List<string>();
+			if (useNewDNA)
+			{
+				return DNACollection.GetDNANames();
+            }
+            List<string> Names = new List<string>();
 
             for (int i = 0; i < dnaConverterList.Length; i++)
             {
@@ -93,6 +98,11 @@ namespace UMA
 
 		public void ResetDNA()
 		{
+			if (useNewDNA)
+			{
+				// New DNA does not need resetting currently.
+				return;
+            }
             for (int j = 0; j < dnaConverterList.Length; j++)
 			{
                 IDNAConverter converter = dnaConverterList[j];
@@ -114,6 +124,10 @@ namespace UMA
 		public DynamicDNAConverterController[] dnaConverterList
 		{
 			get {
+				if (useNewDNA)
+				{
+					return null;
+				}
 				if (disableDNAConverters)
 					return new DynamicDNAConverterController[0];
 				else
@@ -134,7 +148,12 @@ namespace UMA
 
         public DynamicDNAConverterController[] GetConverters(UMADnaBase DNA)
 		{
-			if (disableDNAConverters)
+			if (useNewDNA)
+			{
+				Debug.LogError("GetConverters should not be called when using New DNA system.");
+                return null;
+            }
+            if (disableDNAConverters)
 			{
 				return new DynamicDNAConverterController[0];
 			}
@@ -147,7 +166,12 @@ namespace UMA
 		/// <param name="converter"></param>
 		public void AddConverter(IDNAConverter converter)
 		{
-			if (disableDNAConverters)
+            if (useNewDNA)
+            {
+                Debug.LogError("AddConverters should not be called when using New DNA system.");
+                return;
+            }
+            if (disableDNAConverters)
 				return;
 			_dnaConverterList.Add(converter as DynamicDNAConverterController);
 		}

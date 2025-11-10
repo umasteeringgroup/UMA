@@ -3,6 +3,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using static UMA.DNAInstanceCollection;
+using System.Linq;
 
 namespace UMA
 {
@@ -70,10 +71,30 @@ namespace UMA
 		public string userInformation = "";
 
 		// NEW DNA
-		public DNAInstanceCollection dnaInstanceCollection = new();
+		public DNAInstanceCollection dnaInstanceCollection
+		{
+			get
+			{
+				if (umaRecipe == null)
+				{
+					// How did we get here?
+					umaRecipe = new UMARecipe();
+				}
+				return (umaRecipe.dnaInstanceCollection);
+			}
+			set
+			{
+				if (umaRecipe == null)
+				{
+					// How did we get here?
+					umaRecipe = new UMARecipe();
+				}
+				umaRecipe.dnaInstanceCollection = value;
+            }
+        }
 		public bool alwaysAdjustBounds;
 
-        #region MESH MODIFIERS
+#region MESH MODIFIERS
         // MeshModifers are used to modify the mesh during creation.
         // This array is built from the various recipes added during the build process.
         private readonly Dictionary<string,List<MeshModifier.Modifier>> meshModifiers = new Dictionary<string, List<MeshModifier.Modifier>>();
@@ -194,6 +215,7 @@ namespace UMA
 			
         }
         }
+        #endregion
 
         #region SAVE RESTORE ITEMS
         // Replace SaveMountedItems with this non-alloc version
@@ -431,6 +453,9 @@ namespace UMA
         [Tooltip("If checked, will not animate or modify the vertexes")]
         public bool rawAvatar;
 
+		[Tooltip("If checked, will disable animation on the UMA")]
+        public bool disableAnimation;
+
 		public bool raceChanged;
 
 		public bool hideRenderers;
@@ -468,7 +493,7 @@ namespace UMA
 		}
 
 
-        #region OVERRIDES
+#region OVERRIDES
         [SerializeField]
 		public UmaTPose OverrideTpose = null;
 
@@ -686,10 +711,10 @@ namespace UMA
 				//dnaInstanceCollection.
 				if (dnainstance != null && dnainstance.enabled)
 				{
-					var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
+					var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
 					if (dna != null)
 					{
-						updateFlags |= dna.PreApply(this, dnainstance.value);
+						updateFlags |= dna.PreApply(this, dnainstance.Value);
 					}
 				}
 			}
@@ -709,10 +734,10 @@ namespace UMA
             {
 				if (dnainstance != null && dnainstance.enabled)
 				{
-					var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
+					var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
 					if (dna != null)
 					{
-						updateFlags |= dna.Apply(this, dnainstance.value);
+						updateFlags |= dna.Apply(this, dnainstance.Value);
 					}
 				}
             }
@@ -732,10 +757,10 @@ namespace UMA
             {
 				if (dnainstance != null && dnainstance.enabled)
 				{
-					var dna = dnaInstanceCollection.GetDNA(dnainstance.name);
+					var dna = dnaInstanceCollection.GetDNA(dnainstance.Name);
 					if (dna != null)
 					{
-						updateFlags |= dna.PostApply(this, dnainstance.value);
+						updateFlags |= dna.PostApply(this, dnainstance.Value);
 					}
 				}
             }
@@ -1294,6 +1319,7 @@ namespace UMA
 		{
 			public RaceData raceData;
 			public string recipeName; // only used when DynamicCharacterAvatar merges the recipe with the avatar.
+			public DNAInstanceCollection dnaInstanceCollection;
             Dictionary<int, UMADnaBase> _umaDna;
 			protected Dictionary<int, UMADnaBase> umaDna
 			{
@@ -1314,8 +1340,7 @@ namespace UMA
 					_umaDna = value;
 				}
 			}
-			//protected Dictionary<int, DNAConvertDelegate> umaDnaConverter = new Dictionary<int, DNAConvertDelegate>();
-			//DynamicDNAPlugins FEATURE: Allow more than one converter to use the same dna
+
 			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAConverters = new Dictionary<int, List<DNAConvertDelegate>>();
 			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAPreApplyConverters = new Dictionary<int, List<DNAConvertDelegate>>();
 			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAPostApplyConverters = new Dictionary<int, List<DNAConvertDelegate>>();
@@ -1442,27 +1467,105 @@ namespace UMA
                 return false;
             }
 
+            // AddMissingDNAForRace: ensure all DNA from Race DNACollection exists, using overrides where provided
+            public void AddMissingDNAForRace()
+            {
+                if (raceData == null || !raceData.useNewDNA)
+                {
+                    return;
+                }
+
+                var collection = raceData.DNACollection;
+                if (collection == null)
+                {
+                    collection = new DNACollection();
+                    raceData.DNACollection = collection;
+                }
+                collection.LoadDictionary();
+
+                if (dnaInstanceCollection == null)
+                {
+                    dnaInstanceCollection = new DNAInstanceCollection();
+                }
+                dnaInstanceCollection.Initialize(collection);
+
+                var assigned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (dnaInstanceCollection.dnaInstances != null)
+                {
+                    for (int i = 0; i < dnaInstanceCollection.dnaInstances.Count; i++)
+                    {
+                        var inst = dnaInstanceCollection.dnaInstances[i];
+                        if (inst != null && !string.IsNullOrEmpty(inst.Name))
+                        {
+                            assigned.Add(inst.Name);
+                        }
+                    }
+                }
+
+                Dictionary<string, float> overrides = null;
+                try { overrides = raceData.GetDefaultDNA(); } catch { overrides = null; }
+
+                var dict = collection.dnaDictionary;
+                if (dict == null)
+                {
+                    return;
+                }
+
+                foreach (var kvp in dict)
+                {
+                    var name = kvp.Key;
+                    if (string.IsNullOrEmpty(name) || assigned.Contains(name))
+                    {
+                        continue;
+                    }
+
+                    float value = 0.5f;
+                    if (overrides != null && overrides.TryGetValue(name, out var ov))
+                    {
+                        value = Mathf.Clamp01(ov);
+                    }
+                    else if (kvp.Value != null)
+                    {
+                        value = Mathf.Clamp01(kvp.Value.defaultValue);
+                    }
+
+                    dnaInstanceCollection.AddDNAInstance(new DNAInstance(name, value));
+                }
+            }
+
 #pragma warning disable 618
-			/// <summary>
-			/// Gets the DNA array.
-			/// </summary>
-			/// <returns>The DNA array.</returns>
-			public UMADnaBase[] GetAllDna()
-			{
-				if ((raceData == null) || (slotDataList == null))
-				{
-					return new UMADnaBase[0];
-				}
-				return dnaValues.ToArray();
-			}
-			public UMADnaBase[] GetDefinedDna()
-			{
-				if ((dnaValues == null) || dnaValues.Count == 0)
-				{
-					return new UMADnaBase[0];
-				}
-				return dnaValues.ToArray();
-			}
+            /// <summary>
+            /// Gets the DNA array.
+            /// </summary>
+            /// <returns>The DNA array.</returns>
+            public UMADnaBase[] GetAllDna()
+            {
+                if ((raceData == null) || (slotDataList == null))
+                {
+                    return new UMADnaBase[0];
+                }
+                return dnaValues.ToArray();
+            }
+
+            public UMADnaBase[] GetDefinedDna()
+            {
+                if (raceData != null && raceData.useNewDNA)
+                {
+                    AddMissingDNAForRace();
+                    dnaValues = new List<UMADnaBase>
+                    {
+                        new UMADnaInstance(dnaInstanceCollection)
+                    };
+                }
+                else
+                {
+                    if ((dnaValues == null) || dnaValues.Count == 0)
+                    {
+                        return new UMADnaBase[0];
+                    }
+                }
+                return dnaValues.ToArray();
+            }
 
 			/// <summary>
 			/// Adds the DNA specified.
@@ -1470,7 +1573,12 @@ namespace UMA
 			/// <param name="dna">DNA.</param>
 			public void AddDna(UMADnaBase dna)
 			{
-				umaDna.Add(dna.DNATypeHash, dna);
+				if (umaDna.ContainsKey(dna.DNATypeHash))
+				{
+					Debug.LogWarning("UMARecipe: DNA of type " + dna.GetType().Name + " already exists. Use RemoveDna before adding new DNA of the same type.");
+					return;
+                }
+                umaDna.Add(dna.DNATypeHash, dna);
 				dnaValues.Add(dna);
 			}
 
@@ -1482,6 +1590,11 @@ namespace UMA
 			public T GetDna<T>()
 				where T : UMADnaBase
 			{
+                if (raceData != null && raceData.useNewDNA)
+                {
+                    Debug.LogError($"Attempting GetDna<T> Type = {typeof(T).Name} to get UMADnaBase when useNewDNA is true!");
+                    return null;
+                }
 				UMADnaBase dna;
 				if (umaDna.TryGetValue(UMAUtils.StringToHash(typeof(T).Name), out dna))
 				{
@@ -2263,7 +2376,7 @@ namespace UMA
 				umaDNAConverters.Clear();
 				umaDNAPreApplyConverters.Clear();
 				umaDNAPostApplyConverters.Clear();
-				if (raceData != null)
+				if (raceData != null && raceData.useNewDNA == false) 
 				{
                     for (int i = 0; i < raceData.dnaConverterList.Length; i++)
 					{
@@ -3262,4 +3375,3 @@ private int[] GetOrBuildTPoseHashes(UmaTPose tpose)
 }
 	}
 }
-#endregion

@@ -350,12 +350,7 @@ namespace UMA.CharacterSystem
         {
             get
             {
-                if (umaData != null)
-                {
-                    return umaData.umaRecipe.sharedColors;
-                }
-
-                return new OverlayColorData[0];
+                return umaData.umaRecipe.sharedColors;
             }
         }
         public List<ColorValue> ActiveColors
@@ -525,10 +520,7 @@ namespace UMA.CharacterSystem
             // Cleanup from any edit-time uma generation
             if (Application.isPlaying)
             {
-                UMAData ud = GetComponent<UMAData>();
 
-                if (ud != null)
-                {
                     // cleanup any edit-time umaData
                     /// Having UMA's visible in the editor comes at a cost.
                     /// Have to clean up from edit time stuff.
@@ -543,8 +535,6 @@ namespace UMA.CharacterSystem
                             DestroyImmediate(go);
                         }
                     }
-                    // ud.umaRoot = null;
-                }
             }
             else
             {
@@ -561,10 +551,6 @@ namespace UMA.CharacterSystem
             }
 
 #else
-           UMAData ud = GetComponent<UMAData>();
-
-           if (ud != null)
-           {
                List<GameObject> Cleaners = GetRenderers(gameObject);
                HideAndCleanup(false);
                 for (int i=0;i<Cleaners.Count;i++)
@@ -573,7 +559,6 @@ namespace UMA.CharacterSystem
                     DestroyImmediate(go);
                 }
                //ud.umaRoot = null;
-           }
 #endif
 
                 cacheStates = new Dictionary<string, string>();
@@ -815,7 +800,7 @@ namespace UMA.CharacterSystem
                 if (activeRace.racedata != null)
                 {
                     BuildCharacter(false, true);
-                    ugb.GenerateSingleUMA(umaData, true); // don't fire completed events in the editor
+                    ugb.GenerateSingleUMA(this, true); // don't fire completed events in the editor
                     ugb.Clear();
                 }
             }
@@ -868,10 +853,7 @@ namespace UMA.CharacterSystem
                     GameObject go = PrefabUtility.GetOutermostPrefabInstanceRoot(this.gameObject);
                     UnityEditor.PrefabUtility.UnpackPrefabInstance(go, UnityEditor.PrefabUnpackMode.OutermostRoot, UnityEditor.InteractionMode.AutomatedAction);
                 }
-                if (umaData != null)
-                {
-                    umaData.SaveMountedItems();
-                }
+                SaveMountedItems();
                 CleanupGeneratedData();
                 activeRace.SetRaceData();
                 if (activeRace.racedata != null)
@@ -886,18 +868,17 @@ namespace UMA.CharacterSystem
                     int oldScaleFactor = ugb.InitialScaleFactor;
                     int oldAtlasResolution = ugb.atlasResolution;
 
-                    umaData.rawAvatar = rawAvatar;
                     ugb.FreezeTime = true;
                     ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
                     ugb.atlasResolution = ugb.editorAtlasResolution;
 
-                    ugb.GenerateSingleUMA(umaData, false); // don't fire completed events in the editor
+                    ugb.GenerateSingleUMA(this, false); // don't fire completed events in the editor
 
                     ugb.FreezeTime = false;
                     ugb.InitialScaleFactor = oldScaleFactor;
                     ugb.atlasResolution = oldAtlasResolution;
                     ugb.Clear();
-                    umaData.RestoreSavedItems();
+                    RestoreSavedItems();
                 }
             }
         }
@@ -911,8 +892,6 @@ namespace UMA.CharacterSystem
                 var go = Cleaners[i];
                 DestroyImmediate(go);
             }
-            //DestroyImmediate(umaData);
-            //umaData = null;
             ClearSlots();
         }
 #endif
@@ -920,28 +899,20 @@ namespace UMA.CharacterSystem
         {
             hide = toggle;
             SetRenderers(toggle);
-            if (umaData != null)
-            {
-                umaData.hideRenderers = this.hide;
-            }
+            hideRenderers = hide;
             lastHide = hide;
         }
 
         public void SetRenderers(bool val)
         {
-            if (umaData == null)
+            if (RendererCount > 0)
             {
-                return;
-            }
-
-            if (umaData.RendererCount > 0)
-            {
-                SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
+                SkinnedMeshRenderer frenderer = GetRenderer(0);
                 if (frenderer != null)
                 {
                     if (frenderer.enabled && hide == true)
                     {
-                        SkinnedMeshRenderer[] array = umaData.GetRenderers();
+                        SkinnedMeshRenderer[] array = GetRenderers();
                         for (int i = 0; i < array.Length; i++)
                         {
                             SkinnedMeshRenderer smr = array[i];
@@ -959,7 +930,7 @@ namespace UMA.CharacterSystem
                     // dump all generated textures
                     if (leanHiding && UnityEngine.Application.isPlaying)
                     {
-                        umaData.CleanTextures();
+                        CleanTextures();
                     }
                 }
                 else
@@ -967,21 +938,21 @@ namespace UMA.CharacterSystem
                     if (leanHiding)
                     {
                         // restore generated textures, then unhide.
-                        umaData.Dirty(false, true, false);
+                        Dirty(false, true, false);
                         if (UnityEngine.Application.isPlaying)
                         {
-                            umaData.Dirty(false, true, false);
-                            umaData.OnCharacterUpdated += UnhideRenderers;
+                            Dirty(false, true, false);
+                            OnCharacterUpdated += UnhideRenderers;
                         }
                         else
                         {
                             // In the editor, we need to unhide immediately.
-                            UnhideRenderers(umaData);
+                            UnhideRenderers(this);
                         }
                     }
                     else
                     {
-                        UnhideRenderers(umaData);
+                        UnhideRenderers(this);
                     }
                 }
             }
@@ -989,10 +960,6 @@ namespace UMA.CharacterSystem
 
         private void UnhideRenderers(UMAData data)
         {
-            if (umaData == null)
-            {
-                return;
-            }
             umaData.OnCharacterUpdated -= UnhideRenderers;
             SkinnedMeshRenderer frenderer = umaData.GetRenderer(0);
             if (!frenderer.enabled && hide == false)
@@ -1011,12 +978,10 @@ namespace UMA.CharacterSystem
 
         void Update()
         {
-            if (umaData != null)
-            {
 #if UNITY_EDITOR
                 if (!hide && editorTimeGeneration && Application.isPlaying == false)
                 {
-                    var r = umaData.GetRenderers();
+                    var r = GetRenderers();
                     if (r != null)
                     {
                         if (r.Length > 0 && r[0] != null && r[0].sharedMesh == null)
@@ -1031,7 +996,6 @@ namespace UMA.CharacterSystem
                 {
                     ToggleHide(hide);
                 }
-            }
         }
 
         void OnDestroy()
@@ -1197,10 +1161,21 @@ namespace UMA.CharacterSystem
             RaceData r = activeRace.data;
 
             Dictionary<string, DnaSetter> DefaultRaceDNA = new Dictionary<string, DnaSetter>();
-            if (skipRaceDefaults)
+
+            if (r.useNewDNA)
             {
-                UMAData.UMARecipe recipe = r.baseRaceRecipe.GetCachedRecipe(false);
-                DefaultRaceDNA = GetDNA(recipe);
+               /* foreach (var dna in r)
+                {
+                    DefaultRaceDNA[dna.Name] = dna;
+                }*/
+            }
+            else
+            {
+                if (skipRaceDefaults)
+                {
+                    UMARecipe recipe = r.baseRaceRecipe.GetCachedRecipe(false);
+                    DefaultRaceDNA = GetDNA(recipe);
+                }
             }
 
             // *****************************************************
@@ -3237,7 +3212,7 @@ namespace UMA.CharacterSystem
                 return;
             }
             //umaData.umaRecipe.ApplyDNA(umaData, true);Don't think we need to apply- if we dont we can do the dna reverting when BuildCharacterEnabled is false
-            var activeDNA = umaData.umaRecipe.GetAllDna();
+            var activeDNA = umaRecipe.GetAllDna();
             for (int i = 0; i < activeDNA.Length; i++)
             {
                 if (activeDNA[i] is DynamicUMADnaBase)
@@ -3307,16 +3282,11 @@ namespace UMA.CharacterSystem
                 return dna;
             }
 
-            if (umaData == null)
-            {
-                return GetDefaultDNA();
-            }
-
-            UMADnaBase[] dnaBase = umaData.GetAllDna();
+            UMADnaBase[] dnaBase = GetAllDna();
 
             if (recipe == null)
             {
-                dnaBase = umaData.GetAllDna();
+                dnaBase = GetAllDna();
             }
             else
             {
@@ -3351,6 +3321,15 @@ namespace UMA.CharacterSystem
             return dna;
         }
 
+        private Dictionary<string, float> GetDefaultDNA(UMAData.UMARecipe recipe)
+        {
+            Dictionary<string, float> dna = new Dictionary<string, float>();
+            if (activeRace == null)
+            {
+            }
+            return dna;
+        }
+
 
         /// <summary>
         /// Get all of the DNA for the current character, and return it as a list of DnaSetters.
@@ -3372,16 +3351,31 @@ namespace UMA.CharacterSystem
             {
                 activeRace.SetRaceData();
             }
-            if (umaData == null)
+
+            if (activeRace.racedata.useNewDNA)
             {
+                var DNAbyGroup = dnaInstanceCollection.GetDNAByGroup();
+                foreach (var kvp in DNAbyGroup)
+                {
+                    var group = kvp.Key;
+                    var instances = kvp.Value;
+                    foreach (var dnaInstance in instances)
+                    {
+                        // only one copy allowed.
+                        if (!dna.ContainsKey(dnaInstance.Name))
+                        {
+                            dna.Add(dnaInstance.Name, new DnaSetter(dnaInstance,group)); 
+                        }
+                    }
+                }
                 return dna;
             }
 
-            UMADnaBase[] dnaBase = umaData.GetAllDna();
+            UMADnaBase[] dnaBase = GetAllDna();
 
             if (recipe == null)
             {
-                dnaBase = umaData.GetAllDna();
+                dnaBase = GetAllDna();
             }
             else
             {
@@ -3451,7 +3445,7 @@ namespace UMA.CharacterSystem
 
         public UMADnaBase[] GetAllDNA()
         {
-            return umaData.GetAllDna();
+            return GetAllDna();
         }
 
         #endregion
@@ -3530,6 +3524,10 @@ namespace UMA.CharacterSystem
         {
             // Somehow we can get here while Unity Addressables is instantiating an object, before it is constructed.
             if (this == null)
+            {
+                return;
+            }
+            if (disableAnimation)
             {
                 return;
             }
@@ -4531,20 +4529,20 @@ namespace UMA.CharacterSystem
             cache.LastWardrobeHash = wardrobeHash;
             cache.LastRaceName = activeRace.name;
 #endif
-
             UMADnaBase[] CurrentDNA = null;
+
                 if (umaRecipe != null)
                 {
                     CurrentDNA = umaRecipe.GetDefinedDna();
+                }
+                if (DNAIsValid(CurrentDNA) == false)
+                {
+                    RestoreDNA = false;
                 }
             tm.Restart();
 
             SetUMADataOptions();
             ClearModifiers();
-            if (DNAIsValid(CurrentDNA) == false)
-            {
-                RestoreDNA = false;
-            }
 
             if (BuildCharacterBegun != null)
             {
@@ -5066,7 +5064,7 @@ namespace UMA.CharacterSystem
             tm.Restart();
             umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
-            umaData.AddAdditionalRecipes(AdditionalRecipes, false);
+            AddAdditionalRecipes(AdditionalRecipes, false);
             if (wardrobeRecipes != null)
             {
                 AddWardrobeRecipes(wardrobeRecipes);
@@ -5107,9 +5105,9 @@ namespace UMA.CharacterSystem
             List<SlotData> clippingPlanes = new List<SlotData>();
 
 
-            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
-                SlotData sd = umaData.umaRecipe.slotDataList[i];
+                SlotData sd = umaRecipe.slotDataList[i];
                 if (sd.OverlayCount > 1)
                 {
                     List<OverlayData> Overlays = sd.GetOverlayList();
@@ -5143,9 +5141,9 @@ namespace UMA.CharacterSystem
                 if (sd.asset.isSmooshable)
                 {
                     smooshSlots.Add(sd);
-                    if (umaData.VertexOverrides.ContainsKey(sd.slotName))
+                    if (VertexOverrides.ContainsKey(sd.slotName))
                     {
-                        umaData.VertexOverrides.Remove(sd.slotName);
+                        VertexOverrides.Remove(sd.slotName);
                     }
                 }
             }
@@ -5172,9 +5170,9 @@ namespace UMA.CharacterSystem
 
                 List<SlotData> Smooshables = new List<SlotData>();
 
-                for (int i1 = 0; i1 < umaData.umaRecipe.slotDataList.Length; i1++)
+                for (int i1 = 0; i1 < umaRecipe.slotDataList.Length; i1++)
                 {
-                    SlotData lookSloot = umaData.umaRecipe.slotDataList[i1];
+                    SlotData lookSloot = umaRecipe.slotDataList[i1];
                     if (lookSloot.HasTag(smooshTargetTag))
                     {
                         SmooshTarget = lookSloot.asset;
@@ -5212,7 +5210,7 @@ namespace UMA.CharacterSystem
                 RecipeUpdated.Invoke(umaData);
             }
 
-            if (umaRace != umaData.umaRecipe.raceData)
+            if (umaRace != umaRecipe.raceData)
             {
                 RebuildSkeletonThisBuild = rebuildSkeleton;
                 raceChanged = true;
@@ -5277,7 +5275,7 @@ namespace UMA.CharacterSystem
 
         private void ApplyDNAToModifiers()
         {
-            var modifiers = umaData.Modifiers;
+            var modifiers = Modifiers;
 
             if (modifiers == null || modifiers.Count == 0)
             {
@@ -5285,7 +5283,7 @@ namespace UMA.CharacterSystem
             }
             var DNA = GetDNA();
 
-            foreach (var slot in umaData.umaRecipe.slotDataList)
+            foreach (var slot in umaRecipe.slotDataList)
             {
                 if (slot.asset != null && slot.asset.meshData != null && modifiers.ContainsKey(slot.slotName))
                 {
@@ -5468,9 +5466,9 @@ namespace UMA.CharacterSystem
 
                 Vector3[] sourceVertexes = SmooshMe.meshData.vertices;
 
-                if (umaData.VertexOverrides.ContainsKey(SmooshMe.slotName))
+                if (VertexOverrides.ContainsKey(SmooshMe.slotName))
                 {
-                    sourceVertexes = umaData.VertexOverrides[SmooshMe.slotName];
+                    sourceVertexes = VertexOverrides[SmooshMe.slotName];
                 }
 
                 Vector3 min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
@@ -5578,7 +5576,7 @@ namespace UMA.CharacterSystem
                     Debug.LogWarning("Smooshed " + smooshCount + " verts. Unsmooshed: "+unsmooshCount);
                 }
 #endif
-                umaData.AddVertexOverride(SmooshMe, newVerts);
+                AddVertexOverride(SmooshMe, newVerts);
             }
             finally
             {
@@ -5633,9 +5631,9 @@ namespace UMA.CharacterSystem
             }
             ClearSlots();
             serializedRecipe = null;
-            umaData.umaRecipe.ClearDna();
-            umaData.umaRecipe.SetSlots(new SlotData[0]);
-            umaData.umaRecipe.sharedColors = new OverlayColorData[0];
+            umaRecipe.ClearDna();
+            umaRecipe.SetSlots(new SlotData[0]);
+            umaRecipe.sharedColors = new OverlayColorData[0];
             animationController = null;
 
             if (gameObject.GetComponent<UMAExpressionPlayer>())
@@ -5655,8 +5653,8 @@ namespace UMA.CharacterSystem
                     UMARecipeBase umaAdditionalRecipe = wardrobeRecipes[i];
                     if (umaAdditionalRecipe != null)
                     {
-                        UMAData.UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe();
-                        umaData.umaRecipe.Merge(cachedRecipe, false, true, false, activeRace.racedata.raceName);
+                        UMARecipe cachedRecipe = umaAdditionalRecipe.GetCachedRecipe();
+                        umaRecipe.Merge(cachedRecipe, false, true, false, activeRace.racedata.raceName);
                     }
 #if UNITY_EDITOR
                     else
@@ -5669,7 +5667,7 @@ namespace UMA.CharacterSystem
 #endif
                 }
                 // compress the umaData.umaRecipe.slotDataList
-                umaData.umaRecipe.Compress();
+                umaRecipe.Compress();
             }
         }
 
@@ -5682,7 +5680,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         void FixCrossCompatibleSlots(List<string> hiddenSlots)
         {
-            var recipeSlots = umaData.umaRecipe.slotDataList;
+            var recipeSlots = umaRecipe.slotDataList;
             string equivalentSlot = "";
             for (int i = 0; i < recipeSlots.Length; i++)
             {
@@ -5756,9 +5754,9 @@ namespace UMA.CharacterSystem
                     replaceSlot = equivalentSlot;
                 }
             }
-            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
-                SlotData originalSlot = umaData.umaRecipe.slotDataList[i];
+                SlotData originalSlot = umaRecipe.slotDataList[i];
                 if (originalSlot == null)
                 {
                     continue;
@@ -5767,7 +5765,7 @@ namespace UMA.CharacterSystem
                 if (originalSlot.slotName == replaceSlot)
                 {
                     UMAPackedRecipeBase.UMAPackRecipe PackRecipe = Replacer.PackedLoad();
-                    UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe);
+                    UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe);
                     if (TempRecipe.slotDataList.Length > 0)
                     {
                         List<OverlayData> originalOverlays = originalSlot.GetOverlayList();
@@ -5784,7 +5782,7 @@ namespace UMA.CharacterSystem
                                     }
                                 }
                                 // replacementSlot.SetOverlayList(originalOverlays);
-                                umaData.umaRecipe.slotDataList[i] = replacementSlot;
+                                umaRecipe.slotDataList[i] = replacementSlot;
                                 break;
                             }
                         }
@@ -5812,9 +5810,9 @@ namespace UMA.CharacterSystem
             SlotData replacedSlot = null;
             List<OverlayData> ReplacedOverlays = null;
 
-            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
-                SlotData originalSlot = umaData.umaRecipe.slotDataList[i];
+                SlotData originalSlot = umaRecipe.slotDataList[i];
                 if (originalSlot == null)
                 {
                     continue;
@@ -5822,7 +5820,7 @@ namespace UMA.CharacterSystem
                 if (originalSlot.slotName == replaceSlot)
                 {
                     UMAPackedRecipeBase.UMAPackRecipe PackRecipe = Replacer.PackedLoad();
-                    UMAData.UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe);
+                    UMARecipe TempRecipe = UMATextRecipe.UnpackRecipe(PackRecipe);
                     SlotData newSlot = TempRecipe.GetFirstSlot();
                     if (newSlot != null)
                     {
@@ -5832,7 +5830,7 @@ namespace UMA.CharacterSystem
                         newSlot.SetOverlayList(replacedSlot.GetOverlayList());
                         newSlot.AddOverlayList(newOverlays);
                         ReplacedOverlays = newSlot.GetOverlayList();
-                        umaData.umaRecipe.slotDataList[i] = newSlot;
+                        umaRecipe.slotDataList[i] = newSlot;
                         replaced = true;
                     }
                 }
@@ -5840,9 +5838,9 @@ namespace UMA.CharacterSystem
 
             if (ReplacedOverlays != null)
             {
-                for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+                for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
                 {
-                    SlotData checkSlot = umaData.umaRecipe.slotDataList[i];
+                    SlotData checkSlot = umaRecipe.slotDataList[i];
                     if (checkSlot == null)
                     {
                         continue;
@@ -5877,9 +5875,9 @@ namespace UMA.CharacterSystem
 
             // first, gather any swap slot tags. These are slots that will be replaced by other slots.
             HiddenSlots.Clear();
-            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
-                SlotData sd = umaData.umaRecipe.slotDataList[i];
+                SlotData sd = umaRecipe.slotDataList[i];
                 if (sd == null || sd.asset == null)
                 {
                     continue;
@@ -5916,9 +5914,9 @@ namespace UMA.CharacterSystem
             for (int i = 0; i < SwapSlots.Count; i++)
             {
                 SlotData swap = SwapSlots[i];
-                for (int i1 = 0; i1 < umaData.umaRecipe.slotDataList.Length; i1++)
+                for (int i1 = 0; i1 < umaRecipe.slotDataList.Length; i1++)
                 {
-                    SlotData sd = umaData.umaRecipe.slotDataList[i1];
+                    SlotData sd = umaRecipe.slotDataList[i1];
                     if (sd == null || sd.asset == null)
                     {
                         continue;
@@ -5938,9 +5936,9 @@ namespace UMA.CharacterSystem
                 }
             }
 
-            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
-                SlotData sd = umaData.umaRecipe.slotDataList[i];
+                SlotData sd = umaRecipe.slotDataList[i];
                 if (sd == null || sd.asset == null)
                 {
                     continue;
@@ -6037,7 +6035,7 @@ namespace UMA.CharacterSystem
                 }
             }
 
-            umaData.umaRecipe.slotDataList = NewSlots.ToArray();
+            umaRecipe.slotDataList = NewSlots.ToArray();
             if (HiddenSlots.Count > 0 && SlotsHidden != null)
             {
                 SlotsHidden.Invoke(HiddenSlots);
@@ -6047,9 +6045,9 @@ namespace UMA.CharacterSystem
         void RemoveHiddenSlots(List<string> hiddenSlots)
         {
             List<SlotData> NewSlots = new List<SlotData>();
-            for (int i = 0; i < umaData.umaRecipe.slotDataList.Length; i++)
+            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
-                SlotData sd = umaData.umaRecipe.slotDataList[i];
+                SlotData sd = umaRecipe.slotDataList[i];
                 if (sd == null)
                 {
                     continue;
@@ -6078,24 +6076,22 @@ namespace UMA.CharacterSystem
         public void RegenerateTextures()
         {
             //Debug.Log("Updating Textures");
-            umaData.Dirty(false, true, false);
+            Dirty(false, true, false);
         }
 
         public void RegenerateMesh()
         {
-            umaData.Dirty(false, true, true);
+            Dirty(false, true, true);
         }
 
         public void RegenerateAll ()
         {
-            umaData.Dirty(true, true, true);
+            Dirty(true, true, true);
         }
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
         {
-            //Debug.Log("Forcing Update");
-            umaData.rawAvatar = rawAvatar;
-            umaData.Dirty(DnaDirty, TextureDirty, MeshDirty);
+            Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
 
         //@jaimi not sure what calls this. Generator maybe?

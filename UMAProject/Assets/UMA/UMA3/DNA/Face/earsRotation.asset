@@ -33,6 +33,7 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
+        selected: 0
         EffectName: LeftEarAdjust
         BoneName: LeftEarAdjust
         boneHash: 3517907380
@@ -50,8 +51,9 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
+        selected: 0
         EffectName: RightEarAdjust
         BoneName: RightEarAdjust
         boneHash: 3642326206
         RotationAxis: {x: 1, y: 0, z: 0}
-        RotationAngle: -20
+        RotationAngle: 20

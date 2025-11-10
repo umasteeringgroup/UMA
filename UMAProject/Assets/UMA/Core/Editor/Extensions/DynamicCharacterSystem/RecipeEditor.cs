@@ -181,6 +181,11 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+			{
+				EditorGUILayout.LabelField("Unity is compiling/updating. Please wait...");
+				return;
+			}
 			if (!Initialized)
 			{
                 EditorGUILayout.HelpBox("Recipe Editor is not initialized. Please wait until the editor is ready.", MessageType.Info);

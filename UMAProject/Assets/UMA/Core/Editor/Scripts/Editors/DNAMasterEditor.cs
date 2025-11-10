@@ -150,39 +150,32 @@ namespace UMA.Editors
                     @group.Sort();
                 }
             }
-            else
+            else if (dna is UMADnaInstance)
             {
-                var fields = dna.GetType().GetFields();
+                UMADnaInstance dnaInstance = dna as UMADnaInstance;
 
-                foreach (FieldInfo field in fields)
+                var col = dnaInstance.DNAInstances;
+                var groups = col.GetAllDNAGroups();
+                foreach (var dnaGroup in groups)
                 {
-                    if (field.FieldType != typeof(float))
-                    {
-                        continue;
-                    }
-
-                    string fieldName;
-                    string groupName;
-                    GetNamesFromField(field, out fieldName, out groupName);
-
                     DNAGroupEditor group;
-                    _groups.TryGetValue(groupName, out @group);
-
-                    if (group == null)
+                    _groups.TryGetValue(dnaGroup.DNAArea, out @group);
+                    if (@group == null)
                     {
-                        @group = new DNAGroupEditor(groupName);
-                        _groups.Add(groupName, @group);
+                        @group = new DNAGroupEditor(dnaGroup.DNAArea);
+                        _groups.Add(dnaGroup.DNAArea, @group);
                     }
 
-                    var entry = new DNAFieldEditor(fieldName, field, dna);
-
-                    @group.Add(entry);
+                    var allDNA = col.GetDNAInstancesByGroup(dnaGroup);
+                    foreach (var dnaEntry in allDNA)
+                    {
+                        string fieldName = ObjectNames.NicifyVariableName(dnaEntry.Name);
+                        var entry = new DNAFieldEditor(fieldName, dnaEntry.Name, dnaEntry.Value, dna);
+                        @group.Add(entry);
+                    }
                 }
 
-                foreach (var group in _groups.Values)
-                {
-                    @group.Sort();
-                }
+
             }
         }
 
@@ -260,7 +253,7 @@ namespace UMA.Editors
     {
         public static Comparer comparer = new Comparer();
         private readonly UMADnaBase _dna;
-        private readonly FieldInfo _field;
+        //private readonly FieldInfo _field;
         //DynamicUmaDna:: requires the following
         private readonly string _realName;
         private readonly string _name;
@@ -275,14 +268,7 @@ namespace UMA.Editors
 
             _value = value;
         }
-        public DNAFieldEditor(string name, FieldInfo field, UMADnaBase dna)
-        {
-            _name = name;
-            _field = field;
-            _dna = dna;
 
-            _value = (float)field.GetValue(dna);
-        }
 
         public bool OnGUI(UMADnaBase currentDNA = null)
         {
@@ -300,7 +286,8 @@ namespace UMA.Editors
                 }
                 else
                 {
-                    if ((float)_field.GetValue(currentDNA) != _value)
+                    var dnaCollection = currentDNA as UMADnaInstance;
+                    if (_value != dnaCollection.GetValue(_realName))
                     {
                         changed = true;
                     }
@@ -319,7 +306,8 @@ namespace UMA.Editors
                 }
                 else
                 {
-                    _field.SetValue(_dna, newValue);
+                    var dnaCollection = currentDNA as UMADnaInstance;
+                    dnaCollection.SetValue(_realName, newValue);
                 }
                 changed = true;
             }

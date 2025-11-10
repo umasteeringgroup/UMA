@@ -20,7 +20,7 @@ namespace UMA
 
         // The curve is used to modify the value before applying it.
         [SerializeField]
-        public AnimationCurve curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 0.5f), new Keyframe(1, 0));
+        public AnimationCurve curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 0.5f), new Keyframe(1, 1));
         public float minMapping = -1.0f; // The minimum value to map. This will be the base value when the adjusted input is 0.
         public float maxMapping = 1.0f; // The maximum value to map. This will be the maximum value when the adjusted input is 1.
 #if UNITY_EDITOR

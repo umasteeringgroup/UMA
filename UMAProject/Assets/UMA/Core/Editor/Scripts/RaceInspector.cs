@@ -167,16 +167,19 @@ namespace UMA.Editors
 				EditorGUILayout.PropertyField(manualBoundsCenterProp, new GUIContent("Manual Bounds Center", "Center offset in local space before scaling by the 'Position' bone."));
 			}
 			EditorGUILayout.Space();
+			SerializedProperty useNewDNA = serializedObject.FindProperty("useNewDNA");
+			EditorGUILayout.PropertyField(useNewDNA, new GUIContent("Use New DNA System", "When enabled, the new DNA system using DNA Collections will be used. Otherwise the legacy DNA Converter system will be used."));
 
-#if UMA_DNACOLLECTIONS
-			EditorGUILayout.HelpBox("DNA Collection is the ongoing rewrite of DNA. It's not done, and won't be for some time, please ignore it", MessageType.Warning);
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("DNACollection"));
-#endif
-			EditorGUILayout.Space();
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("disableDNAConverters"));
-
-			SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
-			EditorGUILayout.PropertyField(dnaConverterListprop, true);
+            if (useNewDNA.boolValue)
+			{
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("DNACollection"));
+			}
+			else
+			{
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("disableDNAConverters"));
+				SerializedProperty dnaConverterListprop = serializedObject.FindProperty("_dnaConverterList");
+				EditorGUILayout.PropertyField(dnaConverterListprop, true);
+			}
 
 			showRaceGeneration = EditorGUILayout.Foldout(showRaceGeneration, "Race Generation");
 			if (showRaceGeneration)

@@ -212,10 +212,15 @@ public class DNAGroupEditor : Editor
 
                     if (anyAdded)
                     {
+                        // Commit added elements to the object, then sort the underlying list
                         serializedObject.ApplyModifiedProperties();
+                        SortDNAListByName();
+                        serializedObject.Update();
+
                         _changedThisGUI = true;
                         MarkGroupDirtyAndQueueSave();
                     }
+
 
                     evt.Use();
                 }
@@ -226,6 +231,22 @@ public class DNAGroupEditor : Editor
                 }
             }
         }
+    }
+
+    // Helper: sort the underlying List<DNA> by name with Undo support
+    private void SortDNAListByName()
+    {
+        var group = target as DNAGroup;
+        if (group == null || group.dnaList == null || group.dnaList.Count <= 1) return;
+
+        Undo.RecordObject(group, "Sort DNA list");
+        group.dnaList.Sort((a, b) =>
+        {
+            var an = a != null ? a.name : string.Empty;
+            var bn = b != null ? b.name : string.Empty;
+            return string.Compare(an, bn, StringComparison.OrdinalIgnoreCase);
+        });
+        EditorUtility.SetDirty(group);
     }
 
     private void DrawDNAEntry(SerializedProperty dnaProp, int index)

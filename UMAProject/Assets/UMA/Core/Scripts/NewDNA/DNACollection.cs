@@ -25,6 +25,16 @@ namespace UMA
             }
         }
 
+
+        public List<string> GetDNANames()
+        {
+            if (DNADictionary.Count == 0)
+            {
+                LoadDictionary();
+            }
+            return new List<string>(DNADictionary.Keys);
+        }
+
         public void Reset()
         {
             DNADictionary.Clear();
@@ -52,6 +62,19 @@ namespace UMA
                     }
                 }
             }
+        }
+
+        public DNAInstanceCollection GetDefaultDNA(RaceData race)
+        {
+            LoadDictionary();
+            var dnaInstanceCollection = new DNAInstanceCollection();
+            foreach (var dna in dnaDictionary.Values)
+            {
+                var dnaInstance = new DNAInstance(dna.name, dna.defaultValue);
+                dnaInstanceCollection.AddDNAInstance(dnaInstance);
+            }
+            dnaInstanceCollection.Initialize(race.DNACollection);
+            return dnaInstanceCollection;
         }
 
         private Dictionary<string, DNA> DNADictionary = new Dictionary<string, DNA>();

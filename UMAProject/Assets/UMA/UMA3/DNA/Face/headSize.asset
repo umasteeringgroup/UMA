@@ -25,13 +25,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: -0.00075912476
+            value: 0.19805908
+            inSlope: 0.60296637
+            outSlope: 0.60296637
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 1.1074291
+            outSlope: 1.1074291
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1.003995
+            value: 1.3123853
+            inSlope: 1.6118919
+            outSlope: 1.6118919
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 1
+        selected: 0
         EffectName: Head
         BoneName: Head
         ScaleFactor: {x: 0.15, y: 0.15, z: 0.15}

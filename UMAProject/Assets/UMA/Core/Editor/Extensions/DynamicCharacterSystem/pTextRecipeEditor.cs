@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UMA.CharacterSystem;
+using UnityEditor.Rendering;
 
 namespace UMA.Editors
 {
@@ -55,7 +56,7 @@ namespace UMA.Editors
             {
                 switch (_toolbarIndex)
 				{
-					case 0:
+					case 1:
 						if (!dnaEditor.IsValid)
                         {
                             return false;
@@ -69,7 +70,7 @@ namespace UMA.Editors
                             return changed;
                         }
 
-                    case 1:
+                    case 0:
 						if (slotEditor.OnGUI(target.name, ref _dnaDirty, ref _textureDirty, ref _meshDirty))
                         {
                             return true;
@@ -123,6 +124,9 @@ namespace UMA.Editors
             {
                 return false;
             }
+
+
+
             //This enables us to create a new recipe using the Editor menu command but also add DNA to it based on the set race's converters
             var currentDNA = _recipe.GetAllDna();
 			//we also need current slots because GetAllDna returns a zero length array if _recipe.slotdatalist == null
@@ -132,179 +136,66 @@ namespace UMA.Editors
 			if (currentDNA.Length == 0 && currentSlots != null)
 			{
 				var thisDNAConverterList = standardRaceData.dnaConverterList;
-                for (int i = 0; i < thisDNAConverterList.Length; i++)
+				if (thisDNAConverterList != null)
 				{
-                    IDNAConverter DnaConverter = thisDNAConverterList[i];
-                    if (DnaConverter != null)
+					for (int i = 0; i < thisDNAConverterList.Length; i++)
 					{
-						if(DnaConverter.DNATypeHash != 0)
-                        {
-                            couldAddDNA = true;
-                        }
-                    }
+						IDNAConverter DnaConverter = thisDNAConverterList[i];
+						if (DnaConverter != null)
+						{
+							if (DnaConverter.DNATypeHash != 0)
+							{
+								couldAddDNA = true;
+							}
+						}
+					}
 				}
-				if (couldAddDNA)
+				if (couldAddDNA || standardRaceData.useNewDNA)
 				{
+					GUILayout.BeginHorizontal();
+					_recipe.raceData = EditorGUILayout.ObjectField("RaceData: ", _recipe.raceData, typeof(RaceData), false) as RaceData;
 					if (GUILayout.Button("Add DNA"))
 					{
-                        for (int i = 0; i < thisDNAConverterList.Length; i++)
+						if (standardRaceData.useNewDNA)
 						{
-                            IDNAConverter DnaConverter = thisDNAConverterList[i];
-                            if (DnaConverter != null)
+							_recipe.ClearDna();
+							standardRaceData.dnaConverterList = new DynamicDNAConverterController[0];
+							var dnaInstanceCollection = standardRaceData.DNACollection.GetDefaultDNA(_recipe.raceData);
+							_recipe.AddDna(new UMADnaInstance(dnaInstanceCollection));
+
+							return true;
+						}
+						else
+						{
+							for (int i = 0; i < thisDNAConverterList.Length; i++)
 							{
-								DNAConvertersAdded = true;
-								//the recipe already has the DNAConverter, it just doesn't have the values it requires to show the output in the DNA tab of the recipe
-								//_recipe.AddDNAUpdater(DnaConverter);
-								Type thisType = DnaConverter.DNAType;
-								if (DnaConverter is IDynamicDNAConverter)
+								IDNAConverter DnaConverter = thisDNAConverterList[i];
+								if (DnaConverter != null)
 								{
-									var dna = _recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
-									if (((IDynamicDNAConverter)DnaConverter).dnaAsset != null)
+									DNAConvertersAdded = true;
+									//the recipe already has the DNAConverter, it just doesn't have the values it requires to show the output in the DNA tab of the recipe
+									//_recipe.AddDNAUpdater(DnaConverter);
+									Type thisType = DnaConverter.DNAType;
+									if (DnaConverter is IDynamicDNAConverter)
 									{
-										((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)DnaConverter).dnaAsset;
+										var dna = _recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
+										if (((IDynamicDNAConverter)DnaConverter).dnaAsset != null)
+										{
+											((DynamicUMADnaBase)dna).dnaAsset = ((IDynamicDNAConverter)DnaConverter).dnaAsset;
+										}
 									}
-								}
-								else
-								{
-									_recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
+									else
+									{
+										_recipe.GetOrCreateDna(thisType, DnaConverter.DNATypeHash);
+									}
 								}
 							}
 						}
 					}
+					GUILayout.EndHorizontal();
 				}
 			}
 			return DNAConvertersAdded;
-		}
-
-		protected virtual bool FixDNAConverters()
-		{
-			RaceData standardRaceData = null;
-			if (_recipe != null)
-			{
-				standardRaceData = _recipe.raceData;
-			}
-			if (standardRaceData == null)
-            {
-                return false;
-            }
-
-            var currentDNA = _recipe.GetAllDna();
-			//we also need current slots because GetAllDna returns a zero length array if _recipe.slotdatalist == null
-			SlotData[] currentSlots = _recipe.GetAllSlots();
-			bool DNAConvertersModified = false;
-			if (currentDNA.Length > 0 && currentSlots != null)
-			{
-				//check if any DynamicDNA needs its DynamicDNAAsset updating
-				var thisDNAConverterList = standardRaceData.dnaConverterList;
-				for(int i = 0; i < thisDNAConverterList.Length; i++) /*DnaConverterBehaviour DnaConverter in thisDNAConverterList)*/
-				{
-					if(thisDNAConverterList[i] == null)
-					{
-						Debug.LogWarning(standardRaceData.raceName + " RaceData has a missing DNA Converter");
-						continue;
-					}
-					//'Old' UMA DNA will have a typehash based on its type name (never 0) 
-					//DynamicDNA will only be zero if the converter does not have a DNA asset assigned (and will show a warning)
-					//so if the typeHash is 0 bail
-					if (thisDNAConverterList[i].DNATypeHash == 0)
-					{
-						Debug.LogWarning("Dynamic DNA Converter "+ thisDNAConverterList[i].name+" needs a DNA Asset assigned to it");
-                        continue;
-					}
-					var dna = _recipe.GetOrCreateDna(thisDNAConverterList[i].DNAType, thisDNAConverterList[i].DNATypeHash);
-					if (thisDNAConverterList[i] is IDynamicDNAConverter)
-					{
-						var thisDnaAsset = ((IDynamicDNAConverter)thisDNAConverterList[i]).dnaAsset;
-						if (((DynamicUMADnaBase)dna).dnaAsset != thisDnaAsset || ((DynamicUMADnaBase)dna).didDnaAssetUpdate)
-						{
-							if (((DynamicUMADnaBase)dna).didDnaAssetUpdate)
-							{
-								Debug.Log("DynamicDNA found a missing asset");
-								((DynamicUMADnaBase)dna).didDnaAssetUpdate = false;
-								DNAConvertersModified = true;
-							}
-							else
-							{
-								//When this happens the values get lost
-								((DynamicUMADnaBase)dna).dnaAsset = thisDnaAsset;
-								//so we need to try to add any existing dna values to this dna
-								int imported = 0;
-								for (int j = 0; j < currentDNA.Length; j++)
-								{
-									if (currentDNA[j].DNATypeHash != dna.DNATypeHash)
-									{
-										imported += ((DynamicUMADnaBase)dna).ImportUMADnaValues(currentDNA[j]);
-                                    }
-								}
-								Debug.Log("Updated DNA to match DnaConverter " + thisDNAConverterList[i].name + "'s dna asset and imported "+imported+" values from previous dna");
-								DNAConvertersModified = true;
-							}
-						}
-					}
-				}
-				for (int i = 0; i < currentDNA.Length; i++)
-				{
-					//if there are no converters for the current dna
-					if (_recipe.raceData.GetConverters(currentDNA[i]).Length == 0)
-					{
-						int dnaToImport = currentDNA[i].Count;
-						int dnaImported = 0;
-
-						for (int j = 0; j < currentDNA.Length; j++)
-						{
-							if (currentDNA[j] is DynamicUMADnaBase)
-							{
-								// Keep trying to find a new home for DNA values until they have all been set
-								dnaImported += ((DynamicUMADnaBase)currentDNA[j]).ImportUMADnaValues(currentDNA[i]);
-								if (dnaImported >= dnaToImport)
-                                {
-                                    break;
-                                }
-                            }
-						}
-
-						if (dnaImported > 0)
-						{
-							if(_recipe.GetDna(currentDNA[i].DNATypeHash) != null)
-                            {
-                                _recipe.RemoveDna(currentDNA[i].DNATypeHash);
-                            }
-
-                            DNAConvertersModified = true;
-						}
-					}
-				}
-				currentDNA = _recipe.GetAllDna();
-
-				//Finally if there are more DNA sets than there are converters we need to remove the dna that should not be there
-				if (currentDNA.Length > thisDNAConverterList.Length)
-				{
-					Debug.Log("There were more dna sets in the recipe than converters. Removing unused Dna...");
-					List<UMADnaBase> newCurrentDna = new List<UMADnaBase>();
-					for (int i = 0; i < currentDNA.Length; i++)
-					{
-						bool foundMatch = false;
-						for (int ii = 0; ii < thisDNAConverterList.Length; ii++)
-						{
-							if (thisDNAConverterList[ii].DNATypeHash == currentDNA[i].DNATypeHash)
-							{
-								newCurrentDna.Add(currentDNA[i]);
-								foundMatch = true;
-							}
-						}
-						if (!foundMatch)
-						{
-							if (_recipe.dnaValues.Contains(currentDNA[i]))
-                            {
-                                _recipe.RemoveDna(currentDNA[i].DNATypeHash);
-                            }
-                        }
-					}
-					currentDNA = newCurrentDna.ToArray();
-					DNAConvertersModified = true;
-				}
-			}
-			return DNAConvertersModified;
 		}
 
 		private bool TextRecipeGUI()
@@ -330,13 +221,9 @@ namespace UMA.Editors
 				//draws a button to 'Add DNA' when a new 'standard' recipe is created
 				if (AddDNAButtonUI())
 				{
-					hideToolBar = false;
-					return true;
-				}
-				//fixes dna when the recipes race has updated from UMADnaHumanoid/Tutorial to DynamicDna
-				if (FixDNAConverters())
-				{
-					hideToolBar = false;
+
+                    dnaEditor = new DNAMasterEditor(_recipe);
+                    hideToolBar = false;
 					return true;
 				}
 

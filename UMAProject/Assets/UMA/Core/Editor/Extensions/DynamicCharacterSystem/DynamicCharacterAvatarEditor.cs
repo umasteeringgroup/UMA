@@ -689,15 +689,10 @@ namespace UMA.CharacterSystem.Editors
             showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Predefined DNA");
             if (showPrefinedDNA)
             {
-                var generator = UMAAssetIndexer.Instance.generator;
-                if (generator == null)
+                RaceData race = (thisDCA.activeRace != null) ? thisDCA.activeRace.data : null;
+                if (race != null)
                 {
-                    EditorGUILayout.HelpBox("UMA Generator could not be instantiated.", MessageType.Warning);
-                    return false;
-                }
-                else
-                {
-                    if (generator.useNewDNA)
+                    if (race.useNewDNA)
                     {
                         wasChanged = DoNewDNA(wasChanged);
                     }
@@ -705,6 +700,10 @@ namespace UMA.CharacterSystem.Editors
                     {
                         wasChanged = ShowDNA(wasChanged);
                     }
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("No active race found.", MessageType.Warning);
                 }
             }
             if (showHelp)
@@ -841,7 +840,7 @@ namespace UMA.CharacterSystem.Editors
                 {
                     var inst = instances[i];
                     if (inst == null) continue;
-                    if (_nameToGroupCache.TryGetValue(inst.name, out var grp))
+                    if (_nameToGroupCache.TryGetValue(inst.Name, out var grp))
                     {
                         if (!grouped.TryGetValue(grp, out var list))
                         {
@@ -878,11 +877,11 @@ namespace UMA.CharacterSystem.Editors
                             var inst = entries[ei].inst;
                             if (inst == null) continue;
                             float defaultValue;
-                            if (_nameToDnaCache.TryGetValue(inst.name, out var dnaAsset) && dnaAsset != null)
+                            if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                             {
                                 defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
                             }
-                            else if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.name, out var dnaAsset2) && dnaAsset2 != null)
+                            else if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.Name, out var dnaAsset2) && dnaAsset2 != null)
                             {
                                 defaultValue = Mathf.Clamp01(dnaAsset2.defaultValue);
                             }
@@ -890,9 +889,9 @@ namespace UMA.CharacterSystem.Editors
                             {
                                 continue;
                             }
-                            if (!Mathf.Approximately(inst.value, defaultValue))
+                            if (!Mathf.Approximately(inst.Value, defaultValue))
                             {
-                                inst.value = defaultValue;
+                                inst.Value = defaultValue;
                                 anyReset = true;
                             }
                         }
@@ -905,12 +904,12 @@ namespace UMA.CharacterSystem.Editors
                         {
                             var inst = unknown[ui].inst;
                             if (inst == null) continue;
-                            if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.name, out var dnaAsset) && dnaAsset != null)
+                            if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                             {
                                 float defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
-                                if (!Mathf.Approximately(inst.value, defaultValue))
+                                if (!Mathf.Approximately(inst.Value, defaultValue))
                                 {
-                                    inst.value = defaultValue;
+                                    inst.Value = defaultValue;
                                     anyReset = true;
                                 }
                             }
@@ -946,7 +945,7 @@ namespace UMA.CharacterSystem.Editors
                     }
                     if (!grp.editorFoldout) continue;
                     // Sort entries by name once before drawing
-                    entries.Sort((x, y) => string.Compare(x.inst?.name, y.inst?.name, StringComparison.OrdinalIgnoreCase));
+                    entries.Sort((x, y) => string.Compare(x.inst?.Name, y.inst?.Name, StringComparison.OrdinalIgnoreCase));
 
                     EditorGUI.indentLevel++;
                     for (int ei = 0; ei < entries.Count; ei++)
@@ -956,48 +955,48 @@ namespace UMA.CharacterSystem.Editors
                         if (inst == null) continue;
 
                         EditorGUILayout.BeginHorizontal();
-                        bool newEnabled = EditorGUILayout.ToggleLeft(inst.name, inst.enabled, GUILayout.Width(140));
-                        float oldValue = inst.value;
-                        inst.value = EditorGUILayout.Slider(inst.value, 0f, 1f);
+                        bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
+                        float oldValue = inst.Value;
+                        inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
                         if (GUILayout.Button("Def", GUILayout.Width(40)))
                         {
-                            if (_nameToDnaCache.TryGetValue(inst.name, out var dnaAsset) && dnaAsset != null)
+                            if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                             {
                                 float defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
                                 Undo.RecordObject(umaData, "Reset DNA Value to Default");
-                                inst.value = defaultValue;
+                                inst.Value = defaultValue;
                                 EditorUtility.SetDirty(umaData);
                                 wasChanged = true;
                                 GenerateSingleUMA();
                             }
-                            else if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.name, out var dnaAsset2) && dnaAsset2 != null)
+                            else if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.Name, out var dnaAsset2) && dnaAsset2 != null)
                             {
                                 float defaultValue = Mathf.Clamp01(dnaAsset2.defaultValue);
                                 Undo.RecordObject(umaData, "Reset DNA Value to Default");
-                                inst.value = defaultValue;
+                                inst.Value = defaultValue;
                                 EditorUtility.SetDirty(umaData);
                                 wasChanged = true;
                                 GenerateSingleUMA();
                             }
                             else
                             {
-                                EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.name}' not found in collection.", "OK");
+                                EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                             }
                         }
                         if (GUILayout.Button("Edit", GUILayout.Width(40)))
                         {
-                            if (_nameToDnaCache.TryGetValue(inst.name, out var dnaAsset) && dnaAsset != null)
+                            if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                             {
                                 // Defer inspection to avoid layout errors
                                 InspectMe.Add(dnaAsset);
                             }
-                            else if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.name, out var dnaAsset2) && dnaAsset2 != null)
+                            else if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.Name, out var dnaAsset2) && dnaAsset2 != null)
                             {
                                 InspectMe.Add(dnaAsset2);
                             }
                             else
                             {
-                                EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.name}' not found in collection.", "OK");
+                                EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                             }
                         }
                         if (GUILayout.Button("X", GUILayout.Width(20)))
@@ -1011,7 +1010,7 @@ namespace UMA.CharacterSystem.Editors
                         }
                         EditorGUILayout.EndHorizontal();
 
-                        if (!Mathf.Approximately(oldValue, inst.value))
+                        if (!Mathf.Approximately(oldValue, inst.Value))
                         {
                             Undo.RecordObject(umaData, "Change DNA Value");
                             EditorUtility.SetDirty(umaData);
@@ -1036,7 +1035,7 @@ namespace UMA.CharacterSystem.Editors
                     _unknownAssignedGroupFoldout = EditorGUILayout.Foldout(_unknownAssignedGroupFoldout, "Unknown", true);
                     if (_unknownAssignedGroupFoldout)
                     {
-                        unknown.Sort((x, y) => string.Compare(x.inst?.name, y.inst?.name, StringComparison.OrdinalIgnoreCase));
+                        unknown.Sort((x, y) => string.Compare(x.inst?.Name, y.inst?.Name, StringComparison.OrdinalIgnoreCase));
                         EditorGUI.indentLevel++;
                         for (int ui = 0; ui < unknown.Count; ui++)
                         {
@@ -1045,34 +1044,34 @@ namespace UMA.CharacterSystem.Editors
                             if (inst == null) continue;
 
                             EditorGUILayout.BeginHorizontal();
-                            bool newEnabled = EditorGUILayout.ToggleLeft(inst.name, inst.enabled, GUILayout.Width(140));
-                            float oldValue = inst.value;
-                            inst.value = EditorGUILayout.Slider(inst.value, 0f, 1f);
+                            bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
+                            float oldValue = inst.Value;
+                            inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
                             if (GUILayout.Button("Def", GUILayout.Width(40)))
                             {
-                                if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.name, out var dnaAsset) && dnaAsset != null)
+                                if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                                 {
                                     float defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
                                     Undo.RecordObject(umaData, "Reset DNA Value to Default");
-                                    inst.value = defaultValue;
+                                    inst.Value = defaultValue;
                                     EditorUtility.SetDirty(umaData);
                                     wasChanged = true;
                                     GenerateSingleUMA();
                                 }
                                 else
                                 {
-                                    EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.name}' not found in collection.", "OK");
+                                    EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                                 }
                             }
                             if (GUILayout.Button("Edit", GUILayout.Width(40)))
                             {
-                                if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.name, out var dnaAsset) && dnaAsset != null)
+                                if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                                 {
                                     InspectMe.Add(dnaAsset);
                                 }
                                 else
                                 {
-                                    EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.name}' not found in collection.", "OK");
+                                    EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                                 }
                             }
                             if (GUILayout.Button("X", GUILayout.Width(20)))
@@ -1086,7 +1085,7 @@ namespace UMA.CharacterSystem.Editors
                             }
                             EditorGUILayout.EndHorizontal();
 
-                            if (!Mathf.Approximately(oldValue, inst.value))
+                            if (!Mathf.Approximately(oldValue, inst.Value))
                             {
                                 Undo.RecordObject(umaData, "Change DNA Value");
                                 EditorUtility.SetDirty(umaData);
@@ -1146,7 +1145,7 @@ namespace UMA.CharacterSystem.Editors
                 for (int i = 0; i < instances2.Count; i++)
                 {
                     var inst = instances2[i];
-                    if (inst != null && !string.IsNullOrEmpty(inst.name)) assigned.Add(inst.name);
+                    if (inst != null && !string.IsNullOrEmpty(inst.Name)) assigned.Add(inst.Name);
                 }
             }
 
@@ -1206,7 +1205,7 @@ namespace UMA.CharacterSystem.Editors
                     for (int i = 0; i < current.Count; i++)
                     {
                         var inst = current[i];
-                        if (inst != null && inst.name == selected) { duplicate = true; break; }
+                        if (inst != null && inst.Name == selected) { duplicate = true; break; }
                     }
                 }
                 if (duplicate)
@@ -1228,12 +1227,8 @@ namespace UMA.CharacterSystem.Editors
                 {
                     umaData.dnaInstanceCollection.dnaInstances = new List<DNAInstance>();
                 }
-                umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance
-                {
-                    name = selected,
-                    value = defaultValue,
-                    enabled = true
-                });
+                umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance(selected, defaultValue));
+
                 EditorUtility.SetDirty(umaData);
                 wasChanged = true;
             }
@@ -1276,12 +1271,7 @@ namespace UMA.CharacterSystem.Editors
                     {
                         defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
                     }
-                    umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance
-                    {
-                        name = name,
-                        value = defaultValue,
-                        enabled = true
-                    });
+                    umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance(name, defaultValue));
                     added++;
                 }
                 if (added > 0)
@@ -2029,10 +2019,18 @@ namespace UMA.CharacterSystem.Editors
                 EditorGUILayout.HelpBox("Raw Avatar: Assign a specific Mecanim Avatar.", MessageType.Info);
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("rawAvatar"));
+
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("Disable Animation: Turn off animator creation and animation for this avatar.", MessageType.Info);
+            }
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("disableAnimation"));
+
             if (showHelp)
             {
                 EditorGUILayout.HelpBox("Force Rebind Animator: Forces the Animator to rebind after generation.", MessageType.Info);
             }
+
             EditorGUILayout.PropertyField(serializedObject.FindProperty("forceRebindAnimator"));
             if (showHelp)
             {
@@ -2088,7 +2086,7 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-            Debug.Log("Generating UMA in editor for " + thisDCA.name);
+            // Debug.Log("Generating UMA in editor for " + thisDCA.name);
 
             var indexer = UMAAssetIndexer.Instance;
             if (indexer == null || indexer.Generator == null)

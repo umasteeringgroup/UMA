@@ -44,7 +44,7 @@ namespace UMA
         }
 #endif
         /// <inheritdoc />
-        public override void PostApply(UMAData avatar, DNA dna, float value)
+        public override void Apply(UMAData avatar, DNA dna, float value)
         {
             base.PostApply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(BoneName))

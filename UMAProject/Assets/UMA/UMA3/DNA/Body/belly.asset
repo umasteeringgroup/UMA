@@ -29,17 +29,26 @@ MonoBehaviour:
           - serializedVersion: 3
             time: 0
             value: 0.2
-            inSlope: 1.0999999
-            outSlope: 1.0999999
+            inSlope: 0.6
+            outSlope: 0.6
             tangentMode: 34
             weightedMode: 0
             inWeight: 0
             outWeight: 0.33333334
           - serializedVersion: 3
-            time: 1
-            value: 1.3
+            time: 0.5
+            value: 0.5
             inSlope: 1.0999999
             outSlope: 1.0999999
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1.3
+            inSlope: 1.5999999
+            outSlope: 1.5999999
             tangentMode: 34
             weightedMode: 0
             inWeight: 0.33333334
@@ -50,6 +59,7 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
+        selected: 0
         EffectName: LowerBackBelly
         BoneName: LowerBackBelly
         ScaleFactor: {x: 0.5, y: 1, z: 1}

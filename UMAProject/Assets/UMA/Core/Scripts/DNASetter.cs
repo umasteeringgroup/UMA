@@ -5,12 +5,12 @@
     /// A DnaSetter is used to set a specific piece of DNA on the avatar
     /// that it is pulled from.
     /// </summary>
-    public class DnaSetter
+    public class DnaSetter 
     {
         public string Name; // The name of the DNA.
         public float Value; // Current value of the DNA.
         public string Category;
-
+        DNAInstance dnaInstance;
         public int OwnerIndex
         {
             // position of DNA in index, created at initialization
@@ -19,6 +19,18 @@
         }
 
         protected UMADnaBase Owner;  // owning DNA class. Used to set the DNA by index
+
+
+        public DnaSetter(DNAInstance instance, DNAGroup group)
+        {
+            Name = instance.Name;
+            Value = instance.Value;
+            Category = group.DNAArea;
+            dnaInstance = instance;
+            OwnerIndex = -1;
+            Owner = null;
+        }
+
 
         /// <summary>
         /// Construct a DnaSetter
@@ -44,7 +56,14 @@
         public void Set(float val)
         {
             Value = val;
-            Owner.SetValue(OwnerIndex, val);
+            if (dnaInstance != null)
+            {
+                dnaInstance.Value = val;
+            }
+            else
+            {
+                Owner.SetValue(OwnerIndex, val);
+            }
         }
 
         /// <summary>
@@ -53,7 +72,7 @@
         /// </summary>
         public void Set()
         {
-            Owner.SetValue(OwnerIndex, Value);
+            Set(Value);
         }
 
         /// <summary>
@@ -61,7 +80,14 @@
         /// </summary>
         public float Get()
         {
-            return Owner.GetValue(OwnerIndex);
+            if (dnaInstance != null)
+            {
+                return dnaInstance.Value;
+            }
+            else
+            {
+                return Owner.GetValue(OwnerIndex);
+            }
         }
     }
 }

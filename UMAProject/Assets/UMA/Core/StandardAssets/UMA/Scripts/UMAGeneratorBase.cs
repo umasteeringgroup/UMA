@@ -64,9 +64,6 @@ namespace UMA
         [Tooltip("Always regenerate the renderers when updating the UMA. This is needed if you attach objects to the renderer.")]
         public bool alwaysRegenerateRenderers = false;
 
-        [Tooltip("Use the new DNA system. The older DNA will not be used or called.")]
-        public bool useNewDNA = false;
-
         [NonSerialized]
         public bool FreezeTime;
 
@@ -390,7 +387,7 @@ namespace UMA
                     return;
                 }
 
-                if (umaData.animationController != null)
+                if (umaData.animationController != null || umaData.disableAnimation != true)
                 {
                     var umaTransform = umaData.transform;
                     var oldParent = umaTransform.parent;
