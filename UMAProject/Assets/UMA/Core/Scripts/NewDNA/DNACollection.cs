@@ -64,6 +64,11 @@ namespace UMA
             }
         }
 
+        public bool HasDNA(string dnaName)
+        {
+            return dnaDictionary.ContainsKey(dnaName);
+        }
+
         public DNAInstanceCollection GetDefaultDNA(RaceData race)
         {
             LoadDictionary();
