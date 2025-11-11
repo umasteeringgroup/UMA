@@ -32,6 +32,7 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
+        selected: 0
         EffectName: MandibleAdjust
         BoneName: MandibleAdjust
-        Translation: {x: 0, y: 0, z: 0.01}
+        Translation: {x: 0, y: 0, z: -0.01}

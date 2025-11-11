@@ -664,7 +664,6 @@ namespace UMA.CharacterSystem.Editors
             SerializedProperty characterColors = serializedObject.FindProperty("characterColors");
             SerializedProperty newCharacterColors = characterColors.FindPropertyRelative("_colors");
             GUILayout.BeginHorizontal();
-            GUILayout.Space(2);
             //for ColorValues as OverlayColorDatas we need to outout something that looks like a list but actully uses a method to add/remove colors because we need the new OverlayColorData to have3 channels 
             newCharacterColors.isExpanded = EditorGUILayout.Foldout(newCharacterColors.isExpanded, new GUIContent("Character Colors"));
             GUILayout.EndHorizontal();
@@ -672,11 +671,14 @@ namespace UMA.CharacterSystem.Editors
             var n_newArraySize = n_origArraySize;
             if (newCharacterColors.isExpanded)
             {
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+
                 if (showHelp)
                 {
                     EditorGUILayout.HelpBox("Character Colors: This lets you set predefined colors to be used when building the Avatar. The colors will be assigned to the Shared Colors on the overlays as they are applied to the Avatar.", MessageType.Info);
                 }
                 n_newArraySize = DoColorsGUI(newCharacterColors, n_origArraySize);
+                GUIHelper.EndVerticalPadded(10);
             }
 
             //***********************************************************************************
@@ -685,11 +687,19 @@ namespace UMA.CharacterSystem.Editors
 
             // Dropdown of the current DNA.
             // button to "add" it.
-
-            showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Predefined DNA");
+            RaceData race = (thisDCA.activeRace != null) ? thisDCA.activeRace.data : null;
+            if (race.useNewDNA)
+            {
+                showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Live DNA");
+            }
+            else
+            {
+                showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Predefined DNA");
+            }
             if (showPrefinedDNA)
             {
-                RaceData race = (thisDCA.activeRace != null) ? thisDCA.activeRace.data : null;
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+
                 if (race != null)
                 {
                     if (race.useNewDNA)
@@ -705,6 +715,7 @@ namespace UMA.CharacterSystem.Editors
                 {
                     EditorGUILayout.HelpBox("No active race found.", MessageType.Warning);
                 }
+                GUIHelper.EndVerticalPadded(10);
             }
             if (showHelp)
             {
@@ -855,12 +866,124 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
 
+                bool anyReset = false;
                 // Header with Reset button
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Assigned New DNA", EditorStyles.boldLabel);
-                if (GUILayout.Button("Reset all DNA", GUILayout.Width(120)))
+                //EditorGUILayout.LabelField("Assigned New DNA", EditorStyles.boldLabel);
+                if (GUILayout.Button("Enable All"))
                 {
-                    bool anyReset = false;
+                    // Enable DNAInstances only in visible groups (and visible Unknown group)
+                    Undo.RecordObject(umaData, "Enable All DNA Instances");
+                    bool changed = false;
+
+                    // Visible groups
+                    foreach (var kvp in grouped)
+                    {
+                        var grp = kvp.Key;
+                        if (grp == null || !grp.editorFoldout) continue;
+                        var entries = kvp.Value;
+                        if (entries == null) continue;
+                        for (int ei = 0; ei < entries.Count; ei++)
+                        {
+                            var inst = entries[ei].inst;
+                            if (inst != null && !inst.enabled)
+                            {
+                                inst.enabled = true;
+                                wasChanged = true;
+                                changed = true;
+                            }
+                        }
+                    }
+
+                    // Unknown group if visible
+                    if (_unknownAssignedGroupFoldout && unknown.Count > 0)
+                    {
+                        for (int ui = 0; ui < unknown.Count; ui++)
+                        {
+                            var inst = unknown[ui].inst;
+                            if (inst != null && !inst.enabled)
+                            {
+                                inst.enabled = true;
+                                wasChanged = true;
+                                changed = true;
+                            }
+                        }
+                    }
+
+                    if (changed) anyReset = true;
+                }
+                if (GUILayout.Button("Disable All"))
+                {
+                    // Disable DNAInstances only in visible groups (and visible Unknown group)
+                    Undo.RecordObject(umaData, "Disable All DNA Instances");
+                    bool changed = false;
+
+                    // Visible groups
+                    foreach (var kvp in grouped)
+                    {
+                        var grp = kvp.Key;
+                        if (grp == null || !grp.editorFoldout) continue;
+                        var entries = kvp.Value;
+                        if (entries == null) continue;
+                        for (int ei = 0; ei < entries.Count; ei++)
+                        {
+                            var inst = entries[ei].inst;
+                            if (inst != null && inst.enabled) 
+                            {
+                                inst.enabled = false;
+                                wasChanged = true;
+                                changed = true;
+                            }
+                        }
+                    }
+
+                    // Unknown group if visible
+                    if (_unknownAssignedGroupFoldout && unknown.Count > 0)
+                    {
+                        for (int ui = 0; ui < unknown.Count; ui++)
+                        {
+                            var inst = unknown[ui].inst;
+                            if (inst != null && inst.enabled)
+                            {
+                                inst.enabled = false;
+                                wasChanged = true;
+                                changed = true;
+                            }
+                        }
+                    }
+
+                    if (changed) anyReset = true;
+                }
+                if (GUILayout.Button("Expand All"))
+                {
+                    // go through all groups and set editorFoldout = true
+                    foreach (var kvp in grouped)
+                    {
+                        var grp = kvp.Key;
+                        if (grp == null) continue;
+                        if (!grp.editorFoldout)
+                        {
+                            grp.editorFoldout = true;
+                            EditorUtility.SetDirty(grp);
+                        }
+                    }
+                }
+                if (GUILayout.Button("Collapse All"))
+                {
+                    // go through all groups and set editorFoldout = false
+                    foreach (var kvp in grouped)
+                    {
+                        var grp = kvp.Key;
+                        if (grp == null) continue;
+                        if (grp.editorFoldout)
+                        {
+                            grp.editorFoldout = false;
+                            EditorUtility.SetDirty(grp);
+                        }
+                    }
+                }
+                if (GUILayout.Button("Reset all"))
+                {
                     Undo.RecordObject(umaData, "Reset DNA Values to Default");
 
                     // Reset all expanded groups
@@ -916,14 +1039,15 @@ namespace UMA.CharacterSystem.Editors
                         }
                     }
 
-                    if (anyReset)
-                    {
-                        EditorUtility.SetDirty(umaData);
-                        wasChanged = true;
-                        GenerateSingleUMA();
-                    }
                 }
                 EditorGUILayout.EndHorizontal();
+
+                if (anyReset)
+                {
+                    EditorUtility.SetDirty(umaData);
+                    wasChanged = true;
+                    GenerateSingleUMA();
+                }
 
                 // Sort groups alphabetically by DNAArea
                 var groupedList = new List<KeyValuePair<DNAGroup, List<(int index, DNAInstance inst)>>>(grouped);

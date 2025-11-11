@@ -28,58 +28,170 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.18273926
+            inSlope: 0.32493073
+            outSlope: 0.32493073
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.4118541
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.81726074
+            outSlope: 0.81726074
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 0
         EffectName: NoseBaseAdjust
         BoneName: NoseBaseAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.01, z: 0}
     - rid: 7828207344866296415
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.18273926
+            inSlope: 0.32493073
+            outSlope: 0.32493073
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.4118541
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.81726074
+            outSlope: 0.81726074
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 1
         EffectName: NoseMiddleAdjust
         BoneName: NoseMiddleAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.01, z: 0}
     - rid: 7828207344866296416
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.18273926
+            inSlope: 0.32493073
+            outSlope: 0.32493073
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.4118541
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.81726074
+            outSlope: 0.81726074
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 1
         EffectName: LeftNoseAdjust
         BoneName: LeftNoseAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.01, z: 0}
     - rid: 7828207344866296417
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.18273926
+            inSlope: 0.32493073
+            outSlope: 0.32493073
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.4118541
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.81726074
+            outSlope: 0.81726074
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 1
+            outSlope: 1
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 1
         EffectName: RightNoseAdjust
         BoneName: RightNoseAdjust
-        Translation: {x: 0, y: 0, z: 0}
+        Translation: {x: 0, y: 0.01, z: 0}

@@ -32,10 +32,11 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 0
         EffectName: NoseBaseAdjust
         BoneName: NoseBaseAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.3, y: 0.3, z: 0.3}
     - rid: 7828207344866296404
       type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
       data:
@@ -47,7 +48,8 @@ MonoBehaviour:
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 1
         EffectName: NoseMiddleAdjust
         BoneName: NoseMiddleAdjust
-        ScaleFactor: {x: 1, y: 1, z: 1}
+        ScaleFactor: {x: 0.3, y: 0.3, z: 0.3}
