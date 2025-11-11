@@ -17,14 +17,14 @@ MonoBehaviour:
   - {fileID: 114475921622480812}
   - {fileID: 114181452766340640}
   _overallModifiers:
-    _adjustScale: 1
+    _adjustScale: 0
     _adjustHeight: 0
-    _adjustRadius: 1
-    _adjustMass: 1
+    _adjustRadius: 0
+    _adjustMass: 0
     _updateBounds: 0
     _tightenBounds: 1
     _adjustBounds: 0
-    _manuallySetBounds: 1
+    _manuallySetBounds: 0
     _scale: 1
     _bone: Position
     _scaleBoneHash: -1084586333

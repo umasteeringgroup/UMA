@@ -494,7 +494,12 @@ namespace UMA
                     for (int sm = 0; sm < src.subMeshCount; sm++)
                     {
                         int dstSub = ci.targetSubmeshIndices[sm]; if (dstSub < 0) continue;
-                        var srcTris = src.submeshes[sm].GetTriangles(); int triLen = srcTris.Length; int dstStart = subIndexStart[dstSub] + subWrite[dstSub];
+
+                       // Debug.Log($"Using triangls of size {src.submeshes[sm].GetTriangleCount()} from source submesh {sm} into target submesh {dstSub}");
+                        SubMeshTriangles smt = src.submeshes[sm];
+                        var srcTris = smt.GetTriangles(); 
+                        int triLen = srcTris.Length; 
+                        int dstStart = subIndexStart[dstSub] + subWrite[dstSub];
                         // Make a TempJob copy of triangles so jobs are isolated from asset-owned NativeArrays
                         var triCopy = new NativeArray<int>(triLen, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                         NativeArray<int>.Copy(srcTris, triCopy, triLen);
@@ -842,7 +847,8 @@ namespace UMA
                 if (src.meshData.clothSkinningSerialized?.Length > 0) meshComponents |= MeshComponents.has_clothSkinning;
                 for (int i = 0; i < src.meshData.subMeshCount; i++)
                 {
-                    int dest = src.targetSubmeshIndices[i]; if (dest < 0) continue; int subLen = src.meshData.submeshes[i].GetTriangles().Length; int triLen = (src.triangleMask == null) ? subLen : (subLen - UMAUtils.GetCardinality(src.triangleMask[i]) * 3); subMeshTriangleLength[dest] += triLen;
+                    int TriangleCount = src.meshData.submeshes[i].GetTriangleCount();
+                    int dest = src.targetSubmeshIndices[i]; if (dest < 0) continue; int subLen = TriangleCount; int triLen = (src.triangleMask == null) ? subLen : (subLen - UMAUtils.GetCardinality(src.triangleMask[i]) * 3); subMeshTriangleLength[dest] += triLen;
                 }
             }
         }

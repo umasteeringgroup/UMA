@@ -1,3 +1,4 @@
+//#define DEBUG_UNITY_MESHDATA
 #if !UNITY_STANDALONE
 #undef USE_UNSAFE_CODE
 #endif
@@ -23,13 +24,30 @@ namespace UMA
 	/// UMA version of Unity mesh triangle data.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
-	public struct SubMeshTriangles
+	public class SubMeshTriangles
 	{
-		public static List<NativeArray<int>> nativeTrianglesAllocated = new List<NativeArray<int>>();
+		public static int smtNumber = 0;
+		public int smtID;
+
+        public static List<SubMeshTriangles> nativeTrianglesAllocated = new List<SubMeshTriangles>();
 		[SerializeField]
 		private int[] triangles;
 
-		public int[] getBaseTriangles()
+		public SubMeshTriangles()
+		{
+			smtID = smtNumber++;
+			triangles = null;
+			nativeTriangles = default;
+        }
+
+        public SubMeshTriangles(int[] tris)
+		{
+			smtID = smtNumber++;
+            triangles = tris;
+			nativeTriangles = default;
+        }
+
+        public int[] getBaseTriangles()
 		{
 			return triangles;
 		}
@@ -43,23 +61,43 @@ namespace UMA
 			return triangles.Length;
 		}
 
-		public void DisposeNativeTriangles()
+		public void DisposeNativeTriangles(bool remove)
 		{
 			if (nativeTriangles.IsCreated)
 			{
-				if (nativeTrianglesAllocated.Remove(nativeTriangles))
-				{
-					//Debug.Log("Disposing native triangles for submesh of size " + nativeTriangles.Length);
-					nativeTriangles.Dispose();
-				}
-			}
+#if DEBUG_UNITY_MESHDATA
+				Debug.Log($"SMT {smtID} Disposing native triangles for submesh of size " + nativeTriangles.Length);
+#endif
+                nativeTriangles.Dispose();
+                nativeTriangles = default;
+#if DEBUG_UNITY_MESHDATA
+				Debug.Log($"SMT {smtID} Native triangles disposed. IsCreated = " + nativeTriangles.IsCreated.ToString());
+#endif
+            }
+            if (remove)
+			{
+				nativeTrianglesAllocated.Remove(this);
+            }
 		}
+
+		public static void DisposeAllNativeTriangles()
+		{
+			for (int i = 0; i < nativeTrianglesAllocated.Count; i++)
+			{
+				SubMeshTriangles smt = nativeTrianglesAllocated[i];
+				smt.DisposeNativeTriangles(false);
+            }
+			nativeTrianglesAllocated.Clear();
+        }
 
 
 		public void SetTriangles(int[] tris)
 		{
+#if DEBUG_UNITY_MESHDATA
+            Debug.Log($"SMT {smtID} Setting triangles for submesh of size " + tris.Length);
+#endif
 			triangles = tris;
-			DisposeNativeTriangles();
+			DisposeNativeTriangles(true);
 		}
 
 		public NativeArray<int> nativeTriangles;
@@ -68,11 +106,19 @@ namespace UMA
 		{
 			if (nativeTriangles.IsCreated == false)
 			{
-				//Debug.Log("Allocating native triangles for submesh of size " + triangles.Length);
+#if DEBUG_UNITY_MESHDATA
+                Debug.Log($"SMT {smtID} Allocating native triangles for submesh of size " + triangles.Length);
+#endif
 				nativeTriangles = new NativeArray<int>(triangles, Allocator.Persistent);
-				nativeTrianglesAllocated.Add(nativeTriangles);
+				nativeTrianglesAllocated.Add(this);
 			}
-			return nativeTriangles;
+			else
+			{
+#if DEBUG_UNITY_MESHDATA
+                Debug.Log($"SMT {smtID} Using existing native triangles for submesh of size " + nativeTriangles.Length);
+#endif
+			}
+		return nativeTriangles;
 		}
 	}
 
@@ -122,14 +168,14 @@ namespace UMA
 		}
 		public class UMATransformComparer : IComparer<UMATransform>
 		{
-			#region IComparer<UMATransform> Members
+            #region IComparer<UMATransform> Members
 
 			public int Compare(UMATransform x, UMATransform y)
 			{
 				return x.hash < y.hash ? -1 : x.hash > y.hash ? 1 : 0;
 			}
 
-			#endregion
+            #endregion
 		}
 
 		public void Assign(UMATransform other)
@@ -909,22 +955,40 @@ namespace UMA
 		}
 		static UMAMeshData()
 		{
+#if UNITY_EDITOR
 			AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
-		}
+			UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += beforeAssemblyReload;
+            UnityEditor.EditorApplication.quitting += Application_quitting;
+#else
+			Application.quitting += Application_quitting;
 
-		private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+#endif
+        }
+
+        private static void beforeAssemblyReload()
+        {
+#if DEBUG_UNITY_MESHDATA
+            Debug.Log("AppDomain unloading, cleaning up UMA global buffers");
+#endif
+            SubMeshTriangles.DisposeAllNativeTriangles();
+        }
+
+        private static void Application_quitting()
+        {
+#if DEBUG_UNITY_MESHDATA
+            Debug.Log("Application quitting, cleaning up UMA global buffers");
+#endif
+            CleanupGlobalBuffers();
+			SubMeshTriangles.DisposeAllNativeTriangles();
+        }
+
+        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
 		{
-			//Debug.Log("AppDomain unloading, cleaning up UMA global buffers");
-			CleanupGlobalBuffers();
-			foreach (var ta in SubMeshTriangles.nativeTrianglesAllocated)
-			{
-				if (ta.IsCreated)
-				{
-					ta.Dispose();
-				}
-			}
-			SubMeshTriangles.nativeTrianglesAllocated.Clear();
-		}
+#if DEBUG_UNITY_MESHDATA
+            Debug.Log("AppDomain unloading, cleaning up UMA global buffers");
+#endif
+            SubMeshTriangles.DisposeAllNativeTriangles();
+        }
 
 		public static void CleanupGlobalBuffers()
 		{
@@ -1214,7 +1278,7 @@ namespace UMA
 			}
 
 			//Create the blendshape data on the slot asset from the unity mesh
-			#region Blendshape
+            #region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
 
 			for (int shapeIndex = 0; shapeIndex < sharedMesh.blendShapeCount; shapeIndex++)
@@ -1268,7 +1332,7 @@ namespace UMA
 
 				}
 			}
-			#endregion
+            #endregion
 		}
 
 		/// <summary>
@@ -1318,7 +1382,7 @@ namespace UMA
 				UMAUtils.UDIMAdjustUV(uv4, sharedMesh.uv4);
 			}
 			//Create the blendshape data on the slot asset from the unity mesh
-			#region Blendshape
+            #region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
 
 			Vector3[] deltaVertices;
@@ -1370,7 +1434,7 @@ namespace UMA
 					}
 				}
 			}
-			#endregion
+            #endregion
 		}
 
 		/// <summary>
@@ -1568,7 +1632,7 @@ namespace UMA
 			}
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
-			#region Blendshape
+            #region Blendshape
 			mesh.ClearBlendShapes();
 			if (blendShapes != null && blendShapes.Length > 0)
 			{
@@ -1620,7 +1684,7 @@ namespace UMA
 					}
 				}
 			}
-			#endregion
+            #endregion
 
 			Debug.Log("Recalculating bounds");
 			mesh.RecalculateBounds();
@@ -1901,12 +1965,7 @@ namespace UMA
 
 		public void FreeBoneWeights()
 		{
-			for (int i = 0; i < submeshes.Length; i++)
-			{
-				SubMeshTriangles sm = submeshes[i];
-				sm.DisposeNativeTriangles();
-			}
-
+			SubMeshTriangles.DisposeAllNativeTriangles();
 #if USE_NATIVE_ARRAYS
 			if (LoadedBoneweights)
 			{
@@ -1944,7 +2003,7 @@ namespace UMA
 			}
 		}
 
-		#region operator ==, != and similar HACKS, seriously.....
+        #region operator ==, != and similar HACKS, seriously.....
 		public static implicit operator bool(UMAMeshData obj)
 		{
 			return ((System.Object)obj) != null && obj.vertexCount != 0;
@@ -1988,7 +2047,7 @@ namespace UMA
 		{
 			return base.GetHashCode();
 		}
-		#endregion
+        #endregion
 
 		internal void ReSortUMABones()
 		{
