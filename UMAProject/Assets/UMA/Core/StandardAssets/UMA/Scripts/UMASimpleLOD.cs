@@ -2,6 +2,7 @@ using UnityEngine;
 using UMA.CharacterSystem;
 using System;
 using System.Collections.Generic;
+using System.Collections; // added for BitArray
 
 namespace UMA.Examples
 {
@@ -58,6 +59,9 @@ namespace UMA.Examples
 
         [Tooltip("Random Variance in time (added to MinCheck) so that everything doesn't trigger at the same time. Default = 0.25 seconds")]
         public float CheckRange = 0.25f;
+
+        [Tooltip("When useInternalMeshLOD is true, then slots that have been built with LOD will swap LOD levels based on the zone. This is much faster than the previous version that required a mesh rebuild.")]
+        public bool useInternalMeshLOD = true;
 
         private DynamicCharacterAvatar _avatar;
         private UMAData _umaData;
@@ -237,6 +241,10 @@ namespace UMA.Examples
                 _umaData.atlasResolutionScale = atlasResolutionScale;
             }
 
+            if (useInternalMeshLOD)
+            {
+                UpdateInternalLOD();
+            }
             if (useSlotDropping || swapSlots)
             {
                 updatedSlots = ProcessRecipe(effectiveLevel);
@@ -255,6 +263,181 @@ namespace UMA.Examples
 
             return true;
         }
+
+        private void UpdateInternalLOD()
+        {
+            if (_umaData == null || _umaData.umaRecipe == null || _umaData.GetRenderers() == null)
+            {
+                return;
+            }
+
+            // Determine the new LOD level (account for lodOffset like slot LOD switching)
+            int desiredLOD = _currentLOD - lodOffset;
+            if (desiredLOD < 0) desiredLOD = 0;
+            if (desiredLOD >= maxLOD) desiredLOD = maxLOD - 1;
+
+            // Early out if nothing to do
+            if (_umaData.currentLODLevel == desiredLOD)
+            {
+                return;
+            }
+
+            var slots = _umaData.umaRecipe.slotDataList;
+            if (slots == null || slots.Length == 0)
+            {
+                return;
+            }
+
+            // Check if any slot has multiple internal LOD ranges
+            bool anyHasLOD = false;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var sd = slots[i];
+                if (sd == null || sd.asset == null || sd.asset.meshData == null) continue;
+                int sm = sd.asset.subMeshIndex;
+                if (sd.asset.meshData.submeshes == null || sm < 0 || sm >= sd.asset.meshData.subMeshCount) continue;
+                var smt = sd.asset.meshData.submeshes[sm];
+                if (smt != null && smt.GetTriangleCount(desiredLOD) > 0)
+                {
+                    // Consider more than one LOD if a different LOD produces a different count
+                    int baseCount = smt.GetTriangleCount(0);
+                    if (smt.GetTriangleCount(desiredLOD) != baseCount)
+                    {
+                        anyHasLOD = true; break;
+                    }
+                }
+            }
+            if (!anyHasLOD)
+            {
+                // Nothing with multiple LODs — just keep UMAData in sync and exit
+                _umaData.currentLODLevel = desiredLOD;
+                return;
+            }
+
+            // Update UMAData LOD and refresh mesh hide masks for this LOD
+            _umaData.currentLODLevel = desiredLOD;
+            _umaData.umaRecipe.UpdateMeshHideMasks(desiredLOD);
+
+            // Build per-renderer, per-submesh new index buffers
+            var renderers = _umaData.GetRenderers();
+            if (renderers == null || renderers.Length == 0) return;
+
+            // Accumulate indices by renderer->submesh
+            for (int r = 0; r < renderers.Length; r++)
+            {
+                var smr = renderers[r];
+                if (smr == null || smr.sharedMesh == null) continue;
+
+                int subMeshCount = smr.sharedMesh.subMeshCount;
+                if (subMeshCount <= 0) continue;
+
+                // Prepare containers for new indices
+                var submeshIndices = new List<int>[subMeshCount];
+                for (int i = 0; i < subMeshCount; i++) submeshIndices[i] = new List<int>(1024);
+
+                // Scan all slots that contribute to this renderer
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    var sd = slots[i];
+                    if (sd == null || sd.asset == null || sd.asset.meshData == null) continue;
+                    if (sd.skinnedMeshRenderer != r) continue; // only this renderer
+                    if (sd.Suppressed) continue; // dropped by LOD rules
+
+                    int sourceSub = sd.asset.subMeshIndex;
+                    if (sourceSub < 0 || sourceSub >= sd.asset.meshData.subMeshCount) continue;
+
+                    var smt = sd.asset.meshData.submeshes[sourceSub];
+                    if (smt == null) continue;
+
+                    // Retrieve triangles for desired LOD (managed path)
+                    int[] localTris = null;
+                    try
+                    {
+                        localTris = smt.getManagedTriangles(desiredLOD);
+                    }
+                    catch
+                    {
+                        // fallback to base if specific LOD not available
+                        localTris = smt.getManagedTriangles(0);
+                    }
+                    if (localTris == null || localTris.Length == 0) continue;
+
+                    // Apply mesh hide if present (mask is per-submesh BitArray[]; true bits mean remove)
+                    BitArray[] masks = sd.meshHideMask;
+                    BitArray mask = null;
+                    if (masks != null && masks.Length > 0)
+                    {
+                        if (sourceSub >= 0 && sourceSub < masks.Length)
+                        {
+                            mask = masks[sourceSub];
+                        }
+                        else if (masks.Length == 1)
+                        {
+                            // Some assets may provide a single mask for all submeshes
+                            mask = masks[0];
+                        }
+                    }
+                    if (mask != null && mask.Length > 0)
+                    {
+                        if (mask.Length == localTris.Length)
+                        {
+                            // per-index mask: true means hide index
+                            var filtered = new List<int>(localTris.Length);
+                            for (int k = 0; k < localTris.Length; k += 3)
+                            {
+                                if (mask[k] || mask[k + 1] || mask[k + 2])
+                                {
+                                    continue;
+                                }
+                                filtered.Add(localTris[k]);
+                                filtered.Add(localTris[k + 1]);
+                                filtered.Add(localTris[k + 2]);
+                            }
+                            localTris = filtered.Count > 0 ? filtered.ToArray() : Array.Empty<int>();
+                        }
+                        else if (mask.Length == (localTris.Length / 3))
+                        {
+                            // per-triangle mask: true means remove triangle
+                            var filtered = new List<int>(localTris.Length);
+                            for (int t = 0, k = 0; t < mask.Length; t++, k += 3)
+                            {
+                                if (mask[t]) continue;
+                                filtered.Add(localTris[k]);
+                                filtered.Add(localTris[k + 1]);
+                                filtered.Add(localTris[k + 2]);
+                            }
+                            localTris = filtered.Count > 0 ? filtered.ToArray() : Array.Empty<int>();
+                        }
+                    }
+
+                    if (localTris.Length == 0) continue;
+
+                    // Remap by vertex offset into combined mesh
+                    int vOffset = sd.vertexOffset;
+                    for (int k = 0; k < localTris.Length; k++)
+                    {
+                        localTris[k] += vOffset;
+                    }
+
+                    // Target combined submesh that this slot contributes to
+                    int targetSubmesh = sd.submeshIndex;
+                    if (targetSubmesh < 0 || targetSubmesh >= subMeshCount) continue;
+
+                    submeshIndices[targetSubmesh].AddRange(localTris);
+                }
+
+                // Push new indices back to the Mesh. Only indices change; vertices, bones stay intact.
+                var mesh = smr.sharedMesh;
+                for (int sm = 0; sm < subMeshCount; sm++)
+                {
+                    var arr = submeshIndices[sm].Count > 0 ? submeshIndices[sm].ToArray() : Array.Empty<int>();
+                    // SetIndices updates only the given submesh
+                    mesh.SetIndices(arr, MeshTopology.Triangles, sm, false);
+                }
+                // Not changing bounds; leave as-is for performance. If needed: mesh.RecalculateBounds();
+            }
+        }
+
 
         // ---------- Hysteresis helpers ----------
 

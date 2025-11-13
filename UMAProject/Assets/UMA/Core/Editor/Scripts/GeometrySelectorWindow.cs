@@ -40,6 +40,9 @@ namespace UMA.Editors
         private GUIStyle blackLabels;
         private bool disposed;
 
+#if UNITY_6000_2_OR_NEWER
+        private int _selectedLOD = 0;
+#endif
 
         public static GeometrySelectorWindow Instance { get; private set; }
         public static bool IsOpen
@@ -137,6 +140,50 @@ namespace UMA.Editors
 #endif
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
             GUILayout.Space(20);
+
+#if UNITY_6000_2_OR_NEWER
+            if (_Source != null && _Source.meshAsset != null && _Source.meshAsset.asset != null)
+            {
+                int lodCount = _Source.meshAsset.GetLODCount();
+                int newLOD = EditorGUILayout.IntSlider(new GUIContent("Active LOD", "Select which LOD to edit"), _Source.activeLOD, 0, Mathf.Max(0, lodCount - 1));
+                if (newLOD != _Source.activeLOD)
+                {
+                    _Source.activeLOD = newLOD;
+                    // rebuild editing mesh and selection for this LOD
+                    _Source.InitializeFromMeshData(_Source.meshAsset.asset.meshData);
+                    var flags = _Source.meshAsset.GetTriangleFlagsForLOD(_Source.activeLOD);
+                    if (flags != null && _Source.meshAsset.asset.subMeshIndex < flags.Length)
+                    {
+                        _Source.selectedTriangles = new BitArray(flags[_Source.meshAsset.asset.subMeshIndex]);
+                        _Source.UpdateSelectionMesh();
+                    }
+                }
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Copy Mask Between LODs", EditorStyles.boldLabel);
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+                int fromLod = EditorGUILayout.IntField(new GUIContent("From LOD"), 0);
+                int toLod = EditorGUILayout.IntField(new GUIContent("To LOD"), _Source.activeLOD);
+                bool replace = EditorGUILayout.Toggle(new GUIContent("Replace Dest"), true);
+                if (GUILayout.Button("Copy"))
+                {
+                    _Source.meshAsset.CopyLODMask(Mathf.Max(0, fromLod), Mathf.Max(0, toLod), replace);
+                    // if copying to active, refresh view
+                    if (toLod == _Source.activeLOD)
+                    {
+                        var flags = _Source.meshAsset.GetTriangleFlagsForLOD(_Source.activeLOD);
+                        if (flags != null)
+                        {
+                            _Source.selectedTriangles = new BitArray(flags[_Source.meshAsset.asset.subMeshIndex]);
+                            _Source.UpdateSelectionMesh();
+                        }
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+#endif
 
             EditorGUILayout.BeginHorizontal();
             bool newNormals = EditorGUILayout.Toggle("Visualize Normals", _Source.visualizeNormals);
@@ -418,7 +465,11 @@ namespace UMA.Editors
                 return;
             }
 
+#if UNITY_6000_2_OR_NEWER
+            _Source.meshAsset.SaveSelectionForLOD(selection, _Source.activeLOD);
+#else
             _Source.meshAsset.SaveSelection(selection);
+#endif
         }
 
         private void DrawNextLabel(string lbl)

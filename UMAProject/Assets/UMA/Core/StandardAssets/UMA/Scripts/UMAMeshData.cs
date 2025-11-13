@@ -12,28 +12,48 @@ using UnityEngine.Serialization;
 using System.Runtime.InteropServices;
 using UnityEngine.Rendering;
 using UMA.PoseTools;
-#if UNITY_EDITOR
 using System.Text;
-#endif
 
 
 namespace UMA
 {
 	[Serializable]
+    public class UMALodRange
+	{
+		public uint offset;
+		public uint count;
+#if UNITY_6000_2_OR_NEWER
+		public UMALodRange(MeshLodRange lodrange)
+		{
+			offset = lodrange.indexStart;
+			count = lodrange.indexCount;
+        }
+
+		public UMALodRange(uint offset, uint count)
+		{
+			this.offset = offset;
+			this.count = count;
+		}
+
+#endif
+	}
+
+    [Serializable]
 	/// <summary>
 	/// UMA version of Unity mesh triangle data.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
-	public class SubMeshTriangles
-	{
-		public static int smtNumber = 0;
-		public int smtID;
+	public class SubMeshTriangles {
+    public static int smtNumber;
+    public int smtID;
+    public List<UMALodRange> lodRanges;
+		// Keep track of all allocated native arrays for proper disposal.
+		public static List<SubMeshTriangles> nativeTrianglesAllocated = new List<SubMeshTriangles>();
+    [SerializeField]
+    private int[] triangles;
+    public NativeArray<int> nativeTriangles;
 
-        public static List<SubMeshTriangles> nativeTrianglesAllocated = new List<SubMeshTriangles>();
-		[SerializeField]
-		private int[] triangles;
-
-		public SubMeshTriangles()
+    public SubMeshTriangles()
 		{
 			smtID = smtNumber++;
 			triangles = null;
@@ -47,12 +67,33 @@ namespace UMA
 			nativeTriangles = default;
         }
 
-        public int[] getBaseTriangles()
+		public int[] GetBaseTriangles()
 		{
 			return triangles;
 		}
 
-		public int GetTriangleCount()
+		public void SetLodRanges(List<UMALodRange> ranges)
+		{
+			lodRanges = ranges;
+        }
+
+
+        public int[] getManagedTriangles(int LODNumber)
+		{
+			if (lodRanges == null || lodRanges.Count == 0 || LODNumber < 0)
+			{
+				return triangles;
+            }
+
+			if (LODNumber >= lodRanges.Count)
+			{
+				LODNumber = lodRanges.Count - 1;
+            }
+
+			return new ArraySegment<int>(triangles, (int)lodRanges[LODNumber].offset, (int)lodRanges[LODNumber].count).ToArray();
+		}
+
+		public int GetTriangleCount(int lodLevel)
 		{
 			if (triangles == null)
 			{
@@ -100,9 +141,22 @@ namespace UMA
 			DisposeNativeTriangles(true);
 		}
 
-		public NativeArray<int> nativeTriangles;
 
-		public NativeArray<int> GetTriangles()
+		public UMALodRange GetLODRange(int LODNumber)
+		{
+			if (lodRanges == null || lodRanges.Count == 0 || LODNumber < 0)
+			{
+				return new UMALodRange(0,(uint)triangles.Length);
+			}
+			if (LODNumber >= lodRanges.Count)
+			{
+				LODNumber = lodRanges.Count - 1;
+			}
+			return lodRanges[LODNumber];
+        }
+
+
+        public NativeArray<int> GetTriangles(int LODNumber)
 		{
 			if (nativeTriangles.IsCreated == false)
 			{
@@ -119,6 +173,20 @@ namespace UMA
 #endif
 			}
 		return nativeTriangles;
+		}
+
+		// Backward compatibility overloads (no-arg defaults to LOD 0)
+		public NativeArray<int> GetTriangles()
+		{
+			return GetTriangles(0);
+		}
+		public int GetTriangleCount()
+		{
+			return GetTriangleCount(0);
+		}
+		public int[] getManagedTriangles()
+		{
+			return getManagedTriangles(0);
 		}
 	}
 
@@ -1195,10 +1263,19 @@ namespace UMA
 				vertexCount = sharedMesh.vertexCount;
 				subMeshCount = sharedMesh.subMeshCount;
 				submeshes = new SubMeshTriangles[subMeshCount];
-				for (int i = 0; i < subMeshCount; i++)
+				for (int subMeshNumber = 0; subMeshNumber < subMeshCount; subMeshNumber++)
 				{
-					submeshes[i].SetTriangles(sharedMesh.GetTriangles(i));
-				}
+					submeshes[subMeshNumber].SetTriangles(sharedMesh.GetTriangles(subMeshNumber));
+#if UNITY_6000_2_OR_NEWER
+					List<UMALodRange> lodRanges = new List<UMALodRange>();
+                    for (int lodlevel = 0; lodlevel < sharedMesh.lodCount; lodlevel++)
+					{
+						MeshLodRange lor = sharedMesh.GetLod(subMeshNumber, lodlevel);
+						lodRanges.Add(new UMALodRange(lor));
+                    }
+					submeshes[subMeshNumber].SetLodRanges(lodRanges);
+#endif
+                }
 			}
 			else
 			{
@@ -1206,16 +1283,29 @@ namespace UMA
 				submeshes = new SubMeshTriangles[subMeshCount];
 				var tris = sharedMesh.GetTriangles(subMeshInd);
 
-				vertRemap = new SortedSet<int>(tris);
+                List<UMALodRange> lodRanges = new List<UMALodRange>();
+                for (int lodlevel = 0; lodlevel < sharedMesh.lodCount; lodlevel++)
+                {
+                    MeshLodRange lor = sharedMesh.GetLod(0, lodlevel);
+                    lodRanges.Add(new UMALodRange(lor));
+                }
+                submeshes[0].SetLodRanges(lodRanges);
+
+                vertRemap = new SortedSet<int>(tris);
 				var indRemap = new int[sharedMesh.vertexCount];
 
 				vertexCount = 0;
 				foreach (var vi in vertRemap)
-					indRemap[vi] = vertexCount++;
+                {
+                    indRemap[vi] = vertexCount++;
+                }
 
-				for (var ii = 0; ii < tris.Length; ii++)
-					tris[ii] = indRemap[tris[ii]];
-				submeshes[0].SetTriangles(tris);
+                for (var ii = 0; ii < tris.Length; ii++)
+                {
+                    tris[ii] = indRemap[tris[ii]];
+                }
+
+                submeshes[0].SetTriangles(tris);
 			}
 
 			bindPoses = sharedMesh.bindposes;
@@ -1247,9 +1337,11 @@ namespace UMA
 
 					var boneC = unityBonesPerVertex[nextI];
 					for (; boneC-- > 0;)
-						boneWeights.Add(unityBoneWeights[boneWI++]);
+                    {
+                        boneWeights.Add(unityBoneWeights[boneWI++]);
+                    }
 
-					srcI++;
+                    srcI++;
 				}
 				ManagedBoneWeights = boneWeights.ToArray();
 			}
@@ -1628,8 +1720,12 @@ namespace UMA
 			var Descriptors = new SubMeshDescriptor[subMeshCount];
 			for (int i = 0; i < subMeshCount; i++)
 			{
-				mesh.SetIndices(submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
-			}
+				int LOD = umaData.currentLODLevel;
+                // public void SetIndices(NativeArray<T> indices, int indicesStart, int indicesLength, MeshTopology topology, int submesh, bool calculateBounds, int baseVertex);
+				UMALodRange lodRange = submeshes[i].GetLODRange(LOD);
+				mesh.SetIndices(submeshes[i].GetTriangles(0), (int)lodRange.offset, (int)lodRange.count, MeshTopology.Triangles, i, false);
+                // mesh.SetIndices(submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
+            }
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
             #region Blendshape
@@ -1842,7 +1938,7 @@ namespace UMA
 			mesh.subMeshCount = subMeshCount;
 			for (int i = 0; i < subMeshCount; i++)
 			{
-				int[] tris = submeshes[i].getBaseTriangles();
+				int[] tris = submeshes[i].getManagedTriangles(0);
 				mesh.SetTriangles(tris, i);
 			}
 			return mesh;
@@ -1874,8 +1970,7 @@ namespace UMA
 			mesh.subMeshCount = subMeshCount;
 			for (int i = 0; i < subMeshCount; i++)
 			{
-				//mesh.SetTriangles(submeshes[i].triangles, i);
-				mesh.SetIndices(submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
+                mesh.SetIndices(submeshes[i].GetTriangles(0), MeshTopology.Triangles, i);
 			}
 
 			renderer.bones = bones;
@@ -1898,7 +1993,7 @@ namespace UMA
 			for (int i = 0; i < boneWeights.Length; i++)
 			{
 				UMABoneWeight bw = boneWeights[i];
-				byte BonesPerVertex = 0;
+			 byte BonesPerVertex = 0;
 				float totWeight = bw.weight0 + bw.weight1 + bw.weight2 + bw.weight3;
 				if (bw.weight0 > 0.0f)
 				{
@@ -2365,9 +2460,9 @@ namespace UMA
 						SubMeshTriangles smt = submeshes[i];
 						if (smt.nativeTriangles != null && smt.nativeTriangles.IsCreated)
 						{
-							var tris = smt.GetTriangles();
+							var tris = smt.GetTriangles(0);
 							var tri = 0;
-							for (int j = 0; i < tris.Length; i++)
+							for (int j = 0; j < tris.Length; j++)
 							{
 								tri = tris[j];
 								if (tri >= vertexCount)

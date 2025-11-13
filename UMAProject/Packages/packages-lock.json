@@ -7,12 +7,6 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
-    "com.jbooth.better-lit-shader": {
-      "version": "file:com.jbooth.better-lit-shader",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
-    },
     "com.jbooth.better-shaders": {
       "version": "file:com.jbooth.better-shaders",
       "depth": 0,

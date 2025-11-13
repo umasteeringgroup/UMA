@@ -51,7 +51,7 @@ namespace UMA
         {
             if (umaData.umaRecipe != null)
             {
-                umaData.umaRecipe.UpdateMeshHideMasks();
+                umaData.umaRecipe.UpdateMeshHideMasks(umaData.currentLODLevel);
             }
 
             #region SetupSkeleton
@@ -660,14 +660,67 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
 
                     combineInstance.meshData = ApplyMeshModifiers(umaData, combineInstance.meshData, slotData);
 
+                    // Apply MeshHide mask if present
                     if (slotData.meshHideMask != null)
                         combineInstance.triangleMask = slotData.meshHideMask;
 
+                    // Ensure triangle masks reflect current LOD selection
+#if UNITY_6000_2_OR_NEWER
+                    int lod = Mathf.Max(0, umaData.currentLODLevel);
                     var smCount = combineInstance.meshData.subMeshCount;
-                    if (smCount == 0) continue;
+                    if (smCount > 0)
+                    {
+                        // Prepare array if not already provided by meshHide
+                        if (combineInstance.triangleMask == null || combineInstance.triangleMask.Length != smCount)
+                        {
+                            combineInstance.triangleMask = new System.Collections.BitArray[smCount];
+                        }
+                        for (int sm = 0; sm < smCount; sm++)
+                        {
+                            var smt = combineInstance.meshData.submeshes[sm];
+                            if (smt == null)
+                                continue;
 
-                    combineInstance.targetSubmeshIndices = new int[smCount];
-                    for (int i = 0; i < smCount; i++) combineInstance.targetSubmeshIndices[i] = -1;
+                            // total indices in this submesh
+                            int totalIndexCount = smt.GetTriangleCount();
+                            if (totalIndexCount <= 0)
+                                continue;
+                            int totalTriangleCount = totalIndexCount / 3;
+
+                            // LOD range is expressed in indices (offset,count)
+                            var range = smt.GetLODRange(lod);
+                            int startIndex = Mathf.Clamp((int)range.offset, 0, totalIndexCount);
+                            int countIndex = Mathf.Clamp((int)range.count, 0, totalIndexCount - startIndex);
+                            int keepStartTri = startIndex / 3;
+                            int keepTriCount = countIndex / 3;
+                            int keepEndTri = Mathf.Clamp(keepStartTri + keepTriCount, 0, totalTriangleCount);
+
+                            // MeshAPI expects mask bits per-triangle, where 1 means "remove" and 0 means "keep"
+                            var mask = combineInstance.triangleMask[sm];
+                            if (mask == null || mask.Length != totalTriangleCount)
+                            {
+                                mask = new System.Collections.BitArray(totalTriangleCount, true); // default remove all
+                                combineInstance.triangleMask[sm] = mask;
+                            }
+                            else
+                            {
+                                mask.SetAll(true);
+                            }
+
+                            // Mark triangles in keep range as false (do not remove)
+                            for (int t = keepStartTri; t < keepEndTri; t++)
+                            {
+                                mask[t] = false;
+                            }
+                        }
+                    }
+#endif
+
+                    var smCount2 = combineInstance.meshData.subMeshCount;
+                    if (smCount2 == 0) continue;
+
+                    combineInstance.targetSubmeshIndices = new int[smCount2];
+                    for (int i = 0; i < smCount2; i++) combineInstance.targetSubmeshIndices[i] = -1;
                     combineInstance.targetSubmeshIndices[slotData.asset.subMeshIndex] = rendererMaterialIndex;
 
                     combinedMeshList.Add(combineInstance);

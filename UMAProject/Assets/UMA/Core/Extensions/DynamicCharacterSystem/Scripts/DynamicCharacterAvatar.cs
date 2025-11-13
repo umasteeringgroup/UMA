@@ -48,6 +48,8 @@ namespace UMA.CharacterSystem
         public float DelayUnload = 2.0f;
         public bool BundleCheck = true;
         public bool StartGuard = false;
+        [Tooltip("If true, when building from a prefab, the prefab will be unpacked to allow for Rig and SMR regeneration.")]
+        public bool UnpackPrefabOnBuild = true;
         public bool KeepAnimatorController = false;
         [Tooltip("If true, the Animator will be rebuilt anytime the race changes")]
         public bool RecreateAnimatorOnRaceChange = true;
@@ -847,7 +849,7 @@ namespace UMA.CharacterSystem
                      ugb.UpdateSlots(umaData);
                      return;
                  } */ // TODO: Fix this
-                if (UnityEditor.PrefabUtility.IsPartOfPrefabInstance(gameObject.transform))
+                if (UnpackPrefabOnBuild && UnityEditor.PrefabUtility.IsPartOfPrefabInstance(gameObject.transform))
                 {
                     // Unfortunately we must unpack the prefab or it will blow up.
                     GameObject go = PrefabUtility.GetOutermostPrefabInstanceRoot(this.gameObject);
@@ -5411,8 +5413,8 @@ namespace UMA.CharacterSystem
 
             m.SetVertices(SmooshTarget.meshData.GetVertices());
 
-            int[] triangles = new int[SmooshTarget.meshData.submeshes[0].getBaseTriangles().Length];
-            Array.Copy(SmooshTarget.meshData.submeshes[0].getBaseTriangles(), triangles, SmooshTarget.meshData.submeshes[0].getBaseTriangles().Length);
+            int[] triangles = new int[SmooshTarget.meshData.submeshes[0].getManagedTriangles().Length];
+            Array.Copy(SmooshTarget.meshData.submeshes[0].getManagedTriangles(), triangles, SmooshTarget.meshData.submeshes[0].getManagedTriangles().Length);
             m.SetTriangles(triangles, 0);
 
             Physics.BakeMesh(m.GetInstanceID(), false);

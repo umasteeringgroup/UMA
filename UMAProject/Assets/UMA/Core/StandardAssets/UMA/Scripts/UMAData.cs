@@ -460,6 +460,7 @@ namespace UMA
 
 		public bool hideRenderers;
 
+		public int currentLODLevel = 0;
         public UMAGenerator umaGenerator
         {
             get
@@ -1352,7 +1353,7 @@ namespace UMA
 			public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; set; } = new Dictionary<string, List<MeshHideAsset>>();
 			public Dictionary<string, List<UMAMeshData>> BlendshapeSlots { get; set; } = new Dictionary<string, List<UMAMeshData>>();
 
-			public void UpdateMeshHideMasks()
+			public void UpdateMeshHideMasks(int LODNumber)
 			{
                 for (int i = 0; i < slotDataList.Length; i++)
 				{
@@ -1364,16 +1365,32 @@ namespace UMA
 
                     sd.meshHideMask = null;
 					//Add MeshHideAsset here
-					if (MeshHideDictionary.ContainsKey(sd.slotName))
-					{   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
-						sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName]);
+                    if (MeshHideDictionary.ContainsKey(sd.slotName))
+                    {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
+#if UNITY_6000_2_OR_NEWER
+                        sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName], Mathf.Max(0, LODNumber));
+#else
+                        sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName]);
+#endif
 
-						if (sd.meshHideMask.Length != sd.asset.meshData.submeshes[sd.asset.subMeshIndex].GetTriangles().Length)
+                        // TODO: We need to handle multiple LOD in Mesh Hide Assets
+#if UNITY_6000_2_OR_NEWER
+                        int triLen = sd.asset.meshData.submeshes[sd.asset.subMeshIndex].GetTriangles(Mathf.Max(0, LODNumber)).Length;
+#else
+                        int triLen = sd.asset.meshData.submeshes[sd.asset.subMeshIndex].GetTriangles().Length;
+#endif
+                        if (sd.meshHideMask != null && sd.meshHideMask.Length != triLen)
                         {
 							var mha = MeshHideDictionary[sd.slotName];
                         }
-					}
+                    }
 				}
+			}
+
+			// Back-compat overload for older callers
+			public void UpdateMeshHideMasks()
+			{
+				UpdateMeshHideMasks(0);
 			}
 
 			public OverlayData FindFirstOverlay(string name)
@@ -3252,6 +3269,7 @@ namespace UMA
 		/// <param name="name">Name of the blendshape.</param>
 		/// <param name="weight">Weight(float) to set this blendshape to.</param>
 		/// <param name="allowRebuild">Triggers a rebuild of the uma character if the blendshape is baked</param>
+		/// <param name="bakedOnly">Only set the value if the blendshape is baked</param>
 		public void SetBlendShape(string name, float weight, bool allowRebuild = false, bool bakedOnly = false)
 		{
 			BlendShapeData data;
@@ -3360,17 +3378,17 @@ private int[] GetOrBuildTPoseHashes(UmaTPose tpose)
 
     int[] hashes;
     if (!_tposeHashCache.TryGetValue(tpose, out hashes))
-    {
-        // DeSerialize once per TPose; subsequent calls reuse cached hashes.
-        tpose.DeSerialize();
-        var bones = tpose.boneInfo ?? Array.Empty<SkeletonBone>();
-        hashes = new int[bones.Length];
-        for (int i = 0; i < bones.Length; i++)
-        {
-            hashes[i] = UMAUtils.StringToHash(bones[i].name);
-        }
-        _tposeHashCache[tpose] = hashes;
-    }
+	{
+		// DeSerialize once per TPose; subsequent calls reuse cached hashes.
+		tpose.DeSerialize();
+		var bones = tpose.boneInfo ?? Array.Empty<SkeletonBone>();
+		hashes = new int[bones.Length];
+		for (int i = 0; i < bones.Length; i++)
+		{
+			hashes[i] = UMAUtils.StringToHash(bones[i].name);
+		}
+		_tposeHashCache[tpose] = hashes;
+	}
     return hashes;
 }
 	}

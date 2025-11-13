@@ -5,55 +5,61 @@ using UnityEditor.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
+using Unity.Collections;
 
 namespace UMA
 {
-	public class GeometrySelector : MonoBehaviour
-	{
-		[HideInInspector]
-		public MeshHideAsset meshAsset;
+    public class GeometrySelector : MonoBehaviour
+    {
+        [HideInInspector]
+        public MeshHideAsset meshAsset;
 
-		public BitArray selectedTriangles;
+        public BitArray selectedTriangles;
 
-		public bool visualizeNormals = false;
-		public float normalsLength = 0.1f;
-		public Color32 normalsColor = Color.white;
+        public bool visualizeNormals = false;
+        public float normalsLength = 0.1f;
+        public Color32 normalsColor = Color.white;
 
-		public Mesh sharedMesh
-		{
-			get { return _sharedMesh; }
-			set { _sharedMesh = (Mesh)Instantiate(value); Initialize(); }
-		}
-		private Mesh _sharedMesh;
+#if UNITY_6000_2_OR_NEWER
+        // Active LOD for editing
+        public int activeLOD = 0;
+#endif
 
-		//Occlusion mesh options
-		public Color32 occlusionColor = Color.white;
-		public bool occlusionWireframe = true;
+        public Mesh sharedMesh
+        {
+            get { return _sharedMesh; }
+            set { _sharedMesh = (Mesh)Instantiate(value); Initialize(); }
+        }
+        private Mesh _sharedMesh;
 
-		public Mesh occlusionMesh
-		{
-			get { return _occlusionMesh; }
-			set { _occlusionMesh = value; }
-		}
-		private Mesh _occlusionMesh;
+        //Occlusion mesh options
+        public Color32 occlusionColor = Color.white;
+        public bool occlusionWireframe = true;
 
-		public MeshRenderer meshRenderer
-		{
-			get { return _meshRenderer; }
-		}
-		private MeshRenderer _meshRenderer;
+        public Mesh occlusionMesh
+        {
+            get { return _occlusionMesh; }
+            set { _occlusionMesh = value; }
+        }
+        private Mesh _occlusionMesh;
 
-		public MeshCollider meshCollider
-		{
-			get { return _meshCollider; }
-		}
-		private MeshCollider _meshCollider;
-		//Use 0 for unselected and 1 for selected
-		private Material[] _Materials;
-		private Shader _Shader;
+        public MeshRenderer meshRenderer
+        {
+            get { return _meshRenderer; }
+        }
+        private MeshRenderer _meshRenderer;
+
+        public MeshCollider meshCollider
+        {
+            get { return _meshCollider; }
+        }
+        private MeshCollider _meshCollider;
+        //Use 0 for unselected and 1 for selected
+        private Material[] _Materials;
+        private Shader _Shader;
 
 #if UNITY_EDITOR
-		public struct SceneInfo
+        public struct SceneInfo
         {
             public string path;
             public string name;
@@ -66,7 +72,7 @@ namespace UMA
         public List<SceneInfo> restoreScenes;
 #endif
 
-		public void Initialize()
+        public void Initialize()
         {
             gameObject.name = "GeometrySelector";
             if (_sharedMesh == null)
@@ -101,25 +107,30 @@ namespace UMA
 
             if (selectedTriangles == null)
             {
-                 selectedTriangles = new BitArray(_sharedMesh.triangles.Length / 3);
+#if UNITY_6000_2_OR_NEWER
+                int[] tris = meshAsset.asset.meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles(activeLOD).ToArray();
+                selectedTriangles = new BitArray(tris.Length / 3);
+#else
+                selectedTriangles = new BitArray(_sharedMesh.triangles.Length / 3);
+#endif
             }
 
-            if ( !gameObject.GetComponent<MeshFilter>())
+            if (!gameObject.GetComponent<MeshFilter>())
             {
                 MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
                 meshFilter.mesh = _sharedMesh;
                 meshFilter.hideFlags = HideFlags.HideInInspector;
             }
 
-            if( !gameObject.GetComponent<MeshRenderer>())
-            {                
+            if (!gameObject.GetComponent<MeshRenderer>())
+            {
                 _meshRenderer = gameObject.AddComponent<MeshRenderer>();
                 _meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 _meshRenderer.receiveShadows = false;
                 _meshRenderer.hideFlags = HideFlags.HideInInspector;
             }
 
-            if( !gameObject.GetComponent<MeshCollider>())
+            if (!gameObject.GetComponent<MeshCollider>())
             {
                 _meshCollider = gameObject.AddComponent<MeshCollider>();
                 _meshCollider.convex = false;
@@ -127,7 +138,7 @@ namespace UMA
                 _meshCollider.hideFlags = HideFlags.HideInInspector;
             }
 
-            if( GraphicsSettings.defaultRenderPipeline == null )
+            if (GraphicsSettings.defaultRenderPipeline == null)
             {
                 _Shader = Shader.Find("Standard");
             }
@@ -171,7 +182,7 @@ namespace UMA
             }
 
             _sharedMesh = new Mesh();
-			_sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            _sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             _sharedMesh.subMeshCount = 1; // we're only copying the current submesh
             _sharedMesh.vertices = meshData.vertices;
             _sharedMesh.normals = meshData.normals;
@@ -182,8 +193,11 @@ namespace UMA
             _sharedMesh.uv4 = meshData.uv4;
             _sharedMesh.colors32 = meshData.colors32;
 
-            //_sharedMesh.SetTriangles(meshData.submeshes[meshAsset.asset.subMeshIndex].triangles, 0);
-            _sharedMesh.SetIndices(meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles(), MeshTopology.Triangles, 0);
+#if UNITY_6000_2_OR_NEWER
+            _sharedMesh.SetIndices(meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles(activeLOD).ToArray(), MeshTopology.Triangles, 0);
+#else
+            _sharedMesh.SetIndices(meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles().ToArray(), MeshTopology.Triangles, 0);
+#endif
             _sharedMesh.RecalculateBounds();
             Initialize();
         }
@@ -239,18 +253,18 @@ namespace UMA
         public void UpdateSelectionMesh()
         {
             int selectedCount = UMAUtils.GetCardinality(selectedTriangles);
-            int[] newSelectedTriangles = new int[selectedCount*3];
+            int[] newSelectedTriangles = new int[selectedCount * 3];
             int selectedIndex = 0;
 
             int[] tris = sharedMesh.triangles;
 
             for (int i = 0; i < selectedTriangles.Length; i++)
-            {                
+            {
                 if (selectedTriangles[i])
                 {
-                    newSelectedTriangles[selectedIndex + 0] = tris[(i*3) + 0];
-                    newSelectedTriangles[selectedIndex + 1] = tris[(i*3) + 1];
-                    newSelectedTriangles[selectedIndex + 2] = tris[(i*3) + 2];
+                    newSelectedTriangles[selectedIndex + 0] = tris[(i * 3) + 0];
+                    newSelectedTriangles[selectedIndex + 1] = tris[(i * 3) + 1];
+                    newSelectedTriangles[selectedIndex + 2] = tris[(i * 3) + 2];
                     selectedIndex += 3;
                 }
             }
@@ -287,13 +301,18 @@ namespace UMA
                 return;
             }
 
-            for (int i = 0; i < meshAsset.asset.meshData.submeshes[0].GetTriangles().Length; i+=3)
+#if UNITY_6000_2_OR_NEWER
+            int lod = activeLOD;
+#else
+            int lod = 0;
+#endif
+            for (int i = 0; i < meshAsset.asset.meshData.submeshes[0].GetTriangles(lod).Length; i+=3)
             {
                 bool selected = false;
                 Vector2 centerUV = new Vector2();
                 for (int k = 0; k < 3; k++)
                 {            
-                    int index = meshAsset.asset.meshData.submeshes[0].GetTriangles()[i + k];
+                    int index = meshAsset.asset.meshData.submeshes[0].GetTriangles(lod)[i + k];
                     centerUV += meshAsset.asset.meshData.uv[index];
                     int x = Mathf.FloorToInt(meshAsset.asset.meshData.uv[index].x * tex.width);
                     int y = Mathf.FloorToInt(meshAsset.asset.meshData.uv[index].y * tex.height);
@@ -330,7 +349,7 @@ namespace UMA
             BitArray bitArray = meshHide.triangleFlags[meshHide.asset.subMeshIndex];
             List<int> newTriangles = new List<int>();
 
-            if((bitArray.Length * 3) != triangles.Length)
+            if ((bitArray.Length * 3) != triangles.Length)
             {
                 if (Debug.isDebugBuild)
                 {
@@ -339,16 +358,16 @@ namespace UMA
 
                 return;
             }
-            
+
             //Now let's trip away the triangles
-            for(int i = 0; i < bitArray.Length; i++)
+            for (int i = 0; i < bitArray.Length; i++)
             {
                 if (bitArray[i])
                 {
                     int triIndex = i * 3;
-                    newTriangles.Add( triangles[triIndex] );
-                    newTriangles.Add( triangles[triIndex+1]);
-                    newTriangles.Add( triangles[triIndex+2]);
+                    newTriangles.Add(triangles[triIndex]);
+                    newTriangles.Add(triangles[triIndex + 1]);
+                    newTriangles.Add(triangles[triIndex + 2]);
                 }
             }
             _occlusionMesh.SetTriangles(newTriangles, 0);
@@ -364,7 +383,7 @@ namespace UMA
             if (_occlusionMesh == null)
             {
                 _occlusionMesh = new Mesh();
-				_occlusionMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                _occlusionMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             }
             else
             {
@@ -382,11 +401,15 @@ namespace UMA
             _occlusionMesh.colors32 = meshData.colors32;
 
             _occlusionMesh.triangles = new int[0];
-			_occlusionMesh.subMeshCount = meshData.subMeshCount;
+            _occlusionMesh.subMeshCount = meshData.subMeshCount;
 
             for (int i = 0; i < meshData.subMeshCount; i++)
             {
-                occlusionMesh.SetIndices(meshData.submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
+#if UNITY_6000_2_OR_NEWER
+                occlusionMesh.SetIndices(meshData.submeshes[i].GetTriangles(activeLOD).ToArray(), MeshTopology.Triangles, i);
+#else
+                occlusionMesh.SetIndices(meshData.submeshes[i].GetTriangles().ToArray(), MeshTopology.Triangles, i);
+#endif
                // occlusionMesh.SetTriangles(meshData.submeshes[i].triangles, i);
             }     
         }
@@ -408,7 +431,7 @@ namespace UMA
 
         private void UpdateOcclusionMesh(float offset, Vector3 pos, Vector3 rot, Vector3 s)
         {
-            if (Mathf.Approximately(offset,0) && rot == Vector3.zero && pos == Vector3.zero && s == Vector3.one) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
+            if (Mathf.Approximately(offset, 0) && rot == Vector3.zero && pos == Vector3.zero && s == Vector3.one) //If offset is zero and rot is zero, we can early out because we already reset the mesh.
             {
                 return;
             }

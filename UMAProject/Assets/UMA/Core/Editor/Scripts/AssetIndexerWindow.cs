@@ -3057,7 +3057,7 @@ namespace UMA.Controls
                     }
                     for(int sm=0;sm<item.triangleFlags.Length;sm++)
                     {
-                        if (item.triangleFlags[sm].Length != slot.meshData.submeshes[sm].getBaseTriangles().Length/3)
+                        if (item.triangleFlags[sm].Length != slot.meshData.submeshes[sm].getManagedTriangles(0).Length/3)
                         {
                             errors++;
                             SelectByAssetItems(new List<AssetItem>() { MHAS[i] });

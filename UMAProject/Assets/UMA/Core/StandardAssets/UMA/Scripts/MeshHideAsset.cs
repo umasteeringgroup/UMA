@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
+using System.Collections.Specialized;
 
 namespace UMA
 {
@@ -20,50 +22,51 @@ namespace UMA
         /// The asset we want to apply mesh hiding to if found in the generated UMA.
         /// </summary>
         /// <value>The SlotDataAsset.</value>
-        [SerializeField]
         public SlotDataAsset asset
         {
             get
-			{
-				if (_asset != null)
-				{
-					_assetSlotName = _asset.slotName;
-					_asset = null;
-				}
-				return UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(_assetSlotName);
-			}
-			set
             {
-				if (value != null)
+                if (_asset != null)
+                {
+                    _assetSlotName = _asset.slotName;
+                    _asset = null;
+                }
+                return UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(_assetSlotName);
+            }
+            set
+            {
+                if (value != null)
                 {
                     _assetSlotName = value.slotName;
                 }
                 else
-				{
-					_assetSlotName = "";
-				}
+                {
+                    _assetSlotName = "";
+                }
             }
-        } 
+        }
+        [FormerlySerializedAs("asset")]
         [SerializeField]
         private SlotDataAsset _asset;
 
-		public bool HasReference
-		{
-			get { return _asset != null;  }
-		}
+        public bool HasReference
+        {
+            get { return _asset != null; }
+        }
 
         public string AssetSlotName
         {
-            get {
-				if (string.IsNullOrEmpty(_assetSlotName))
-				{
-					if (_asset != null)
-					{
-						_assetSlotName = _asset.slotName;
-					}
-				}
-				return _assetSlotName; 
-				}
+            get
+            {
+                if (string.IsNullOrEmpty(_assetSlotName))
+                {
+                    if (_asset != null)
+                    {
+                        _assetSlotName = _asset.slotName;
+                    }
+                }
+                return _assetSlotName;
+            }
             set
             {
                 _assetSlotName = value;
@@ -76,24 +79,40 @@ namespace UMA
         /// BitArray of the triangle flags list. The list stores only the first index of the triangle vertex in the asset's triangle list.
         /// </summary>
         /// <value>The array of BitArrays. A BitArray for each submesh triangle list.</value>
-        public BitArray[] triangleFlags { get { return _triangleFlags; }}
-        private BitArray[] _triangleFlags; 
+        public BitArray[] triangleFlags
+        {
+            get { return _triangleFlags; }
+        }
 
+        private BitArray[] _triangleFlags;
 
         [System.Serializable]
         public class serializedFlags
         {
             public int[] flags;
-			public int Count;
+            public int Count;
 
             public serializedFlags(int count)
             {
-				Count = count;
-				flags = new int[(Count + 31) / 32];
+                Count = count;
+                flags = new int[(Count + 31) / 32];
             }
         }
         [SerializeField]
+        [FormerlySerializedAs("_serializedFlags")]
         private serializedFlags[] _serializedFlags;
+
+        // Per-LOD storage (Unity 6000.2 or newer). Backward compatible when not present.
+#if UNITY_6000_2_OR_NEWER
+        [SerializeField]
+        private List<serializedFlags[]> _serializedFlagsPerLOD = new List<serializedFlags[]>(); // index = LOD level
+
+        // runtime cache of per LOD bitarrays, not serialized
+        private readonly Dictionary<int, BitArray[]> _triangleFlagsPerLOD = new Dictionary<int, BitArray[]>();
+#endif
+
+        [SerializeField]
+        private List<UMALodRange> lodOffsets = new List<UMALodRange>();
 
         public int SubmeshCount
         {
@@ -110,28 +129,28 @@ namespace UMA
             }
         }
 
-		/// <summary>
-		/// If this contains a reference to an asset, it is freed.
-		/// This asset reference is no longer needed, and 
-		/// forces the asset to be included in the build.
-		/// It is kept only for upgrading from earlier UMA versions
-		/// </summary>
-		public void FreeReference()
-		{
-			if (_asset != null)
-			{
-				_assetSlotName = _asset.slotName;
-				_asset = null;
-			}
-		}
+        /// <summary>
+        /// If this contains a reference to an asset, it is freed.
+        /// This asset reference is no longer needed, and 
+        /// forces the asset to be included in the build.
+        /// It is kept only for upgrading from earlier UMA versions
+        /// </summary>
+        public void FreeReference()
+        {
+            if (_asset != null)
+            {
+                _assetSlotName = _asset.slotName;
+                _asset = null;
+            }
+        }
 
-		/// <summary>
-		/// Gets the total triangle count in the multidimensional triangleFlags.
-		/// </summary>
-		/// <value>The triangle count.</value>
-		public int TriangleCount 
-        { 
-            get 
+        /// <summary>
+        /// Gets the total triangle count in the multidimensional triangleFlags.
+        /// </summary>
+        /// <value>The triangle count.</value>
+        public int TriangleCount
+        {
+            get
             {
                 if (_triangleFlags != null)
                 {
@@ -148,7 +167,7 @@ namespace UMA
                     return 0;
                 }
             }
-        }   
+        }
 
         /// <summary>
         /// Gets the hidden triangles count.
@@ -194,67 +213,108 @@ namespace UMA
         /// </summary>
         public void OnBeforeSerialize()
         {
-			// _asset = null; // Let's not save this!
-            if (_triangleFlags == null)
-            {
-                return;
-            }
-
-            if (TriangleCount > 0)
+            // _asset = null; // Let's not save this!
+            if (_triangleFlags != null && TriangleCount > 0)
             {
                 _serializedFlags = new serializedFlags[_triangleFlags.Length];
                 for (int i = 0; i < _triangleFlags.Length; i++)
                 {
                     _serializedFlags[i] = new serializedFlags(_triangleFlags[i].Length);
                     _serializedFlags[i].flags.Initialize();
-                }                    
+                    _triangleFlags[i].CopyTo(_serializedFlags[i].flags, 0);
+                }
             }
 
-            for (int i = 0; i < _triangleFlags.Length; i++)
+#if UNITY_600_2_OR_NEWER // guard against accidental symbol typo
+#endif
+#if UNITY_6000_2_OR_NEWER
+            // serialize per-LOD if present
+            if (_triangleFlagsPerLOD != null && _triangleFlagsPerLOD.Count > 0)
             {
-                _triangleFlags[i].CopyTo(_serializedFlags[i].flags, 0);
+                int maxLOD = 0;
+                foreach (var k in _triangleFlagsPerLOD.Keys)
+                {
+                    if (k > maxLOD) maxLOD = k;
+                }
+                // ensure list capacity
+                while (_serializedFlagsPerLOD.Count <= maxLOD)
+                {
+                    _serializedFlagsPerLOD.Add(null);
+                }
+
+                for (int lod = 0; lod <= maxLOD; lod++)
+                {
+                    BitArray[] lodFlags;
+                    if (!_triangleFlagsPerLOD.TryGetValue(lod, out lodFlags) || lodFlags == null)
+                    {
+                        continue;
+                    }
+                    var ser = new serializedFlags[lodFlags.Length];
+                    for (int i = 0; i < lodFlags.Length; i++)
+                    {
+                        ser[i] = new serializedFlags(lodFlags[i].Length);
+                        ser[i].flags.Initialize();
+                        lodFlags[i].CopyTo(ser[i].flags, 0);
+                    }
+                    _serializedFlagsPerLOD[lod] = ser;
+                }
             }
+#endif
 
             if (_serializedFlags == null)
             {
-                if(Debug.isDebugBuild)
+                if (Debug.isDebugBuild)
                 {
                     Debug.LogError("Serializing triangle flags failed!");
                 }
             }
         }
 
-
         /// <summary>
         /// Custom deserialization to write the boolean array to the BitArray.
         /// </summary>
         public void OnAfterDeserialize()
         {
-			//We're not logging an error here because we'll get spammed by it for empty/not-set assets.
-			if (_asset == null && string.IsNullOrEmpty(_assetSlotName))
-			{
-				return;
-			}
-
-			if (_asset != null)
-			{
-				_assetSlotName = _asset.slotName;
-			}
-            
-            if (_serializedFlags == null)
+            //We're not logging an error here because we'll get spammed by it for empty/not-set assets.
+            if (_asset == null && string.IsNullOrEmpty(_assetSlotName))
             {
                 return;
             }
 
-            if (_serializedFlags.Length > 0)
+            if (_asset != null)
+            {
+                _assetSlotName = _asset.slotName;
+            }
+
+            if (_serializedFlags != null && _serializedFlags.Length > 0)
             {
                 _triangleFlags = new BitArray[_serializedFlags.Length];
                 for (int i = 0; i < _serializedFlags.Length; i++)
                 {
                     _triangleFlags[i] = new BitArray(_serializedFlags[i].flags);
-					_triangleFlags[i].Length = _serializedFlags[i].Count;
+                    _triangleFlags[i].Length = _serializedFlags[i].Count;
                 }
             }
+
+#if UNITY_6000_2_OR_NEWER
+            // rebuild cache from serialized LODs if present
+            if (_serializedFlagsPerLOD != null && _serializedFlagsPerLOD.Count > 0)
+            {
+                _triangleFlagsPerLOD.Clear();
+                for (int lod = 0; lod < _serializedFlagsPerLOD.Count; lod++)
+                {
+                    var ser = _serializedFlagsPerLOD[lod];
+                    if (ser == null) continue;
+                    var arr = new BitArray[ser.Length];
+                    for (int i = 0; i < ser.Length; i++)
+                    {
+                        arr[i] = new BitArray(ser[i].flags);
+                        arr[i].Length = ser[i].Count;
+                    }
+                    _triangleFlagsPerLOD[lod] = arr;
+                }
+            }
+#endif
         }
 
         /// <summary>
@@ -263,7 +323,7 @@ namespace UMA
         [ExecuteInEditMode]
         public void Initialize()
         {
-			SlotDataAsset slot = asset;
+            SlotDataAsset slot = asset;
 
             if (slot == null)
             {
@@ -279,7 +339,13 @@ namespace UMA
             _triangleFlags = new BitArray[slot.meshData.subMeshCount];
             for (int i = 0; i < slot.meshData.subMeshCount; i++)
             {
-                _triangleFlags[i] = new BitArray(slot.meshData.submeshes[i].GetTriangles().Length / 3);
+#if UNITY_6000_2_OR_NEWER
+                // default initialize against base LOD (0)
+                int triCount = slot.meshData.submeshes[i].GetTriangles(0).Length / 3;
+#else
+                int triCount = slot.meshData.submeshes[i].GetTriangles().Length / 3;
+#endif
+                _triangleFlags[i] = new BitArray(triCount);
             }
         }
 
@@ -294,14 +360,14 @@ namespace UMA
         {
             if (_triangleFlags == null)
             {
-                if(Debug.isDebugBuild)
+                if (Debug.isDebugBuild)
                 {
                     Debug.LogError("Triangle Array not initialized!");
                 }
 
                 return;
             }
-                
+
             if (triangleIndex >= 0 && (_triangleFlags[submesh].Length - 3) > triangleIndex)
             {
                 _triangleFlags[submesh][triangleIndex] = flag;
@@ -313,9 +379,13 @@ namespace UMA
         /// </summary>
         /// <param name="selection">The BitArray selection.</param>
         [ExecuteInEditMode]
-        public void SaveSelection( BitArray selection )
+        public void SaveSelection(BitArray selection)
         {
             int submesh = asset.subMeshIndex;
+            if (_triangleFlags == null || submesh < 0 || submesh >= _triangleFlags.Length)
+            {
+                return;
+            }
             if (selection.Count != _triangleFlags[submesh].Count)
             {
                 if (Debug.isDebugBuild)
@@ -326,7 +396,6 @@ namespace UMA
                 return;
             }
 
-            //Only works for submesh 0 for now
             _triangleFlags[submesh].SetAll(false);
             if (selection.Length == _triangleFlags[submesh].Length)
             {
@@ -340,19 +409,164 @@ namespace UMA
                     Debug.LogWarning("SaveSelection: counts don't match!");
                 }
             }
+            UnityEditor.EditorUtility.SetDirty(this);
 #endif
+        }
 
+#if UNITY_6000_2_OR_NEWER
+        // LOD helpers
+        public int GetLODCount()
+        {
+            if (asset == null || asset.meshData == null || asset.subMeshIndex < 0 || asset.subMeshIndex >= asset.meshData.subMeshCount)
+            {
+                return 1;
+            }
+            var ranges = asset.meshData.submeshes[asset.subMeshIndex].lodRanges;
+            return (ranges != null && ranges.Count > 0) ? ranges.Count : 1;
+        }
+
+        private void EnsureLODAllocated(int lod)
+        {
+            if (asset == null || asset.meshData == null) return;
+            if (_triangleFlagsPerLOD.ContainsKey(lod)) return;
+
+            var perSubmesh = new BitArray[asset.meshData.subMeshCount];
+            for (int sm = 0; sm < asset.meshData.subMeshCount; sm++)
+            {
+                int triCount = asset.meshData.submeshes[sm].GetTriangles(lod).Length / 3;
+                perSubmesh[sm] = new BitArray(triCount);
+            }
+            _triangleFlagsPerLOD[lod] = perSubmesh;
+        }
+
+        private static HashSet<int> BuildHiddenVertexSet(BitArray[] mask, UMAMeshData meshData, int submesh, int lod)
+        {
+            var set = new HashSet<int>();
+            if (mask == null || meshData == null) return set;
+#if UNITY_6000_2_OR_NEWER
+            var tris = meshData.submeshes[submesh].GetTriangles(lod);
+#else
+            var tris = meshData.submeshes[submesh].GetTriangles();
+#endif
+            if (mask[submesh] == null) return set;
+            int triCount = tris.Length / 3;
+            int mcount = Mathf.Min(mask[submesh].Length, triCount);
+            for (int i = 0; i < mcount; i++)
+            {
+                if (mask[submesh][i])
+                {
+                    int t = i * 3;
+                    set.Add(tris[t + 0]);
+                    set.Add(tris[t + 1]);
+                    set.Add(tris[t + 2]);
+                }
+            }
+            return set;
+        }
+
+        public BitArray[] GetTriangleFlagsForLOD(int lod)
+        {
+            if (lod <= 0)
+            {
+                return _triangleFlags;
+            }
+
+            if (asset == null || asset.meshData == null)
+            {
+                return _triangleFlags;
+            }
+
+            BitArray[] lodFlags;
+            if (_triangleFlagsPerLOD.TryGetValue(lod, out lodFlags) && lodFlags != null)
+            {
+                return lodFlags;
+            }
+
+            // Generate from base selection by vertex mapping.
+            EnsureLODAllocated(lod);
+            lodFlags = _triangleFlagsPerLOD[lod];
+
+            for (int sm = 0; sm < asset.meshData.subMeshCount; sm++)
+            {
+                // Build set of hidden vertices from base (LOD0)
+                var hiddenVerts = BuildHiddenVertexSet(_triangleFlags, asset.meshData, sm, 0);
+                var tris = asset.meshData.submeshes[sm].GetTriangles(lod);
+                var dest = lodFlags[sm];
+                int triCount = tris.Length / 3;
+                for (int i = 0; i < triCount; i++)
+                {
+                    int t = i * 3;
+                    bool hide = hiddenVerts.Contains(tris[t]) || hiddenVerts.Contains(tris[t + 1]) || hiddenVerts.Contains(tris[t + 2]);
+                    if (i < dest.Length) dest[i] = hide;
+                }
+            }
+
+            return lodFlags;
+        }
+
+        public void SaveSelectionForLOD(BitArray selection, int lod)
+        {
+            if (asset == null || asset.meshData == null) return;
+
+            if (lod <= 0)
+            {
+                SaveSelection(selection);
+                return;
+            }
+
+            EnsureLODAllocated(lod);
+            int submesh = asset.subMeshIndex;
+            var perSm = _triangleFlagsPerLOD[lod];
+            if (selection != null && submesh >= 0 && submesh < perSm.Length)
+            {
+                if (selection.Length == perSm[submesh].Length)
+                {
+                    perSm[submesh] = new BitArray(selection);
+#if UNITY_EDITOR
+                    UnityEditor.EditorUtility.SetDirty(this);
+#endif
+                }
+            }
+        }
+
+        public void CopyLODMask(int fromLOD, int toLOD, bool replaceDestination)
+        {
+            if (asset == null || asset.meshData == null) return;
+            if (fromLOD == toLOD) return;
+
+            EnsureLODAllocated(toLOD);
+
+            // Build hidden vertex set from source LOD mask (or base flags when fromLOD == 0)
+            BitArray[] srcMask = (fromLOD <= 0) ? _triangleFlags : GetTriangleFlagsForLOD(fromLOD);
+            int submesh = asset.subMeshIndex;
+            var hiddenVerts = BuildHiddenVertexSet(srcMask, asset.meshData, submesh, Mathf.Max(0, fromLOD));
+
+            // Apply to destination LOD triangles
+            var tris = asset.meshData.submeshes[submesh].GetTriangles(toLOD);
+            var dest = _triangleFlagsPerLOD[toLOD][submesh];
+            if (replaceDestination)
+            {
+                dest.SetAll(false);
+            }
+            int triCount = tris.Length / 3;
+            for (int i = 0; i < triCount && i < dest.Length; i++)
+            {
+                int t = i * 3;
+                bool hide = hiddenVerts.Contains(tris[t]) || hiddenVerts.Contains(tris[t + 1]) || hiddenVerts.Contains(tris[t + 2]);
+                if (hide) dest[i] = true;
+            }
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
-            #endif
+#endif
         }
+#endif
 
         /// <summary>
         /// Generates a final BitArray mask from a list of MeshHideAssets.
         /// </summary>
         /// <returns>The BitArray array mask.</returns>
         /// <param name="assets">List of MeshHideAssets.</param>
-        public static BitArray[] GenerateMask( List<MeshHideAsset> assets )
+        public static BitArray[] GenerateMask(List<MeshHideAsset> assets)
         {
             List<BitArray[]> flags = new List<BitArray[]>();
             for (int i = 0; i < assets.Count; i++)
@@ -365,11 +579,30 @@ namespace UMA
         }
 
         /// <summary>
+        /// Generates a final BitArray mask for a specific LOD from a list of MeshHideAssets.
+        /// </summary>
+        public static BitArray[] GenerateMask(List<MeshHideAsset> assets, int lod)
+        {
+            if (assets == null || assets.Count == 0) return null;
+            var flags = new List<BitArray[]>();
+            for (int i = 0; i < assets.Count; i++)
+            {
+                var a = assets[i];
+#if UNITY_6000_2_OR_NEWER
+                flags.Add(a.GetTriangleFlagsForLOD(Mathf.Max(0, lod)) ?? a.triangleFlags);
+#else
+                flags.Add(a.triangleFlags);
+#endif
+            }
+            return CombineTriangleFlags(flags);
+        }
+
+        /// <summary>
         /// Combines the list of BitArray arrays.
         /// </summary>
         /// <returns>The final combined BitArray array.</returns>
         /// <param name="flags">List of BitArray array flags.</param>
-        public static BitArray[] CombineTriangleFlags( List<BitArray[]> flags)
+        public static BitArray[] CombineTriangleFlags(List<BitArray[]> flags)
         {
             if (flags == null || flags.Count <= 0)
             {
@@ -377,7 +610,7 @@ namespace UMA
             }
 
             BitArray[] final = new BitArray[flags[0].Length];
-            for(int i = 0; i < flags[0].Length; i++)
+            for (int i = 0; i < flags[0].Length; i++)
             {
                 final[i] = new BitArray(flags[0][i]);
             }
@@ -385,7 +618,7 @@ namespace UMA
             BitArray[] baseSubmeshFlags = flags[0];
 
             for (int i = 1; i < flags.Count; i++)
-            {              
+            {
                 BitArray[] SubmeshFlags = flags[i];
 
                 for (int j = 0; j < SubmeshFlags.Length; j++)
@@ -403,16 +636,16 @@ namespace UMA
             return final;
         }
 
-        #if UNITY_EDITOR
-		#if UMA_HOTKEYS
+#if UNITY_EDITOR
+#if UMA_HOTKEYS
         [UnityEditor.MenuItem("Assets/Create/UMA/Misc/Mesh Hide Asset %#h")]
-		#else
-		[UnityEditor.MenuItem("Assets/Create/UMA/Misc/Mesh Hide Asset")]
-		#endif
+#else
+        [UnityEditor.MenuItem("Assets/Create/UMA/Misc/Mesh Hide Asset")]
+#endif
         public static void CreateMeshHideAsset()
         {
             UMA.CustomAssetUtility.CreateAsset<MeshHideAsset>();
         }
-        #endif
+#endif
     }
 }

@@ -1159,7 +1159,7 @@ namespace UMA
                 int totalIdx =0;
                 for (int i =0; i < md.submeshes.Length; i++)
                 {
-                    var tris = md.submeshes[i].getBaseTriangles();
+                    var tris = md.submeshes[i].getManagedTriangles(0);
                     if (tris != null) totalIdx += tris.Length;
                 }
                 if (totalIdx >0 && (totalIdx %3) ==0)
@@ -1168,7 +1168,7 @@ namespace UMA
                     int write =0;
                     for (int i =0; i < md.submeshes.Length; i++)
                     {
-                        var tris = md.submeshes[i].getBaseTriangles();
+                        var tris = md.submeshes[i].getManagedTriangles(0);
                         if (tris == null || tris.Length ==0) continue;
                         System.Array.Copy(tris,0, allTriangles, write, tris.Length);
                         write += tris.Length;

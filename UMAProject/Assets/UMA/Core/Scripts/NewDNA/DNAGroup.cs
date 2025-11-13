@@ -14,6 +14,8 @@ namespace UMA
         public string DNAArea;
         [Tooltip("The list of DNA that this contains.")]
         public List<DNA> dnaList = new List<DNA>();
+        [Tooltip("The maximum total value for this group.")]
+        public float MaxTotalValue = 0.0f;
 
 #if UNITY_EDITOR
         // Editor-only persisted foldout state for inspectors

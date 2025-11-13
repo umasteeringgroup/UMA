@@ -95,7 +95,6 @@ namespace UMA
 			return 0f;
 		}
 
-        [SerializeField]
         public override int DNATypeHash
         {
             get { return dnaTypeHash; }

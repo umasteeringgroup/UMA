@@ -495,43 +495,38 @@ namespace UMA
                     {
                         int dstSub = ci.targetSubmeshIndices[sm]; if (dstSub < 0) continue;
 
-                       // Debug.Log($"Using triangls of size {src.submeshes[sm].GetTriangleCount()} from source submesh {sm} into target submesh {dstSub}");
                         SubMeshTriangles smt = src.submeshes[sm];
-                        var srcTris = smt.GetTriangles(); 
-                        int triLen = srcTris.Length; 
+                        var srcTris = smt.GetTriangles();
+                        int triLen = srcTris.Length;
                         int dstStart = subIndexStart[dstSub] + subWrite[dstSub];
-                        // Make a TempJob copy of triangles so jobs are isolated from asset-owned NativeArrays
                         var triCopy = new NativeArray<int>(triLen, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                         NativeArray<int>.Copy(srcTris, triCopy, triLen);
-                        if (ci.triangleMask != null && sm < ci.triangleMask.Length)
-                        {
-                            int removed = UMAUtils.GetCardinality(ci.triangleMask[sm]); int kept = triLen - removed * 3;
-                            if (removed == 0)
-                            {
-                                if (indexFormat == IndexFormat.UInt16) indexJobs.Add(new CopyIndicesJobU16 { Src = triCopy, Dst = ibU16, DstStart = dstStart, Add = (ushort)ci.slotData.vertexOffset }.Schedule());
-                                else indexJobs.Add(new CopyIndicesJobInt { Src = triCopy, Dst = ibInt, DstStart = dstStart, Add = ci.slotData.vertexOffset }.Schedule());
-                                subWrite[dstSub] += triLen;
-                            }
-                            else if (kept > 0)
-                            {
-                                var maskNative = BitArrayToNative(ci.triangleMask[sm], Allocator.TempJob);
-                                if (indexFormat == IndexFormat.UInt16) indexJobs.Add(new MaskedCopyIndicesJobU16 { Src = triCopy, Mask = maskNative, Dst = ibU16, DstStart = dstStart, Add = (ushort)ci.slotData.vertexOffset }.Schedule());
-                                else indexJobs.Add(new MaskedCopyIndicesJobInt { Src = triCopy, Mask = maskNative, Dst = ibInt, DstStart = dstStart, Add = ci.slotData.vertexOffset }.Schedule());
-                                subWrite[dstSub] += kept;
-                            }
-                        }
-                        else
+
+                        bool hasMask = (ci.triangleMask != null && sm < ci.triangleMask.Length && ci.triangleMask[sm] != null && ci.triangleMask[sm].Length > 0);
+                        if (!hasMask)
                         {
                             if (indexFormat == IndexFormat.UInt16) indexJobs.Add(new CopyIndicesJobU16 { Src = triCopy, Dst = ibU16, DstStart = dstStart, Add = (ushort)ci.slotData.vertexOffset }.Schedule());
                             else indexJobs.Add(new CopyIndicesJobInt { Src = triCopy, Dst = ibInt, DstStart = dstStart, Add = ci.slotData.vertexOffset }.Schedule());
                             subWrite[dstSub] += triLen;
+                        }
+                        else
+                        {
+                            // mask length in triangles, true=remove
+                            int triCount = triLen / 3;
+                            int removedTris = UMAUtils.GetCardinality(ci.triangleMask[sm]);
+                            int kept = Mathf.Max(0, triCount - removedTris) * 3;
+                            var maskNative = BitArrayToNative(ci.triangleMask[sm], Allocator.TempJob);
+                            if (indexFormat == IndexFormat.UInt16) indexJobs.Add(new MaskedCopyIndicesJobU16 { Src = triCopy, Mask = maskNative, Dst = ibU16, DstStart = dstStart, Add = (ushort)ci.slotData.vertexOffset }.Schedule());
+                            else indexJobs.Add(new MaskedCopyIndicesJobInt { Src = triCopy, Mask = maskNative, Dst = ibInt, DstStart = dstStart, Add = ci.slotData.vertexOffset }.Schedule());
+                            subWrite[dstSub] += kept;
                         }
                     }
                 }
                 sw.Stop(); Ticks_IndexJobsSchedule += sw.ElapsedTicks;
                 if (indexJobs.Count > 0) { sw.Restart(); var handles = new NativeArray<JobHandle>(indexJobs.Count, Allocator.Temp); for (int i = 0; i < indexJobs.Count; i++) handles[i] = indexJobs[i]; JobHandle.CompleteAll(handles); handles.Dispose(); indexJobs.Clear(); sw.Stop(); Ticks_IndexJobsComplete += sw.ElapsedTicks; }
                 if (hasUV) { sw.Restart(); RecalculateUVForUMA(vC01, umaData, batch.AtlasResolution, batch.CurrentRendererIndex); sw.Stop(); Ticks_UVRemap += sw.ElapsedTicks; }
-                sw.Restart(); for (int i = 0; i < subMeshCount; i++) md.SetSubMesh(i, new SubMeshDescriptor { topology = MeshTopology.Triangles, indexStart = subIndexStart[i], indexCount = subMeshTriangleLength[i], baseVertex = 0, vertexCount = vertexCount }, MeshUpdateFlags.Default); sw.Stop(); Ticks_SetSubmeshes += sw.ElapsedTicks;
+                // Use what we actually wrote (subWrite) to describe submeshes to avoid overruns
+                sw.Restart(); for (int i = 0; i < subMeshCount; i++) { md.SetSubMesh(i, new SubMeshDescriptor { topology = MeshTopology.Triangles, indexStart = subIndexStart[i], indexCount = subWrite[i], baseVertex = 0, vertexCount = vertexCount }, MeshUpdateFlags.Default); } sw.Stop(); Ticks_SetSubmeshes += sw.ElapsedTicks;
                 sw.Restart(); var mesh = batch.Renderer.sharedMesh ?? new Mesh(); mesh.indexFormat = indexFormat; Mesh.ApplyAndDisposeWritableMeshData(mda, new[] { mesh }, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices); sw.Stop(); Ticks_ApplyMeshData += sw.ElapsedTicks;
                 if (hasBlendShapes && blendShapeNames != null && blendShapeNames.Count > 0)
                 {
@@ -847,8 +842,20 @@ namespace UMA
                 if (src.meshData.clothSkinningSerialized?.Length > 0) meshComponents |= MeshComponents.has_clothSkinning;
                 for (int i = 0; i < src.meshData.subMeshCount; i++)
                 {
-                    int TriangleCount = src.meshData.submeshes[i].GetTriangleCount();
-                    int dest = src.targetSubmeshIndices[i]; if (dest < 0) continue; int subLen = TriangleCount; int triLen = (src.triangleMask == null) ? subLen : (subLen - UMAUtils.GetCardinality(src.triangleMask[i]) * 3); subMeshTriangleLength[dest] += triLen;
+                    int indexLen = src.meshData.submeshes[i].GetTriangleCount();
+                    int dest = src.targetSubmeshIndices[i]; if (dest < 0) continue;
+                    // If there is a mask, its length is in triangles with true=remove. Compute kept index length accordingly.
+                    if (src.triangleMask != null && i < src.triangleMask.Length && src.triangleMask[i] != null && src.triangleMask[i].Length > 0)
+                    {
+                        int triCount = indexLen / 3;
+                        int removedTris = UMAUtils.GetCardinality(src.triangleMask[i]);
+                        int keptTris = Mathf.Clamp(triCount - removedTris, 0, triCount);
+                        subMeshTriangleLength[dest] += keptTris * 3;
+                    }
+                    else
+                    {
+                        subMeshTriangleLength[dest] += indexLen;
+                    }
                 }
             }
         }

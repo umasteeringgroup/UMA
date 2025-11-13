@@ -23,6 +23,26 @@ namespace UMA.Editors
             public List<string> TempAssetsToDelete = new List<string>();
         }
 
+        // Helper: copy LOD ranges from a source mesh submesh into a SlotDataAsset's meshData submesh
+        private static void CopyLodRangesFromSourceMesh(SlotDataAsset sda, int targetSubmeshIndex, Mesh sourceMesh, int sourceSubmeshIndex)
+        {
+#if UNITY_6000_2_OR_NEWER
+            if (sda == null || sda.meshData == null || sda.meshData.submeshes == null) return;
+            if (targetSubmeshIndex < 0 || targetSubmeshIndex >= sda.meshData.submeshes.Length) return;
+            if (sourceMesh == null) return;
+            int lodCount = sourceMesh.lodCount;
+            if (lodCount <= 0) return;
+
+            var ranges = new List<UMA.UMALodRange>(lodCount);
+            for (int l = 0; l < lodCount; l++)
+            {
+                var lor = sourceMesh.GetLod(sourceSubmeshIndex, l);
+                ranges.Add(new UMA.UMALodRange(lor));
+            }
+            sda.meshData.submeshes[targetSubmeshIndex].SetLodRanges(ranges);
+#endif
+        }
+
         /// <summary>
         /// Updates an Existing SlotDataAsset.
         /// </summary>
@@ -118,6 +138,14 @@ namespace UMA.Editors
 
             slot.UpdateMeshData(finalMeshRenderer, rootBone, false, subMesh, clearNormals, clearTangents);
             slot.meshData.SlotName = slot.slotName;
+#if UNITY_6000_2_OR_NEWER
+            // Try to carry LOD ranges from the source mesh (if available)
+            var srcMesh = mesh != null ? mesh.sharedMesh : null;
+            if (srcMesh != null)
+            {
+                CopyLodRangesFromSourceMesh(slot, 0, srcMesh, subMesh);
+            }
+#endif
             var cloth = mesh.GetComponent<Cloth>();
             if (cloth != null)
             {
@@ -325,7 +353,7 @@ namespace UMA.Editors
                     if (bname.Contains(sbp.stripBones))
                     {
                         bname = bname.Replace(sbp.stripBones, "");
-                    }
+                      }
                     transformList[i].name = bname;
                 }
                 if (transformList[i].name == sbp.rootBone)
@@ -492,6 +520,10 @@ namespace UMA.Editors
                 string existingRootBone = slot.meshData.RootBoneName;
                 UpdateSlotData(OldAsset, finalMeshRenderer, OldAsset.material, OldAsset.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
                 EditorUtility.SetDirty(OldAsset);
+                // Carry LOD ranges from the source mesh
+#if UNITY_6000_2_OR_NEWER
+                CopyLodRangesFromSourceMesh(OldAsset, 0, sbp.slotMesh.sharedMesh, 0);
+#endif
                 createdSlots.Add(OldAsset);
                 // Replace working reference with existing for overlay mapping
                 UnityEngine.Object.DestroyImmediate(slot);
@@ -500,6 +532,10 @@ namespace UMA.Editors
             else
             {
                 AssetDatabase.CreateAsset(slot, slotPath);
+#if UNITY_6000_2_OR_NEWER
+                // Carry LOD ranges from the source mesh
+                CopyLodRangesFromSourceMesh(slot, 0, sbp.slotMesh.sharedMesh, 0);
+#endif
                 if (sbp.addToGlobalLibrary)
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), slot);
@@ -558,6 +594,9 @@ namespace UMA.Editors
                     string existingRootBone = slot.meshData.RootBoneName;
                     UpdateSlotData(existingAdditional, finalMeshRenderer, existingAdditional.material, existingAdditional.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
                     existingAdditional.sourceSubmeshIndex = i;
+#if UNITY_6000_2_OR_NEWER
+                    CopyLodRangesFromSourceMesh(existingAdditional, 0, sbp.slotMesh.sharedMesh, i);
+#endif
                     EditorUtility.SetDirty(existingAdditional);
                     createdSlots.Add(existingAdditional);
 
@@ -582,6 +621,9 @@ namespace UMA.Editors
                 additionalSlot.sourceSubmeshIndex = i;
 
                 AssetDatabase.CreateAsset(additionalSlot, theSlotPath);
+#if UNITY_6000_2_OR_NEWER
+                CopyLodRangesFromSourceMesh(additionalSlot, 0, sbp.slotMesh.sharedMesh, i);
+#endif
                 if (sbp.addToGlobalLibrary)
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), additionalSlot);
@@ -810,17 +852,12 @@ namespace UMA.Editors
                 srcAllBW = source.GetAllBoneWeights();
                 hasSkinning = srcBPV.IsCreated && srcBPV.Length == srcVertexCount && srcAllBW.IsCreated;
             }
-            catch
-            {
-                hasSkinning = false;
-            }
+            catch { hasSkinning = false; }
 
             NativeArray<byte> newBPV = default;
             NativeArray<BoneWeight1> newAllBW = default;
-
             if (hasSkinning)
             {
-                // Build offsets for source bone weights
                 var offsets = new int[srcVertexCount];
                 int acc = 0;
                 for (int v = 0; v < srcVertexCount; v++)
@@ -828,11 +865,8 @@ namespace UMA.Editors
                     offsets[v] = acc;
                     acc += (v < srcBPV.Length ? srcBPV[v] : (byte)0);
                 }
-
-                // Build new arrays
                 var bpvManaged = new byte[newVertexCount];
                 var bwManaged = new List<BoneWeight1>(acc);
-
                 for (int i = 0; i < newVertexCount; i++)
                 {
                     int old = newToOld[i];
@@ -844,7 +878,6 @@ namespace UMA.Editors
                         bwManaged.Add(srcAllBW[srcOffset + j]);
                     }
                 }
-
                 newBPV = new NativeArray<byte>(bpvManaged, Allocator.Temp);
                 var bwArray = bwManaged.Count > 0 ? bwManaged.ToArray() : Array.Empty<BoneWeight1>();
                 newAllBW = new NativeArray<BoneWeight1>(bwArray, Allocator.Temp);
@@ -862,12 +895,9 @@ namespace UMA.Editors
             if (newUV1 != null) compact.uv2 = newUV1;
             if (newUV2 != null) compact.uv3 = newUV2;
             if (newUV3 != null) compact.uv4 = newUV3;
-
-            compact.bindposes = source.bindposes; // keep original bones layout
-
+            compact.bindposes = source.bindposes;
             compact.subMeshCount = 1;
             compact.SetTriangles(newTris, 0, true);
-
             if (hasSkinning && newBPV.IsCreated && newAllBW.IsCreated)
             {
                 compact.SetBoneWeights(newBPV, newAllBW);
@@ -1114,12 +1144,27 @@ namespace UMA.Editors
             // First pass: gather triangles per (submesh, tile) and record which original vertices belong to multiple tiles.
             var perSubTileToTris = new Dictionary<int, Dictionary<(int u, int v), List<int>>>();
             var oldIndexToTiles = new Dictionary<int, HashSet<(int u, int v)>>();
+#if UNITY_6000_2_OR_NEWER
+            // Also track per-tile LOD counts in original order so we can rebuild ranges on the compact mesh
+            var perSubTileToLodCounts = new Dictionary<int, Dictionary<(int u, int v), int[]>>();
+#endif
 
             for (int sub = 0; sub < mesh.subMeshCount; sub++)
             {
                 int[] tris = mesh.GetTriangles(sub);
                 // Classify triangles by tile
                 var tileToTris = new Dictionary<(int u, int v), List<int>>();
+#if UNITY_6000_2_OR_NEWER
+                int lodCount = mesh.lodCount;
+                // Pre-fetch source submesh LOD ranges
+                var lodRanges = new List<(int start, int count)>(lodCount);
+                for (int l = 0; l < lodCount; l++)
+                {
+                    var lor = mesh.GetLod(sub, l);
+                    lodRanges.Add(((int)lor.indexStart, (int)lor.indexCount));
+                }
+                var tileToLodCounts = new Dictionary<(int u, int v), int[]>();
+#endif
 
                 for (int t = 0; t < tris.Length; t += 3)
                 {
@@ -1161,6 +1206,32 @@ namespace UMA.Editors
                     list.Add(b);
                     list.Add(c);
 
+#if UNITY_6000_2_OR_NEWER
+                    // Determine which LOD this triangle belongs to based on its starting index 't'
+                    int lodLevel = 0;
+                    if (lodCount > 0 && lodRanges.Count == lodCount)
+                    {
+                        for (int l = 0; l < lodCount; l++)
+                        {
+                            var lr = lodRanges[l];
+                            if (t >= lr.start && t < (lr.start + lr.count))
+                            {
+                                lodLevel = l;
+                                break;
+                            }
+                        }
+                    }
+                    if (!tileToLodCounts.TryGetValue(key, out var counts))
+                    {
+                        counts = (lodCount > 0) ? new int[lodCount] : new int[0];
+                        tileToLodCounts.Add(key, counts);
+                    }
+                    if (counts.Length > 0)
+                    {
+                        counts[lodLevel] += 3; // three indices for this triangle
+                    }
+#endif
+
                     // Record tile membership for each original vertex index
                     if (!oldIndexToTiles.TryGetValue(a, out var setA)) { setA = new HashSet<(int, int)>(); oldIndexToTiles.Add(a, setA); }
                     setA.Add(key);
@@ -1172,6 +1243,9 @@ namespace UMA.Editors
 
                 // Store per submesh tile map
                 perSubTileToTris[sub] = tileToTris;
+#if UNITY_6000_2_OR_NEWER
+                perSubTileToLodCounts[sub] = tileToLodCounts;
+#endif
             }
 
             // Determine which original vertices are shared across multiple tiles.
@@ -1277,26 +1351,24 @@ namespace UMA.Editors
                             }
                         }
 
-                        // Save seam map for shared vertices (original -> local index)
-                        if (sda != null && cmr.OldToNew != null && cmr.OldToNew.Count > 0)
+#if UNITY_6000_2_OR_NEWER
+                        // Build and set LOD ranges for this compact mesh from the per-tile counts
+                        if (perSubTileToLodCounts.TryGetValue(sub, out var tileLodCounts) && tileLodCounts.TryGetValue((tu, tv), out var countsArr) && countsArr != null && countsArr.Length > 0)
                         {
-                            var seamOriginal = new List<int>();
-                            var seamLocal = new List<int>();
-                            foreach (var pair in cmr.OldToNew)
+                            var ranges = new List<UMA.UMALodRange>(countsArr.Length);
+                            uint offset = 0;
+                            for (int l = 0; l < countsArr.Length; l++)
                             {
-                                if (sharedOldIndices.Contains(pair.Key))
-                                {
-                                    seamOriginal.Add(pair.Key);
-                                    seamLocal.Add(pair.Value);
-                                }
+                                uint cnt = (uint)Mathf.Max(0, countsArr[l]);
+                                ranges.Add(new UMA.UMALodRange(offset, cnt));
+                                offset += cnt;
                             }
-                            sda.UdimSharedVertexMap = new SlotDataAsset.UdimSeamMap
+                            if (sda.meshData != null && sda.meshData.submeshes != null && sda.meshData.submeshes.Length > 0)
                             {
-                                originalIndices = seamOriginal.ToArray(),
-                                localIndices = seamLocal.ToArray()
-                            };
-                            EditorUtility.SetDirty(sda);
+                                sda.meshData.submeshes[0].SetLodRanges(ranges);
+                            }
                         }
+#endif
 
                         createdSlots.Add(sda);
 
