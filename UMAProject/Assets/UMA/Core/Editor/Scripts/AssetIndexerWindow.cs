@@ -2860,7 +2860,7 @@ namespace UMA.Controls
                 PoseConverter = EditorGUILayout.ObjectField("", PoseConverter, typeof(UMABonePose), false, GUILayout.Width(175)) as UMABonePose;
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("RaceData:");
+                GUILayout.Label("To RaceData:");
                 raceForPose = EditorGUILayout.ObjectField("", raceForPose,  typeof(RaceData), false, GUILayout.Width(175)) as RaceData;
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
@@ -2881,6 +2881,15 @@ namespace UMA.Controls
                 {
                     ConvertSlotFromLegacy(donorSlot, PoseConverter, raceForPose, rotX, rotY, rotZ);
                 }
+                if (GUILayout.Button("Convert to new format (old method)", GUILayout.Width(200)))
+                {
+                    ConvertSlotFromLegacyOld(donorSlot, PoseConverter, raceForPose, rotX, rotY, rotZ);
+                }
+                if (GUILayout.Button("Restore from backup (_Original)"))
+                {
+                    RestoreSlots();
+                }
+
                 GUIHelper.EndVerticalPadded(10);
             }
 
@@ -2900,9 +2909,109 @@ namespace UMA.Controls
             }
             GUILayout.EndScrollView();
         }
+        /// <summary>
+        /// Restores the specified slot from its original backup (slotName + "_Original").
+        /// Copies all data from the backup into the current slot, but preserves the current slot's asset name and slotName.
+        /// The backup asset is left untouched in the backup folder for future reuse.
+        /// </summary>
+        /// <param name="slot">The slot to restore (must not be a backup slot itself).</param>
+        public void RestoreSlot(SlotDataAsset slot)
+        {
+            if (slot == null)
+            {
+                Debug.LogError("[SlotRestore] Slot parameter is null.");
+                return;
+            }
+            if (string.IsNullOrEmpty(slot.slotName))
+            {
+                Debug.LogError("[SlotRestore] Slot has an empty slotName.");
+                return;
+            }
+            if (slot.slotName.EndsWith("_Original", StringComparison.Ordinal))
+            {
+                Debug.LogWarning("[SlotRestore] Cannot restore a backup slot directly.");
+                return;
+            }
 
+            // Derive backup name exactly as ConvertSlotFromLegacy does
+            string backupName = slot.slotName + "_Original";
 
-        private void ConvertSlotFromLegacy(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x=0f, float y=0f, float z = 0f)
+            // Try to locate backup in the UMA indexer
+            SlotDataAsset backup = UMAAssetIndexer.Instance?.GetAsset<SlotDataAsset>(backupName);
+
+            // Fallback: search AssetDatabase if not found in index
+            if (backup == null)
+            {
+                string[] guids = AssetDatabase.FindAssets($"{backupName} t:SlotDataAsset");
+                if (guids != null && guids.Length > 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    backup = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(path);
+                }
+            }
+
+            if (backup == null)
+            {
+                Debug.LogError($"[SlotRestore] Backup slot '{backupName}' not found. Cannot restore '{slot.slotName}'.");
+                return;
+            }
+
+            // Preserve original slotName & asset name before copy
+            string originalSlotName = slot.slotName;
+            string originalAssetName = slot.name; // Unity asset name (may differ)
+
+            try
+            {
+                // Use provided Assign() API to copy all relevant data
+                slot.Assign(backup);
+
+                // Restore identifying names to keep this asset as the active (non-backup) slot
+                slot.slotName = originalSlotName;
+                slot.name = originalAssetName;
+
+                // If legacy status should be restored to true (backup is legacy)
+                slot.isLegacySlot = backup.isLegacySlot;
+
+                // Recompute name hash if necessary
+                slot.nameHash = slot.GetNameHash();
+
+                EditorUtility.SetDirty(slot);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
+                AssetDatabase.SaveAssetIfDirty(slot);
+#else
+                AssetDatabase.SaveAssets();
+#endif
+                // Update UMA systems (mesh/cache)
+                UMAUpdateProcessor.UpdateSlot(slot, false);
+
+                Debug.Log($"[SlotRestore] Restored slot '{originalSlotName}' from backup '{backupName}'.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[SlotRestore] Exception restoring '{originalSlotName}' from '{backupName}': {ex.Message}");
+            }
+        }
+    
+
+        private void RestoreSlots()
+        {
+            var selectedSlots = GetSelectedAssets(typeof(SlotDataAsset));
+            foreach (var slotItem in selectedSlots)
+            {
+                SlotDataAsset slot = slotItem.Item as SlotDataAsset;
+                if (slot != null)
+                {
+                    Debug.Log($"Restoring converted slot {slot.slotName}");
+                    this.RestoreSlot(slot);
+                    EditorUtility.SetDirty(slot);
+                    AssetDatabase.SaveAssetIfDirty(slot);
+                    UMAUpdateProcessor.UpdateSlot(slot, false);
+                }
+            }
+        }
+        
+
+        private void ConvertSlotFromLegacyOld(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x=0f, float y=0f, float z = 0f)
         {
             if (poseConverter == null)
             {
@@ -2930,6 +3039,102 @@ namespace UMA.Controls
                 }
             }
         }
+
+        private void ConvertSlotFromLegacy(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x = 0f, float y = 0f, float z = 0f)
+        {
+            // Backup-aware legacy conversion:
+            // 1. Skip slots whose slotName already ends with _Original
+            // 2. If backup (slotName + _Original) does not exist, create via Clone (asset name & slotName both changed)
+            // 3. Never overwrite existing backup; reuse it
+            // 4. Always convert from backup's meshData (unless donor provided)
+            // 5. If donor provided, use donor instead of backup (donor's current state, not its backup)
+            // 6. Add backup to UMAAssetIndexer (so it can be found quickly)
+            // 7. backup.isLegacySlot stays true; converted slot sets isLegacySlot = false
+            // 8. Folder: Assets/UMA/SlotBackup (created if missing)
+            // 9. Re-run conversions always source from original backup
+            // 10. Use Clone method; keep other slot fields unchanged
+            // 11. No Undo integration; just mark dirty & save
+            var selected = GetSelectedAssets(typeof(SlotDataAsset));
+            if (selected == null || selected.Count == 0) return;
+
+            const string backupFolder = "Assets/UMA/SlotBackup";
+            if (!Directory.Exists(backupFolder))
+            {
+                Directory.CreateDirectory(backupFolder);
+                AssetDatabase.ImportAsset(backupFolder);
+            }
+
+            foreach (var ai in selected)
+            {
+                var slot = ai.Item as SlotDataAsset;
+                if (slot == null) continue;
+                if (string.IsNullOrEmpty(slot.slotName)) continue;
+                // Skip backup assets themselves
+                if (slot.slotName.EndsWith("_Original", StringComparison.Ordinal)) continue;
+
+                // Get or create backup
+                string backupName = slot.slotName + "_Original";
+                SlotDataAsset backup = UMAAssetIndexer.Instance?.GetAsset<SlotDataAsset>(backupName);
+                if (backup == null)
+                {
+                    // Fallback AssetDatabase search
+                    string[] guids = AssetDatabase.FindAssets(backupName + " t:SlotDataAsset");
+                    if (guids != null && guids.Length > 0)
+                    {
+                        string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                        backup = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(path);
+                    }
+                }
+                if (backup == null)
+                {
+                    backup = slot.Clone(backupName, backupName, true, backupFolder);
+                    if (backup == null)
+                    {
+                        Debug.LogError($"[SlotConvert] Failed to create backup for '{slot.slotName}'. Skipping.");
+                        continue;
+                    }
+                    backup.isLegacySlot = true; // Preserve original legacy flag
+                    EditorUtility.SetDirty(backup);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
+                    AssetDatabase.SaveAssetIfDirty(backup);
+#else
+                    AssetDatabase.SaveAssets();
+#endif
+                    UMAAssetIndexer.Instance?.ProcessNewItem(backup, false, false);
+                    Debug.Log($"[SlotConvert] Created backup '{backupName}'.");
+                }
+
+                // Choose source (donor overrides backup)
+                SlotDataAsset sourceForConversion = donor != null ? donor : backup;
+                if (sourceForConversion == null)
+                {
+                    Debug.LogError($"[SlotConvert] Source slot null for '{slot.slotName}'.");
+                    continue;
+                }
+
+                // Perform conversion
+                if (donor != null)
+                {
+                    slot.ConvertBonePosesFromLegacy(donor, poseConverter, raceData, x, y, z);
+                }
+                else
+                {
+                    slot.ConvertBonePosesFromLegacy(sourceForConversion, poseConverter, raceData, x, y, z);
+                }
+
+                // Mark converted slot (legacy cleared)
+                slot.isLegacySlot = false;
+                EditorUtility.SetDirty(slot);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
+                AssetDatabase.SaveAssetIfDirty(slot);
+#else
+                AssetDatabase.SaveAssets();
+#endif
+                UMAUpdateProcessor.UpdateSlot(slot, false);
+                Debug.Log($"[SlotConvert] Converted '{slot.slotName}' using '{sourceForConversion.slotName}'.");
+            }
+        }
+	
 
         private void SetLegacyFlagOnSelectedSlots(bool legacyFlag)
         {

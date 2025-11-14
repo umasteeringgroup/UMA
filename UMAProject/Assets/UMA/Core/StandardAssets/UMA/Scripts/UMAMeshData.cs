@@ -99,7 +99,15 @@ namespace UMA
 			{
 				return 0;
 			}
-			return triangles.Length;
+			if (lodRanges == null || lodRanges.Count == 0 || lodLevel < 0)
+			{
+				return triangles.Length;
+			}
+			if (lodLevel >= lodRanges.Count)
+			{
+				lodLevel = lodRanges.Count - 1;
+			}
+			return (int)lodRanges[lodLevel].count;
 		}
 
 		public void DisposeNativeTriangles(bool remove)
@@ -146,7 +154,7 @@ namespace UMA
 		{
 			if (lodRanges == null || lodRanges.Count == 0 || LODNumber < 0)
 			{
-				return new UMALodRange(0,(uint)triangles.Length);
+				return new UMALodRange(0,(uint)(triangles != null ? triangles.Length : 0));
 			}
 			if (LODNumber >= lodRanges.Count)
 			{
@@ -158,13 +166,17 @@ namespace UMA
 
         public NativeArray<int> GetTriangles(int LODNumber)
 		{
+			// Ensure backing native array exists
 			if (nativeTriangles.IsCreated == false)
 			{
 #if DEBUG_UNITY_MESHDATA
-                Debug.Log($"SMT {smtID} Allocating native triangles for submesh of size " + triangles.Length);
+                Debug.Log($"SMT {smtID} Allocating native triangles for submesh of size " + (triangles != null ? triangles.Length : 0));
 #endif
-				nativeTriangles = new NativeArray<int>(triangles, Allocator.Persistent);
-				nativeTrianglesAllocated.Add(this);
+				nativeTriangles = (triangles != null && triangles.Length > 0) ? new NativeArray<int>(triangles, Allocator.Persistent) : default;
+				if (nativeTriangles.IsCreated)
+				{
+					nativeTrianglesAllocated.Add(this);
+				}
 			}
 			else
 			{
@@ -172,7 +184,28 @@ namespace UMA
                 Debug.Log($"SMT {smtID} Using existing native triangles for submesh of size " + nativeTriangles.Length);
 #endif
 			}
-		return nativeTriangles;
+
+			if (!nativeTriangles.IsCreated)
+			{
+				return default;
+			}
+
+			// If no LOD ranges, return full buffer
+			if (lodRanges == null || lodRanges.Count == 0 || LODNumber < 0)
+			{
+				return nativeTriangles;
+			}
+			if (LODNumber >= lodRanges.Count)
+			{
+				LODNumber = lodRanges.Count - 1;
+			}
+			var lr = lodRanges[LODNumber];
+			int start = (int)lr.offset;
+			int count = (int)lr.count;
+			// Clamp to avoid out-of-range
+			start = Mathf.Clamp(start, 0, nativeTriangles.Length);
+			count = Mathf.Clamp(count, 0, nativeTriangles.Length - start);
+			return nativeTriangles.GetSubArray(start, count);
 		}
 
 		// Backward compatibility overloads (no-arg defaults to LOD 0)
@@ -815,40 +848,40 @@ namespace UMA
 					accum(bw.boneIndex0, bw.weight0);
 					accum(bw.boneIndex1, bw.weight1);
 					accum(bw.boneIndex2, bw.weight2);
-					accum(bw.boneIndex3, bw.weight3);
-					newVerts[vi] = accV;
-					if (newNormals != null) newNormals[vi] = accN.sqrMagnitude > 0f ? accN.normalized : srcNormals[vi];
-					if (newTangents != null)
-					{
-						var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
-						newTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
-					}
-				}
-			}
-			else
-			{
-				// No weights; return copy with pre-rotation applied if requested
-				var noWeightsCopy = DeepCopy();
-				if (preRotation != Matrix4x4.identity)
-				{
-					noWeightsCopy.vertices = srcVertices;
-					if (srcNormals != null) noWeightsCopy.normals = srcNormals;
-					if (srcTangents != null) noWeightsCopy.tangents = srcTangents;
-					noWeightsCopy.verticesModified = true;
-					if (srcNormals != null) noWeightsCopy.normalsModified = true;
-					if (srcTangents != null) noWeightsCopy.tangentsModified = true;
-					noWeightsCopy.vertexCount = srcVertices.Length;
-				}
-				return noWeightsCopy;
-			}
+                    accum(bw.boneIndex3, bw.weight3);
+                    newVerts[vi] = accV;
+                    if (newNormals != null) newNormals[vi] = accN.sqrMagnitude > 0f ? accN.normalized : srcNormals[vi];
+                    if (newTangents != null)
+                    {
+                        var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                        newTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
+                    }
+                }
+            }
+            else
+            {
+                // No weights; return copy with pre-rotation applied if requested
+                var noWeightsCopy = DeepCopy();
+                if (preRotation != Matrix4x4.identity)
+                {
+                    noWeightsCopy.vertices = srcVertices;
+                    if (srcNormals != null) noWeightsCopy.normals = srcNormals;
+                    if (srcTangents != null) noWeightsCopy.tangents = srcTangents;
+                    noWeightsCopy.verticesModified = true;
+                    if (srcNormals != null) noWeightsCopy.normalsModified = true;
+                    if (srcTangents != null) noWeightsCopy.tangentsModified = true;
+                    noWeightsCopy.vertexCount = srcVertices.Length;
+                }
+                return noWeightsCopy;
+            }
 
-			outData.vertices = newVerts;
-			if (newNormals != null) outData.normals = newNormals;
-			if (newTangents != null) outData.tangents = newTangents;
-			outData.verticesModified = true;
-			if (newNormals != null) outData.normalsModified = true;
-			if (newTangents != null) outData.tangentsModified = true;
-			outData.vertexCount = newVerts.Length;
+            outData.vertices = newVerts;
+            if (newNormals != null) outData.normals = newNormals;
+            if (newTangents != null) outData.tangents = newTangents;
+            outData.verticesModified = true;
+            if (newNormals != null) outData.normalsModified = true;
+            if (newTangents != null) outData.tangentsModified = true;
+            outData.vertexCount = newVerts.Length;
 			return outData;
 		}
 
@@ -1265,6 +1298,7 @@ namespace UMA
 				submeshes = new SubMeshTriangles[subMeshCount];
 				for (int subMeshNumber = 0; subMeshNumber < subMeshCount; subMeshNumber++)
 				{
+					submeshes[subMeshNumber] = new SubMeshTriangles();
 					submeshes[subMeshNumber].SetTriangles(sharedMesh.GetTriangles(subMeshNumber));
 #if UNITY_6000_2_OR_NEWER
 					List<UMALodRange> lodRanges = new List<UMALodRange>();
@@ -1289,6 +1323,7 @@ namespace UMA
                     MeshLodRange lor = sharedMesh.GetLod(0, lodlevel);
                     lodRanges.Add(new UMALodRange(lor));
                 }
+				submeshes[0] = new SubMeshTriangles();
                 submeshes[0].SetLodRanges(lodRanges);
 
                 vertRemap = new SortedSet<int>(tris);
@@ -1464,6 +1499,7 @@ namespace UMA
 			submeshes = new SubMeshTriangles[subMeshCount];
 			for (int i = 0; i < subMeshCount; i++)
 			{
+				submeshes[i] = new SubMeshTriangles();
 				submeshes[i].SetTriangles(sharedMesh.GetTriangles(i));
 			}
 			if (udimAdjustment)
@@ -1951,7 +1987,7 @@ namespace UMA
 		public void CopyDataToUnityMesh(SkinnedMeshRenderer renderer)
 		{
 			Mesh mesh = renderer.sharedMesh;
-			mesh.subMeshCount = 1;
+					mesh.subMeshCount = 1;
 			mesh.triangles = new int[0];
 			mesh.vertices = vertices;
 
