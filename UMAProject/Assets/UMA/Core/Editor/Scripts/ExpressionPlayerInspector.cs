@@ -26,10 +26,11 @@ namespace UMA.PoseTools
 
 			if (GUILayout.Button("Reset Expression"))
 			{
+				Undo.RecordObject(player, "Reset Expression");
 				float[] zeroes = new float[player.Values.Length];
 				player.Values = zeroes;
 				EditorUtility.SetDirty(player);
-				AssetDatabase.SaveAssets();
+				TrySimulateOnce(player);
 			}
 
 			if (GUILayout.Button("Save To Clip"))
@@ -38,6 +39,20 @@ namespace UMA.PoseTools
 				player.SaveExpressionClip(assetPath);
 			}
 		}
+
+        private static void TrySimulateOnce(ExpressionPlayer p)
+        {
+            var umaPlayer = p as UMAExpressionPlayer;
+            if (umaPlayer != null)
+            {
+                umaPlayer.EditorSimulateOnce();
+            }
+            else
+            {
+                // fallback: repaint scene view
+                SceneView.RepaintAll();
+            }
+        }
 
 		[MenuItem("UMA/Pose Tools/Set Clip Generic", true, priority = 1)]
 		static bool ValidateSetClipGeneric()

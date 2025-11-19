@@ -1,6 +1,5 @@
 using UnityEngine;
 using UMA.CharacterSystem;
-using Newtonsoft.Json.Linq;
 
 
 #if UNITY_EDITOR

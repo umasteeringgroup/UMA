@@ -36,6 +36,7 @@ namespace UMA.PoseTools
 			public Quaternion rotation;
 			public Vector3 scale;
 			public string category;
+			public bool enabled = true; // new flag to allow disabling this bone in editor/runtime
 		}
 
 		/// <summary>
@@ -106,6 +107,7 @@ namespace UMA.PoseTools
 									scale.y / bone.localScale.y,
 									scale.z / bone.localScale.z);
 			pose.category = category;
+			pose.enabled = true;
 
 			ArrayUtility.Add(ref poses, pose);
 		}
@@ -199,6 +201,7 @@ namespace UMA.PoseTools
             for (int i = 0; i < poses.Length; i++)
 			{
                 PoseBone pose = poses[i];
+                if (!pose.enabled) continue; // skip disabled bones
                 umaSkeleton.Morph(pose.hash, pose.position, pose.scale, pose.rotation, weight);
 			}
 		}

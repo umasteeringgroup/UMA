@@ -358,15 +358,187 @@ namespace UMA
             //PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, string.Join( ";", allDefines.ToArray()));
 		}
       
-		/// <summary>
-		/// Create a Wardrobe Recipe from the slot (and optionally overlay)
-		/// </summary>
-		/// <param name="path"></param>
-		/// <param name="sd"></param>
-		/// <param name="od"></param>
-		/// <param name="slotName"></param>
-		/// <param name="addToGlobalLibrary"></param>
-		public static UMAWardrobeRecipe CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od, string slotName, bool addToGlobalLibrary)
+        // Rotation from Blender Z-up to Unity Y-up
+        private static readonly Quaternion BlenderToUnityRotation = Quaternion.Euler(90, 0, 0);
+
+        public static void ConvertSkinnedMesh(SkinnedMeshRenderer smr)
+        {
+            if (smr == null || smr.sharedMesh == null)
+            {
+                Debug.LogWarning("SkinnedMeshRenderer or Mesh is null.");
+                return;
+            }
+
+            Mesh mesh = UnityEngine.Object.Instantiate(smr.sharedMesh); // Clone to avoid modifying original
+            ConvertMeshGeometry(mesh);
+            ConvertBindposes(mesh);
+            smr.sharedMesh = mesh;
+
+            // Convert bone transforms
+            ConvertSkeletonRoot(smr.rootBone);
+        }
+
+        /// <summary>
+        /// Converts a UMAMeshData from Blender Z‑up to Unity Y‑up space (same logic as ConvertSkinnedMesh but in-place on UMAMeshData).
+        /// Geometry (vertices, normals, tangents), bindposes, and optionally bone/local transforms are rotated.
+        /// </summary>
+        /// <param name="meshData">Source UMA mesh data.</param>
+        /// <param name="adjustBindposes">Multiply bindposes by inverse rotation (keeps skinning aligned after vertex rotation).</param>
+        /// <param name="convertBones">
+        /// If true, rotate UMA bone local transforms. Typically leave false to avoid double-compensating animation data.
+        /// </param>
+        /// <param name="rotateRootBoneOnly">
+        /// When converting bones, rotate only the root (recommended). Set false to rotate all UMA bones.
+        /// </param>
+        /// <param name="mirrorHandednessAdjust">
+        /// If true, flips tangent w to compensate handedness change (needed for normal maps).
+        /// </param>
+        public static void ConvertMeshData(
+            UMAMeshData meshData,
+            bool adjustBindposes = true,
+            bool convertBones = false,
+            bool rotateRootBoneOnly = true,
+            bool mirrorHandednessAdjust = true)
+        {
+            if (meshData == null)
+            {
+                Debug.LogWarning("ConvertMeshData: meshData is null.");
+                return;
+            }
+            if (meshData.vertices == null || meshData.vertexCount == 0)
+            {
+                Debug.LogWarning($"ConvertMeshData: meshData has no vertices ({meshData.vertexCount}).");
+                return;
+            }
+
+            // Use same rotation as geometry conversion (-90° about X).
+            Quaternion rot = BlenderToUnityRot;
+            Matrix4x4 rotM = Matrix4x4.Rotate(rot);
+            Matrix4x4 invRotM = rotM.inverse;
+
+            // 1. Geometry
+            var verts = meshData.vertices;
+            var norms = meshData.normals;
+            var tangs = meshData.tangents;
+
+            for (int i = 0; i < meshData.vertexCount; i++)
+            {
+                verts[i] = rot * verts[i];
+                if (norms != null && i < norms.Length)
+                {
+                    norms[i] = (rot * norms[i]).normalized;
+                }
+                if (tangs != null && i < tangs.Length)
+                {
+                    Vector3 dir = new Vector3(tangs[i].x, tangs[i].y, tangs[i].z);
+                    dir = (rot * dir).normalized;
+                    float w = tangs[i].w;
+                    if (mirrorHandednessAdjust) w = -w;
+                    tangs[i] = new Vector4(dir.x, dir.y, dir.z, w);
+                }
+            }
+
+            meshData.verticesModified = true;
+            if (norms != null) meshData.normalsModified = true;
+            if (tangs != null) meshData.tangentsModified = true;
+
+            // 2. Bindposes
+            if (adjustBindposes && meshData.bindPoses != null && meshData.bindPoses.Length > 0)
+            {
+                var binds = meshData.bindPoses;
+                for (int i = 0; i < binds.Length; i++)
+                {
+                    // Same approach as ConvertBindposes: rotate mesh space, compensate by inverse.
+                    binds[i] = binds[i] * invRotM;
+                }
+            }
+
+            // 3. Bone transforms (optional)
+            // Inside ConvertMeshData, replace the bone rotation block with:
+            // 3. Bone transforms (optional; enforce root-only when geometry adjusted)
+            if (convertBones && meshData.umaBones != null && meshData.umaBones.Length > 0)
+            {
+                int rootHash = meshData.rootBoneHash;
+                for (int i = 0; i < meshData.umaBones.Length; i++)
+                {
+                    var bt = meshData.umaBones[i];
+                    if (bt == null) continue;
+                    // Always restrict to root to avoid double application
+                    if (bt.hash != rootHash) continue;
+
+                    bt.position = rot * bt.position;
+                    bt.rotation = rot * bt.rotation;
+                }
+
+                if (meshData.rootBone != null)
+                {
+                    meshData.rootBone.localPosition = rot * meshData.rootBone.localPosition;
+                    meshData.rootBone.localRotation = rot * meshData.rootBone.localRotation;
+                }
+            }
+        }
+
+        private static readonly Quaternion BlenderToUnityRot = Quaternion.Euler(-90f, 0f, 0f);
+
+        private static void ConvertMeshGeometry(Mesh mesh)
+        {
+            var vertices = mesh.vertices;
+            var normals = mesh.normals;
+            var tangents = mesh.tangents;
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i] = BlenderToUnityRot * vertices[i];
+            }
+
+            for (int i = 0; i < normals.Length; i++)
+            {
+                normals[i] = (BlenderToUnityRot * normals[i]).normalized;
+            }
+
+            for (int i = 0; i < tangents.Length; i++)
+            {
+                Vector3 dir = new Vector3(tangents[i].x, tangents[i].y, tangents[i].z);
+                dir = BlenderToUnityRot * dir;
+                tangents[i] = new Vector4(dir.x, dir.y, dir.z, -tangents[i].w); // w inverted because (x,z,-y) changes handedness
+            }
+
+            mesh.vertices = vertices;
+            mesh.normals = normals;
+            mesh.tangents = tangents;
+            mesh.RecalculateBounds();
+        }
+
+        private static void ConvertBindposes(Mesh mesh)
+        {
+            var bindposes = mesh.bindposes;
+            Matrix4x4 rot = Matrix4x4.Rotate(BlenderToUnityRot);
+            Matrix4x4 invRot = rot.inverse;
+
+            for (int i = 0; i < bindposes.Length; i++)
+            {
+                // Rotate mesh space; adjust bindpose accordingly
+                bindposes[i] = bindposes[i] * invRot;
+            }
+            mesh.bindposes = bindposes;
+        }
+
+        private static void ConvertSkeletonRoot(Transform root)
+        {
+            if (root == null) return;
+            root.localRotation = BlenderToUnityRot * root.localRotation;
+            root.localPosition = BlenderToUnityRot * root.localPosition;
+        }
+
+        /// <summary>
+        /// Create a Wardrobe Recipe from the slot (and optionally overlay)
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="sd"></param>
+        /// <param name="od"></param>
+        /// <param name="slotName"></param>
+        /// <param name="addToGlobalLibrary"></param>
+        public static UMAWardrobeRecipe CreateRecipe(string path, SlotDataAsset sd, OverlayDataAsset od, string slotName, bool addToGlobalLibrary)
 		{
 			// Generate an asset in memory
 			UMAWardrobeRecipe asset = ScriptableObject.CreateInstance<CharacterSystem.UMAWardrobeRecipe>();

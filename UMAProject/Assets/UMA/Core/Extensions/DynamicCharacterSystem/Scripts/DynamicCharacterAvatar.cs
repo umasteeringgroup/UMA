@@ -829,7 +829,7 @@ namespace UMA.CharacterSystem
                 if (generateWait >= maxWait)
                 {
                     // Don't try anymore.
-                    return; 
+                    return;
                 }
                 // Try again after compiling and updating finished.
                 EditorApplication.delayCall += InternalGenerateSingleUMA;
@@ -841,6 +841,11 @@ namespace UMA.CharacterSystem
                 return;
             }
             bool slotsOnly = nextBuildSlotsOnly;
+            BuildNow();
+        }
+
+        public void BuildNow()
+        {
             UMAGenerator ugb = umaGenerator;
             if (ugb != null)
             {
@@ -5598,6 +5603,122 @@ namespace UMA.CharacterSystem
                 DebugBox.transform.localScale = size;
                 DebugBox.transform.position = center;
             }
+        }
+
+        public SlotData[] GetBaseSlots()
+        {
+            // Guard: no recipe or empty
+            if (umaRecipe == null || umaRecipe.slotDataList == null || umaRecipe.slotDataList.Length == 0)
+            {
+                return Array.Empty<SlotData>();
+            }
+
+            // Clone current slot list (shallow copy of SlotData references)
+            var cloned = new List<SlotData>(umaRecipe.slotDataList.Length);
+            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
+            {
+                var sd = umaRecipe.slotDataList[i];
+                if (sd != null)
+                {
+                    cloned.Add(sd);
+                }
+            }
+
+            // Remove base-race slots from the cloned list
+            try
+            {
+                var raceData = activeRace != null ? activeRace.racedata : null;
+                var baseRecipeAsset = raceData != null ? raceData.baseRaceRecipe : null;
+                if (baseRecipeAsset != null)
+                {
+                    // Use cached recipe to avoid re-parsing
+                    var baseRecipe = baseRecipeAsset.GetCachedRecipe();
+                    if (baseRecipe != null && baseRecipe.slotDataList != null && baseRecipe.slotDataList.Length > 0)
+                    {
+                        var baseSlotNames = new HashSet<string>();
+                        for (int i = 0; i < baseRecipe.slotDataList.Length; i++)
+                        {
+                            var bsd = baseRecipe.slotDataList[i];
+                            if (bsd != null && !string.IsNullOrEmpty(bsd.slotName))
+                            {
+                                baseSlotNames.Add(bsd.slotName);
+                            }
+                        }
+
+                        if (baseSlotNames.Count > 0)
+                        {
+                            cloned.RemoveAll(sd => sd != null && !string.IsNullOrEmpty(sd.slotName) && (!baseSlotNames.Contains(sd.slotName)));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+#if UNITY_EDITOR
+                Debug.LogWarning($"[GetEquippedSlots] Failed to filter base slots: {ex.Message}");
+#endif
+                // Fallback: return cloned list unfiltered
+            }
+
+            return cloned.ToArray();
+        }
+
+        public SlotData[] GetEquippedSlots()
+        {
+            // Guard: no recipe or empty
+            if (umaRecipe == null || umaRecipe.slotDataList == null || umaRecipe.slotDataList.Length == 0)
+            {
+                return Array.Empty<SlotData>();
+            }
+
+            // Clone current slot list (shallow copy of SlotData references)
+            var cloned = new List<SlotData>(umaRecipe.slotDataList.Length);
+            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
+            {
+                var sd = umaRecipe.slotDataList[i];
+                if (sd != null)
+                {
+                    cloned.Add(sd);
+                }
+            }
+
+            // Remove base-race slots from the cloned list
+            try
+            {
+                var raceData = activeRace != null ? activeRace.racedata : null;
+                var baseRecipeAsset = raceData != null ? raceData.baseRaceRecipe : null;
+                if (baseRecipeAsset != null)
+                {
+                    // Use cached recipe to avoid re-parsing
+                    var baseRecipe = baseRecipeAsset.GetCachedRecipe();
+                    if (baseRecipe != null && baseRecipe.slotDataList != null && baseRecipe.slotDataList.Length > 0)
+                    {
+                        var baseSlotNames = new HashSet<string>();
+                        for (int i = 0; i < baseRecipe.slotDataList.Length; i++)
+                        {
+                            var bsd = baseRecipe.slotDataList[i];
+                            if (bsd != null && !string.IsNullOrEmpty(bsd.slotName))
+                            {
+                                baseSlotNames.Add(bsd.slotName);
+                            }
+                        }
+
+                        if (baseSlotNames.Count > 0)
+                        {
+                            cloned.RemoveAll(sd => sd != null && !string.IsNullOrEmpty(sd.slotName) && baseSlotNames.Contains(sd.slotName));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+#if UNITY_EDITOR
+                Debug.LogWarning($"[GetEquippedSlots] Failed to filter base slots: {ex.Message}");
+#endif
+                // Fallback: return cloned list unfiltered
+            }
+
+            return cloned.ToArray();
         }
 
         void UpdateBounds()

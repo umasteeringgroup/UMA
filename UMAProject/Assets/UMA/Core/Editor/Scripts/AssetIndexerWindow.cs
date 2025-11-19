@@ -2438,6 +2438,7 @@ namespace UMA.Controls
         bool _materialFoldout;
         bool _raceFoldout;
         bool _recipeFoldout;
+        bool _conversionFoldout;
         bool _OverlayFoldout;
         bool _SlotFoldout;
         bool _TextureFoldout;
@@ -2453,8 +2454,10 @@ namespace UMA.Controls
 		private UMAAssetIndexer AnalyzeIndex;
         private UMABonePose PoseConverter;
         private RaceData raceForPose;
+        private RaceData toRace;
         private SlotDataAsset donorSlot;
-        float rotX, rotY, rotZ; 
+        float rotX, rotY, rotZ;
+        private bool postRotate = false;
 
 
         void ShowSidebar()
@@ -2854,11 +2857,13 @@ namespace UMA.Controls
                 {
                     SetLegacyFlagOnSelectedSlots(true);
                 }
+#if EXP_SLOT_CONVERSION
                 GUILayout.Label("Slot Conversion",EditorStyles.boldLabel);
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("BonePose:");
                 PoseConverter = EditorGUILayout.ObjectField("", PoseConverter, typeof(UMABonePose), false, GUILayout.Width(175)) as UMABonePose;
                 GUILayout.EndHorizontal();
+
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("To RaceData:");
                 raceForPose = EditorGUILayout.ObjectField("", raceForPose,  typeof(RaceData), false, GUILayout.Width(175)) as RaceData;
@@ -2875,23 +2880,81 @@ namespace UMA.Controls
                 EditorGUILayout.LabelField("Z:", GUILayout.Width(22));
                 rotZ = EditorGUILayout.FloatField(rotZ, GUILayout.Width(60));
                 GUILayout.EndHorizontal();
+                postRotate = EditorGUILayout.ToggleLeft("Post Rotate", postRotate);
 
 
                 if (GUILayout.Button("Convert to new format", GUILayout.Width(150)))
                 {
-                    ConvertSlotFromLegacy(donorSlot, PoseConverter, raceForPose, rotX, rotY, rotZ);
+                    ConvertSlotFromLegacy(donorSlot, PoseConverter, raceForPose, rotX, rotY, rotZ, postRotate);
                 }
                 if (GUILayout.Button("Convert to new format (old method)", GUILayout.Width(200)))
                 {
-                    ConvertSlotFromLegacyOld(donorSlot, PoseConverter, raceForPose, rotX, rotY, rotZ);
+                    ConvertSlotFromLegacyOld(donorSlot, PoseConverter, raceForPose, rotX, rotY, rotZ, postRotate);
                 }
                 if (GUILayout.Button("Restore from backup (_Original)"))
                 {
                     RestoreSlots();
                 }
-
+#endif
                 GUIHelper.EndVerticalPadded(10);
             }
+#if EXP_SLOT_CONVERSION
+            _conversionFoldout = EditorGUILayout.Foldout(_conversionFoldout, "Conversions");
+            if (_conversionFoldout)
+            {
+                GUILayout.Label("Scene base slot Conversion", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox($"This will convert all equipped slots on the 'From DCA' to the 'To DCA' using the BonePose specified below and will create new slots in the project folder 'Assets/UMA/ConvertedSlots'.", MessageType.Info);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("BonePose:");
+                PoseConverter = EditorGUILayout.ObjectField("", PoseConverter, typeof(UMABonePose), false, GUILayout.Width(175)) as UMABonePose;
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("From Character");
+                _fromCharacter = EditorGUILayout.ObjectField("", _fromCharacter, typeof(DynamicCharacterAvatar), true, GUILayout.Width(175)) as DynamicCharacterAvatar;
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("To Character");
+                _toCharacter = EditorGUILayout.ObjectField("", _toCharacter, typeof(DynamicCharacterAvatar), true, GUILayout.Width(175)) as DynamicCharacterAvatar;
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("X:", GUILayout.Width(22));
+                rotX = EditorGUILayout.FloatField(rotX, GUILayout.Width(60));
+                EditorGUILayout.LabelField("Y:", GUILayout.Width(22));
+                rotY = EditorGUILayout.FloatField(rotY, GUILayout.Width(60));
+                EditorGUILayout.LabelField("Z:", GUILayout.Width(22));
+                rotZ = EditorGUILayout.FloatField(rotZ, GUILayout.Width(60));
+                GUILayout.EndHorizontal();
+                alignBindPoses = EditorGUILayout.ToggleLeft("Align Bind Poses", alignBindPoses);
+                if (GUILayout.Button("inc"))
+                {
+                    rotX += 90f;
+                    if (rotX >= 360f)
+                    {
+                        rotX = 0f;
+                        rotY += 90f;
+                        if (rotY >= 360f)
+                        {
+                            rotY = 0f;
+                            rotZ += 90f;
+                            if (rotZ >= 360f)
+                            {
+                                rotZ = 0f;
+                            }
+                        }
+
+                    }
+                    ConvertEquippedSlots(_fromCharacter, _toCharacter, PoseConverter, rotX, rotY, rotZ,alignBindPoses);
+                }
+
+                if (GUILayout.Button("Convert Now"))
+                {
+                    ConvertEquippedSlots(_fromCharacter, _toCharacter, PoseConverter, rotX, rotY,rotZ,alignBindPoses);
+                }
+            }
+#endif
 
             _TextureFoldout = EditorGUILayout.Foldout(_TextureFoldout, "Textures");
             if (_TextureFoldout)
@@ -2909,6 +2972,262 @@ namespace UMA.Controls
             }
             GUILayout.EndScrollView();
         }
+
+        private DynamicCharacterAvatar _fromCharacter;
+        private DynamicCharacterAvatar _toCharacter;
+        private bool alignBindPoses = false;
+
+        class SaveBonePoseInfo
+        {
+            public DynamicDNAConverterController Controller;
+            public int BonePoseConverterNumber;
+            public float BonePoseConverterWeight;
+            public UMABonePose bonePose;
+
+            public SaveBonePoseInfo(DynamicDNAConverterController controller, int converterNumber, float weight, UMABonePose pose)
+            {
+                Controller = controller;
+                BonePoseConverterNumber = converterNumber;
+                BonePoseConverterWeight = weight;
+                bonePose = pose;
+            }
+        }
+
+        // todo: pass a donor slot. Copy everything from that except the meshdata, which comes from the fromDCA after applying the bonepose.
+
+        private void ConvertEquippedSlots(DynamicCharacterAvatar fromDCA, DynamicCharacterAvatar toDCA, UMABonePose poseConverter, float rotX, float rotY, float rotZ, bool alignBindPoses)
+        {
+            if (fromDCA == null || toDCA == null || poseConverter == null)
+            {
+                Debug.LogError("Please ensure From DCA, To DCA and BonePose are all assigned.");
+                return;
+            }
+
+            // save the boneposes, and then clear their weights so they don't apply.
+            // the set our new bonepose with weight 1f
+            // then force build the character to apply the bonepose to the rig 
+            // then bake the character with no animator to get the meshes with the bonepose applied
+
+
+
+            RaceData race = fromDCA.activeRace.data;
+            if (race.useNewDNA)
+            {
+                Debug.LogError("From DCA uses new DNA system. This conversion only works with legacy DNA");
+                EditorUtility.DisplayDialog("Error", "From DCA uses new DNA system. This conversion only works with legacy DNA", "OK");
+            }
+            if (race.dnaConverterList == null || race.dnaConverterList.Length == 0)
+            {               
+                Debug.LogError("From DCA Race has no DNA Converters.");
+                EditorUtility.DisplayDialog("Error", "From DCA Race has no DNA converters", "OK");
+                return;
+            }
+
+            List <DynamicDNAConverterController> controllers = new List<DynamicDNAConverterController>();
+            controllers.AddRange(race.dnaConverterList);
+
+            List <SaveBonePoseInfo> BonePoseSaves = new List<SaveBonePoseInfo>();
+            foreach (var controller in controllers)
+            {
+                var bonePoseConverters = controller.GetBonePoseConverters();
+                for (int bpConverter = 0; bpConverter < bonePoseConverters.Count; bpConverter++)
+                {
+                    BonePoseDNAConverterPlugin.BonePoseDNAConverter bonePoseConverter = bonePoseConverters[bpConverter];
+                    SaveBonePoseInfo sbp = new SaveBonePoseInfo(controller, bpConverter, bonePoseConverter.startingPoseWeight, bonePoseConverter.poseToApply);
+                    BonePoseSaves.Add(sbp);
+                    bonePoseConverter.startingPoseWeight = 0f;
+                }
+            }
+
+            if (BonePoseSaves.Count == 0)
+            {
+                var plugin = controllers[0].EnsureBonePosePlugin();
+            }
+
+            var addedbpc  = controllers[0].AddBonePoseConverter(poseConverter, startingWeight: 1f);
+
+            var toSlots = toDCA.GetBaseSlots();
+
+            var fromSlots = fromDCA.GetEquippedSlots();
+            fromDCA.BuildNow();
+            //ApplyBoneposeToRig(fromDCA, poseConverter);
+            List<Mesh> meshes = BakeDCA(fromDCA);
+            Quaternion rot = Quaternion.Euler(rotX, rotY, rotZ);
+
+            foreach (var slot in fromSlots)
+            {
+                SlotDataAsset backupSlot;
+                // if backup exists, restore from that first.
+
+                BackupSlot(backupFolder, slot.asset, out backupSlot);
+                // Restore the backup slot if it exists
+                if (backupSlot != null)
+                {
+                    slot.asset.meshData = backupSlot.meshData.DeepCopy();
+                }
+                // Convert each slot using the baked meshes
+                SlotDataAsset sda = slot.asset;
+                int meshNumber = slot.skinnedMeshRenderer;
+                int vertexOffset = slot.vertexOffset;
+                int vertexCount = sda.meshData.vertexCount;
+                Mesh bakedMesh = meshes[meshNumber];
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    Vector3 newVector = bakedMesh.vertices[vertexOffset + i];
+                    sda.meshData.vertices[i] = rot * newVector;
+                }
+                if (alignBindPoses)
+                {
+                    SlotDataAssetInspector.ConformBindposesAndVertices(sda, toSlots[0].asset);
+                }
+                else
+                {
+                    // copy the bindpose from the toDCA first slot.
+                    Matrix4x4[] bindPoses = toSlots[0].asset.meshData.bindPoses;
+                }
+                FinalizeSlot(sda);
+            }
+
+
+            addedbpc.startingPoseWeight = 0f;
+            controllers[0].RemoveBonePoseConverters(poseConverter);
+            // restore bone poses
+            foreach (var bonePoseInfo in BonePoseSaves)
+            {
+                var controller = bonePoseInfo.Controller;
+                var bonePoseConverter = controller.GetBonePoseConverters()[bonePoseInfo.BonePoseConverterNumber];
+                bonePoseConverter.startingPoseWeight = bonePoseInfo.BonePoseConverterWeight;
+                bonePoseConverter.poseToApply = bonePoseInfo.bonePose;
+            }
+
+            CopyPreloadWardrobeRecipes(fromDCA, toDCA);
+            toDCA.BuildNow();
+        }
+
+        private void CopyPreloadWardrobeRecipes(DynamicCharacterAvatar fromDCA, DynamicCharacterAvatar toDCA)
+        {
+            if (fromDCA == null || toDCA == null)
+            {
+                Debug.LogError("CopyPreloadWardrobeRecipes: fromDCA or toDCA is null.");
+                return;
+            }
+
+            var src = fromDCA.preloadWardrobeRecipes;
+            if (src == null)
+            {
+                Debug.LogWarning("CopyPreloadWardrobeRecipes: Source DCA has no preloadWardrobeRecipes.");
+                return;
+            }
+
+#if UNITY_EDITOR
+            Undo.RecordObject(toDCA, "Copy Preload Wardrobe Recipes");
+#endif
+
+            // Ensure destination list exists
+            if (toDCA.preloadWardrobeRecipes == null)
+            {
+                toDCA.preloadWardrobeRecipes = new DynamicCharacterAvatar.WardrobeRecipeList();
+            }
+
+            toDCA.preloadWardrobeRecipes.loadDefaultRecipes = src.loadDefaultRecipes;
+
+            var dstList = new List<DynamicCharacterAvatar.WardrobeRecipeListItem>(); // alias not available; use fully qualified below
+            dstList = new List<DynamicCharacterAvatar.WardrobeRecipeListItem>(src.recipes != null ? src.recipes.Count : 0);
+
+            var idx = UMAAssetIndexer.Instance;
+
+            if (src.recipes != null)
+            {
+                dstList.Clear();
+                for (int i = 0; i < src.recipes.Count; i++)
+                {
+                    var s = src.recipes[i];
+                    if (s == null) continue;
+
+                    var item = new DynamicCharacterAvatar.WardrobeRecipeListItem
+                    {
+                        _recipeName = s._recipeName,
+                        _enabledInDefaultWardrobe = s._enabledInDefaultWardrobe,
+                        ForceLoad = s.ForceLoad,
+                        _compatibleRaces = (s._compatibleRaces != null) ? new List<string>(s._compatibleRaces) : new List<string>()
+                    };
+
+                    // Try to resolve the recipe asset by name for convenience
+                    if (!string.IsNullOrEmpty(item._recipeName) && idx != null)
+                    {
+                        try
+                        {
+                            item._recipe = idx.GetAsset<UMATextRecipe>(item._recipeName);
+                            item.ForceLoad = true;
+                        }
+                        catch { /* ignore resolve failures; name will still be copied */ }
+                    }
+
+                    dstList.Add(item);
+                }
+            }
+
+            toDCA.preloadWardrobeRecipes.recipes = dstList;
+
+#if UNITY_EDITOR
+            EditorUtility.SetDirty(toDCA);
+#endif
+        }
+
+        public List<Mesh> BakeDCA(DynamicCharacterAvatar dca)
+        {
+            List<Mesh> meshes = new List<Mesh>();
+            UMAData ud = dca as UMAData;
+            for (int i = 0; i < ud.RendererCount; i++)
+            {
+                SkinnedMeshRenderer smr = ud.GetRenderer(i);
+                Mesh bakedMesh = new Mesh();
+                smr.BakeMesh(bakedMesh);
+                meshes.Add(bakedMesh);
+            }
+            return meshes;
+        }
+
+        public void ApplyBoneposeToRig(DynamicCharacterAvatar DCA, UMABonePose PoseConverter)
+        {
+            if (DCA == null || DCA.umaData == null || DCA.umaData.skeleton == null)
+            {
+                Debug.LogError("DCA or UMAData or Skeleton is null.");
+                return;
+            }
+            var poseConverter = PoseConverter;
+            if (poseConverter == null)
+            {
+                Debug.LogError("PoseConverter is null.");
+                return;
+            }
+            foreach (var bonePose in poseConverter.poses)
+            {
+                var boneTransform = DCA.umaData.skeleton.GetBoneTransform(bonePose.bone);
+                if (boneTransform != null)
+                {
+                    boneTransform.localPosition = bonePose.position;
+                    boneTransform.localRotation = bonePose.rotation;
+                    boneTransform.localScale = bonePose.scale;
+                }
+            }
+        }
+
+
+        public void BakeSelectedSlotsToNewRace()
+        {
+            var selectedSlots = GetSelectedAssets(typeof(SlotDataAsset));
+            foreach (var slotItem in selectedSlots)
+            {
+                SlotDataAsset slot = slotItem.Item as SlotDataAsset;
+                if (slot != null)
+                {
+                    BakeSlotToNewRace(slot, raceForPose, null, 0, 0, 0, PoseConverter);
+                }
+            }
+        }
+
+
         /// <summary>
         /// Restores the specified slot from its original backup (slotName + "_Original").
         /// Copies all data from the backup into the current slot, but preserves the current slot's asset name and slotName.
@@ -3011,7 +3330,7 @@ namespace UMA.Controls
         }
         
 
-        private void ConvertSlotFromLegacyOld(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x=0f, float y=0f, float z = 0f)
+        private void ConvertSlotFromLegacyOld(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x=0f, float y=0f, float z = 0f, bool postRotate=false)
         {
             if (poseConverter == null)
             {
@@ -3026,11 +3345,11 @@ namespace UMA.Controls
                 {
                     if (donor != null)
                     {
-                        slot.ConvertBonePosesFromLegacy(donor, poseConverter, raceData, x, y, z);
+                        slot.ConvertBonePosesFromLegacy(donor, poseConverter, raceData, x, y, z, postRotate);
                     }
                     else
                     {
-                        slot.ConvertBonePosesFromLegacy(poseConverter, raceData, x, y, z);
+                        slot.ConvertBonePosesFromLegacy(poseConverter, raceData, x, y, z, postRotate);
                     }
                     Debug.Log("Updating converted slot");
                     EditorUtility.SetDirty(slot);
@@ -3040,7 +3359,11 @@ namespace UMA.Controls
             }
         }
 
-        private void ConvertSlotFromLegacy(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x = 0f, float y = 0f, float z = 0f)
+
+        const string backupFolder = "Assets/UMA/SlotBackup";
+
+
+        private void ConvertSlotFromLegacy(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x, float y, float z, bool postRotate)
         {
             // Backup-aware legacy conversion:
             // 1. Skip slots whose slotName already ends with _Original
@@ -3057,12 +3380,8 @@ namespace UMA.Controls
             var selected = GetSelectedAssets(typeof(SlotDataAsset));
             if (selected == null || selected.Count == 0) return;
 
-            const string backupFolder = "Assets/UMA/SlotBackup";
-            if (!Directory.Exists(backupFolder))
-            {
-                Directory.CreateDirectory(backupFolder);
-                AssetDatabase.ImportAsset(backupFolder);
-            }
+
+
 
             foreach (var ai in selected)
             {
@@ -3070,40 +3389,11 @@ namespace UMA.Controls
                 if (slot == null) continue;
                 if (string.IsNullOrEmpty(slot.slotName)) continue;
                 // Skip backup assets themselves
-                if (slot.slotName.EndsWith("_Original", StringComparison.Ordinal)) continue;
-
-                // Get or create backup
-                string backupName = slot.slotName + "_Original";
-                SlotDataAsset backup = UMAAssetIndexer.Instance?.GetAsset<SlotDataAsset>(backupName);
-                if (backup == null)
+                SlotDataAsset backup;
+                if (!BackupSlot(backupFolder, slot, out backup))
                 {
-                    // Fallback AssetDatabase search
-                    string[] guids = AssetDatabase.FindAssets(backupName + " t:SlotDataAsset");
-                    if (guids != null && guids.Length > 0)
-                    {
-                        string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                        backup = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(path);
-                    }
+                    continue;
                 }
-                if (backup == null)
-                {
-                    backup = slot.Clone(backupName, backupName, true, backupFolder);
-                    if (backup == null)
-                    {
-                        Debug.LogError($"[SlotConvert] Failed to create backup for '{slot.slotName}'. Skipping.");
-                        continue;
-                    }
-                    backup.isLegacySlot = true; // Preserve original legacy flag
-                    EditorUtility.SetDirty(backup);
-#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
-                    AssetDatabase.SaveAssetIfDirty(backup);
-#else
-                    AssetDatabase.SaveAssets();
-#endif
-                    UMAAssetIndexer.Instance?.ProcessNewItem(backup, false, false);
-                    Debug.Log($"[SlotConvert] Created backup '{backupName}'.");
-                }
-
                 // Choose source (donor overrides backup)
                 SlotDataAsset sourceForConversion = donor != null ? donor : backup;
                 if (sourceForConversion == null)
@@ -3115,26 +3405,106 @@ namespace UMA.Controls
                 // Perform conversion
                 if (donor != null)
                 {
-                    slot.ConvertBonePosesFromLegacy(donor, poseConverter, raceData, x, y, z);
+                    slot.ConvertBonePosesFromLegacy(donor, poseConverter, raceData, x, y, z, postRotate);
                 }
                 else
                 {
-                    slot.ConvertBonePosesFromLegacy(sourceForConversion, poseConverter, raceData, x, y, z);
+                    slot.ConvertBonePosesFromLegacy(sourceForConversion, poseConverter, raceData, x, y, z, postRotate);
                 }
 
-                // Mark converted slot (legacy cleared)
-                slot.isLegacySlot = false;
-                EditorUtility.SetDirty(slot);
-#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
-                AssetDatabase.SaveAssetIfDirty(slot);
-#else
-                AssetDatabase.SaveAssets();
-#endif
-                UMAUpdateProcessor.UpdateSlot(slot, false);
+                FinalizeSlot(slot);
                 Debug.Log($"[SlotConvert] Converted '{slot.slotName}' using '{sourceForConversion.slotName}'.");
             }
         }
-	
+
+        private static void FinalizeSlot(SlotDataAsset slot)
+        {
+            // Mark converted slot (legacy cleared)
+            slot.isLegacySlot = false;
+            EditorUtility.SetDirty(slot);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
+                AssetDatabase.SaveAssetIfDirty(slot);
+#else
+            AssetDatabase.SaveAssets();
+#endif
+            UMAUpdateProcessor.UpdateSlot(slot, false);
+        }
+
+        private static bool BackupSlot(string backupFolder, SlotDataAsset slot, out SlotDataAsset backup)
+        {
+            if (!Directory.Exists(backupFolder))
+            {
+                Directory.CreateDirectory(backupFolder);
+                AssetDatabase.ImportAsset(backupFolder);
+            }
+
+            backup = null;
+            if (slot == null || string.IsNullOrEmpty(slot.slotName))
+            {
+                Debug.LogError("[SlotConvert] Invalid slot passed to BackupSlot.");
+                return false;
+            }
+
+            string backupName = slot.slotName + "_Original";
+
+            // Try UMAAssetIndexer first
+            backup = UMAAssetIndexer.Instance?.GetAsset<SlotDataAsset>(backupName);
+
+            // Fallback to AssetDatabase search
+            if (backup == null)
+            {
+                // Exact name search prevents partial matches
+                string[] guids = AssetDatabase.FindAssets($"\"{backupName}\" t:SlotDataAsset");
+                if (guids != null && guids.Length > 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    backup = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(path);
+                }
+            }
+
+            // Need to create backup
+            if (backup == null)
+            {
+                backup = slot.Clone(backupName, backupName, true, backupFolder);
+                if (backup == null)
+                {
+                    Debug.LogError($"[SlotConvert] Failed to create backup for '{slot.slotName}'. Skipping.");
+                    return false;
+                }
+
+                backup.isLegacySlot = true; // retain legacy flag on original
+                EditorUtility.SetDirty(backup);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
+        AssetDatabase.SaveAssetIfDirty(backup);
+#else
+                AssetDatabase.SaveAssets();
+#endif
+                UMAAssetIndexer.Instance?.ProcessNewItem(backup, false, false);
+                Debug.Log($"[SlotConvert] Created backup '{backupName}'.");
+            }
+
+            return true;
+        }
+
+        private void BakeSlotToNewRace(SlotDataAsset slot, RaceData oldRace, RaceData newRace, float rotx, float roty, float rotz, UMABonePose SourceToDest)
+        {
+            // First, bake the new bone pose on the slot. 
+            if (string.IsNullOrEmpty(slot.slotName))
+            {
+                Debug.Log("Slot has not slotName! slot base name is: " + slot.name);
+                return;
+            }
+
+            // Skip backup assets themselves
+            SlotDataAsset backup;
+            if (!BackupSlot(backupFolder, slot, out backup))
+            {
+                return;
+            }
+
+            slot.meshData.ApplyBonePose(oldRace, SourceToDest);
+            FinalizeSlot(slot);
+        }
 
         private void SetLegacyFlagOnSelectedSlots(bool legacyFlag)
         {

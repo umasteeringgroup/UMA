@@ -764,12 +764,14 @@ namespace UMA
         {
         }
 
-        UMAMeshData Convert(UMABonePose bonePose, RaceData raceData, float x, float y, float z )
+        UMAMeshData Convert(UMABonePose bonePose, RaceData raceData, float x, float y, float z, bool postRotate)
         {
             Quaternion adjustRot = Quaternion.Euler(x, y, z);
             Matrix4x4 adjustMatrix = Matrix4x4.TRS(Vector3.zero, adjustRot, Vector3.one);
-            UMAMeshData convertedMeshData = meshData.ApplyBonePose(bonePose, adjustMatrix, raceData);
-            return convertedMeshData;
+            // First bake the bone pose with the requested pre-rotation
+            var baked = meshData.ApplyBonePoseWithRoot(bonePose, adjustMatrix, postRotate, "Hips");
+            // Then apply race data replacements (bindposes + UMA transforms + root/bones)
+            return baked.ApplyBonePose(null, raceData);
         }
 
         public void Begin(UMAData umaData)
@@ -850,18 +852,18 @@ namespace UMA
         }
 
 
-        public void ConvertBonePosesFromLegacy(UMABonePose bonePose, RaceData race, float x, float y, float z)
+        public void ConvertBonePosesFromLegacy(UMABonePose bonePose, RaceData race, float x, float y, float z, bool postRotate)
         {
             //if (isLegacySlot && bonePose != null)
             //{
-                meshData = Convert(bonePose,race,x,y,z);
+                meshData = Convert(bonePose,race,x,y,z,postRotate);
                 isLegacySlot = false;
                 Debug.Log($"Converted legacy SlotDataAsset {slotName} to new bone pose system.");
                 // you will need to set this as dirty and save the asset after calling this function.
             //}
         }
 
-        public void ConvertBonePosesFromLegacy(SlotDataAsset donor, UMABonePose bonePose, RaceData race, float x, float y, float z)
+        public void ConvertBonePosesFromLegacy(SlotDataAsset donor, UMABonePose bonePose, RaceData race, float x, float y, float z, bool postRotate)
         {
             if (donor == null && isLegacySlot == false)
             {
@@ -870,7 +872,7 @@ namespace UMA
 
             //if (bonePose != null)
             //{
-                meshData = donor.Convert(bonePose, race, x, y, z);
+                meshData = donor.Convert(bonePose, race, x, y, z, postRotate);
                 isLegacySlot = false;
                 Debug.Log($"Converted legacy SlotDataAsset {slotName} to new bone pose system.");
                 // you will need to set this as dirty and save the asset after calling this function.

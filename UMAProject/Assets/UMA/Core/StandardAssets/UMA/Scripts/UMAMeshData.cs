@@ -603,13 +603,82 @@ namespace UMA
 			return offset;
 		}
 
-		public UMAMeshData ApplyBonePose(UMABonePose bonePose)
+		public UMAMeshData otherApplyBonePose(UMABonePose bonePose)
 		{
 			// Backward-compatible wrapper: no pre-rotation
-			return ApplyBonePose(bonePose, Matrix4x4.identity);
+			return ApplyBonePose(bonePose, Matrix4x4.identity, false );
 		}
-		// New overload: apply a pre-rotation to geometry before baking the bone pose
-		public UMAMeshData ApplyBonePose(UMABonePose bonePose, Matrix4x4 preRotation)
+
+
+        /// <summary>
+        /// helper providing corrected post-rotation behavior for ApplyBonePose.
+        /// Use: var result = meshData.ApplyBonePoseWithPostRotate(bonePose, rotationMatrix, postRotateFlag);
+        /// If postRotateFlag == false: delegates to existing ApplyBonePose(bonePose, rotationMatrix, false) (pre-rotation).
+        /// If postRotateFlag == true: applies bone pose first (no pre-rotation), then rotates baked vertices/normals/tangents.
+        /// </summary>
+
+            public UMAMeshData ApplyBonePoseWithPostRotate(
+                UMABonePose bonePose,
+                Matrix4x4 rotation,
+                bool postRotate)
+            {
+
+
+                // If we are NOT post rotating, keep original pre-rotation behavior
+                if (!postRotate)
+                {
+                    return ApplyBonePose(bonePose, rotation, false);
+                }
+
+                // When postRotate == true:
+                // 1. Bake bone pose WITHOUT any pre-rotation (identity).
+                // 2. Apply rotation to resulting geometry (vertices, normals, tangents) afterward.
+                var baked = ApplyBonePose(bonePose, Matrix4x4.identity, false);
+
+                // If rotation is identity or mesh has no vertices, just return baked.
+                if (rotation == Matrix4x4.identity || baked.vertices == null || baked.vertexCount == 0)
+                    return baked;
+
+                var vCount = baked.vertexCount;
+                var inVerts = baked.vertices;
+                var inNormals = baked.normals;
+                var inTangents = baked.tangents;
+
+                var outVerts = new Vector3[vCount];
+                Vector3[] outNormals = (inNormals != null && inNormals.Length == vCount) ? new Vector3[vCount] : null;
+                Vector4[] outTangents = (inTangents != null && inTangents.Length == vCount) ? new Vector4[vCount] : null;
+
+                for (int i = 0; i < vCount; i++)
+                {
+                    outVerts[i] = rotation.MultiplyPoint3x4(inVerts[i]);
+
+                    if (outNormals != null)
+                        outNormals[i] = rotation.MultiplyVector(inNormals[i]);
+
+                    if (outTangents != null)
+                    {
+                        var t3 = new Vector3(inTangents[i].x, inTangents[i].y, inTangents[i].z);
+                        var rt = rotation.MultiplyVector(t3).normalized;
+                        outTangents[i] = new Vector4(rt.x, rt.y, rt.z, inTangents[i].w);
+                    }
+                }
+
+                baked.vertices = outVerts;
+                if (outNormals != null) baked.normals = outNormals;
+                if (outTangents != null) baked.tangents = outTangents;
+
+                baked.verticesModified = true;
+                if (outNormals != null) baked.normalsModified = true;
+                if (outTangents != null) baked.tangentsModified = true;
+
+                baked.vertexCount = outVerts.Length;
+                return baked;
+            }
+        
+    
+
+    // New overload: apply a pre-rotation to geometry before baking the bone pose
+    public UMAMeshData OlderApplyBonePose(UMABonePose bonePose, Matrix4x4 preRotation, bool postRotate)
 		{
 			// If no pose, still allow pre-rotation only
 			if (bonePose == null)
@@ -677,6 +746,7 @@ namespace UMA
 					copyOnly.vertexCount = rotVerts.Length;
 				}
 				return copyOnly;
+
 			}
 
 			// Build a hash->UMATransform map from current bones
@@ -888,7 +958,7 @@ namespace UMA
 		public UMAMeshData ApplyBonePose(UMABonePose bonePose, RaceData raceData)
 		{
 			// Start from a deep copy of this mesh data. If a bone pose is provided, bake it using existing bindposes first.
-			UMAMeshData outData = (bonePose != null) ? ApplyBonePose(bonePose, Matrix4x4.identity) : DeepCopy();
+			UMAMeshData outData = (bonePose != null) ? ApplyBonePose(bonePose, Matrix4x4.identity, false) : DeepCopy();
 
 			if (raceData == null || raceData.baseRaceRecipe == null)
 			{
@@ -2520,11 +2590,980 @@ namespace UMA
 		}
 #endif
 
-		// Convenience overload: apply pre-rotation and race replacements in one call
-		public UMAMeshData ApplyBonePose(UMABonePose bonePose, Matrix4x4 preRotation, RaceData raceData)
+        // Place these helpers inside the UMAMeshData class (e.g., above ApplyBonePose methods)
+        private static Quaternion NormalizeSafe(Quaternion q)
+        {
+            // Guard against NaN/Infinity and zero length
+            if (float.IsNaN(q.x) || float.IsNaN(q.y) || float.IsNaN(q.z) || float.IsNaN(q.w) ||
+                float.IsInfinity(q.x) || float.IsInfinity(q.y) || float.IsInfinity(q.z) || float.IsInfinity(q.w))
+            {
+                return Quaternion.identity;
+            }
+            float mag = Mathf.Sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+            if (mag < 1e-8f) return Quaternion.identity;
+            float inv = 1.0f / mag;
+            return new Quaternion(q.x * inv, q.y * inv, q.z * inv, q.w * inv);
+        }
+
+        private static Vector3 SanitizeScale(Vector3 s)
+        {
+            // Avoid invalid/degenerate scale values
+            if (float.IsNaN(s.x) || float.IsInfinity(s.x)) s.x = 1f;
+            if (float.IsNaN(s.y) || float.IsInfinity(s.y)) s.y = 1f;
+            if (float.IsNaN(s.z) || float.IsInfinity(s.z)) s.z = 1f;
+            return s;
+        }
+
+
+        public UMAMeshData ApplyBonePose(RaceData race, UMABonePose pose)
+        {
+            // Simple, in-place baker: returns 'this' after updating vertices/normals/tangents.
+            // Assumptions:
+            // - Uses current UMA bone hierarchy (umaBones) as the "default race" transforms.
+            // - Applies pose deltas in local-space per bone, then skins with existing bindposes.
+            // - Does not call other ApplyBonePose methods; no pre/post rotation; no race bindpose swap.
+
+            // Guard: nothing to do
+            if (pose == null || pose.poses == null || pose.poses.Length == 0)
+                return this;
+            if (vertices == null || vertexCount == 0 || bindPoses == null || bindPoses.Length == 0 || boneNameHashes == null || boneNameHashes.Length == 0)
+                return this;
+            if (umaBones == null || umaBones.Length == 0)
+                return this;
+
+            // Local copy of default bone transforms mapped by hash
+            var localByHash = new Dictionary<int, UMATransform>(umaBones.Length);
+            for (int i = 0; i < umaBones.Length; i++)
+            {
+                var b = umaBones[i];
+                if (b == null) continue;
+                localByHash[b.hash] = new UMATransform()
+                {
+                    hash = b.hash,
+                    parent = b.parent,
+                    name = b.name,
+                    position = b.position,
+                    rotation = b.rotation,
+                    scale = b.scale
+                };
+            }
+
+            // Apply pose deltas (local-space)
+            for (int i = 0; i < pose.poses.Length; i++)
+            {
+                var pb = pose.poses[i];
+                UMATransform lt;
+                if (localByHash.TryGetValue(pb.hash, out lt))
+                {
+                    lt.position += pb.position;
+
+                    // Normalize quaternion to avoid invalid TRS
+                    {
+                        var r = lt.rotation * pb.rotation;
+                        float m = Mathf.Sqrt(r.x * r.x + r.y * r.y + r.z * r.z + r.w * r.w);
+                        if (m > 1e-8f && float.IsFinite(m))
+                        {
+                            float inv = 1.0f / m;
+                            lt.rotation = new Quaternion(r.x * inv, r.y * inv, r.z * inv, r.w * inv);
+                        }
+                        else
+                        {
+                            lt.rotation = Quaternion.identity;
+                        }
+                    }
+
+                    lt.scale = new Vector3(lt.scale.x * pb.scale.x, lt.scale.y * pb.scale.y, lt.scale.z * pb.scale.z);
+                    localByHash[pb.hash] = lt;
+                }
+            }
+
+            // Build world matrices per bone hash by traversing parents
+            var worldByHash = new Dictionary<int, Matrix4x4>(localByHash.Count);
+            Func<UMATransform, Matrix4x4> toLocal = t =>
+            {
+                // Sanitize scale
+                var s = t.scale;
+                if (!float.IsFinite(s.x)) s.x = 1f;
+                if (!float.IsFinite(s.y)) s.y = 1f;
+                if (!float.IsFinite(s.z)) s.z = 1f;
+                return Matrix4x4.TRS(t.position, t.rotation, s);
+            };
+
+            Func<int, Matrix4x4> getWorld = null;
+            getWorld = (hash) =>
+            {
+                Matrix4x4 w;
+                if (worldByHash.TryGetValue(hash, out w)) return w;
+
+                UMATransform lt;
+                if (!localByHash.TryGetValue(hash, out lt))
+                {
+                    w = Matrix4x4.identity;
+                    worldByHash[hash] = w;
+                    return w;
+                }
+
+                if (lt.parent == 0 || lt.parent == hash || !localByHash.ContainsKey(lt.parent))
+                {
+                    w = toLocal(lt);
+                    worldByHash[hash] = w;
+                    return w;
+                }
+
+                var pw = getWorld(lt.parent);
+                w = pw * toLocal(lt);
+                worldByHash[hash] = w;
+                return w;
+            };
+
+            // Skinning matrices per bone index (index aligns with boneNameHashes/bindPoses)
+            var skinMats = new Matrix4x4[boneNameHashes.Length];
+            for (int i = 0; i < boneNameHashes.Length; i++)
+            {
+                int h = boneNameHashes[i];
+                var w = getWorld(h);
+                var bp = (i < bindPoses.Length) ? bindPoses[i] : Matrix4x4.identity;
+                skinMats[i] = w * bp;
+            }
+
+            // Source geometry (no pre-rotation in this simple version)
+            var srcVerts = vertices;
+            var srcNormals = normals;
+            var srcTangents = tangents;
+
+            // Output buffers
+            var outVerts = new Vector3[vertexCount];
+            Vector3[] outNormals = (srcNormals != null && srcNormals.Length == vertexCount) ? new Vector3[vertexCount] : null;
+            Vector4[] outTangents = (srcTangents != null && srcTangents.Length == vertexCount) ? new Vector4[vertexCount] : null;
+
+            // Skin using either ManagedBoneWeights (vtx-count-matched) or legacy boneWeights
+            bool hasManaged = (ManagedBonesPerVertex != null && ManagedBonesPerVertex.Length == vertexCount &&
+                               ManagedBoneWeights != null && ManagedBoneWeights.Length > 0);
+
+            if (hasManaged)
+            {
+                int offset = 0;
+                for (int vi = 0; vi < vertexCount; vi++)
+                {
+                    var baseV = srcVerts[vi];
+                    Vector3 accV = Vector3.zero;
+                    Vector3 accN = Vector3.zero;
+                    Vector3 accT = Vector3.zero;
+
+                    int count = ManagedBonesPerVertex[vi];
+                    for (int j = 0; j < count; j++)
+                    {
+                        var bw = ManagedBoneWeights[offset + j];
+                        int bi = bw.boneIndex;
+                        float w = bw.weight;
+                        if (w <= 0f) continue;
+
+                        var sm = (bi >= 0 && bi < skinMats.Length) ? skinMats[bi] : Matrix4x4.identity;
+                        accV += sm.MultiplyPoint3x4(baseV) * w;
+
+                        if (outNormals != null)
+                            accN += sm.MultiplyVector(srcNormals[vi]) * w;
+
+                        if (outTangents != null)
+                        {
+                            var t3 = new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                            accT += sm.MultiplyVector(t3) * w;
+                        }
+                    }
+
+                    outVerts[vi] = accV;
+                    if (outNormals != null)
+                        outNormals[vi] = (accN.sqrMagnitude > 0f) ? accN.normalized : srcNormals[vi];
+
+                    if (outTangents != null)
+                    {
+                        var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                        outTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
+                    }
+
+                    offset += count;
+                }
+            }
+            else if (boneWeights != null && boneWeights.Length == vertexCount)
+            {
+                for (int vi = 0; vi < vertexCount; vi++)
+                {
+                    var bw = boneWeights[vi];
+                    var baseV = srcVerts[vi];
+                    Vector3 accV = Vector3.zero;
+                    Vector3 accN = Vector3.zero;
+                    Vector3 accT = Vector3.zero;
+
+                    void accum(int bi, float w)
+                    {
+                        if (w <= 0f) return;
+                        var sm = (bi >= 0 && bi < skinMats.Length) ? skinMats[bi] : Matrix4x4.identity;
+                        accV += sm.MultiplyPoint3x4(baseV) * w;
+
+                        if (outNormals != null)
+                            accN += sm.MultiplyVector(srcNormals[vi]) * w;
+
+                        if (outTangents != null)
+                        {
+                            var t3 = new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                            accT += sm.MultiplyVector(t3) * w;
+                        }
+                    }
+
+                    accum(bw.boneIndex0, bw.weight0);
+                    accum(bw.boneIndex1, bw.weight1);
+                    accum(bw.boneIndex2, bw.weight2);
+                    accum(bw.boneIndex3, bw.weight3);
+
+                    outVerts[vi] = accV;
+                    if (outNormals != null)
+                        outNormals[vi] = (accN.sqrMagnitude > 0f) ? accN.normalized : srcNormals[vi];
+
+                    if (outTangents != null)
+                    {
+                        var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                        outTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
+                    }
+                }
+            }
+            else
+            {
+                // No weights; nothing to bake
+                return this;
+            }
+
+            // Commit results in-place
+            vertices = outVerts;
+            if (outNormals != null) normals = outNormals;
+            if (outTangents != null) tangents = outTangents;
+
+            verticesModified = true;
+            if (outNormals != null) normalsModified = true;
+            if (outTangents != null) tangentsModified = true;
+
+            // vertexCount unchanged
+            return this;
+        }
+
+        // Add inside the UMAMeshData class
+
+        /// <summary>
+        /// Applies a UMABonePose while treating the specified bone name as the pose root.
+        /// - If postRotate is true, the pose is baked first (no pre-rotation) then the preRotation is applied to the baked vertices.
+        /// - The bone whose name hashes to 'rootBoneName' is considered the root for hierarchy traversal when composing world matrices.
+        /// </summary>
+        public UMAMeshData ApplyBonePoseWithRoot(UMABonePose bonePose, Matrix4x4 preRotation, bool postRotate, string rootBoneName)
+        {
+            // Post-rotation branch: bake with identity first, then rotate baked geometry.
+            if (postRotate && preRotation != Matrix4x4.identity)
+            {
+                var baked = ApplyBonePoseWithRoot(bonePose, Matrix4x4.identity, false, rootBoneName);
+                if (baked == null || baked.vertices == null || baked.vertexCount == 0)
+                    return baked;
+
+                int vCount = baked.vertexCount;
+                var inVerts = baked.vertices;
+                var inNormals = baked.normals;
+                var inTangents = baked.tangents;
+
+                var outVerts = new Vector3[vCount];
+                Vector3[] outNormals = (inNormals != null && inNormals.Length == vCount) ? new Vector3[vCount] : null;
+                Vector4[] outTangents = (inTangents != null && inTangents.Length == vCount) ? new Vector4[vCount] : null;
+
+                for (int i = 0; i < vCount; i++)
+                {
+                    outVerts[i] = preRotation.MultiplyPoint3x4(inVerts[i]);
+
+                    if (outNormals != null)
+                        outNormals[i] = preRotation.MultiplyVector(inNormals[i]);
+
+                    if (outTangents != null)
+                    {
+                        var t3 = new Vector3(inTangents[i].x, inTangents[i].y, inTangents[i].z);
+                        var rt = preRotation.MultiplyVector(t3).normalized;
+                        outTangents[i] = new Vector4(rt.x, rt.y, rt.z, inTangents[i].w);
+                    }
+                }
+
+                baked.vertices = outVerts;
+                if (outNormals != null) baked.normals = outNormals;
+                if (outTangents != null) baked.tangents = outTangents;
+
+                baked.verticesModified = true;
+                if (outNormals != null) baked.normalsModified = true;
+                if (outTangents != null) baked.tangentsModified = true;
+
+                baked.vertexCount = outVerts.Length;
+                return baked;
+            }
+
+            // No pose: allow simple pre-rotation only
+            if (bonePose == null)
+            {
+                var copyOnly = DeepCopy();
+                if (vertices == null || vertexCount == 0)
+                    return copyOnly;
+
+                if (preRotation != Matrix4x4.identity)
+                {
+                    var rotVerts = new Vector3[vertexCount];
+                    Vector3[] rotNormals = (normals != null && normals.Length == vertexCount) ? new Vector3[vertexCount] : null;
+                    Vector4[] rotTangents = (tangents != null && tangents.Length == vertexCount) ? new Vector4[vertexCount] : null;
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        rotVerts[i] = preRotation.MultiplyPoint3x4(vertices[i]);
+                        if (rotNormals != null) rotNormals[i] = preRotation.MultiplyVector(normals[i]);
+                        if (rotTangents != null)
+                        {
+                            var t3 = new Vector3(tangents[i].x, tangents[i].y, tangents[i].z);
+                            var rt = preRotation.MultiplyVector(t3).normalized;
+                            rotTangents[i] = new Vector4(rt.x, rt.y, rt.z, tangents[i].w);
+                        }
+                    }
+                    copyOnly.vertices = rotVerts;
+                    if (rotNormals != null) copyOnly.normals = rotNormals;
+                    if (rotTangents != null) copyOnly.tangents = rotTangents;
+                    copyOnly.verticesModified = true;
+                    if (rotNormals != null) copyOnly.normalsModified = true;
+                    if (rotTangents != null) copyOnly.tangentsModified = true;
+                    copyOnly.vertexCount = rotVerts.Length;
+                }
+                return copyOnly;
+            }
+
+            // Validate data needed for skinning
+            if (vertices == null || vertexCount == 0 || bindPoses == null || bindPoses.Length == 0 || boneNameHashes == null || boneNameHashes.Length == 0)
+            {
+                var copyOnly = DeepCopy();
+                if (vertices == null || vertexCount == 0)
+                    return copyOnly;
+
+                if (preRotation != Matrix4x4.identity)
+                {
+                    var rotVerts = new Vector3[vertexCount];
+                    Vector3[] rotNormals = (normals != null && normals.Length == vertexCount) ? new Vector3[vertexCount] : null;
+                    Vector4[] rotTangents = (tangents != null && tangents.Length == vertexCount) ? new Vector4[vertexCount] : null;
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        rotVerts[i] = preRotation.MultiplyPoint3x4(vertices[i]);
+                        if (rotNormals != null) rotNormals[i] = preRotation.MultiplyVector(normals[i]);
+                        if (rotTangents != null)
+                        {
+                            var t3 = new Vector3(tangents[i].x, tangents[i].y, tangents[i].z);
+                            var rt = preRotation.MultiplyVector(t3).normalized;
+                            rotTangents[i] = new Vector4(rt.x, rt.y, rt.z, tangents[i].w);
+                        }
+                    }
+                    copyOnly.vertices = rotVerts;
+                    if (rotNormals != null) copyOnly.normals = rotNormals;
+                    if (rotTangents != null) copyOnly.tangents = rotTangents;
+                    copyOnly.verticesModified = true;
+                    if (rotNormals != null) copyOnly.normalsModified = true;
+                    if (rotTangents != null) copyOnly.tangentsModified = true;
+                    copyOnly.vertexCount = rotVerts.Length;
+                }
+                return copyOnly;
+            }
+
+            // Build local transforms by hash
+            var localByHash = new Dictionary<int, UMATransform>(umaBones != null ? umaBones.Length : 0);
+            if (umaBones != null)
+            {
+                for (int i = 0; i < umaBones.Length; i++)
+                {
+                    var b = umaBones[i];
+                    localByHash[b.hash] = new UMATransform()
+                    {
+                        hash = b.hash,
+                        parent = b.parent,
+                        name = b.name,
+                        position = b.position,
+                        rotation = b.rotation,
+                        scale = b.scale
+                    };
+                }
+            }
+
+            // Apply pose deltas (normalize rotations to avoid invalid TRS quaternions)
+            if (bonePose.poses != null)
+            {
+                for (int i = 0; i < bonePose.poses.Length; i++)
+                {
+                    var pb = bonePose.poses[i];
+                    UMATransform lt;
+                    if (localByHash.TryGetValue(pb.hash, out lt))
+                    {
+                        lt.position += pb.position;
+                        lt.rotation = NormalizeSafe(lt.rotation * pb.rotation);
+                        lt.scale = new Vector3(lt.scale.x * pb.scale.x, lt.scale.y * pb.scale.y, lt.scale.z * pb.scale.z);
+                        localByHash[pb.hash] = lt;
+                    }
+                }
+            }
+
+            // Forced root (by name) — stop hierarchy traversal when reaching this hash
+            int forcedRootHash = 0;
+            if (!string.IsNullOrEmpty(rootBoneName))
+            {
+                try { forcedRootHash = UMAUtils.StringToHash(rootBoneName); } catch { forcedRootHash = 0; }
+            }
+
+            // Local TRS with normalized rotation and sanitized scale
+            Func<UMATransform, Matrix4x4> toLocal = t =>
+            {
+                var r = NormalizeSafe(t.rotation);
+                var s = SanitizeScale(t.scale);
+                return Matrix4x4.TRS(t.position, r, s);
+            };
+
+            // Build world matrices honoring the forced root
+            var worldByHash = new Dictionary<int, Matrix4x4>(localByHash.Count);
+            Func<int, Matrix4x4> getWorld = null;
+            getWorld = (hash) =>
+            {
+                Matrix4x4 w;
+                if (worldByHash.TryGetValue(hash, out w)) return w;
+                UMATransform lt;
+                if (!localByHash.TryGetValue(hash, out lt))
+                {
+                    w = Matrix4x4.identity;
+                    worldByHash[hash] = w;
+                    return w;
+                }
+
+                // Treat the requested bone as root
+                if (forcedRootHash != 0 && hash == forcedRootHash)
+                {
+                    w = toLocal(lt);
+                    worldByHash[hash] = w;
+                    return w;
+                }
+
+                // Default roots (no/invalid parent)
+                if (lt.parent == 0 || lt.parent == hash || !localByHash.ContainsKey(lt.parent))
+                {
+                    w = toLocal(lt);
+                    worldByHash[hash] = w;
+                    return w;
+                }
+
+                var pw = getWorld(lt.parent);
+                w = pw * toLocal(lt);
+                worldByHash[hash] = w;
+                return w;
+            };
+
+            // Skinning matrices (index -> hash)
+            var skinMats = new Matrix4x4[boneNameHashes.Length];
+            for (int i = 0; i < boneNameHashes.Length; i++)
+            {
+                int hash = boneNameHashes[i];
+                var w = getWorld(hash);
+                var bp = (i < bindPoses.Length) ? bindPoses[i] : Matrix4x4.identity;
+                skinMats[i] = w * bp;
+            }
+
+            // Pre-rotate source geometry if requested (pre-rotation path)
+            var srcVertices = vertices;
+            var srcNormals = normals;
+            var srcTangents = tangents;
+
+            if (preRotation != Matrix4x4.identity)
+            {
+                var rotVerts = new Vector3[vertexCount];
+                Vector3[] rotNormals = (normals != null && normals.Length == vertexCount) ? new Vector3[vertexCount] : null;
+                Vector4[] rotTangents = (tangents != null && tangents.Length == vertexCount) ? new Vector4[vertexCount] : null;
+
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    rotVerts[i] = preRotation.MultiplyPoint3x4(vertices[i]);
+                    if (rotNormals != null) rotNormals[i] = preRotation.MultiplyVector(normals[i]);
+                    if (rotTangents != null)
+                    {
+                        var t3 = new Vector3(tangents[i].x, tangents[i].y, tangents[i].z);
+                        var rt = preRotation.MultiplyVector(t3).normalized;
+                        rotTangents[i] = new Vector4(rt.x, rt.y, rt.z, tangents[i].w);
+                    }
+                }
+
+                srcVertices = rotVerts;
+                srcNormals = rotNormals ?? srcNormals;
+                srcTangents = rotTangents ?? srcTangents;
+            }
+
+            // Prepare output and skin
+            var outData = DeepCopy();
+            var newVerts = new Vector3[vertexCount];
+            Vector3[] newNormals = (srcNormals != null && srcNormals.Length == vertexCount) ? new Vector3[vertexCount] : null;
+            Vector4[] newTangents = (srcTangents != null && srcTangents.Length == vertexCount) ? new Vector4[vertexCount] : null;
+
+            Func<Matrix4x4, Vector3, Vector3> mulPoint = (m, v) => m.MultiplyPoint3x4(v);
+            Func<Matrix4x4, Vector3, Vector3> mulVector = (m, v) => m.MultiplyVector(v);
+
+            bool hasManaged = (ManagedBonesPerVertex != null && ManagedBonesPerVertex.Length == vertexCount && ManagedBoneWeights != null && ManagedBoneWeights.Length > 0);
+            if (hasManaged)
+            {
+                int offset = 0;
+                for (int vi = 0; vi < vertexCount; vi++)
+                {
+                    var baseV = srcVertices[vi];
+                    Vector3 accV = Vector3.zero;
+                    Vector3 accN = Vector3.zero;
+                    Vector3 accT = Vector3.zero;
+                    int count = ManagedBonesPerVertex[vi];
+                    for (int j = 0; j < count; j++)
+                    {
+                        var bw = ManagedBoneWeights[offset + j];
+                        int bi = bw.boneIndex;
+                        float w = bw.weight;
+                        var sm = (bi >= 0 && bi < skinMats.Length) ? skinMats[bi] : Matrix4x4.identity;
+                        accV += mulPoint(sm, baseV) * w;
+                        if (newNormals != null) accN += mulVector(sm, srcNormals[vi]) * w;
+                        if (newTangents != null)
+                        {
+                            var t3 = new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                            accT += mulVector(sm, t3) * w;
+                        }
+                    }
+                    newVerts[vi] = accV;
+                    if (newNormals != null) newNormals[vi] = accN.sqrMagnitude > 0f ? accN.normalized : srcNormals[vi];
+                    if (newTangents != null)
+                    {
+                        var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                        newTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
+                    }
+                    offset += count;
+                }
+            }
+            else if (boneWeights != null && boneWeights.Length == vertexCount)
+            {
+                for (int vi = 0; vi < vertexCount; vi++)
+                {
+                    var bw = boneWeights[vi];
+                    var baseV = srcVertices[vi];
+                    Vector3 accV = Vector3.zero;
+                    Vector3 accN = Vector3.zero;
+                    Vector3 accT = Vector3.zero;
+                    void accum(int bi, float w)
+                    {
+                        if (w <= 0f) return;
+                        var sm = (bi >= 0 && bi < skinMats.Length) ? skinMats[bi] : Matrix4x4.identity;
+                        accV += mulPoint(sm, baseV) * w;
+                        if (newNormals != null) accN += mulVector(sm, srcNormals[vi]) * w;
+                        if (newTangents != null)
+                        {
+                            var t3 = new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                            accT += mulVector(sm, t3) * w;
+                        }
+                    }
+                    accum(bw.boneIndex0, bw.weight0);
+                    accum(bw.boneIndex1, bw.weight1);
+                    accum(bw.boneIndex2, bw.weight2);
+                    accum(bw.boneIndex3, bw.weight3);
+
+                    newVerts[vi] = accV;
+                    if (newNormals != null) newNormals[vi] = accN.sqrMagnitude > 0f ? accN.normalized : srcNormals[vi];
+                    if (newTangents != null)
+                    {
+                        var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                        newTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
+                    }
+                }
+            }
+            else
+            {
+                // No weights; return copy with pre-rotation if any
+                var noWeightsCopy = DeepCopy();
+                if (preRotation != Matrix4x4.identity)
+                {
+                    noWeightsCopy.vertices = srcVertices;
+                    if (srcNormals != null) noWeightsCopy.normals = srcNormals;
+                    if (srcTangents != null) noWeightsCopy.tangents = srcTangents;
+                    noWeightsCopy.verticesModified = true;
+                    if (srcNormals != null) noWeightsCopy.normalsModified = true;
+                    if (srcTangents != null) noWeightsCopy.tangentsModified = true;
+                    noWeightsCopy.vertexCount = srcVertices.Length;
+                }
+                return noWeightsCopy;
+            }
+
+            outData = DeepCopy();
+            outData.vertices = newVerts;
+            if (newNormals != null) outData.normals = newNormals;
+            if (newTangents != null) outData.tangents = newTangents;
+            outData.verticesModified = true;
+            if (newNormals != null) outData.normalsModified = true;
+            if (newTangents != null) outData.tangentsModified = true;
+            outData.vertexCount = newVerts.Length;
+            return outData;
+        }
+
+        /// <summary>
+        /// Convenience overload: identity pre-rotation, no post-rotate.
+        /// </summary>
+        public UMAMeshData ApplyBonePoseWithRoot(UMABonePose bonePose, string rootBoneName)
+        {
+            return ApplyBonePoseWithRoot(bonePose, Matrix4x4.identity, false, rootBoneName);
+        }
+
+        /// <summary>
+        /// Convenience overload: bake pose with root, then apply RaceData replacements.
+        /// </summary>
+        public UMAMeshData ApplyBonePoseWithRoot(UMABonePose bonePose, Matrix4x4 preRotation, RaceData raceData, bool postRotate, string rootBoneName)
+        {
+            var baked = ApplyBonePoseWithRoot(bonePose, preRotation, postRotate, rootBoneName);
+            return baked.ApplyBonePose(null, raceData);
+        }
+
+        public UMAMeshData ApplyBonePose(UMABonePose bonePose, Matrix4x4 preRotation, bool postRotate)
+        {
+            // If post-rotation is requested, bake the pose first (no pre-rotation), then rotate the result.
+            if (postRotate && preRotation != Matrix4x4.identity)
+            {
+                // Bake pose without pre-rotation
+                var baked = ApplyBonePose(bonePose, Matrix4x4.identity, false);
+                if (baked == null) return null;
+
+                // Nothing to rotate?
+                if (baked.vertices == null || baked.vertexCount == 0)
+                    return baked;
+
+                int vCount = baked.vertexCount;
+                var inVerts = baked.vertices;
+                var inNormals = baked.normals;
+                var inTangents = baked.tangents;
+
+                var outVerts = new Vector3[vCount];
+                Vector3[] outNormals = (inNormals != null && inNormals.Length == vCount) ? new Vector3[vCount] : null;
+                Vector4[] outTangents = (inTangents != null && inTangents.Length == vCount) ? new Vector4[vCount] : null;
+
+                for (int i = 0; i < vCount; i++)
+                {
+                    outVerts[i] = preRotation.MultiplyPoint3x4(inVerts[i]);
+
+                    if (outNormals != null)
+                        outNormals[i] = preRotation.MultiplyVector(inNormals[i]);
+
+                    if (outTangents != null)
+                    {
+                        var t3 = new Vector3(inTangents[i].x, inTangents[i].y, inTangents[i].z);
+                        var rt = preRotation.MultiplyVector(t3).normalized;
+                        outTangents[i] = new Vector4(rt.x, rt.y, rt.z, inTangents[i].w);
+                    }
+                }
+
+                baked.vertices = outVerts;
+                if (outNormals != null) baked.normals = outNormals;
+                if (outTangents != null) baked.tangents = outTangents;
+
+                baked.verticesModified = true;
+                if (outNormals != null) baked.normalsModified = true;
+                if (outTangents != null) baked.tangentsModified = true;
+
+                baked.vertexCount = outVerts.Length;
+                return baked;
+            }
+
+            // Existing behavior: pre-rotation occurs before skinning (unchanged path)
+            // If no pose, still allow pre-rotation only
+            if (bonePose == null)
+            {
+                var copyOnly = DeepCopy();
+                if (vertices == null || vertexCount == 0)
+                    return copyOnly;
+
+                if (preRotation != Matrix4x4.identity)
+                {
+                    var rotVerts = new Vector3[vertexCount];
+                    Vector3[] rotNormals = (normals != null && normals.Length == vertexCount) ? new Vector3[vertexCount] : null;
+                    Vector4[] rotTangents = (tangents != null && tangents.Length == vertexCount) ? new Vector4[vertexCount] : null;
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        rotVerts[i] = preRotation.MultiplyPoint3x4(vertices[i]);
+                        if (rotNormals != null) rotNormals[i] = preRotation.MultiplyVector(normals[i]);
+                        if (rotTangents != null)
+                        {
+                            var t3 = new Vector3(tangents[i].x, tangents[i].y, tangents[i].z);
+                            var rt = preRotation.MultiplyVector(t3).normalized;
+                            rotTangents[i] = new Vector4(rt.x, rt.y, rt.z, tangents[i].w);
+                        }
+                    }
+                    copyOnly.vertices = rotVerts;
+                    if (rotNormals != null) copyOnly.normals = rotNormals;
+                    if (rotTangents != null) copyOnly.tangents = rotTangents;
+                    copyOnly.verticesModified = true;
+                    if (rotNormals != null) copyOnly.normalsModified = true;
+                    if (rotTangents != null) copyOnly.tangentsModified = true;
+                    copyOnly.vertexCount = rotVerts.Length;
+                }
+                return copyOnly;
+            }
+
+            // Validate required data (still apply pre-rotation only if skinning data missing)
+            if (vertices == null || vertexCount == 0 || bindPoses == null || bindPoses.Length == 0 || boneNameHashes == null || boneNameHashes.Length == 0)
+            {
+                var copyOnly = DeepCopy();
+                if (vertices == null || vertexCount == 0)
+                    return copyOnly;
+
+                if (preRotation != Matrix4x4.identity)
+                {
+                    var rotVerts = new Vector3[vertexCount];
+                    Vector3[] rotNormals = (normals != null && normals.Length == vertexCount) ? new Vector3[vertexCount] : null;
+                    Vector4[] rotTangents = (tangents != null && tangents.Length == vertexCount) ? new Vector4[vertexCount] : null;
+                    for (int i = 0; i < vertexCount; i++)
+                    {
+                        rotVerts[i] = preRotation.MultiplyPoint3x4(vertices[i]);
+                        if (rotNormals != null) rotNormals[i] = preRotation.MultiplyVector(normals[i]);
+                        if (rotTangents != null)
+                        {
+                            var t3 = new Vector3(tangents[i].x, tangents[i].y, tangents[i].z);
+                            var rt = preRotation.MultiplyVector(t3).normalized;
+                            rotTangents[i] = new Vector4(rt.x, rt.y, rt.z, tangents[i].w);
+                        }
+                    }
+                    copyOnly.vertices = rotVerts;
+                    if (rotNormals != null) copyOnly.normals = rotNormals;
+                    if (rotTangents != null) copyOnly.tangents = rotTangents;
+                    copyOnly.verticesModified = true;
+                    if (rotNormals != null) copyOnly.normalsModified = true;
+                    if (rotTangents != null) copyOnly.tangentsModified = true;
+                    copyOnly.vertexCount = rotVerts.Length;
+                }
+                return copyOnly;
+            }
+
+            // Build a hash->UMATransform map from current bones
+            var localByHash = new Dictionary<int, UMATransform>(umaBones != null ? umaBones.Length : 0);
+            if (umaBones != null)
+            {
+                for (int i = 0; i < umaBones.Length; i++)
+                {
+                    var b = umaBones[i];
+                    localByHash[b.hash] = new UMATransform()
+                    {
+                        hash = b.hash,
+                        parent = b.parent,
+                        name = b.name,
+                        position = b.position,
+                        rotation = b.rotation,
+                        scale = b.scale
+                    };
+                }
+            }
+
+            // 1) When composing bone rotations, normalize the result
+            if (bonePose.poses != null)
+            {
+                for (int i = 0; i < bonePose.poses.Length; i++)
+                {
+                    var pb = bonePose.poses[i];
+                    UMATransform lt;
+                    if (localByHash.TryGetValue(pb.hash, out lt))
+                    {
+                        lt.position += pb.position;
+                        // Keep existing order; normalize to avoid drift
+                        lt.rotation = NormalizeSafe(lt.rotation * pb.rotation);
+                        lt.scale = new Vector3(lt.scale.x * pb.scale.x, lt.scale.y * pb.scale.y, lt.scale.z * pb.scale.z);
+                        localByHash[pb.hash] = lt;
+                    }
+                }
+            }
+
+
+            // Build world matrices for each bone hash using hierarchy
+            var worldByHash = new Dictionary<int, Matrix4x4>(localByHash.Count);
+            //Func<UMATransform, Matrix4x4> toLocal = t => Matrix4x4.TRS(t.position, t.rotation, t.scale);
+
+
+            // 2) Build local TRS using normalized rotation and sanitized scale
+            Func<UMATransform, Matrix4x4> toLocal = t =>
+            {
+                var r = NormalizeSafe(t.rotation);
+                var s = SanitizeScale(t.scale);
+                return Matrix4x4.TRS(t.position, r, s);
+            };
+
+
+            Func<int, Matrix4x4> getWorld = null;
+            getWorld = (hash) =>
+            {
+                Matrix4x4 w;
+                if (worldByHash.TryGetValue(hash, out w)) return w;
+                UMATransform lt;
+                if (!localByHash.TryGetValue(hash, out lt))
+                {
+                    w = Matrix4x4.identity;
+                    worldByHash[hash] = w;
+                    return w;
+                }
+                if (lt.parent == 0 || lt.parent == hash || !localByHash.ContainsKey(lt.parent))
+                {
+                    w = toLocal(lt);
+                    worldByHash[hash] = w;
+                    return w;
+                }
+                var pw = getWorld(lt.parent);
+                w = pw * toLocal(lt);
+                worldByHash[hash] = w;
+                return w;
+            };
+
+            // Skinning matrices per bone index (index -> hash)
+            var skinMats = new Matrix4x4[boneNameHashes.Length];
+            for (int i = 0; i < boneNameHashes.Length; i++)
+            {
+                int hash = boneNameHashes[i];
+                var w = getWorld(hash);
+                var bp = (i < bindPoses.Length) ? bindPoses[i] : Matrix4x4.identity;
+                skinMats[i] = w * bp;
+            }
+
+            // Pre-rotate source geometry if requested (pre-rotation path)
+            var srcVertices = vertices;
+            var srcNormals = normals;
+            var srcTangents = tangents;
+
+            if (preRotation != Matrix4x4.identity)
+            {
+                var rotVerts = new Vector3[vertexCount];
+                Vector3[] rotNormals = (normals != null && normals.Length == vertexCount) ? new Vector3[vertexCount] : null;
+                Vector4[] rotTangents = (tangents != null && tangents.Length == vertexCount) ? new Vector4[vertexCount] : null;
+
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    rotVerts[i] = preRotation.MultiplyPoint3x4(vertices[i]);
+                    if (rotNormals != null) rotNormals[i] = preRotation.MultiplyVector(normals[i]);
+                    if (rotTangents != null)
+                    {
+                        var t3 = new Vector3(tangents[i].x, tangents[i].y, tangents[i].z);
+                        var rt = preRotation.MultiplyVector(t3).normalized;
+                        rotTangents[i] = new Vector4(rt.x, rt.y, rt.z, tangents[i].w);
+                    }
+                }
+
+                srcVertices = rotVerts;
+                srcNormals = rotNormals ?? srcNormals;
+                srcTangents = rotTangents ?? srcTangents;
+            }
+
+            // Prepare output copy and arrays
+            var outData = DeepCopy();
+            var newVerts = new Vector3[vertexCount];
+            Vector3[] newNormals = (srcNormals != null && srcNormals.Length == vertexCount) ? new Vector3[vertexCount] : null;
+            Vector4[] newTangents = (srcTangents != null && srcTangents.Length == vertexCount) ? new Vector4[vertexCount] : null;
+
+            Func<Matrix4x4, Vector3, Vector3> mulPoint = (m, v) => m.MultiplyPoint3x4(v);
+            Func<Matrix4x4, Vector3, Vector3> mulVector = (m, v) => m.MultiplyVector(v);
+
+            bool hasManaged = (ManagedBonesPerVertex != null && ManagedBonesPerVertex.Length == vertexCount && ManagedBoneWeights != null && ManagedBoneWeights.Length > 0);
+            if (hasManaged)
+            {
+                int offset = 0;
+                for (int vi = 0; vi < vertexCount; vi++)
+                {
+                    var baseV = srcVertices[vi];
+                    Vector3 accV = Vector3.zero;
+                    Vector3 accN = Vector3.zero;
+                    Vector3 accT = Vector3.zero;
+                    int count = ManagedBonesPerVertex[vi];
+                    for (int j = 0; j < count; j++)
+                    {
+                        var bw = ManagedBoneWeights[offset + j];
+                        int bi = bw.boneIndex;
+                        float w = bw.weight;
+                        var sm = (bi >= 0 && bi < skinMats.Length) ? skinMats[bi] : Matrix4x4.identity;
+                        accV += mulPoint(sm, baseV) * w;
+                        if (newNormals != null) accN += mulVector(sm, srcNormals[vi]) * w;
+                        if (newTangents != null)
+                        {
+                            var t3 = new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                            accT += mulVector(sm, t3) * w;
+                        }
+                    }
+                    newVerts[vi] = accV;
+                    if (newNormals != null) newNormals[vi] = accN.sqrMagnitude > 0f ? accN.normalized : srcNormals[vi];
+                    if (newTangents != null)
+                    {
+                        var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                        newTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
+                    }
+                    offset += count;
+                }
+            }
+            else if (boneWeights != null && boneWeights.Length == vertexCount)
+            {
+                for (int vi = 0; vi < vertexCount; vi++)
+                {
+                    var bw = boneWeights[vi];
+                    var baseV = srcVertices[vi];
+                    Vector3 accV = Vector3.zero;
+                    Vector3 accN = Vector3.zero;
+                    Vector3 accT = Vector3.zero;
+                    Action<int, float> accum = (bi, w) =>
+                    {
+                        if (w <= 0f) return;
+                        var sm = (bi >= 0 && bi < skinMats.Length) ? skinMats[bi] : Matrix4x4.identity;
+                        accV += mulPoint(sm, baseV) * w;
+                        if (newNormals != null) accN += mulVector(sm, srcNormals[vi]) * w;
+                        if (newTangents != null)
+                        {
+                            var t3 = new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                            accT += mulVector(sm, t3) * w;
+                        }
+                    };
+                    accum(bw.boneIndex0, bw.weight0);
+                    accum(bw.boneIndex1, bw.weight1);
+                    accum(bw.boneIndex2, bw.weight2);
+                    accum(bw.boneIndex3, bw.weight3);
+                    newVerts[vi] = accV;
+                    if (newNormals != null) newNormals[vi] = accN.sqrMagnitude > 0f ? accN.normalized : srcNormals[vi];
+                    if (newTangents != null)
+                    {
+                        var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+                        newTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
+                    }
+                }
+            }
+            else
+            {
+                // No weights; return copy with pre-rotation applied if requested
+                var noWeightsCopy = DeepCopy();
+                if (preRotation != Matrix4x4.identity)
+                {
+                    noWeightsCopy.vertices = srcVertices;
+                    if (srcNormals != null) noWeightsCopy.normals = srcNormals;
+                    if (srcTangents != null) noWeightsCopy.tangents = srcTangents;
+                    noWeightsCopy.verticesModified = true;
+                    if (srcNormals != null) noWeightsCopy.normalsModified = true;
+                    if (srcTangents != null) noWeightsCopy.tangentsModified = true;
+                    noWeightsCopy.vertexCount = srcVertices.Length;
+                }
+                return noWeightsCopy;
+            }
+
+            outData.vertices = newVerts;
+            if (newNormals != null) outData.normals = newNormals;
+            if (newTangents != null) outData.tangents = newTangents;
+            outData.verticesModified = true;
+            if (newNormals != null) outData.normalsModified = true;
+            if (newTangents != null) outData.tangentsModified = true;
+            outData.vertexCount = newVerts.Length;
+            return outData;
+        }
+
+//What changed:
+//- Added an early post-rotate branch that bakes with identity pre-rotation, then rotates the baked result.
+//- Left the existing pre-rotation path untouched for backward compatibility.
+
+//Why this fixes twisting:
+//- With both a pose and a global 180° Z correction, pre-rotating raw vertices and then skinning effectively double-transform bones versus geometry. Post-rotating applies the global correction in the same space as the baked (skinned) geometry, avoiding compounded rotation artifacts (e.g., twisted shoes).
+
+        // Convenience overload: apply pre-rotation and race replacements in one call
+        public UMAMeshData ApplyBonePose(UMABonePose bonePose, Matrix4x4 preRotation, RaceData raceData, bool postRotate)
 		{
 			// First bake the bone pose with the requested pre-rotation
-			var baked = ApplyBonePose(bonePose, preRotation);
+			var baked = ApplyBonePose(bonePose, preRotation, postRotate);
 			// Then apply race data replacements (bindposes + UMA transforms + root/bones)
 			return baked.ApplyBonePose(null, raceData);
 		}

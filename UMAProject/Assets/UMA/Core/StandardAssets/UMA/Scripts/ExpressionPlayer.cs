@@ -388,14 +388,15 @@ namespace UMA.PoseTools
 				rightBrowUp_Down = value[i++];
 				midBrowUp_Down = value[i++];
 
-				leftGrasp = valueArray[36];
-				rightGrasp = valueArray[37];
-				leftPeace = valueArray[38];
-				rightPeace = valueArray[39];
-				leftRude = valueArray[40];
-				rightRude = valueArray[41];
-				leftPoint = valueArray[42];
-				rightPoint = valueArray[43];
+				// FIX: assign last 8 from input array
+				leftGrasp = value[i++];
+				rightGrasp = value[i++];
+				leftPeace = value[i++];
+				rightPeace = value[i++];
+				leftRude = value[i++];
+				rightRude = value[i++];
+				leftPoint = value[i++];
+				rightPoint = value[i++];
 			}
 		}
 

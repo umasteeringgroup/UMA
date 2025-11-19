@@ -993,7 +993,7 @@ namespace UMA.Editors
         /// Vertices are transformed using the dominant bone (highest weight).
         /// Bones absent in source retain original bindpose.
         /// </summary>
-        private string ConformBindposesAndVertices(SlotDataAsset targetSlot, SlotDataAsset sourceSlot)
+        public static string ConformBindposesAndVertices(SlotDataAsset targetSlot, SlotDataAsset sourceSlot)
         {
             if (targetSlot == null || sourceSlot == null || targetSlot.meshData == null || sourceSlot.meshData == null)
                 return "Missing mesh data.";
