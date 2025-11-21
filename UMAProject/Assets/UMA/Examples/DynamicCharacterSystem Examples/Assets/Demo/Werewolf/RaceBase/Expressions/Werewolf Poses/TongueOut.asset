@@ -19,13 +19,13 @@ MonoBehaviour:
     rotation: {x: -1.9626978e-10, y: -0.0025968414, z: 1.2790283e-13, w: 1.000006}
     scale: {x: 1.0000001, y: 1, z: 0.9999999}
     category: 
+    enabled: 1
   - bone: Tongue02
     hash: -718215880
     position: {x: -0.0070524067, y: -0.00000001350049, z: 0.0001282806}
     rotation: {x: 0.000000008605724, y: 0.044462137, z: -0.0000000012891457, w: 0.99900204}
     scale: {x: 0.9999999, y: 1, z: 0.9999996}
     category: 
-  tweenPoses:
-  - {fileID: 11400000, guid: fee4844cffaf244faae683766c3d96dc, type: 2}
-  tweenWeights:
-  - 0.5
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyeSquint_R
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: RightCheek
+    hash: 827866759
+    position: {x: -0.000020712614, y: -0.00006931275, z: -0.0062573925}
+    rotation: {x: -7.6531137e-10, y: 0.000000046853483, z: -0.000000037339916, w: 1}
+    scale: {x: 1, y: 1.0000002, z: 0.99999964}
+    category: 
+    enabled: 1
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: 0.0000000037252903, y: -0.000000007450581, z: -0.000000014901161}
+    rotation: {x: 0.000000051915887, y: -0.000000084291294, z: -6.1659887e-12, w: 1}
+    scale: {x: 0.99999934, y: 0.9999994, z: 0.9202135}
+    category: 
+    enabled: 1
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: -1.8332003e-12, y: 0.0000002868211, z: -0.000000007144081}
+    rotation: {x: 0.0000000025181395, y: 0.032400344, z: -5.056733e-12, w: 0.99947494}
+    scale: {x: 1, y: 0.9999999, z: 0.9999999}
+    category: 
+    enabled: 1
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: -1.8332003e-12, y: 0.00000028682126, z: -0.000000007144081}
+    rotation: {x: 0.000000004323332, y: 0.05588352, z: 2.0752011e-12, w: -0.9984373}
+    scale: {x: 0.99999994, y: 1.0000001, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0.0000000018626451, y: 0.00027488172, z: 0.001294516}
+    rotation: {x: -0.000000057658035, y: 2.6090241e-15, z: -3.626741e-14, w: 1}
+    scale: {x: 0.9999999, y: 1.0000002, z: 1.0000004}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0.0000000037252903, y: 0.0003201887, z: 0.0015075505}
+    rotation: {x: -0.000000046951637, y: -0.00000005101605, z: 0.004092999, w: 0.9999916}
+    scale: {x: 1.0000002, y: 1.0000002, z: 1.0000002}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowUp
+    hash: 1246724795
+    position: {x: 0.000000048428774, y: 0.000349544, z: 0.0018251762}
+    rotation: {x: -0.000000033055095, y: -0.00000008395414, z: -9.577081e-11, w: 1}
+    scale: {x: 1.0000005, y: 1.0000004, z: 1.0000005}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

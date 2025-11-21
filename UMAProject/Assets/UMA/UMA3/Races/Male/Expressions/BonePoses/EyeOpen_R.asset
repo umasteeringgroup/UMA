@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyeOpen_R
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: 0.0000000037252903, y: -0.000000007450581, z: -0.000000014901161}
+    rotation: {x: 0.000000051915887, y: -0.000000084291294, z: -6.1659887e-12, w: 1}
+    scale: {x: 0.99999994, y: 1.0000002, z: 1.0007373}
+    category: 
+    enabled: 1
+  - bone: RightLowerLid
+    hash: -945389519
+    position: {x: -0.0000000037252974, y: 0.00000024745748, z: -0.0000000071431714}
+    rotation: {x: 0.000000007474989, y: 0.09967951, z: -9.654999e-12, w: -0.9950196}
+    scale: {x: 1, y: 0.9999999, z: 0.9999999}
+    category: 
+    enabled: 1
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: -0.0000000037252974, y: 0.00000024745754, z: -0.0000000071431714}
+    rotation: {x: 0.000000007039724, y: 0.094343424, z: -2.0830782e-11, w: 0.9955397}
+    scale: {x: 0.99999994, y: 1.0000001, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

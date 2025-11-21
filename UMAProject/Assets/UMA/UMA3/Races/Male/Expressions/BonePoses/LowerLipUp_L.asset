@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: LowerLipUp_L
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.00046668015, y: -0.002177313, z: 0.0029575229}
+    rotation: {x: -0.04302884, y: -0.31444794, z: 0.014816537, w: -0.94818324}
+    scale: {x: 1.0000004, y: 1.0000002, z: 1.0000001}
+    category: 
+    enabled: 1
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: -2.7333513e-10, y: -0.0020069666, z: 0.0011110976}
+    rotation: {x: 0.0000000128381, y: 0.1700455, z: 8.881784e-15, w: 0.9854362}
+    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

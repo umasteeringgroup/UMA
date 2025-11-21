@@ -15,6 +15,8 @@ namespace UMA.PoseTools
     [System.Serializable]
     public class UMAExpressionSet : ScriptableObject
     {
+        [Tooltip("Name of the jaw bone if the jaw is not mapped through an avatar")]
+        public string UnmappedJawName;
         /// <summary>
         /// Pair of mutually exclusive expressions which can share a curve.
         /// </summary>

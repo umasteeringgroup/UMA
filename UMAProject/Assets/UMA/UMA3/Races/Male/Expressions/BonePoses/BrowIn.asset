@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowIn
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftEye
+    hash: 27653119
+    position: {x: -0.0000000037252903, y: -0.000000007450581, z: -0.000000014901161}
+    rotation: {x: 0.000000041901153, y: 0.00000016858256, z: -4.0610093e-12, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1.0005088}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: -0.0000000018626451, y: -0.00003697723, z: -0.0001738891}
+    rotation: {x: 0.00000010488219, y: 0.000000057130425, z: 0.02783087, w: 0.9996126}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: -0.0000000037252903, y: -0.00004310906, z: -0.00020276755}
+    rotation: {x: 0.000000053279532, y: 0.00000011159692, z: 0.013348916, w: 0.9999109}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEye
+    hash: -2120937982
+    position: {x: 0.0000000037252903, y: -0.000000007450581, z: -0.000000014901161}
+    rotation: {x: 0.000000051915887, y: -0.000000084291294, z: -6.1659887e-12, w: 1}
+    scale: {x: 0.99999994, y: 1.0000001, z: 1.0005087}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0.0000000018626451, y: -0.00003697723, z: -0.0001739189}
+    rotation: {x: -0.000000014563782, y: -0.000000056739836, z: 0.027830973, w: -0.9996126}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0.0000000037252903, y: -0.00004310906, z: -0.00020276755}
+    rotation: {x: -0.0000002476259, y: -0.00000013332932, z: 0.013349049, w: -0.9999109}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

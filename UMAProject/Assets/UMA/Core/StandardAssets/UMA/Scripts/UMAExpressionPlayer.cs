@@ -4,6 +4,7 @@
 //	Copyright:	(c) 2013 Eli Curtz
 //	============================================================
 using UMA.CharacterSystem;
+using UnityEditor;
 using UnityEngine;
 
 namespace UMA.PoseTools
@@ -11,8 +12,8 @@ namespace UMA.PoseTools
     /// <summary>
     /// UMA specific expression player.
     /// </summary>
-    [ExecuteInEditMode]
-	public class UMAExpressionPlayer : ExpressionPlayer
+   // [ExecuteInEditMode]
+	public class UMAExpressionPlayer : ExpressionPlayer, ISerializationCallbackReceiver
 	{
 		/// <summary>
 		/// The expression set containing poses used for animation.
@@ -56,7 +57,8 @@ namespace UMA.PoseTools
 		// Use this for initialization
 		void Start()
 		{
-			Initialize();
+            Debug.Log("UMAExpressionPlayer Start called for " + gameObject.name+" Neck_down is " + neckUp_Down);
+            Initialize();
 		}
 
 #if UNITY_EDITOR
@@ -64,15 +66,20 @@ namespace UMA.PoseTools
         {
             if (!Application.isPlaying)
             {
+                Debug.Log("UMAExpressionPlayer OnEnable called for " + gameObject.name+" Neck_down is " + neckUp_Down);
                 Initialize();
             }
         }
 
         private void OnValidate()
         {
-            if (!Application.isPlaying)
+            if (!EditorApplication.isPlaying)
             {
-                if (!initialized || umaData == null) { Initialize(); }
+                if (!initialized || umaData == null) 
+                {
+                    Debug.Log("UMAExpressionPlayer OnValidate called for " + gameObject.name+" Neck_down is " + neckUp_Down);
+                    Initialize(); 
+                }
                 DoUpdate();
                 DoLateUpdate();
             }
@@ -81,6 +88,7 @@ namespace UMA.PoseTools
 
 		public void Initialize()
         {
+            Debug.Log("Initializing UMAExpressionPlayer for " + gameObject.name+" Neck_down is " + neckUp_Down);
             blinkDelay = Random.Range(minBlinkDelay, maxBlinkDelay);
 
             if (Camera.main != null)
@@ -128,7 +136,8 @@ namespace UMA.PoseTools
 				}
 			}
 
-			if (umaData != null)
+            Debug.Log("UMAExpressionPlayer found UMAData: " + (umaData != null)+" Neck_down is " + neckUp_Down);
+            if (umaData != null)
 			{
 				animator = gameObject.GetComponentInChildren<Animator>();
 				SetupBones();
@@ -136,6 +145,7 @@ namespace UMA.PoseTools
 
 			processing = true;
 			initialized = true;
+            Debug.Log("UMAExpressionPlayer init done: " + (umaData != null) + " Neck_down is " + neckUp_Down);
         }
 
         private void CharacterBegun(UMAData _umaData)
@@ -146,7 +156,9 @@ namespace UMA.PoseTools
 
 		private void SetupBones()
 		{
-			if ((expressionSet != null) /*&& (umaData != null) && (umaData.skeleton != null)*/)
+            Debug.Log("Setup bones starting. neck_down is " + neckUp_Down);
+
+            if ((expressionSet != null) /*&& (umaData != null) && (umaData.skeleton != null)*/)
 			{
 				Transform jaw = null;
 				Transform neck = null;
@@ -154,57 +166,56 @@ namespace UMA.PoseTools
 
 				if (umaData != null && umaData.animator != null && umaData.animator.avatar != null)
 				{
+					// Initialize and then assign from animator bones
 					jawHash = 0;
 					neckHash = 0;
 					headHash = 0;
 					animator = umaData.animator;
+
 					jaw = animator.GetBoneTransform(HumanBodyBones.Jaw);
-					if (jaw != null)
+                    if (jaw != null)
                     {
                         jawHash = UMAUtils.StringToHash(jaw.name);
+                    }
+                    else
+                    {
+                        // Try unmapped jaw name from expression set
+                        jaw = animator.transform.Find(expressionSet.UnmappedJawName);
+                        if (jaw != null)
+                        {
+                            jawHash = UMAUtils.StringToHash(jaw.name);
+                        }
                     }
 
                     neck = animator.GetBoneTransform(HumanBodyBones.Neck);
 					if (neck != null)
-                    {
-                        neckHash = UMAUtils.StringToHash(neck.name);
-                    }
+					{
+						neckHash = UMAUtils.StringToHash(neck.name);
+					}
 
-                    head = animator.GetBoneTransform(HumanBodyBones.Head);
+					head = animator.GetBoneTransform(HumanBodyBones.Head);
 					if (head != null)
-                    {
-                        headHash = UMAUtils.StringToHash(head.name);
-                    }
-                }
-				if (overrideMecanimJaw && jaw == null)
-				{
-					if (Debug.isDebugBuild)
 					{
-						Debug.Log("Jaw bone not found, but jaw override is requested. This will be ignored in a production build.");
+						headHash = UMAUtils.StringToHash(head.name);
 					}
-					overrideMecanimJaw = false;
 				}
-				if (overrideMecanimNeck && neck == null)
+
+				// Do NOT change override flags here; just warn in editor if requested
+#if UNITY_EDITOR
+				if (Debug.isDebugBuild)
 				{
-					if (Debug.isDebugBuild)
-					{
-						Debug.Log("Neck bone not found, but neck override is requested. This will be ignored in a production build.");
-					}
-					overrideMecanimNeck = false;
+					if (overrideMecanimJaw && jaw == null) { Debug.Log("Jaw bone not found; jaw override will be skipped until available."); }
+					if (overrideMecanimNeck && neck == null) { Debug.Log("Neck bone not found; neck override will be skipped until available."); }
+					if (overrideMecanimHead && head == null) { Debug.Log("Head bone not found; head override will be skipped until available."); }
 				}
-				if (overrideMecanimHead && head == null)
-				{
-					if (Debug.isDebugBuild)
-					{
-						Debug.Log("Head bone not found, but head override is requested. This will be ignored in a production build.");
-					}
-					overrideMecanimHead = false;
-				}
+#endif
 			}
+            Debug.Log("Setup bones complete. neck_down is " + neckUp_Down);
 		}
 
         private void UmaData_OnCharacterUpdated(UMAData obj)
         {
+            Debug.Log("Character updated. Neck_updown is " + neckUp_Down);
 			umaData = obj;
 			SetupBones();
 			animator = umaData.animator;
@@ -225,12 +236,14 @@ namespace UMA.PoseTools
 			{
 				if (!initialized || umaData == null)
 				{
-					Initialize();
+                    Debug.Log("UMAExpressionPlayer DoUpdate calling Initialize for " + gameObject.name+" Neck_down is " + neckUp_Down);
+                    Initialize();
 					return;
 				}
 			}
 
-			if (!processing)
+			// In editor, always allow processing to run to reflect inspector changes
+			if (Application.isPlaying && !processing)
             {
                 return;
             }
@@ -245,15 +258,20 @@ namespace UMA.PoseTools
                 return;
             }
 
+            // Effective overrides only apply when corresponding bone hash exists
+            bool oHead = overrideMecanimHead && headHash != 0;
+            bool oNeck = overrideMecanimNeck && neckHash != 0;
+            bool oJaw  = overrideMecanimJaw  && jawHash  != 0;
+
             // Fix for animation systems which require consistent values frame to frame
             Quaternion headRotation = Quaternion.identity;
 			Quaternion neckRotation = Quaternion.identity;
 
-			if (!overrideMecanimHead && headHash != 0)
+			if (!oHead && headHash != 0)
             {
 				headRotation = umaData.skeleton.GetRotation(headHash);
 			}
-			if (!overrideMecanimNeck && neckHash != 0)
+			if (!oNeck && neckHash != 0)
             {
 				neckRotation = umaData.skeleton.GetRotation(neckHash);
 			}
@@ -264,12 +282,12 @@ namespace UMA.PoseTools
                 expressionSet.RestoreBones(umaData.skeleton, logResetErrors);
             }
 
-            if (!overrideMecanimNeck && neckHash != 0)
+            if (!oNeck && neckHash != 0)
             {
                 umaData.skeleton.SetRotation(neckHash, neckRotation);
             }
 
-            if (!overrideMecanimHead && headHash != 0)
+            if (!oHead && headHash != 0)
             {
                 umaData.skeleton.SetRotation(headHash, headRotation);
             }
@@ -290,7 +308,8 @@ namespace UMA.PoseTools
 
         private void DoLateUpdate()
 		{
-			if (!processing)
+			// In editor, always allow processing to run to reflect inspector changes
+			if (Application.isPlaying && !processing)
             {
 				return;
             }
@@ -322,33 +341,21 @@ namespace UMA.PoseTools
 
 			float[] values = Values;
 
+			// Effective overrides only apply when corresponding bone hash exists
+			bool oHead = overrideMecanimHead && headHash != 0;
+			bool oNeck = overrideMecanimNeck && neckHash != 0;
+			bool oJaw  = overrideMecanimJaw  && jawHash  != 0;
+			bool oEyes = overrideMecanimEyes; // eye hashes not tracked here
+			bool oHands = overrideMecanimHands; // hand hashes not tracked here
+
 			MecanimJoint mecanimMask = MecanimJoint.None;
-			if (!overrideMecanimNeck)
-            {
-				mecanimMask |= MecanimJoint.Neck;
-            }
+			if (!oNeck) { mecanimMask |= MecanimJoint.Neck; }
+			if (!oHead) { mecanimMask |= MecanimJoint.Head; }
+			if (!oJaw)  { mecanimMask |= MecanimJoint.Jaw; }
+			if (!oEyes) { mecanimMask |= MecanimJoint.Eye; }
+			if (!oHands){ mecanimMask |= MecanimJoint.Hands; }
 
-			if (!overrideMecanimHead)
-            {
-				mecanimMask |= MecanimJoint.Head;
-            }
-
-			if (!overrideMecanimJaw)
-            {
-				mecanimMask |= MecanimJoint.Jaw;
-            }
-
-			if (!overrideMecanimEyes)
-            {
-				mecanimMask |= MecanimJoint.Eye;
-            }
-
-			if (!overrideMecanimHands)
-            {
-				mecanimMask |= MecanimJoint.Hands;
-            }
-
-			if (overrideMecanimJaw)
+			if (oJaw && jawHash != 0)
 			{
 				umaData.skeleton.Restore(jawHash);
 			}
@@ -573,5 +580,15 @@ namespace UMA.PoseTools
                 }
             }
         }
-	}
+
+        public void OnBeforeSerialize()
+        {
+           // Debug.Log("Before serialize: neck_down is " + neckUp_Down);
+        }
+
+        public void OnAfterDeserialize()
+        {
+            Debug.Log("After deserialize: neck_down is " + neckUp_Down);
+        }
+    }
 }

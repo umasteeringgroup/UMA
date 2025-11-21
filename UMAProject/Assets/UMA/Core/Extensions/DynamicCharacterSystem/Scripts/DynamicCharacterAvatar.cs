@@ -3459,6 +3459,9 @@ namespace UMA.CharacterSystem
 
         #region SETTINGS MODIFICATION (ANIMATION RELATED)
 
+
+        public static UMAExpressionPlayer debugExpressionPlayer = null;
+
         /// <summary>
         /// Sets the Expression set for the Avatar based on the Avatars set race.
         /// </summary>
@@ -3466,6 +3469,7 @@ namespace UMA.CharacterSystem
         public void SetExpressionSet(bool addExressionPlayer = false)
         {
             var thisExpressionPlayer = gameObject.GetComponent<UMAExpressionPlayer>();
+            debugExpressionPlayer = thisExpressionPlayer;
             if (thisExpressionPlayer == null && addExressionPlayer)
             {
                 thisExpressionPlayer = gameObject.AddComponent<UMAExpressionPlayer>();
@@ -3516,6 +3520,7 @@ namespace UMA.CharacterSystem
                 }
 
                 thisExpressionPlayer.enabled = true;
+                Debug.Log("Initializing Expression Player from DCA on " + gameObject.name);
                 thisExpressionPlayer.Initialize();
             }
             else

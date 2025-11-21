@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: EyeUp_L
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftEyeGlobe
+    hash: -326698209
+    position: {x: -0.0000000037270382, y: 0.000000016326482, z: -0.0000000013186323}
+    rotation: {x: 0.00000025976675, y: 0.25503883, z: -0.00000091175673, w: 0.9669308}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLowerLid
+    hash: 484878204
+    position: {x: -0.0000000037270382, y: 0.000000016326482, z: -0.0000000013186323}
+    rotation: {x: 0.000000007431626, y: 0.09897714, z: -1.3011203e-11, w: 0.9950897}
+    scale: {x: 1, y: 0.9999999, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: -0.0000000037270382, y: 0.000000016326482, z: -0.0000000013186323}
+    rotation: {x: 0.0000000050004516, y: 0.05220501, z: 5.2687854e-11, w: 0.99863636}
+    scale: {x: 0.9999997, y: 0.9999999, z: 0.9999997}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

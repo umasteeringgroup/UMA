@@ -74,7 +74,7 @@ namespace UMA.PoseTools
 			Listening = 4
 		};
 
-		[System.Serializable]
+		/*[System.Serializable]
 		public class Expression
         {
 			public string poseName;
@@ -83,10 +83,10 @@ namespace UMA.PoseTools
 			public float value = 0.0f;
 			[Range(0.0f, 1.0f)]
 			public float defaultValue = 0.5f;
-        }
+        }*/
 
 	
-		public List<Expression> Expressions;
+		//public List<Expression> Expressions;
 
 		public const int PoseCount = 44;
 		/// <summary>
@@ -200,9 +200,10 @@ namespace UMA.PoseTools
 			MecanimJoint.Hands,
 			MecanimJoint.Hands
 		};
-
-		// Pose values
-		[Range(-1f, 1f)]
+        #region Expressions 
+        // TODO: Draw these manually in the inspector for better layout
+        // Pose values
+        [Range(-1f, 1f)]
 		public float neckUp_Down = 0f;
 		[Range(-1f, 1f)]
 		public float neckLeft_Right = 0f;
@@ -291,9 +292,9 @@ namespace UMA.PoseTools
 		public float leftPoint = 0f;
 		[Range(0f, 1f)]
 		public float rightPoint = 0f;
+        #endregion
 
-
-		protected float[] valueArray = new float[PoseCount];
+        protected float[] valueArray = new float[PoseCount];
 		public float[] Values
 		{
 			get
@@ -351,7 +352,8 @@ namespace UMA.PoseTools
 				if (value.Length != PoseCount) return;
 
 				int i = 0;
-				neckUp_Down = value[i++];
+				Debug.Log($"neck_down new value: {value[i]} was {neckUp_Down}");
+                neckUp_Down = value[i++];
 				neckLeft_Right = value[i++];
 				neckTiltLeft_Right = value[i++];
 				headUp_Down = value[i++];

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowInnerDown
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: -0.0000000018626451, y: -0.000013291836, z: -0.00006251037}
+    rotation: {x: 0.000042986183, y: 0.046286803, z: -0.006275757, w: -0.99890846}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: -0.0000000037252903, y: -0.000015504658, z: -0.000072814524}
+    rotation: {x: 0.000000540724, y: 0.00000014272625, z: 0.0034994134, w: -0.99999386}
+    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+    category: 
+    enabled: 1
+  - bone: NoseMiddle
+    hash: 865884795
+    position: {x: -0.0000009253305, y: 0.00000044703484, z: 0.00083535165}
+    rotation: {x: 0.0000189938, y: 0.00000016614685, z: -0.00000005955792, w: 1}
+    scale: {x: 1, y: 1.0000001, z: 1}
+    category: 
+    enabled: 1
+  - bone: NoseTop
+    hash: 463827395
+    position: {x: 0.00010781602, y: -0.00055095553, z: 0.0067395046}
+    rotation: {x: -0.00004214168, y: 0.038710132, z: 0.000001634429, w: -0.9992505}
+    scale: {x: 1, y: 1.0000001, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0.0000000018626451, y: -0.000013291836, z: -0.00006252527}
+    rotation: {x: -0.00004313924, y: 0.046286803, z: 0.0062757246, w: -0.99890846}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0.0000000037252903, y: -0.000015504658, z: -0.000072814524}
+    rotation: {x: -0.00000036263063, y: -0.00000017191304, z: 0.003499489, w: 0.99999386}
+    scale: {x: 1, y: 1.0000001, z: 1.0000001}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []
