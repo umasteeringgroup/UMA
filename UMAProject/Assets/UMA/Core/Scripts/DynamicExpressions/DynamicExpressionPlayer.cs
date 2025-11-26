@@ -67,6 +67,18 @@ public class DynamicExpressionPlayer : MonoBehaviour
     private bool _hasEyes;
     private bool _lookAtEngaged; // true when current frame LookAt passes gating
 
+    // One-time log flags
+    private bool _logInitMissing;
+    private bool _logAnimatorMissing;
+    private bool _logDistanceTooFar;
+    private bool _logBlinkSkipped;
+    private bool _logSaccadeSkipped;
+    private bool _logLookAtNoTarget;
+    private bool _logLookAtTooNear;
+    private bool _logLookAtTooFar;
+    private bool _logLookAtBehind;
+    private bool _logLookAtNoEyes;
+
     // Scratch vars (avoid per-frame allocations)
     private Vector3 _lookDir;
     private Vector3 _headForward;
@@ -88,25 +100,37 @@ public class DynamicExpressionPlayer : MonoBehaviour
     private void Initialize()
     {
         if (_initialized) return;
-        _animator = GetComponentInChildren<Animator>();
         _mainCam = Camera.main;
-        if (_animator != null)
-        {
-            // Try to fetch head transform (human rig)
-            _headTransform = _animator.GetBoneTransform(HumanBodyBones.Head);
-            _hasHead = _headTransform != null;
-            CacheEyeTransforms();
-        }
         ScheduleNextBlink();
         ScheduleNextSaccade();
         _initialized = true;
     }
 
-    private void CacheEyeTransforms()
+    private void CacheTransforms()
     {
-        _leftEyeTransform = _animator.GetBoneTransform(HumanBodyBones.LeftEye);
-        _rightEyeTransform = _animator.GetBoneTransform(HumanBodyBones.RightEye);
-        _hasEyes = (_leftEyeTransform != null && _rightEyeTransform != null);
+        if (_headTransform != null)
+        {
+            return; // already cached
+        }
+        if (_animator == null)
+        {
+            _animator = GetComponentInChildren<Animator>();
+        }
+
+        if (_animator != null)
+        {
+            if (_animator.avatar != null)
+            {
+                if (_animator.avatar.isHuman)
+                {
+                    _headTransform = _animator.GetBoneTransform(HumanBodyBones.Head);
+                    _hasHead = _headTransform != null;
+                    _leftEyeTransform = _animator.GetBoneTransform(HumanBodyBones.LeftEye);
+                    _rightEyeTransform = _animator.GetBoneTransform(HumanBodyBones.RightEye);
+                    _hasEyes = (_leftEyeTransform != null && _rightEyeTransform != null);
+                }
+            }
+        }
     }
 
     void Update()
@@ -121,19 +145,45 @@ public class DynamicExpressionPlayer : MonoBehaviour
 
     private bool ShouldProcess()
     {
-        if (!_initialized) return false;
-        if (_animator == null) return false;
+        // Evaluate and log reasons once
+        if (!_initialized)
+        {
+            LogOnce(ref _logInitMissing, "[DynamicExpressionPlayer] Skipping processing: not initialized.");
+            return false;
+        }
+        if (_animator == null)
+        {
+            LogOnce(ref _logAnimatorMissing, "[DynamicExpressionPlayer] Skipping processing: Animator not found.");
+            return false;
+        }
         if (_mainCam != null)
         {
             float sq = (_mainCam.transform.position - transform.position).sqrMagnitude;
-            if (sq > processDistance * processDistance) return false;
+            if (sq > processDistance * processDistance)
+            {
+                LogOnce(ref _logDistanceTooFar, "[DynamicExpressionPlayer] Skipping processing: beyond processDistance.");
+                return false;
+            }
+        }
+        if (_headTransform == null)
+        {
+            return false;
         }
         return true;
     }
 
     private void DoUpdate()
     {
-        if (!ShouldProcess()) return;
+        CacheTransforms();
+        bool canProcess = ShouldProcess();
+        if (!canProcess)
+        {
+            // Log feature-specific skips once if enabled
+            if (EnableBlinking) LogOnce(ref _logBlinkSkipped, "[DynamicExpressionPlayer] Blink update skipped: processing disabled.");
+            if (EnableSaccades) LogOnce(ref _logSaccadeSkipped, "[DynamicExpressionPlayer] Saccade update skipped: processing disabled.");
+            if (EnableLookAt) LogOnce(ref _logLookAtNoTarget, "[DynamicExpressionPlayer] LookAt update skipped: processing disabled.");
+            return;
+        }
 
         if (EnableBlinking)
         {
@@ -162,6 +212,10 @@ public class DynamicExpressionPlayer : MonoBehaviour
 
     private void UpdateBlinking()
     {
+        if (_headTransform == null)
+        {
+            return; // no head, skip
+        }
         if (!_isBlinking)
         {
             if (Time.time >= _nextBlinkTime)
@@ -228,6 +282,11 @@ public class DynamicExpressionPlayer : MonoBehaviour
 
     private void UpdateSaccades()
     {
+        if (_headTransform == null)
+        {
+            return; // no head, skip
+        }
+
         if (Time.time >= _nextSaccadeTime && !_isBlinking)
         {
             BeginSaccade();
@@ -247,17 +306,30 @@ public class DynamicExpressionPlayer : MonoBehaviour
     #region LookAt
     private void UpdateLookAtComputation()
     {
-        _lookAtEngaged = false; // reset, will set true if all conditions satisfied
+
+        _lookAtEngaged = false; // reset
+        if (!EnableLookAt)
+        {
+            return;
+        }
         if (LookAtTarget == null)
         {
+            LogOnce(ref _logLookAtNoTarget, "[DynamicExpressionPlayer] LookAt not engaged: LookAtTarget is null.");
             _ikLookPos = transform.position + transform.forward * 2f;
             return;
         }
 
         _toTarget = LookAtTarget.position - transform.position;
         float dist = _toTarget.magnitude;
-        if (dist < LookAtMinDistance || dist > LookAtMaxDistance)
+        if (dist < LookAtMinDistance)
         {
+            LogOnce(ref _logLookAtTooNear, "[DynamicExpressionPlayer] LookAt not engaged: target closer than MinDistance.");
+            _ikLookPos = transform.position + transform.forward * 2f;
+            return;
+        }
+        if (dist > LookAtMaxDistance)
+        {
+            LogOnce(ref _logLookAtTooFar, "[DynamicExpressionPlayer] LookAt not engaged: target beyond MaxDistance.");
             _ikLookPos = transform.position + transform.forward * 2f;
             return;
         }
@@ -267,8 +339,14 @@ public class DynamicExpressionPlayer : MonoBehaviour
         float forwardDot = Vector3.Dot(transform.forward, _lookDir);
         if (forwardDot < 0.05f)
         {
+            LogOnce(ref _logLookAtBehind, "[DynamicExpressionPlayer] LookAt not engaged: target behind character.");
             _ikLookPos = transform.position + transform.forward * 2f;
             return;
+        }
+
+        if (!_hasEyes)
+        {
+            LogOnce(ref _logLookAtNoEyes, "[DynamicExpressionPlayer] LookAt engaged without eye bones: using head only.");
         }
 
         // Apply eye jitter (localized small offsets)
@@ -340,7 +418,18 @@ public class DynamicExpressionPlayer : MonoBehaviour
     }
     #endregion
 
+    private static void LogOnce(ref bool flag, string message)
+    {
+        if (flag) return;
+        flag = true;
+        if (Debug.isDebugBuild)
+        {
+            Debug.Log(message);
+        }
+    }
+
 #if UNITY_EDITOR
+    [SerializeField] public string dnaCreationFolder = "Assets"; // destination for newly created DNA assets from bone poses
     private void OnDrawGizmos()
     {
         if (!Application.isPlaying && !_initialized) Initialize();
@@ -368,7 +457,7 @@ public class DynamicExpressionPlayer : MonoBehaviour
     {
         if (Application.isPlaying) return;
         Initialize();
-        DoUpdate();      // simulate Update phase
+        DoUpdate();      // simulate Update phase (includes logging)
         DoLateUpdate();  // simulate LateUpdate phase
         UnityEditor.SceneView.RepaintAll(); // refresh gizmos & scene view
     }

@@ -70,11 +70,13 @@ namespace UMA.PoseTools
         private void OnEnable()
         {
             LoadSettings();
+            EditorApplication.update += DoInspectors;
         }
 
         private void OnDisable()
         {
             SaveSettings();
+            EditorApplication.update -= DoInspectors;
         }
 
         private void OnGUI()
@@ -84,6 +86,15 @@ namespace UMA.PoseTools
 
             DrawAxisSection(ref _showRotation, "Rotation Conversion", rotX, rotY, rotZ);
             DrawAxisSection(ref _showTranslation, "Translation Conversion", posX, posY, posZ);
+
+            // Quick self-test utility
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Self-Test Axis Mapping", GUILayout.Width(180)))
+            {
+                RunSelfTest();
+            }
+            EditorGUILayout.EndHorizontal();
 
             if (_settingsDirty && Event.current.type == EventType.Repaint)
             {
@@ -192,7 +203,7 @@ namespace UMA.PoseTools
                 // Restore button (before bone selection UI)
                 EditorGUILayout.BeginHorizontal();
                 GUI.enabled = poseAsset != null;
-                if (GUILayout.Button("Restore", GUILayout.Width(80)))
+                if (GUILayout.Button("Restore"))
                 {
                     if (poseAsset != null)
                     {
@@ -209,6 +220,10 @@ namespace UMA.PoseTools
                     }
                 }
                 GUI.enabled = true;
+                if (GUILayout.Button("Edit Pose"))
+                {
+                    InspectMe.Add(poseAsset);
+                }
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.EndHorizontal();
 
@@ -240,6 +255,19 @@ namespace UMA.PoseTools
             {
                 _queuedPoses.Clear();
                 _boneDropdownIndices.Clear();
+            }
+        }
+
+        private List<UnityEngine.Object> InspectMe = new List<UnityEngine.Object>();
+        private void DoInspectors()
+        {
+            if (InspectMe.Count > 0)
+            {
+                for (int i = 0; i < InspectMe.Count; i++)
+                {
+                    InspectorUtlity.InspectTarget(InspectMe[i]);
+                }
+                InspectMe.Clear();
             }
         }
 
@@ -318,12 +346,16 @@ namespace UMA.PoseTools
             var converted = new List<UMABonePose.PoseBone>(sourceBones.Length);
             foreach (var pb in sourceBones)
             {
+                bool applyPos = AxisMapChanges(posX) || AxisMapChanges(posY) || AxisMapChanges(posZ);
+                bool applyRot = AxisMapChanges(rotX) || AxisMapChanges(rotY) || AxisMapChanges(rotZ);
+                Vector3 newPos = applyPos ? ConvertVector(pb.position, posX, posY, posZ) : pb.position;
+                Quaternion newRot = applyRot ? Quaternion.Euler(ConvertEuler(pb.rotation.eulerAngles, rotX, rotY, rotZ)) : pb.rotation;
                 converted.Add(new UMABonePose.PoseBone
                 {
                     bone = pb.bone,
                     hash = pb.hash,
-                    position = ConvertVector(pb.position, posX, posY, posZ),
-                    rotation = Quaternion.Euler(ConvertEuler(pb.rotation.eulerAngles, rotX, rotY, rotZ)),
+                    position = newPos,
+                    rotation = newRot,
                     scale = pb.scale,
                     category = pb.category,
                     enabled = pb.enabled
@@ -363,9 +395,30 @@ namespace UMA.PoseTools
             return arr;
         }
 
+        // Helpers for safe axis access to avoid any implicit index confusion
+        private static float GetAxis(Vector3 v, Axis a)
+        {
+            switch (a)
+            {
+                case Axis.X: return v.x;
+                case Axis.Y: return v.y;
+                case Axis.Z: return v.z;
+                default: return 0f;
+            }
+        }
+        private static void SetAxis(ref Vector3 v, Axis a, float value)
+        {
+            switch (a)
+            {
+                case Axis.X: v.x = value; break;
+                case Axis.Y: v.y = value; break;
+                case Axis.Z: v.z = value; break;
+            }
+        }
+
         private static Vector3 ConvertVector(Vector3 src, AxisMap a1, AxisMap a2, AxisMap a3)
         {
-            Vector3 dst = src;
+            Vector3 dst = src; // start from identity mapping
             ApplyAxisMap(ref dst, src, a1);
             ApplyAxisMap(ref dst, src, a2);
             ApplyAxisMap(ref dst, src, a3);
@@ -374,20 +427,15 @@ namespace UMA.PoseTools
 
         private static void ApplyAxisMap(ref Vector3 dst, Vector3 src, AxisMap map)
         {
-            if (!map.enabled) return;
-            float v = src[(int)map.sourceAxis];
+            if (map == null || !map.enabled) return;
+            float v = GetAxis(src, map.sourceAxis);
             if (map.invert) v = -v;
-            switch (map.targetAxis)
-            {
-                case Axis.X: dst.x = v; break;
-                case Axis.Y: dst.y = v; break;
-                case Axis.Z: dst.z = v; break;
-            }
+            SetAxis(ref dst, map.targetAxis, v);
         }
 
         private static Vector3 ConvertEuler(Vector3 srcEuler, AxisMap a1, AxisMap a2, AxisMap a3)
         {
-            Vector3 dst = srcEuler;
+            Vector3 dst = srcEuler; // start from identity mapping
             ApplyEulerAxisMap(ref dst, srcEuler, a1);
             ApplyEulerAxisMap(ref dst, srcEuler, a2);
             ApplyEulerAxisMap(ref dst, srcEuler, a3);
@@ -396,15 +444,10 @@ namespace UMA.PoseTools
 
         private static void ApplyEulerAxisMap(ref Vector3 dst, Vector3 src, AxisMap map)
         {
-            if (!map.enabled) return;
-            float v = src[(int)map.sourceAxis];
+            if (map == null || !map.enabled) return;
+            float v = GetAxis(src, map.sourceAxis);
             if (map.invert) v = -v;
-            switch (map.targetAxis)
-            {
-                case Axis.X: dst.x = v; break;
-                case Axis.Y: dst.y = v; break;
-                case Axis.Z: dst.z = v; break;
-            }
+            SetAxis(ref dst, map.targetAxis, v);
         }
 
         private void ValidateMapping(params AxisMap[] maps)
@@ -412,15 +455,8 @@ namespace UMA.PoseTools
             var usedTargets = new Dictionary<Axis, int>();
             foreach (var m in maps)
             {
-                if (!m.enabled) continue;
-                if (usedTargets.TryGetValue(m.targetAxis, out int count))
-                {
-                    usedTargets[m.targetAxis] = count + 1;
-                }
-                else
-                {
-                    usedTargets.Add(m.targetAxis, 1);
-                }
+                if (m == null || !m.enabled) continue;
+                if (usedTargets.TryGetValue(m.targetAxis, out int count)) usedTargets[m.targetAxis] = count + 1; else usedTargets.Add(m.targetAxis, 1);
             }
             foreach (var kv in usedTargets)
             {
@@ -479,7 +515,7 @@ namespace UMA.PoseTools
             {
                 if (umaData?.skeleton != null)
                 {
-                    int hash = UMAUtils.StringToHash(boneName);
+                    int hash = UMASkeleton.StringToHash(boneName);
                     var t = umaData.skeleton.GetBoneTransform(hash);
                     if (t != null)
                     {
@@ -523,6 +559,38 @@ namespace UMA.PoseTools
                 if (res != null) return res;
             }
             return null;
+        }
+
+        private void RunSelfTest()
+        {
+            // Test position mapping on canonical unit vectors
+            Vector3 testX = new Vector3(1, 0, 0);
+            Vector3 testY = new Vector3(0, 1, 0);
+            Vector3 testZ = new Vector3(0, 0, 1);
+            var outX = ConvertVector(testX, posX, posY, posZ);
+            var outY = ConvertVector(testY, posX, posY, posZ);
+            var outZ = ConvertVector(testZ, posX, posY, posZ);
+            Debug.Log($"[BonePoseConverter] Pos map X {testX} -> {outX}, Y {testY} -> {outY}, Z {testZ} -> {outZ}");
+
+            // Test rotation mapping similarly (Euler degrees)
+            Vector3 rX = new Vector3(10, 0, 0);
+            Vector3 rY = new Vector3(0, 10, 0);
+            Vector3 rZ = new Vector3(0, 0, 10);
+            var routX = ConvertEuler(rX, rotX, rotY, rotZ);
+            var routY = ConvertEuler(rY, rotX, rotY, rotZ);
+            var routZ = ConvertEuler(rZ, rotX, rotY, rotZ);
+            Debug.Log($"[BonePoseConverter] Rot map X {rX} -> {routX}, Y {rY} -> {routY}, Z {rZ} -> {routZ}");
+
+            _status = "Self-test logged to Console";
+            Repaint();
+        }
+
+        private bool AxisMapChanges(AxisMap map)
+        {
+            if (map == null || !map.enabled) return false;
+            if (map.invert) return true;
+            // A change only if remapping to a different target axis
+            return map.sourceAxis != map.targetAxis;
         }
     }
 }

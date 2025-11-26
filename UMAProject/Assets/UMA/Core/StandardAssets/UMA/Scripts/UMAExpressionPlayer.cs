@@ -13,7 +13,7 @@ namespace UMA.PoseTools
     /// UMA specific expression player.
     /// </summary>
    // [ExecuteInEditMode]
-	public class UMAExpressionPlayer : ExpressionPlayer, ISerializationCallbackReceiver
+	public class UMAExpressionPlayer : ExpressionPlayer
 	{
 		/// <summary>
 		/// The expression set containing poses used for animation.
@@ -71,19 +71,6 @@ namespace UMA.PoseTools
             }
         }
 
-        private void OnValidate()
-        {
-            if (!EditorApplication.isPlaying)
-            {
-                if (!initialized || umaData == null) 
-                {
-                    Debug.Log("UMAExpressionPlayer OnValidate called for " + gameObject.name+" Neck_down is " + neckUp_Down);
-                    Initialize(); 
-                }
-                DoUpdate();
-                DoLateUpdate();
-            }
-        }
 #endif
 
 		public void Initialize()
@@ -579,16 +566,6 @@ namespace UMA.PoseTools
                     rightEyeOpen_Close = -1.01f;
                 }
             }
-        }
-
-        public void OnBeforeSerialize()
-        {
-           // Debug.Log("Before serialize: neck_down is " + neckUp_Down);
-        }
-
-        public void OnAfterDeserialize()
-        {
-            Debug.Log("After deserialize: neck_down is " + neckUp_Down);
         }
     }
 }

@@ -97,6 +97,7 @@ UMA Conventions
 - Use UMA APIs (`UMAAssetIndexer`, `UMAData`, `DynamicCharacterAvatar`) instead of bespoke lookups.
 - Generated materials: rebind textures by resolved property name; avoid guessing.
 - Respect `UMAMaterial.MaterialType` — skip stamping/atlas writes for `UseExistingMaterial` and `UseExistingTextures`.
+- it is preferred to use if-then-else instead of ternary operator (?:). Ternary operator should only be used inline, and when absolutely necessary.
 
 Decal System Guidelines
 - Clip stamping to `SlotData.UVArea`; re-normalize saved UVs if the area changed.

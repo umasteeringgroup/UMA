@@ -21,7 +21,7 @@ namespace UMA.PoseTools
         private UMAExpressionSet expressionSet;
         private BonePoseConversionWindow converterWindow;
         private Vector2 _exprScroll;
-        private bool _showPosePairs = true; // toggle
+        private bool _showPosePairs = false; // toggle
 
         // Cache list of expression property names (matches field names in ExpressionPlayer)
         private static readonly HashSet<string> ExpressionPropertyNames = new HashSet<string>(ExpressionPlayer.PoseNames)
@@ -73,7 +73,7 @@ namespace UMA.PoseTools
         private void DrawHeaderTools()
         {
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Reset Expression", GUILayout.Width(140)))
+            if (GUILayout.Button("Reset "))
             {
                 Undo.RecordObject(player, "Reset Expression");
                 float[] zeroes = new float[player.Values.Length];
@@ -81,7 +81,7 @@ namespace UMA.PoseTools
                 EditorUtility.SetDirty(player);
                 TrySimulateOnce(player);
             }
-            if (GUILayout.Button("Save To Clip", GUILayout.Width(120)))
+            if (GUILayout.Button("Save Clip"))
             {
                 string assetPath = EditorUtility.SaveFilePanelInProject("Save Expression Clip", "Expression", "anim", null);
                 if (!string.IsNullOrEmpty(assetPath))
@@ -90,7 +90,7 @@ namespace UMA.PoseTools
                 }
             }
             EditorGUI.BeginDisabledGroup(expressionSet == null);
-            if (GUILayout.Button("Edit Expression Set", GUILayout.Width(160)))
+            if (GUILayout.Button("Edit Expression Set"))
             {
                 if (expressionSet == null && umaPlayer != null)
                 {
@@ -103,7 +103,7 @@ namespace UMA.PoseTools
             }
             EditorGUI.EndDisabledGroup();
             GUILayout.FlexibleSpace();
-            _showPosePairs = EditorGUILayout.ToggleLeft("Show Pose Pairs", _showPosePairs, GUILayout.Width(130));
+            _showPosePairs = EditorGUILayout.ToggleLeft("Show Pairs", _showPosePairs);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
         }
@@ -120,6 +120,7 @@ namespace UMA.PoseTools
                 return;
             }
 
+            /*
             EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
             GUILayout.Label("Pose", GUILayout.Width(140));
             GUILayout.Label("Value", GUILayout.Width(_showPosePairs ? 60 : 200));
@@ -128,11 +129,11 @@ namespace UMA.PoseTools
                 GUILayout.Label("Primary", GUILayout.Width(160));
                 GUILayout.Label("Inverse", GUILayout.Width(160));
             }
-            GUILayout.Label("Edit", GUILayout.Width(50));
-            GUILayout.Label("Convert", GUILayout.Width(65));
-            EditorGUILayout.EndHorizontal();
+           // GUILayout.Label("Edit", GUILayout.Width(50));
+           // GUILayout.Label("Convert", GUILayout.Width(65));
+            EditorGUILayout.EndHorizontal();*/
 
-            _exprScroll = EditorGUILayout.BeginScrollView(_exprScroll, GUILayout.Height(400));
+           // _exprScroll = EditorGUILayout.BeginScrollView(_exprScroll, GUILayout.Height(400));
             float[] vals = player.Values;
             for (int i = 0; i < ExpressionPlayer.PoseCount; i++)
             {
@@ -141,9 +142,9 @@ namespace UMA.PoseTools
                 string primaryName = ExpressionPlayer.PrimaryPoseName(i) ?? ExpressionPlayer.PoseNames[i];
 
                 EditorGUILayout.BeginHorizontal();
-                GUILayout.Label(primaryName, GUILayout.Width(140));
+                GUILayout.Label(primaryName, GUILayout.Width(110));
                 EditorGUI.BeginChangeCheck();
-                float newVal = EditorGUILayout.Slider(vals[i], -1f, 1f, GUILayout.Width(_showPosePairs ? 160 : 200));
+                float newVal = EditorGUILayout.Slider(vals[i], -1f, 1f);//, GUILayout.Width(140 ));
                 if (EditorGUI.EndChangeCheck())
                 {
                     Undo.RecordObject(player, "Change Expression Value");
@@ -171,25 +172,13 @@ namespace UMA.PoseTools
                         EditorUtility.SetDirty(expressionSet);
                     }
                 }
-                bool hasEditablePose = pair.primary != null || pair.inverse != null;
-                EditorGUI.BeginDisabledGroup(!hasEditablePose);
-                if (GUILayout.Button("Edit", GUILayout.Width(50)))
-                {
-                    var poseToEdit = pair.primary != null ? pair.primary : pair.inverse;
-                    if (poseToEdit != null)
-                    {
-                        Selection.activeObject = poseToEdit;
-                        EditorGUIUtility.PingObject(poseToEdit);
-                    }
-                }
-                EditorGUI.EndDisabledGroup();
                 if (GUILayout.Button("Convert", GUILayout.Width(65)))
                 {
                     QueueForConversion(pair);
                 }
                 EditorGUILayout.EndHorizontal();
             }
-            EditorGUILayout.EndScrollView();
+           // EditorGUILayout.EndScrollView();
         }
 
         private void QueueForConversion(UMAExpressionSet.PosePair pair)

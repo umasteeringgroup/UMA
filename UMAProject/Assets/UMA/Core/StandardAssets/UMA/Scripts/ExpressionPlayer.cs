@@ -352,7 +352,7 @@ namespace UMA.PoseTools
 				if (value.Length != PoseCount) return;
 
 				int i = 0;
-				Debug.Log($"neck_down new value: {value[i]} was {neckUp_Down}");
+				// Debug.Log($"neck_down new value: {value[i]} was {neckUp_Down}");
                 neckUp_Down = value[i++];
 				neckLeft_Right = value[i++];
 				neckTiltLeft_Right = value[i++];

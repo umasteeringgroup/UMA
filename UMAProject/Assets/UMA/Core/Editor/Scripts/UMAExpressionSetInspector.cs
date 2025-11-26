@@ -9,6 +9,8 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Serialization;
+using System;
 
 namespace UMA.PoseTools
 {
@@ -23,17 +25,33 @@ namespace UMA.PoseTools
 
 		public override void OnInspectorGUI()
 		{
+			if (expressionSet == null)
+			{
+				EditorGUILayout.HelpBox("Expression set is null.", MessageType.Error);
+				return;
+			}
+
 			GUILayout.BeginVertical();
 
 			// Duplicate button
 			EditorGUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Duplicate Set and Poses...", GUILayout.Width(220)))
+			if (GUILayout.Button("Replace Expressions", GUILayout.Width(160)))
+			{
+				ReplaceExpressions();
+			}
+			if (GUILayout.Button("Duplicate Set", GUILayout.Width(160)))
 			{
 				DuplicateSetAndPoses();
 			}
 			EditorGUILayout.EndHorizontal();
 			EditorGUILayout.Space();
+
+			// Initialize array if missing
+			if (expressionSet.posePairs == null)
+			{
+				expressionSet.posePairs = new UMAExpressionSet.PosePair[UMAExpressionPlayer.PoseCount];
+			}
 
 			if (expressionSet.posePairs.Length != UMAExpressionPlayer.PoseCount)
 			{
@@ -68,12 +86,150 @@ namespace UMA.PoseTools
 
 			if (GUI.changed)
 			{
-				EditorUtility.SetDirty(target);
+				Undo.RecordObject(expressionSet, "Modify Expression Set");
+				EditorUtility.SetDirty(expressionSet);
 				AssetDatabase.SaveAssets();
 			}
 		}
 
-		private void DuplicateSetAndPoses()
+		private void ReplaceExpressions()
+		{
+			string defaultFolderAbs = Application.dataPath;
+			string chosenAbs = EditorUtility.OpenFolderPanel("Select source folder (inside Assets)", defaultFolderAbs, "");
+			if (string.IsNullOrEmpty(chosenAbs)) { return; }
+			string assetsAbs = Application.dataPath.Replace("\\", "/");
+			string chosenNorm = chosenAbs.Replace("\\", "/");
+			if (!chosenNorm.StartsWith(assetsAbs, StringComparison.OrdinalIgnoreCase))
+			{
+				EditorUtility.DisplayDialog("Invalid Folder", "Please choose a folder inside the project's Assets directory.", "OK");
+				return;
+			}
+			string srcFolder = "Assets" + chosenNorm.Substring(assetsAbs.Length);
+
+			string[] guids = AssetDatabase.FindAssets("t:UMABonePose", new string[] { srcFolder });
+			if (guids.Length == 0)
+			{
+				EditorUtility.DisplayDialog("No Poses Found", "No UMABonePose assets were found in the selected folder.", "OK");
+				return;
+			}
+			var poseByName = new Dictionary<string, UMABonePose>(StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < guids.Length; i++)
+			{
+				string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+				UMABonePose bp = AssetDatabase.LoadAssetAtPath<UMABonePose>(path);
+				if (bp != null && !poseByName.ContainsKey(bp.name))
+				{
+					poseByName.Add(bp.name, bp);
+				}
+			}
+
+			if (expressionSet.posePairs == null || expressionSet.posePairs.Length != UMAExpressionPlayer.PoseCount)
+			{
+				expressionSet.posePairs = new UMAExpressionSet.PosePair[UMAExpressionPlayer.PoseCount];
+			}
+
+			Undo.RecordObject(expressionSet, "Replace Expressions");
+
+			int replacedPrimary = 0;
+			int replacedInverse = 0;
+			int missingPrimary = 0;
+			int missingInverse = 0;
+
+			for (int i = 0; i < UMAExpressionPlayer.PoseCount; i++)
+			{
+				var pair = expressionSet.posePairs[i];
+				if (pair == null)
+				{
+					pair = new UMAExpressionSet.PosePair();
+					expressionSet.posePairs[i] = pair;
+					continue;
+				}
+
+                if (pair.primary != null)
+				{
+					string primaryName = pair.primary.name;
+					UMABonePose newPrimary;
+
+					if (!poseByName.ContainsKey(primaryName))
+					{
+                        // does it contain a _L or _R suffix?
+                        // if so, get the base, and duplicate with the suffixes
+
+                    }
+
+                    if (poseByName.TryGetValue(primaryName, out newPrimary))
+					{
+						if (pair.primary != newPrimary)
+						{
+							pair.primary = newPrimary;
+							replacedPrimary++;
+						}
+					}
+					else
+					{
+						missingPrimary++;
+					}
+				}
+
+				if (pair.inverse != null)
+				{
+					string inverseName = pair.inverse.name;
+					UMABonePose newInverse;
+					if (poseByName.TryGetValue(inverseName, out newInverse))
+					{
+						if (pair.inverse != newInverse)
+						{
+							pair.inverse = newInverse;
+							replacedInverse++;
+						}
+					}
+					else
+					{
+						missingInverse++;
+					}
+				}
+			}
+
+			EditorUtility.SetDirty(expressionSet);
+			AssetDatabase.SaveAssets();
+
+			EditorUtility.DisplayDialog(
+				"Expressions Replaced",
+				$"Primary Replaced: {replacedPrimary}\nInverse Replaced: {replacedInverse}\nPrimary Missing: {missingPrimary}\nInverse Missing: {missingInverse}",
+				"OK");
+		}
+
+		private UMABonePose ReplacePose(string sourceFolder, UMABonePose oldPose, ref int replacedCount, ref int missingCount)
+		{
+			if (oldPose == null)
+			{
+				return null;
+			}
+			string poseName = oldPose.name;
+			// Limit search strictly to the chosen source folder (and its subfolders)
+			string[] guids = AssetDatabase.FindAssets("t:UMABonePose " + poseName, new string[] { sourceFolder });
+			for (int i = 0; i < guids.Length; i++)
+			{
+				string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+				if (!path.StartsWith(sourceFolder, StringComparison.OrdinalIgnoreCase))
+				{
+					continue; // safety: ignore assets outside folder
+				}
+				UMABonePose candidate = AssetDatabase.LoadAssetAtPath<UMABonePose>(path);
+				if (candidate != null)
+				{
+					if (string.Equals(candidate.name, poseName, StringComparison.OrdinalIgnoreCase))
+					{
+						replacedCount++;
+                        return candidate; // first match in folder
+					}
+				}
+			}
+			missingCount++;
+            return oldPose; // No replacement found in folder
+        }
+
+        private void DuplicateSetAndPoses()
 		{
 			// Choose destination folder (must be under Assets)
 			string defaultFolderAbs = Application.dataPath;
@@ -188,7 +344,7 @@ namespace UMA.PoseTools
 		static string GetAssetFolder()
 		{
 			string assetFolder = "Assets";
-			Object[] selected = Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
+			UnityEngine.Object[] selected = Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets);
 			if (selected.Length > 0)
 			{
 				string assetPath = AssetDatabase.GetAssetPath(selected[0]);
