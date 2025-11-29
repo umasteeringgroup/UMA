@@ -1351,7 +1351,8 @@ namespace UMA.CharacterSystem.Editors
                 {
                     umaData.dnaInstanceCollection.dnaInstances = new List<DNAInstance>();
                 }
-                umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance(selected, defaultValue));
+                // Set parentGroup for the instance
+                umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance(selected, defaultValue, selGroup));
 
                 EditorUtility.SetDirty(umaData);
                 wasChanged = true;
@@ -1395,7 +1396,8 @@ namespace UMA.CharacterSystem.Editors
                     {
                         defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
                     }
-                    umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance(name, defaultValue));
+                    // Set parentGroup for each instance
+                    umaData.dnaInstanceCollection.dnaInstances.Add(new DNAInstance(name, defaultValue, selGroup));
                     added++;
                 }
                 if (added > 0)

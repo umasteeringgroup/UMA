@@ -370,7 +370,6 @@ namespace UMA
 			umaData = data;
 
 
-
             if (umaData.RebuildSkeletonThisBuild)
 			{
 				if (umaData.umaRoot != null)
@@ -382,8 +381,7 @@ namespace UMA
 				umaData.RebuildSkeletonThisBuild = false;
 				umaData.isShapeDirty = true;
 			}
-
-			if (!umaData.Validate())
+            if (!umaData.Validate())
             {
                 return true;
             }
@@ -413,8 +411,8 @@ namespace UMA
 #endif
             if (!umaData.rawAvatar)
 			{
-				PreApply(umaData);
-			}
+                PreApply(umaData);
+            }
 
 #if DEBUG_TIMING
             long preapply = gstopWatch.ElapsedTicks;
@@ -429,12 +427,12 @@ namespace UMA
 
             if (umaData.isTextureDirty)
 			{
-				UMAGeneratorPro ugp = new UMAGeneratorPro();
+                UMAGeneratorPro ugp = new UMAGeneratorPro();
 				ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
 				umaData.isTextureDirty = false;
 				umaData.isAtlasDirty |= umaData.isMeshDirty;
 				TextureChanged++;
-			}
+            }
 
 #if DEBUG_TIMING
             long textureprocessing = gstopWatch.ElapsedTicks;
@@ -458,14 +456,14 @@ namespace UMA
 
             if (umaData.isShapeDirty)
 			{
-				UpdateUMABody(umaData);
+                UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
-				DnaChanged++;
-			}
+				DnaChanged++; 
+            }
 			else if (umaData.skeleton.isUpdating)
 			{
-				umaData.skeleton.EndSkeletonUpdate();
-			}
+                umaData.skeleton.EndSkeletonUpdate();
+            }
 #if DEBUG_TIMING
             long skeletonUpdates = gstopWatch.ElapsedTicks;
             skeletonUpdatesTicks += skeletonUpdates;
@@ -477,7 +475,7 @@ namespace UMA
 		
 			if (autoSetRaceBlendshapes)
 			{
-				if (raceNames == null)
+                if (raceNames == null)
 				{
 					RaceData[] races = UMAAssetIndexer.Instance.GetAllRaces();
 					raceNames = new HashSet<string>();
@@ -487,7 +485,6 @@ namespace UMA
                         raceNames.Add(r.raceName);
 					}
 				}
-
 
 				if (raceNames != null && raceNames.Count > 0)
 				{
@@ -511,13 +508,13 @@ namespace UMA
 						}
 					}
 				}
-			}
+            }
 
-			// Apply manual renderer bounds if configured on RaceData
-			ApplyManualRendererBounds(umaData, renderers);
+            // Apply manual renderer bounds if configured on RaceData
+            ApplyManualRendererBounds(umaData, renderers);
 
-			umaData.SetupEmbeddedPhysics();
-
+            
+            umaData.SetupEmbeddedPhysics();
 #if DEBUG_TIMING
             long raceblendshapes = gstopWatch.ElapsedTicks;
             raceblendshapesTicks += raceblendshapes;
@@ -528,11 +525,11 @@ namespace UMA
 			umaData.dirty = false;
 			if (fireEvents)
             {
-				UMAReady();
-			}
+                UMAReady();
+            }
 			else
             {
-				umaData.Show();
+                umaData.Show();
             }
 #if DEBUG_TIMING
             long endEvents = gstopWatch.ElapsedTicks;
@@ -892,7 +889,7 @@ namespace UMA
                 umaData.NewDNAPostApply();
             }
             umaData.FireDNAAppliedEvents();
-		}
+        }
 #pragma warning restore 618
 	}
 }

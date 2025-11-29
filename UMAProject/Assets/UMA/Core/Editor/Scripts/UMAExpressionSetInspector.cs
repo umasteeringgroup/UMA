@@ -18,84 +18,163 @@ namespace UMA.PoseTools
 	public class UMAExpressionSetInspector : Editor
 	{
 		private UMAExpressionSet expressionSet;
+		private const string LastReplaceFolderPrefKey = "UMAExpressionSetInspector_LastReplaceFolder";
 		public void OnEnable()
 		{
 			expressionSet = target as UMAExpressionSet;
 		}
 
+		private static UMABonePose CreateFilteredPoseAsset(UMABonePose basePose, string destFolder, string newName, bool isLeft)
+		{
+			if (basePose == null) return null;
+			// Clone and filter
+			UMABonePose clone = ScriptableObject.CreateInstance<UMABonePose>();
+			if (basePose.poses != null && basePose.poses.Length > 0)
+			{
+				List<UMABonePose.PoseBone> list = new List<UMABonePose.PoseBone>(basePose.poses.Length);
+				for (int i = 0; i < basePose.poses.Length; i++)
+				{
+					var pb = basePose.poses[i];
+					if (pb == null) continue;
+					string boneNameLower = string.IsNullOrEmpty(pb.bone) ? string.Empty : pb.bone.ToLowerInvariant();
+					bool isLeftBone = boneNameLower.Contains("left");
+					bool isRightBone = boneNameLower.Contains("right");
+					// Keep only same-side or neutral bones
+					if (isLeft)
+					{
+						if (isRightBone) { continue; }
+					}
+					else
+					{
+						if (isLeftBone) { continue; }
+					}
+					// Copy
+					list.Add(new UMABonePose.PoseBone
+					{
+						bone = pb.bone,
+						hash = pb.hash,
+						position = pb.position,
+						rotation = pb.rotation,
+						scale = pb.scale,
+						category = pb.category,
+						enabled = pb.enabled
+					});
+				}
+				clone.poses = list.ToArray();
+			}
+
+			// Create asset on disk
+			string safePath = AssetDatabase.GenerateUniqueAssetPath(destFolder + "/" + newName + ".asset");
+			AssetDatabase.CreateAsset(clone, safePath);
+			EditorUtility.SetDirty(clone);
+			AssetDatabase.SaveAssets();
+			return clone;
+		}
+
 		public override void OnInspectorGUI()
 		{
-			if (expressionSet == null)
+            if (expressionSet == null)
 			{
 				EditorGUILayout.HelpBox("Expression set is null.", MessageType.Error);
 				return;
 			}
 
-			GUILayout.BeginVertical();
-
-			// Duplicate button
-			EditorGUILayout.BeginHorizontal();
-			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Replace Expressions", GUILayout.Width(160)))
+			// Explicit Begin/EndVertical with try/finally to avoid layout mismatch after domain reloads
+			EditorGUILayout.BeginVertical();
+			try
 			{
-				ReplaceExpressions();
-			}
-			if (GUILayout.Button("Duplicate Set", GUILayout.Width(160)))
-			{
-				DuplicateSetAndPoses();
-			}
-			EditorGUILayout.EndHorizontal();
-			EditorGUILayout.Space();
 
-			// Initialize array if missing
-			if (expressionSet.posePairs == null)
-			{
-				expressionSet.posePairs = new UMAExpressionSet.PosePair[UMAExpressionPlayer.PoseCount];
-			}
-
-			if (expressionSet.posePairs.Length != UMAExpressionPlayer.PoseCount)
-			{
-				Debug.LogWarning("Expression Set out of sync with Expression Poses!");
-				System.Array.Resize<UMAExpressionSet.PosePair>(ref expressionSet.posePairs, UMAExpressionPlayer.PoseCount);
-			}
-
-            expressionSet.UnmappedJawName =EditorGUILayout.TextField("Unmapped Jaw Name", expressionSet.UnmappedJawName);
-
-            for (int i = 0; i < UMAExpressionPlayer.PoseCount; i++)
-			{
-				string primary = ExpressionPlayer.PrimaryPoseName(i);
-				string inverse = ExpressionPlayer.InversePoseName(i);
-				if (expressionSet.posePairs[i] == null)
+				// Duplicate button
+				EditorGUILayout.BeginHorizontal();
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Replace Expressions", GUILayout.Width(160)))
 				{
-					expressionSet.posePairs[i] = new UMAExpressionSet.PosePair();
+                    EditorApplication.delayCall += () =>
+                    {
+                        ReplaceExpressions();
+                    };
 				}
-				if (primary != null)
+				if (GUILayout.Button("Duplicate Set", GUILayout.Width(160)))
 				{
-					EditorGUILayout.LabelField(primary);
-					expressionSet.posePairs[i].primary = EditorGUILayout.ObjectField(expressionSet.posePairs[i].primary, typeof(UMABonePose), false) as UMABonePose;
+					DuplicateSetAndPoses();
 				}
-				if (inverse != null)
-				{
-					EditorGUILayout.LabelField(inverse);
-					expressionSet.posePairs[i].inverse = EditorGUILayout.ObjectField(expressionSet.posePairs[i].inverse, typeof(UMABonePose), false) as UMABonePose;
-				}
+				EditorGUILayout.EndHorizontal();
 				EditorGUILayout.Space();
-			}
 
-			GUILayout.EndVertical();
+
+				// Initialize array if missing
+				if (expressionSet.posePairs == null)
+				{
+					expressionSet.posePairs = new UMAExpressionSet.PosePair[UMAExpressionPlayer.PoseCount];
+				}
+
+				if (expressionSet.posePairs.Length != UMAExpressionPlayer.PoseCount)
+				{
+					Debug.LogWarning("Expression Set out of sync with Expression Poses!");
+					System.Array.Resize<UMAExpressionSet.PosePair>(ref expressionSet.posePairs, UMAExpressionPlayer.PoseCount);
+				}
+
+				expressionSet.UnmappedJawName = EditorGUILayout.TextField("Unmapped Jaw Name", expressionSet.UnmappedJawName);
+
+				for (int i = 0; i < UMAExpressionPlayer.PoseCount; i++)
+				{
+					string primary = ExpressionPlayer.PrimaryPoseName(i);
+					string inverse = ExpressionPlayer.InversePoseName(i);
+					if (expressionSet.posePairs[i] == null)
+					{
+						expressionSet.posePairs[i] = new UMAExpressionSet.PosePair();
+					}
+					if (primary != null)
+					{
+						EditorGUILayout.LabelField(primary);
+						expressionSet.posePairs[i].primary = EditorGUILayout.ObjectField(expressionSet.posePairs[i].primary, typeof(UMABonePose), false) as UMABonePose;
+					}
+					if (inverse != null)
+					{
+						EditorGUILayout.LabelField(inverse);
+						expressionSet.posePairs[i].inverse = EditorGUILayout.ObjectField(expressionSet.posePairs[i].inverse, typeof(UMABonePose), false) as UMABonePose;
+					}
+					EditorGUILayout.Space();
+				}
+
+			}
+			finally
+			{
+				EditorGUILayout.EndVertical();
+			}
 
 			if (GUI.changed)
 			{
 				Undo.RecordObject(expressionSet, "Modify Expression Set");
 				EditorUtility.SetDirty(expressionSet);
-				AssetDatabase.SaveAssets();
+				AssetDatabase.SaveAssets(); 
 			}
 		}
 
 		private void ReplaceExpressions()
 		{
-			string defaultFolderAbs = Application.dataPath;
+			// Determine default folder: last used (stored as Assets-relative) or Assets root
+			string defaultFolderRel = EditorPrefs.GetString(LastReplaceFolderPrefKey, "Assets");
+			string defaultFolderAbs;
+			if (!string.IsNullOrEmpty(defaultFolderRel) && defaultFolderRel.StartsWith("Assets"))
+			{
+				// Convert Assets-relative to absolute
+				// Application.dataPath ends with "/Assets"
+				if (defaultFolderRel.Length == 6) // exactly "Assets"
+				{
+					defaultFolderAbs = Application.dataPath;
+				}
+				else
+				{
+					defaultFolderAbs = Application.dataPath + defaultFolderRel.Substring(6); // keep leading slash/segments
+				}
+			}
+			else
+			{
+				defaultFolderAbs = Application.dataPath;
+			}
 			string chosenAbs = EditorUtility.OpenFolderPanel("Select source folder (inside Assets)", defaultFolderAbs, "");
+
 			if (string.IsNullOrEmpty(chosenAbs)) { return; }
 			string assetsAbs = Application.dataPath.Replace("\\", "/");
 			string chosenNorm = chosenAbs.Replace("\\", "/");
@@ -105,6 +184,9 @@ namespace UMA.PoseTools
 				return;
 			}
 			string srcFolder = "Assets" + chosenNorm.Substring(assetsAbs.Length);
+
+			// Persist for next use
+			EditorPrefs.SetString(LastReplaceFolderPrefKey, srcFolder);
 
 			string[] guids = AssetDatabase.FindAssets("t:UMABonePose", new string[] { srcFolder });
 			if (guids.Length == 0)
@@ -134,6 +216,8 @@ namespace UMA.PoseTools
 			int replacedInverse = 0;
 			int missingPrimary = 0;
 			int missingInverse = 0;
+			List<string> missingPrimaryNames = new List<string>();
+			List<string> missingInverseNames = new List<string>();
 
 			for (int i = 0; i < UMAExpressionPlayer.PoseCount; i++)
 			{
@@ -152,11 +236,26 @@ namespace UMA.PoseTools
 
 					if (!poseByName.ContainsKey(primaryName))
 					{
-                        // does it contain a _L or _R suffix?
-                        // if so, get the base, and duplicate with the suffixes
-
-                    }
-
+						// Try fallback: build from base pose without _L/_R suffix
+						bool endsWithL = primaryName.EndsWith("_L", StringComparison.OrdinalIgnoreCase);
+						bool endsWithR = !endsWithL && primaryName.EndsWith("_R", StringComparison.OrdinalIgnoreCase);
+						if (endsWithL || endsWithR)
+						{
+							string baseName = primaryName.Substring(0, primaryName.Length - 2);
+							UMABonePose basePose;
+							if (poseByName.TryGetValue(baseName, out basePose) && basePose != null)
+							{
+								UMABonePose created = CreateFilteredPoseAsset(basePose, srcFolder, primaryName, endsWithL);
+								if (created != null)
+								{
+									poseByName[created.name] = created;
+									pair.primary = created;
+									replacedPrimary++;
+									goto PrimaryDone;
+								}
+							}
+						}
+					}
                     if (poseByName.TryGetValue(primaryName, out newPrimary))
 					{
 						if (pair.primary != newPrimary)
@@ -168,13 +267,38 @@ namespace UMA.PoseTools
 					else
 					{
 						missingPrimary++;
+						if (!missingPrimaryNames.Contains(primaryName)) { missingPrimaryNames.Add(primaryName); }
 					}
+PrimaryDone: ;
 				}
 
 				if (pair.inverse != null)
 				{
 					string inverseName = pair.inverse.name;
 					UMABonePose newInverse;
+
+					if (!poseByName.ContainsKey(inverseName))
+					{
+						bool endsWithL = inverseName.EndsWith("_L", StringComparison.OrdinalIgnoreCase);
+						bool endsWithR = !endsWithL && inverseName.EndsWith("_R", StringComparison.OrdinalIgnoreCase);
+						if (endsWithL || endsWithR)
+						{
+							string baseName = inverseName.Substring(0, inverseName.Length - 2);
+							UMABonePose basePose;
+							if (poseByName.TryGetValue(baseName, out basePose) && basePose != null)
+							{
+								UMABonePose created = CreateFilteredPoseAsset(basePose, srcFolder, inverseName, endsWithL);
+								if (created != null)
+								{
+									poseByName[created.name] = created;
+									pair.inverse = created;
+									replacedInverse++;
+									goto InverseDone;
+								}
+							}
+						}
+					}
+
 					if (poseByName.TryGetValue(inverseName, out newInverse))
 					{
 						if (pair.inverse != newInverse)
@@ -186,16 +310,38 @@ namespace UMA.PoseTools
 					else
 					{
 						missingInverse++;
+						if (!missingInverseNames.Contains(inverseName)) { missingInverseNames.Add(inverseName); }
 					}
+InverseDone: ;
 				}
 			}
 
 			EditorUtility.SetDirty(expressionSet);
 			AssetDatabase.SaveAssets();
 
+			// Log missing pose names for easier debugging
+			if (missingPrimaryNames.Count > 0 || missingInverseNames.Count > 0)
+			{
+				System.Text.StringBuilder sb = new System.Text.StringBuilder();
+				sb.Append("[UMAExpressionSetInspector] Missing poses:\n");
+				if (missingPrimaryNames.Count > 0)
+				{
+					sb.Append(" Primary: ");
+					sb.Append(string.Join(", ", missingPrimaryNames));
+					sb.Append("\n");
+				}
+				if (missingInverseNames.Count > 0)
+				{
+					sb.Append(" Inverse: ");
+					sb.Append(string.Join(", ", missingInverseNames));
+					sb.Append("\n");
+				}
+				Debug.LogWarning(sb.ToString());
+			}
+
 			EditorUtility.DisplayDialog(
 				"Expressions Replaced",
-				$"Primary Replaced: {replacedPrimary}\nInverse Replaced: {replacedInverse}\nPrimary Missing: {missingPrimary}\nInverse Missing: {missingInverse}",
+				$"Primary Replaced: {replacedPrimary}\nInverse Replaced: {replacedInverse}\nPrimary Missing: {missingPrimary}\nInverse Missing: {missingInverse}\n(Check Console for missing names)",
 				"OK");
 		}
 

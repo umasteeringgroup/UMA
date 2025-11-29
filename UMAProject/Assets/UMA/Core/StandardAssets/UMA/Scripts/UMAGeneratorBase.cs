@@ -366,7 +366,7 @@ namespace UMA
 						animator.Update(Time.deltaTime);
 					else
 						animator.Update(0);
-#endif
+#endif 
                 }
 
                 // release rented arrays
@@ -398,7 +398,6 @@ namespace UMA
                     umaTransform.SetParent(null, false);
                     umaTransform.localRotation = Quaternion.identity;
                     umaTransform.localPosition = Vector3.zero;
-
                     if (animator == null)
                     {
                         animator = umaData.gameObject.GetComponent<Animator>();
@@ -406,7 +405,6 @@ namespace UMA
                         {
                             animator = umaData.gameObject.AddComponent<Animator>();
                         }
-
                         SetAvatar(umaData, animator);
                         animator.runtimeAnimatorController = umaData.animationController;
                         umaData.animator = animator;
@@ -436,7 +434,6 @@ namespace UMA
                         {
                             snapshot.RestoreAnimatorState(animator, umaData);
                         }
-
                         if (umaData.ForceRebindAnimator)
                         {
                             animator.Rebind();

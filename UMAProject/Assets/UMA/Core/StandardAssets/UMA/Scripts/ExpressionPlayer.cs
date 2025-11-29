@@ -88,11 +88,11 @@ namespace UMA.PoseTools
 	
 		//public List<Expression> Expressions;
 
-		public const int PoseCount = 44;
+		public const int PoseCount = 51;
 		/// <summary>
 		/// Poses names as they appear for animations.
 		/// </summary>
-		static public readonly string[] PoseNames = 
+		static public readonly string[] PoseNames =
 		{
 			"neckUp_Down",
 			"neckLeft_Right",
@@ -137,7 +137,14 @@ namespace UMA.PoseTools
 			"leftRude",
 			"rightRude",
 			"leftPoint",
-			"rightPoint"
+			"rightPoint",
+			"DespairFace",
+			"HappyFace",
+			"JovialFace",
+			"SadFace",
+			"SourFace",
+			"StupidFace",
+			"YawnFace"
 		};
 
 		public enum MecanimJoint : int
@@ -198,8 +205,15 @@ namespace UMA.PoseTools
 			MecanimJoint.Hands,
 			MecanimJoint.Hands,
 			MecanimJoint.Hands,
-			MecanimJoint.Hands
-		};
+			MecanimJoint.Hands,
+            MecanimJoint.None,
+            MecanimJoint.None,
+            MecanimJoint.None,
+            MecanimJoint.None,
+            MecanimJoint.None,
+            MecanimJoint.None,
+            MecanimJoint.None
+        };
         #region Expressions 
         // TODO: Draw these manually in the inspector for better layout
         // Pose values
@@ -292,6 +306,20 @@ namespace UMA.PoseTools
 		public float leftPoint = 0f;
 		[Range(0f, 1f)]
 		public float rightPoint = 0f;
+        [Range(0f, 1f)]
+        public float DespairFace = 0f;
+        [Range(0f, 1f)]
+        public float HappyFace = 0f;
+        [Range(0f, 1f)]
+        public float JovialFace = 0f;
+        [Range(0f, 1f)]
+        public float SadFace = 0f;
+        [Range(0f, 1f)]
+        public float SourFace = 0f;
+        [Range(0f, 1f)]
+        public float StupidFace = 0f;
+        [Range(0f, 1f)]
+        public float YawnFace = 0f;
         #endregion
 
         protected float[] valueArray = new float[PoseCount];
@@ -299,6 +327,10 @@ namespace UMA.PoseTools
 		{
 			get
 			{
+				if (valueArray.Length < PoseCount)
+				{
+					valueArray = new float[PoseCount];
+				}
 				valueArray[0] = neckUp_Down;
 				valueArray[1] = neckLeft_Right;
 				valueArray[2] = neckTiltLeft_Right;
@@ -344,18 +376,24 @@ namespace UMA.PoseTools
 				valueArray[41] = rightRude;
 				valueArray[42] = leftPoint;
 				valueArray[43] = rightPoint;
+				valueArray[44] = DespairFace;
+				valueArray[45] = HappyFace;
+				valueArray[46] = JovialFace;
+				valueArray[47] = SadFace;
+				valueArray[48] = SourFace;
+				valueArray[49] = StupidFace;
+				valueArray[50] = YawnFace;
 
-				return valueArray;
+                return valueArray;
 			}
 			set
 			{
 				if (value.Length != PoseCount) return;
 
 				int i = 0;
-				// Debug.Log($"neck_down new value: {value[i]} was {neckUp_Down}");
                 neckUp_Down = value[i++];
-				neckLeft_Right = value[i++];
-				neckTiltLeft_Right = value[i++];
+                neckLeft_Right = value[i++];
+				neckTiltLeft_Right = value[i++]; 
 				headUp_Down = value[i++];
 				headLeft_Right = value[i++];
 				headTiltLeft_Right = value[i++];
@@ -399,7 +437,15 @@ namespace UMA.PoseTools
 				rightRude = value[i++];
 				leftPoint = value[i++];
 				rightPoint = value[i++];
-			}
+
+				DespairFace = value[i++];
+				HappyFace = value[i++];
+				JovialFace = value[i++];
+				SadFace = value[i++];
+				SourFace = value[i++];
+				StupidFace = value[i++];
+				YawnFace = value[i++];
+            }
 		}
 
 #if UNITY_EDITOR

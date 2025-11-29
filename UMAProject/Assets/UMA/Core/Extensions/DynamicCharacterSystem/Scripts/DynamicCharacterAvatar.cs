@@ -844,6 +844,7 @@ namespace UMA.CharacterSystem
             BuildNow();
         }
 
+
         public void BuildNow()
         {
             UMAGenerator ugb = umaGenerator;
@@ -873,14 +874,13 @@ namespace UMA.CharacterSystem
                     predefinedDNA = dna;
 
                     int oldScaleFactor = ugb.InitialScaleFactor;
-                    int oldAtlasResolution = ugb.atlasResolution;
+                    int oldAtlasResolution = ugb.atlasResolution;  
 
                     ugb.FreezeTime = true;
                     ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
                     ugb.atlasResolution = ugb.editorAtlasResolution;
 
                     ugb.GenerateSingleUMA(this, false); // don't fire completed events in the editor
-
                     ugb.FreezeTime = false;
                     ugb.InitialScaleFactor = oldScaleFactor;
                     ugb.atlasResolution = oldAtlasResolution;
@@ -3520,7 +3520,6 @@ namespace UMA.CharacterSystem
                 }
 
                 thisExpressionPlayer.enabled = true;
-                Debug.Log("Initializing Expression Player from DCA on " + gameObject.name);
                 thisExpressionPlayer.Initialize();
             }
             else

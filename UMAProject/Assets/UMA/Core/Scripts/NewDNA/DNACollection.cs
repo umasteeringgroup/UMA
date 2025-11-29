@@ -73,10 +73,21 @@ namespace UMA
         {
             LoadDictionary();
             var dnaInstanceCollection = new DNAInstanceCollection();
-            foreach (var dna in dnaDictionary.Values)
+            // Preserve parent group association when creating instances
+            if (DNAGroups != null)
             {
-                var dnaInstance = new DNAInstance(dna.name, dna.defaultValue);
-                dnaInstanceCollection.AddDNAInstance(dnaInstance);
+                for (int gi = 0; gi < DNAGroups.Count; gi++)
+                {
+                    var group = DNAGroups[gi];
+                    if (group == null || group.dnaList == null) { continue; }
+                    for (int di = 0; di < group.dnaList.Count; di++)
+                    {
+                        var dna = group.dnaList[di];
+                        if (dna == null || string.IsNullOrEmpty(dna.name)) { continue; }
+                        var dnaInstance = new DNAInstance(dna.name, dna.defaultValue, group);
+                        dnaInstanceCollection.AddDNAInstance(dnaInstance);
+                    }
+                }
             }
             dnaInstanceCollection.Initialize(race.DNACollection);
             return dnaInstanceCollection;

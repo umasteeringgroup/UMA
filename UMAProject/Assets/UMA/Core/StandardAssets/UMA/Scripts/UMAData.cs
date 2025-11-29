@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using static UMA.DNAInstanceCollection;
 using System.Linq;
+using UMA.CharacterSystem;
 
 namespace UMA
 {
@@ -126,6 +127,7 @@ namespace UMA
             }
         }
 #endif
+
 
         public void ClearModifiers()
         {
@@ -1522,31 +1524,36 @@ namespace UMA
                 Dictionary<string, float> overrides = null;
                 try { overrides = raceData.GetDefaultDNA(); } catch { overrides = null; }
 
-                var dict = collection.dnaDictionary;
-                if (dict == null)
+                // Iterate groups to preserve parentGroup association
+                var groups = collection.DNAGroups;
+                if (groups == null)
                 {
                     return;
                 }
-
-                foreach (var kvp in dict)
+                for (int gi = 0; gi < groups.Count; gi++)
                 {
-                    var name = kvp.Key;
-                    if (string.IsNullOrEmpty(name) || assigned.Contains(name))
+                    var group = groups[gi];
+                    if (group == null || group.dnaList == null) { continue; }
+                    for (int di = 0; di < group.dnaList.Count; di++)
                     {
-                        continue;
+                        var dnaDef = group.dnaList[di];
+                        if (dnaDef == null) { continue; }
+                        var name = dnaDef.name;
+                        if (string.IsNullOrEmpty(name) || assigned.Contains(name))
+                        {
+                            continue;
+                        }
+                        float value = 0.5f;
+                        if (overrides != null && overrides.TryGetValue(name, out var ov))
+                        {
+                            value = Mathf.Clamp01(ov);
+                        }
+                        else
+                        {
+                            value = Mathf.Clamp01(dnaDef.defaultValue);
+                        }
+                        dnaInstanceCollection.AddDNAInstance(new DNAInstance(name, value, group));
                     }
-
-                    float value = 0.5f;
-                    if (overrides != null && overrides.TryGetValue(name, out var ov))
-                    {
-                        value = Mathf.Clamp01(ov);
-                    }
-                    else if (kvp.Value != null)
-                    {
-                        value = Mathf.Clamp01(kvp.Value.defaultValue);
-                    }
-
-                    dnaInstanceCollection.AddDNAInstance(new DNAInstance(name, value));
                 }
             }
 

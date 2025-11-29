@@ -11,16 +11,18 @@ namespace UMA
         public string Name;
         public float Value;
         public bool enabled = true;
+        public DNAGroup parentGroup;
 
         public DNAInstance Clone()
         {
-            return new DNAInstance(Name, Value) { enabled = this.enabled };
+            return new DNAInstance(Name, Value, parentGroup) { enabled = this.enabled };
         }
 
-        public DNAInstance(string name, float value)
+        public DNAInstance(string name, float value, DNAGroup parentGroup)
         {
             Name = name;
             Value = value;
+            this.parentGroup = parentGroup;
         }
     }
 }

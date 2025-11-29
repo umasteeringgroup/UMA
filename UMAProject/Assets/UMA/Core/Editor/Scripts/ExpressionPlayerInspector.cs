@@ -54,7 +54,9 @@ namespace UMA.PoseTools
         // Draw all serialized properties except those we render manually in the expression table
         private void DrawNonExpressionProperties()
         {
-            var prop = serializedObject.GetIterator();
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("expressionSet"), new GUIContent("Expression Set"), false);
+
+            var prop = serializedObject.GetIterator(); 
             bool enterChildren = true;
             while (prop.NextVisible(enterChildren))
             {
@@ -114,10 +116,35 @@ namespace UMA.PoseTools
             {
                 EditorGUILayout.HelpBox("No player.", MessageType.Info); return;
             }
-            if (umaPlayer == null || expressionSet == null || expressionSet.posePairs == null || expressionSet.posePairs.Length != ExpressionPlayer.PoseCount)
+            if (umaPlayer == null || expressionSet == null || expressionSet.posePairs == null)
             {
-                EditorGUILayout.HelpBox("UMAExpressionSet not assigned or invalid. Assign on UMAExpressionPlayer.", MessageType.Warning);
+                EditorGUILayout.HelpBox("UMAExpressionSet not assigned. Assign on UMAExpressionPlayer.", MessageType.Warning);
                 return;
+            }
+
+            int existingCount = expressionSet.posePairs.Length;
+            if (existingCount != ExpressionPlayer.PoseCount)
+            {
+                EditorGUILayout.HelpBox("Legacy ExpressionSet: contains " + existingCount + " pose pairs; current PoseCount is " + ExpressionPlayer.PoseCount + ". Missing entries will be shown without pose assets.", MessageType.Info);
+                if (GUILayout.Button("Expand PosePairs to " + ExpressionPlayer.PoseCount))
+                {
+                    Undo.RecordObject(expressionSet, "Expand PosePairs");
+                    var newArray = new UMAExpressionSet.PosePair[ExpressionPlayer.PoseCount];
+                    for (int i = 0; i < ExpressionPlayer.PoseCount; i++)
+                    {
+                        if (i < existingCount)
+                        {
+                            newArray[i] = expressionSet.posePairs[i];
+                        }
+                        if (newArray[i] == null)
+                        {
+                            newArray[i] = new UMAExpressionSet.PosePair();
+                        }
+                    }
+                    expressionSet.posePairs = newArray;
+                    EditorUtility.SetDirty(expressionSet);
+                }
+                EditorGUILayout.Space();
             }
 
             /*
@@ -137,8 +164,15 @@ namespace UMA.PoseTools
             float[] vals = player.Values;
             for (int i = 0; i < ExpressionPlayer.PoseCount; i++)
             {
-                var pair = expressionSet.posePairs[i];
-                if (pair == null) { pair = expressionSet.posePairs[i] = new UMAExpressionSet.PosePair(); }
+                UMAExpressionSet.PosePair pair = null;
+                if (i < expressionSet.posePairs.Length)
+                {
+                    pair = expressionSet.posePairs[i];
+                    if (pair == null)
+                    {
+                        pair = expressionSet.posePairs[i] = new UMAExpressionSet.PosePair();
+                    }
+                }
                 string primaryName = ExpressionPlayer.PrimaryPoseName(i) ?? ExpressionPlayer.PoseNames[i];
 
                 EditorGUILayout.BeginHorizontal();
@@ -155,26 +189,36 @@ namespace UMA.PoseTools
                 }
                 if (_showPosePairs)
                 {
-                    EditorGUI.BeginChangeCheck();
-                    var newPrimary = EditorGUILayout.ObjectField(pair.primary, typeof(UMABonePose), false, GUILayout.Width(160)) as UMABonePose;
-                    if (EditorGUI.EndChangeCheck())
+                    if (pair != null)
                     {
-                        Undo.RecordObject(expressionSet, "Assign Primary Pose");
-                        pair.primary = newPrimary;
-                        EditorUtility.SetDirty(expressionSet);
+                        EditorGUI.BeginChangeCheck();
+                        var newPrimary = EditorGUILayout.ObjectField(pair.primary, typeof(UMABonePose), false, GUILayout.Width(160)) as UMABonePose;
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            Undo.RecordObject(expressionSet, "Assign Primary Pose");
+                            pair.primary = newPrimary;
+                            EditorUtility.SetDirty(expressionSet);
+                        }
+                        EditorGUI.BeginChangeCheck();
+                        var newInverse = EditorGUILayout.ObjectField(pair.inverse, typeof(UMABonePose), false, GUILayout.Width(160)) as UMABonePose;
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            Undo.RecordObject(expressionSet, "Assign Inverse Pose");
+                            pair.inverse = newInverse;
+                            EditorUtility.SetDirty(expressionSet);
+                        }
                     }
-                    EditorGUI.BeginChangeCheck();
-                    var newInverse = EditorGUILayout.ObjectField(pair.inverse, typeof(UMABonePose), false, GUILayout.Width(160)) as UMABonePose;
-                    if (EditorGUI.EndChangeCheck())
+                    else
                     {
-                        Undo.RecordObject(expressionSet, "Assign Inverse Pose");
-                        pair.inverse = newInverse;
-                        EditorUtility.SetDirty(expressionSet);
+                        EditorGUI.BeginDisabledGroup(true);
+                        EditorGUILayout.ObjectField(null, typeof(UMABonePose), false, GUILayout.Width(160));
+                        EditorGUILayout.ObjectField(null, typeof(UMABonePose), false, GUILayout.Width(160));
+                        EditorGUI.EndDisabledGroup();
                     }
                 }
                 if (GUILayout.Button("Convert", GUILayout.Width(65)))
                 {
-                    QueueForConversion(pair);
+                    if (pair != null) { QueueForConversion(pair); }
                 }
                 EditorGUILayout.EndHorizontal();
             }

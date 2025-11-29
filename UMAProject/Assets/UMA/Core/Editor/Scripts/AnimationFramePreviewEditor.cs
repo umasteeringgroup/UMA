@@ -15,6 +15,8 @@ namespace UMA.Editors
         private SerializedProperty posesProperty;
         private bool isDelayCallRegistered;
         private Vector2 scrollPosition;
+        private float gotoFrame;
+
 
         private void OnEnable()
         {
@@ -103,7 +105,18 @@ namespace UMA.Editors
                     float currentTime = normalizedTimeProperty.floatValue * clip.length;
                     EditorGUILayout.LabelField("Current Time", string.Format("{0:F3}s / {1:F3}s", currentTime, clip.length));
                     int frameCount = Mathf.CeilToInt(clip.length * clip.frameRate);
-                    EditorGUILayout.LabelField("Frame Count: " + frameCount);
+                    EditorGUILayout.LabelField($"Frame {Mathf.FloorToInt(currentTime * clip.frameRate)} / {frameCount}");
+                    gotoFrame = EditorGUILayout.FloatField("Go to Frame", gotoFrame);
+                    if (GUILayout.Button("Go"))
+                    {
+                        float time = gotoFrame / clip.frameRate;
+                        AnimationFramePreview preview = target as AnimationFramePreview;
+                        if (preview != null)
+                        {
+                            preview.GotoFrame(time);
+                            normalizedTimeProperty.floatValue = Mathf.Clamp01(time / clip.length);
+                        }
+                    }
                 }
 
                 EditorGUILayout.Space();
@@ -232,18 +245,27 @@ namespace UMA.Editors
 
             if (GUILayout.Button("Export expression set"))
             {
-                ExportExpressionSet();
+                EditorApplication.delayCall += () =>
+                {
+                    ExportExpressionSet();
+                };
             }
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Load Pose Set"))
             {
-                LoadPoseSet();
+                EditorApplication.delayCall += () =>
+                {
+                    LoadPoseSet();
+                };
             }
             EditorGUI.BeginDisabledGroup(!validPose);
             if (GUILayout.Button("Save Pose Set"))
             {
-                SavePoseSet();
+                EditorApplication.delayCall += () =>
+                {
+                    SavePoseSet();
+                };
             }
             EditorGUI.EndDisabledGroup();
             GUILayout.EndHorizontal();
@@ -388,21 +410,6 @@ namespace UMA.Editors
                     float rotydiff = curRot.y - baseRot.y;
                     float rotzdiff = curRot.z - baseRot.z;
                     float rotwdiff = curRot.w - baseRot.w;
-                    if (poseID.Equals("NeckUp") && t.name.Equals("LeftLipsSuperiorMiddle"))
-                    {
-                        Debug.Log("Neckup/LeftLipsSuperiorMiddle Diff values for tolerance checking");
-                        Debug.Log($"PosDiff = {posDiff}");
-                        Debug.Log($"posxdiff = {posxdiff}");
-                        Debug.Log($"posydiff = {posydiff}");
-                        Debug.Log($"poszdiff = {poszdiff}");
-                        Debug.Log($"scalexdiff = {scalexdiff}");
-                        Debug.Log($"scaleydiff = {scaleydiff}");
-                        Debug.Log($"scalezdiff = {scalezdiff}");
-                        Debug.Log($"rotxdiff = {rotxdiff}");
-                        Debug.Log($"rotydiff = {rotydiff}");
-                        Debug.Log($"rotzdiff = {rotzdiff}");
-                        Debug.Log($"rotwdiff = {rotwdiff}");
-                    }
 
                     bool posChanged = Mathf.Abs(curPos.x - basePos.x) > posTol || Mathf.Abs(curPos.y - basePos.y) > posTol || Mathf.Abs(curPos.z - basePos.z) > posTol;
                     bool scaleChanged = Mathf.Abs(curScale.x - baseScale.x) > scaleTol || Mathf.Abs(curScale.y - baseScale.y) > scaleTol || Mathf.Abs(curScale.z - baseScale.z) > scaleTol;

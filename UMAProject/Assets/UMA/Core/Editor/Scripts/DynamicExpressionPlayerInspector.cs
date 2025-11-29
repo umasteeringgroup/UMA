@@ -193,7 +193,7 @@ public class DynamicExpressionPlayerInspector : Editor
         {
             Name = string.IsNullOrEmpty(dna.displayName) ? dna.name : dna.displayName,
             ExpressionDNA = dna,
-            ExpressionValue = new DNAInstance(dna.displayName, dna.defaultValue)
+            ExpressionValue = new DNAInstance(dna.displayName, dna.defaultValue, null)
         };
         _player.Expressions.Add(expr);
         EditorUtility.SetDirty(_player);
@@ -270,7 +270,7 @@ public class DynamicExpressionPlayerInspector : Editor
             if (expr.ExpressionDNA != null && expr.ExpressionValue == null)
             {
                 Undo.RecordObject(_player, "Create DNAInstance");
-                expr.ExpressionValue = new DNAInstance(expr.ExpressionDNA.displayName, expr.ExpressionDNA.defaultValue);
+                expr.ExpressionValue = new DNAInstance(expr.ExpressionDNA.displayName, expr.ExpressionDNA.defaultValue, null);
                 EditorUtility.SetDirty(_player);
             }
 

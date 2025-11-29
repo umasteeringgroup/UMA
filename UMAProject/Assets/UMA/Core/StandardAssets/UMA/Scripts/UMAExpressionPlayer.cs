@@ -57,7 +57,6 @@ namespace UMA.PoseTools
 		// Use this for initialization
 		void Start()
 		{
-            Debug.Log("UMAExpressionPlayer Start called for " + gameObject.name+" Neck_down is " + neckUp_Down);
             Initialize();
 		}
 
@@ -66,7 +65,6 @@ namespace UMA.PoseTools
         {
             if (!Application.isPlaying)
             {
-                Debug.Log("UMAExpressionPlayer OnEnable called for " + gameObject.name+" Neck_down is " + neckUp_Down);
                 Initialize();
             }
         }
@@ -75,7 +73,6 @@ namespace UMA.PoseTools
 
 		public void Initialize()
         {
-            Debug.Log("Initializing UMAExpressionPlayer for " + gameObject.name+" Neck_down is " + neckUp_Down);
             blinkDelay = Random.Range(minBlinkDelay, maxBlinkDelay);
 
             if (Camera.main != null)
@@ -123,7 +120,6 @@ namespace UMA.PoseTools
 				}
 			}
 
-            Debug.Log("UMAExpressionPlayer found UMAData: " + (umaData != null)+" Neck_down is " + neckUp_Down);
             if (umaData != null)
 			{
 				animator = gameObject.GetComponentInChildren<Animator>();
@@ -132,7 +128,6 @@ namespace UMA.PoseTools
 
 			processing = true;
 			initialized = true;
-            Debug.Log("UMAExpressionPlayer init done: " + (umaData != null) + " Neck_down is " + neckUp_Down);
         }
 
         private void CharacterBegun(UMAData _umaData)
@@ -143,7 +138,6 @@ namespace UMA.PoseTools
 
 		private void SetupBones()
 		{
-            Debug.Log("Setup bones starting. neck_down is " + neckUp_Down);
 
             if ((expressionSet != null) /*&& (umaData != null) && (umaData.skeleton != null)*/)
 			{
@@ -197,12 +191,10 @@ namespace UMA.PoseTools
 				}
 #endif
 			}
-            Debug.Log("Setup bones complete. neck_down is " + neckUp_Down);
 		}
 
         private void UmaData_OnCharacterUpdated(UMAData obj)
         {
-            Debug.Log("Character updated. Neck_updown is " + neckUp_Down);
 			umaData = obj;
 			SetupBones();
 			animator = umaData.animator;
@@ -223,7 +215,6 @@ namespace UMA.PoseTools
 			{
 				if (!initialized || umaData == null)
 				{
-                    Debug.Log("UMAExpressionPlayer DoUpdate calling Initialize for " + gameObject.name+" Neck_down is " + neckUp_Down);
                     Initialize();
 					return;
 				}
@@ -347,13 +338,15 @@ namespace UMA.PoseTools
 				umaData.skeleton.Restore(jawHash);
 			}
 
-			if (LastValues == null || LastValues.Length < values.Length)
+            if (LastValues == null || LastValues.Length < values.Length)
             {
-				LastValues = new float[44];
-				saveValues(values);
+                LastValues = new float[values.Length];
+                saveValues(values);
             }
 
-			for (int i = 0; i < values.Length; i++)
+            int maxPairs = (expressionSet != null && expressionSet.posePairs != null) ? expressionSet.posePairs.Length : 0;
+            int loopCount = Mathf.Min(values.Length, MecanimAlternate.Length, maxPairs);
+            for (int i = 0; i < loopCount; i++)
 			{
 				if (LastValues[i] != values[i])
             	{
@@ -392,12 +385,13 @@ namespace UMA.PoseTools
 			saveValues(values);
 		}
 
+
         void Update()
         {
             DoUpdate();
         }
 
-        void LateUpdate()
+        void LateUpdate() 
         {
             DoLateUpdate();
         }
@@ -410,9 +404,12 @@ namespace UMA.PoseTools
         {
 #if UNITY_EDITOR
             if (Application.isPlaying) return;
-            if (!initialized || umaData == null) { Initialize(); }
+            if (!initialized || umaData == null) 
+            {
+                Initialize();
+            }
             DoUpdate();
-            DoLateUpdate();
+            DoLateUpdate(); 
 #endif
         }
 
