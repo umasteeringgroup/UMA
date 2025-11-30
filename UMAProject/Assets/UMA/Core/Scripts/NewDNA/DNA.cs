@@ -37,6 +37,14 @@ namespace UMA
             return updateFlags;
         }
 
+        public void Restore(UMAData avatar, float value)
+        {
+            foreach (var effect in effects)
+            {
+                effect.Restore(avatar, this, value);
+            }
+        }
+
         public DNABuildType PreApply(UMAData avatar, float value)
         {
             DNABuildType updateFlags = DNABuildType.None;

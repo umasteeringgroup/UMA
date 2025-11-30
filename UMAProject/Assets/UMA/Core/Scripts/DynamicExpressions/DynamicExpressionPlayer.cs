@@ -1,6 +1,7 @@
 using UMA;
 using UnityEngine;
 using System.Collections.Generic;
+using UMA.CharacterSystem;
 
 public class DynamicExpressionPlayer : MonoBehaviour
 {
@@ -66,6 +67,9 @@ public class DynamicExpressionPlayer : MonoBehaviour
     private Transform _rightEyeTransform;
     private bool _hasEyes;
     private bool _lookAtEngaged; // true when current frame LookAt passes gating
+    private DynamicCharacterAvatar _dca;
+    private UMAData _umaData;
+    private readonly Dictionary<string, float> _lastValues = new Dictionary<string, float>(32);
 
     // One-time log flags
     private bool _logInitMissing;
@@ -103,6 +107,11 @@ public class DynamicExpressionPlayer : MonoBehaviour
         _mainCam = Camera.main;
         ScheduleNextBlink();
         ScheduleNextSaccade();
+        _dca = GetComponent<DynamicCharacterAvatar>();
+        if (_dca != null)
+        {
+            _umaData = _dca.umaData;
+        }
         _initialized = true;
     }
 
@@ -115,6 +124,14 @@ public class DynamicExpressionPlayer : MonoBehaviour
         if (_animator == null)
         {
             _animator = GetComponentInChildren<Animator>();
+        }
+        if (_dca == null)
+        {
+            _dca = GetComponentInChildren<DynamicCharacterAvatar>();
+        }
+        if (_umaData == null && _dca != null)
+        {
+            _umaData = _dca.umaData;
         }
 
         if (_animator != null)
@@ -196,6 +213,74 @@ public class DynamicExpressionPlayer : MonoBehaviour
         if (EnableLookAt)
         {
             UpdateLookAtComputation();
+        }
+
+        // Process dynamic expressions and trigger minimal rebuilds
+        if (_umaData != null && _dca != null && Expressions != null && Expressions.Count > 0)
+        {
+            bool textureDirty = false;
+            bool meshDirty = false;
+            // Apply effects only when value changed
+            //bool skeletonEditing = false; // guard Begin/EndSkeletonUpdate
+            for (int i = 0; i < Expressions.Count; i++)
+            {
+                var expr = Expressions[i];
+                if (expr == null) { continue; }
+                float val = expr.ExpressionValue != null ? expr.ExpressionValue.Value : 0f;
+                float prev;
+                if (_lastValues.TryGetValue(expr.Name, out prev) && Mathf.Approximately(prev, val))
+                {
+                    continue; // no change
+                }
+                _lastValues[expr.Name] = val;
+
+                var dna = expr.ExpressionDNA;
+                if (dna == null || dna.effects == null || dna.effects.Count == 0) { continue; }
+
+                // Bones need to be restored to base pose for Expressions, to avoid accumulation without rebuilding character completely.
+                dna.Restore(_umaData, val);
+                // Invoke DNA effects and aggregate required rebuild via AreaEffect flags
+                dna.PreApply(_umaData, val);
+                for (int ei = 0; ei < dna.effects.Count; ei++)
+                {
+                    var effect = dna.effects[ei];
+                    if (effect == null) { continue; }
+                    // Classify by AreaEffect
+                    var area = effect.AreaEffect;
+                    // If this is a Rig effect and we haven't prepared the skeleton yet, do so now
+                    //if (!skeletonEditing && (area & UMA.DNAInstanceCollection.DNABuildType.Rig) != 0)
+                    //{
+                        //if (_umaData != null && _umaData.skeleton != null)
+                        //{
+                            //_umaData.skeleton.RestoreAll();
+                            //skeletonEditing = true;
+                        //}
+                    //}
+                    // Apply the effect after any required skeleton preparation
+                    effect.Apply(_umaData, dna, val);
+                    if ((area & UMA.DNAInstanceCollection.DNABuildType.Texture) != 0)
+                    {
+                        textureDirty = true;
+                    }
+                    if ((area & UMA.DNAInstanceCollection.DNABuildType.SharedColors) != 0)
+                    {
+                        textureDirty = true;
+                    }
+                    if ((area & UMA.DNAInstanceCollection.DNABuildType.Mesh) != 0)
+                    {
+                        meshDirty = true;
+                    }
+                    // Rig and BlendShape are immediate applications (handled by Apply) and do not trigger rebuilds here
+                }
+                dna.PostApply(_umaData, val);
+            }
+
+            // Do not call EndSkeletonUpdate here; avoid updating the saved baseline so poses do not accumulate
+
+            if (textureDirty || meshDirty)
+            {
+                _dca.ForceUpdate(false, textureDirty, meshDirty);
+            }
         }
     }
 

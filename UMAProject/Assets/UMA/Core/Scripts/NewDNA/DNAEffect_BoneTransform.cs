@@ -30,9 +30,20 @@ namespace UMA
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Rig;
         /// <inheritdoc />
+        public override void Restore(UMAData avatar, DNA dna, float value)
+        {
+            if (avatar == null || avatar.skeleton == null || string.IsNullOrEmpty(boneName))
+            {
+                return;
+            }
+            // Restore baseline for this bone only
+            avatar.skeleton.Restore(UMAUtils.StringToHash(boneName));
+        }
+
+        /// <inheritdoc />
         public override void Apply(UMAData avatar, DNA dna, float value)
         {
-            base.PostApply(avatar, dna, value);
+            base.Apply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(boneName))  
             {
                 Transform boneTransform = avatar.skeleton.GetBoneTransform(boneName);

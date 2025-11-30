@@ -11,6 +11,8 @@
         public float Value; // Current value of the DNA.
         public string Category;
         DNAInstance dnaInstance;
+        public UMAData umaData;
+
         public int OwnerIndex
         {
             // position of DNA in index, created at initialization
@@ -21,7 +23,7 @@
         protected UMADnaBase Owner;  // owning DNA class. Used to set the DNA by index
 
 
-        public DnaSetter(DNAInstance instance, DNAGroup group)
+        public DnaSetter(DNAInstance instance, DNAGroup group, UMAData umaData)
         {
             Name = instance.Name;
             Value = instance.Value;
@@ -29,6 +31,7 @@
             dnaInstance = instance;
             OwnerIndex = -1;
             Owner = null;
+            this.umaData = umaData;
         }
 
 
@@ -47,6 +50,7 @@
             OwnerIndex = ownerIndex;
             Owner = owner;
             Category = category;
+            umaData = null;
         }
 
         /// <summary>
@@ -59,12 +63,75 @@
             if (dnaInstance != null)
             {
                 dnaInstance.Value = val;
+                if (dnaInstance.parentGroup.MaxTotalValue > 0.0001f)
+                {
+                    // Enforce MaxTotalValue by reducing other non-zero instances equally
+                    if (umaData != null && umaData.dnaInstanceCollection != null)
+                    {
+                        var group = dnaInstance.parentGroup;
+                        var instances = umaData.dnaInstanceCollection.GetDNAInstancesByGroup(group);
+                        if (instances != null && instances.Count > 0)
+                        {
+                            float total = 0.0f;
+                            int otherNonZero = 0;
+                            for (int i = 0; i < instances.Count; i++)
+                            {
+                                var inst = instances[i];
+                                if (inst == null || !inst.enabled)
+                                {
+                                    continue;
+                                }
+                                total += inst.Value;
+                                if (inst != dnaInstance && inst.Value > 0.0f)
+                                {
+                                    otherNonZero++;
+                                }
+                            }
+
+                            float maxTotal = group.MaxTotalValue;
+                            if (total > maxTotal && otherNonZero > 0)
+                            {
+                                float over = total - maxTotal;
+                                float reductionPer = over / (float)otherNonZero;
+
+                                for (int i = 0; i < instances.Count; i++)
+                                {
+                                    var inst = instances[i];
+                                    if (inst == null || !inst.enabled)
+                                    {
+                                        continue;
+                                    }
+                                    if (inst == dnaInstance)
+                                    {
+                                        continue;
+                                    }
+                                    if (inst.Value > 0.0f)
+                                    {
+                                        float newVal = inst.Value - reductionPer;
+                                        if (newVal < 0.0f)
+                                        {
+                                            newVal = 0.0f;
+                                        }
+                                        if (newVal > 1.0f)
+                                        {
+                                            newVal = 1.0f;
+                                        }
+                                        inst.Value = newVal;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
             }
             else
             {
                 Owner.SetValue(OwnerIndex, val);
             }
         }
+
+
 
         /// <summary>
         /// Set the current DNA value. You will need to rebuild the character to see 

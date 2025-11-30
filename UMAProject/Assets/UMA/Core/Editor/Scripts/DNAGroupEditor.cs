@@ -13,6 +13,7 @@ public class DNAGroupEditor : Editor
 {
     private SerializedProperty dnaAreaProp;
     private SerializedProperty dnaListProp;
+    private SerializedProperty MaxTotalValueProp;
     private bool _changedThisGUI;
     private bool _pendingSave;
     private float _lastActionTime;
@@ -22,6 +23,7 @@ public class DNAGroupEditor : Editor
     {
         dnaAreaProp = serializedObject.FindProperty("DNAArea");
         dnaListProp = serializedObject.FindProperty("dnaList");
+        MaxTotalValueProp = serializedObject.FindProperty("MaxTotalValue");
         EditorApplication.update += DelayedSaveTick;
     }
 
@@ -87,6 +89,7 @@ public class DNAGroupEditor : Editor
 
         EditorGUI.BeginChangeCheck();
         EditorGUILayout.PropertyField(dnaAreaProp, new GUIContent("DNA Area"));
+        EditorGUILayout.PropertyField(MaxTotalValueProp, new GUIContent("Max Total for Area", "Leave 0 for no maximum");
         if (EditorGUI.EndChangeCheck())
         {
             serializedObject.ApplyModifiedProperties();

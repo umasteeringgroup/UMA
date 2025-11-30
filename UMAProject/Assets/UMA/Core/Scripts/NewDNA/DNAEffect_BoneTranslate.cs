@@ -36,9 +36,18 @@ namespace UMA
         }
 #endif
         /// <inheritdoc />
+        public override void Restore(UMAData avatar, DNA dna, float value)
+        {
+            if (avatar == null || avatar.skeleton == null || string.IsNullOrEmpty(BoneName))
+            {
+                return;
+            }
+            avatar.skeleton.Restore(UMAUtils.StringToHash(BoneName));
+        }
+        /// <inheritdoc />
         public override void Apply(UMAData avatar, DNA dna, float value)
         {
-            base.PostApply(avatar, dna, value);
+            base.Apply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(BoneName))
             {
                 Transform boneTransform = avatar.skeleton.GetBoneTransform(BoneName);

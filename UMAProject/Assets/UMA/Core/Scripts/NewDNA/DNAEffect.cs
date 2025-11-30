@@ -120,6 +120,11 @@ namespace UMA
             // Some effects need to be applied during the load process, such as those that modify avatar shared colors.
         }
 
+        public virtual void Restore(UMAData avatar, DNA dna, float value)
+        {
+
+        }
+
         public virtual void PreApply(UMAData avatar, DNA dna, float value)
         {
             // This is called before Apply, so we can do any pre-processing here.

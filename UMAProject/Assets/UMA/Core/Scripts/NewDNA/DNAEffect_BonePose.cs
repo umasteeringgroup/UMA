@@ -34,10 +34,27 @@ namespace UMA
         /// <inheritdoc />
         public override void Apply(UMAData avatar, DNA dna, float value)
         {
-            base.PostApply(avatar, dna, value);
+            base.Apply(avatar, dna, value);
             if (avatar != null && bonePose != null)
             {
                 bonePose.ApplyPose(avatar.skeleton, GetMappedValue(value));
+            }
+        }
+
+        /// <inheritdoc />
+        public override void Restore(UMAData avatar, DNA dna, float value)
+        {
+            // Restore only bones touched by this pose to the saved post-DNA baseline
+            if (avatar == null || avatar.skeleton == null || bonePose == null || bonePose.poses == null)
+            {
+                return;
+            }
+
+            var skeleton = avatar.skeleton;
+            for (int i = 0; i < bonePose.poses.Length; i++)
+            {
+                var pb = bonePose.poses[i];
+                skeleton.Restore(pb.hash);
             }
         }
     }

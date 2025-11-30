@@ -3371,7 +3371,7 @@ namespace UMA.CharacterSystem
                         // only one copy allowed.
                         if (!dna.ContainsKey(dnaInstance.Name))
                         {
-                            dna.Add(dnaInstance.Name, new DnaSetter(dnaInstance,group)); 
+                            dna.Add(dnaInstance.Name, new DnaSetter(dnaInstance,group,this)); 
                         }
                     }
                 }
