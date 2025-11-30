@@ -89,7 +89,7 @@ public class DNAGroupEditor : Editor
 
         EditorGUI.BeginChangeCheck();
         EditorGUILayout.PropertyField(dnaAreaProp, new GUIContent("DNA Area"));
-        EditorGUILayout.PropertyField(MaxTotalValueProp, new GUIContent("Max Total for Area", "Leave 0 for no maximum");
+        EditorGUILayout.PropertyField(MaxTotalValueProp, new GUIContent("Max Total for Area", "Leave 0 for no maximum"));
         if (EditorGUI.EndChangeCheck())
         {
             serializedObject.ApplyModifiedProperties();
