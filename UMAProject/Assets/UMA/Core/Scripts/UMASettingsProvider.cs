@@ -33,7 +33,48 @@ namespace UMA
         public const string ConfigToggle_IndexAutoRepair = "UMA_INDEX_AUTOREPAIR";
 
         private string dots = "";
+        private string UMABasePath = "";
+        public string BasePath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(UMABasePath))
+                {
+                    UMABasePath = FindUMAFullPath();
+                }
+                return UMABasePath;
+            }
+        }
 
+        public static string FindUMAFolder()
+        {
+            string basePath = FindUMAFullPath();
+            // return the path relative to the Assets folder
+            string folder = basePath.Replace(Application.dataPath, "Assets");
+            return folder;
+        }
+
+        public static string FindUMAFullPath()
+        {
+            string folder = "UMA";
+
+            // search the project for the UMA folder
+            string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
+            if (folders != null && folders.Length > 0)
+            {
+                foreach (string guid in folders)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (path.EndsWith(folder, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        return path;
+                    }
+                }
+            }
+
+            // if we didn't find it, return the default path
+            return Path.Combine(Application.dataPath, folder);
+        }
 
         private SerializedObject m_CustomSettings;
 
@@ -116,37 +157,34 @@ namespace UMA
 
         public void DrawBoolConfigToggle(string propertyName, string label, string tooltip, string defineSymbol, HashSet<string> defineSymbols, bool burst = false)
         {
-            SerializedProperty prop = m_CustomSettings.FindProperty(propertyName);
             EditorGUI.BeginChangeCheck();
-            prop.boolValue = EditorGUILayout.Toggle(new GUIContent(label, tooltip), prop.boolValue);
+            var boolValue = defineSymbols.Contains(defineSymbol);
+            boolValue = EditorGUILayout.Toggle(new GUIContent(label, tooltip), boolValue);
             if (EditorGUI.EndChangeCheck())
             {
-                Debug.Log($"{label} changed to {prop.boolValue} burst = {burst}");
                 if (burst)
                 {
-                    if (prop.boolValue)
+                    if (boolValue)
                     {
-                        string datapath = Application.dataPath;
-                        string sourceFile = Path.Combine(datapath, "uma", "core", "uma_core_burst.dat");
-                        string destFile = Path.Combine(datapath, "uma", "core", "uma_core.asmdef");
-                        Debug.Log($"Burst changed to {prop.boolValue}-Copying from {sourceFile} to {destFile}");
+                        string sourceFile = Path.Combine(BasePath, "uma", "core", "uma_core_burst.dat");
+                        string destFile = Path.Combine(BasePath, "uma", "core", "uma_core.asmdef");
+                        Debug.Log($"Burst changed to {boolValue}-Copying from {sourceFile} to {destFile}");
                         File.Copy(sourceFile, destFile, true);
                         AssetDatabase.Refresh();
                         Debug.Log("File copied");
                     }
                     else
                     {
-                        string datapath = Application.dataPath;
-                        string sourceFile = Path.Combine(datapath, "uma", "core", "uma_core_noburst.dat");
-                        string destFile = Path.Combine(datapath, "uma", "core", "uma_core.asmdef");
-                        Debug.Log($"Burst changed to {prop.boolValue}-Copying from {sourceFile} to {destFile}");
+                        string sourceFile = Path.Combine(BasePath, "uma", "core", "uma_core_noburst.dat");
+                        string destFile = Path.Combine(BasePath, "uma", "core", "uma_core.asmdef");
+                        Debug.Log($"Burst changed to {boolValue}-Copying from {sourceFile} to {destFile}");
                         File.Copy(sourceFile, destFile, true);
                         AssetDatabase.Refresh();
                         Debug.Log("File copied");
                     }
                 }
                 m_CustomSettings.ApplyModifiedProperties();
-                if (prop.boolValue)
+                if (boolValue)
                 {
                     if (!defineSymbols.Contains(defineSymbol))
                     {
