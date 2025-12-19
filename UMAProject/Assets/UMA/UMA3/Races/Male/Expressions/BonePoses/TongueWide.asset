@@ -13,18 +13,46 @@ MonoBehaviour:
   m_Name: TongueWide
   m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
   poses:
+  - bone: LeftHandFinger05_01
+    hash: 769127528
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.00084950734, y: -0.00037201357, z: 0.0014461173, w: 0.9999986}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftHandFinger05_02
+    hash: -1260476974
+    position: {x: 0.00000010998839, y: 0.000000037252903, z: 0.000000107814714}
+    rotation: {x: 0.004177995, y: 0.0007068552, z: -0.00034929643, w: 0.999991}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
   - bone: Tongue01
     hash: 1278850178
-    position: {x: -7.275958e-12, y: 0.000000037252903, z: -0.000000059604645}
-    rotation: {x: -0.0000000032130094, y: -0.000000028864676, z: 0.0000000030328637, w: 1}
-    scale: {x: 1.0000001, y: 1.0803399, z: 0.9999999}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.000048068177, y: 1.1999787e-10, z: -1.6483391e-10, w: 1}
+    scale: {x: 1.0790031, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: Tongue02
     hash: -718215880
-    position: {x: 8.7041485e-14, y: 0.000000007450581, z: -0.000000011175871}
-    rotation: {x: 0.000000037779753, y: 0.0000000037215042, z: 0.000000002854701, w: 1}
-    scale: {x: 1, y: 1.0778745, z: 1}
+    position: {x: 0, y: 0, z: 0.00000043362962}
+    rotation: {x: -0.000013290187, y: -0.0002643069, z: -0.0000000033235068, w: 1}
+    scale: {x: 1.0768236, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightHandFinger05_01
+    hash: -1157319794
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.00084959326, y: 0.00037180143, z: -0.0014460133, w: 0.99999857}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightHandFinger05_02
+    hash: 571335220
+    position: {x: 0.00000012770394, y: -0.0000000037252903, z: -0.000000029562091}
+    rotation: {x: 0.0041779326, y: -0.0007068166, z: 0.0003492815, w: 0.999991}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   tweenPoses: []

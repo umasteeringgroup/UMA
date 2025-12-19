@@ -15,23 +15,51 @@ MonoBehaviour:
   poses:
   - bone: LeftEyeGlobe
     hash: -326698209
-    position: {x: -0.0000000037270382, y: 0.000000016326482, z: -0.0000000013186323}
-    rotation: {x: 0.00000025976675, y: 0.25503883, z: -0.00000091175673, w: 0.9669308}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.2550389, y: -0.00000045129102, z: 0.0000022195793, w: 0.9669308}
     scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: LeftLowerLid
     hash: 484878204
-    position: {x: -0.0000000037270382, y: 0.000000016326482, z: -0.0000000013186323}
-    rotation: {x: 0.000000007431626, y: 0.09897714, z: -1.3011203e-11, w: 0.9950897}
-    scale: {x: 1, y: 0.9999999, z: 1}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.09897715, y: 0.000011952399, z: 0.000053267333, w: 0.99508977}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: LeftUpperLid
     hash: -209628701
-    position: {x: -0.0000000037270382, y: 0.000000016326482, z: -0.0000000013186323}
-    rotation: {x: 0.0000000050004516, y: 0.05220501, z: 5.2687854e-11, w: 0.99863636}
-    scale: {x: 0.9999997, y: 0.9999999, z: 0.9999997}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.052204985, y: 0.0000058643213, z: -0.000036646165, w: 0.9986365}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: -0.000033974648, z: 0.00006388873}
+    rotation: {x: 0.0009669573, y: 0.0023504952, z: -0.000002273048, w: 0.9999969}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.000036805868, y: -0.000006530434, z: -0.000060796738}
+    rotation: {x: -0.0008208523, y: -0.0018741044, z: -0.00015071638, w: 0.9999979}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: -0.000040072948, z: 0}
+    rotation: {x: -0.00000003162197, y: 1.09954545e-10, z: -0.002931538, w: 0.9999957}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.00006358771}
+    rotation: {x: -0.00000001839989, y: 0.002135304, z: -1.2524591e-11, w: 0.99999774}
+    scale: {x: 1.0005997, y: 1, z: 1}
     category: 
     enabled: 1
   tweenPoses: []

@@ -136,9 +136,40 @@ namespace UMA.Editors
 
 		public override void OnInspectorGUI()
 		{
-			if (Event.current.type == EventType.Layout)
+			if (currentTarget == null)
 			{
-				UpdateObject();
+				EditorGUILayout.HelpBox("UMARandomizer target is missing.", MessageType.Error);
+				return;
+			}
+
+			// Ensure editor-only, non-serialized fields are initialized.
+			if (currentTarget.raceDatas == null || currentTarget.races == null)
+			{
+				InitRaces(currentTarget);
+			}
+			if (currentTarget.droppedItems == null)
+			{
+				currentTarget.droppedItems = new List<UMAWardrobeRecipe>();
+			}
+			if (currentTarget.droppedCollections == null)
+			{
+				currentTarget.droppedCollections = new List<UMAWardrobeCollection>();
+			}
+
+			try
+			{
+				if (Event.current.type == EventType.Layout)
+				{
+					UpdateObject();
+				}
+			}
+			catch (System.Exception ex)
+			{
+				EditorGUILayout.HelpBox("UMARandomizer inspector hit an exception while updating. See Console for details.", MessageType.Error);
+				Debug.LogException(ex);
+				// Don't keep trying every layout pass if the state is bad.
+				autoSave = false;
+				return;
 			}
 
 			if (currentTarget.useDefinition)
@@ -150,11 +181,26 @@ namespace UMA.Editors
 
 			UtilitiesGUI(ref currentTarget.Global.UtilityFoldout, "Utilities", Tooltips.Utilities);
 
-			DragAndDropGUI("Per Race Randomizers");
-
-			foreach (RandomAvatar ra in currentTarget.RandomAvatars)
+			try
 			{
-				RandomAvatarGUI(ra);
+				DragAndDropGUI("Per Race Randomizers");
+			}
+			catch (System.Exception ex)
+			{
+				EditorGUILayout.HelpBox("Failed to draw per-race randomizer UI. See Console for details.", MessageType.Error);
+				Debug.LogException(ex);
+				return;
+			}
+
+			if (currentTarget.RandomAvatars != null)
+			{
+				foreach (RandomAvatar ra in currentTarget.RandomAvatars)
+				{
+					if (ra != null)
+					{
+						RandomAvatarGUI(ra);
+					}
+				}
 			}
 
 			if (GUI.changed && !autoSave)
@@ -226,6 +272,20 @@ namespace UMA.Editors
 			GUIHelper.Separator();
 			EditorGUILayout.LabelField("Per Race Randomizer", EditorStyles.boldLabel);
 
+			if (currentTarget.races == null || currentTarget.races.Length == 0 || currentTarget.raceDatas == null || currentTarget.raceDatas.Count == 0)
+			{
+				EditorGUILayout.HelpBox("No UMA races found in the Asset Indexer. Open the UMA Asset Indexer window and rebuild the index, then re-open this inspector.", MessageType.Warning);
+				return;
+			}
+			if (currentTarget.currentRace < 0)
+			{
+				currentTarget.currentRace = 0;
+			}
+			else if (currentTarget.currentRace >= currentTarget.races.Length)
+			{
+				currentTarget.currentRace = currentTarget.races.Length - 1;
+			}
+
 			// Race Selection | New Race Presets Button
 			Rect lineRect = GUILayoutUtility.GetRect(0.0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
 
@@ -236,13 +296,18 @@ namespace UMA.Editors
 			EditorGUI.LabelField(raceLabelSelectionRect, "First Select Race");
 			currentTarget.currentRace = EditorGUI.Popup(raceSelectionRect, currentTarget.currentRace, currentTarget.races);
 
-			if (GUI.Button(newRacePresetsRect, Tooltips.NewPresets))
+			if (GUI.Button(newRacePresetsRect, "Add Race"))
+			{
 				FindAvatar(currentTarget.raceDatas[currentTarget.currentRace]);
+			}
 
 			GUILayout.Space(5);
 
 			// Drop Area
-			currentTarget.droppedItems.Clear(); currentTarget.droppedCollections.Clear();
+			if (currentTarget.droppedItems == null) currentTarget.droppedItems = new List<UMAWardrobeRecipe>();
+			if (currentTarget.droppedCollections == null) currentTarget.droppedCollections = new List<UMAWardrobeCollection>();
+			currentTarget.droppedItems.Clear();
+			currentTarget.droppedCollections.Clear();
 			GUIHelper.DropAreaGUI(DropedItem, height: 50f, label: Tooltips.DropArea(currentTarget.races[currentTarget.currentRace]));
 
 			GUILayout.Space(5);
@@ -250,21 +315,34 @@ namespace UMA.Editors
 
 		private bool DropedItem(Object draggedObject)
 		{
+			if (draggedObject == null)
+			{
+				return false;
+			}
+			if (currentTarget.droppedItems == null) currentTarget.droppedItems = new List<UMAWardrobeRecipe>();
+			if (currentTarget.droppedCollections == null) currentTarget.droppedCollections = new List<UMAWardrobeCollection>();
+
 			// Process Recipes
 			if (draggedObject is UMAWardrobeRecipe)
 			{
 				UMAWardrobeRecipe utr = draggedObject as UMAWardrobeRecipe;
-				currentTarget.droppedItems.Add(utr);
+				if (utr != null)
+				{
+					currentTarget.droppedItems.Add(utr);
+				}
 			}
 			// Process Collections
 			if (draggedObject is UMAWardrobeCollection)
 			{
 				UMAWardrobeCollection utr = draggedObject as UMAWardrobeCollection;
-				currentTarget.droppedCollections.Add(utr);
+				if (utr != null)
+				{
+					currentTarget.droppedCollections.Add(utr);
+				}
 			}
 			// Process Folders
 			var path = AssetDatabase.GetAssetPath(draggedObject);
-			if (System.IO.Directory.Exists(path))
+			if (!string.IsNullOrEmpty(path) && System.IO.Directory.Exists(path))
 			{
 				RecursiveScanFoldersForAssets(path);
 			}
@@ -302,6 +380,20 @@ namespace UMA.Editors
 		/// <param name="ra"></param>
 		private void WardrobeGUI(RandomAvatar ra)
 		{
+			if (ra == null || ra.raceData == null || ra.raceData.wardrobeSlots == null || ra.raceData.wardrobeSlots.Count == 0)
+			{
+				EditorGUILayout.HelpBox("Race has no wardrobe slots (or race data is missing).", MessageType.Warning);
+				return;
+			}
+			if (ra.currentWardrobeSlot < 0)
+			{
+				ra.currentWardrobeSlot = 0;
+			}
+			else if (ra.currentWardrobeSlot >= ra.raceData.wardrobeSlots.Count)
+			{
+				ra.currentWardrobeSlot = ra.raceData.wardrobeSlots.Count - 1;
+			}
+
 			// add a null slot for a 
 			GUILayout.BeginHorizontal();
 			EditorGUILayout.LabelField("Select Wardrobe Slot", GUILayout.ExpandWidth(false));
@@ -335,6 +427,10 @@ namespace UMA.Editors
 		/// <param name="rws"> RandomWardrobeSlot </param>
 		public void WardrobeSlotGUI(RandomAvatar ra, RandomWardrobeSlot rws)
 		{
+			if (rws == null)
+			{
+				return;
+			}
 			// do random colors
 			// show each possible item.
 			string name = "<null>";
@@ -347,7 +443,7 @@ namespace UMA.Editors
 
 			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
 			rws.Chance = EditorGUILayout.IntSlider("Weighted Chance", rws.Chance, 1, 100);
-			if (rws.PossibleColors.Length > 0)
+			if (rws.PossibleColors != null && rws.PossibleColors.Length > 0)
 			{
 				if (GUILayout.Button("Add Shared Color"))
 				{
@@ -374,19 +470,45 @@ namespace UMA.Editors
 
 		}
 
-		private void DNAGUI(RandomAvatar ra)
+		private static int rangeIndex = 0;
+        private void DNAGUI(RandomAvatar ra)
 		{
-			GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
+			string[] ranges = { "50%", "60%", "70%", "80%", "90%", "100%" };
+            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.75f, 0.75f));
 			// (popup with DNA names) and "Add" button.
 			EditorGUILayout.BeginHorizontal();
-			ra.SelectedDNA = EditorGUILayout.Popup("DNA", ra.SelectedDNA, ra.PossibleDNA);
-			bool addDNA = GUILayout.Button("Add DNA", EditorStyles.miniButton);// GUIStyles.Popup?
-			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.LabelField("Select DNA", GUILayout.Width(100));
+            ra.SelectedDNA = EditorGUILayout.Popup(ra.SelectedDNA, ra.PossibleDNA, GUILayout.ExpandWidth(true));
+			rangeIndex = EditorGUILayout.Popup(rangeIndex, ranges, GUILayout.Width(60));
+            bool addDNA = GUILayout.Button("Add DNA", EditorStyles.miniButton, GUILayout.Width(80));// GUIStyles.Popup?
+			bool addAllDNA = GUILayout.Button("Add All", EditorStyles.miniButton, GUILayout.Width(80));// GUIStyles.Popup?
+            EditorGUILayout.EndHorizontal();
 
 			if (addDNA)
 				ra.DNAAdd = ra.PossibleDNA[ra.SelectedDNA];
 
-			if (ra.RandomDna.Count == 0)
+			if (addAllDNA)
+			{
+				foreach (string dnaName in ra.PossibleDNA)
+				{
+					bool alreadyExists = false;
+					foreach (RandomDNA rd in ra.RandomDna)
+					{
+						if (rd.DnaName == dnaName)
+						{
+							alreadyExists = true;
+							break;
+						}
+					}
+					if (!alreadyExists)
+					{
+						ra.RandomDna.Add(new RandomDNA(dnaName));
+						ra.DnaChanged = true;
+					}
+				}
+            }
+
+            if (ra.RandomDna.Count == 0)
 			{
 				EditorGUILayout.LabelField("No Random DNA has been added");
 				GUIHelper.EndVerticalPadded(10);
@@ -560,7 +682,25 @@ namespace UMA.Editors
 
 		private void UpdateObject()
 		{
-			ExtractRecipesFromCollections(currentTarget.droppedCollections, currentTarget.droppedItems);
+			if (currentTarget == null)
+			{
+				return;
+			}
+			if (currentTarget.droppedItems == null) currentTarget.droppedItems = new List<UMAWardrobeRecipe>();
+			if (currentTarget.droppedCollections == null) currentTarget.droppedCollections = new List<UMAWardrobeCollection>();
+			if (currentTarget.RandomAvatars == null) currentTarget.RandomAvatars = new List<RandomAvatar>();
+
+			try
+			{
+				ExtractRecipesFromCollections(currentTarget.droppedCollections, currentTarget.droppedItems);
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogException(ex);
+				currentTarget.droppedCollections.Clear();
+				currentTarget.droppedItems.Clear();
+				return;
+			}
 
 			// Add any dropped items.
 			int ChangeCount = currentTarget.droppedItems.Count;
@@ -607,7 +747,23 @@ namespace UMA.Editors
 
 		private void AddRecipesToCurrentRandomAvatar(List<UMAWardrobeRecipe> recipes)
 		{
-			if (recipes.Count == 0) return;
+			if (recipes == null || recipes.Count == 0)
+			{
+				return;
+			}
+			if (currentTarget == null || currentTarget.raceDatas == null || currentTarget.raceDatas.Count == 0)
+			{
+				recipes.Clear();
+				return;
+			}
+			if (currentTarget.currentRace < 0)
+			{
+				currentTarget.currentRace = 0;
+			}
+			else if (currentTarget.currentRace >= currentTarget.raceDatas.Count)
+			{
+				currentTarget.currentRace = currentTarget.raceDatas.Count - 1;
+			}
 
 			// Handle Foldout
 			foreach (RandomAvatar rv in currentTarget.RandomAvatars)
@@ -620,12 +776,22 @@ namespace UMA.Editors
 			}
 
 			// Get Current Avatar
-			RandomAvatar ra = FindAvatar(currentTarget.raceDatas[currentTarget.currentRace]);
+			var raceData = currentTarget.raceDatas[currentTarget.currentRace];
+			if (raceData == null)
+			{
+				recipes.Clear();
+				return;
+			}
+			RandomAvatar ra = FindAvatar(raceData);
 
 			// Add all the wardrobe items to Current Avatar
 			foreach (UMAWardrobeRecipe uwr in recipes)
 			{
-				if (RecipeCompatible(uwr, currentTarget.raceDatas[currentTarget.currentRace]))
+				if (uwr == null)
+				{
+					continue;
+				}
+				if (RecipeCompatible(uwr, raceData))
 				{
 					RandomWardrobeSlot rws = new RandomWardrobeSlot(uwr, uwr.wardrobeSlot);
 					ra.GuiFoldout = true;
@@ -641,16 +807,62 @@ namespace UMA.Editors
 
 		private void ExtractRecipesFromCollections(List<UMAWardrobeCollection> collections, List<UMAWardrobeRecipe> recipes)
 		{
-			if (collections.Count == 0) return;
+			if (collections == null || collections.Count == 0)
+			{
+				return;
+			}
+			if (recipes == null)
+			{
+				return;
+			}
+			if (currentTarget == null || currentTarget.raceDatas == null || currentTarget.raceDatas.Count == 0)
+			{
+				collections.Clear();
+				return;
+			}
+			if (currentTarget.currentRace < 0)
+			{
+				currentTarget.currentRace = 0;
+			}
+			else if (currentTarget.currentRace >= currentTarget.raceDatas.Count)
+			{
+				currentTarget.currentRace = currentTarget.raceDatas.Count - 1;
+			}
+			var raceData = currentTarget.raceDatas[currentTarget.currentRace];
+			if (raceData == null)
+			{
+				collections.Clear();
+				return;
+			}
 
 			// Add all Recipes from Collections to the Recipes list
 			foreach (UMAWardrobeCollection uwr in collections)
 			{
-				string curRace = currentTarget.raceDatas[currentTarget.currentRace].ToString();
-				List<WardrobeSettings> wardrobes = uwr.GetRacesWardrobeSet(currentTarget.raceDatas[currentTarget.currentRace]);
+				if (uwr == null)
+				{
+					continue;
+				}
+				List<WardrobeSettings> wardrobes;
+				try
+				{
+					wardrobes = uwr.GetRacesWardrobeSet(raceData);
+				}
+				catch (System.Exception ex)
+				{
+					Debug.LogException(ex);
+					continue;
+				}
+				if (wardrobes == null)
+				{
+					continue;
+				}
 
 				foreach (WardrobeSettings wardrobe in wardrobes)
 				{
+					if (string.IsNullOrEmpty(wardrobe.recipe))
+					{
+						continue;
+					}
 					UMAWardrobeRecipe recipe = UMAAssetIndexer.Instance.GetRecipe(wardrobe.recipe, false) as UMAWardrobeRecipe;
 					if (recipe != null && !recipes.Contains(recipe))
 						recipes.Add(recipe);
@@ -661,7 +873,15 @@ namespace UMA.Editors
 
 		private bool RecipeCompatible(UMAWardrobeRecipe uwr, RaceData raceData)
 		{
+			if (uwr == null || raceData == null)
+			{
+				return false;
+			}
 			// first, see if the recipe is directly compatible with the race.
+			if (uwr.compatibleRaces == null)
+			{
+				return false;
+			}
 			foreach (string s in uwr.compatibleRaces)
 			{
 				if (s == raceData.raceName)
@@ -678,6 +898,18 @@ namespace UMA.Editors
 
 		private RandomAvatar FindAvatar(RaceData raceData)
 		{
+			if (raceData == null)
+			{
+				return null;
+			}
+			if (currentTarget == null)
+			{
+				return null;
+			}
+			if (currentTarget.RandomAvatars == null)
+			{
+				currentTarget.RandomAvatars = new List<RandomAvatar>();
+			}
 			// Is the current race defined?
 			foreach (RandomAvatar ra in currentTarget.RandomAvatars)
 			{

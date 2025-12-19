@@ -1829,6 +1829,11 @@ namespace UMA.CharacterSystem.Editors
             {
                 if (GUILayout.Button("Perform Save"))
                 {
+                    string AvatarDefinitionString = thisDCA.GetAvatarDefinitionString(false);
+                    if (AvatarDefinitionString != null)
+                    {
+                        
+                    }
                     thisDCA.DoSave();
                 }
             }

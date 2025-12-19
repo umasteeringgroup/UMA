@@ -15,16 +15,23 @@ MonoBehaviour:
   DNAArea: Face
   dnaList:
   - {fileID: 11400000, guid: 91d0e3ae7117768408a3dad4c2ea2e69, type: 2}
+  - {fileID: 11400000, guid: bc5ec9f1492e9234e9bde914eff7a854, type: 2}
   - {fileID: 11400000, guid: 780534ffe7d486a4bb882e4d6ef1f71a, type: 2}
+  - {fileID: 11400000, guid: 1e48083733fdc4f49a859d36d749fe61, type: 2}
   - {fileID: 11400000, guid: 45def202333324b4da54ac5983f4c84a, type: 2}
   - {fileID: 11400000, guid: dbfb4d07c08e8d44d87032d549c00693, type: 2}
   - {fileID: 11400000, guid: be5d8c1724e58fc469c992ec4772ecb0, type: 2}
+  - {fileID: 11400000, guid: 45964a73ab552ba48a7418e8d5c4bebb, type: 2}
   - {fileID: 11400000, guid: 2047519855e6a5648ad9fa5d5bd902ce, type: 2}
   - {fileID: 11400000, guid: 5d70c6ab6199af849a128408ebbfd8d1, type: 2}
   - {fileID: 11400000, guid: 4676c75ef70118d4798464c5a2db4e63, type: 2}
+  - {fileID: 11400000, guid: f75db3431def2e2488955e6760dbb23d, type: 2}
   - {fileID: 11400000, guid: 0edbf566c81443541b4fbff4f65df70d, type: 2}
   - {fileID: 11400000, guid: aef84746c93ee7944902315492b71573, type: 2}
   - {fileID: 11400000, guid: 87e246edd3eeccb4a965068dde89baf1, type: 2}
+  - {fileID: 11400000, guid: 8b46390045fd66f4a9a6a1a58d988e44, type: 2}
+  - {fileID: 11400000, guid: 3c9372f796e9e4f40b3af5a89695c35f, type: 2}
+  - {fileID: 11400000, guid: d0163397c8e44f44ea2290838202b2e2, type: 2}
   - {fileID: 11400000, guid: c63c109d46b195a4a8b34246aefa54ff, type: 2}
   - {fileID: 11400000, guid: 2f3f0c492cf6e2445b7c25cf769807c4, type: 2}
   - {fileID: 11400000, guid: c43ceed260184ab4183720aedc1b5680, type: 2}
@@ -35,6 +42,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 066c403990796714e8f06d081324f7ae, type: 2}
   - {fileID: 11400000, guid: 543c6c6ecfe7f4342b438d99a6e206db, type: 2}
   - {fileID: 11400000, guid: 0507fedd04ec01148851350a33e28fa6, type: 2}
+  - {fileID: 11400000, guid: dbb8bace0ebeaf84db86bb6930153b7f, type: 2}
   - {fileID: 11400000, guid: e6241a68f01c0ee47a842929ed848152, type: 2}
   - {fileID: 11400000, guid: b8a50c8fc10f3794ebbe7f1c9003914d, type: 2}
   - {fileID: 11400000, guid: 6c21e0267bf0de34e9b5eeb0dae8524c, type: 2}
@@ -42,11 +50,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5fecd924b39c28d4692ba6b373bb4491, type: 2}
   - {fileID: 11400000, guid: 64b845266346105459a88d09415c18b8, type: 2}
   - {fileID: 11400000, guid: c429bee64972929428fd20a6d491faf7, type: 2}
-  - {fileID: 11400000, guid: 1e48083733fdc4f49a859d36d749fe61, type: 2}
-  - {fileID: 11400000, guid: bc5ec9f1492e9234e9bde914eff7a854, type: 2}
-  - {fileID: 11400000, guid: f75db3431def2e2488955e6760dbb23d, type: 2}
-  - {fileID: 11400000, guid: 45964a73ab552ba48a7418e8d5c4bebb, type: 2}
-  - {fileID: 11400000, guid: dbb8bace0ebeaf84db86bb6930153b7f, type: 2}
-  - {fileID: 11400000, guid: 8b46390045fd66f4a9a6a1a58d988e44, type: 2}
-  - {fileID: 11400000, guid: 3c9372f796e9e4f40b3af5a89695c35f, type: 2}
-  editorFoldout: 0
+  MaxTotalValue: 0
+  editorFoldout: 1

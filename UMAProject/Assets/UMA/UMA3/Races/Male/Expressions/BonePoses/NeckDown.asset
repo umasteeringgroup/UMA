@@ -15,8 +15,22 @@ MonoBehaviour:
   poses:
   - bone: Neck
     hash: -2145158803
-    position: {x: -0.0000000015419346, y: -3.5527137e-15, z: 0}
-    rotation: {x: 0.25529847, y: 0.000000016762042, z: -2.1316282e-14, w: 0.9668623}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.25529903, y: 0.0000000011625748, z: -0.00000016006392, w: 0.9668622}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.00005901605, y: 0.00004960969, z: 0.00021405518}
+    rotation: {x: -0.0000029976673, y: -0.0017247612, z: -0.000013263684, w: 0.99999857}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.00005901791, y: 0.00008530542, z: 0.00036896765}
+    rotation: {x: -0.0000031348873, y: 0.0017908113, z: 0.000013761252, w: 0.9999985}
     scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1

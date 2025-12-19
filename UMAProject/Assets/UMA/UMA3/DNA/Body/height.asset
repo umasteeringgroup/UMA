@@ -27,19 +27,28 @@ MonoBehaviour:
           serializedVersion: 2
           m_Curve:
           - serializedVersion: 3
-            time: 0
-            value: 0.3
-            inSlope: 0.5
-            outSlope: 0.5
-            tangentMode: 34
+            time: -0.002281189
+            value: 0.3645752
+            inSlope: 0.11223476
+            outSlope: 0.11223476
+            tangentMode: 0
             weightedMode: 0
             inWeight: 0
+            outWeight: 0.11346719
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.43480974
+            outSlope: 0.43480974
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
             outWeight: 0.33333334
           - serializedVersion: 3
             time: 1
             value: 0.8
-            inSlope: 0.5
-            outSlope: 0.5
+            inSlope: 0.6
+            outSlope: 0.6
             tangentMode: 34
             weightedMode: 0
             inWeight: 0.33333334
@@ -50,6 +59,7 @@ MonoBehaviour:
         minMapping: -1
         maxMapping: 1
         expanded: 1
+        selected: 0
         EffectName: Position
         BoneName: Position
         ScaleFactor: {x: 1, y: 1, z: 1}

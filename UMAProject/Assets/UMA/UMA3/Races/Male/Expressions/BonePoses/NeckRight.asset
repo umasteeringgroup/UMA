@@ -15,8 +15,29 @@ MonoBehaviour:
   poses:
   - bone: Neck
     hash: -2145158803
-    position: {x: -0.0000000015419346, y: -3.5527137e-15, z: 0}
-    rotation: {x: -0.000000014338394, y: -0.33487633, z: 4.6270188e-10, w: -0.9422621}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.000000023476222, y: 0.3293636, z: 0.06051135, w: 0.94226223}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.000052114017, y: 0.000045407563, z: 0.0001949817}
+    rotation: {x: -0.0000030731294, y: -0.0018236958, z: -0.000014019252, w: 0.9999984}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.0000023189773}
+    rotation: {x: -0.000071053146, y: -0.0014130736, z: -0.00000009938743, w: 0.999999}
+    scale: {x: 1.0012178, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.00005211495, y: 0.000084504485, z: 0.00034599006}
+    rotation: {x: -0.0000033844003, y: 0.0018934621, z: 0.00001457317, w: 0.9999982}
     scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1

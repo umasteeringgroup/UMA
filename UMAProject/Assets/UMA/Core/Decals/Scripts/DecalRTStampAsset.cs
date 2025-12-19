@@ -19,8 +19,13 @@ namespace UMA
             public int[] triOrdinals;         // Global ordinals (indices within the original selected triangle list) for each triangle
             public Rect recordedUVArea;       // The UVArea at the time the stamp was created
             public bool debugDontUse;       // If true, this slot is ignored at apply time
-            public int lastframe { get; set; }
-            public override string ToString()
+
+			// TODO: Remove this field in future versions	
+			// TODO: 
+			[NonSerialized]
+			public Dictionary<int, int> HashToFrame = new Dictionary<int, int>();
+
+			public override string ToString()
             {
                 string ignored = debugDontUse ? "(ignored)" : "";
                 return $"{slotName} {ignored}";
@@ -40,6 +45,7 @@ namespace UMA
         public string overlayName;            // OverlayDataAsset.name used for the source stamp
         public int bleedPixels;               // default dilation at record time
         public bool forceLinearSampling;      // default sampling mode at record time
+        public bool invertY;                  // if true, Y is inverted during stamping (normalized space)
         public List<SlotStamp> slots = new List<SlotStamp>(8);
     }
 }

@@ -33,6 +33,8 @@ namespace UMA
 
 		private static void RunCallbacks()
 		{
+			return;
+#pragma warning disable CS0162
 			if (!ranOnce)
 			{
 				FriendlyNames = new Dictionary<Type, string>();
@@ -72,6 +74,7 @@ namespace UMA
 				ranOnce = true;
 				return;
 			}
+#pragma warning restore CS0162
 		}
 
         public static string FindUMAFolder()

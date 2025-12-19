@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowOuterUp
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: -0.00021045655, z: 0.000070780516}
+    rotation: {x: 0.00000012424047, y: 0.0027127878, z: -1.6121804e-11, w: 0.9999964}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: 0, y: 0.00010051578, z: -0.00018835068}
+    rotation: {x: -0.067472, y: 0.00356795, z: 0.00024114673, w: 0.9977149}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowUp
+    hash: 1123680177
+    position: {x: 0, y: -0.00025376678, z: 0.00012218952}
+    rotation: {x: -0.11061096, y: 0.00004941003, z: 0.00024449758, w: 0.9938638}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: -0.000020649284, z: 0}
+    rotation: {x: 0.000000068642, y: -2.2871849e-11, z: -0.0015103118, w: 0.99999887}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: -0.0002104491, z: 0.000070780516}
+    rotation: {x: 0.00000012420118, y: -0.002712921, z: -5.710198e-10, w: 0.9999964}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0, y: 0.000100560486, z: -0.00018835068}
+    rotation: {x: -0.06747199, y: -0.003567697, z: -0.00024112861, w: 0.9977148}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowUp
+    hash: 1246724795
+    position: {x: 0, y: -0.00025367737, z: 0.00012214482}
+    rotation: {x: -0.11061096, y: -0.00004938294, z: -0.00024452704, w: 0.99386376}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

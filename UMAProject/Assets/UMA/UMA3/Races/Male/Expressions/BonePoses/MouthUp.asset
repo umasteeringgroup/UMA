@@ -13,67 +13,81 @@ MonoBehaviour:
   m_Name: MouthUp
   m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
   poses:
+  - bone: LeftHandFinger05_01
+    hash: 769127528
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.0007970081, y: -0.000348791, z: 0.0013565904, w: 0.9999988}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
   - bone: LeftLipsSuperiorMiddle
     hash: -1900485368
-    position: {x: -0.00035215728, y: 0.0010545254, z: -0.0040095784}
-    rotation: {x: -0.00000035794912, y: 0.0000000060683827, z: 0.00000039570648, w: 1}
-    scale: {x: 1.0000001, y: 1.0000002, z: 1.0000001}
+    position: {x: -0.00033927802, y: 0.0040140115, z: 0.00093354285}
+    rotation: {x: -0.0000009935485, y: -0.00063755945, z: -0.0000048598345, w: 0.9999998}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: LipsSuperior
     hash: -1089081410
-    position: {x: 2.910383e-10, y: -0.0011457056, z: -0.0042967275}
-    rotation: {x: -0.000000057658045, y: 5.939693e-15, z: -3.227693e-14, w: 1}
-    scale: {x: 0.9999999, y: 1.0000001, z: 0.99999994}
+    position: {x: 0, y: 0.0042968616, z: -0.0011597723}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: LeftLips
     hash: 1620479899
-    position: {x: 0, y: 0.006251566, z: 0.0037912354}
-    rotation: {x: -0.000000018301694, y: -0.0000000014947404, z: 0.000000010305076, w: 1}
-    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    position: {x: 0, y: -0.0037912428, z: 0.0062515177}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: LeftLipsInferior
     hash: -2082379262
-    position: {x: -0.00016632676, y: 0.004920576, z: 0.0028381124}
-    rotation: {x: -0.00000000332515, y: -0.00000007392283, z: -0.000000024670324, w: 1}
-    scale: {x: 1.0000001, y: 1.0000001, z: 1}
+    position: {x: -0.0000726562, y: -0.0027346313, z: 0.004920557}
+    rotation: {x: -0.000011076489, y: 0.0000014162449, z: 0.00000046170302, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: LipsInferior
     hash: -499586065
-    position: {x: -4.1129766e-11, y: 0.0046167, z: 0.0017274767}
-    rotation: {x: 4.9456695e-14, y: -0.000000029325983, z: -2.7147264e-14, w: 1}
+    position: {x: 0, y: -0.0015523434, z: 0.004616659}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightLips
     hash: -1558564409
-    position: {x: 0, y: 0.006251566, z: 0.0037912354}
-    rotation: {x: -0.000000011950444, y: -0.00000008541675, z: -0.000000014843023, w: 1}
-    scale: {x: 0.99999994, y: 1, z: 1}
+    position: {x: 0, y: -0.0037912428, z: 0.0062515177}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightLipsInferior
     hash: 921042654
-    position: {x: 0.0001663249, y: 0.004920576, z: 0.0028381124}
-    rotation: {x: 0.000000010319794, y: -0.0000000154114, z: -0.0000000055153206, w: 1}
-    scale: {x: 1, y: 1.0000001, z: 1}
+    position: {x: 0.0000726562, y: -0.0027346388, z: 0.004920557}
+    rotation: {x: -0.000011553473, y: -0.0000014783777, z: -0.0000004752275, w: 1}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightLipsSuperiorMiddle
     hash: -2093673696
-    position: {x: 0.0003521582, y: 0.0010545254, z: -0.0040095784}
-    rotation: {x: 0.00000033870762, y: -0.00000024403653, z: 0.00000006285496, w: 1}
-    scale: {x: 0.99999994, y: 1.0000001, z: 0.99999994}
+    position: {x: 0.00033927988, y: 0.0040140115, z: 0.0008508712}
+    rotation: {x: -0.0000010964138, y: 0.0006619336, z: 0.0000050402155, w: 0.99999976}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: UpperLips
     hash: 891826736
-    position: {x: 2.6193447e-10, y: 0.000000014901161, z: -0.002784904}
-    rotation: {x: -0.000000057657896, y: 0, z: 0, w: 1}
-    scale: {x: 1, y: 1.0000001, z: 1}
+    position: {x: 0.000021718697, y: 0.0027442202, z: 0}
+    rotation: {x: 0.0000955469, y: 1.23141705e-11, z: -2.544958e-11, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightHandFinger05_01
+    hash: -1157319794
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.0007968969, y: 0.00034875158, z: -0.0013562515, w: 0.99999875}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   tweenPoses: []

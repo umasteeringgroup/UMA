@@ -216,6 +216,11 @@ namespace UMA
 #if UNITY_EDITOR
 		public void SetupDNA(RaceData rc)
 		{
+			if (rc.useNewDNA)
+			{
+				PossibleDNA = rc.GetDNANames().ToArray();
+                return;
+            }
 			List<string> DNAList = new List<string>();
 			foreach (IDNAConverter cvt in rc.dnaConverterList)
 			{

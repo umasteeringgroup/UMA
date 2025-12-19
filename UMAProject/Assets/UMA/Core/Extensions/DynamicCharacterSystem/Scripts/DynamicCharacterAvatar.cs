@@ -643,7 +643,7 @@ namespace UMA.CharacterSystem
 #if SUPER_LOGGING
 			Debug.Log("Start on DynamicCharacterAvatar: " + gameObject.name);
 #endif
-            AddCharacterStateCache("NULL");
+            OldAddCharacterStateCache("NULL");
             InitializeAvatar();
 
             SetUMADataOptions();
@@ -1137,7 +1137,7 @@ namespace UMA.CharacterSystem
             }
             else if (serializedRecipe != null)
             {
-                LoadFromRecipe(serializedRecipe);
+                OldLoadFromRecipe(serializedRecipe);
             }
         }
 
@@ -1375,7 +1375,6 @@ namespace UMA.CharacterSystem
                 return;
             }
 
-            var recipes = UMAAssetIndexer.Instance.GetRecipes(adf.RaceName);
             for (int i = 0; i < adf.Wardrobe.Length; i++)
             {
                 string s = adf.Wardrobe[i];
@@ -1635,7 +1634,7 @@ namespace UMA.CharacterSystem
                 {
                     if (cacheCurrentState && BuildCharacterEnabled && activeRace.racedata != null)
                     {
-                        AddCharacterStateCache();
+                        OldAddCharacterStateCache();
                     }
                     //so do we need to make this actually destroy the Avatar? I guess we do...
                     UnloadAvatar();
@@ -1689,7 +1688,7 @@ namespace UMA.CharacterSystem
                 //If BuildCharacterEnabled is false dont cache because the end user will have never made this version of the character
                 if (cacheCurrentState && BuildCharacterEnabled && activeRace.racedata != null)
                 {
-                    AddCharacterStateCache();
+                    OldAddCharacterStateCache();
                 }
                 if (cacheCurrentState && cacheStates.ContainsKey(race.raceName))//we want to IMPORT these cached settings-cache states could now be DCS nodels
                 {
@@ -1703,7 +1702,7 @@ namespace UMA.CharacterSystem
                     {
                         _wardrobeRecipes.Clear();
                     }
-                    LoadFromRecipeString(cacheStates[race.raceName], thisLoadFlags);
+                    OldLoadFromRecipeString(cacheStates[race.raceName], thisLoadFlags);
                     return;
                 }
             }
@@ -1729,7 +1728,7 @@ namespace UMA.CharacterSystem
                     _wardrobeRecipes.Clear();
                 }
                 //by setting 'ForceDCSLoad' to true the loaded race will always be loaded like a new uma rather than the old uma way
-                ImportSettings(UMATextRecipe.PackedLoadDCS((race.baseRaceRecipe as UMATextRecipe).recipeString), thisLoadFlags, true);
+                OldImportSettings(UMATextRecipe.PackedLoadDCS((race.baseRaceRecipe as UMATextRecipe).recipeString), thisLoadFlags, true);
             }
         }
 
@@ -3709,12 +3708,18 @@ namespace UMA.CharacterSystem
         #endregion
 
         #region FULL EXPORT
+        public string GetCurrentRecipe()
+        {
+            // return an AvatarDefinitionString instead of a UMATextRecipe string
+            return GetAvatarDefinitionString(false, false);
+        }
+
         /// <summary>
         /// Returns the UMATextRecipe string with the addition of the Avatars current WardrobeSet.
         /// </summary>
         /// <param name="backwardsCompatible">If true, slot and overlay data is included and you can load the recipe into a non-dynamicCharacterAvatar.</param>
         /// <returns></returns>
-        public string GetCurrentRecipe(bool backwardsCompatible = false)
+        public string OldGetCurrentRecipe(bool backwardsCompatible = false)
         {
             Dictionary<string, UMATextRecipe> wardrobeCache = new Dictionary<string, UMATextRecipe>(_wardrobeRecipes);
             Dictionary<string, UMAWardrobeCollection> wcCache = new Dictionary<string, UMAWardrobeCollection>(_wardrobeCollections);
@@ -3747,13 +3752,51 @@ namespace UMA.CharacterSystem
             _wardrobeCollections = wcCache;
             return currentRecipeString;
         }
+
+
+        public bool DoSave(string filePath)
+        {
+            ClearWardrobeCollectionsRecipes(true);
+            string extension = "txt";
+            if (filePath == "")
+            {
+                filePath = GetSavePath(extension);
+            }
+            if (filePath != "")
+            {
+                try
+                {
+                    File.WriteAllText(filePath, GetCurrentRecipe());
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("Error saving DynamicCharacterAvatar recipe to " + filePath + "\n" + e.Message);
+                    return false;
+                }
+                return true;
+            }
+            return false;
+
+        }
+
+
+        public bool DoSave(bool saveAsAsset = false, string filePath = "")
+        {
+            if (saveAsAsset)
+            {
+                Debug.LogWarning("Saving as asset is not currently supported for DynamicCharacterAvatar recipes."); 
+            }
+            return DoSave(filePath);
+        }
+
+
         /// <summary>
         /// Saves the current DynamicCharacterAvatar using the optimized DCSPackRecipe model. This has smaller file size but the resulting recipe strings will not work with 'non-DynamicCharacterAvatar' avatars
         /// </summary>
         /// <param name="saveAsAsset">If true will save the resulting asset, otherwise saves the string to a txt file</param>
         /// <param name="filePath">If no file path is supplied it will be generated based on the settings in the Save section of the component</param>
         /// <param name="customSaveOptions">Override the default save options as defined in the avatar save section, to only save specific properties of the Avatar</param>
-        public void DoSave(bool saveAsAsset = false, string filePath = "", SaveOptions customSaveOptions = SaveOptions.useDefaults)
+        public void OldDoSave(bool saveAsAsset = false, string filePath = "", SaveOptions customSaveOptions = SaveOptions.useDefaults)
         {
 #if !UNITY_EDITOR
             saveAsAsset = false;
@@ -3914,7 +3957,7 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Helper method for getting the required DCA.LoadOptions flags. Set all to false for DCA.LoadOptions.UseDefaults
         /// </summary>
-        public static LoadOptions GetLoadOptionsFlags(bool loadRace, bool loadDNA, bool loadWardrobe, bool loadBodyColors, bool loadWardrobeColors)
+        public static LoadOptions OldGetLoadOptionsFlags(bool loadRace, bool loadDNA, bool loadWardrobe, bool loadBodyColors, bool loadWardrobeColors)
         {
             if (!loadRace && !loadDNA && !loadWardrobe && !loadBodyColors && !loadWardrobeColors)
             {
@@ -3965,17 +4008,17 @@ namespace UMA.CharacterSystem
                 ClearSlots();
             }
 
-            LoadFromRecipeString(recipeString, GetLoadOptionsFlags(false, false, true, false, loadColors));
+            OldLoadFromRecipeString(recipeString, OldGetLoadOptionsFlags(false, false, true, false, loadColors));
         }
 
         public void LoadColorsFromRecipeString(string recipeString, bool loadBodyColors = true, bool loadWardrobeColors = true)
         {
-            LoadFromRecipeString(recipeString, GetLoadOptionsFlags(false, false, false, loadBodyColors, loadWardrobeColors));
+            OldLoadFromRecipeString(recipeString, OldGetLoadOptionsFlags(false, false, false, loadBodyColors, loadWardrobeColors));
         }
 
         public void LoadDNAFromRecipeString(string recipeString)
         {
-            LoadFromRecipeString(recipeString, GetLoadOptionsFlags(false, true, false, false, false));
+            OldLoadFromRecipeString(recipeString, OldGetLoadOptionsFlags(false, true, false, false, false));
         }
 
         #endregion
@@ -4011,7 +4054,7 @@ namespace UMA.CharacterSystem
         /// Sets the avatar to load from the given recipe string
         /// </summary>
         /// <param name="recipeString"></param>
-        public void SetLoadString(string recipeString)
+        public void OldSetLoadString(string recipeString)
         {
             if (_isFirstSettingsBuild)
             {
@@ -4021,7 +4064,7 @@ namespace UMA.CharacterSystem
             }
             else
             {
-                LoadFromRecipeString(recipeString);
+                OldLoadFromRecipeString(recipeString);
             }
         }
 
@@ -4042,7 +4085,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         /// <param name="settingsToLoad"></param>
         /// <param name="customLoadOptions"></param>
-        public void LoadFromRecipe(UMARecipeBase settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults)
+        public void OldLoadFromRecipe(UMARecipeBase settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults)
         {
             if (UMATextRecipe.GetRecipesType((settingsToLoad as UMATextRecipe).recipeString) == "Wardrobe" || (settingsToLoad as UMATextRecipe).recipeType == "Wardrobe")
             {
@@ -4053,23 +4096,23 @@ namespace UMA.CharacterSystem
 
                 return;
             }
-            ImportSettings(UMATextRecipe.PackedLoadDCS((settingsToLoad as UMATextRecipe).recipeString), customLoadOptions);
+            OldImportSettings(UMATextRecipe.PackedLoadDCS((settingsToLoad as UMATextRecipe).recipeString), customLoadOptions);
         }
         /// <summary>
         /// Load settings from an existing recipe string, optionally customizing what is loaded from the recipe
         /// </summary>
         /// <param name="settingsToLoad"></param>
         /// <param name="customLoadOptions"></param>
-        public void LoadFromRecipeString(string settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool ClearWardrobe = false)
+        public void OldLoadFromRecipeString(string settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool ClearWardrobe = false)
         {
             if (ClearWardrobe)
             {
                 this._wardrobeRecipes.Clear();
             }
-            ImportSettings(UMATextRecipe.PackedLoadDCS(settingsToLoad), customLoadOptions);
+            OldImportSettings(UMATextRecipe.PackedLoadDCS(settingsToLoad), customLoadOptions);
         }
 
-        bool ImportSettings(UMATextRecipe.DCSUniversalPackRecipe settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool forceDCSLoad = false)
+        bool OldImportSettings(UMATextRecipe.DCSUniversalPackRecipe settingsToLoad, LoadOptions customLoadOptions = LoadOptions.useDefaults, bool forceDCSLoad = false)
         {
             var thisLoadOptions = customLoadOptions == LoadOptions.useDefaults ? defaultLoadOptions : customLoadOptions;
             //When ChangeRace calls this, it calls it with forceDCSLoad to be true so we need settingsToLoad.wardrobeSet fixed if its null
@@ -4182,7 +4225,7 @@ namespace UMA.CharacterSystem
 
                 if (cacheCurrentState)
                 {
-                    AddCharacterStateCache();
+                    OldAddCharacterStateCache();
                 }
             }
             else
@@ -4256,7 +4299,7 @@ namespace UMA.CharacterSystem
             if (ai != null)
             {
                 string recipeString = (ai.Item as UMATextRecipe).recipeString;
-                LoadFromRecipeString(recipeString);
+                OldLoadFromRecipeString(recipeString);
                 return;
             }
 #if UNITY_EDITOR
@@ -4274,7 +4317,7 @@ namespace UMA.CharacterSystem
             if (ai != null)
             {
                 string recipeString = (ai.Item as TextAsset).text;
-                LoadFromRecipeString(recipeString);
+                OldLoadFromRecipeString(recipeString);
                 return;
             }
 #if UNITY_EDITOR
@@ -4385,7 +4428,7 @@ namespace UMA.CharacterSystem
             }
             if (recipeString != "")
             {
-                LoadFromRecipeString(recipeString);
+                OldLoadFromRecipeString(recipeString);
             }
             else
             {
@@ -4407,7 +4450,7 @@ namespace UMA.CharacterSystem
 #else
             yield return www.Send();
 #endif
-            LoadFromRecipeString(www.downloadHandler.text);
+            OldLoadFromRecipeString(www.downloadHandler.text);
         }
         #endregion
         #endregion
@@ -4643,12 +4686,6 @@ namespace UMA.CharacterSystem
                         }
                     }
 
-                    if (utr.OverrideDNA != null && utr.OverrideDNA.Count > 0)
-                        overrideDNA.AddRange(utr.OverrideDNA);
-
-                    if (utr.HideTags.Count > 0)
-                        HideTags.AddRange(utr.HideTags);
-
 
                 }
 
@@ -4706,6 +4743,11 @@ namespace UMA.CharacterSystem
                                     }
                                 }
                             }
+                            if (utr.OverrideDNA != null && utr.OverrideDNA.Count > 0)
+                                overrideDNA.AddRange(utr.OverrideDNA);
+
+                            if (utr.HideTags.Count > 0)
+                                HideTags.AddRange(utr.HideTags);
                         }
                     }
 
@@ -4716,9 +4758,16 @@ namespace UMA.CharacterSystem
                         {
                             for (int a = 0; a < addl.Count; a++)
                             {
-                                var r = addl[a];
-                                if (r != null && !r.disabled)
-                                    WardrobeRecipes.Add(r);
+                                var utr = addl[a];
+                                if (utr != null && !utr.disabled)
+                                {
+                                    WardrobeRecipes.Add(utr);
+                                    if (utr.OverrideDNA != null && utr.OverrideDNA.Count > 0)
+                                        overrideDNA.AddRange(utr.OverrideDNA);
+
+                                    if (utr.HideTags.Count > 0)
+                                        HideTags.AddRange(utr.HideTags);
+                                }
                             }
                         }
                     }
@@ -4895,6 +4944,18 @@ namespace UMA.CharacterSystem
             }
         }
 
+        public bool UnloadAllQueuedHandles()
+        {
+            bool hadHandles = LoadedHandles.Count > 0;
+            while (LoadedHandles.Count > 0)
+            {
+                AsyncOp Op = LoadedHandles.Dequeue();
+                UnloadOldestQueuedHandle(Op);
+            }
+            LoadQueue.Clear();
+            return hadHandles;
+        }
+
         private void LoadWhenReady(AsyncOp Op)
         {
             try
@@ -4929,6 +4990,7 @@ namespace UMA.CharacterSystem
                 Debug.LogException(ex, this);
             }
         }
+
         private void UnloadOldestQueuedHandle(AsyncOp Op)
         {
             if (Op.IsValid())
@@ -5426,7 +5488,11 @@ namespace UMA.CharacterSystem
             Array.Copy(SmooshTarget.meshData.submeshes[0].getManagedTriangles(), triangles, SmooshTarget.meshData.submeshes[0].getManagedTriangles().Length);
             m.SetTriangles(triangles, 0);
 
+#if UNITY_6000_3_OR_NEWER
+            Physics.BakeMesh(m.GetEntityId(), false);
+#else
             Physics.BakeMesh(m.GetInstanceID(), false);
+#endif
 
             SmooshScene = CreateSmooshScene(SmooshScene);
 
@@ -6218,6 +6284,36 @@ namespace UMA.CharacterSystem
 
         public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
         {
+#if UMA_ADDRESSABLES
+
+            // Make sure all assets are loaded before calling Dirty
+            if (LoadQueue.Count == 0)
+            {
+                // Preload all recipes for this avatar
+                var op = UMAAssetIndexer.Instance.Preload(this, false);
+                // Capture dirty flags for use in callback
+                bool dnaDirtyCapture = DnaDirty;
+                bool textureDirtyCapture = TextureDirty;
+                bool meshDirtyCapture = MeshDirty;
+
+                op.Completed += (AsyncOp) =>
+                {
+                    if (AsyncOp.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
+                    {
+                        Dirty(dnaDirtyCapture, textureDirtyCapture, meshDirtyCapture);
+                    }
+                    else
+                    {
+                        if (Debug.isDebugBuild)
+                        {
+                            Debug.LogWarning("[DynamicCharacterAvatar] ForceUpdate preload failed, calling Dirty anyway.");
+                        }
+                        Dirty(dnaDirtyCapture, textureDirtyCapture, meshDirtyCapture);
+                    }
+                };
+                return; // Wait for preload to complete before calling Dirty
+            }
+#endif
             Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
 
@@ -6238,7 +6334,7 @@ namespace UMA.CharacterSystem
         /// Adds the current state of the avatars wardrobe and colors and dna to a cache so that when the avatars race is set back to this current race, these can be restored
         /// </summary>
         /// <param name="cacheStateName"></param>
-        void AddCharacterStateCache(string cacheStateName = "")
+        void OldAddCharacterStateCache(string cacheStateName = "")
         {
             if (!Application.isPlaying)
             {
@@ -6268,7 +6364,7 @@ namespace UMA.CharacterSystem
             {
                 bool wasEnsureSharedColors = ensureSharedColors;
                 ensureSharedColors = true;
-                var currentRecipeForRace = GetCurrentRecipe(false);
+                var currentRecipeForRace = OldGetCurrentRecipe(false);
                 if (cacheStates.ContainsKey(activeRace.name))
                 {
                     cacheStates[activeRace.name] = currentRecipeForRace;
@@ -6320,21 +6416,12 @@ namespace UMA.CharacterSystem
         /// <returns></returns>
         public bool UpdatePending()
         {
-            if (umaData != null)
+            if (umaData.umaGenerator == null)
             {
-                if (umaData == null)
-                {
-                    return false;
-                }
-
-                if (umaData.umaGenerator == null)
-                {
-                    return false;
-                }
-
-                return umaData.umaGenerator.updatePending(umaData);
+                return false;
             }
-            return false;
+
+            return umaData.umaGenerator.updatePending(umaData);
         }
         #endregion
 

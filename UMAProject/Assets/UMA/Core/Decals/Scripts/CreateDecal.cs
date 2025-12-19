@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UMA;
 using UMA.CharacterSystem;
 using UnityEditor;
@@ -61,6 +62,9 @@ namespace UMA.Decals
         [Tooltip("Pause the Animator(s) on the selected avatar while working.")]
         public bool PauseAvatarAnimation = false;
 
+		[Header("Debug Visualization")]
+		[Tooltip("Prefab used to visualize decal placement points.")]
+		public GameObject debugSpherePrefab;
         public Color TattooColor;
 
         [Header("Decal Overlay Handling")]
@@ -97,8 +101,9 @@ namespace UMA.Decals
         // UI state for improved interface
         private Vector2 _scrollPosition;
         private bool _showDebugSettings = false;
+		public bool debugShowSpheres = false;
 
-        [Header("Orbit Settings")]
+		[Header("Orbit Settings")]
         [Tooltip("Offset from avatar root used as orbit pivot.")]
         public Vector3 OrbitOffset = new Vector3(0f, 1f, 0f);
         [Tooltip("Horizontal orbit sensitivity (degrees per normalized screen movement).")]
@@ -135,6 +140,7 @@ namespace UMA.Decals
 
         void Start()
         {
+			EnsureTag("debugSphere");
             InitializeOrbit();
             if (StampField != null && Avatar != null)
             {
@@ -369,8 +375,15 @@ namespace UMA.Decals
 #endif
             if (_showDebugSettings)
             {
-                // Toggle with auto-pause when enabling debug
-                bool prevDebug = EnableTriangleDebug;
+				bool oldShowSpheres = debugShowSpheres;
+				// Toggle with auto-pause when enabling debug
+				debugShowSpheres = GUILayout.Toggle( debugShowSpheres, "Show Debug Spheres");
+				if (oldShowSpheres != debugShowSpheres)
+				{
+					ShowSpheres(debugShowSpheres);
+				}
+
+				bool prevDebug = EnableTriangleDebug;
                 EnableTriangleDebug = GUILayout.Toggle(EnableTriangleDebug, "Enable Triangle Debug");
                 if (!prevDebug && EnableTriangleDebug)
                 {
@@ -455,6 +468,7 @@ namespace UMA.Decals
                 Avatar.BuildCharacter();
             }
         }
+
 
         void Update()
         {
@@ -857,50 +871,46 @@ namespace UMA.Decals
                 DecalRotationDegrees = Random.Range(0f, 360f);
             }
 
-            if (decalMethod == DecalMethod.SlotDecal)
-            {
-                // DecalSlotBuilder.enableDebug = true;
-                // Build decal slot
-                var slotAsset = DecalSlotBuilder.CreateDecalSlot(
-                    Avatar,
-                    ray,
-                    DecalRadius,
-                    fudgeRadius,
-                    DecalRotationDegrees,
-                    MeshDecalOverlay.material,  // Using UMAMaterial from overlay
-                    MeshDecalOverlay,
-                    new DecalSlotBuilder.DecalBuildOptions
-                    {
-                        useHitNormalForProjection = this.useHitNormalForProjection,
-                        backOffset = 0.04f, // Slight offset back to ensure we capture edges
-                                            //multithread = false,              // requirement: allocate per click, no async
-                                            // copyBlendshapes = true,
-                        facingThreshold = 0.2f,
-                        enableDebug = true
-                    });
+            if (decalMethod == DecalMethod.SlotDecal) {
+				// DecalSlotBuilder.enableDebug = true;
+				// Build decal slot
+				var slotAsset = DecalSlotBuilder.CreateDecalSlot(
+					Avatar,
+					ray,
+					DecalRadius,
+					fudgeRadius,
+					DecalRotationDegrees,
+					MeshDecalOverlay.material,  // Using UMAMaterial from overlay
+					MeshDecalOverlay,
+					new DecalSlotBuilder.DecalBuildOptions {
+						useHitNormalForProjection = this.useHitNormalForProjection,
+						backOffset = 0.04f, // Slight offset back to ensure we capture edges
+											//multithread = false,              // requirement: allocate per click, no async
+											// copyBlendshapes = true,
+						facingThreshold = 0.2f,
+						enableDebug = true
+					});
 
-                if (slotAsset == null)
-                {
-                    Debug.Log("Decal creation produced no geometry (nothing within radius or facing threshold).");
-                    return;
-                }
-                UMAAssetIndexer.Instance.ProcessNewItem(slotAsset, false, false); // Ensure new asset is indexed
+				if(slotAsset == null) {
+					Debug.Log("Decal creation produced no geometry (nothing within radius or facing threshold).");
+					return;
+				}
+				CreateDebugSphere();
+				UMAAssetIndexer.Instance.ProcessNewItem(slotAsset, false, false); // Ensure new asset is indexed
 
-                // Wrap into SlotData and add overlay
-                SlotData slotData = new SlotData(slotAsset);
-                if (MeshDecalOverlay != null)
-                {
-                    var overlayInstance = new OverlayData(MeshDecalOverlay);
-                    DecalSlotBuilder.SetLastDecalOverlay(overlayInstance);
-                    slotData.AddOverlay(overlayInstance);
-                }
-                slotData.expandAlongNormal = slotOffset; // Slight expansion to avoid z-fighting
+				// Wrap into SlotData and add overlay
+				SlotData slotData = new SlotData(slotAsset);
+				if(MeshDecalOverlay != null) {
+					var overlayInstance = new OverlayData(MeshDecalOverlay);
+					DecalSlotBuilder.SetLastDecalOverlay(overlayInstance);
+					slotData.AddOverlay(overlayInstance);
+				}
+				slotData.expandAlongNormal = slotOffset; // Slight expansion to avoid z-fighting
 
-                // Add (accumulate) into existing UMA recipe
-                Avatar.umaData.umaRecipe.MergeSlot(slotData, true);
-                Avatar.ForceUpdate(true, true, true);
-            }
-            else
+				// Add (accumulate) into existing UMA recipe
+				Avatar.umaData.umaRecipe.MergeSlot(slotData, true);
+				Avatar.ForceUpdate(true, true, true);
+			} else
             {
                 // Example call
                 var options = new DecalRenderTexture.DecalRTOptions
@@ -911,7 +921,8 @@ namespace UMA.Decals
                     forceLinearSampling = false,
                     useHitNormalForProjection = this.useHitNormalForProjection,
                     uvExpandPixels = DecalRTUVExpandPixels,
-                    bleedPixels = decalRTDilation
+                    bleedPixels = decalRTDilation,
+					invertUVYAxis = true
                 };
 
                 if (Avatar.umaData == null)
@@ -936,8 +947,10 @@ namespace UMA.Decals
                     return;
                 }
 
-                // Additional behavior for RenderTexture mode: create a DecalRTStampAsset and store in StampField
-                if (StampField != null && TextureDecalOverlay != null)
+				CreateDebugSphere(result.Value.hitPoint, result.Value.hitNormal);
+
+				// Additional behavior for RenderTexture mode: create a DecalRTStampAsset and store in StampField
+				if (StampField != null && TextureDecalOverlay != null)
                 {
                     var last = DecalRenderTexture.LastStamp;
                     if (last != null)
@@ -964,8 +977,9 @@ namespace UMA.Decals
                                 normBaseUV = (s.normBaseUV != null) ? (Vector2[])s.normBaseUV.Clone() : new Vector2[0],
                                 overlayUV = (s.overlayUV != null) ? (Vector2[])s.overlayUV.Clone() : new Vector2[0],
                                 triangles = (s.triangles != null) ? (int[])s.triangles.Clone() : new int[0],
-                                triOrdinals = s.triOrdinals != null ? (int[])s.triOrdinals.Clone() : null
-                            };
+                                triOrdinals = s.triOrdinals != null ? (int[])s.triOrdinals.Clone() : null,
+                                recordedUVArea = s.recordedUVArea // <-- copy this too
+};
                             clone.slots.Add(ns);
                         }
 
@@ -987,8 +1001,10 @@ namespace UMA.Decals
                         }
                         catch { /* ignore editor persistence errors */ }
 #endif
-                        // Find or create an overlay stamp set that will be triggered by base overlays on affected slots (not the decal overlay itself)
-                        DecalRTStampSlot.OverlayStampSet targetSet = null;
+						CreateDebugSphere();
+
+						// Find or create an overlay stamp set that will be triggered by base overlays on affected slots (not the decal overlay itself)
+						DecalRTStampSlot.OverlayStampSet targetSet = null;
                         if (StampField.overlayStamps != null)
                         {
                             // Prefer a dedicated auto set if present
@@ -1089,7 +1105,56 @@ namespace UMA.Decals
             }
         }
 
-        private void RefreshLastDecalDebug()
+		private void ShowSpheres(bool show) {
+
+			GameObject[] debugSpheres = GameObject.FindGameObjectsWithTag("debugSphere");
+			foreach(var go in debugSpheres) {
+				go.SetActive(show);
+			}
+		}
+
+		public void EnsureTag(string tagName) {
+			if(!UnityEditorInternal.InternalEditorUtility.tags.Contains(tagName)) {
+				var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+				var tagsProp = tagManager.FindProperty("tags");
+				bool found = false;
+				for(int i = 0; i < tagsProp.arraySize; i++) {
+					SerializedProperty t = tagsProp.GetArrayElementAtIndex(i);
+					if(t.stringValue == tagName) { found = true; break; }
+				}
+				if(!found) {
+					tagsProp.InsertArrayElementAtIndex(tagsProp.arraySize);
+					SerializedProperty newTag = tagsProp.GetArrayElementAtIndex(tagsProp.arraySize - 1);
+					newTag.stringValue = tagName;
+					tagManager.ApplyModifiedPropertiesWithoutUndo();
+					AssetDatabase.SaveAssets();
+				}
+			}
+		}
+
+
+		private void CreateDebugSphere(Vector3 position, Vector3 direction) {
+			if(debugSpherePrefab == null)
+				return;
+
+			GameObject go = GameObject.Instantiate(debugSpherePrefab);
+			go.transform.position = position;
+			go.transform.rotation = Quaternion.LookRotation(direction.sqrMagnitude > 1e-12f ? direction : Vector3.forward);
+			go.transform.localScale = 0.03f * Vector3.one;
+			// if "debugSphere" tag does not exist, then add it to the tags.
+			go.name = "debugSphere";
+			go.SetActive(debugShowSpheres);
+
+			GameObject.DontDestroyOnLoad(go);
+		}
+
+private void CreateDebugSphere()
+{
+	// Legacy slot-based placement (DecalSlotBuilder sets these)
+	CreateDebugSphere(DecalSlotBuilder._lastHitPointWorld, DecalSlotBuilder._lastProjectionDirWorld);
+}
+
+		private void RefreshLastDecalDebug()
         {
             _selectedOrdinals.Clear();
             _selectedAddCombinedTris.Clear();
@@ -1411,7 +1476,7 @@ namespace UMA.Decals
             _selectedOrdinals.Clear();
             foreach (var kv in _dbgTriToOrdinal)
             {
-                _selectedOrdinals.Add(kv.Value);
+	_selectedOrdinals.Add(kv.Value);
             }
         }
 

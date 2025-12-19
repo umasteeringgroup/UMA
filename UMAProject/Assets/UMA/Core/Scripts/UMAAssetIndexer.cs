@@ -157,7 +157,8 @@ namespace UMA
         {  typeof(TextAsset), typeof(TextAsset) },
         {  typeof(DynamicUMADnaAsset), typeof(DynamicUMADnaAsset) },
         {  typeof(UMAMaterial), typeof(UMAMaterial) },
-        {  typeof(UMAColorScheme), typeof(UMAColorScheme) }
+        {  typeof(UMAColorScheme), typeof(UMAColorScheme) },
+        {  typeof(MeshHideAsset), typeof(MeshHideAsset) }
         };
 
 
@@ -179,6 +180,7 @@ namespace UMA
         (typeof(UMAWardrobeCollection)),
         (typeof(RuntimeAnimatorController)),
         (typeof(AnimatorOverrideController)),
+        (typeof(MeshHideAsset)),
 #if UNITY_EDITOR
         (typeof(AnimatorController)),
 #endif
@@ -3414,7 +3416,11 @@ namespace UMA
         {
             AssetItem ai = null;
             ai = new AssetItem(TypeToLookup[type], o);
+#if UNITY_6000_3_OR_NEWER
+            ai._Path = AssetDatabase.GetAssetPath(o.GetEntityId());
+#else
             ai._Path = AssetDatabase.GetAssetPath(o.GetInstanceID());
+#endif
             return AddAssetItem(ai);
         }
 
@@ -3501,7 +3507,7 @@ namespace UMA
 #endif
 #endregion
 
-#region Maintenance
+            #region Maintenance
 #if UMA_ADDRESSABLES
 #if UNITY_EDITOR
         public void ClearAddressableFlags()
@@ -4129,7 +4135,7 @@ namespace UMA
                     if (obj != null)
                     {
                         ai._Name = ai.EvilName;
-                        ai._Path = AssetDatabase.GetAssetPath(obj.GetInstanceID());
+                        ai._Path = AssetDatabase.GetAssetPath(obj.GetEntityId());
                         ai._Guid = AssetDatabase.AssetPathToGUID(ai._Path);
                     }
                     else

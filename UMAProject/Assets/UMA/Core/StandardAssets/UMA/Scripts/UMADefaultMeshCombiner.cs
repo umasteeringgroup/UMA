@@ -314,9 +314,10 @@ namespace UMA
 #if UNITY_2022_2_OR_NEWER
                 if (UMASettings.UseMeshAPICombiner)
                 {
-					if(updatedAtlas)
+                    umaData.markNotReadable = false; // MeshAPI currently requires readable meshes
+                    if (updatedAtlas)
 						SetSlotUVAreasForRendererFiltered(_filteredMaterials);
-
+                    
                     var clothCoeffs = SkinnedMeshCombinerMeshAPI.CombineIntoRenderer(
                         renderers[currentRendererIndex],
                         combinedMeshList.ToArray(),
@@ -325,7 +326,7 @@ namespace UMA
                         atlasResolution,
                         bakedBlendshapes ?? new Dictionary<string, float>(),
                         umaData.markDynamic,
-                        umaData.markNotReadable);
+                        false); // Currently, must always be readable when using MeshAPI
                     SetupCloth(clothCoeffs);
                     //ApplyClothIfNeeded(clothCoeffs);
                 }

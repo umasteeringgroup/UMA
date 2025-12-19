@@ -46,13 +46,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
+  defaultRendererAsset: {fileID: 0}
   userInformation: 
-  dnaInstanceCollection:
-    dnaInstances: []
-  useNewDNA: 0
+  alwaysAdjustBounds: 0
   rawAvatar: 0
+  disableAnimation: 0
   raceChanged: 0
   hideRenderers: 0
+  currentLODLevel: 0
   OverrideTpose: {fileID: 0}
   atlasResolutionScale: 1
   ForceRebindAnimator: 0
@@ -106,10 +107,15 @@ MonoBehaviour:
   PreUpdateUMABody:
     m_PersistentCalls:
       m_Calls: []
+  AtlasUpdated:
+    m_PersistentCalls:
+      m_Calls: []
   umaRoot: {fileID: 0}
   _umaRecipe:
     raceData: {fileID: 0}
     recipeName: 
+    dnaInstanceCollection:
+      dnaInstances: []
     slotDataList: []
     sharedColors: []
   animator: {fileID: 0}
@@ -122,6 +128,7 @@ MonoBehaviour:
   DelayUnload: 2
   BundleCheck: 1
   StartGuard: 0
+  UnpackPrefabOnBuild: 1
   KeepAnimatorController: 0
   RecreateAnimatorOnRaceChange: 1
   RecipeUpdated:

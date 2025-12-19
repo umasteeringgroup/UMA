@@ -13,25 +13,53 @@ MonoBehaviour:
   m_Name: EyeOpen_L
   m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
   poses:
-  - bone: LeftEye
-    hash: 27653119
-    position: {x: -0.0000000037252903, y: -0.000000007450581, z: -0.000000014901161}
-    rotation: {x: 0.000000041901153, y: 0.00000016858256, z: -4.0610093e-12, w: 1}
-    scale: {x: 1.0000004, y: 1.0000002, z: 1.0007375}
-    category: 
-    enabled: 1
   - bone: LeftLowerLid
     hash: 484878204
-    position: {x: -5.684342e-14, y: 0.00000011927872, z: 0.000000009184127}
-    rotation: {x: 0.000000007620516, y: 0.09967951, z: -1.5057955e-11, w: -0.9950196}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.09987669, y: -0.00001206101, z: -0.000053751442, w: 0.99499995}
     scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: LeftUpperLid
     hash: -209628701
-    position: {x: -5.684342e-14, y: 0.00000011927872, z: 0.000000009184127}
-    rotation: {x: 0.0000000071877935, y: 0.09434336, z: 1.2190415e-11, w: 0.9955397}
-    scale: {x: 0.9999996, y: 0.9999997, z: 0.9999997}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.094343714, y: 0.000010597976, z: -0.000066226145, w: 0.9955397}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: -0.00003491342, z: 0.00006569922}
+    rotation: {x: 0.0009949037, y: 0.002418745, z: -0.000002406798, w: 0.99999666}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: 0, y: -0.000040590763, z: 0.00007652491}
+    rotation: {x: 0.0008175754, y: 0.0012462393, z: -0.000001019071, w: 0.999999}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.000041747466, y: -0.000012855977, z: -0.00007966161}
+    rotation: {x: -0.0007541183, y: -0.0017598767, z: -0.00013863115, w: 0.99999815}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: -0.00003764406, z: 0}
+    rotation: {x: 0.000000024498233, y: 4.5840522e-11, z: -0.0027541814, w: 0.99999624}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.000059733902}
+    rotation: {x: -0.000000009388211, y: 0.0020057957, z: -2.7212853e-11, w: 0.99999803}
+    scale: {x: 1.0005634, y: 1, z: 1}
     category: 
     enabled: 1
   tweenPoses: []

@@ -34,8 +34,8 @@ namespace UMA
         private static int[] _lastOutputTriOrdinals; // length = _lastOutputTriangles/3
 
         // New: projection context for rebuilding with added triangles
-        private static Vector3 _lastHitPointWorld;
-        private static Vector3 _lastProjectionDirWorld;
+        public static Vector3 _lastHitPointWorld;
+		public static Vector3 _lastProjectionDirWorld;
         private static Vector3 _lastAxisXWorld;
         private static Vector3 _lastAxisYWorld;
         private static float _lastRadius;

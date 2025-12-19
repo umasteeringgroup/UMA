@@ -353,10 +353,10 @@ MonoBehaviour:
       MinValue: 0.4375
       MaxValue: 0.6041666
     raceData: {fileID: 11400000, guid: f8fea6f0ee17b3f42a4ae6cfb627bab3, type: 2}
-    GuiFoldout: 0
+    GuiFoldout: 1
     ColorsFoldout: 1
-    WardrobeFoldout: 1
-    DnaFoldout: 0
+    WardrobeFoldout: 0
+    DnaFoldout: 1
     Delete: 0
     AddColorTable: 0
     DnaChanged: 1

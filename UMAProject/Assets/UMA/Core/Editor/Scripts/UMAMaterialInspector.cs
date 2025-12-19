@@ -156,7 +156,7 @@ namespace UMA.Editors
                                 }
                                 else
                                 {
-                                    Debug.LogWarning("Material " + mat.name + " does not match " + source.material.name + ". Skipping copy of properties.");
+                                    //Debug.LogWarning("Material " + mat.name + " does not match " + source.material.name + ". Skipping copy of properties.");
                                     continue;
                                 }
                             }

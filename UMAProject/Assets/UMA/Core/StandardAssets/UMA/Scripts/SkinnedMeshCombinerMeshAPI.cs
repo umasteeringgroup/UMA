@@ -405,7 +405,12 @@ namespace UMA
                 sw.Restart();
                 var mda = Mesh.AllocateWritableMeshData(1); var md = mda[0];
                 md.SetVertexBufferParams(vertexCount, BuildVertexLayout(hasNormals, hasTangents, hasUV, hasUV2, hasUV3, hasUV4, hasColors32));
-                var indexFormat = (vertexCount <= 65535) ? IndexFormat.UInt16 : IndexFormat.UInt32;
+                // UInt16 can only represent indices up to 65535. Use UInt32 if vertex count exceeds that.
+                var indexFormat = IndexFormat.UInt16;
+                if (vertexCount > 65535)
+                {
+                    indexFormat = IndexFormat.UInt32;
+                }
                 md.SetIndexBufferParams(totalIndexCount, indexFormat); md.subMeshCount = subMeshCount; sw.Stop(); Ticks_AllocateMeshData += sw.ElapsedTicks;
                 var vPos = md.GetVertexData<Vector3>(0);
                 NativeArray<NormTan> vNT = default; NativeArray<ColUV01> vC01 = default; NativeArray<UV23> vUV23 = default;
@@ -417,7 +422,7 @@ namespace UMA
                 var nativeBoneWeights = new NativeArray<BoneWeight1>(boneWeightCount, Allocator.TempJob); var nativeBonesPerVertex = new NativeArray<byte>(Math.Max(1, vertexCount), Allocator.TempJob);
                 int vertexOffset = 0; int boneWeightOffset = 0; var boundsMin = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity); var boundsMax = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
                 subWrite = ArrayPool<int>.Shared.Rent(subMeshCount); sourceVertexOffsets = ArrayPool<int>.Shared.Rent(sources.Length);
-                var indexJobs = new List<JobHandle>(Math.Max(32, subMeshCount * sources.Length)); NativeArray<int> bwRemap = default; if (UseParallelBoneWeights) bwRemap = new NativeArray<int>(boneWeightCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+                NativeArray<int> bwRemap = default; if (UseParallelBoneWeights) bwRemap = new NativeArray<int>(boneWeightCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 for (int s = 0; s < sources.Length; s++)
                 {
                     var ci = sources[s]; var src = ci.meshData; int srcCount = src.vertexCount; sourceVertexOffsets[s] = vertexOffset;
@@ -440,10 +445,10 @@ namespace UMA
                     }
                     sw.Stop(); Ticks_BuildBoneWeights += sw.ElapsedTicks;
 #if UMA_UNSAFE
-                    float expand = (ci.slotData != null && ci.slotData.expandAlongNormal > 0) ? ci.slotData.expandAlongNormal / 1000000f : 0f;
+                    float expand = (ci.slotData != null && ci.slotData.expandAlongNormal != 0) ? ci.slotData.expandAlongNormal / 1000000f : 0f;
                     FastCopyPositionsAndBoundsUnsafe(vPos, vertexOffset, src.vertices, src.normals, srcCount, expand, ref boundsMin, ref boundsMax);
 #else
-                    if (ci.slotData != null && ci.slotData.expandAlongNormal > 0 && src.normals != null && src.normals.Length == srcCount)
+                    if (ci.slotData != null && ci.slotData.expandAlongNormal != 0 && src.normals != null && src.normals.Length == srcCount)
                     { float expand = ci.slotData.expandAlongNormal / 1000000f; for (int i = 0; i < srcCount; i++) vPos[vertexOffset + i] = src.vertices[i] + (src.normals[i] * expand); }
                     else { NativeArray<Vector3>.Copy(src.vertices, 0, vPos, vertexOffset, srcCount); }
                     for (int i = 0; i < srcCount; i++) { var v = vPos[vertexOffset + i]; if (v.x < boundsMin.x) boundsMin.x = v.x; if (v.x > boundsMax.x) boundsMax.x = v.x; if (v.y < boundsMin.y) boundsMin.y = v.y; if (v.y > boundsMax.y) boundsMax.y = v.y; if (v.z < boundsMin.z) boundsMin.z = v.z; if (v.z > boundsMax.z) boundsMax.z = v.z; }
@@ -487,43 +492,118 @@ namespace UMA
                         }
                     }
                 }
-                Array.Clear(subWrite, 0, subMeshCount); sw.Restart();
+
+                // Build index buffer. Keep it synchronous to avoid per-submesh TempJob allocations.
+                Array.Clear(subWrite, 0, subMeshCount);
+                sw.Restart();
                 for (int s = 0; s < sources.Length; s++)
                 {
-                    var ci = sources[s]; var src = ci.meshData;
+                    var ci = sources[s];
+                    var src = ci.meshData;
+                    int add = ci.slotData.vertexOffset;
+
                     for (int sm = 0; sm < src.subMeshCount; sm++)
                     {
-                        int dstSub = ci.targetSubmeshIndices[sm]; if (dstSub < 0) continue;
+                        int dstSub = ci.targetSubmeshIndices[sm];
+                        if (dstSub < 0) continue;
 
-                        SubMeshTriangles smt = src.submeshes[sm];
-                        var srcTris = smt.GetTriangles();
+                        var srcTris = src.submeshes[sm].GetTriangles();
                         int triLen = srcTris.Length;
                         int dstStart = subIndexStart[dstSub] + subWrite[dstSub];
-                        var triCopy = new NativeArray<int>(triLen, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-                        NativeArray<int>.Copy(srcTris, triCopy, triLen);
+
+                        // Defensive clamp: don't write past the allocated index buffer.
+                        int maxWritable;
+                        if (indexFormat == IndexFormat.UInt16)
+                        {
+                            maxWritable = ibU16.Length - dstStart;
+                        }
+                        else
+                        {
+                            maxWritable = ibInt.Length - dstStart;
+                        }
+                        if (maxWritable <= 0) continue;
 
                         bool hasMask = (ci.triangleMask != null && sm < ci.triangleMask.Length && ci.triangleMask[sm] != null && ci.triangleMask[sm].Length > 0);
                         if (!hasMask)
                         {
-                            if (indexFormat == IndexFormat.UInt16) indexJobs.Add(new CopyIndicesJobU16 { Src = triCopy, Dst = ibU16, DstStart = dstStart, Add = (ushort)ci.slotData.vertexOffset }.Schedule());
-                            else indexJobs.Add(new CopyIndicesJobInt { Src = triCopy, Dst = ibInt, DstStart = dstStart, Add = ci.slotData.vertexOffset }.Schedule());
-                            subWrite[dstSub] += triLen;
+                            int writeCount = triLen;
+                            if (writeCount > maxWritable) writeCount = maxWritable;
+                            if (indexFormat == IndexFormat.UInt16)
+                            {
+                                for (int i = 0; i < writeCount; i++)
+                                {
+                                    int idx = srcTris[i] + add;
+                                    if ((uint)idx > 65535u)
+                                    {
+                                        // This should not happen when vertexCount <= 65535, but guard against bad input.
+                                        continue;
+                                    }
+                                    ibU16[dstStart + i] = (ushort)idx;
+                                }
+                            }
+                            else
+                            {
+                                for (int i = 0; i < writeCount; i++)
+                                {
+                                    ibInt[dstStart + i] = srcTris[i] + add;
+                                }
+                            }
+                            subWrite[dstSub] += writeCount;
                         }
                         else
                         {
-                            // mask length in triangles, true=remove
+                            var mask = ci.triangleMask[sm];
                             int triCount = triLen / 3;
-                            int removedTris = UMAUtils.GetCardinality(ci.triangleMask[sm]);
-                            int kept = Mathf.Max(0, triCount - removedTris) * 3;
-                            var maskNative = BitArrayToNative(ci.triangleMask[sm], Allocator.TempJob);
-                            if (indexFormat == IndexFormat.UInt16) indexJobs.Add(new MaskedCopyIndicesJobU16 { Src = triCopy, Mask = maskNative, Dst = ibU16, DstStart = dstStart, Add = (ushort)ci.slotData.vertexOffset }.Schedule());
-                            else indexJobs.Add(new MaskedCopyIndicesJobInt { Src = triCopy, Mask = maskNative, Dst = ibInt, DstStart = dstStart, Add = ci.slotData.vertexOffset }.Schedule());
-                            subWrite[dstSub] += kept;
+                            int write = 0;
+
+                            if (indexFormat == IndexFormat.UInt16)
+                            {
+                                for (int t = 0; t < triCount; t++)
+                                {
+                                    if (mask[t]) continue;
+                                    if (write + 3 > maxWritable) break;
+                                    int i3 = t * 3;
+                                    int i0 = srcTris[i3] + add;
+                                    int i1 = srcTris[i3 + 1] + add;
+                                    int i2 = srcTris[i3 + 2] + add;
+                                    if ((uint)i0 > 65535u || (uint)i1 > 65535u || (uint)i2 > 65535u)
+                                    {
+                                        continue;
+                                    }
+                                    ibU16[dstStart + write++] = (ushort)i0;
+                                    ibU16[dstStart + write++] = (ushort)i1;
+                                    ibU16[dstStart + write++] = (ushort)i2;
+                                }
+                            }
+                            else
+                            {
+                                for (int t = 0; t < triCount; t++)
+                                {
+                                    if (mask[t]) continue;
+                                    if (write + 3 > maxWritable) break;
+                                    int i3 = t * 3;
+                                    ibInt[dstStart + write++] = srcTris[i3] + add;
+                                    ibInt[dstStart + write++] = srcTris[i3 + 1] + add;
+                                    ibInt[dstStart + write++] = srcTris[i3 + 2] + add;
+                                }
+                            }
+                            subWrite[dstSub] += write;
                         }
                     }
                 }
-                sw.Stop(); Ticks_IndexJobsSchedule += sw.ElapsedTicks;
-                if (indexJobs.Count > 0) { sw.Restart(); var handles = new NativeArray<JobHandle>(indexJobs.Count, Allocator.Temp); for (int i = 0; i < indexJobs.Count; i++) handles[i] = indexJobs[i]; JobHandle.CompleteAll(handles); handles.Dispose(); indexJobs.Clear(); sw.Stop(); Ticks_IndexJobsComplete += sw.ElapsedTicks; }
+                sw.Stop();
+                Ticks_IndexJobsSchedule += sw.ElapsedTicks;
+
+                // Ensure subWrite does not exceed the precomputed allocation for that submesh.
+                for (int i = 0; i < subMeshCount; i++)
+                {
+                    int max = subMeshTriangleLength[i];
+                    if (subWrite[i] > max)
+                    {
+                        subWrite[i] = max;
+                    }
+                }
+
                 if (hasUV) { sw.Restart(); RecalculateUVForUMA(vC01, umaData, batch.AtlasResolution, batch.CurrentRendererIndex); sw.Stop(); Ticks_UVRemap += sw.ElapsedTicks; }
                 // Use what we actually wrote (subWrite) to describe submeshes to avoid overruns
                 sw.Restart(); for (int i = 0; i < subMeshCount; i++) { md.SetSubMesh(i, new SubMeshDescriptor { topology = MeshTopology.Triangles, indexStart = subIndexStart[i], indexCount = subWrite[i], baseVertex = 0, vertexCount = vertexCount }, MeshUpdateFlags.Default); } sw.Stop(); Ticks_SetSubmeshes += sw.ElapsedTicks;
@@ -931,13 +1011,22 @@ namespace UMA
         private struct FragmentChoice { public SlotData slot; public Rect atlasRegion; public bool isRectShared; public bool slotUseAtlasOverlay; public List<OverlayData> overlayList; public Vector2 resolutionScale; public Vector2 cropResolution; public bool prefersCropping; }
         private static void RecalculateUVForUMA(NativeArray<ColUV01> vC01, UMAData umaData, int atlasResolution, int currentRendererIndex)
         {
-            if (!vC01.IsCreated || vC01.Length == 0 || umaData?.generatedMaterials == null) return; var targetRendererAsset = umaData.GetRendererAsset(currentRendererIndex); var materials = umaData.generatedMaterials.materials; var processedSlots = new HashSet<SlotData>();
+            if (!vC01.IsCreated || vC01.Length == 0 || umaData?.generatedMaterials == null) return;
+            var targetRendererAsset = umaData.GetRendererAsset(currentRendererIndex);
+            var materials = umaData.generatedMaterials.materials;
+            // Reuse a static cache to avoid per-build allocations.
+            _uvProcessedSlots.Clear();
             for (int mi = 0; mi < materials.Count; mi++)
             {
                 var gm = materials[mi]; if (gm == null || gm.rendererAsset != targetRendererAsset) continue; if (gm.umaMaterial == null || !gm.umaMaterial.IsGeneratedTextures) continue; var fragments = gm.materialFragments;
                 for (int f = 0; f < fragments.Count; f++)
                 {
-                    var fragment = fragments[f]; var slot = fragment.slotData; if (slot?.asset?.meshData == null) continue; if (processedSlots.Contains(slot)) continue; int vertexCount = slot.asset.meshData.vertexCount; int start = slot.vertexOffset; if (start < 0 || start + vertexCount > vC01.Length) { vertexCount = Mathf.Clamp(vertexCount, 0, vC01.Length - Math.Max(0, start)); if (vertexCount <= 0) continue; }
+                    var fragment = fragments[f]; var slot = fragment.slotData;
+                    if (slot?.asset?.meshData == null) continue;
+                    if (_uvProcessedSlots.Contains(slot)) continue;
+                    int vertexCount = slot.asset.meshData.vertexCount;
+                    int start = slot.vertexOffset;
+                    if (start < 0 || start + vertexCount > vC01.Length) { vertexCount = Mathf.Clamp(vertexCount, 0, vC01.Length - Math.Max(0, start)); if (vertexCount <= 0) continue; }
                     // Declare atlas mapping variables first so cropping adjustments can modify them
                     var rect = fragment.atlasRegion;
                     float xMin = rect.xMin / atlasResolution; float xMax = rect.xMax / atlasResolution; float yMin = rect.yMin / atlasResolution; float yMax = rect.yMax / atlasResolution;
@@ -955,7 +1044,7 @@ namespace UMA
                         }
                     }
                     for (int i = 0; i < vertexCount; i++) { int vi = start + i; var c = vC01[vi]; c.uv0.x = xMin + xRange * c.uv0.x; c.uv0.y = yMin + yRange * c.uv0.y; vC01[vi] = c; }
-                    processedSlots.Add(slot);
+                    _uvProcessedSlots.Add(slot);
                 }
             }
         }

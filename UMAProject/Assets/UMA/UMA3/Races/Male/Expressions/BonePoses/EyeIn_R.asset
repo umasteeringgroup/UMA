@@ -13,10 +13,38 @@ MonoBehaviour:
   m_Name: EyeIn_R
   m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
   poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: -0.000044949353, z: 0}
+    rotation: {x: -0.000000010797113, y: -5.1999755e-10, z: -0.003287456, w: 0.9999947}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.00007129526}
+    rotation: {x: 0.0000000082355, y: 0.002393631, z: -2.5870108e-11, w: 0.99999714}
+    scale: {x: 1.0006732, y: 1, z: 1}
+    category: 
+    enabled: 1
   - bone: RightEyeGlobe
     hash: 935779410
-    position: {x: -0.0000000037252974, y: 0.00000024745754, z: -0.0000000071431714}
-    rotation: {x: 2.447304e-12, y: -5.976988e-13, z: 0.21291119, w: -0.9770716}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.0000016252474, y: 0.0000003413693, z: -0.2129112, w: 0.9770716}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: -0.00003194064, z: 0.000060155988}
+    rotation: {x: 0.00091075763, y: -0.0022140334, z: 0.0000020164173, w: 0.9999972}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.000026925467, y: 0.000015188009, z: -0.000043988228}
+    rotation: {x: -0.0009094223, y: 0.0020185488, z: 0.00016669593, w: 0.99999756}
     scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1

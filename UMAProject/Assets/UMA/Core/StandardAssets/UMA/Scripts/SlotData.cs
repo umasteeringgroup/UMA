@@ -375,10 +375,10 @@ namespace UMA
                     res.overlayList.Add(overlay.Duplicate());
                 }
             }
-            res.skinnedMeshRenderer = 0;
-            res.submeshIndex = 0;
-            res.vertexOffset = 0;
-            res.UVArea.Set(0, 0, 1.0f, 1.0f);
+			res.skinnedMeshRenderer = skinnedMeshRenderer;
+			res.submeshIndex = submeshIndex;
+			res.vertexOffset = vertexOffset;
+            res.UVArea.Set(UVArea.x, UVArea.y, UVArea.width, UVArea.height);
             res.Races = Races;
 			res.tags = tags.Length > 0 ? (string[])tags.Clone() : new string[0]; 
             res.blendShapeTargetSlot = blendShapeTargetSlot;

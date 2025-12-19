@@ -13,18 +13,32 @@ MonoBehaviour:
   m_Name: LowerLipUp_L
   m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
   poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: -0.00013617426, z: 0.00004579872}
+    rotation: {x: 0.000000009079736, y: 0.0017554183, z: 1.6910656e-10, w: 0.9999985}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: 0, y: 0.00006508082, z: -0.000121831894}
+    rotation: {x: -0.00000007649191, y: 0.0023139843, z: -1.6364438e-10, w: 0.9999974}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
   - bone: LeftLipsInferior
     hash: -2082379262
-    position: {x: -0.00046668015, y: -0.002177313, z: 0.0029575229}
-    rotation: {x: -0.04302884, y: -0.31444794, z: 0.014816537, w: -0.94818324}
-    scale: {x: 1.0000004, y: 1.0000002, z: 1.0000001}
+    position: {x: -0.00038320292, y: -0.0029672757, z: -0.0022825599}
+    rotation: {x: 0.30597162, y: -0.07549665, z: -0.04037426, w: 0.9481833}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: LipsInferior
     hash: -499586065
-    position: {x: -2.7333513e-10, y: -0.0020069666, z: 0.0011110976}
-    rotation: {x: 0.0000000128381, y: 0.1700455, z: 8.881784e-15, w: 0.9854362}
-    scale: {x: 1.0000001, y: 1, z: 1.0000001}
+    position: {x: 0, y: -0.0021869838, z: -0.0040428843}
+    rotation: {x: 0.33507624, y: -0.000000045337924, z: -0.000000008713364, w: 0.94219106}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   tweenPoses: []

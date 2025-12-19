@@ -1180,9 +1180,8 @@ namespace UMA
 						{
 							MaterialFragment fragment = material.materialFragments[i];
 							SlotData sd = fragment.slotData;
-							sd.skinnedMeshRenderer = 0;
-							sd.submeshIndex = 0;
-							sd.vertexOffset = 0;
+							//sd.skinnedMeshRenderer = 0;
+							//sd.submeshIndex = 0;
 							sd.UVArea.Set(0, 0, 1.0f, 1.0f);
 						}
 					}
@@ -1202,9 +1201,9 @@ namespace UMA
 					material.materialFragments[atlasElementIndex].atlasRegion = tempRect;
 
                     SlotData sd = fragment.slotData;
-                    sd.skinnedMeshRenderer = 0;
-                    sd.submeshIndex = 0;
-                    sd.vertexOffset = 0;
+                    //sd.skinnedMeshRenderer = 0;
+                    //sd.submeshIndex = 0;
+                    //sd.vertexOffset = 0;
                     sd.UVArea.Set(0, 0, 1.0f, 1.0f);
                 }
 			}

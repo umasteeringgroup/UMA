@@ -1,5 +1,5 @@
 BEGIN_OPTIONS
-   ShaderName "UMA/Diffuse_Normal_Thickness_Occlusion_Gloss"
+   ShaderName "UMA/DNTOGloss2"
    Stackable "False"
    Workflow "Metallic"
 END_OPTIONS
@@ -23,7 +23,8 @@ BEGIN_PROPERTIES
     _SSSColor("SSS Color", Color) = (1,0.4,0.4,1)
     _SSSLevel("SSS Level", Range(0,1)) = 0.3
     _SSSGlow("SSS Glow", Range(0,1)) = 0.3 
-    _FuzzAmount("Fuzz Amount",Range(0,1)) = 0.35
+    _SkinMaskAmount("SkinMask Amount",Range(0,4)) = 0.35
+    [Enum(Normal, 0, Inverted, 1)]_InvertSkinMask("Invert SkinMask", Float) = 1
     _Occlusion ("Occlusion Level", Range(0, 2)) = 1
     _EmissiveModulation ("Emissive Modulation", Range(0, 2)) = 1
     _EmissiveAdd ("Emissive Add", Color) = (0,0,0,0)
@@ -36,7 +37,7 @@ BEGIN_PROPERTIES
     [GroupRollout(Textures)]
     [MainTexture]
     [Group(Textures)][NoScaleOffset]_BaseMap("BaseMap", 2D) = "white" {}
-    [Group(Textures)][NoScaleOffset]_FuzzMap ("FuzzMap", 2D) = "white" { }
+    [Group(Textures)][NoScaleOffset]_SkinMaskMap ("SkinMaskMap", 2D) = "black" { }
     [Group(Textures)][NoScaleOffset]_BumpMap("_BumpMap", 2D) = "bump" {}
     [Group(Textures)]_NormalStrength ("Normal Strength", Range(0,2)) = 1
     [Group(Textures)][NoScaleOffset]_ThicknessMap("_ThicknessMap", 2D) = "white" {}
@@ -63,10 +64,11 @@ BEGIN_CBUFFER
     float _NormalStrength;
     half4 _SSSColor;
     float _InvertThickness;
+    float _InvertSkinMask;
     float _SSSLevel;
     float _SSSGlow;
     float _Occlusion;
-    float _FuzzAmount;
+    float _SkinMaskAmount;
     half4 _EmissiveAdd;
     float _EmissiveModulation;
     float _MinSmooth;
@@ -90,8 +92,8 @@ BEGIN_CODE
    SAMPLER(sampler_OcclusionMap);
    TEXTURE2D(_GlossMap);
    SAMPLER(sampler_GlossMap);
-    TEXTURE2D(_FuzzMap);
-    SAMPLER(sampler_FuzzMap);
+    TEXTURE2D(_SkinMaskMap);
+    SAMPLER(sampler_SkinMaskMap);
 
     half3 AdjustContrast(half3 color, half contrast) {
 #if !UNITY_COLORSPACE_GAMMA
@@ -135,16 +137,24 @@ BEGIN_CODE
 	  half3 base_n = UnpackScaleNormal(basepackednormal,_NormalStrength);
       half4 base_occlusion = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, auv);
       half4 base_Gloss = SAMPLE_TEXTURE2D(_GlossMap, sampler_GlossMap, auv);
-      float4 base_fuzz = SAMPLE_TEXTURE2D(_FuzzMap, sampler_FuzzMap, auv); 
+      float4 base_SkinMask = SAMPLE_TEXTURE2D(_SkinMaskMap, sampler_SkinMaskMap, auv); 
 
 	  half base_smooth = mask.a;
 	  half base_thick = mask.r;
       
       o.Alpha = base_c.a * _Color.a;
 	  
-      float3 Color = lerp(base_c.rgb, base_fuzz.rgb, _FuzzAmount);
+      float3 baseColor = base_c.rgb * _ColorModulation * _Color.rgb;
+      if (_InvertSkinMask > 0.5)
+      {
+         base_SkinMask.rgb = 1.0 - base_SkinMask.rgb;
+      }
 
-      o.Albedo = SaturateColors(Color * _ColorModulation * _Color.rgb, _Saturation);
+      float3 colorMasked = lerp(baseColor, base_c.rgb, base_SkinMask.rgb * _SkinMaskAmount);
+
+      // float3 Color = lerp(base_c.rgb, base_SkinMask.rgb, _SkinMaskAmount);
+
+      o.Albedo = SaturateColors(colorMasked, _Saturation);
 	  o.Normal = base_n;
 	  o.Metallic = _Metallic;
 	  o.Smoothness = (base_Gloss * _SmoothnessModulation) + _SmoothnessAdd;

@@ -711,8 +711,8 @@ namespace UMA.Editors
 			}
 		}
 
-		[UnityEditor.MenuItem("GameObject/UMA/Load from Character Text file (runtime only)")]
-		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from text file (runtime only)")]
+		[UnityEditor.MenuItem("GameObject/UMA/Load from AvatarDefinition file (runtime only)")]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from an AvatarDefinition file (runtime only)")]
 		[MenuItem("UMA/Load and Save/Load Selected Avatar(s) txt", priority = 1)]
 		public static void LoadSelectedAvatarsTxt()
 		{
@@ -728,88 +728,31 @@ namespace UMA.Editors
 
 				if (avatar != null)
 				{
-					var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "txt");
+					var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "txt,adf");
 					if (path.Length != 0)
 					{
-						var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
-						asset.recipeString = FileUtils.ReadAllText(path);
+						string recipeString = FileUtils.ReadAllText(path);
 						//check if Avatar is DCS
 						if (avatar is DynamicCharacterAvatar)
 						{
-							(avatar as DynamicCharacterAvatar).LoadFromRecipeString(asset.recipeString);
-						}
-						else
-						{
-							avatar.Load(asset);
-						}
-
-						UMAUtils.DestroySceneObject(asset);
-					}
-				}
-			}
-		}
-
-		[UnityEditor.MenuItem("GameObject/UMA/Load from Character Asset (runtime only)")]
-		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from Asset (runtime only)")]
-		[MenuItem("UMA/Load and Save/Load Selected Avatar(s) assets", priority = 1)]
-		public static void LoadSelectedAvatarsAsset()
-		{
-			for (int i = 0; i < Selection.gameObjects.Length; i++)
-			{
-				var selectedTransform = Selection.gameObjects[i].transform;
-				var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
-				while (avatar == null && selectedTransform.parent != null)
-				{
-					selectedTransform = selectedTransform.parent;
-					avatar = selectedTransform.GetComponent<UMAAvatarBase>();
-				}
-
-				if (avatar != null)
-				{
-					var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "asset");
-					if (path.Length != 0)
-					{
-						var index = path.IndexOf("/Assets/");
-						if (index > 0)
-						{
-							path = path.Substring(index + 1);
-						}
-						var asset = AssetDatabase.LoadMainAssetAtPath(path) as UMARecipeBase;
-						if (asset != null)
-						{
-							//check if Avatar is DCS
-							if (avatar is DynamicCharacterAvatar)
-							{
-								(avatar as DynamicCharacterAvatar).LoadFromRecipe(asset);
-							}
-							else
-							{
-								avatar.Load(asset);
-							}
-						}
-						else
-						{
-							Debug.LogError("Failed To Load Asset \"" + path + "\"\nAssets must be inside the project and descend from the UMARecipeBase type");
+							(avatar as DynamicCharacterAvatar).LoadAvatarDefinition(recipeString);
 						}
 					}
 				}
 			}
 		}
+
 
 		//@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method
-		[UnityEditor.MenuItem("GameObject/UMA/Save as Optimized Character Text File (runtime only)")]
-		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized Character Text File")]
-		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) txt (optimized)", priority = 1)]
-		public static void SaveSelectedAvatarsDCSTxt()
+		[UnityEditor.MenuItem("GameObject/UMA/Save as AvatarDefinition (runtime only)")]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized AvatarDefinition File")]
+		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) AvatarDefinition (optimized)", priority = 1)]
+		public static void SaveSelectedAvatarsDefinition()
 		{
 			if (!Application.isPlaying)
 			{
 				EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
 				return;
-			}
-			else
-			{
-				EditorUtility.DisplayDialog("Notice", "The optimized save type is only compatible with DynamicCharacterAvatar avatars (or child classes of)", "Continue");
 			}
 
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -819,41 +762,10 @@ namespace UMA.Editors
 
 				if (avatar != null)
 				{
-					var path = EditorUtility.SaveFilePanel("Save DynamicCharacterAvatar Optimized Text", "Assets", avatar.name + ".txt", "txt");
+					var path = EditorUtility.SaveFilePanel("Save DynamicCharacterAvatar Text", "Assets", avatar.name + ".txt", "txt");
 					if (path.Length != 0)
 					{
 						avatar.DoSave(false, path);
-					}
-				}
-			}
-		}
-		//@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method and the resulting asset can also be inspected and edited
-		[UnityEditor.MenuItem("GameObject/UMA/Save as Optimized Character Asset (runtime only)")]
-		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized Character Asset File")]
-		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) asset (optimized)", priority = 1)]
-		public static void SaveSelectedAvatarsDCSAsset()
-		{
-			if (!Application.isPlaying)
-			{
-				EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
-				return;
-			}
-			else
-			{
-				EditorUtility.DisplayDialog("Notice", "The optimized save type is only compatible with DynamicCharacterAvatar avatars (or child classes of)", "Continue");
-			}
-
-			for (int i = 0; i < Selection.gameObjects.Length; i++)
-			{
-				var selectedTransform = Selection.gameObjects[i].transform;
-				var avatar = selectedTransform.GetComponent<DynamicCharacterAvatar>();
-
-				if (avatar != null)
-				{
-					var path = EditorUtility.SaveFilePanelInProject("Save DynamicCharacterAvatar Optimized Asset", avatar.name + ".asset", "asset", "Message 2");
-					if (path.Length != 0)
-					{
-						avatar.DoSave(true, path);
 					}
 				}
 			}

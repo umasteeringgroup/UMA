@@ -75,6 +75,12 @@ namespace UMA.Examples
             bool changedSlots = ProcessRecipe(_currentLOD);
             if (changedSlots)
             {
+                if (_avatar != null)
+                {
+                    _avatar.ForceUpdate(false, false, false);
+                    return;
+                }
+
                 _umaData.Dirty(true, true, true);
             }
         }
@@ -258,7 +264,15 @@ namespace UMA.Examples
 
             if (updatedTextures || updatedSlots)
             {
-                _umaData.Dirty(updatedSlots, updatedTextures, updatedSlots);
+                if (_avatar != null)
+                {
+                    _avatar.ForceUpdate(updatedSlots, updatedTextures, updatedSlots);
+                    return true;
+                }
+                else
+                {
+                    _umaData.Dirty(updatedSlots, updatedTextures, updatedSlots);
+                }
             }
 
             return true;

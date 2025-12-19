@@ -13,39 +13,32 @@ MonoBehaviour:
   m_Name: EyeClose_R
   m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
   poses:
-  - bone: RightEye
-    hash: -2120937982
-    position: {x: 0.0000000037252903, y: -0.000000007450581, z: -0.000000014901161}
-    rotation: {x: 0.000000051915887, y: -0.000000084291294, z: -6.1659887e-12, w: 1}
-    scale: {x: 0.99999976, y: 1.0000002, z: 1.0049126}
-    category: 
-    enabled: 1
   - bone: RightLowerLid
     hash: -945389519
-    position: {x: -0.0000000037252974, y: 0.00000024745748, z: -0.0000000071431714}
-    rotation: {x: 0.000000010083102, y: 0.1323682, z: -5.619727e-12, w: 0.9912006}
-    scale: {x: 1, y: 0.9999999, z: 0.9999999}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.06017748, y: 0, z: 0, w: 0.9981877}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightUpperLid
     hash: 683767470
-    position: {x: -0.0000000037252974, y: 0.00000024745754, z: -0.0000000071431714}
-    rotation: {x: 0.000000010031845, y: 0.13158333, z: -3.575884e-11, w: -0.9913051}
-    scale: {x: 0.99999994, y: 1.0000001, z: 1}
+    position: {x: 0, y: 0.002, z: 0}
+    rotation: {x: 0.28053662, y: -0.07544985, z: 0.038591184, w: -0.95609486}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightEyebrowLow
     hash: -1640515339
-    position: {x: 0.0000000018626451, y: -0.000096164644, z: -0.00045283884}
-    rotation: {x: -0.000000057658035, y: 2.6090241e-15, z: -3.626741e-14, w: 1}
-    scale: {x: 0.9999999, y: 1.0000002, z: 1.0000004}
+    position: {x: 0, y: 0.00047954172, z: 0.00006758422}
+    rotation: {x: 0.001021659, y: -0.0024872443, z: -0.00030565102, w: 0.99999636}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightEyebrowMiddle
     hash: 1695671804
-    position: {x: 0.0000000037252903, y: -0.000087581575, z: -0.00041243434}
-    rotation: {x: -0.00000005765796, y: -5.551115e-16, z: -4.1120633e-15, w: 1}
-    scale: {x: 1.0000002, y: 1.0000002, z: 1.0000002}
+    position: {x: 0, y: 0.00032585114, z: 0.000053450465}
+    rotation: {x: 0.0008407546, y: -0.001281166, z: 0.0000010772017, w: 0.99999887}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   tweenPoses: []

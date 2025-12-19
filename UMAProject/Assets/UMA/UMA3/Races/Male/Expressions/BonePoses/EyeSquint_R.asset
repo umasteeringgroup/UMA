@@ -13,53 +13,74 @@ MonoBehaviour:
   m_Name: EyeSquint_R
   m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
   poses:
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: -0.000032804906, z: 0}
+    rotation: {x: 0.00000010332042, y: 5.7733957e-11, z: -0.0023986835, w: 0.99999714}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.000052026284}
+    rotation: {x: 0.0000000054961355, y: 0.0017474395, z: 1.908657e-11, w: 0.99999845}
+    scale: {x: 1.0004914, y: 1, z: 1}
+    category: 
+    enabled: 1
   - bone: RightCheek
     hash: 827866759
-    position: {x: -0.000020712614, y: -0.00006931275, z: -0.0062573925}
-    rotation: {x: -7.6531137e-10, y: 0.000000046853483, z: -0.000000037339916, w: 1}
-    scale: {x: 1, y: 1.0000002, z: 0.99999964}
+    position: {x: -0.0000145584345, y: 0.006421335, z: 0.00010553002}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightEye
     hash: -2120937982
-    position: {x: 0.0000000037252903, y: -0.000000007450581, z: -0.000000014901161}
-    rotation: {x: 0.000000051915887, y: -0.000000084291294, z: -6.1659887e-12, w: 1}
-    scale: {x: 0.99999934, y: 0.9999994, z: 0.9202135}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 0.92239493}
     category: 
     enabled: 1
   - bone: RightLowerLid
     hash: -945389519
-    position: {x: -1.8332003e-12, y: 0.0000002868211, z: -0.000000007144081}
-    rotation: {x: 0.0000000025181395, y: 0.032400344, z: -5.056733e-12, w: 0.99947494}
-    scale: {x: 1, y: 0.9999999, z: 0.9999999}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.03240034, y: -0.0000039351776, z: -0.000017416802, w: 0.99947506}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightUpperLid
     hash: 683767470
-    position: {x: -1.8332003e-12, y: 0.00000028682126, z: -0.000000007144081}
-    rotation: {x: 0.000000004323332, y: 0.05588352, z: 2.0752011e-12, w: -0.9984373}
-    scale: {x: 0.99999994, y: 1.0000001, z: 1}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.05588351, y: 0.000006395127, z: -0.0000392124, w: 0.99843735}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightEyebrowLow
     hash: -1640515339
-    position: {x: 0.0000000018626451, y: 0.00027488172, z: 0.001294516}
-    rotation: {x: -0.000000057658035, y: 2.6090241e-15, z: -3.626741e-14, w: 1}
-    scale: {x: 0.9999999, y: 1.0000002, z: 1.0000004}
+    position: {x: 0, y: -0.0011230558, z: 0.00019294024}
+    rotation: {x: 0.0010493076, y: -0.002555759, z: -0.00045807796, w: 0.9999961}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightEyebrowMiddle
     hash: 1695671804
-    position: {x: 0.0000000037252903, y: 0.0003201887, z: 0.0015075505}
-    rotation: {x: -0.000000046951637, y: -0.00000005101605, z: 0.004092999, w: 0.9999916}
-    scale: {x: 1.0000002, y: 1.0000002, z: 1.0000002}
+    position: {x: 0, y: -0.0015460998, z: 0.00014207512}
+    rotation: {x: 0.0008638036, y: -0.0013164618, z: 0.0000011373429, w: 0.9999988}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   - bone: RightEyebrowUp
     hash: 1246724795
-    position: {x: 0.000000048428774, y: 0.000349544, z: 0.0018251762}
-    rotation: {x: -0.000000033055095, y: -0.00000008395414, z: -9.577081e-11, w: 1}
-    scale: {x: 1.0000005, y: 1.0000004, z: 1.0000005}
+    position: {x: 0, y: -0.0017796531, z: 0.00037886947}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.000051627867, y: -0.000020291656, z: -0.0001296699}
+    rotation: {x: -0.0005906179, y: 0.001469683, z: 0.00010907732, w: 0.99999875}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   tweenPoses: []

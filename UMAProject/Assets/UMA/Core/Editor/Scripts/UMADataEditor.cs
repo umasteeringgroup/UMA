@@ -9,6 +9,7 @@ namespace UMA.Editors
     {
         protected UMAData _umaData;
         public bool initialized = false;
+		public bool showEditInfo = false;
 
 		//To keep the DNA inspector uptodate when DCA changes the recipe we need to track
 		//the active dna and update the editor for it when the recipe changes.
@@ -106,6 +107,10 @@ namespace UMA.Editors
 
 					GUIHelper.EndCollapsableGroup();
                 }
+				if(GUIHelper.BeginCollapsableGroup(ref showEditInfo, "Edit time info")) {
+					DoEditTimeInfo();
+					GUIHelper.EndCollapsableGroup();
+				}
 				if (dnaEditor != null)
                 {
                     if (!CheckCurrentDNATypeHashes())
@@ -139,7 +144,7 @@ namespace UMA.Editors
                 {
                     if (slot != null)
                     {
-                        EditorGUILayout.LabelField("Slot: " + slot.asset.slotName);
+                        EditorGUILayout.LabelField($"{slot.vertexOffset:000000} {slot.asset.meshData.vertexCount:000000} {slot.asset.slotName}");
                     }
                 }
             }

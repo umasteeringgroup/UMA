@@ -85,10 +85,12 @@ namespace UMA
         [Tooltip("If true, dilate RGB colors across padding regardless of alpha (fixes seams across opaque islands).")]
         public bool rgbOnlyDilation = true;
 
-        // Called from SlotDataAsset.CharacterBegun (UMADataEvent) in the slot that owns this script.
-        public void OnCharacterBegun(UMAData umaData)
+		private Dictionary<string, int> alreadyProcessed = new Dictionary<string, int>();
+		// Called from SlotDataAsset.CharacterBegun (UMADataEvent) in the slot that owns this script.
+		public void OnCharacterBegun(UMAData umaData)
         {
-            if (umaData == null) return;
+			Debug.Log("[DecalRTStampSlot] OnCharacterBegun called.");
+			if (umaData == null) return;
 
             _avatar = _avatar ?? GetComponentInParent<DynamicCharacterAvatar>();
             if (_avatar == null && enableDebug)
@@ -102,13 +104,31 @@ namespace UMA
                 _umaData.OnAtlasUpdated -= HandleAtlasUpdated;
                 _subscribed = false;
             }
+			alreadyProcessed.Clear();
 
             _umaData = umaData;
             _umaData.OnAtlasUpdated += HandleAtlasUpdated;
             _subscribed = true;
         }
 
-        private void OnDisable()
+		bool AlreadProcessed(string overlayName, string propertyName, int frame) {
+			string key = overlayName + "|" + propertyName;
+			if (alreadyProcessed.ContainsKey(key)) {
+				if(alreadyProcessed[key] == frame) {
+					return false;
+				} else {
+					alreadyProcessed[key] = frame;
+					return false;
+				}
+			} else {
+				alreadyProcessed[key] = frame;
+				return false;
+			}
+		}
+
+
+
+		private void OnDisable()
         {
             Unsubscribe();
         }
@@ -133,9 +153,18 @@ namespace UMA
         {
             try
             {
-                if (umaData == null || parms == null || parms.overlayData == null) return;
+				Debug.Log($"[DecalRTStampSlot] HandleAtlasUpdated overlay '{parms.overlayName}' property '{parms.materialPropertyName}'");
+				if(parms.overlayName.ToLower().Contains("amy_body") && parms.materialPropertyName.ToLower().Contains("basemap")) {
+					Debug.Log("[DecalRTStampSlot] Detected Amy Body Basemap overlay update.");
+				}
+				if (umaData == null || parms == null || parms.overlayData == null) return;
 
-                if (_avatar == null) _avatar = umaData as DynamicCharacterAvatar;
+				if(AlreadProcessed(parms.overlayName, parms.materialPropertyName, Time.frameCount)) {
+					Debug.Log("[DecalRTStampSlot] Already processed this overlay/property this frame, skipping.");
+					return;
+				}
+
+					if (_avatar == null) _avatar = umaData as DynamicCharacterAvatar;
                 if (_avatar == null) return;
                 if (overlayStamps == null || overlayStamps.Count == 0) return;
 
@@ -144,8 +173,10 @@ namespace UMA
                 int maxBleedPixels = 0;
                 int currenttime = Time.frameCount;
 
-                // Iterate ALL sets; do not early exit so multiple sets can react to the same overlay
-                for (int si = 0; si < overlayStamps.Count; si++)
+				//DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "Before Iterating Stamps");
+
+			// Iterate ALL sets; do not early exit so multiple sets can react to the same overlay
+			for(int si = 0; si < overlayStamps.Count; si++)
                 {
                     var set = overlayStamps[si];
                     if (set == null || set.stamps == null || set.stamps.Length == 0) continue;
@@ -157,7 +188,7 @@ namespace UMA
                         var stamp = set.stamps[st];
                         if (stamp == null) continue;
 
-
+						Debug.Log("DecalRT: Calling ApplySlotStamps");
                         bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms.materialPropertyName, parms.renderTexture, parms.overlayData.asset.nameHash);
                         if (ok)
                         {
@@ -167,13 +198,31 @@ namespace UMA
                     }
                 }
 
-                // If we applied any stamps to this final RT, run a dilation pass that expands color into transparent padding
-                if (anyApplied && parms.renderTexture != null)
+				//DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "After Iterating Stamps");
+
+
+				// If we applied any stamps to this final RT, run a dilation pass that expands color into transparent padding
+				if(anyApplied && parms.renderTexture != null)
                 {
+                    // Guard against uncreated or invalid RT
+                    if (!parms.renderTexture.IsCreated())
+                    {
+                        if (enableDebug || Debug.isDebugBuild)
+                        {
+                            Debug.LogWarning("[DecalRTStampSlot] RenderTexture not created, skipping dilation.");
+                        }
+                    }
+                    else
+                    {
                     // Use the largest bleed requested by any applied stamp. Clamp to shader range [1..16].
                     int bleed = Mathf.Clamp(maxBleedPixels <= 0 ? 2 : maxBleedPixels, 1, 64); // allow multiple rounds if >16
-                    RunFinalDilation(parms.renderTexture, bleed, rgbOnlyDilation);
-                }
+						//DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "Before final dilation");
+
+						//RunFinalDilation(parms.renderTexture, bleed, rgbOnlyDilation);
+						//DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "After final dilation");
+
+					}
+				}
             }
             catch (Exception ex)
             {
@@ -203,6 +252,7 @@ namespace UMA
         private static void RunFinalDilation(RenderTexture rt, int bleedPixels, bool rgbOnly)
         {
             if (rt == null || bleedPixels <= 0) return;
+            if (!rt.IsCreated()) return;
             EnsureDilateMat();
             if (_dilateMat == null) return;
 
@@ -221,15 +271,22 @@ namespace UMA
 
 
             int remaining = Mathf.Clamp(bleedPixels, 1, 256);
-            while (remaining > 0)
+            // Create a single temporary RT (no depth, no mips, no MSAA) reused for all passes
+            var tmp = RenderTexture.GetTemporary(rt.width, rt.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            try
             {
-                int step = Mathf.Min(remaining, 16);
-                _dilateMat.SetFloat("_Radius", step);
-                var tmp = RenderTexture.GetTemporary(rt.descriptor);
-                Graphics.Blit(rt, tmp);
-                Graphics.Blit(tmp, rt, _dilateMat);
+                while (remaining > 0)
+                {
+                    int step = Mathf.Min(remaining, 16);
+                    _dilateMat.SetFloat("_Radius", step);
+                    Graphics.Blit(rt, tmp);
+                    Graphics.Blit(tmp, rt, _dilateMat);
+                    remaining -= step;
+                }
+            }
+            finally
+            {
                 RenderTexture.ReleaseTemporary(tmp);
-                remaining -= step;
             }
         }
 

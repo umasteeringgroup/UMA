@@ -13,11 +13,46 @@ MonoBehaviour:
   m_Name: JawRight
   m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
   poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: -0.000027298927, z: 0.0000513494}
+    rotation: {x: 0.00077836256, y: 0.0018912876, z: -0.0000014720122, w: 0.999998}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.0000022212043, y: 0.00003765896, z: 0.000071525574}
+    rotation: {x: -0.0012893905, y: -0.0026746525, z: -0.0002358833, w: 0.9999956}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
   - bone: Mandible
     hash: 1574626840
-    position: {x: -1.4551915e-11, y: 0, z: -0.0000000037252903}
-    rotation: {x: -0.0000001183161, y: 0.000000004046749, z: 0.08493272, w: 0.9963867}
-    scale: {x: 0.9999999, y: 1.0000001, z: 1}
+    position: {x: 0, y: -0.000045076013, z: -0.000004887581}
+    rotation: {x: -0.00054237485, y: 0.07111132, z: 0.041701987, w: 0.99659616}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.000090564325}
+    rotation: {x: -0.000000016003208, y: 0.003040925, z: 7.356384e-13, w: 0.99999535}
+    scale: {x: 1.0008546, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: -0.000027291477, z: 0.0000513494}
+    rotation: {x: 0.00077836256, y: -0.0018912873, z: 0.0000014718568, w: 0.999998}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.0000022212043, y: 0.000050641596, z: 0.000041410327}
+    rotation: {x: -0.0012281705, y: 0.0025668496, z: 0.00022468314, w: 0.99999595}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   tweenPoses: []

@@ -1334,6 +1334,7 @@ namespace UMA
             slotName = source.slotName;
             nameHash = source.nameHash;
             material = source.material;
+            materialName = source.materialName;
             overlayScale = source.overlayScale;
             animatedBones = source.animatedBones;
             meshData = source.meshData;

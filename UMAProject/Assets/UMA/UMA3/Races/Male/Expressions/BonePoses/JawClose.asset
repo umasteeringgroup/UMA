@@ -13,11 +13,32 @@ MonoBehaviour:
   m_Name: JawClose
   m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
   poses:
+  - bone: LeftHandFinger05_01
+    hash: 769127528
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.00077956327, y: -0.00034104811, z: 0.0013267741, w: 0.9999988}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
   - bone: Mandible
     hash: 1574626840
-    position: {x: 0, y: -1.4551915e-11, z: -0.0000000037252903}
-    rotation: {x: 0.022530429, y: -0.000000079682124, z: 0.00000004232839, w: 0.99974614}
-    scale: {x: 0.9999999, y: 1.0000001, z: 1}
+    position: {x: 0, y: 0.000033009797, z: -0.000071033835}
+    rotation: {x: -0.022251781, y: -4.314356e-16, z: 0.0000000044740704, w: 0.9997524}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.00012804568, y: 0.000093244016, z: 0.00059874356}
+    rotation: {x: -0.0000015655179, y: 0.00076497096, z: 0.0000058611167, w: 0.99999976}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightHandFinger05_01
+    hash: -1157319794
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.000779496, y: 0.0003410412, z: -0.0013266496, w: 0.9999988}
+    scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
   tweenPoses: []

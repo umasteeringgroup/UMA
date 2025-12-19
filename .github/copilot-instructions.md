@@ -191,3 +191,4 @@ Debug as needed. Use debugging techniques to isolate and resolve issues.
 Test frequently. Run tests after each change to verify correctness.
 Iterate until the root cause is fixed and all tests pass.
 Reflect and validate comprehensively. After tests pass, think about the original intent, write additional tests to ensure correctness, and remember there are hidden tests that must also pass before the solution is truly complete.
+Do not run Azure functions unless explicitly instructed by the user.

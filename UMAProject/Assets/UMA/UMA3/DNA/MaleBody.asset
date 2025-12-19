@@ -17,8 +17,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ed3d813968beb574a94b23596c26312e, type: 2}
   - {fileID: 11400000, guid: fc4a0394e181f254cb0d8dd7a3706450, type: 2}
   - {fileID: 11400000, guid: fbacdc232c2757141b64b125b7c4d1d6, type: 2}
-  - {fileID: 11400000, guid: 5214effcbe588264a8ed2dca2c40567d, type: 2}
-  - {fileID: 11400000, guid: 1c68d80c607a8034c88610b672c2df23, type: 2}
+  - {fileID: 11400000, guid: e123d86b31bb2d9409277744116e602c, type: 2}
   - {fileID: 11400000, guid: 22f26758d68e72e4797f6b44016d950c, type: 2}
   - {fileID: 11400000, guid: 0f8e6ff4d406f9d478a860ae275f4fb1, type: 2}
   - {fileID: 11400000, guid: 704ea218039a3c640b2e00bb85d19590, type: 2}
@@ -32,4 +31,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1766586bf058f0e4c86bfe72b3e0aad4, type: 2}
   - {fileID: 11400000, guid: 5b9b5ccd127971a4fb354de990f56a37, type: 2}
   - {fileID: 11400000, guid: c2ddc1007f02f7947888f78cc120d48d, type: 2}
+  MaxTotalValue: 0
   editorFoldout: 1

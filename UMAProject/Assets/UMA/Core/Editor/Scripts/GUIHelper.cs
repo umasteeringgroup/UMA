@@ -383,7 +383,7 @@ namespace UMA.Editors
             if (tooltip != null)
             {
                 Rect position = GUILayoutUtility.GetLastRect();
-                EditorGUI.LabelField(position, tooltip);
+               // EditorGUI.LabelField(position, tooltip);
             }
             GUILayout.EndHorizontal();
             return nfoldout;

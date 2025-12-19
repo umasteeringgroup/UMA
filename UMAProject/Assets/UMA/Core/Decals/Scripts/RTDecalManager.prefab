@@ -48,36 +48,7 @@ MonoBehaviour:
   - name: AutoRTDecals
     overlays:
     - {fileID: 11400000, guid: 4cb716881cefd2c418029584f5f40e86, type: 2}
-    overlayNames:
-    - UMA30_Body_UDIM1002_UMA_F_Skin_UDIM1002
-    - UMA30_Body_UDIM1004_UMA_F_Skin_UDIM1004
-    - UMA30_Body_UDIM1005_UMA_F_Skin_UDIM1005
-    stamps:
-    - {fileID: 11400000, guid: 4d74b3b2867a09a4ebfdc0d35f7d8f80, type: 2}
-    - {fileID: 11400000, guid: 42fdae4afd18bbb43a54d3e00658ba28, type: 2}
-    - {fileID: 11400000, guid: 0b9dbb2d3f7dbaf45bc2d8f2fa750e32, type: 2}
-    - {fileID: 11400000, guid: bfe993918d31f8841b8dcfba79b4d74e, type: 2}
-    - {fileID: 11400000, guid: 7b29c58171fcbde4b9489c37397a726f, type: 2}
-    - {fileID: 11400000, guid: 067c225ef850d44458c7cd79d78ec10a, type: 2}
-    - {fileID: 11400000, guid: 68997150e1c05bd4b95fd39292aa8db6, type: 2}
-    - {fileID: 11400000, guid: 93fe393549fa54943a4f4c74be982675, type: 2}
-    - {fileID: 11400000, guid: 7c4de654b517a2b4985128a7c56f912d, type: 2}
-    - {fileID: 11400000, guid: 91e18af9925b47743adebd9827c473b8, type: 2}
-    - {fileID: 11400000, guid: 6bbdc9adab4f03a4f82f73543337bfe0, type: 2}
-    - {fileID: 11400000, guid: 20855e9022b822546b27b99f10bba401, type: 2}
-    - {fileID: 11400000, guid: bc8216dbe8412414ca684027f0e67ac6, type: 2}
-    - {fileID: 11400000, guid: 973197355433aa84cbb70236093bcee4, type: 2}
-    - {fileID: 11400000, guid: 1b7e9841a23c90a498bc47c6e1a79a9f, type: 2}
-    - {fileID: 11400000, guid: c48b7e3b2c2a53c4b872d707d8f305bf, type: 2}
-    - {fileID: 11400000, guid: de3e6cff28f60b64c8cf28965bc9da4c, type: 2}
-    - {fileID: 11400000, guid: 00ac312c1bf0efb45b748a732dc2db1f, type: 2}
-    - {fileID: 11400000, guid: 0083041d2388d2c479d4ff85b513c590, type: 2}
-    - {fileID: 11400000, guid: d4390038953635a489e4292528a1ed28, type: 2}
-    - {fileID: 11400000, guid: 0096c279683a4f748a280f0cb79af8ba, type: 2}
-    - {fileID: 11400000, guid: 15a0bb2961eb3d44b8c37e6519bbdcd3, type: 2}
-    - {fileID: 11400000, guid: cae73de58be5cf84a8d6fd45b4f67d3b, type: 2}
-    - {fileID: 11400000, guid: 6ba006b248409cc4c8470d2b16c8c257, type: 2}
-    - {fileID: 11400000, guid: 1784458b03a778f429fed92d6c3a04a8, type: 2}
-    - {fileID: 11400000, guid: bf80cacbe28a54043b011a927e64be9a, type: 2}
+    overlayNames: []
+    stamps: []
   enableDebug: 0
   rgbOnlyDilation: 1

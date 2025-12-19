@@ -1,12 +1,12 @@
 {
     "slotName": "UMA30_Body",
     "RootBone": "Global",
-    "createOverlay": true,
-    "createRecipe": true,
+    "createOverlay": false,
+    "createRecipe": false,
     "isBaseRaceRecipe": false,
     "addToGlobalLibrary": true,
     "binarySerialization": true,
-    "calcTangents": true,
+    "calcTangents": false,
     "clearNormals": false,
     "clearTangents": false,
     "udimAdjustment": true,
@@ -28,6 +28,6 @@
     "invertZ": false,
     "updateExistingSlots": false,
     "Tags": [],
-    "slotMaterialPath": "Assets/UMA/Content/Core/HumanShared/Materials/Standard(Specular)/UMA_Diffuse_Normal_Specular.asset",
-    "slotFolderPath": "Assets/UMA/UMA3/Clothing"
+    "slotMaterialPath": "Assets/UMA/Content/Core/HumanShared/Materials/Standard/UMA_Diffuse_Normal_Thickness_Occlusion_Gloss.asset",
+    "slotFolderPath": "Assets/UMA/UMA3"
 }
