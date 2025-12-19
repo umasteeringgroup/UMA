@@ -143,7 +143,7 @@ Material:
     - _UseHalfLambert: 1
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 0.3882353, g: 0.20491865, b: 0.12709141, a: 1}
+    - _Color: {r: 1, g: 0.8980392, b: 0.9098039, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _EmissiveAdd: {r: 0, g: 0, b: 0, a: 0}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
