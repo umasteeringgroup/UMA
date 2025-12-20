@@ -51,9 +51,9 @@ MonoBehaviour:
   useAsyncConversion: 0
   asyncMipRegen: 1
   convertMipMaps: 0
-  atlasResolution: 8192
+  atlasResolution: 1024
   editorAtlasResolution: 4096
-  AtlasOverflowFitMethod: 2
+  AtlasOverflowFitMethod: 1
   FitPercentageDecrease: 0.5
   SharperFitTextures: 1
   defaultOverlayAsset: {fileID: 0}
@@ -64,7 +64,6 @@ MonoBehaviour:
   MaxQueuedConversionsPerFrame: 8
   Use32BitBuffers: 0
   alwaysRegenerateRenderers: 0
-  useNewDNA: 1
   SaveAndRestoreIgnoredItems: 0
   meshCombiner: {fileID: 7275351159514515506}
   InitialScaleFactor: 1

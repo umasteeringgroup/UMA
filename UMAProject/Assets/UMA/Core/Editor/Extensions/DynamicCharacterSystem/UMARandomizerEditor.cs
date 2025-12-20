@@ -489,6 +489,7 @@ namespace UMA.Editors
 
 			if (addAllDNA)
 			{
+				
 				foreach (string dnaName in ra.PossibleDNA)
 				{
 					bool alreadyExists = false;
@@ -502,7 +503,9 @@ namespace UMA.Editors
 					}
 					if (!alreadyExists)
 					{
-						ra.RandomDna.Add(new RandomDNA(dnaName));
+						RandomDNA r = new RandomDNA(dnaName);
+						SetMinMax(r, rangeIndex);
+                        ra.RandomDna.Add(r);
 						ra.DnaChanged = true;
 					}
 				}
@@ -533,7 +536,37 @@ namespace UMA.Editors
 			GUIHelper.EndVerticalPadded(10);
 		}
 
-		private void SharedColorsGUI(ref bool foldout, List<RandomColors> SharedColors, string label, GUIContent tooltip = default)
+		private void SetMinMax(RandomDNA rd, int randomAmount)
+		{
+			switch (randomAmount)
+			{
+				case 0:
+					rd.MinValue = 0.25f;
+					rd.MaxValue = 0.75f;
+					break;
+				case 1:
+					rd.MinValue = 0.20f;
+					rd.MaxValue = 0.80f;
+					break;
+				case 2:
+					rd.MinValue = 0.15f;
+					rd.MaxValue = 0.75f;
+					break;
+				case 3:
+					rd.MinValue = 0.10f;
+					rd.MaxValue = 0.80f;
+					break;
+				case 4:
+					rd.MinValue = 0.05f;
+					rd.MaxValue = 0.95f;
+					break;
+				case 5:
+					rd.MinValue = 0.0f;
+					rd.MaxValue = 1.0f;
+					break;
+			}
+        }
+        private void SharedColorsGUI(ref bool foldout, List<RandomColors> SharedColors, string label, GUIContent tooltip = default)
 		{
 			foldout = GUIHelper.FoldoutBar(foldout, label, tooltip);
 

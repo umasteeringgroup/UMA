@@ -35,7 +35,6 @@ namespace UMA.Editors
             SharperFitTextures = serializedObject.FindProperty("SharperFitTextures");
             useAsyncConversion = serializedObject.FindProperty("useAsyncConversion");
             asyncMipRegen = serializedObject.FindProperty("asyncMipRegen");
-            useNewDNA = serializedObject.FindProperty("useNewDNA");
         }
 
         public override void OnInspectorGUI()
@@ -56,7 +55,6 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(AtlasOverflowFitMethod);
                 EditorGUILayout.PropertyField(FitPercentageDecrease);
                 EditorGUILayout.PropertyField(convertMipMaps);
-                EditorGUILayout.PropertyField(useNewDNA, new GUIContent("Use New DNA System"));
                 EditorGUILayout.IntPopup(atlasResolution, atlasLabels, atlasValues);
                 GUIHelper.EndVerticalPadded();
 
