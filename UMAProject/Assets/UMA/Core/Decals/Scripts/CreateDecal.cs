@@ -856,6 +856,7 @@ namespace UMA.Decals
                     Debug.LogWarning("TextureDecalOverlay is missing. Cannot place RT decal.");
                     return;
                 }
+                Debug.Log($"Applying RT decal. {TextureDecalOverlay.name}");
             }
 
             if (Avatar == null || Avatar.umaData == null)
@@ -874,7 +875,8 @@ namespace UMA.Decals
             if (decalMethod == DecalMethod.SlotDecal) {
 				// DecalSlotBuilder.enableDebug = true;
 				// Build decal slot
-				var slotAsset = DecalSlotBuilder.CreateDecalSlot(
+                Debug.Log($"Creating Mesh decal. {MeshDecalOverlay.name}");
+                var slotAsset = DecalSlotBuilder.CreateDecalSlot(
 					Avatar,
 					ray,
 					DecalRadius,
@@ -912,6 +914,8 @@ namespace UMA.Decals
 				Avatar.ForceUpdate(true, true, true);
 			} else
             {
+                Debug.Log($"Creating RenderTexture decal. {TextureDecalOverlay.name}");
+
                 // Example call
                 var options = new DecalRenderTexture.DecalRTOptions
                 {
@@ -922,7 +926,7 @@ namespace UMA.Decals
                     useHitNormalForProjection = this.useHitNormalForProjection,
                     uvExpandPixels = DecalRTUVExpandPixels,
                     bleedPixels = decalRTDilation,
-					invertUVYAxis = true
+					invertUVYAxis = false
                 };
 
                 if (Avatar.umaData == null)
@@ -958,6 +962,7 @@ namespace UMA.Decals
                         // Clone the last stamp (runtime instance) so we can add to the stamp slot set
                         var clone = ScriptableObject.CreateInstance<DecalRTStampAsset>();
                         clone.overlayName = last.overlayName;
+						clone.overlayNameHash = last.overlayNameHash;
                         clone.bleedPixels = last.bleedPixels;
                         clone.forceLinearSampling = last.forceLinearSampling;
                         clone.slots = new List<DecalRTStampAsset.SlotStamp>(last.slots.Count);

@@ -1036,15 +1036,6 @@ namespace UMA
             }
 
             bool valid = true;
-			if (umaGenerator == null)
-			{
-				if (Debug.isDebugBuild)
-                {
-                    Debug.LogError("UMA data missing required generator!");
-                }
-
-                valid = false;
-			}
 
             if (defaultRendererAsset == null && umaGenerator != null)
             {
@@ -1064,27 +1055,6 @@ namespace UMA
 			{
 				valid = valid && umaRecipe.Validate();
 			}
-
-#if UNITY_EDITOR
-            if (animationController == null)
-			{
-				if (Application.isPlaying)
-				{
-					if (Debug.isDebugBuild)
-                    {
-                        Debug.LogWarning("No animation controller supplied.");
-                    }
-                }
-			}
-
-			if (!valid && UnityEditor.EditorApplication.isPlaying)
-			{
-				if (Debug.isDebugBuild)
-                {
-                    Debug.LogError("UMAData: Recipe or Generator is not valid!");
-                }
-			}
-#endif
 
 			return valid;
 		}

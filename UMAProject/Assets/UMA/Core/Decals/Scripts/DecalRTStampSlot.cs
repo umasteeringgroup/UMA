@@ -153,14 +153,10 @@ namespace UMA
         {
             try
             {
-				Debug.Log($"[DecalRTStampSlot] HandleAtlasUpdated overlay '{parms.overlayName}' property '{parms.materialPropertyName}'");
-				if(parms.overlayName.ToLower().Contains("amy_body") && parms.materialPropertyName.ToLower().Contains("basemap")) {
-					Debug.Log("[DecalRTStampSlot] Detected Amy Body Basemap overlay update.");
-				}
 				if (umaData == null || parms == null || parms.overlayData == null) return;
 
 				if(AlreadProcessed(parms.overlayName, parms.materialPropertyName, Time.frameCount)) {
-					Debug.Log("[DecalRTStampSlot] Already processed this overlay/property this frame, skipping.");
+					//Debug.Log("[DecalRTStampSlot] Already processed this overlay/property this frame, skipping.");
 					return;
 				}
 
@@ -187,8 +183,8 @@ namespace UMA
                     {
                         var stamp = set.stamps[st];
                         if (stamp == null) continue;
-
-						Debug.Log("DecalRT: Calling ApplySlotStamps");
+                          
+						// Debug.Log("DecalRT: Calling ApplySlotStamps");
                         bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms.materialPropertyName, parms.renderTexture, parms.overlayData.asset.nameHash);
                         if (ok)
                         {
