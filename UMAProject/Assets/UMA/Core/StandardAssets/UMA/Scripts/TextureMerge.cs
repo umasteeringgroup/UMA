@@ -125,74 +125,79 @@ namespace UMA
             }
         }
 
-        public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color), bool sharperFitTextures = true)
+		public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color), bool sharperFitTextures = true)
 		{
 			if (textureMergeRects != null)
 			{
 				//Debug.Log("Drawing " + textureMergeRectCount + " rects to target: " + target.name + " w:" + width + " h:" + height);
-                RenderTexture backup = RenderTexture.active;
+				RenderTexture backup = RenderTexture.active;
 				RenderTexture.active = target;
 #if UMA_ADVANCED_BLENDMODES
 				RenderTexture scratch = null;
 #endif
 				GL.Clear(true, true, background);
 				GL.PushMatrix();
-				//the matrix needs to be in the original atlas dimensions because the textureMergeRects are in that space.
-				GL.LoadPixelMatrix(0, width, height, 0);
+				try
+				{
+					//the matrix needs to be in the original atlas dimensions because the textureMergeRects are in that space.
+					GL.LoadPixelMatrix(0, width, height, 0);
 
 #if UMA_ADVANCED_BLENDMODES
 
-				// This draws the entire atlas.
-				// We need to set the base texture on any overlay that is not a base overlay.
-				// To do this, we will probably need to track that on the textureMergeRects.
-				// We should hard code base overlays to be normal blend mode (ie, they blend with the basic shaders)
+					// This draws the entire atlas.
+					// We need to set the base texture on any overlay that is not a base overlay.
+					// To do this, we will probably need to track that on the textureMergeRects.
+					// We should hard code base overlays to be normal blend mode (ie, they blend with the basic shaders)
 
-				Rect Destination = new Rect(0, 0, 0, 0);
-				Rect Src = new Rect(0, 0, 0, 0);
-				for (int i = 0; i < textureMergeRectCount; i++)
-				{
-					var tr = textureMergeRects[i];
-
-					//Debug.Log("Drawing rect for texture: " + (tr.tex != null ? tr.tex.name : "null") + " at " + tr.rect + " advancedBlending: " + tr.advancedBlending + " channelType: " + tr.channelType);
-                    if (tr.advancedBlending)
+					Rect Destination = new Rect(0, 0, 0, 0);
+					Rect Src = new Rect(0, 0, 0, 0);
+					for (int i = 0; i < textureMergeRectCount; i++)
 					{
-                        // Create a temporary texture that is the size of the overlay rect in atlas space.
-                        scratch = RenderTexture.GetTemporary((int)tr.rect.width, (int)tr.rect.height, 0, target.format, RenderTextureReadWrite.Linear);
+						var tr = textureMergeRects[i];
 
-						float fw = (float)width;
-						float fh = (float)height;
+						//Debug.Log("Drawing rect for texture: " + (tr.tex != null ? tr.tex.name : "null") + " at " + tr.rect + " advancedBlending: " + tr.advancedBlending + " channelType: " + tr.channelType);
+						if (tr.advancedBlending)
+						{
+							// Create a temporary texture that is the size of the overlay rect in atlas space.
+							scratch = RenderTexture.GetTemporary((int)tr.rect.width, (int)tr.rect.height, 0, target.format, RenderTextureReadWrite.Linear);
 
-                        GL.PushMatrix();
-                        GL.LoadPixelMatrix(0, scratch.width, scratch.height, 0); 
+							float fw = (float)width;
+							float fh = (float)height;
 
-						// Set the destination (The entire scratch texture)
-                        Destination.Set(0, 0, scratch.width, scratch.height);
+							GL.PushMatrix();
+							try
+							{
+								GL.LoadPixelMatrix(0, scratch.width, scratch.height, 0);
 
-						// Set the source rect in UV space
-						Src.Set(tr.rect.x/fw, 1.0f-((tr.rect.y+tr.rect.height)/fh), (tr.rect.width/fw), (tr.rect.height / fh));  // get the rect in UV space
+								// Set the destination (The entire scratch texture)
+								Destination.Set(0, 0, scratch.width, scratch.height);
 
-                        //SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-before.png"));
-                        // should be drawing to the scratch texture now
-                        RenderTexture.active = scratch;
-                        Graphics.DrawTexture(Destination, target, Src, 0, 0, 0, 0);
-						RenderTexture.active = target;
-                        //SaveRenderTexture(scratch, System.IO.Path.Combine(Application.dataPath, "scratch-after.png"));
-                        //SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-after.png"));
-						GL.PopMatrix();
-						tr.mat.SetTexture("_BaseTex", scratch);
-						DrawRect (ref tr, sharperFitTextures);
-                    }
-                    else
-					{
-                        DrawRect(ref tr, sharperFitTextures);
-                    }
+								// Set the source rect in UV space
+								Src.Set(tr.rect.x / fw, 1.0f - ((tr.rect.y + tr.rect.height) / fh), (tr.rect.width / fw), (tr.rect.height / fh));  // get the rect in UV space
 
-                    if (scratch != null)
-					{
-                        RenderTexture.ReleaseTemporary(scratch);
-                        scratch = null;
-                    }
-				}
+								//SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-before.png"));
+								// should be drawing to the scratch texture now
+								RenderTexture.active = scratch;
+								Graphics.DrawTexture(Destination, target, Src, 0, 0, 0, 0);
+								RenderTexture.active = target;
+								//SaveRenderTexture(scratch, System.IO.Path.Combine(Application.dataPath, "scratch-after.png"));
+								//SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-after.png"));
+							}
+							finally { GL.PopMatrix(); }
+							tr.mat.SetTexture("_BaseTex", scratch);
+							DrawRect(ref tr, sharperFitTextures);
+						}
+						else
+						{
+							DrawRect(ref tr, sharperFitTextures);
+						}
+
+						if (scratch != null)
+						{
+							RenderTexture.ReleaseTemporary(scratch);
+							scratch = null;
+						}
+					}
 
 #else
 				for (int i = 0; i < textureMergeRectCount; i++)
@@ -200,8 +205,12 @@ namespace UMA
 					DrawRect(ref textureMergeRects[i], sharperFitTextures);
 			    }
 #endif
-				GL.PopMatrix();
-				RenderTexture.active = backup;
+				}
+				finally
+				{
+					GL.PopMatrix();
+					RenderTexture.active = backup;
+				}
 			}
 		}
 
@@ -218,57 +227,36 @@ namespace UMA
                 return;
             }
 
-			//Debug.Log("Drawing rect for texture: " + tr.tex.name + " at " + tr.rect);
-
-            if (tr.transform)
+            //Debug.Log("Drawing rect for texture: " + tr.tex.name + " at " + tr.rect);
+            GL.PushMatrix();
+			try
 			{
-#if true
-				// rotate texture here?
-				GL.PushMatrix();
-				tr.rect.x += tr.position.x;
-				tr.rect.y += tr.position.y;
 
-                // rotate around the pivot
-                pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f) , tr.rect.y + (tr.rect.height / 2.0f) );
-				
-				Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
+				if (tr.transform)
+				{
+					tr.rect.x += tr.position.x;
+					tr.rect.y += tr.position.y;
 
-				GL.MultMatrix(newMat);
-#else
-                // rotate texture here?
-                GL.PushMatrix();
+					// rotate around the pivot
+					pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f), tr.rect.y + (tr.rect.height / 2.0f));
 
-                // rotate around the pivot
-                pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f), tr.rect.y + (tr.rect.height / 2.0f));
-				
-                tr.rect.width *= tr.scale.x;
-                tr.rect.height *= tr.scale.y;
+					Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
 
-                Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), Vector3.one) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
+					GL.MultMatrix(newMat);
+				}
 
-                GL.MultMatrix(newMat);
+				if (sharperFitTextures)
+				{
+					tr.tex.mipMapBias = -1.0f;
+				}
+				else
+				{
+					tr.tex.mipMapBias = 0f;
+				}
 
-#endif
-            }
-
-            if (sharperFitTextures)
-			{
-				tr.tex.mipMapBias = -1.0f;
+				Graphics.DrawTexture(tr.rect, tr.tex, tr.mat);
 			}
-			else
-			{
-				tr.tex.mipMapBias = 0f;
-			}
-
-			if (tr.channelType == UMAMaterial.ChannelType.DiffuseTexture)
-			{
-				// Debug.Log($"Drawing = {tr.textureType} with texture {tr.mat.mainTexture.name} and shader {tr.mat.shader.name}");
-			}
-
-		
-			Graphics.DrawTexture(tr.rect, tr.tex, tr.mat);		
-			if (tr.transform)
-			{
+			finally {
 				GL.PopMatrix();
 			}
 

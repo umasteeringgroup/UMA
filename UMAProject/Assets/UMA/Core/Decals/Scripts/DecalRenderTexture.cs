@@ -791,122 +791,130 @@ namespace UMA {
 				stampMat.SetFloat("_UseMask", maskTex != null ? 1f : 0f);
 				if(maskTex != null) { stampMat.SetTexture("_MaskTex", maskTex); LogTextureInfo("ApplySlotStamps maskTex", maskTex); }
 
-				var prevRTGlobal = RenderTexture.active;
+                bool stampedAny = false;
+                var prevRTGlobal = RenderTexture.active;
 				GL.PushMatrix();
-				GL.LoadOrtho();
-				LogRTActive("ApplySlotStamps: Before stamping");
+				try
+				{
+					GL.LoadOrtho();
+					LogRTActive("ApplySlotStamps: Before stamping");
 
-				bool stampedAny = false;
-				int currenttime = Time.frameCount;
+					int currenttime = Time.frameCount;
 
-				for(int si = 0; si < stamp.slots.Count; si++) {
-					var slotStamp = stamp.slots[si];
-					if(slotStamp == null)
-						continue;
-					if(slotStamp.debugDontUse)
-						continue;
-					SlotData slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
-					if(slot == null || slot.asset == null)
-						continue;
-
-						if(!slot.hasOverlay(srcOverlayNameHash))
+					for (int si = 0; si < stamp.slots.Count; si++)
+					{
+						var slotStamp = stamp.slots[si];
+						if (slotStamp == null)
+							continue;
+						if (slotStamp.debugDontUse)
+							continue;
+						SlotData slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
+						if (slot == null || slot.asset == null)
 							continue;
 
-					int vcount = (slotStamp.normBaseUV != null) ? slotStamp.normBaseUV.Length : 0;
-					if(vcount == 0 || slotStamp.overlayUV == null || slotStamp.triangles == null) {
-						LogDebugSkip($"ApplySlotStamps: invalid stamp data for slot '{slotStamp.slotName}'");
-						continue;
+						if (!slot.hasOverlay(srcOverlayNameHash))
+							continue;
+
+						int vcount = (slotStamp.normBaseUV != null) ? slotStamp.normBaseUV.Length : 0;
+						if (vcount == 0 || slotStamp.overlayUV == null || slotStamp.triangles == null)
+						{
+							LogDebugSkip($"ApplySlotStamps: invalid stamp data for slot '{slotStamp.slotName}'");
+							continue;
+						}
+
+						// ... inside ApplyStampToUMA loop, before building uv lists:
+						bool hasRecorded = (slotStamp.recordedUVArea.width > 0f && slotStamp.recordedUVArea.height > 0f);
+						bool hasRuntime = (slot.UVArea.width > 0f && slot.UVArea.height > 0f);
+
+
+						// Always map normalized UVs from recorded area into current slot UVArea
+
+						// Build UV lists; convert normalized slot UVs back to atlas UVs
+						var uv0List = new List<Vector2>(vcount);
+						var uv1List = new List<Vector2>(vcount);
+						var colList = new List<Color32>(vcount);
+						var vertsList = new List<Vector3>(vcount);
+						for (int v = 0; v < vcount; v++)
+						{
+							Vector2 nuv = slotStamp.normBaseUV[v];
+							// normalized -> atlas (recorded area)
+							Vector2 atlasUVRecorded = hasRecorded
+								? new Vector2(
+									slotStamp.recordedUVArea.xMin + nuv.x * slotStamp.recordedUVArea.width,
+									slotStamp.recordedUVArea.yMin + nuv.y * slotStamp.recordedUVArea.height)
+								: nuv;
+							// atlas (recorded) -> normalized (current)
+							Vector2 normCurrent = hasRuntime
+								? new Vector2(
+									(atlasUVRecorded.x - slot.UVArea.xMin) / slot.UVArea.width,
+									(atlasUVRecorded.y - slot.UVArea.yMin) / slot.UVArea.height)
+								: atlasUVRecorded;
+							// normalized (current) -> atlas (current)
+							Vector2 globalUV = hasRuntime
+								? slot.ConvertToAtlasUV(new Vector2(Mathf.Clamp01(normCurrent.x), Mathf.Clamp01(normCurrent.y)))
+								: normCurrent;
+
+							uv0List.Add(globalUV);
+							var ov = slotStamp.overlayUV[v];
+							if (stamp.invertY) ov.y = 1.0f - ov.y;
+							uv1List.Add(ov);
+							colList.Add(new Color32(255, 255, 255, 255));
+							vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
+						}
+
+						// Build mesh for optional debug/consistency (not strictly required for DrawMeshNow)
+						var mesh = new Mesh { name = $"DecalRT_ApplyStampAsset_{slotStamp.slotName}" };
+						mesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+						mesh.SetVertices(vertsList);
+						mesh.SetTriangles(slotStamp.triangles, 0);
+						mesh.SetUVs(0, uv0List);
+						mesh.SetUVs(1, uv1List);
+						mesh.SetColors(colList);
+						mesh.RecalculateBounds();
+
+						var uvRect = hasRuntime ? slot.UVArea : new Rect(0f, 0f, 1f, 1f);
+						stampMat.SetVector("_UVRect", new Vector4(uvRect.xMin, uvRect.yMin, uvRect.xMax, uvRect.yMax));
+
+						// Source texture for resolved channel
+						var srcTex = overlay.textureList[channelIndex];
+						if (srcTex == null)
+							continue;
+						stampMat.SetTexture("_OverlayTex", srcTex);
+
+						// Build expanded mesh for stamping this slot (seam fix)
+						var expandedMesh = BuildStampMeshWithExpansion(uv0List, uv1List, colList, slotStamp.triangles,
+						/*expandPixels*/0.75f, targetTexture.width, targetTexture.height);
+						if (expandedMesh == null)
+						{
+							continue;
+						}
+
+						// Draw to provided target texture
+						var prevActive = RenderTexture.active;
+						RenderTexture.active = targetTexture;
+						SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, Time.frameCount, "before drawing mesh");
+
+						bool SetPassReturn = stampMat.SetPass(0);
+						DrawStampMesh(expandedMesh);
+						RenderTexture.active = prevActive;
+
+						// HERE: Record After
+						SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, currenttime, "after drawing mesh");
+
+
+						stampedAny = true;
+
+						//if(stamp.bleedPixels > 0)
+						//	RunDilation(targetTexture, stamp.bleedPixels);
+						//SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, Time.frameCount, "After Dilation");
+
+						UMAUtils.DestroySceneObject(expandedMesh);
 					}
-
-					// ... inside ApplyStampToUMA loop, before building uv lists:
-					bool hasRecorded = (slotStamp.recordedUVArea.width > 0f && slotStamp.recordedUVArea.height > 0f);
-					bool hasRuntime = (slot.UVArea.width > 0f && slot.UVArea.height > 0f);
-
-
-                    // Always map normalized UVs from recorded area into current slot UVArea
-
-					// Build UV lists; convert normalized slot UVs back to atlas UVs
-					var uv0List = new List<Vector2>(vcount);
-					var uv1List = new List<Vector2>(vcount);
-					var colList = new List<Color32>(vcount);
-					var vertsList = new List<Vector3>(vcount);
-				for(int v = 0; v < vcount; v++) {
-					Vector2 nuv = slotStamp.normBaseUV[v];
-                        // normalized -> atlas (recorded area)
-                        Vector2 atlasUVRecorded = hasRecorded
-                            ? new Vector2(
-                                slotStamp.recordedUVArea.xMin + nuv.x * slotStamp.recordedUVArea.width,
-                                slotStamp.recordedUVArea.yMin + nuv.y * slotStamp.recordedUVArea.height)
-                            : nuv;
-                        // atlas (recorded) -> normalized (current)
-                        Vector2 normCurrent = hasRuntime
-                            ? new Vector2(
-                                (atlasUVRecorded.x - slot.UVArea.xMin) / slot.UVArea.width,
-                                (atlasUVRecorded.y - slot.UVArea.yMin) / slot.UVArea.height)
-                            : atlasUVRecorded;
-                        // normalized (current) -> atlas (current)
-                        Vector2 globalUV = hasRuntime
-                            ? slot.ConvertToAtlasUV(new Vector2(Mathf.Clamp01(normCurrent.x), Mathf.Clamp01(normCurrent.y)))
-                            : normCurrent;
-
-                        uv0List.Add(globalUV);
-					var ov = slotStamp.overlayUV[v];
-					if(stamp.invertY) ov.y = 1.0f - ov.y;
-					uv1List.Add(ov);
-                        colList.Add(new Color32(255, 255, 255, 255));
-                        vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
-                    }
-
-					// Build mesh for optional debug/consistency (not strictly required for DrawMeshNow)
-					var mesh = new Mesh { name = $"DecalRT_ApplyStampAsset_{slotStamp.slotName}" };
-					mesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
-					mesh.SetVertices(vertsList);
-					mesh.SetTriangles(slotStamp.triangles, 0);
-					mesh.SetUVs(0, uv0List);
-					mesh.SetUVs(1, uv1List);
-					mesh.SetColors(colList);
-					mesh.RecalculateBounds();
-
-					var uvRect = hasRuntime ? slot.UVArea : new Rect(0f, 0f, 1f, 1f);
-					stampMat.SetVector("_UVRect", new Vector4(uvRect.xMin, uvRect.yMin, uvRect.xMax, uvRect.yMax));
-					
-					// Source texture for resolved channel
-					var srcTex = overlay.textureList[channelIndex];
-					if(srcTex == null)
-						continue;
-					stampMat.SetTexture("_OverlayTex", srcTex);
-
-					// Build expanded mesh for stamping this slot (seam fix)
-					var expandedMesh = BuildStampMeshWithExpansion(uv0List, uv1List, colList, slotStamp.triangles,
-					/*expandPixels*/0.75f, targetTexture.width, targetTexture.height);
-					if(expandedMesh == null) {
-						continue;
-					}
-
-					// Draw to provided target texture
-					var prevActive = RenderTexture.active;
-					RenderTexture.active = targetTexture;
-					SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, Time.frameCount, "before drawing mesh");
-
-					bool SetPassReturn = stampMat.SetPass(0);
-					DrawStampMesh(expandedMesh);
-					RenderTexture.active = prevActive;
-
-					// HERE: Record After
-					SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, currenttime, "after drawing mesh");
-
-
-					stampedAny = true;
-
-					//if(stamp.bleedPixels > 0)
-					//	RunDilation(targetTexture, stamp.bleedPixels);
-					//SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, Time.frameCount, "After Dilation");
-
-					UMAUtils.DestroySceneObject(expandedMesh);
 				}
-
-				GL.PopMatrix();
-				RenderTexture.active = prevRTGlobal;
+				finally {
+					GL.PopMatrix();
+					RenderTexture.active = prevRTGlobal;
+				}
 
 				// Destroy temp stamp material
 				if(Application.isPlaying)
