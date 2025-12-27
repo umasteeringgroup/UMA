@@ -409,6 +409,10 @@ namespace UMA.Examples
                     if (sd.skinnedMeshRenderer != r) continue; // only this renderer
                     if (sd.Suppressed) continue; // dropped by LOD rules
 
+                    // If the slot has a MaxLod set and the current LOD exceeds it, skip this slot entirely
+                    // (contribute no triangles, effectively hiding it at higher LOD levels)
+                    if (sd.MaxLod > -1 && desiredLOD > sd.MaxLod) continue;
+
                     int sourceSub = sd.asset.subMeshIndex;
                     if (sourceSub < 0 || sourceSub >= sd.asset.meshData.subMeshCount) continue;
 
