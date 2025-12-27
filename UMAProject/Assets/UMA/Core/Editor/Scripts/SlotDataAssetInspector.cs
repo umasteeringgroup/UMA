@@ -24,10 +24,14 @@ namespace UMA.Editors
         SerializedProperty CharacterCompleted;
         SerializedProperty MaxLOD;
         SerializedProperty isClippingPlane;
+        SerializedProperty clippingPlaneOffset;
+        SerializedProperty isSmooshable;
         SerializedProperty smooshOffset;
         SerializedProperty smooshExpand;
         SlotDataAsset slot;
         SlotDataAsset WeldToSlot = null;
+
+        bool lodFoldout;
 
         // Source slot for bindpose conformity
         SlotDataAsset bindposeSourceSlot = null;
@@ -115,6 +119,8 @@ namespace UMA.Editors
             CharacterCompleted = serializedObject.FindProperty("CharacterCompleted");
             MaxLOD = serializedObject.FindProperty("maxLOD");
             isClippingPlane = serializedObject.FindProperty("isClippingPlane");
+            clippingPlaneOffset = serializedObject.FindProperty("clippingPlaneOffset");
+            isSmooshable = serializedObject.FindProperty("isSmooshable");
             smooshExpand = serializedObject.FindProperty("smooshExpand");
             smooshOffset = serializedObject.FindProperty("smooshOffset");
 
@@ -290,6 +296,59 @@ namespace UMA.Editors
                 Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
             }
 
+            // LOD Info
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            lodFoldout = EditorGUILayout.Foldout(lodFoldout, "LOD");
+            GUILayout.EndHorizontal();
+            if (lodFoldout)
+            {
+                GUILayout.Space(10);
+                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+                if (slot.meshData == null || slot.meshData.submeshes == null || slot.meshData.subMeshCount <= 0)
+                {
+                    EditorGUILayout.HelpBox("MeshData is missing.", MessageType.Info);
+                }
+                else
+                {
+                    int sm = slot.subMeshIndex;
+                    if (sm < 0 || sm >= slot.meshData.subMeshCount)
+                    {
+                        sm = 0;
+                    }
+
+                    var smt = slot.meshData.submeshes[sm];
+                    if (smt == null)
+                    {
+                        EditorGUILayout.HelpBox("Submesh data is missing.", MessageType.Info);
+                    }
+                    else
+                    {
+                        int baseCount = 0;
+                        try { baseCount = smt.GetTriangleCount(0) / 3; } catch { }
+                        EditorGUILayout.LabelField("LOD0 Triangles", baseCount.ToString());
+
+                        if (smt.lodRanges != null && smt.lodRanges.Count > 0)
+                        {
+                            EditorGUILayout.Space(5);
+                            EditorGUILayout.LabelField("Internal LOD Ranges", EditorStyles.boldLabel);
+                            for (int i = 0; i < smt.lodRanges.Count; i++)
+                            {
+                                var r = smt.lodRanges[i];
+                                int triCount = (int)r.count / 3;
+                                EditorGUILayout.LabelField(
+                                    string.Format("LOD{0}", i),
+                                    string.Format("triangles={0}, offset={1}, count={2}", triCount, r.offset, r.count));
+                            }
+                        }
+                        else
+                        {
+                            EditorGUILayout.HelpBox("No internal LOD ranges found on this slot.", MessageType.Info);
+                        }
+                    }
+                }
+                GUIHelper.EndVerticalPadded(10);
+            }
+
             // Smooshing
             EditorGUI.BeginChangeCheck();
             GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
@@ -297,11 +356,15 @@ namespace UMA.Editors
             GUILayout.EndHorizontal();
             if (slot.smooshFoldout)
             {
-                #region Smooshing
                 GUILayout.Space(10);
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-                EditorGUILayout.HelpBox("Conform one slot to another using a clipping plane. Offset shifts the conforming vertices; Expand scales them.", MessageType.Info);
+                EditorGUILayout.HelpBox("Smooshing and clipping plane controls for this slot.", MessageType.Info);
 
+                if (isSmooshable != null) EditorGUILayout.PropertyField(isSmooshable, new GUIContent("Is Smooshable"));
+                if (isClippingPlane != null) EditorGUILayout.PropertyField(isClippingPlane, new GUIContent("Is Clipping Plane"));
+                if (clippingPlaneOffset != null) EditorGUILayout.PropertyField(clippingPlaneOffset, new GUIContent("Clipping Plane Offset"), true);
+
+                EditorGUILayout.Space(5);
                 if (smooshOffset != null) EditorGUILayout.PropertyField(smooshOffset);
                 if (smooshExpand != null) EditorGUILayout.PropertyField(smooshExpand);
 
@@ -315,7 +378,6 @@ namespace UMA.Editors
                     forceUpdate = true;
                 }
                 GUIHelper.EndVerticalPadded(10);
-                #endregion
             }
             forceUpdate |= EditorGUI.EndChangeCheck();
 

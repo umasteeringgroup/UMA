@@ -1,13 +1,17 @@
+#define UMA_INTERNALLOD_DIAGNOSTICS
+
 using UnityEngine;
 using UMA.CharacterSystem;
 using System;
 using System.Collections.Generic;
 using System.Collections; // added for BitArray
-
 namespace UMA.Examples
 {
     public class UMASimpleLOD : MonoBehaviour
     {
+#if UNITY_EDITOR && UMA_INTERNALLOD_DIAGNOSTICS
+        private static int _lastLoggedFrame = -1;
+#endif
         [Tooltip("The distance to step to another LOD")]
         [Range(0.01f, 100f)]
         public float lodDistance = 5.0f;
@@ -49,6 +53,15 @@ namespace UMA.Examples
         public float BufferZone = 0.5f;
 
         public int CurrentLOD { get { return _currentLOD - lodOffset; } }
+
+#if UNITY_EDITOR
+        [Header("Editor")]
+        [Tooltip("Editor-only override for Current LOD. When enabled, the inspector can force a specific LOD level at edit time.")]
+        public bool editorOverrideLOD;
+
+        [Tooltip("Editor-only forced LOD level (0..maxLOD-1) used when 'Editor Override LOD' is enabled.")]
+        public int editorForcedLOD;
+#endif
 
         private int _currentLOD = -1;
         private float lastDist = 0.0f;
@@ -148,6 +161,7 @@ namespace UMA.Examples
             }
             if (_umaData == null)
             {
+                Debug.Log("UMAData not found!");
                 return;
             }
             if (lodLevel < 0)
@@ -159,8 +173,27 @@ namespace UMA.Examples
                 lodLevel = maxLOD - 1;
             }
             _currentLOD = lodLevel + lodOffset;
+            Debug.Log("Process recipe for LOD level " + _currentLOD);
+
             ProcessRecipe(_currentLOD);
         }
+
+#if UNITY_EDITOR
+        public int GetEditorDesiredLODLevel()
+        {
+            if (!editorOverrideLOD)
+            {
+                return -1;
+            }
+
+            int max = maxLOD;
+            if (max < 1)
+            {
+                max = 1;
+            }
+            return Mathf.Clamp(editorForcedLOD, 0, max - 1);
+        }
+#endif
 
         public void Update()
         {
@@ -211,6 +244,14 @@ namespace UMA.Examples
             {
                 return false;
             }
+            if (_umaData.GetRenderer(0) == null)
+            {
+                                return false;
+            }
+            if ((_umaData as DynamicCharacterAvatar).UpdatePending())
+            {
+                return false;
+            }
 
             Transform _cameraTransform = Camera.main.transform;
 
@@ -247,10 +288,6 @@ namespace UMA.Examples
                 _umaData.atlasResolutionScale = atlasResolutionScale;
             }
 
-            if (useInternalMeshLOD)
-            {
-                UpdateInternalLOD();
-            }
             if (useSlotDropping || swapSlots)
             {
                 updatedSlots = ProcessRecipe(effectiveLevel);
@@ -260,6 +297,12 @@ namespace UMA.Examples
             {
                 lastDist = cameraDistance;
                 _currentLOD = effectiveLevel;
+
+                // Only update internal mesh LOD when the LOD level actually changes
+                if (useInternalMeshLOD)
+                {
+                    UpdateInternalLOD();
+                }
             }
 
             if (updatedTextures || updatedSlots)
@@ -278,7 +321,7 @@ namespace UMA.Examples
             return true;
         }
 
-        private void UpdateInternalLOD()
+        public void UpdateInternalLOD()
         {
             if (_umaData == null || _umaData.umaRecipe == null || _umaData.GetRenderers() == null)
             {
@@ -291,10 +334,9 @@ namespace UMA.Examples
             if (desiredLOD >= maxLOD) desiredLOD = maxLOD - 1;
 
             // Early out if nothing to do
-            if (_umaData.currentLODLevel == desiredLOD)
-            {
-                return;
-            }
+            // NOTE: We cannot early-out solely based on UMAData.currentLODLevel, because the renderer meshes
+            // may have been modified by other edit-time operations and need indices rebuilt even when the
+            // desired level matches UMAData.
 
             var slots = _umaData.umaRecipe.slotDataList;
             if (slots == null || slots.Length == 0)
@@ -311,18 +353,19 @@ namespace UMA.Examples
                 int sm = sd.asset.subMeshIndex;
                 if (sd.asset.meshData.submeshes == null || sm < 0 || sm >= sd.asset.meshData.subMeshCount) continue;
                 var smt = sd.asset.meshData.submeshes[sm];
-                if (smt != null && smt.GetTriangleCount(desiredLOD) > 0)
+                if (smt == null) continue;
+
+                int lodCount = smt.LODCount();
+                if (lodCount > 1)
                 {
-                    // Consider more than one LOD if a different LOD produces a different count
-                    int baseCount = smt.GetTriangleCount(0);
-                    if (smt.GetTriangleCount(desiredLOD) != baseCount)
-                    {
-                        anyHasLOD = true; break;
-                    }
+                    anyHasLOD = true;
+                    break;
                 }
+                if (anyHasLOD) break;
             }
             if (!anyHasLOD)
             {
+                Debug.Log("[UMASimpleLOD] No slots with multiple LODs found; skipping internal LOD update.");
                 // Nothing with multiple LODs — just keep UMAData in sync and exit
                 _umaData.currentLODLevel = desiredLOD;
                 return;
@@ -331,6 +374,15 @@ namespace UMA.Examples
             // Update UMAData LOD and refresh mesh hide masks for this LOD
             _umaData.currentLODLevel = desiredLOD;
             _umaData.umaRecipe.UpdateMeshHideMasks(desiredLOD);
+
+#if UNITY_EDITOR && UMA_INTERNALLOD_DIAGNOSTICS
+            // Avoid spamming: log at most once per editor frame.
+            if (_lastLoggedFrame != Time.frameCount)
+            {
+                _lastLoggedFrame = Time.frameCount;
+                Debug.Log("[UMASimpleLOD] UpdateInternalLOD desiredLOD=" + desiredLOD + " currentLOD=" + _currentLOD + " slots=" + slots.Length);
+            }
+#endif
 
             // Build per-renderer, per-submesh new index buffers
             var renderers = _umaData.GetRenderers();
@@ -365,16 +417,65 @@ namespace UMA.Examples
 
                     // Retrieve triangles for desired LOD (managed path)
                     int[] localTris = null;
+
+                    int slotLodCount = 0;
                     try
                     {
-                        localTris = smt.getManagedTriangles(desiredLOD);
+                        slotLodCount = smt.LODCount();
                     }
                     catch
                     {
-                        // fallback to base if specific LOD not available
-                        localTris = smt.getManagedTriangles(0);
+                        slotLodCount = 0;
+                    }
+
+                    // Slots without internal LOD ranges must always render their base triangles.
+                    // (They are not expected to have per-LOD triangle buffers.)
+                    if (slotLodCount <= 0)
+                    {
+                        localTris = smt.GetBaseTriangles();
+                    }
+                    else
+                    {
+                        int slotDesired = desiredLOD;
+                        if (slotDesired < 0)
+                        {
+                            slotDesired = 0;
+                        }
+                        if (slotDesired >= slotLodCount)
+                        {
+                            slotDesired = slotLodCount - 1;
+                        }
+
+                        // If the requested LOD for this slot has no triangles, migrate to next valid higher LOD.
+                        int chosenLod = slotLodCount - 1;
+                        for (int l = slotDesired; l < slotLodCount; l++)
+                        {
+                            if (!smt.HasLODLevel(l))
+                            {
+                                continue;
+                            }
+                            if (smt.GetTriangleCount(l) > 0)
+                            {
+                                chosenLod = l;
+                                break;
+                            }
+                        }
+
+                        if (chosenLod <= 0)
+                        {
+                            localTris = smt.GetBaseTriangles();
+                        }
+                        else
+                        {
+                            localTris = smt.getManagedTriangles(chosenLod);
+                        }
                     }
                     if (localTris == null || localTris.Length == 0) continue;
+
+                    // Always work on a copy since we will apply vertex offsets and may filter
+                    var localTrisCopy = new int[localTris.Length];
+                    Array.Copy(localTris, localTrisCopy, localTris.Length);
+                    localTris = localTrisCopy;
 
                     // Apply mesh hide if present (mask is per-submesh BitArray[]; true bits mean remove)
                     BitArray[] masks = sd.meshHideMask;
@@ -393,6 +494,9 @@ namespace UMA.Examples
                     }
                     if (mask != null && mask.Length > 0)
                     {
+#if UNITY_EDITOR && UMA_INTERNALLOD_DIAGNOSTICS
+                        int beforeLen = localTris.Length;
+#endif
                         if (mask.Length == localTris.Length)
                         {
                             // per-index mask: true means hide index
@@ -422,6 +526,18 @@ namespace UMA.Examples
                             }
                             localTris = filtered.Count > 0 ? filtered.ToArray() : Array.Empty<int>();
                         }
+
+#if UNITY_EDITOR && UMA_INTERNALLOD_DIAGNOSTICS
+                        int afterLen = localTris.Length;
+                        if (afterLen != beforeLen)
+                        {
+                            Debug.Log("[UMASimpleLOD] MeshHideMask filtered slot='" + sd.slotName + "' sub=" + sourceSub + " indices " + beforeLen + " -> " + afterLen);
+                        }
+                        else
+                        {
+                            Debug.Log("[UMASimpleLOD] MeshHideMask present but did not filter slot='" + sd.slotName + "' sub=" + sourceSub + " (maskLen=" + mask.Length + ", trisLen=" + beforeLen + ")");
+                        }
+#endif
                     }
 
                     if (localTris.Length == 0) continue;

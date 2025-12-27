@@ -13,6 +13,86 @@ namespace UMA.Editors
     {
         public static SkinnedMeshRenderer finalMeshRenderer;
 
+        // Helper: choose a triangle's UDIM tile by majority vertex membership.
+        // If the triangle spans multiple tiles, it will be assigned to the tile that contains the most vertices.
+        // Ties are resolved deterministically by choosing the lowest UDIM number (lowest v, then u).
+        private static bool TryGetTriangleUdimTileByMajority(Vector2[] uv, int a, int b, int c, int tilesU, int tilesV, out (int u, int v) tileKey)
+        {
+            tileKey = default;
+            if (uv == null)
+            {
+                return false;
+            }
+
+            (int u, int v) ta = (Mathf.FloorToInt(uv[a].x), Mathf.FloorToInt(uv[a].y));
+            (int u, int v) tb = (Mathf.FloorToInt(uv[b].x), Mathf.FloorToInt(uv[b].y));
+            (int u, int v) tc = (Mathf.FloorToInt(uv[c].x), Mathf.FloorToInt(uv[c].y));
+
+            int ca = 1;
+            int cb = 0;
+            int cc = 0;
+
+            if (tb.u == ta.u && tb.v == ta.v)
+            {
+                ca++;
+            }
+            else
+            {
+                cb = 1;
+            }
+
+            if (tc.u == ta.u && tc.v == ta.v)
+            {
+                ca++;
+            }
+            else if (cb > 0 && tc.u == tb.u && tc.v == tb.v)
+            {
+                cb++;
+            }
+            else
+            {
+                cc = 1;
+            }
+
+            (int u, int v) best = ta;
+            int bestCount = ca;
+
+            if (cb > bestCount)
+            {
+                best = tb;
+                bestCount = cb;
+            }
+            else if (cb == bestCount && cb > 0)
+            {
+                if (tb.v < best.v || (tb.v == best.v && tb.u < best.u))
+                {
+                    best = tb;
+                }
+            }
+
+            if (cc > bestCount)
+            {
+                best = tc;
+                bestCount = cc;
+            }
+            else if (cc == bestCount && cc > 0)
+            {
+                if (tc.v < best.v || (tc.v == best.v && tc.u < best.u))
+                {
+                    best = tc;
+                }
+            }
+
+            // Ignore outside configured UDIM grid
+            if (best.u < 0 || best.v < 0 || best.u >= tilesU || best.v >= tilesV)
+            {
+                return false;
+            }
+
+            tileKey = best;
+            return true;
+        }
+
         // Result object returned to the caller with all created assets
         public class SlotBuildResult
         {
@@ -36,6 +116,7 @@ namespace UMA.Editors
             var ranges = new List<UMA.UMALodRange>(lodCount);
             for (int l = 0; l < lodCount; l++)
             {
+                Debug.Log("Processing LOD " + l + " for slot " + sda.slotName);
                 var lor = sourceMesh.GetLod(sourceSubmeshIndex, l);
                 ranges.Add(new UMA.UMALodRange(lor));
             }
@@ -43,11 +124,149 @@ namespace UMA.Editors
 #endif
         }
 
+        private static void ClearInternalLods(SlotDataAsset slot, int targetSubmeshIndex)
+        {
+#if UNITY_6000_2_OR_NEWER
+            if (slot == null || slot.meshData == null || slot.meshData.submeshes == null)
+            {
+                return;
+            }
+            if (targetSubmeshIndex < 0 || targetSubmeshIndex >= slot.meshData.submeshes.Length)
+            {
+                return;
+            }
+            var smt = slot.meshData.submeshes[targetSubmeshIndex];
+            if (smt == null)
+            {
+                return;
+            }
+            if (smt.lodRanges != null && smt.lodRanges.Count > 0)
+            {
+                smt.lodRanges = null;
+                EditorUtility.SetDirty(slot);
+            }
+#endif
+        }
+
+        private static void GenerateSlotLodsIfEnabled(SlotBuilderParameters sbp, SlotDataAsset slot)
+        {
+            if (!sbp.generateSlotLods)
+            {
+                return;
+            }
+            if (slot == null)
+            {
+                return;
+            }
+
+            Debug.Log(string.Format("[SlotLOD] Generating internal LODs for slot='{0}' maxLevels={1} minTris={2} reduction={3} preserveBorders={4} borderWeight={5}",
+                slot.slotName,
+                sbp.slotLodMaxLevels,
+                sbp.slotLodMinTriangles,
+                sbp.slotLodTargetReductionPerLevel,
+                sbp.slotLodPreserveBoundaryEdges,
+                sbp.slotLodBoundaryWeight));
+
+            // Persist the parameters used for LOD generation onto the slot (editor-only) so Updates can reuse them.
+            try
+            {
+                var snap = new SlotDataAsset.SlotBuilderParametersSnapshot();
+                snap.generateSlotLods = sbp.generateSlotLods;
+                snap.slotLodMaxLevels = sbp.slotLodMaxLevels;
+                snap.slotLodMinTriangles = sbp.slotLodMinTriangles;
+                snap.slotLodTargetReductionPerLevel = sbp.slotLodTargetReductionPerLevel;
+                snap.slotLodPreserveBoundaryEdges = sbp.slotLodPreserveBoundaryEdges;
+                snap.slotLodBoundaryWeight = sbp.slotLodBoundaryWeight;
+                slot.SetSlotBuilderParamsSnapshot(snap);
+                EditorUtility.SetDirty(slot);
+            }
+            catch { }
+
+            // Use reflection to avoid assembly-definition reference issues between editor assemblies.
+            var lodGenType = Type.GetType("UMA.Editors.SlotLodGenerator, UMA_Core_Editor", throwOnError: false);
+            if (lodGenType == null)
+            {
+                lodGenType = Type.GetType("UMA.Editors.SlotLodGenerator", throwOnError: false);
+            }
+            if (lodGenType == null)
+            {
+                Debug.LogWarning("[SlotLOD] SlotLodGenerator type not found; internal slot LODs not generated.");
+                return;
+            }
+
+            var optionsType = lodGenType.GetNestedType("LodGenOptions", System.Reflection.BindingFlags.Public);
+            if (optionsType == null)
+            {
+                Debug.LogWarning("[SlotLOD] SlotLodGenerator.LodGenOptions not found; internal slot LODs not generated.");
+                return;
+            }
+
+            var options = Activator.CreateInstance(optionsType);
+
+            SetFieldIfExists(optionsType, options, "MaxLodLevels", Mathf.Clamp(sbp.slotLodMaxLevels > 0 ? sbp.slotLodMaxLevels : 8, 1, 8));
+            SetFieldIfExists(optionsType, options, "MinTriangles", Mathf.Max(0, sbp.slotLodMinTriangles > 0 ? sbp.slotLodMinTriangles : 256));
+            SetFieldIfExists(optionsType, options, "TargetReductionPerLevel", Mathf.Clamp01(sbp.slotLodTargetReductionPerLevel > 0f ? sbp.slotLodTargetReductionPerLevel : 0.5f));
+            SetFieldIfExists(optionsType, options, "PreserveBoundaryEdges", sbp.slotLodPreserveBoundaryEdges);
+            SetFieldIfExists(optionsType, options, "BoundaryWeight", Mathf.Max(0f, sbp.slotLodBoundaryWeight));
+
+            var method = lodGenType.GetMethod("GenerateAndApplyLods", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            if (method == null)
+            {
+                Debug.LogWarning("[SlotLOD] SlotLodGenerator.GenerateAndApplyLods not found; internal slot LODs not generated.");
+                return;
+            }
+
+            try
+            {
+                method.Invoke(null, new object[] { slot, options });
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[SlotLOD] Failed generating internal slot LODs: " + ex.Message);
+            }
+        }
+
+        private static void SetFieldIfExists(Type t, object instance, string fieldName, object value)
+        {
+            var f = t.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (f == null)
+            {
+                return;
+            }
+            try
+            {
+                f.SetValue(instance, value);
+            }
+            catch { }
+        }
+
         /// <summary>
         /// Updates an Existing SlotDataAsset.
         /// </summary>
         public static void UpdateSlotData(SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents, bool clearNormals, bool clearTangents)
         {
+#if UNITY_EDITOR
+            // If this slot was built with Slot Builder LOD settings, reuse those defaults on update.
+            // This keeps updates consistent even when called from other tools.
+            try
+            {
+                if (slot != null && slot.HasSlotBuilderParamsSnapshot)
+                {
+                    var snap = slot.GetSlotBuilderParamsSnapshot();
+                    if (snap.hasData)
+                    {
+                        // We only override options that are commonly driven by the builder.
+                        // Tangent recomputation is expensive: only force it when LOD generation was enabled.
+                        if (snap.generateSlotLods)
+                        {
+                            calcTangents = true;
+                        }
+                    }
+                }
+            }
+            catch { }
+#endif
+
             int subMesh = slot.subMeshIndex;
             if (slot.sourceSubmeshIndex > 0)
             {
@@ -151,6 +370,29 @@ namespace UMA.Editors
             {
                 slot.meshData.RetrieveDataFromUnityCloth(cloth);
             }
+
+#if UNITY_EDITOR
+            // If the slot was previously built with internal LODs, regenerate them after updating mesh data.
+            try
+            {
+                if (slot != null && slot.HasSlotBuilderParamsSnapshot)
+                {
+                    var snap = slot.GetSlotBuilderParamsSnapshot();
+                    if (snap.hasData && snap.generateSlotLods)
+                    {
+                        var sbp = new SlotBuilderParameters();
+                        sbp.generateSlotLods = true;
+                        sbp.slotLodMaxLevels = snap.slotLodMaxLevels;
+                        sbp.slotLodMinTriangles = snap.slotLodMinTriangles;
+                        sbp.slotLodTargetReductionPerLevel = snap.slotLodTargetReductionPerLevel;
+                        sbp.slotLodPreserveBoundaryEdges = snap.slotLodPreserveBoundaryEdges;
+                        sbp.slotLodBoundaryWeight = snap.slotLodBoundaryWeight;
+                        GenerateSlotLodsIfEnabled(sbp, slot);
+                    }
+                }
+            }
+            catch { }
+#endif
             AssetDatabase.SaveAssets();
             // Always clean up here; batch deferral is handled only in CreateSlotData
             AssetDatabase.DeleteAsset(SkinnedName);
@@ -514,16 +756,35 @@ namespace UMA.Editors
                 }
             }
 
+            if (sbp.alwaysRecreateSlots)
+            {
+                if (OldAsset != null)
+                {
+                    AssetDatabase.DeleteAsset(slotPath);
+                    OldAsset = null;
+                }
+            }
+
             if (OldAsset != null)
             {
                 // Overwrite existing slot in place
                 string existingRootBone = slot.meshData.RootBoneName;
                 UpdateSlotData(OldAsset, finalMeshRenderer, OldAsset.material, OldAsset.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
                 EditorUtility.SetDirty(OldAsset);
+#if UNITY_6000_2_OR_NEWER
+                if (!sbp.generateSlotLods)
+                {
+                    ClearInternalLods(OldAsset, 0);
+                }
+#endif
                 // Carry LOD ranges from the source mesh
 #if UNITY_6000_2_OR_NEWER
-                CopyLodRangesFromSourceMesh(OldAsset, 0, sbp.slotMesh.sharedMesh, 0);
+                if (sbp.generateSlotLods)
+                {
+                    CopyLodRangesFromSourceMesh(OldAsset, 0, sbp.slotMesh.sharedMesh, 0);
+                }
 #endif
+                GenerateSlotLodsIfEnabled(sbp, OldAsset);
                 createdSlots.Add(OldAsset);
                 // Replace working reference with existing for overlay mapping
                 UnityEngine.Object.DestroyImmediate(slot);
@@ -534,8 +795,16 @@ namespace UMA.Editors
                 AssetDatabase.CreateAsset(slot, slotPath);
 #if UNITY_6000_2_OR_NEWER
                 // Carry LOD ranges from the source mesh
-                CopyLodRangesFromSourceMesh(slot, 0, sbp.slotMesh.sharedMesh, 0);
+                if (sbp.generateSlotLods)
+                {
+                    CopyLodRangesFromSourceMesh(slot, 0, sbp.slotMesh.sharedMesh, 0);
+                }
+                else
+                {
+                    ClearInternalLods(slot, 0);
+                }
 #endif
+                GenerateSlotLodsIfEnabled(sbp, slot);
                 if (sbp.addToGlobalLibrary)
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), slot);
@@ -588,6 +857,14 @@ namespace UMA.Editors
                 }
 
                 var existingAdditional = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(theSlotPath);
+                if (sbp.alwaysRecreateSlots)
+                {
+                    if (existingAdditional != null)
+                    {
+                        AssetDatabase.DeleteAsset(theSlotPath);
+                        existingAdditional = null;
+                    }
+                }
                 if (existingAdditional != null)
                 {
                     // Update existing submesh slot
@@ -595,8 +872,16 @@ namespace UMA.Editors
                     UpdateSlotData(existingAdditional, finalMeshRenderer, existingAdditional.material, existingAdditional.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
                     existingAdditional.sourceSubmeshIndex = i;
 #if UNITY_6000_2_OR_NEWER
-                    CopyLodRangesFromSourceMesh(existingAdditional, 0, sbp.slotMesh.sharedMesh, i);
+                    if (!sbp.generateSlotLods)
+                    {
+                        ClearInternalLods(existingAdditional, 0);
+                    }
+                    if (sbp.generateSlotLods)
+                    {
+                        CopyLodRangesFromSourceMesh(existingAdditional, 0, sbp.slotMesh.sharedMesh, i);
+                    }
 #endif
+                    GenerateSlotLodsIfEnabled(sbp, existingAdditional);
                     EditorUtility.SetDirty(existingAdditional);
                     createdSlots.Add(existingAdditional);
 
@@ -622,8 +907,16 @@ namespace UMA.Editors
 
                 AssetDatabase.CreateAsset(additionalSlot, theSlotPath);
 #if UNITY_6000_2_OR_NEWER
-                CopyLodRangesFromSourceMesh(additionalSlot, 0, sbp.slotMesh.sharedMesh, i);
+                if (sbp.generateSlotLods)
+                {
+                    CopyLodRangesFromSourceMesh(additionalSlot, 0, sbp.slotMesh.sharedMesh, i);
+                }
+                else
+                {
+                    ClearInternalLods(additionalSlot, 0);
+                }
 #endif
+                GenerateSlotLodsIfEnabled(sbp, additionalSlot);
                 if (sbp.addToGlobalLibrary)
                 {
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), additionalSlot);
@@ -1172,31 +1465,11 @@ namespace UMA.Editors
                     int b = tris[t + 1];
                     int c = tris[t + 2];
 
-                    Vector2 uva = uv[a];
-                    Vector2 uvb = uv[b];
-                    Vector2 uvc = uv[c];
-
-                    int ua = Mathf.FloorToInt(uva.x);
-                    int va = Mathf.FloorToInt(uva.y);
-                    int ub = Mathf.FloorToInt(uvb.x);
-                    int vb = Mathf.FloorToInt(uvb.y);
-                    int uc = Mathf.FloorToInt(uvc.x);
-                    int vc = Mathf.FloorToInt(uvc.y);
-
-                    // Spanning across tiles? Error out
-                    if (ua != ub || ua != uc || va != vb || va != vc)
-                    {
-                        Debug.LogError($"[UDIM] Triangle spans UDIM tiles in submesh {sub} at indices ({a},{b},{c}). Aborting.");
-                        return null;
-                    }
-
-                    // Ignore outside configured UDIM grid
-                    if (ua < 0 || va < 0 || ua >= tilesU || va >= tilesV)
+                    // Choose the owning tile by majority vertex membership (supports triangles spanning tiles)
+                    if (!TryGetTriangleUdimTileByMajority(uv, a, b, c, tilesU, tilesV, out var key))
                     {
                         continue;
                     }
-
-                    var key = (ua, va);
                     if (!tileToTris.TryGetValue(key, out var list))
                     {
                         list = new List<int>(6);
@@ -1307,6 +1580,14 @@ namespace UMA.Editors
                         }
 
                         var existing = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(theSlotPath);
+                        if (sbp.alwaysRecreateSlots)
+                        {
+                            if (existing != null)
+                            {
+                                AssetDatabase.DeleteAsset(theSlotPath);
+                                existing = null;
+                            }
+                        }
                         SlotDataAsset sda;
                         if (existing != null)
                         {
@@ -1318,6 +1599,45 @@ namespace UMA.Editors
                             sda.sourceSubmeshIndex = sub;
                             sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
                             TransformMeshData(sda, sbp);
+
+#if UNITY_6000_2_OR_NEWER
+                            if (!sbp.generateSlotLods)
+                            {
+                                ClearInternalLods(sda, 0);
+                            }
+#endif
+
+                            // Populate UDIM seam map (original vertex index -> this slot's local vertex index)
+                            if (sharedOldIndices != null && sharedOldIndices.Count > 0 && cmr.NewToOld != null && cmr.NewToOld.Count > 0)
+                            {
+                                var orig = new List<int>(sharedOldIndices.Count);
+                                var loc = new List<int>(sharedOldIndices.Count);
+                                for (int localIndex = 0; localIndex < cmr.NewToOld.Count; localIndex++)
+                                {
+                                    int oldIndex = cmr.NewToOld[localIndex];
+                                    if (sharedOldIndices.Contains(oldIndex))
+                                    {
+                                        orig.Add(oldIndex);
+                                        loc.Add(localIndex);
+                                    }
+                                }
+                                if (orig.Count > 0)
+                                {
+                                    sda.UdimSharedVertexMap = new SlotDataAsset.UdimSeamMap
+                                    {
+                                        originalIndices = orig.ToArray(),
+                                        localIndices = loc.ToArray()
+                                    };
+                                }
+                                else
+                                {
+                                    sda.UdimSharedVertexMap = null;
+                                }
+                            }
+                            else
+                            {
+                                sda.UdimSharedVertexMap = null;
+                            }
                             var cloth = sbp.slotMesh.GetComponent<Cloth>();
                             if (cloth != null)
                             {
@@ -1338,6 +1658,30 @@ namespace UMA.Editors
                             sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
                             TransformMeshData(sda, sbp);
 
+                            // Populate UDIM seam map (original vertex index -> this slot's local vertex index)
+                            if (sharedOldIndices != null && sharedOldIndices.Count > 0 && cmr.NewToOld != null && cmr.NewToOld.Count > 0)
+                            {
+                                var orig = new List<int>(sharedOldIndices.Count);
+                                var loc = new List<int>(sharedOldIndices.Count);
+                                for (int localIndex = 0; localIndex < cmr.NewToOld.Count; localIndex++)
+                                {
+                                    int oldIndex = cmr.NewToOld[localIndex];
+                                    if (sharedOldIndices.Contains(oldIndex))
+                                    {
+                                        orig.Add(oldIndex);
+                                        loc.Add(localIndex);
+                                    }
+                                }
+                                if (orig.Count > 0)
+                                {
+                                    sda.UdimSharedVertexMap = new SlotDataAsset.UdimSeamMap
+                                    {
+                                        originalIndices = orig.ToArray(),
+                                        localIndices = loc.ToArray()
+                                    };
+                                }
+                            }
+
                             var cloth = sbp.slotMesh.GetComponent<Cloth>();
                             if (cloth != null)
                             {
@@ -1349,11 +1693,22 @@ namespace UMA.Editors
                             {
                                 UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sda);
                             }
+
+#if UNITY_6000_2_OR_NEWER
+                            if (!sbp.generateSlotLods)
+                            {
+                                ClearInternalLods(sda, 0);
+                            }
+#endif
                         }
+
+                        // If requested, generate internal per-slot LOD buffers/ranges for this UDIM slot.
+                        // This must run after UpdateMeshData (meshData exists) and after the asset is created/updated.
+                        GenerateSlotLodsIfEnabled(sbp, sda);
 
 #if UNITY_6000_2_OR_NEWER
                         // Build and set LOD ranges for this compact mesh from the per-tile counts
-                        if (perSubTileToLodCounts.TryGetValue(sub, out var tileLodCounts) && tileLodCounts.TryGetValue((tu, tv), out var countsArr) && countsArr != null && countsArr.Length > 0)
+                        if (sbp.generateSlotLods && perSubTileToLodCounts.TryGetValue(sub, out var tileLodCounts) && tileLodCounts.TryGetValue((tu, tv), out var countsArr) && countsArr != null && countsArr.Length > 0)
                         {
                             var ranges = new List<UMA.UMALodRange>(countsArr.Length);
                             uint offset = 0;

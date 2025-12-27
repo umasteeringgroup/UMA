@@ -200,14 +200,18 @@ namespace UMA.Editors
 			}
 			if (_recipe == null) return;
 
-			foreach(IUMARecipePlugin plugin in plugins) 
+			if (plugins != null)
 			{
-				string label = plugin.GetSectionLabel();
-				plugin.foldOut = GUIHelper.FoldoutBar(plugin.foldOut, label);
-				if(plugin.foldOut) {
-					GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-					plugin.OnInspectorGUI(serializedObject);
-					GUIHelper.EndVerticalPadded(10);
+				foreach (IUMARecipePlugin plugin in plugins)
+				{
+					string label = plugin.GetSectionLabel();
+					plugin.foldOut = GUIHelper.FoldoutBar(plugin.foldOut, label);
+					if (plugin.foldOut)
+					{
+						GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+						plugin.OnInspectorGUI(serializedObject);
+						GUIHelper.EndVerticalPadded(10);
+					}
 				}
 			}
 

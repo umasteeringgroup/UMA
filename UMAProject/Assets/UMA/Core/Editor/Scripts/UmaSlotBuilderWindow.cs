@@ -68,11 +68,19 @@ namespace UMA.Editors
             public bool invertX;
             public bool invertY;
             public bool invertZ;
-            public bool updateExistingSlots;
+            public bool alwaysRecreateSlots;
             public List<string> Tags = new List<string>();
             // New: persist material and folder by asset path
             public string slotMaterialPath;
             public string slotFolderPath;
+
+            // Slot LOD generation
+            public bool generateSlotLods;
+            public int slotLodMaxLevels;
+            public int slotLodMinTriangles;
+            public float slotLodTargetReductionPerLevel;
+            public bool slotLodPreserveBoundaryEdges;
+            public float slotLodBoundaryWeight;
         }
 
         public string slotName;
@@ -107,7 +115,25 @@ namespace UMA.Editors
         public bool invertX;
         public bool invertY;
         public bool invertZ;
-        public bool updateExistingSlots = false;
+        public bool alwaysRecreateSlots = false;
+
+        [System.Serializable]
+        private class PendingSmrEntry
+        {
+            public SkinnedMeshRenderer smr;
+            public bool selected = true;
+        }
+
+        private List<PendingSmrEntry> _pendingSmrs = new List<PendingSmrEntry>();
+        private Vector2 _pendingSmrsScroll;
+
+        // Slot LOD generation
+        public bool generateSlotLods = false;
+        public int slotLodMaxLevels = 8;
+        public int slotLodMinTriangles = 256;
+        public float slotLodTargetReductionPerLevel = 0.5f;
+        public bool slotLodPreserveBoundaryEdges = true;
+        public float slotLodBoundaryWeight = 10f;
 
         // UDIM grid size (default 10x10)
         public int udimTilesU = 10;
@@ -155,7 +181,7 @@ namespace UMA.Editors
                 state.invertX = invertX;
                 state.invertY = invertY;
                 state.invertZ = invertZ;
-                state.updateExistingSlots = updateExistingSlots;
+                state.alwaysRecreateSlots = alwaysRecreateSlots;
                 // Copy KeepBones strings
                 state.KeepBones = new List<string>(KeepBones != null ? KeepBones.Count : 0);
                 if (KeepBones != null)
@@ -170,6 +196,13 @@ namespace UMA.Editors
                 // New: persist paths for material and folder
                 state.slotMaterialPath = slotMaterial != null ? AssetDatabase.GetAssetPath(slotMaterial) : string.Empty;
                 state.slotFolderPath = slotFolder != null ? AssetDatabase.GetAssetPath(slotFolder) : string.Empty;
+
+                state.generateSlotLods = generateSlotLods;
+                state.slotLodMaxLevels = slotLodMaxLevels;
+                state.slotLodMinTriangles = slotLodMinTriangles;
+                state.slotLodTargetReductionPerLevel = slotLodTargetReductionPerLevel;
+                state.slotLodPreserveBoundaryEdges = slotLodPreserveBoundaryEdges;
+                state.slotLodBoundaryWeight = slotLodBoundaryWeight;
 
                 string json = JsonUtility.ToJson(state, true);
                 string fp = GetPersistFilePath();
@@ -216,7 +249,14 @@ namespace UMA.Editors
                 invertX = state.invertX;
                 invertY = state.invertY;
                 invertZ = state.invertZ;
-                updateExistingSlots = state.updateExistingSlots;
+                alwaysRecreateSlots = state.alwaysRecreateSlots;
+
+                generateSlotLods = state.generateSlotLods;
+                slotLodMaxLevels = state.slotLodMaxLevels;
+                slotLodMinTriangles = state.slotLodMinTriangles;
+                slotLodTargetReductionPerLevel = state.slotLodTargetReductionPerLevel;
+                slotLodPreserveBoundaryEdges = state.slotLodPreserveBoundaryEdges;
+                slotLodBoundaryWeight = state.slotLodBoundaryWeight;
 
                 // Restore KeepBones list
                 KeepBones = new List<BoneName>();
@@ -333,7 +373,7 @@ namespace UMA.Editors
             slotMaterial = EditorGUILayout.ObjectField("UMAMaterial\t ", slotMaterial, typeof(UMAMaterial), false) as UMAMaterial;
             slotFolder = EditorGUILayout.ObjectField("Slot Destination Folder", slotFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
 
-            updateExistingSlots = EditorGUILayout.Toggle(new GUIContent("Update Existing Slots", "If true, existing slots will not be overwritten, but will be updated instead. This only works if the slot has the same name and path in the file system."), updateExistingSlots);
+            alwaysRecreateSlots = EditorGUILayout.Toggle(new GUIContent("Always recreate slots", "If enabled, any existing SlotDataAsset at the target path will be deleted and recreated instead of updated."), alwaysRecreateSlots);
             //EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             EditorGUILayout.BeginHorizontal();
             isBaseRaceRecipe = EditorGUILayout.Toggle("Is Base Race Recipe", isBaseRaceRecipe);
@@ -363,6 +403,27 @@ namespace UMA.Editors
             calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
             udimAdjustment = EditorGUILayout.Toggle("Adjust for UDIM", udimAdjustment);
             EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            generateSlotLods = EditorGUILayout.Toggle(new GUIContent("Generate Slot LODs", "Generate internal per-slot LOD triangle buffers/ranges for UMASimpleLOD. When enabled, Unity 6 mesh LOD copying is not used."), generateSlotLods);
+            EditorGUILayout.EndHorizontal();
+            EditorGUI.indentLevel++;
+            using (new EditorGUI.DisabledScope(!generateSlotLods))
+            {
+                slotLodMaxLevels = EditorGUILayout.IntSlider(new GUIContent("Max LOD Levels", "Maximum internal LOD levels to generate (including LOD0)."), Mathf.Clamp(slotLodMaxLevels, 1, 8), 1, 8);
+                slotLodMinTriangles = EditorGUILayout.IntField(new GUIContent("Min Triangles", "Stop generating when a LOD reaches this triangle count (approx)."), Mathf.Max(0, slotLodMinTriangles));
+                slotLodTargetReductionPerLevel = EditorGUILayout.Slider(new GUIContent("Reduction per Level", "Target triangle reduction ratio per LOD step."), Mathf.Clamp01(slotLodTargetReductionPerLevel), 0.1f, 0.9f);
+                slotLodPreserveBoundaryEdges = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges", "Attempt to preserve open edges to reduce seams when combined with other slots."), slotLodPreserveBoundaryEdges);
+                slotLodBoundaryWeight = EditorGUILayout.FloatField(new GUIContent(
+                    "Boundary Weight",
+                    "表tDefault / good starting point: 10\n" +
+                    "表tIf you see borders \u201Cchewing in\u201D or seams drifting: 20\u201350\n" +
+                    "表tIf you see it refusing to reduce enough or leaving too much geometry near borders: 5\u201310\n" +
+                    "表tFor slots where border alignment is critical (hands, sleeves, boots, neck, waist): 25\u201375\n" +
+                    "表tFor mostly-closed pieces (props, buttons, inner mouth) where border preservation is less important: 0\u201310"),
+                    Mathf.Max(0f, slotLodBoundaryWeight));
+            }
+            EditorGUI.indentLevel--;
             // UDIM tile dimensions
             EditorGUI.indentLevel++;
             using (new EditorGUI.DisabledScope(!udimAdjustment))
@@ -551,8 +612,211 @@ namespace UMA.Editors
             EnforceFolder(ref relativeFolder);
 
             DropAreaGUI(dropArea);
+
+            DrawPendingSmrList();
             GUI.color = save;
             GUIHelper.EndVerticalPadded(10);
+        }
+
+        private void DrawPendingSmrList()
+        {
+            if (_pendingSmrs == null)
+            {
+                _pendingSmrs = new List<PendingSmrEntry>();
+            }
+
+            if (_pendingSmrs.Count == 0)
+            {
+                return;
+            }
+
+            EditorGUILayout.Space(5);
+            EditorGUILayout.LabelField("Pending SkinnedMeshRenderers", EditorStyles.boldLabel);
+
+            using (var scroll = new EditorGUILayout.ScrollViewScope(_pendingSmrsScroll, GUILayout.MinHeight(120)))
+            {
+                _pendingSmrsScroll = scroll.scrollPosition;
+
+                for (int i = 0; i < _pendingSmrs.Count; i++)
+                {
+                    var e = _pendingSmrs[i];
+                    if (e == null)
+                    {
+                        continue;
+                    }
+
+                    EditorGUILayout.BeginHorizontal();
+                    e.selected = EditorGUILayout.Toggle(e.selected, GUILayout.Width(18));
+                    using (new EditorGUI.DisabledScope(true))
+                    {
+                        e.smr = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(e.smr, typeof(SkinnedMeshRenderer), true);
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Select All"))
+            {
+                for (int i = 0; i < _pendingSmrs.Count; i++)
+                {
+                    if (_pendingSmrs[i] != null)
+                    {
+                        _pendingSmrs[i].selected = true;
+                    }
+                }
+            }
+            if (GUILayout.Button("Select None"))
+            {
+                for (int i = 0; i < _pendingSmrs.Count; i++)
+                {
+                    if (_pendingSmrs[i] != null)
+                    {
+                        _pendingSmrs[i].selected = false;
+                    }
+                }
+            }
+            if (GUILayout.Button("Clear List"))
+            {
+                _pendingSmrs.Clear();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(3);
+            if (GUILayout.Button("Process checked slots"))
+            {
+                ProcessPendingSmrs();
+            }
+        }
+
+        private void ProcessPendingSmrs()
+        {
+            if (_pendingSmrs == null || _pendingSmrs.Count == 0)
+            {
+                return;
+            }
+
+            // Aggregate results from all processed meshes
+            var aggregate = new UMASlotProcessingUtil.SlotBuildResult
+            {
+                Slots = new List<SlotDataAsset>(),
+                SlotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>(),
+                IsUDIM = false,
+                TempAssetsToDelete = new List<string>()
+            };
+
+            var deferredDeletes = new HashSet<string>();
+
+            // Preserve original slotName and slotMesh to restore later
+            string originalSlotName = slotName;
+            var originalSlotMesh = slotMesh;
+
+            // Count selected
+            int selectedCount = 0;
+            for (int i = 0; i < _pendingSmrs.Count; i++)
+            {
+                var e = _pendingSmrs[i];
+                if (e != null && e.selected && e.smr != null)
+                {
+                    selectedCount++;
+                }
+            }
+            if (selectedCount == 0)
+            {
+                EditorUtility.DisplayDialog("Slot Builder", "No SkinnedMeshRenderers are checked.", "OK");
+                return;
+            }
+
+            float current = 1f;
+            float total = (float)selectedCount;
+
+            try
+            {
+                for (int i = 0; i < _pendingSmrs.Count; i++)
+                {
+                    var e = _pendingSmrs[i];
+                    if (e == null || !e.selected || e.smr == null)
+                    {
+                        continue;
+                    }
+
+                    var mesh = e.smr;
+                    EditorUtility.DisplayProgressBar(string.Format("Creating Slots {0} of {1}", current, total), string.Format("Slot: {0}", mesh.name), (current / total));
+                    slotMesh = mesh;
+                    GetMaterialName(mesh.name, mesh);
+
+                    // Build result for this mesh without creating a recipe per mesh
+                    var result = CreateSlot_Internal_WithResult(true);
+                    if (result != null && result.Slots != null && result.Slots.Count > 0)
+                    {
+                        aggregate.Slots.AddRange(result.Slots);
+                        if (result.SlotToOverlay != null)
+                        {
+                            foreach (var kv in result.SlotToOverlay)
+                            {
+                                if (!aggregate.SlotToOverlay.ContainsKey(kv.Key))
+                                {
+                                    aggregate.SlotToOverlay.Add(kv.Key, kv.Value);
+                                }
+                            }
+                        }
+                        aggregate.IsUDIM = aggregate.IsUDIM || result.IsUDIM;
+
+                        if (result.TempAssetsToDelete != null)
+                        {
+                            for (int ti = 0; ti < result.TempAssetsToDelete.Count; ti++)
+                            {
+                                var p = result.TempAssetsToDelete[ti];
+                                if (!string.IsNullOrEmpty(p)) deferredDeletes.Add(p);
+                            }
+                        }
+                    }
+
+                    current++;
+                }
+
+                // Create a single recipe for the whole batch if requested
+                if (createRecipe && aggregate.Slots.Count > 0)
+                {
+                    CreateRecipeFromResult(aggregate);
+                }
+
+                if (addToGlobalLibrary)
+                {
+                    UMAAssetIndexer.Instance.ForceSave();
+                }
+
+                foreach (var path in deferredDeletes)
+                {
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(path))
+                        {
+                            AssetDatabase.DeleteAsset(path);
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"Could not delete temp asset '{path}': {ex.Message}");
+                    }
+                }
+
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                slotName = originalSlotName;
+                slotMesh = originalSlotMesh;
+
+                // Clear pending list after processing
+                if (_pendingSmrs != null)
+                {
+                    _pendingSmrs.Clear();
+                }
+                Repaint();
+            }
         }
 
         private SlotDataAsset CreateSlot()
@@ -649,7 +913,7 @@ namespace UMA.Editors
             sbp.invertX = invertX;
             sbp.invertY = invertY;
             sbp.invertZ = invertZ;
-            sbp.updateExistingSlots = updateExistingSlots;
+            sbp.alwaysRecreateSlots = alwaysRecreateSlots;
             sbp.clearNormals = clearNormals;
             sbp.clearTangents = clearTangents;
             sbp.udimTilesU = udimTilesU;
@@ -661,6 +925,25 @@ namespace UMA.Editors
             sbp.slotFolderPath = slotFolder != null ? AssetDatabase.GetAssetPath(slotFolder) : string.Empty;
             sbp.addToGlobalLibrary = addToGlobalLibrary;
             sbp.batchMode = batchMode;
+
+            // Slot LOD generation
+            sbp.generateSlotLods = generateSlotLods;
+            sbp.slotLodMaxLevels = slotLodMaxLevels;
+            sbp.slotLodMinTriangles = slotLodMinTriangles;
+            sbp.slotLodTargetReductionPerLevel = slotLodTargetReductionPerLevel;
+            sbp.slotLodPreserveBoundaryEdges = slotLodPreserveBoundaryEdges;
+            sbp.slotLodBoundaryWeight = slotLodBoundaryWeight;
+
+            Debug.Log(string.Format("[SlotBuilder] Build slot='{0}' udimAdjustment={1} alwaysRecreateSlots={2} generateSlotLods={3} maxLevels={4} minTris={5} reduction={6} preserveBorders={7} borderWeight={8}",
+                sbp.slotName,
+                sbp.udimAdjustment,
+                sbp.alwaysRecreateSlots,
+                sbp.generateSlotLods,
+                sbp.slotLodMaxLevels,
+                sbp.slotLodMinTriangles,
+                sbp.slotLodTargetReductionPerLevel,
+                sbp.slotLodPreserveBoundaryEdges,
+                sbp.slotLodBoundaryWeight));
 
             var result = UMASlotProcessingUtil.CreateSlotData(sbp);
             if (result == null)
@@ -763,99 +1046,27 @@ namespace UMA.Editors
                         RecurseObject(draggedObjects[i], meshes);
                     }
 
-                    // Aggregate results from all processed meshes
-                    var aggregate = new UMASlotProcessingUtil.SlotBuildResult
+                    if (_pendingSmrs == null)
                     {
-                        Slots = new List<SlotDataAsset>(),
-                        SlotToOverlay = new Dictionary<SlotDataAsset, OverlayDataAsset>(),
-                        IsUDIM = false,
-                        TempAssetsToDelete = new List<string>()
-                    };
+                        _pendingSmrs = new List<PendingSmrEntry>();
+                    }
 
-                    var deferredDeletes = new HashSet<string>();
-
-                    float current = 1f;
-                    float total = (float)meshes.Count;
-
-                    // Preserve original slotName and slotMesh to restore later
-                    string originalSlotName = slotName;
-                    var originalSlotMesh = slotMesh;
-
-                    foreach(var mesh in meshes)
+                    // Rebuild pending list from this drop (default checked)
+                    _pendingSmrs.Clear();
+                    foreach (var mesh in meshes)
                     {
-                        EditorUtility.DisplayProgressBar(string.Format("Creating Slots {0} of {1}", current, total), string.Format("Slot: {0}", mesh.name), (current / total));
-                        slotMesh = mesh;
-                        GetMaterialName(mesh.name, mesh);
-
-                        // Build result for this mesh without creating a recipe per mesh
-                        var result = CreateSlot_Internal_WithResult(true);
-                        if (result != null && result.Slots != null && result.Slots.Count > 0)
+                        if (mesh == null)
                         {
-                            // Merge slots
-                            aggregate.Slots.AddRange(result.Slots);
-                            // Merge overlays map
-                            if (result.SlotToOverlay != null)
-                            {
-                                foreach (var kv in result.SlotToOverlay)
-                                {
-                                    if (!aggregate.SlotToOverlay.ContainsKey(kv.Key))
-                                    {
-                                        aggregate.SlotToOverlay.Add(kv.Key, kv.Value);
-                                    }
-                                }
-                            }
-                            // Track UDIM presence if any
-                            aggregate.IsUDIM = aggregate.IsUDIM || result.IsUDIM;
-
-                            // Collect temp asset paths to delete later
-                            if (result.TempAssetsToDelete != null)
-                            {
-                                for (int i = 0; i < result.TempAssetsToDelete.Count; i++)
-                                {
-                                    var p = result.TempAssetsToDelete[i];
-                                    if (!string.IsNullOrEmpty(p)) deferredDeletes.Add(p);
-                                }
-                            }
-
-                            Debug.Log("Batch importer processed mesh: " + slotName);
+                            continue;
                         }
-                        current++;
+                        _pendingSmrs.Add(new PendingSmrEntry { smr = mesh, selected = true });
                     }
 
-                    // Restore UI state
-                    slotName = originalSlotName;
-                    slotMesh = originalSlotMesh;
-
-                    // Create a single recipe for the whole batch if requested
-                    if (createRecipe && aggregate.Slots.Count > 0)
+                    if (_pendingSmrs.Count == 0)
                     {
-                        CreateRecipeFromResult(aggregate);
+                        EditorUtility.DisplayDialog("Slot Builder", "No SkinnedMeshRenderers found in dropped objects.", "OK");
                     }
-
-                    if (addToGlobalLibrary)
-                    {
-                        UMAAssetIndexer.Instance.ForceSave();
-                    }
-
-                    // Now delete deferred temp assets
-                    foreach (var path in deferredDeletes)
-                    {
-                        try
-                        {
-                            if (!string.IsNullOrEmpty(path))
-                            {
-                                AssetDatabase.DeleteAsset(path);
-                            }
-                        }
-                        catch (System.Exception ex)
-                        {
-                            Debug.LogWarning($"Could not delete temp asset '{path}': {ex.Message}");
-                        }
-                    }
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-
-                    EditorUtility.ClearProgressBar();
+                    Repaint();
                 }
             }
         }
@@ -924,7 +1135,7 @@ namespace UMA.Editors
         }
 
         [MenuItem("UMA/Slot Builder", priority = 20)]
-        public static void OpenUmaTexturePrepareWindow()
+        public static void OpenUmaTexturePrepareWindow() 
         {
             UmaSlotBuilderWindow window = (UmaSlotBuilderWindow)EditorWindow.GetWindow(typeof(UmaSlotBuilderWindow));
             window.titleContent.text = "Slot Builder";

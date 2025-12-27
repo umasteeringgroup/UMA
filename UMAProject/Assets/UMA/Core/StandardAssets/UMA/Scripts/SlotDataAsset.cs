@@ -87,6 +87,42 @@ namespace UMA
 
         [Tooltip("Editor-only: mapping of shared UDIM seam vertex indices (original -> local) for this split slot")] public UdimSeamMap UdimSharedVertexMap;
 
+        [System.Serializable]
+        public struct SlotBuilderParametersSnapshot
+        {
+            public int version;
+            public bool hasData;
+
+            // LOD generation
+            public bool generateSlotLods;
+            public int slotLodMaxLevels;
+            public int slotLodMinTriangles;
+            public float slotLodTargetReductionPerLevel;
+            public bool slotLodPreserveBoundaryEdges;
+            public float slotLodBoundaryWeight;
+        }
+
+        [SerializeField]
+        [HideInInspector]
+        private SlotBuilderParametersSnapshot _slotBuilderParamsSnapshot;
+
+        public bool HasSlotBuilderParamsSnapshot
+        {
+            get { return _slotBuilderParamsSnapshot.hasData; }
+        }
+
+        public SlotBuilderParametersSnapshot GetSlotBuilderParamsSnapshot()
+        {
+            return _slotBuilderParamsSnapshot;
+        }
+
+        public void SetSlotBuilderParamsSnapshot(SlotBuilderParametersSnapshot snapshot)
+        {
+            snapshot.version = 1;
+            snapshot.hasData = true;
+            _slotBuilderParamsSnapshot = snapshot;
+        }
+
         public Dictionary<int, int> TheirVertexToOurVertex = new Dictionary<int, int>();
         public Dictionary<int,int> OurVertextoTheirVertex = new Dictionary<int, int>();
         public Dictionary<int,int> TheirBonesToOurBones = new Dictionary<int, int>();

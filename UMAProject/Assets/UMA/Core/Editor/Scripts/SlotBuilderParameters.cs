@@ -13,7 +13,7 @@ namespace UMA.Editors
         public bool useRootFolder;
         public bool nameByMaterial;
         public bool keepAllBones;
-        public bool updateExistingSlots;
+        public bool alwaysRecreateSlots;
         public bool createOverlays;
         public bool createRecipe;
         public bool isBaseRaceRecipe;
@@ -49,5 +49,14 @@ namespace UMA.Editors
 
         // Optional: weld UDIM seam normals/tangents across split tiles by averaging
         public bool weldUdimNormals;
+
+        // Optional: generate internal per-slot LOD triangle buffers/ranges using SlotLodGenerator.
+        // When enabled, Unity mesh LOD copying is skipped.
+        public bool generateSlotLods;
+        public int slotLodMaxLevels;
+        public int slotLodMinTriangles;
+        public float slotLodTargetReductionPerLevel;
+        public bool slotLodPreserveBoundaryEdges;
+        public float slotLodBoundaryWeight;
     }
 }

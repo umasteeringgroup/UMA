@@ -69,6 +69,24 @@ namespace UMA
 
 		public int[] GetBaseTriangles()
 		{
+			if (triangles == null)
+			{
+				return null;
+			}
+
+			// If this submesh has internal LODs, triangles contains appended LOD buffers.
+			// LOD0 is stored as the first lodRanges entry.
+			if (lodRanges != null && lodRanges.Count > 0)
+			{
+				var r = lodRanges[0];
+				int start = (int)r.offset;
+				int count = (int)r.count;
+				if (start >= 0 && count > 0 && (start + count) <= triangles.Length)
+				{
+					return new ArraySegment<int>(triangles, start, count).ToArray();
+				}
+			}
+
 			return triangles;
 		}
 
@@ -76,6 +94,30 @@ namespace UMA
 		{
 			lodRanges = ranges;
         }
+
+
+		public int LODCount()
+		{
+			if (lodRanges == null)
+			{
+				return 0;
+            }
+            return lodRanges.Count; 
+		}
+
+		public bool HasLODLevel(int lodLevel)
+		{
+			if (lodRanges == null)
+			{
+				return false;
+			}
+			return lodLevel >= 0 && lodLevel < lodRanges.Count;
+		}
+
+		public bool HasMultipleLODs()
+		{
+			return LODCount() > 1;
+		}
 
 
         public int[] getManagedTriangles(int LODNumber)
@@ -90,7 +132,24 @@ namespace UMA
 				LODNumber = lodRanges.Count - 1;
             }
 
-			return new ArraySegment<int>(triangles, (int)lodRanges[LODNumber].offset, (int)lodRanges[LODNumber].count).ToArray();
+			if (triangles == null)
+			{
+				return null;
+			}
+
+			int start = (int)lodRanges[LODNumber].offset;
+			int count = (int)lodRanges[LODNumber].count;
+			if (start < 0 || count <= 0)
+			{
+				return Array.Empty<int>();
+			}
+			if ((start + count) > triangles.Length)
+			{
+				// Invalid/stale/mismatched range; fall back to base triangles (avoids exceptions).
+				return GetBaseTriangles();
+			}
+
+			return new ArraySegment<int>(triangles, start, count).ToArray();
 		}
 
 		public int GetTriangleCount(int lodLevel)
@@ -1370,15 +1429,6 @@ namespace UMA
 				{
 					submeshes[subMeshNumber] = new SubMeshTriangles();
 					submeshes[subMeshNumber].SetTriangles(sharedMesh.GetTriangles(subMeshNumber));
-#if UNITY_6000_2_OR_NEWER
-					List<UMALodRange> lodRanges = new List<UMALodRange>();
-                    for (int lodlevel = 0; lodlevel < sharedMesh.lodCount; lodlevel++)
-					{
-						MeshLodRange lor = sharedMesh.GetLod(subMeshNumber, lodlevel);
-						lodRanges.Add(new UMALodRange(lor));
-                    }
-					submeshes[subMeshNumber].SetLodRanges(lodRanges);
-#endif
                 }
 			}
 			else
@@ -1386,15 +1436,7 @@ namespace UMA
 				subMeshCount = 1;
 				submeshes = new SubMeshTriangles[subMeshCount];
 				var tris = sharedMesh.GetTriangles(subMeshInd);
-
-                List<UMALodRange> lodRanges = new List<UMALodRange>();
-                for (int lodlevel = 0; lodlevel < sharedMesh.lodCount; lodlevel++)
-                {
-                    MeshLodRange lor = sharedMesh.GetLod(0, lodlevel);
-                    lodRanges.Add(new UMALodRange(lor));
-                }
 				submeshes[0] = new SubMeshTriangles();
-                submeshes[0].SetLodRanges(lodRanges);
 
                 vertRemap = new SortedSet<int>(tris);
 				var indRemap = new int[sharedMesh.vertexCount];

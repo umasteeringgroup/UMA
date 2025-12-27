@@ -808,11 +808,27 @@ namespace UMA.CharacterSystem
             }
         }
 
+
 #if UNITY_EDITOR
 
         public bool nextBuildSlotsOnly = false;
         private int generateWait = 0;
         const int maxWait = 60;
+
+        public void RebuildCurrentRecipe()
+        {
+            UMAGenerator ugb = UMAAssetIndexer.Instance.generator;
+            if (ugb != null)
+            {
+                ugb.GenerateSingleUMA(this, true); // don't fire completed events in the editor
+                ugb.Clear();
+            }
+            else
+            {
+                Debug.LogError("Unable to find editor");
+            }
+        }
+
 
         public void GenerateSingleUMA(bool slotsOnly = false)
         {

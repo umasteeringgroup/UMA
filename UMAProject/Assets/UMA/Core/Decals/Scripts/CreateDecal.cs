@@ -2,7 +2,9 @@
 using System.Linq;
 using UMA;
 using UMA.CharacterSystem;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -140,7 +142,9 @@ namespace UMA.Decals
 
         void Start()
         {
-			EnsureTag("debugSphere");
+#if UNITY_EDITOR
+            EnsureTag("debugSphere");
+#endif
             InitializeOrbit();
             if (StampField != null && Avatar != null)
             {
@@ -1117,8 +1121,8 @@ namespace UMA.Decals
 				go.SetActive(show);
 			}
 		}
-
-		public void EnsureTag(string tagName) {
+#if UNITY_EDITOR
+        public void EnsureTag(string tagName) {
 			if(!UnityEditorInternal.InternalEditorUtility.tags.Contains(tagName)) {
 				var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
 				var tagsProp = tagManager.FindProperty("tags");
@@ -1136,9 +1140,10 @@ namespace UMA.Decals
 				}
 			}
 		}
+#endif
 
 
-		private void CreateDebugSphere(Vector3 position, Vector3 direction) {
+        private void CreateDebugSphere(Vector3 position, Vector3 direction) {
 			if(debugSpherePrefab == null)
 				return;
 
