@@ -179,6 +179,8 @@ namespace UMA.Editors
                 float reduction = LoadFloat("TargetReductionPerLevel", 0.5f);
                 bool preserveBorders = LoadBool("PreserveBoundaryEdges", true);
                 float boundaryWeight = LoadFloat("BoundaryWeight", 10f);
+                bool preserveVolume = LoadBool("PreserveVolume", true);
+                float volumeWeight = LoadFloat("VolumeWeight", 1.0f);
                 bool useUnityLodGenerator = LoadBool("UseUnityLodGenerator", false);
 
                 _optionsFoldout = EditorGUILayout.Foldout(_optionsFoldout, "LOD Gen Options", true);
@@ -190,10 +192,26 @@ namespace UMA.Editors
                         "Use Unity LOD Generator",
                         "When enabled, uses Unity's MeshLodUtility.GenerateMeshLods instead of UMA's internal reducer."),
                         useUnityLodGenerator);
-                    minTriangles = EditorGUILayout.IntField(new GUIContent("Min Triangles"), Mathf.Max(0, minTriangles));
-                    reduction = EditorGUILayout.Slider(new GUIContent("Reduction Per Level"), reduction, 0.01f, 0.99f);
-                    preserveBorders = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges"), preserveBorders);
-                    boundaryWeight = EditorGUILayout.FloatField(new GUIContent("Boundary Weight"), Mathf.Max(0f, boundaryWeight));
+
+                    using (new EditorGUI.DisabledScope(useUnityLodGenerator))
+                    {
+                        minTriangles = EditorGUILayout.IntField(new GUIContent("Min Triangles"), Mathf.Max(0, minTriangles));
+                        reduction = EditorGUILayout.Slider(new GUIContent("Reduction Per Level"), reduction, 0.01f, 0.99f);
+                        preserveBorders = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges"), preserveBorders);
+                        boundaryWeight = EditorGUILayout.FloatField(new GUIContent("Boundary Weight"), Mathf.Max(0f, boundaryWeight));
+                        preserveVolume = EditorGUILayout.Toggle(new GUIContent(
+                            "Preserve Volume",
+                            "When enabled, penalizes edge collapses that would flatten thin features like arms and fingers."),
+                            preserveVolume);
+
+                        using (new EditorGUI.DisabledScope(!preserveVolume))
+                        {
+                            volumeWeight = EditorGUILayout.Slider(new GUIContent(
+                                "Volume Weight",
+                                "How strongly to preserve volume. Higher values prevent more flattening but may reduce simplification quality."),
+                                volumeWeight, 0.1f, 5.0f);
+                        }
+                    }
                     if (EditorGUI.EndChangeCheck())
                     {
                         SaveInt("MaxLodLevels", maxLodLevels);
@@ -202,6 +220,8 @@ namespace UMA.Editors
                         SaveFloat("TargetReductionPerLevel", reduction);
                         SaveBool("PreserveBoundaryEdges", preserveBorders);
                         SaveFloat("BoundaryWeight", boundaryWeight);
+                        SaveBool("PreserveVolume", preserveVolume);
+                        SaveFloat("VolumeWeight", volumeWeight);
                     }
                 }
 
@@ -247,6 +267,8 @@ namespace UMA.Editors
                         opts.TargetReductionPerLevel = reduction;
                         opts.PreserveBoundaryEdges = preserveBorders;
                         opts.BoundaryWeight = boundaryWeight;
+                        opts.PreserveVolume = preserveVolume;
+                        opts.VolumeWeight = volumeWeight;
                         opts.useUnityLodGenerator = useUnityLodGenerator;
 
                         int changed = 0;

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 
 using System;
 using System.Collections.Generic;
@@ -17,6 +17,8 @@ namespace UMA.Editors
             public float TargetReductionPerLevel = 0.5f;
             public bool PreserveBoundaryEdges = true;
             public float BoundaryWeight = 10f;
+            public bool PreserveVolume = true;
+            public float VolumeWeight = 1.0f;
             public bool useUnityLodGenerator = false; // When true, then only MaxLodLevels are used.
         }
 
@@ -92,7 +94,7 @@ namespace UMA.Editors
 
                 // Collect triangles by slicing the base triangle buffer using LOD ranges.
                 // Unity stores LOD ranges as (indexStart,indexCount) segments over the base index buffer.
-                int[] allTris = tempMesh.GetTriangles(0,-1,false);
+                int[] allTris = tempMesh.GetTriangles(0, -1, false);
                 if (allTris == null || allTris.Length < 3)
                 {
                     return false;
@@ -380,7 +382,7 @@ namespace UMA.Editors
             for (int i = 0; i < vCount; i++)
             {
                 Vector3 p = positions[i];
-                // Skip vertices on the center line (X ? 0)
+                // Skip vertices on the center line (X ≈ 0)
                 if (Mathf.Abs(p.x) < symmetryTolerance)
                 {
                     continue;
@@ -576,14 +578,14 @@ namespace UMA.Editors
                     }
 
                     // Increment collapse count for this triangle
-                        t.collapseCount++;
+                    t.collapseCount++;
 
-                        // Replace removeV with keepV
-                        if (t.v0 == removeV) t.v0 = keepV;
-                        if (t.v1 == removeV) t.v1 = keepV;
-                        if (t.v2 == removeV) t.v2 = keepV;
+                    // Replace removeV with keepV
+                    if (t.v0 == removeV) t.v0 = keepV;
+                    if (t.v1 == removeV) t.v1 = keepV;
+                    if (t.v2 == removeV) t.v2 = keepV;
 
-                        // Check if triangle became degenerate
+                    // Check if triangle became degenerate
                     if (t.v0 == t.v1 || t.v1 == t.v2 || t.v2 == t.v0)
                     {
                         t.deleted = true;
@@ -703,103 +705,128 @@ namespace UMA.Editors
             if (v0 == v1)
             {
                 return;
-                }
+            }
+            ulong key = MakeUndirectedEdgeKey(v0, v1);
+            if (!edges.ContainsKey(key))
+            {
+                var e = CreateEdge(v0, v1, positions, quadrics, vertexData, boundaryEdges, options);
+                edges[key] = e;
+            }
+        }
+
+        private static SimplifyEdge CreateEdge(int v0, int v1, Vector3[] positions, SimplifyQuadric[] quadrics, SimplifyVertex[] vertexData, HashSet<ulong> boundaryEdges, LodGenOptions options)
+        {
+            if (v0 > v1)
+            {
+                int tmp = v0;
+                v0 = v1;
+                v1 = tmp;
+            }
+
+            float cost = float.MaxValue;
+
+            // Skip if either vertex is already collapsed
+            if (vertexData[v0].collapsed || vertexData[v1].collapsed)
+            {
+                return new SimplifyEdge { v0 = v0, v1 = v1, cost = -1 };
+            }
+
+            // Skip boundary edges if preserving boundaries
+            if (options.PreserveBoundaryEdges && boundaryEdges != null)
+            {
                 ulong key = MakeUndirectedEdgeKey(v0, v1);
-                if (!edges.ContainsKey(key))
+                if (boundaryEdges.Contains(key))
                 {
-                    var e = CreateEdge(v0, v1, positions, quadrics, vertexData, boundaryEdges, options);
-                    edges[key] = e;
+                    return new SimplifyEdge { v0 = v0, v1 = v1, cost = -1 };
                 }
             }
 
-            private static SimplifyEdge CreateEdge(int v0, int v1, Vector3[] positions, SimplifyQuadric[] quadrics, SimplifyVertex[] vertexData, HashSet<ulong> boundaryEdges, LodGenOptions options)
+            // Compute collapse cost using quadric error
+            var q = quadrics[v0];
+            q.Add(quadrics[v1]);
+
+            // We collapse to one of the existing vertices (no new vertex positions)
+            float cost0 = q.Evaluate(positions[v0]);
+            float cost1 = q.Evaluate(positions[v1]);
+            float baseCost = Mathf.Min(cost0, cost1);
+
+            // Normalize the base cost to make penalties relative
+            // Add a small epsilon to avoid division by zero
+            float costScale = Mathf.Max(0.0001f, baseCost);
+            cost = baseCost;
+
+            // Add edge length as a small tie-breaker (relative to edge length scale)
+            float edgeLen = (positions[v0] - positions[v1]).magnitude;
+            cost += edgeLen * 0.001f;
+
+            // Penalize boundary vertices
+            if (options.PreserveBoundaryEdges)
             {
-                if (v0 > v1)
+                if (vertexData[v0].isBoundary || vertexData[v1].isBoundary)
                 {
-                    int tmp = v0;
-                    v0 = v1;
-                    v1 = tmp;
+                    cost += options.BoundaryWeight * costScale;
+                }
+            }
+
+            // Small penalty for vertices that have already been affected by collapses
+            // This helps distribute collapses more evenly across the mesh
+            int totalCollapseCount = vertexData[v0].collapseCount + vertexData[v1].collapseCount;
+            if (totalCollapseCount > 0)
+            {
+                // Very small relative penalty - just enough to break ties
+                cost += costScale * 0.01f * totalCollapseCount;
+            }
+
+            // Penalize asymmetric collapses (when one vertex has a mirror but would collapse asymmetrically)
+            int mirror0 = vertexData[v0].mirrorVertex;
+            int mirror1 = vertexData[v1].mirrorVertex;
+            if (mirror0 >= 0 || mirror1 >= 0)
+            {
+                // Check if this edge has a symmetric counterpart
+                bool hasSymmetricEdge = false;
+                if (mirror0 >= 0 && mirror1 >= 0)
+                {
+                    // Both vertices have mirrors - check if the mirror edge exists and is valid
+                    if (!vertexData[mirror0].collapsed && !vertexData[mirror1].collapsed)
+                    {
+                        hasSymmetricEdge = true;
+                    }
                 }
 
-                    float cost = float.MaxValue;
-
-                    // Skip if either vertex is already collapsed
-                    if (vertexData[v0].collapsed || vertexData[v1].collapsed)
-                    {
-                        return new SimplifyEdge { v0 = v0, v1 = v1, cost = -1 };
-                    }
-
-                    // Skip boundary edges if preserving boundaries
-                    if (options.PreserveBoundaryEdges && boundaryEdges != null)
-                    {
-                        ulong key = MakeUndirectedEdgeKey(v0, v1);
-                        if (boundaryEdges.Contains(key))
-                        {
-                            return new SimplifyEdge { v0 = v0, v1 = v1, cost = -1 };
-                        }
-                    }
-
-                    // Compute collapse cost using quadric error
-                    var q = quadrics[v0];
-                    q.Add(quadrics[v1]);
-
-                    // We collapse to one of the existing vertices (no new vertex positions)
-                    float cost0 = q.Evaluate(positions[v0]);
-                    float cost1 = q.Evaluate(positions[v1]);
-                    float baseCost = Mathf.Min(cost0, cost1);
-
-                    // Normalize the base cost to make penalties relative
-                    // Add a small epsilon to avoid division by zero
-                    float costScale = Mathf.Max(0.0001f, baseCost);
-                    cost = baseCost;
-
-                    // Add edge length as a small tie-breaker (relative to edge length scale)
-                    float edgeLen = (positions[v0] - positions[v1]).magnitude;
-                    cost += edgeLen * 0.001f;
-
-                    // Penalize boundary vertices
-                    if (options.PreserveBoundaryEdges)
-                    {
-                        if (vertexData[v0].isBoundary || vertexData[v1].isBoundary)
-                        {
-                            cost += options.BoundaryWeight * costScale;
-                        }
-                    }
-
-                    // Small penalty for vertices that have already been affected by collapses
-                    // This helps distribute collapses more evenly across the mesh
-                    int totalCollapseCount = vertexData[v0].collapseCount + vertexData[v1].collapseCount;
-                    if (totalCollapseCount > 0)
-                    {
-                        // Very small relative penalty - just enough to break ties
-                        cost += costScale * 0.01f * totalCollapseCount;
-                    }
-
-                    // Penalize asymmetric collapses (when one vertex has a mirror but would collapse asymmetrically)
-                    int mirror0 = vertexData[v0].mirrorVertex;
-                    int mirror1 = vertexData[v1].mirrorVertex;
-                    if (mirror0 >= 0 || mirror1 >= 0)
-                    {
-                        // Check if this edge has a symmetric counterpart
-                        bool hasSymmetricEdge = false;
-                        if (mirror0 >= 0 && mirror1 >= 0)
-                        {
-                            // Both vertices have mirrors - check if the mirror edge exists and is valid
-                            if (!vertexData[mirror0].collapsed && !vertexData[mirror1].collapsed)
-                            {
-                                hasSymmetricEdge = true;
+                if (!hasSymmetricEdge)
+                {
+                                // This collapse would break symmetry - add small relative penalty
+                                cost += costScale * 0.1f;
                             }
                         }
 
-                        if (!hasSymmetricEdge)
+                        // Volume preservation: penalize collapses that would flatten thin features like arms
+                        // We detect this by checking if the edge crosses a high-curvature region
+                        if (options.PreserveVolume && options.VolumeWeight > 0)
                         {
-                            // This collapse would break symmetry - add small relative penalty
-                            cost += costScale * 0.1f;
-                        }
-                    }
+                            // Use quadric eigenvalues as a proxy for local curvature
+                            // High curvature relative to edge length indicates thin features
+                            float edgeLenSq = (positions[v1] - positions[v0]).sqrMagnitude;
+                            if (edgeLenSq > 1e-10f)
+                            {
+                                float avgEdgeLen = Mathf.Sqrt(edgeLenSq);
 
-                    return new SimplifyEdge { v0 = v0, v1 = v1, cost = cost };
-                }
+                                // The quadric error gives us a measure of how much the surface curves
+                                // Dividing by edge length gives us curvature density
+                                float curvatureEstimate = Mathf.Sqrt(baseCost) / avgEdgeLen;
+
+                                // If curvature is high relative to edge length, this is likely a thin feature
+                                // Penalize collapsing these edges to preserve volume
+                                if (curvatureEstimate > 0.5f)
+                                {
+                                    float volumePenalty = options.VolumeWeight * costScale * Mathf.Min(curvatureEstimate, 5.0f);
+                                    cost += volumePenalty;
+                                }
+                            }
+                        }
+
+                        return new SimplifyEdge { v0 = v0, v1 = v1, cost = cost };
+                    }
 
         private static void InsertEdgeSorted(List<SimplifyEdge> edgeList, SimplifyEdge edge)
         {
@@ -949,134 +976,134 @@ namespace UMA.Editors
                 a33 += other.a33;
             }
 
-                public float Evaluate(Vector3 p)
+            public float Evaluate(Vector3 p)
+            {
+                float x = p.x, y = p.y, z = p.z, w = 1f;
+                return a00 * x * x + 2 * a01 * x * y + 2 * a02 * x * z + 2 * a03 * x * w
+                     + a11 * y * y + 2 * a12 * y * z + 2 * a13 * y * w
+                     + a22 * z * z + 2 * a23 * z * w
+                     + a33 * w * w;
+            }
+        }
+
+        /// <summary>
+        /// Create a spatial hash key for a position, used for finding symmetric vertices.
+        /// </summary>
+        private static long HashPosition(float x, float y, float z, float cellSize)
+        {
+            int ix = Mathf.RoundToInt(x / cellSize);
+            int iy = Mathf.RoundToInt(y / cellSize);
+            int iz = Mathf.RoundToInt(z / cellSize);
+            // Pack into a long (21 bits per component, supports ~2 million cells per axis)
+            long hash = ((long)(ix + 1048576) & 0x1FFFFF);
+            hash |= ((long)(iy + 1048576) & 0x1FFFFF) << 21;
+            hash |= ((long)(iz + 1048576) & 0x1FFFFF) << 42;
+            return hash;
+        }
+
+        public static bool ValidateInternalLods(SlotDataAsset slot)
+        {
+            if (slot == null || slot.meshData == null || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0)
+            {
+                return false;
+            }
+            int sub = slot.subMeshIndex;
+            if (sub < 0 || sub >= slot.meshData.submeshes.Length)
+            {
+                sub = 0;
+            }
+            var smt = slot.meshData.submeshes[sub];
+            if (smt == null)
+            {
+                return false;
+            }
+
+            var baseTris = smt.GetBaseTriangles();
+            if (baseTris == null)
+            {
+                return false;
+            }
+
+            var lodRanges = smt.lodRanges;
+            if (lodRanges == null || lodRanges.Count == 0)
+            {
+                return true;
+            }
+
+            int lastCount = int.MaxValue;
+            for (int i = 0; i < lodRanges.Count; i++)
+            {
+                var r = lodRanges[i];
+                if ((int)r.offset < 0 || (int)r.count < 0)
                 {
-                    float x = p.x, y = p.y, z = p.z, w = 1f;
-                    return a00 * x * x + 2 * a01 * x * y + 2 * a02 * x * z + 2 * a03 * x * w
-                         + a11 * y * y + 2 * a12 * y * z + 2 * a13 * y * w
-                         + a22 * z * z + 2 * a23 * z * w
-                         + a33 * w * w;
+                    return false;
+                }
+                if ((long)r.offset + (long)r.count > baseTris.Length)
+                {
+                    return false;
+                }
+                if (r.count % 3 != 0)
+                {
+                    return false;
+                }
+                int triCount = (int)r.count / 3;
+                if (triCount > lastCount)
+                {
+                    // Should be non-increasing
+                    return false;
+                }
+                lastCount = triCount;
+            }
+
+            return true;
+        }
+
+        private static HashSet<ulong> BuildBoundaryEdgeSet(int[] triangles)
+        {
+            var edgeCounts = new Dictionary<ulong, int>(triangles.Length);
+            for (int i = 0; i < triangles.Length; i += 3)
+            {
+                int a = triangles[i];
+                int b = triangles[i + 1];
+                int c = triangles[i + 2];
+
+                AddEdgeCount(edgeCounts, a, b);
+                AddEdgeCount(edgeCounts, b, c);
+                AddEdgeCount(edgeCounts, c, a);
+            }
+
+            var res = new HashSet<ulong>();
+            foreach (var kv in edgeCounts)
+            {
+                if (kv.Value == 1)
+                {
+                    res.Add(kv.Key);
                 }
             }
+            return res;
+        }
 
-            /// <summary>
-            /// Create a spatial hash key for a position, used for finding symmetric vertices.
-            /// </summary>
-            private static long HashPosition(float x, float y, float z, float cellSize)
+        private static void AddEdgeCount(Dictionary<ulong, int> edgeCounts, int v0, int v1)
+        {
+            ulong key = MakeUndirectedEdgeKey(v0, v1);
+            int count;
+            if (edgeCounts.TryGetValue(key, out count))
             {
-                int ix = Mathf.RoundToInt(x / cellSize);
-                int iy = Mathf.RoundToInt(y / cellSize);
-                int iz = Mathf.RoundToInt(z / cellSize);
-                // Pack into a long (21 bits per component, supports ~2 million cells per axis)
-                long hash = ((long)(ix + 1048576) & 0x1FFFFF);
-                hash |= ((long)(iy + 1048576) & 0x1FFFFF) << 21;
-                hash |= ((long)(iz + 1048576) & 0x1FFFFF) << 42;
-                return hash;
+                edgeCounts[key] = count + 1;
             }
+            else
+            {
+                edgeCounts.Add(key, 1);
+            }
+        }
 
-            public static bool ValidateInternalLods(SlotDataAsset slot)
-                             {
-                                 if (slot == null || slot.meshData == null || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0)
-                                 {
-                                     return false;
-                                 }
-                                 int sub = slot.subMeshIndex;
-                                 if (sub < 0 || sub >= slot.meshData.submeshes.Length)
-                                 {
-                                     sub = 0;
-                                 }
-                                 var smt = slot.meshData.submeshes[sub];
-                                 if (smt == null)
-                                 {
-                                     return false;
-                                 }
+        private static ulong MakeUndirectedEdgeKey(int v0, int v1)
+        {
+            uint a = (uint)Mathf.Min(v0, v1);
+            uint b = (uint)Mathf.Max(v0, v1);
+            return ((ulong)a << 32) | (ulong)b;
+        }
+    }
+}
 
-                                 var baseTris = smt.GetBaseTriangles();
-                                 if (baseTris == null)
-                                 {
-                                     return false;
-                                 }
-
-                                 var lodRanges = smt.lodRanges;
-                                 if (lodRanges == null || lodRanges.Count == 0)
-                                 {
-                                     return true;
-                                 }
-
-                                 int lastCount = int.MaxValue;
-                                 for (int i = 0; i < lodRanges.Count; i++)
-                                 {
-                                     var r = lodRanges[i];
-                                     if ((int)r.offset < 0 || (int)r.count < 0)
-                                     {
-                                         return false;
-                                     }
-                                     if ((long)r.offset + (long)r.count > baseTris.Length)
-                                     {
-                                         return false;
-                                     }
-                                     if (r.count % 3 != 0)
-                                     {
-                                         return false;
-                                     }
-                                     int triCount = (int)r.count / 3;
-                                     if (triCount > lastCount)
-                                     {
-                                         // Should be non-increasing
-                                         return false;
-                                     }
-                                     lastCount = triCount;
-                                 }
-
-                                 return true;
-                             }
-
-                             private static HashSet<ulong> BuildBoundaryEdgeSet(int[] triangles)
-                             {
-                                 var edgeCounts = new Dictionary<ulong, int>(triangles.Length);
-                                 for (int i = 0; i < triangles.Length; i += 3)
-                                 {
-                                     int a = triangles[i];
-                                     int b = triangles[i + 1];
-                                     int c = triangles[i + 2];
-
-                                     AddEdgeCount(edgeCounts, a, b);
-                                     AddEdgeCount(edgeCounts, b, c);
-                                     AddEdgeCount(edgeCounts, c, a);
-                                 }
-
-                                 var res = new HashSet<ulong>();
-                                 foreach (var kv in edgeCounts)
-                                 {
-                                     if (kv.Value == 1)
-                                     {
-                                         res.Add(kv.Key);
-                                     }
-                                 }
-                                 return res;
-                             }
-
-                             private static void AddEdgeCount(Dictionary<ulong, int> edgeCounts, int v0, int v1)
-                             {
-                                 ulong key = MakeUndirectedEdgeKey(v0, v1);
-                                 int count;
-                                 if (edgeCounts.TryGetValue(key, out count))
-                                 {
-                                     edgeCounts[key] = count + 1;
-                                 }
-                                 else
-                                 {
-                                     edgeCounts.Add(key, 1);
-                                 }
-                             }
-
-                             private static ulong MakeUndirectedEdgeKey(int v0, int v1)
-                             {
-                                 uint a = (uint)Mathf.Min(v0, v1);
-                                 uint b = (uint)Mathf.Max(v0, v1);
-                                 return ((ulong)a << 32) | (ulong)b;
-                             }
-                         }
-                     }
-
-                     #endif
+#endif

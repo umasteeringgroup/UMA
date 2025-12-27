@@ -9,6 +9,8 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using System.Xml.Serialization;
+
 #if UNITY_6000_2_OR_NEWER
 using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
 using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
@@ -60,6 +62,50 @@ namespace UMA.Controls
         Texture2D umaTexture;
         SlotDataAsset umaSlot;
         MeshHideAsset AddedMHA = null;
+
+        private const string SlotLodPrefKeyPrefix = "UMA.UMASimpleLODEditor.InternalSlotLOD.";
+
+        private static int LoadSlotLodInt(string key, int defaultValue)
+        {
+            return EditorPrefs.GetInt(SlotLodPrefKeyPrefix + key, defaultValue);
+        }
+
+        private static float LoadSlotLodFloat(string key, float defaultValue)
+        {
+            return EditorPrefs.GetFloat(SlotLodPrefKeyPrefix + key, defaultValue);
+        }
+
+        private static bool LoadSlotLodBool(string key, bool defaultValue)
+        {
+            return EditorPrefs.GetBool(SlotLodPrefKeyPrefix + key, defaultValue);
+        }
+
+        private static void SaveSlotLodInt(string key, int value)
+        {
+            EditorPrefs.SetInt(SlotLodPrefKeyPrefix + key, value);
+        }
+
+        private static void SaveSlotLodFloat(string key, float value)
+        {
+            EditorPrefs.SetFloat(SlotLodPrefKeyPrefix + key, value);
+        }
+
+        private static void SaveSlotLodBool(string key, bool value)
+        {
+            EditorPrefs.SetBool(SlotLodPrefKeyPrefix + key, value);
+        }
+
+        private bool _slotLodOptionsFoldout = true;
+
+#if UNITY_6000_2_OR_NEWER
+		private MeshHideAsset.CopyLODMode _fixMhaCopyLodMode = MeshHideAsset.CopyLODMode.Conservative;
+		private int _fixMhaCopyPolicy = 0; // 0=Replace, 1=Missing
+		private static readonly GUIContent[] _fixMhaCopyPolicyOptions =
+		{
+			new GUIContent("Replace", "Overwrite destination LOD masks."),
+			new GUIContent("Missing", "Only fill destination LOD masks that are missing/unallocated.")
+		};
+#endif
 
         private GenericMenu FileMenu
         {
@@ -2587,6 +2633,30 @@ namespace UMA.Controls
                     SelectUnusedMeshHideAssets();
                 }
 
+#if UNITY_6000_2_OR_NEWER
+                EditorGUILayout.Space(5);
+                EditorGUILayout.LabelField("LOD Fix Options", EditorStyles.boldLabel);
+                _fixMhaCopyLodMode = (MeshHideAsset.CopyLODMode)EditorGUILayout.EnumPopup(new GUIContent(
+                    "Copy LOD Mode",
+                    "Controls how destination triangles are marked hidden based on how many of their vertices were part of any hidden triangle in the source LOD.\n\n" +
+                    "Strict: hide only if ALL 3 vertices were previously hidden.\n" +
+                    "Weighted: hide if 2 or more vertices were previously hidden.\n" +
+                    "Conservative: hide if ANY 1 vertex was previously hidden."),
+                    _fixMhaCopyLodMode);
+                _fixMhaCopyPolicy = EditorGUILayout.Popup(new GUIContent("Copy Policy", "Replace overwrites destination LODs; Missing only fills unallocated LODs."), _fixMhaCopyPolicy, _fixMhaCopyPolicyOptions);
+#endif
+
+                if (GUILayout.Button("Gen LOD on ALL MHA"))
+                {
+                    FixMeshHideAssetLOD(true);
+                }
+
+                if (GUILayout.Button("Gen LOD on Selected MHA"))
+                {
+                    FixMeshHideAssetLOD(false);
+                }
+
+
                 GUIHelper.EndVerticalPadded(10);
             }
             _materialFoldout = EditorGUILayout.Foldout(_materialFoldout, "UMA Materials");
@@ -2857,6 +2927,69 @@ namespace UMA.Controls
                 {
                     SetLegacyFlagOnSelectedSlots(true);
                 }
+
+                EditorGUILayout.Space(5);
+                EditorGUILayout.LabelField("LOD Generation", EditorStyles.boldLabel);
+                _slotLodOptionsFoldout = EditorGUILayout.Foldout(_slotLodOptionsFoldout, "LOD Gen Options", true);
+                if (_slotLodOptionsFoldout)
+                {
+                    int maxLodLevels = LoadSlotLodInt("MaxLodLevels", 8);
+                    int minTriangles = LoadSlotLodInt("MinTriangles", 256);
+                    float reduction = LoadSlotLodFloat("TargetReductionPerLevel", 0.5f);
+                    bool preserveBorders = LoadSlotLodBool("PreserveBoundaryEdges", true);
+                    float boundaryWeight = LoadSlotLodFloat("BoundaryWeight", 10f);
+                    bool preserveVolume = LoadSlotLodBool("PreserveVolume", true);
+                    float volumeWeight = LoadSlotLodFloat("VolumeWeight", 1.0f);
+                    bool useUnityLodGenerator = LoadSlotLodBool("UseUnityLodGenerator", false);
+
+                    EditorGUI.BeginChangeCheck();
+                    maxLodLevels = EditorGUILayout.IntSlider(new GUIContent("Max LOD Levels"), maxLodLevels, 1, 8);
+                    useUnityLodGenerator = EditorGUILayout.Toggle(new GUIContent(
+                        "Use Unity LOD Generator",
+                        "When enabled, uses Unity's MeshLodUtility.GenerateMeshLods instead of UMA's internal reducer."),
+                        useUnityLodGenerator);
+
+                    using (new EditorGUI.DisabledScope(useUnityLodGenerator))
+                    {
+                        minTriangles = EditorGUILayout.IntField(new GUIContent("Min Triangles"), Mathf.Max(0, minTriangles));
+                        reduction = EditorGUILayout.Slider(new GUIContent("Reduction Per Level"), reduction, 0.01f, 0.99f);
+                        preserveBorders = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges"), preserveBorders);
+                        boundaryWeight = EditorGUILayout.FloatField(new GUIContent("Boundary Weight"), Mathf.Max(0f, boundaryWeight));
+                        preserveVolume = EditorGUILayout.Toggle(new GUIContent(
+                            "Preserve Volume",
+                            "When enabled, penalizes edge collapses that would flatten thin features like arms and fingers."),
+                            preserveVolume);
+
+                        using (new EditorGUI.DisabledScope(!preserveVolume))
+                        {
+                            volumeWeight = EditorGUILayout.Slider(new GUIContent(
+                                "Volume Weight",
+                                "How strongly to preserve volume. Higher values prevent more flattening but may reduce simplification quality."),
+                                volumeWeight, 0.1f, 5.0f);
+                        }
+                    }
+
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        SaveSlotLodInt("MaxLodLevels", maxLodLevels);
+                        SaveSlotLodBool("UseUnityLodGenerator", useUnityLodGenerator);
+                        SaveSlotLodInt("MinTriangles", minTriangles);
+                        SaveSlotLodFloat("TargetReductionPerLevel", reduction);
+                        SaveSlotLodBool("PreserveBoundaryEdges", preserveBorders);
+                        SaveSlotLodFloat("BoundaryWeight", boundaryWeight);
+                        SaveSlotLodBool("PreserveVolume", preserveVolume);
+                        SaveSlotLodFloat("VolumeWeight", volumeWeight);
+                    }
+                }
+                if (GUILayout.Button("Create LOD for selected slots"))
+                {
+                    CreateLODForSlots(false);
+                }
+                if (GUILayout.Button("Create LOD for all slots"))
+                {
+                    CreateLODForSlots(true);
+                }
+
 #if EXP_SLOT_CONVERSION
                 GUILayout.Label("Slot Conversion",EditorStyles.boldLabel);
                 GUILayout.BeginHorizontal();
@@ -2971,6 +3104,198 @@ namespace UMA.Controls
                 }
             }
             GUILayout.EndScrollView();
+        }
+
+        private void CreateLODForSlots(bool processAll)
+        {
+            List<SlotDataAsset> slots = new List<SlotDataAsset>();
+            if (processAll)
+            {
+                var allItems = UAI.GetAllAssets<SlotDataAsset>();
+                foreach (var item in allItems)
+                {
+                    slots.Add(item);
+                }
+            }
+            else
+            {
+                var selectedItems = GetSelectedAssets(typeof(SlotDataAsset));
+                foreach (var item in selectedItems)
+                {
+                    slots.Add(item.Item as SlotDataAsset);
+                }
+            }
+
+            if (slots.Count == 0)
+            {
+                return;
+            }
+
+            int maxLodLevels = LoadSlotLodInt("MaxLodLevels", 8);
+            int minTriangles = LoadSlotLodInt("MinTriangles", 256);
+            float reduction = LoadSlotLodFloat("TargetReductionPerLevel", 0.5f);
+            bool preserveBorders = LoadSlotLodBool("PreserveBoundaryEdges", true);
+            float boundaryWeight = LoadSlotLodFloat("BoundaryWeight", 10f);
+            bool preserveVolume = LoadSlotLodBool("PreserveVolume", true);
+            float volumeWeight = LoadSlotLodFloat("VolumeWeight", 1.0f);
+            bool useUnityLodGenerator = LoadSlotLodBool("UseUnityLodGenerator", false);
+
+            var opts = new SlotLodGenerator.LodGenOptions();
+            opts.MaxLodLevels = maxLodLevels;
+            opts.MinTriangles = minTriangles;
+            opts.TargetReductionPerLevel = reduction;
+            opts.PreserveBoundaryEdges = preserveBorders;
+            opts.BoundaryWeight = boundaryWeight;
+            opts.PreserveVolume = preserveVolume;
+            opts.VolumeWeight = volumeWeight;
+            opts.useUnityLodGenerator = useUnityLodGenerator;
+
+            int updated = 0;
+            int skipped = 0;
+
+            try
+            {
+                for (int i = 0; i < slots.Count; i++)
+                {
+                    var slot = slots[i];
+                    if (slot == null || slot.meshData == null)
+                    {
+                        skipped++;
+                        continue;
+                    }
+
+                    float t = (slots.Count > 0) ? ((float)i / (float)slots.Count) : 1.0f;
+                    bool cancel = EditorUtility.DisplayCancelableProgressBar(
+                        "Generate Slot LODs",
+                        "Processing: " + slot.name,
+                        t);
+                    if (cancel)
+                    {
+                        break;
+                    }
+
+                    bool did = false;
+                    try
+                    {
+                        did = SlotLodGenerator.GenerateAndApplyLods(slot, opts);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                        did = false;
+                    }
+
+                    if (did)
+                    {
+                        updated++;
+                        EditorUtility.SetDirty(slot);
+                    }
+                    else
+                    {
+                        skipped++;
+                    }
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            if (updated > 0)
+            {
+                AssetDatabase.SaveAssets();
+            }
+
+            EditorUtility.DisplayDialog("Slot LOD", "Updated " + updated + " slot(s). Skipped " + skipped + ".", "OK");
+        }
+
+
+
+        private void FixMeshHideAssetLOD(bool processAll)
+        {
+            List<MeshHideAsset> mhas = new List<MeshHideAsset>();
+            if (processAll)
+            {
+                var allItems = UAI.GetAllAssets<MeshHideAsset>();
+                foreach (var item in allItems)
+                {
+                    mhas.Add(item);
+                }
+            }
+            else
+            {
+                var selectedItems = GetSelectedAssets(typeof(MeshHideAsset));
+                foreach (var item in selectedItems)
+                {
+                    mhas.Add(item.Item as MeshHideAsset);
+                }
+            }
+            foreach (var mha in mhas)
+            {
+                bool modified = false;
+
+#if UNITY_6000_2_OR_NEWER
+                if (mha == null)
+                {
+                    continue;
+                }
+
+                SlotDataAsset slot = mha.asset;
+                if (slot == null || slot.meshData == null)
+                {
+                    continue;
+                }
+
+                int submesh = slot.subMeshIndex;
+                if (submesh < 0 || submesh >= slot.meshData.subMeshCount)
+                {
+                    continue;
+                }
+
+                int lodCount = 1;
+                var ranges = slot.meshData.submeshes[submesh].lodRanges;
+                if (ranges != null && ranges.Count > 0)
+                {
+                    lodCount = ranges.Count;
+                }
+
+                if (lodCount < 1)
+                {
+                    lodCount = 1;
+                }
+
+                bool replace = (_fixMhaCopyPolicy == 0);
+                bool onlyMissing = (_fixMhaCopyPolicy != 0);
+
+                // Ensure base selection exists (legacy assets might have never been initialized)
+                if (mha.triangleFlags == null || mha.triangleFlags.Length == 0)
+                {
+                    mha.Initialize();
+                    modified = true;
+                }
+
+                // Copy base LOD mask (0) to all other LODs, allocating as needed.
+                for (int lod = 1; lod < lodCount; lod++)
+                {
+                    // In "Missing" mode, skip LODs that already have stored data.
+                    if (onlyMissing)
+                    {
+                        if (mha.HasStoredLODMask(lod))
+                        {
+                            continue;
+                        }
+                    }
+
+                    mha.CopyLODMask(0, lod, replace, _fixMhaCopyLodMode);
+                    modified = true;
+                }
+#endif
+                if (modified)
+                {
+                    EditorUtility.SetDirty(mha);
+                }
+            }
+            AssetDatabase.SaveAssets();
         }
 
         private DynamicCharacterAvatar _fromCharacter;

@@ -18,6 +18,13 @@ namespace UMA
     /// </remarks>
     public class MeshHideAsset : ScriptableObject, ISerializationCallbackReceiver
     {
+        public enum CopyLODMode
+        {
+            Strict,
+            Conservative,
+            Weighted
+        }
+
         /// <summary>
         /// The asset we want to apply mesh hiding to if found in the generated UMA.
         /// </summary>
@@ -425,6 +432,27 @@ namespace UMA
             return (ranges != null && ranges.Count > 0) ? ranges.Count : 1;
         }
 
+        public bool HasStoredLODMask(int lod)
+        {
+            if (lod <= 0)
+            {
+                return true;
+            }
+
+            if (_triangleFlagsPerLOD != null && _triangleFlagsPerLOD.ContainsKey(lod))
+            {
+                return true;
+            }
+
+            // If we have serialized data for this LOD, it exists even if not yet cached.
+            if (_serializedFlagsPerLOD != null && lod >= 0 && lod < _serializedFlagsPerLOD.Count)
+            {
+                return _serializedFlagsPerLOD[lod] != null;
+            }
+
+            return false;
+        }
+
         private void EnsureLODAllocated(int lod)
         {
             if (asset == null || asset.meshData == null) return;
@@ -531,6 +559,11 @@ namespace UMA
 
         public void CopyLODMask(int fromLOD, int toLOD, bool replaceDestination)
         {
+            CopyLODMask(fromLOD, toLOD, replaceDestination, CopyLODMode.Conservative);
+        }
+
+        public void CopyLODMask(int fromLOD, int toLOD, bool replaceDestination, CopyLODMode mode)
+        {
             if (asset == null || asset.meshData == null) return;
             if (fromLOD == toLOD) return;
 
@@ -548,12 +581,38 @@ namespace UMA
             {
                 dest.SetAll(false);
             }
+
             int triCount = tris.Length / 3;
             for (int i = 0; i < triCount && i < dest.Length; i++)
             {
                 int t = i * 3;
-                bool hide = hiddenVerts.Contains(tris[t]) || hiddenVerts.Contains(tris[t + 1]) || hiddenVerts.Contains(tris[t + 2]);
-                if (hide) dest[i] = true;
+                bool v0 = hiddenVerts.Contains(tris[t]);
+                bool v1 = hiddenVerts.Contains(tris[t + 1]);
+                bool v2 = hiddenVerts.Contains(tris[t + 2]);
+
+                bool hide = false;
+                if (mode == CopyLODMode.Strict)
+                {
+                    hide = v0 && v1 && v2;
+                }
+                else if (mode == CopyLODMode.Weighted)
+                {
+                    int count = 0;
+                    if (v0) count++;
+                    if (v1) count++;
+                    if (v2) count++;
+                    hide = count >= 2;
+                }
+                else
+                {
+                    // Conservative
+                    hide = v0 || v1 || v2;
+                }
+
+                if (hide)
+                {
+                    dest[i] = true;
+                }
             }
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);

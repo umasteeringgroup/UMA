@@ -72,137 +72,148 @@ namespace UMA
         public List<SceneInfo> restoreScenes;
 #endif
 
-        public void Initialize()
-        {
-            gameObject.name = "GeometrySelector";
-            if (_sharedMesh == null)
-            {
-#if UNITY_EDITOR
-                if (Debug.isDebugBuild)
-                {
-                    Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
-                }
-#endif
-                return;
-            }
+                        public void Initialize()
+                        {
+                            gameObject.name = "GeometrySelector";
+                            if (_sharedMesh == null)
+                            {
+                #if UNITY_EDITOR
+                                if (Debug.isDebugBuild)
+                                {
+                                    Debug.LogWarning("GeometrySelector: Initializing with no mesh!");
+                                }
+                #endif
+                                return;
+                            }
 
-            if (meshAsset != null)
-            {
-                UMAMeshData meshData = meshAsset.asset.meshData;
+                            if (meshAsset != null)
+                            {
+                                UMAMeshData meshData = meshAsset.asset.meshData;
 
-                /* Todo: figure out how to get the races root bone orientation
-                Transform root = meshData.rootBone;
-                if (root == null)
-                {
-                    SkeletonTools.RecursiveFindBone(meshData.bones[0],"Global");
-                }
-                */
-                if (meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
-                {
-                    gameObject.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-                }
-            }
+                                /* Todo: figure out how to get the races root bone orientation
+                                Transform root = meshData.rootBone;
+                                if (root == null)
+                                {
+                                    SkeletonTools.RecursiveFindBone(meshData.bones[0],"Global");
+                                }
+                                */
+                                if (meshData.rootBoneHash == UMAUtils.StringToHash("Global"))
+                                {
+                                    gameObject.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+                                }
+                            }
 
-            gameObject.transform.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
+                            gameObject.transform.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
 
-            if (selectedTriangles == null)
-            {
-#if UNITY_6000_2_OR_NEWER
-                int[] tris = meshAsset.asset.meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles(activeLOD).ToArray();
-                selectedTriangles = new BitArray(tris.Length / 3);
-#else
-                selectedTriangles = new BitArray(_sharedMesh.triangles.Length / 3);
-#endif
-            }
+                            if (selectedTriangles == null)
+                            {
+                #if UNITY_6000_2_OR_NEWER
+                                int[] tris = meshAsset.asset.meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles(activeLOD).ToArray();
+                                selectedTriangles = new BitArray(tris.Length / 3);
+                #else
+                                selectedTriangles = new BitArray(_sharedMesh.triangles.Length / 3);
+                #endif
+                            }
 
-            if (!gameObject.GetComponent<MeshFilter>())
-            {
-                MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
-                meshFilter.mesh = _sharedMesh;
-                meshFilter.hideFlags = HideFlags.HideInInspector;
-            }
+                            MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();
+                            if (meshFilter == null)
+                            {
+                                meshFilter = gameObject.AddComponent<MeshFilter>();
+                                meshFilter.hideFlags = HideFlags.HideInInspector;
+                            }
+                            // Always update the mesh reference in case it changed (e.g., LOD switch)
+                            meshFilter.mesh = _sharedMesh;
 
-            if (!gameObject.GetComponent<MeshRenderer>())
-            {
-                _meshRenderer = gameObject.AddComponent<MeshRenderer>();
-                _meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                _meshRenderer.receiveShadows = false;
-                _meshRenderer.hideFlags = HideFlags.HideInInspector;
-            }
+                            if (!gameObject.GetComponent<MeshRenderer>())
+                            {
+                                _meshRenderer = gameObject.AddComponent<MeshRenderer>();
+                                _meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                                _meshRenderer.receiveShadows = false;
+                                _meshRenderer.hideFlags = HideFlags.HideInInspector;
+                            }
 
-            if (!gameObject.GetComponent<MeshCollider>())
-            {
-                _meshCollider = gameObject.AddComponent<MeshCollider>();
-                _meshCollider.convex = false;
-                _meshCollider.sharedMesh = _sharedMesh;
-                _meshCollider.hideFlags = HideFlags.HideInInspector;
-            }
+                            if (!gameObject.GetComponent<MeshCollider>())
+                            {
+                                _meshCollider = gameObject.AddComponent<MeshCollider>();
+                                _meshCollider.convex = false;
+                                _meshCollider.hideFlags = HideFlags.HideInInspector;
+                            }
+                            // Always update the collider's mesh reference in case it changed (e.g., LOD switch)
+                            if (_meshCollider != null)
+                            {
+                                _meshCollider.sharedMesh = _sharedMesh;
+                            }
 
-            if (GraphicsSettings.defaultRenderPipeline == null)
-            {
-                _Shader = Shader.Find("Standard");
-            }
-            else
-            {
-                //Expand this to find shaders that work with other SRPs in the future.
-                _Shader = Shader.Find("Unlit/Color");
-            }
+                            if (GraphicsSettings.defaultRenderPipeline == null)
+                            {
+                                _Shader = Shader.Find("Standard");
+                            }
+                            else
+                            {
+                                //Expand this to find shaders that work with other SRPs in the future.
+                                _Shader = Shader.Find("Unlit/Color");
+                            }
 
-            if (_Materials == null && _Shader != null)
-            {
-                _Materials = new Material[2];
+                            if (_Materials == null && _Shader != null)
+                            {
+                                _Materials = new Material[2];
 
-                //Selected
-                _Materials[1] = new Material(_Shader);
-                _Materials[1].name = "Selected";
-                _Materials[1].color = Color.red;
-                _Materials[1].hideFlags = HideFlags.HideInInspector;
+                                //Selected
+                                _Materials[1] = new Material(_Shader);
+                                _Materials[1].name = "Selected";
+                                _Materials[1].color = Color.red;
+                                _Materials[1].hideFlags = HideFlags.HideInInspector;
 
-                //UnSelected
-                _Materials[0] = new Material(_Shader);
-                _Materials[0].name = "UnSelected";
-                _Materials[0].color = Color.gray;
-                _Materials[0].hideFlags = HideFlags.HideInInspector;
+                                //UnSelected
+                                _Materials[0] = new Material(_Shader);
+                                _Materials[0].name = "UnSelected";
+                                _Materials[0].color = Color.gray;
+                                _Materials[0].hideFlags = HideFlags.HideInInspector;
 
-                _sharedMesh.subMeshCount = 2;
-                _meshRenderer.sharedMaterials = _Materials;
-            }
-        }
+                                _meshRenderer.sharedMaterials = _Materials;
+                            }
 
-        public void InitializeFromMeshData(UMAMeshData meshData)
-        {
-            if (meshData == null)
-            {
-                if (Debug.isDebugBuild)
-                {
-                    Debug.LogError("InitializeFromMeshData: meshData is null!");
-                }
+                            // Always ensure the mesh has 2 submeshes for selection visualization
+                            if (_sharedMesh.subMeshCount < 2)
+                            {
+                                _sharedMesh.subMeshCount = 2;
+                            }
+                        }
 
-                return;
-            }
+                        public void InitializeFromMeshData(UMAMeshData meshData)
+                        {
+                            if (meshData == null)
+                            {
+                                if (Debug.isDebugBuild)
+                                {
+                                    Debug.LogError("InitializeFromMeshData: meshData is null!");
+                                }
 
-            _sharedMesh = new Mesh();
-            _sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            _sharedMesh.subMeshCount = 1; // we're only copying the current submesh
-            _sharedMesh.vertices = meshData.vertices;
-            _sharedMesh.normals = meshData.normals;
-            _sharedMesh.tangents = meshData.tangents;
-            _sharedMesh.uv = meshData.uv;
-            _sharedMesh.uv2 = meshData.uv2;
-            _sharedMesh.uv3 = meshData.uv3;
-            _sharedMesh.uv4 = meshData.uv4;
-            _sharedMesh.colors32 = meshData.colors32;
+                                return;
+                            }
 
-#if UNITY_6000_2_OR_NEWER
-            _sharedMesh.SetIndices(meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles(activeLOD).ToArray(), MeshTopology.Triangles, 0);
-#else
-            _sharedMesh.SetIndices(meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles().ToArray(), MeshTopology.Triangles, 0);
-#endif
-            _sharedMesh.RecalculateBounds();
-            Initialize();
-        }
+                            _sharedMesh = new Mesh();
+                            _sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                            _sharedMesh.subMeshCount = 1; // we're only copying the current submesh
+                            _sharedMesh.vertices = meshData.vertices;
+                            _sharedMesh.normals = meshData.normals;
+                            _sharedMesh.tangents = meshData.tangents;
+                            _sharedMesh.uv = meshData.uv;
+                            _sharedMesh.uv2 = meshData.uv2;
+                            _sharedMesh.uv3 = meshData.uv3;
+                            _sharedMesh.uv4 = meshData.uv4;
+                            _sharedMesh.colors32 = meshData.colors32;
 
-        public void SelectAll()
+                #if UNITY_6000_2_OR_NEWER
+                            _sharedMesh.SetIndices(meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles(activeLOD).ToArray(), MeshTopology.Triangles, 0);
+                #else
+                            _sharedMesh.SetIndices(meshData.submeshes[meshAsset.asset.subMeshIndex].GetTriangles().ToArray(), MeshTopology.Triangles, 0);
+                #endif
+                            _sharedMesh.RecalculateBounds();
+                            Initialize();
+                        }
+
+                        public void SelectAll()
         {
             if (_sharedMesh == null)
             {
