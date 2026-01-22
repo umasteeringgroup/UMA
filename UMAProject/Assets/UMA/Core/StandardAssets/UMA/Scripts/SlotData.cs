@@ -78,6 +78,7 @@ namespace UMA
         public int skinnedMeshRenderer;
         public int submeshIndex;
         public int vertexOffset;
+        public int uvAreaUpdateFrame;
         public Rect UVArea;
         public bool tempHidden;
         public bool isDisabled = false;

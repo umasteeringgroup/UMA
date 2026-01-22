@@ -462,6 +462,24 @@ namespace UMA.Controls
                 Repaint();
             });
 
+			ItemsMenu.AddSeparator("");
+
+
+			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Prepare Build", () => {
+				UMASettings umaSettings = UMASettings.GetOrCreateSettings();
+				umaSettings.addrStripTextures = true; //this tells uma to replace the recipe materials with Hidden/InternalErrorShader shader and creates a tag on the real shader, which it reapplies at runtime load. Note that the shader variant must be in the project build (reference in Init scene "ForceIncludeShaders" prefab). And so obviously we don't want that in the normal editor settings as we'd lose the references.
+				umaSettings.addrStripUVAttachedShaders = true; //same as above, except for uv attach prefab materials
+				SingleGroupGenerator sg = new SingleGroupGenerator();
+				sg.ClearMaterials = true; // this tells UMA to remove materials from slots and overlays so they don't bloat the addressables
+				UMAAddressablesSupport.Instance.GenerateAddressables(sg);
+				UMAAssetIndexer.Instance.PrepareBuild();
+				Resources.UnloadUnusedAssets();
+				UMAAddressablesSupport.Instance.CleanupOrphans(typeof(SlotDataAsset), true, $"Orphan Cleanup of type {typeof(SlotDataAsset).Name} - Menu Option");
+				UMAAddressablesSupport.Instance.CleanupOrphans(typeof(OverlayDataAsset), true, $"Orphan Cleanup of type {typeof(OverlayDataAsset).Name} - Menu Option");
+			});
+
+
+
             AddMenuItemWithCallback(_AddressablesMenu, "Reset stripped shaders", () =>
             {
                 int total = UMAAssetIndexer.Instance.ResetStrippedShaders();
@@ -1853,6 +1871,7 @@ namespace UMA.Controls
             {
                 AssetTreeElement ate = t as AssetTreeElement;
                 ate.IsResourceCount = 0;
+				ate.LoadedCount = 0;
                 ate.IsAddrCount = 0;
                 ate.Keepcount = 0;
                 ate.IgnoreCount = 0;
@@ -1866,6 +1885,11 @@ namespace UMA.Controls
                         {
                             ate.IsResourceCount++;
                         }
+
+						if (ai._SerializedItem != null)
+						{
+							ate.LoadedCount++;
+						}
 
                         if (ai.IsAlwaysLoaded)
                         {
@@ -2261,6 +2285,8 @@ namespace UMA.Controls
 
                             if (ai.IsResource)
                                 ate.IsResourceCount++;
+							if (ai._SerializedItem != null)
+								ate.LoadedCount++;
                             if (ai.IsAlwaysLoaded)
                                 ate.Keepcount++;
                             if (ai.IsAddressable)

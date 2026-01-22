@@ -3,7 +3,9 @@ using UnityEditor;
 using System.Collections.Generic;
 using UMA.CharacterSystem;
 using UnityEditorInternal;
-using System.IO; // Added for JSON save/load
+using System.IO;
+using System.Xml.Serialization;
+using System.Threading; // Added for JSON save/load
 
 namespace UMA.Editors
 {
@@ -39,6 +41,99 @@ namespace UMA.Editors
             {
                 strValue = val;
             }
+        }
+
+        private string EnsureWardrobeFolder()
+        {
+            if (slotFolder == null)
+            {
+                return null;
+            }
+
+            string basePath = AssetDatabase.GetAssetPath(slotFolder);
+            if (string.IsNullOrEmpty(basePath))
+            {
+                return null;
+            }
+
+            string wardrobePath = basePath.TrimEnd('/') + "/Wardrobe";
+            if (AssetDatabase.IsValidFolder(wardrobePath))
+            {
+                return wardrobePath;
+            }
+
+            string guid = AssetDatabase.CreateFolder(basePath, "Wardrobe");
+            if (string.IsNullOrEmpty(guid))
+            {
+                Debug.LogWarning("[SlotBuilder] Could not create Wardrobe folder under: " + basePath);
+                return basePath;
+            }
+
+            return wardrobePath;
+        }
+
+        private void CreateWardrobeRecipesForSlots(UMASlotProcessingUtil.SlotBuildResult result, string wardrobeFolderPath)
+        {
+            if (result == null || result.Slots == null || result.Slots.Count == 0)
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(wardrobeFolderPath))
+            {
+                wardrobeFolderPath = EnsureWardrobeFolder();
+            }
+
+            if (string.IsNullOrEmpty(wardrobeFolderPath))
+            {
+                return;
+            }
+
+            for (int i = 0; i < result.Slots.Count; i++)
+            {
+                var sda = result.Slots[i];
+                if (sda == null)
+                {
+                    continue;
+                }
+
+                string slotAssetName = sda.slotName;
+                if (string.IsNullOrEmpty(slotAssetName))
+                {
+                    slotAssetName = sda.name;
+                }
+
+                EditorUtility.DisplayProgressBar("Creating Wardrobe Recipes", "Recipe for: " + slotAssetName, 1f);
+                Thread.Sleep(0);
+
+                var recipe = new UMA.UMAData.UMARecipe();
+                recipe.ClearDna();
+
+                var sd = new SlotData(sda);
+                if (result.SlotToOverlay != null && result.SlotToOverlay.TryGetValue(sda, out var oda) && oda != null)
+                {
+                    var od = new OverlayData(oda);
+                    sd.AddOverlay(od);
+                }
+                recipe.SetSlot(0, sd);
+
+                string recipeBaseName = slotAssetName + "_Recipe";
+                string recipePath = Path.Combine(wardrobeFolderPath, recipeBaseName + ".asset").Replace('\\', '/');
+                recipePath = AssetDatabase.GenerateUniqueAssetPath(recipePath);
+
+                var uwr = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+                uwr.name = recipeBaseName;
+                uwr.Save(recipe);
+                AssetDatabase.CreateAsset(uwr, recipePath);
+                EditorUtility.SetDirty(uwr);
+
+                if (addToGlobalLibrary)
+                {
+                    UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMAWardrobeRecipe), uwr);
+                }
+            }
+
+            AssetDatabase.SaveAssets();
         }
 
         // Persisted state for window parameters
@@ -81,6 +176,13 @@ namespace UMA.Editors
             public float slotLodTargetReductionPerLevel;
             public bool slotLodPreserveBoundaryEdges;
             public float slotLodBoundaryWeight;
+            public Vector2 scrollPos = Vector2.zero;
+
+            // Drag & drop batch filters
+            public bool filterIgnoreMeshesEnabled;
+            public string filterIgnoreMeshesContaining;
+            public bool filterOnlyIncludeMeshesEnabled;
+            public string filterOnlyIncludeMeshesContaining;
         }
 
         public string slotName;
@@ -116,6 +218,7 @@ namespace UMA.Editors
         public bool invertY;
         public bool invertZ;
         public bool alwaysRecreateSlots = false;
+        public Vector2 scrollPos = Vector2.zero;
 
         [System.Serializable]
         private class PendingSmrEntry
@@ -126,6 +229,12 @@ namespace UMA.Editors
 
         private List<PendingSmrEntry> _pendingSmrs = new List<PendingSmrEntry>();
         private Vector2 _pendingSmrsScroll;
+
+        // Drag & drop batch filters
+        private bool _filterIgnoreMeshesEnabled;
+        private string _filterIgnoreMeshesContaining = string.Empty;
+        private bool _filterOnlyIncludeMeshesEnabled;
+        private string _filterOnlyIncludeMeshesContaining = string.Empty;
 
         // Slot LOD generation
         public bool generateSlotLods = false;
@@ -182,6 +291,7 @@ namespace UMA.Editors
                 state.invertY = invertY;
                 state.invertZ = invertZ;
                 state.alwaysRecreateSlots = alwaysRecreateSlots;
+                state.scrollPos = scrollPos;
                 // Copy KeepBones strings
                 state.KeepBones = new List<string>(KeepBones != null ? KeepBones.Count : 0);
                 if (KeepBones != null)
@@ -203,6 +313,11 @@ namespace UMA.Editors
                 state.slotLodTargetReductionPerLevel = slotLodTargetReductionPerLevel;
                 state.slotLodPreserveBoundaryEdges = slotLodPreserveBoundaryEdges;
                 state.slotLodBoundaryWeight = slotLodBoundaryWeight;
+
+                state.filterIgnoreMeshesEnabled = _filterIgnoreMeshesEnabled;
+                state.filterIgnoreMeshesContaining = _filterIgnoreMeshesContaining;
+                state.filterOnlyIncludeMeshesEnabled = _filterOnlyIncludeMeshesEnabled;
+                state.filterOnlyIncludeMeshesContaining = _filterOnlyIncludeMeshesContaining;
 
                 string json = JsonUtility.ToJson(state, true);
                 string fp = GetPersistFilePath();
@@ -257,6 +372,24 @@ namespace UMA.Editors
                 slotLodTargetReductionPerLevel = state.slotLodTargetReductionPerLevel;
                 slotLodPreserveBoundaryEdges = state.slotLodPreserveBoundaryEdges;
                 slotLodBoundaryWeight = state.slotLodBoundaryWeight;
+                scrollPos = state.scrollPos;
+
+                // When upgrading from older JSON, these fields may be missing;
+                // default to disabled unless clearly enabled by non-empty text.
+                _filterIgnoreMeshesContaining = state.filterIgnoreMeshesContaining ?? string.Empty;
+                _filterOnlyIncludeMeshesContaining = state.filterOnlyIncludeMeshesContaining ?? string.Empty;
+
+                _filterIgnoreMeshesEnabled = state.filterIgnoreMeshesEnabled;
+                if (!_filterIgnoreMeshesEnabled && !string.IsNullOrEmpty(_filterIgnoreMeshesContaining))
+                {
+                    // keep disabled
+                }
+
+                _filterOnlyIncludeMeshesEnabled = state.filterOnlyIncludeMeshesEnabled;
+                if (!_filterOnlyIncludeMeshesEnabled && !string.IsNullOrEmpty(_filterOnlyIncludeMeshesContaining))
+                {
+                    // keep disabled
+                }
 
                 // Restore KeepBones list
                 KeepBones = new List<BoneName>();
@@ -360,12 +493,14 @@ namespace UMA.Editors
             boneListInitialized = true;
         }
 
+        private static bool singleInstanceOpen = false;
         void OnGUI()
         {
             if (!boneListInitialized || boneList == null)
             {
                 InitBoneList();
             }
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
             GUILayout.Label("Common Parameters", EditorStyles.boldLabel);
             normalReferenceMesh = EditorGUILayout.ObjectField("Seams Mesh (Optional)  ", normalReferenceMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
@@ -401,140 +536,46 @@ namespace UMA.Editors
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
-            udimAdjustment = EditorGUILayout.Toggle("Adjust for UDIM", udimAdjustment);
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.BeginHorizontal();
-            generateSlotLods = EditorGUILayout.Toggle(new GUIContent("Generate Slot LODs", "Generate internal per-slot LOD triangle buffers/ranges for UMASimpleLOD. When enabled, Unity 6 mesh LOD copying is not used."), generateSlotLods);
-            EditorGUILayout.EndHorizontal();
-            EditorGUI.indentLevel++;
-            using (new EditorGUI.DisabledScope(!generateSlotLods))
-            {
-                slotLodMaxLevels = EditorGUILayout.IntSlider(new GUIContent("Max LOD Levels", "Maximum internal LOD levels to generate (including LOD0)."), Mathf.Clamp(slotLodMaxLevels, 1, 8), 1, 8);
-                slotLodMinTriangles = EditorGUILayout.IntField(new GUIContent("Min Triangles", "Stop generating when a LOD reaches this triangle count (approx)."), Mathf.Max(0, slotLodMinTriangles));
-                slotLodTargetReductionPerLevel = EditorGUILayout.Slider(new GUIContent("Reduction per Level", "Target triangle reduction ratio per LOD step."), Mathf.Clamp01(slotLodTargetReductionPerLevel), 0.1f, 0.9f);
-                slotLodPreserveBoundaryEdges = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges", "Attempt to preserve open edges to reduce seams when combined with other slots."), slotLodPreserveBoundaryEdges);
-                slotLodBoundaryWeight = EditorGUILayout.FloatField(new GUIContent(
-                    "Boundary Weight",
-                    "表tDefault / good starting point: 10\n" +
-                    "表tIf you see borders \u201Cchewing in\u201D or seams drifting: 20\u201350\n" +
-                    "表tIf you see it refusing to reduce enough or leaving too much geometry near borders: 5\u201310\n" +
-                    "表tFor slots where border alignment is critical (hands, sleeves, boots, neck, waist): 25\u201375\n" +
-                    "表tFor mostly-closed pieces (props, buttons, inner mouth) where border preservation is less important: 0\u201310"),
-                    Mathf.Max(0f, slotLodBoundaryWeight));
-            }
-            EditorGUI.indentLevel--;
-            // UDIM tile dimensions
-            EditorGUI.indentLevel++;
-            using (new EditorGUI.DisabledScope(!udimAdjustment))
-            {
-                udimTilesU = EditorGUILayout.IntField(new GUIContent("UDIM Tiles U", "Number of tiles horizontally (e.g., 10)"), Mathf.Max(0, udimTilesU));
-                udimTilesV = EditorGUILayout.IntField(new GUIContent("UDIM Tiles V", "Number of tiles vertically (e.g., 10)"), Mathf.Max(0, udimTilesV));
-            }
-            EditorGUI.indentLevel--;
+
             EditorGUILayout.BeginHorizontal();
             clearNormals = EditorGUILayout.Toggle("Clear Blendshape Normals", clearNormals);
             clearTangents = EditorGUILayout.Toggle("Clear Blendshape Tangents", clearTangents);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             useRootFolder = EditorGUILayout.Toggle("Write to Root Folder", useRootFolder);
+
             keepAllBones = EditorGUILayout.Toggle("Keep All Bones", keepAllBones);
             EditorGUILayout.EndHorizontal();
             BoneStripper = EditorGUILayout.TextField("Strip from Bones:", BoneStripper);
+
             rotationEnabled = EditorGUILayout.Toggle("Enable Rotation", rotationEnabled);
-            rotation = Quaternion.Euler(EditorGUILayout.Vector3Field("Rotation", rotation.eulerAngles));
-            invertX = EditorGUILayout.Toggle("Invert X", invertX);
-            invertY = EditorGUILayout.Toggle("Invert Y", invertY);
-            invertZ = EditorGUILayout.Toggle("Invert Z", invertZ);
             if (rotationEnabled)
             {
+                rotation = Quaternion.Euler(EditorGUILayout.Vector3Field("Rotation", rotation.eulerAngles));
+                invertX = EditorGUILayout.Toggle("Invert X", invertX);
+                invertY = EditorGUILayout.Toggle("Invert Y", invertY);
+                invertZ = EditorGUILayout.Toggle("Invert Z", invertZ);
                 EditorGUILayout.HelpBox("Rotation is enabled. This will rotate the slot mesh by the specified amount. This is useful for correcting the orientation of the slot mesh.", MessageType.Info);
             }
 
             boneList.DoLayoutList();
             GUIHelper.EndVerticalPadded(10);
 
+            // UDIM tile dimensions
+            DoUDIMGUI();
+
+            DoLODGUI();
 
             DoDragDrop();
 
-            EnforceFolder(ref slotFolder);
-            //
-            // For now, we will disable this option.
-            // It doesn't work in most cases.
-            // RootBone = EditorGUILayout.TextField("Root Bone (ex:'Global')", RootBone);
-            // 
-            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f),EditorStyles.helpBox);
-            GUILayout.Label("Single Slot Processing", EditorStyles.boldLabel);
+            DoSingleSlotGUI();
 
-            var newslotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
-            if (newslotMesh != slotMesh)
-            {
-                errmsg = "";
-                slotMesh = newslotMesh;
-                slotName = newslotMesh.name;
-            }
-
-            slotName = EditorGUILayout.TextField("Slot Name", slotName);
-
-
-
-            if (GUILayout.Button("Verify Slot"))
-            {
-                if (slotMesh == null)
-                {
-                    errmsg = "Slot is null.";
-                }
-                else
-                {
-                    Vector2[] uv = slotMesh.sharedMesh.uv;
-                    foreach (Vector2 v in uv)
-                    {
-                        if (v.x > 1.0f || v.x < 0.0f || v.y > 1.0f || v.y < 0.0f)
-                        {
-                            errmsg = "UV Coordinates are out of range and will likely have issues with atlassed materials. Textures should not be tiled unless using non-atlassed materials. If this slot is using UDIMs, please check the box to adjust for UDIM in the slot options.";
-                            break;
-                        }
-                    }
-                    if (string.IsNullOrEmpty(errmsg))
-                    {
-                        errmsg = "No errors found";
-                    }
-                }
-            }
-
-            if (!string.IsNullOrEmpty(errmsg))
-            {
-                EditorGUILayout.HelpBox(errmsg, MessageType.Warning);
-            }
-
-            if (GUILayout.Button("Create Slot"))
-            {
-                // Save current parameters before creating
-                SaveStateToJson();
-
-                Debug.Log("Processing...");
-                SlotDataAsset sd = CreateSlot();
-                if (sd != null)
-                {
-                    Debug.Log("Success.");
-                    string AssetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
-                    if (addToGlobalLibrary)
-                    {
-                        UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);
-                    }
-                    // Overlay and Recipe creation moved to UMASlotProcessingUtil via SlotBuilderParameters flags
-                }
-            }
-
-            GUIHelper.EndVerticalPadded(10);
-
-            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
-            GUILayout.Space(10);
+            GUIHelper.BeginVerticalPadded(2, new Color(0.75f, 0.875f, 1f), EditorStyles.helpBox);
             showTags = EditorGUILayout.Foldout(showTags, "Tags");
-            GUILayout.EndHorizontal();
             if (showTags)
             {
-                GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f),EditorStyles.helpBox);
                 // Draw the button area
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Add Tag", GUILayout.Width(80)))
@@ -570,9 +611,12 @@ namespace UMA.Editors
                         Repaint();
                     }
                 }
-                // Draw the tags (or "No tags defined");
-                GUIHelper.EndVerticalPadded(10);
+
+
+
+
             }
+            GUIHelper.EndVerticalPadded(2);
 
 
             if (slotMesh != null)
@@ -596,26 +640,215 @@ namespace UMA.Editors
                     RootBone = "Global";
                 }
             }
-
+            EditorGUILayout.EndScrollView();
         }
 
+        private bool showUDIMGUI;
+        private void DoUDIMGUI()
+        {
+            GUIHelper.BeginVerticalPadded(2, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
+            showUDIMGUI = EditorGUILayout.Foldout(showUDIMGUI, "UDIM Settings", true);
+            if (showUDIMGUI)
+            {
+                udimAdjustment = EditorGUILayout.Toggle("Adjust for UDIM", udimAdjustment);
+                using (new EditorGUI.DisabledScope(!udimAdjustment))
+                {
+                    udimTilesU = EditorGUILayout.IntField(new GUIContent("UDIM Tiles U", "Number of tiles horizontally (e.g., 10)"), Mathf.Max(0, udimTilesU));
+                    udimTilesV = EditorGUILayout.IntField(new GUIContent("UDIM Tiles V", "Number of tiles vertically (e.g., 10)"), Mathf.Max(0, udimTilesV));
+                }
+            }
+            GUIHelper.EndVerticalPadded(2);
+        }
+
+        private void DoSingleSlotGUI()
+        {
+            EnforceFolder(ref slotFolder);
+            GUIHelper.BeginVerticalPadded(2, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
+            singleInstanceOpen = EditorGUILayout.Foldout(singleInstanceOpen, "Single Slot Processing", true);
+            if (singleInstanceOpen)
+            {
+                var newslotMesh = EditorGUILayout.ObjectField("Slot Mesh  ", slotMesh, typeof(SkinnedMeshRenderer), false) as SkinnedMeshRenderer;
+                if (newslotMesh != slotMesh)
+                {
+                    errmsg = "";
+                    slotMesh = newslotMesh;
+                    slotName = newslotMesh.name;
+                }
+
+                slotName = EditorGUILayout.TextField("Slot Name", slotName);
+
+
+
+                if (GUILayout.Button("Verify Slot"))
+                {
+                    if (slotMesh == null)
+                    {
+                        errmsg = "Slot is null.";
+                    }
+                    else
+                    {
+                        Vector2[] uv = slotMesh.sharedMesh.uv;
+                        foreach (Vector2 v in uv)
+                        {
+                            if (v.x > 1.0f || v.x < 0.0f || v.y > 1.0f || v.y < 0.0f)
+                            {
+                                errmsg = "UV Coordinates are out of range and will likely have issues with atlassed materials. Textures should not be tiled unless using non-atlassed materials. If this slot is using UDIMs, please check the box to adjust for UDIM in the slot options.";
+                                break;
+                            }
+                        }
+                        if (string.IsNullOrEmpty(errmsg))
+                        {
+                            errmsg = "No errors found";
+                        }
+                    }
+                }
+
+
+                if (!string.IsNullOrEmpty(errmsg))
+                {
+                    EditorGUILayout.HelpBox(errmsg, MessageType.Warning);
+                }
+
+                if (GUILayout.Button("Create Slot"))
+                {
+                    // Save current parameters before creating
+                    SaveStateToJson();
+
+                    Debug.Log("Processing...");
+                    SlotDataAsset sd = CreateSlot();
+                    if (sd != null)
+                    {
+                        Debug.Log("Success.");
+                        string AssetPath = AssetDatabase.GetAssetPath(sd.GetInstanceID());
+                        if (addToGlobalLibrary)
+                        {
+                            UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);
+                        }
+                        // Overlay and Recipe creation moved to UMASlotProcessingUtil via SlotBuilderParameters flags
+                    }
+                }
+
+            }
+            GUIHelper.EndVerticalPadded(2);
+        }
+
+        private bool ShouldProcessMeshByFilters(SkinnedMeshRenderer smr)
+        {
+            if (smr == null)
+            {
+                return false;
+            }
+
+            string meshName = smr.name;
+            if (meshName == null)
+            {
+                meshName = string.Empty;
+            }
+
+            if (_filterIgnoreMeshesEnabled)
+            {
+                string ignore = _filterIgnoreMeshesContaining;
+                if (!string.IsNullOrEmpty(ignore))
+                {
+                    if (meshName.IndexOf(ignore, System.StringComparison.InvariantCultureIgnoreCase) >= 0)
+                    {
+                        Debug.Log(string.Format("[SlotBuilder] Skipping mesh '{0}' due to Ignore filter ('{1}')", meshName, ignore));
+                        return false;
+                    }
+                }
+            }
+
+            if (_filterOnlyIncludeMeshesEnabled)
+            {
+                string include = _filterOnlyIncludeMeshesContaining;
+                if (!string.IsNullOrEmpty(include))
+                {
+                    if (meshName.IndexOf(include, System.StringComparison.InvariantCultureIgnoreCase) < 0)
+                    {
+                        Debug.Log(string.Format("[SlotBuilder] Skipping mesh '{0}' due to Only-Include filter ('{1}')", meshName, include));
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+
+        private bool showLodSettings = false;
+        private void DoLODGUI()
+        {
+            GUIHelper.BeginVerticalPadded(2, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
+            showLodSettings = EditorGUILayout.Foldout(showLodSettings, "Slot LOD Generation Settings", true);
+            if (showLodSettings)
+            {
+                EditorGUILayout.BeginHorizontal();
+                generateSlotLods = EditorGUILayout.Toggle(new GUIContent("Generate Slot LODs", "Generate internal per-slot LOD triangle buffers/ranges for UMASimpleLOD. When enabled, Unity 6 mesh LOD copying is not used."), generateSlotLods);
+                EditorGUILayout.EndHorizontal();
+                using (new EditorGUI.DisabledScope(!generateSlotLods))
+                {
+                    slotLodMaxLevels = EditorGUILayout.IntSlider(new GUIContent("Max LOD Levels", "Maximum internal LOD levels to generate (including LOD0)."), Mathf.Clamp(slotLodMaxLevels, 1, 8), 1, 8);
+                    slotLodMinTriangles = EditorGUILayout.IntField(new GUIContent("Min Triangles", "Stop generating when a LOD reaches this triangle count (approx)."), Mathf.Max(0, slotLodMinTriangles));
+                    slotLodTargetReductionPerLevel = EditorGUILayout.Slider(new GUIContent("Reduction per Level", "Target triangle reduction ratio per LOD step."), Mathf.Clamp01(slotLodTargetReductionPerLevel), 0.1f, 0.9f);
+                    slotLodPreserveBoundaryEdges = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges", "Attempt to preserve open edges to reduce seams when combined with other slots."), slotLodPreserveBoundaryEdges);
+                    slotLodBoundaryWeight = EditorGUILayout.FloatField(new GUIContent(
+                        "Boundary Weight",
+                        "表tDefault / good starting point: 10\n" +
+                        "表tIf you see borders \u201Cchewing in\u201D or seams drifting: 20\u201350\n" +
+                        "表tIf you see it refusing to reduce enough or leaving too much geometry near borders: 5\u201310\n" +
+                        "表tFor slots where border alignment is critical (hands, sleeves, boots, neck, waist): 25\u201375\n" +
+                        "表tFor mostly-closed pieces (props, buttons, inner mouth) where border preservation is less important: 0\u201310"),
+                        Mathf.Max(0f, slotLodBoundaryWeight));
+                }
+            }
+            GUIHelper.EndVerticalPadded(2);
+        }
+
+        private static bool dragDropOpen = false;
         private void DoDragDrop()
         {
-            GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
-            GUILayout.Label("Automatic Drag and Drop processing", EditorStyles.boldLabel);
-            Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-            nameAfterMaterial = GUILayout.Toggle(nameAfterMaterial, "Name slot by material");
-            Color save = GUI.color;
-            GUI.color = Color.white;
-            GUI.Box(dropArea, "Drag FBX GameObject or meshes here to generate all slots and overlays for the GameObject");
-            relativeFolder = EditorGUILayout.ObjectField("Relative Folder", relativeFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
-            EnforceFolder(ref relativeFolder);
+            GUIHelper.BeginVerticalPadded(2, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
+            //dragDropOpen = GUIHelper.FoldoutBar(dragDropOpen, "Drag and Drop Slot Builder");
+            dragDropOpen = EditorGUILayout.Foldout(dragDropOpen, "Drag and Drop Slot Builder", true);
+            if (dragDropOpen)
+            {
+                //GUIHelper.BeginVerticalPadded(2, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
 
-            DropAreaGUI(dropArea);
+                GUILayout.Label("Automatic Drag and Drop processing", EditorStyles.boldLabel);
+                Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+                nameAfterMaterial = GUILayout.Toggle(nameAfterMaterial, "Name slot by material");
+                Color save = GUI.color;
+                GUI.color = Color.white;
+                GUI.Box(dropArea, "Drag FBX GameObject or meshes here to generate all slots and overlays for the GameObject");
+                relativeFolder = EditorGUILayout.ObjectField("Relative Folder", relativeFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
+                EnforceFolder(ref relativeFolder);
 
-            DrawPendingSmrList();
-            GUI.color = save;
-            GUIHelper.EndVerticalPadded(10);
+                EditorGUILayout.Space(3);
+                EditorGUILayout.LabelField("Batch Filters", EditorStyles.boldLabel);
+
+                EditorGUILayout.BeginHorizontal();
+                _filterIgnoreMeshesEnabled = EditorGUILayout.Toggle(_filterIgnoreMeshesEnabled, GUILayout.Width(18));
+                using (new EditorGUI.DisabledScope(!_filterIgnoreMeshesEnabled))
+                {
+                    _filterIgnoreMeshesContaining = EditorGUILayout.TextField("Ignore Meshes containing", _filterIgnoreMeshesContaining);
+                }
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginHorizontal();
+                _filterOnlyIncludeMeshesEnabled = EditorGUILayout.Toggle(_filterOnlyIncludeMeshesEnabled, GUILayout.Width(18));
+                using (new EditorGUI.DisabledScope(!_filterOnlyIncludeMeshesEnabled))
+                {
+                    _filterOnlyIncludeMeshesContaining = EditorGUILayout.TextField("Only include meshes containing", _filterOnlyIncludeMeshesContaining);
+                }
+                EditorGUILayout.EndHorizontal();
+
+                DropAreaGUI(dropArea);
+
+                DrawPendingSmrList();
+                GUI.color = save;
+                //GUIHelper.EndVerticalPadded(10);
+            }
+            GUIHelper.EndVerticalPadded(2);
         }
 
         private void DrawPendingSmrList()
@@ -711,19 +944,19 @@ namespace UMA.Editors
             string originalSlotName = slotName;
             var originalSlotMesh = slotMesh;
 
-            // Count selected
+            // Count selected (after batch filters)
             int selectedCount = 0;
             for (int i = 0; i < _pendingSmrs.Count; i++)
             {
                 var e = _pendingSmrs[i];
-                if (e != null && e.selected && e.smr != null)
+                if (e != null && e.selected && e.smr != null && ShouldProcessMeshByFilters(e.smr))
                 {
                     selectedCount++;
                 }
             }
             if (selectedCount == 0)
             {
-                EditorUtility.DisplayDialog("Slot Builder", "No SkinnedMeshRenderers are checked.", "OK");
+                EditorUtility.DisplayDialog("Slot Builder", "No SkinnedMeshRenderers matched the current selection and filters.", "OK");
                 return;
             }
 
@@ -732,6 +965,19 @@ namespace UMA.Editors
 
             try
             {
+                int progressId = Progress.Start("Batch Slot Creation", "-> Preparing batch...");
+                EditorUtility.DisplayProgressBar("Creating Slots", "Preparing batch...", 0f);
+                Thread.Sleep(0);
+
+                // Batch mode behavior:
+                // - If isBaseRaceRecipe == false: create a Wardrobe subfolder and create one wardrobe recipe per processed slot.
+                // - If isBaseRaceRecipe == true: defer to existing behavior (single base recipe can be created later if createRecipe enabled).
+                string wardrobeFolderPath = null;
+                if (!isBaseRaceRecipe && createRecipe)
+                {
+                    wardrobeFolderPath = EnsureWardrobeFolder();
+                }
+
                 for (int i = 0; i < _pendingSmrs.Count; i++)
                 {
                     var e = _pendingSmrs[i];
@@ -740,8 +986,16 @@ namespace UMA.Editors
                         continue;
                     }
 
+                    if (!ShouldProcessMeshByFilters(e.smr))
+                    {
+                        continue;
+                    }
+
                     var mesh = e.smr;
+                    Progress.Report(progressId, current/total, $"Slot: {mesh.name} Slot {current} of {total}");
                     EditorUtility.DisplayProgressBar(string.Format("Creating Slots {0} of {1}", current, total), string.Format("Slot: {0}", mesh.name), (current / total));
+                    Thread.Sleep(0);
+
                     slotMesh = mesh;
                     GetMaterialName(mesh.name, mesh);
 
@@ -770,14 +1024,28 @@ namespace UMA.Editors
                                 if (!string.IsNullOrEmpty(p)) deferredDeletes.Add(p);
                             }
                         }
+
+                        // Per-slot wardrobe recipe creation in batch mode
+                        if (!isBaseRaceRecipe && createRecipe)
+                        {
+                            CreateWardrobeRecipesForSlots(result, wardrobeFolderPath);
+                        }
                     }
 
                     current++;
                 }
+                Progress.Report(progressId,1.0f,"Finishing...");
+                EditorUtility.DisplayProgressBar("Creating Slots", "Finishing...", 1f);
+                Thread.Sleep(0);
 
-                // Create a single recipe for the whole batch if requested
-                if (createRecipe && aggregate.Slots.Count > 0)
+
+                // When building base race recipes in batch mode, keep existing behavior (single base recipe for the whole batch)
+                if (isBaseRaceRecipe && createRecipe && aggregate.Slots.Count > 0)
                 {
+                    Progress.Report(progressId, 1.0f, "Building Base Recipe...");
+                    EditorUtility.DisplayProgressBar("Creating Base Recipe", "Building base-race recipe...", 1f);
+                    Thread.Sleep(0);
+
                     CreateRecipeFromResult(aggregate);
                 }
 
@@ -785,7 +1053,7 @@ namespace UMA.Editors
                 {
                     UMAAssetIndexer.Instance.ForceSave();
                 }
-
+                Progress.Remove(progressId);
                 foreach (var path in deferredDeletes)
                 {
                     try
@@ -807,6 +1075,8 @@ namespace UMA.Editors
             finally
             {
                 EditorUtility.ClearProgressBar();
+                Thread.Sleep(0);
+
                 slotName = originalSlotName;
                 slotMesh = originalSlotMesh;
 
@@ -934,7 +1204,7 @@ namespace UMA.Editors
             sbp.slotLodPreserveBoundaryEdges = slotLodPreserveBoundaryEdges;
             sbp.slotLodBoundaryWeight = slotLodBoundaryWeight;
 
-            Debug.Log(string.Format("[SlotBuilder] Build slot='{0}' udimAdjustment={1} alwaysRecreateSlots={2} generateSlotLods={3} maxLevels={4} minTris={5} reduction={6} preserveBorders={7} borderWeight={8}",
+            /*Debug.Log(string.Format("[SlotBuilder] Build slot='{0}' udimAdjustment={1} alwaysRecreateSlots={2} generateSlotLods={3} maxLevels={4} minTris={5} reduction={6} preserveBorders={7} borderWeight={8}",
                 sbp.slotName,
                 sbp.udimAdjustment,
                 sbp.alwaysRecreateSlots,
@@ -943,7 +1213,7 @@ namespace UMA.Editors
                 sbp.slotLodMinTriangles,
                 sbp.slotLodTargetReductionPerLevel,
                 sbp.slotLodPreserveBoundaryEdges,
-                sbp.slotLodBoundaryWeight));
+                sbp.slotLodBoundaryWeight)); */
 
             var result = UMASlotProcessingUtil.CreateSlotData(sbp);
             if (result == null)
@@ -1059,6 +1329,12 @@ namespace UMA.Editors
                         {
                             continue;
                         }
+
+                        if (!ShouldProcessMeshByFilters(mesh))
+                        {
+                            continue;
+                        }
+
                         _pendingSmrs.Add(new PendingSmrEntry { smr = mesh, selected = true });
                     }
 

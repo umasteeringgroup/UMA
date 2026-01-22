@@ -11,7 +11,7 @@ using UnityEditor.Build;
 using System;
 
 namespace UMA
-{
+{ 
 
     public class UMASettingsProvider : SettingsProvider
     {
@@ -383,8 +383,24 @@ namespace UMA
             EndVerticalPadded(10);
 
             GUILayout.Space(10);
+			BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+			EditorGUILayout.LabelField("Debug Settings", EditorStyles.boldLabel);
 
-            BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
+			DrawBoolProperty(
+				"useMeshAPICombiner",
+				"Use MeshAPI Combiner (Unity 2022.2+)",
+				"Enable the MeshData API based combiner at runtime on Unity 2022.2+. When disabled or on older Unity versions, UMA uses the legacy combiner."
+			);
+
+			DrawBoolProperty("DebugMemoryUsage", "Debug Memory Usage", "If true, UMA will log memory usage information to the console");
+			DrawBoolProperty("DisableDecalCallbacks","Disable Decal Callbacks", "If true, UMA will disable decal callbacks to improve performance when decals are not used.");
+			
+
+
+			EndVerticalPadded(10);
+			GUILayout.Space(10);
+
+			BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("Editor Settings", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These settings control the behavior of UMA in the editor", MessageType.Info);
 
@@ -408,14 +424,7 @@ namespace UMA
 
             DrawBoolProperty("showWelcomeToUMA", "Show Welcome Window", "If true, UMA will show the welcome window when the project is loaded");
 
-            // Runtime MeshAPI combiner toggle (Unity 2022.2+)
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Runtime Mesh Combiner", EditorStyles.boldLabel);
-            DrawBoolProperty(
-                "useMeshAPICombiner",
-                "Use MeshAPI Combiner (Unity 2022.2+)",
-                "Enable the MeshData API based combiner at runtime on Unity 2022.2+. When disabled or on older Unity versions, UMA uses the legacy combiner."
-            );
+
 
             DrawObjectProperty("characterPrefab", "Character Prefab", "The default character prefab used by UMA", typeof(GameObject));
             DrawObjectProperty("generatorPrefab", "Generator Prefab", "The default generator prefab used by UMA", typeof(GameObject));
@@ -447,7 +456,7 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("UMA Addressables Options", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These settings are only used if 'Use Addressables' is enabled. Note: Stripping Textures *requires* that you are indexing Texture2D type!", MessageType.Info); 
-            DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrStripTextures", "addrStripUVAttachedShaders", "addrIncludeRecipes", "addrIncludeOther" });
+            DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrStripTextures", "addrStripUVAttachedShaders", "addrIncludeRecipes", "addrIncludeOther"});
             EndVerticalPadded(10);
 
             m_CustomSettings.ApplyModifiedPropertiesWithoutUndo();

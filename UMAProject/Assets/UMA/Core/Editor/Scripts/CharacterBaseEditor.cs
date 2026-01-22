@@ -174,6 +174,12 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
+			if(EditorApplication.isCompiling || EditorApplication.isUpdating) {
+				EditorGUILayout.HelpBox("UMA Recipes cannot be during compilation/updating", MessageType.Info);
+				return;
+			}
+
+
             GUILayout.Label(_description);
             _AutomaticUpdates = GUILayout.Toggle(_AutomaticUpdates, "Automatic Updates");
             _forceUpdate = false;

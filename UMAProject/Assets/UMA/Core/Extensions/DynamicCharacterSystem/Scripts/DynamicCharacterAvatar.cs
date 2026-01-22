@@ -6298,7 +6298,7 @@ namespace UMA.CharacterSystem
             Dirty(true, true, true);
         }
 
-        public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false)
+        public void ForceUpdate(bool DnaDirty, bool TextureDirty = false, bool MeshDirty = false, bool cleanMaterials = false)
         {
 #if UMA_ADDRESSABLES
 
@@ -6330,6 +6330,7 @@ namespace UMA.CharacterSystem
                 return; // Wait for preload to complete before calling Dirty
             }
 #endif
+			umaData.needsMaterialClear = cleanMaterials;
             Dirty(DnaDirty, TextureDirty, MeshDirty);
         }
 

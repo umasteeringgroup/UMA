@@ -868,6 +868,11 @@ namespace UMA.Editors
         public override void OnInteractivePreviewGUI(Rect r, GUIStyle background)
         {
             var currentTarget = target as SlotDataAsset;
+            if (currentTarget.isUtilitySlot)
+            {
+                EditorGUI.LabelField(r, "Utility slots cannot be previewed.");
+                return;
+            }
             // Rebuild preview if first time, settings changed, or the target changed
             if (meshToPreview == null || previewForTarget != currentTarget)
             {

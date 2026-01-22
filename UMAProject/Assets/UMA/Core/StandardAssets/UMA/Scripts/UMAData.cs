@@ -476,6 +476,11 @@ namespace UMA
 				UMAGenerator umaGenerator = instance.Generator;
 				if (umaGenerator == null)
 				{
+#if UNITY_EDITOR //VES added so the error doesn't spam in prefab mode
+					if(gameObject != null && UnityEditor.SceneManagement.PrefabStageUtility.GetPrefabStage(gameObject) != null) {
+						return null;
+					}
+#endif
 					Debug.LogError("AssetIndexer generator instance is NULL!!!!");
 				}
 				return umaGenerator;
@@ -646,7 +651,10 @@ namespace UMA
 		/// Have the texture atlases changed?
 		/// </summary>
 		public bool isAtlasDirty;
-
+		/// <summary>
+		/// Indicates whether the material needs to be cleared before rendering.
+		/// </summary>
+		public bool needsMaterialClear;
         /// <summary>
         /// Can the mesh be read after creation?
         /// </summary>
@@ -2638,7 +2646,8 @@ namespace UMA
 		{
 			if (AtlasUpdated != null)
 			{
-				AtlasUpdated.Invoke(this,tp);
+				Debug.Log("Invoking AtlasUpdated Event");
+                AtlasUpdated.Invoke(this,tp);
             }
         }
 
@@ -3090,7 +3099,7 @@ namespace UMA
         /// </summary>
         public void FireCharacterBegunEvents()
 		{
-			if (CharacterBegun != null)
+            if (CharacterBegun != null)
             {
                 CharacterBegun.Invoke(this);
             }
@@ -3100,7 +3109,7 @@ namespace UMA
                 SlotData slotData = umaRecipe.slotDataList[i];
                 if (slotData != null && slotData.asset.CharacterBegun != null)
 				{
-					slotData.asset.Begin(this);
+                    slotData.asset.Begin(this);
 					slotData.asset.CharacterBegun.Invoke(this);
                     slotData.asset.SlotBeginProcessing.Invoke(this,slotData);
                 }
@@ -3130,7 +3139,11 @@ namespace UMA
 					slotData.asset.DNAApplied.Invoke(this);
                     if (slotData.asset.SlotProcessed != null)
                     {
-                        slotData.asset.SlotProcessed.Invoke(this, slotData);
+						int count = slotData.asset.SlotProcessed.GetPersistentEventCount();
+						if(count > 0) 
+						{
+                        	slotData.asset.SlotProcessed.Invoke(this, slotData);
+                    	}
                     }
                 }
 			}

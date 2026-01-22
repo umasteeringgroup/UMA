@@ -1,4 +1,4 @@
-#if UMA_ADDRESSABLES
+﻿#if UMA_ADDRESSABLES
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using AsyncOp = UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<System.Collections.Generic.IList<UnityEngine.Object>>;
@@ -855,38 +855,71 @@ namespace UMA
             int count = 0;
 
             var items = UMAAssetIndexer.Instance.GetAssetDictionary(type);
-
-            List<string> toRemove = new List<string>();
+			Debug.Log("OC: Checking for orphaned items of type: " + type.ToString() + ", total items: " + items.Count);
+			List<string> toRemove = new List<string>();
             foreach (KeyValuePair<string, AssetItem> pair in items)
             {
-                // if not addressable, not resource, and not always loaded, then it's an orphan.
-                if (pair.Value.IsAddressable == false && pair.Value.IsResource == false && pair.Value.IsAlwaysLoaded == false)
-                {
-                    toRemove.Add(pair.Key);
-                }
+				AssetItem ai = pair.Value;
+				if(ai != null) {
+					if(ai.IsResource) {
+						Debug.Log($"OC: Skipping resource item: {ai._Name} because it is marked as a resource.");
+						continue;
+					}
+					if (ai.IsAddressable) {
+						Debug.Log($"OC: Skipping addressable item: {ai._Name} because it is marked as addressable.");
+						continue;
+					}
+					if (ai.IsAlwaysLoaded) {
+						Debug.Log($"OC: Skipping always loaded item: {ai._Name} because it is marked as always loaded.");
+						continue;
+					}
+
+					// if not addressable, not resource, and not always loaded, then it's an orphan.
+					if(pair.Value.IsAddressable == false && pair.Value.IsResource == false && pair.Value.IsAlwaysLoaded == false) {
+						toRemove.Add(pair.Key);
+					}
+				}
             }
 
-            long totalsize = 0;
+			Debug.Log("OC: Found " + toRemove.Count + " orphaned items to remove.");
+
+			long totalsize = 0;
 
             foreach (var key in toRemove)
             {
                 if (items.ContainsKey(key))
                 {
-                    var item = items[key].CacheSerializedItem();
-                    totalsize += Profiler.GetRuntimeMemorySizeLong(item);
-                items.Remove(key);
-                    Debug.Log("Removing orphaned item: " + key);
+					var ai = items[key];
+					var item = ai.CacheSerializedItem();
+					if(item == null) { //VES added null check
+						Debug.LogError("OC: Removing orphaned item: " + key + ", and item was null, please fix!"); //VES added
+					} else {
+						Debug.Log("OC: Removing orphaned item: " + key + ", " + item); //VES added
+						totalsize += Profiler.GetRuntimeMemorySizeLong(item);
+					}
+
+					// Remove from the master serialized list too; otherwise a later dictionary rebuild
+					// (e.g. `UpdateSerializedDictionaryItems`) will bring the entry back.
+					if (ai != null)
+					{
+						UMAAssetIndexer.Instance.RemoveAsset(ai, false);
+					}
+					items.Remove(key);
+
+                    Debug.Log("OC: Removed orphaned item: " + key); //VES changed Removing to Removed
                     count++;
+				}
             }
-            }
-            if (forceSave)
+			UMAAssetIndexer.Instance.RemoveAssetsComplete();
+
+			if (forceSave)
             {
-            UMAAssetIndexer.Instance.ForceSave();
-        }
+				UMAAssetIndexer.Instance.ForceSave();
+			}
             if (!string.IsNullOrEmpty(msg))
             {
-                Debug.Log(msg + " Removed " + toRemove.Count + " orphaned items.");
-                Debug.Log(msg + " Total size: " + totalsize + " bytes.");
+                Debug.Log(msg + "OC: Removed " + toRemove.Count + " orphaned items.");
+                Debug.Log(msg + "OC: Total size: " + totalsize + " bytes.");
             }
             return toRemove.Count;
         }

@@ -160,6 +160,26 @@ namespace UMA
 			}
 		}
 
+		public UMAMaterial GetMaterial() {
+			if(material == null) {
+				material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(materialName);
+			}
+			return material;	
+		}
+
+		public void EnsureMaterial() {
+			GetMaterial();
+			// if the texture list is not loaded, and the overlay has texture names, try to load them
+			if(textureList == null && textureNames != null) {
+				textureList = new Texture[textureNames.Length];
+				for(int i = 0; i < textureNames.Length; i++) {
+					if(!string.IsNullOrEmpty(textureNames[i])) {
+						textureList[i] = UMAAssetIndexer.Instance.GetAsset<Texture2D>(textureNames[i]);
+					}
+				}
+			}
+		}
+
         public bool forceKeep = false;
         public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
 

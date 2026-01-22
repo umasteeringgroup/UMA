@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UMA;
 using UMA.CharacterSystem;
@@ -17,7 +18,16 @@ namespace UMA.Decals
 
     public class CreateDecal : MonoBehaviour
     {
-        public enum DecalMethod
+		public static int MatrixLevel = 0;
+		public enum rebuildMethod
+		{
+			FullRebuild,
+			ForceTextures,
+			ForceTexturesAndDNA,
+			ForceTexturesAndMesh,
+			ForceAll
+		};
+		public enum DecalMethod
         {
             SlotDecal, RenderTexture
         };
@@ -32,6 +42,14 @@ namespace UMA.Decals
         public OverlayDataAsset TextureDecalOverlay;
         [Tooltip("DecalRTStampSlot used to store generated DecalRTStampAssets when using RenderTexture decals.")]
         public DecalRTStampSlot StampField; // Added field per request
+
+		[Header("Stamps")]
+		[Tooltip("Currently selected stamp (set by clicking in the Stamps list).")]
+		public DecalRTStampAsset CurrentStamp;
+
+		[Header("Slot Generation")]
+		[Tooltip("Slot name used by the 'Generate and Save a Slot' tool.")]
+		public string GeneratedSlotName;
 
         [Header("Decal Settings")]
         [Tooltip("Method used to create decals. SlotDecal uses DecalSlotBuilder, RenderTexture uses UMA's built-in render texture decal system.")]
@@ -69,14 +87,25 @@ namespace UMA.Decals
 		public GameObject debugSpherePrefab;
         public Color TattooColor;
 
+		[Header("Edit Mode Colors")]
+		public Color EditFillKeepColor = new Color(0f, 1f, 0f, 0.5f);
+		public Color EditFillRemoveColor = new Color(1f, 0f, 0f, 0.5f);
+		public Color EditFillAddColor = new Color(0f, 1f, 0f, 0.5f);
+		public Color EditOutlineKeepColor = new Color(0f, 1f, 0f, 1f);
+		public Color EditOutlineRemoveColor = new Color(1f, 0f, 0f, 1f);
+		public Color EditOutlineUnusedColor = new Color(0f, 1f, 1f, 0.9f);
+		public Color EditOutlineAddColor = new Color(0f, 1f, 0f, 1f);
+
         [Header("Decal Overlay Handling")]
         [Tooltip("If true, automatically add affected overlays to a rt decal slot when using RenderTexture decals.")]
         public bool AutoAddOverlays = true; // If true, automatically add the overlay used for decal creation to the decal slot
         [Tooltip("If true, call Draw on the decal RTs immediately after stamping (otherwise they are drawn during UMAData.Update")]
-        public bool DrawRenderTexturesImmediately = true; // If true, call Draw on the decal RTs immediately after stamping (otherwise they are drawn during UMAData.Update)
+        public bool DrawRenderTexturesImmediately = false; // If true, call Draw on the decal RTs immediately after stamping (otherwise they are drawn during UMAData.Update)
 
-        // Internal debug state
-        private SkinnedMeshRenderer _dbgSmr;
+		public rebuildMethod RebuildMethod = rebuildMethod.ForceTextures;
+
+		// Internal debug state
+		private SkinnedMeshRenderer _dbgSmr;
         private int[] _dbgSmrTriangles;                 // Combined SMR triangles (tri indices)
         private Dictionary<int, int> _dbgTriToOrdinal;   // Combined triIndex -> ordinal in last decal
         private int _dbgSequence;                       // Sequence to detect new decal
@@ -90,6 +119,11 @@ namespace UMA.Decals
         private bool _paintTargetSelected; // the target selection state to apply while painting
         private readonly HashSet<int> _paintVisited = new HashSet<int>();
 
+		// UV adjust mode state (Ctrl + LMB)
+		private bool _uvAdjustActive;
+		private Vector2 _uvAdjustLastMouse;
+		private HashSet<int> _uvAdjustVerts;
+
         // Undo/redo stacks
         private readonly Stack<HashSet<int>> _undo = new Stack<HashSet<int>>();
         private readonly Stack<HashSet<int>> _redo = new Stack<HashSet<int>>();
@@ -102,8 +136,10 @@ namespace UMA.Decals
 
         // UI state for improved interface
         private Vector2 _scrollPosition;
+		private Vector2 _stampsScrollPosition;
         private bool _showDebugSettings = false;
 		public bool debugShowSpheres = false;
+		public float DecalScale = 1.0f;
 
 		[Header("Orbit Settings")]
         [Tooltip("Offset from avatar root used as orbit pivot.")]
@@ -145,14 +181,45 @@ namespace UMA.Decals
 #if UNITY_EDITOR
             EnsureTag("debugSphere");
 #endif
-            InitializeOrbit();
+
             if (StampField != null && Avatar != null)
             {
                 StampField.OnCharacterBegun(Avatar.umaData);
             }
-        }
+#if UMA_ADDRESSABLES
+			// ensure the overlays are loaded from Addressables
+			// by requesting them via the indexers LoadLabelList function.
+			// use the last label assigned to the overlay asset
+			//
+			List<string> addresses = new List<string>();
+			if(MeshDecalOverlay != null) {
+				AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<OverlayDataAsset>(MeshDecalOverlay.overlayName);
+				if(ai != null) {
+					addresses.Add(ai.AddressableAddress);
+				}
+			}
+			if(TextureDecalOverlay != null) {
+				AssetItem ai = UMAAssetIndexer.Instance.GetAssetItem<OverlayDataAsset>(TextureDecalOverlay.overlayName);
+				if(ai != null) {
+					addresses.Add(ai.AddressableAddress);
+				}
+			}
+			if (addresses.Count == 0) {
+				InitializeOrbit();
+				return;
+			}
+			var op = UMAAssetIndexer.Instance.LoadLabelList(addresses,false);
+			op.Completed += (handle) =>
+			{
+				Debug.Log($"CreateDecal: Addressables load complete for overlays.");
+				InitializeOrbit();
+			};
+#else
+			InitializeOrbit();
+#endif
+		}
 
-        private void OnDisable()
+		private void OnDisable()
         {
             // Ensure we restore animators if this component is disabled while paused
             if (PauseAvatarAnimation)
@@ -185,8 +252,9 @@ namespace UMA.Decals
             {
                 return;
             }
+			_initialized = true;
 
-            _targetPos = Avatar.transform.position + OrbitOffset;
+			_targetPos = Avatar.transform.position + OrbitOffset;
             Vector3 camPos = OrbitCamera.transform.position;
             Vector3 dir = camPos - _targetPos;
             _distance = Mathf.Clamp(dir.magnitude, MinDistance, MaxDistance);
@@ -200,276 +268,567 @@ namespace UMA.Decals
             _pitch = Mathf.Asin(dir.normalized.y) * Mathf.Rad2Deg;
             _pitch = Mathf.Clamp(_pitch, MinPitch, MaxPitch);
 
-            _initialized = true;
             UpdateCameraTransform();
         }
 
-        private void OnGUI()
-        {
-            GUILayout.BeginArea(ScreenArea, GUI.skin.window);
-            
+        private void OnGUI() {
+			GUILayout.BeginArea(ScreenArea, GUI.skin.window);
+
+#if UNITY_EDITOR
+			if (StampField != null)
+			{
+				if (EditorUtility.IsDirty(StampField))
+				{
+					GUILayout.Label("Stamp Slot Modified (Unsaved Changes)");
+					if (GUILayout.Button("Save Moified Stamps"))
+					{
+						AssetDatabase.SaveAssetIfDirty(StampField);
+                    }
+                }
+			}
+
+			GUILayout.Space(6);
+			GUILayout.Label("Generate Utility Slot");
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Slot Name:", GUILayout.Width(100));
+			GeneratedSlotName = GUILayout.TextField(GeneratedSlotName ?? string.Empty, GUILayout.Width(200));
+			GUILayout.EndHorizontal();
+			if (GUILayout.Button("Generate and Save a Slot"))
+			{
+				GenerateAndSaveSlot();
+			}
+#endif
+
             // Use scroll view for expandable content
             _scrollPosition = GUILayout.BeginScrollView(_scrollPosition);
-            
-            // Decal Method Toggle
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Decal Method:", GUILayout.Width(100));
-            if (GUILayout.Button($"{decalMethod}", GUILayout.Width(150)))
-            {
-                decalMethod = decalMethod == DecalMethod.SlotDecal ? DecalMethod.RenderTexture : DecalMethod.SlotDecal;
-            }
-            GUILayout.EndHorizontal();
-            
-            GUILayout.Space(5);
-            
-            // Active Overlay Selection
-            GUILayout.Label("Active Overlay:");
-            if (decalMethod == DecalMethod.SlotDecal)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Mesh Decal:", GUILayout.Width(100));
+			if(EnableTriangleDebug) {
+				DrawEditorPanel();
+			}
+			else {
+				DrawLeftPanel();
+			}
+
+			GUILayout.EndScrollView();
+			GUILayout.EndArea();
+
+			DrawRightPanel();
+
+			// Apply pause state from the toggle each GUI frame
+			ApplyAnimationPauseState();
+		}
+
+#if UNITY_EDITOR
+		private void GenerateAndSaveSlot()
+		{
+			try
+			{
+				if (StampField == null)
+				{
+					EditorUtility.DisplayDialog("UMA", "No StampField assigned.", "OK");
+					return;
+				}
+
+				string slotName = (GeneratedSlotName ?? string.Empty).Trim();
+				if (string.IsNullOrEmpty(slotName))
+				{
+					EditorUtility.DisplayDialog("UMA", "Please enter a Slot Name.", "OK");
+					return;
+				}
+
+				var stampGO = StampField.gameObject;
+				if (stampGO == null)
+				{
+					EditorUtility.DisplayDialog("UMA", "StampField has no GameObject.", "OK");
+					return;
+				}
+
+				string projectRoot = System.IO.Path.GetDirectoryName(Application.dataPath);
+				string absFolder = EditorUtility.OpenFolderPanel("Select folder to save slot assets", Application.dataPath, "");
+				if (string.IsNullOrEmpty(absFolder))
+				{
+					return;
+				}
+
+				absFolder = absFolder.Replace('\\', '/');
+				string absAssetsRoot = (Application.dataPath).Replace('\\', '/');
+				if (!absFolder.StartsWith(absAssetsRoot, System.StringComparison.OrdinalIgnoreCase))
+				{
+					EditorUtility.DisplayDialog("UMA", "Folder must be inside this project's Assets folder.", "OK");
+					return;
+				}
+
+				string relFolder = "Assets" + absFolder.Substring(absAssetsRoot.Length);
+				relFolder = relFolder.TrimEnd('/');
+				if (!AssetDatabase.IsValidFolder(relFolder))
+				{
+					EditorUtility.DisplayDialog("UMA", "Selected folder is not a valid Unity Assets folder.", "OK");
+					return;
+				}
+
+				// 1) Create prefab clone containing the DecalRTStampSlot
+				string stampsPrefabName = slotName + "_Stamps";
+				string prefabPath = AssetDatabase.GenerateUniqueAssetPath(relFolder + "/" + stampsPrefabName + ".prefab");
+				var temp = Instantiate(stampGO);
+				temp.name = stampsPrefabName;
+				GameObject prefabAsset;
+				try
+				{
+					prefabAsset = PrefabUtility.SaveAsPrefabAsset(temp, prefabPath);
+				}
+				finally
+				{
+					DestroyImmediate(temp);
+				}
+
+				if (prefabAsset == null)
+				{
+					EditorUtility.DisplayDialog("UMA", "Failed to create stamp prefab.", "OK");
+					return;
+				}
+
+				var prefabStampSlot = prefabAsset.GetComponent<DecalRTStampSlot>();
+				if (prefabStampSlot == null)
+				{
+					EditorUtility.DisplayDialog("UMA", "Created prefab does not contain DecalRTStampSlot.", "OK");
+					return;
+				}
+
+				// 2) Create utility SlotDataAsset
+				string assetPath = AssetDatabase.GenerateUniqueAssetPath(relFolder + "/" + slotName + ".asset");
+				var newSlot = UMA.CustomAssetUtility.CreateAsset<SlotDataAsset>(assetPath, false, slotName);
+				if (newSlot == null)
+				{
+					EditorUtility.DisplayDialog("UMA", "Failed to create SlotDataAsset.", "OK");
+					return;
+				}
+
+				newSlot.name = slotName;
+				newSlot.slotName = slotName;
+				newSlot.SlotObject = prefabAsset;
+				EditorUtility.SetDirty(newSlot);
+
+				// 3) Hook CharacterBegun -> prefabStampSlot.OnCharacterBegun
+				if (newSlot.CharacterBegun == null)
+				{
+					newSlot.CharacterBegun = new UMADataEvent();
+				}
+				UnityEditor.Events.UnityEventTools.AddPersistentListener(newSlot.CharacterBegun, prefabStampSlot.OnCharacterBegun);
+				EditorUtility.SetDirty(newSlot);
+				AssetDatabase.SaveAssetIfDirty(newSlot);
+
+				EditorUtility.DisplayDialog("UMA", $"Created utility slot '{slotName}'.\nPrefab: {prefabPath}\nSlot: {AssetDatabase.GetAssetPath(newSlot)}", "OK");
+			}
+			catch (System.Exception ex)
+			{
+				EditorUtility.DisplayDialog("UMA", "GenerateAndSaveSlot failed: " + ex.Message, "OK");
+			}
+		}
+#endif
+
+		private void DrawRightPanel() {
+
+			// Stamps panel (right side)
+			float stampsWidth = Mathf.Clamp(Screen.width * 0.2f, 200f, Screen.width);
+			var stampsArea = new Rect(Screen.width - stampsWidth - 20f, 20f, stampsWidth, Screen.height - 40f);
+			GUILayout.BeginArea(stampsArea, "Stamps", GUI.skin.window);
+			try {
+				if(StampField == null || StampField.overlayStamps == null) {
+					GUILayout.Label("No Stamp Slot");
+				} else {
+					var allStamps = new List<DecalRTStampAsset>();
+					for(int si = 0; si < StampField.overlayStamps.Count; si++) {
+						var set = StampField.overlayStamps[si];
+						if(set == null || set.stamps == null || set.stamps.Length == 0) {
+							continue;
+						}
+						allStamps.AddRange(set.stamps);
+					}
+
+					_stampsScrollPosition = GUILayout.BeginScrollView(_stampsScrollPosition);
+					try {
+						for(int i = allStamps.Count - 1; i >= 0; i--) {
+							var stamp = allStamps[i];
+							if(stamp == null)
+								continue;
+
+							GUILayout.BeginHorizontal();
+							try {
+								GUILayout.Label(ReferenceEquals(stamp, CurrentStamp) ? "*" : string.Empty, GUILayout.Width(24), GUILayout.Height(24));
+								if(GUILayout.Button(stamp.name, GUILayout.Height(24))) {
+									// Switching stamps must reset debug state first, otherwise cached mappings
+									// can briefly show triangles from the previously selected stamp/slot.
+									ClearCurrent();
+									CurrentStamp = stamp;
+									if(decalMethod == DecalMethod.RenderTexture) {
+										RefreshLastDecalDebug();
+									}
+									ToTriangleDebugMode();
+								}
+								if(GUILayout.Button("X", GUILayout.Width(24), GUILayout.Height(24))) {
+									if(ReferenceEquals(CurrentStamp, stamp)) {
+										CurrentStamp = null;
+										ClearCurrent();
+										RebuildAvatar();
+									}
+									StampField.RemoveStamp(stamp);
+
+								}
+							} finally {
+								GUILayout.EndHorizontal();
+							}
+						}
+					} finally {
+						GUILayout.EndScrollView();
+					}
+				}
+			} finally {
+				GUILayout.EndArea();
+			}
+		}
+
+		private void DrawEditorPanel() {
+			if(EnableTriangleDebug) {
+				if(_dbgTriToOrdinal == null) {
+					RefreshLastDecalDebug();
+				}
+
+				GUILayout.Label("Edit Mode Active");
+
+				GUILayout.Label("Debug Selection (Shift + Left Click to paint)");
+
+				GUILayout.BeginHorizontal();
+				GUI.enabled = _dbgTriToOrdinal != null;
+
+				if(GUILayout.Button("Clear Selection", GUILayout.Width(100))) {
+					_selectedOrdinals.Clear();
+					_selectedAddCombinedTris.Clear();
+					_undo.Clear();
+					_redo.Clear();
+				}
+				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+				if(GUILayout.Button("Clear", GUILayout.Width(70))) {
+					PushUndo();
+					_selectedOrdinals.Clear();
+					_selectedAddCombinedTris.Clear();
+				}
+				if(GUILayout.Button("Select All", GUILayout.Width(90))) {
+					PushUndo();
+					SelectAll();
+				}
+				if(GUILayout.Button("Invert", GUILayout.Width(70))) {
+					PushUndo();
+					InvertSelection();
+				}
+				GUI.enabled = true;
+				GUILayout.EndHorizontal();
+
+				float lastDecalRotationDegrees = DecalRotationDegrees;
+				float lastDecalScale = DecalScale;
+		
+
+				GUILayout.BeginHorizontal();				
+				GUILayout.Label($"Rotation: {DecalRotationDegrees:F1}°", GUILayout.Width(100));
+				DecalRotationDegrees = GUILayout.HorizontalSlider(DecalRotationDegrees, -180f, 180f);
+				GUILayout.EndHorizontal();
+
+				if (DecalRotationDegrees != lastDecalRotationDegrees)
+				{
+					float delta = DecalRotationDegrees - lastDecalRotationDegrees;
+					RotateCurrentStampUVs(delta);
+				}
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label($"Scale: {DecalScale:F2}x", GUILayout.Width(100));
+				DecalScale = GUILayout.HorizontalSlider(DecalScale, 0.25f, 4.0f);
+				GUILayout.EndHorizontal();
+
+				if (!Mathf.Approximately(DecalScale, lastDecalScale))
+				{
+					float deltaScale = DecalScale / Mathf.Max(0.0001f, lastDecalScale);
+					ScaleCurrentStampUVs(deltaScale);
+				}
+
+				GUILayout.BeginHorizontal();
+				GUI.enabled = _undo.Count > 0;
+				if(GUILayout.Button("Undo", GUILayout.Width(70))) {
+					PopUndo();
+				}
+				GUI.enabled = _redo.Count > 0;
+				if(GUILayout.Button("Redo", GUILayout.Width(70))) {
+					PopRedo();
+				}
+				GUI.enabled = true;
+				GUILayout.EndHorizontal();
+
+				GUILayout.Label($"Remove (red): {_selectedOrdinals.Count}  Add (green): {_selectedAddCombinedTris.Count}");
+				GUILayout.BeginHorizontal();
+				if(GUILayout.Button("Apply Changes")) {
+					ApplySelectedChanges();
+				}
+				if(GUILayout.Button("Exit Edit Mode")) {
+					EnableTriangleDebug = false;
+				}
+				GUILayout.EndHorizontal();
+
+				GUILayout.Space(6);
+				GUILayout.Label("Edit Mode Controls:");
+				GUILayout.Label("- Left Click: toggle triangle selection (red = remove from decal, green = add to decal)");
+				GUILayout.Label("  (Note: green addition only works for SlotDecals)");
+				GUILayout.Label("- Shift + Left Click/Drag: paint selected status");
+				GUILayout.Label("- Ctrl + Left Click/Drag: move decal texture (adjusts overlay UVs of selected triangles)");
+				GUILayout.Label("- Use Select All / Invert / Clear for bulk selection changes");
+				GUILayout.Label("Navigation:");
+				GUILayout.Label("- Right Click + Drag: orbit camera");
+				GUILayout.Label("- Shift + Right Click + Drag: pan vertically");
+				GUILayout.Label("- Mouse Wheel: zoom");
+
+			}
+		}
+		private void DrawLeftPanel() {
+
+
+
+			// Decal Method Toggle
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Decal Method:", GUILayout.Width(100));
+			if(GUILayout.Button($"{decalMethod}", GUILayout.Width(150))) {
+				decalMethod = decalMethod == DecalMethod.SlotDecal ? DecalMethod.RenderTexture : DecalMethod.SlotDecal;
+			}
+			GUILayout.EndHorizontal();
+
+			GUILayout.Space(5);
+
+			// Active Overlay Selection
+			GUILayout.Label("Active Overlay:");
+			if(decalMethod == DecalMethod.SlotDecal) {
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Mesh Decal:", GUILayout.Width(100));
 #if UNITY_EDITOR
                 MeshDecalOverlay = (OverlayDataAsset)EditorGUI.ObjectField(GUILayoutUtility.GetRect(200, 18), MeshDecalOverlay, typeof(OverlayDataAsset), false);
 #else
-                GUILayout.Label(MeshDecalOverlay != null ? MeshDecalOverlay.name : "None", GUILayout.Width(200));
+				GUILayout.Label(MeshDecalOverlay != null ? MeshDecalOverlay.name : "None", GUILayout.Width(200));
 #endif
-                GUILayout.EndHorizontal();
-            }
-            else
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Texture Decal:", GUILayout.Width(100));
+				GUILayout.EndHorizontal();
+			} else {
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Texture Decal:", GUILayout.Width(100));
 #if UNITY_EDITOR
                 TextureDecalOverlay = (OverlayDataAsset)EditorGUI.ObjectField(GUILayoutUtility.GetRect(200, 18), TextureDecalOverlay, typeof(OverlayDataAsset), false);
 #else
-                GUILayout.Label(TextureDecalOverlay != null ? TextureDecalOverlay.name : "None", GUILayout.Width(200));
+				GUILayout.Label(TextureDecalOverlay != null ? TextureDecalOverlay.name : "None", GUILayout.Width(200));
 #endif
-                GUILayout.EndHorizontal();
-                
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Stamp Field:", GUILayout.Width(100));
+				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Stamp Field:", GUILayout.Width(100));
 #if UNITY_EDITOR
                 StampField = (DecalRTStampSlot)EditorGUI.ObjectField(GUILayoutUtility.GetRect(200, 18), StampField, typeof(DecalRTStampSlot), true);
 #else
-                GUILayout.Label(StampField != null ? StampField.name : "None", GUILayout.Width(200));
+				GUILayout.Label(StampField != null ? StampField.name : "None", GUILayout.Width(200));
 #endif
-                GUILayout.EndHorizontal();
-            }
-            
-            GUILayout.Space(5);
-            
-            // Radius/Rotation Controls
-            GUILayout.Label("Decal Settings:");
-            
-            GUILayout.BeginHorizontal();
-            GUILayout.Label($"Radius: {DecalRadius:F3}", GUILayout.Width(100));
-            float newRadius = GUILayout.HorizontalSlider(DecalRadius, 0.01f, 0.5f, GUILayout.Width(150));
-            if (System.Math.Abs(newRadius - DecalRadius) > 0.001f)
-            {
-                DecalRadius = newRadius;
-                UpdateLastDecalIfExists();
-            }
-            GUILayout.EndHorizontal();
-            
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Fudge Radius:", GUILayout.Width(100));
-            string fudgeStr = GUILayout.TextField(fudgeRadius.ToString("F4"), GUILayout.Width(80));
-            if (float.TryParse(fudgeStr, out float newFudge))
-            {
-                fudgeRadius = newFudge;
-            }
-            GUILayout.EndHorizontal();
-            
-            GUILayout.BeginHorizontal();
-            GUILayout.Label($"Rotation: {DecalRotationDegrees:F1}°", GUILayout.Width(100));
-            float newRotation = GUILayout.HorizontalSlider(DecalRotationDegrees, 0f, 360f, GUILayout.Width(150));
-            if (System.Math.Abs(newRotation - DecalRotationDegrees) > 0.1f)
-            {
-                DecalRotationDegrees = newRotation;
-                UpdateLastDecalIfExists();
-            }
-            GUILayout.EndHorizontal();
-            
-            GUILayout.BeginHorizontal();
-            randomizeRotation = GUILayout.Toggle(randomizeRotation, "Randomize Rotation", GUILayout.Width(150));
-            useHitNormalForProjection = GUILayout.Toggle(useHitNormalForProjection, "Use Hit Normal", GUILayout.Width(150));
-            GUILayout.EndHorizontal();
+				GUILayout.EndHorizontal();
+			}
 
-            if (GUILayout.Button("Clear All Decals"))
-            {
-                ClearAllDecals();
-            }
+			GUILayout.Space(5);
 
-            // Method-specific settings
-            if (decalMethod == DecalMethod.SlotDecal)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Slot Offset:", GUILayout.Width(100));
-                string offsetStr = GUILayout.TextField(slotOffset.ToString(), GUILayout.Width(80));
-                if (int.TryParse(offsetStr, out int newOffset))
-                {
-                    slotOffset = newOffset;
-                }
-                GUILayout.EndHorizontal();
-            }
-            else
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("RT Dilation:", GUILayout.Width(100));
-                string dilationStr = GUILayout.TextField(decalRTDilation.ToString(), GUILayout.Width(80));
-                if (int.TryParse(dilationStr, out int newDilation))
-                {
-                    decalRTDilation = newDilation;
-                }
-                GUILayout.EndHorizontal();
+			// Radius/Rotation Controls
+			GUILayout.Label("Decal Settings:");
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("RT UV Expand (px):", GUILayout.Width(120));
-                string expandStr = GUILayout.TextField(DecalRTUVExpandPixels.ToString("F2"), GUILayout.Width(80));
-                if (float.TryParse(expandStr, out float newExpand))
-                {
-                    DecalRTUVExpandPixels = Mathf.Clamp(newExpand, 0f, 8f);
-                }
-                GUILayout.EndHorizontal();
-                
-                GUILayout.BeginHorizontal();
-                AutoAddOverlays = GUILayout.Toggle(AutoAddOverlays, "Auto Add Overlays", GUILayout.Width(140));
-                DrawRenderTexturesImmediately = GUILayout.Toggle(DrawRenderTexturesImmediately, "Draw RT Immediately", GUILayout.Width(140));
-                GUILayout.EndHorizontal();
-            }
+			GUILayout.BeginHorizontal();
+			GUILayout.Label($"Radius: {DecalRadius:F3}", GUILayout.Width(100));
+			float newRadius = GUILayout.HorizontalSlider(DecalRadius, 0.01f, 0.5f, GUILayout.Width(150));
+			if(System.Math.Abs(newRadius - DecalRadius) > 0.001f) {
+				DecalRadius = newRadius;
+				UpdateLastDecalIfExists();
+			}
+			GUILayout.EndHorizontal();
 
-            
-            GUILayout.Space(5);
-            
-            // Place Decal Functionality
-            GUILayout.Label("Controls:");
-            GUILayout.Label("Left Click: Place Decal (disabled in Debug)");
-            GUILayout.Label("Right Click + Drag: Orbit Camera");
-            GUILayout.Label("Shift + Right Click + Drag: Pan Vertically");
-            GUILayout.Label("Mouse Wheel: Zoom");
-            
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Restart Avatar", GUILayout.Width(120)))
-            {
-                Avatar.BuildCharacter();
-            }
-            PauseAvatarAnimation = GUILayout.Toggle(PauseAvatarAnimation, "Pause Animation", GUILayout.Width(140));
-            GUILayout.EndHorizontal();
-            
-            GUILayout.Space(5);
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Fudge Radius:", GUILayout.Width(100));
+			string fudgeStr = GUILayout.TextField(fudgeRadius.ToString("F4"), GUILayout.Width(80));
+			if(float.TryParse(fudgeStr, out float newFudge)) {
+				fudgeRadius = newFudge;
+			}
+			GUILayout.EndHorizontal();
 
+			GUILayout.BeginHorizontal();
+			GUILayout.Label($"Rotation: {DecalRotationDegrees:F1}°", GUILayout.Width(100));
+			float newRotation = GUILayout.HorizontalSlider(DecalRotationDegrees, 0f, 360f, GUILayout.Width(150));
+			if(System.Math.Abs(newRotation - DecalRotationDegrees) > 0.1f) {
+				DecalRotationDegrees = newRotation;
+				UpdateLastDecalIfExists();
+			}
+			GUILayout.EndHorizontal();
 
-            // Debug Settings (Collapsible)
-#if UNITY_EDITOR
-            TattooColor = EditorGUILayout.ColorField("Tattoo Color", TattooColor);
-            if (GUILayout.Button("Update Tattoo Color"))
-            {
-                OverlayColorData ocd = new OverlayColorData(1);
-                ocd.SetColor(0, false, TattooColor);
-                Avatar.SetRawColor("Tattoo", ocd);
-            }
-            _showDebugSettings = EditorGUI.Foldout(GUILayoutUtility.GetRect(300, 18), _showDebugSettings, "Debug Settings", true);
-#else
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(_showDebugSettings ? "▼ Debug Settings" : "▶ Debug Settings", GUILayout.Width(150)))
-            {
-                _showDebugSettings = !_showDebugSettings;
-            }
-            GUILayout.EndHorizontal();
-#endif
-            if (_showDebugSettings)
-            {
-				bool oldShowSpheres = debugShowSpheres;
-				// Toggle with auto-pause when enabling debug
-				debugShowSpheres = GUILayout.Toggle( debugShowSpheres, "Show Debug Spheres");
-				if (oldShowSpheres != debugShowSpheres)
-				{
-					ShowSpheres(debugShowSpheres);
+			GUILayout.BeginHorizontal();
+			randomizeRotation = GUILayout.Toggle(randomizeRotation, "Randomize Rotation", GUILayout.Width(150));
+			useHitNormalForProjection = GUILayout.Toggle(useHitNormalForProjection, "Use Hit Normal", GUILayout.Width(150));
+			GUILayout.EndHorizontal();
+
+			if(GUILayout.Button("Clear All Decals")) {
+				ClearAllDecals();
+			}
+
+			// Method-specific settings
+			if(decalMethod == DecalMethod.SlotDecal) {
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Slot Offset:", GUILayout.Width(100));
+				string offsetStr = GUILayout.TextField(slotOffset.ToString(), GUILayout.Width(80));
+				if(int.TryParse(offsetStr, out int newOffset)) {
+					slotOffset = newOffset;
 				}
+				GUILayout.EndHorizontal();
+			} else {
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("RT Dilation:", GUILayout.Width(100));
+				string dilationStr = GUILayout.TextField(decalRTDilation.ToString(), GUILayout.Width(80));
+				if(int.TryParse(dilationStr, out int newDilation)) {
+					decalRTDilation = newDilation;
+				}
+				GUILayout.EndHorizontal();
 
-				bool prevDebug = EnableTriangleDebug;
-                EnableTriangleDebug = GUILayout.Toggle(EnableTriangleDebug, "Enable Triangle Debug");
-                if (!prevDebug && EnableTriangleDebug)
-                {
-                    PauseAvatarAnimation = true;
-                    ApplyAnimationPauseState();
-                }
-                
-                if (EnableTriangleDebug)
-                {
-                    if (_dbgTriToOrdinal == null)
-                    {
-                        RefreshLastDecalDebug();
-                    }
-                    
-                    GUILayout.Label("Debug Selection (Shift + Left Click to paint)");
-                    
-                    GUILayout.BeginHorizontal();
-                    GUI.enabled = _dbgTriToOrdinal != null;
-                    if (GUILayout.Button("Apply Changes", GUILayout.Width(110)))
-                    {
-                        ApplySelectedChanges();
-                    }
-                    if (GUILayout.Button("Cancel", GUILayout.Width(70)))
-                    {
-                        _selectedOrdinals.Clear();
-                        _selectedAddCombinedTris.Clear();
-                        _undo.Clear();
-                        _redo.Clear();
-                    }
-                    GUILayout.EndHorizontal();
-                    
-                    GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Clear", GUILayout.Width(70)))
-                    {
-                        PushUndo();
-                        _selectedOrdinals.Clear();
-                        _selectedAddCombinedTris.Clear();
-                    }
-                    if (GUILayout.Button("Select All", GUILayout.Width(90)))
-                    {
-                        PushUndo();
-                        SelectAll();
-                    }
-                    if (GUILayout.Button("Invert", GUILayout.Width(70)))
-                    {
-                        PushUndo();
-                        InvertSelection();
-                    }
-                    GUI.enabled = true;
-                    GUILayout.EndHorizontal();
-                    
-                    GUILayout.BeginHorizontal();
-                    GUI.enabled = _undo.Count > 0;
-                    if (GUILayout.Button("Undo", GUILayout.Width(70)))
-                    {
-                        PopUndo();
-                    }
-                    GUI.enabled = _redo.Count > 0;
-                    if (GUILayout.Button("Redo", GUILayout.Width(70)))
-                    {
-                        PopRedo();
-                    }
-                    GUI.enabled = true;
-                    GUILayout.EndHorizontal();
-                    
-                    GUILayout.Label($"Remove (red): {_selectedOrdinals.Count}  Add (green): {_selectedAddCombinedTris.Count}");
-                }
-            }
-            
-            GUILayout.EndScrollView();
-            GUILayout.EndArea();
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("RT UV Expand (px):", GUILayout.Width(120));
+				string expandStr = GUILayout.TextField(DecalRTUVExpandPixels.ToString("F2"), GUILayout.Width(80));
+				if(float.TryParse(expandStr, out float newExpand)) {
+					DecalRTUVExpandPixels = Mathf.Clamp(newExpand, 0f, 8f);
+				}
+				GUILayout.EndHorizontal();
 
-            // Apply pause state from the toggle each GUI frame
-            ApplyAnimationPauseState();
-        }
+				GUILayout.BeginHorizontal();
+				AutoAddOverlays = GUILayout.Toggle(AutoAddOverlays, "Auto Add Overlays", GUILayout.Width(140));
+				DrawRenderTexturesImmediately = GUILayout.Toggle(DrawRenderTexturesImmediately, "Draw RT Immediately", GUILayout.Width(140));
+				GUILayout.EndHorizontal();
+			}
 
-        private void ClearAllDecals()
+
+			GUILayout.Space(5);
+
+			// Place Decal Functionality
+			GUILayout.Label("Controls:");
+			GUILayout.Label("Left Click: Place Decal (disabled in Debug)");
+			GUILayout.Label("Right Click + Drag: Orbit Camera");
+			GUILayout.Label("Shift + Right Click + Drag: Pan Vertically");
+			GUILayout.Label("Mouse Wheel: Zoom");
+
+			GUILayout.BeginHorizontal();
+			if(GUILayout.Button("Restart Avatar", GUILayout.Width(120))) {
+				RebuildAvatar();
+			}
+			PauseAvatarAnimation = GUILayout.Toggle(PauseAvatarAnimation, "Pause Animation", GUILayout.Width(140));
+			GUILayout.EndHorizontal();
+		}
+
+
+		private void ToTriangleDebugMode() {
+			EnableTriangleDebug = true; // ensure debug mode is set
+			PauseAvatarAnimation = true;
+			DecalRotationDegrees = 0.0f;
+			ApplyAnimationPauseState();
+		}
+
+		private void RotateCurrentStampUVs(float deltaDegrees)
+		{
+			if (Mathf.Abs(deltaDegrees) < 0.0001f)
+			{
+				return;
+			}
+			if (decalMethod != DecalMethod.RenderTexture || CurrentStamp == null || CurrentStamp.slots == null)
+			{
+				return;
+			}
+
+			float rad = deltaDegrees * Mathf.Deg2Rad;
+			float c = Mathf.Cos(rad);
+			float s = Mathf.Sin(rad);
+
+			for (int i = 0; i < CurrentStamp.slots.Count; i++)
+			{
+				var ss = CurrentStamp.slots[i];
+				if (ss == null || ss.debugDontUse) continue;
+				// Rotate only decal-space UVs (overlay sampling). Rotating base UVs would move the stamped area around the model.
+				RotateUVArray01InPlace(ss.overlayUV, c, s);
+			}
+
+			#if UNITY_EDITOR
+			EditorUtility.SetDirty(CurrentStamp);
+			// AssetDatabase.SaveAssetIfDirty(CurrentStamp);
+			#endif
+			// Re-stamp so the rotated UVs are applied to the avatar render textures.
+			RebuildAvatar();
+			RefreshLastDecalDebug();
+		}
+
+		private void ScaleCurrentStampUVs(float deltaScale)
+		{
+			if (Mathf.Abs(deltaScale - 1f) < 0.0001f)
+			{
+				return;
+			}
+			if (decalMethod != DecalMethod.RenderTexture || CurrentStamp == null || CurrentStamp.slots == null)
+			{
+				return;
+			}
+
+			for (int i = 0; i < CurrentStamp.slots.Count; i++)
+			{
+				var ss = CurrentStamp.slots[i];
+				if (ss == null || ss.debugDontUse) continue;
+				ScaleUVArray01InPlace(ss.overlayUV, deltaScale);
+			}
+
+			#if UNITY_EDITOR
+			EditorUtility.SetDirty(CurrentStamp);
+			//AssetDatabase.SaveAssetIfDirty(CurrentStamp);
+			#endif
+			RebuildAvatar();
+			RefreshLastDecalDebug();
+		}
+
+		private static void RotateUVArray01InPlace(Vector2[] uvs, float c, float s)
+		{
+			if (uvs == null || uvs.Length == 0) return;
+			for (int i = 0; i < uvs.Length; i++)
+			{
+				Vector2 uv = uvs[i];
+				uv.x -= 0.5f;
+				uv.y -= 0.5f;
+				float x = uv.x;
+				float y = uv.y;
+				uv.x = x * c - y * s;
+				uv.y = x * s + y * c;
+				uv.x += 0.5f;
+				uv.y += 0.5f;
+				uvs[i] = uv;
+			}
+		}
+
+		private static void ScaleUVArray01InPlace(Vector2[] uvs, float deltaScale)
+		{
+			if (uvs == null || uvs.Length == 0) return;
+			// overlayUV maps from destination (mesh UVs) into decal overlay space.
+			// To make the decal appear larger, we must sample a smaller portion of the overlay texture -> scale UVs toward the center.
+			float inv = 1f / Mathf.Max(0.0001f, deltaScale);
+			for (int i = 0; i < uvs.Length; i++)
+			{
+				Vector2 uv = uvs[i];
+				uv.x -= 0.5f;
+				uv.y -= 0.5f;
+				uv *= inv;
+				uv.x += 0.5f;
+				uv.y += 0.5f;
+				uvs[i] = uv;
+			}
+		}
+
+		private void ClearAllDecals()
         {
             if (StampField != null)
             {
                 StampField.ClearAllStamps();
-                Avatar.BuildCharacter();
+				RebuildAvatar();
             }
         }
 
@@ -478,12 +837,7 @@ namespace UMA.Decals
         {
             if (!_initialized)
             {
-                InitializeOrbit();
-            }
-
-            if (Avatar == null || OrbitCamera == null)
-            {
-                return;
+				return;
             }
 
             // Auto-pause when debug is enabled at runtime (safety net)
@@ -513,16 +867,140 @@ namespace UMA.Decals
             {
                 EnsureDebugBake();
                 bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-                if (shift)
-                {
-                    HandlePaintMode();
-                }
-                else if (Input.GetMouseButtonDown(0))
-                {
-                    HandleTriangleToggleClick();
-                }
+				bool ctrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+				if(shift) {
+					HandlePaintMode();
+				} else if(ctrl) {
+					HandleUVAdjustMode();
+				} else if(Input.GetMouseButtonDown(0)) {
+					HandleTriangleToggleClick();
+				}
             }
         }
+
+
+		private void HandleUVAdjustMode() {
+			if (decalMethod != DecalMethod.RenderTexture || CurrentStamp == null || CurrentStamp.slots == null)
+			{
+				_uvAdjustActive = false;
+				_uvAdjustVerts = null;
+				return;
+			}
+
+			// Begin drag
+			if (Input.GetMouseButtonDown(0))
+			{
+				_uvAdjustActive = true;
+				_uvAdjustLastMouse = Input.mousePosition;
+
+				// Build a vertex set for all currently selected triangles (remove-set + add-set)
+				_uvAdjustVerts = new HashSet<int>();
+				for (int si = 0; si < CurrentStamp.slots.Count; si++)
+				{
+					var ss = CurrentStamp.slots[si];
+					if (ss == null || ss.debugDontUse) continue;
+					if (ss.triangles == null || ss.triangles.Length == 0) continue;
+					if (ss.overlayUV == null || ss.overlayUV.Length == 0) continue;
+
+					int triCount = ss.triangles.Length / 3;
+#if UNITY_EDITOR
+					var ords = ss.triOrdinals;
+					if (ords == null || ords.Length != triCount) continue;
+
+					for (int t = 0; t < triCount; t++)
+					{
+						int ord = ords[t];
+						bool selected = _selectedOrdinals.Contains(ord);
+						// Also treat triangles selected-to-add as selected for UV adjust.
+						if (!selected && _dbgTriToOrdinal != null)
+						{
+							foreach (var kv in _dbgTriToOrdinal)
+							{
+								if (kv.Value == ord)
+								{
+									if (_selectedAddCombinedTris.Contains(kv.Key))
+										selected = true;
+									break;
+								}
+							}
+						}
+						if (!selected) continue;
+
+						int i0 = ss.triangles[t * 3 + 0];
+						int i1 = ss.triangles[t * 3 + 1];
+						int i2 = ss.triangles[t * 3 + 2];
+						if ((uint)i0 < ss.overlayUV.Length) _uvAdjustVerts.Add(i0);
+						if ((uint)i1 < ss.overlayUV.Length) _uvAdjustVerts.Add(i1);
+						if ((uint)i2 < ss.overlayUV.Length) _uvAdjustVerts.Add(i2);
+					}
+#endif
+				}
+				return;
+			}
+
+			// End drag
+			if (Input.GetMouseButtonUp(0))
+			{
+				_uvAdjustActive = false;
+				_uvAdjustVerts = null;
+				return;
+			}
+
+			// Drag
+			if (!_uvAdjustActive || !Input.GetMouseButton(0) || _uvAdjustVerts == null || _uvAdjustVerts.Count == 0)
+			{
+				return;
+			}
+
+			Vector2 mouse = Input.mousePosition;
+			Vector2 mouseDelta = mouse - _uvAdjustLastMouse;
+			_uvAdjustLastMouse = mouse;
+			if (mouseDelta.sqrMagnitude < 0.01f)
+			{
+				return;
+			}
+
+			// Convert screen delta to overlayUV delta.
+			// Horizontal mouse delta maps directly to +U.
+			// Vertical movement in screen space is inverted relative to UV space, so subtract Y.
+			// Scale factor: use the selected stamp's overlayUV spread as a proxy for UV island scale.
+			float uvPerPixel = 1f / Mathf.Max(1f, Mathf.Min(Screen.width, Screen.height));
+			for (int si = 0; si < CurrentStamp.slots.Count; si++)
+			{
+				var ss = CurrentStamp.slots[si];
+				if (ss == null || ss.debugDontUse) continue;
+				if (ss.overlayUV == null || ss.overlayUV.Length == 0) continue;
+
+				// Compute a scale from the current overlay UV bounding box.
+				// If triangles cover a small overlay region, we want a smaller UV delta per pixel.
+				float minU = float.PositiveInfinity, minV = float.PositiveInfinity;
+				float maxU = float.NegativeInfinity, maxV = float.NegativeInfinity;
+				for (int i = 0; i < ss.overlayUV.Length; i++)
+				{
+					var uv = ss.overlayUV[i];
+					if (uv.x < minU) minU = uv.x;
+					if (uv.y < minV) minV = uv.y;
+					if (uv.x > maxU) maxU = uv.x;
+					if (uv.y > maxV) maxV = uv.y;
+				}
+				float span = Mathf.Max(1e-5f, Mathf.Max(maxU - minU, maxV - minV));
+				float scaledUvPerPixel = uvPerPixel * span;
+
+				Vector2 duv = new Vector2(mouseDelta.x * scaledUvPerPixel, -mouseDelta.y * scaledUvPerPixel);
+
+				foreach (int vi in _uvAdjustVerts)
+				{
+					if ((uint)vi >= ss.overlayUV.Length) continue;
+					ss.overlayUV[vi] += duv;
+				}
+			}
+
+			#if UNITY_EDITOR
+			EditorUtility.SetDirty(CurrentStamp);
+			#endif
+			RebuildAvatar();
+			RefreshLastDecalDebug();
+		}
 
         private void ApplyAnimationPauseState()
         {
@@ -602,180 +1080,174 @@ namespace UMA.Decals
             int triCount = t.Length / 3;
 
             GL.PushMatrix();
-            GL.MultMatrix(Matrix4x4.identity);
+			try {
+				MatrixLevel++;
+				GL.MultMatrix(Matrix4x4.identity);
 
-            // Pass 1: Fill existing decal triangles (green), ones selected to remove are red
-            GL.Begin(GL.TRIANGLES);
-            for (int i = 0; i < triCount; i++)
-            {
-                if (_dbgTriToOrdinal == null || !_dbgTriToOrdinal.ContainsKey(i))
-                {
-                    continue; // only decal triangles
-                }
+				// Pass 1: Fill existing decal triangles (green), ones selected to remove are red
+				GL.Begin(GL.TRIANGLES);
+				for(int i = 0; i < triCount; i++) {
+					if(_dbgTriToOrdinal == null || !_dbgTriToOrdinal.ContainsKey(i)) {
+						continue; // only decal triangles
+					}
 
-                int i0 = t[i * 3 + 0];
-                int i1 = t[i * 3 + 1];
-                int i2 = t[i * 3 + 2];
-                if ((uint)i0 >= v.Length || (uint)i1 >= v.Length || (uint)i2 >= v.Length)
-                {
-                    continue;
-                }
+					int i0 = t[i * 3 + 0];
+					int i1 = t[i * 3 + 1];
+					int i2 = t[i * 3 + 2];
+					if((uint)i0 >= v.Length || (uint)i1 >= v.Length || (uint)i2 >= v.Length) {
+						continue;
+					}
 
-                Vector3 w0 = tr.TransformPoint(v[i0]);
-                Vector3 w1 = tr.TransformPoint(v[i1]);
-                Vector3 w2 = tr.TransformPoint(v[i2]);
+					Vector3 w0 = tr.TransformPoint(v[i0]);
+					Vector3 w1 = tr.TransformPoint(v[i1]);
+					Vector3 w2 = tr.TransformPoint(v[i2]);
 
-                Vector3 n = Vector3.Cross(w1 - w0, w2 - w0);
-                if (n.sqrMagnitude < 1e-12f)
-                {
-                    continue;
-                }
+					Vector3 n = Vector3.Cross(w1 - w0, w2 - w0);
+					if(n.sqrMagnitude < 1e-12f) {
+						continue;
+					}
 
-                n.Normalize();
-                // Only draw those facing camera
-                if (Vector3.Dot(n, camFwd) >= 0f)
-                {
-                    continue;
-                }
+					n.Normalize();
+					// Only draw those facing camera
+					if(Vector3.Dot(n, camFwd) >= 0f) {
+						continue;
+					}
 
-                int ord = _dbgTriToOrdinal[i];
-                bool removing = _selectedOrdinals.Contains(ord);
-                Color fillCol = removing ? new Color(1f, 0f, 0f, 0.5f) : new Color(0f, 1f, 0f, 0.5f);
-                GL.Color(fillCol);
-                GL.Vertex(w0); GL.Vertex(w1); GL.Vertex(w2);
-            }
-            GL.End();
+					int ord = _dbgTriToOrdinal[i];
+					bool removing = _selectedOrdinals.Contains(ord);
+					Color fillCol = removing ? EditFillRemoveColor : EditFillKeepColor;
+					GL.Color(fillCol);
+					GL.Vertex(w0);
+					GL.Vertex(w1);
+					GL.Vertex(w2);
+				}
+				GL.End();
 
-            // Pass 2: Fill triangles selected to add (currently not in decal) with green
-            GL.Begin(GL.TRIANGLES);
-            for (int i = 0; i < triCount; i++)
-            {
-                if (_dbgTriToOrdinal != null && _dbgTriToOrdinal.ContainsKey(i))
-                {
-                    continue; // skip decal triangles here
-                }
+				// Pass 2: Fill triangles selected to add (currently not in decal) with green
+				GL.Begin(GL.TRIANGLES);
+				for(int i = 0; i < triCount; i++) {
+					if(_dbgTriToOrdinal != null && _dbgTriToOrdinal.ContainsKey(i)) {
+						continue; // skip decal triangles here
+					}
 
-                if (!_selectedAddCombinedTris.Contains(i))
-                {
-                    continue; // only selected additions
-                }
+					if(!_selectedAddCombinedTris.Contains(i)) {
+						continue; // only selected additions
+					}
 
-                int i0 = t[i * 3 + 0];
-                int i1 = t[i * 3 + 1];
-                int i2 = t[i * 3 + 2];
-                if ((uint)i0 >= v.Length || (uint)i1 >= v.Length || (uint)i2 >= v.Length)
-                {
-                    continue;
-                }
+					int i0 = t[i * 3 + 0];
+					int i1 = t[i * 3 + 1];
+					int i2 = t[i * 3 + 2];
+					if((uint)i0 >= v.Length || (uint)i1 >= v.Length || (uint)i2 >= v.Length) {
+						continue;
+					}
 
-                Vector3 w0 = tr.TransformPoint(v[i0]);
-                Vector3 w1 = tr.TransformPoint(v[i1]);
-                Vector3 w2 = tr.TransformPoint(v[i2]);
+					Vector3 w0 = tr.TransformPoint(v[i0]);
+					Vector3 w1 = tr.TransformPoint(v[i1]);
+					Vector3 w2 = tr.TransformPoint(v[i2]);
 
-                Vector3 n = Vector3.Cross(w1 - w0, w2 - w0);
-                if (n.sqrMagnitude < 1e-12f)
-                {
-                    continue;
-                }
+					Vector3 n = Vector3.Cross(w1 - w0, w2 - w0);
+					if(n.sqrMagnitude < 1e-12f) {
+						continue;
+					}
 
-                n.Normalize();
-                if (Vector3.Dot(n, camFwd) >= 0f)
-                {
-                    continue; // Only facing camera
-                }
+					n.Normalize();
+					if(Vector3.Dot(n, camFwd) >= 0f) {
+						continue; // Only facing camera
+					}
 
-                GL.Color(new Color(0f, 1f, 0f, 0.5f));
-                GL.Vertex(w0); GL.Vertex(w1); GL.Vertex(w2);
-            }
-            GL.End();
+					GL.Color(EditFillAddColor);
+					GL.Vertex(w0);
+					GL.Vertex(w1);
+					GL.Vertex(w2);
+				}
+				GL.End();
 
-            // Pass 3: Outlines for existing decal triangles (green or red)
-            GL.Begin(GL.LINES);
-            for (int i = 0; i < triCount; i++)
-            {
-                if (_dbgTriToOrdinal == null || !_dbgTriToOrdinal.ContainsKey(i))
-                {
-                    continue;
-                }
+				// Pass 3: Outlines for existing decal triangles (green or red)
+				GL.Begin(GL.LINES);
+				for(int i = 0; i < triCount; i++) {
+					if(_dbgTriToOrdinal == null || !_dbgTriToOrdinal.ContainsKey(i)) {
+						continue;
+					}
 
-                int i0 = t[i * 3 + 0];
-                int i1 = t[i * 3 + 1];
-                int i2 = t[i * 3 + 2];
-                if ((uint)i0 >= v.Length || (uint)i1 >= v.Length || (uint)i2 >= v.Length)
-                {
-                    continue;
-                }
+					int i0 = t[i * 3 + 0];
+					int i1 = t[i * 3 + 1];
+					int i2 = t[i * 3 + 2];
+					if((uint)i0 >= v.Length || (uint)i1 >= v.Length || (uint)i2 >= v.Length) {
+						continue;
+					}
 
-                Vector3 w0 = tr.TransformPoint(v[i0]);
-                Vector3 w1 = tr.TransformPoint(v[i1]);
-                Vector3 w2 = tr.TransformPoint(v[i2]);
+					Vector3 w0 = tr.TransformPoint(v[i0]);
+					Vector3 w1 = tr.TransformPoint(v[i1]);
+					Vector3 w2 = tr.TransformPoint(v[i2]);
 
-                Vector3 n = Vector3.Cross(w1 - w0, w2 - w0);
-                if (n.sqrMagnitude < 1e-12f)
-                {
-                    continue;
-                }
+					Vector3 n = Vector3.Cross(w1 - w0, w2 - w0);
+					if(n.sqrMagnitude < 1e-12f) {
+						continue;
+					}
 
-                n.Normalize();
-                if (Vector3.Dot(n, camFwd) >= 0f)
-                {
-                    continue; // facing away -> no line
-                }
+					n.Normalize();
+					if(Vector3.Dot(n, camFwd) >= 0f) {
+						continue; // facing away -> no line
+					}
 
-                int ord = _dbgTriToOrdinal[i];
-                bool removing = _selectedOrdinals.Contains(ord);
-                Color edgeCol = removing ? new Color(1f, 0f, 0f, 1f) : new Color(0f, 1f, 0f, 1f);
-                GL.Color(edgeCol);
-                GL.Vertex(w0); GL.Vertex(w1);
-                GL.Vertex(w1); GL.Vertex(w2);
-                GL.Vertex(w2); GL.Vertex(w0);
-            }
-            GL.End();
+					int ord = _dbgTriToOrdinal[i];
+					bool removing = _selectedOrdinals.Contains(ord);
+					Color edgeCol = removing ? EditOutlineRemoveColor : EditOutlineKeepColor;
+					GL.Color(edgeCol);
+					GL.Vertex(w0);
+					GL.Vertex(w1);
+					GL.Vertex(w1);
+					GL.Vertex(w2);
+					GL.Vertex(w2);
+					GL.Vertex(w0);
+				}
+				GL.End();
 
-            // Pass 4: Outlines for unused triangles facing camera (cyan). If selected to add, draw green.
-            GL.Begin(GL.LINES);
-            for (int i = 0; i < triCount; i++)
-            {
-                if (_dbgTriToOrdinal != null && _dbgTriToOrdinal.ContainsKey(i))
-                {
-                    continue; // only triangles not in decal
-                }
+				// Pass 4: Outlines for unused triangles facing camera (cyan). If selected to add, draw green.
+				GL.Begin(GL.LINES);
+				for(int i = 0; i < triCount; i++) {
+					if(_dbgTriToOrdinal != null && _dbgTriToOrdinal.ContainsKey(i)) {
+						continue; // only triangles not in decal
+					}
 
-                int i0 = t[i * 3 + 0];
-                int i1 = t[i * 3 + 1];
-                int i2 = t[i * 3 + 2];
-                if ((uint)i0 >= v.Length || (uint)i1 >= v.Length || (uint)i2 >= v.Length)
-                {
-                    continue;
-                }
+					int i0 = t[i * 3 + 0];
+					int i1 = t[i * 3 + 1];
+					int i2 = t[i * 3 + 2];
+					if((uint)i0 >= v.Length || (uint)i1 >= v.Length || (uint)i2 >= v.Length) {
+						continue;
+					}
 
-                Vector3 w0 = tr.TransformPoint(v[i0]);
-                Vector3 w1 = tr.TransformPoint(v[i1]);
-                Vector3 w2 = tr.TransformPoint(v[i2]);
+					Vector3 w0 = tr.TransformPoint(v[i0]);
+					Vector3 w1 = tr.TransformPoint(v[i1]);
+					Vector3 w2 = tr.TransformPoint(v[i2]);
 
-                Vector3 n = Vector3.Cross(w1 - w0, w2 - w0);
-                if (n.sqrMagnitude < 1e-12f)
-                {
-                    continue;
-                }
+					Vector3 n = Vector3.Cross(w1 - w0, w2 - w0);
+					if(n.sqrMagnitude < 1e-12f) {
+						continue;
+					}
 
-                n.Normalize();
-                if (Vector3.Dot(n, camFwd) >= 0f)
-                {
-                    continue; // only show facing camera
-                }
+					n.Normalize();
+					if(Vector3.Dot(n, camFwd) >= 0f) {
+						continue; // only show facing camera
+					}
 
-                bool addSel = _selectedAddCombinedTris.Contains(i);
-                Color edgeCol = addSel ? new Color(0f, 1f, 0f, 1f) : new Color(0f, 1f, 1f, 0.9f);
-                GL.Color(edgeCol);
-                GL.Vertex(w0); GL.Vertex(w1);
-                GL.Vertex(w1); GL.Vertex(w2);
-                GL.Vertex(w2); GL.Vertex(w0);
-            }
-            GL.End();
+					bool addSel = _selectedAddCombinedTris.Contains(i);
+					Color edgeCol = addSel ? EditOutlineAddColor : EditOutlineUnusedColor;
+					GL.Color(edgeCol);
+					GL.Vertex(w0);
+					GL.Vertex(w1);
+					GL.Vertex(w1);
+					GL.Vertex(w2);
+					GL.Vertex(w2);
+					GL.Vertex(w0);
+				}
+				GL.End();
 
-            GL.PopMatrix();
-        }
+			} finally {
+				GL.PopMatrix();
+				MatrixLevel--;
+			}
+		}
 
         private void HandleOrbitInput()
         {
@@ -860,7 +1332,7 @@ namespace UMA.Decals
                     Debug.LogWarning("TextureDecalOverlay is missing. Cannot place RT decal.");
                     return;
                 }
-                Debug.Log($"Applying RT decal. {TextureDecalOverlay.name}");
+                //Debug.Log($"Applying RT decal. {TextureDecalOverlay.name}");
             }
 
             if (Avatar == null || Avatar.umaData == null)
@@ -918,7 +1390,7 @@ namespace UMA.Decals
 				Avatar.ForceUpdate(true, true, true);
 			} else
             {
-                Debug.Log($"Creating RenderTexture decal. {TextureDecalOverlay.name}");
+                //Debug.Log($"Creating RenderTexture decal. {TextureDecalOverlay.name}");
 
                 // Example call
                 var options = new DecalRenderTexture.DecalRTOptions
@@ -939,6 +1411,8 @@ namespace UMA.Decals
                     return;
                 }
 
+				// 
+
                 var result = DecalRenderTexture.CreateDecalLayer(
                     Avatar,
                     ray,
@@ -955,42 +1429,49 @@ namespace UMA.Decals
                     return;
                 }
 
-				CreateDebugSphere(result.Value.hitPoint, result.Value.hitNormal);
+				// CreateDebugSphere(result.Value.hitPoint, result.Value.hitNormal);
 
 				// Additional behavior for RenderTexture mode: create a DecalRTStampAsset and store in StampField
 				if (StampField != null && TextureDecalOverlay != null)
                 {
                     var last = DecalRenderTexture.LastStamp;
-                    if (last != null)
-                    {
-                        // Clone the last stamp (runtime instance) so we can add to the stamp slot set
-                        var clone = ScriptableObject.CreateInstance<DecalRTStampAsset>();
-                        clone.overlayName = last.overlayName;
-						clone.overlayNameHash = last.overlayNameHash;
-                        clone.bleedPixels = last.bleedPixels;
-                        clone.forceLinearSampling = last.forceLinearSampling;
-                        clone.slots = new List<DecalRTStampAsset.SlotStamp>(last.slots.Count);
-                        for (int i = 0; i < last.slots.Count; i++)
-                        {
-                            var s = last.slots[i];
-                            if (s == null)
-                            {
-                                continue;
-                            }
+                    if (last != null) {
+						bool hadAnyStampsBefore = false;
+						try
+						{
+							hadAnyStampsBefore = StampField.overlayStamps != null && StampField.overlayStamps.Any(s => s != null && s.stamps != null && s.stamps.Length > 0);
+						}
+						catch { }
 
-                            var ns = new DecalRTStampAsset.SlotStamp
-                            {
-                                slotName = s.slotName,
-                                slotHash = UMAUtils.StringToHash(s.slotName),
-                                umaMaterialName = s.umaMaterialName,
-                                normBaseUV = (s.normBaseUV != null) ? (Vector2[])s.normBaseUV.Clone() : new Vector2[0],
-                                overlayUV = (s.overlayUV != null) ? (Vector2[])s.overlayUV.Clone() : new Vector2[0],
-                                triangles = (s.triangles != null) ? (int[])s.triangles.Clone() : new int[0],
-                                triOrdinals = s.triOrdinals != null ? (int[])s.triOrdinals.Clone() : null,
-                                recordedUVArea = s.recordedUVArea // <-- copy this too
-};
-                            clone.slots.Add(ns);
-                        }
+						// Clone the last stamp (runtime instance) so we can add to the stamp slot set
+						var clone = ScriptableObject.CreateInstance<DecalRTStampAsset>();
+						clone.overlayName = last.overlayName;
+						clone.overlayNameHash = last.overlayNameHash;
+						clone.bleedPixels = last.bleedPixels;
+						clone.forceLinearSampling = last.forceLinearSampling;
+						CurrentStamp = clone;
+						clone.slots = new List<DecalRTStampAsset.SlotStamp>(last.slots.Count);
+						for(int i = 0; i < last.slots.Count; i++) {
+							var s = last.slots[i];
+							if(s == null) {
+								continue;
+							}
+
+							var ns = new DecalRTStampAsset.SlotStamp {
+								slotName = s.slotName,
+								slotHash = UMAUtils.StringToHash(s.slotName),
+								umaMaterialName = s.umaMaterialName,
+								normBaseUV = (s.normBaseUV != null) ? (Vector2[])s.normBaseUV.Clone() : new Vector2[0],
+								overlayUV = (s.overlayUV != null) ? (Vector2[])s.overlayUV.Clone() : new Vector2[0],
+								triangles = (s.triangles != null) ? (int[])s.triangles.Clone() : new int[0],
+#if UNITY_EDITOR
+								triOrdinals = s.triOrdinals != null ? (int[])s.triOrdinals.Clone() : null,
+								slotRelativeTriangles = s.slotRelativeTriangles != null ? (int[])s.slotRelativeTriangles.Clone() : null,
+#endif
+								recordedUVArea = s.recordedUVArea // <-- copy this too
+							};
+							clone.slots.Add(ns);
+						}
 
 #if UNITY_EDITOR
                         // Persist as an asset so Inspector does not show 'Type Mismatch' for transient SOs
@@ -1006,105 +1487,105 @@ namespace UMA.Decals
                             var path = UnityEditor.AssetDatabase.GenerateUniqueAssetPath($"{folder}/{safeName}.asset");
                             UnityEditor.AssetDatabase.CreateAsset(clone, path);
                             EditorUtility.SetDirty(clone);
-                            UnityEditor.AssetDatabase.SaveAssetIfDirty(clone);
+                            //UnityEditor.AssetDatabase.SaveAssetIfDirty(clone);
                         }
                         catch { /* ignore editor persistence errors */ }
 #endif
-						CreateDebugSphere();
+						// CreateDebugSphere();
 
 						// Find or create an overlay stamp set that will be triggered by base overlays on affected slots (not the decal overlay itself)
 						DecalRTStampSlot.OverlayStampSet targetSet = null;
-                        if (StampField.overlayStamps != null)
-                        {
-                            // Prefer a dedicated auto set if present
-                            for (int i = 0; i < StampField.overlayStamps.Count; i++)
-                            {
-                                var set = StampField.overlayStamps[i];
-                                if (set != null && string.Equals(set.name, "AutoRTDecals", System.StringComparison.Ordinal))
-                                {
-                                    targetSet = set; break;
-                                }
-                            }
-                        }
-                        if (targetSet == null)
-                        {
-                            targetSet = new DecalRTStampSlot.OverlayStampSet
-                            {
-                                name = "AutoRTDecals",
-                                overlays = new List<OverlayDataAsset>(),
-                                overlayNames = new List<string>()
-                            };
-                            StampField.overlayStamps.Add(targetSet);
-                        }
+						if(StampField.overlayStamps != null) {
+							// Prefer a dedicated auto set if present
+							for(int i = 0; i < StampField.overlayStamps.Count; i++) {
+								var set = StampField.overlayStamps[i];
+								if(set != null && string.Equals(set.name, "AutoRTDecals", System.StringComparison.Ordinal)) {
+									targetSet = set;
+									break;
+								}
+							}
+						}
+						if(targetSet == null) {
+							targetSet = new DecalRTStampSlot.OverlayStampSet {
+								name = "AutoRTDecals",
+								overlays = new List<OverlayDataAsset>(),
+								overlayNames = new List<string>()
+							};
+							StampField.overlayStamps.Add(targetSet);
+						}
 
-                        // Ensure trigger overlay names include the overlays currently used on the affected slots
-                        var triggerNames = new HashSet<string>(System.StringComparer.Ordinal);
-                        for (int si = 0; si < clone.slots.Count; si++)
-                        {
-                            var ss = clone.slots[si];
-                            if (ss == null) continue;
-                            var runtimeSlot = Avatar.umaData?.umaRecipe?.GetSlot(ss.slotName);
-                            if (runtimeSlot == null) continue;
-                            var overlays = runtimeSlot.GetOverlayList();
-                            if (overlays == null) continue;
-                            for (int oi = 0; oi < overlays.Count; oi++)
-                            {
-                                var od = overlays[oi];
-                                if (od == null) continue;
-                                var oname = od.overlayName;
-                                if (!string.IsNullOrEmpty(oname)) triggerNames.Add(oname);
-                            }
-                        }
-                        bool empty = targetSet.overlays == null || targetSet.overlays.Count == 0;
-                        // Merge into set.overlayNames
-                        if (targetSet.overlayNames == null) 
-                            targetSet.overlayNames = new List<string>();
-                        foreach (var n in triggerNames)
-                        {
-                            bool exists = false;
-                            for (int j = 0; j < targetSet.overlayNames.Count; j++)
-                            {
-                                if (string.Equals(targetSet.overlayNames[j], n, System.StringComparison.Ordinal))
-                                {
-                                    exists = true; break;
-                                }
-                            }
-                            if (empty || AutoAddOverlays)
-                            {
-                                if (!exists) targetSet.overlayNames.Add(n);
-                            }
-                        }
+						// Ensure trigger overlay names include the overlays currently used on the affected slots
+						var triggerNames = new HashSet<string>(System.StringComparer.Ordinal);
+						for(int si = 0; si < clone.slots.Count; si++) {
+							var ss = clone.slots[si];
+							if(ss == null)
+								continue;
+							var runtimeSlot = Avatar.umaData?.umaRecipe?.GetSlot(ss.slotName);
+							if(runtimeSlot == null)
+								continue;
+							var overlays = runtimeSlot.GetOverlayList();
+							if(overlays == null)
+								continue;
+							for(int oi = 0; oi < overlays.Count; oi++) {
+								var od = overlays[oi];
+								if(od == null)
+									continue;
+								var oname = od.overlayName;
+								if(!string.IsNullOrEmpty(oname))
+									triggerNames.Add(oname);
+							}
+						}
+						bool noOverlayRefs = targetSet.overlays == null || targetSet.overlays.Count == 0;
+						bool noOverlayNames = targetSet.overlayNames == null || targetSet.overlayNames.Count == 0;
+						bool setHasNoTriggers = noOverlayRefs && noOverlayNames;
+						// Merge into set.overlayNames
+						if(targetSet.overlayNames == null)
+							targetSet.overlayNames = new List<string>();
+						foreach(var n in triggerNames) {
+							bool exists = false;
+							for(int j = 0; j < targetSet.overlayNames.Count; j++) {
+								if(string.Equals(targetSet.overlayNames[j], n, System.StringComparison.Ordinal)) {
+									exists = true;
+									break;
+								}
+							}
+							if(AutoAddOverlays || setHasNoTriggers) {
+								if(!exists)
+									targetSet.overlayNames.Add(n);
+							}
+						}
 
-                        // Append the new stamp to the set
-                        var list = new List<DecalRTStampAsset>();
-                        if (targetSet.stamps != null && targetSet.stamps.Length > 0)
-                        {
-                            list.AddRange(targetSet.stamps);
-                        }
+						// Append the new stamp to the set
+						var list = new List<DecalRTStampAsset>();
+						if(targetSet.stamps != null && targetSet.stamps.Length > 0) {
+							list.AddRange(targetSet.stamps);
+						}
 
-                        list.Add(clone);
-                        targetSet.stamps = list.ToArray();
+						list.Add(clone);
+						targetSet.stamps = list.ToArray();
 
-                        // Ensure the slot is subscribed to atlas updates (use its public entrypoint)
-                        if (Avatar.umaData != null)
-                        {
-                            StampField.OnCharacterBegun(Avatar.umaData);
-                        }
+						// Ensure the slot is subscribed to atlas updates (use its public entrypoint)
+						if(Avatar.umaData != null) {
+							StampField.OnCharacterBegun(Avatar.umaData);
+						}
+						//StampField.NotifyStampsChanged();
+#if UNITY_EDITOR
+						EditorUtility.SetDirty(StampField);
+						//AssetDatabase.SaveAssetIfDirty(StampField);
+#endif
 
-                        // Trigger textures-only generation so atlas changes (if any) propagate and slot can re-stamp via OnAtlasUpdated
-                        try
-                        {
-                            if (UMAAssetIndexer.Instance != null && UMAAssetIndexer.Instance.generator != null && !DrawRenderTexturesImmediately)
-                            {
-                                Avatar.ForceUpdate(false, true, false);
-                            }
-                        }
-                        catch (System.Exception ex)
-                        {
-                            Debug.LogException(ex);
-                        }
-                    }
-                }
+
+						// Trigger textures-only generation so atlas changes (if any) propagate and slot can re-stamp via OnAtlasUpdated
+						RebuildAvatar();
+
+						// If this was the first-ever stamp, there may be no later OnAtlasUpdated event to cause stamping.
+						// Do a best-effort immediate apply against the currently generated atlas RTs (safe no-op if not ready).
+						if (!hadAnyStampsBefore && !DrawRenderTexturesImmediately)
+						{
+							// TryApplyStampToCurrentAtlases(clone);
+						}
+					}
+				}
             }
 
             // If debug is enabled, refresh selection mapping and open selection UI automatically
@@ -1112,7 +1593,63 @@ namespace UMA.Decals
             {
                 RefreshLastDecalDebug();
             }
-        }
+		}
+
+		private void TryApplyStampToCurrentAtlases(DecalRTStampAsset stamp)
+		{
+			if (stamp == null)
+			{
+				return;
+			}
+			if (Avatar == null || Avatar.umaData == null)
+			{
+				return;
+			}
+
+			// UMA's texture pipeline invokes stamping via OnAtlasUpdated.
+			// When adding the first stamp to an empty set, that event may not be triggered again soon,
+			// so we force a textures update as a one-time bootstrap.
+			try
+			{
+				Avatar.ForceUpdate(false, true, false, true);
+			}
+			catch
+			{
+				// Best-effort only
+			}
+		}
+
+		private void RebuildAvatar() {
+			try 
+			{
+				//Debug.Log("Rebuilding avatar per decal edit.");
+                if (UMAAssetIndexer.Instance != null && UMAAssetIndexer.Instance.generator != null && !DrawRenderTexturesImmediately) {
+                   // Debug.Log("Rebuilding method: " + RebuildMethod);
+
+                    switch (RebuildMethod) {
+					case rebuildMethod.ForceTextures:
+
+                            Avatar.ForceUpdate(false, true, false, true);
+						break;
+					case rebuildMethod.ForceAll:
+						Avatar.ForceUpdate(true, true, true, true);
+						break;
+					case rebuildMethod.ForceTexturesAndMesh:
+						Avatar.ForceUpdate(false, true, true, true);
+						break;
+					case rebuildMethod.ForceTexturesAndDNA:
+						Avatar.ForceUpdate(true, true, false, true);
+						break;
+					case rebuildMethod.FullRebuild:
+						Avatar.BuildCharacter(true);
+						break;
+					}
+					// Avatar.ForceUpdate(false, true, false);
+				}
+			} catch(System.Exception ex) {
+				Debug.LogException(ex);
+			}
+		}
 
 		private void ShowSpheres(bool show) {
 
@@ -1136,6 +1673,7 @@ namespace UMA.Decals
 					SerializedProperty newTag = tagsProp.GetArrayElementAtIndex(tagsProp.arraySize - 1);
 					newTag.stringValue = tagName;
 					tagManager.ApplyModifiedPropertiesWithoutUndo();
+					Debug.Log($"Added tag: { tagName } - Saving...");
 					AssetDatabase.SaveAssets();
 				}
 			}
@@ -1164,6 +1702,16 @@ private void CreateDebugSphere()
 	CreateDebugSphere(DecalSlotBuilder._lastHitPointWorld, DecalSlotBuilder._lastProjectionDirWorld);
 }
 
+		private void ClearCurrent() {
+			_selectedOrdinals.Clear();
+			_selectedAddCombinedTris.Clear();
+			_undo.Clear();
+			_redo.Clear();
+			_dbgSmr = null;
+			_dbgSmrTriangles = null;
+			_dbgTriToOrdinal = null;
+		}
+
 		private void RefreshLastDecalDebug()
         {
             _selectedOrdinals.Clear();
@@ -1184,12 +1732,136 @@ private void CreateDebugSphere()
             }
             else
             {
-                if (DecalRenderTexture.TryGetLastDebug(out var rSmr, out var rTris, out var rMap, out var rSeq))
-                {
-                    _dbgSmr = rSmr; _dbgSmrTriangles = rTris; _dbgTriToOrdinal = rMap; _dbgSequence = rSeq;
-                }
+				if (EnableTriangleDebug && CurrentStamp != null && Avatar != null && Avatar.umaData != null)
+				{
+					if (TryBuildRTDebugFromStamp(CurrentStamp, Avatar.umaData, out _dbgSmr, out _dbgSmrTriangles, out _dbgTriToOrdinal))
+					{
+						_dbgSequence++;
+						return;
+					}
+				}
+				if (DecalRenderTexture.TryGetLastDebug(out var rSmr, out var rTris, out var rMap, out var rSeq))
+				{
+					_dbgSmr = rSmr; _dbgSmrTriangles = rTris; _dbgTriToOrdinal = rMap; _dbgSequence = rSeq;
+				}
             }
         }
+
+		private bool TryBuildRTDebugFromStamp(DecalRTStampAsset stamp, UMAData umaData, out SkinnedMeshRenderer smr, out int[] combinedTriangles, out Dictionary<int, int> triToOrdinal)
+		{
+			smr = null;
+			combinedTriangles = null;
+			triToOrdinal = null;
+
+			if (stamp == null || stamp.slots == null || stamp.slots.Count == 0 || umaData == null)
+			{
+				return false;
+			}
+
+			// Pick the first usable slot stamp (only for choosing an SMR to bake/visualize).
+			DecalRTStampAsset.SlotStamp ssChosen = null;
+			for (int i = 0; i < stamp.slots.Count; i++)
+			{
+				var ss = stamp.slots[i];
+				if (ss == null || ss.debugDontUse) continue;
+				if (string.IsNullOrEmpty(ss.slotName)) continue;
+				if (ss.triangles == null || ss.triangles.Length == 0) continue;
+				ssChosen = ss;
+				break;
+			}
+			if (ssChosen == null)
+			{
+				return false;
+			}
+
+			// Determine which renderer to visualize by using the SlotData's assigned SkinnedMeshRenderer index.
+			var chosenSlot = umaData.umaRecipe != null ? umaData.umaRecipe.GetSlot(ssChosen.slotName) : null;
+			if (chosenSlot == null)
+			{
+				return false;
+			}
+			var renderers = umaData.GetRenderers();
+			if (renderers == null || renderers.Length == 0)
+			{
+				return false;
+			}
+
+			int rendererIndex = (chosenSlot.skinnedMeshRenderer >= 0 && chosenSlot.skinnedMeshRenderer < renderers.Length)
+				? chosenSlot.skinnedMeshRenderer
+				: 0;
+			smr = renderers[rendererIndex];
+			if (smr == null)
+			{
+				return false;
+			}
+
+			// Use a baked mesh to get the triangle index buffer that matches the baked vertices used for hit-testing.
+			var baked = new Mesh();
+			try
+			{
+				smr.BakeMesh(baked);
+				combinedTriangles = baked.triangles;
+				if (combinedTriangles == null || combinedTriangles.Length == 0)
+				{
+					return false;
+				}
+			}
+			finally
+			{
+				UMAUtils.DestroySceneObject(baked);
+			}
+
+			triToOrdinal = new Dictionary<int, int>();
+			int combinedTriCount = combinedTriangles.Length / 3;
+			for (int si = 0; si < stamp.slots.Count; si++)
+			{
+				var ss = stamp.slots[si];
+				if (ss == null || ss.debugDontUse) continue;
+				if (string.IsNullOrEmpty(ss.slotName)) continue;
+#if UNITY_EDITOR
+				if (ss.slotRelativeTriangles == null || ss.slotRelativeTriangles.Length == 0) continue;
+				if (ss.triOrdinals == null || ss.triOrdinals.Length != (ss.slotRelativeTriangles.Length / 3)) continue;
+#else
+				continue;
+#endif
+
+				var sd = umaData.umaRecipe != null ? umaData.umaRecipe.GetSlot(ss.slotName) : null;
+				if (sd == null) continue;
+				if (sd.skinnedMeshRenderer != rendererIndex) continue;
+
+#if UNITY_EDITOR
+				// slotRelativeTriangles are vertex indices relative to the slot's mesh.
+				// Convert them back to combined/baked mesh vertex indices by adding vertexOffset.
+				int baseVert = sd.vertexOffset;
+				var rel = ss.slotRelativeTriangles;
+				var ords = ss.triOrdinals;
+				int relTriCount = rel.Length / 3;
+				for (int t = 0; t < relTriCount; t++)
+				{
+					int a = rel[t * 3 + 0] + baseVert;
+					int b = rel[t * 3 + 1] + baseVert;
+					int c = rel[t * 3 + 2] + baseVert;
+					int ord = ords[t];
+
+					for (int ci = 0; ci < combinedTriCount; ci++)
+					{
+						int i0 = combinedTriangles[ci * 3 + 0];
+						int i1 = combinedTriangles[ci * 3 + 1];
+						int i2 = combinedTriangles[ci * 3 + 2];
+						if ((i0 == a && i1 == b && i2 == c) || (i0 == a && i1 == c && i2 == b) ||
+							(i0 == b && i1 == a && i2 == c) || (i0 == b && i1 == c && i2 == a) ||
+							(i0 == c && i1 == a && i2 == b) || (i0 == c && i1 == b && i2 == a))
+						{
+							if (!triToOrdinal.ContainsKey(ci)) triToOrdinal.Add(ci, ord);
+							break;
+						}
+					}
+				}
+#endif
+			}
+
+			return triToOrdinal.Count > 0;
+		}
 
         private void EnsureDebugBake()
         {
@@ -1454,11 +2126,11 @@ private void CreateDebugSphere()
             }
             else
             {
-                // RT mode currently only supports removal in builder API
-                if (_selectedOrdinals.Count > 0)
-                {
-                    changed = DecalRenderTexture.RemoveTrianglesFromLastStamp(_selectedOrdinals, Avatar, Avatar.umaData);
-                }
+				// RT mode: remove triangles from the CURRENT stamp (by ordinal), then restamp.
+				if (_selectedOrdinals.Count > 0 && CurrentStamp != null)
+				{
+					changed = RemoveTrianglesFromStamp(CurrentStamp, _selectedOrdinals);
+				}
             }
 
             if (changed)
@@ -1469,12 +2141,93 @@ private void CreateDebugSphere()
                 {
                     Avatar.ForceUpdate(true, true, true);
                 }
+				else
+				{
+					// Restamp pipeline: rebuilding textures will cause DecalRTStampSlot to re-apply stamps.
+					if (Avatar != null)
+					{
+						Avatar.ForceUpdate(false, true, false, true);
+					}
+				}
 
                 _selectedOrdinals.Clear();
                 _selectedAddCombinedTris.Clear();
                 RefreshLastDecalDebug();
             }
         }
+
+		private static bool RemoveTrianglesFromStamp(DecalRTStampAsset stamp, HashSet<int> ordinalsToRemove)
+		{
+			if (stamp == null || ordinalsToRemove == null || ordinalsToRemove.Count == 0)
+			{
+				return false;
+			}
+			if (stamp.slots == null || stamp.slots.Count == 0)
+			{
+				return false;
+			}
+
+			bool changed = false;
+			for (int si = stamp.slots.Count - 1; si >= 0; si--)
+			{
+				var s = stamp.slots[si];
+				if (s == null || s.triangles == null || s.triangles.Length == 0)
+				{
+					continue;
+				}
+				int triCount = s.triangles.Length / 3;
+#if UNITY_EDITOR
+				var triOrd = s.triOrdinals;
+#else
+				int[] triOrd = null;
+#endif
+				if (triOrd == null || triOrd.Length != triCount)
+				{
+					continue;
+				}
+				var newTri = new List<int>(s.triangles.Length);
+				var newOrd = new List<int>(triOrd.Length);
+#if UNITY_EDITOR
+				var newSlotRel = (s.slotRelativeTriangles != null && s.slotRelativeTriangles.Length == s.triangles.Length)
+					? new List<int>(s.slotRelativeTriangles.Length)
+					: null;
+#endif
+				for (int t = 0; t < triCount; t++)
+				{
+					int ord = triOrd[t];
+					if (ordinalsToRemove.Contains(ord))
+					{
+						changed = true;
+						continue;
+					}
+					newTri.Add(s.triangles[t * 3 + 0]);
+					newTri.Add(s.triangles[t * 3 + 1]);
+					newTri.Add(s.triangles[t * 3 + 2]);
+					newOrd.Add(ord);
+#if UNITY_EDITOR
+					if (newSlotRel != null)
+					{
+						newSlotRel.Add(s.slotRelativeTriangles[t * 3 + 0]);
+						newSlotRel.Add(s.slotRelativeTriangles[t * 3 + 1]);
+						newSlotRel.Add(s.slotRelativeTriangles[t * 3 + 2]);
+					}
+#endif
+				}
+				if (changed)
+				{
+					s.triangles = newTri.ToArray();
+#if UNITY_EDITOR
+					s.triOrdinals = newOrd.ToArray();
+					if (newSlotRel != null) s.slotRelativeTriangles = newSlotRel.ToArray();
+#endif
+				}
+				if (s.triangles == null || s.triangles.Length == 0)
+				{
+					stamp.slots.RemoveAt(si);
+				}
+			}
+			return changed;
+		}
 
         private void SelectAll()
         {
@@ -1563,7 +2316,7 @@ private void CreateDebugSphere()
                     return true;
                 }
 
-#if (UNITY_IOS || UNITY_ANDROID)
+#if(UNITY_IOS || UNITY_ANDROID)
             // Touches
             if (Input.touchCount > 0)
             {

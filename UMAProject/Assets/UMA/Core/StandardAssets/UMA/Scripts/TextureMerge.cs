@@ -261,8 +261,26 @@ namespace UMA
 			}
 
             if (tr.textureEventParms != null)
-			{
-				tr.textureEventParms.renderTexture = RenderTexture.active;
+            {
+                tr.textureEventParms.renderTexture = RenderTexture.active;
+#if true
+                // Ensure SlotData.UVArea is valid BEFORE firing AtlasUpdated (decal stamping depends on it).
+                var tp = tr.textureEventParms;
+                var baseOverlay = tp.slotData.GetOverlay(0);
+                if (baseOverlay.overlayName.ToLower() == "amy_body_overlay")
+                {
+                    Debug.Log("Amy");
+                }
+                if (tp.slotData != null && tp.renderTexture != null && baseOverlay != null && tp.overlayData == tp.slotData.GetOverlay(0) && tp.slotData.uvAreaUpdateFrame != Time.frameCount)
+                {
+                    float w = Mathf.Max(1f, tp.renderTexture.width);
+                    float h = Mathf.Max(1f, tp.renderTexture.height);
+                    tp.slotData.uvAreaUpdateFrame = Time.frameCount;
+
+                    // tr.rect is already in atlas pixel space (and already Y-inverted in SetupMaterialAndBaseOverlay).
+                    tp.slotData.UVArea.Set(tr.rect.xMin / w, tr.rect.yMin / h, tr.rect.width / w, tr.rect.height / h);
+                }
+#endif
                 tr.textureEventParms.umaData.FireAtlasUpdatedEvent(tr.textureEventParms);
             }
         }

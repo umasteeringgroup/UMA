@@ -31,6 +31,7 @@ namespace UMA.Controls
 			Name,
 			Actions,
 			Type,
+			Loaded,
 			IsResource,
 			IsAddressable,
             Total,
@@ -51,6 +52,7 @@ namespace UMA.Controls
 		// Sort options per column
 		SortOption[] m_SortOptions =
 		{
+			SortOption.Name,
 			SortOption.Name,
 			SortOption.Name,
 			SortOption.Name,
@@ -226,7 +228,7 @@ namespace UMA.Controls
 						if (item.data.AmountChecked == Amount.Mixed)
 						{
 							EditorGUI.showMixedValue = true;
-						}
+						} 
 						bool checkval = item.data.AmountChecked == Amount.All;
 						bool newval = EditorGUI.Toggle(cellRect, checkval);
 						EditorGUI.showMixedValue = false;
@@ -238,6 +240,12 @@ namespace UMA.Controls
 						// checking/unchecking this will toggle ALL the items below.
 					}
 					break;
+
+					case AssetColumns.Loaded:
+						{
+							GUI.Label(cellRect, ate.LoadedCount.ToString());
+						}
+						break;
 
 				case AssetColumns.Always:
 					{
@@ -430,8 +438,15 @@ namespace UMA.Controls
                     }
                     break;
 
+				case AssetColumns.Loaded:
+					{
+					cellRect.x += kCheckboxOffset;
+					cellRect.width -= kCheckboxOffset;
+					EditorGUI.Toggle(cellRect, ai.IsLoaded);
+					}
+				break;
 
-                case AssetColumns.IsResource:
+			case AssetColumns.IsResource:
 				{
 					cellRect.x += kCheckboxOffset;
 					cellRect.width -= kCheckboxOffset;
@@ -707,6 +722,17 @@ namespace UMA.Controls
 					minWidth = 60,
 					autoResize = false,
 					allowToggleVisibility = false
+				},
+				new MultiColumnHeaderState.Column
+				{
+					headerContent = new GUIContent("Loaded", "Is the item loaded (has a cached SerializedObject reference)?"),
+					headerTextAlignment = TextAlignment.Center,
+					sortedAscending = true,
+					sortingArrowAlignment = TextAlignment.Left,
+					width = 50,
+					minWidth = 50,
+					maxWidth = 50,
+					autoResize = true
 				},
  				new MultiColumnHeaderState.Column
 				{

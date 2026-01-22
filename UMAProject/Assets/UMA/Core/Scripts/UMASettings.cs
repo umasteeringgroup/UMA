@@ -18,6 +18,10 @@ namespace UMA
         // Runtime toggle for MeshAPI combiner (Unity 2022.2+)
         [Tooltip("Enable the MeshData API based combiner on Unity 2022.2+. Falls back to legacy combiner when disabled or on older Unity.")]
         public bool useMeshAPICombiner = false;
+		[Tooltip("Enable detailed UMA memory usage debug logs.")]
+		public bool DebugMemoryUsage = false;
+		[Tooltip("Enable decal callbacks on UMA characters.")]
+		public bool DisableDecalCallbacks = false;
 
 #if UNITY_EDITOR
         //public const string customSettingsPath = "Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset";
@@ -58,6 +62,7 @@ namespace UMA
         public bool showWelcomeToUMA = true;
 #endif
         public GameObject generatorPrefab;
+		public static UMASettings instance;
 #if UNITY_EDITOR
         public GameObject characterPrefab;
         public TextureMerge textureMerge;
@@ -80,7 +85,6 @@ namespace UMA
         [Header("Welcome page textures")]
         public Texture2D Overlays;
         public Texture2D Slots;
-		public static UMASettings instance;
 
 
         [MenuItem("Assets/Create/UMA/Core/UMASettings")]
@@ -104,12 +108,6 @@ namespace UMA
         }
 
 
-        public static UMASettings GetSettings()
-        {
-            var settings = Resources.Load<UMASettings>("UMASettings");
-            UpdateAlwaysOverrides(settings); //VES added
-            return settings;
-        }
 
         public static string FindUMAFullPath()
         {
@@ -140,6 +138,15 @@ namespace UMA
             // if we didn't find it, return the default path. Let the chips fall where they may.
             return "Assets/UMA";
         }
+#endif
+
+		public static UMASettings GetSettings() {
+			var settings = Resources.Load<UMASettings>("UMASettings");
+			UpdateAlwaysOverrides(settings); //VES added
+			return settings;
+		}
+
+
 
         public static UMASettings GetOrCreateSettings()
         {
@@ -151,12 +158,13 @@ namespace UMA
 			var o = Resources.Load<UMASettings>("UMASettings");
 			if (o != null)
 			{
+				instance = o;
 				return o;
 			}
+#if UNITY_EDITOR
 
             string path = FindUMAFullPath() + "/InternalDataStore/InGame/Resources/UMASettings.asset";
             var settings = AssetDatabase.LoadAssetAtPath<UMASettings>(path);
-#if UNITY_EDITOR
             if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<UMASettings>();
@@ -166,12 +174,19 @@ namespace UMA
                 AssetDatabase.CreateAsset(settings, path);
                 AssetDatabase.SaveAssets();
             }
-#endif
             UpdateAlwaysOverrides(settings); //VES added
             instance = settings;
             return settings;
-        }
+#else
+            var settings = ScriptableObject.CreateInstance<UMASettings>();
+            // settings.cities = new List<string>();
+            settings.useMeshAPICombiner = false;
+            UpdateAlwaysOverrides(settings); //VES added
+			instance = settings;
+			return settings;
 #endif
+        }
+
 
         public static UMASettings GetSettingsFromResources()
         {
@@ -200,6 +215,13 @@ namespace UMA
 #endif
 #endif
         }
+
+		public static bool DisplayDebugMemoryUsage {
+			get {
+				var settings = GetOrCreateSettings();
+				return settings.DebugMemoryUsage;
+			}
+		}
 
 #if UNITY_EDITOR
         public static SerializedObject GetSerializedSettings()

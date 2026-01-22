@@ -29,6 +29,14 @@ namespace UMA
 		public UMAMeshCombiner meshCombiner;
 		private HashSet<string> raceNames;
 
+		public enum FlipDecalMode
+		{
+			Auto,
+			Always,
+			Never
+		}
+		public FlipDecalMode flipDecalMode;
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -385,6 +393,12 @@ namespace UMA
             {
                 return true;
             }
+			if(umaData.isTextureDirty && umaData.needsMaterialClear) {
+                Debug.Log("Cleaning Textures and Generated Materials for UMAData");
+                umaData.CleanTextures();
+				umaData.generatedMaterials = new UMAData.GeneratedMaterials();
+				umaData.needsMaterialClear = false;
+			}
 #if DEBUG_TIMING
             long validation = gstopWatch.ElapsedTicks;
             validationTicks += validation;

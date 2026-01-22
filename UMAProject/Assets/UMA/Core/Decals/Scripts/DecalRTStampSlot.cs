@@ -12,8 +12,9 @@ namespace UMA
     /// when a matching overlay channel render target is ready, applies configured DecalRTStampAssets
     /// into the generated atlas using DecalRenderTexture.ApplyStampAsset.
     /// </summary>
+    [ExecuteAlways]
     [DisallowMultipleComponent]
-    public class DecalRTStampSlot : MonoBehaviour
+    public class DecalRTStampSlot : MonoBehaviour, IUMAEventHookup
     {
         [Serializable]
         public class OverlayStampSet
@@ -29,7 +30,14 @@ namespace UMA
             [Tooltip("Stamp assets to apply for matching overlays (applied for each matching atlas update event).")]
             public DecalRTStampAsset[] stamps;
 
-            public bool Matches(OverlayData overlayData)
+			public void RemoveStamp(DecalRTStampAsset stamp) {
+				List<DecalRTStampAsset> stampList = new List<DecalRTStampAsset>(stamps);
+				stampList.Remove(stamp);
+				stamps = stampList.ToArray();
+			}
+
+
+			public bool Matches(OverlayData overlayData)
             {
                 if (overlayData == null) return false;
 
@@ -85,8 +93,50 @@ namespace UMA
         [Tooltip("If true, dilate RGB colors across padding regardless of alpha (fixes seams across opaque islands).")]
         public bool rgbOnlyDilation = true;
 
+		public void RemoveStamp(DecalRTStampAsset stamp) {
+			for(int i = 0; i < overlayStamps.Count; i++) {
+				overlayStamps[i].RemoveStamp(stamp);
+			}
+		}
+
+
 		private Dictionary<string, int> alreadyProcessed = new Dictionary<string, int>();
-		// Called from SlotDataAsset.CharacterBegun (UMADataEvent) in the slot that owns this script.
+
+		public void NotifyStampsChanged()
+		{
+			try
+			{
+				alreadyProcessed.Clear();
+				if (_umaData == null)
+				{
+					_avatar = _avatar ?? GetComponentInParent<DynamicCharacterAvatar>();
+					if (_avatar != null)
+					{
+						_umaData = _avatar.umaData;
+					}
+				}
+
+				if (_umaData != null && !_subscribed)
+				{
+					OnCharacterBegun(_umaData);
+				}
+
+				if (_avatar == null)
+				{
+					_avatar = GetComponentInParent<DynamicCharacterAvatar>();
+				}
+
+				if (_avatar != null && _avatar.umaData != null)
+				{
+					_avatar.ForceUpdate(false, true, false, true);
+				}
+			}
+			catch
+			{
+				// best effort
+			}
+		}
+		// Called from SlotDataAsset.CharacterBegun (UMADataEvent) in the slot that owns this script. 
 		public void OnCharacterBegun(UMAData umaData)
         {
 			Debug.Log("[DecalRTStampSlot] OnCharacterBegun called.");
@@ -153,10 +203,11 @@ namespace UMA
         {
             try
             {
+				Debug.Log("HandleAtlasUpdated called"); 
 				if (umaData == null || parms == null || parms.overlayData == null) return;
 
 				if(AlreadProcessed(parms.overlayName, parms.materialPropertyName, Time.frameCount)) {
-					//Debug.Log("[DecalRTStampSlot] Already processed this overlay/property this frame, skipping.");
+					Debug.Log("[DecalRTStampSlot] Already processed this overlay/property this frame, skipping.");
 					return;
 				}
 
@@ -184,7 +235,6 @@ namespace UMA
                         var stamp = set.stamps[st];
                         if (stamp == null) continue;
                           
-						// Debug.Log("DecalRT: Calling ApplySlotStamps");
                         bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms.materialPropertyName, parms.renderTexture, parms.overlayData.asset.nameHash);
                         if (ok)
                         {
@@ -290,6 +340,21 @@ namespace UMA
         {
             // clear the stamps
             overlayStamps.Clear();
+        }
+
+        public void HookupEvents(SlotDataAsset slot)
+        {
+            // no events needed for this now
+        }
+
+        public void Begun(UMAData umaData)
+        {
+            OnCharacterBegun(umaData);
+        }
+
+        public void Completed(UMAData umaData, GameObject slotObject)
+        {
+            // nothing to undo...
         }
     }
 }
