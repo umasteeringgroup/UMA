@@ -234,8 +234,8 @@ namespace UMA
                     {
                         var stamp = set.stamps[st];
                         if (stamp == null) continue;
-                          
-                        bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms.materialPropertyName, parms.renderTexture, parms.overlayData.asset.nameHash);
+
+                        bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms); 
                         if (ok)
                         {
                             anyApplied = true;

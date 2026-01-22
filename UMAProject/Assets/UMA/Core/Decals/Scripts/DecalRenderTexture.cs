@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UMA.CharacterSystem;
 using System.Collections; // added
-using System.IO; // added
+using System.IO;
+using JetBrains.Annotations; // added
 
 namespace UMA {
 	/// <summary>
@@ -70,7 +71,6 @@ namespace UMA {
 			public int bleedPixels = 2; // #15.2 edge dilation
 			public bool useHitNormalForProjection = false; // project using hit triangle normal instead of ray dir
 			public float uvExpandPixels = 0.75f; // expand stamped tris in UV space (pixels) to reduce seams
-			public bool invertUVYAxis = false; // invert normalized and overlay Y
 		}
 
 		private static int _dbgSequence;
@@ -152,20 +152,25 @@ namespace UMA {
 			return lastSlotForIndex;
 		}
 
-		/// <summary>
-		/// CreateDecalLayer: stamps an overlay's textures into all UMA-generated RenderTextures for that overlay's UMAMaterial and channels.
-		/// Each channel uses the same projected triangle set and UVs.
-		/// Also caches a DecalRTStampAsset describing the stamped geometry for save/restore.
-		/// </summary>
-		/// <param name="avatar">Target avatar used for mesh raycast and skeleton.</param>
-		/// <param name="ray">Ray to project decal from.</param>
-		/// <param name="radius">World-space radius.</param>
-		/// <param name="fudgeRadius">Extra radius to soften edges.</param>
-		/// <param name="angleDegrees">Rotation around normal in degrees.</param>
-		/// <param name="umaData">UMAData that holds generated RenderTextures.</param>
-		/// <param name="overlay">OverlayDataAsset providing per-channel source textures and UMAMaterial mapping.</param>
-		/// <param name="options">Stamping options.</param>
-		public static DecalLayerResult? CreateDecalLayer(
+        static Rect FlipRectY01(Rect r)
+        {
+            return new Rect(r.xMin, 1f - r.yMax, r.width, r.height);
+        }
+
+        /// <summary>
+        /// CreateDecalLayer: stamps an overlay's textures into all UMA-generated RenderTextures for that overlay's UMAMaterial and channels.
+        /// Each channel uses the same projected triangle set and UVs.
+        /// Also caches a DecalRTStampAsset describing the stamped geometry for save/restore.
+        /// </summary>
+        /// <param name="avatar">Target avatar used for mesh raycast and skeleton.</param>
+        /// <param name="ray">Ray to project decal from.</param>
+        /// <param name="radius">World-space radius.</param>
+        /// <param name="fudgeRadius">Extra radius to soften edges.</param>
+        /// <param name="angleDegrees">Rotation around normal in degrees.</param>
+        /// <param name="umaData">UMAData that holds generated RenderTextures.</param>
+        /// <param name="overlay">OverlayDataAsset providing per-channel source textures and UMAMaterial mapping.</param>
+        /// <param name="options">Stamping options.</param>
+        public static DecalLayerResult? CreateDecalLayer(
  DynamicCharacterAvatar avatar,
  Ray ray,
  float radius,
@@ -313,7 +318,6 @@ namespace UMA {
 					float py = Vector3.Dot(planar, axisY);
 					float u = (px / radius) * 0.5f + 0.5f;
 					float v2 = (py / radius) * 0.5f + 0.5f;
-					if(options.invertUVYAxis) v2 = 1.0f - v2;
 					overlayUVAll[v] = new Vector2(u, v2);
 
 					// Vertex position for stamping mesh: map UV0 -> clip space (-1..1)
@@ -370,7 +374,7 @@ namespace UMA {
 				}
 				float fudgeFactor = (fudgeRadius <= 0f) ? 0.0001f : (fudgeRadius / (radius + fudgeRadius));
 				stampMat.SetFloat("_Fudge", fudgeFactor);
-				stampMat.SetFloat("_UseUVRect", 1.0f);
+				stampMat.SetFloat("_UseUVRect", 0.0f); 
 
 				// Bind a global mask to gate coverage for all channels: prefer overlay.alphaMask, else overlay.textureList[0].a
 				Texture maskTex = null;
@@ -398,7 +402,6 @@ namespace UMA {
 				var stampAsset = ScriptableObject.CreateInstance<DecalRTStampAsset>();
 				stampAsset.overlayName = overlay.overlayName; // use overlay.overlayName for restore
 				stampAsset.overlayNameHash = UMAUtils.StringToHash(stampAsset.overlayName);
-				stampAsset.invertY = options.invertUVYAxis;
 				stampAsset.bleedPixels = options.bleedPixels;
 				stampAsset.forceLinearSampling = options.forceLinearSampling;
 				stampAsset.slots.Clear();
@@ -486,13 +489,13 @@ namespace UMA {
                         // If UVArea is invalid, default to full atlas
                         normRect = new Rect(0f, 0f, 1f, 1f);
                     }
-                    for(int iuv = 0; iuv < uv0List.Count; iuv++) {
-                        var uv = uv0List[iuv];
-					var nu = (uv.x - normRect.xMin) / normRect.width;
-					var nv = (uv.y - normRect.yMin) / normRect.height;
-					if(options.invertUVYAxis) nv = 1.0f - nv;
-                        slotStamp.normBaseUV[iuv] = new Vector2(Mathf.Clamp01(nu), Mathf.Clamp01(nv));
-                    }
+					for (int iuv = 0; iuv < uv0List.Count; iuv++)
+					{
+						var uv = uv0List[iuv];
+						var nu = (uv.x - normRect.xMin) / normRect.width;
+						var nv = (uv.y - normRect.yMin) / normRect.height;
+						slotStamp.normBaseUV[iuv] = new Vector2(Mathf.Clamp01(nu), Mathf.Clamp01(nv));
+					}
                     slotStamp.recordedUVArea = normRect; // exact area used for normalization
 
 					stampAsset.slots.Add(slotStamp);
@@ -538,10 +541,13 @@ namespace UMA {
 		DynamicCharacterAvatar avatar,
 		UMAData umaData,
 		DecalRTStampAsset stamp,
-		string materialPropertyName,
-		RenderTexture targetTexture, int srcOverlayNameHash) 
+		TextureEventParms parms)
 		{
-			if(avatar == null || umaData == null || stamp == null || string.IsNullOrEmpty(materialPropertyName) || targetTexture == null) 
+			string materialPropertyName = parms.materialPropertyName;
+			RenderTexture targetTexture = parms.renderTexture;
+			int srcOverlayNameHash      = parms.overlayData.asset.nameHash;
+
+            if (avatar == null || umaData == null || stamp == null || string.IsNullOrEmpty(materialPropertyName) || targetTexture == null) 
 			{
 				var missing = new List<string>(6);
 				if(avatar == null)
@@ -560,8 +566,9 @@ namespace UMA {
 			try {
 				// Note: we cannot early-out by comparing the stamp's source overlay to the atlas-update overlay
 				// because stamps are re-applied during atlas updates triggered by other overlays on the slot.
+				bool flip = NeedsRenderTargetYFlip();
 
-				LogInfo($"ApplySlotStamps: Begin for property '{materialPropertyName}'. ColorSpace={QualitySettings.activeColorSpace}");
+                LogInfo($"ApplySlotStamps: Begin for property '{materialPropertyName}'. ColorSpace={QualitySettings.activeColorSpace}");
 				//LogTextureInfo("ApplySlotStamps target RT", targetTexture);
 				//Debug.Log("ApplySlotStamps: Begin for property '" + materialPropertyName + "'.");
                 // Resolve overlay
@@ -622,6 +629,7 @@ namespace UMA {
 
                 bool stampedAny = false;
                 var prevRTGlobal = RenderTexture.active;
+
 				GL.PushMatrix();
 				try
 				{
@@ -638,7 +646,13 @@ namespace UMA {
 						if (slotStamp.debugDontUse)
 							continue;
 						SlotData slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
-						if (slot == null || slot.asset == null)
+                        Rect uvArea = slot.UVArea;
+                        if (flip)
+						{
+							uvArea = FlipRectY01(slot.UVArea);
+						}
+						
+                        if (slot == null || slot.asset == null)
 							continue;
 
 						if (!slot.hasOverlay(srcOverlayNameHash))
@@ -665,7 +679,7 @@ namespace UMA {
 						var vertsList = new List<Vector3>(vcount);
 						for (int v = 0; v < vcount; v++)
 						{
-							Vector2 nuv = slotStamp.normBaseUV[v];
+							/* Vector2 nuv = slotStamp.normBaseUV[v];
 							// normalized -> atlas (recorded area)
 							Vector2 atlasUVRecorded = hasRecorded
 								? new Vector2(
@@ -681,9 +695,15 @@ namespace UMA {
 							// normalized (current) -> atlas (current)
 							Vector2 globalUV = hasRuntime
 								? slot.ConvertToAtlasUV(new Vector2(Mathf.Clamp01(normCurrent.x), Mathf.Clamp01(normCurrent.y)))
-								: normCurrent;
+								: normCurrent;  */
 
-							uv0List.Add(globalUV);
+							Vector2 uvIn = slotStamp.normBaseUV[v];
+                            Vector2 globalUV = new Vector2(uvArea.x + (uvArea.width * uvIn.x), uvArea.y + (uvArea.height * uvIn.y));
+
+
+                            //Vector2 globalUV = slot.ConvertToAtlasUV(slotStamp.normBaseUV[v]);
+                            
+                            uv0List.Add(globalUV);
 							var ov = slotStamp.overlayUV[v];
 							if (stamp.invertY) ov.y = 1.0f - ov.y;
 							uv1List.Add(ov);

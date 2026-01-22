@@ -1401,8 +1401,7 @@ namespace UMA.Decals
                     forceLinearSampling = false,
                     useHitNormalForProjection = this.useHitNormalForProjection,
                     uvExpandPixels = DecalRTUVExpandPixels,
-                    bleedPixels = decalRTDilation,
-					invertUVYAxis = false
+					bleedPixels = decalRTDilation
                 };
 
                 if (Avatar.umaData == null)

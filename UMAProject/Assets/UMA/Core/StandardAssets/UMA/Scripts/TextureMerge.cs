@@ -267,9 +267,10 @@ namespace UMA
                 // Ensure SlotData.UVArea is valid BEFORE firing AtlasUpdated (decal stamping depends on it).
                 var tp = tr.textureEventParms;
                 var baseOverlay = tp.slotData.GetOverlay(0);
-                if (baseOverlay.overlayName.ToLower() == "amy_body_overlay")
-                {
-                    Debug.Log("Amy");
+
+				if (tp.slotData.asset.slotName.Contains("1002"))
+				{
+					int debugme = 42;
                 }
                 if (tp.slotData != null && tp.renderTexture != null && baseOverlay != null && tp.overlayData == tp.slotData.GetOverlay(0) && tp.slotData.uvAreaUpdateFrame != Time.frameCount)
                 {
