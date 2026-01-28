@@ -122,6 +122,7 @@ QualitySettings:
     GameCoreXboxOne: 1
     Lumin: 0
     Nintendo Switch: 1
+    Nintendo Switch 2: 1
     PS4: 1
     PS5: 1
     Server: 0

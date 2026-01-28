@@ -11,3 +11,4 @@
 - Custom requirement A
 - Custom requirement B
 - CreateDecal 'ClearAllStamps' is invoked only from the CreateDecal OnGUI UI, not from inspectors.
+- For SlotDataAsset strict validation: slots with meshData == null should be considered valid only when isUtilitySlot == true.

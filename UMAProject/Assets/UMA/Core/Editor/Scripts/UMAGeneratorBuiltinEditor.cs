@@ -26,14 +26,17 @@ namespace UMA.Editors
 		SerializedProperty showInHierarchy;
 		SerializedProperty Use32BitBuffers;
 		SerializedProperty alwaysRegenerateRenderers;
-
+		SerializedProperty AutomaticScaling;
+		SerializedProperty ScaleGPUMemoryCutoffMB;
+		SerializedProperty ScaleSystemMemoryCutoffMB;
 
         public static bool showGenerationSettings = false;
 		public static bool showAdvancedSettings = false;
 		public static bool showStatistics = true;
 		public static bool showEditTimeSettings = false;
+		public static bool showRuntimeTuningSettings = false;
 
-		private static bool IsEditorBusy()
+        private static bool IsEditorBusy()
 		{
 			return EditorApplication.isCompiling || EditorApplication.isUpdating;
 		}
@@ -79,6 +82,9 @@ namespace UMA.Editors
 			showInHierarchy = serializedObject.FindProperty("showInHierarchy");
 			Use32BitBuffers = serializedObject.FindProperty("Use32BitBuffers");
 			alwaysRegenerateRenderers = serializedObject.FindProperty("alwaysRegenerateRenderers");
+			AutomaticScaling = serializedObject.FindProperty("AutomaticScaling");
+			ScaleGPUMemoryCutoffMB = serializedObject.FindProperty("ScaleGPUMemoryCutoffMB");
+			ScaleSystemMemoryCutoffMB = serializedObject.FindProperty("ScaleSystemMemoryCutoffMB");
         }
 #pragma warning restore 0108
 
@@ -125,12 +131,22 @@ namespace UMA.Editors
 				DrawIfPresent(garbageCollectionRate);
 				DrawIfPresent(processAllPending);
 
+				
+
 				var saveRestoreIgnored = serializedObject.FindProperty("SaveAndRestoreIgnoredItems");
 				DrawIfPresent(saveRestoreIgnored);
 				DrawIfPresent(showInHierarchy);
 			}
+			showRuntimeTuningSettings = EditorGUILayout.Foldout(showRuntimeTuningSettings, "Runtime Tuning Settings");
+			if (showRuntimeTuningSettings)
+			{
+				EditorGUILayout.HelpBox("Automatic scaling options to help manage memory usage on constrained devices.", MessageType.None);
+				DrawIfPresent(AutomaticScaling);
+				DrawIfPresent(ScaleGPUMemoryCutoffMB, "GPU Memory Cutoff (MB)");
+				DrawIfPresent(ScaleSystemMemoryCutoffMB, "System Memory Cutoff (MB)");
+			}
 
-			showEditTimeSettings = EditorGUILayout.Foldout(showEditTimeSettings, "Edit Time Settings");
+            showEditTimeSettings = EditorGUILayout.Foldout(showEditTimeSettings, "Edit Time Settings");
 			if (showEditTimeSettings)
 			{
 				EditorGUILayout.HelpBox("Edit time generation options. Keep the atlas size down and the scale factor high to address possible problems loading large scene files.", MessageType.None);

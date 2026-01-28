@@ -646,11 +646,14 @@ namespace UMA {
 						if (slotStamp.debugDontUse)
 							continue;
 						SlotData slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
+
+						// ?? No slot to apply it to!
+						if (slot == null) continue;
+
+                        // SlotData.UVArea is treated as bottom-left UV space (same convention as mesh UVs).
+                        // I need the UV Area that is stored on the Slot. Should it be stored on the Overlay instead?
+                        // if so, we can get rid of the slot here, and target any mesh that uses the overlay.
                         Rect uvArea = slot.UVArea;
-                        if (flip)
-						{
-							uvArea = FlipRectY01(slot.UVArea);
-						}
 						
                         if (slot == null || slot.asset == null)
 							continue;
@@ -725,7 +728,7 @@ namespace UMA {
                         var uvRect = hasRuntime ? slot.UVArea : new Rect(0f, 0f, 1f, 1f);
                         //Debug.Log("ApplySlotStamps: Adjusted UV Area for slot = " + slot.UVArea);
                         stampMat.SetVector("_UVRect", new Vector4(uvRect.xMin, uvRect.yMin, uvRect.xMax, uvRect.yMax));
-
+						//LogWarn("Flip is " + flip.ToString());
 						if (uvRect.width <= 0f || uvRect.height <= 0f)
 						{
 							LogWarn($"ApplySlotStamps: slot '{slotStamp.slotName}' has invalid UVArea={uvRect}. Shader will clip everything.");
@@ -759,6 +762,12 @@ namespace UMA {
 								{
 									LogInfo($"ApplySlotStamps: UVRect partially clips slot '{slotStamp.slotName}'. UVArea={uvRect} meshUVBounds=({minU:F4},{minV:F4})-({maxU:F4},{maxV:F4}).");
 								}
+								else
+									{
+									// fully inside
+									LogInfo($"ApplySlotStamps: UVRect fully contains slot '{slotStamp.slotName} UVArea = {uvRect} meshUVBounds=({minU:F4},{minV:F4})-({maxU:F4},{maxV:F4}'.");
+								}
+
 							}
 						}
 

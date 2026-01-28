@@ -2,11 +2,11 @@
   <Project Path="UMA_Core_Editor.csproj" />
   <Project Path="JBooth.BetterShaders.Editor.csproj" />
   <Project Path="UMA_Core.csproj" />
+  <Project Path="UMA_Content.csproj" />
   <Project Path="Addressable_Editor.csproj" />
   <Project Path="UMA_Examples.csproj" />
   <Project Path="Shaderpackager-editor.csproj" />
   <Project Path="UMA_Examples_Editor.csproj" />
-  <Project Path="UMA_Content.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Samples.csproj" />
   <Project Path="JBooth.BetterShaders.Samples.csproj" />

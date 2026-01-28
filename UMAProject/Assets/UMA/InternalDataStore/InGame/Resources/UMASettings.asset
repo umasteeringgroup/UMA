@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: UMASettings
   m_EditorClassIdentifier: 
   useMeshAPICombiner: 1
+  DebugMemoryUsage: 0
+  DisableDecalCallbacks: 0
   WarningMessage: "Warning: Please do not modify these\n settings using the inspector.\n
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
@@ -38,6 +40,8 @@ MonoBehaviour:
   - Slots/Face
   - Slots/Legs
   - Slots/Arms
+  - Slots/Face
+  - Face
   cleanRegenOnSave: 1
   autoRepairIndex: 0
   showIndexedTypes: 0

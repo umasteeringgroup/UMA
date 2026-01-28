@@ -2,6 +2,7 @@ BEGIN_OPTIONS
    ShaderName "UMA/Diffuse"
    Stackable "False"
    Workflow "Metallic"
+   DisableGBufferPass "True"        // disable gbuffer pass
 END_OPTIONS
 
 BEGIN_PROPERTIES
@@ -19,7 +20,7 @@ BEGIN_PROPERTIES
     [Enum(Off,0,Front,1,Back,2)]_CullMode("Culling Mode", Float) = 2
 
     [BetterHeader(Textures)]
-    [NoScaleOffset]_BaseMap("BaseMap", 2D) = "white" {}
+    _BaseMap("BaseMap", 2D) = "white" {}
 END_PROPERTIES
 
 BEGIN_PASS("All")

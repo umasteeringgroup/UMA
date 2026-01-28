@@ -12,54 +12,1163 @@ namespace UMA.Editors
 {
     public class UMAAvatarLoadSaveMenuItems : Editor
 	{
-		[UnityEditor.MenuItem("GameObject/UMA/Save Mecanim Avatar to Asset (runtime only)")]
-		[MenuItem("UMA/Runtime/Save Selected Avatars Mecanim Avatar to Asset", priority = 1)]
-		public static void SaveMecanimAvatar()
+		[MenuItem("Assets/UMA/Examine Wearables", false, 2001)]
+		private static void AssignLocationsToWearablesMenu()
 		{
-			if (!Application.isPlaying)
+			var selectedRecipes = GetSelectedWardrobeRecipes();
+			if (selectedRecipes.Count == 0)
 			{
-				EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
-				return;
-			}
-			if (Selection.gameObjects.Length != 1)
-			{
-				EditorUtility.DisplayDialog("Notice", "Only one Avatar can be selected.", "OK");
+				EditorUtility.DisplayDialog("Assign Locations", "Select one or more UMAWardrobeRecipe assets in the Project window.", "OK");
 				return;
 			}
 
-			var selectedTransform = Selection.gameObjects[0].transform;
-			var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
-
-			if (avatar == null)
-			{
-				EditorUtility.DisplayDialog("Notice", "An Avatar must be selected to use this function", "OK");
-				return;
-			}
-
-			if (avatar.umaData == null)
-			{
-				EditorUtility.DisplayDialog("Notice", "The Avatar must be constructed before using this function", "OK");
-				return;
-			}
-
-			if (avatar.umaData.animator == null)
-			{
-				EditorUtility.DisplayDialog("Notice", "Animator has not been assigned!", "OK");
-				return;
-			}
-			if (avatar.umaData.animator.avatar == null)
-			{
-				EditorUtility.DisplayDialog("Notice", "Mecanim avatar is null!", "OK");
-				return;
-			}
-
-			string path = EditorUtility.SaveFilePanelInProject("Save avatar", "CreatedAvatar.asset", "asset", "Save the avatar");
-
-			AssetDatabase.CreateAsset(avatar.umaData.animator.avatar, path);
-			AssetDatabase.SaveAssets();
-
-			EditorUtility.DisplayDialog("Saved", "Avatar save to assets as CreatedAvatar", "OK");
+			ExamineWearables.Open(selectedRecipes);
 		}
+
+		[MenuItem("Assets/UMA/Examine Wearables", true)]
+		private static bool AssignLocationsToWearablesMenu_Validate()
+		{
+			return GetSelectedWardrobeRecipes().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Consolidate Textures", false, 2002)]
+		private static void ConsolidateTexturesMenu()
+		{
+			var selectedRecipes = GetSelectedWardrobeRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Consolidate Textures", "Select one or more UMAWardrobeRecipe assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaConsolidateTexturesWindow.Open(selectedRecipes);
+		}
+
+		[MenuItem("Assets/UMA/Consolidate Textures", true)]
+		private static bool ConsolidateTexturesMenu_Validate()
+		{
+			return GetSelectedWardrobeRecipes().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Examine Overlays", false, 2003)]
+		private static void ExamineOverlaysMenu()
+		{
+			var overlays = GetSelectedOverlays();
+			if (overlays.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Examine Overlays", "Select one or more OverlayDataAsset assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaExamineOverlaysWindow.Open(overlays);
+		}
+
+		[MenuItem("Assets/UMA/Examine Overlays", true)]
+		private static bool ExamineOverlaysMenu_Validate()
+		{
+			return GetSelectedOverlays().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", false, 2000)]
+		private static void AddRacesToSelectedRecipesMenu()
+		{
+			var selectedRecipes = GetSelectedWardrobeRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Add Races", "Select one or more UMAWardrobeRecipe assets in the Project window.", "OK");
+				return;
+			}
+			UmaAddRacesToRecipesWindow.Open(selectedRecipes);
+		}
+
+	internal class UmaConsolidateTexturesWindow : EditorWindow
+	{
+		private readonly List<UMAWardrobeRecipe> _recipes = new List<UMAWardrobeRecipe>();
+		private DefaultAsset _destFolder;
+		private string _destFolderPath;
+		private Vector2 _scroll;
+
+		public static void Open(List<UMAWardrobeRecipe> recipes)
+		{
+			var window = GetWindow<UmaConsolidateTexturesWindow>(true, "Consolidate Textures", true);
+			window.minSize = new Vector2(520f, 180f);
+			window._recipes.Clear();
+			if (recipes != null)
+			{
+				window._recipes.AddRange(recipes);
+			}
+			window._destFolder = null;
+			window._destFolderPath = "";
+			window.ShowUtility();
+			window.Focus();
+		}
+
+		private void OnGUI()
+		{
+			EditorGUILayout.LabelField("Consolidate Textures", EditorStyles.boldLabel);
+			EditorGUILayout.HelpBox("Copies textures referenced by overlays in the selected UMAWardrobeRecipe assets into a chosen folder.", MessageType.Info);
+			EditorGUILayout.Space(6);
+
+			_scroll = EditorGUILayout.BeginScrollView(_scroll);
+			EditorGUILayout.LabelField("Destination Folder", EditorStyles.boldLabel);
+			EditorGUI.BeginChangeCheck();
+			_destFolder = (DefaultAsset)EditorGUILayout.ObjectField(_destFolder, typeof(DefaultAsset), false);
+			if (EditorGUI.EndChangeCheck())
+			{
+				_destFolderPath = _destFolder != null ? AssetDatabase.GetAssetPath(_destFolder) : "";
+				if (!string.IsNullOrEmpty(_destFolderPath) && !AssetDatabase.IsValidFolder(_destFolderPath))
+				{
+					_destFolder = null;
+					_destFolderPath = "";
+				}
+			}
+
+			using (new EditorGUI.DisabledScope(true))
+			{
+				EditorGUILayout.TextField("Path", _destFolderPath);
+			}
+			EditorGUILayout.EndScrollView();
+
+			EditorGUILayout.Space(8);
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_destFolderPath) || _recipes.Count == 0))
+			{
+				if (GUILayout.Button("Move Textures", GUILayout.Width(140), GUILayout.Height(28)))
+				{
+					CopyTextures();
+				}
+			}
+			if (GUILayout.Button("Cancel", GUILayout.Width(140), GUILayout.Height(28)))
+			{
+				Close();
+			}
+			EditorGUILayout.EndHorizontal();
+		}
+
+		private void CopyTextures()
+		{
+			var textures = new HashSet<string>();
+			var overlaysToSave = new HashSet<UMA.OverlayDataAsset>();
+			var overlayTextureRefs = new Dictionary<string, List<(UMA.OverlayDataAsset overlay, int index)>>(System.StringComparer.OrdinalIgnoreCase);
+			try
+			{
+				for (int i = 0; i < _recipes.Count; i++)
+				{
+					var recipe = _recipes[i];
+					if (recipe == null)
+					{
+						continue;
+					}
+
+					EditorUtility.DisplayProgressBar("Consolidate Textures", "Scanning recipes...", Mathf.Clamp01((float)i / Mathf.Max(1, _recipes.Count)));
+
+					var umaRecipe = new UMA.UMAData.UMARecipe();
+					recipe.Load(umaRecipe, true);
+					if (umaRecipe.slotDataList == null)
+					{
+						continue;
+					}
+
+					for (int s = 0; s < umaRecipe.slotDataList.Length; s++)
+					{
+						var slot = umaRecipe.slotDataList[s];
+						if (slot == null)
+						{
+							continue;
+						}
+
+						for (int o = 0; o < slot.OverlayCount; o++)
+						{
+							var overlay = slot.GetOverlay(o);
+							if (overlay == null)
+							{
+								continue;
+							}
+							var overlayAsset = overlay.asset;
+							if (overlayAsset == null)
+							{
+								continue;
+							}
+
+							if (overlayAsset.textureList != null)
+							{
+								for (int t = 0; t < overlayAsset.textureList.Length; t++)
+								{
+									var tex = overlayAsset.textureList[t];
+									if (tex == null)
+									{
+										continue;
+									}
+									string srcPath = AssetDatabase.GetAssetPath(tex);
+									if (!string.IsNullOrEmpty(srcPath))
+									{
+										textures.Add(srcPath);
+										if (!overlayTextureRefs.TryGetValue(srcPath, out var refsForPath) || refsForPath == null)
+										{
+											refsForPath = new List<(UMA.OverlayDataAsset overlay, int index)>();
+											overlayTextureRefs[srcPath] = refsForPath;
+										}
+										refsForPath.Add((overlayAsset, t));
+									}
+								}
+							}
+
+							if (overlayAsset.alphaMask != null)
+							{
+								string srcPath = AssetDatabase.GetAssetPath(overlayAsset.alphaMask);
+								if (!string.IsNullOrEmpty(srcPath))
+								{
+									textures.Add(srcPath);
+								}
+							}
+						}
+					}
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+			}
+
+			if (textures.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Consolidate Textures", "No textures were found in overlays for the selected recipes.", "OK");
+				return;
+			}
+
+			int moved = 0;
+			int total = textures.Count;
+			int index = 0;
+			try
+			{
+				foreach (string srcPath in textures)
+				{
+					index++;
+					EditorUtility.DisplayProgressBar("Consolidate Textures", "Moving textures...", Mathf.Clamp01((float)index / Mathf.Max(1, total)));
+					if (string.IsNullOrEmpty(srcPath))
+					{
+						continue;
+					}
+
+					// Skip textures that are already inside the destination folder
+					if (!string.IsNullOrEmpty(_destFolderPath) && srcPath.StartsWith(_destFolderPath + "/", System.StringComparison.OrdinalIgnoreCase))
+					{
+						continue;
+					}
+
+					string fileName = Path.GetFileName(srcPath);
+					if (string.IsNullOrEmpty(fileName))
+					{
+						continue;
+					}
+
+					string destPathAlready = _destFolderPath + "/" + fileName;
+					var existingDestTexture = AssetDatabase.LoadAssetAtPath<Texture>(destPathAlready);
+					if (existingDestTexture != null)
+					{
+						if (overlayTextureRefs.TryGetValue(srcPath, out var refsForPath) && refsForPath != null)
+						{
+							for (int r = 0; r < refsForPath.Count; r++)
+							{
+								var (overlay, texIndex) = refsForPath[r];
+								if (overlay == null)
+								{
+									continue;
+								}
+								var list = overlay.textureList;
+								if (list == null || texIndex < 0 || texIndex >= list.Length)
+								{
+									continue;
+								}
+								if (list[texIndex] == existingDestTexture)
+								{
+									continue;
+								}
+								Undo.RecordObject(overlay, "Relink overlay texture");
+								list[texIndex] = existingDestTexture;
+								overlay.textureList = list;
+								EditorUtility.SetDirty(overlay);
+								overlaysToSave.Add(overlay);
+							}
+						}
+						continue;
+					}
+
+					string destPath = AssetDatabase.GenerateUniqueAssetPath(destPathAlready);
+					string moveError = AssetDatabase.MoveAsset(srcPath, destPath);
+					if (!string.IsNullOrEmpty(moveError))
+					{
+						continue;
+					}
+
+					moved++;
+					var movedTexture = AssetDatabase.LoadAssetAtPath<Texture>(destPath);
+					if (movedTexture == null)
+					{
+						continue;
+					}
+
+					if (overlayTextureRefs.TryGetValue(srcPath, out var refsAfterMove) && refsAfterMove != null)
+					{
+						for (int r = 0; r < refsAfterMove.Count; r++)
+						{
+							var (overlay, texIndex) = refsAfterMove[r];
+							if (overlay == null)
+							{
+								continue;
+							}
+							var list = overlay.textureList;
+							if (list == null || texIndex < 0 || texIndex >= list.Length)
+							{
+								continue;
+							}
+							if (list[texIndex] == movedTexture)
+							{
+								continue;
+							}
+							Undo.RecordObject(overlay, "Relink overlay texture");
+							list[texIndex] = movedTexture;
+							overlay.textureList = list;
+							EditorUtility.SetDirty(overlay);
+							overlaysToSave.Add(overlay);
+						}
+					}
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+			}
+
+			if (overlaysToSave.Count > 0)
+			{
+				AssetDatabase.SaveAssets();
+			}
+			AssetDatabase.Refresh();
+			EditorUtility.DisplayDialog("Consolidate Textures", "Moved " + moved + " texture asset(s) into: " + _destFolderPath + "\nUpdated overlays: " + overlaysToSave.Count, "OK");
+		}
+	}
+
+		[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", true)]
+		private static bool AddRacesToSelectedRecipesMenu_Validate()
+		{
+			return GetSelectedWardrobeRecipes().Count > 0;
+		}
+
+		private static List<UMAWardrobeRecipe> GetSelectedWardrobeRecipes()
+		{
+			var selected = Selection.GetFiltered(typeof(UMAWardrobeRecipe), SelectionMode.Assets);
+			var recipes = new List<UMAWardrobeRecipe>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var r = selected[i] as UMAWardrobeRecipe;
+				if (r != null)
+				{
+					recipes.Add(r);
+				}
+			}
+			return recipes;
+		}
+
+		private static List<UMA.OverlayDataAsset> GetSelectedOverlays()
+		{
+			var selected = Selection.GetFiltered(typeof(UMA.OverlayDataAsset), SelectionMode.Assets);
+			var overlays = new List<UMA.OverlayDataAsset>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var o = selected[i] as UMA.OverlayDataAsset;
+				if (o != null)
+				{
+					overlays.Add(o);
+				}
+			}
+			return overlays;
+		}
+
+	internal class UmaExamineOverlaysWindow : EditorWindow
+	{
+		private readonly List<UMA.OverlayDataAsset> _overlays = new List<UMA.OverlayDataAsset>();
+		private readonly List<UMA.OverlayDataAsset> _filteredOverlays = new List<UMA.OverlayDataAsset>();
+		private UMA.OverlayDataAsset _selectedOverlay;
+		private Vector2 _leftScroll;
+		private Vector2 _rightScroll;
+		private static readonly GUIContent _completeLabel = new GUIContent("Complete");
+		private static readonly GUIContent _incompleteLabel = new GUIContent("Incomplete");
+		private enum OverlayFilter { All, Complete, Incomplete }
+		private OverlayFilter _filter = OverlayFilter.All;
+
+		public static void Open(List<UMA.OverlayDataAsset> overlays)
+		{
+			var window = GetWindow<UmaExamineOverlaysWindow>(false, "Examine Overlays", true);
+			window.minSize = new Vector2(860f, 420f);
+			window._overlays.Clear();
+			if (overlays != null)
+			{
+				window._overlays.AddRange(overlays);
+			}
+			window.SortOverlays();
+			window._selectedOverlay = window._overlays.Count > 0 ? window._overlays[0] : null;
+			window.Show();
+			window.Focus();
+		}
+
+		private void RefreshFromSelection()
+		{
+			var selected = Selection.GetFiltered(typeof(UMA.OverlayDataAsset), SelectionMode.Assets);
+			_overlays.Clear();
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var o = selected[i] as UMA.OverlayDataAsset;
+				if (o != null)
+				{
+					_overlays.Add(o);
+				}
+			}
+			SortOverlays();
+			if (_selectedOverlay != null && !_overlays.Contains(_selectedOverlay))
+			{
+				_selectedOverlay = null;
+			}
+			RebuildFilteredOverlays(_selectedOverlay);
+			Repaint();
+		}
+
+		private void OnSelectionChange()
+		{
+			// Intentionally no-op: we only refresh the window contents when the user presses Refresh.
+		}
+
+		private void SortOverlays()
+		{
+			_overlays.Sort((a, b) => string.Compare(a != null ? a.name : "", b != null ? b.name : "", System.StringComparison.OrdinalIgnoreCase));
+		}
+
+		private void RebuildFilteredOverlays(UMA.OverlayDataAsset keepSelected)
+		{
+			_filteredOverlays.Clear();
+			for (int i = 0; i < _overlays.Count; i++)
+			{
+				var overlay = _overlays[i];
+				if (overlay == null)
+				{
+					continue;
+				}
+				bool isComplete = IsComplete(overlay);
+				switch (_filter)
+				{
+					case OverlayFilter.Complete:
+						if (!isComplete) continue;
+						break;
+					case OverlayFilter.Incomplete:
+						if (isComplete) continue;
+						break;
+				}
+				_filteredOverlays.Add(overlay);
+			}
+
+			if (_filteredOverlays.Count == 0)
+			{
+				_selectedOverlay = null;
+				return;
+			}
+
+			if (keepSelected != null)
+			{
+				if (_filteredOverlays.Contains(keepSelected))
+				{
+					_selectedOverlay = keepSelected;
+					return;
+				}
+			}
+			_selectedOverlay = _filteredOverlays[0];
+		}
+
+		private void OnGUI()
+		{
+			EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+			GUILayout.Label("Examine Overlays", EditorStyles.boldLabel);
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(70)))
+			{
+				RefreshFromSelection();
+			}
+			EditorGUILayout.EndHorizontal();
+
+			if (_overlays.Count == 0)
+			{
+				EditorGUILayout.HelpBox("Select one or more OverlayDataAsset assets in the Project window.", MessageType.Info);
+				return;
+			}
+
+			RebuildFilteredOverlays(_selectedOverlay);
+
+			EditorGUILayout.BeginHorizontal();
+			DrawOverlayList();
+			GUILayout.Space(10);
+			DrawOverlayDetails();
+			EditorGUILayout.EndHorizontal();
+		}
+
+		private void DrawOverlayList()
+		{
+			EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.40f));
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.LabelField("Selected Overlays", EditorStyles.boldLabel);
+			if (GUILayout.Button("Refresh", GUILayout.Width(70)))
+			{
+				RefreshFromSelection();
+			}
+			EditorGUILayout.EndHorizontal();
+			var previouslySelected = _selectedOverlay;
+			EditorGUI.BeginChangeCheck();
+			string[] filterLabels = { "all", "complete", "incomplete" };
+			_filter = (OverlayFilter)EditorGUILayout.Popup((int)_filter, filterLabels);
+			if (EditorGUI.EndChangeCheck())
+			{
+				RebuildFilteredOverlays(previouslySelected);
+				GUI.FocusControl(null);
+			}
+			EditorGUILayout.Space(2);
+			_leftScroll = EditorGUILayout.BeginScrollView(_leftScroll, GUILayout.ExpandHeight(true));
+			for (int i = 0; i < _filteredOverlays.Count; i++)
+			{
+				var overlay = _filteredOverlays[i];
+				if (overlay == null)
+				{
+					continue;
+				}
+
+				EditorGUILayout.BeginHorizontal();
+				bool selected = (overlay == _selectedOverlay);
+				if (GUILayout.Toggle(selected, GUIContent.none, GUILayout.Width(18)) != selected)
+				{
+					_selectedOverlay = overlay;
+					GUI.FocusControl(null);
+				}
+				var buttonStyle = selected ? EditorStyles.miniButtonMid : EditorStyles.miniButton;
+				if (GUILayout.Button(overlay.name, buttonStyle, GUILayout.ExpandWidth(true)))
+				{
+					_selectedOverlay = overlay;
+					GUI.FocusControl(null);
+				}
+				GUILayout.Label(IsComplete(overlay) ? _completeLabel : _incompleteLabel, GUILayout.Width(78));
+				EditorGUILayout.EndHorizontal();
+			}
+			EditorGUILayout.EndScrollView();
+			EditorGUILayout.EndVertical();
+		}
+
+		private void DrawOverlayDetails()
+		{
+			EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+			EditorGUILayout.LabelField("Overlay Textures", EditorStyles.boldLabel);
+
+			if (_selectedOverlay == null)
+			{
+				EditorGUILayout.HelpBox("Select an overlay to view its textures.", MessageType.Info);
+				EditorGUILayout.EndVertical();
+				return;
+			}
+
+			var overlay = _selectedOverlay;
+			if (overlay == null)
+			{
+				EditorGUILayout.HelpBox("Selected overlay is missing.", MessageType.Warning);
+				EditorGUILayout.EndVertical();
+				return;
+			}
+
+			EditorGUILayout.LabelField("Overlay", overlay.name);
+			EditorGUILayout.Space(4);
+
+			var mat = overlay.GetMaterial();
+
+			var texList = overlay.textureList;
+			int displayCount = texList != null ? texList.Length : 0;
+			_rightScroll = EditorGUILayout.BeginScrollView(_rightScroll, GUILayout.ExpandHeight(true));
+			for (int i = 0; i < displayCount; i++)
+			{
+				Texture current = texList[i];
+				string paramName = "Texture " + i;
+				if (mat != null && mat.channels != null && i < mat.channels.Length && !string.IsNullOrEmpty(mat.channels[i].materialPropertyName))
+				{
+					paramName = mat.channels[i].materialPropertyName;
+				}
+				string texName = current != null ? current.name : "<Not Set>";
+				const float rowHeight = 128f;
+				const float previewSize = 96f;
+
+				EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+				EditorGUILayout.BeginHorizontal();
+				GUILayout.Label(i.ToString(), GUILayout.Width(26));
+				GUILayout.Label(paramName, EditorStyles.boldLabel);
+				GUILayout.FlexibleSpace();
+				GUILayout.Label(texName, EditorStyles.miniLabel, GUILayout.Width(180));
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.BeginHorizontal(GUILayout.Height(rowHeight));
+				EditorGUI.BeginChangeCheck();
+				var newTex = (Texture)EditorGUILayout.ObjectField(current, typeof(Texture), false, GUILayout.Width(previewSize), GUILayout.Height(previewSize));
+				if (EditorGUI.EndChangeCheck())
+				{
+					Undo.RecordObject(overlay, "Set overlay texture");
+					var list = overlay.textureList;
+					if (list != null && i < list.Length)
+					{
+						list[i] = newTex;
+						overlay.textureList = list;
+						EditorUtility.SetDirty(overlay);
+						AssetDatabase.SaveAssets();
+					}
+				}
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndHorizontal();
+				EditorGUILayout.EndVertical();
+			}
+			EditorGUILayout.EndScrollView();
+			EditorGUILayout.EndVertical();
+		}
+
+		private static bool IsComplete(UMA.OverlayDataAsset overlay)
+		{
+			if (overlay == null)
+			{
+				return false;
+			}
+			var list = overlay.textureList;
+			if (list == null || list.Length == 0)
+			{
+				return false;
+			}
+			for (int i = 0; i < list.Length; i++)
+			{
+				if (list[i] == null)
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+
+	}
+
+	internal class ExamineWearables : EditorWindow
+	{
+		private readonly List<UMAWardrobeRecipe> _recipes = new List<UMAWardrobeRecipe>();
+		private bool[] _recipeSelected = new bool[0];
+		private Vector2 _recipesScroll;
+
+		private readonly List<string> _slots = new List<string>();
+		private int _selectedSlotIndex = -1;
+		private Vector2 _slotsScroll;
+
+		private UMAMaterial _targetMaterial;
+		private string _matchText = "";
+		private enum MatchMode
+		{
+			Contains = 0,
+			StartsWith = 1,
+			EndsWith = 2,
+		}
+		private MatchMode _matchMode = MatchMode.Contains;
+		private static GUIContent _inspectContent;
+		private static GUIContent InspectContent
+		{
+			get
+			{
+				if (_inspectContent == null)
+				{
+					var icon = EditorGUIUtility.FindTexture("ViewToolOrbit");
+					_inspectContent = new GUIContent("", icon, "Inspect");
+				}
+				return _inspectContent;
+			}
+		}
+
+		public static void Open(List<UMAWardrobeRecipe> recipes)
+		{
+			var window = GetWindow<ExamineWearables>(false, "Examine Wearables", true);
+			window.minSize = new Vector2(700f, 420f);
+			window._recipes.Clear();
+			if (recipes != null)
+			{
+				window._recipes.AddRange(recipes);
+			}
+			window._recipeSelected = new bool[window._recipes.Count];
+			window.RebuildSlots();
+			window.Show();
+			window.Focus();
+		}
+
+		private void OnSelectionChange()
+		{
+			// Intentionally no-op: we only refresh the window contents when the user presses Refresh.
+		}
+
+		private void RebuildSlots()
+		{
+			_slots.Clear();
+			var slotSet = new HashSet<string>();
+
+			var idx = UMAAssetIndexer.Instance;
+			if (idx == null)
+			{
+				_selectedSlotIndex = -1;
+				return;
+			}
+
+			for (int i = 0; i < _recipes.Count; i++)
+			{
+				var recipe = _recipes[i];
+				if (recipe == null || recipe.compatibleRaces == null)
+				{
+					continue;
+				}
+
+				for (int r = 0; r < recipe.compatibleRaces.Count; r++)
+				{
+					string raceName = recipe.compatibleRaces[r];
+					if (string.IsNullOrEmpty(raceName))
+					{
+						continue;
+					}
+
+					RaceData race = null;
+					try
+					{
+						race = idx.GetAsset<RaceData>(raceName);
+					}
+					catch
+					{
+						race = null;
+					}
+
+					if (race == null || race.wardrobeSlots == null)
+					{
+						continue;
+					}
+
+					for (int s = 0; s < race.wardrobeSlots.Count; s++)
+					{
+						string slot = race.wardrobeSlots[s];
+						if (!string.IsNullOrEmpty(slot))
+						{
+							slotSet.Add(slot);
+						}
+					}
+				}
+			}
+
+			_slots.AddRange(slotSet);
+			_slots.Sort(System.StringComparer.OrdinalIgnoreCase);
+			if (_selectedSlotIndex >= _slots.Count)
+			{
+				_selectedSlotIndex = -1;
+			}
+		}
+
+		private void OnGUI()
+		{
+			EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+			GUILayout.Label("Examine Wearables", EditorStyles.boldLabel);
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(70)))
+			{
+				RebuildSlots();
+			}
+			EditorGUILayout.EndHorizontal();
+
+			if (_recipes.Count == 0)
+			{
+				EditorGUILayout.HelpBox("Select one or more UMAWardrobeRecipe assets in the Project window.", MessageType.Info);
+				EditorGUILayout.Space(8);
+				if (GUILayout.Button("Close", GUILayout.Height(26)))
+				{
+					Close();
+				}
+				return;
+			}
+
+			EditorGUILayout.Space(6);
+			DrawUtilitiesPanel();
+			EditorGUILayout.BeginHorizontal();
+			DrawRecipesColumn();
+			GUILayout.Space(10);
+			DrawSlotsColumn();
+			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.Space(10);
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			using (new EditorGUI.DisabledScope(!HasAnyRecipeChecked() || _selectedSlotIndex < 0 || _selectedSlotIndex >= _slots.Count))
+			{
+				if (GUILayout.Button("Assign", GUILayout.Width(120), GUILayout.Height(28)))
+				{
+					AssignSelectedSlot();
+				}
+			}
+			if (GUILayout.Button("Close", GUILayout.Width(120), GUILayout.Height(28)))
+			{
+				Close();
+			}
+			EditorGUILayout.EndHorizontal();
+		}
+
+		private void DrawUtilitiesPanel()
+		{
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			EditorGUILayout.LabelField("Utilities", EditorStyles.boldLabel);
+			EditorGUILayout.LabelField("Set UMAMaterial on slots and overlays based on overlay texture[0] name matching.", EditorStyles.wordWrappedLabel);
+                EditorGUILayout.BeginHorizontal();
+			_targetMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", _targetMaterial, typeof(UMAMaterial), false);
+			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.BeginHorizontal();
+			_matchMode = (MatchMode)EditorGUILayout.EnumPopup("Match Mode", _matchMode);
+			_matchText = EditorGUILayout.TextField("Texture[0] Match Text", _matchText);
+			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			using (new EditorGUI.DisabledScope(_targetMaterial == null || string.IsNullOrEmpty(_matchText) || !HasAnyRecipeChecked()))
+			{
+				if (GUILayout.Button("Process", GUILayout.Width(140), GUILayout.Height(24)))
+				{
+					ProcessMaterialUpdates();
+				}
+			}
+			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.Space(6);
+		}
+
+		private bool DoesOverlayMatch(UMA.OverlayDataAsset overlayAsset)
+		{
+			if (overlayAsset == null)
+			{
+				return false;
+			}
+			var texList = overlayAsset.textureList;
+			if (texList == null || texList.Length == 0 || texList[0] == null)
+			{
+				return false;
+			}
+			string texName = texList[0].name;
+			if (string.IsNullOrEmpty(texName))
+			{
+				return false;
+			}
+			if (string.IsNullOrEmpty(_matchText))
+			{
+				return false;
+			}
+
+			if (_matchMode == MatchMode.StartsWith)
+			{
+				return texName.StartsWith(_matchText, System.StringComparison.OrdinalIgnoreCase);
+			}
+			if (_matchMode == MatchMode.EndsWith)
+			{
+				return texName.EndsWith(_matchText, System.StringComparison.OrdinalIgnoreCase);
+			}
+			return texName.IndexOf(_matchText, System.StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+
+		private void ProcessMaterialUpdates()
+		{
+			if (_targetMaterial == null)
+			{
+				EditorUtility.DisplayDialog("Process", "Select an UMAMaterial.", "OK");
+				return;
+			}
+			if (string.IsNullOrEmpty(_matchText))
+			{
+				EditorUtility.DisplayDialog("Process", "Enter text to match against overlay texture[0].name.", "OK");
+				return;
+			}
+
+			var changedSlots = new HashSet<UMA.SlotDataAsset>();
+			var changedOverlays = new HashSet<UMA.OverlayDataAsset>();
+			int processedRecipes = 0;
+			int matchedOverlays = 0;
+
+			try
+			{
+				for (int i = 0; i < _recipes.Count; i++)
+				{
+					if (i >= _recipeSelected.Length || !_recipeSelected[i])
+					{
+						continue;
+					}
+					var recipe = _recipes[i];
+					if (recipe == null)
+					{
+						continue;
+					}
+					processedRecipes++;
+					EditorUtility.DisplayProgressBar("Process", "Scanning recipes...", Mathf.Clamp01((float)processedRecipes / Mathf.Max(1, CountCheckedRecipes())));
+
+					var umaRecipe = new UMA.UMAData.UMARecipe();
+					recipe.Load(umaRecipe, true);
+					if (umaRecipe.slotDataList == null)
+					{
+						continue;
+					}
+
+					for (int s = 0; s < umaRecipe.slotDataList.Length; s++)
+					{
+						var slot = umaRecipe.slotDataList[s];
+						if (slot == null)
+						{
+							continue;
+						}
+						var slotAsset = slot.asset;
+						if (slotAsset == null)
+						{
+							continue;
+						}
+
+						bool anyOverlayMatchedOnSlot = false;
+						for (int o = 0; o < slot.OverlayCount; o++)
+						{
+							var overlay = slot.GetOverlay(o);
+							if (overlay == null)
+							{
+								continue;
+							}
+							var overlayAsset = overlay.asset;
+							if (overlayAsset == null)
+							{
+								continue;
+							}
+							if (!DoesOverlayMatch(overlayAsset))
+							{
+								continue;
+							}
+							matchedOverlays++;
+
+							if (overlayAsset.material != _targetMaterial)
+							{
+								Undo.RecordObject(overlayAsset, "Update Overlay UMAMaterial");
+								overlayAsset.material = _targetMaterial;
+								overlayAsset.materialName = _targetMaterial != null ? _targetMaterial.name : "";
+								changedOverlays.Add(overlayAsset);
+							}
+
+							anyOverlayMatchedOnSlot = true;
+						}
+
+						if (anyOverlayMatchedOnSlot && slotAsset.material != _targetMaterial)
+						{
+							Undo.RecordObject(slotAsset, "Update Slot UMAMaterial");
+							slotAsset.material = _targetMaterial;
+							slotAsset.materialName = _targetMaterial != null ? _targetMaterial.name : "";
+							changedSlots.Add(slotAsset);
+						}
+					}
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+			}
+
+			foreach (var overlayAsset in changedOverlays)
+			{
+				if (overlayAsset != null)
+				{
+					EditorUtility.SetDirty(overlayAsset);
+				}
+			}
+			foreach (var slotAsset in changedSlots)
+			{
+				if (slotAsset != null)
+				{
+					EditorUtility.SetDirty(slotAsset);
+				}
+			}
+			if (changedOverlays.Count > 0 || changedSlots.Count > 0)
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog("Process", "Matched overlays: " + matchedOverlays + "\nUpdated overlays: " + changedOverlays.Count + "\nUpdated slots: " + changedSlots.Count, "OK");
+		}
+
+		private int CountCheckedRecipes()
+		{
+			int count = 0;
+			for (int i = 0; i < _recipeSelected.Length; i++)
+			{
+				if (_recipeSelected[i])
+				{
+					count++;
+				}
+			}
+			return count;
+		}
+
+			private void DrawRecipesColumn()
+			{
+				EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.62f));
+				EditorGUILayout.LabelField("Wardrobe Recipes", EditorStyles.boldLabel);
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("All", GUILayout.Width(60)))
+				{
+					for (int i = 0; i < _recipeSelected.Length; i++) _recipeSelected[i] = true;
+				}
+				if (GUILayout.Button("None", GUILayout.Width(60)))
+				{
+					for (int i = 0; i < _recipeSelected.Length; i++) _recipeSelected[i] = false;
+				}
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.Space(4);
+				_recipesScroll = EditorGUILayout.BeginScrollView(_recipesScroll, GUILayout.ExpandHeight(true));
+				EditorGUILayout.BeginVertical();
+				for (int i = 0; i < _recipes.Count; i++)
+				{
+					var recipe = _recipes[i];
+					if (recipe == null) continue;
+
+					EditorGUILayout.BeginHorizontal();
+					_recipeSelected[i] = EditorGUILayout.Toggle(_recipeSelected[i], GUILayout.Width(18));
+					if (GUILayout.Button(InspectContent, EditorStyles.miniButton, GUILayout.Width(22), GUILayout.Height(18)))
+					{
+						UMA.InspectorUtlity.InspectTarget(recipe);
+					}
+					EditorGUILayout.ObjectField(recipe, typeof(UMAWardrobeRecipe), false);
+					string slot = string.IsNullOrEmpty(recipe.wardrobeSlot) ? "<Unassigned>" : recipe.wardrobeSlot;
+					GUILayout.Label(slot, GUILayout.Width(160));
+					if (!RecipeHasAnySlots(recipe))
+					{
+						GUILayout.Label("Warning - no slots", EditorStyles.miniLabel, GUILayout.Width(120));
+					}
+					else
+					{
+						GUILayout.Label("Slots look OK", EditorStyles.miniLabel, GUILayout.Width(120));
+					}
+					EditorGUILayout.EndHorizontal();
+				}
+				EditorGUILayout.EndVertical();
+				EditorGUILayout.EndScrollView();
+				EditorGUILayout.EndVertical();
+			}
+
+		private static bool RecipeHasAnySlots(UMAWardrobeRecipe recipe)
+		{
+			if (recipe == null)
+			{
+				return false;
+			}
+			try
+			{
+				var umaRecipe = new UMA.UMAData.UMARecipe();
+				recipe.Load(umaRecipe, true);
+				if (umaRecipe.slotDataList == null)
+				{
+					return false;
+				}
+				for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
+				{
+					if (umaRecipe.slotDataList[i] != null)
+					{
+						return true;
+					}
+				}
+				return false;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		private void DrawSlotsColumn()
+		{
+			EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+			EditorGUILayout.LabelField("Wardrobe Slots (union of slots across compatible races)", EditorStyles.boldLabel);
+			if (_slots.Count == 0)
+			{
+				EditorGUILayout.HelpBox("No wardrobe slots found from compatible races on the selected recipes.", MessageType.Warning);
+				EditorGUILayout.EndVertical();
+				return;
+			}
+
+			_slotsScroll = EditorGUILayout.BeginScrollView(_slotsScroll, GUILayout.ExpandHeight(true));
+			for (int i = 0; i < _slots.Count; i++)
+			{
+				bool isSelected = (_selectedSlotIndex == i);
+				bool newSelected = EditorGUILayout.ToggleLeft(_slots[i], isSelected);
+				if (newSelected != isSelected)
+				{
+					_selectedSlotIndex = newSelected ? i : -1;
+				}
+			}
+			EditorGUILayout.EndScrollView();
+			EditorGUILayout.EndVertical();
+		}
+
+		private bool HasAnyRecipeChecked()
+		{
+			for (int i = 0; i < _recipeSelected.Length; i++)
+			{
+				if (_recipeSelected[i]) return true;
+			}
+			return false;
+		}
+
+		private void AssignSelectedSlot()
+		{
+			if (_selectedSlotIndex < 0 || _selectedSlotIndex >= _slots.Count)
+			{
+				EditorUtility.DisplayDialog("Assign", "Select exactly one wardrobe slot.", "OK");
+				return;
+			}
+
+			string slot = _slots[_selectedSlotIndex];
+			if (string.IsNullOrEmpty(slot))
+			{
+				EditorUtility.DisplayDialog("Assign", "Selected wardrobe slot is empty.", "OK");
+				return;
+			}
+
+			int updated = 0;
+			for (int i = 0; i < _recipes.Count; i++)
+			{
+				if (i >= _recipeSelected.Length || !_recipeSelected[i])
+				{
+					continue;
+				}
+				var recipe = _recipes[i];
+				if (recipe == null)
+				{
+					continue;
+				}
+
+				if (recipe.wardrobeSlot == slot)
+				{
+					continue;
+				}
+
+				Undo.RecordObject(recipe, "Assign wardrobe slot");
+				recipe.wardrobeSlot = slot;
+				EditorUtility.SetDirty(recipe);
+				updated++;
+			}
+
+			if (updated > 0)
+			{
+				AssetDatabase.SaveAssets();
+			}
+
+			EditorUtility.DisplayDialog("Assign", "Updated " + updated + " recipe(s).", "OK");
+		}
+	}
 
 		public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting)
 		{
@@ -771,6 +1880,8 @@ namespace UMA.Editors
 			}
 		}
 
+
+
 		[UnityEditor.MenuItem("Assets/Add Selected Assets to UMA Global Library")]
 		public static void AddSelectedToGlobalLibrary()
 		{
@@ -790,6 +1901,176 @@ namespace UMA.Editors
 			}
 			UAI.ForceSave();
 			EditorUtility.DisplayDialog("Success", added + " item(s) added to Global Library", "OK");
+		}
+	}
+
+	internal class UmaAddRacesToRecipesWindow : EditorWindow
+	{
+		private readonly List<UMAWardrobeRecipe> _targetRecipes = new List<UMAWardrobeRecipe>();
+		private readonly List<RaceData> _allRaces = new List<RaceData>();
+		private bool[] _raceSelected = new bool[0];
+		private Vector2 _scroll;
+
+		public static void Open(List<UMAWardrobeRecipe> targetRecipes)
+		{
+			var window = GetWindow<UmaAddRacesToRecipesWindow>(true, "Add Races to Recipes", true);
+			window.minSize = new Vector2(420f, 420f);
+
+			window._targetRecipes.Clear();
+			if (targetRecipes != null)
+			{
+				window._targetRecipes.AddRange(targetRecipes);
+			}
+
+			window.RefreshRaces();
+			window.ShowUtility();
+			window.Focus();
+		}
+
+		private void RefreshRaces()
+		{
+			_allRaces.Clear();
+
+			var idx = UMAAssetIndexer.Instance;
+			if (idx != null)
+			{
+				var races = idx.GetAllAssets<RaceData>();
+				if (races != null)
+				{
+					for (int i = 0; i < races.Count; i++)
+					{
+						if (races[i] != null)
+						{
+							_allRaces.Add(races[i]);
+						}
+					}
+				}
+			}
+
+			_allRaces.Sort((a, b) => string.Compare(a != null ? a.raceName : "", b != null ? b.raceName : "", System.StringComparison.OrdinalIgnoreCase));
+			_raceSelected = new bool[_allRaces.Count];
+		}
+
+		private void OnGUI()
+		{
+			EditorGUILayout.LabelField("Add Race(s) to Selected UMAWardrobeRecipe", EditorStyles.boldLabel);
+			EditorGUILayout.HelpBox($"Selected recipes: {_targetRecipes.Count}", MessageType.Info);
+
+			EditorGUILayout.Space(8);
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.LabelField("RaceData", EditorStyles.boldLabel);
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button("Refresh", GUILayout.Width(80)))
+			{
+				RefreshRaces();
+			}
+			EditorGUILayout.EndHorizontal();
+
+			if (_allRaces.Count == 0)
+			{
+				EditorGUILayout.HelpBox("No RaceData found (UMAAssetIndexer not ready, or project has no RaceData).", MessageType.Warning);
+			}
+			else
+			{
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("All", GUILayout.Width(80)))
+				{
+					for (int i = 0; i < _raceSelected.Length; i++)
+					{
+						_raceSelected[i] = true;
+					}
+				}
+				if (GUILayout.Button("None", GUILayout.Width(80)))
+				{
+					for (int i = 0; i < _raceSelected.Length; i++)
+					{
+						_raceSelected[i] = false;
+					}
+				}
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.Space(4);
+				_scroll = EditorGUILayout.BeginScrollView(_scroll);
+				for (int i = 0; i < _allRaces.Count; i++)
+				{
+					var race = _allRaces[i];
+					if (race == null)
+					{
+						continue;
+					}
+
+					string label = !string.IsNullOrEmpty(race.raceName) ? race.raceName : race.name;
+					_raceSelected[i] = EditorGUILayout.ToggleLeft(label, _raceSelected[i]);
+				}
+				EditorGUILayout.EndScrollView();
+			}
+
+			EditorGUILayout.Space(8);
+			using (new EditorGUI.DisabledScope(_targetRecipes.Count == 0 || _allRaces.Count == 0))
+			{
+				if (GUILayout.Button("Apply to Selected Recipes", GUILayout.Height(28)))
+				{
+					Apply();
+				}
+			}
+		}
+
+		private void Apply()
+		{
+			var selectedRaces = new List<RaceData>();
+			for (int i = 0; i < _allRaces.Count; i++)
+			{
+				if (i < _raceSelected.Length && _raceSelected[i])
+				{
+					if (_allRaces[i] != null)
+					{
+						selectedRaces.Add(_allRaces[i]);
+					}
+				}
+			}
+
+			if (selectedRaces.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Add Races", "Select one or more RaceData entries to apply.", "OK");
+				return;
+			}
+
+			int added = 0;
+			for (int i = 0; i < _targetRecipes.Count; i++)
+			{
+				var recipe = _targetRecipes[i];
+				if (recipe == null)
+				{
+					continue;
+				}
+
+				Undo.RecordObject(recipe, "Add Races to Recipe");
+				foreach (var race in selectedRaces)
+				{
+					if (race == null || string.IsNullOrEmpty(race.raceName))
+					{
+						continue;
+					}
+
+					if (!recipe.compatibleRaces.Contains(race.raceName))
+					{
+						recipe.compatibleRaces.Add(race.raceName);
+						added++;
+					}
+				}
+				EditorUtility.SetDirty(recipe);
+			}
+
+			AssetDatabase.SaveAssets();
+			var idx = UMAAssetIndexer.Instance;
+			if (idx != null)
+			{
+				idx.ForceSave();
+			}
+
+			EditorUtility.DisplayDialog("Add Races", $"Added {added} race assignment(s) to {_targetRecipes.Count} recipe(s).", "OK");
+			Close();
 		}
 	}
 

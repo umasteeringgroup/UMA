@@ -44,7 +44,14 @@ namespace UMA
 		[Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
         public int InitialScaleFactor = 1;
 
-		[Range(1.0f,16.0f)]
+        [Tooltip("Automatically adjust Atlas size based on available memory.")]
+        public bool AutomaticScaling = false;
+        [Tooltip("Scale down textures if GPU memory is below this value (in MB).")]
+        public float ScaleGPUMemoryCutoffMB = 1024.0f;
+        [Tooltip("Scale down textures if system memory is below this value (in MB).")]
+        public float ScaleSystemMemoryCutoffMB = 16384.0f;
+
+        [Range(1.0f,16.0f)]
 		[Tooltip("Scale factor for edit-time builds. Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
 		public int editorInitialScaleFactor = 4;
 
@@ -71,6 +78,8 @@ namespace UMA
 		public bool collectGarbage = true;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
         private System.Diagnostics.Stopwatch buildStopWatch = new System.Diagnostics.Stopwatch();
+
+        
 
 		[Tooltip("Automatically set blendshapes based on race")]
 		public bool autoSetRaceBlendshapes = false;
@@ -147,8 +156,18 @@ namespace UMA
 
         public virtual void Awake()
 		{
-
-			if (atlasResolution == 0)
+            if (AutomaticScaling)
+            {
+                if (SystemInfo.systemMemorySize < ScaleSystemMemoryCutoffMB || SystemInfo.graphicsMemorySize < ScaleGPUMemoryCutoffMB)
+                {
+                    InitialScaleFactor *= 2;
+                    atlasResolution /= 2;
+                    Debug.Log($"UMAGeneratorBuiltin: Automatic scaling applied. New InitialScaleFactor: {InitialScaleFactor}, New atlasResolution: {atlasResolution} System Memory: {SystemInfo.systemMemorySize} MB, GPU Memory: {SystemInfo.graphicsMemorySize} MB");
+                }
+                // don't do this again.
+                AutomaticScaling = false;
+            }
+            if (atlasResolution == 0)
             {
                 atlasResolution = 256;
             }

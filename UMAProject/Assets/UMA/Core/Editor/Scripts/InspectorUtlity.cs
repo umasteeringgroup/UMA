@@ -35,7 +35,7 @@ namespace UMA
 
 			// Set the selection to GO we want to inspect
 			// Selection.activeGameObject = target;
-			Selection.instanceIDs = new int[] { target.GetInstanceID() };
+			Selection.entityIds = new EntityId[] { target.GetEntityId() };
 
 			// Invoke `isLocked` setter method passing 'true' to lock the inspector
 			isLocked.GetSetMethod().Invoke(inspectorInstance, new object[] { true });

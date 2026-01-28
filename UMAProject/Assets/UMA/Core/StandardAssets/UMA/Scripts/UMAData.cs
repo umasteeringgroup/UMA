@@ -2646,7 +2646,7 @@ namespace UMA
 		{
 			if (AtlasUpdated != null)
 			{
-				Debug.Log("Invoking AtlasUpdated Event");
+				//Debug.Log("Invoking AtlasUpdated Event");
                 AtlasUpdated.Invoke(this,tp);
             }
         }

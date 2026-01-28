@@ -268,18 +268,19 @@ namespace UMA
                 var tp = tr.textureEventParms;
                 var baseOverlay = tp.slotData.GetOverlay(0);
 
-				if (tp.slotData.asset.slotName.Contains("1002"))
-				{
-					int debugme = 42;
-                }
-                if (tp.slotData != null && tp.renderTexture != null && baseOverlay != null && tp.overlayData == tp.slotData.GetOverlay(0) && tp.slotData.uvAreaUpdateFrame != Time.frameCount)
-                {
+				if(tp.slotData != null && tp.renderTexture != null && baseOverlay != null && tp.overlayData == tp.slotData.GetOverlay(0) && tp.slotData.uvAreaUpdateFrame != Time.frameCount) {
                     float w = Mathf.Max(1f, tp.renderTexture.width);
                     float h = Mathf.Max(1f, tp.renderTexture.height);
                     tp.slotData.uvAreaUpdateFrame = Time.frameCount;
 
-                    // tr.rect is already in atlas pixel space (and already Y-inverted in SetupMaterialAndBaseOverlay).
-                    tp.slotData.UVArea.Set(tr.rect.xMin / w, tr.rect.yMin / h, tr.rect.width / w, tr.rect.height / h);
+					// Convert from top-left pixel space (GL.LoadPixelMatrix(..., height, 0))
+					// to bottom-left UV space (UMA SlotData.UVArea / mesh UV convention).
+					float xMin = tr.rect.xMin / w;
+					float yMin = (h - (tr.rect.yMin + tr.rect.height)) / h; // unflip Y
+					float xRange = tr.rect.width / w;
+					float yRange = tr.rect.height / h;
+
+					tp.slotData.UVArea.Set(xMin, yMin, xRange, yRange);
                 }
 #endif
                 tr.textureEventParms.umaData.FireAtlasUpdatedEvent(tr.textureEventParms);

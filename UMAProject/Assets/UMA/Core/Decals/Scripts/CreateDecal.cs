@@ -1672,7 +1672,7 @@ namespace UMA.Decals
 					SerializedProperty newTag = tagsProp.GetArrayElementAtIndex(tagsProp.arraySize - 1);
 					newTag.stringValue = tagName;
 					tagManager.ApplyModifiedPropertiesWithoutUndo();
-					Debug.Log($"Added tag: { tagName } - Saving...");
+					//Debug.Log($"Added tag: { tagName } - Saving...");
 					AssetDatabase.SaveAssets();
 				}
 			}

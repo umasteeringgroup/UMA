@@ -1,0 +1,440 @@
+fileFormatVersion: 2
+guid: c54cd2182059fd14ab1177b08d530340
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Fem_Eyebrows
+    second: {fileID: 2100000, guid: 4e2e03dc3cc7a67479fb3066584d8a2e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Fem_Eyes
+    second: {fileID: 2100000, guid: 7e6ab77c2081ad641878f06e29ff83f1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: FemaleInnerMouth.001
+    second: {fileID: 2100000, guid: 632319eb1f2c0ed40b78e41a5ed18c3f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: UMA_EYELASHES
+    second: {fileID: 2100000, guid: 94756175271121d4ca37624ee64557e3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: UMA_F_Skin.001
+    second: {fileID: 2100000, guid: 6a94c778604e75c41a89d7949a9c700b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_Hoodie_turquoise_mat.001
+    second: {fileID: 2100000, guid: f9ffc1199c9010e498325a91a248e982, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_colors_top_bottom_mat
+    second: {fileID: 2100000, guid: 774ef18dc311af044a144b005fe00ec2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_dress_tennis_granit_mat
+    second: {fileID: 2100000, guid: 2787544b26019a54a8046f9ace0d7b66, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_hair_mat_000
+    second: {fileID: 2100000, guid: d04df88a3edbd174482a8ebc22366f2c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_shoes_tall_mat
+    second: {fileID: 2100000, guid: a2bb4ce9e455fb64f859b6be36c50332, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_shoes_tall_white
+    second: {fileID: 2100000, guid: c84e95928e188ca4c98941114aaea850, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_skirt_turquoise_mat.001
+    second: {fileID: 2100000, guid: 7ca2caaf8fc16df4486bf134366da3c2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_sports_underwear_bottoms_mat.001
+    second: {fileID: 2100000, guid: c71a53717338c424d9070de59f730a4d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_tights_gray_mat
+    second: {fileID: 2100000, guid: 44588ba6f587fc34c877c5307dfe65ae, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_tights_purple_mat
+    second: {fileID: 2100000, guid: a7cc25f5b0fe31246a6441dabaa31bd4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_tights_stripe_mat
+    second: {fileID: 2100000, guid: 09b31115252acf540b76d88c46841699, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_tshirt_turquoise_mat
+    second: {fileID: 2100000, guid: 8c8ce669aacdd0d4b8a0831ed849ea57, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_underwear_greenPalettes_mat
+    second: {fileID: 2100000, guid: 10851f55a45c8564486fc8bb266a2894, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_underwear_purple_mat
+    second: {fileID: 2100000, guid: d01829ad7c8fcdb4b9fdf3d520897ad2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_underwear_whiteLace_mat
+    second: {fileID: 2100000, guid: a3ae40af4e8b5494d9fbcca50eef61dd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_female_underwear_whiteStriped_mat
+    second: {fileID: 2100000, guid: 1a254eb8eaac6db41b8542d4185d7684, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_green_tights_mat
+    second: {fileID: 2100000, guid: 651187617b720074096f26ff28a106e5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_hoodie_blueWhite_mat.001
+    second: {fileID: 2100000, guid: 8e6ff248726dee94a88fd8cb49178c23, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_hoodie_grey_mat.002
+    second: {fileID: 2100000, guid: 2dc3c5404faf80646898663b5db032d8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_jacket_hive_mat
+    second: {fileID: 2100000, guid: 82a65630cd1eb6c44b4365f8041a863a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_hoodie_blue_mat.001
+    second: {fileID: 2100000, guid: 6b664ccd7c646a447bf3bf8b5da07252, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_jacket_hive_mat.002
+    second: {fileID: 2100000, guid: 1a69c69b7ed82db4aa1472b38f46ca39, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_shoe_low_white_mat
+    second: {fileID: 2100000, guid: 2514b0d65cd21ac47949c435700cedb7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_shoe_low_white_mat.002
+    second: {fileID: 2100000, guid: 593ed3634277cca468c503e0a2d6271b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_shoes_tall_mat.001
+    second: {fileID: 2100000, guid: c052c197ee4a91148b9f7c65ed251d21, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_shoes_tall_turquoise_mat.001
+    second: {fileID: 2100000, guid: 71ad525b3c755624e99345227ee5c993, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_shorts_black_cotton_mat.001
+    second: {fileID: 2100000, guid: 8c3ebb0be0a0c214eb296c47ec6512e3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_shorts_hive_mat
+    second: {fileID: 2100000, guid: 646e27c8b9220494bb7d40f498cf9b80, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_shorts_white_mat.001
+    second: {fileID: 2100000, guid: 467b05bb51af22142b569a669ed6dd5a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_sportpants_alt_black_mat.002
+    second: {fileID: 2100000, guid: f166e5e98242dcd4ca28207bdff0b216, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_sportpants_blueWhite_mat
+    second: {fileID: 2100000, guid: 1bd02a9d02c32fb40aa96f2983cffd44, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_sportpants_grey_mat.002
+    second: {fileID: 2100000, guid: 1f63f12de2c243742bbeb6a208f8be60, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_sweatpants_black_mat.002
+    second: {fileID: 2100000, guid: 72f01526b20a42b48afa69b62e6df23b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_swimwear_granit_mat.002
+    second: {fileID: 2100000, guid: ad518bbf3bd457e4bbbab0f4d50b1884, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_tanktop_yellow_mat.001
+    second: {fileID: 2100000, guid: 8f28a5bca12844d46971a7995ad3dcc0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_tights_black_mat.001
+    second: {fileID: 2100000, guid: 5ce6552f23d1f574a9d362a7d6f2942c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_tights_prints_mat.001
+    second: {fileID: 2100000, guid: 56497bfa6713df84f96dc3f715efbb5c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_underpants_blue_mat.001
+    second: {fileID: 2100000, guid: b3b3e50ad69abcb428704204a54fbafd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_underpants_granit_mat.001
+    second: {fileID: 2100000, guid: 041274159ff016a48a58cbe57a425b04, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_underwear_fishes_mat.001
+    second: {fileID: 2100000, guid: 5b00f6f0e06e7144d9e52048de9f125e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_underwear_hive_mat.001
+    second: {fileID: 2100000, guid: a335cc0579ca2654781a5cbf6f88bdad, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_underwear_tighty_mat.001
+    second: {fileID: 2100000, guid: f263d1969e45c0f49b2dbc3fd7d4e6ce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_male_underwear_whiteBlue_mat.001
+    second: {fileID: 2100000, guid: e585cfca1b8a1304684f72c24147ec77, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_shorts_turquoise.001
+    second: {fileID: 2100000, guid: c796808afaebe0247bdf840fb1a687dd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_sportswear_pants_granit_mat
+    second: {fileID: 2100000, guid: 1f950d56150a9694fa5e84cb351495f1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_sportswear_sweater_granit_mat
+    second: {fileID: 2100000, guid: f6feaaddbdc13824eb5c06432c413d6b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_sportswear_top_granit_mat.001
+    second: {fileID: 2100000, guid: 936d2406ea47bc449b777664f1c626b7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_sportswear_top_mat
+    second: {fileID: 2100000, guid: b96e0bccd1daf944093c008c699d1a52, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_swimwear_black_mat
+    second: {fileID: 2100000, guid: 6d4e04521abcd9d4cbd06975be3db458, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_tanktop_whiteBlackStraps_mat
+    second: {fileID: 2100000, guid: 712dd0bbbd312ea4b9723028a130c922, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_tanktop_yellow_mat
+    second: {fileID: 2100000, guid: 19492788334c3b348864a994ca728f9f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_tanktop_zebra_mat
+    second: {fileID: 2100000, guid: 766af4b7254625940848c0c0c4592ce2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_tshirt_white_mat
+    second: {fileID: 2100000, guid: 66eaf17c150d66c44b0ddec77a2ddd66, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_underwear_bra_green_mat
+    second: {fileID: 2100000, guid: 22f52930cfe7b7f41bb867802351b46e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_underwear_bra_purple_mat
+    second: {fileID: 2100000, guid: 63118153182f43e499380e2df5f3c40a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_underwear_bra_white_mat
+    second: {fileID: 2100000, guid: 38620c924484c914682e5d5d1501576b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_underwear_bra_yellow_mat
+    second: {fileID: 2100000, guid: a5695590f95db674f8b1c5cd42d579ac, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_underwear_white_granit_mat
+    second: {fileID: 2100000, guid: baca61718be6d5c47bd5a53944e83e25, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: bb_underwear_white_granit_mat.001
+    second: {fileID: 2100000, guid: a2a85875d0529794a91030f7bb80a88e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: hair_male_blinn1
+    second: {fileID: 2100000, guid: 6817f0bb7c67a7d4b8311aa5054ae554, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: hair_male_blinn1__bb_male_hair_DA_tif_001
+    second: {fileID: 2100000, guid: 308ff702528a5244492edbc4e52672d2, type: 2}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

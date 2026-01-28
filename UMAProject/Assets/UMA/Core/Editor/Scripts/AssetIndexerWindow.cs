@@ -22,6 +22,223 @@ namespace UMA.Controls
 {
     class AssetIndexerWindow : EditorWindow
     {
+		private class SlotValidationReportWindow : EditorWindow
+		{
+			internal struct SlotIssue
+			{
+				public SlotDataAsset Slot;
+				public List<string> Reasons;
+			}
+
+			private readonly List<SlotIssue> _issues = new List<SlotIssue>();
+			private Vector2 _scroll;
+			private bool _isRunning;
+
+			public static void ShowReport(List<SlotIssue> issues)
+			{
+				var w = GetWindow<SlotValidationReportWindow>(true, "UMA Slot Validation", true);
+				w._issues.Clear();
+				if (issues != null)
+				{
+					w._issues.AddRange(issues);
+				}
+				w.minSize = new Vector2(600, 300);
+				w.ShowUtility();
+				w.Focus();
+				w.Repaint();
+			}
+
+			private void OnGUI()
+			{
+				using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+				{
+					GUILayout.Label("Invalid slots: " + _issues.Count, EditorStyles.toolbarButton);
+					GUILayout.FlexibleSpace();
+					using (new EditorGUI.DisabledScope(_isRunning))
+					{
+						if (GUILayout.Button("Fix all slots without slot names", EditorStyles.toolbarButton))
+						{
+							FixAllSlotsWithoutSlotNames();
+						}
+						if (GUILayout.Button("Load missing materials", EditorStyles.toolbarButton))
+						{
+							LoadMissingMaterials();
+						}
+					}
+					if (GUILayout.Button("Close", EditorStyles.toolbarButton, GUILayout.Width(80)))
+					{
+						Close();
+					}
+				}
+
+				if (_issues.Count == 0)
+				{
+					EditorGUILayout.HelpBox("No invalid slots detected.", MessageType.Info);
+					return;
+				}
+
+				_scroll = EditorGUILayout.BeginScrollView(_scroll);
+				for (int i = 0; i < _issues.Count; i++)
+				{
+					var issue = _issues[i];
+					if (issue.Slot == null)
+					{
+						continue;
+					}
+
+					EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+					using (new EditorGUILayout.HorizontalScope())
+					{
+						EditorGUILayout.ObjectField(issue.Slot, typeof(SlotDataAsset), false);
+						if (GUILayout.Button("Select", GUILayout.Width(80)))
+						{
+							Selection.activeObject = issue.Slot;
+							EditorGUIUtility.PingObject(issue.Slot);
+						}
+						if (GUILayout.Button("Inspect", GUILayout.Width(80)))
+						{
+                            InspectorUtlity.InspectTarget(issue.Slot);
+						}
+					}
+
+					if (issue.Reasons != null)
+					{
+						for (int r = 0; r < issue.Reasons.Count; r++)
+						{
+							if (string.IsNullOrEmpty(issue.Reasons[r]))
+							{
+								continue;
+							}
+							EditorGUILayout.LabelField("- " + issue.Reasons[r], EditorStyles.wordWrappedLabel);
+						}
+					}
+					EditorGUILayout.EndVertical();
+				}
+				EditorGUILayout.EndScrollView();
+			}
+
+			private void FixAllSlotsWithoutSlotNames()
+			{
+				var indexer = UMAAssetIndexer.Instance;
+				if (indexer == null)
+				{
+					return;
+				}
+
+				var slots = indexer.GetAllAssets<SlotDataAsset>();
+				int fixedCount = 0;
+				try
+				{
+					_isRunning = true;
+					for (int i = 0; i < slots.Count; i++)
+					{
+						var s = slots[i];
+						if (s == null)
+						{
+							continue;
+						}
+						if (!string.IsNullOrEmpty(s.slotName))
+						{
+							continue;
+						}
+
+						Undo.RecordObject(s, "Fix slotName");
+						s.slotName = s.name;
+						EditorUtility.SetDirty(s);
+						fixedCount++;
+					}
+				}
+				finally
+				{
+					_isRunning = false;
+				}
+
+				AssetDatabase.SaveAssets();
+				EditorUtility.DisplayDialog("Fix slot names", "Updated " + fixedCount + " slot(s).", "OK");
+				RefreshReport();
+			}
+
+			private void LoadMissingMaterials()
+			{
+				var indexer = UMAAssetIndexer.Instance;
+				if (indexer == null)
+				{
+					return;
+				}
+
+				var slots = indexer.GetAllAssets<SlotDataAsset>();
+				int fixedCount = 0;
+				int missingName = 0;
+				try
+				{
+					_isRunning = true;
+					for (int i = 0; i < slots.Count; i++)
+					{
+						var s = slots[i];
+						if (s == null)
+						{
+							continue;
+						}
+						if (s.material != null)
+						{
+							continue;
+						}
+						if (string.IsNullOrEmpty(s.materialName))
+						{
+							missingName++;
+							continue;
+						}
+
+						var mat = indexer.GetAsset<UMAMaterial>(s.materialName);
+						if (mat == null)
+						{
+							continue;
+						}
+
+						Undo.RecordObject(s, "Load missing slot material");
+						s.material = mat;
+						EditorUtility.SetDirty(s);
+						fixedCount++;
+					}
+				}
+				finally
+				{
+					_isRunning = false;
+				}
+
+				AssetDatabase.SaveAssets();
+				EditorUtility.DisplayDialog("Load missing materials", "Updated " + fixedCount + " slot(s). Slots missing materialName: " + missingName + ".", "OK");
+				RefreshReport();
+			}
+
+			private void RefreshReport()
+			{
+				var indexer = UMAAssetIndexer.Instance;
+				if (indexer == null)
+				{
+					return;
+				}
+				var slots = indexer.GetAllAssets<SlotDataAsset>();
+				var newIssues = new List<SlotIssue>();
+				var reasons = new List<string>();
+				for (int i = 0; i < slots.Count; i++)
+				{
+					var sda = slots[i];
+					if (sda == null)
+					{
+						continue;
+					}
+					if (!sda.ValidateMeshData(reasons))
+					{
+						newIssues.Add(new SlotIssue { Slot = sda, Reasons = new List<string>(reasons) });
+					}
+				}
+				_issues.Clear();
+				_issues.AddRange(newIssues);
+				Repaint();
+			}
+		}
+
         [NonSerialized] bool m_Initialized;
         [SerializeField] TreeViewState m_TreeViewState; // Serialized in the window layout file so it survives assembly reloading
         [SerializeField] MultiColumnHeaderState m_MultiColumnHeaderState;
@@ -64,6 +281,164 @@ namespace UMA.Controls
         MeshHideAsset AddedMHA = null;
 
         private const string SlotLodPrefKeyPrefix = "UMA.UMASimpleLODEditor.InternalSlotLOD.";
+
+		private static bool IsBakedSlotName(string assetName)
+		{
+			if (string.IsNullOrEmpty(assetName))
+			{
+				return false;
+			}
+			return assetName.IndexOf("_baked_", StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+
+		private static string MakeSafeFileStem(string name)
+		{
+			if (string.IsNullOrEmpty(name))
+			{
+				return string.Empty;
+			}
+			string safe = name.Replace(':', '_').Replace('/', '_').Replace('\\', '_');
+			safe = safe.Replace('*', '_').Replace('?', '_').Replace('"', '_').Replace('<', '_').Replace('>', '_').Replace('|', '_');
+			return safe.Trim();
+		}
+
+		private static string GetPreferredBakedSlotAssetName(SlotDataAsset slot)
+		{
+			if (slot == null)
+			{
+				return string.Empty;
+			}
+			// If Unity object name is default/empty, use slotName as a better identifier
+			string n = slot.name;
+			if (string.IsNullOrEmpty(n) || n == "SlotDataAsset" || n == "New SlotDataAsset")
+			{
+				n = slot.slotName;
+			}
+			return MakeSafeFileStem(n);
+		}
+
+		private void SaveBakedSlotsToDisk(List<SlotDataAsset> slotsSource, string title)
+		{
+			if (UAI == null)
+			{
+				return;
+			}
+
+			string destFolder = EditorUtility.OpenFolderPanel(title, "Assets", "");
+			if (string.IsNullOrEmpty(destFolder))
+			{
+				return;
+			}
+
+			// Convert absolute path under project to an Assets-relative path
+			destFolder = destFolder.Replace('\\', '/');
+			string projectPath = Application.dataPath.Replace('\\', '/');
+			if (!destFolder.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase))
+			{
+				EditorUtility.DisplayDialog("Save baked slots", "Please select a folder under this project's Assets folder.", "OK");
+				return;
+			}
+			string destAssetFolder = "Assets" + destFolder.Substring(projectPath.Length);
+
+			if (slotsSource == null || slotsSource.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Save baked slots", "No SlotDataAsset found to save.", "OK");
+				return;
+			}
+
+			int saved = 0;
+			int skipped = 0;
+			int total = slotsSource.Count;
+			int processed = 0;
+			try
+			{
+				for (int i = 0; i < slotsSource.Count; i++)
+				{
+					var slot = slotsSource[i];
+					processed++;
+					EditorUtility.DisplayProgressBar("Save baked slots", "Processing slots...", Mathf.Clamp01((float)processed / Mathf.Max(1, total)));
+
+					if (slot == null)
+					{
+						skipped++;
+						continue;
+					}
+
+					// We only want the baked (in-memory) ones.
+					if (!IsBakedSlotName(slot.name) && !IsBakedSlotName(slot.slotName))
+					{
+						skipped++;
+						continue;
+					}
+
+					string existingPath = AssetDatabase.GetAssetPath(slot);
+					if (!string.IsNullOrEmpty(existingPath))
+					{
+						// Already on disk
+						skipped++;
+						continue;
+					}
+
+					// Derive filename
+					string stem = GetPreferredBakedSlotAssetName(slot);
+					if (string.IsNullOrEmpty(stem))
+					{
+						stem = "BakedSlot";
+					}
+					string targetPath = AssetDatabase.GenerateUniqueAssetPath(destAssetFolder + "/" + stem + ".asset");
+
+					// Create a persisted clone so we don't mutate the in-memory instance in-place
+					var clone = UnityEngine.Object.Instantiate(slot);
+					clone.name = Path.GetFileNameWithoutExtension(targetPath);
+					Undo.RegisterCreatedObjectUndo(clone, "Save baked slot");
+					AssetDatabase.CreateAsset(clone, targetPath);
+					EditorUtility.SetDirty(clone);
+
+					// Replace the indexer reference to point to the saved asset
+					try
+					{
+						UAI.ProcessNewItem(clone, false, false);
+					}
+					catch { }
+
+					saved++;
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+			}
+
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
+			m_Initialized = false;
+			Repaint();
+			EditorUtility.DisplayDialog("Save baked slots", "Saved " + saved + " baked slot(s). Skipped " + skipped + ".", "OK");
+		}
+
+		private void SaveAllBakedSlotsToDisk()
+		{
+			var allSlots = UAI.GetAllAssets<SlotDataAsset>();
+			SaveBakedSlotsToDisk(allSlots, "Save all baked slots to folder");
+		}
+
+		private void SaveSelectedBakedSlotsToDisk()
+		{
+			var selected = GetSelectedAssets(typeof(SlotDataAsset));
+			var slots = new List<SlotDataAsset>(selected != null ? selected.Count : 0);
+			if (selected != null)
+			{
+				for (int i = 0; i < selected.Count; i++)
+				{
+					var s = selected[i].Item as SlotDataAsset;
+					if (s != null)
+					{
+						slots.Add(s);
+					}
+				}
+			}
+			SaveBakedSlotsToDisk(slots, "Save selected baked slots to folder");
+		}
 
         private static int LoadSlotLodInt(string key, int defaultValue)
         {
@@ -379,6 +754,16 @@ namespace UMA.Controls
                 UMAAssetIndexer.Instance.ForceSave();
             });
 
+			AddMenuItemWithCallback(ToolsMenu, "Save all baked slots to disk", () =>
+			{
+				SaveAllBakedSlotsToDisk(); 
+			});
+
+			AddMenuItemWithCallback(ToolsMenu, "Save selected baked slots to disk", () =>
+			{
+				SaveSelectedBakedSlotsToDisk();
+			});
+
             AddMenuItemWithCallback(FileMenu, "Rebuild Dictionaries", () =>
             {
                 if (UAI == null) return;
@@ -595,21 +980,45 @@ namespace UMA.Controls
             AddMenuItemWithCallback(ToolsMenu, "Validate All Indexed Slots", () =>
             {
                 if (UAI == null) return;
-                EditorUtility.DisplayProgressBar("Validating", "Validating Slots", 0.0f);
-                List<SlotDataAsset> slots = UMAAssetIndexer.Instance.GetAllAssets<SlotDataAsset>();
-                List<SlotDataAsset> BadSlots = new List<SlotDataAsset>();
+				List<SlotDataAsset> slots = UMAAssetIndexer.Instance.GetAllAssets<SlotDataAsset>();
+				var issues = new List<SlotValidationReportWindow.SlotIssue>();
+				var reasons = new List<string>();
+				try
+				{
+					EditorUtility.DisplayProgressBar("Validating", "Validating Slots", 0.0f);
+					for (int i = 0; i < slots.Count; i++)
+					{
+						SlotDataAsset sda = slots[i];
+						float perc = (slots.Count > 0) ? ((float)i / (float)slots.Count) : 1.0f;
+						EditorUtility.DisplayProgressBar("Validating", sda != null ? ("Validating " + sda.name) : "Validating", perc);
 
-                for (int i = 0; i < slots.Count; i++)
-                {
-                    SlotDataAsset sda = slots[i];
-                    if (!sda.ValidateMeshData())
-                    {
-                        BadSlots.Add(sda);
-                    }
-                    float perc = (float)i / (float)slots.Count;
-                    EditorUtility.DisplayProgressBar("Validating", "Validating Slots", perc);
-                }
-                return;
+						if (sda == null)
+						{
+							continue;
+						}
+
+						if (!sda.ValidateMeshData(reasons))
+						{
+							issues.Add(new SlotValidationReportWindow.SlotIssue
+							{
+								Slot = sda,
+								Reasons = new List<string>(reasons)
+							});
+						}
+					}
+				}
+				finally
+				{
+					EditorUtility.ClearProgressBar();
+				}
+
+				if (issues.Count == 0)
+				{
+					EditorUtility.DisplayDialog("Validate Slots", "No invalid slots detected.", "OK");
+					return;
+				}
+
+				SlotValidationReportWindow.ShowReport(issues);
             });
 
 
@@ -4315,6 +4724,12 @@ namespace UMA.Controls
 				ItemsMenu.DropDown(new Rect(MenuRect));
 			}
 
+			MenuRect.x += 70;
+			MenuRect.width = 70;
+			if (EditorGUI.DropdownButton(MenuRect, new GUIContent("Tools"), FocusType.Passive, EditorStyles.toolbarDropDown))
+			{
+				ToolsMenu.DropDown(new Rect(MenuRect));
+			}
 
 			MenuRect.x += 70;
 			MenuRect.width = 100;

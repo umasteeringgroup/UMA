@@ -111,15 +111,15 @@ BEGIN_CODE
         return max(0.0h, dot(a, b));
     }
 
-    inline half Luminance(half3 color) {
+    inline half CalculateLuma(half3 color) {
         return dot(color, half3(0.299, 0.587, 0.114));
         //return dot(color, unity_ColorSpaceLuminance.rgb); // Use unity_ColorSpaceLuminance for better compatibility
     }
 
     inline half3 SaturateColors(half3 color, half saturation) {
         half gray = 0.214041f;
-        half luminance = Luminance(color);
-        color = (color - luminance) * saturation + luminance;
+        half luma = CalculateLuma(color);
+        color = (color - luma) * saturation + luma;
         return (color - gray) * _Contrast + gray; 
         
         //return lerp(half3(luminance, luminance, luminance), color, saturation);

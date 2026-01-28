@@ -49,7 +49,7 @@ MonoBehaviour:
   textureMerge: {fileID: 11400000, guid: d242fc6cda21e9b42b95a0c72bb3bee1, type: 2}
   convertRenderTexture: 0
   useAsyncConversion: 0
-  asyncMipRegen: 1
+  asyncMipRegen: 0
   convertMipMaps: 0
   atlasResolution: 1024
   editorAtlasResolution: 4096
@@ -66,7 +66,11 @@ MonoBehaviour:
   alwaysRegenerateRenderers: 0
   SaveAndRestoreIgnoredItems: 0
   meshCombiner: {fileID: 7275351159514515506}
+  flipDecalMode: 0
   InitialScaleFactor: 1
+  AutomaticScaling: 1
+  ScaleGPUMemoryCutoffMB: 4096
+  ScaleSystemMemoryCutoffMB: 8192
   editorInitialScaleFactor: 1
   IterationCount: 1
   processAllPending: 1

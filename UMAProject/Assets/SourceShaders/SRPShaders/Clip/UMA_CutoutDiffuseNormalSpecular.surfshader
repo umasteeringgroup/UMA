@@ -1,5 +1,5 @@
 BEGIN_OPTIONS
-   ShaderName "UMA/Cutout_Diffuse_Normal_Specular"
+   ShaderName "UMA/Cutout_Diffuse_Normal_SpecularZ"
    Stackable "False"
    Workflow "Specular"
 END_OPTIONS
@@ -18,6 +18,9 @@ BEGIN_PROPERTIES
 	_RimLightColor("Rim Light Color", Color) = (1,1,1,1)
 	_RimLightPower("Rim Light Power", Range(0.5, 12)) = 4
     _AlphaClip("Alpha Clip", Range(0,1)) = 0
+    [Toggle]_UseDither("Dither Near Cutout", Float) = 0
+    _DitherRange("Dither Range", Range(0,0.2)) = 0.05
+    _DitherScale("Dither Scale", Float) = 512
 
     [Enum(Off,0,Front,1,Back,2)]_CullMode("Culling Mode", Float) = 2
     [Enum(Flip, 0, Mirror, 1, None, 2)] _DoubleSidedNormalMode("Double sided normal mode", Float) = 1
@@ -35,19 +38,22 @@ END_PASS
 
 // Any variables you want to have in the per material CBuffer go here.
 BEGIN_CBUFFER
-    half4 _Color;
-	half  _ColorModulation;
-	half  _SmoothnessModulation;
-	half  _SpecularModulation;
-    half  _EmissiveModulation;
-    half _HalfLambertStrength;
-    float _DoubleSidedNormalMode;
-    half3 _RimLightColor;
-	half  _RimLightPower;
-    float _RimLightingModulation;
-    float _NormalStrength;
-    float _UseHalfLambert;
-    float _AlphaClip;
+    // Match Properties order and use consistent types
+    float4 _Color;
+    float  _ColorModulation;
+    float  _SpecularModulation;
+    float  _SmoothnessModulation;
+    float  _UseHalfLambert;
+    float  _HalfLambertStrength;
+    float  _RimLightingModulation;
+    float4 _RimLightColor;
+    float  _RimLightPower;
+    float  _AlphaClip;
+    float  _DoubleSidedNormalMode;
+    float  _NormalStrength;
+    float  _UseDither;
+    float  _DitherRange;
+    float  _DitherScale;
 END_CBUFFER
 
 
@@ -61,6 +67,14 @@ BEGIN_CODE
    TEXTURE2D(_SpecularMap);
    SAMPLER(sampler_SpecularMap);
 
+    // Stable hash-based noise for dithering
+    float hash12(float2 p)
+    {
+        float3 p3 = frac(float3(p.x, p.y, p.x) * 0.1031);
+        p3 += dot(p3, p3.yzx + 33.33);
+        return frac((p3.x + p3.y) * p3.z);
+    }
+
 
 	void SurfaceFunction(inout Surface o, ShaderData d)
 	{
@@ -70,7 +84,17 @@ BEGIN_CODE
       
 	  half4 mask = SAMPLE_TEXTURE2D(_SpecularMap,sampler_SpecularMap,cuv);
 	  half4 base_c = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, auv);
-      if ((base_c.a * _Color.a) < _AlphaClip) discard;
+      float a = base_c.a * _Color.a;
+      // Traditional cutout: discard when alpha is below cutoff
+      if (a < _AlphaClip) discard;
+      // Optional dithering near the cutoff to smooth edges
+      if (_UseDither > 0 && a < (_AlphaClip + _DitherRange) && _DitherRange > 0)
+      {
+          float coverage = saturate((a - _AlphaClip) / max(_DitherRange, 1e-5));
+          float2 uvpix = floor(auv * _DitherScale);
+          float n = hash12(uvpix);
+          if (coverage <= n) discard;
+      }
 
 	  half4 basepackednormal = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap,nuv);
 	  half3 base_n = UnpackScaleNormal(basepackednormal,_NormalStrength);
@@ -81,7 +105,6 @@ BEGIN_CODE
       o.Albedo = base_c.rgb   * _ColorModulation * _Color.rgb;
 
 	  o.Normal = base_n;
-	 // o.Metallic = base_Metallic * _MetallicModulation;
       o.Specular = base_specular * _SpecularModulation;
 	  o.Smoothness = base_smooth * _SmoothnessModulation;
 
@@ -108,10 +131,10 @@ BEGIN_CODE
         o.Albedo *= atten * lightColor * lambert;        
      }
 
-     if (_RimLightingModulation>0) 
+    if (_RimLightingModulation>0) 
      { 
 	    float rim = 1.0 - saturate(dot(d.tangentSpaceViewDir, o.Normal)); 
-	    o.Emission += (pow(rim, _RimLightPower) * _RimLightColor) * _RimLightingModulation;  
+	    o.Emission += (pow(rim, _RimLightPower) * _RimLightColor.rgb) * _RimLightingModulation;  
       }
 	}
 

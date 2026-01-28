@@ -8,6 +8,7 @@ using UMA.PoseTools;
 using UnityEditorInternal;
 #endif
 using UnityEngine;
+using System;
 using UnityEngine.Serialization;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -544,6 +545,82 @@ namespace UMA
             Errors = meshData.Validate();
             return true;
         }
+
+		/// <summary>
+		/// Strict validation for editor tools. Does not change behavior of <see cref="ValidateMeshData"/>.
+		/// Returns false when problems are detected and populates <paramref name="reasons"/> with details.
+		/// </summary>
+		public bool ValidateMeshData(List<string> reasons)
+		{
+			if (reasons == null)
+			{
+				throw new ArgumentNullException(nameof(reasons));
+			}
+			reasons.Clear();
+
+			if (string.IsNullOrEmpty(slotName))
+			{
+				reasons.Add("slotName is empty.");
+			}
+
+			// Utility slots are allowed to have no meshData and no material.
+			if (isUtilitySlot)
+			{
+				return reasons.Count == 0;
+			}
+
+			// If meshData is missing, treat as valid only if this looks like a deliberate utility slot.
+			if (meshData == null)
+			{
+				reasons.Add("meshData is null.");
+				return reasons.Count == 0;
+			}
+
+			// If meshData exists, basic shape should make sense
+			if (meshData.vertexCount <= 0)
+			{
+				reasons.Add("meshData has no vertices.");
+			}
+			if (meshData.subMeshCount <= 0)
+			{
+				reasons.Add("meshData has no submeshes.");
+			}
+
+			if (subMeshIndex < 0 || (meshData.subMeshCount > 0 && subMeshIndex >= meshData.subMeshCount))
+			{
+				reasons.Add("subMeshIndex is out of range for meshData.subMeshCount.");
+			}
+
+			// Material assignment (or at least materialName for bundles) should be present for renderable slots.
+			if (material == null)
+			{
+				if (string.IsNullOrEmpty(materialName))
+				{
+					reasons.Add("material is null and materialName is empty.");
+				}
+				else
+				{
+					reasons.Add("material is null (materialName is set; slot may require LoadFromIndex before use).");
+				}
+			}
+
+			string meshErrors = null;
+			try
+			{
+				meshErrors = meshData.Validate();
+			}
+			catch (Exception ex)
+			{
+				reasons.Add("meshData.Validate threw: " + ex.GetType().Name + ": " + ex.Message);
+				meshErrors = null;
+			}
+			if (!string.IsNullOrEmpty(meshErrors))
+			{
+				reasons.Add(meshErrors);
+			}
+
+			return reasons.Count == 0;
+		}
 
         private void AddError(string v)
         {

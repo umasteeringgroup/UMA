@@ -242,14 +242,14 @@ PrefabInstance:
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: prefab
       value: 
-      objectReference: {fileID: 153068, guid: f274f7de46bae39409af3fb7acdb97e6, type: 3}
+      objectReference: {fileID: 153068, guid: 07f355e97c3d63d43aca902b562409f4, type: 3}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridXSize
-      value: 4
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridZSize
-      value: 4
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: GridDistance
@@ -274,7 +274,7 @@ PrefabInstance:
     - target: {fileID: 2885161576314354680, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: 'Randomizers.Array.data[0]'
       value: 
-      objectReference: {fileID: 11400000, guid: 8b094ca6b40c5084e9a8316a526a87fd, type: 2}
+      objectReference: {fileID: 11400000, guid: 1d98bbac2224476408b48003899802fc, type: 2}
     - target: {fileID: 2885161576785209578, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       propertyPath: m_RootOrder
       value: 5
@@ -334,6 +334,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2885161576785399288, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1693305527}
+    - targetCorrespondingSourceObject: {fileID: 2885161576785399288, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1693305530}
   m_SourcePrefab: {fileID: 100100000, guid: 11b6342601a487e45a8ca8ed561a9b7a, type: 3}
 --- !u!1 &504827744
 GameObject:
@@ -718,11 +721,26 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1693305524}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eababb03e8df4bc40bbe5e5272fd96dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UMA_Examples::StatDisplayer
+--- !u!114 &1693305530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1693305524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b19a6b26dd4b48845b0237118b8cfb36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA_Core::UMA.FPSCounter
+  Text: {fileID: 0}
+  updateRate: 0.5
+  updateTime: 0
 --- !u!108 &2464011014809395105
 Light:
   m_ObjectHideFlags: 0

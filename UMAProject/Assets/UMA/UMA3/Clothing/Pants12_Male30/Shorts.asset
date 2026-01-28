@@ -26,7 +26,7 @@ MonoBehaviour:
   - race: Human Female 3.0
     filename: 
     thumb: {fileID: 0}
-  wardrobeSlot: None
+  wardrobeSlot: Legs
   Appended: 0
   Hides: []
   HideTags: []

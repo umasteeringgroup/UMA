@@ -60,30 +60,72 @@ namespace UMA.CharacterSystem.Editors
 
         public void SetupDropdown(string race)
         {
-            if (LastRace != race)
+			// Rebuild when race changes OR when the menu is empty (domain reload / index refresh)
+			if (LastRace != race || recipeMenu.Count == 0 || recipes.Count == 0)
             {
                 LastRace = race;
                 recipes.Clear();
                 recipeMenu.Clear();
-                if (thisDCA != null)
+				if (thisDCA != null)
                 {
                     try
                     {
-                        var availableRecipes = thisDCA.AvailableRecipes;
-                        if (availableRecipes != null)
-                        {
-                            foreach (var slot in availableRecipes.Keys)
-                            {
-                                var list = availableRecipes[slot];
-                                if (list == null) continue;
-                                foreach (var recipe in list)
-                                {
-                                    if (recipe == null) continue;
-                                    recipes.Add(recipe.name);
-                                    recipeMenu.Add(slot + "/" + recipe.name);
-                                }
-                            }
-                        }
+						// Ensure the DCA has an up-to-date AvailableRecipes mapping for the currently selected race
+						try
+						{
+							thisDCA.preloadWardrobeRecipes?.GetRecipesForRace(thisDCA.activeRace.name, thisDCA.activeRace.data);
+						}
+						catch { }
+
+						var availableRecipes = thisDCA.AvailableRecipes;
+						if ((availableRecipes == null || availableRecipes.Count == 0) && thisDCA.activeRace != null && thisDCA.activeRace.data != null)
+						{
+							// Fallback: force a rebuild of race recipes in the indexer and try again
+							var idx = TryGetIndexer();
+							if (idx != null)
+							{
+								try { idx.RebuildRaceRecipes(); } catch { }
+							}
+							availableRecipes = thisDCA.AvailableRecipes;
+						}
+
+						if (availableRecipes != null && availableRecipes.Count > 0)
+						{
+							// Present as a submenu for each wardrobe slot on the current race
+							var raceData = thisDCA.activeRace != null ? thisDCA.activeRace.data : null;
+							IList<string> slots = raceData != null ? raceData.wardrobeSlots : null;
+							if (slots != null && slots.Count > 0)
+							{
+								for (int si = 0; si < slots.Count; si++)
+								{
+									string slot = slots[si];
+									if (string.IsNullOrEmpty(slot)) continue;
+									if (!availableRecipes.TryGetValue(slot, out var list) || list == null) continue;
+									for (int ri = 0; ri < list.Count; ri++)
+									{
+										var recipe = list[ri];
+										if (recipe == null) continue;
+										recipes.Add(recipe.name);
+										recipeMenu.Add(slot + "/" + recipe.name);
+									}
+								}
+							}
+							else
+							{
+								foreach (var kvp in availableRecipes)
+								{
+									var list = kvp.Value;
+									if (list == null) continue;
+									for (int ri = 0; ri < list.Count; ri++)
+									{
+										var recipe = list[ri];
+										if (recipe == null) continue;
+										recipes.Add(recipe.name);
+										recipeMenu.Add(kvp.Key + "/" + recipe.name);
+									}
+								}
+							}
+						}
                     }
                     catch { /* ignore during reload */ }
                 }

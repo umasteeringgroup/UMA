@@ -46,9 +46,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: UMA_Core::UMA.DecalRTStampSlot
   overlayStamps:
   - name: AutoRTDecals
-    overlays:
-    - {fileID: 11400000, guid: 4cb716881cefd2c418029584f5f40e86, type: 2}
-    overlayNames: []
-    stamps: []
+    overlays: []
+    overlayNames:
+    - UMA30_Body_UDIM1002_UMA_F_Skin_UDIM1002
+    - UMA30_Body_UDIM1002_UMA_M_Skin_UDIM1002
+    - UMA30_Body_UDIM1005_UMA_F_Skin_UDIM1005
+    - UMA30_Body_UDIM1001_UMA_F_Skin_UDIM1001
+    - UMA30_Body_UDIM1003_UMA_F_Skin_UDIM1003
+    - UMA30_InnerMouth_FemaleInnerMouth.001
+    stamps:
+    - {fileID: 11400000, guid: 86e76e29059e3274db220456c5db8ec0, type: 2}
+    - {fileID: 11400000, guid: 46199ee6709ecb94a9200787f7b4662c, type: 2}
+    - {fileID: 11400000, guid: 7feac892f5d29ba4b9fcebfa1a202233, type: 2}
+    - {fileID: 11400000, guid: a648d9d58463a334bb54e5f3849e2f1d, type: 2}
+    - {fileID: 11400000, guid: 8e47e50654a32e14fa85b51b4c945a84, type: 2}
+    - {fileID: 11400000, guid: 7af63a2bb4162d845b64e339694e0303, type: 2}
+    - {fileID: 11400000, guid: 37aa5f2dd30ff4b47ad6f5a1c07dae0f, type: 2}
+    - {fileID: 11400000, guid: a9a2477786790db43aa11d39f0d741ba, type: 2}
   enableDebug: 0
   rgbOnlyDilation: 1
