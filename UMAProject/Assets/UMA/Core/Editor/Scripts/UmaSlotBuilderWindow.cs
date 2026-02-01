@@ -195,6 +195,8 @@ namespace UMA.Editors
         public UMAMaterial slotMaterial;
         public bool createOverlay;
         public bool createRecipe;
+        public bool appendTypeToName = true;
+        public bool addUDIMTileNumbers = true;
         public bool isBaseRaceRecipe = false;
         public bool addToGlobalLibrary;
         public bool binarySerialization;
@@ -525,6 +527,7 @@ namespace UMA.Editors
             }
 
             EditorGUILayout.EndHorizontal();
+
             //EditorGUILayout.LabelField(slotName + "_Overlay");
             //EditorGUILayout.EndHorizontal();
             //EditorGUILayout.BeginHorizontal();
@@ -534,6 +537,11 @@ namespace UMA.Editors
             binarySerialization = EditorGUILayout.Toggle(new GUIContent("Binary Serialization", "Forces the created Mesh object to be serialized as binary. Recommended for large meshes and blendshapes."), binarySerialization);
             addToGlobalLibrary = EditorGUILayout.Toggle("Add To Global Library", addToGlobalLibrary);
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            // appendTypeToName = EditorGUILayout.Toggle("Append Type To Name", appendTypeToName);
+            addUDIMTileNumbers = EditorGUILayout.Toggle("Add UDIM Tile Numbers", addUDIMTileNumbers);
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.BeginHorizontal();
             calcTangents = EditorGUILayout.Toggle("Calculate Tangents", calcTangents);
             EditorGUILayout.EndHorizontal();
@@ -1195,6 +1203,8 @@ namespace UMA.Editors
             sbp.slotFolderPath = slotFolder != null ? AssetDatabase.GetAssetPath(slotFolder) : string.Empty;
             sbp.addToGlobalLibrary = addToGlobalLibrary;
             sbp.batchMode = batchMode;
+            sbp.appendTypeToName = appendTypeToName;
+            sbp.addUDIMTileNumbers = addUDIMTileNumbers;
 
             // Slot LOD generation
             sbp.generateSlotLods = generateSlotLods;
@@ -1262,7 +1272,11 @@ namespace UMA.Editors
             }
 
             string assetDir = AssetDatabase.GetAssetPath(slotFolder);
-            string recipeBaseName = GetSlotName(slotMesh) + (isBaseRaceRecipe ? "_BaseRaceRecipe" : "_Recipe");
+            string recipeBaseName = GetSlotName(slotMesh);
+            if (appendTypeToName)
+            {
+                recipeBaseName += isBaseRaceRecipe ? "_BaseRaceRecipe" : "_Recipe";
+            }
             string recipePath = Path.Combine(assetDir, recipeBaseName + ".asset").Replace('\\','/');
             recipePath = AssetDatabase.GenerateUniqueAssetPath(recipePath);
 

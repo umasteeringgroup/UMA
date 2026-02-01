@@ -614,7 +614,7 @@ namespace UMA.CharacterSystem.Editors
             }
             EditorGUI.BeginChangeCheck();
             bool wasEnabled = GUI.enabled; //VES added
-            if (wasEnabled && PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) != null)
+            if (wasEnabled && thisDCA != null && PrefabStageUtility.GetPrefabStage(thisDCA.gameObject) != null)
             { //VES added, checks if in prefab
                 GUI.enabled = false; //VES added (we don't want anyone generating the character in the patient prefabs as it breaks inheritance, and we setup patients via code)
             }

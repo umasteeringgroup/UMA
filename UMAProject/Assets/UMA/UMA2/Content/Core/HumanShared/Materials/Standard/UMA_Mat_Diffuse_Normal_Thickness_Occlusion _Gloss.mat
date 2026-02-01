@@ -28,7 +28,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: d2f564755f5fb184f9b281447b756f0c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
@@ -60,7 +60,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlossMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: d2f564755f5fb184f9b281447b756f0c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -80,11 +80,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SkinMaskMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: d2f564755f5fb184f9b281447b756f0c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ThicknessMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: d2f564755f5fb184f9b281447b756f0c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -102,7 +102,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _BumpScale: 1
-    - _ColorModulation: 0.38
+    - _ColorModulation: 1
     - _Contrast: 1
     - _CullMode: 2
     - _Cutoff: 0.5
@@ -117,10 +117,10 @@ Material:
     - _HalfLambertStrength: 5.24
     - _InvertSkinMask: 0
     - _InvertThickness: 1
-    - _MaxSmooth: 0.83
+    - _MaxSmooth: 0.899
     - _Metallic: 0
     - _MetallicModulation: 1
-    - _MinSmooth: 0.192
+    - _MinSmooth: 0.314
     - _Mode: 0
     - _NormalStrength: 0.612
     - _Occlusion: 2
@@ -134,7 +134,7 @@ Material:
     - _SSSLevel: 0.3
     - _Saturation: 1
     - _SkinMaskAmount: 1
-    - _SmoothnessAdd: 0.114
+    - _SmoothnessAdd: 0.063
     - _SmoothnessModulation: 0.632
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -143,7 +143,7 @@ Material:
     - _UseHalfLambert: 1
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 1, g: 0.8980392, b: 0.9098039, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _EmissiveAdd: {r: 0, g: 0, b: 0, a: 0}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}

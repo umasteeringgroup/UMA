@@ -2133,11 +2133,11 @@ namespace UMA
             AddText("This only takes a minute, but is necessary to make sure UMA knows where everything is.");
             LogLine l = AddText("Rebuild Library after importing new version!");
             AddText("");
-            AddText("To get started on your own, click on the <b>'Add UMA an to Current Scene'</b> button to the right");
+            AddText("To get started on your own, click on the <b>'Add UMA an to Current Scene'</b> button to the left");
             AddText("");
-            AddText("If you are new to UMA, please check out the <b>'Basics'</b> section to the right");
+            AddText("If you are new to UMA, please check out the <b>'Basics'</b> section to the left");
             AddText("");
-            AddText("To check out UMA in action, please open the sample scene using the button to the right");
+            AddText("To check out UMA in action, please open a sample scene using the button to the left");
             AddText("");
             AddText("Please join the <b>UMA Discord</b> for help and support (see Links)");
             AddText("You can also check out the <b>UMA Wiki</b> for documentation (see Links)");

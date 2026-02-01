@@ -407,10 +407,18 @@ namespace UMA.Editors
                 return null;
             }
 
-            string matName = (srcMat != null && !string.IsNullOrEmpty(srcMat.name)) ? srcMat.name : "Material";
-            string overlayName = udimNumber.HasValue
-            ? string.Format("{0}_{1}_UDIM{2}", slot.slotName, matName, udimNumber.Value)
-            : string.Format("{0}_{1}", slot.slotName, matName);
+            string overlayName = slot.slotName;
+            if (sbp.nameByMaterial)
+            {
+                string matName = (srcMat != null && !string.IsNullOrEmpty(srcMat.name)) ? srcMat.name : "Material";
+                matName = matName.Replace(" (Instance)", "").Replace(" ", "_");
+                overlayName += "_" + matName;
+            }
+            if (sbp.appendTypeToName)
+            {
+                overlayName += "_overlay";
+            }
+
 
             // Build texture list based on UMAMaterial channels from the source material
             int channelCount = (sbp.material.channels != null) ? sbp.material.channels.Length : 0;
@@ -439,7 +447,7 @@ namespace UMA.Editors
             }
 
             // Compute target asset path (no unique name generation)
-            string fileName = overlayName + "_overlay.asset";
+            string fileName = overlayName+".asset";
             string overlayPath = sbp.useRootFolder ? (sbp.slotFolder + '/' + fileName) : (assetDir + '/' + fileName);
 
             // If an overlay already exists at this path, update it in place
@@ -1536,9 +1544,11 @@ namespace UMA.Editors
                     continue;
                 }
 
+                int i = 0;
                 // Create a slot per used tile
                 foreach (var kvp in tileToTris)
                 {
+                    ++i;
                     int tu = kvp.Key.u;
                     int tv = kvp.Key.v;
                     int udimNumber = 1001 + tu + (tv * 10);
@@ -1557,7 +1567,18 @@ namespace UMA.Editors
                             }
                         }
                     }
-                    string theSlotName = string.Format("{0}_UDIM{1}", baseName, udimNumber);
+                    string theSlotName = baseName;
+
+                    if (sbp.addUDIMTileNumbers)
+                    {    
+                        theSlotName = string.Format("{0}_UDIM{1}", baseName, udimNumber);
+                    }
+                    else
+                    {
+                        // get the last 3 digits 
+                        theSlotName = string.Format("{0}_{1}", baseName, i);
+                    }
+
 
                     // Build a compact temporary mesh limited to this tile for submesh ->0, with index map
                     Mesh tileMeshSrc = UnityEngine.Object.Instantiate(mesh);
@@ -1572,11 +1593,16 @@ namespace UMA.Editors
 
                     try
                     {
+                        string append = ".asset";
+                        if (sbp.appendTypeToName)
+                        {
+                            append = "_slot.asset";
+                        }
                         // Determine target path
-                        string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + "_slot.asset";
+                        string theSlotPath = sbp.slotFolder + '/' + sbp.assetName + '/' + theSlotName + append;
                         if (sbp.useRootFolder)
                         {
-                            theSlotPath = sbp.slotFolder + '/' + theSlotName + "_slot.asset";
+                            theSlotPath = sbp.slotFolder + '/' + theSlotName + append;
                         }
 
                         var existing = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(theSlotPath);

@@ -149,7 +149,11 @@ namespace UMA.Editors
 
                 EditorUtility.SetDirty(slot);
                 AssetDatabase.SaveAssetIfDirty(slot);
+#if UNITY_6000_3_OR_NEWER
                 string path = AssetDatabase.GetAssetPath(slot.GetEntityId());
+#else
+                string path = AssetDatabase.GetAssetPath(slot.GetInstanceID());
+#endif
                 AssetDatabase.ImportAsset(path);
                 UMAUpdateProcessor.UpdateSlot(slot, false);
 
@@ -169,7 +173,7 @@ namespace UMA.Editors
 #else
             return false;
 #endif
-        }
+            }
 
         public static bool GenerateAndApplyLods(SlotDataAsset slot, LodGenOptions options = null)
         {

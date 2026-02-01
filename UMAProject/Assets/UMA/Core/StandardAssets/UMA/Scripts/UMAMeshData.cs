@@ -28,14 +28,14 @@ namespace UMA
 			offset = lodrange.indexStart;
 			count = lodrange.indexCount;
         }
+#endif
 
-		public UMALodRange(uint offset, uint count)
+        public UMALodRange(uint offset, uint count)
 		{
 			this.offset = offset;
 			this.count = count;
 		}
 
-#endif
 	}
 
     [Serializable]

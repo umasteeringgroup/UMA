@@ -4570,7 +4570,11 @@ namespace UMA
                     if (obj != null)
                     {
                         ai._Name = ai.EvilName;
+#if UNITY_6000_3_OR_NEWER
                         ai._Path = AssetDatabase.GetAssetPath(obj.GetEntityId());
+#else
+                        ai._Path = AssetDatabase.GetAssetPath(obj.GetInstanceID());
+#endif
                         ai._Guid = AssetDatabase.AssetPathToGUID(ai._Path);
                     }
                     else
@@ -4599,11 +4603,11 @@ namespace UMA
         }
 
 #endif
-        /// <summary>
-        /// returns the entire lookup dictionary for a specific type.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
+                        /// <summary>
+                        /// returns the entire lookup dictionary for a specific type.
+                        /// </summary>
+                        /// <param name="type"></param>
+                        /// <returns></returns>
         public Dictionary<string, AssetItem> GetAssetDictionary(System.Type type)
         {
             System.Type LookupType = TypeToLookup[type];

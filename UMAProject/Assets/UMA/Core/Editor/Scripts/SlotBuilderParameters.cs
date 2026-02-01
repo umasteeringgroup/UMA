@@ -18,6 +18,8 @@ namespace UMA.Editors
         public bool createRecipe;
         public bool isBaseRaceRecipe;
         public bool addToGlobalLibrary; // new
+        public bool appendTypeToName; // new
+        public bool addUDIMTileNumbers; // new
 
         public string stripBones;
         public string rootBone;

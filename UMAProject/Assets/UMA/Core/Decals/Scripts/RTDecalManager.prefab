@@ -53,15 +53,24 @@ MonoBehaviour:
     - UMA30_Body_UDIM1005_UMA_F_Skin_UDIM1005
     - UMA30_Body_UDIM1001_UMA_F_Skin_UDIM1001
     - UMA30_Body_UDIM1003_UMA_F_Skin_UDIM1003
+    - UMA30_Body_UDIM1004_UMA_F_Skin_UDIM1004
+    - UMA30_Eyebrows_Fem_Eyebrows
+    - UMA30_Eyelashes_UMA_EYELASHES
+    - UMA30_Eyes_Fem_Eyes
     - UMA30_InnerMouth_FemaleInnerMouth.001
     stamps:
-    - {fileID: 11400000, guid: 86e76e29059e3274db220456c5db8ec0, type: 2}
-    - {fileID: 11400000, guid: 46199ee6709ecb94a9200787f7b4662c, type: 2}
-    - {fileID: 11400000, guid: 7feac892f5d29ba4b9fcebfa1a202233, type: 2}
-    - {fileID: 11400000, guid: a648d9d58463a334bb54e5f3849e2f1d, type: 2}
-    - {fileID: 11400000, guid: 8e47e50654a32e14fa85b51b4c945a84, type: 2}
-    - {fileID: 11400000, guid: 7af63a2bb4162d845b64e339694e0303, type: 2}
-    - {fileID: 11400000, guid: 37aa5f2dd30ff4b47ad6f5a1c07dae0f, type: 2}
-    - {fileID: 11400000, guid: a9a2477786790db43aa11d39f0d741ba, type: 2}
+    - {fileID: 11400000, guid: e2f767d40a6920c4b976a516e259f462, type: 2}
+    - {fileID: 11400000, guid: 16b074d11b6c2f14ab20e7f1b7c3ec8f, type: 2}
+    - {fileID: 11400000, guid: 8f8af5f75c17686419718efc1b62c870, type: 2}
+    - {fileID: 11400000, guid: 14ba297d97dfb474b8d77ed060eb532c, type: 2}
+    - {fileID: 11400000, guid: 0205a5f7a789190459f9650ae81c37b6, type: 2}
+    - {fileID: 11400000, guid: 423b867b964a9c943b1a18f1a932c124, type: 2}
+    - {fileID: 11400000, guid: f6ae21f1d1b46ba4cbea07bfcafc4b68, type: 2}
+    - {fileID: 11400000, guid: d3aa4892ccfdca44db5237bc94406519, type: 2}
+    - {fileID: 11400000, guid: 4a7954e3e53cf4d4aa9683e567d407c1, type: 2}
+    - {fileID: 11400000, guid: ddcb716566cf4a14f9a4b88953ac4bed, type: 2}
+    - {fileID: 11400000, guid: d97736f910cfb654db10bb4d91a5683c, type: 2}
+    - {fileID: 11400000, guid: 45769c8873e226d4ebd7efc991e90d76, type: 2}
+    - {fileID: 11400000, guid: 4b7ba54afdd33674e853707b7d638bf5, type: 2}
   enableDebug: 0
   rgbOnlyDilation: 1

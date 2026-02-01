@@ -33,9 +33,13 @@ namespace UMA
 			// 4- Fallback to our previous selection
 			inspectorInstance.Show();
 
-			// Set the selection to GO we want to inspect
-			// Selection.activeGameObject = target;
-			Selection.entityIds = new EntityId[] { target.GetEntityId() };
+            // Set the selection to GO we want to inspect
+            // Selection.activeGameObject = target;
+#if UNITY_6000_3_OR_NEWER
+            Selection.entityIds = new EntityId[] { target.GetEntityId() };
+#else
+            Selection.instanceIDs = new int[] { target.GetInstanceID() };
+#endif
 
 			// Invoke `isLocked` setter method passing 'true' to lock the inspector
 			isLocked.GetSetMethod().Invoke(inspectorInstance, new object[] { true });
