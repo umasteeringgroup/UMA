@@ -55,6 +55,7 @@ namespace UMA.Editors
         // Optional: generate internal per-slot LOD triangle buffers/ranges using SlotLodGenerator.
         // When enabled, Unity mesh LOD copying is skipped.
         public bool generateSlotLods;
+        public bool useUnityLodGenerator;
         public int slotLodMaxLevels;
         public int slotLodMinTriangles;
         public float slotLodTargetReductionPerLevel;

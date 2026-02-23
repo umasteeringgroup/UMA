@@ -171,6 +171,7 @@ namespace UMA.Editors
 
             // Slot LOD generation
             public bool generateSlotLods;
+            public bool useUnityLodGenerator;
             public int slotLodMaxLevels;
             public int slotLodMinTriangles;
             public float slotLodTargetReductionPerLevel;
@@ -240,6 +241,7 @@ namespace UMA.Editors
 
         // Slot LOD generation
         public bool generateSlotLods = false;
+        public bool useUnityLodGenerator = false;
         public int slotLodMaxLevels = 8;
         public int slotLodMinTriangles = 256;
         public float slotLodTargetReductionPerLevel = 0.5f;
@@ -310,6 +312,7 @@ namespace UMA.Editors
                 state.slotFolderPath = slotFolder != null ? AssetDatabase.GetAssetPath(slotFolder) : string.Empty;
 
                 state.generateSlotLods = generateSlotLods;
+                state.useUnityLodGenerator = useUnityLodGenerator;
                 state.slotLodMaxLevels = slotLodMaxLevels;
                 state.slotLodMinTriangles = slotLodMinTriangles;
                 state.slotLodTargetReductionPerLevel = slotLodTargetReductionPerLevel;
@@ -369,6 +372,7 @@ namespace UMA.Editors
                 alwaysRecreateSlots = state.alwaysRecreateSlots;
 
                 generateSlotLods = state.generateSlotLods;
+                useUnityLodGenerator = state.useUnityLodGenerator;
                 slotLodMaxLevels = state.slotLodMaxLevels;
                 slotLodMinTriangles = state.slotLodMinTriangles;
                 slotLodTargetReductionPerLevel = state.slotLodTargetReductionPerLevel;
@@ -795,18 +799,24 @@ namespace UMA.Editors
                 EditorGUILayout.EndHorizontal();
                 using (new EditorGUI.DisabledScope(!generateSlotLods))
                 {
+#if UNITY_6000_2_OR_NEWER
+                    useUnityLodGenerator = EditorGUILayout.Toggle(new GUIContent("Use Unity LOD Generator", "Use Unity's built-in mesh LOD generator instead of UMA's custom generator."), useUnityLodGenerator);
+#endif
                     slotLodMaxLevels = EditorGUILayout.IntSlider(new GUIContent("Max LOD Levels", "Maximum internal LOD levels to generate (including LOD0)."), Mathf.Clamp(slotLodMaxLevels, 1, 8), 1, 8);
-                    slotLodMinTriangles = EditorGUILayout.IntField(new GUIContent("Min Triangles", "Stop generating when a LOD reaches this triangle count (approx)."), Mathf.Max(0, slotLodMinTriangles));
-                    slotLodTargetReductionPerLevel = EditorGUILayout.Slider(new GUIContent("Reduction per Level", "Target triangle reduction ratio per LOD step."), Mathf.Clamp01(slotLodTargetReductionPerLevel), 0.1f, 0.9f);
-                    slotLodPreserveBoundaryEdges = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges", "Attempt to preserve open edges to reduce seams when combined with other slots."), slotLodPreserveBoundaryEdges);
-                    slotLodBoundaryWeight = EditorGUILayout.FloatField(new GUIContent(
-                        "Boundary Weight",
-                        "表tDefault / good starting point: 10\n" +
-                        "表tIf you see borders \u201Cchewing in\u201D or seams drifting: 20\u201350\n" +
-                        "表tIf you see it refusing to reduce enough or leaving too much geometry near borders: 5\u201310\n" +
-                        "表tFor slots where border alignment is critical (hands, sleeves, boots, neck, waist): 25\u201375\n" +
-                        "表tFor mostly-closed pieces (props, buttons, inner mouth) where border preservation is less important: 0\u201310"),
-                        Mathf.Max(0f, slotLodBoundaryWeight));
+                 using (new EditorGUI.DisabledScope(useUnityLodGenerator))
+                    {
+                        slotLodMinTriangles = EditorGUILayout.IntField(new GUIContent("Min Triangles", "Stop generating when a LOD reaches this triangle count (approx)."), Mathf.Max(0, slotLodMinTriangles));
+                        slotLodTargetReductionPerLevel = EditorGUILayout.Slider(new GUIContent("Reduction per Level", "Target triangle reduction ratio per LOD step."), Mathf.Clamp01(slotLodTargetReductionPerLevel), 0.1f, 0.9f);
+                        slotLodPreserveBoundaryEdges = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges", "Attempt to preserve open edges to reduce seams when combined with other slots."), slotLodPreserveBoundaryEdges);
+                        slotLodBoundaryWeight = EditorGUILayout.FloatField(new GUIContent(
+                            "Boundary Weight",
+                            "表tDefault / good starting point: 10\n" +
+                            "表tIf you see borders \u201Cchewing in\u201D or seams drifting: 20\u201350\n" +
+                            "表tIf you see it refusing to reduce enough or leaving too much geometry near borders: 5\u201310\n" +
+                            "表tFor slots where border alignment is critical (hands, sleeves, boots, neck, waist): 25\u201375\n" +
+                            "表tFor mostly-closed pieces (props, buttons, inner mouth) where border preservation is less important: 0\u201310"),
+                            Mathf.Max(0f, slotLodBoundaryWeight));
+                    }
                 }
             }
             GUIHelper.EndVerticalPadded(2);
@@ -937,6 +947,8 @@ namespace UMA.Editors
                 return;
             }
 
+            var processedEntries = new List<PendingSmrEntry>();
+
             // Aggregate results from all processed meshes
             var aggregate = new UMASlotProcessingUtil.SlotBuildResult
             {
@@ -1040,6 +1052,8 @@ namespace UMA.Editors
                         }
                     }
 
+                    processedEntries.Add(e);
+
                     current++;
                 }
                 Progress.Report(progressId,1.0f,"Finishing...");
@@ -1091,7 +1105,21 @@ namespace UMA.Editors
                 // Clear pending list after processing
                 if (_pendingSmrs != null)
                 {
-                    _pendingSmrs.Clear();
+                   if (processedEntries.Count == _pendingSmrs.Count)
+                    {
+                        _pendingSmrs.Clear();
+                    }
+                    else
+                    {
+                        for (int i = _pendingSmrs.Count - 1; i >= 0; i--)
+                        {
+                            var entry = _pendingSmrs[i];
+                            if (processedEntries.Contains(entry))
+                            {
+                                _pendingSmrs.RemoveAt(i);
+                            }
+                        }
+                    }
                 }
                 Repaint();
             }
@@ -1208,6 +1236,7 @@ namespace UMA.Editors
 
             // Slot LOD generation
             sbp.generateSlotLods = generateSlotLods;
+            sbp.useUnityLodGenerator = useUnityLodGenerator;
             sbp.slotLodMaxLevels = slotLodMaxLevels;
             sbp.slotLodMinTriangles = slotLodMinTriangles;
             sbp.slotLodTargetReductionPerLevel = slotLodTargetReductionPerLevel;
@@ -1231,6 +1260,45 @@ namespace UMA.Editors
                 Debug.LogError("Failed to create SlotDataAsset(s)");
                 return null;
             }
+
+            try
+            {
+                int totalSlots = result.Slots != null ? result.Slots.Count : 0;
+                Debug.Log($"[SlotBuilder][SlotLOD] Result slots={totalSlots} generateSlotLods={generateSlotLods} useUnity={useUnityLodGenerator}");
+                if (result.Slots != null)
+                {
+                    for (int si = 0; si < result.Slots.Count; si++)
+                    {
+                        var s = result.Slots[si];
+                        if (s == null) continue;
+                        var md = s.meshData;
+                        int lodCount = (md != null && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null) ? md.submeshes[0].LODCount() : -1;
+                        int triLen = (md != null && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null && md.submeshes[0].getManagedTriangles(0) != null)
+                            ? md.submeshes[0].getManagedTriangles(0).Length
+                            : -1;
+                        Debug.Log($"[SlotBuilder][SlotLOD] Slot[{si}] '{s.slotName}' (new slots use submesh0) lodCount={lodCount} triLen={triLen}");
+
+                        if (s != null)
+                        {
+                            string ap = AssetDatabase.GetAssetPath(s);
+                            if (!string.IsNullOrEmpty(ap))
+                            {
+                                var reloaded = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(ap);
+                                if (reloaded != null)
+                                {
+                                    var rmd = reloaded.meshData;
+                                    int rlod = (rmd != null && rmd.submeshes != null && rmd.submeshes.Length > 0 && rmd.submeshes[0] != null) ? rmd.submeshes[0].LODCount() : -1;
+                                    int rtriLen = (rmd != null && rmd.submeshes != null && rmd.submeshes.Length > 0 && rmd.submeshes[0] != null && rmd.submeshes[0].getManagedTriangles(0) != null)
+                                        ? rmd.submeshes[0].getManagedTriangles(0).Length
+                                        : -1;
+                                    Debug.Log($"[SlotBuilder][SlotLOD] Reload Slot[{si}] path='{ap}' lodCount={rlod} triLen={rtriLen}");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
 
             // Apply tags to all created slot assets
             if (result.Slots != null)

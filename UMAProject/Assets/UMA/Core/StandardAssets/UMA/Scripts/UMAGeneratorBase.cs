@@ -533,6 +533,19 @@ namespace UMA
                 Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
                 CreatedAvatars.Add(res.GetInstanceID());
                 res.name = umaData.name;
+                if (umaTPose.HasExtractedHumanPose())
+                {
+                    HumanPose pose = umaTPose.GetHumanPose();
+                    var handler = new HumanPoseHandler(res, umaData.transform);
+                    try
+                    {
+                        handler.SetHumanPose(ref pose);
+                    }
+                    finally
+                    {
+                        handler.Dispose();
+                    }
+                }
                 return res;
             }
             catch (Exception ex)

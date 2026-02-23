@@ -385,7 +385,12 @@ namespace UMA
                 subMeshTriangleLength = ArrayPool<int>.Shared.Rent(subMeshCount);
                 MeshComponents flags = MeshComponents.none;
                 var sw = System.Diagnostics.Stopwatch.StartNew();
-                AnalyzeSources(sources, subMeshTriangleLength, ref vertexCount, ref boneWeightCount, ref bindPoseCount, ref transformHierarchyCount, ref flags);
+                int lodLevel = 0;
+                if (umaData != null)
+                {
+                    lodLevel = Mathf.Max(0, umaData.currentLODLevel);
+                }
+                AnalyzeSources(sources, subMeshTriangleLength, lodLevel, ref vertexCount, ref boneWeightCount, ref bindPoseCount, ref transformHierarchyCount, ref flags);
                 sw.Stop(); Ticks_AnalyzeSources += sw.ElapsedTicks;
                 Dictionary<string, BlendShapeVertexData> blendShapeNames;
                 sw.Restart();
@@ -501,13 +506,30 @@ namespace UMA
                     var ci = sources[s];
                     var src = ci.meshData;
                     int add = ci.slotData.vertexOffset;
+                    int lod = 0;
+                    if (umaData != null)
+                    {
+                        lod = Mathf.Max(0, umaData.currentLODLevel);
+                    }
 
                     for (int sm = 0; sm < src.subMeshCount; sm++)
                     {
                         int dstSub = ci.targetSubmeshIndices[sm];
                         if (dstSub < 0) continue;
 
-                        var srcTris = src.submeshes[sm].GetTriangles();
+                        NativeArray<int> srcTris;
+                        if (lod > 0)
+                        {
+                            srcTris = src.submeshes[sm].GetTriangles(lod);
+                            if (!srcTris.IsCreated || srcTris.Length == 0)
+                            {
+                                srcTris = src.submeshes[sm].GetTriangles();
+                            }
+                        }
+                        else
+                        {
+                            srcTris = src.submeshes[sm].GetTriangles();
+                        }
                         int triLen = srcTris.Length;
                         int dstStart = subIndexStart[dstSub] + subWrite[dstSub];
 
@@ -523,7 +545,7 @@ namespace UMA
                         }
                         if (maxWritable <= 0) continue;
 
-                        bool hasMask = (ci.triangleMask != null && sm < ci.triangleMask.Length && ci.triangleMask[sm] != null && ci.triangleMask[sm].Length > 0);
+                       bool hasMask = (lod == 0) && (ci.triangleMask != null && sm < ci.triangleMask.Length && ci.triangleMask[sm] != null && ci.triangleMask[sm].Length > 0);
                         if (!hasMask)
                         {
                             int writeCount = triLen;
@@ -553,7 +575,11 @@ namespace UMA
                         else
                         {
                             var mask = ci.triangleMask[sm];
-                            int triCount = triLen / 3;
+                          int triCount = triLen / 3;
+                            if (mask.Length < triCount)
+                            {
+                                triCount = mask.Length;
+                            }
                             int write = 0;
 
                             if (indexFormat == IndexFormat.UInt16)
@@ -906,7 +932,7 @@ namespace UMA
         #region UMA helpers
         [Flags] private enum MeshComponents { none = 0, has_normals = 1, has_tangents = 2, has_colors32 = 4, has_uv = 8, has_uv2 = 16, has_uv3 = 32, has_uv4 = 64, has_blendShapes = 128, has_clothSkinning = 256 }
         private class BlendShapeVertexData { public bool hasNormals; public bool hasTangents; public int frameCount; public float[] frameWeights; public int index; }
-        private static void AnalyzeSources(SkinnedMeshCombiner.CombineInstance[] sources, int[] subMeshTriangleLength, ref int vertexCount, ref int boneWeightCount, ref int bindPoseCount, ref int transformHierarchyCount, ref MeshComponents meshComponents)
+        private static void AnalyzeSources(SkinnedMeshCombiner.CombineInstance[] sources, int[] subMeshTriangleLength, int lodLevel, ref int vertexCount, ref int boneWeightCount, ref int bindPoseCount, ref int transformHierarchyCount, ref MeshComponents meshComponents)
         {
             Array.Fill(subMeshTriangleLength, 0);
             for (int j = 0; j < sources.Length; j++)
@@ -922,7 +948,19 @@ namespace UMA
                 if (src.meshData.clothSkinningSerialized?.Length > 0) meshComponents |= MeshComponents.has_clothSkinning;
                 for (int i = 0; i < src.meshData.subMeshCount; i++)
                 {
-                    int indexLen = src.meshData.submeshes[i].GetTriangleCount();
+                    int indexLen;
+                    if (lodLevel > 0)
+                    {
+                        indexLen = src.meshData.submeshes[i].GetTriangleCount(lodLevel);
+                        if (indexLen <= 0)
+                        {
+                            indexLen = src.meshData.submeshes[i].GetTriangleCount();
+                        }
+                    }
+                    else
+                    {
+                        indexLen = src.meshData.submeshes[i].GetTriangleCount();
+                    }
                     int dest = src.targetSubmeshIndices[i]; if (dest < 0) continue;
                     // If there is a mask, its length is in triangles with true=remove. Compute kept index length accordingly.
                     if (src.triangleMask != null && i < src.triangleMask.Length && src.triangleMask[i] != null && src.triangleMask[i].Length > 0)

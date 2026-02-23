@@ -61,6 +61,8 @@ namespace UMA.Examples
 
         [Tooltip("Editor-only forced LOD level (0..maxLOD-1) used when 'Editor Override LOD' is enabled.")]
         public int editorForcedLOD;
+        [Tooltip("Log LOD changes in the editor for diagnostics. Only effective when 'Editor Override LOD' is enabled.")]
+        public bool logEditorLODChanges = true;
 #endif
 
         private int _currentLOD = -1;
@@ -83,6 +85,7 @@ namespace UMA.Examples
 
         public void SetSwapSlots(bool swapSlots, int lodOffset)
         {
+            Debug.Log("SetSwapSlots called with swapSlots=" + swapSlots + " lodOffset=" + lodOffset);
             this.lodOffset = lodOffset;
             this.swapSlots = swapSlots;
             bool changedSlots = ProcessRecipe(_currentLOD);
@@ -133,12 +136,14 @@ namespace UMA.Examples
 
         public void CharacterBegun(UMAData umaData)
         {
+            Debug.Log("CharacterBegun received for " + gameObject.name);
             initialized = true;
             DoLODCheck(umaData);
         }
 
         private void DoLODCheck(UMAData umaData)
         {
+            Debug.Log("Performing LOD check for " + gameObject.name);
             if (!PerformLodCheck())
             {
                 _currentLOD = 0;
@@ -155,6 +160,7 @@ namespace UMA.Examples
         /// </summary>
         public void DoManualLODCheck(int lodLevel)
         {
+            Debug.Log("Manually processing LOD level " + lodLevel + " for " + gameObject.name);
             if (_umaData == null)
             {
                 _umaData = gameObject.GetComponent<UMAData>();
@@ -173,7 +179,10 @@ namespace UMA.Examples
                 lodLevel = maxLOD - 1;
             }
             _currentLOD = lodLevel + lodOffset;
-            Debug.Log("Process recipe for LOD level " + _currentLOD);
+            if (logEditorLODChanges)
+            {
+                Debug.Log("Process recipe for LOD level " + _currentLOD);
+            }
 
             ProcessRecipe(_currentLOD);
         }
@@ -206,6 +215,7 @@ namespace UMA.Examples
             {
                 return;
             }
+            Debug.Log("UMASimpleLOD Update for " + gameObject.name + " at time " + Time.time);
 
             if (Time.time > NextTime)
             {
@@ -220,6 +230,7 @@ namespace UMA.Examples
 
         public bool PerformLodCheck()
         {
+            Debug.Log("PerformLodCheck called for " + gameObject.name);
             if (_umaData == null)
             {
                 _umaData = gameObject.GetComponent<UMAData>();
@@ -323,6 +334,7 @@ namespace UMA.Examples
 
         public void UpdateInternalLOD()
         {
+            Debug.Log("Updating Internal LOD");
             if (_umaData == null || _umaData.umaRecipe == null || _umaData.GetRenderers() == null)
             {
                 return;
@@ -380,7 +392,10 @@ namespace UMA.Examples
             if (_lastLoggedFrame != Time.frameCount)
             {
                 _lastLoggedFrame = Time.frameCount;
-                Debug.Log("[UMASimpleLOD] UpdateInternalLOD desiredLOD=" + desiredLOD + " currentLOD=" + _currentLOD + " slots=" + slots.Length);
+                if (logEditorLODChanges)
+                {
+                    Debug.Log("[UMASimpleLOD] UpdateInternalLOD desiredLOD=" + desiredLOD + " currentLOD=" + _currentLOD + " slots=" + slots.Length);
+                }
             }
 #endif
 
@@ -535,11 +550,17 @@ namespace UMA.Examples
                         int afterLen = localTris.Length;
                         if (afterLen != beforeLen)
                         {
-                            Debug.Log("[UMASimpleLOD] MeshHideMask filtered slot='" + sd.slotName + "' sub=" + sourceSub + " indices " + beforeLen + " -> " + afterLen);
+                            if (logEditorLODChanges)
+                            {
+                                Debug.Log("[UMASimpleLOD] MeshHideMask filtered slot='" + sd.slotName + "' sub=" + sourceSub + " indices " + beforeLen + " -> " + afterLen);
+                            }
                         }
                         else
                         {
-                            Debug.Log("[UMASimpleLOD] MeshHideMask present but did not filter slot='" + sd.slotName + "' sub=" + sourceSub + " (maskLen=" + mask.Length + ", trisLen=" + beforeLen + ")");
+                            if (logEditorLODChanges)
+                            {
+                                Debug.Log("[UMASimpleLOD] MeshHideMask present but did not filter slot='" + sd.slotName + "' sub=" + sourceSub + " (maskLen=" + mask.Length + ", trisLen=" + beforeLen + ")");
+                            }
                         }
 #endif
                     }
@@ -564,6 +585,7 @@ namespace UMA.Examples
                 var mesh = smr.sharedMesh;
                 for (int sm = 0; sm < subMeshCount; sm++)
                 {
+                    Debug.Log("Updating renderer " + r + " submesh " + sm + " with " + submeshIndices[sm].Count + " indices for LOD " + desiredLOD);    
                     var arr = submeshIndices[sm].Count > 0 ? submeshIndices[sm].ToArray() : Array.Empty<int>();
                     // SetIndices updates only the given submesh
                     mesh.SetIndices(arr, MeshTopology.Triangles, sm, false);
@@ -604,6 +626,7 @@ namespace UMA.Examples
         // Apply BufferZone/BufferPercent hysteresis around the current LOD boundaries
         private int ApplyBufferHysteresis(int currentLevel, int targetLevel, float cameraDistance)
         {
+            Debug.Log("Applying hysteresis: currentLevel=" + currentLevel + " targetLevel=" + targetLevel + " cameraDistance=" + cameraDistance);
             if (currentLevel < 0) return targetLevel; // first time, adopt target
             if (targetLevel == currentLevel) return currentLevel;
 
@@ -737,6 +760,7 @@ namespace UMA.Examples
 
         private bool ProcessRecipe(int currentLevel)
         {
+            Debug.Log("Processing recipe for LOD level " + currentLevel);
             bool changedSlots = false;
 
             if (_umaData.umaRecipe.slotDataList == null)

@@ -23,6 +23,10 @@ namespace UMA.Editors
         private SerializedProperty _occlusionEntries;
         private SerializedProperty _noAutoAdd;
         private SerializedProperty _dontMergeDuplicates;
+        private bool _showOverlayValueCopy;
+        private OverlayDataAsset _sourceOverlay;
+        private bool _copyOverlayMaterial = true;
+        private bool _copyOverlayTextureChannels = true;
 
         private static bool IsEditorBusy => EditorApplication.isCompiling || EditorApplication.isUpdating;
 
@@ -166,6 +170,7 @@ namespace UMA.Editors
             GUI.Box(dropArea, "Drop a Material here to copy textures to texture channels");
             CopyMaterialDropArea(dropArea);
             EditorGUILayout.Space();
+            DrawOverlayValueCopyUI(od);
 
             // UMA Material and its channels
             if (_umaMaterial != null) { EditorGUILayout.PropertyField(_umaMaterial); }
@@ -420,6 +425,131 @@ namespace UMA.Editors
                 od.lastActionTime = Time.realtimeSinceStartup;
                 od.doSave = true;
             }
+        }
+
+        private void DrawOverlayValueCopyUI(OverlayDataAsset targetOverlay)
+        {
+            if (targetOverlay == null)
+            {
+                return;
+            }
+
+            if (serializedObject.isEditingMultipleObjects)
+            {
+                EditorGUILayout.HelpBox("Value copy is disabled while editing multiple overlays.", MessageType.Info);
+                return;
+            }
+
+            if (GUILayout.Button("Copy Values from another Overlay"))
+            {
+                _showOverlayValueCopy = !_showOverlayValueCopy;
+            }
+
+            if (!_showOverlayValueCopy)
+            {
+                return;
+            }
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            _sourceOverlay = EditorGUILayout.ObjectField(
+                "Source Overlay",
+                _sourceOverlay,
+                typeof(OverlayDataAsset),
+                false
+            ) as OverlayDataAsset;
+
+            _copyOverlayMaterial = EditorGUILayout.ToggleLeft("Material", _copyOverlayMaterial);
+            _copyOverlayTextureChannels = EditorGUILayout.ToggleLeft("Texture Channel Data", _copyOverlayTextureChannels);
+
+            bool hasSource = _sourceOverlay != null;
+            bool isSelfReference = _sourceOverlay == targetOverlay;
+            bool hasAnySelection = _copyOverlayMaterial || _copyOverlayTextureChannels;
+
+            if (!hasSource)
+            {
+                EditorGUILayout.HelpBox("Assign a source overlay to copy from.", MessageType.Info);
+            }
+            else if (isSelfReference)
+            {
+                EditorGUILayout.HelpBox("Source and target overlays are the same. Choose a different source overlay.", MessageType.Warning);
+            }
+            else if (!hasAnySelection)
+            {
+                EditorGUILayout.HelpBox("Select at least one value to copy.", MessageType.Info);
+            }
+            else if (_copyOverlayTextureChannels && !_copyOverlayMaterial && targetOverlay.material != _sourceOverlay.material)
+            {
+                EditorGUILayout.HelpBox("Material is not being copied and source/target materials differ. Texture channels may not align.", MessageType.Warning);
+            }
+
+            EditorGUI.BeginDisabledGroup(!hasSource || isSelfReference || !hasAnySelection);
+            if (GUILayout.Button("Copy Selected Values"))
+            {
+                Undo.RecordObject(targetOverlay, "Copy Overlay Values");
+
+                if (_copyOverlayMaterial)
+                {
+                    targetOverlay.material = _sourceOverlay.material;
+                    targetOverlay.materialName = _sourceOverlay.materialName;
+                }
+                if (_copyOverlayTextureChannels)
+                {
+                    targetOverlay.textureList = CloneTextureArray(_sourceOverlay.textureList);
+                    targetOverlay.textureNames = CloneStringArray(_sourceOverlay.textureNames);
+                    targetOverlay.overlayBlend = CloneOverlayBlendArray(_sourceOverlay.overlayBlend);
+                }
+
+                targetOverlay.ValidateBlendList();
+                targetOverlay.lastActionTime = Time.realtimeSinceStartup;
+                targetOverlay.doSave = true;
+                EditorUtility.SetDirty(targetOverlay);
+                AssetDatabase.SaveAssetIfDirty(targetOverlay);
+                UMAUpdateProcessor.UpdateOverlay(targetOverlay);
+                serializedObject.Update();
+                _textureList = serializedObject.FindProperty("_textureList");
+                _textureNames = serializedObject.FindProperty("textureNames");
+                _blendList = serializedObject.FindProperty("overlayBlend");
+                Repaint();
+            }
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space();
+        }
+
+        private static Texture[] CloneTextureArray(Texture[] source)
+        {
+            if (source == null)
+            {
+                return Array.Empty<Texture>();
+            }
+
+            var cloned = new Texture[source.Length];
+            Array.Copy(source, cloned, source.Length);
+            return cloned;
+        }
+
+        private static string[] CloneStringArray(string[] source)
+        {
+            if (source == null)
+            {
+                return Array.Empty<string>();
+            }
+
+            var cloned = new string[source.Length];
+            Array.Copy(source, cloned, source.Length);
+            return cloned;
+        }
+
+        private static OverlayDataAsset.OverlayBlend[] CloneOverlayBlendArray(OverlayDataAsset.OverlayBlend[] source)
+        {
+            if (source == null)
+            {
+                return Array.Empty<OverlayDataAsset.OverlayBlend>();
+            }
+
+            var cloned = new OverlayDataAsset.OverlayBlend[source.Length];
+            Array.Copy(source, cloned, source.Length);
+            return cloned;
         }
 
         private void CopyMaterialDropArea(Rect dropArea)

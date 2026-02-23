@@ -3790,13 +3790,21 @@ namespace UMA
         {
             if (ai.Index != -1)
             {
-                SerializedItems[ai.Index] = null;
-				if(compressAndSave) {
-                CompressNulls();
-                RebuildIndex();
-                ForceSave();
+                if (ai.Index >= SerializedItems.Count)
+                {
+                    Debug.Log($"Out of range index {ai.Index} removing asset {ai.EvilName} ");
+                }
+                else
+                {
+                    SerializedItems[ai.Index] = null;
+                    if (compressAndSave)
+                    {
+                        CompressNulls();
+                        RebuildIndex();
+                        ForceSave();
+                    }
+                }
             }
-        }
         }
 
 		public void RemoveAssetsComplete() {

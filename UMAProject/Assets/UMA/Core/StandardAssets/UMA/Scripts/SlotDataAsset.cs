@@ -828,18 +828,6 @@ namespace UMA
         public string[] Races;
 
         /// <summary>
-        /// These are the vertexes in local space to the character mesh.
-        /// This can be different from the slot vertexes depending on the modeller, how it
-        /// was exported, and whether the transform was applied. What a pain.
-        /// This is calculated once and cached. Currently, it is only used for hair smooshing.
-        /// but we may find other uses for it, like with decals or the Mesh Hide editor.
-        /// This data *could* be serialized, but for now, it is not. TODO: serialize it, and generate it during
-        /// the slot build process.
-        /// </summary>
-        [System.NonSerialized]
-        public Vector3[] TransformedLocalVertexes;
-
-        /// <summary>
         /// Callback event when character update begins.
         /// </summary>
         public UMADataEvent CharacterBegun;
@@ -994,11 +982,29 @@ namespace UMA
 
         public void UpdateMeshData(SkinnedMeshRenderer meshRenderer, string rootBoneName, bool udimAdjustment, int submeshIndex, bool clearNormals, bool clearTangents)
         {
+#if UNITY_EDITOR
+            try
+            {
+                int before = (meshData != null && meshData.submeshes != null && meshData.submeshes.Length > 0 && meshData.submeshes[0] != null)
+                    ? meshData.submeshes[0].LODCount()
+                    : -1;
+                Debug.Log($"[SlotLOD][UpdateMeshData] slot='{slotName}' BEFORE meshDataRebuild lodCount={before} submeshIndexArg={submeshIndex} udim={udimAdjustment}");
+            }
+            catch { }
+#endif
             meshData = new UMAMeshData();
             meshData.SlotName = this.slotName;
             meshData.RootBoneName = rootBoneName;
             meshData.RetrieveDataFromUnityMesh(meshRenderer,submeshIndex,udimAdjustment, clearNormals, clearTangents);
 #if UNITY_EDITOR
+            try
+            {
+                int after = (meshData != null && meshData.submeshes != null && meshData.submeshes.Length > 0 && meshData.submeshes[0] != null)
+                    ? meshData.submeshes[0].LODCount()
+                    : -1;
+                Debug.Log($"[SlotLOD][UpdateMeshData] slot='{slotName}' AFTER meshDataRebuild lodCount={after} submeshIndexArg={submeshIndex} udim={udimAdjustment}");
+            }
+            catch { }
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
         }

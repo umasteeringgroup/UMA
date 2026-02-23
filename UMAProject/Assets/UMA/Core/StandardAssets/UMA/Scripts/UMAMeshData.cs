@@ -46,6 +46,7 @@ namespace UMA
 	public class SubMeshTriangles {
     public static int smtNumber;
     public int smtID;
+ [SerializeField]
     public List<UMALodRange> lodRanges;
 		// Keep track of all allocated native arrays for proper disposal.
 		public static List<SubMeshTriangles> nativeTrianglesAllocated = new List<SubMeshTriangles>();
@@ -154,13 +155,22 @@ namespace UMA
 
 		public int GetTriangleCount(int lodLevel)
 		{
-			if (triangles == null)
+          int triangleBufferLength;
+			if (triangles != null)
+			{
+				triangleBufferLength = triangles.Length;
+			}
+			else if (nativeTriangles.IsCreated)
+			{
+				triangleBufferLength = nativeTriangles.Length;
+			}
+			else
 			{
 				return 0;
 			}
 			if (lodRanges == null || lodRanges.Count == 0 || lodLevel < 0)
 			{
-				return triangles.Length;
+                return triangleBufferLength;
 			}
 			if (lodLevel >= lodRanges.Count)
 			{
@@ -213,7 +223,20 @@ namespace UMA
 		{
 			if (lodRanges == null || lodRanges.Count == 0 || LODNumber < 0)
 			{
-				return new UMALodRange(0,(uint)(triangles != null ? triangles.Length : 0));
+             uint len;
+				if (triangles != null)
+				{
+					len = (uint)triangles.Length;
+				}
+				else if (nativeTriangles.IsCreated)
+				{
+					len = (uint)nativeTriangles.Length;
+				}
+				else
+				{
+					len = 0;
+				}
+				return new UMALodRange(0, len);
 			}
 			if (LODNumber >= lodRanges.Count)
 			{
@@ -1866,14 +1889,22 @@ namespace UMA
 			var subMeshCount = submeshes.Length;
 			mesh.subMeshCount = subMeshCount;
 			var Descriptors = new SubMeshDescriptor[subMeshCount];
-			for (int i = 0; i < subMeshCount; i++)
+          for (int i = 0; i < subMeshCount; i++)
 			{
 				int LOD = umaData.currentLODLevel;
-                // public void SetIndices(NativeArray<T> indices, int indicesStart, int indicesLength, MeshTopology topology, int submesh, bool calculateBounds, int baseVertex);
+				// public void SetIndices(NativeArray<T> indices, int indicesStart, int indicesLength, MeshTopology topology, int submesh, bool calculateBounds, int baseVertex);
 				UMALodRange lodRange = submeshes[i].GetLODRange(LOD);
+#if UNITY_EDITOR
+				if (Debug.isDebugBuild)
+				{
+					int total = 0;
+					try { total = submeshes[i].GetTriangleCount(); } catch { total = -1; }
+					Debug.Log($"[UMA ApplyMesh] submesh={i} LOD={LOD} totalIdx={total} range=({lodRange.offset},{lodRange.count})");
+				}
+#endif
 				mesh.SetIndices(submeshes[i].GetTriangles(0), (int)lodRange.offset, (int)lodRange.count, MeshTopology.Triangles, i, false);
-                // mesh.SetIndices(submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
-            }
+				// mesh.SetIndices(submeshes[i].GetTriangles(), MeshTopology.Triangles, i);
+			}
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
             #region Blendshape

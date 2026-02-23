@@ -69,6 +69,40 @@ namespace UMA.Editors
 			return GetSelectedOverlays().Count > 0;
 		}
 
+		[MenuItem("Assets/UMA/Examine Slots", false, 2005)]
+		private static void ExamineSlotsMenu()
+		{
+			var slots = GetSelectedSlots();
+			if (slots.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Examine Slots", "Select one or more SlotDataAsset assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaExamineSlotsWindow.Open(slots);
+		}
+
+		[MenuItem("Assets/UMA/Examine Slots", true)]
+		private static bool ExamineSlotsMenu_Validate()
+		{
+			return GetSelectedSlots().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Extract T-Pose", false, 1999)]
+		private static void ExtractTPoseMenu()
+		{
+			if (!TPoseExtracter.TryExtractSelectedTPose())
+			{
+				EditorUtility.DisplayDialog("Extract T-Pose", "Select one or more model assets in the Project window.", "OK");
+			}
+		}
+
+		[MenuItem("Assets/UMA/Extract T-Pose", true)]
+		private static bool ExtractTPoseMenu_Validate()
+		{
+			return Selection.objects != null && Selection.objects.Length > 0;
+		}
+
 		[MenuItem("Assets/UMA/Convert selected textures to PNG", false, 2004)]
 		private static void ConvertSelectedTexturesToPngMenu()
 		{
@@ -98,6 +132,478 @@ namespace UMA.Editors
 				return;
 			}
 			UmaAddRacesToRecipesWindow.Open(selectedRecipes);
+		}
+
+		internal class UmaExamineSlotsWindow : EditorWindow
+		{
+			private enum SlotSortMode
+			{
+				None = 0,
+				Name = 1,
+				SlotName = 2
+			}
+
+			private readonly List<UMA.SlotDataAsset> _slots = new List<UMA.SlotDataAsset>();
+			private bool[] _slotSelected = new bool[0];
+			private Vector2 _leftScroll;
+			private Vector2 _rightScroll;
+			private DefaultAsset _destFolder;
+			private string _destFolderPath;
+			private SlotSortMode _sortMode = SlotSortMode.None;
+			private bool _setMaterial;
+			private UMA.UMAMaterial _targetMaterial;
+			private bool _setOverlayScale;
+			private float _overlayScale = 1f;
+			private bool _addTags;
+			private string _tagsText = string.Empty;
+			private bool _setWildcard;
+			private bool _wildcardValue;
+			private bool _addWildcardRaces;
+			private string _racesText = string.Empty;
+
+			public static void Open(List<UMA.SlotDataAsset> slots)
+			{
+				var window = GetWindow<UmaExamineSlotsWindow>(false, "Examine Slots", true);
+				window.minSize = new Vector2(860f, 420f);
+				window._slots.Clear();
+				if (slots != null)
+				{
+					window._slots.AddRange(slots);
+				}
+				window._slotSelected = new bool[window._slots.Count];
+				for (int i = 0; i < window._slotSelected.Length; i++)
+				{
+					window._slotSelected[i] = true;
+				}
+				window._destFolder = null;
+				window._destFolderPath = string.Empty;
+				window.Show();
+				window.Focus();
+			}
+
+			private void RefreshFromSelection()
+			{
+				var selected = GetSelectedSlots();
+				_slots.Clear();
+				_slots.AddRange(selected);
+				_slotSelected = new bool[_slots.Count];
+				for (int i = 0; i < _slotSelected.Length; i++)
+				{
+					_slotSelected[i] = true;
+				}
+				SortSlots();
+				Repaint();
+			}
+
+			private void OnGUI()
+			{
+				EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+				GUILayout.Label("Examine Slots", EditorStyles.boldLabel);
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(70)))
+				{
+					RefreshFromSelection();
+				}
+				EditorGUILayout.EndHorizontal();
+
+				if (_slots.Count == 0)
+				{
+					EditorGUILayout.HelpBox("Select one or more SlotDataAsset assets in the Project window.", MessageType.Info);
+					return;
+				}
+
+				EditorGUILayout.BeginHorizontal();
+				DrawSlotsColumn();
+				GUILayout.Space(10);
+				DrawOptionsColumn();
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void DrawOptionsColumn()
+			{
+				EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.42f));
+				EditorGUILayout.LabelField("Slot Updates", EditorStyles.boldLabel);
+
+				_leftScroll = EditorGUILayout.BeginScrollView(_leftScroll, GUILayout.ExpandHeight(true));
+				_setMaterial = EditorGUILayout.ToggleLeft("Set UMAMaterial", _setMaterial);
+				using (new EditorGUI.DisabledScope(!_setMaterial))
+				{
+					_targetMaterial = (UMA.UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", _targetMaterial, typeof(UMA.UMAMaterial), false);
+				}
+
+				_setOverlayScale = EditorGUILayout.ToggleLeft("Set OverlayScale", _setOverlayScale);
+				using (new EditorGUI.DisabledScope(!_setOverlayScale))
+				{
+					_overlayScale = EditorGUILayout.FloatField("OverlayScale", _overlayScale);
+				}
+
+				_addTags = EditorGUILayout.ToggleLeft("Add Tags", _addTags);
+				using (new EditorGUI.DisabledScope(!_addTags))
+				{
+					_tagsText = EditorGUILayout.TextField("Tags (comma/semicolon)", _tagsText);
+				}
+
+				_setWildcard = EditorGUILayout.ToggleLeft("Set Wildcard", _setWildcard);
+				using (new EditorGUI.DisabledScope(!_setWildcard))
+				{
+					_wildcardValue = EditorGUILayout.Toggle("Wildcard Value", _wildcardValue);
+				}
+
+				_addWildcardRaces = EditorGUILayout.ToggleLeft("Add Wildcard Races", _addWildcardRaces);
+				using (new EditorGUI.DisabledScope(!_addWildcardRaces))
+				{
+					_racesText = EditorGUILayout.TextField("Races (comma/semicolon)", _racesText);
+				}
+
+				EditorGUILayout.Space(6);
+				EditorGUILayout.LabelField("Destination Folder", EditorStyles.boldLabel);
+				EditorGUI.BeginChangeCheck();
+				_destFolder = (DefaultAsset)EditorGUILayout.ObjectField(_destFolder, typeof(DefaultAsset), false);
+				if (EditorGUI.EndChangeCheck())
+				{
+					_destFolderPath = _destFolder != null ? AssetDatabase.GetAssetPath(_destFolder) : string.Empty;
+					if (!string.IsNullOrEmpty(_destFolderPath) && !AssetDatabase.IsValidFolder(_destFolderPath))
+					{
+						_destFolder = null;
+						_destFolderPath = string.Empty;
+					}
+				}
+
+				using (new EditorGUI.DisabledScope(true))
+				{
+					EditorGUILayout.TextField("Path", _destFolderPath);
+				}
+
+				EditorGUILayout.EndScrollView();
+
+				EditorGUILayout.Space(8);
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("Apply Updates", GUILayout.Width(140), GUILayout.Height(28)))
+				{
+					ApplyUpdates();
+				}
+				if (GUILayout.Button("Replace Slots In Folder", GUILayout.Width(180), GUILayout.Height(28)))
+				{
+					ReplaceSlotsInFolder();
+				}
+				EditorGUILayout.EndHorizontal();
+				EditorGUILayout.EndVertical();
+			}
+
+			private void DrawSlotsColumn()
+			{
+				EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+				EditorGUILayout.LabelField("Selected Slots", EditorStyles.boldLabel);
+				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.LabelField("Sort By", GUILayout.Width(50));
+				EditorGUI.BeginChangeCheck();
+				_sortMode = (SlotSortMode)EditorGUILayout.EnumPopup(_sortMode, GUILayout.Width(120));
+				if (EditorGUI.EndChangeCheck())
+				{
+					SortSlots();
+				}
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndHorizontal();
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("Select All", GUILayout.Width(90)))
+				{
+					SetAllSelections(true);
+				}
+				if (GUILayout.Button("Deselect All", GUILayout.Width(100)))
+				{
+					SetAllSelections(false);
+				}
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.EndHorizontal();
+				EditorGUILayout.Space(4);
+
+				_rightScroll = EditorGUILayout.BeginScrollView(_rightScroll, GUILayout.ExpandHeight(true));
+				for (int i = 0; i < _slots.Count; i++)
+				{
+					var slot = _slots[i];
+					if (slot == null)
+					{
+						continue;
+					}
+
+					EditorGUILayout.BeginHorizontal();
+					_slotSelected[i] = EditorGUILayout.Toggle(_slotSelected[i], GUILayout.Width(18));
+					EditorGUILayout.ObjectField(slot, typeof(UMA.SlotDataAsset), false);
+					EditorGUILayout.EndHorizontal();
+				}
+				EditorGUILayout.EndScrollView();
+				EditorGUILayout.EndVertical();
+			}
+
+			private void SetAllSelections(bool value)
+			{
+				for (int i = 0; i < _slotSelected.Length; i++)
+				{
+					_slotSelected[i] = value;
+				}
+			}
+
+			private void SortSlots()
+			{
+				if (_sortMode == SlotSortMode.None || _slots.Count == 0)
+				{
+					return;
+				}
+
+				var entries = new List<SlotEntry>(_slots.Count);
+				for (int i = 0; i < _slots.Count; i++)
+				{
+					entries.Add(new SlotEntry { Slot = _slots[i], Selected = (i < _slotSelected.Length && _slotSelected[i]) });
+				}
+
+				if (_sortMode == SlotSortMode.Name)
+				{
+					entries.Sort((a, b) => string.Compare(a.GetName(), b.GetName(), System.StringComparison.OrdinalIgnoreCase));
+				}
+				else if (_sortMode == SlotSortMode.SlotName)
+				{
+					entries.Sort((a, b) => string.Compare(a.GetSlotName(), b.GetSlotName(), System.StringComparison.OrdinalIgnoreCase));
+				}
+
+				_slots.Clear();
+				_slotSelected = new bool[entries.Count];
+				for (int i = 0; i < entries.Count; i++)
+				{
+					_slots.Add(entries[i].Slot);
+					_slotSelected[i] = entries[i].Selected;
+				}
+			}
+
+			private struct SlotEntry
+			{
+				public UMA.SlotDataAsset Slot;
+				public bool Selected;
+
+				public string GetName()
+				{
+					if (Slot == null)
+					{
+						return string.Empty;
+					}
+					return Slot.name ?? string.Empty;
+				}
+
+				public string GetSlotName()
+				{
+					if (Slot == null)
+					{
+						return string.Empty;
+					}
+					return Slot.slotName ?? string.Empty;
+				}
+			}
+
+			private void ApplyUpdates()
+			{
+				bool anySaved = false;
+				var tagsToAdd = ParseTokens(_tagsText);
+				var racesToAdd = ParseTokens(_racesText);
+
+				for (int i = 0; i < _slots.Count; i++)
+				{
+					if (i >= _slotSelected.Length || !_slotSelected[i])
+					{
+						continue;
+					}
+					var slot = _slots[i];
+					if (slot == null)
+					{
+						continue;
+					}
+
+					bool changed = false;
+					Undo.RecordObject(slot, "Update Slot");
+
+					if (_setMaterial)
+					{
+						slot.material = _targetMaterial;
+						if (_targetMaterial != null)
+						{
+							slot.materialName = _targetMaterial.name;
+						}
+						else
+						{
+							slot.materialName = string.Empty;
+						}
+						changed = true;
+					}
+
+					if (_setOverlayScale)
+					{
+						slot.overlayScale = _overlayScale;
+						changed = true;
+					}
+
+					if (_addTags && tagsToAdd.Count > 0)
+					{
+						var merged = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+						if (slot.tags != null)
+						{
+							for (int t = 0; t < slot.tags.Length; t++)
+							{
+								var tag = slot.tags[t];
+								if (!string.IsNullOrEmpty(tag))
+								{
+									merged.Add(tag.Trim());
+								}
+							}
+						}
+						for (int t = 0; t < tagsToAdd.Count; t++)
+						{
+							merged.Add(tagsToAdd[t]);
+						}
+						if (merged.Count > 0)
+						{
+							slot.tags = new List<string>(merged).ToArray();
+							changed = true;
+						}
+					}
+
+					if (_setWildcard)
+					{
+						slot.isWildCardSlot = _wildcardValue;
+						changed = true;
+					}
+
+					if (_addWildcardRaces && racesToAdd.Count > 0)
+					{
+						var merged = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+						if (slot.Races != null)
+						{
+							for (int r = 0; r < slot.Races.Length; r++)
+							{
+								var race = slot.Races[r];
+								if (!string.IsNullOrEmpty(race))
+								{
+									merged.Add(race.Trim());
+								}
+							}
+						}
+						for (int r = 0; r < racesToAdd.Count; r++)
+						{
+							merged.Add(racesToAdd[r]);
+						}
+						if (merged.Count > 0)
+						{
+							slot.Races = new List<string>(merged).ToArray();
+							changed = true;
+						}
+					}
+
+					if (changed)
+					{
+						EditorUtility.SetDirty(slot);
+#if UNITY_2021_1_OR_NEWER
+						AssetDatabase.SaveAssetIfDirty(slot);
+#endif
+						anySaved = true;
+					}
+				}
+
+				if (anySaved)
+				{
+					AssetDatabase.SaveAssets();
+					AssetDatabase.Refresh();
+				}
+			}
+
+			private void ReplaceSlotsInFolder()
+			{
+				if (string.IsNullOrEmpty(_destFolderPath))
+				{
+					EditorUtility.DisplayDialog("Replace Slots In Folder", "Select a destination folder.", "OK");
+					return;
+				}
+
+				int updated = 0;
+				for (int i = 0; i < _slots.Count; i++)
+				{
+					if (i >= _slotSelected.Length || !_slotSelected[i])
+					{
+						continue;
+					}
+					var slot = _slots[i];
+					if (slot == null)
+					{
+						continue;
+					}
+
+					var searchNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+					if (!string.IsNullOrEmpty(slot.name))
+					{
+						searchNames.Add(slot.name);
+					}
+					if (!string.IsNullOrEmpty(slot.slotName))
+					{
+						searchNames.Add(slot.slotName);
+					}
+
+					string[] guids = AssetDatabase.FindAssets("t:SlotDataAsset", new[] { _destFolderPath });
+					for (int g = 0; g < guids.Length; g++)
+					{
+						string path = AssetDatabase.GUIDToAssetPath(guids[g]);
+						if (string.IsNullOrEmpty(path))
+						{
+							continue;
+						}
+						var target = AssetDatabase.LoadAssetAtPath<UMA.SlotDataAsset>(path);
+						if (target == null)
+						{
+							continue;
+						}
+						if (target == slot)
+						{
+							continue;
+						}
+						if (!searchNames.Contains(target.name) && !searchNames.Contains(target.slotName))
+						{
+							continue;
+						}
+
+						Undo.RecordObject(target, "Replace Slot In Folder");
+						EditorUtility.CopySerialized(slot, target);
+						EditorUtility.SetDirty(target);
+						AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+#if UNITY_2021_1_OR_NEWER
+						AssetDatabase.SaveAssetIfDirty(target);
+#endif
+						updated++;
+					}
+				}
+
+				if (updated > 0)
+				{
+					AssetDatabase.SaveAssets();
+					AssetDatabase.Refresh();
+					UMAAssetIndexer.RebuildAllUMAS();
+				}
+				EditorUtility.DisplayDialog("Replace Slots In Folder", "Updated slots: " + updated, "OK");
+			}
+
+			private static List<string> ParseTokens(string input)
+			{
+				var results = new List<string>();
+				if (string.IsNullOrEmpty(input))
+				{
+					return results;
+				}
+				char[] separators = new[] { ',', ';', '\n', '\r', '\t' };
+				string[] parts = input.Split(separators, System.StringSplitOptions.RemoveEmptyEntries);
+				for (int i = 0; i < parts.Length; i++)
+				{
+					string token = parts[i].Trim();
+					if (!string.IsNullOrEmpty(token))
+					{
+						results.Add(token);
+					}
+				}
+				return results;
+			}
 		}
 
 	internal class UmaConsolidateTexturesWindow : EditorWindow
@@ -403,6 +909,21 @@ namespace UMA.Editors
 				}
 			}
 			return overlays;
+		}
+
+		private static List<UMA.SlotDataAsset> GetSelectedSlots()
+		{
+			var selected = Selection.GetFiltered(typeof(UMA.SlotDataAsset), SelectionMode.Assets);
+			var slots = new List<UMA.SlotDataAsset>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var s = selected[i] as UMA.SlotDataAsset;
+				if (s != null)
+				{
+					slots.Add(s);
+				}
+			}
+			return slots;
 		}
 
 		private static List<Texture2D> GetSelectedTextures()
@@ -735,6 +1256,15 @@ namespace UMA.Editors
 					}
 
 					File.WriteAllBytes(destPath, data);
+					string absDestPath = GetAbsolutePathFromAssetPath(destPath);
+					if (!string.IsNullOrEmpty(absDestPath))
+					{
+						File.WriteAllBytes(absDestPath, data);
+					}
+					else
+					{
+						File.WriteAllBytes(destPath, data);
+					}
 					AssetDatabase.ImportAsset(destPath, ImportAssetOptions.ForceUpdate);
 					var pngTex = AssetDatabase.LoadAssetAtPath<Texture2D>(destPath);
 					if (pngTex != null)
@@ -801,8 +1331,18 @@ namespace UMA.Editors
 						if (list[t] == oldTexture)
 						{
 							list[t] = newTexture;
+							if (overlay.textureNames != null && t < overlay.textureNames.Length)
+							{
+								overlay.textureNames[t] = newTexture.name;
+							}
 							changed = true;
 						}
+					}
+
+					if (overlay.alphaMask == oldTexture)
+					{
+						overlay.alphaMask = newTexture;
+						changed = true;
 					}
 
 					if (!changed)
@@ -812,20 +1352,6 @@ namespace UMA.Editors
 
 					Undo.RecordObject(overlay, "Replace overlay texture");
 					overlay.textureList = list;
-
-					// Best-effort: update textureNames for any slots matching the old texture name
-					var names = overlay.textureNames;
-					if (names != null)
-					{
-						for (int n = 0; n < names.Length; n++)
-						{
-							if (!string.IsNullOrEmpty(names[n]) && names[n] == oldTexture.name)
-							{
-								names[n] = newTexture.name;
-							}
-						}
-						overlay.textureNames = names;
-					}
 
 					EditorUtility.SetDirty(overlay);
 					updated++;
@@ -870,6 +1396,11 @@ namespace UMA.Editors
 				}
 				try
 				{
+					string absPath = GetAbsolutePathFromAssetPath(assetPath);
+					if (!string.IsNullOrEmpty(absPath) && File.Exists(absPath))
+					{
+						return new FileInfo(absPath).Length;
+					}
 					if (File.Exists(assetPath))
 					{
 						return new FileInfo(assetPath).Length;
@@ -879,6 +1410,25 @@ namespace UMA.Editors
 				{
 				}
 				return 0;
+			}
+
+			private static string GetAbsolutePathFromAssetPath(string assetPath)
+			{
+				if (string.IsNullOrEmpty(assetPath))
+				{
+					return null;
+				}
+				if (!assetPath.StartsWith("Assets/", System.StringComparison.OrdinalIgnoreCase))
+				{
+					return null;
+				}
+				string projectRoot = Path.GetDirectoryName(Application.dataPath);
+				if (string.IsNullOrEmpty(projectRoot))
+				{
+					return null;
+				}
+				string relative = assetPath.Substring("Assets/".Length);
+				return Path.Combine(projectRoot, "Assets", relative);
 			}
 
 			private static string FormatBytes(long bytes)

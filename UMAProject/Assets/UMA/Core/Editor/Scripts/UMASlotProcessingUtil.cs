@@ -103,6 +103,91 @@ namespace UMA.Editors
             public List<string> TempAssetsToDelete = new List<string>();
         }
 
+        private class SlotPreserveData
+        {
+            public string[] races;
+            public string[] tags;
+            public bool forceKeep;
+            public bool noAutoAdd;
+            public bool isClippingPlane;
+            public bool isSmooshable;
+            public Vector3 smooshOffset;
+            public Vector3 smooshExpand;
+            public bool isWildCardSlot;
+            public BaseUpdatedObject[] animatedBones;
+            public UMAMaterial material;
+            public string materialName;
+            public int maxLOD;
+            public bool useAtlasOverlay;
+            public float overlayScale;
+
+            public static SlotPreserveData FromSlot(SlotDataAsset slot)
+            {
+                if (slot == null)
+                {
+                    return null;
+                }
+                var data = new SlotPreserveData();
+                if (slot.Races != null)
+                {
+                    data.races = (string[])slot.Races.Clone();
+                }
+                if (slot.tags != null)
+                {
+                    data.tags = (string[])slot.tags.Clone();
+                }
+                data.forceKeep = slot.forceKeep;
+                data.noAutoAdd = slot.noAutoAdd;
+                data.isClippingPlane = slot.isClippingPlane;
+                data.isSmooshable = slot.isSmooshable;
+                data.smooshOffset = slot.smooshOffset;
+                data.smooshExpand = slot.smooshExpand;
+                data.isWildCardSlot = slot.isWildCardSlot;
+                if (slot.animatedBones != null)
+                {
+                    data.animatedBones = (BaseUpdatedObject[])slot.animatedBones.Clone();
+                }
+                data.material = slot.material;
+                data.materialName = slot.materialName;
+                data.maxLOD = slot.maxLOD;
+                data.useAtlasOverlay = slot.useAtlasOverlay;
+                data.overlayScale = slot.overlayScale;
+                return data;
+            }
+
+            public void ApplyTo(SlotDataAsset slot)
+            {
+                if (slot == null)
+                {
+                    return;
+                }
+                if (races != null)
+                {
+                    slot.Races = (string[])races.Clone();
+                }
+                if (tags != null)
+                {
+                    slot.tags = (string[])tags.Clone();
+                }
+                slot.forceKeep = forceKeep;
+                slot.noAutoAdd = noAutoAdd;
+                slot.isClippingPlane = isClippingPlane;
+                slot.isSmooshable = isSmooshable;
+                slot.smooshOffset = smooshOffset;
+                slot.smooshExpand = smooshExpand;
+                slot.isWildCardSlot = isWildCardSlot;
+                if (animatedBones != null)
+                {
+                    slot.animatedBones = (BaseUpdatedObject[])animatedBones.Clone();
+                }
+                slot.material = material;
+                slot.materialName = materialName;
+                slot.maxLOD = maxLOD;
+                slot.useAtlasOverlay = useAtlasOverlay;
+                slot.overlayScale = overlayScale;
+            }
+        }
+
         // Helper: copy LOD ranges from a source mesh submesh into a SlotDataAsset's meshData submesh
         private static void CopyLodRangesFromSourceMesh(SlotDataAsset sda, int targetSubmeshIndex, Mesh sourceMesh, int sourceSubmeshIndex)
         {
@@ -159,6 +244,14 @@ namespace UMA.Editors
                 return;
             }
 
+            try
+            {
+                var md = slot.meshData;
+                int lodsBefore = (md != null && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null) ? md.submeshes[0].LODCount() : -1;
+                Debug.Log($"[SlotLOD] BEFORE slot='{slot.slotName}' (new slots use submesh0) useUnity={sbp.useUnityLodGenerator} lodCount={lodsBefore}");
+            }
+            catch { }
+
             Debug.Log(string.Format("[SlotLOD] Generating internal LODs for slot='{0}' maxLevels={1} minTris={2} reduction={3} preserveBorders={4} borderWeight={5}",
                 slot.slotName,
                 sbp.slotLodMaxLevels,
@@ -182,60 +275,30 @@ namespace UMA.Editors
             }
             catch { }
 
-            // Use reflection to avoid assembly-definition reference issues between editor assemblies.
-            var lodGenType = Type.GetType("UMA.Editors.SlotLodGenerator, UMA_Core_Editor", throwOnError: false);
-            if (lodGenType == null)
-            {
-                lodGenType = Type.GetType("UMA.Editors.SlotLodGenerator", throwOnError: false);
-            }
-            if (lodGenType == null)
-            {
-                Debug.LogWarning("[SlotLOD] SlotLodGenerator type not found; internal slot LODs not generated.");
-                return;
-            }
-
-            var optionsType = lodGenType.GetNestedType("LodGenOptions", System.Reflection.BindingFlags.Public);
-            if (optionsType == null)
-            {
-                Debug.LogWarning("[SlotLOD] SlotLodGenerator.LodGenOptions not found; internal slot LODs not generated.");
-                return;
-            }
-
-            var options = Activator.CreateInstance(optionsType);
-
-            SetFieldIfExists(optionsType, options, "MaxLodLevels", Mathf.Clamp(sbp.slotLodMaxLevels > 0 ? sbp.slotLodMaxLevels : 8, 1, 8));
-            SetFieldIfExists(optionsType, options, "MinTriangles", Mathf.Max(0, sbp.slotLodMinTriangles > 0 ? sbp.slotLodMinTriangles : 256));
-            SetFieldIfExists(optionsType, options, "TargetReductionPerLevel", Mathf.Clamp01(sbp.slotLodTargetReductionPerLevel > 0f ? sbp.slotLodTargetReductionPerLevel : 0.5f));
-            SetFieldIfExists(optionsType, options, "PreserveBoundaryEdges", sbp.slotLodPreserveBoundaryEdges);
-            SetFieldIfExists(optionsType, options, "BoundaryWeight", Mathf.Max(0f, sbp.slotLodBoundaryWeight));
-
-            var method = lodGenType.GetMethod("GenerateAndApplyLods", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-            if (method == null)
-            {
-                Debug.LogWarning("[SlotLOD] SlotLodGenerator.GenerateAndApplyLods not found; internal slot LODs not generated.");
-                return;
-            }
+          var options = new SlotLodGenerator.LodGenOptions();
+            options.MaxLodLevels = Mathf.Clamp(sbp.slotLodMaxLevels > 0 ? sbp.slotLodMaxLevels : 8, 1, 8);
+            options.MinTriangles = Mathf.Max(0, sbp.slotLodMinTriangles > 0 ? sbp.slotLodMinTriangles : 256);
+            options.TargetReductionPerLevel = Mathf.Clamp01(sbp.slotLodTargetReductionPerLevel > 0f ? sbp.slotLodTargetReductionPerLevel : 0.5f);
+            options.PreserveBoundaryEdges = sbp.slotLodPreserveBoundaryEdges;
+            options.BoundaryWeight = Mathf.Max(0f, sbp.slotLodBoundaryWeight);
+#if UNITY_6000_2_OR_NEWER
+            options.useUnityLodGenerator = sbp.useUnityLodGenerator;
+#endif
 
             try
             {
-                method.Invoke(null, new object[] { slot, options });
+                SlotLodGenerator.GenerateAndApplyLods(slot, options);
             }
             catch (Exception ex)
             {
                 Debug.LogWarning("[SlotLOD] Failed generating internal slot LODs: " + ex.Message);
             }
-        }
 
-        private static void SetFieldIfExists(Type t, object instance, string fieldName, object value)
-        {
-            var f = t.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            if (f == null)
-            {
-                return;
-            }
             try
             {
-                f.SetValue(instance, value);
+                var md = slot.meshData;
+                int lodsAfter = (md != null && md.submeshes != null && md.submeshes.Length > 0 && md.submeshes[0] != null) ? md.submeshes[0].LODCount() : -1;
+                Debug.Log($"[SlotLOD] AFTER slot='{slot.slotName}' (new slots use submesh0) useUnity={sbp.useUnityLodGenerator} lodCount={lodsAfter}");
             }
             catch { }
         }
@@ -1606,10 +1669,12 @@ namespace UMA.Editors
                         }
 
                         var existing = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(theSlotPath);
+						SlotPreserveData preserved = null;
                         if (sbp.alwaysRecreateSlots)
                         {
                             if (existing != null)
                             {
+								preserved = SlotPreserveData.FromSlot(existing);
                                 AssetDatabase.DeleteAsset(theSlotPath);
                                 existing = null;
                             }
@@ -1683,6 +1748,10 @@ namespace UMA.Editors
                             // Normalize UVs via udimAdjustment flag
                             sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
                             TransformMeshData(sda, sbp);
+							if (preserved != null)
+							{
+								preserved.ApplyTo(sda);
+							}
 
                             // Populate UDIM seam map (original vertex index -> this slot's local vertex index)
                             if (sharedOldIndices != null && sharedOldIndices.Count > 0 && cmr.NewToOld != null && cmr.NewToOld.Count > 0)
@@ -1733,8 +1802,12 @@ namespace UMA.Editors
                         GenerateSlotLodsIfEnabled(sbp, sda);
 
 #if UNITY_6000_2_OR_NEWER
-                        // Build and set LOD ranges for this compact mesh from the per-tile counts
-                        if (sbp.generateSlotLods && perSubTileToLodCounts.TryGetValue(sub, out var tileLodCounts) && tileLodCounts.TryGetValue((tu, tv), out var countsArr) && countsArr != null && countsArr.Length > 0)
+                        // If we are NOT generating UMA internal LODs, preserve Unity-authored mesh LODs by
+                        // rebuilding compact-mesh LOD ranges from per-tile counts.
+                        //
+                        // When UMA internal LODs are generated above, they already append triangle buffers and
+                        // assign correct `lodRanges`. Overwriting here would destroy those generated ranges.
+                        if (!sbp.generateSlotLods && perSubTileToLodCounts.TryGetValue(sub, out var tileLodCounts) && tileLodCounts.TryGetValue((tu, tv), out var countsArr) && countsArr != null && countsArr.Length > 0)
                         {
                             var ranges = new List<UMA.UMALodRange>(countsArr.Length);
                             uint offset = 0;

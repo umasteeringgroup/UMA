@@ -9,6 +9,9 @@ namespace UMA
 {
     public class UMADefaultMeshCombiner : UMAMeshCombiner
     {
+#if UNITY_EDITOR
+        private const bool UMA_INTERNALLOD_BUILD_DIAGNOSTICS = true;
+#endif
         protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
         protected List<UMAData.GeneratedMaterial> combinedMaterialList;
 
@@ -358,6 +361,26 @@ namespace UMA
                             vertexCount = 0
                         };
                         SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings, umaData.umaRecipe, currentRendererIndex);
+#if UNITY_EDITOR
+                        if (UMA_INTERNALLOD_BUILD_DIAGNOSTICS)
+                        {
+                            int smc = (umaMesh.submeshes != null) ? umaMesh.submeshes.Length : 0;
+                            Debug.Log($"[UMA LODBuild] CombinedMesh renderer={currentRendererIndex} submeshes={smc} currentLOD={umaData.currentLODLevel}");
+                            for (int sm = 0; sm < smc; sm++)
+                            {
+                                var smt = umaMesh.submeshes[sm];
+                                if (smt == null)
+                                {
+                                    Debug.Log($"[UMA LODBuild]  combined sm={sm} <null>");
+                                    continue;
+                                }
+                                int totalIdx = 0;
+                                try { totalIdx = smt.GetTriangleCount(); } catch { totalIdx = -1; }
+                                var lr = smt.GetLODRange(Mathf.Max(0, umaData.currentLODLevel));
+                                Debug.Log($"[UMA LODBuild]  combined sm={sm} totalIdx={totalIdx} lodRange=({lr.offset},{lr.count})");
+                            }
+                        }
+#endif
                         if (updatedAtlas)
                         {
 #if UMA_COMBINER_TIMINGS
@@ -665,56 +688,11 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                     if (slotData.meshHideMask != null)
                         combineInstance.triangleMask = slotData.meshHideMask;
 
-                    // Ensure triangle masks reflect current LOD selection
+                 // Do not generate internal-LOD triangle masks for the legacy combiner.
+                    // Legacy `SkinnedMeshCombiner` always copies the base triangle buffer (`GetTriangles()`),
+                    // so a mask sized from `GetTriangles(lod)` will not match and will trigger runtime errors.
 #if UNITY_6000_2_OR_NEWER
-                    int lod = Mathf.Max(0, umaData.currentLODLevel);
-                    var smCount = combineInstance.meshData.subMeshCount;
-                    if (smCount > 0)
-                    {
-                        // Prepare array if not already provided by meshHide
-                        if (combineInstance.triangleMask == null || combineInstance.triangleMask.Length != smCount)
-                        {
-                            combineInstance.triangleMask = new System.Collections.BitArray[smCount];
-                        }
-                        for (int sm = 0; sm < smCount; sm++)
-                        {
-                            var smt = combineInstance.meshData.submeshes[sm];
-                            if (smt == null)
-                                continue;
-
-                            // total indices in this submesh
-                            int totalIndexCount = smt.GetTriangleCount();
-                            if (totalIndexCount <= 0)
-                                continue;
-                            int totalTriangleCount = totalIndexCount / 3;
-
-                            // LOD range is expressed in indices (offset,count)
-                            var range = smt.GetLODRange(lod);
-                            int startIndex = Mathf.Clamp((int)range.offset, 0, totalIndexCount);
-                            int countIndex = Mathf.Clamp((int)range.count, 0, totalIndexCount - startIndex);
-                            int keepStartTri = startIndex / 3;
-                            int keepTriCount = countIndex / 3;
-                            int keepEndTri = Mathf.Clamp(keepStartTri + keepTriCount, 0, totalTriangleCount);
-
-                            // MeshAPI expects mask bits per-triangle, where 1 means "remove" and 0 means "keep"
-                            var mask = combineInstance.triangleMask[sm];
-                            if (mask == null || mask.Length != totalTriangleCount)
-                            {
-                                mask = new System.Collections.BitArray(totalTriangleCount, true); // default remove all
-                                combineInstance.triangleMask[sm] = mask;
-                            }
-                            else
-                            {
-                                mask.SetAll(true);
-                            }
-
-                            // Mark triangles in keep range as false (do not remove)
-                            for (int t = keepStartTri; t < keepEndTri; t++)
-                            {
-                                mask[t] = false;
-                            }
-                        }
-                    }
+                   // Intentionally left as MeshHide-only. Internal LOD is applied later when the final mesh is set up via LOD ranges.
 #endif
 
                     var smCount2 = combineInstance.meshData.subMeshCount;

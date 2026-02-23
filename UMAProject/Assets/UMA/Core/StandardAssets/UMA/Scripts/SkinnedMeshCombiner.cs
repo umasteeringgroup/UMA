@@ -157,12 +157,18 @@ namespace UMA
 
             //int[][] submeshTriangles = new int[subMeshCount][];
 
-            List<NativeArray<int>> submeshTriangles = new System.Collections.Generic.List<NativeArray<int>>(subMeshTriangleLength.Length);
+          var submeshTriangles = new List<NativeArray<int>>(subMeshTriangleLength.Length);
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
 			{
+				// Keep list indices aligned with submesh indices.
+				// Some submeshes may have 0 triangles; still insert a default slot to preserve indexing.
 				if (subMeshTriangleLength[i] > 0)
 				{
 					submeshTriangles.Add(target.GetSubmeshBuffer(subMeshTriangleLength[i], i));
+				}
+				else
+				{
+					submeshTriangles.Add(default);
 				}
 				subMeshTriangleLength[i] = 0;
 			}
@@ -569,10 +575,26 @@ namespace UMA
 			target.submeshes = new SubMeshTriangles[subMeshCount];
 			target.umaBones = umaTransforms;
 			target.umaBoneCount = boneCount;
-			for (int i = 0; i < subMeshCount; i++) 
+			if (subMeshCount < 1)
 			{
-				target.submeshes[i].SetTriangles(null);
-				target.submeshes[i].nativeTriangles = submeshTriangles[i];
+				Debug.LogError("Submesh count is less than 1! subMeshCount=" + subMeshCount);
+            }
+			Debug.Log("Submesh count is " + subMeshCount);	
+            if (target.submeshes == null)
+			{
+				Debug.LogError("Submeshes is null!");
+            }
+            for (int i = 0; i < subMeshCount; i++) 
+			{
+				Debug.Log("Submesh " + i + " triangle count is " + subMeshTriangleLength[i]);
+
+                if (target.submeshes[i] == null)
+                {
+                    target.submeshes[i] = new SubMeshTriangles();
+                }
+
+                target.submeshes[i].SetTriangles(null);
+                target.submeshes[i].nativeTriangles = submeshTriangles[i];
 			}
 			target.boneNameHashes = bonesList.ToArray();
 		}

@@ -27,10 +27,12 @@ namespace UMA.Editors
 #if UNITY_6000_2_OR_NEWER
             if (slot == null)
             {
+                Debug.LogError("Slot is null.");
                 return false;
             }
             if (slot.meshData == null || slot.meshData.submeshes == null || slot.meshData.submeshes.Length == 0)
             {
+                Debug.LogError("Slot mesh data is missing or has no submeshes.");
                 return false;
             }
             if (options == null)
@@ -39,6 +41,7 @@ namespace UMA.Editors
             }
             if (options.MaxLodLevels < 1)
             {
+                Debug.LogError("MaxLodLevels must be at least 1.");
                 return false;
             }
 
@@ -51,6 +54,7 @@ namespace UMA.Editors
             var smt = slot.meshData.submeshes[sub];
             if (smt == null)
             {
+                Debug.LogError("SubMeshTriangles is null.");
                 return false;
             }
 
@@ -89,6 +93,7 @@ namespace UMA.Editors
                 int lodCount = tempMesh.lodCount;
                 if (lodCount <= 1)
                 {
+                    Debug.LogWarning("Unity LOD generator did not produce multiple LOD levels.");
                     return false;
                 }
 
@@ -97,6 +102,7 @@ namespace UMA.Editors
                 int[] allTris = tempMesh.GetTriangles(0, -1, false);
                 if (allTris == null || allTris.Length < 3)
                 {
+                    Debug.LogError("Failed to get triangles from temp mesh after LOD generation.");
                     return false;
                 }
 
@@ -141,21 +147,32 @@ namespace UMA.Editors
                     return false;
                 }
 
-                Undo.RecordObject(slot, "Generate Slot LODs (Unity)");
+                  Undo.RecordObject(slot, "Generate Slot LODs (Unity)");
                 smt.SetTriangles(appended.ToArray());
                 smt.SetLodRanges(ranges);
                 EditorUtility.SetDirty(slot);
-                Debug.Log($"Applied {ranges.Count} LODs to slot.");
+                 Debug.Log($"Applied {ranges.Count} LODs to slot. smt.LODCount={smt.LODCount()} triLen={(appended != null ? appended.Count : 0)}");
 
-                EditorUtility.SetDirty(slot);
                 AssetDatabase.SaveAssetIfDirty(slot);
 #if UNITY_6000_3_OR_NEWER
                 string path = AssetDatabase.GetAssetPath(slot.GetEntityId());
 #else
                 string path = AssetDatabase.GetAssetPath(slot.GetInstanceID());
 #endif
-                AssetDatabase.ImportAsset(path);
-                UMAUpdateProcessor.UpdateSlot(slot, false);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.ImportAsset(path);
+                }
+                 try
+                    {
+                        int verify = (slot.meshData != null && slot.meshData.submeshes != null && slot.meshData.submeshes.Length > sub && slot.meshData.submeshes[sub] != null)
+                            ? slot.meshData.submeshes[sub].LODCount()
+                            : -1;
+                        Debug.Log($"[SlotLOD][Unity] VERIFY slot='{slot.slotName}' lodCount={verify}");
+                    }
+                    catch { }
+                    UMAUpdateProcessor.UpdateSlot(slot, false);
 
                 return true;
             }
@@ -198,10 +215,12 @@ namespace UMA.Editors
 
             if (options.useUnityLodGenerator)
             {
+                Debug.Log("Generating LODs using Unity's built-in LOD generator.");
                 return GenerateAndApplyUnityLods(slot, options);
             }
             else
             {
+                Debug.Log("Generating LODs using custom edge-collapse simplification.");
                 return GenerateAndApplyCustomLods(slot, options);
             }
         }
