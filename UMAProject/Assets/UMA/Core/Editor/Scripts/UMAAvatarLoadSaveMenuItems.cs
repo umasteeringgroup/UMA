@@ -1454,6 +1454,10 @@ namespace UMA.Editors
 		private UMA.OverlayDataAsset _selectedOverlay;
 		private Vector2 _leftScroll;
 		private Vector2 _rightScroll;
+     private DefaultAsset _textureFolder;
+		private string _textureFolderPath;
+		private bool _includeSubfolders;
+		private bool _skipWhenSameAsset = true;
 		private static readonly GUIContent _completeLabel = new GUIContent("Complete");
 		private static readonly GUIContent _incompleteLabel = new GUIContent("Incomplete");
 		private enum OverlayFilter { All, Complete, Incomplete }
@@ -1564,11 +1568,239 @@ namespace UMA.Editors
 
 			RebuildFilteredOverlays(_selectedOverlay);
 
+          DrawRelinkPanel();
+
 			EditorGUILayout.BeginHorizontal();
 			DrawOverlayList();
 			GUILayout.Space(10);
 			DrawOverlayDetails();
 			EditorGUILayout.EndHorizontal();
+		}
+
+		private void DrawRelinkPanel()
+		{
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			EditorGUILayout.LabelField("Relink Textures", EditorStyles.boldLabel);
+			EditorGUILayout.HelpBox("Replaces textures on the selected OverlayDataAsset list by name, using textures found in the specified folder.", MessageType.Info);
+			EditorGUI.BeginChangeCheck();
+			_textureFolder = (DefaultAsset)EditorGUILayout.ObjectField("Texture Folder", _textureFolder, typeof(DefaultAsset), false);
+			if (EditorGUI.EndChangeCheck())
+			{
+				_textureFolderPath = _textureFolder != null ? AssetDatabase.GetAssetPath(_textureFolder) : string.Empty;
+				if (!string.IsNullOrEmpty(_textureFolderPath) && !AssetDatabase.IsValidFolder(_textureFolderPath))
+				{
+					_textureFolder = null;
+					_textureFolderPath = string.Empty;
+				}
+			}
+			using (new EditorGUI.DisabledScope(true))
+			{
+				EditorGUILayout.TextField("Path", _textureFolderPath ?? string.Empty);
+			}
+			_includeSubfolders = EditorGUILayout.ToggleLeft("Include subfolders", _includeSubfolders);
+			_skipWhenSameAsset = EditorGUILayout.ToggleLeft("Skip if already same asset", _skipWhenSameAsset);
+
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_textureFolderPath) || _overlays.Count == 0))
+			{
+				if (GUILayout.Button("Replace textures in selected overlays", GUILayout.Width(260), GUILayout.Height(24)))
+				{
+					ReplaceTexturesInSelectedOverlays();
+				}
+			}
+			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.Space(6);
+		}
+
+		private void ReplaceTexturesInSelectedOverlays()
+		{
+			if (string.IsNullOrEmpty(_textureFolderPath))
+			{
+				EditorUtility.DisplayDialog("Relink Textures", "Select a valid texture folder.", "OK");
+				return;
+			}
+			if (_overlays.Count == 0)
+			{
+				return;
+			}
+
+			var nameToTexture = BuildTextureLookup(_textureFolderPath, _includeSubfolders);
+			if (nameToTexture.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Relink Textures", "No textures found in folder: " + _textureFolderPath, "OK");
+				return;
+			}
+
+            int overlaysUpdated = 0;
+			int texturesReplaced = 0;
+			int texturesMissing = 0;
+         int alphaMasksReplaced = 0;
+         var missingNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+			try
+			{
+				for (int i = 0; i < _overlays.Count; i++)
+				{
+					var overlay = _overlays[i];
+					if (overlay == null) continue;
+
+					var list = overlay.textureList;
+					if (list == null || list.Length == 0) continue;
+
+                    bool anyChanged = false;
+					Undo.RecordObject(overlay, "Relink overlay textures");
+
+					if (overlay.alphaMask != null)
+					{
+						string alphaBaseName = GetTextureBaseName(overlay.alphaMask);
+						if (!string.IsNullOrEmpty(alphaBaseName) && nameToTexture.TryGetValue(alphaBaseName, out var alphaReplacement) && alphaReplacement != null)
+						{
+							if (!_skipWhenSameAsset || alphaReplacement != overlay.alphaMask)
+							{
+								overlay.alphaMask = alphaReplacement;
+								alphaMasksReplaced++;
+								anyChanged = true;
+							}
+						}
+						else
+						{
+							texturesMissing++;
+                           if (!string.IsNullOrEmpty(alphaBaseName))
+							{
+								missingNames.Add(alphaBaseName);
+							}
+						}
+					}
+
+					for (int t = 0; t < list.Length; t++)
+					{
+						var current = list[t];
+						if (current == null) continue;
+
+						string baseName = GetTextureBaseName(current);
+						if (string.IsNullOrEmpty(baseName)) continue;
+
+						if (!nameToTexture.TryGetValue(baseName, out var replacement) || replacement == null)
+						{
+							texturesMissing++;
+                           missingNames.Add(baseName);
+							continue;
+						}
+
+						if (_skipWhenSameAsset && replacement == current)
+						{
+							continue;
+						}
+
+						list[t] = replacement;
+						texturesReplaced++;
+						anyChanged = true;
+						if (overlay.textureNames != null && t < overlay.textureNames.Length)
+						{
+							overlay.textureNames[t] = replacement.name;
+						}
+					}
+
+					if (!anyChanged) continue;
+					overlay.textureList = list;
+					EditorUtility.SetDirty(overlay);
+					overlaysUpdated++;
+				}
+			}
+			finally
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog(
+				"Relink Textures",
+				"Overlays updated: " + overlaysUpdated +
+				"\nTextures replaced: " + texturesReplaced +
+             "\nAlpha masks replaced: " + alphaMasksReplaced +
+				"\nTextures not found: " + texturesMissing,
+				"OK");
+
+			if (missingNames.Count > 0)
+			{
+				var list = new List<string>(missingNames);
+				list.Sort(System.StringComparer.OrdinalIgnoreCase);
+				string details = string.Join("\n", list);
+				EditorUtility.DisplayDialog("Textures not found", details, "OK");
+			}
+		}
+
+        private static Dictionary<string, Texture> BuildTextureLookup(string folderPath, bool includeSubfolders)
+		{
+			var result = new Dictionary<string, Texture>(System.StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrEmpty(folderPath)) return result;
+			folderPath = folderPath.Replace('\\', '/');
+
+			string[] search = new[] { folderPath };
+          const string filter = "t:Texture";
+			// `FindAssets` will search recursively within provided folder(s).
+			string[] guids = AssetDatabase.FindAssets(filter, search);
+			for (int i = 0; i < guids.Length; i++)
+			{
+				string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+				if (string.IsNullOrEmpty(path)) continue;
+				if (!includeSubfolders)
+				{
+                   string dir = Path.GetDirectoryName(path)?.Replace('\\', '/');
+					if (!string.Equals(dir, folderPath, System.StringComparison.OrdinalIgnoreCase))
+					{
+						continue;
+					}
+				}
+             var tex = AssetDatabase.LoadAssetAtPath<Texture>(path);
+				if (tex == null) continue;
+				string key = Path.GetFileNameWithoutExtension(path);
+				if (string.IsNullOrEmpty(key)) continue;
+               if (result.TryGetValue(key, out var existing) && existing != null)
+				{
+					if (GetExtensionPriority(path) >= GetExtensionPriority(AssetDatabase.GetAssetPath(existing)))
+					{
+						continue;
+					}
+					result[key] = tex;
+				}
+				else
+				{
+					result[key] = tex;
+				}
+			}
+			return result;
+		}
+
+		private static int GetExtensionPriority(string assetPath)
+		{
+			if (string.IsNullOrEmpty(assetPath)) return int.MaxValue;
+			string ext = Path.GetExtension(assetPath);
+			if (string.IsNullOrEmpty(ext)) return int.MaxValue;
+			ext = ext.TrimStart('.').ToLowerInvariant();
+			switch (ext)
+			{
+				case "png": return 0;
+				case "jpg":
+				case "jpeg": return 1;
+				case "tga": return 2;
+				case "tif":
+				case "tiff": return 3;
+				default: return 10;
+			}
+		}
+
+		private static string GetTextureBaseName(Texture texture)
+		{
+			if (texture == null) return null;
+			string path = AssetDatabase.GetAssetPath(texture);
+			if (!string.IsNullOrEmpty(path))
+			{
+				return Path.GetFileNameWithoutExtension(path);
+			}
+			// Fallback: if texture is generated/unassigned to disk, use object name.
+			return texture.name;
 		}
 
 		private void DrawOverlayList()
