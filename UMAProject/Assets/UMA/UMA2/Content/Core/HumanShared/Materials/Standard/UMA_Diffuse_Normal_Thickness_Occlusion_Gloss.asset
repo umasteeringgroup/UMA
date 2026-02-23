@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _material: {fileID: 2100000, guid: b19b1c419ef95d246a5b0026f3872a62, type: 2}
   _secondPass: {fileID: 0}
-  materialType: 2
+  materialType: 1
   channels:
   - channelType: 4
     textureFormat: 0
