@@ -8,6 +8,7 @@ namespace UMA
     /// <summary>
     /// DNA effect that lerps a bone's local position/rotation/scale toward target values based on the mapped DNA value.
     /// </summary>
+    [System.Serializable]
     public class DNAEffect_BoneTransform : DNAEffect
     {
         /// <summary>

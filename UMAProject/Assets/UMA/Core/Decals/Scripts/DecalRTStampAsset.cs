@@ -11,6 +11,7 @@ namespace UMA
         public class SlotStamp
         {
             public string slotName;           // Identifies the target slot in the recipe at apply time
+            public string slotGroup;          // Helpful for matching when slotName is missing, changed, or slot is replaced with a different slot that uses the same UV 
             public int slotHash;            // Cached hash of slotName for faster matching
             public string umaMaterialName;    // Helpful for matching generated materials
             public Vector2[] normBaseUV;      // UV0 normalized to [0..1] within SlotData.UVArea at record time
@@ -31,6 +32,10 @@ namespace UMA
 			public override string ToString()
             {
                 string ignored = debugDontUse ? "(ignored)" : "";
+                if (!string.IsNullOrEmpty(slotGroup))
+                {
+                    return $"{slotGroup} {ignored}";
+                }
                 return $"{slotName} {ignored}";
             }
             public bool SlotHasOverlay(UMAData umaData, int overlayHash)

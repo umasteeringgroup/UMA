@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 2560
     height: 1349.3334
   m_ShowMode: 4
-  m_Title: Hierarchy
+  m_Title: Project
   m_RootView: {fileID: 8}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -39,9 +39,9 @@ MonoBehaviour:
   m_Children: []
   m_Position:
     serializedVersion: 2
-    x: 610
+    x: 940.6667
     y: 0
-    width: 1152.6666
+    width: 837.99994
     height: 693.3334
   m_MinSize: {x: 102, y: 126}
   m_MaxSize: {x: 4002, y: 4026}
@@ -70,12 +70,12 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 600
-    width: 1762.6666
+    width: 1778.6666
     height: 693.3334
   m_MinSize: {x: 200, y: 56}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 124
+  controlID: 130
   draggingID: 0
 --- !u!114 &4
 MonoBehaviour:
@@ -92,9 +92,9 @@ MonoBehaviour:
   m_Children: []
   m_Position:
     serializedVersion: 2
-    x: 1762.6666
+    x: 1778.6666
     y: 0
-    width: 797.3334
+    width: 781.3334
     height: 1293.3334
   m_MinSize: {x: 276, y: 76}
   m_MaxSize: {x: 4001, y: 4026}
@@ -130,7 +130,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 112}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 153
+  controlID: 128
   draggingID: 0
 --- !u!114 &6
 MonoBehaviour:
@@ -149,7 +149,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 366.66666
+    width: 369.33334
     height: 600
   m_MinSize: {x: 201, y: 226}
   m_MaxSize: {x: 4001, y: 4026}
@@ -175,7 +175,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 610
+    width: 940.6667
     height: 693.3334
   m_MinSize: {x: 231, y: 276}
   m_MaxSize: {x: 10001, y: 10026}
@@ -274,12 +274,12 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 1762.6666
+    width: 1778.6666
     height: 1293.3334
   m_MinSize: {x: 200, y: 112}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 123
+  controlID: 129
   draggingID: 0
 --- !u!114 &12
 MonoBehaviour:
@@ -300,12 +300,12 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 1762.6666
+    width: 1778.6666
     height: 600
   m_MinSize: {x: 200, y: 56}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 20
+  controlID: 49
   draggingID: 0
 --- !u!114 &13
 MonoBehaviour:
@@ -322,9 +322,9 @@ MonoBehaviour:
   m_Children: []
   m_Position:
     serializedVersion: 2
-    x: 366.66666
+    x: 369.33334
     y: 0
-    width: 1396
+    width: 1409.3333
     height: 600
   m_MinSize: {x: 202, y: 226}
   m_MaxSize: {x: 4002, y: 4026}
@@ -336,7 +336,7 @@ MonoBehaviour:
   - {fileID: 15}
   - {fileID: 26}
   m_Selected: 0
-  m_LastSelected: 3
+  m_LastSelected: 2
 --- !u!114 &14
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -410,47 +410,49 @@ MonoBehaviour:
       m_Data: 93856
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 64480
-    - m_Data: 64482
-    - m_Data: 64484
-    - m_Data: 64486
-    - m_Data: 64488
-    - m_Data: 64490
-    - m_Data: 64492
-    - m_Data: 64494
-    - m_Data: 64496
-    - m_Data: 64498
-    - m_Data: 64500
-    - m_Data: 64502
-    - m_Data: 64504
-    - m_Data: 64506
-    - m_Data: 64508
-    - m_Data: 64510
-    - m_Data: 64512
-    - m_Data: 64514
-    - m_Data: 64516
-    - m_Data: 64518
-    - m_Data: 64520
-    - m_Data: 64522
-    - m_Data: 64524
-    - m_Data: 64526
-    - m_Data: 64528
-    - m_Data: 64530
-    - m_Data: 64532
-    - m_Data: 64534
-    - m_Data: 64536
-    - m_Data: 64538
-    - m_Data: 64540
-    - m_Data: 64542
-    - m_Data: 64544
-    - m_Data: 64546
-    - m_Data: 64548
-    - m_Data: 64550
-    - m_Data: 64552
-    - m_Data: 64554
-    - m_Data: 64556
-    - m_Data: 64558
-    - m_Data: 64560
+    - m_Data: 62546
+    - m_Data: 62548
+    - m_Data: 62550
+    - m_Data: 62552
+    - m_Data: 62554
+    - m_Data: 62556
+    - m_Data: 62558
+    - m_Data: 62560
+    - m_Data: 62562
+    - m_Data: 62564
+    - m_Data: 62566
+    - m_Data: 62568
+    - m_Data: 62570
+    - m_Data: 62572
+    - m_Data: 62574
+    - m_Data: 62576
+    - m_Data: 62578
+    - m_Data: 62580
+    - m_Data: 62582
+    - m_Data: 62584
+    - m_Data: 62586
+    - m_Data: 62588
+    - m_Data: 62590
+    - m_Data: 62592
+    - m_Data: 62594
+    - m_Data: 62596
+    - m_Data: 62598
+    - m_Data: 62600
+    - m_Data: 62602
+    - m_Data: 62604
+    - m_Data: 62606
+    - m_Data: 62608
+    - m_Data: 62610
+    - m_Data: 62612
+    - m_Data: 62614
+    - m_Data: 62616
+    - m_Data: 62618
+    - m_Data: 62620
+    - m_Data: 62622
+    - m_Data: 62624
+    - m_Data: 62626
+    - m_Data: 62628
+    - m_Data: 62630
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -483,47 +485,49 @@ MonoBehaviour:
       m_Data: 0
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 64480
-    - m_Data: 64482
-    - m_Data: 64484
-    - m_Data: 64486
-    - m_Data: 64488
-    - m_Data: 64490
-    - m_Data: 64492
-    - m_Data: 64494
-    - m_Data: 64496
-    - m_Data: 64498
-    - m_Data: 64500
-    - m_Data: 64502
-    - m_Data: 64504
-    - m_Data: 64506
-    - m_Data: 64508
-    - m_Data: 64510
-    - m_Data: 64512
-    - m_Data: 64514
-    - m_Data: 64516
-    - m_Data: 64518
-    - m_Data: 64520
-    - m_Data: 64522
-    - m_Data: 64524
-    - m_Data: 64526
-    - m_Data: 64528
-    - m_Data: 64530
-    - m_Data: 64532
-    - m_Data: 64534
-    - m_Data: 64536
-    - m_Data: 64538
-    - m_Data: 64540
-    - m_Data: 64542
-    - m_Data: 64544
-    - m_Data: 64546
-    - m_Data: 64548
-    - m_Data: 64550
-    - m_Data: 64552
-    - m_Data: 64554
-    - m_Data: 64556
-    - m_Data: 64558
-    - m_Data: 64560
+    - m_Data: 62546
+    - m_Data: 62548
+    - m_Data: 62550
+    - m_Data: 62552
+    - m_Data: 62554
+    - m_Data: 62556
+    - m_Data: 62558
+    - m_Data: 62560
+    - m_Data: 62562
+    - m_Data: 62564
+    - m_Data: 62566
+    - m_Data: 62568
+    - m_Data: 62570
+    - m_Data: 62572
+    - m_Data: 62574
+    - m_Data: 62576
+    - m_Data: 62578
+    - m_Data: 62580
+    - m_Data: 62582
+    - m_Data: 62584
+    - m_Data: 62586
+    - m_Data: 62588
+    - m_Data: 62590
+    - m_Data: 62592
+    - m_Data: 62594
+    - m_Data: 62596
+    - m_Data: 62598
+    - m_Data: 62600
+    - m_Data: 62602
+    - m_Data: 62604
+    - m_Data: 62606
+    - m_Data: 62608
+    - m_Data: 62610
+    - m_Data: 62612
+    - m_Data: 62614
+    - m_Data: 62616
+    - m_Data: 62618
+    - m_Data: 62620
+    - m_Data: 62622
+    - m_Data: 62624
+    - m_Data: 62626
+    - m_Data: 62628
+    - m_Data: 62630
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -695,7 +699,7 @@ MonoBehaviour:
     m_CachedPref: -367.3333
     m_ControlHash: 1412526313
     m_PrefName: Preview_InspectorPreview
-  m_LastInspectedObjectInstanceID: 58440
+  m_LastInspectedObjectInstanceID: 58032
   m_LastVerticalScrollValue: 0
   m_GlobalObjectId: 
   m_InspectorMode: 0
@@ -746,7 +750,7 @@ MonoBehaviour:
     m_CachedPref: -367.3333
     m_ControlHash: 1412526313
     m_PrefName: Preview_InspectorPreview
-  m_LastInspectedObjectInstanceID: 61638
+  m_LastInspectedObjectInstanceID: 54782
   m_LastVerticalScrollValue: 0
   m_GlobalObjectId: 
   m_InspectorMode: 0
@@ -854,10 +858,10 @@ MonoBehaviour:
     m_TextWithWhitespace: "UMA NextGen 3.0 Global Library\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 368.6667
-    y: 86
-    width: 1386
-    height: 568
+    x: 369.33334
+    y: 78.66667
+    width: 1407.3333
+    height: 574
   m_SerializedDataModeController:
     m_DataMode: 0
     m_PreferredDataMode: 0
@@ -1485,9 +1489,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Inspector\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1763.6666
+    x: 1779.6666
     y: 24
-    width: 796.3334
+    width: 780.3334
     height: 1267.3334
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1538,7 +1542,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 24
-    width: 609
+    width: 939.6667
     height: 667.3334
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1564,7 +1568,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 3
     m_Folders:
-    - Assets/UMA/UMA2/Content/Hair/woman-haircard_4_tie
+    - Assets/UMA/UMA3
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -1574,61 +1578,63 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/UMA/UMA2/Content/Hair/woman-haircard_4_tie
+  - Assets/UMA/UMA3
   m_LastFoldersGridSize: 16
   m_LastProjectPath: E:\UMAURP\UMA\UMAProject
   m_LockTracker:
     m_IsLocked: 0
   m_LastLocalAssetsSearchArea: 3
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 1772.6666}
+    scrollPos: {x: 0, y: 0}
     m_SelectedIDs:
-    - m_Data: 63284
+    - m_Data: 65206
     m_LastClickedID:
-      m_Data: 63284
+      m_Data: 65206
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 64480
-    - m_Data: 64482
-    - m_Data: 64484
-    - m_Data: 64486
-    - m_Data: 64488
-    - m_Data: 64490
-    - m_Data: 64492
-    - m_Data: 64494
-    - m_Data: 64496
-    - m_Data: 64498
-    - m_Data: 64500
-    - m_Data: 64502
-    - m_Data: 64504
-    - m_Data: 64506
-    - m_Data: 64508
-    - m_Data: 64510
-    - m_Data: 64512
-    - m_Data: 64514
-    - m_Data: 64516
-    - m_Data: 64518
-    - m_Data: 64520
-    - m_Data: 64522
-    - m_Data: 64524
-    - m_Data: 64526
-    - m_Data: 64528
-    - m_Data: 64530
-    - m_Data: 64532
-    - m_Data: 64534
-    - m_Data: 64536
-    - m_Data: 64538
-    - m_Data: 64540
-    - m_Data: 64542
-    - m_Data: 64544
-    - m_Data: 64546
-    - m_Data: 64548
-    - m_Data: 64550
-    - m_Data: 64552
-    - m_Data: 64554
-    - m_Data: 64556
-    - m_Data: 64558
-    - m_Data: 64560
+    - m_Data: 62546
+    - m_Data: 62548
+    - m_Data: 62550
+    - m_Data: 62552
+    - m_Data: 62554
+    - m_Data: 62556
+    - m_Data: 62558
+    - m_Data: 62560
+    - m_Data: 62562
+    - m_Data: 62564
+    - m_Data: 62566
+    - m_Data: 62568
+    - m_Data: 62570
+    - m_Data: 62572
+    - m_Data: 62574
+    - m_Data: 62576
+    - m_Data: 62578
+    - m_Data: 62580
+    - m_Data: 62582
+    - m_Data: 62584
+    - m_Data: 62586
+    - m_Data: 62588
+    - m_Data: 62590
+    - m_Data: 62592
+    - m_Data: 62594
+    - m_Data: 62596
+    - m_Data: 62598
+    - m_Data: 62600
+    - m_Data: 62602
+    - m_Data: 62604
+    - m_Data: 62606
+    - m_Data: 62608
+    - m_Data: 62610
+    - m_Data: 62612
+    - m_Data: 62614
+    - m_Data: 62616
+    - m_Data: 62618
+    - m_Data: 62620
+    - m_Data: 62622
+    - m_Data: 62624
+    - m_Data: 62626
+    - m_Data: 62628
+    - m_Data: 62630
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1661,47 +1667,49 @@ MonoBehaviour:
       m_Data: 0
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 64480
-    - m_Data: 64482
-    - m_Data: 64484
-    - m_Data: 64486
-    - m_Data: 64488
-    - m_Data: 64490
-    - m_Data: 64492
-    - m_Data: 64494
-    - m_Data: 64496
-    - m_Data: 64498
-    - m_Data: 64500
-    - m_Data: 64502
-    - m_Data: 64504
-    - m_Data: 64506
-    - m_Data: 64508
-    - m_Data: 64510
-    - m_Data: 64512
-    - m_Data: 64514
-    - m_Data: 64516
-    - m_Data: 64518
-    - m_Data: 64520
-    - m_Data: 64522
-    - m_Data: 64524
-    - m_Data: 64526
-    - m_Data: 64528
-    - m_Data: 64530
-    - m_Data: 64532
-    - m_Data: 64534
-    - m_Data: 64536
-    - m_Data: 64538
-    - m_Data: 64540
-    - m_Data: 64542
-    - m_Data: 64544
-    - m_Data: 64546
-    - m_Data: 64548
-    - m_Data: 64550
-    - m_Data: 64552
-    - m_Data: 64554
-    - m_Data: 64556
-    - m_Data: 64558
-    - m_Data: 64560
+    - m_Data: 62546
+    - m_Data: 62548
+    - m_Data: 62550
+    - m_Data: 62552
+    - m_Data: 62554
+    - m_Data: 62556
+    - m_Data: 62558
+    - m_Data: 62560
+    - m_Data: 62562
+    - m_Data: 62564
+    - m_Data: 62566
+    - m_Data: 62568
+    - m_Data: 62570
+    - m_Data: 62572
+    - m_Data: 62574
+    - m_Data: 62576
+    - m_Data: 62578
+    - m_Data: 62580
+    - m_Data: 62582
+    - m_Data: 62584
+    - m_Data: 62586
+    - m_Data: 62588
+    - m_Data: 62590
+    - m_Data: 62592
+    - m_Data: 62594
+    - m_Data: 62596
+    - m_Data: 62598
+    - m_Data: 62600
+    - m_Data: 62602
+    - m_Data: 62604
+    - m_Data: 62606
+    - m_Data: 62608
+    - m_Data: 62610
+    - m_Data: 62612
+    - m_Data: 62614
+    - m_Data: 62616
+    - m_Data: 62618
+    - m_Data: 62620
+    - m_Data: 62622
+    - m_Data: 62624
+    - m_Data: 62626
+    - m_Data: 62628
+    - m_Data: 62630
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1728,9 +1736,10 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: []
-    m_LastClickedInstanceID: 0
-    m_HadKeyboardFocusLastEvent: 0
+    m_SelectedInstanceIDs:
+    - m_Data: 59516
+    m_LastClickedInstanceID: 59516
+    m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs:
     - m_Data: 61958
     - m_Data: 62912
@@ -1764,7 +1773,7 @@ MonoBehaviour:
     m_ScrollPosition: {x: 0, y: 0}
     m_GridSize: 16
   m_SkipHiddenPackages: 0
-  m_DirectoriesAreaWidth: 157.66667
+  m_DirectoriesAreaWidth: 464.33334
 --- !u!114 &24
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -1788,7 +1797,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 24
-    width: 365.66666
+    width: 368.33334
     height: 574
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1810,10 +1819,8 @@ MonoBehaviour:
       m_LastClickedID:
         m_Data: 0
       m_ExpandedIDs:
-      - m_Data: -23920
-      - m_Data: -4518
-      - m_Data: -1318
-      - m_Data: 61638
+      - m_Data: -1316
+      - m_Data: 62114
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -1860,9 +1867,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Scene\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 367.66666
+    x: 370.33334
     y: 24
-    width: 1394
+    width: 1407.3333
     height: 574
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -2406,13 +2413,13 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: 3.6220675, y: -0.45489755, z: -2.244539}
+    m_Target: {x: 2.7526777, y: 1.627944, z: 2.1805995}
     speed: 2
-    m_Value: {x: 3.6220675, y: -0.45489755, z: -2.244539}
+    m_Value: {x: 2.7526777, y: 1.627944, z: 2.1805995}
   m_RenderMode: 0
   m_CameraMode:
-    drawMode: 2
-    name: Shaded Wireframe
+    drawMode: 0
+    name: Shaded
     section: Shading Mode
   m_ValidateTrueMetals: 0
   m_DoValidateTrueMetals: 0
@@ -2454,13 +2461,13 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: 0.049366146, y: 0.31593215, z: -0.016296268, w: 0.9475482}
+    m_Target: {x: -0.06589327, y: 0.044707906, z: 0.0030904755, w: 0.9970284}
     speed: 2
-    m_Value: {x: -0.04936615, y: -0.31593215, z: 0.016296268, w: -0.9475483}
+    m_Value: {x: 0.06589327, y: -0.04470791, z: -0.0030904755, w: -0.99702847}
   m_Size:
-    m_Target: 3.1277122
+    m_Target: 4.095571
     speed: 2
-    m_Value: 3.1277122
+    m_Value: 4.095571
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -2618,9 +2625,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Console\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 611
+    x: 941.6667
     y: 24
-    width: 1150.6666
+    width: 835.99994
     height: 667.3334
   m_SerializedDataModeController:
     m_DataMode: 0

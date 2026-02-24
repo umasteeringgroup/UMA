@@ -18,14 +18,10 @@ MonoBehaviour:
   DisplayValue: The Middle-Ager
   compatibleRaces:
   - HumanMale
-  - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
     thumb: {fileID: 21300000, guid: 3e5313759ce011440a671ff2194b66c1, type: 3}
-  - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
   wardrobeSlot: Hair
   Appended: 0
   Hides: []

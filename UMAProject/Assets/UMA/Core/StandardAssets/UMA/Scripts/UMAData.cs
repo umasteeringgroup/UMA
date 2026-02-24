@@ -1959,6 +1959,23 @@ namespace UMA
 				return null;
             }
 
+
+			public SlotData GetSlotBySlotGroup(string slotGroup)
+			{
+				for (int i = 0; i < slotDataList.Length; i++)
+				{
+					if (slotDataList[i] == null)
+					{
+						continue;
+					}
+					if (slotDataList[i].asset != null && slotDataList[i].asset.slotGroup == slotGroup)
+					{
+						return slotDataList[i];
+					}
+				}
+				return null;
+            }
+
 			public SlotData GetSlot(string name)
             {
 				int hash = UMAUtils.StringToHash(name);

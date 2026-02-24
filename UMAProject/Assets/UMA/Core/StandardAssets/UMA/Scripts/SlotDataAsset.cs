@@ -642,8 +642,6 @@ namespace UMA
         public bool smooshFoldout { get; set; } = false;
         public bool utilitiesFoldout { get; set; } = false;
 
-
-
 #endif
 
         public UMARendererAsset RendererAsset { get { return _rendererAsset; } set { _rendererAsset = value; } }

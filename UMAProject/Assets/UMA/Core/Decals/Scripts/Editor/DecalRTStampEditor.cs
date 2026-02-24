@@ -31,6 +31,7 @@ public static class DecalRTStampEditor
             {
                 slotName = s.slotName,
                 slotHash = s.slotHash,
+                slotGroup = s.slotGroup,
                 umaMaterialName = s.umaMaterialName,
                 normBaseUV = (s.normBaseUV != null) ? (Vector2[])s.normBaseUV.Clone() : new Vector2[0],
                 overlayUV = (s.overlayUV != null) ? (Vector2[])s.overlayUV.Clone() : new Vector2[0],

@@ -305,50 +305,66 @@ namespace UMA.Editors
 					ValidationMessages.Add("Error: genericRootMotionTransformName is null or empty. This is required for Generic UMA Targets.");
 				}
 
-				if (race.dnaConverterList == null)
+				if (race.useNewDNA)
 				{
-					ValidationMessages.Add("Error: dnaConverterList is null");
-				}
-				else
-				{
-					for (int i = 0; i < race.dnaConverterList.Length; i++)
+					if (race.DNACollection == null)
 					{
-						var cvt = race.dnaConverterList[i];
-						if (cvt == null)
+						ValidationMessages.Add("Error: DNACollection is null");
+					}
+					else
+					{
+						if (race.DNACollection.DNAGroups == null || race.DNACollection.DNAGroups.Count == 0)
 						{
-							ValidationMessages.Add("Error: dnaConverterList[" + i + "] is null");
-						}
-						else
+							ValidationMessages.Add("Error: DNACollection has no DNAGroups");
+                        }
+					}
+                }
+				else 
+				{
+					if (race.dnaConverterList == null)
+					{
+						ValidationMessages.Add("Error: dnaConverterList is null");
+					}
+					else
+					{
+						for (int i = 0; i < race.dnaConverterList.Length; i++)
 						{
-							if (cvt.dnaAsset == null)
+							var cvt = race.dnaConverterList[i];
+							if (cvt == null)
 							{
-								ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a null dnaAsset");
+								ValidationMessages.Add("Error: dnaConverterList[" + i + "] is null");
 							}
 							else
 							{
-								if (cvt.dnaAsset.Names == null || cvt.dnaAsset.Names.Length == 0)
+								if (cvt.dnaAsset == null)
 								{
-									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with no DNA names");
+									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a null dnaAsset");
 								}
-								if (cvt.dnaAsset.dnaTypeHash == 0)
+								else
 								{
-									ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with a0 dnaType Hash");
-								}
-								if (cvt.PluginCount == 0)
-								{
-									ValidationMessages.Add("Warning: dnaConverterList[" + i + "] has no DNA Converter Plugins. Is that intentional?");
-								}
-								for (int j = 0; j < cvt.PluginCount; j++)
-								{
-									var plugin = cvt.GetPlugin(j);
-									if (plugin == null)
+									if (cvt.dnaAsset.Names == null || cvt.dnaAsset.Names.Length == 0)
 									{
-										ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a null plugin at index " + j);
+										ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with no DNA names");
+									}
+									if (cvt.dnaAsset.dnaTypeHash == 0)
+									{
+										ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a dnaAsset with a0 dnaType Hash");
+									}
+									if (cvt.PluginCount == 0)
+									{
+										ValidationMessages.Add("Warning: dnaConverterList[" + i + "] has no DNA Converter Plugins. Is that intentional?");
+									}
+									for (int j = 0; j < cvt.PluginCount; j++)
+									{
+										var plugin = cvt.GetPlugin(j);
+										if (plugin == null)
+										{
+											ValidationMessages.Add("Error: dnaConverterList[" + i + "] has a null plugin at index " + j);
+										}
 									}
 								}
 							}
 						}
-
 					}
 				}
 				if (ValidationMessages.Count == 0)

@@ -1,3 +1,4 @@
+using System;
 using UMA.CharacterSystem;
 using UnityEngine;
 using static UMA.DNAEffect_SharedColorChannel;
@@ -9,6 +10,7 @@ namespace UMA
     /// DNA effect that calculates a color from FromColor/ToColor and the mapped DNA value, then combines it
     /// into a named SharedColor on the avatar using the chosen combination method.
     /// </summary>
+    [System.Serializable]
     public class DNAEffect_SharedColor : DNAEffect
     {
         public enum CombinationMethod

@@ -1458,6 +1458,7 @@ namespace UMA.Decals
 
 							var ns = new DecalRTStampAsset.SlotStamp {
 								slotName = s.slotName,
+								slotGroup = s.slotGroup,
 								slotHash = UMAUtils.StringToHash(s.slotName),
 								umaMaterialName = s.umaMaterialName,
 								normBaseUV = (s.normBaseUV != null) ? (Vector2[])s.normBaseUV.Clone() : new Vector2[0],

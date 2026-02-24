@@ -863,7 +863,6 @@ namespace UMA.CharacterSystem
 
         public void BuildNow()
         {
-            Debug.Log("Building UMA: " + gameObject.name);
             UMAGenerator ugb = umaGenerator;
             if (ugb != null)
             {
@@ -4521,7 +4520,6 @@ namespace UMA.CharacterSystem
         // Find: public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true, bool forceBuild=false)
         {
-            Debug.Log("BuildCharacter called with RestoreDNA: " + RestoreDNA + " skipBundleCheck: " + skipBundleCheck + " useBundleParameter: " + useBundleParameter + " forceBuild: " + forceBuild);
 #if UMA_DCA_TIMING
             Stopwatch sw = new Stopwatch();
             sw.Start();

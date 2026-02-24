@@ -453,8 +453,9 @@ namespace UMA {
 
 					// Build slot stamp entry
 					var slotStamp = new DecalRTStampAsset.SlotStamp {
-						slotName = slot.slotName,
-						slotHash = UMAUtils.StringToHash(slot.slotName),
+                       slotName = string.IsNullOrEmpty(slot.slotName) ? (slot.asset != null ? slot.asset.name : string.Empty) : slot.slotName,
+						slotGroup = slot.asset != null ? slot.asset.slotGroup : null,
+                        slotHash = UMAUtils.StringToHash(slot.slotName),
 						umaMaterialName = slot.material != null ? slot.material.name : string.Empty,
 						normBaseUV = new Vector2[uv0List.Count],
 						overlayUV = uv1List.ToArray(),
@@ -645,7 +646,23 @@ namespace UMA {
 							continue;
 						if (slotStamp.debugDontUse)
 							continue;
-						SlotData slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
+                      SlotData slot = null;
+						if (!string.IsNullOrEmpty(slotStamp.slotName))
+						{
+							slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
+						}
+						if (slot == null && !string.IsNullOrEmpty(slotStamp.slotGroup))
+						{
+							slot = umaData.umaRecipe.GetSlotBySlotGroup(slotStamp.slotGroup);
+						}
+						if (slot == null && slotStamp.slotHash != 0)
+						{
+							try
+							{
+								slot = umaData.GetSlotByHash(slotStamp.slotHash);
+							}
+							catch { }
+						}
 
 						// ?? No slot to apply it to!
 						if (slot == null) continue;
