@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UMA;
 using UnityEditor;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace UMA
 
         // Persist foldout states per asset instance id (not across domain reload, but stable during play/compiles)
         private static readonly Dictionary<int, List<bool>> FoldoutStates = new Dictionary<int, List<bool>>();
+        private static readonly Dictionary<int, List<bool>> VertexFoldoutStates = new Dictionary<int, List<bool>>();
 
         private int _instanceId;
 
@@ -56,11 +58,19 @@ namespace UMA
             {
                 FoldoutStates[_instanceId] = new List<bool>();
             }
+            if (!VertexFoldoutStates.ContainsKey(_instanceId))
+            {
+                VertexFoldoutStates[_instanceId] = new List<bool>();
+            }
             if (_modifiersProp != null)
             {
-                var list = FoldoutStates[_instanceId];
-                while (list.Count < _modifiersProp.arraySize) list.Add(false);
-                if (list.Count > _modifiersProp.arraySize) list.RemoveRange(_modifiersProp.arraySize, list.Count - _modifiersProp.arraySize);
+                var modifierList = FoldoutStates[_instanceId];
+                while (modifierList.Count < _modifiersProp.arraySize) modifierList.Add(false);
+                if (modifierList.Count > _modifiersProp.arraySize) modifierList.RemoveRange(_modifiersProp.arraySize, modifierList.Count - _modifiersProp.arraySize);
+
+                var vertexList = VertexFoldoutStates[_instanceId];
+                while (vertexList.Count < _modifiersProp.arraySize) vertexList.Add(false);
+                if (vertexList.Count > _modifiersProp.arraySize) vertexList.RemoveRange(_modifiersProp.arraySize, vertexList.Count - _modifiersProp.arraySize);
             }
         }
 
@@ -108,6 +118,18 @@ namespace UMA
                 mm.modifiers = new System.Collections.Generic.List<MeshModifier.Modifier>();
                 EditorUtility.SetDirty(mm);
                 serializedObject.Update();
+            }
+
+            int runtimeStackCount = mm != null && mm.modifiers != null ? mm.modifiers.Count : 0;
+            int editorStackCount = mm != null && mm.EditorModifiers != null ? mm.EditorModifiers.Count : 0;
+            int totalStackCount = runtimeStackCount + editorStackCount;
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Modifier Stack Counts", EditorStyles.boldLabel);
+                EditorGUILayout.IntField("Runtime Stacks", runtimeStackCount);
+                EditorGUILayout.IntField("Editor Stacks", editorStackCount);
+                EditorGUILayout.IntField("All Stacks", totalStackCount);
             }
 
             EnsureFoldoutList();
@@ -169,6 +191,8 @@ namespace UMA
                                 scaleProp.floatValue = Mathf.Clamp(newScale, 0f, 100f);
                             }
                         }
+
+                        DrawModifierDetails(mm, i);
                         EditorGUI.indentLevel--;
                     }
                 }
@@ -208,7 +232,12 @@ namespace UMA
             if (FoldoutStates.TryGetValue(_instanceId, out var list))
             {
                 while (list.Count < _modifiersProp.arraySize) list.Add(false);
-                if (list.Count > 0) list[list.Count - 1] = true; // auto expand new
+                if (list.Count > 0) list[list.Count - 1] = false;
+            }
+            if (VertexFoldoutStates.TryGetValue(_instanceId, out var vertexList))
+            {
+                while (vertexList.Count < _modifiersProp.arraySize) vertexList.Add(false);
+                if (vertexList.Count > 0) vertexList[vertexList.Count - 1] = false;
             }
         }
 
@@ -217,6 +246,75 @@ namespace UMA
             if (_modifiersProp == null || index < 0 || index >= _modifiersProp.arraySize) return;
             _modifiersProp.DeleteArrayElementAtIndex(index);
             EnsureFoldoutList();
+        }
+
+        private void DrawModifierDetails(MeshModifier meshModifier, int index)
+        {
+            if (meshModifier == null || meshModifier.modifiers == null || index < 0 || index >= meshModifier.modifiers.Count)
+            {
+                return;
+            }
+
+            var modifier = meshModifier.modifiers[index];
+            if (modifier == null)
+            {
+                EditorGUILayout.HelpBox("Modifier data is null.", MessageType.Warning);
+                return;
+            }
+
+            string collectionType = modifier.adjustments != null ? modifier.adjustments.GetType().Name : "None";
+            string templateType = modifier.TemplateAdjustment != null ? modifier.TemplateAdjustment.GetType().Name : "None";
+            int adjustmentCount = modifier.adjustments != null && modifier.adjustments.vertexAdjustments != null ? modifier.adjustments.vertexAdjustments.Count : 0;
+
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField("Details", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Adjustment Collection", collectionType);
+            EditorGUILayout.LabelField("Template Type", templateType);
+            EditorGUILayout.IntField("Adjustment Count", adjustmentCount);
+            EditorGUILayout.Toggle("Keep As Is", modifier.keepAsIs);
+            EditorGUILayout.Toggle("Manually Modified", modifier.manuallyModified);
+            EditorGUILayout.Toggle("Temporary", modifier.isTemporary);
+
+            if (!VertexFoldoutStates.TryGetValue(_instanceId, out var vertexFoldouts))
+            {
+                return;
+            }
+
+            while (vertexFoldouts.Count <= index)
+            {
+                vertexFoldouts.Add(false);
+            }
+
+            vertexFoldouts[index] = EditorGUILayout.Foldout(vertexFoldouts[index], "Vertices", true);
+            if (!vertexFoldouts[index])
+            {
+                return;
+            }
+
+            if (adjustmentCount == 0)
+            {
+                EditorGUILayout.LabelField("None");
+                return;
+            }
+
+            var vertices = modifier.adjustments.vertexAdjustments;
+            var groupedBySlot = vertices.GroupBy(x => x != null ? x.slotName : string.Empty);
+            foreach (var group in groupedBySlot)
+            {
+                string slotName = string.IsNullOrEmpty(group.Key) ? "(No Slot)" : group.Key;
+                EditorGUILayout.LabelField($"Slot: {slotName} ({group.Count()})", EditorStyles.miniBoldLabel);
+
+                foreach (var adjustment in group)
+                {
+                    if (adjustment == null)
+                    {
+                        EditorGUILayout.LabelField("- <null>");
+                        continue;
+                    }
+
+                    EditorGUILayout.LabelField($"- v:{adjustment.vertexIndex} [{adjustment.GetType().Name}]");
+                }
+            }
         }
     }
 }

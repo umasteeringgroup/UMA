@@ -67,6 +67,127 @@ namespace UMA
         public enum EditorMode { MeshModifiers, VertexAdjustments, Blendshapes }
         public EditorMode editorMode = EditorMode.VertexAdjustments;
 
+        private bool suppressUndoRebuild = false;
+        private bool activeAdjustmentInteractiveUndoArmed = false;
+        private bool bulkModifierInteractiveUndoArmed = false;
+
+        private UnityEngine.Object[] GetUndoTargets(bool includeCharacterState = false)
+        {
+            List<UnityEngine.Object> targets = new List<UnityEngine.Object>();
+            targets.Add(this);
+
+            if (vertexEditorStage != null)
+            {
+                targets.Add(vertexEditorStage);
+                if (vertexEditorStage.BakedMesh != null)
+                {
+                    targets.Add(vertexEditorStage.BakedMesh);
+                }
+            }
+
+            if (includeCharacterState && thisDCA != null)
+            {
+                targets.Add(thisDCA);
+                if (thisDCA.umaData != null)
+                {
+                    targets.Add(thisDCA.umaData);
+                }
+            }
+
+            return targets.ToArray();
+        }
+
+        private void RegisterUndoSnapshot(string actionName, bool includeCharacterState = false)
+        {
+            Undo.RegisterCompleteObjectUndo(GetUndoTargets(includeCharacterState), actionName);
+        }
+
+        private void MarkEditorStateDirty(bool includeCharacterState = false)
+        {
+            EditorUtility.SetDirty(this);
+            if (vertexEditorStage != null)
+            {
+                EditorUtility.SetDirty(vertexEditorStage);
+                if (vertexEditorStage.BakedMesh != null)
+                {
+                    EditorUtility.SetDirty(vertexEditorStage.BakedMesh);
+                }
+            }
+            if (includeCharacterState && thisDCA != null)
+            {
+                EditorUtility.SetDirty(thisDCA);
+                if (thisDCA.umaData != null)
+                {
+                    EditorUtility.SetDirty(thisDCA.umaData);
+                }
+            }
+        }
+
+        private void HandleInteractiveUndoCapture(ref bool isArmed, string actionName)
+        {
+            if (Event.current == null)
+            {
+                return;
+            }
+
+            EventType type = Event.current.type;
+            EventType rawType = Event.current.rawType;
+
+            if (rawType == EventType.MouseUp || type == EventType.MouseUp || type == EventType.Ignore)
+            {
+                isArmed = false;
+                return;
+            }
+
+            if (!isArmed && (type == EventType.MouseDown || type == EventType.KeyDown || type == EventType.ScrollWheel))
+            {
+                RegisterUndoSnapshot(actionName);
+                isArmed = true;
+            }
+
+            if (type == EventType.Repaint && GUIUtility.hotControl == 0)
+            {
+                isArmed = false;
+            }
+        }
+
+        private void OnEnable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+            Undo.undoRedoPerformed += OnUndoRedoPerformed;
+        }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+        }
+
+        private void OnUndoRedoPerformed()
+        {
+            if (suppressUndoRebuild)
+            {
+                return;
+            }
+
+            Repaint();
+            SceneView.RepaintAll();
+
+            if (thisDCA == null || vertexEditorStage == null)
+            {
+                return;
+            }
+
+            suppressUndoRebuild = true;
+            try
+            {
+                DoCharacterRebuild();
+            }
+            finally
+            {
+                suppressUndoRebuild = false;
+            }
+        }
+
         public void Setup(DynamicCharacterAvatar DCA, VertexEditorStage vstage, MeshModifier modifier)
         {
             thisDCA = DCA;
@@ -98,7 +219,18 @@ namespace UMA
             else
             {
                 currentModifierIndex = 0;
-                Modifiers = modifier.Modifiers;
+                if (modifier.EditorModifiers != null && modifier.EditorModifiers.Count > 0)
+                {
+                    Modifiers = modifier.EditorModifiers;
+                }
+                else if (modifier.Modifiers != null)
+                {
+                    Modifiers = modifier.Modifiers;
+                }
+                else
+                {
+                    Modifiers = new List<MeshModifier.Modifier>();
+                }
             }
             // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
             centeredLabel = EditorStyles.boldLabel;
@@ -147,23 +279,60 @@ namespace UMA
             GUILayout.Label("Modifiers", centeredLabel);
 
 
-            IncludeAdHocAdjustments = GUILayout.Toggle(IncludeAdHocAdjustments,"Include Ad-Hoc adjustments");
-            IncludeBulkModifiers = GUILayout.Toggle(IncludeBulkModifiers, "Include Bulk Modifiers");
-            IncludeActiveOnlyBulk = GUILayout.Toggle(IncludeActiveOnlyBulk, "Only Active Bulk Modifier");
-            RebuildOnChanges = GUILayout.Toggle(RebuildOnChanges, "Rebuild on changes");
+            bool newIncludeAdHocAdjustments = GUILayout.Toggle(IncludeAdHocAdjustments, "Include Ad-Hoc adjustments");
+            if (newIncludeAdHocAdjustments != IncludeAdHocAdjustments)
+            {
+                RegisterUndoSnapshot("Toggle Include Ad-Hoc Adjustments");
+                IncludeAdHocAdjustments = newIncludeAdHocAdjustments;
+                MarkEditorStateDirty();
+            }
+
+            bool newIncludeBulkModifiers = GUILayout.Toggle(IncludeBulkModifiers, "Include Bulk Modifiers");
+            if (newIncludeBulkModifiers != IncludeBulkModifiers)
+            {
+                RegisterUndoSnapshot("Toggle Include Bulk Modifiers");
+                IncludeBulkModifiers = newIncludeBulkModifiers;
+                if (IncludeBulkModifiers == false)
+                {
+                    IncludeActiveOnlyBulk = false;
+                }
+                MarkEditorStateDirty();
+            }
+
+            bool newIncludeActiveOnlyBulk = GUILayout.Toggle(IncludeActiveOnlyBulk, "Only Active Bulk Modifier");
+            if (newIncludeActiveOnlyBulk != IncludeActiveOnlyBulk)
+            {
+                RegisterUndoSnapshot("Toggle Include Active Bulk Modifier");
+                IncludeActiveOnlyBulk = newIncludeActiveOnlyBulk;
+                MarkEditorStateDirty();
+            }
+
+            bool newRebuildOnChanges = GUILayout.Toggle(RebuildOnChanges, "Rebuild on changes");
+            if (newRebuildOnChanges != RebuildOnChanges)
+            {
+                RegisterUndoSnapshot("Toggle Rebuild On Changes");
+                RebuildOnChanges = newRebuildOnChanges;
+                MarkEditorStateDirty();
+            }
 
             if (GUILayout.Button("Rebuild Now"))
             {
+                RegisterUndoSnapshot("Rebuild Character", true);
                 DoCharacterRebuild();
+                MarkEditorStateDirty(true);
             }
             if (GUILayout.Button("Rebuild to TPose"))
             {
+                RegisterUndoSnapshot("Rebuild Character To T-Pose", true);
                 DoCharacterRebuild(true);
+                MarkEditorStateDirty(true);
             }
 
             if (GUILayout.Button("Reset Build"))
             {
+                RegisterUndoSnapshot("Reset Character Build", true);
                 DoCharacterReset();
+                MarkEditorStateDirty(true);
             }
             if (GUILayout.Button("Save to Asset"))
             {
@@ -176,7 +345,9 @@ namespace UMA
             }
             if (GUILayout.Button("Recalculate Normals"))
             {
+                RegisterUndoSnapshot("Recalculate Normals");
                 vertexEditorStage.RecalculateNormals();
+                MarkEditorStateDirty();
             }
 
             if (IncludeBulkModifiers == false)
@@ -189,19 +360,31 @@ namespace UMA
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Ad-hoc Adjustments", VertexModeStyle))
             {
+                RegisterUndoSnapshot("Switch To Ad-Hoc Adjustments");
                 editorMode = EditorMode.VertexAdjustments;
+                bulkModifierInteractiveUndoArmed = false;
+                activeAdjustmentInteractiveUndoArmed = false;
+                MarkEditorStateDirty();
             }
             if (GUILayout.Button("Bulk Add Active", MeshModifierModeStyle))
             {
+                RegisterUndoSnapshot("Switch To Bulk Modifiers");
                 editorMode = EditorMode.MeshModifiers;
+                bulkModifierInteractiveUndoArmed = false;
+                activeAdjustmentInteractiveUndoArmed = false;
                 deActivateCurrentSelection();
                 vertexEditorStage.SetActive(null);
+                MarkEditorStateDirty();
             }
             if (GUILayout.Button("Extract Blendshapes", BlendshapeStyle))
             {
+                RegisterUndoSnapshot("Switch To Blendshape Extractor");
                 editorMode = EditorMode.Blendshapes;
+                bulkModifierInteractiveUndoArmed = false;
+                activeAdjustmentInteractiveUndoArmed = false;
                 deActivateCurrentSelection();
                 vertexEditorStage.SetActive(null);
+                MarkEditorStateDirty();
             }
             vertexEditorStage.editorMode = editorMode;
             GUILayout.EndHorizontal();
@@ -244,8 +427,12 @@ namespace UMA
         }
 
         VertexAdjustment activeAdjustment = null;
-        public void SetActive(VertexAdjustment va, bool activeState = true)
+        public void SetActive(VertexAdjustment va, bool activeState = true, bool registerUndo = false)
         {
+            if (registerUndo)
+            {
+                RegisterUndoSnapshot(activeState ? "Activate Vertex Adjustment" : "Deactivate Vertex Adjustment");
+            }
             deActivateCurrentSelection();
             
             va.active = activeState;
@@ -258,6 +445,10 @@ namespace UMA
             {
                 vertexEditorStage.SetActive(null);
                 activeAdjustment = null;
+            }
+            if (registerUndo)
+            {
+                MarkEditorStateDirty();
             }
         }
 
@@ -335,35 +526,60 @@ namespace UMA
                 dnaNames = dnaList.ToArray();
             }
             
-            currentBlendshape = EditorGUILayout.Popup("Select Blendshape",currentBlendshape, strBlendShapes);
-            currentDNA = EditorGUILayout.Popup("Select DNA", currentDNA, dnaNames);
+            int newCurrentBlendshape = EditorGUILayout.Popup("Select Blendshape", currentBlendshape, strBlendShapes);
+            if (newCurrentBlendshape != currentBlendshape)
+            {
+                RegisterUndoSnapshot("Select Blendshape");
+                currentBlendshape = newCurrentBlendshape;
+                MarkEditorStateDirty();
+            }
+
+            int newCurrentDNA = EditorGUILayout.Popup("Select DNA", currentDNA, dnaNames);
+            if (newCurrentDNA != currentDNA)
+            {
+                RegisterUndoSnapshot("Select Blendshape DNA");
+                currentDNA = newCurrentDNA;
+                MarkEditorStateDirty();
+            }
 
             GUIHelper.BeginVerticalPadded();
             GUILayout.Label("Select Slots to extract blendshapes",centeredLabel);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Select All"))
             {
+                RegisterUndoSnapshot("Select All Blendshape Slots");
                 for (int i = 0; i < blendShapeSlotSelected.Count; i++)
                 {
                     blendShapeSlotSelected[i] = true;
                 }
+                MarkEditorStateDirty();
             }
             if (GUILayout.Button("Clear Selection"))
             {
+                RegisterUndoSnapshot("Clear Blendshape Slot Selection");
                 for (int i = 0; i < blendShapeSlotSelected.Count; i++)
                 {
                     blendShapeSlotSelected[i] = false;
                 }
+                MarkEditorStateDirty();
             }
             GUILayout.EndHorizontal();
             for (int i = 0; i < blendShapeSlots.Count; i++)
             {
-                blendShapeSlotSelected[i] = EditorGUILayout.Toggle(blendShapeSlots[i], blendShapeSlotSelected[i]);
+                bool newSelectedState = EditorGUILayout.Toggle(blendShapeSlots[i], blendShapeSlotSelected[i]);
+                if (newSelectedState != blendShapeSlotSelected[i])
+                {
+                    RegisterUndoSnapshot("Toggle Blendshape Slot");
+                    blendShapeSlotSelected[i] = newSelectedState;
+                    MarkEditorStateDirty();
+                }
             }
             GUIHelper.EndVerticalPadded();
             if (GUILayout.Button("Extract Blendshapes"))
             {
+                RegisterUndoSnapshot("Extract Blendshapes");
                 ExtractBlendshapes(strBlendShapes[currentBlendshape],dnaNames[currentDNA],blendShapeSlotSelected,blendShapeSlots);
+                MarkEditorStateDirty();
             }
             GUIHelper.BeginVerticalPadded();
             foreach(var mod in Modifiers)
@@ -378,7 +594,9 @@ namespace UMA
                     GUILayout.Label($"Blendshape: {mod.ModifierName} Slot: {mod.SlotName}");
                     if (GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
                     {
+                        RegisterUndoSnapshot("Remove Extracted Blendshape Modifier");
                         Modifiers.Remove(mod);
+                        MarkEditorStateDirty();
                         break;
                     }
                     GUILayout.EndHorizontal();
@@ -539,7 +757,13 @@ namespace UMA
 
                 GUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField("Type", GUILayout.Width(60));
-                selectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames, GUILayout.Width(180));
+                int newSelectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames, GUILayout.Width(180));
+                if (newSelectedType != selectedType)
+                {
+                    RegisterUndoSnapshot("Change Adjustment Type");
+                    selectedType = newSelectedType;
+                    MarkEditorStateDirty();
+                }
                 if (selectedType >= 0)
                 {
                     if (templateCollection == null || templateCollection.GetType() != ModifierTypes[selectedType])
@@ -554,12 +778,14 @@ namespace UMA
                 }
                 if (GUILayout.Button("Add"))
                 {
+                    RegisterUndoSnapshot("Add Vertex Adjustment");
                     VertexAdjustment va = CreateVertexAdjustment(selectedVertex, templateVertexAdjustmentCollection);
                     int newSize = vertexEditorStage.GetVertexAdjustments().Count + 1;
                     FoldOuts = ExpandList(FoldOuts, newSize);
                     SetExpanded(FoldOuts, newSize - 1);
                     vertexEditorStage.AddVertexAdjustment(va);
                     SetActive(va);
+                    MarkEditorStateDirty();
                 }
                 GUILayout.EndHorizontal();
                 if (templateCollection != null)
@@ -608,7 +834,7 @@ namespace UMA
                 }
                 if(GUILayout.Button($"{va.slotName},{va.vertexIndex},{va.Name}", EditorStyles.miniButtonMid, GUILayout.ExpandWidth(true)))
                 {
-                    SetActive(va,true);
+                    SetActive(va, true, true);
                 }
                 delme = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
@@ -635,12 +861,14 @@ namespace UMA
             //}
             if (RemoveMe != null)
             {
+                RegisterUndoSnapshot("Remove Vertex Adjustment");
                 vertexEditorStage.RemoveVertexAdjustment(RemoveMe);
                 if (RebuildOnChanges)
                 {
                     DoCharacterRebuild();
                     //DoCharacterRebuildWithUpdates();
                 }
+                MarkEditorStateDirty(true);
             }
             EditorGUILayout.EndScrollView();
         }
@@ -710,7 +938,146 @@ namespace UMA
                     SplitModifiersBySlot(result, mod);
                 }
             }
+
+            ValidateSplitAccounting(result, useBuildOptions);
             return result; 
+        }
+
+        private List<VertexAdjustment> GetSourceAdjustmentsForSplit(bool useBuildOptions)
+        {
+            List<VertexAdjustment> sourceAdjustments = new List<VertexAdjustment>();
+
+            if ((IncludeAdHocAdjustments || useBuildOptions == false) && vertexEditorStage != null)
+            {
+                var adHoc = vertexEditorStage.GetVertexAdjustments();
+                if (adHoc != null)
+                {
+                    sourceAdjustments.AddRange(adHoc);
+                }
+            }
+
+            if (useBuildOptions)
+            {
+                if (IncludeBulkModifiers)
+                {
+                    if (IncludeActiveOnlyBulk)
+                    {
+                        if (currentModifierIndex >= 0 && currentModifierIndex < Modifiers.Count)
+                        {
+                            AddModifierAdjustments(sourceAdjustments, Modifiers[currentModifierIndex]);
+                        }
+                    }
+                    else
+                    {
+                        foreach (MeshModifier.Modifier mod in Modifiers)
+                        {
+                            AddModifierAdjustments(sourceAdjustments, mod);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (MeshModifier.Modifier mod in Modifiers)
+                {
+                    AddModifierAdjustments(sourceAdjustments, mod);
+                }
+            }
+
+            return sourceAdjustments;
+        }
+
+        private static void AddModifierAdjustments(List<VertexAdjustment> buffer, MeshModifier.Modifier modifier)
+        {
+            if (buffer == null || modifier == null || modifier.adjustments == null || modifier.adjustments.vertexAdjustments == null)
+            {
+                return;
+            }
+
+            buffer.AddRange(modifier.adjustments.vertexAdjustments);
+        }
+
+        private static string BuildAdjustmentAccountingKey(VertexAdjustment adjustment)
+        {
+            return adjustment.slotName + "|" + adjustment.vertexIndex + "|" + adjustment.GetType().FullName;
+        }
+
+        private static Dictionary<string, int> BuildAdjustmentCountMap(List<VertexAdjustment> adjustments)
+        {
+            Dictionary<string, int> counts = new Dictionary<string, int>();
+            if (adjustments == null)
+            {
+                return counts;
+            }
+
+            foreach (VertexAdjustment adjustment in adjustments)
+            {
+                if (adjustment == null || string.IsNullOrEmpty(adjustment.slotName))
+                {
+                    continue;
+                }
+
+                string key = BuildAdjustmentAccountingKey(adjustment);
+                if (counts.ContainsKey(key))
+                {
+                    counts[key]++;
+                }
+                else
+                {
+                    counts.Add(key, 1);
+                }
+            }
+            return counts;
+        }
+
+        private void ValidateSplitAccounting(List<MeshModifier.Modifier> result, bool useBuildOptions)
+        {
+            List<VertexAdjustment> sourceAdjustments = GetSourceAdjustmentsForSplit(useBuildOptions);
+            List<VertexAdjustment> resultAdjustments = new List<VertexAdjustment>();
+            if (result != null)
+            {
+                foreach (MeshModifier.Modifier modifier in result)
+                {
+                    AddModifierAdjustments(resultAdjustments, modifier);
+                }
+            }
+
+            Dictionary<string, int> sourceCounts = BuildAdjustmentCountMap(sourceAdjustments);
+            Dictionary<string, int> resultCounts = BuildAdjustmentCountMap(resultAdjustments);
+
+            int sourceTotal = 0;
+            foreach (var kvp in sourceCounts)
+            {
+                sourceTotal += kvp.Value;
+            }
+
+            int resultTotal = 0;
+            foreach (var kvp in resultCounts)
+            {
+                resultTotal += kvp.Value;
+            }
+
+            if (sourceTotal != resultTotal)
+            {
+                Debug.LogError($"MeshModifier split validation mismatch. Source adjustments: {sourceTotal}, Result adjustments: {resultTotal}");
+            }
+
+            foreach (var kvp in sourceCounts)
+            {
+                int resultCount = resultCounts.ContainsKey(kvp.Key) ? resultCounts[kvp.Key] : 0;
+                if (resultCount != kvp.Value)
+                {
+                    Debug.LogError($"MeshModifier split lost or duplicated adjustments for key '{kvp.Key}'. Source: {kvp.Value}, Result: {resultCount}");
+                }
+            }
+
+            foreach (var kvp in resultCounts)
+            {
+                if (!sourceCounts.ContainsKey(kvp.Key))
+                {
+                    Debug.LogError($"MeshModifier split produced unexpected adjustment key '{kvp.Key}' ({kvp.Value} entries)");
+                }
+            }
         }
 
 #if UMA_BURSTCOMPILE
@@ -798,22 +1165,63 @@ namespace UMA
 #endif
         public void SplitModifiersBySlot(List<MeshModifier.Modifier> target, MeshModifier.Modifier activeModifier)
         {
+            if (target == null || activeModifier == null)
+            {
+                return;
+            }
+
             if (activeModifier.keepAsIs)
             {
                 // No need to split, just add.
                 target.Add(activeModifier);
                 return;
             }
+
+            if (activeModifier.adjustments == null || activeModifier.adjustments.vertexAdjustments == null)
+            {
+                return;
+            }
+
             foreach (VertexAdjustment va in activeModifier.adjustments.vertexAdjustments)
             {
+                if (va == null || string.IsNullOrEmpty(va.slotName))
+                {
+                    continue;
+                }
+
                 string key = va.slotName;
                 MeshModifier.Modifier newMod = null;
                 foreach (MeshModifier.Modifier mod in target)
                 {
-                    if (mod.SlotName == key && mod.TemplateAdjustment.GetType() == va.GetType() && mod.keepAsIs == false)
+                    if (mod == null || mod.keepAsIs)
                     {
-                        newMod = mod;
-                        break;
+                        continue;
+                    }
+
+                    if (mod.adjustments == null)
+                    {
+                        continue;
+                    }
+
+                    Type modType = null;
+                    if (mod.TemplateAdjustment != null)
+                    {
+                        modType = mod.TemplateAdjustment.GetType();
+                    }
+                    else
+                    {
+                        modType = mod.adjustments.AdjustmentType;
+                    }
+
+                    if (mod.SlotName == key && modType == va.GetType())
+                    {
+                        bool sameDNA = mod.DNAName == activeModifier.DNAName;
+                        bool sameScale = Mathf.Approximately(mod.Scale, activeModifier.Scale);
+                        if (sameDNA && sameScale)
+                        {
+                            newMod = mod;
+                            break;
+                        }
                     }
                 }
                 if (newMod == null)
@@ -821,7 +1229,9 @@ namespace UMA
                     newMod = new MeshModifier.Modifier();
                     newMod.keepAsIs = false;
                     newMod.SlotName = key;
-                    newMod.ModifierName = "Bulk Adjustment";
+                    newMod.ModifierName = activeModifier.ModifierName;
+                    newMod.DNAName = activeModifier.DNAName;
+                    newMod.Scale = activeModifier.Scale;
                     newMod.TemplateAdjustment = (VertexAdjustment)Activator.CreateInstance(va.GetType());
                     newMod.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(activeModifier.adjustments.GetType());
                     target.Add(newMod);
@@ -851,6 +1261,7 @@ namespace UMA
                 GUIHelper.BeginVerticalPadded(10, new Color(0.3f, 0.3f, 0.4f));
             }
 
+            HandleInteractiveUndoCapture(ref activeAdjustmentInteractiveUndoArmed, "Edit Vertex Adjustment");
 
             if (va.DoGUI())
             {
@@ -955,12 +1366,19 @@ namespace UMA
 
 
         private Vector2 ModifierScrollPos = Vector2.zero;
+
+        private void OpenModifierInspector(int modifierIndex)
+        {
+            ModifierInspectWindow.ShowWindow(this, modifierIndex);
+        }
+
         private void DrawMeshModifiers()
         {
             EditorGUILayout.LabelField("Mesh Modifiers", centeredLabel);
             EditorGUILayout.HelpBox("Recalculate normals to modifier will create a normal rotation modifier from the current normals and tangents to the recalculate normals and tangents. You should run this before doing any mesh modifications.", MessageType.Info);
             if (GUILayout.Button("Recalculate Normals to Reset Modifier"))
             {
+                RegisterUndoSnapshot("Create Reset Normals Modifier", true);
                 DoCharacterRebuild(true, false, false);
                 // Get normals from "fresh" mesh.
                 // Now recalculate normals and tangents.
@@ -988,7 +1406,16 @@ namespace UMA
                 for (int i = 0; i < theCollection.vertexAdjustments.Count; i++)
                 {
                     SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(theCollection.vertexAdjustments[i].slotName);
-                    int vertPos = theCollection.vertexAdjustments[i].vertexIndex + slot.vertexOffset;
+                    if (slot == null)
+                    {
+                        continue;
+                    }
+
+                    if (!vertexEditorStage.TryGetVisibleBakedVertexIndex(slot, theCollection.vertexAdjustments[i].vertexIndex, out int vertPos))
+                    {
+                        continue;
+                    }
+
                     VertexNormalAdjustment var = theCollection.vertexAdjustments[i] as VertexNormalAdjustment;
                     var.rotation = Quaternion.FromToRotation(oldNormals[vertPos], newNormals[vertPos]);
                     //var.initialNormal = normals[vertPos];
@@ -997,10 +1424,17 @@ namespace UMA
                 currentModifierIndex = Modifiers.Count - 1;
                 ModifierScrollPos.y = 100000;
                 vertexEditorStage.SetVertexSelections(saveSelections);
+                MarkEditorStateDirty(true);
             }
 
             EditorGUILayout.LabelField("Extract Bulk Modifier of Type:");
-            selectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames);
+            int newSelectedType = EditorGUILayout.Popup(selectedType, ModifierTypeNames);
+            if (newSelectedType != selectedType)
+            {
+                RegisterUndoSnapshot("Change Bulk Modifier Type");
+                selectedType = newSelectedType;
+                MarkEditorStateDirty();
+            }
 
             int activeCount = vertexEditorStage.GetActiveSelectedVertexCount();
             if (activeCount == 0)
@@ -1012,6 +1446,7 @@ namespace UMA
             {
                 if (GUILayout.Button("Add Collection for selected vertexes"))
                 {
+                    RegisterUndoSnapshot("Add Bulk Modifier Collection");
                     MeshModifier.Modifier newMod = new MeshModifier.Modifier();
                     newMod.EditorInitialize(ModifierTypes[selectedType]);
                     newMod.ModifierName = FindNameForModifier(newMod.TemplateAdjustment.Name);
@@ -1019,6 +1454,7 @@ namespace UMA
                     AddActiveVertexesToCollection(newMod);
                     currentModifierIndex = Modifiers.Count - 1;
                     ModifierScrollPos.y = 100000;
+                    MarkEditorStateDirty();
                 }
             }
             if (currentModifierIndex < 0 || currentModifierIndex >= Modifiers.Count)
@@ -1043,6 +1479,7 @@ namespace UMA
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField($"{currentModifier.TemplateAdjustment.Name} {currentModifier.ModifierName}" , centeredLabel);
             EditorGUILayout.LabelField($"{currentModifier.adjustments.vertexAdjustments.Count} vertexes",centeredLabel);
+            HandleInteractiveUndoCapture(ref bulkModifierInteractiveUndoArmed, "Edit Bulk Modifier");
             bool changed = currentModifier.TemplateAdjustment.DoGUI();
             // RebuildOnChanges = EditorGUILayout.Toggle("Rebuild on changes", RebuildOnChanges);
 
@@ -1058,6 +1495,7 @@ namespace UMA
                 {
                     DoCharacterRebuildWithActiveBulkModifier(currentModifier);
                 }
+                MarkEditorStateDirty(true);
             }
 
           /*  if (GUILayout.Button("Rebuild with this adjustment"))
@@ -1097,11 +1535,18 @@ namespace UMA
                 }
                 if (GUILayout.Button($"{mod.TemplateAdjustment.Name}:{mod.ModifierName}", EditorStyles.miniButtonMid, GUILayout.ExpandWidth(true)))
                 {
+                    RegisterUndoSnapshot("Select Bulk Modifier");
                     currentModifierIndex = i;
+                    MarkEditorStateDirty();
                     Repaint();
+                }
+                if (GUILayout.Button("Inspect", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+                {
+                    OpenModifierInspector(i);
                 }
                 if(GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
                 {
+                    RegisterUndoSnapshot("Remove Bulk Modifier");
                     deleteMe = i;
                 }
                 GUILayout.EndHorizontal();
@@ -1136,6 +1581,7 @@ namespace UMA
                 {
                     currentModifierIndex = Modifiers.Count - 1;
                 }
+                MarkEditorStateDirty();
             }
         }
 
@@ -1174,6 +1620,244 @@ namespace UMA
             // Add the ability to edit/filter to the "active" vertexes.
             // The currently selected vertex to edit should be selected and flashing or something on the character.
             GUIHelper.EndVerticalPadded(10);
+        }
+
+        private class ModifierInspectWindow : EditorWindow
+        {
+            private MeshModifierEditor owner;
+            private int modifierIndex = -1;
+            private Vector2 vertexScroll;
+            private List<SlotData> addSlots = new List<SlotData>();
+            private string[] addSlotNames = new string[0];
+            private int addSlotIndex = 0;
+            private int addVertexIndex = 0;
+
+            public static void ShowWindow(MeshModifierEditor owner, int modifierIndex)
+            {
+                ModifierInspectWindow wnd = GetWindow<ModifierInspectWindow>(true, "Modifier Inspector", true);
+                wnd.minSize = new Vector2(640, 420);
+                wnd.Initialize(owner, modifierIndex);
+                wnd.Show();
+            }
+
+            private void Initialize(MeshModifierEditor modifierEditor, int index)
+            {
+                owner = modifierEditor;
+                modifierIndex = index;
+                RefreshSlotCache();
+            }
+
+            private MeshModifier.Modifier GetModifier()
+            {
+                if (owner == null || owner.Modifiers == null)
+                {
+                    return null;
+                }
+                if (modifierIndex < 0 || modifierIndex >= owner.Modifiers.Count)
+                {
+                    return null;
+                }
+                return owner.Modifiers[modifierIndex];
+            }
+
+            private void RefreshSlotCache()
+            {
+                addSlots = new List<SlotData>();
+                if (owner == null || owner.thisDCA == null || owner.thisDCA.umaData == null || owner.thisDCA.umaData.umaRecipe == null || owner.thisDCA.umaData.umaRecipe.slotDataList == null)
+                {
+                    addSlotNames = new string[0];
+                    addSlotIndex = 0;
+                    return;
+                }
+
+                foreach (var slot in owner.thisDCA.umaData.umaRecipe.slotDataList)
+                {
+                    if (slot != null && slot.asset != null && slot.asset.meshData != null)
+                    {
+                        addSlots.Add(slot);
+                    }
+                }
+
+                addSlotNames = new string[addSlots.Count];
+                for (int i = 0; i < addSlots.Count; i++)
+                {
+                    addSlotNames[i] = addSlots[i].slotName;
+                }
+
+                if (addSlotIndex >= addSlotNames.Length)
+                {
+                    addSlotIndex = Mathf.Max(0, addSlotNames.Length - 1);
+                }
+            }
+
+            private bool ContainsVertex(MeshModifier.Modifier modifier, string slotName, int vertexIndex)
+            {
+                for (int i = 0; i < modifier.adjustments.vertexAdjustments.Count; i++)
+                {
+                    VertexAdjustment existing = modifier.adjustments.vertexAdjustments[i];
+                    if (existing.slotName == slotName && existing.vertexIndex == vertexIndex)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            private bool TryAddVertex(MeshModifier.Modifier modifier, SlotData slot, int vertexIndex)
+            {
+                if (modifier == null || modifier.adjustments == null || slot == null || slot.asset == null || slot.asset.meshData == null)
+                {
+                    return false;
+                }
+
+                if (vertexIndex < 0 || vertexIndex >= slot.asset.meshData.vertexCount)
+                {
+                    return false;
+                }
+
+                if (ContainsVertex(modifier, slot.slotName, vertexIndex))
+                {
+                    return false;
+                }
+
+                VertexAdjustment newAdjustment = modifier.adjustments.Create();
+                newAdjustment.slotName = slot.slotName;
+                newAdjustment.vertexIndex = vertexIndex;
+                newAdjustment.active = false;
+                newAdjustment.Init(slot.asset.meshData);
+
+                if (modifier.TemplateAdjustment != null)
+                {
+                    newAdjustment.CopyFrom(modifier.TemplateAdjustment);
+                }
+
+                modifier.adjustments.Add(newAdjustment);
+                return true;
+            }
+
+            private void OnGUI()
+            {
+                MeshModifier.Modifier modifier = GetModifier();
+                if (modifier == null)
+                {
+                    EditorGUILayout.HelpBox("This modifier is no longer available.", MessageType.Info);
+                    if (GUILayout.Button("Close"))
+                    {
+                        Close();
+                    }
+                    return;
+                }
+
+                EditorGUILayout.LabelField($"Modifier: {modifier.ModifierName}", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"Type: {(modifier.TemplateAdjustment != null ? modifier.TemplateAdjustment.Name : "Unknown")}");
+                EditorGUILayout.LabelField($"Slot: {modifier.SlotName}");
+                EditorGUILayout.LabelField($"DNA: {modifier.DNAName}");
+                EditorGUILayout.LabelField($"Scale: {modifier.Scale}");
+                EditorGUILayout.LabelField($"Keep As Is: {modifier.keepAsIs}");
+                EditorGUILayout.LabelField($"Vertex Count: {(modifier.adjustments != null ? modifier.adjustments.vertexAdjustments.Count : 0)}");
+
+                GUILayout.Space(6);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Select Modifier Vertices"))
+                {
+                    owner.vertexEditorStage.SelectVertexes(modifier.adjustments);
+                    SceneView.RepaintAll();
+                }
+
+                if (GUILayout.Button("Add Active Scene Selection"))
+                {
+                    owner.RegisterUndoSnapshot("Inspect Add Active Vertices");
+                    int added = 0;
+                    var selected = owner.vertexEditorStage.GetActiveSelectedVertexes();
+                    for (int i = 0; i < selected.Count; i++)
+                    {
+                        if (TryAddVertex(modifier, selected[i].slot, selected[i].vertexIndexOnSlot))
+                        {
+                            added++;
+                        }
+                    }
+
+                    if (added > 0)
+                    {
+                        owner.MarkEditorStateDirty(true);
+                        if (owner.RebuildOnChanges)
+                        {
+                            owner.DoCharacterRebuild();
+                        }
+                        owner.Repaint();
+                        Repaint();
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                RefreshSlotCache();
+                GUILayout.Space(4);
+                GUILayout.Label("Add Vertex", EditorStyles.boldLabel);
+                if (addSlotNames.Length == 0)
+                {
+                    EditorGUILayout.HelpBox("No valid slots found on this character.", MessageType.Warning);
+                }
+                else
+                {
+                    addSlotIndex = EditorGUILayout.Popup("Slot", addSlotIndex, addSlotNames);
+                    addVertexIndex = EditorGUILayout.IntField("Vertex Index", addVertexIndex);
+                    if (GUILayout.Button("Add Vertex"))
+                    {
+                        SlotData slot = addSlots[addSlotIndex];
+                        owner.RegisterUndoSnapshot("Inspect Add Vertex");
+                        if (TryAddVertex(modifier, slot, addVertexIndex))
+                        {
+                            owner.MarkEditorStateDirty(true);
+                            if (owner.RebuildOnChanges)
+                            {
+                                owner.DoCharacterRebuild();
+                            }
+                            owner.Repaint();
+                        }
+                        else
+                        {
+                            EditorUtility.DisplayDialog("Add Vertex", "Could not add vertex. Verify slot, vertex index range, and duplicate state.", "OK");
+                        }
+                    }
+                }
+
+                GUILayout.Space(8);
+                GUILayout.Label("Vertices", EditorStyles.boldLabel);
+                vertexScroll = EditorGUILayout.BeginScrollView(vertexScroll);
+                int removeIndex = -1;
+                if (modifier.adjustments != null)
+                {
+                    for (int i = 0; i < modifier.adjustments.vertexAdjustments.Count; i++)
+                    {
+                        VertexAdjustment va = modifier.adjustments.vertexAdjustments[i];
+                        if (va == null)
+                        {
+                            continue;
+                        }
+
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label($"{i}: {va.slotName} / {va.vertexIndex}", GUILayout.ExpandWidth(true));
+                        if (GUILayout.Button("Delete", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+                        {
+                            removeIndex = i;
+                        }
+                        GUILayout.EndHorizontal();
+                    }
+                }
+                EditorGUILayout.EndScrollView();
+
+                if (removeIndex >= 0)
+                {
+                    owner.RegisterUndoSnapshot("Inspect Remove Vertex");
+                    modifier.adjustments.vertexAdjustments.RemoveAt(removeIndex);
+                    owner.MarkEditorStateDirty(true);
+                    if (owner.RebuildOnChanges)
+                    {
+                        owner.DoCharacterRebuild();
+                    }
+                    owner.Repaint();
+                }
+            }
         }
 
         private void OnDestroy()

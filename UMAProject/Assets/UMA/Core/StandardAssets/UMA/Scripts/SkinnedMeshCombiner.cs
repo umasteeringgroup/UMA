@@ -1,3 +1,4 @@
+// #define TEST_COLORSHADER
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -558,7 +559,17 @@ namespace UMA
 			target.uv2 = uv2;
 			target.uv3 = uv3;
 			target.uv4 = uv4;
-			target.colors32 = colors32;
+#if TEST_COLORSHADER
+			for (int i = 0; i < colors32.Length; i++)
+			{
+				System.Random rnd = new System.Random();
+				colors32[i] = new Color32((byte)rnd.Next(255), (byte)rnd.Next(255),(byte)rnd.Next(255), 255);
+            }
+            target.colors32 = colors32;
+
+#else
+            target.colors32 = colors32;
+#endif
 
 			if (has_blendShapes)
             {
@@ -577,16 +588,16 @@ namespace UMA
 			target.umaBoneCount = boneCount;
 			if (subMeshCount < 1)
 			{
-				Debug.LogError("Submesh count is less than 1! subMeshCount=" + subMeshCount);
+				//Debug.LogError("Submesh count is less than 1! subMeshCount=" + subMeshCount);
             }
-			Debug.Log("Submesh count is " + subMeshCount);	
+			//Debug.Log("Submesh count is " + subMeshCount);	
             if (target.submeshes == null)
 			{
-				Debug.LogError("Submeshes is null!");
+				//Debug.LogError("Submeshes is null!");
             }
             for (int i = 0; i < subMeshCount; i++) 
 			{
-				Debug.Log("Submesh " + i + " triangle count is " + subMeshTriangleLength[i]);
+				//Debug.Log("Submesh " + i + " triangle count is " + subMeshTriangleLength[i]);
 
                 if (target.submeshes[i] == null)
                 {

@@ -137,6 +137,9 @@ namespace UMA
 
         public void OnBeforeSerialize()
         {
+#if UNITY_EDITOR
+            SyncRuntimeModifiersFromEditorModifiers();
+#endif
             foreach (var mod in modifiers)
             {
                 mod.BeforeSaving();
@@ -147,7 +150,15 @@ namespace UMA
         {
             foreach (var mod in modifiers)
             {
-                if (mod.adjustments == null || mod.adjustments.vertexAdjustments == null || mod.adjustments.vertexAdjustments.Count == 0)
+                if (mod == null)
+                {
+                    continue;
+                }
+
+                bool hasSerializedJsonAdjustments = mod.JsonAdjustments != null && mod.JsonAdjustments.Count > 0;
+                bool hasNoRuntimeAdjustments = mod.adjustments == null || mod.adjustments.vertexAdjustments == null || mod.adjustments.vertexAdjustments.Count == 0;
+
+                if (hasSerializedJsonAdjustments || hasNoRuntimeAdjustments)
                 {
                     mod.AfterLoading();
                 }
@@ -172,6 +183,82 @@ namespace UMA
 
         // These are the "pre-split" ad-hoc adjustments as created in the editor.
         public List<string> AdHocAdjustmentJSON = new List<string>();
+
+        private void SyncRuntimeModifiersFromEditorModifiers()
+        {
+            if (editorModifiers == null || editorModifiers.Count == 0)
+            {
+                return;
+            }
+
+            List<Modifier> splitModifiers = new List<Modifier>();
+            foreach (var source in editorModifiers)
+            {
+                SplitModifierBySlot(splitModifiers, source);
+            }
+            modifiers = splitModifiers;
+        }
+
+        private static void SplitModifierBySlot(List<Modifier> target, Modifier source)
+        {
+            if (source == null)
+            {
+                return;
+            }
+
+            if (source.keepAsIs)
+            {
+                target.Add(source);
+                return;
+            }
+
+            if (source.adjustments == null || source.adjustments.vertexAdjustments == null)
+            {
+                return;
+            }
+
+            foreach (var adjustment in source.adjustments.vertexAdjustments)
+            {
+                if (adjustment == null || string.IsNullOrEmpty(adjustment.slotName))
+                {
+                    continue;
+                }
+
+                Modifier destination = null;
+                for (int i = 0; i < target.Count; i++)
+                {
+                    var candidate = target[i];
+                    if (candidate == null || candidate.keepAsIs)
+                    {
+                        continue;
+                    }
+
+                    Type candidateType = candidate.TemplateAdjustment != null ? candidate.TemplateAdjustment.GetType() : null;
+                    if (candidate.SlotName == adjustment.slotName && candidateType == adjustment.GetType())
+                    {
+                        destination = candidate;
+                        break;
+                    }
+                }
+
+                if (destination == null)
+                {
+                    destination = new Modifier();
+                    destination.keepAsIs = false;
+                    destination.SlotName = adjustment.slotName;
+                    destination.ModifierName = source.ModifierName;
+                    destination.DNAName = source.DNAName;
+                    destination.Scale = source.Scale;
+                    destination.TemplateAdjustment = source.TemplateAdjustment != null
+                        ? (VertexAdjustment)Activator.CreateInstance(source.TemplateAdjustment.GetType())
+                        : (VertexAdjustment)Activator.CreateInstance(adjustment.GetType());
+                    destination.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(source.adjustments.GetType());
+                    target.Add(destination);
+                }
+
+                destination.adjustments.Add(adjustment);
+            }
+        }
 #endif
 
 

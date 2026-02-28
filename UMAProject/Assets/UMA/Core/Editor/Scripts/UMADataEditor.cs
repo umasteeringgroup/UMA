@@ -89,6 +89,7 @@ namespace UMA.Editors
 		}
 
 		public static bool ShowOverrides;
+        public static bool ShowAppliedMeshModifiers;
 
 		public override void OnInspectorGUI()
         {
@@ -129,6 +130,45 @@ namespace UMA.Editors
             {
                 DoEditTimeInfo();
             }
+
+            DrawAppliedMeshModifiersInfo();
+        }
+
+        private void DrawAppliedMeshModifiersInfo()
+        {
+            if (_umaData == null)
+            {
+                return;
+            }
+
+            if (!GUIHelper.BeginCollapsableGroup(ref ShowAppliedMeshModifiers, "Applied Mesh Modifiers"))
+            {
+                return;
+            }
+
+            var manualMeshModifiers = _umaData.ManualMeshModifiers;
+            if (manualMeshModifiers == null || manualMeshModifiers.Count == 0)
+            {
+                EditorGUILayout.LabelField("None");
+            }
+            else
+            {
+                EditorGUILayout.IntField("Count", manualMeshModifiers.Count);
+                for (int i = 0; i < manualMeshModifiers.Count; i++)
+                {
+                    var modifier = manualMeshModifiers[i];
+                    if (modifier == null)
+                    {
+                        EditorGUILayout.LabelField($"{i:00}: <null>");
+                        continue;
+                    }
+
+                    int adjustmentCount = modifier.adjustments != null ? modifier.adjustments.Count() : 0;
+                    EditorGUILayout.LabelField($"{i:00}: {modifier.ModifierName} | Slot: {modifier.SlotName} | Adjustments: {adjustmentCount}");
+                }
+            }
+
+            GUIHelper.EndCollapsableGroup();
         }
 
         protected void DoEditTimeInfo()

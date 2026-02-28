@@ -2,6 +2,7 @@
 
 ## General Guidelines
 - Avoid kludgy fixes; prefer root-cause fixes based on observed event flow and resource readiness.
+- For UI/UX refactors in UMA editor tools, clarify requirements with questions before implementation and ensure clear mode separation to prevent overlapping functions.
 
 ## Code Style
 - Use specific formatting rules

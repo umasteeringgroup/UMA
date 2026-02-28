@@ -365,7 +365,7 @@ namespace UMA
                         if (UMA_INTERNALLOD_BUILD_DIAGNOSTICS)
                         {
                             int smc = (umaMesh.submeshes != null) ? umaMesh.submeshes.Length : 0;
-                            Debug.Log($"[UMA LODBuild] CombinedMesh renderer={currentRendererIndex} submeshes={smc} currentLOD={umaData.currentLODLevel}");
+                            //Debug.Log($"[UMA LODBuild] CombinedMesh renderer={currentRendererIndex} submeshes={smc} currentLOD={umaData.currentLODLevel}");
                             for (int sm = 0; sm < smc; sm++)
                             {
                                 var smt = umaMesh.submeshes[sm];
@@ -377,7 +377,7 @@ namespace UMA
                                 int totalIdx = 0;
                                 try { totalIdx = smt.GetTriangleCount(); } catch { totalIdx = -1; }
                                 var lr = smt.GetLODRange(Mathf.Max(0, umaData.currentLODLevel));
-                                Debug.Log($"[UMA LODBuild]  combined sm={sm} totalIdx={totalIdx} lodRange=({lr.offset},{lr.count})");
+                               // Debug.Log($"[UMA LODBuild]  combined sm={sm} totalIdx={totalIdx} lodRange=({lr.offset},{lr.count})");
                             }
                         }
 #endif

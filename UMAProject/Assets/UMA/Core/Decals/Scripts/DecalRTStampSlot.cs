@@ -203,7 +203,7 @@ namespace UMA
         {
             try
             {
-				Debug.Log("HandleAtlasUpdated called"); 
+				//Debug.Log("HandleAtlasUpdated called"); 
 				if (umaData == null || parms == null || parms.overlayData == null) return;
 
 				if(AlreadProcessed(parms.overlayName, parms.materialPropertyName, Time.frameCount)) {

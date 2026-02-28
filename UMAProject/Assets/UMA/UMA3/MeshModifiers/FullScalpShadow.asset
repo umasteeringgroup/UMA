@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3022e3cc0dfedfb46969c949a86882f3, type: 3}
+  m_Name: FullScalpShadow
+  m_EditorClassIdentifier: UMA_Core::UMA.MeshModifier
+  modifiers:
+  - ModifierName: Bulk Adjustment
+    isTemporary: 0
+    manuallyModified: 0
+    keepAsIs: 0
+    SlotName: UMA30_Body_UDIM1003
+    DNAName: 
+    Scale: 1
+    TemplateAdjustmentJSON: '{"vertexIndex":0,"weight":1.0,"_name":"Set Color","active":false,"slotName":"","color":{"r":0,"g":0,"b":0,"a":0}}'
+    AdjustmentType: UMA.VertexColorAdjustment, UMA_Core, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    CollectionType: UMA.VertexColorAdjustmentCollection, UMA_Core, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    JsonAdjustments:
+    - '{"vertexIndex":499,"weight":1.0,"_name":"Set Color","active":true,"slotName":"UMA30_Body_UDIM1003","color":{"r":14,"g":14,"b":14,"a":255}}'
+  editorModifiers: []
+  AdHocAdjustmentJSON:
+  - '{"vertexIndex":499,"weight":1.0,"_name":"Set Color","active":true,"slotName":"UMA30_Body_UDIM1003","color":{"r":14,"g":14,"b":14,"a":255}}'

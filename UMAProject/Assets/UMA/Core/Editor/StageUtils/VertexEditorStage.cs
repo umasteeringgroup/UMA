@@ -31,6 +31,7 @@ namespace UMA
         public bool hasSaved = false;
         public DynamicCharacterAvatar thisDCA;
         public Mesh BakedMesh;
+        [SerializeField]
         private List<VertexSelection> SelectedVertexes = new List<VertexSelection>();
         PhysicsScene phyScene;
 
@@ -41,6 +42,7 @@ namespace UMA
         bool selectObscured = false;
         bool selectFacingAway = false;
         private GUIStyle centeredLabel;
+        [SerializeField]
         private int currentSelected = -1;
         public int CurrentSelected
         {
@@ -57,19 +59,26 @@ namespace UMA
         }
         float blinkSpeed = 0.2f;
 
-        enum selectMode { Add, Remove, InvertSelection, Activate, Deactivate };
+        enum selectMode { Add, Remove, InvertSelection, Activate, Deactivate, ToggleState };
+
+        enum DefineMode { DefineVertexSet, DefineVertexState };
 
         string[] selectFrom = new string[] { "All Slots" };
         int selectionSlot = 0; // 0 is all slots
 
         selectMode currentMode = selectMode.Add;
+        DefineMode currentDefineMode = DefineMode.DefineVertexSet;
+        private bool replaceSelectionOnRectSelect = false;
+        private bool paintModeSet = false;
+        private bool paintModeState = false;
+        private readonly HashSet<string> paintedVerticesThisStroke = new HashSet<string>();
         // End Options
 
         const int VertexEditorToolsWindowID = 0x1234;
         const int VisibleWearablesID = 0x1235;
 
         public Vector2 VertexEditorScrollLocation = Vector2.zero;
-        public Rect VertexEditorToolsWindow = new Rect(10, 10, 250, 300);
+        public Rect VertexEditorToolsWindow = new Rect(10, 10, 300, 300);
 
 
         public Vector2 VisibleWearablesLocation = Vector2.zero;
@@ -78,13 +87,38 @@ namespace UMA
         private MeshModifierEditor modifierEditor;
         public bool rectSelect = false;
         public bool painting = false;
+        private bool pendingStateClickAction = false;
+        private Vector2 pendingStateClickStart = Vector2.zero;
         public Vector2 RectStart = Vector2.zero;
         public MeshModifier Currentmodifier;
         public Type[] ModifierTypes;
 
 
 
+     [SerializeReference]
         private List<VertexAdjustment> _adjustments = new List<VertexAdjustment>();
+
+        private bool selectionUndoArmed = false;
+
+        private bool IsPaintModeEnabled
+        {
+            get { return currentDefineMode == DefineMode.DefineVertexSet ? paintModeSet : paintModeState; }
+        }
+
+        private void BeginSelectionUndoSnapshot(string actionName)
+        {
+            if (selectionUndoArmed)
+            {
+                return;
+            }
+            Undo.RegisterCompleteObjectUndo(this, actionName);
+            selectionUndoArmed = true;
+        }
+
+        private void EndSelectionUndoSnapshot()
+        {
+            selectionUndoArmed = false;
+        }
 
         public List<VertexAdjustment> Adjustments
         {
@@ -118,6 +152,7 @@ namespace UMA
 
 
         GUIStyle HelpBoxStyle;
+        [Serializable]
         public class VertexSelection
         {
             public int vertexIndexOnSlot;
@@ -175,9 +210,107 @@ namespace UMA
             }
         }
 
+        private int GetSelectionIndex(SlotData slot, int vertexIndexOnSlot)
+        {
+            for (int i = 0; i < SelectedVertexes.Count; i++)
+            {
+                if (SelectedVertexes[i].slot.slotName == slot.slotName && SelectedVertexes[i].vertexIndexOnSlot == vertexIndexOnSlot)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
         public Vector3 GetWorldPosition(SlotData slot, int vertexIndex)
         {
-            return VertexObject.transform.TransformPoint(BakedMesh.vertices[vertexIndex + slot.vertexOffset]);
+            int bakedIndex = GetVisibleBakedVertexIndex(slot, vertexIndex);
+            if (bakedIndex < 0 || bakedIndex >= BakedMesh.vertexCount)
+            {
+                return Vector3.zero;
+            }
+            return VertexObject.transform.TransformPoint(BakedMesh.vertices[bakedIndex]);
+        }
+
+        private bool IsSelectableSlot(SlotData slot)
+        {
+            return slot != null &&
+                   slot.asset != null &&
+                   slot.asset.meshData != null &&
+                   !slot.Suppressed &&
+                   !slot.asset.isUtilitySlot;
+        }
+
+        private bool TryGetSlotForBakedVertex(int bakedVertexIndex, out SlotData foundSlot, out int slotVertexIndex)
+        {
+            foundSlot = null;
+            slotVertexIndex = -1;
+
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
+            {
+                return false;
+            }
+
+            int runningOffset = 0;
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                SlotData slot = slots[i];
+                if (!IsSelectableSlot(slot))
+                {
+                    continue;
+                }
+
+                int slotVertexCount = slot.asset.meshData.vertexCount;
+                if (bakedVertexIndex >= runningOffset && bakedVertexIndex < runningOffset + slotVertexCount)
+                {
+                    foundSlot = slot;
+                    slotVertexIndex = bakedVertexIndex - runningOffset;
+                    return true;
+                }
+
+                runningOffset += slotVertexCount;
+            }
+
+            return false;
+        }
+
+        private int GetVisibleBakedVertexIndex(SlotData slot, int slotVertexIndex)
+        {
+            if (!IsSelectableSlot(slot) || slotVertexIndex < 0)
+            {
+                return -1;
+            }
+
+            int runningOffset = 0;
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                SlotData recipeSlot = slots[i];
+                if (!IsSelectableSlot(recipeSlot))
+                {
+                    continue;
+                }
+
+                int slotVertexCount = recipeSlot.asset.meshData.vertexCount;
+                if (ReferenceEquals(recipeSlot, slot) || recipeSlot.slotName == slot.slotName)
+                {
+                    if (slotVertexIndex >= slotVertexCount)
+                    {
+                        return -1;
+                    }
+                    return runningOffset + slotVertexIndex;
+                }
+                runningOffset += slotVertexCount;
+            }
+
+            return -1;
+        }
+
+        public bool TryGetVisibleBakedVertexIndex(SlotData slot, int slotVertexIndex, out int bakedVertexIndex)
+        {
+            bakedVertexIndex = GetVisibleBakedVertexIndex(slot, slotVertexIndex);
+            return bakedVertexIndex >= 0 && bakedVertexIndex < BakedMesh.vertexCount;
         }
 
 
@@ -519,7 +652,7 @@ namespace UMA
         {
             // Adjust window positions based on the scene view size
             Rect r = SceneView.lastActiveSceneView.position;
-            float width = 200;
+            float width = Mathf.Clamp(r.width * 0.28f, 300f, 420f);
             float halfheight = (r.height / 2) - 45;
             float top1 = 5;
             float top2 = halfheight + 10;
@@ -574,11 +707,7 @@ namespace UMA
 
                 if (currentEvent.type == EventType.Repaint)
                 {
-                    if (currentEvent.shift)
-                    {
-                        EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowPlus);
-                    }
-                    else if (currentEvent.control)
+                    if (currentMode == selectMode.Remove)
                     {
                         EditorGUIUtility.AddCursorRect(new Rect(0, 0, sceneView.position.width, sceneView.position.height), MouseCursor.ArrowMinus);
                     }
@@ -593,30 +722,59 @@ namespace UMA
                     currentState = vertexState.unKnown;
 
                     flippedVertexes.Clear();
+                    paintedVerticesThisStroke.Clear();
                     //Debug.Log("Currentevent.button = "+ currentEvent.button);
                     if (currentEvent.button == 0)
                     {
-                        if (currentEvent.shift)
+                        BeginSelectionUndoSnapshot(currentDefineMode == DefineMode.DefineVertexSet ? "Modify Vertex Set" : "Modify Vertex State");
+
+                        if (currentDefineMode == DefineMode.DefineVertexSet)
                         {
-                            SingleSelect(currentEvent);
-                            rectSelect = false;
-                            painting = true;
-                        }
-                        else if (currentEvent.control)
-                        {
-                            SingleSelect(currentEvent);
-                            rectSelect = false;
-                            painting = true;
+                            if (IsPaintModeEnabled)
+                            {
+                                replaceSelectionOnRectSelect = false;
+                                rectSelect = false;
+                                painting = true;
+                            }
+                            else
+                            {
+                                replaceSelectionOnRectSelect = GetEffectiveSelectMode(currentEvent) == selectMode.Add && !currentEvent.shift && !currentEvent.control;
+                                rectSelect = true;
+                                painting = false;
+                                RectStart = currentEvent.mousePosition - currentEvent.delta;
+                            }
                         }
                         else
                         {
+                            if (IsPaintModeEnabled)
+                            {
+                                pendingStateClickAction = false;
+                                replaceSelectionOnRectSelect = false;
+                                rectSelect = false;
+                                painting = true;
+                                SingleSelect(currentEvent);
+                            }
+                            else
+                            {
+                                pendingStateClickAction = true;
+                                pendingStateClickStart = currentEvent.mousePosition;
+                                replaceSelectionOnRectSelect = false;
+                                rectSelect = true;
+                                painting = false;
+                                RectStart = currentEvent.mousePosition - currentEvent.delta;
+                            }
+                        }
+
+                        if (currentDefineMode == DefineMode.DefineVertexSet)
+                        {
                             SingleSelect(currentEvent);
-                            rectSelect = true;
-                            RectStart = currentEvent.mousePosition - currentEvent.delta;
                         }
                     }
                     else if (currentEvent.button == 1)
                     {
+                        pendingStateClickAction = false;
+                        replaceSelectionOnRectSelect = false;
+                        paintedVerticesThisStroke.Clear();
                         rectSelect = false;
                     }
                 }
@@ -625,6 +783,14 @@ namespace UMA
                 // This is to prevent the scene view from capturing the selection and doing it's own routines
                 if (currentEvent.type == EventType.MouseDrag)
                 {
+                    if (pendingStateClickAction)
+                    {
+                        float dragDistance = Vector2.Distance(pendingStateClickStart, currentEvent.mousePosition);
+                        if (dragDistance > 2f)
+                        {
+                            rectSelect = true;
+                        }
+                    }
                     Event.current.Use();
                     sceneView.Repaint();
                 }
@@ -632,9 +798,26 @@ namespace UMA
 
                 if (currentEvent.type == EventType.MouseUp)// && currentEvent.button == 0)
                 {
+                    EndSelectionUndoSnapshot();
                     painting = false;
 
-                    if (rectSelect)
+                    if (pendingStateClickAction)
+                    {
+                        float dragDistance = Vector2.Distance(pendingStateClickStart, currentEvent.mousePosition);
+                        if (dragDistance <= 2f)
+                        {
+                            SingleSelect(currentEvent);
+                        }
+                        else
+                        {
+                            Vector2 RectEnd = currentEvent.mousePosition;
+                            Rect MinMax = GetMinMax(RectStart, RectEnd);
+                            RectangleSelect(currentEvent, MinMax);
+                        }
+                        pendingStateClickAction = false;
+                        rectSelect = false;
+                    }
+                    else if (rectSelect)
                     {
                         // Do the rectangle selection
                         Vector2 RectEnd = currentEvent.mousePosition;
@@ -642,6 +825,8 @@ namespace UMA
                         RectangleSelect(currentEvent, MinMax);
                         rectSelect = false;
                     }
+                    replaceSelectionOnRectSelect = false;
+                    paintedVerticesThisStroke.Clear();
                 }
 
 
@@ -657,6 +842,10 @@ namespace UMA
                         painting = false;
                         sceneView.Repaint();
                     }
+                    pendingStateClickAction = false;
+                    replaceSelectionOnRectSelect = false;
+                    paintedVerticesThisStroke.Clear();
+                    EndSelectionUndoSnapshot();
                 }
 
                 if (rectSelect && (currentEvent.mousePosition.x < 0 || currentEvent.mousePosition.y < 0 || currentEvent.mousePosition.x > sceneView.position.width || currentEvent.mousePosition.y > sceneView.position.height))
@@ -673,6 +862,12 @@ namespace UMA
             {
                 Rect topCenter = new Rect(0, 25, sceneView.position.width, 20);
                 GUI.Label(topCenter, "** Edit Mode **", centeredLabel);
+            }
+            else
+            {
+                Rect topCenter = new Rect(0, 25, sceneView.position.width, 20);
+                string modeText = currentDefineMode == DefineMode.DefineVertexSet ? "** Define Vertex Set Mode **" : "** Define Vertex State Mode **";
+                GUI.Label(topCenter, modeText, centeredLabel);
             }
 
 
@@ -746,7 +941,10 @@ namespace UMA
                     continue;
                 }
 
-                int bakedIndex = vs.vertexIndexOnSlot + vs.slot.vertexOffset;
+                if (!TryGetVisibleBakedVertexIndex(vs.slot, vs.vertexIndexOnSlot, out int bakedIndex))
+                {
+                    continue;
+                }
 
                 Vector3 bakedNormal = normals[bakedIndex];
                 if (Vector3.Dot(bakedNormal, Camera.current.transform.forward) > 0)
@@ -830,13 +1028,18 @@ namespace UMA
 
             if (van != null)
             {
+                if (!TryGetVisibleBakedVertexIndex(editSelection.slot, editSelection.vertexIndexOnSlot, out int bakedIndex))
+                {
+                    return false;
+                }
+
                 if (van.bakedNormalSet == false)
                 {
-                    van.bakedNormal = BakedMesh.normals[editSelection.slot.vertexOffset + editSelection.vertexIndexOnSlot];
+                    van.bakedNormal = BakedMesh.normals[bakedIndex];
                     van.bakedNormalSet = true;
                 }
 
-                editSelection.WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[editSelection.slot.vertexOffset + editSelection.vertexIndexOnSlot]);
+                editSelection.WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[bakedIndex]);
                 // show an arrow gizmo at the editSelection.WorldPosition, pointing in the direction of the normal
                 Handles.color = Color.red;
                 Vector3 normal = van.bakedNormal;
@@ -862,6 +1065,11 @@ namespace UMA
             VertexScaleAdjustment vas = editAdjustment as VertexScaleAdjustment;
             if (vas != null)
             {
+                if (!TryGetVisibleBakedVertexIndex(editSelection.slot, editSelection.vertexIndexOnSlot, out int bakedIndex))
+                {
+                    return false;
+                }
+
                 UMAData umaData = thisDCA.umaData;
                 SlotData slot = thisDCA.umaData.umaRecipe.FindSlot(vas.slotName);
 
@@ -877,7 +1085,7 @@ namespace UMA
                 // show an arrow gizmo at the editSelection.WorldPosition, pointing in the direction of the normal
                 Handles.color = Color.red;
                 //Vector3 normal = vas.bakedNormal;
-                Vector3 worldRotation = VertexObject.transform.TransformVector(BakedMesh.normals[editSelection.slot.vertexOffset + editSelection.vertexIndexOnSlot]);
+                Vector3 worldRotation = VertexObject.transform.TransformVector(BakedMesh.normals[bakedIndex]);
                 Quaternion quaternion = Quaternion.LookRotation(worldRotation);
                 // Handles.ArrowHandleCap(0, editSelection.WorldPosition, quaternion, 0.1f, EventType.Repaint);
                 //Handles.ArrowHandleCap(0, editSelection.WorldPosition, Quaternion.LookRotation(worldRotation), 0.1f, EventType.Repaint);
@@ -898,6 +1106,37 @@ namespace UMA
             return false;
         }
 
+        private int GetVisibleSlotCount()
+        {
+            int visibleCount = 0;
+            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+            {
+                if (slot != null && !slot.Suppressed)
+                {
+                    visibleCount++;
+                }
+            }
+            return visibleCount;
+        }
+
+        private bool EnsureAtLeastOneVisibleSlot()
+        {
+            if (GetVisibleSlotCount() > 0)
+            {
+                return false;
+            }
+
+            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+            {
+                if (slot != null)
+                {
+                    slot.Suppressed = false;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private void DrawGUIWindows(SceneView sceneView)
         {
             Handles.BeginGUI();
@@ -909,7 +1148,13 @@ namespace UMA
                 VisibleWearablesLocation = GUILayout.BeginScrollView(VisibleWearablesLocation);
                 bool wasChanged = false;
                 bool wasRecipeChanged = false;
+                bool blockedHideAllSlots = false;
                 var wearables = thisDCA.GetVisibleWearables();
+
+                if (EnsureAtLeastOneVisibleSlot())
+                {
+                    wasChanged = true;
+                }
 
                 GUILayout.Label("Visible Wearables", EditorStyles.boldLabel);
                 foreach (var wearable in wearables)
@@ -926,16 +1171,30 @@ namespace UMA
                 }
                 GUILayout.Space(10);
                 GUILayout.Label("Visible Slots", EditorStyles.boldLabel);
+                int visibleSlotCount = GetVisibleSlotCount();
                 foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
                 {
+                    if (slot == null)
+                    {
+                        continue;
+                    }
                     GUILayout.BeginHorizontal();
                     bool wasDisabled = slot.Suppressed;
-                    // EditorGUI.BeginChangeCheck();  doesn't work here
-                    slot.Suppressed = !GUILayout.Toggle(!slot.Suppressed, "", GUILayout.Width(24));
+                    bool desiredVisible = GUILayout.Toggle(!slot.Suppressed, "", GUILayout.Width(24));
+                    bool desiredSuppressed = !desiredVisible;
+
+                    if (desiredSuppressed && !slot.Suppressed && visibleSlotCount <= 1)
+                    {
+                        desiredSuppressed = false;
+                        blockedHideAllSlots = true;
+                    }
+
+                    slot.Suppressed = desiredSuppressed;
                     //wasChanged = EditorGUI.EndChangeCheck();
                     if (slot.Suppressed != wasDisabled)
                     {
                         wasChanged = true;
+                        visibleSlotCount += slot.Suppressed ? -1 : 1;
                     }
                     if (slot.Suppressed && editAdjustment != null)
                     {
@@ -948,6 +1207,57 @@ namespace UMA
                     GUILayout.EndHorizontal();
 
                 }
+
+                GUILayout.Space(8);
+                if (GUILayout.Button("Invert Visiblity", EditorStyles.miniButton))
+                {
+                    foreach (var wearable in wearables)
+                    {
+                        wearable.disabled = !wearable.disabled;
+                        wasRecipeChanged = true;
+                    }
+
+                    int totalSlots = 0;
+                    foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+                    {
+                        if (slot != null)
+                        {
+                            totalSlots++;
+                        }
+                    }
+
+                    if (totalSlots > 0 && (totalSlots - visibleSlotCount) == 0)
+                    {
+                        blockedHideAllSlots = true;
+                    }
+
+                    foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+                    {
+                        if (slot == null)
+                        {
+                            continue;
+                        }
+
+                        if (blockedHideAllSlots)
+                        {
+                            continue;
+                        }
+
+                        slot.Suppressed = !slot.Suppressed;
+                        wasChanged = true;
+
+                        if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
+                        {
+                            editAdjustment = null;
+                        }
+                    }
+                }
+
+                if (blockedHideAllSlots)
+                {
+                    EditorGUILayout.HelpBox("At least one slot must remain visible.", MessageType.Warning);
+                }
+
                 GUILayout.EndScrollView();
                 if (wasChanged)
                 {
@@ -1009,6 +1319,19 @@ namespace UMA
             #region Selection Options
             GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
             GUILayout.Label("Selection Options", centeredLabel);
+
+            GUILayout.BeginHorizontal();
+            DefineMode newDefineMode = (DefineMode)GUILayout.Toolbar((int)currentDefineMode, new string[] { "Define Set", "Define State" });
+            GUILayout.EndHorizontal();
+            if (newDefineMode != currentDefineMode)
+            {
+                CancelInteraction();
+                currentDefineMode = newDefineMode;
+                currentMode = currentDefineMode == DefineMode.DefineVertexSet ? selectMode.Add : selectMode.ToggleState;
+            }
+
+            GUILayout.Label(currentDefineMode == DefineMode.DefineVertexSet ? "Current Mode: Define Vertex Set" : "Current Mode: Define Vertex State", EditorStyles.miniBoldLabel);
+
             GUILayout.BeginHorizontal();
             selectObscured = EditorGUILayout.Toggle("Obscured", selectObscured);
             GUILayout.EndHorizontal();
@@ -1019,24 +1342,42 @@ namespace UMA
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Default State", GUILayout.Width(72));
+            GUILayout.Label("Default State", GUILayout.Width(92));
             currentNewVertexState = EditorGUILayout.Popup(currentNewVertexState, new string[] { "Inactive", "Active" });
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Drag Mode", GUILayout.Width(72));
-            currentMode = (selectMode)EditorGUILayout.EnumPopup(currentMode);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Slot Filter", GUILayout.Width(72));
-
-            if (selectionSlot >= selectFrom.Length)
+            if (currentDefineMode == DefineMode.DefineVertexSet)
             {
-                selectionSlot = 0;
+                paintModeSet = EditorGUILayout.Toggle("Paint Mode", paintModeSet);
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Set Action", GUILayout.Width(92));
+                int setAction = currentMode == selectMode.Remove ? 1 : currentMode == selectMode.InvertSelection ? 2 : 0;
+                int newSetAction = GUILayout.Toolbar(setAction, new string[] { "Add", "Remove", "Invert" });
+                currentMode = newSetAction == 1 ? selectMode.Remove : newSetAction == 2 ? selectMode.InvertSelection : selectMode.Add;
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Slot Filter", GUILayout.Width(92));
+
+                if (selectionSlot >= selectFrom.Length)
+                {
+                    selectionSlot = 0;
+                }
+                selectionSlot = EditorGUILayout.Popup(selectionSlot, selectFrom);
+                GUILayout.EndHorizontal();
             }
-            selectionSlot = EditorGUILayout.Popup(selectionSlot, selectFrom);
-            GUILayout.EndHorizontal();
+            else
+            {
+                paintModeState = EditorGUILayout.Toggle("Paint Mode", paintModeState);
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("State Action", GUILayout.Width(92));
+                int stateAction = currentMode == selectMode.Activate ? 0 : currentMode == selectMode.Deactivate ? 1 : 2;
+                int newStateAction = GUILayout.Toolbar(stateAction, new string[] { "Activate", "Deactivate", "Toggle" });
+                currentMode = newStateAction == 0 ? selectMode.Activate : newStateAction == 1 ? selectMode.Deactivate : selectMode.ToggleState;
+                GUILayout.EndHorizontal();
+            }
 
 
             GUILayout.BeginHorizontal();
@@ -1049,6 +1390,7 @@ namespace UMA
             if (GUILayout.Button("Load", threeButtonStyle))
             {
                 // Load the vertex selections
+                Undo.RegisterCompleteObjectUndo(this, "Load Vertex Selection");
                 SelectedVertexes.Clear();
                 LoadSelections();
                 modifierEditor.Repaint();
@@ -1056,57 +1398,71 @@ namespace UMA
             if (GUILayout.Button("Append", threeButtonStyle))
             {
                 // Append the vertex selections
+                Undo.RegisterCompleteObjectUndo(this, "Append Vertex Selection");
                 LoadSelections();
                 modifierEditor.Repaint();
             }
             GUILayout.EndHorizontal();
 
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Invert State", smallButtonStyle))
+            if (currentDefineMode == DefineMode.DefineVertexSet)
             {
-                for (int i = 0; i < SelectedVertexes.Count; i++)
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Invert Selection", smallButtonStyle))
                 {
-                    SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
+                    Undo.RegisterCompleteObjectUndo(this, "Invert Vertex Selection");
+                    InvertSelection();
+                    modifierEditor.Repaint();
                 }
-                modifierEditor.Repaint();
-            }
-            if (GUILayout.Button("Invert Selection", smallButtonStyle))
-            {
-                InvertSelection();
-                modifierEditor.Repaint();
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Activate all", smallButtonStyle))
-            {
-                for (int i = 0; i < SelectedVertexes.Count; i++)
+                if (GUILayout.Button("Select All", smallButtonStyle))
                 {
-                    SelectedVertexes[i].isActive = true;
+                    Undo.RegisterCompleteObjectUndo(this, "Select All Vertexes");
+                    SelectAll();
+                    modifierEditor.Repaint();
                 }
-                modifierEditor.Repaint();
-            }
-            if (GUILayout.Button("Deactivate all", smallButtonStyle))
-            {
-                for (int i = 0; i < SelectedVertexes.Count; i++)
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Clear Selection", smallButtonStyle))
                 {
-                    SelectedVertexes[i].isActive = false;
+                    Undo.RegisterCompleteObjectUndo(this, "Clear Vertex Selection");
+                    SelectedVertexes.Clear();
+                    modifierEditor.Repaint();
                 }
-                modifierEditor.Repaint();
+                GUILayout.EndHorizontal();
             }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Select All", smallButtonStyle))
+            else
             {
-                SelectAll();
-                modifierEditor.Repaint();
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Invert State", smallButtonStyle))
+                {
+                    Undo.RegisterCompleteObjectUndo(this, "Invert Vertex State");
+                    for (int i = 0; i < SelectedVertexes.Count; i++)
+                    {
+                        SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
+                    }
+                    modifierEditor.Repaint();
+                }
+                if (GUILayout.Button("Activate all", smallButtonStyle))
+                {
+                    Undo.RegisterCompleteObjectUndo(this, "Activate Vertex State");
+                    for (int i = 0; i < SelectedVertexes.Count; i++)
+                    {
+                        SelectedVertexes[i].isActive = true;
+                    }
+                    modifierEditor.Repaint();
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Deactivate all", smallButtonStyle))
+                {
+                    Undo.RegisterCompleteObjectUndo(this, "Deactivate Vertex State");
+                    for (int i = 0; i < SelectedVertexes.Count; i++)
+                    {
+                        SelectedVertexes[i].isActive = false;
+                    }
+                    modifierEditor.Repaint();
+                }
+                GUILayout.EndHorizontal();
             }
-            if (GUILayout.Button("Clear Selection", smallButtonStyle))
-            {
-                SelectedVertexes.Clear();
-                modifierEditor.Repaint();
-            }
-            GUILayout.EndHorizontal();
             GUIHelper.EndVerticalPadded(5);
             #endregion
 
@@ -1121,7 +1477,28 @@ namespace UMA
                 sceneView.AlignViewToObject(cameraAnchor.transform);
             }
             GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.85f, 1f));
-            GUILayout.TextArea("Shift-Click empty spot to add vertex(es)\nShift-click a selected vertex to toggle active state\nControl-Click to remove vertex(es)\nRight-Click to cancel selection\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
+            if (currentDefineMode == DefineMode.DefineVertexSet)
+            {
+                if (paintModeSet)
+                {
+                    GUILayout.TextArea("Define Vertex Set mode\nPaint Mode enabled: click-drag applies Set Action to vertices under cursor\nSet Action is selected from Add / Remove / Invert\nEach vertex is processed only once per stroke\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
+                }
+                else
+                {
+                    GUILayout.TextArea("Define Vertex Set mode\nLeft-click applies Set Action to a vertex\nLeft-drag box applies Set Action to multiple vertices\nSet Action is selected from Add / Remove / Invert\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
+                }
+            }
+            else
+            {
+                if (paintModeState)
+                {
+                    GUILayout.TextArea("Define Vertex State mode\nOnly affects already selected vertices\nPaint Mode enabled: click-drag applies State Action\nState Action is selected from Toggle / Activate / Deactivate\nEach vertex is processed only once per stroke\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
+                }
+                else
+                {
+                    GUILayout.TextArea("Define Vertex State mode\nOnly affects already selected vertices\nLeft-click applies State Action\nState Action is selected from Toggle / Activate / Deactivate\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
+                }
+            }
             if (Event.current.type == EventType.Repaint)
             {
                 float height = GUILayoutUtility.GetLastRect().yMax;
@@ -1135,20 +1512,46 @@ namespace UMA
 
         }
 
+        private void CancelInteraction()
+        {
+            pendingStateClickAction = false;
+            replaceSelectionOnRectSelect = false;
+            paintedVerticesThisStroke.Clear();
+            rectSelect = false;
+            painting = false;
+            EndSelectionUndoSnapshot();
+        }
+
+        private selectMode GetEffectiveSelectMode(Event currentEvent)
+        {
+            if (currentDefineMode == DefineMode.DefineVertexSet && currentEvent != null)
+            {
+                if (currentEvent.control)
+                {
+                    return selectMode.InvertSelection;
+                }
+
+                if (currentEvent.shift)
+                {
+                    return selectMode.Add;
+                }
+            }
+
+            return currentMode;
+        }
+
 
         public void SelectAll()
         {
             SelectedVertexes.Clear();
             var vertexes = BakedMesh.vertices;
-            var normals = BakedMesh.normals;
             for (int i = 0; i < vertexes.Length; i++)
             {
-                SlotData foundSlot = thisDCA.umaData.umaRecipe.FindSlotForVertex(i);
-                if (foundSlot != null)
+                if (TryGetSlotForBakedVertex(i, out SlotData foundSlot, out int foundVert))
                 {
                     SelectedVertexes.Add(new VertexSelection()
                     {
-                        vertexIndexOnSlot = i - foundSlot.vertexOffset,
+                        vertexIndexOnSlot = foundVert,
                         slot = foundSlot,
                         WorldPosition = VertexObject.transform.TransformPoint(vertexes[i]),
                         isActive = (currentNewVertexState == (int)newVertexState.Active)
@@ -1212,10 +1615,8 @@ namespace UMA
                 for (int i = 0; i < BakedMesh.vertices.Length; i++)
                 {
                     EditorUtility.DisplayProgressBar("Inverting Selection", "Processing vertex " + i.ToString(), (float)i / (float)BakedMesh.vertices.Length);
-                    SlotData foundSlot = thisDCA.umaData.umaRecipe.FindSlotForVertex(i);
-                    if (foundSlot != null)
+                    if (TryGetSlotForBakedVertex(i, out SlotData foundSlot, out int foundVert))
                     {
-                        int foundVert = i - foundSlot.vertexOffset;
                         bool found = false;
                         for (int j = 0; j < SelectedVertexes.Count; j++)
                         {
@@ -1261,6 +1662,12 @@ namespace UMA
         {
             EditorUtility.ClearProgressBar();
 
+            selectMode effectiveMode = GetEffectiveSelectMode(currentEvent);
+            if (replaceSelectionOnRectSelect && currentDefineMode == DefineMode.DefineVertexSet && effectiveMode == selectMode.Add)
+            {
+                SelectedVertexes.Clear();
+            }
+
             var vertexes = BakedMesh.vertices;
             var normals = BakedMesh.normals;
             for (int i = 0; i < vertexes.Length; i++)
@@ -1304,10 +1711,12 @@ namespace UMA
 
                     if (!blocked)
                     {
-                        SlotData foundSlot = thisDCA.umaData.umaRecipe.FindSlotForVertex(i);
-                        int foundVert = i - foundSlot.vertexOffset;
+                        if (!TryGetSlotForBakedVertex(i, out SlotData foundSlot, out int foundVert))
+                        {
+                            continue;
+                        }
 
-                        if (selectionSlot > 0)
+                        if (currentDefineMode == DefineMode.DefineVertexSet && selectionSlot > 0)
                         {
                             if (foundSlot.slotName != selectFrom[selectionSlot])
                             {
@@ -1317,7 +1726,7 @@ namespace UMA
 
                         if (foundSlot != null)
                         {
-                            switch (currentMode)
+                            switch (effectiveMode)
                             {
                                 case selectMode.Add:
                                     AddVertex(foundSlot, foundVert);
@@ -1333,6 +1742,13 @@ namespace UMA
                                     break;
                                 case selectMode.Deactivate:
                                     DeactivateVertex(foundSlot, foundVert);
+                                    break;
+                                case selectMode.ToggleState:
+                                    int stateIndex = GetSelectionIndex(foundSlot, foundVert);
+                                    if (stateIndex >= 0)
+                                    {
+                                        SelectedVertexes[stateIndex].isActive = !SelectedVertexes[stateIndex].isActive;
+                                    }
                                     break;
                             }
                         }
@@ -1381,7 +1797,7 @@ namespace UMA
             {
                 vertexIndexOnSlot = foundVert,
                 slot = foundSlot,
-                WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[foundVert + foundSlot.vertexOffset]),
+                WorldPosition = GetWorldPosition(foundSlot, foundVert),
                 isActive = (currentNewVertexState == (int)newVertexState.Active)
             });
         }
@@ -1412,7 +1828,7 @@ namespace UMA
             {
                 vertexIndexOnSlot = foundVert,
                 slot = foundSlot,
-                WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[foundVert + foundSlot.vertexOffset])
+                WorldPosition = GetWorldPosition(foundSlot, foundVert)
             });
         }
 
@@ -1431,7 +1847,7 @@ namespace UMA
                     {
                         vertexIndexOnSlot = va.vertexIndex,
                         slot = slot,
-                        WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[va.vertexIndex + slot.vertexOffset]),
+                        WorldPosition = GetWorldPosition(slot, va.vertexIndex),
                         isActive = true
                     });
                 }
@@ -1441,18 +1857,29 @@ namespace UMA
         private bool SingleSelect(Event currentEvent)
         {
             bool found = false;
-            int selectedVertex = -1;
+            selectMode effectiveMode = GetEffectiveSelectMode(currentEvent);
+            bool replaceSelectionOnAdd = currentDefineMode == DefineMode.DefineVertexSet &&
+                                         effectiveMode == selectMode.Add &&
+                                         !currentEvent.shift &&
+                                         !currentEvent.control &&
+                                         !(IsPaintModeEnabled && painting);
 
             Ray ray = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
             if (phyScene.Raycast(ray.origin, ray.direction, out RaycastHit hit))
             {
-                bool duplicateVertex = false;
                 if (hit.transform != null && hit.transform.gameObject == VertexObject)
                 {
                     VertexSelection vs = FindVertex(hit, BakedMesh, VertexObject);
                     if (vs != null)
                     {
-                        if (selectionSlot > 0)
+                        bool trackPaintStroke = IsPaintModeEnabled && painting;
+                        string paintKey = vs.slot.slotName + ":" + vs.vertexIndexOnSlot;
+                        if (trackPaintStroke && paintedVerticesThisStroke.Contains(paintKey))
+                        {
+                            return false;
+                        }
+
+                        if (currentDefineMode == DefineMode.DefineVertexSet && selectionSlot > 0)
                         {
                             if (vs.slot.slotName != selectFrom[selectionSlot])
                             {
@@ -1464,74 +1891,94 @@ namespace UMA
                         {
                             if (SelectedVertexes[i].slot.slotName == vs.slot.slotName && SelectedVertexes[i].vertexIndexOnSlot == vs.vertexIndexOnSlot)
                             {
-                                if (currentEvent.control || (currentEvent.shift))
-                                {
-                                    if (currentState == vertexState.AddingOnly)
-                                    {
-                                        return false;
-                                    }
+                                found = true;
+                                int selectedVertex = i;
 
-                                    if (currentState == vertexState.unKnown)
-                                    {
-                                        if (SelectedVertexes[i].isActive)
-                                        {
-                                            currentState = vertexState.Inactive;
-                                        }
-                                        else
-                                        {
-                                            currentState = vertexState.Active;
-                                        }
-                                        SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
-                                    }
-                                    else
-                                    {
-                                        if (currentState == vertexState.Active)
-                                        {
-                                            SelectedVertexes[i].isActive = true;
-                                        }
-                                        else
-                                        {
-                                            SelectedVertexes[i].isActive = false;
-                                        }
-                                    }
+                                if (effectiveMode == selectMode.Add && replaceSelectionOnAdd)
+                                {
+                                    bool previousActive = SelectedVertexes[i].isActive;
+                                    SelectedVertexes.Clear();
+                                    vs.isActive = previousActive;
+                                    SelectedVertexes.Add(vs);
+                                    CurrentSelected = 0;
+                                    SetActive(null);
+                                    found = true;
                                 }
-                                // SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
-                                duplicateVertex = true;
-                                selectedVertex = i;
+                                else if (effectiveMode == selectMode.Remove)
+                                {
+                                    SelectedVertexes.RemoveAt(selectedVertex);
+                                    if (CurrentSelected == selectedVertex)
+                                    {
+                                        CurrentSelected = -1;
+                                        SetActive(null);
+                                    }
+                                    else if (CurrentSelected > selectedVertex)
+                                    {
+                                        CurrentSelected--;
+                                    }
+                                    found = true;
+                                }
+                                else if (effectiveMode == selectMode.InvertSelection)
+                                {
+                                    SelectedVertexes.RemoveAt(selectedVertex);
+                                    if (CurrentSelected == selectedVertex)
+                                    {
+                                        CurrentSelected = -1;
+                                        SetActive(null);
+                                    }
+                                    else if (CurrentSelected > selectedVertex)
+                                    {
+                                        CurrentSelected--;
+                                    }
+                                    found = true;
+                                }
+                                else if (effectiveMode == selectMode.ToggleState)
+                                {
+                                    SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
+                                    CurrentSelected = i;
+                                    SetActive(null);
+                                    found = true;
+                                }
+                                else if (effectiveMode == selectMode.Activate)
+                                {
+                                    SelectedVertexes[i].isActive = true;
+                                    CurrentSelected = i;
+                                    SetActive(null);
+                                    found = true;
+                                }
+                                else if (effectiveMode == selectMode.Deactivate)
+                                {
+                                    SelectedVertexes[i].isActive = false;
+                                    CurrentSelected = i;
+                                    SetActive(null);
+                                    found = true;
+                                }
+                                else
+                                {
+                                    CurrentSelected = i;
+                                    SetActive(null);
+                                }
                                 break;
                             }
                         }
 
-                        if (!duplicateVertex)
+                        if (trackPaintStroke)
                         {
-                            if (currentEvent.shift && (currentState == vertexState.unKnown || currentState == vertexState.AddingOnly))
+                            paintedVerticesThisStroke.Add(paintKey);
+                        }
+
+                        if (!found)
+                        {
+                            if (effectiveMode == selectMode.Add || effectiveMode == selectMode.InvertSelection)
                             {
-                                currentState = vertexState.AddingOnly;
-                                found = true;
+                                if (replaceSelectionOnAdd)
+                                {
+                                    SelectedVertexes.Clear();
+                                }
                                 SelectedVertexes.Add(vs);
                                 CurrentSelected = SelectedVertexes.Count - 1;
                                 SetActive(null);
-                            }
-                        }
-                        else
-                        {
-                            if (currentEvent.control)
-                            {
-                                found = false;
-                                SelectedVertexes.RemoveAt(selectedVertex);
-                                if (CurrentSelected == selectedVertex)
-                                {
-                                    CurrentSelected = -1;
-                                    SetActive(null);
-                                }
-                            }
-                            else
-                            {
-                                if (!currentEvent.shift)
-                                {
-                                    CurrentSelected = selectedVertex;
-                                    SetActive(null);
-                                }
+                                found = true;
                             }
                         }
                     }
@@ -1681,14 +2128,11 @@ namespace UMA
                 }
             }
 
-            SlotData foundSlot = thisDCA.umaData.umaRecipe.FindSlotForVertex(foundVert);
-
-            if (foundSlot != null)
+            if (TryGetSlotForBakedVertex(foundVert, out SlotData foundSlot, out int slotVertexIndex))
             {
-                int LocalToSlot = foundVert - foundSlot.vertexOffset;
                 return new VertexSelection()
                 {
-                    vertexIndexOnSlot = LocalToSlot,
+                    vertexIndexOnSlot = slotVertexIndex,
                     slot = foundSlot,
                     WorldPosition = go.transform.TransformPoint(verts[foundVert]),
                     isActive = (currentNewVertexState == (int)newVertexState.Active)

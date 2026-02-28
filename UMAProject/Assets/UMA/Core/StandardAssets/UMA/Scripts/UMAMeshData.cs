@@ -1899,7 +1899,7 @@ namespace UMA
 				{
 					int total = 0;
 					try { total = submeshes[i].GetTriangleCount(); } catch { total = -1; }
-					Debug.Log($"[UMA ApplyMesh] submesh={i} LOD={LOD} totalIdx={total} range=({lodRange.offset},{lodRange.count})");
+					//Debug.Log($"[UMA ApplyMesh] submesh={i} LOD={LOD} totalIdx={total} range=({lodRange.offset},{lodRange.count})");
 				}
 #endif
 				mesh.SetIndices(submeshes[i].GetTriangles(0), (int)lodRange.offset, (int)lodRange.count, MeshTopology.Triangles, i, false);
@@ -1961,7 +1961,7 @@ namespace UMA
 			}
             #endregion
 
-			Debug.Log("Recalculating bounds");
+			//Debug.Log("Recalculating bounds");
 			mesh.RecalculateBounds();
 			renderer.bones = bones != null ? bones : skeleton.HashesToTransforms(boneNameHashes);
 			UMAUtils.DestroySceneObject(renderer.sharedMesh);

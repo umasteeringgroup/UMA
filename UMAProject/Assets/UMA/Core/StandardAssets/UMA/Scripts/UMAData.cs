@@ -187,6 +187,16 @@ namespace UMA
                 {
                     accumulatedModifiers.Add(kvp.Key, new List<MeshModifier.Modifier>());
                 }
+				List<MeshModifier.Modifier> mods = kvp.Value;
+				Debug.Log("There are " + mods.Count + " modifiers for slot " + kvp.Key);	
+                if (mods.Count > 0)
+				{
+					var modifier = mods[0];
+					var adj = modifier.adjustments;
+					var va = modifier.adjustments.vertexAdjustments;
+					Debug.Log("Adding " + va.Count + " vertex adjustments for slot " + kvp.Key);	
+                }
+
                 accumulatedModifiers[kvp.Key].AddRange(kvp.Value);
             }
 #if UNITY_EDITOR

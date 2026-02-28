@@ -2,6 +2,7 @@ BEGIN_OPTIONS
    ShaderName "UMA/DNTOGloss2"
    Stackable "False"
    Workflow "Metallic"
+   VertexColorRequire "1"   
 END_OPTIONS
 
 BEGIN_PROPERTIES
@@ -127,6 +128,7 @@ BEGIN_CODE
 
 	void SurfaceFunction(inout Surface o, ShaderData d)
 	{
+      float4 vcolor = d.vertexColor;
       float2 auv = d.texcoord0.xy;
       float2 nuv = d.texcoord0.xy;
       float2 cuv = d.texcoord0.xy;
@@ -191,6 +193,7 @@ BEGIN_CODE
      }
      float fakeLum = dot(o.Albedo, float3(0.299, 0.587, 0.114));
      o.Albedo += (base_thick * _SSSColor.rgb * _SSSLevel * fakeLum);
+     o.Albedo *= vcolor;
 
      
      o.Emission = _EmissiveAdd + ((max(0.0h, dot(lightDir, o.Normal)) * _SSSColor.rgb * base_thick * _SSSGlow) * _EmissiveModulation);
