@@ -355,20 +355,10 @@ namespace UMA.Editors
                                 if (desired != currentForced)
                                 {
 
-                                    //Undo.RecordObject(lod, "Set UMA LOD Level");
                                     lod.editorForcedLOD = desired;
-                                   // Debug.Log("Forcing UMA LOD to level " + desired);
-                                    if (lod.logEditorLODChanges)
-                                    {
-                                        Debug.Log("Forced LOD changed to " + desired + " in editor.");
-                                    }
                                     lod.DoManualLODCheck(desired);
                                     if (lod.useInternalMeshLOD)
                                     {
-                                        if (lod.logEditorLODChanges)
-                                        {
-                                            Debug.Log("Forced LOD changed to " + desired + " in editor. Updating internal mesh LODs.");
-                                        }
                                         lod.UpdateInternalLOD();
                                         return;
                                     }

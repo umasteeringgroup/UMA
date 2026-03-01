@@ -61,8 +61,6 @@ namespace UMA.Examples
 
         [Tooltip("Editor-only forced LOD level (0..maxLOD-1) used when 'Editor Override LOD' is enabled.")]
         public int editorForcedLOD;
-        [Tooltip("Log LOD changes in the editor for diagnostics. Only effective when 'Editor Override LOD' is enabled.")]
-        public bool logEditorLODChanges = true;
 #endif
 
         private int _currentLOD = -1;
@@ -179,11 +177,6 @@ namespace UMA.Examples
                 lodLevel = maxLOD - 1;
             }
             _currentLOD = lodLevel + lodOffset;
-            if (logEditorLODChanges)
-            {
-                Debug.Log("Process recipe for LOD level " + _currentLOD);
-            }
-
             ProcessRecipe(_currentLOD);
         }
 
@@ -392,10 +385,6 @@ namespace UMA.Examples
             if (_lastLoggedFrame != Time.frameCount)
             {
                 _lastLoggedFrame = Time.frameCount;
-                if (logEditorLODChanges)
-                {
-                    Debug.Log("[UMASimpleLOD] UpdateInternalLOD desiredLOD=" + desiredLOD + " currentLOD=" + _currentLOD + " slots=" + slots.Length);
-                }
             }
 #endif
 
@@ -546,23 +535,7 @@ namespace UMA.Examples
                             localTris = filtered.Count > 0 ? filtered.ToArray() : Array.Empty<int>();
                         }
 
-#if UNITY_EDITOR && UMA_INTERNALLOD_DIAGNOSTICS
                         int afterLen = localTris.Length;
-                        if (afterLen != beforeLen)
-                        {
-                            if (logEditorLODChanges)
-                            {
-                                Debug.Log("[UMASimpleLOD] MeshHideMask filtered slot='" + sd.slotName + "' sub=" + sourceSub + " indices " + beforeLen + " -> " + afterLen);
-                            }
-                        }
-                        else
-                        {
-                            if (logEditorLODChanges)
-                            {
-                                Debug.Log("[UMASimpleLOD] MeshHideMask present but did not filter slot='" + sd.slotName + "' sub=" + sourceSub + " (maskLen=" + mask.Length + ", trisLen=" + beforeLen + ")");
-                            }
-                        }
-#endif
                     }
 
                     if (localTris.Length == 0) continue;

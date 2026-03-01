@@ -130,6 +130,10 @@ namespace UMA
 
         const int VertexEditorToolsWindowID = 0x1234;
         const int VisibleWearablesID = 0x1235;
+        private const float LeftPanelWidthMin = 320f;
+        private const float LeftPanelWidthMax = 460f;
+        private const float LeftPanelPadding = 6f;
+        private const float LeftPanelHeaderHeight = 18f;
 
         public Vector2 VertexEditorScrollLocation = Vector2.zero;
         public Rect VertexEditorToolsWindow = new Rect(10, 10, 300, 300);
@@ -137,6 +141,7 @@ namespace UMA
 
         public Vector2 VisibleWearablesLocation = Vector2.zero;
         public Rect VisibleWearablesWindow = new Rect(10, 310, 250, 300);
+        private Rect leftPanelRect;
 
         private MeshModifierEditor modifierEditor;
         public bool rectSelect = false;
@@ -1051,29 +1056,13 @@ namespace UMA
 
         public void AdjustWindowRects()
         {
-            // Adjust window positions based on the scene view size
-            Rect r = SceneView.lastActiveSceneView.position;
-            float width = Mathf.Clamp(r.width * 0.28f, 300f, 420f);
-            float halfheight = (r.height / 2) - 45;
-
-            // Preserve current x/y so the windows remain draggable.
-            if (VertexEditorToolsWindow.width <= 0f || VertexEditorToolsWindow.height <= 0f)
+         Rect r = SceneView.lastActiveSceneView.position;
+            float panelWidth = Mathf.Clamp(r.width * 0.33f, LeftPanelWidthMin, LeftPanelWidthMax);
+            if (panelWidth > 300f)
             {
-                VertexEditorToolsWindow = new Rect(5f, 5f, width, halfheight);
+                panelWidth = 300f;
             }
-            else
-            {
-                VertexEditorToolsWindow = new Rect(VertexEditorToolsWindow.x, VertexEditorToolsWindow.y, width, halfheight);
-            }
-
-            if (VisibleWearablesWindow.width <= 0f || VisibleWearablesWindow.height <= 0f)
-            {
-                VisibleWearablesWindow = new Rect(5f, halfheight + 10f, width, halfheight);
-            }
-            else
-            {
-                VisibleWearablesWindow = new Rect(VisibleWearablesWindow.x, VisibleWearablesWindow.y, width, halfheight);
-            }
+            leftPanelRect = new Rect(LeftPanelPadding, LeftPanelPadding, panelWidth, r.height - (LeftPanelPadding * 2f));
         }
 
         Quaternion test = Quaternion.identity;
@@ -1083,9 +1072,12 @@ namespace UMA
 
             Event currentEvent = Event.current;
             Vector2 mousePos = currentEvent.mousePosition;
-            bool mouseOverToolsWindow = VertexEditorToolsWindow.Contains(mousePos);
-            bool mouseOverVisibilityWindow = VisibleWearablesWindow.Contains(mousePos);
-            bool mouseOverAnyWindow = mouseOverToolsWindow || mouseOverVisibilityWindow;
+         bool mouseOverAnyWindow = leftPanelRect.Contains(mousePos);
+            // Let SceneView handle built-in focus shortcut (F) when the cursor is not over our UI.
+            if (!mouseOverAnyWindow && currentEvent.type == EventType.KeyDown && currentEvent.keyCode == KeyCode.F)
+            {
+                return;
+            }
 
             Handles.SetCamera(sceneView.camera);
             if (!rectSelect && Event.current.alt)
@@ -1570,161 +1562,212 @@ namespace UMA
         private void DrawGUIWindows(SceneView sceneView)
         {
             Handles.BeginGUI();
-
-            VertexEditorToolsWindow = GUI.Window(VertexEditorToolsWindowID, VertexEditorToolsWindow, DoToolsWindow, "Tools");
-
-            VisibleWearablesWindow = GUI.Window(VisibleWearablesID, VisibleWearablesWindow, (id) =>
+            GUILayout.BeginArea(leftPanelRect, EditorStyles.helpBox);
             {
+                float availableHeight = leftPanelRect.height - (LeftPanelPadding * 2f);
+                float maxVisibilityHeight = Mathf.Max(50f, availableHeight * 0.5f);
+                float visibilityHeight = GetVisibilitySectionHeightEstimate(maxVisibilityHeight);
+                float toolsHeight = Mathf.Max(50f, availableHeight - visibilityHeight);
+
+                Rect toolsRect = new Rect(0f, 0f, leftPanelRect.width, toolsHeight);
+                Rect visRect = new Rect(0f, toolsHeight, leftPanelRect.width, visibilityHeight);
+
+                GUILayout.BeginArea(toolsRect);
+                {
+                    VertexEditorScrollLocation = GUILayout.BeginScrollView(VertexEditorScrollLocation);
+                    DoToolsPanel();
+                    GUILayout.EndScrollView();
+                }
+                GUILayout.EndArea();
+
+                GUILayout.BeginArea(visRect);
+                {
+                    DrawVisibilityPanel(visRect.height);
+                }
+                GUILayout.EndArea();
+            }
+            GUILayout.EndArea();
 
 
-                VisibleWearablesLocation = GUILayout.BeginScrollView(VisibleWearablesLocation);
-                bool wasChanged = false;
-                bool wasRecipeChanged = false;
-                bool blockedHideAllSlots = false;
+            Handles.EndGUI();
+        }
+
+        private float GetVisibilitySectionHeightEstimate(float maxHeight)
+        {
+            float line = EditorGUIUtility.singleLineHeight;
+            float vSpacing = 2f;
+            float header = Mathf.Max(LeftPanelHeaderHeight, line);
+
+            int wearableCount = 0;
+            int slotCount = 0;
+            if (thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null)
+            {
                 var wearables = thisDCA.GetVisibleWearables();
+                wearableCount = wearables != null ? wearables.Count() : 0;
+                var slots = thisDCA.umaData.umaRecipe.slotDataList;
+                slotCount = slots != null ? slots.Length : 0;
+            }
 
-                if (EnsureAtLeastOneVisibleSlot())
+            // Approximate height for:
+            // - "Visibility" header
+            // - scroll view containing wearables + slots + button + optional help box
+            float scrollContentLines = 0f;
+            scrollContentLines += 1f; // "Visible Wearables" header
+            scrollContentLines += wearableCount;
+            scrollContentLines += 1f; // "Visible Slots" header
+            scrollContentLines += slotCount;
+            scrollContentLines += 1.5f; // spacing + invert button
+            scrollContentLines += 2f; // safety margin / possible helpbox
+
+            float estimated = header + ((scrollContentLines * (line + vSpacing)) + (LeftPanelPadding * 2f));
+            return Mathf.Clamp(estimated, 50f, maxHeight);
+        }
+
+        private void DoToolsPanel()
+        {
+            GUILayout.Label("Tools", EditorStyles.boldLabel);
+            DoToolsWindow(VertexEditorToolsWindowID);
+        }
+
+      private void DrawVisibilityPanel(float availableHeight)
+        {
+            GUILayout.Label("Visibility", EditorStyles.boldLabel);
+
+            // Fill the remainder of the visibility section with the scroll view.
+            float headerHeight = Mathf.Max(LeftPanelHeaderHeight, EditorGUIUtility.singleLineHeight);
+            float scrollHeight = Mathf.Max(0f, availableHeight - headerHeight);
+            VisibleWearablesLocation = GUILayout.BeginScrollView(VisibleWearablesLocation, GUILayout.Height(scrollHeight));
+            bool wasChanged = false;
+            bool wasRecipeChanged = false;
+            bool blockedHideAllSlots = false;
+            var wearables = thisDCA.GetVisibleWearables();
+
+            if (EnsureAtLeastOneVisibleSlot())
+            {
+                wasChanged = true;
+            }
+
+            GUILayout.Label("Visible Wearables", EditorStyles.boldLabel);
+            foreach (var wearable in wearables)
+            {
+                GUILayout.BeginHorizontal();
+                bool wasVisible = wearable.disabled;
+                wearable.disabled = !GUILayout.Toggle(!wearable.disabled, string.Empty, GUILayout.Width(24));
+                if (wasVisible != wearable.disabled)
+                {
+                    wasRecipeChanged = true;
+                }
+                GUILayout.Label(wearable.name);
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.Space(10);
+            GUILayout.Label("Visible Slots", EditorStyles.boldLabel);
+            int visibleSlotCount = GetVisibleSlotCount();
+            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+            {
+                if (slot == null)
+                {
+                    continue;
+                }
+                GUILayout.BeginHorizontal();
+                bool wasDisabled = slot.Suppressed;
+                bool desiredVisible = GUILayout.Toggle(!slot.Suppressed, string.Empty, GUILayout.Width(24));
+                bool desiredSuppressed = !desiredVisible;
+
+                if (desiredSuppressed && !slot.Suppressed && visibleSlotCount <= 1)
+                {
+                    desiredSuppressed = false;
+                    blockedHideAllSlots = true;
+                }
+
+                slot.Suppressed = desiredSuppressed;
+                if (slot.Suppressed != wasDisabled)
                 {
                     wasChanged = true;
+                    visibleSlotCount += slot.Suppressed ? -1 : 1;
                 }
+                if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
+                {
+                    editAdjustment = null;
+                }
+                string label = slot.slotName;
+                if (label.Length > 27)
+                {
+                    label = label.Substring(0, 24) + "...";
+                }
+                if (GUILayout.Button(label, EditorStyles.label))
+                {
+                    slot.Suppressed = !slot.Suppressed;
+                    wasChanged = true;
+                    visibleSlotCount += slot.Suppressed ? -1 : 1;
+                    if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
+                    {
+                        editAdjustment = null;
+                    }
+                }
+                GUILayout.EndHorizontal();
+            }
 
-                GUILayout.Label("Visible Wearables", EditorStyles.boldLabel);
+            GUILayout.Space(8);
+            if (GUILayout.Button("Invert Visiblity", EditorStyles.miniButton))
+            {
                 foreach (var wearable in wearables)
                 {
-                    GUILayout.BeginHorizontal();
-                    bool wasVisible = wearable.disabled;
-                    wearable.disabled = !GUILayout.Toggle(!wearable.disabled, "", GUILayout.Width(24));
-                    if (wasVisible != wearable.disabled)
-                    {
-                        wasRecipeChanged = true;
-                    }
-                    GUILayout.Label(wearable.name);
-                    GUILayout.EndHorizontal();
+                    wearable.disabled = !wearable.disabled;
+                    wasRecipeChanged = true;
                 }
-                GUILayout.Space(10);
-                GUILayout.Label("Visible Slots", EditorStyles.boldLabel);
-                int visibleSlotCount = GetVisibleSlotCount();
+
+                int totalSlots = 0;
+                foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+                {
+                    if (slot != null)
+                    {
+                        totalSlots++;
+                    }
+                }
+
+                if (totalSlots > 0 && (totalSlots - visibleSlotCount) == 0)
+                {
+                    blockedHideAllSlots = true;
+                }
+
                 foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
                 {
                     if (slot == null)
                     {
                         continue;
                     }
-                    GUILayout.BeginHorizontal();
-                    bool wasDisabled = slot.Suppressed;
-                    bool desiredVisible = GUILayout.Toggle(!slot.Suppressed, "", GUILayout.Width(24));
-                    bool desiredSuppressed = !desiredVisible;
-
-                    if (desiredSuppressed && !slot.Suppressed && visibleSlotCount <= 1)
+                    if (blockedHideAllSlots)
                     {
-                        desiredSuppressed = false;
-                        blockedHideAllSlots = true;
+                        continue;
                     }
-
-                    slot.Suppressed = desiredSuppressed;
-                    //wasChanged = EditorGUI.EndChangeCheck();
-                    if (slot.Suppressed != wasDisabled)
+                    slot.Suppressed = !slot.Suppressed;
+                    wasChanged = true;
+                    if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
                     {
-                        wasChanged = true;
-                        visibleSlotCount += slot.Suppressed ? -1 : 1;
-                    }
-                    if (slot.Suppressed && editAdjustment != null)
-                    {
-                        if (editAdjustment.slotName == slot.slotName)
-                        {
-                            editAdjustment = null;
-                        }
-                    }
-                    if (GUILayout.Button(slot.slotName, EditorStyles.label))
-                    {
-                        slot.Suppressed = !slot.Suppressed;
-                        wasChanged = true;
-
-                        if (slot.Suppressed)
-                        {
-                            visibleSlotCount -= 1;
-                        }
-                        else
-                        {
-                            visibleSlotCount += 1;
-                        }
-
-                        if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
-                        {
-                            editAdjustment = null;
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-
-                }
-
-                GUILayout.Space(8);
-                if (GUILayout.Button("Invert Visiblity", EditorStyles.miniButton))
-                {
-                    foreach (var wearable in wearables)
-                    {
-                        wearable.disabled = !wearable.disabled;
-                        wasRecipeChanged = true;
-                    }
-
-                    int totalSlots = 0;
-                    foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
-                    {
-                        if (slot != null)
-                        {
-                            totalSlots++;
-                        }
-                    }
-
-                    if (totalSlots > 0 && (totalSlots - visibleSlotCount) == 0)
-                    {
-                        blockedHideAllSlots = true;
-                    }
-
-                    foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
-                    {
-                        if (slot == null)
-                        {
-                            continue;
-                        }
-
-                        if (blockedHideAllSlots)
-                        {
-                            continue;
-                        }
-
-                        slot.Suppressed = !slot.Suppressed;
-                        wasChanged = true;
-
-                        if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
-                        {
-                            editAdjustment = null;
-                        }
+                        editAdjustment = null;
                     }
                 }
+            }
 
-                if (blockedHideAllSlots)
-                {
-                    EditorGUILayout.HelpBox("At least one slot must remain visible.", MessageType.Warning);
-                }
+            if (blockedHideAllSlots)
+            {
+                EditorGUILayout.HelpBox("At least one slot must remain visible.", MessageType.Warning);
+            }
 
-              GUILayout.EndScrollView();
-                GUI.DragWindow(new Rect(0, 0, VisibleWearablesWindow.width, 20));
+            GUILayout.EndScrollView();
 
-                if (wasChanged)
-                {
-                    RebuildMesh(false);
-                    modifierEditor.Repaint();
-                }
-                if (wasRecipeChanged)
-                {
-                    RebuildMesh(true);
-                    modifierEditor.Repaint();
-                }
-            }, "Visibility");
-
-
-            Handles.EndGUI();
+            if (wasChanged)
+            {
+                RebuildMesh(false);
+                modifierEditor.Repaint();
+            }
+            if (wasRecipeChanged)
+            {
+                RebuildMesh(true);
+                modifierEditor.Repaint();
+            }
         }
 
         private Vector2 ToolsPos = new Vector2(0, 0);
@@ -2026,7 +2069,6 @@ namespace UMA
             GUILayout.Space(ToolWindowAreaHeight + 10);
             GUILayout.EndScrollView();
             // Define a small drag area so the rest of the window is NOT draggable
-            GUI.DragWindow(new Rect(0, 0, VertexEditorToolsWindow.width, 20));
         }
 
         private void CancelInteraction()
