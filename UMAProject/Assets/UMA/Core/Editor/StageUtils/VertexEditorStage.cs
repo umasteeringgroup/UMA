@@ -142,6 +142,8 @@ namespace UMA
         public Vector2 VisibleWearablesLocation = Vector2.zero;
         public Rect VisibleWearablesWindow = new Rect(10, 310, 250, 300);
         private Rect leftPanelRect;
+        private Vector2 lastSceneViewSize = Vector2.zero;
+        private float cachedVisibilityHeight = -1f;
 
         private MeshModifierEditor modifierEditor;
         public bool rectSelect = false;
@@ -249,7 +251,7 @@ namespace UMA
             bestHit = default;
             if (!phyScene.IsValid())
             {
-           return false;
+                return false;
             }
 
             var tempHits = new RaycastHit[32];
@@ -259,11 +261,15 @@ namespace UMA
                 return false;
             }
 
-            Array.Sort(tempHits, 0, hitCount, RaycastHitDistanceComparer.Instance);
+         Array.Sort(tempHits, 0, hitCount, RaycastHitDistanceComparer.Instance);
             for (int i = 0; i < hitCount; i++)
             {
                 RaycastHit hit = tempHits[i];
                 if (hit.collider == null)
+                {
+                    continue;
+                }
+                if (hit.collider.gameObject != VertexObject)
                 {
                     continue;
                 }
@@ -286,6 +292,49 @@ namespace UMA
                 }
 
                 hitsOtherSlot++;
+                bestHit = hit;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TryGetNearestHitSameSlot(Ray ray, float maxDistance, SlotData sourceSlot, out RaycastHit bestHit)
+        {
+            bestHit = default;
+            if (!phyScene.IsValid())
+            {
+                return false;
+            }
+
+            var tempHits = new RaycastHit[32];
+            int hitCount = phyScene.Raycast(ray.origin, ray.direction, tempHits, maxDistance);
+            if (hitCount <= 0)
+            {
+                return false;
+            }
+
+            Array.Sort(tempHits, 0, hitCount, RaycastHitDistanceComparer.Instance);
+            for (int i = 0; i < hitCount; i++)
+            {
+                RaycastHit hit = tempHits[i];
+                if (hit.collider == null)
+                {
+                    continue;
+                }
+                if (!PassFaceFilter(hit, ray.direction, raycastHitFaceFilter))
+                {
+                    continue;
+                }
+                SlotData hitSlot = GetSlotForTriangle(hit.triangleIndex);
+                if (hitSlot == null)
+                {
+                    continue;
+                }
+                if (hitSlot.slotName != sourceSlot.slotName)
+                {
+                    continue;
+                }
                 bestHit = hit;
                 return true;
             }
@@ -384,12 +433,6 @@ namespace UMA
         private void SelectByRaycast()
         {
             raycastDebugRays.Clear();
-            if (!phyScene.IsValid())
-            {
-                raycastStatusType = MessageType.Warning;
-                raycastStatusMessage = "Raycast skipped: physics scene is not initialized.";
-                return;
-            }
 
             if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
             {
@@ -420,36 +463,75 @@ namespace UMA
                 return;
             }
 
-            if (!raycastAddToSelection)
-            {
-                SelectedVertexes.Clear();
-            }
-
-            float maxDistance = raycastLength > 0f ? raycastLength : float.PositiveInfinity;
-            var verts = BakedMesh.vertices;
-            var normals = BakedMesh.normals;
-
             int sourceVertexCount = sourceSlot.asset != null && sourceSlot.asset.meshData != null
                 ? sourceSlot.asset.meshData.vertexCount
                 : 0;
 
             if (sourceVertexCount <= 0)
             {
+                raycastStatusType = MessageType.Warning;
+                raycastStatusMessage = "Raycast skipped: source slot has no vertices.";
                 return;
             }
 
-            int added = 0;
-            int hitsOtherSlot = 0;
-            int hitsSameSlot = 0;
-            int totalCasts = 0;
+            // Use pure CPU ray-triangle intersection - no Unity physics, 100% synchronous
+            SelectByRaycastCPU(sourceSlot, sourceVertexCount);
+        }
+
+        /// <summary>
+        /// Pure CPU ray-triangle intersection. No Unity physics, completely synchronous.
+        /// Builds triangle list from all slots EXCEPT sourceSlot, then tests rays against it.
+        /// </summary>
+        private void SelectByRaycastCPU(SlotData sourceSlot, int sourceVertexCount)
+        {
+            var verts = BakedMesh.vertices;
+            var normals = BakedMesh.normals;
+            var tris = BakedMesh.triangles;
+            float maxDistance = raycastLength > 0f ? raycastLength : float.MaxValue;
+
+            // Step 1: Build list of triangles that do NOT belong to sourceSlot
+            var otherTriangles = new List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)>();
+            int triangleCount = tris.Length / 3;
+
+            for (int t = 0; t < triangleCount; t++)
+            {
+                int i0 = tris[t * 3];
+                int i1 = tris[t * 3 + 1];
+                int i2 = tris[t * 3 + 2];
+
+                // Check if this triangle belongs to the source slot
+                if (TryGetSlotForBakedVertex(i0, out SlotData slot0, out _) && slot0.slotName == sourceSlot.slotName)
+                {
+                    continue; // Skip triangles from source slot
+                }
+
+                Vector3 v0 = VertexObject.transform.TransformPoint(verts[i0]);
+                Vector3 v1 = VertexObject.transform.TransformPoint(verts[i1]);
+                Vector3 v2 = VertexObject.transform.TransformPoint(verts[i2]);
+
+                // Calculate face normal
+                Vector3 edge1 = v1 - v0;
+                Vector3 edge2 = v2 - v0;
+                Vector3 faceNormal = Vector3.Cross(edge1, edge2).normalized;
+
+                otherTriangles.Add((v0, v1, v2, faceNormal));
+            }
+
+            if (otherTriangles.Count == 0)
+            {
+                raycastStatusType = MessageType.Warning;
+                raycastStatusMessage = "Raycast skipped: no other geometry to test against.";
+                return;
+            }
+
+            // Step 2: Gather ray origins and directions from source slot vertices
+            var rayData = new List<(int slotVertexIndex, Vector3 origin, Vector3 direction)>();
             for (int slotVertexIndex = 0; slotVertexIndex < sourceVertexCount; slotVertexIndex++)
             {
-                totalCasts++;
                 if (!TryGetVisibleBakedVertexIndex(sourceSlot, slotVertexIndex, out int bakedIndex))
                 {
                     continue;
                 }
-
                 if (bakedIndex < 0 || bakedIndex >= verts.Length)
                 {
                     continue;
@@ -457,52 +539,104 @@ namespace UMA
 
                 Vector3 originWorld = VertexObject.transform.TransformPoint(verts[bakedIndex]);
                 Vector3 dirWorld = Vector3.up;
-                if (bakedIndex >= 0 && bakedIndex < normals.Length)
+                if (bakedIndex < normals.Length)
                 {
                     Vector3 nWorld = VertexObject.transform.TransformDirection(normals[bakedIndex]).normalized;
                     dirWorld = raycastDirection == RaycastSelectDirection.Inward ? -nWorld : nWorld;
                 }
-
                 if (dirWorld.sqrMagnitude < 1e-8f)
                 {
                     continue;
                 }
 
-                // Offset slightly to avoid immediately hitting the originating triangle.
+                // Offset slightly to avoid self-intersection
                 Vector3 origin = originWorld + (dirWorld * 0.0005f);
-                Ray ray = new Ray(origin, dirWorld);
+                rayData.Add((slotVertexIndex, origin, dirWorld));
+            }
 
-                bool hitOther = TryGetNearestHitDifferentSlot(ray, maxDistance, sourceSlot, out _, ref hitsSameSlot, ref hitsOtherSlot);
+            if (rayData.Count == 0)
+            {
+                raycastStatusType = MessageType.Warning;
+                raycastStatusMessage = "Raycast skipped: no valid vertices found on source slot.";
+                return;
+            }
+
+            // Step 3: For each ray, test against all triangles (CPU ray-triangle intersection)
+            if (!raycastAddToSelection)
+            {
+                SelectedVertexes.Clear();
+            }
+
+            int added = 0;
+            int hits = 0;
+            int misses = 0;
+            int totalCasts = rayData.Count;
+
+            foreach (var (slotVertexIndex, origin, direction) in rayData)
+            {
+                bool hitSomething = false;
+                float closestT = maxDistance;
+
+                // Test against all "other" triangles
+                foreach (var (v0, v1, v2, faceNormal) in otherTriangles)
+                {
+                    if (RayTriangleIntersect(origin, direction, v0, v1, v2, out float t))
+                    {
+                        if (t > 0.0001f && t < closestT)
+                        {
+                            // Apply face filter
+                            if (raycastHitFaceFilter == RaycastHitFaceFilter.All)
+                            {
+                                hitSomething = true;
+                                closestT = t;
+                            }
+                            else
+                            {
+                                float dot = Vector3.Dot(faceNormal, direction);
+                                bool passFaceFilter = raycastHitFaceFilter == RaycastHitFaceFilter.TowardVertex
+                                    ? dot <= 0f
+                                    : dot >= 0f;
+                                if (passFaceFilter)
+                                {
+                                    hitSomething = true;
+                                    closestT = t;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (raycastDrawDebugRays && raycastDebugRays.Count < Mathf.Max(0, raycastDebugRayLimit))
                 {
                     raycastDebugRays.Add(new DebugRay()
                     {
-                        origin = ray.origin,
-                        direction = ray.direction,
+                        origin = origin,
+                        direction = direction,
                         length = maxDistance,
-                     hitOtherSlot = hitOther,
+                        hitOtherSlot = hitSomething,
                         time = Time.realtimeSinceStartup
                     });
                 }
 
-                if (!hitOther)
+                if (hitSomething)
                 {
-                    continue;
+                    hits++;
+                    if (GetSelectionIndex(sourceSlot, slotVertexIndex) < 0)
+                    {
+                        SelectedVertexes.Add(new VertexSelection()
+                        {
+                            vertexIndexOnSlot = slotVertexIndex,
+                            slot = sourceSlot,
+                            WorldPosition = origin,
+                            isActive = (currentNewVertexState == (int)newVertexState.Active)
+                        });
+                        added++;
+                    }
                 }
-
-                if (GetSelectionIndex(sourceSlot, slotVertexIndex) >= 0)
+                else
                 {
-                    continue;
+                    misses++;
                 }
-
-                SelectedVertexes.Add(new VertexSelection()
-                {
-                    vertexIndexOnSlot = slotVertexIndex,
-                    slot = sourceSlot,
-                    WorldPosition = originWorld,
-                    isActive = (currentNewVertexState == (int)newVertexState.Active)
-                });
-                added++;
             }
 
             if (added > 0)
@@ -511,8 +645,47 @@ namespace UMA
             }
 
             raycastStatusType = MessageType.Info;
-            string visibleSlots = visibleSelectFrom != null ? string.Join(", ", visibleSelectFrom) : "(null)";
-            raycastStatusMessage = $"Raycast complete\nCasts: {totalCasts}\nHit other slot: {hitsOtherSlot}, hit same slot: {hitsSameSlot}\nSelected: {added}\nVisible slots: {visibleSlots}";
+            raycastStatusMessage = $"CPU Raycast complete\nTriangles tested: {otherTriangles.Count}\nRays: {totalCasts}\nHits (occluded): {hits}\nMisses: {misses}\nSelected: {added}";
+        }
+
+        /// <summary>
+        /// Möller–Trumbore ray-triangle intersection algorithm.
+        /// Returns true if ray intersects triangle, with t = distance along ray.
+        /// </summary>
+        private static bool RayTriangleIntersect(Vector3 rayOrigin, Vector3 rayDir, Vector3 v0, Vector3 v1, Vector3 v2, out float t)
+        {
+            t = 0f;
+            const float EPSILON = 1e-8f;
+
+            Vector3 edge1 = v1 - v0;
+            Vector3 edge2 = v2 - v0;
+            Vector3 h = Vector3.Cross(rayDir, edge2);
+            float a = Vector3.Dot(edge1, h);
+
+            if (a > -EPSILON && a < EPSILON)
+            {
+                return false; // Ray is parallel to triangle
+            }
+
+            float f = 1.0f / a;
+            Vector3 s = rayOrigin - v0;
+            float u = f * Vector3.Dot(s, h);
+
+            if (u < 0.0f || u > 1.0f)
+            {
+                return false;
+            }
+
+            Vector3 q = Vector3.Cross(s, edge1);
+            float v = f * Vector3.Dot(rayDir, q);
+
+            if (v < 0.0f || u + v > 1.0f)
+            {
+                return false;
+            }
+
+            t = f * Vector3.Dot(edge2, q);
+            return t > EPSILON;
         }
 
         private void BeginSelectionUndoSnapshot(string actionName)
@@ -914,6 +1087,7 @@ namespace UMA
             HelpBoxStyle.wordWrap = true;
             //AssetDatabase.StartAssetEditing();
             thisDCA.GenerateSingleUMA();
+            cachedVisibilityHeight = -1f;
 
             return true;
         }
@@ -1566,7 +1740,11 @@ namespace UMA
             {
                 float availableHeight = leftPanelRect.height - (LeftPanelPadding * 2f);
                 float maxVisibilityHeight = Mathf.Max(50f, availableHeight * 0.5f);
-                float visibilityHeight = GetVisibilitySectionHeightEstimate(maxVisibilityHeight);
+               if (cachedVisibilityHeight < 0f)
+                {
+                    cachedVisibilityHeight = GetVisibilitySectionHeightEstimate(maxVisibilityHeight);
+                }
+                float visibilityHeight = Mathf.Min(cachedVisibilityHeight, maxVisibilityHeight);
                 float toolsHeight = Mathf.Max(50f, availableHeight - visibilityHeight);
 
                 Rect toolsRect = new Rect(0f, 0f, leftPanelRect.width, toolsHeight);

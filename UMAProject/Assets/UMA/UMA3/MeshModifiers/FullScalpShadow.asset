@@ -12,21 +12,4715 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3022e3cc0dfedfb46969c949a86882f3, type: 3}
   m_Name: FullScalpShadow
   m_EditorClassIdentifier: UMA_Core::UMA.MeshModifier
-  modifiers:
-  - ModifierName: Bulk Adjustment
+  splitDiagnostics: 
+  runtimeModifiers:
+  - ModifierName: Set Color (1)
     isTemporary: 0
     manuallyModified: 0
     keepAsIs: 0
-    SlotName: UMA30_Body_UDIM1003
+    SlotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
     DNAName: 
     Scale: 1
-    TemplateAdjustmentJSON: '{"vertexIndex":0,"weight":1.0,"_name":"Set Color","active":false,"slotName":"","color":{"r":0,"g":0,"b":0,"a":0}}'
-    AdjustmentType: UMA.VertexColorAdjustment, UMA_Core, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-    CollectionType: UMA.VertexColorAdjustmentCollection, UMA_Core, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
-    JsonAdjustments:
-    - '{"vertexIndex":499,"weight":1.0,"_name":"Set Color","active":true,"slotName":"UMA30_Body_UDIM1003","color":{"r":14,"g":14,"b":14,"a":255}}'
-  editorModifiers: []
-  AdHocAdjustmentJSON:
-  - '{"vertexIndex":499,"weight":1.0,"_name":"Set Color","active":true,"slotName":"UMA30_Body_UDIM1003","color":{"r":14,"g":14,"b":14,"a":255}}'
+    adjustments:
+      rid: 4600982924562531187
+  editorModifiers:
+  - ModifierName: Set Color (1)
+    isTemporary: 0
+    manuallyModified: 0
+    keepAsIs: 0
+    SlotName: 
+    DNAName: 
+    Scale: 1
+    adjustments:
+      rid: 4600982924562531188
+  references:
+    version: 2
+    RefIds:
+    - rid: 4600982924562531187
+      type: {class: VertexColorAdjustmentCollection, ns: UMA, asm: UMA_Core}
+      data:
+        vertexAdjustments:
+        - rid: 4600982924562531189
+        - rid: 4600982924562531190
+        - rid: 4600982924562531191
+        - rid: 4600982924562531192
+        - rid: 4600982924562531193
+        - rid: 4600982924562531194
+        - rid: 4600982924562531195
+        - rid: 4600982924562531196
+        - rid: 4600982924562531197
+        - rid: 4600982924562531198
+        - rid: 4600982924562531199
+        - rid: 4600982924562531200
+        - rid: 4600982924562531201
+        - rid: 4600982924562531202
+        - rid: 4600982924562531203
+        - rid: 4600982924562531204
+        - rid: 4600982924562531205
+        - rid: 4600982924562531206
+        - rid: 4600982924562531207
+        - rid: 4600982924562531208
+        - rid: 4600982924562531209
+        - rid: 4600982924562531210
+        - rid: 4600982924562531211
+        - rid: 4600982924562531212
+        - rid: 4600982924562531213
+        - rid: 4600982924562531214
+        - rid: 4600982924562531215
+        - rid: 4600982924562531216
+        - rid: 4600982924562531217
+        - rid: 4600982924562531218
+        - rid: 4600982924562531219
+        - rid: 4600982924562531220
+        - rid: 4600982924562531221
+        - rid: 4600982924562531222
+        - rid: 4600982924562531223
+        - rid: 4600982924562531224
+        - rid: 4600982924562531225
+        - rid: 4600982924562531226
+        - rid: 4600982924562531227
+        - rid: 4600982924562531228
+        - rid: 4600982924562531229
+        - rid: 4600982924562531230
+        - rid: 4600982924562531231
+        - rid: 4600982924562531232
+        - rid: 4600982924562531233
+        - rid: 4600982924562531234
+        - rid: 4600982924562531235
+        - rid: 4600982924562531236
+        - rid: 4600982924562531237
+        - rid: 4600982924562531238
+        - rid: 4600982924562531239
+        - rid: 4600982924562531240
+        - rid: 4600982924562531241
+        - rid: 4600982924562531242
+        - rid: 4600982924562531243
+        - rid: 4600982924562531244
+        - rid: 4600982924562531245
+        - rid: 4600982924562531246
+        - rid: 4600982924562531247
+        - rid: 4600982924562531248
+        - rid: 4600982924562531249
+        - rid: 4600982924562531250
+        - rid: 4600982924562531251
+        - rid: 4600982924562531252
+        - rid: 4600982924562531253
+        - rid: 4600982924562531254
+        - rid: 4600982924562531255
+        - rid: 4600982924562531256
+        - rid: 4600982924562531257
+        - rid: 4600982924562531258
+        - rid: 4600982924562531259
+        - rid: 4600982924562531260
+        - rid: 4600982924562531261
+        - rid: 4600982924562531262
+        - rid: 4600982924562531263
+        - rid: 4600982924562531264
+        - rid: 4600982924562531265
+        - rid: 4600982924562531266
+        - rid: 4600982924562531267
+        - rid: 4600982924562531268
+        - rid: 4600982924562531269
+        - rid: 4600982924562531270
+        - rid: 4600982924562531271
+        - rid: 4600982924562531272
+        - rid: 4600982924562531273
+        - rid: 4600982924562531274
+        - rid: 4600982924562531275
+        - rid: 4600982924562531276
+        - rid: 4600982924562531277
+        - rid: 4600982924562531278
+        - rid: 4600982924562531279
+        - rid: 4600982924562531280
+        - rid: 4600982924562531281
+        - rid: 4600982924562531282
+        - rid: 4600982924562531283
+        - rid: 4600982924562531284
+        - rid: 4600982924562531285
+        - rid: 4600982924562531286
+        - rid: 4600982924562531287
+        - rid: 4600982924562531288
+        - rid: 4600982924562531289
+        - rid: 4600982924562531290
+        - rid: 4600982924562531291
+        - rid: 4600982924562531292
+        - rid: 4600982924562531293
+        - rid: 4600982924562531294
+        - rid: 4600982924562531295
+        - rid: 4600982924562531296
+        - rid: 4600982924562531297
+        - rid: 4600982924562531298
+        - rid: 4600982924562531299
+        - rid: 4600982924562531300
+        - rid: 4600982924562531301
+        - rid: 4600982924562531302
+        - rid: 4600982924562531303
+        - rid: 4600982924562531304
+        - rid: 4600982924562531305
+        - rid: 4600982924562531306
+        - rid: 4600982924562531307
+        - rid: 4600982924562531308
+        - rid: 4600982924562531309
+        - rid: 4600982924562531310
+        - rid: 4600982924562531311
+        - rid: 4600982924562531312
+        - rid: 4600982924562531313
+        - rid: 4600982924562531314
+        - rid: 4600982924562531315
+        - rid: 4600982924562531316
+        - rid: 4600982924562531317
+        - rid: 4600982924562531318
+        - rid: 4600982924562531319
+        - rid: 4600982924562531320
+        - rid: 4600982924562531321
+        - rid: 4600982924562531322
+        - rid: 4600982924562531323
+        - rid: 4600982924562531324
+        - rid: 4600982924562531325
+        - rid: 4600982924562531326
+        - rid: 4600982924562531327
+        - rid: 4600982924562531328
+        - rid: 4600982924562531329
+        - rid: 4600982924562531330
+        - rid: 4600982924562531331
+        - rid: 4600982924562531332
+        - rid: 4600982924562531333
+        - rid: 4600982924562531334
+        - rid: 4600982924562531335
+        - rid: 4600982924562531336
+        - rid: 4600982924562531337
+        - rid: 4600982924562531338
+        - rid: 4600982924562531339
+        - rid: 4600982924562531340
+        - rid: 4600982924562531341
+        - rid: 4600982924562531342
+        - rid: 4600982924562531343
+        - rid: 4600982924562531344
+        - rid: 4600982924562531345
+        - rid: 4600982924562531346
+        - rid: 4600982924562531347
+        - rid: 4600982924562531348
+        - rid: 4600982924562531349
+        - rid: 4600982924562531350
+        - rid: 4600982924562531351
+        - rid: 4600982924562531352
+        - rid: 4600982924562531353
+        - rid: 4600982924562531354
+        - rid: 4600982924562531355
+        - rid: 4600982924562531356
+        - rid: 4600982924562531357
+        - rid: 4600982924562531358
+        - rid: 4600982924562531359
+        - rid: 4600982924562531360
+        - rid: 4600982924562531361
+        - rid: 4600982924562531362
+        - rid: 4600982924562531363
+        - rid: 4600982924562531364
+        - rid: 4600982924562531365
+        - rid: 4600982924562531366
+        - rid: 4600982924562531367
+        - rid: 4600982924562531368
+        - rid: 4600982924562531369
+        - rid: 4600982924562531370
+        - rid: 4600982924562531371
+        - rid: 4600982924562531372
+        - rid: 4600982924562531373
+        - rid: 4600982924562531374
+        - rid: 4600982924562531375
+        - rid: 4600982924562531376
+        - rid: 4600982924562531377
+        - rid: 4600982924562531378
+        - rid: 4600982924562531379
+        - rid: 4600982924562531380
+        - rid: 4600982924562531381
+        - rid: 4600982924562531382
+        - rid: 4600982924562531383
+        - rid: 4600982924562531384
+        - rid: 4600982924562531385
+        - rid: 4600982924562531386
+        - rid: 4600982924562531387
+        - rid: 4600982924562531388
+        - rid: 4600982924562531389
+        - rid: 4600982924562531390
+        - rid: 4600982924562531391
+        - rid: 4600982924562531392
+        - rid: 4600982924562531393
+        - rid: 4600982924562531394
+        - rid: 4600982924562531395
+        - rid: 4600982924562531396
+        - rid: 4600982924562531397
+        - rid: 4600982924562531398
+        - rid: 4600982924562531399
+        - rid: 4600982924562531400
+        - rid: 4600982924562531401
+        - rid: 4600982924562531402
+        - rid: 4600982924562531403
+        - rid: 4600982924562531404
+        - rid: 4600982924562531405
+        - rid: 4600982924562531406
+        - rid: 4600982924562531407
+        - rid: 4600982924562531408
+        - rid: 4600982924562531409
+        - rid: 4600982924562531410
+        - rid: 4600982924562531411
+        - rid: 4600982924562531412
+        - rid: 4600982924562531413
+        - rid: 4600982924562531414
+        - rid: 4600982924562531415
+        - rid: 4600982924562531416
+        - rid: 4600982924562531417
+        - rid: 4600982924562531418
+        - rid: 4600982924562531419
+        - rid: 4600982924562531420
+        - rid: 4600982924562531421
+        - rid: 4600982924562531422
+        - rid: 4600982924562531423
+        - rid: 4600982924562531424
+        - rid: 4600982924562531425
+        - rid: 4600982924562531426
+        - rid: 4600982924562531427
+        - rid: 4600982924562531428
+        - rid: 4600982924562531429
+        - rid: 4600982924562531430
+        - rid: 4600982924562531431
+        - rid: 4600982924562531432
+        - rid: 4600982924562531433
+        - rid: 4600982924562531434
+        - rid: 4600982924562531435
+        - rid: 4600982924562531436
+        - rid: 4600982924562531437
+        - rid: 4600982924562531438
+        - rid: 4600982924562531439
+        - rid: 4600982924562531440
+        - rid: 4600982924562531441
+        - rid: 4600982924562531442
+        - rid: 4600982924562531443
+        - rid: 4600982924562531444
+        - rid: 4600982924562531445
+        - rid: 4600982924562531446
+        - rid: 4600982924562531447
+        - rid: 4600982924562531448
+        - rid: 4600982924562531449
+        - rid: 4600982924562531450
+        - rid: 4600982924562531451
+        - rid: 4600982924562531452
+        - rid: 4600982924562531453
+        - rid: 4600982924562531454
+        - rid: 4600982924562531455
+        - rid: 4600982924562531456
+        - rid: 4600982924562531457
+        - rid: 4600982924562531458
+        - rid: 4600982924562531459
+        - rid: 4600982924562531460
+        - rid: 4600982924562531461
+        - rid: 4600982924562531462
+        - rid: 4600982924562531463
+        - rid: 4600982924562531464
+        - rid: 4600982924562531465
+        - rid: 4600982924562531466
+        - rid: 4600982924562531467
+        - rid: 4600982924562531468
+        - rid: 4600982924562531469
+        - rid: 4600982924562531470
+        - rid: 4600982924562531471
+        - rid: 4600982924562531472
+        - rid: 4600982924562531473
+        - rid: 4600982924562531474
+        - rid: 4600982924562531475
+        - rid: 4600982924562531476
+        - rid: 4600982924562531477
+        - rid: 4600982924562531478
+        - rid: 4600982924562531479
+        - rid: 4600982924562531480
+        - rid: 4600982924562531481
+        - rid: 4600982924562531482
+        - rid: 4600982924562531483
+        - rid: 4600982924562531484
+        - rid: 4600982924562531485
+        - rid: 4600982924562531486
+        - rid: 4600982924562531487
+        - rid: 4600982924562531488
+        - rid: 4600982924562531489
+        - rid: 4600982924562531490
+        - rid: 4600982924562531491
+        - rid: 4600982924562531492
+        - rid: 4600982924562531493
+        - rid: 4600982924562531494
+        - rid: 4600982924562531495
+        - rid: 4600982924562531496
+        - rid: 4600982924562531497
+        - rid: 4600982924562531498
+        - rid: 4600982924562531499
+        - rid: 4600982924562531500
+        - rid: 4600982924562531501
+        - rid: 4600982924562531502
+        - rid: 4600982924562531503
+        - rid: 4600982924562531504
+        - rid: 4600982924562531505
+        - rid: 4600982924562531506
+        - rid: 4600982924562531507
+        - rid: 4600982924562531508
+        - rid: 4600982924562531509
+        - rid: 4600982924562531510
+        - rid: 4600982924562531511
+        - rid: 4600982924562531512
+        - rid: 4600982924562531513
+        - rid: 4600982924562531514
+        - rid: 4600982924562531515
+        - rid: 4600982924562531516
+        - rid: 4600982924562531517
+        - rid: 4600982924562531518
+        - rid: 4600982924562531519
+        - rid: 4600982924562531520
+        - rid: 4600982924562531521
+        - rid: 4600982924562531522
+        - rid: 4600982924562531523
+        - rid: 4600982924562531524
+        - rid: 4600982924562531525
+        - rid: 4600982924562531526
+        - rid: 4600982924562531527
+        - rid: 4600982924562531528
+        - rid: 4600982924562531529
+        - rid: 4600982924562531530
+        - rid: 4600982924562531531
+        - rid: 4600982924562531532
+        - rid: 4600982924562531533
+        - rid: 4600982924562531534
+        - rid: 4600982924562531535
+        - rid: 4600982924562531536
+        - rid: 4600982924562531537
+        - rid: 4600982924562531538
+        - rid: 4600982924562531539
+        - rid: 4600982924562531540
+        - rid: 4600982924562531541
+        - rid: 4600982924562531542
+        - rid: 4600982924562531543
+        - rid: 4600982924562531544
+        - rid: 4600982924562531545
+        - rid: 4600982924562531546
+        - rid: 4600982924562531547
+        - rid: 4600982924562531548
+    - rid: 4600982924562531188
+      type: {class: VertexColorAdjustmentCollection, ns: UMA, asm: UMA_Core}
+      data:
+        vertexAdjustments:
+        - rid: 4600982924562531189
+        - rid: 4600982924562531190
+        - rid: 4600982924562531191
+        - rid: 4600982924562531192
+        - rid: 4600982924562531193
+        - rid: 4600982924562531194
+        - rid: 4600982924562531195
+        - rid: 4600982924562531196
+        - rid: 4600982924562531197
+        - rid: 4600982924562531198
+        - rid: 4600982924562531199
+        - rid: 4600982924562531200
+        - rid: 4600982924562531201
+        - rid: 4600982924562531202
+        - rid: 4600982924562531203
+        - rid: 4600982924562531204
+        - rid: 4600982924562531205
+        - rid: 4600982924562531206
+        - rid: 4600982924562531207
+        - rid: 4600982924562531208
+        - rid: 4600982924562531209
+        - rid: 4600982924562531210
+        - rid: 4600982924562531211
+        - rid: 4600982924562531212
+        - rid: 4600982924562531213
+        - rid: 4600982924562531214
+        - rid: 4600982924562531215
+        - rid: 4600982924562531216
+        - rid: 4600982924562531217
+        - rid: 4600982924562531218
+        - rid: 4600982924562531219
+        - rid: 4600982924562531220
+        - rid: 4600982924562531221
+        - rid: 4600982924562531222
+        - rid: 4600982924562531223
+        - rid: 4600982924562531224
+        - rid: 4600982924562531225
+        - rid: 4600982924562531226
+        - rid: 4600982924562531227
+        - rid: 4600982924562531228
+        - rid: 4600982924562531229
+        - rid: 4600982924562531230
+        - rid: 4600982924562531231
+        - rid: 4600982924562531232
+        - rid: 4600982924562531233
+        - rid: 4600982924562531234
+        - rid: 4600982924562531235
+        - rid: 4600982924562531236
+        - rid: 4600982924562531237
+        - rid: 4600982924562531238
+        - rid: 4600982924562531239
+        - rid: 4600982924562531240
+        - rid: 4600982924562531241
+        - rid: 4600982924562531242
+        - rid: 4600982924562531243
+        - rid: 4600982924562531244
+        - rid: 4600982924562531245
+        - rid: 4600982924562531246
+        - rid: 4600982924562531247
+        - rid: 4600982924562531248
+        - rid: 4600982924562531249
+        - rid: 4600982924562531250
+        - rid: 4600982924562531251
+        - rid: 4600982924562531252
+        - rid: 4600982924562531253
+        - rid: 4600982924562531254
+        - rid: 4600982924562531255
+        - rid: 4600982924562531256
+        - rid: 4600982924562531257
+        - rid: 4600982924562531258
+        - rid: 4600982924562531259
+        - rid: 4600982924562531260
+        - rid: 4600982924562531261
+        - rid: 4600982924562531262
+        - rid: 4600982924562531263
+        - rid: 4600982924562531264
+        - rid: 4600982924562531265
+        - rid: 4600982924562531266
+        - rid: 4600982924562531267
+        - rid: 4600982924562531268
+        - rid: 4600982924562531269
+        - rid: 4600982924562531270
+        - rid: 4600982924562531271
+        - rid: 4600982924562531272
+        - rid: 4600982924562531273
+        - rid: 4600982924562531274
+        - rid: 4600982924562531275
+        - rid: 4600982924562531276
+        - rid: 4600982924562531277
+        - rid: 4600982924562531278
+        - rid: 4600982924562531279
+        - rid: 4600982924562531280
+        - rid: 4600982924562531281
+        - rid: 4600982924562531282
+        - rid: 4600982924562531283
+        - rid: 4600982924562531284
+        - rid: 4600982924562531285
+        - rid: 4600982924562531286
+        - rid: 4600982924562531287
+        - rid: 4600982924562531288
+        - rid: 4600982924562531289
+        - rid: 4600982924562531290
+        - rid: 4600982924562531291
+        - rid: 4600982924562531292
+        - rid: 4600982924562531293
+        - rid: 4600982924562531294
+        - rid: 4600982924562531295
+        - rid: 4600982924562531296
+        - rid: 4600982924562531297
+        - rid: 4600982924562531298
+        - rid: 4600982924562531299
+        - rid: 4600982924562531300
+        - rid: 4600982924562531301
+        - rid: 4600982924562531302
+        - rid: 4600982924562531303
+        - rid: 4600982924562531304
+        - rid: 4600982924562531305
+        - rid: 4600982924562531306
+        - rid: 4600982924562531307
+        - rid: 4600982924562531308
+        - rid: 4600982924562531309
+        - rid: 4600982924562531310
+        - rid: 4600982924562531311
+        - rid: 4600982924562531312
+        - rid: 4600982924562531313
+        - rid: 4600982924562531314
+        - rid: 4600982924562531315
+        - rid: 4600982924562531316
+        - rid: 4600982924562531317
+        - rid: 4600982924562531318
+        - rid: 4600982924562531319
+        - rid: 4600982924562531320
+        - rid: 4600982924562531321
+        - rid: 4600982924562531322
+        - rid: 4600982924562531323
+        - rid: 4600982924562531324
+        - rid: 4600982924562531325
+        - rid: 4600982924562531326
+        - rid: 4600982924562531327
+        - rid: 4600982924562531328
+        - rid: 4600982924562531329
+        - rid: 4600982924562531330
+        - rid: 4600982924562531331
+        - rid: 4600982924562531332
+        - rid: 4600982924562531333
+        - rid: 4600982924562531334
+        - rid: 4600982924562531335
+        - rid: 4600982924562531336
+        - rid: 4600982924562531337
+        - rid: 4600982924562531338
+        - rid: 4600982924562531339
+        - rid: 4600982924562531340
+        - rid: 4600982924562531341
+        - rid: 4600982924562531342
+        - rid: 4600982924562531343
+        - rid: 4600982924562531344
+        - rid: 4600982924562531345
+        - rid: 4600982924562531346
+        - rid: 4600982924562531347
+        - rid: 4600982924562531348
+        - rid: 4600982924562531349
+        - rid: 4600982924562531350
+        - rid: 4600982924562531351
+        - rid: 4600982924562531352
+        - rid: 4600982924562531353
+        - rid: 4600982924562531354
+        - rid: 4600982924562531355
+        - rid: 4600982924562531356
+        - rid: 4600982924562531357
+        - rid: 4600982924562531358
+        - rid: 4600982924562531359
+        - rid: 4600982924562531360
+        - rid: 4600982924562531361
+        - rid: 4600982924562531362
+        - rid: 4600982924562531363
+        - rid: 4600982924562531364
+        - rid: 4600982924562531365
+        - rid: 4600982924562531366
+        - rid: 4600982924562531367
+        - rid: 4600982924562531368
+        - rid: 4600982924562531369
+        - rid: 4600982924562531370
+        - rid: 4600982924562531371
+        - rid: 4600982924562531372
+        - rid: 4600982924562531373
+        - rid: 4600982924562531374
+        - rid: 4600982924562531375
+        - rid: 4600982924562531376
+        - rid: 4600982924562531377
+        - rid: 4600982924562531378
+        - rid: 4600982924562531379
+        - rid: 4600982924562531380
+        - rid: 4600982924562531381
+        - rid: 4600982924562531382
+        - rid: 4600982924562531383
+        - rid: 4600982924562531384
+        - rid: 4600982924562531385
+        - rid: 4600982924562531386
+        - rid: 4600982924562531387
+        - rid: 4600982924562531388
+        - rid: 4600982924562531389
+        - rid: 4600982924562531390
+        - rid: 4600982924562531391
+        - rid: 4600982924562531392
+        - rid: 4600982924562531393
+        - rid: 4600982924562531394
+        - rid: 4600982924562531395
+        - rid: 4600982924562531396
+        - rid: 4600982924562531397
+        - rid: 4600982924562531398
+        - rid: 4600982924562531399
+        - rid: 4600982924562531400
+        - rid: 4600982924562531401
+        - rid: 4600982924562531402
+        - rid: 4600982924562531403
+        - rid: 4600982924562531404
+        - rid: 4600982924562531405
+        - rid: 4600982924562531406
+        - rid: 4600982924562531407
+        - rid: 4600982924562531408
+        - rid: 4600982924562531409
+        - rid: 4600982924562531410
+        - rid: 4600982924562531411
+        - rid: 4600982924562531412
+        - rid: 4600982924562531413
+        - rid: 4600982924562531414
+        - rid: 4600982924562531415
+        - rid: 4600982924562531416
+        - rid: 4600982924562531417
+        - rid: 4600982924562531418
+        - rid: 4600982924562531419
+        - rid: 4600982924562531420
+        - rid: 4600982924562531421
+        - rid: 4600982924562531422
+        - rid: 4600982924562531423
+        - rid: 4600982924562531424
+        - rid: 4600982924562531425
+        - rid: 4600982924562531426
+        - rid: 4600982924562531427
+        - rid: 4600982924562531428
+        - rid: 4600982924562531429
+        - rid: 4600982924562531430
+        - rid: 4600982924562531431
+        - rid: 4600982924562531432
+        - rid: 4600982924562531433
+        - rid: 4600982924562531434
+        - rid: 4600982924562531435
+        - rid: 4600982924562531436
+        - rid: 4600982924562531437
+        - rid: 4600982924562531438
+        - rid: 4600982924562531439
+        - rid: 4600982924562531440
+        - rid: 4600982924562531441
+        - rid: 4600982924562531442
+        - rid: 4600982924562531443
+        - rid: 4600982924562531444
+        - rid: 4600982924562531445
+        - rid: 4600982924562531446
+        - rid: 4600982924562531447
+        - rid: 4600982924562531448
+        - rid: 4600982924562531449
+        - rid: 4600982924562531450
+        - rid: 4600982924562531451
+        - rid: 4600982924562531452
+        - rid: 4600982924562531453
+        - rid: 4600982924562531454
+        - rid: 4600982924562531455
+        - rid: 4600982924562531456
+        - rid: 4600982924562531457
+        - rid: 4600982924562531458
+        - rid: 4600982924562531459
+        - rid: 4600982924562531460
+        - rid: 4600982924562531461
+        - rid: 4600982924562531462
+        - rid: 4600982924562531463
+        - rid: 4600982924562531464
+        - rid: 4600982924562531465
+        - rid: 4600982924562531466
+        - rid: 4600982924562531467
+        - rid: 4600982924562531468
+        - rid: 4600982924562531469
+        - rid: 4600982924562531470
+        - rid: 4600982924562531471
+        - rid: 4600982924562531472
+        - rid: 4600982924562531473
+        - rid: 4600982924562531474
+        - rid: 4600982924562531475
+        - rid: 4600982924562531476
+        - rid: 4600982924562531477
+        - rid: 4600982924562531478
+        - rid: 4600982924562531479
+        - rid: 4600982924562531480
+        - rid: 4600982924562531481
+        - rid: 4600982924562531482
+        - rid: 4600982924562531483
+        - rid: 4600982924562531484
+        - rid: 4600982924562531485
+        - rid: 4600982924562531486
+        - rid: 4600982924562531487
+        - rid: 4600982924562531488
+        - rid: 4600982924562531489
+        - rid: 4600982924562531490
+        - rid: 4600982924562531491
+        - rid: 4600982924562531492
+        - rid: 4600982924562531493
+        - rid: 4600982924562531494
+        - rid: 4600982924562531495
+        - rid: 4600982924562531496
+        - rid: 4600982924562531497
+        - rid: 4600982924562531498
+        - rid: 4600982924562531499
+        - rid: 4600982924562531500
+        - rid: 4600982924562531501
+        - rid: 4600982924562531502
+        - rid: 4600982924562531503
+        - rid: 4600982924562531504
+        - rid: 4600982924562531505
+        - rid: 4600982924562531506
+        - rid: 4600982924562531507
+        - rid: 4600982924562531508
+        - rid: 4600982924562531509
+        - rid: 4600982924562531510
+        - rid: 4600982924562531511
+        - rid: 4600982924562531512
+        - rid: 4600982924562531513
+        - rid: 4600982924562531514
+        - rid: 4600982924562531515
+        - rid: 4600982924562531516
+        - rid: 4600982924562531517
+        - rid: 4600982924562531518
+        - rid: 4600982924562531519
+        - rid: 4600982924562531520
+        - rid: 4600982924562531521
+        - rid: 4600982924562531522
+        - rid: 4600982924562531523
+        - rid: 4600982924562531524
+        - rid: 4600982924562531525
+        - rid: 4600982924562531526
+        - rid: 4600982924562531527
+        - rid: 4600982924562531528
+        - rid: 4600982924562531529
+        - rid: 4600982924562531530
+        - rid: 4600982924562531531
+        - rid: 4600982924562531532
+        - rid: 4600982924562531533
+        - rid: 4600982924562531534
+        - rid: 4600982924562531535
+        - rid: 4600982924562531536
+        - rid: 4600982924562531537
+        - rid: 4600982924562531538
+        - rid: 4600982924562531539
+        - rid: 4600982924562531540
+        - rid: 4600982924562531541
+        - rid: 4600982924562531542
+        - rid: 4600982924562531543
+        - rid: 4600982924562531544
+        - rid: 4600982924562531545
+        - rid: 4600982924562531546
+        - rid: 4600982924562531547
+        - rid: 4600982924562531548
+    - rid: 4600982924562531189
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 581
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531190
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 600
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531191
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 599
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531192
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 712
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531193
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 710
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531194
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 711
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531195
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 697
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531196
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 696
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531197
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 704
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531198
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 692
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531199
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 680
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531200
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 572
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531201
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 602
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531202
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 601
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531203
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 609
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531204
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 627
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531205
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 709
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531206
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 708
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531207
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 707
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531208
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 705
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531209
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 666
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531210
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 671
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531211
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 669
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531212
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 652
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531213
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 651
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531214
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 644
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531215
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 646
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531216
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 653
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531217
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 665
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531218
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 645
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531219
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 637
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531220
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 648
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531221
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 650
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531222
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 659
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531223
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 636
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531224
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 640
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531225
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 649
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531226
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 656
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531227
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 706
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531228
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 642
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531229
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 641
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531230
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 633
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531231
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 631
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531232
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 558
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531233
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 564
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531234
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 623
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531235
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 632
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531236
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 629
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531237
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 635
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531238
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 626
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531239
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 630
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531240
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 628
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531241
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 620
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531242
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 621
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531243
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 559
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531244
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 550
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531245
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 543
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531246
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 545
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531247
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 618
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531248
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 617
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531249
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 619
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531250
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 622
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531251
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 624
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531252
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 625
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531253
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 608
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531254
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 607
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531255
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 615
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531256
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 613
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531257
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 611
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531258
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 612
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531259
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 562
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531260
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 547
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531261
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 556
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531262
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 606
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531263
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 605
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531264
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 604
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531265
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 567
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531266
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 551
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531267
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 565
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531268
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 634
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531269
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 638
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531270
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 639
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531271
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 643
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531272
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 501
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531273
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 647
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531274
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 655
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531275
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 657
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531276
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 654
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531277
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 658
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531278
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 661
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531279
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 505
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531280
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 491
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531281
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 493
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531282
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 487
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531283
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 442
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531284
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 437
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531285
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 494
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531286
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 496
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531287
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 503
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531288
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 510
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531289
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 504
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531290
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 495
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531291
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 492
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531292
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 497
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531293
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 500
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531294
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 498
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531295
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 499
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531296
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 506
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531297
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 511
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531298
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 502
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531299
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 519
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531300
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 520
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531301
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 517
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531302
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 516
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531303
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 512
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531304
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 513
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531305
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 521
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531306
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 518
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531307
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 538
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531308
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 523
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531309
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 522
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531310
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 534
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531311
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 563
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531312
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 535
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531313
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 533
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531314
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 532
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531315
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 524
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531316
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 525
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531317
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 529
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531318
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 557
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531319
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 527
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531320
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 528
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531321
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 548
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531322
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 549
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531323
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 531
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531324
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 536
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531325
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 432
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531326
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 433
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531327
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 281
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531328
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 282
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531329
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 276
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531330
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 274
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531331
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 275
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531332
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 280
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531333
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 435
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531334
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 434
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531335
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 436
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531336
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 191
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531337
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 279
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531338
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 273
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531339
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 189
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531340
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 190
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531341
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 508
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531342
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 507
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531343
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 188
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531344
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 180
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531345
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 179
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531346
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 178
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531347
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 177
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531348
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 166
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531349
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 165
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531350
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 98
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531351
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 95
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531352
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 96
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531353
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 99
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531354
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 526
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531355
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 544
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531356
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 539
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531357
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 537
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531358
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 88
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531359
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 87
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531360
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 94
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531361
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 84
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531362
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 82
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531363
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 83
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531364
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 86
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531365
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 77
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531366
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 540
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531367
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 541
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531368
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 546
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531369
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 542
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531370
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 76
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531371
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 75
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531372
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 81
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531373
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 78
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531374
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 71
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531375
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 72
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531376
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 74
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531377
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 34
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531378
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 552
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531379
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 610
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531380
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 571
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531381
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 553
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531382
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 554
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531383
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 33
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531384
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 32
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531385
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 65
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531386
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 64
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531387
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 63
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531388
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 36
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531389
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 43
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531390
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 24
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531391
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 17
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531392
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 22
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531393
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 23
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531394
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 561
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531395
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 566
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531396
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 603
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531397
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 560
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531398
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 555
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531399
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 31
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531400
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 30
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531401
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 37
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531402
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 18
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531403
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 568
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531404
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 97
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531405
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 162
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531406
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 163
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531407
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 175
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531408
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 176
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531409
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 186
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531410
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 161
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531411
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 164
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531412
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 171
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531413
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 172
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531414
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 182
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531415
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 158
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531416
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 160
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531417
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 85
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531418
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 79
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531419
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 80
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531420
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 157
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531421
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 154
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531422
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 169
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531423
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 170
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531424
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 70
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531425
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 59
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531426
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 44
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531427
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 61
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531428
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 69
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531429
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 90
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531430
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 93
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531431
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 68
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531432
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 62
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531433
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 66
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531434
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 60
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531435
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 57
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531436
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 91
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531437
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 101
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531438
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 103
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531439
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 104
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531440
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 100
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531441
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 92
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531442
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 148
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531443
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 150
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531444
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 153
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531445
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 156
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531446
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 155
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531447
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 159
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531448
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 173
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531449
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 174
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531450
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 181
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531451
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 58
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531452
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 73
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531453
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 67
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531454
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 102
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531455
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 107
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531456
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 108
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531457
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 147
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531458
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 149
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531459
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 152
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531460
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 151
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531461
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 146
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531462
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 137
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531463
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 111
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531464
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 123
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531465
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 132
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531466
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 142
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531467
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 143
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531468
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 193
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531469
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 185
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531470
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 184
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531471
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 197
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531472
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 194
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531473
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 200
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531474
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 139
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531475
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 138
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531476
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 201
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531477
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 202
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531478
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 203
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531479
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 199
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531480
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 580
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531481
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 569
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531482
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 570
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531483
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 14
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531484
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 13
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531485
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 19
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531486
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 20
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531487
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 52
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531488
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 53
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531489
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 56
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531490
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 55
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531491
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 105
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531492
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 106
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531493
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 701
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531494
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 698
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531495
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 695
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531496
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 685
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531497
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 713
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531498
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 595
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531499
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 598
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531500
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 588
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531501
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 587
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531502
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 582
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531503
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 573
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531504
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 574
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531505
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 9
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531506
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 8
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531507
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 12
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531508
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 21
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531509
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 25
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531510
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 51
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531511
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 42
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531512
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 54
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531513
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 46
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531514
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 109
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531515
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 110
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531516
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 116
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531517
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 117
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531518
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 121
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531519
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 124
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531520
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 122
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531521
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 131
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531522
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 667
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531523
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 205
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531524
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 204
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531525
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 206
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531526
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 210
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531527
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 207
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531528
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 265
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531529
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 198
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531530
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 196
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531531
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 278
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531532
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 187
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531533
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 195
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531534
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 192
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531535
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 183
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531536
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 266
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531537
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 264
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531538
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 263
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531539
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 270
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531540
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 261
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531541
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 220
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531542
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 212
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531543
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 211
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531544
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 209
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531545
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 215
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531546
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 218
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531547
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 214
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
+    - rid: 4600982924562531548
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 662
+        weight: 1
+        _name: Set Color
+        active: 1
+        slotName: UMA30_Body_UDIM1003_slot_baked_Human Male 3.0
+        color:
+          serializedVersion: 2
+          rgba: 4282532445
