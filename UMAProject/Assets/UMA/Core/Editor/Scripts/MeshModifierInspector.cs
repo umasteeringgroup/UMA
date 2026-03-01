@@ -10,10 +10,16 @@ namespace UMA
     [CustomEditor(typeof(MeshModifier))]
     public class MeshModifierInspector : Editor
     {
-        private SerializedProperty _modifiersProp;
+        private SerializedProperty _runtimeModifiersProp;
+        private SerializedProperty _editorModifiersProp;
+        private SerializedProperty _splitDiagnosticsProp;
         private GUIStyle _headerStyle;
         private GUIStyle _foldoutStyle;
         private GUIStyle _boxedStyle;
+
+        private bool _showRuntimeModifiers = true;
+        private bool _showEditorModifiers = false;
+        private bool _showSplitDiagnostics = true;
 
         // Persist foldout states per asset instance id (not across domain reload, but stable during play/compiles)
         private static readonly Dictionary<int, List<bool>> FoldoutStates = new Dictionary<int, List<bool>>();
@@ -32,7 +38,9 @@ namespace UMA
         {
             if (serializedObject != null)
             {
-                _modifiersProp = serializedObject.FindProperty("modifiers");
+                _runtimeModifiersProp = serializedObject.FindProperty("runtimeModifiers");
+                _editorModifiersProp = serializedObject.FindProperty("editorModifiers");
+                _splitDiagnosticsProp = serializedObject.FindProperty("splitDiagnostics");
             }
         }
 
@@ -54,6 +62,16 @@ namespace UMA
 
         private void EnsureFoldoutList()
         {
+            int size = 0;
+            if (_runtimeModifiersProp != null)
+            {
+                size = _runtimeModifiersProp.arraySize;
+            }
+            EnsureFoldoutListFor(size);
+        }
+
+        private void EnsureFoldoutListFor(int size)
+        {
             if (!FoldoutStates.ContainsKey(_instanceId))
             {
                 FoldoutStates[_instanceId] = new List<bool>();
@@ -62,16 +80,14 @@ namespace UMA
             {
                 VertexFoldoutStates[_instanceId] = new List<bool>();
             }
-            if (_modifiersProp != null)
-            {
-                var modifierList = FoldoutStates[_instanceId];
-                while (modifierList.Count < _modifiersProp.arraySize) modifierList.Add(false);
-                if (modifierList.Count > _modifiersProp.arraySize) modifierList.RemoveRange(_modifiersProp.arraySize, modifierList.Count - _modifiersProp.arraySize);
 
-                var vertexList = VertexFoldoutStates[_instanceId];
-                while (vertexList.Count < _modifiersProp.arraySize) vertexList.Add(false);
-                if (vertexList.Count > _modifiersProp.arraySize) vertexList.RemoveRange(_modifiersProp.arraySize, vertexList.Count - _modifiersProp.arraySize);
-            }
+            var modifierList = FoldoutStates[_instanceId];
+            while (modifierList.Count < size) modifierList.Add(false);
+            if (modifierList.Count > size) modifierList.RemoveRange(size, modifierList.Count - size);
+
+            var vertexList = VertexFoldoutStates[_instanceId];
+            while (vertexList.Count < size) vertexList.Add(false);
+            if (vertexList.Count > size) vertexList.RemoveRange(size, vertexList.Count - size);
         }
 
         public override void OnInspectorGUI()
@@ -96,7 +112,7 @@ namespace UMA
             }
 
             // Reacquire property if lost (domain reload or layout rebuild)
-            if (_modifiersProp == null)
+            if (_runtimeModifiersProp == null)
             {
                 AcquireProperties();
             }
@@ -104,23 +120,23 @@ namespace UMA
             EditorGUILayout.LabelField("Mesh Modifier", _headerStyle);
             EditorGUILayout.Space(2);
 
-            if (_modifiersProp == null)
+            if (_runtimeModifiersProp == null)
             {
-                EditorGUILayout.HelpBox("'modifiers' list not found on object.", MessageType.Error);
+                EditorGUILayout.HelpBox("'runtimeModifiers' list not found on object.", MessageType.Error);
                 return;
             }
 
             // Guard against null list in the underlying object (can happen after domain reload if list not serialized yet)
             var mm = target as MeshModifier;
-            if (mm != null && mm.modifiers == null)
+            if (mm != null && mm.runtimeModifiers == null)
             {
                 Undo.RecordObject(mm, "Initialize Modifiers List");
-                mm.modifiers = new System.Collections.Generic.List<MeshModifier.Modifier>();
+                mm.runtimeModifiers = new System.Collections.Generic.List<MeshModifier.Modifier>();
                 EditorUtility.SetDirty(mm);
                 serializedObject.Update();
             }
 
-            int runtimeStackCount = mm != null && mm.modifiers != null ? mm.modifiers.Count : 0;
+            int runtimeStackCount = mm != null && mm.runtimeModifiers != null ? mm.runtimeModifiers.Count : 0;
             int editorStackCount = mm != null && mm.EditorModifiers != null ? mm.EditorModifiers.Count : 0;
             int totalStackCount = runtimeStackCount + editorStackCount;
 
@@ -136,76 +152,32 @@ namespace UMA
 
             using (new EditorGUILayout.VerticalScope(_boxedStyle))
             {
-                EditorGUILayout.LabelField("Modifiers", EditorStyles.boldLabel);
-
-                if (_modifiersProp.arraySize == 0)
+                _showSplitDiagnostics = EditorGUILayout.Foldout(_showSplitDiagnostics, "Split Diagnostics", true, _foldoutStyle);
+                if (_showSplitDiagnostics)
                 {
-                    EditorGUILayout.HelpBox("No modifiers defined.", MessageType.Info);
-                }
-
-                // Draw each modifier entry
-                for (int i = 0; i < _modifiersProp.arraySize; i++)
-                {
-                    var foldouts = FoldoutStates[_instanceId];
-                    if (i >= foldouts.Count) foldouts.Add(false);
-
-                    var element = _modifiersProp.GetArrayElementAtIndex(i);
-                    string slotName = element.FindPropertyRelative("SlotName")?.stringValue ?? "(Unnamed)";
-
-                    using (new EditorGUILayout.HorizontalScope())
-                    {
-                        foldouts[i] = EditorGUILayout.Foldout(foldouts[i], $"Modifier {i + 1}: {slotName}", true, _foldoutStyle);
-
-                        GUILayout.FlexibleSpace();
-
-                        if (GUILayout.Button(new GUIContent("x", "Remove this modifier"), GUILayout.Width(20)))
-                        {
-                            RemoveModifierAt(i);
-                            break; // collection changed
-                        }
-                    }
-
-                    if (!foldouts[i]) continue;
-
                     using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                     {
-                        EditorGUI.indentLevel++;
-                        var slotNameProp = element.FindPropertyRelative("SlotName");
-                        var dnaNameProp = element.FindPropertyRelative("DNAName");
-                        var scaleProp = element.FindPropertyRelative("Scale");
-#if UNITY_EDITOR
-                        var modName = element.FindPropertyRelative("ModifierName");
-                        if (modName != null)
+                        if (_splitDiagnosticsProp == null)
                         {
-                            EditorGUILayout.PropertyField(modName, new GUIContent("Modifier Name"));
+                            EditorGUILayout.HelpBox("No split diagnostics available.", MessageType.Info);
                         }
-#endif
-                        EditorGUILayout.PropertyField(slotNameProp, new GUIContent("Slot Name"));
-                        EditorGUILayout.PropertyField(dnaNameProp, new GUIContent("DNA Name"));
-
-                        if (scaleProp != null)
+                        else
                         {
-                            float newScale = EditorGUILayout.Slider(new GUIContent("Scale"), scaleProp.floatValue, 0f, 5f);
-                            if (!Mathf.Approximately(newScale, scaleProp.floatValue))
-                            {
-                                scaleProp.floatValue = Mathf.Clamp(newScale, 0f, 100f);
-                            }
+                            EditorGUILayout.PropertyField(_splitDiagnosticsProp, new GUIContent(""));
                         }
-
-                        DrawModifierDetails(mm, i);
-                        EditorGUI.indentLevel--;
                     }
                 }
 
-                EditorGUILayout.Space();
-
-                using (new EditorGUILayout.HorizontalScope())
+                _showEditorModifiers = EditorGUILayout.Foldout(_showEditorModifiers, "Editor Modifiers", true, _foldoutStyle);
+                if (_showEditorModifiers)
                 {
-                    if (GUILayout.Button("Add Modifier"))
-                    {
-                        AddModifier();
-                    }
-                    GUILayout.FlexibleSpace();
+                    DrawModifierList(mm, _editorModifiersProp, "editor", allowAddRemove: false);
+                }
+
+                _showRuntimeModifiers = EditorGUILayout.Foldout(_showRuntimeModifiers, "Runtime Modifiers", true, _foldoutStyle);
+                if (_showRuntimeModifiers)
+                {
+                    DrawModifierList(mm, _runtimeModifiersProp, "runtime", allowAddRemove: true);
                 }
             }
 
@@ -217,10 +189,10 @@ namespace UMA
 
         private void AddModifier()
         {
-            if (_modifiersProp == null) return;
-            int newIndex = _modifiersProp.arraySize;
-            _modifiersProp.InsertArrayElementAtIndex(newIndex);
-            var newElement = _modifiersProp.GetArrayElementAtIndex(newIndex);
+            if (_runtimeModifiersProp == null) return;
+            int newIndex = _runtimeModifiersProp.arraySize;
+            _runtimeModifiersProp.InsertArrayElementAtIndex(newIndex);
+            var newElement = _runtimeModifiersProp.GetArrayElementAtIndex(newIndex);
             // Clear string fields & set defaults
             var slotName = newElement.FindPropertyRelative("SlotName");
             if (slotName != null) slotName.stringValue = string.Empty;
@@ -228,34 +200,138 @@ namespace UMA
             if (dnaName != null) dnaName.stringValue = string.Empty;
             var scale = newElement.FindPropertyRelative("Scale");
             if (scale != null) scale.floatValue = 1f;
-            EnsureFoldoutList();
+            EnsureFoldoutListFor(_runtimeModifiersProp.arraySize);
             if (FoldoutStates.TryGetValue(_instanceId, out var list))
             {
-                while (list.Count < _modifiersProp.arraySize) list.Add(false);
+                while (list.Count < _runtimeModifiersProp.arraySize) list.Add(false);
                 if (list.Count > 0) list[list.Count - 1] = false;
             }
             if (VertexFoldoutStates.TryGetValue(_instanceId, out var vertexList))
             {
-                while (vertexList.Count < _modifiersProp.arraySize) vertexList.Add(false);
+                while (vertexList.Count < _runtimeModifiersProp.arraySize) vertexList.Add(false);
                 if (vertexList.Count > 0) vertexList[vertexList.Count - 1] = false;
             }
         }
 
         private void RemoveModifierAt(int index)
         {
-            if (_modifiersProp == null || index < 0 || index >= _modifiersProp.arraySize) return;
-            _modifiersProp.DeleteArrayElementAtIndex(index);
-            EnsureFoldoutList();
+            if (_runtimeModifiersProp == null || index < 0 || index >= _runtimeModifiersProp.arraySize) return;
+            _runtimeModifiersProp.DeleteArrayElementAtIndex(index);
+            EnsureFoldoutListFor(_runtimeModifiersProp.arraySize);
+        }
+
+        private void DrawModifierList(MeshModifier mm, SerializedProperty listProp, string labelPrefix, bool allowAddRemove)
+        {
+            if (listProp == null)
+            {
+                EditorGUILayout.HelpBox($"'{labelPrefix}' modifiers list not available on this object.", MessageType.Info);
+                return;
+            }
+
+            if (listProp.arraySize == 0)
+            {
+                EditorGUILayout.HelpBox("None.", MessageType.Info);
+            }
+
+            EnsureFoldoutListFor(listProp.arraySize);
+
+            for (int i = 0; i < listProp.arraySize; i++)
+            {
+                var foldouts = FoldoutStates[_instanceId];
+                if (i >= foldouts.Count) foldouts.Add(false);
+
+                var element = listProp.GetArrayElementAtIndex(i);
+                string slotName = element.FindPropertyRelative("SlotName")?.stringValue ?? "(Unnamed)";
+                string name = element.FindPropertyRelative("ModifierName")?.stringValue;
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = slotName;
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    foldouts[i] = EditorGUILayout.Foldout(foldouts[i], $"{labelPrefix} {i + 1}: {name}", true, _foldoutStyle);
+
+                    GUILayout.FlexibleSpace();
+
+                    if (allowAddRemove)
+                    {
+                        if (GUILayout.Button(new GUIContent("x", "Remove this modifier"), GUILayout.Width(20)))
+                        {
+                            if (labelPrefix == "runtime")
+                            {
+                                RemoveModifierAt(i);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (!foldouts[i])
+                {
+                    continue;
+                }
+
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                {
+                    EditorGUI.indentLevel++;
+                    var slotNameProp = element.FindPropertyRelative("SlotName");
+                    var dnaNameProp = element.FindPropertyRelative("DNAName");
+                    var scaleProp = element.FindPropertyRelative("Scale");
+#if UNITY_EDITOR
+                    var modName = element.FindPropertyRelative("ModifierName");
+                    if (modName != null)
+                    {
+                        EditorGUILayout.PropertyField(modName, new GUIContent("Modifier Name"));
+                    }
+#endif
+                    if (slotNameProp != null)
+                    {
+                        EditorGUILayout.PropertyField(slotNameProp, new GUIContent("Slot Name"));
+                    }
+                    if (dnaNameProp != null)
+                    {
+                        EditorGUILayout.PropertyField(dnaNameProp, new GUIContent("DNA Name"));
+                    }
+                    if (scaleProp != null)
+                    {
+                        float newScale = EditorGUILayout.Slider(new GUIContent("Scale"), scaleProp.floatValue, 0f, 5f);
+                        if (!Mathf.Approximately(newScale, scaleProp.floatValue))
+                        {
+                            scaleProp.floatValue = Mathf.Clamp(newScale, 0f, 100f);
+                        }
+                    }
+
+                    if (labelPrefix == "runtime")
+                    {
+                        DrawModifierDetails(mm, i);
+                    }
+
+                    EditorGUI.indentLevel--;
+                }
+            }
+
+            if (allowAddRemove)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Add Modifier"))
+                    {
+                        AddModifier();
+                    }
+                    GUILayout.FlexibleSpace();
+                }
+            }
         }
 
         private void DrawModifierDetails(MeshModifier meshModifier, int index)
         {
-            if (meshModifier == null || meshModifier.modifiers == null || index < 0 || index >= meshModifier.modifiers.Count)
+            if (meshModifier == null || meshModifier.runtimeModifiers == null || index < 0 || index >= meshModifier.runtimeModifiers.Count)
             {
                 return;
             }
 
-            var modifier = meshModifier.modifiers[index];
+            var modifier = meshModifier.runtimeModifiers[index];
             if (modifier == null)
             {
                 EditorGUILayout.HelpBox("Modifier data is null.", MessageType.Warning);

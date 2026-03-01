@@ -223,14 +223,16 @@ namespace UMA
                 {
                     Modifiers = modifier.EditorModifiers;
                 }
-                else if (modifier.Modifiers != null)
+                else if (modifier.RuntimeModifiers != null)
                 {
-                    Modifiers = modifier.Modifiers;
+                    Modifiers = modifier.RuntimeModifiers;
                 }
                 else
                 {
                     Modifiers = new List<MeshModifier.Modifier>();
                 }
+
+                HydrateAdHocAdjustmentsFromEditorModifiers();
             }
             // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
             centeredLabel = EditorStyles.boldLabel;
@@ -410,20 +412,129 @@ namespace UMA
             {
                 string BaseName = System.IO.Path.GetFileNameWithoutExtension(Path);
                 MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(Path, false);
-                meshModifier.Modifiers = DoModifierSplit(false);
-                foreach (MeshModifier.Modifier mod in Modifiers)
-                {
-                    mod.BeforeSaving();
-                }
-                meshModifier.EditorModifiers = Modifiers;
-                meshModifier.AdHocAdjustmentJSON = new List<string>();
-                foreach (VertexAdjustment va in vertexEditorStage.GetVertexAdjustments())
-                {
-                    meshModifier.AdHocAdjustmentJSON.Add(JsonUtility.ToJson(va));
-                }
+                List<MeshModifier.Modifier> editorSnapshot = BuildEditorModifierSnapshot(includeBulkModifiers: true, includeAdHocModifiers: true, onlyActiveBulkModifier: false);
+                meshModifier.EditorModifiers = editorSnapshot;
+                meshModifier.RuntimeModifiers = SplitModifierStacksBySlot(editorSnapshot);
                 EditorUtility.SetDirty(meshModifier);
                 AssetDatabase.SaveAssetIfDirty(meshModifier);
             }
+        }
+
+        private void HydrateAdHocAdjustmentsFromEditorModifiers()
+        {
+            if (vertexEditorStage == null)
+            {
+                return;
+            }
+
+            List<VertexAdjustment> adHocAdjustments = vertexEditorStage.GetVertexAdjustments();
+            adHocAdjustments.Clear();
+
+            if (Modifiers == null)
+            {
+                return;
+            }
+
+            for (int i = Modifiers.Count - 1; i >= 0; i--)
+            {
+                MeshModifier.Modifier mod = Modifiers[i];
+                if (mod == null || mod.manuallyModified == false)
+                {
+                    continue;
+                }
+
+                if (mod.adjustments != null && mod.adjustments.vertexAdjustments != null)
+                {
+                    foreach (VertexAdjustment adjustment in mod.adjustments.vertexAdjustments)
+                    {
+                        if (adjustment != null)
+                        {
+                            adHocAdjustments.Add(adjustment);
+                        }
+                    }
+                }
+
+                Modifiers.RemoveAt(i);
+            }
+        }
+
+        private List<MeshModifier.Modifier> BuildEditorModifierSnapshot(bool includeBulkModifiers, bool includeAdHocModifiers, bool onlyActiveBulkModifier)
+        {
+            List<MeshModifier.Modifier> snapshot = new List<MeshModifier.Modifier>();
+
+            if (includeBulkModifiers && Modifiers != null)
+            {
+                if (onlyActiveBulkModifier)
+                {
+                    if (currentModifierIndex >= 0 && currentModifierIndex < Modifiers.Count)
+                    {
+                        snapshot.Add(Modifiers[currentModifierIndex]);
+                    }
+                }
+                else
+                {
+                    snapshot.AddRange(Modifiers);
+                }
+            }
+
+            if (includeAdHocModifiers && vertexEditorStage != null)
+            {
+                Dictionary<string, MeshModifier.Modifier> adHocStacks = new Dictionary<string, MeshModifier.Modifier>();
+                foreach (VertexAdjustment adjustment in vertexEditorStage.GetVertexAdjustments())
+                {
+                    if (adjustment == null || string.IsNullOrEmpty(adjustment.slotName))
+                    {
+                        continue;
+                    }
+
+                    string key = adjustment.slotName + ":" + adjustment.GetType().AssemblyQualifiedName;
+                    if (!adHocStacks.ContainsKey(key))
+                    {
+                        MeshModifier.Modifier adHocModifier = new MeshModifier.Modifier();
+                        adHocModifier.manuallyModified = true;
+                        adHocModifier.keepAsIs = false;
+                        adHocModifier.SlotName = adjustment.slotName;
+                        adHocModifier.ModifierName = "Ad-hoc " + adjustment.Name;
+                        adHocModifier.DNAName = string.Empty;
+                        adHocModifier.Scale = 1.0f;
+                        adHocModifier.TemplateAdjustment = (VertexAdjustment)Activator.CreateInstance(adjustment.GetType());
+                        adHocModifier.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(adjustment.VertexAdjustmentCollection.GetType());
+                        adHocStacks.Add(key, adHocModifier);
+                    }
+
+                    adHocStacks[key].adjustments.Add(adjustment);
+                }
+
+                foreach (var stack in adHocStacks.Values)
+                {
+                    snapshot.Add(stack);
+                }
+            }
+
+            return snapshot;
+        }
+
+        private List<MeshModifier.Modifier> SplitModifierStacksBySlot(List<MeshModifier.Modifier> sourceModifiers)
+        {
+            List<MeshModifier.Modifier> result = new List<MeshModifier.Modifier>();
+            if (sourceModifiers == null)
+            {
+                return result;
+            }
+
+            foreach (MeshModifier.Modifier mod in sourceModifiers)
+            {
+                SplitModifiersBySlot(result, mod);
+                Debug.Log($"Split modifier {mod.ModifierName} into {result.Count} modifiers");
+                foreach(MeshModifier.Modifier splitMod in result)
+                {
+                    Debug.Log($" - {splitMod.ModifierName} (Slot: {splitMod.SlotName}, Adjustments: {(splitMod.adjustments != null ? splitMod.adjustments.vertexAdjustments.Count : 0)})");
+                }
+            }
+
+           
+
+            return result;
         }
 
         VertexAdjustment activeAdjustment = null;
@@ -566,7 +677,7 @@ namespace UMA
             GUILayout.EndHorizontal();
             for (int i = 0; i < blendShapeSlots.Count; i++)
             {
-                bool newSelectedState = EditorGUILayout.Toggle(blendShapeSlots[i], blendShapeSlotSelected[i]);
+                bool newSelectedState = EditorGUILayout.ToggleLeft(blendShapeSlots[i], blendShapeSlotSelected[i]);
                 if (newSelectedState != blendShapeSlotSelected[i])
                 {
                     RegisterUndoSnapshot("Toggle Blendshape Slot");
@@ -886,58 +997,12 @@ namespace UMA
 
         public List<MeshModifier.Modifier> DoModifierSplit(bool useBuildOptions)
         {
-            List<MeshModifier.Modifier> result = new List<MeshModifier.Modifier>();
-            if (IncludeAdHocAdjustments || useBuildOptions == false)
-            {
-                Dictionary<string, MeshModifier.Modifier> testModifiers = new Dictionary<string, MeshModifier.Modifier>();
+            bool includeBulk = useBuildOptions ? IncludeBulkModifiers : true;
+            bool includeAdHoc = useBuildOptions ? IncludeAdHocAdjustments : true;
+            bool onlyActiveBulk = useBuildOptions && IncludeActiveOnlyBulk;
 
-                foreach (VertexAdjustment va in vertexEditorStage.GetVertexAdjustments())
-                {
-                    string key = va.Name + ":" + va.slotName;
-                    if (!testModifiers.ContainsKey(key))
-                    {
-                        MeshModifier.Modifier newMod = new MeshModifier.Modifier();
-                        newMod.adjustments = va.VertexAdjustmentCollection;
-                        newMod.SlotName = va.slotName;
-                        newMod.ModifierName = va.Name;
-                        testModifiers.Add(key, newMod);
-                    }
-                    testModifiers[key].adjustments.Add(va);
-                }
-
-                foreach (KeyValuePair<string, MeshModifier.Modifier> kvp in testModifiers)
-                {
-                    SplitModifiersBySlot(result, kvp.Value);
-                }
-            }
-
-            if (useBuildOptions)
-            {
-                if (IncludeBulkModifiers)
-                {
-                    if (IncludeActiveOnlyBulk)
-                    {
-                        if (currentModifierIndex < Modifiers.Count && currentModifierIndex >= 0)
-                        {
-                            SplitModifiersBySlot(result, Modifiers[currentModifierIndex]);
-                        }
-                    }
-                    else
-                    {
-                        foreach (MeshModifier.Modifier mod in Modifiers)
-                        {
-                            SplitModifiersBySlot(result, mod);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                foreach (MeshModifier.Modifier mod in Modifiers)
-                {
-                    SplitModifiersBySlot(result, mod);
-                }
-            }
+            List<MeshModifier.Modifier> sourceModifiers = BuildEditorModifierSnapshot(includeBulk, includeAdHoc, onlyActiveBulk);
+            List<MeshModifier.Modifier> result = SplitModifierStacksBySlot(sourceModifiers);
 
             ValidateSplitAccounting(result, useBuildOptions);
             return result; 
@@ -945,45 +1010,16 @@ namespace UMA
 
         private List<VertexAdjustment> GetSourceAdjustmentsForSplit(bool useBuildOptions)
         {
+            bool includeBulk = useBuildOptions ? IncludeBulkModifiers : true;
+            bool includeAdHoc = useBuildOptions ? IncludeAdHocAdjustments : true;
+            bool onlyActiveBulk = useBuildOptions && IncludeActiveOnlyBulk;
+
+            List<MeshModifier.Modifier> sourceStacks = BuildEditorModifierSnapshot(includeBulk, includeAdHoc, onlyActiveBulk);
             List<VertexAdjustment> sourceAdjustments = new List<VertexAdjustment>();
-
-            if ((IncludeAdHocAdjustments || useBuildOptions == false) && vertexEditorStage != null)
+            foreach (MeshModifier.Modifier stack in sourceStacks)
             {
-                var adHoc = vertexEditorStage.GetVertexAdjustments();
-                if (adHoc != null)
-                {
-                    sourceAdjustments.AddRange(adHoc);
-                }
+                AddModifierAdjustments(sourceAdjustments, stack);
             }
-
-            if (useBuildOptions)
-            {
-                if (IncludeBulkModifiers)
-                {
-                    if (IncludeActiveOnlyBulk)
-                    {
-                        if (currentModifierIndex >= 0 && currentModifierIndex < Modifiers.Count)
-                        {
-                            AddModifierAdjustments(sourceAdjustments, Modifiers[currentModifierIndex]);
-                        }
-                    }
-                    else
-                    {
-                        foreach (MeshModifier.Modifier mod in Modifiers)
-                        {
-                            AddModifierAdjustments(sourceAdjustments, mod);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                foreach (MeshModifier.Modifier mod in Modifiers)
-                {
-                    AddModifierAdjustments(sourceAdjustments, mod);
-                }
-            }
-
             return sourceAdjustments;
         }
 
@@ -1203,15 +1239,7 @@ namespace UMA
                         continue;
                     }
 
-                    Type modType = null;
-                    if (mod.TemplateAdjustment != null)
-                    {
-                        modType = mod.TemplateAdjustment.GetType();
-                    }
-                    else
-                    {
-                        modType = mod.adjustments.AdjustmentType;
-                    }
+                    Type modType = mod.adjustments.AdjustmentType;
 
                     if (mod.SlotName == key && modType == va.GetType())
                     {
@@ -1232,10 +1260,10 @@ namespace UMA
                     newMod.ModifierName = activeModifier.ModifierName;
                     newMod.DNAName = activeModifier.DNAName;
                     newMod.Scale = activeModifier.Scale;
-                    newMod.TemplateAdjustment = (VertexAdjustment)Activator.CreateInstance(va.GetType());
                     newMod.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(activeModifier.adjustments.GetType());
                     target.Add(newMod);
                 }
+                Debug.Log($"Adding adjustment for slot {va.slotName} to modifier {newMod.ModifierName}");
                 newMod.adjustments.Add(va);
             }
         }

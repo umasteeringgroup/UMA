@@ -1234,6 +1234,7 @@ namespace UMA
             get { return false; }
         }
 
+      [SerializeReference]
         public List<VertexAdjustment> vertexAdjustments = new List<VertexAdjustment>();
         // when the asset is saved, a collection for each slot is added.
         // When the recipe is loaded, after the slotdatas are merged, 

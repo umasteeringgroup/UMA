@@ -56,6 +56,12 @@ namespace UMA
                     modifierEditor.Repaint();
                 }
             }
+       }
+
+        private void RefreshVisibleSlotListsIfNeeded()
+        {
+            // Keep dropdowns in sync with current slot suppression changes while the stage is running.
+            RefreshVisibleSlotLists();
         }
         float blinkSpeed = 0.2f;
 
@@ -65,6 +71,54 @@ namespace UMA
 
         string[] selectFrom = new string[] { "All Slots" };
         int selectionSlot = 0; // 0 is all slots
+        string[] visibleSelectFrom = new string[] { "All Slots" };
+
+        private enum RaycastSelectDirection
+        {
+            Outward,
+            Inward
+        }
+
+        private enum RaycastHitFaceFilter
+        {
+            TowardVertex,
+            AwayFromVertex,
+            All
+        }
+
+        [SerializeField]
+        private bool showRaycastSelection = false;
+        [SerializeField]
+        private int raycastSelectionSlot = 0;
+        [SerializeField]
+        private RaycastSelectDirection raycastDirection = RaycastSelectDirection.Outward;
+        [SerializeField]
+        private bool raycastAddToSelection = false;
+        [SerializeField]
+        private float raycastLength = 0.25f;
+        [SerializeField]
+        private RaycastHitFaceFilter raycastHitFaceFilter = RaycastHitFaceFilter.TowardVertex;
+        [SerializeField]
+        private string raycastStatusMessage;
+        [SerializeField]
+        private MessageType raycastStatusType = MessageType.Info;
+        [SerializeField]
+        private bool raycastDrawDebugRays = false;
+        [SerializeField]
+        private int raycastDebugRayLimit = 64;
+        private readonly List<DebugRay> raycastDebugRays = new List<DebugRay>(64);
+
+        private struct DebugRay
+        {
+            public Vector3 origin;
+            public Vector3 direction;
+            public float length;
+            public bool hitOtherSlot;
+           public float time;
+        }
+
+        [SerializeField]
+        private float raycastDebugRayLifetime = 25f;
 
         selectMode currentMode = selectMode.Add;
         DefineMode currentDefineMode = DefineMode.DefineVertexSet;
@@ -103,6 +157,357 @@ namespace UMA
         private bool IsPaintModeEnabled
         {
             get { return currentDefineMode == DefineMode.DefineVertexSet ? paintModeSet : paintModeState; }
+        }
+
+        private static bool PassFaceFilter(RaycastHit hit, Vector3 rayDirection, RaycastHitFaceFilter filter)
+        {
+            if (filter == RaycastHitFaceFilter.All)
+            {
+                return true;
+            }
+
+            float dot = Vector3.Dot(hit.normal, rayDirection);
+            // Toward: surface normal opposes the ray direction.
+            if (filter == RaycastHitFaceFilter.TowardVertex)
+            {
+                return dot <= 0f;
+            }
+
+            // Away: surface normal points (roughly) along the ray direction.
+            return dot >= 0f;
+        }
+
+        private SlotData GetSlotForTriangle(int triangleIndex)
+        {
+            if (triangleIndex < 0 || BakedMesh == null)
+            {
+                return null;
+            }
+
+            int triBase = triangleIndex * 3;
+            var tris = BakedMesh.triangles;
+            if (triBase + 2 >= tris.Length)
+            {
+                return null;
+            }
+
+            SlotData slot0;
+            SlotData slot1;
+            SlotData slot2;
+            int unused;
+            if (!TryGetSlotForBakedVertex(tris[triBase], out slot0, out unused))
+            {
+                slot0 = null;
+            }
+            if (!TryGetSlotForBakedVertex(tris[triBase + 1], out slot1, out unused))
+            {
+                slot1 = null;
+            }
+            if (!TryGetSlotForBakedVertex(tris[triBase + 2], out slot2, out unused))
+            {
+                slot2 = null;
+            }
+
+            if (slot0 == null && slot1 == null && slot2 == null)
+            {
+                return null;
+            }
+
+            // Majority vote: this is resilient against seam triangles where one vertex maps oddly.
+            if (slot0 != null && slot1 != null && slot0.slotName == slot1.slotName)
+            {
+                return slot0;
+            }
+            if (slot0 != null && slot2 != null && slot0.slotName == slot2.slotName)
+            {
+                return slot0;
+            }
+            if (slot1 != null && slot2 != null && slot1.slotName == slot2.slotName)
+            {
+                return slot1;
+            }
+
+            // No majority: fall back to the first non-null.
+            if (slot0 != null)
+            {
+                return slot0;
+            }
+            if (slot1 != null)
+            {
+                return slot1;
+            }
+            return slot2;
+        }
+
+        private bool TryGetNearestHitDifferentSlot(Ray ray, float maxDistance, SlotData sourceSlot, out RaycastHit bestHit, ref int hitsSameSlot, ref int hitsOtherSlot)
+        {
+            bestHit = default;
+            if (!phyScene.IsValid())
+            {
+           return false;
+            }
+
+            var tempHits = new RaycastHit[32];
+            int hitCount = phyScene.Raycast(ray.origin, ray.direction, tempHits, maxDistance);
+            if (hitCount <= 0)
+            {
+                return false;
+            }
+
+            Array.Sort(tempHits, 0, hitCount, RaycastHitDistanceComparer.Instance);
+            for (int i = 0; i < hitCount; i++)
+            {
+                RaycastHit hit = tempHits[i];
+                if (hit.collider == null)
+                {
+                    continue;
+                }
+
+                if (!PassFaceFilter(hit, ray.direction, raycastHitFaceFilter))
+                {
+                    continue;
+                }
+
+                SlotData hitSlot = GetSlotForTriangle(hit.triangleIndex);
+                if (hitSlot == null)
+                {
+                    continue;
+                }
+
+                if (hitSlot.slotName == sourceSlot.slotName)
+                {
+                    hitsSameSlot++;
+                    continue;
+                }
+
+                hitsOtherSlot++;
+                bestHit = hit;
+                return true;
+            }
+
+            return false;
+        }
+
+        private sealed class RaycastHitDistanceComparer : IComparer<RaycastHit>
+        {
+            public static readonly RaycastHitDistanceComparer Instance = new RaycastHitDistanceComparer();
+            public int Compare(RaycastHit x, RaycastHit y)
+            {
+                return x.distance.CompareTo(y.distance);
+            }
+        }
+
+        private void DrawRaycastDebugRays()
+        {
+            if (!raycastDrawDebugRays || raycastDebugRays.Count == 0)
+            {
+                return;
+            }
+
+            float now = Time.realtimeSinceStartup;
+            for (int i = raycastDebugRays.Count - 1; i >= 0; i--)
+            {
+                if (raycastDebugRayLifetime > 0f && (now - raycastDebugRays[i].time) > raycastDebugRayLifetime)
+                {
+                    raycastDebugRays.RemoveAt(i);
+                }
+            }
+
+            Gizmos.matrix = Matrix4x4.identity;
+            for (int i = 0; i < raycastDebugRays.Count; i++)
+            {
+                DebugRay dr = raycastDebugRays[i];
+                float len;
+                if (float.IsPositiveInfinity(dr.length))
+                {
+                    len = 0.25f;
+                }
+                else
+                {
+                    len = dr.length;
+                }
+                Vector3 end = dr.origin + (dr.direction.normalized * len);
+                Gizmos.color = dr.hitOtherSlot ? Color.green : Color.red;
+                Gizmos.DrawLine(dr.origin, end);
+            }
+        }
+
+        private void DrawRaycastDebugRaysHandles()
+        {
+            if (!raycastDrawDebugRays || raycastDebugRays.Count == 0)
+            {
+                return;
+            }
+
+            float now = Time.realtimeSinceStartup;
+            for (int i = raycastDebugRays.Count - 1; i >= 0; i--)
+            {
+                if (raycastDebugRayLifetime > 0f && (now - raycastDebugRays[i].time) > raycastDebugRayLifetime)
+                {
+                    raycastDebugRays.RemoveAt(i);
+                }
+            }
+
+            if (raycastDebugRays.Count == 0)
+            {
+                return;
+            }
+
+            Handles.zTest = UnityEngine.Rendering.CompareFunction.Always;
+            float capSize = Mathf.Max(0.002f, HandlesSize * 0.5f);
+            for (int i = 0; i < raycastDebugRays.Count; i++)
+            {
+                DebugRay dr = raycastDebugRays[i];
+                float len = float.IsPositiveInfinity(dr.length) ? 0.25f : dr.length;
+                Vector3 dir = dr.direction.sqrMagnitude > 1e-8f ? dr.direction.normalized : Vector3.up;
+                Vector3 end = dr.origin + (dir * len);
+                Color c = dr.hitOtherSlot ? new Color(0.1f, 1f, 0.1f, 1f) : new Color(1f, 0.15f, 0.15f, 1f);
+                using (new Handles.DrawingScope(c))
+                {
+                    Handles.DrawAAPolyLine(3f, dr.origin, end);
+                    Handles.SphereHandleCap(0, dr.origin, Quaternion.identity, capSize, EventType.Repaint);
+                    Handles.SphereHandleCap(0, end, Quaternion.identity, capSize, EventType.Repaint);
+                }
+            }
+        }
+
+        private void OnDrawGizmos()
+        {
+            DrawRaycastDebugRays();
+        }
+
+        private void SelectByRaycast()
+        {
+            raycastDebugRays.Clear();
+            if (!phyScene.IsValid())
+            {
+                raycastStatusType = MessageType.Warning;
+                raycastStatusMessage = "Raycast skipped: physics scene is not initialized.";
+                return;
+            }
+
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
+            {
+                raycastStatusType = MessageType.Warning;
+                raycastStatusMessage = "Raycast skipped: character data is not available.";
+                return;
+            }
+
+            if (VertexObject == null || BakedMesh == null || BakedMesh.vertexCount == 0)
+            {
+                raycastStatusType = MessageType.Warning;
+                raycastStatusMessage = "Raycast skipped: baked mesh is not available.";
+                return;
+            }
+
+            if (raycastSelectionSlot <= 0 || raycastSelectionSlot >= visibleSelectFrom.Length)
+            {
+                raycastStatusType = MessageType.Info;
+                raycastStatusMessage = "Select a visible slot to raycast from.";
+                return;
+            }
+
+            SlotData sourceSlot = thisDCA.umaData.umaRecipe.GetSlot(visibleSelectFrom[raycastSelectionSlot]);
+            if (sourceSlot == null || !IsSelectableSlot(sourceSlot))
+            {
+                raycastStatusType = MessageType.Warning;
+                raycastStatusMessage = "Raycast skipped: source slot is not selectable.";
+                return;
+            }
+
+            if (!raycastAddToSelection)
+            {
+                SelectedVertexes.Clear();
+            }
+
+            float maxDistance = raycastLength > 0f ? raycastLength : float.PositiveInfinity;
+            var verts = BakedMesh.vertices;
+            var normals = BakedMesh.normals;
+
+            int sourceVertexCount = sourceSlot.asset != null && sourceSlot.asset.meshData != null
+                ? sourceSlot.asset.meshData.vertexCount
+                : 0;
+
+            if (sourceVertexCount <= 0)
+            {
+                return;
+            }
+
+            int added = 0;
+            int hitsOtherSlot = 0;
+            int hitsSameSlot = 0;
+            int totalCasts = 0;
+            for (int slotVertexIndex = 0; slotVertexIndex < sourceVertexCount; slotVertexIndex++)
+            {
+                totalCasts++;
+                if (!TryGetVisibleBakedVertexIndex(sourceSlot, slotVertexIndex, out int bakedIndex))
+                {
+                    continue;
+                }
+
+                if (bakedIndex < 0 || bakedIndex >= verts.Length)
+                {
+                    continue;
+                }
+
+                Vector3 originWorld = VertexObject.transform.TransformPoint(verts[bakedIndex]);
+                Vector3 dirWorld = Vector3.up;
+                if (bakedIndex >= 0 && bakedIndex < normals.Length)
+                {
+                    Vector3 nWorld = VertexObject.transform.TransformDirection(normals[bakedIndex]).normalized;
+                    dirWorld = raycastDirection == RaycastSelectDirection.Inward ? -nWorld : nWorld;
+                }
+
+                if (dirWorld.sqrMagnitude < 1e-8f)
+                {
+                    continue;
+                }
+
+                // Offset slightly to avoid immediately hitting the originating triangle.
+                Vector3 origin = originWorld + (dirWorld * 0.0005f);
+                Ray ray = new Ray(origin, dirWorld);
+
+                bool hitOther = TryGetNearestHitDifferentSlot(ray, maxDistance, sourceSlot, out _, ref hitsSameSlot, ref hitsOtherSlot);
+                if (raycastDrawDebugRays && raycastDebugRays.Count < Mathf.Max(0, raycastDebugRayLimit))
+                {
+                    raycastDebugRays.Add(new DebugRay()
+                    {
+                        origin = ray.origin,
+                        direction = ray.direction,
+                        length = maxDistance,
+                     hitOtherSlot = hitOther,
+                        time = Time.realtimeSinceStartup
+                    });
+                }
+
+                if (!hitOther)
+                {
+                    continue;
+                }
+
+                if (GetSelectionIndex(sourceSlot, slotVertexIndex) >= 0)
+                {
+                    continue;
+                }
+
+                SelectedVertexes.Add(new VertexSelection()
+                {
+                    vertexIndexOnSlot = slotVertexIndex,
+                    slot = sourceSlot,
+                    WorldPosition = originWorld,
+                    isActive = (currentNewVertexState == (int)newVertexState.Active)
+                });
+                added++;
+            }
+
+            if (added > 0)
+            {
+                UpdateSelections();
+            }
+
+            raycastStatusType = MessageType.Info;
+            string visibleSlots = visibleSelectFrom != null ? string.Join(", ", visibleSelectFrom) : "(null)";
+            raycastStatusMessage = $"Raycast complete\nCasts: {totalCasts}\nHit other slot: {hitsOtherSlot}, hit same slot: {hitsSameSlot}\nSelected: {added}\nVisible slots: {visibleSlots}";
         }
 
         private void BeginSelectionUndoSnapshot(string actionName)
@@ -435,13 +840,13 @@ namespace UMA
             centeredLabel.alignment = TextAnchor.MiddleCenter;
 
             modifierEditor = MeshModifierEditor.GetOrCreateWindowFromModifier(Currentmodifier, thisDCA, this);
-            if (Currentmodifier != null && Currentmodifier.Modifiers != null)
+            if (Currentmodifier != null)
             {
                 modifierEditor.Modifiers = Currentmodifier.EditorModifiers;
                 foreach (var newMod in modifierEditor.Modifiers)
                 {
                     // get the type of the VertexAdjustment for this collection
-                    newMod.AfterLoading();
+                    // no-op: adjustments are persisted directly via SerializeReference
                     /*
                     Type adjType = Type.GetType(newMod.AdjustmentType);
                     Type colType = Type.GetType(newMod.CollectionType);
@@ -455,15 +860,6 @@ namespace UMA
                             newMod.adjustments.Add(va);
                         }
                     } */
-                }
-
-                foreach (string json in Currentmodifier.AdHocAdjustmentJSON)
-                {
-                    VertexAdjustment va = VertexAdjustment.FromJSON(json);
-                    if (va != null)
-                    {
-                        Adjustments.Add(va);
-                    }
                 }
             }
             else
@@ -644,6 +1040,11 @@ namespace UMA
             {
                 InitialSetup(view);
             }
+            DrawRaycastDebugRaysHandles();
+         if (raycastDrawDebugRays && raycastDebugRays.Count > 0)
+            {
+                SceneView.RepaintAll();
+            }
             AdjustWindowRects();
             DoSceneGUI(view);
         }
@@ -767,7 +1168,16 @@ namespace UMA
 
                         if (currentDefineMode == DefineMode.DefineVertexSet)
                         {
-                            SingleSelect(currentEvent);
+                            if (IsPaintModeEnabled)
+                            {
+                                SingleSelect(currentEvent);
+                            }
+                            else
+                            {
+                                // Defer click selection until MouseUp so a click doesn't get treated as a zero-size rect drag.
+                                pendingStateClickAction = true;
+                                pendingStateClickStart = currentEvent.mousePosition;
+                            }
                         }
                     }
                     else if (currentEvent.button == 1)
@@ -1203,7 +1613,25 @@ namespace UMA
                             editAdjustment = null;
                         }
                     }
-                    GUILayout.Label(slot.slotName);
+                    if (GUILayout.Button(slot.slotName, EditorStyles.label))
+                    {
+                        slot.Suppressed = !slot.Suppressed;
+                        wasChanged = true;
+
+                        if (slot.Suppressed)
+                        {
+                            visibleSlotCount -= 1;
+                        }
+                        else
+                        {
+                            visibleSlotCount += 1;
+                        }
+
+                        if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
+                        {
+                            editAdjustment = null;
+                        }
+                    }
                     GUILayout.EndHorizontal();
 
                 }
@@ -1366,6 +1794,71 @@ namespace UMA
                 }
                 selectionSlot = EditorGUILayout.Popup(selectionSlot, selectFrom);
                 GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                showRaycastSelection = EditorGUILayout.Foldout(showRaycastSelection, "Select by raycasting", true);
+                GUILayout.EndHorizontal();
+
+                if (showRaycastSelection)
+                {
+                 RefreshVisibleSlotListsIfNeeded();
+                    GUIHelper.BeginVerticalPadded(5, new Color(0.92f, 0.92f, 0.97f), EditorStyles.helpBox);
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Selection Slot", GUILayout.Width(92));
+                    if (raycastSelectionSlot >= visibleSelectFrom.Length)
+                    {
+                        raycastSelectionSlot = 0;
+                    }
+                    raycastSelectionSlot = EditorGUILayout.Popup(raycastSelectionSlot, visibleSelectFrom);
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Direction", GUILayout.Width(92));
+                    raycastDirection = (RaycastSelectDirection)EditorGUILayout.EnumPopup(raycastDirection);
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Hit Faces", GUILayout.Width(92));
+                    raycastHitFaceFilter = (RaycastHitFaceFilter)EditorGUILayout.EnumPopup(raycastHitFaceFilter);
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Raycast Length", GUILayout.Width(92));
+                    raycastLength = EditorGUILayout.Slider(raycastLength,0.01f,1.0f);
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    raycastDrawDebugRays = EditorGUILayout.Toggle("Debug Rays", raycastDrawDebugRays);
+                    GUILayout.EndHorizontal();
+                    EditorGUI.BeginDisabledGroup(!raycastDrawDebugRays);
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Debug Ray Limit", GUILayout.Width(92));
+                    raycastDebugRayLimit = EditorGUILayout.IntSlider(raycastDebugRayLimit, 0, 1024);
+                    GUILayout.EndHorizontal();
+                    EditorGUI.EndDisabledGroup();
+
+                    raycastAddToSelection = GUILayout.Toggle(raycastAddToSelection, "Add to selection (otherwise replace)");
+
+                    EditorGUI.BeginDisabledGroup(raycastSelectionSlot <= 0);
+                    if (GUILayout.Button("Select by raycast"))
+                    {
+                        Undo.RegisterCompleteObjectUndo(this, "Select Vertexes By Raycast");
+                        SelectByRaycast();
+                        modifierEditor.Repaint();
+                        SceneView.RepaintAll();
+                    }
+                    EditorGUI.EndDisabledGroup();
+
+                    if (!string.IsNullOrEmpty(raycastStatusMessage))
+                    {
+                       GUILayout.Label("Result (copy/paste):", EditorStyles.miniBoldLabel);
+                        float line = EditorGUIUtility.singleLineHeight;
+                        raycastStatusMessage = EditorGUILayout.TextArea(raycastStatusMessage, GUILayout.MinHeight(line * 4f));
+                    }
+
+                    GUIHelper.EndVerticalPadded(5);
+                }
             }
             else
             {
@@ -2173,14 +2666,7 @@ namespace UMA
             sceneView.wantsMouseEnterLeaveWindow = true;
 
 
-            List<string> slotnames = new List<string>();
-            slotnames.Add("All Slots");
-            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
-            {
-                string s = slot.slotName;
-                slotnames.Add(s);
-            }
-            selectFrom = slotnames.ToArray();
+            RefreshVisibleSlotLists();
 
 
 
@@ -2192,6 +2678,46 @@ namespace UMA
             sceneView.AlignViewToObject(cameraAnchor.transform);
             sceneView.FrameSelected();
             phyScene = PhysicsSceneExtensions.GetPhysicsScene(scene);
+        }
+
+        private void RefreshVisibleSlotLists()
+        {
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
+            {
+                selectFrom = new string[] { "All Slots" };
+                visibleSelectFrom = new string[] { "All Slots" };
+                selectionSlot = 0;
+                raycastSelectionSlot = 0;
+                return;
+            }
+
+            List<string> all = new List<string>();
+            List<string> visible = new List<string>();
+            all.Add("All Slots");
+            visible.Add("All Slots");
+            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+            {
+                if (slot == null)
+                {
+                    continue;
+                }
+                all.Add(slot.slotName);
+                if (IsSelectableSlot(slot))
+                {
+                    visible.Add(slot.slotName);
+                }
+            }
+            selectFrom = all.ToArray();
+            visibleSelectFrom = visible.ToArray();
+
+            if (selectionSlot >= selectFrom.Length)
+            {
+                selectionSlot = 0;
+            }
+            if (raycastSelectionSlot >= visibleSelectFrom.Length)
+            {
+                raycastSelectionSlot = 0;
+            }
         }
 
         public Mesh GetBakedMesh()

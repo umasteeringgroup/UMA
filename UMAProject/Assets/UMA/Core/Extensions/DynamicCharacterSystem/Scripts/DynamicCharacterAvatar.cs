@@ -5380,6 +5380,10 @@ namespace UMA.CharacterSystem
 
                     foreach (var modifier in slotModifiers)
                     {
+                        if (string.IsNullOrEmpty(modifier.DNAName))
+                        {
+                            continue;
+                        }
                         if (modifier != null && DNA.ContainsKey(modifier.DNAName))
                         {
                             modifier.Scale = DNA[modifier.DNAName].Value;

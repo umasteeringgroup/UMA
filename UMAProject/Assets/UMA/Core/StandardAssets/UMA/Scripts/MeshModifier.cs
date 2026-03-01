@@ -10,8 +10,12 @@ namespace UMA
     [Serializable]
     // MeshModifier is a ScriptableObject that contains lists of VertexAdjustments.
     // Note: This is added to recipes 
-    public class MeshModifier : ScriptableObject, ISerializationCallbackReceiver
+    public class MeshModifier : ScriptableObject
     {
+      #if UNITY_EDITOR
+        [SerializeField, TextArea(3, 20)]
+        private string splitDiagnostics;
+        #endif
         [Serializable]
         // each slot affected, will have a modifier.
         public class Modifier
@@ -32,62 +36,17 @@ namespace UMA
             public float Scale = 1.0f;
 
             [Tooltip("This is the list of adjustments for the current slot.")]
+            [SerializeReference]
             public VertexAdjustmentCollection adjustments;
-
-            public string TemplateAdjustmentJSON;
-            public string AdjustmentType;
-            public string CollectionType;
-            public List<string> JsonAdjustments = new List<string>();
 
             public void EditorInitialize(Type collectionType)
             {
                 adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(collectionType);
-                CollectionType = collectionType.AssemblyQualifiedName;
 
 #if UNITY_EDITOR
                 Type adjustmentType = adjustments.AdjustmentType;
                 TemplateAdjustment = (VertexAdjustment)Activator.CreateInstance(adjustmentType);
-                AdjustmentType = adjustmentType.AssemblyQualifiedName;
 #endif
-            }
-
-            public void BeforeSaving()
-            {
-#if UNITY_EDITOR
-                if (TemplateAdjustment != null)
-                {
-                    TemplateAdjustmentJSON = JsonUtility.ToJson(TemplateAdjustment);
-                }
-                else
-                {
-                    TemplateAdjustmentJSON = "";
-                }
-#endif
-                JsonAdjustments.Clear();
-                foreach (var adj in adjustments.vertexAdjustments)
-                {
-                    JsonAdjustments.Add(JsonUtility.ToJson(adj));
-                }
-                CollectionType = adjustments.GetType().AssemblyQualifiedName;
-                AdjustmentType = adjustments.vertexAdjustments[0].GetType().AssemblyQualifiedName;
-            }
-
-            public void AfterLoading()
-            {
-                Type adjType = Type.GetType(AdjustmentType);
-                Type colType = Type.GetType(CollectionType);
-                adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(colType);
-#if UNITY_EDITOR
-                TemplateAdjustment = VertexAdjustment.FromJSON(TemplateAdjustmentJSON);
-#endif
-                foreach (string json in JsonAdjustments)
-                {
-                    VertexAdjustment va = VertexAdjustment.FromJSON(json);
-                    if (va != null)
-                    {
-                        adjustments.Add(va);
-                    }
-                }
             }
              public UMAMeshData Process(UMAMeshData src)
             {
@@ -131,49 +90,24 @@ namespace UMA
             }
         }
 
-        // There is one modifier per slot.
-        // each modifier can contain multiple adjustments.
-        public List<Modifier> modifiers = new List<Modifier>();
+        // Runtime modifiers are split by slot and used during mesh generation.
+        public List<Modifier> runtimeModifiers = new List<Modifier>();
 
-        public void OnBeforeSerialize()
+        public List<Modifier> RuntimeModifiers
         {
-#if UNITY_EDITOR
-            SyncRuntimeModifiersFromEditorModifiers();
-#endif
-            foreach (var mod in modifiers)
-            {
-                mod.BeforeSaving();
-            }
+            get { return runtimeModifiers; } 
+            set { runtimeModifiers = value; }
         }
-
-        public void OnAfterDeserialize()
+         
+        #if UNITY_EDITOR
+        public string SplitDiagnostics
         {
-            foreach (var mod in modifiers)
-            {
-                if (mod == null)
-                {
-                    continue;
-                }
-
-                bool hasSerializedJsonAdjustments = mod.JsonAdjustments != null && mod.JsonAdjustments.Count > 0;
-                bool hasNoRuntimeAdjustments = mod.adjustments == null || mod.adjustments.vertexAdjustments == null || mod.adjustments.vertexAdjustments.Count == 0;
-
-                if (hasSerializedJsonAdjustments || hasNoRuntimeAdjustments)
-                {
-                    mod.AfterLoading();
-                }
-            }
+            get { return splitDiagnostics; }
         }
-
-        public List<Modifier> Modifiers
-        {
-            get { return modifiers; }
-            set { modifiers = value; }
-        }
+        #endif
 
 #if UNITY_EDITOR        
-        // These are the "pre-split" modifiers as created in the editor.
-        // these are not used at runtime.
+        // These are the unsplit modifier stacks as created in the editor.
         public List<Modifier> editorModifiers = new List<Modifier>();
         public List<Modifier> EditorModifiers
         {
@@ -181,34 +115,81 @@ namespace UMA
             set { editorModifiers = value; }
         }
 
-        // These are the "pre-split" ad-hoc adjustments as created in the editor.
-        public List<string> AdHocAdjustmentJSON = new List<string>();
-
         private void SyncRuntimeModifiersFromEditorModifiers()
         {
-            if (editorModifiers == null || editorModifiers.Count == 0)
+          if (editorModifiers == null || editorModifiers.Count == 0)
             {
+                splitDiagnostics = "No editor modifiers to split.";
                 return;
             }
 
+            int editorStacks = editorModifiers.Count;
+            int editorAdjustmentsTotal = 0;
+            int stacksMissingAdjustments = 0;
+            int stacksUsingModifierSlotName = 0;
+            int stacksUsingAdjustmentSlotName = 0;
+            int adjustmentsNull = 0;
+            int adjustmentsMissingSlotName = 0;
+            int adjustmentsAdded = 0;
+
             List<Modifier> splitModifiers = new List<Modifier>();
-            foreach (var source in editorModifiers)
+            for (int i = 0; i < editorModifiers.Count; i++)
             {
-                SplitModifierBySlot(splitModifiers, source);
+                Modifier source = editorModifiers[i];
+                if (source == null)
+                {
+                    stacksMissingAdjustments++;
+                    continue;
+                }
+
+                if (source.keepAsIs)
+                {
+                    splitModifiers.Add(source);
+                    continue;
+                }
+
+                if (source.adjustments == null || source.adjustments.vertexAdjustments == null)
+                {
+                    stacksMissingAdjustments++;
+                    continue;
+                }
+
+               editorAdjustmentsTotal += source.adjustments.vertexAdjustments.Count;
+                if (!string.IsNullOrEmpty(source.SlotName))
+                {
+                    stacksUsingModifierSlotName++;
+                }
+                else
+                {
+                    stacksUsingAdjustmentSlotName++;
+                }
+                SplitModifierBySlot(splitModifiers, source, ref adjustmentsNull, ref adjustmentsMissingSlotName, ref adjustmentsAdded);
             }
-            modifiers = splitModifiers;
+
+            runtimeModifiers = splitModifiers;
+
+            splitDiagnostics =
+                $"Split diagnostics:\n" +
+                $"- Editor stacks: {editorStacks}\n" +
+             $"- Stacks using Modifier.SlotName: {stacksUsingModifierSlotName}\n" +
+                $"- Stacks using adjustment.slotName fallback: {stacksUsingAdjustmentSlotName}\n" +
+                $"- Editor adjustments total: {editorAdjustmentsTotal}\n" +
+                $"- Stacks skipped (null/missing adjustments): {stacksMissingAdjustments}\n" +
+                $"- Adjustments null: {adjustmentsNull}\n" +
+                $"- Adjustments missing slotName: {adjustmentsMissingSlotName}\n" +
+                $"- Adjustments added to runtime: {adjustmentsAdded}\n" +
+                $"- Runtime stacks created: {runtimeModifiers.Count}\n";
+
+            if (runtimeModifiers.Count == 0 && editorAdjustmentsTotal > 0)
+            {
+                Debug.LogWarning($"[MeshModifier] No runtime modifiers were created during split.\n{splitDiagnostics}", this);
+            }
         }
 
-        private static void SplitModifierBySlot(List<Modifier> target, Modifier source)
+     private static void SplitModifierBySlot(List<Modifier> target, Modifier source, ref int adjustmentsNull, ref int adjustmentsMissingSlotName, ref int adjustmentsAdded)
         {
             if (source == null)
             {
-                return;
-            }
-
-            if (source.keepAsIs)
-            {
-                target.Add(source);
                 return;
             }
 
@@ -217,10 +198,80 @@ namespace UMA
                 return;
             }
 
+            // Preferred path: the modifier already declares its target slot.
+            // This is the runtime-required association; adjustments do not need to carry slotName.
+            if (!string.IsNullOrEmpty(source.SlotName))
+            {
+                Modifier destination = null;
+                for (int i = 0; i < target.Count; i++)
+                {
+                    var candidate = target[i];
+                    if (candidate == null || candidate.keepAsIs)
+                    {
+                        continue;
+                    }
+
+                    Type candidateType = candidate.adjustments != null ? candidate.adjustments.GetType() : null;
+                    if (candidate.SlotName == source.SlotName && candidateType == source.adjustments.GetType())
+                    {
+                        bool sameDNA = candidate.DNAName == source.DNAName;
+                        bool sameScale = Mathf.Approximately(candidate.Scale, source.Scale);
+                        if (sameDNA && sameScale)
+                        {
+                            destination = candidate;
+                            break;
+                        }
+                    }
+                }
+
+                if (destination == null)
+                {
+                    destination = new Modifier();
+                    destination.keepAsIs = false;
+                    destination.SlotName = source.SlotName;
+                    destination.DNAName = source.DNAName;
+                    destination.Scale = source.Scale;
+                    destination.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(source.adjustments.GetType());
+#if UNITY_EDITOR
+                    destination.ModifierName = source.ModifierName;
+                    destination.manuallyModified = source.manuallyModified;
+                    destination.isTemporary = source.isTemporary;
+#endif
+                    target.Add(destination);
+                }
+
+                for (int i = 0; i < source.adjustments.vertexAdjustments.Count; i++)
+                {
+                    var adjustment = source.adjustments.vertexAdjustments[i];
+                    if (adjustment == null)
+                    {
+                        adjustmentsNull++;
+                        continue;
+                    }
+                    #if UNITY_EDITOR
+                    // Remove redundant slotName in runtime modifiers to reduce asset size.
+                    // Slot is implied by destination.SlotName.
+                    adjustment.slotName = null;
+                    #endif
+                    destination.adjustments.Add(adjustment);
+                    adjustmentsAdded++;
+                }
+                return;
+            }
+
+            // Legacy fallback: split by per-adjustment slotName when source modifier has no SlotName.
             foreach (var adjustment in source.adjustments.vertexAdjustments)
             {
                 if (adjustment == null || string.IsNullOrEmpty(adjustment.slotName))
                 {
+                   if (adjustment == null)
+                    {
+                        adjustmentsNull++;
+                    }
+                    else
+                    {
+                        adjustmentsMissingSlotName++;
+                    }
                     continue;
                 }
 
@@ -233,7 +284,12 @@ namespace UMA
                         continue;
                     }
 
-                    Type candidateType = candidate.TemplateAdjustment != null ? candidate.TemplateAdjustment.GetType() : null;
+                    Type candidateType = null;
+                    if (candidate.adjustments != null)
+                    {
+                        candidateType = candidate.adjustments.AdjustmentType;
+                    }
+
                     if (candidate.SlotName == adjustment.slotName && candidateType == adjustment.GetType())
                     {
                         destination = candidate;
@@ -246,17 +302,19 @@ namespace UMA
                     destination = new Modifier();
                     destination.keepAsIs = false;
                     destination.SlotName = adjustment.slotName;
-                    destination.ModifierName = source.ModifierName;
                     destination.DNAName = source.DNAName;
                     destination.Scale = source.Scale;
-                    destination.TemplateAdjustment = source.TemplateAdjustment != null
-                        ? (VertexAdjustment)Activator.CreateInstance(source.TemplateAdjustment.GetType())
-                        : (VertexAdjustment)Activator.CreateInstance(adjustment.GetType());
                     destination.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(source.adjustments.GetType());
+                    #if UNITY_EDITOR
+                    destination.ModifierName = source.ModifierName;
+                    destination.manuallyModified = source.manuallyModified;
+                    destination.isTemporary = source.isTemporary;
+                    #endif
                     target.Add(destination);
                 }
 
                 destination.adjustments.Add(adjustment);
+               adjustmentsAdded++;
             }
         }
 #endif
@@ -265,7 +323,7 @@ namespace UMA
         // This method creates a shallow copy of the MeshDetails object, applies the adjustments, and returns the modified copy.
         public MeshDetails Process(string Slot, MeshDetails Src)
         {
-            foreach (var mod in Modifiers)
+            foreach (var mod in RuntimeModifiers)
             {
                 // TODO: remove this check, it should be done in the editor.
                 if (mod.SlotName == Slot)
