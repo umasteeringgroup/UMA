@@ -1055,15 +1055,25 @@ namespace UMA
             Rect r = SceneView.lastActiveSceneView.position;
             float width = Mathf.Clamp(r.width * 0.28f, 300f, 420f);
             float halfheight = (r.height / 2) - 45;
-            float top1 = 5;
-            float top2 = halfheight + 10;
-            float left1 = 5;
-            float left2 = r.width - width - 35;
 
+            // Preserve current x/y so the windows remain draggable.
+            if (VertexEditorToolsWindow.width <= 0f || VertexEditorToolsWindow.height <= 0f)
+            {
+                VertexEditorToolsWindow = new Rect(5f, 5f, width, halfheight);
+            }
+            else
+            {
+                VertexEditorToolsWindow = new Rect(VertexEditorToolsWindow.x, VertexEditorToolsWindow.y, width, halfheight);
+            }
 
-
-            VertexEditorToolsWindow = new Rect(left1, top1, width, halfheight);
-            VisibleWearablesWindow = new Rect(left1, top2, width, halfheight);
+            if (VisibleWearablesWindow.width <= 0f || VisibleWearablesWindow.height <= 0f)
+            {
+                VisibleWearablesWindow = new Rect(5f, halfheight + 10f, width, halfheight);
+            }
+            else
+            {
+                VisibleWearablesWindow = new Rect(VisibleWearablesWindow.x, VisibleWearablesWindow.y, width, halfheight);
+            }
         }
 
         Quaternion test = Quaternion.identity;
@@ -1072,6 +1082,10 @@ namespace UMA
         {
 
             Event currentEvent = Event.current;
+            Vector2 mousePos = currentEvent.mousePosition;
+            bool mouseOverToolsWindow = VertexEditorToolsWindow.Contains(mousePos);
+            bool mouseOverVisibilityWindow = VisibleWearablesWindow.Contains(mousePos);
+            bool mouseOverAnyWindow = mouseOverToolsWindow || mouseOverVisibilityWindow;
 
             Handles.SetCamera(sceneView.camera);
             if (!rectSelect && Event.current.alt)
@@ -1101,7 +1115,7 @@ namespace UMA
 
                 string vals = $"Shift {currentEvent.shift}\nControl{currentEvent.control}\n,Alt{currentEvent.alt},Command{currentEvent.command}";
 
-                if (Event.current.type == EventType.Layout)
+             if (Event.current.type == EventType.Layout && !mouseOverAnyWindow)
                 {
                     HandleUtility.AddDefaultControl(GUIUtility.GetControlID(GetHashCode(), FocusType.Passive));
                 }
@@ -1118,7 +1132,7 @@ namespace UMA
                     }
                 }
 
-                if (currentEvent.type == EventType.MouseDown)
+               if (currentEvent.type == EventType.MouseDown && !mouseOverAnyWindow)
                 {
                     currentState = vertexState.unKnown;
 
@@ -1190,20 +1204,26 @@ namespace UMA
                 }
 
 
-                // This is to prevent the scene view from capturing the selection and doing it's own routines
-                if (currentEvent.type == EventType.MouseDrag)
+
+            // This is to prevent the scene view from capturing the selection and doing it's own routines.
+            // But we must not eat events intended for our own IMGUI windows/scrollviews.
+           if (currentEvent.type == EventType.MouseDrag)
+            {
+                if (pendingStateClickAction)
                 {
-                    if (pendingStateClickAction)
+                    float dragDistance = Vector2.Distance(pendingStateClickStart, currentEvent.mousePosition);
+                    if (dragDistance > 2f)
                     {
-                        float dragDistance = Vector2.Distance(pendingStateClickStart, currentEvent.mousePosition);
-                        if (dragDistance > 2f)
-                        {
-                            rectSelect = true;
-                        }
+                        rectSelect = true;
                     }
-                    Event.current.Use();
+                }
+
+                if (!mouseOverAnyWindow)
+                {
+                    currentEvent.Use();
                     sceneView.Repaint();
                 }
+            }
 
 
                 if (currentEvent.type == EventType.MouseUp)// && currentEvent.button == 0)
@@ -1555,6 +1575,8 @@ namespace UMA
 
             VisibleWearablesWindow = GUI.Window(VisibleWearablesID, VisibleWearablesWindow, (id) =>
             {
+
+
                 VisibleWearablesLocation = GUILayout.BeginScrollView(VisibleWearablesLocation);
                 bool wasChanged = false;
                 bool wasRecipeChanged = false;
@@ -1686,7 +1708,9 @@ namespace UMA
                     EditorGUILayout.HelpBox("At least one slot must remain visible.", MessageType.Warning);
                 }
 
-                GUILayout.EndScrollView();
+              GUILayout.EndScrollView();
+                GUI.DragWindow(new Rect(0, 0, VisibleWearablesWindow.width, 20));
+
                 if (wasChanged)
                 {
                     RebuildMesh(false);
@@ -2001,8 +2025,8 @@ namespace UMA
             GUILayout.EndArea();
             GUILayout.Space(ToolWindowAreaHeight + 10);
             GUILayout.EndScrollView();
-
-
+            // Define a small drag area so the rest of the window is NOT draggable
+            GUI.DragWindow(new Rect(0, 0, VertexEditorToolsWindow.width, 20));
         }
 
         private void CancelInteraction()
