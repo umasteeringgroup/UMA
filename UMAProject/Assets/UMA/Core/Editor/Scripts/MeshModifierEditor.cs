@@ -213,26 +213,52 @@ namespace UMA
 
             if (modifier == null)
             {
+                Debug.Log("[MeshModifierEditor.Setup] modifier is null, creating empty list");
                 // create a new modifier?
                 Modifiers = new List<MeshModifier.Modifier>();
             }
             else
             {
                 currentModifierIndex = 0;
+
+                // Debug: Log the state of the incoming modifier
+                int editorCount = modifier.EditorModifiers != null ? modifier.EditorModifiers.Count : -1;
+                int runtimeCount = modifier.RuntimeModifiers != null ? modifier.RuntimeModifiers.Count : -1;
+                int editorAdjustments = 0;
+                if (modifier.EditorModifiers != null)
+                {
+                    foreach (var m in modifier.EditorModifiers)
+                    {
+                        if (m != null && m.adjustments != null && m.adjustments.vertexAdjustments != null)
+                        {
+                            editorAdjustments += m.adjustments.vertexAdjustments.Count;
+                        }
+                    }
+                }
+                Debug.Log($"[MeshModifierEditor.Setup] Incoming modifier: EditorModifiers={editorCount}, RuntimeModifiers={runtimeCount}, Total EditorAdjustments={editorAdjustments}");
+
                 if (modifier.EditorModifiers != null && modifier.EditorModifiers.Count > 0)
                 {
-                    Modifiers = modifier.EditorModifiers;
+                    // Create a copy to avoid modifying the original asset data
+                    Modifiers = new List<MeshModifier.Modifier>(modifier.EditorModifiers);
+                    Debug.Log($"[MeshModifierEditor.Setup] Using EditorModifiers, copied {Modifiers.Count} modifiers");
                 }
                 else if (modifier.RuntimeModifiers != null)
                 {
-                    Modifiers = modifier.RuntimeModifiers;
+                    // Create a copy to avoid modifying the original asset data
+                    Modifiers = new List<MeshModifier.Modifier>(modifier.RuntimeModifiers);
+                    Debug.Log($"[MeshModifierEditor.Setup] Using RuntimeModifiers, copied {Modifiers.Count} modifiers");
                 }
                 else
                 {
+                    Debug.Log("[MeshModifierEditor.Setup] Both EditorModifiers and RuntimeModifiers are null/empty");
                     Modifiers = new List<MeshModifier.Modifier>();
                 }
 
                 HydrateAdHocAdjustmentsFromEditorModifiers();
+
+                // Debug: Log state after hydration
+                Debug.Log($"[MeshModifierEditor.Setup] After hydration: Modifiers.Count={Modifiers.Count}");
             }
             // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
             centeredLabel = EditorStyles.boldLabel;
@@ -405,13 +431,28 @@ namespace UMA
             }
         }
 
+        private static string MeshModifierSaveFolderKey => $"UMA_MeshModifierSaveFolder_{Application.dataPath.GetHashCode()}";
+
         public void SaveToAsset()
         {
-            string Path = EditorUtility.SaveFilePanelInProject("Save MeshModifier", "MeshModifier", "asset", "Save current MeshModifier to project");
-            if (Path != "")
+            // Get the last used folder for this project, default to "Assets"
+            string lastFolder = EditorPrefs.GetString(MeshModifierSaveFolderKey, "Assets");
+
+            // Ensure the folder still exists, otherwise fall back to Assets
+            if (!AssetDatabase.IsValidFolder(lastFolder))
             {
-                string BaseName = System.IO.Path.GetFileNameWithoutExtension(Path);
-                MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(Path, false);
+                lastFolder = "Assets";
+            }
+
+            string path = EditorUtility.SaveFilePanelInProject("Save MeshModifier", "MeshModifier", "asset", "Save current MeshModifier to project", lastFolder);
+            if (!string.IsNullOrEmpty(path))
+            {
+                // Remember the folder for next time
+                string folder = System.IO.Path.GetDirectoryName(path);
+                EditorPrefs.SetString(MeshModifierSaveFolderKey, folder);
+
+                string BaseName = System.IO.Path.GetFileNameWithoutExtension(path);
+                MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(path, false);
                 List<MeshModifier.Modifier> editorSnapshot = BuildEditorModifierSnapshot(includeBulkModifiers: true, includeAdHocModifiers: true, onlyActiveBulkModifier: false);
                 meshModifier.EditorModifiers = editorSnapshot;
                 meshModifier.RuntimeModifiers = SplitModifierStacksBySlot(editorSnapshot);
@@ -424,6 +465,7 @@ namespace UMA
         {
             if (vertexEditorStage == null)
             {
+                Debug.Log("[HydrateAdHoc] vertexEditorStage is null, skipping");
                 return;
             }
 
@@ -432,16 +474,37 @@ namespace UMA
 
             if (Modifiers == null)
             {
+                Debug.Log("[HydrateAdHoc] Modifiers is null, skipping");
                 return;
             }
+
+            Debug.Log($"[HydrateAdHoc] Processing {Modifiers.Count} modifiers...");
+
+            int totalAdjustmentsExtracted = 0;
+            int modifiersKept = 0;
+            int modifiersExtracted = 0;
 
             for (int i = Modifiers.Count - 1; i >= 0; i--)
             {
                 MeshModifier.Modifier mod = Modifiers[i];
-                if (mod == null || mod.manuallyModified == false)
+                if (mod == null)
                 {
+                    Debug.Log($"[HydrateAdHoc] Modifier {i} is null, skipping");
                     continue;
                 }
+
+                int adjustmentCount = mod.adjustments != null && mod.adjustments.vertexAdjustments != null 
+                    ? mod.adjustments.vertexAdjustments.Count : 0;
+
+                if (mod.manuallyModified == false)
+                {
+                    Debug.Log($"[HydrateAdHoc] Modifier {i} '{mod.ModifierName}' has manuallyModified=false, keeping as bulk modifier ({adjustmentCount} adjustments)");
+                    modifiersKept++;
+                    continue;
+                }
+
+                Debug.Log($"[HydrateAdHoc] Modifier {i} '{mod.ModifierName}' has manuallyModified=true, extracting {adjustmentCount} adjustments to ad-hoc");
+                modifiersExtracted++;
 
                 if (mod.adjustments != null && mod.adjustments.vertexAdjustments != null)
                 {
@@ -450,12 +513,15 @@ namespace UMA
                         if (adjustment != null)
                         {
                             adHocAdjustments.Add(adjustment);
+                            totalAdjustmentsExtracted++;
                         }
                     }
                 }
 
                 Modifiers.RemoveAt(i);
             }
+
+            Debug.Log($"[HydrateAdHoc] Done: {modifiersKept} bulk modifiers kept, {modifiersExtracted} extracted to ad-hoc, {totalAdjustmentsExtracted} total adjustments extracted");
         }
 
         private List<MeshModifier.Modifier> BuildEditorModifierSnapshot(bool includeBulkModifiers, bool includeAdHocModifiers, bool onlyActiveBulkModifier)
@@ -1496,13 +1562,45 @@ namespace UMA
                 return;
             }
 
-            if (selectedType < 0 || selectedType >= ModifierTypes.Length)
+            // Ensure template state is initialized for the CURRENT modifier, without overwriting its saved adjustments.
+            // The previous logic used the global `selectedType`, which can differ from the modifier's actual collection type.
+            // That could result in EditorInitialize creating a new collection and implicitly losing the loaded vertices.
+            if (currentModifier.adjustments == null)
             {
-                return;
+                // No collection loaded; initialize from the currently selected type as a fallback.
+                if (selectedType < 0 || selectedType >= ModifierTypes.Length)
+                {
+                    return;
+                }
+                currentModifier.EditorInitialize(ModifierTypes[selectedType]);
             }
+
             if (currentModifier.TemplateAdjustment == null)
             {
-                currentModifier.EditorInitialize(ModifierTypes[selectedType]);
+                Type adjustmentType = currentModifier.adjustments.AdjustmentType;
+                currentModifier.TemplateAdjustment = adjustmentType != null
+                    ? (VertexAdjustment)Activator.CreateInstance(adjustmentType)
+                    : null;
+            }
+
+            // Keep the UI "Extract Bulk Modifier of Type" dropdown aligned with the current modifier's collection type.
+            if (currentModifier.adjustments != null)
+            {
+                Type currentType = currentModifier.adjustments.GetType();
+                for (int t = 0; t < ModifierTypes.Length; t++)
+                {
+                    if (ModifierTypes[t] == currentType)
+                    {
+                        selectedType = t;
+                        break;
+                    }
+                }
+            }
+
+            if (currentModifier.TemplateAdjustment == null)
+            {
+                EditorGUILayout.HelpBox("Unable to initialize template adjustment for this modifier.", MessageType.Warning);
+                return;
             }
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField($"{currentModifier.TemplateAdjustment.Name} {currentModifier.ModifierName}" , centeredLabel);

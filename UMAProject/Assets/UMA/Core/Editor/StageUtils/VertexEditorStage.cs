@@ -1020,7 +1020,8 @@ namespace UMA
             modifierEditor = MeshModifierEditor.GetOrCreateWindowFromModifier(Currentmodifier, thisDCA, this);
             if (Currentmodifier != null)
             {
-                modifierEditor.Modifiers = Currentmodifier.EditorModifiers;
+                // Note: Setup() in MeshModifierEditor already creates a safe copy of EditorModifiers.
+                // Do NOT reassign modifierEditor.Modifiers here as it would replace the copy with a direct reference.
                 foreach (var newMod in modifierEditor.Modifiers)
                 {
                     // get the type of the VertexAdjustment for this collection
@@ -1039,6 +1040,17 @@ namespace UMA
                         }
                     } */
                 }
+
+                // Debug: Check adjustments count after foreach loop
+                int totalAfterLoop = 0;
+                foreach (var mod in modifierEditor.Modifiers)
+                {
+                    if (mod != null && mod.adjustments != null && mod.adjustments.vertexAdjustments != null)
+                    {
+                        totalAfterLoop += mod.adjustments.vertexAdjustments.Count;
+                    }
+                }
+                Debug.Log($"[OnOpenStage] After foreach loop: Modifiers.Count={modifierEditor.Modifiers.Count}, TotalAdjustments={totalAfterLoop}");
             }
             else
             {

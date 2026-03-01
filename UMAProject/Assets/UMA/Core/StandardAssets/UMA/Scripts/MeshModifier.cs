@@ -98,17 +98,17 @@ namespace UMA
             get { return runtimeModifiers; } 
             set { runtimeModifiers = value; }
         }
-         
+
         #if UNITY_EDITOR
         public string SplitDiagnostics
         {
             get { return splitDiagnostics; }
         }
-        #endif
 
-#if UNITY_EDITOR        
         // These are the unsplit modifier stacks as created in the editor.
+        [SerializeField]
         public List<Modifier> editorModifiers = new List<Modifier>();
+
         public List<Modifier> EditorModifiers
         {
             get { return editorModifiers; }
@@ -305,11 +305,11 @@ namespace UMA
                     destination.DNAName = source.DNAName;
                     destination.Scale = source.Scale;
                     destination.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(source.adjustments.GetType());
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     destination.ModifierName = source.ModifierName;
                     destination.manuallyModified = source.manuallyModified;
                     destination.isTemporary = source.isTemporary;
-                    #endif
+#endif
                     target.Add(destination);
                 }
 
