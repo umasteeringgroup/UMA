@@ -229,6 +229,19 @@ namespace UMA
         [SerializeField]
         private MessageType raycastOcclusionStatusType = MessageType.Info;
 
+        [SerializeField]
+        private bool raycastTestMode;
+        [SerializeField]
+        private string raycastTestSourceSlot;
+        [SerializeField]
+        private string raycastTestOccluderSlot;
+        [SerializeField]
+        private int raycastTestSlotVertexIndex;
+        [SerializeField]
+        private string raycastTestStatus;
+        [SerializeField]
+        private MessageType raycastTestStatusType = MessageType.Info;
+
         [Serializable]
         private class SubmeshColorEntry
         {
@@ -1245,6 +1258,36 @@ namespace UMA
             {
                 EditorGUILayout.HelpBox(raycastOcclusionStatus, raycastOcclusionStatusType);
             }
+
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Test Raycast (CPU)", EditorStyles.boldLabel);
+            raycastTestMode = EditorGUILayout.ToggleLeft("Enable test-pick mode (click vertex)", raycastTestMode);
+
+            string[] allSlots = selectFrom != null && selectFrom.Length > 0 ? selectFrom : new[] { "All Slots" };
+            int srcIndex = Mathf.Max(0, Array.IndexOf(allSlots, raycastTestSourceSlot));
+            int occIndex = Mathf.Max(0, Array.IndexOf(allSlots, raycastTestOccluderSlot));
+            srcIndex = EditorGUILayout.Popup("Source Slot", srcIndex, allSlots);
+            occIndex = EditorGUILayout.Popup("Occluder Slot", occIndex, allSlots);
+            raycastTestSourceSlot = allSlots.Length > srcIndex ? allSlots[srcIndex] : null;
+            raycastTestOccluderSlot = allSlots.Length > occIndex ? allSlots[occIndex] : null;
+
+            using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(raycastTestSourceSlot) || raycastTestSourceSlot == "All Slots"))
+            {
+                raycastTestSlotVertexIndex = Mathf.Max(0, EditorGUILayout.IntField("Slot Vertex Index", raycastTestSlotVertexIndex));
+            }
+
+            using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(raycastTestSourceSlot) || raycastTestSourceSlot == "All Slots" || string.IsNullOrEmpty(raycastTestOccluderSlot) || raycastTestOccluderSlot == "All Slots"))
+            {
+                if (GUILayout.Button("Run Test Raycast For Vertex"))
+                {
+                    RunTestRaycastForSelectedVertex();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(raycastTestStatus))
+            {
+                EditorGUILayout.HelpBox(raycastTestStatus, raycastTestStatusType);
+            }
 #endif
         }
 
@@ -1329,12 +1372,14 @@ namespace UMA
             // We do NOT require MeshHideAssets here; raycast behaves like manual selection.
             // Results are applied to stage selections (`SelectedFaces`) and can be split into assets later.
 
-            // Build CPU triangle cache for candidate geometry (visible, non-selected)
+            // Build CPU triangle cache for candidate geometry: visible AND not in selected slots.
+            // IMPORTANT: this relies on correct slot ownership mapping (GetSlotNameForBakedVertex).
             List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)> candidates = BuildCandidateTrianglesCPU(visibleSlotNames, selectedSlotNames);
             if (candidates.Count == 0)
             {
                 raycastOcclusionStatusType = MessageType.Warning;
                 raycastOcclusionStatus = "Raycast skipped: no visible non-selected geometry to test against.";
+                EditorUtility.DisplayDialog("Raycast Occlusion", raycastOcclusionStatus, "OK");
                 return;
             }
 
@@ -1342,28 +1387,28 @@ namespace UMA
             int totalVerticesTested = 0;
             int totalVertexHits = 0;
             int totalSlotsProcessed = 0;
+            int totalTrianglesChecked = 0;
+            int slotsWithNewTriangles = 0;
 
             // SlotName -> local triangle flags for that slot. Flags length equals slot local triangle count.
             Dictionary<string, BitArray> slotHiddenFlags = new Dictionary<string, BitArray>(StringComparer.Ordinal);
 
             try
             {
+                int skippedNotVisible = 0;
+                int skippedMissingMesh = 0;
                 foreach (string slotName in selectedSlotNames)
                 {
                     if (!visibleSlotNames.Contains(slotName))
                     {
-                        continue;
-                    }
-
-                    // NOT in selection mode: i.e. don't run on slots that are currently selected in the Scene overlay selection set
-                    if (IsSlotInSelectionMode(slotName))
-                    {
+                        skippedNotVisible++;
                         continue;
                     }
 
                     SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(slotName);
                     if (slot == null || slot.asset == null || slot.asset.meshData == null)
                     {
+                        skippedMissingMesh++;
                         continue;
                     }
 
@@ -1396,7 +1441,19 @@ namespace UMA
                         totalTrianglesMarked += marked;
                     }
 
+                    totalTrianglesChecked += triCount;
+                    if (marked > 0)
+                    {
+                        slotsWithNewTriangles++;
+                    }
+
                     totalSlotsProcessed++;
+                }
+
+                // Append skip info for debugging.
+                if (skippedNotVisible > 0 || skippedMissingMesh > 0)
+                {
+                    raycastOcclusionStatusType = MessageType.Info;
                 }
             }
             finally
@@ -1461,9 +1518,128 @@ namespace UMA
             MarkOverlayMeshDirty();
 
             raycastOcclusionStatusType = MessageType.Info;
-            raycastOcclusionStatus = $"Raycast complete\nCandidate triangles: {candidates.Count}\nSlots processed: {totalSlotsProcessed}\nVertices tested: {totalVerticesTested}\nVertex hits: {totalVertexHits}\nTriangles marked: {totalTrianglesMarked}";
+            raycastOcclusionStatus = $"Raycast complete\nCandidate triangles: {candidates.Count}\nSlots processed: {totalSlotsProcessed}\nSlots with new triangles: {slotsWithNewTriangles}\nTriangles checked: {totalTrianglesChecked}\nVertices tested: {totalVerticesTested}\nVertex hits: {totalVertexHits}\nTriangles marked: {totalTrianglesMarked}";
+
+            EditorUtility.DisplayDialog("Raycast Occlusion Complete", raycastOcclusionStatus, "OK");
 
             SceneView.RepaintAll();
+        }
+
+        private void RunTestRaycastForSelectedVertex()
+        {
+            raycastTestStatusType = MessageType.Info;
+            raycastTestStatus = null;
+
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
+            {
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = "Test raycast skipped: character data is not available.";
+                return;
+            }
+            if (FaceObject == null || BakedMesh == null)
+            {
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = "Test raycast skipped: baked mesh is not available.";
+                return;
+            }
+            if (string.IsNullOrEmpty(raycastTestSourceSlot) || raycastTestSourceSlot == "All Slots")
+            {
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = "Pick a Source Slot first.";
+                return;
+            }
+            if (string.IsNullOrEmpty(raycastTestOccluderSlot) || raycastTestOccluderSlot == "All Slots")
+            {
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = "Pick an Occluder Slot first.";
+                return;
+            }
+
+            SlotData sourceSlot = thisDCA.umaData.umaRecipe.GetSlot(raycastTestSourceSlot);
+            if (sourceSlot == null || sourceSlot.asset == null || sourceSlot.asset.meshData == null)
+            {
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = "Source slot not found or missing mesh data.";
+                return;
+            }
+
+            int bakedIndex = GetBakedVertexIndexForSlotVertex(sourceSlot, raycastTestSlotVertexIndex);
+            if (bakedIndex < 0 || bakedIndex >= BakedMesh.vertexCount)
+            {
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = $"Invalid baked vertex index for slot vertex {raycastTestSlotVertexIndex}.";
+                return;
+            }
+
+            Vector3 originWorld = FaceObject.transform.TransformPoint(BakedMesh.vertices[bakedIndex]);
+            Vector3 nWorld = Vector3.up;
+            if (bakedIndex >= 0 && bakedIndex < BakedMesh.normals.Length)
+            {
+                nWorld = FaceObject.transform.TransformDirection(BakedMesh.normals[bakedIndex]).normalized;
+            }
+            if (nWorld.sqrMagnitude < 1e-8f)
+            {
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = "Vertex normal is invalid/zero.";
+                return;
+            }
+
+            HashSet<string> visibleSlotNames = new HashSet<string>(StringComparer.Ordinal);
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var s = slots[i];
+                if (s == null) continue;
+                if (s.Suppressed) continue;
+                visibleSlotNames.Add(s.slotName);
+            }
+
+            var selectedSlotNames = new HashSet<string>(StringComparer.Ordinal) { raycastTestSourceSlot };
+            List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)> candidates = BuildCandidateTrianglesCPU(visibleSlotNames, selectedSlotNames);
+            if (candidates.Count == 0)
+            {
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = "No candidate triangles found. Slot ownership mapping may be failing.";
+                return;
+            }
+
+            // Rebuild candidate list for ONLY the occluder slot.
+            HashSet<string> selectedExceptOccluder = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var s in visibleSlotNames)
+            {
+                if (!string.Equals(s, raycastTestOccluderSlot, StringComparison.Ordinal))
+                {
+                    selectedExceptOccluder.Add(s);
+                }
+            }
+            List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)> occCandidates = BuildCandidateTrianglesCPU(visibleSlotNames, selectedExceptOccluder);
+            if (occCandidates.Count == 0)
+            {
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = "No occluder triangles found for the chosen occluder slot (or it is suppressed).";
+                return;
+            }
+
+            float outMax = Mathf.Max(0f, raycastOcclusionOutward);
+            float inMax = Mathf.Max(0f, raycastOcclusionInward);
+
+            bool hitOut = false;
+            bool hitIn = false;
+            if (outMax > 0f)
+            {
+                Vector3 dir = nWorld;
+                Vector3 origin = originWorld + (dir * 0.0005f);
+                hitOut = RaycastCPU(origin, dir, outMax, occCandidates);
+            }
+            if (inMax > 0f)
+            {
+                Vector3 dir = -nWorld;
+                Vector3 origin = originWorld + (dir * 0.0005f);
+                hitIn = RaycastCPU(origin, dir, inMax, occCandidates);
+            }
+
+            raycastTestStatusType = (hitOut || hitIn) ? MessageType.Info : MessageType.Warning;
+            raycastTestStatus = $"Test vertex bakedIndex={bakedIndex}\nSource={raycastTestSourceSlot} Occluder={raycastTestOccluderSlot}\nCandidates(all)={candidates.Count} Candidates(occluder)={occCandidates.Count}\nHit outward={hitOut} Hit inward={hitIn}";
         }
 
         private bool IsSlotInSelectionMode(string slotName)
@@ -2694,6 +2870,12 @@ namespace UMA
                 return;
             }
 
+            if (raycastTestMode && evt.type == EventType.MouseDown && evt.button == 0 && !evt.alt && GUIUtility.hotControl == 0)
+            {
+                TryPickTestRaycastVertex(evt.mousePosition);
+                // Let normal selection continue too.
+            }
+
             if (evt.alt)
             {
                 return;
@@ -2791,6 +2973,80 @@ namespace UMA
 
                 evt.Use();
             }
+        }
+
+        private void TryPickTestRaycastVertex(Vector2 mousePosition)
+        {
+            if (meshCollider == null || FaceObject == null || BakedMesh == null)
+            {
+                return;
+            }
+            if (string.IsNullOrEmpty(raycastTestSourceSlot) || raycastTestSourceSlot == "All Slots")
+            {
+                return;
+            }
+
+            SlotData sourceSlot = thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null ? thisDCA.umaData.umaRecipe.GetSlot(raycastTestSourceSlot) : null;
+            if (sourceSlot == null || sourceSlot.asset == null || sourceSlot.asset.meshData == null)
+            {
+                return;
+            }
+
+            Ray ray = HandleUtility.GUIPointToWorldRay(mousePosition);
+            if (!meshCollider.Raycast(ray, out RaycastHit hitInfo, 1000f))
+            {
+                return;
+            }
+
+            int globalTriangleIndex = hitInfo.triangleIndex;
+            if (!TryMapGlobalTriangleIndexToSubmesh(globalTriangleIndex, out int submeshIndex, out int triangleIndexOnSubmesh))
+            {
+                return;
+            }
+
+            TriangleKey key = new TriangleKey(submeshIndex, triangleIndexOnSubmesh);
+            if (!triangleSlotOwnership.TryGetValue(key, out var owner) || owner.slot == null)
+            {
+                return;
+            }
+
+            if (!string.Equals(owner.slot.slotName, raycastTestSourceSlot, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            int[] tris = BakedMesh.GetTriangles(submeshIndex);
+            int ti = triangleIndexOnSubmesh * 3;
+            if (tris == null || ti + 2 >= tris.Length)
+            {
+                return;
+            }
+
+            int v0 = tris[ti];
+            int v1 = tris[ti + 1];
+            int v2 = tris[ti + 2];
+
+            Vector3[] verts = BakedMesh.vertices;
+            Vector3 hp = FaceObject.transform.InverseTransformPoint(hitInfo.point);
+            float d0 = (verts[v0] - hp).sqrMagnitude;
+            float d1 = (verts[v1] - hp).sqrMagnitude;
+            float d2 = (verts[v2] - hp).sqrMagnitude;
+
+            int chosen = v0;
+            float best = d0;
+            if (d1 < best)
+            {
+                best = d1;
+                chosen = v1;
+            }
+            if (d2 < best)
+            {
+                chosen = v2;
+            }
+
+            raycastTestSlotVertexIndex = Mathf.Max(0, chosen - sourceSlot.vertexOffset);
+            raycastTestStatusType = MessageType.Info;
+            raycastTestStatus = $"Picked vertex on {raycastTestSourceSlot}: slotVertexIndex={raycastTestSlotVertexIndex} (bakedIndex={chosen})";
         }
 
         private void UpdateDragRect(Vector2 currentMousePos)
