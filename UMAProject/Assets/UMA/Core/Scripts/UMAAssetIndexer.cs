@@ -139,7 +139,8 @@ namespace UMA
         {  typeof(TextAsset), typeof(TextAsset) },
         {  typeof(DynamicUMADnaAsset), typeof(DynamicUMADnaAsset) },
         {  typeof(UMAMaterial), typeof(UMAMaterial) },
-        {  typeof(UMAColorScheme), typeof(UMAColorScheme) }
+        {  typeof(UMAColorScheme), typeof(UMAColorScheme) },
+        {  typeof(MeshHideAsset), typeof(MeshHideAsset) } // SALTY GAMES added to get around issues with missing type
         };
 
 
@@ -166,7 +167,8 @@ namespace UMA
         (typeof(DynamicUMADnaAsset)),
         (typeof(TextAsset)),
         (typeof(UMAMaterial)),
-        (typeof(UMAColorScheme))
+        (typeof(UMAColorScheme)),
+        (typeof(MeshHideAsset))
     };
 
 
@@ -2595,6 +2597,10 @@ namespace UMA
 
             foreach (string s in CompatibleRaces)
             {
+                // ignore excluded races
+                if (!TypeDic.TryGetValue(s, out var _))
+                    continue;
+
                 RaceData r = GetAsset<RaceData>(s);
                 if (r != null && !AdditionalRaces.Contains(r.name))
                 {
