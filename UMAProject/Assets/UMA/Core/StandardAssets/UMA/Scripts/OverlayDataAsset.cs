@@ -11,7 +11,6 @@ namespace UMA
     /// <summary>
     /// Contains the immutable data shared between overlays of the same type.
     /// </summary>
-    [PreferBinarySerialization]
 	[System.Serializable]
 	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver, IUMAIndexOptions
 	{
@@ -30,7 +29,7 @@ namespace UMA
 
 		public ReorderableList tagsList;
 #endif
-		public enum OverlayType
+        public enum OverlayType
 		{
 			Normal = 0,
 			Cutout = 1,
