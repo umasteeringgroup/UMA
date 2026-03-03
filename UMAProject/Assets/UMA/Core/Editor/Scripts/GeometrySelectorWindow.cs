@@ -46,7 +46,7 @@ namespace UMA.Editors
         private int _copyFromLod = 0;
         private int _copyToLod = 0;
         private bool _copyReplaceDest = true;
-        private MeshHideAsset.CopyLODMode _copyLodMode = MeshHideAsset.CopyLODMode.Conservative;
+        private MeshHideAsset.TriangleHideStrategy _copyLodMode = MeshHideAsset.TriangleHideStrategy.Conservative;
 #endif
 
         public static GeometrySelectorWindow Instance { get; private set; }
@@ -191,7 +191,7 @@ namespace UMA.Editors
                     _copyFromLod = EditorGUILayout.IntField(new GUIContent("From LOD"), _copyFromLod);
                     _copyToLod = EditorGUILayout.IntField(new GUIContent("To LOD"), _copyToLod);
                     _copyReplaceDest = EditorGUILayout.Toggle(new GUIContent("Replace Dest"), _copyReplaceDest);
-                    _copyLodMode = (MeshHideAsset.CopyLODMode)EditorGUILayout.EnumPopup(new GUIContent(
+                    _copyLodMode = (MeshHideAsset.TriangleHideStrategy)EditorGUILayout.EnumPopup(new GUIContent(
                         "Copy LOD Mode",
                         "Controls how destination triangles are marked hidden based on how many of their vertices were part of any hidden triangle in the source LOD.\n\n" +
                         "Strict: hide only if ALL 3 vertices were previously hidden.\n" +

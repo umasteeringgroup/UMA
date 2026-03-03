@@ -3,9 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
 using System.Collections.Specialized;
+using Unity.Collections;
+using System;
+
 
 namespace UMA
 {
+
     /// <summary>
     /// This ScriptableObject class is used for advanced mesh hiding with UMA and the DCS.  
     /// </summary>
@@ -18,12 +22,231 @@ namespace UMA
     /// </remarks>
     public class MeshHideAsset : ScriptableObject, ISerializationCallbackReceiver
     {
-        public enum CopyLODMode
+        const int bitArraySize = 512;   // bit array dimensions are 512x512. We will index into this as if it were a texture, u*512 + (v * *512x512), 
+                                        // This will let us find the bit for any vertex on the triangle,and we will store the visibility of the vertex.
+                                        // Then we can determine the visibility of the triangle by checking the visibility of its vertices.
+                                        // We can use the same strict flags as we do when calculating the MeshHideAsset LOD levels -- TriangleHideStrategy. 
+                                        //                     "Strict: hide only if ALL 3 vertices were previously hidden.\n" +
+                                        //                     "Weighted: hide if 2 or more vertices were previously hidden.\n" +
+                                        //                     "Conservative: hide if ANY 1 vertex was previously hidden."),
+        public enum TriangleHideStrategy
         {
             Strict,
             Conservative,
             Weighted
         }
+
+        public static TriangleHideStrategy HideStrategy = TriangleHideStrategy.Conservative;
+
+#if UNITY_EDITOR
+        public bool NeedsRebuildFromUV()
+        {
+            var sda = asset;
+            if (sda == null || sda.meshData == null)
+            {
+                return false;
+            }
+            if (AssetHash == 0)
+            {
+                return false;
+            }
+
+            ulong current = sda.meshData.CalculateHashCode();
+            return current != AssetHash;
+        }
+
+        public void UpdateEditorHashAndUVMaskFromFlags()
+        {
+            var sda = asset;
+            if (sda == null || sda.meshData == null)
+            {
+                return;
+            }
+
+            AssetHash = sda.meshData.CalculateHashCode();
+
+            if (HiddenVertexesByUV == null || HiddenVertexesByUV.Length != bitArraySize * bitArraySize)
+            {
+                HiddenVertexesByUV = new BitArray(bitArraySize * bitArraySize);
+            }
+            else
+            {
+                HiddenVertexesByUV.SetAll(false);
+            }
+
+            if (_triangleFlags == null || _triangleFlags.Length == 0)
+            {
+                return;
+            }
+
+            var uvs = sda.meshData.uv;
+            if (uvs == null || uvs.Length == 0)
+            {
+                return;
+            }
+
+            int submeshCount = Mathf.Min(_triangleFlags.Length, sda.meshData.subMeshCount);
+            for (int sm = 0; sm < submeshCount; sm++)
+            {
+                var flags = _triangleFlags[sm];
+                if (flags == null)
+                {
+                    continue;
+                }
+
+                var tris = sda.meshData.submeshes[sm].GetBaseTriangles();
+                if (tris == null || tris.Length == 0)
+                {
+                    continue;
+                }
+
+                int triCount = Mathf.Min(flags.Count, tris.Length / 3);
+                for (int t = 0; t < triCount; t++)
+                {
+                    if (!flags[t])
+                    {
+                        continue;
+                    }
+
+                    int ti = t * 3;
+                    MarkUV(uvs, tris[ti + 0]);
+                    MarkUV(uvs, tris[ti + 1]);
+                    MarkUV(uvs, tris[ti + 2]);
+                }
+            }
+        }
+
+        private void MarkUV(Vector2[] uvs, int vertexIndex)
+        {
+            if (uvs == null || vertexIndex < 0 || vertexIndex >= uvs.Length)
+            {
+                return;
+            }
+
+            Vector2 uv = uvs[vertexIndex];
+            float uf = uv.x;
+            float vf = uv.y;
+            if (!float.IsFinite(uf) || !float.IsFinite(vf))
+            {
+                return;
+            }
+
+            uf = uf - Mathf.Floor(uf);
+            vf = vf - Mathf.Floor(vf);
+
+            int u = Mathf.Clamp((int)(uf * (bitArraySize - 1)), 0, bitArraySize - 1);
+            int v = Mathf.Clamp((int)(vf * (bitArraySize - 1)), 0, bitArraySize - 1);
+            int idx = u + (v * bitArraySize);
+            if (idx >= 0 && idx < HiddenVertexesByUV.Length)
+            {
+                HiddenVertexesByUV[idx] = true;
+            }
+        }
+
+        public void RebuildFlagsFromEditorUVMask()
+        {
+            var sda = asset;
+            if (sda == null || sda.meshData == null)
+            {
+                return;
+            }
+
+            if (HiddenVertexesByUV == null || HiddenVertexesByUV.Length != bitArraySize * bitArraySize)
+            {
+                return;
+            }
+
+            if (_triangleFlags == null || _triangleFlags.Length != sda.meshData.subMeshCount)
+            {
+                _triangleFlags = new BitArray[sda.meshData.subMeshCount];
+            }
+
+            var uvs = sda.meshData.uv;
+            if (uvs == null || uvs.Length == 0)
+            {
+                return;
+            }
+
+            for (int sm = 0; sm < sda.meshData.subMeshCount; sm++)
+            {
+                var tris = sda.meshData.submeshes[sm].GetBaseTriangles();
+                int triCount = (tris != null) ? (tris.Length / 3) : 0;
+                if (triCount <= 0)
+                {
+                    _triangleFlags[sm] = new BitArray(0);
+                    continue;
+                }
+
+                BitArray flags = _triangleFlags[sm];
+                if (flags == null || flags.Count != triCount)
+                {
+                    flags = new BitArray(triCount);
+                    _triangleFlags[sm] = flags;
+                }
+                else
+                {
+                    flags.SetAll(false);
+                }
+
+                for (int t = 0; t < triCount; t++)
+                {
+                    int ti = t * 3;
+                    bool v0 = IsUVMarked(uvs, tris[ti + 0]);
+                    bool v1 = IsUVMarked(uvs, tris[ti + 1]);
+                    bool v2 = IsUVMarked(uvs, tris[ti + 2]);
+
+                    bool hide;
+                    if (HideStrategy == TriangleHideStrategy.Strict)
+                    {
+                        hide = v0 && v1 && v2;
+                    }
+                    else if (HideStrategy == TriangleHideStrategy.Weighted)
+                    {
+                        int c = 0;
+                        if (v0) c++;
+                        if (v1) c++;
+                        if (v2) c++;
+                        hide = c >= 2;
+                    }
+                    else
+                    {
+                        hide = v0 || v1 || v2;
+                    }
+
+                    if (hide)
+                    {
+                        flags[t] = true;
+                    }
+                }
+            }
+
+            AssetHash = sda.meshData.CalculateHashCode();
+        }
+
+        private bool IsUVMarked(Vector2[] uvs, int vertexIndex)
+        {
+            if (uvs == null || vertexIndex < 0 || vertexIndex >= uvs.Length)
+            {
+                return false;
+            }
+
+            Vector2 uv = uvs[vertexIndex];
+            float uf = uv.x;
+            float vf = uv.y;
+            if (!float.IsFinite(uf) || !float.IsFinite(vf))
+            {
+                return false;
+            }
+
+            uf = uf - Mathf.Floor(uf);
+            vf = vf - Mathf.Floor(vf);
+
+            int u = Mathf.Clamp((int)(uf * (bitArraySize - 1)), 0, bitArraySize - 1);
+            int v = Mathf.Clamp((int)(vf * (bitArraySize - 1)), 0, bitArraySize - 1);
+            int idx = u + (v * bitArraySize);
+            return idx >= 0 && idx < HiddenVertexesByUV.Length && HiddenVertexesByUV[idx];
+        }
+#endif
 
         /// <summary>
         /// The asset we want to apply mesh hiding to if found in the generated UMA.
@@ -60,7 +283,13 @@ namespace UMA
         {
             get { return _asset != null; }
         }
-
+#if UNITY_EDITOR
+        // The hash of the meshdata in the asset. This is used to detect when the mesh has changed and the hide asset needs to be reinitialized.
+        public ulong AssetHash = 0;
+        // A UV map of the vertices in the mesh. This is used to determine which vertices are hidden based on the triangle hiding.
+        // This is only needed when the Hash changes, and we have to recreate the hide flags based on the UVs, so we can determine which vertices are hidden and then hide the triangles based on the vertex hiding.
+        public BitArray HiddenVertexesByUV = new BitArray(bitArraySize * bitArraySize); 
+#endif
         public string AssetSlotName
         {
             get
@@ -270,10 +499,7 @@ namespace UMA
 
             if (_serializedFlags == null)
             {
-                if (Debug.isDebugBuild)
-                {
-                    Debug.LogError("Serializing triangle flags failed!");
-                }
+                _serializedFlags = new serializedFlags[0];
             }
         }
 
@@ -559,10 +785,10 @@ namespace UMA
 
         public void CopyLODMask(int fromLOD, int toLOD, bool replaceDestination)
         {
-            CopyLODMask(fromLOD, toLOD, replaceDestination, CopyLODMode.Conservative);
+            CopyLODMask(fromLOD, toLOD, replaceDestination, TriangleHideStrategy.Conservative);
         }
 
-        public void CopyLODMask(int fromLOD, int toLOD, bool replaceDestination, CopyLODMode mode)
+        public void CopyLODMask(int fromLOD, int toLOD, bool replaceDestination, TriangleHideStrategy mode)
         {
             if (asset == null || asset.meshData == null) return;
             if (fromLOD == toLOD) return;
@@ -591,11 +817,11 @@ namespace UMA
                 bool v2 = hiddenVerts.Contains(tris[t + 2]);
 
                 bool hide = false;
-                if (mode == CopyLODMode.Strict)
+                if (mode == TriangleHideStrategy.Strict)
                 {
                     hide = v0 && v1 && v2;
                 }
-                else if (mode == CopyLODMode.Weighted)
+                else if (mode == TriangleHideStrategy.Weighted)
                 {
                     int count = 0;
                     if (v0) count++;

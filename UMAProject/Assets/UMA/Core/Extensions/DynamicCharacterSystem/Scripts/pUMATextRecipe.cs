@@ -41,6 +41,9 @@ namespace UMA
         [SerializeField]
         public List<MeshHideAsset> MeshHideAssets = new List<MeshHideAsset>();
 
+		[SerializeField]
+		public List<MeshHideAssetCollection> MeshHideAssetCollections = new List<MeshHideAssetCollection>();
+
         [SerializeField]
         public List<MeshModifier> MeshModifiers = new List<MeshModifier>();
 

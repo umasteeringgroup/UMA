@@ -1024,6 +1024,16 @@ namespace UMA
             {
                 return;
             }
+#if SAVING_RYANS_HASHCODE
+#if UNITY_EDITOR
+            bool hashUpdated = meshData.NeedsHashCode();
+            if (hashUpdated)
+            {
+                EditorUtility.SetDirty(this);
+                AssetDatabase.SaveAssetIfDirty(this);
+            }
+#endif
+#endif
 
             if (meshData.LoadedBoneweights)
             {

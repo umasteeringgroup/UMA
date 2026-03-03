@@ -999,7 +999,12 @@ namespace UMA.Editors
 				{
 					if (recipe != null)
 					{
-						MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
+						MeshHideAssetCollection mhac = EditorGUIUtility.GetObjectPickerObject() as MeshHideAssetCollection;
+						if (mhac != null)
+						{
+							AddMeshHideAssetCollection(recipe, mhac);
+                        }
+                        MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
 						if (mha != null)
 						{
 							AddMeshHideAsset(recipe, mha);
@@ -1014,11 +1019,12 @@ namespace UMA.Editors
 				}
 				GUILayout.Space(10);
 				Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
-				GUI.Box(dropArea, "Drag Mesh Hide or Modifier Assets here, or use buttons above to select.");
+				GUI.Box(dropArea, "Drag Mesh Hide or Modifier Assets or collections here, or use buttons above to select.");
 				if (DropAreaGUI(dropArea))
 				{
 					EditorUtility.SetDirty(target);
-					string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+					AssetDatabase.SaveAssetIfDirty(target);
+                    string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
 					AssetDatabase.ImportAsset(path);
 					Repaint();
 				}
@@ -1060,7 +1066,45 @@ namespace UMA.Editors
 					EditorGUILayout.LabelField("No Mesh Hide Assets", EditorStyles.miniLabel);
 					GUILayout.EndHorizontal();
 				}
-				GUILayout.Label("Mesh Modifiers", EditorStyles.boldLabel);
+
+
+                MeshHideAssetCollection collectiondeleteme = null;
+				deleteNulls = false;
+                GUILayout.Label("Mesh Hide Asset Collections", EditorStyles.boldLabel);
+                count = 0;
+                foreach (MeshHideAssetCollection mhac in recipe.MeshHideAssetCollections)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    if (mhac != null)
+                    {
+                        count++;
+                        GUILayout.Space(10);
+                        EditorGUILayout.LabelField(mhac.name, GUILayout.ExpandWidth(true));
+                        if (GUILayout.Button("Inspect", GUILayout.Width(65)))
+                        {
+                            InspectMe.Add(mhac);
+                        }
+                        if (GUILayout.Button("X", GUILayout.Width(20.0f)))
+                        {
+                            collectiondeleteme = mhac;
+                        }
+                    }
+                    else
+                    {
+                        deleteNulls = true;
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+                if (count == 0)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(10);
+                    EditorGUILayout.LabelField("No Collections", EditorStyles.miniLabel);
+                    GUILayout.EndHorizontal();
+                }
+
+
+                GUILayout.Label("Mesh Modifiers", EditorStyles.boldLabel);
 
 				count = 0;
 				int delPos = -1;
@@ -1104,6 +1148,11 @@ namespace UMA.Editors
 					EditorGUILayout.LabelField("No Mesh Modifiers", EditorStyles.miniLabel);
 					GUILayout.EndHorizontal();
 				}
+
+
+
+
+
 				EditorGUILayout.EndVertical();
 				GUIHelper.EndVerticalPadded(10);
 
@@ -1375,6 +1424,46 @@ namespace UMA.Editors
                 AssetDatabase.ImportAsset(path);
                 Repaint();
             }
+        }
+
+		private bool AddMeshHideAssetCollection(UMAWardrobeRecipe recipe, MeshHideAssetCollection mhac)
+		{
+            bool found = false;
+            if (mhac != null)
+            {
+                foreach (MeshHideAssetCollection theAsset in recipe.MeshHideAssetCollections)
+                {
+                    if (theAsset.GetInstanceID() == mhac.GetInstanceID())
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found)
+            {
+                recipe.MeshHideAssetCollections.Add(mhac);
+                EditorUtility.SetDirty(target);
+#if UNITY_6000_3_OR_NEWER
+                AssetDatabase.SaveAssetIfDirty(target);
+                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
+                AssetDatabase.ImportAsset(path);
+#else
+				AssetDatabase.SaveAssets();
+                string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+                AssetDatabase.ImportAsset(path);
+#endif
+                Repaint();
+                /*
+                meshHides.InsertArrayElementAtIndex(0);
+                SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
+                element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
+                meshHideAssetPickerID = -1;
+                Repaint();
+                */
+            }
+
+            return found;
         }
 
         private bool AddMeshHideAsset(UMAWardrobeRecipe recipe, MeshHideAsset mha)

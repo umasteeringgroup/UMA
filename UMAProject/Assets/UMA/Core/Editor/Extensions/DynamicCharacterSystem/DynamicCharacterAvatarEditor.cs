@@ -1574,10 +1574,16 @@ namespace UMA.CharacterSystem.Editors
                 VertexEditorStage.ShowStage(thisDCA, null);
             }
 
+            if (GUILayout.Button("Create New Mesh Hide Asset"))
+            {
+                // TODO:
+                 FaceEditorStage.ShowStage(thisDCA, (MeshHideAsset)null);
+            }
+
             // Drag & Drop Area
             Rect dropRect = GUILayoutUtility.GetRect(0,40, GUILayout.ExpandWidth(true));
             GUIContent dropLabel;
-            dropLabel = new GUIContent("Drag & Drop a MeshModifier here to edit", "Drop a MeshModifier asset");
+             dropLabel = new GUIContent("Drag & Drop a MeshModifier, Mesh Hide Asset, or Mesh Hide Collection here to edit", "Drop a MeshModifier, MeshHideAsset, or MeshHideAssetCollection asset");
 
             GUI.Box(dropRect, dropLabel, EditorStyles.helpBox);
 
@@ -1594,6 +1600,11 @@ namespace UMA.CharacterSystem.Editors
                             valid = true;
                             break;
                         }
+                         if (o is MeshHideAssetCollection)
+                         {
+                             valid = true;
+                             break;
+                         }
                     }
                     if (valid)
                     {
@@ -1609,6 +1620,17 @@ namespace UMA.CharacterSystem.Editors
                                     VertexEditorStage.ShowStage(thisDCA, MeshModifier);
                                     break; // only first
                                 }
+                                if (o is MeshHideAsset mha)
+                                {
+                                    // TODO:
+                                    FaceEditorStage.ShowStage(thisDCA, mha);
+                                    break; // only first asset dropped. 
+                                }
+                                 if (o is MeshHideAssetCollection mhac)
+                                 {
+                                     FaceEditorStage.ShowStage(thisDCA, mhac);
+                                     break;
+                                 }
                             }
                         }
                         evt.Use();
@@ -1618,6 +1640,8 @@ namespace UMA.CharacterSystem.Editors
 
             GUIHelper.EndVerticalPadded(10);
         }
+
+
 
         private void DoShowWardrobeGUI()
         {

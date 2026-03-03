@@ -473,7 +473,7 @@ namespace UMA.Controls
         private bool _slotLodOptionsFoldout = true;
 
 #if UNITY_6000_2_OR_NEWER
-		private MeshHideAsset.CopyLODMode _fixMhaCopyLodMode = MeshHideAsset.CopyLODMode.Conservative;
+		private MeshHideAsset.TriangleHideStrategy _fixMhaCopyLodMode = MeshHideAsset.TriangleHideStrategy.Conservative;
 		private int _fixMhaCopyPolicy = 0; // 0=Replace, 1=Missing
 		private static readonly GUIContent[] _fixMhaCopyPolicyOptions =
 		{
@@ -3071,7 +3071,7 @@ namespace UMA.Controls
 #if UNITY_6000_2_OR_NEWER
                 EditorGUILayout.Space(5);
                 EditorGUILayout.LabelField("LOD Fix Options", EditorStyles.boldLabel);
-                _fixMhaCopyLodMode = (MeshHideAsset.CopyLODMode)EditorGUILayout.EnumPopup(new GUIContent(
+                _fixMhaCopyLodMode = (MeshHideAsset.TriangleHideStrategy)EditorGUILayout.EnumPopup(new GUIContent(
                     "Copy LOD Mode",
                     "Controls how destination triangles are marked hidden based on how many of their vertices were part of any hidden triangle in the source LOD.\n\n" +
                     "Strict: hide only if ALL 3 vertices were previously hidden.\n" +

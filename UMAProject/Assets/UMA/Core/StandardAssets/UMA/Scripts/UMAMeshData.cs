@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.Rendering;
 using UMA.PoseTools;
 using System.Text;
+using System.IO.Hashing;
 
 
 namespace UMA
@@ -655,7 +656,11 @@ namespace UMA
 		[System.NonSerialized]
 		public bool LoadedBoneweights;
 		public string SlotName; // the slotname. used for debugging.
-
+#if false
+#if UNITY_EDITOR
+		public ulong HashCode = 0;         // if 0, then we recalculate the hash on load. 
+#endif
+#endif
 		public Vector3[] GetVertices()
 		{
 			return vertices;
@@ -688,79 +693,79 @@ namespace UMA
 		public UMAMeshData otherApplyBonePose(UMABonePose bonePose)
 		{
 			// Backward-compatible wrapper: no pre-rotation
-			return ApplyBonePose(bonePose, Matrix4x4.identity, false );
+			return ApplyBonePose(bonePose, Matrix4x4.identity, false);
 		}
 
 
-        /// <summary>
-        /// helper providing corrected post-rotation behavior for ApplyBonePose.
-        /// Use: var result = meshData.ApplyBonePoseWithPostRotate(bonePose, rotationMatrix, postRotateFlag);
-        /// If postRotateFlag == false: delegates to existing ApplyBonePose(bonePose, rotationMatrix, false) (pre-rotation).
-        /// If postRotateFlag == true: applies bone pose first (no pre-rotation), then rotates baked vertices/normals/tangents.
-        /// </summary>
+		/// <summary>
+		/// helper providing corrected post-rotation behavior for ApplyBonePose.
+		/// Use: var result = meshData.ApplyBonePoseWithPostRotate(bonePose, rotationMatrix, postRotateFlag);
+		/// If postRotateFlag == false: delegates to existing ApplyBonePose(bonePose, rotationMatrix, false) (pre-rotation).
+		/// If postRotateFlag == true: applies bone pose first (no pre-rotation), then rotates baked vertices/normals/tangents.
+		/// </summary>
 
-            public UMAMeshData ApplyBonePoseWithPostRotate(
-                UMABonePose bonePose,
-                Matrix4x4 rotation,
-                bool postRotate)
-            {
+		public UMAMeshData ApplyBonePoseWithPostRotate(
+			UMABonePose bonePose,
+			Matrix4x4 rotation,
+			bool postRotate)
+		{
 
 
-                // If we are NOT post rotating, keep original pre-rotation behavior
-                if (!postRotate)
-                {
-                    return ApplyBonePose(bonePose, rotation, false);
-                }
+			// If we are NOT post rotating, keep original pre-rotation behavior
+			if (!postRotate)
+			{
+				return ApplyBonePose(bonePose, rotation, false);
+			}
 
-                // When postRotate == true:
-                // 1. Bake bone pose WITHOUT any pre-rotation (identity).
-                // 2. Apply rotation to resulting geometry (vertices, normals, tangents) afterward.
-                var baked = ApplyBonePose(bonePose, Matrix4x4.identity, false);
+			// When postRotate == true:
+			// 1. Bake bone pose WITHOUT any pre-rotation (identity).
+			// 2. Apply rotation to resulting geometry (vertices, normals, tangents) afterward.
+			var baked = ApplyBonePose(bonePose, Matrix4x4.identity, false);
 
-                // If rotation is identity or mesh has no vertices, just return baked.
-                if (rotation == Matrix4x4.identity || baked.vertices == null || baked.vertexCount == 0)
-                    return baked;
+			// If rotation is identity or mesh has no vertices, just return baked.
+			if (rotation == Matrix4x4.identity || baked.vertices == null || baked.vertexCount == 0)
+				return baked;
 
-                var vCount = baked.vertexCount;
-                var inVerts = baked.vertices;
-                var inNormals = baked.normals;
-                var inTangents = baked.tangents;
+			var vCount = baked.vertexCount;
+			var inVerts = baked.vertices;
+			var inNormals = baked.normals;
+			var inTangents = baked.tangents;
 
-                var outVerts = new Vector3[vCount];
-                Vector3[] outNormals = (inNormals != null && inNormals.Length == vCount) ? new Vector3[vCount] : null;
-                Vector4[] outTangents = (inTangents != null && inTangents.Length == vCount) ? new Vector4[vCount] : null;
+			var outVerts = new Vector3[vCount];
+			Vector3[] outNormals = (inNormals != null && inNormals.Length == vCount) ? new Vector3[vCount] : null;
+			Vector4[] outTangents = (inTangents != null && inTangents.Length == vCount) ? new Vector4[vCount] : null;
 
-                for (int i = 0; i < vCount; i++)
-                {
-                    outVerts[i] = rotation.MultiplyPoint3x4(inVerts[i]);
+			for (int i = 0; i < vCount; i++)
+			{
+				outVerts[i] = rotation.MultiplyPoint3x4(inVerts[i]);
 
-                    if (outNormals != null)
-                        outNormals[i] = rotation.MultiplyVector(inNormals[i]);
+				if (outNormals != null)
+					outNormals[i] = rotation.MultiplyVector(inNormals[i]);
 
-                    if (outTangents != null)
-                    {
-                        var t3 = new Vector3(inTangents[i].x, inTangents[i].y, inTangents[i].z);
-                        var rt = rotation.MultiplyVector(t3).normalized;
-                        outTangents[i] = new Vector4(rt.x, rt.y, rt.z, inTangents[i].w);
-                    }
-                }
+				if (outTangents != null)
+				{
+					var t3 = new Vector3(inTangents[i].x, inTangents[i].y, inTangents[i].z);
+					var rt = rotation.MultiplyVector(t3).normalized;
+					outTangents[i] = new Vector4(rt.x, rt.y, rt.z, inTangents[i].w);
+				}
+			}
 
-                baked.vertices = outVerts;
-                if (outNormals != null) baked.normals = outNormals;
-                if (outTangents != null) baked.tangents = outTangents;
+			baked.vertices = outVerts;
+			if (outNormals != null) baked.normals = outNormals;
+			if (outTangents != null) baked.tangents = outTangents;
 
-                baked.verticesModified = true;
-                if (outNormals != null) baked.normalsModified = true;
-                if (outTangents != null) baked.tangentsModified = true;
+			baked.verticesModified = true;
+			if (outNormals != null) baked.normalsModified = true;
+			if (outTangents != null) baked.tangentsModified = true;
 
-                baked.vertexCount = outVerts.Length;
-                return baked;
-            }
-        
-    
+			baked.vertexCount = outVerts.Length;
+			return baked;
+		}
 
-    // New overload: apply a pre-rotation to geometry before baking the bone pose
-    public UMAMeshData OlderApplyBonePose(UMABonePose bonePose, Matrix4x4 preRotation, bool postRotate)
+
+
+		// New overload: apply a pre-rotation to geometry before baking the bone pose
+		public UMAMeshData OlderApplyBonePose(UMABonePose bonePose, Matrix4x4 preRotation, bool postRotate)
 		{
 			// If no pose, still allow pre-rotation only
 			if (bonePose == null)
@@ -1000,40 +1005,40 @@ namespace UMA
 					accum(bw.boneIndex0, bw.weight0);
 					accum(bw.boneIndex1, bw.weight1);
 					accum(bw.boneIndex2, bw.weight2);
-                    accum(bw.boneIndex3, bw.weight3);
-                    newVerts[vi] = accV;
-                    if (newNormals != null) newNormals[vi] = accN.sqrMagnitude > 0f ? accN.normalized : srcNormals[vi];
-                    if (newTangents != null)
-                    {
-                        var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
-                        newTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
-                    }
-                }
-            }
-            else
-            {
-                // No weights; return copy with pre-rotation applied if requested
-                var noWeightsCopy = DeepCopy();
-                if (preRotation != Matrix4x4.identity)
-                {
-                    noWeightsCopy.vertices = srcVertices;
-                    if (srcNormals != null) noWeightsCopy.normals = srcNormals;
-                    if (srcTangents != null) noWeightsCopy.tangents = srcTangents;
-                    noWeightsCopy.verticesModified = true;
-                    if (srcNormals != null) noWeightsCopy.normalsModified = true;
-                    if (srcTangents != null) noWeightsCopy.tangentsModified = true;
-                    noWeightsCopy.vertexCount = srcVertices.Length;
-                }
-                return noWeightsCopy;
-            }
+					accum(bw.boneIndex3, bw.weight3);
+					newVerts[vi] = accV;
+					if (newNormals != null) newNormals[vi] = accN.sqrMagnitude > 0f ? accN.normalized : srcNormals[vi];
+					if (newTangents != null)
+					{
+						var t = (accT.sqrMagnitude > 0f) ? accT.normalized : new Vector3(srcTangents[vi].x, srcTangents[vi].y, srcTangents[vi].z);
+						newTangents[vi] = new Vector4(t.x, t.y, t.z, srcTangents[vi].w);
+					}
+				}
+			}
+			else
+			{
+				// No weights; return copy with pre-rotation applied if requested
+				var noWeightsCopy = DeepCopy();
+				if (preRotation != Matrix4x4.identity)
+				{
+					noWeightsCopy.vertices = srcVertices;
+					if (srcNormals != null) noWeightsCopy.normals = srcNormals;
+					if (srcTangents != null) noWeightsCopy.tangents = srcTangents;
+					noWeightsCopy.verticesModified = true;
+					if (srcNormals != null) noWeightsCopy.normalsModified = true;
+					if (srcTangents != null) noWeightsCopy.tangentsModified = true;
+					noWeightsCopy.vertexCount = srcVertices.Length;
+				}
+				return noWeightsCopy;
+			}
 
-            outData.vertices = newVerts;
-            if (newNormals != null) outData.normals = newNormals;
-            if (newTangents != null) outData.tangents = newTangents;
-            outData.verticesModified = true;
-            if (newNormals != null) outData.normalsModified = true;
-            if (newTangents != null) outData.tangentsModified = true;
-            outData.vertexCount = newVerts.Length;
+			outData.vertices = newVerts;
+			if (newNormals != null) outData.normals = newNormals;
+			if (newTangents != null) outData.tangents = newTangents;
+			outData.verticesModified = true;
+			if (newNormals != null) outData.normalsModified = true;
+			if (newTangents != null) outData.tangentsModified = true;
+			outData.vertexCount = newVerts.Length;
 			return outData;
 		}
 
@@ -1055,7 +1060,7 @@ namespace UMA
 			}
 
 			var slots = recipe.GetAllSlots();
-			if (slots == null || slots.Length ==0)
+			if (slots == null || slots.Length == 0)
 			{
 				return outData;
 			}
@@ -1067,10 +1072,10 @@ namespace UMA
 			// Also track first-available bones/root from the race's slots
 			Transform[] firstBones = null;
 			Transform firstRootBone = null;
-			int firstRootBoneHash =0;
+			int firstRootBoneHash = 0;
 			string firstRootBoneName = null;
 
-			for (int si =0; si < slots.Length; si++)
+			for (int si = 0; si < slots.Length; si++)
 			{
 				var s = slots[si];
 				if (s == null || s.asset == null) continue;
@@ -1078,7 +1083,7 @@ namespace UMA
 				if (md == null) continue;
 
 				// Capture first encountered bones/root info if present
-				if (firstBones == null && md.bones != null && md.bones.Length >0)
+				if (firstBones == null && md.bones != null && md.bones.Length > 0)
 				{
 					firstBones = md.bones;
 				}
@@ -1086,7 +1091,7 @@ namespace UMA
 				{
 					firstRootBone = md.rootBone;
 				}
-				if (firstRootBoneHash ==0 && md.rootBoneHash !=0)
+				if (firstRootBoneHash == 0 && md.rootBoneHash != 0)
 				{
 					firstRootBoneHash = md.rootBoneHash;
 				}
@@ -1101,7 +1106,7 @@ namespace UMA
 					var srcHashes = md.boneNameHashes;
 					var srcBind = md.bindPoses;
 					int len = Math.Min(srcHashes.Length, srcBind.Length);
-					for (int i =0; i < len; i++)
+					for (int i = 0; i < len; i++)
 					{
 						int h = srcHashes[i];
 						if (!bindPoseByHash.ContainsKey(h))
@@ -1115,7 +1120,7 @@ namespace UMA
 				var srcBones = md.umaBones;
 				if (srcBones != null)
 				{
-					for (int i =0; i < srcBones.Length; i++)
+					for (int i = 0; i < srcBones.Length; i++)
 					{
 						var b = srcBones[i];
 						if (b == null) continue;
@@ -1137,7 +1142,7 @@ namespace UMA
 			}
 
 			// Replace bind poses for matching hashes
-			if (outData.boneNameHashes != null && outData.boneNameHashes.Length >0)
+			if (outData.boneNameHashes != null && outData.boneNameHashes.Length > 0)
 			{
 				// Ensure we have a bindpose array long enough
 				if (outData.bindPoses == null || outData.bindPoses.Length != outData.boneNameHashes.Length)
@@ -1151,7 +1156,7 @@ namespace UMA
 					outData.bindPoses = newBinds;
 				}
 
-				for (int i =0; i < outData.boneNameHashes.Length; i++)
+				for (int i = 0; i < outData.boneNameHashes.Length; i++)
 				{
 					int h = outData.boneNameHashes[i];
 					Matrix4x4 bp;
@@ -1163,9 +1168,9 @@ namespace UMA
 			}
 
 			// Update UMA bone transforms (position/rotation/scale and parent) where hashes match
-			if (outData.umaBones != null && outData.umaBones.Length >0)
+			if (outData.umaBones != null && outData.umaBones.Length > 0)
 			{
-				for (int i =0; i < outData.umaBones.Length; i++)
+				for (int i = 0; i < outData.umaBones.Length; i++)
 				{
 					var b = outData.umaBones[i];
 					if (b == null) continue;
@@ -1176,7 +1181,7 @@ namespace UMA
 						b.rotation = src.rotation;
 						b.scale = src.scale;
 						b.parent = src.parent; // adopt parent from race for consistency
-						// leave name/hash as-is
+											   // leave name/hash as-is
 					}
 				}
 			}
@@ -1186,7 +1191,7 @@ namespace UMA
 			{
 				outData.RootBoneName = firstRootBoneName;
 			}
-			if (firstRootBoneHash !=0)
+			if (firstRootBoneHash != 0)
 			{
 				outData.rootBoneHash = firstRootBoneHash;
 			}
@@ -1199,7 +1204,7 @@ namespace UMA
 			{
 				outData.rootBone = firstRootBone;
 			}
-			if (firstBones != null && firstBones.Length >0)
+			if (firstBones != null && firstBones.Length > 0)
 			{
 				outData.bones = firstBones;
 			}
@@ -1211,37 +1216,37 @@ namespace UMA
 #if UNITY_EDITOR
 			AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
 			UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += beforeAssemblyReload;
-            UnityEditor.EditorApplication.quitting += Application_quitting;
+			UnityEditor.EditorApplication.quitting += Application_quitting;
 #else
 			Application.quitting += Application_quitting;
 
 #endif
-        }
+		}
 
-        private static void beforeAssemblyReload()
-        {
-#if DEBUG_UNITY_MESHDATA
-            Debug.Log("AppDomain unloading, cleaning up UMA global buffers");
-#endif
-            SubMeshTriangles.DisposeAllNativeTriangles();
-        }
-
-        private static void Application_quitting()
-        {
-#if DEBUG_UNITY_MESHDATA
-            Debug.Log("Application quitting, cleaning up UMA global buffers");
-#endif
-            CleanupGlobalBuffers();
-			SubMeshTriangles.DisposeAllNativeTriangles();
-        }
-
-        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+		private static void beforeAssemblyReload()
 		{
 #if DEBUG_UNITY_MESHDATA
             Debug.Log("AppDomain unloading, cleaning up UMA global buffers");
 #endif
-            SubMeshTriangles.DisposeAllNativeTriangles();
-        }
+			SubMeshTriangles.DisposeAllNativeTriangles();
+		}
+
+		private static void Application_quitting()
+		{
+#if DEBUG_UNITY_MESHDATA
+            Debug.Log("Application quitting, cleaning up UMA global buffers");
+#endif
+			CleanupGlobalBuffers();
+			SubMeshTriangles.DisposeAllNativeTriangles();
+		}
+
+		private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+		{
+#if DEBUG_UNITY_MESHDATA
+            Debug.Log("AppDomain unloading, cleaning up UMA global buffers");
+#endif
+			SubMeshTriangles.DisposeAllNativeTriangles();
+		}
 
 		public static void CleanupGlobalBuffers()
 		{
@@ -1452,7 +1457,7 @@ namespace UMA
 				{
 					submeshes[subMeshNumber] = new SubMeshTriangles();
 					submeshes[subMeshNumber].SetTriangles(sharedMesh.GetTriangles(subMeshNumber));
-                }
+				}
 			}
 			else
 			{
@@ -1461,21 +1466,21 @@ namespace UMA
 				var tris = sharedMesh.GetTriangles(subMeshInd);
 				submeshes[0] = new SubMeshTriangles();
 
-                vertRemap = new SortedSet<int>(tris);
+				vertRemap = new SortedSet<int>(tris);
 				var indRemap = new int[sharedMesh.vertexCount];
 
 				vertexCount = 0;
 				foreach (var vi in vertRemap)
-                {
-                    indRemap[vi] = vertexCount++;
-                }
+				{
+					indRemap[vi] = vertexCount++;
+				}
 
-                for (var ii = 0; ii < tris.Length; ii++)
-                {
-                    tris[ii] = indRemap[tris[ii]];
-                }
+				for (var ii = 0; ii < tris.Length; ii++)
+				{
+					tris[ii] = indRemap[tris[ii]];
+				}
 
-                submeshes[0].SetTriangles(tris);
+				submeshes[0].SetTriangles(tris);
 			}
 
 			bindPoses = sharedMesh.bindposes;
@@ -1507,11 +1512,11 @@ namespace UMA
 
 					var boneC = unityBonesPerVertex[nextI];
 					for (; boneC-- > 0;)
-                    {
-                        boneWeights.Add(unityBoneWeights[boneWI++]);
-                    }
+					{
+						boneWeights.Add(unityBoneWeights[boneWI++]);
+					}
 
-                    srcI++;
+					srcI++;
 				}
 				ManagedBoneWeights = boneWeights.ToArray();
 			}
@@ -1540,7 +1545,7 @@ namespace UMA
 			}
 
 			//Create the blendshape data on the slot asset from the unity mesh
-            #region Blendshape
+			#region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
 
 			for (int shapeIndex = 0; shapeIndex < sharedMesh.blendShapeCount; shapeIndex++)
@@ -1594,7 +1599,7 @@ namespace UMA
 
 				}
 			}
-            #endregion
+			#endregion
 		}
 
 		/// <summary>
@@ -1645,7 +1650,7 @@ namespace UMA
 				UMAUtils.UDIMAdjustUV(uv4, sharedMesh.uv4);
 			}
 			//Create the blendshape data on the slot asset from the unity mesh
-            #region Blendshape
+			#region Blendshape
 			blendShapes = new UMABlendShape[sharedMesh.blendShapeCount];
 
 			Vector3[] deltaVertices;
@@ -1697,7 +1702,7 @@ namespace UMA
 					}
 				}
 			}
-            #endregion
+			#endregion
 		}
 
 		/// <summary>
@@ -1889,7 +1894,7 @@ namespace UMA
 			var subMeshCount = submeshes.Length;
 			mesh.subMeshCount = subMeshCount;
 			var Descriptors = new SubMeshDescriptor[subMeshCount];
-          for (int i = 0; i < subMeshCount; i++)
+			for (int i = 0; i < subMeshCount; i++)
 			{
 				int LOD = umaData.currentLODLevel;
 				// public void SetIndices(NativeArray<T> indices, int indicesStart, int indicesLength, MeshTopology topology, int submesh, bool calculateBounds, int baseVertex);
@@ -1907,7 +1912,7 @@ namespace UMA
 			}
 
 			//Apply the blendshape data from the slot asset back to the combined UMA unity mesh.
-            #region Blendshape
+			#region Blendshape
 			mesh.ClearBlendShapes();
 			if (blendShapes != null && blendShapes.Length > 0)
 			{
@@ -1959,7 +1964,7 @@ namespace UMA
 					}
 				}
 			}
-            #endregion
+			#endregion
 
 			//Debug.Log("Recalculating bounds");
 			mesh.RecalculateBounds();
@@ -2100,7 +2105,78 @@ namespace UMA
 #endif
 		}
 
-		public Mesh ToUnityMesh()
+		public ulong CalculateHashCode()
+		{
+           // Stable geometry hash for change detection.
+			// Uses vertex positions + submesh triangle indices.
+			if (vertices == null || vertices.Length == 0 || submeshes == null || submeshes.Length == 0)
+			{
+				return 0;
+			}
+
+			var hasher = new XxHash64();
+
+			unsafe
+			{
+				fixed (Vector3* vptr = vertices)
+				{
+					hasher.Append(new ReadOnlySpan<byte>(vptr, vertices.Length * sizeof(Vector3)));
+				}
+			}
+
+			for (int sm = 0; sm < submeshes.Length; sm++)
+			{
+				var s = submeshes[sm];
+				if (s == null)
+				{
+					continue;
+				}
+				int[] tris = s.GetBaseTriangles();
+				if (tris == null || tris.Length == 0)
+				{
+					continue;
+				}
+
+				unsafe
+				{
+					fixed (int* tptr = tris)
+					{
+						hasher.Append(new ReadOnlySpan<byte>(tptr, tris.Length * sizeof(int)));
+					}
+				}
+			}
+
+			Span<byte> hashBytes = stackalloc byte[8];
+			hasher.GetHashAndReset(hashBytes);
+			return BitConverter.ToUInt64(hashBytes);
+        }
+
+#if false
+
+        public bool HashCodeChanged()
+		{
+			ulong currentHash = CalculateHashCode();
+			if (currentHash != HashCode) { return true; }
+            return false;
+        }
+
+
+		// This is used to calculate the hash code on load if it hasn't been calculated before, and to determine if the hash code needs to be saved.
+		public bool NeedsHashCode()
+		{
+#if UNITY_EDITOR
+			if (HashCode == 0)
+			{
+                // calculate the hash code and save it, so we can persist to disk later.
+                HashCode = CalculateHashCode();
+				return true;
+            }
+#endif
+            return false;
+		}
+#endif
+
+        public Mesh ToUnityMesh()
 		{
 			Mesh mesh = new Mesh();
 			mesh.vertices = vertices;
@@ -2277,7 +2353,7 @@ namespace UMA
 			}
 		}
 
-        #region operator ==, != and similar HACKS, seriously.....
+		#region operator ==, != and similar HACKS, seriously.....
 		public static implicit operator bool(UMAMeshData obj)
 		{
 			return ((System.Object)obj) != null && obj.vertexCount != 0;
@@ -2317,11 +2393,7 @@ namespace UMA
 			}
 			return ((bool)obj);
 		}
-		public override int GetHashCode()
-		{
-			return base.GetHashCode();
-		}
-        #endregion
+		#endregion
 
 		internal void ReSortUMABones()
 		{
