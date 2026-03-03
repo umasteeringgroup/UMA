@@ -9,9 +9,10 @@ BetterShaders.meta
 FlipbookGames/
 FlipbookGames.meta
 UnityVS.meta
+/.vs
 *.csproj
 *.sln
-*.suo
+*.slnx
 *.suo
 UMAProject/ProjectSettings/ClusterInputManager.asset
 
