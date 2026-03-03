@@ -165,6 +165,23 @@ namespace UMA
 
         private const string MeshHideAssetFolderPrefKeyPrefix = "UMA.FaceEditorStage.MeshHideAssetFolder.";
 
+        private const string RaycastPrefKeyPrefix = "UMA.FaceEditorStage.RaycastOcclusion.";
+        private const float RaycastDefaultOutward = 0.1f;
+        private const float RaycastDefaultInward = 0.02f;
+
+        [SerializeField]
+        private float raycastOcclusionOutward = RaycastDefaultOutward;
+        [SerializeField]
+        private float raycastOcclusionInward = RaycastDefaultInward;
+        [SerializeField]
+        private bool raycastOcclusionAdd = false;
+        [SerializeField]
+        private MeshHideAsset.TriangleHideStrategy raycastOcclusionStrategy = MeshHideAsset.TriangleHideStrategy.Conservative;
+        [SerializeField]
+        private string raycastOcclusionStatus;
+        [SerializeField]
+        private MessageType raycastOcclusionStatusType = MessageType.Info;
+
         [Serializable]
         private class SubmeshColorEntry
         {
@@ -1028,6 +1045,620 @@ namespace UMA
             }
         }
 
+        private void DrawRaycastOcclusionSection()
+        {
+#if UNITY_EDITOR
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("Raycast Occlusion", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Raycast all selected slots against visible slots.", MessageType.Info);
+
+            LoadRaycastPrefsIfNeeded();
+
+            raycastOcclusionOutward = Mathf.Max(0f, EditorGUILayout.FloatField(new GUIContent("Outward Distance", "Raycast along vertex normal"), raycastOcclusionOutward));
+            raycastOcclusionInward = Mathf.Max(0f, EditorGUILayout.FloatField(new GUIContent("Inward Distance", "Raycast opposite vertex normal"), raycastOcclusionInward));
+
+            raycastOcclusionAdd = EditorGUILayout.ToggleLeft("Add to existing hides (otherwise replace)", raycastOcclusionAdd);
+            raycastOcclusionStrategy = (MeshHideAsset.TriangleHideStrategy)EditorGUILayout.EnumPopup(new GUIContent("Triangle Strategy"), raycastOcclusionStrategy);
+
+            SaveRaycastPrefs();
+
+            EditorGUI.BeginDisabledGroup(CurrentHideAsset == null && CurrentHideCollection == null);
+            if (GUILayout.Button("Raycast Occlusion To MeshHideAssets"))
+            {
+                RaycastOcclusionToMeshHideAssets();
+            }
+            EditorGUI.EndDisabledGroup();
+
+            if (!string.IsNullOrEmpty(raycastOcclusionStatus))
+            {
+                EditorGUILayout.HelpBox(raycastOcclusionStatus, raycastOcclusionStatusType);
+            }
+#endif
+        }
+
+#if UNITY_EDITOR
+        private bool raycastPrefsLoaded;
+
+        private void LoadRaycastPrefsIfNeeded()
+        {
+            if (raycastPrefsLoaded)
+            {
+                return;
+            }
+            raycastPrefsLoaded = true;
+
+            raycastOcclusionOutward = EditorPrefs.GetFloat(RaycastPrefKeyPrefix + "Outward", RaycastDefaultOutward);
+            raycastOcclusionInward = EditorPrefs.GetFloat(RaycastPrefKeyPrefix + "Inward", RaycastDefaultInward);
+            raycastOcclusionAdd = EditorPrefs.GetBool(RaycastPrefKeyPrefix + "Add", false);
+            raycastOcclusionStrategy = (MeshHideAsset.TriangleHideStrategy)EditorPrefs.GetInt(RaycastPrefKeyPrefix + "Strategy", (int)MeshHideAsset.TriangleHideStrategy.Conservative);
+        }
+
+        private void SaveRaycastPrefs()
+        {
+            EditorPrefs.SetFloat(RaycastPrefKeyPrefix + "Outward", raycastOcclusionOutward);
+            EditorPrefs.SetFloat(RaycastPrefKeyPrefix + "Inward", raycastOcclusionInward);
+            EditorPrefs.SetBool(RaycastPrefKeyPrefix + "Add", raycastOcclusionAdd);
+            EditorPrefs.SetInt(RaycastPrefKeyPrefix + "Strategy", (int)raycastOcclusionStrategy);
+        }
+
+        private void RaycastOcclusionToMeshHideAssets()
+        {
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
+            {
+                raycastOcclusionStatusType = MessageType.Warning;
+                raycastOcclusionStatus = "Raycast skipped: character data is not available.";
+                return;
+            }
+
+            if (FaceObject == null || BakedMesh == null || BakedMesh.vertexCount == 0)
+            {
+                raycastOcclusionStatusType = MessageType.Warning;
+                raycastOcclusionStatus = "Raycast skipped: baked mesh is not available.";
+                return;
+            }
+
+            if (raycastOcclusionOutward <= 0f && raycastOcclusionInward <= 0f)
+            {
+                raycastOcclusionStatusType = MessageType.Info;
+                raycastOcclusionStatus = "Raycast skipped: both distances are 0.";
+                return;
+            }
+
+            // Determine which slots we're processing: Visible + NOT in selection mode + selected in UI
+            HashSet<string> selectedSlotNames = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < slotSelectionEntries.Count; i++)
+            {
+                var e = slotSelectionEntries[i];
+                if (e == null || string.IsNullOrEmpty(e.slotName)) continue;
+                if (e.isSelected)
+                {
+                    selectedSlotNames.Add(e.slotName);
+                }
+            }
+
+            if (selectedSlotNames.Count == 0)
+            {
+                raycastOcclusionStatusType = MessageType.Info;
+                raycastOcclusionStatus = "No selected slots to raycast.";
+                return;
+            }
+
+            // Candidate slots: visible, selectable, not selected
+            HashSet<string> visibleSlotNames = new HashSet<string>(StringComparer.Ordinal);
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var s = slots[i];
+                if (s == null) continue;
+                if (s.Suppressed) continue;
+                visibleSlotNames.Add(s.slotName);
+            }
+
+            // Map slotName -> MeshHideAsset / local submesh index
+            Dictionary<string, (MeshHideAsset mha, int localSubmesh)> slotToMha = new Dictionary<string, (MeshHideAsset, int)>(StringComparer.Ordinal);
+            if (CurrentHideAsset != null)
+            {
+                var key = CurrentHideAsset.AssetSlotName;
+                if (!string.IsNullOrEmpty(key))
+                {
+                    slotToMha[key] = (CurrentHideAsset, 0);
+                }
+            }
+            if (CurrentHideCollection != null && CurrentHideCollection.Assets != null)
+            {
+                for (int i = 0; i < CurrentHideCollection.Assets.Count; i++)
+                {
+                    var mha = CurrentHideCollection.Assets[i];
+                    if (mha == null) continue;
+                    var key = mha.AssetSlotName;
+                    if (string.IsNullOrEmpty(key)) continue;
+                    slotToMha[key] = (mha, 0);
+                }
+            }
+
+            // Build CPU triangle cache for candidate geometry (visible, non-selected)
+            List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)> candidates = BuildCandidateTrianglesCPU(visibleSlotNames, selectedSlotNames);
+            if (candidates.Count == 0)
+            {
+                raycastOcclusionStatusType = MessageType.Warning;
+                raycastOcclusionStatus = "Raycast skipped: no visible non-selected geometry to test against.";
+                return;
+            }
+
+            int totalTrianglesMarked = 0;
+            int totalVerticesTested = 0;
+            int totalVertexHits = 0;
+            int totalSlotsProcessed = 0;
+
+            try
+            {
+                foreach (string slotName in selectedSlotNames)
+                {
+                    if (!visibleSlotNames.Contains(slotName))
+                    {
+                        continue;
+                    }
+
+                    // NOT in selection mode: i.e. don't run on slots that are currently selected in the Scene overlay selection set
+                    if (IsSlotInSelectionMode(slotName))
+                    {
+                        continue;
+                    }
+
+                    SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(slotName);
+                    if (slot == null || slot.asset == null || slot.asset.meshData == null)
+                    {
+                        continue;
+                    }
+
+                    if (!slotToMha.TryGetValue(slotName, out var mhaInfo) || mhaInfo.mha == null)
+                    {
+                        // If we do not have an existing MHA loaded for this slot, we can't write flags.
+                        continue;
+                    }
+
+                    int localSubmesh = Mathf.Clamp(mhaInfo.localSubmesh, 0, Mathf.Max(0, slot.asset.meshData.subMeshCount - 1));
+
+                    int triCount = GetLocalTriangleCountForSlotSubmesh(slot, localSubmesh);
+                    if (triCount <= 0)
+                    {
+                        continue;
+                    }
+
+                    BitArray flags = GetTriangleFlagsSafe(mhaInfo.mha, localSubmesh);
+                    if (flags == null || flags.Count != triCount)
+                    {
+                        // Ensure flags initialized to correct size
+                        mhaInfo.mha.Initialize();
+                        flags = GetTriangleFlagsSafe(mhaInfo.mha, localSubmesh);
+                    }
+                    if (flags == null || flags.Count != triCount)
+                    {
+                        continue;
+                    }
+
+                    Undo.RecordObject(mhaInfo.mha, "Raycast Occlusion");
+
+                    if (!raycastOcclusionAdd)
+                    {
+                        flags.SetAll(false);
+                    }
+
+                    bool[] occludedVerts = ComputeSlotVertexOcclusionCPU(slot, candidates, raycastOcclusionOutward, raycastOcclusionInward, ref totalVerticesTested, ref totalVertexHits);
+                    if (occludedVerts == null)
+                    {
+                        continue;
+                    }
+
+                    int marked = ApplyTriangleOcclusionFromVertexOcclusion(slot, localSubmesh, occludedVerts, flags, raycastOcclusionStrategy);
+                    if (marked > 0)
+                    {
+                        totalTrianglesMarked += marked;
+                    }
+
+                    EditorUtility.SetDirty(mhaInfo.mha);
+                    AssetDatabase.SaveAssetIfDirty(mhaInfo.mha);
+
+                    totalSlotsProcessed++;
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            raycastOcclusionStatusType = MessageType.Info;
+            raycastOcclusionStatus = $"Raycast complete\nCandidate triangles: {candidates.Count}\nSlots processed: {totalSlotsProcessed}\nVertices tested: {totalVerticesTested}\nVertex hits: {totalVertexHits}\nTriangles marked: {totalTrianglesMarked}";
+
+            LoadSelections();
+            MarkOverlayMeshDirty();
+            SceneView.RepaintAll();
+        }
+
+        private bool IsSlotInSelectionMode(string slotName)
+        {
+            // Slot is "in selection mode" when it is currently part of the active selection set for manual editing.
+            // Implementation: use slotSelectionEntries' isSelected as the selection mode flag.
+            // The raycast feature requires slots NOT in selection mode.
+            if (slotSelectionEntries == null)
+            {
+                return false;
+            }
+            for (int i = 0; i < slotSelectionEntries.Count; i++)
+            {
+                var e = slotSelectionEntries[i];
+                if (e == null) continue;
+                if (e.slotName == slotName)
+                {
+                    return e.isSelected;
+                }
+            }
+            return false;
+        }
+
+        private List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)> BuildCandidateTrianglesCPU(HashSet<string> visibleSlotNames, HashSet<string> selectedSlotNames)
+        {
+            var result = new List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)>();
+
+            var tris = BakedMesh.triangles;
+            var verts = BakedMesh.vertices;
+            int triangleCount = tris.Length / 3;
+
+            // Build triangles only if they belong to a visible, non-selected slot.
+            for (int t = 0; t < triangleCount; t++)
+            {
+                int i0 = tris[t * 3 + 0];
+                int i1 = tris[t * 3 + 1];
+                int i2 = tris[t * 3 + 2];
+
+                string slotName = GetSlotNameForBakedVertex(i0);
+                if (string.IsNullOrEmpty(slotName))
+                {
+                    continue;
+                }
+                if (!visibleSlotNames.Contains(slotName))
+                {
+                    continue;
+                }
+                if (selectedSlotNames.Contains(slotName))
+                {
+                    continue;
+                }
+
+                Vector3 v0 = FaceObject.transform.TransformPoint(verts[i0]);
+                Vector3 v1 = FaceObject.transform.TransformPoint(verts[i1]);
+                Vector3 v2 = FaceObject.transform.TransformPoint(verts[i2]);
+                Vector3 faceNormal = Vector3.Cross(v1 - v0, v2 - v0);
+                if (faceNormal.sqrMagnitude > 1e-12f)
+                {
+                    faceNormal.Normalize();
+                }
+                else
+                {
+                    faceNormal = Vector3.up;
+                }
+
+                result.Add((v0, v1, v2, faceNormal));
+            }
+
+            return result;
+        }
+
+        private bool[] ComputeSlotVertexOcclusionCPU(SlotData sourceSlot,
+            List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)> candidates,
+            float outwardDistance,
+            float inwardDistance,
+            ref int totalVerticesTested,
+            ref int totalVertexHits)
+        {
+            if (sourceSlot == null || sourceSlot.asset == null || sourceSlot.asset.meshData == null)
+            {
+                return null;
+            }
+
+            int sourceVertexCount = sourceSlot.asset.meshData.vertexCount;
+            if (sourceVertexCount <= 0)
+            {
+                return null;
+            }
+
+            var verts = BakedMesh.vertices;
+            var normals = BakedMesh.normals;
+            bool[] occluded = new bool[sourceVertexCount];
+
+            float outMax = outwardDistance > 0f ? outwardDistance : 0f;
+            float inMax = inwardDistance > 0f ? inwardDistance : 0f;
+
+            for (int slotVertexIndex = 0; slotVertexIndex < sourceVertexCount; slotVertexIndex++)
+            {
+                int bakedIndex = GetBakedVertexIndexForSlotVertex(sourceSlot, slotVertexIndex);
+                if (bakedIndex < 0)
+                {
+                    continue;
+                }
+                if (bakedIndex < 0 || bakedIndex >= verts.Length)
+                {
+                    continue;
+                }
+
+                Vector3 originWorld = FaceObject.transform.TransformPoint(verts[bakedIndex]);
+                Vector3 nWorld = Vector3.up;
+                if (bakedIndex >= 0 && bakedIndex < normals.Length)
+                {
+                    nWorld = FaceObject.transform.TransformDirection(normals[bakedIndex]).normalized;
+                }
+                if (nWorld.sqrMagnitude < 1e-8f)
+                {
+                    continue;
+                }
+
+                bool hit = false;
+
+                // Outward
+                if (outMax > 0f)
+                {
+                    Vector3 dir = nWorld;
+                    Vector3 origin = originWorld + (dir * 0.0005f);
+                    hit = RaycastCPU(origin, dir, outMax, candidates);
+                }
+
+                // Inward (only if not already hit)
+                if (!hit && inMax > 0f)
+                {
+                    Vector3 dir = -nWorld;
+                    Vector3 origin = originWorld + (dir * 0.0005f);
+                    hit = RaycastCPU(origin, dir, inMax, candidates);
+                }
+
+                totalVerticesTested++;
+                if (hit)
+                {
+                    totalVertexHits++;
+                    occluded[slotVertexIndex] = true;
+                }
+            }
+
+            return occluded;
+        }
+
+        private string GetSlotNameForBakedVertex(int bakedVertexIndex)
+        {
+            // Resolve ownership using triangleSlotOwnership built for the baked mesh.
+            if (triangleSlotOwnership == null || triangleSlotOwnership.Count == 0)
+            {
+                return null;
+            }
+
+            var tris = BakedMesh != null ? BakedMesh.triangles : null;
+            if (tris == null || tris.Length < 3)
+            {
+                return null;
+            }
+
+            // Find the first triangle that contains this vertex and return its owning slot.
+            int triangleCount = tris.Length / 3;
+            for (int ti = 0; ti < triangleCount; ti++)
+            {
+                int baseIdx = ti * 3;
+                if (tris[baseIdx] != bakedVertexIndex && tris[baseIdx + 1] != bakedVertexIndex && tris[baseIdx + 2] != bakedVertexIndex)
+                {
+                    continue;
+                }
+
+                // Use slot ownership by checking the slot for the first vertex of the triangle.
+                // This matches how slot offsets are packed into the baked mesh.
+                SlotData s = GetSlotForBakedVertexIndex(tris[baseIdx]);
+                if (s != null)
+                {
+                    return s.slotName;
+                }
+            }
+
+            return null;
+        }
+
+        private int GetBakedVertexIndexForSlotVertex(SlotData slot, int slotVertexIndex)
+        {
+            if (slot == null || slot.asset == null || slot.asset.meshData == null)
+            {
+                return -1;
+            }
+            if (slot.Suppressed)
+            {
+                return -1;
+            }
+
+            int baked = slot.vertexOffset + slotVertexIndex;
+            if (BakedMesh == null)
+            {
+                return -1;
+            }
+            if (baked < 0 || baked >= BakedMesh.vertexCount)
+            {
+                return -1;
+            }
+            return baked;
+        }
+
+        private SlotData GetSlotForBakedVertexIndex(int bakedVertexIndex)
+        {
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
+            {
+                return null;
+            }
+
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var s = slots[i];
+                if (s == null) continue;
+                if (s.Suppressed) continue;
+                if (s.asset == null || s.asset.meshData == null) continue;
+
+                int start = s.vertexOffset;
+                int count = s.asset.meshData.vertexCount;
+                if (bakedVertexIndex >= start && bakedVertexIndex < start + count)
+                {
+                    return s;
+                }
+            }
+
+            return null;
+        }
+
+        private bool RaycastCPU(Vector3 origin, Vector3 direction, float maxDistance, List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)> triangles)
+        {
+            if (triangles == null || triangles.Count == 0)
+            {
+                return false;
+            }
+
+            if (maxDistance <= 0f)
+            {
+                return false;
+            }
+
+            float bestT = maxDistance;
+            bool hit = false;
+
+            for (int i = 0; i < triangles.Count; i++)
+            {
+                var tri = triangles[i];
+                if (RayTriangleIntersect(origin, direction, tri.v0, tri.v1, tri.v2, out float t))
+                {
+                    if (t > 0.0001f && t < bestT)
+                    {
+                        // Apply face filter based on requested strategy? For occlusion, accept all.
+                        bestT = t;
+                        hit = true;
+                    }
+                }
+            }
+
+            return hit;
+        }
+
+        private static bool RayTriangleIntersect(Vector3 rayOrigin, Vector3 rayDir, Vector3 v0, Vector3 v1, Vector3 v2, out float t)
+        {
+            t = 0f;
+            const float EPSILON = 1e-8f;
+
+            Vector3 edge1 = v1 - v0;
+            Vector3 edge2 = v2 - v0;
+            Vector3 h = Vector3.Cross(rayDir, edge2);
+            float a = Vector3.Dot(edge1, h);
+
+            if (a > -EPSILON && a < EPSILON)
+            {
+                return false;
+            }
+
+            float f = 1.0f / a;
+            Vector3 s = rayOrigin - v0;
+            float u = f * Vector3.Dot(s, h);
+
+            if (u < 0.0f || u > 1.0f)
+            {
+                return false;
+            }
+
+            Vector3 q = Vector3.Cross(s, edge1);
+            float v = f * Vector3.Dot(rayDir, q);
+
+            if (v < 0.0f || u + v > 1.0f)
+            {
+                return false;
+            }
+
+            t = f * Vector3.Dot(edge2, q);
+            return t > EPSILON;
+        }
+
+        private int GetLocalTriangleCountForSlotSubmesh(SlotData slot, int localSubmesh)
+        {
+            if (slot == null || slot.asset == null || slot.asset.meshData == null)
+            {
+                return 0;
+            }
+            if (localSubmesh < 0 || localSubmesh >= slot.asset.meshData.subMeshCount)
+            {
+                return 0;
+            }
+
+            var tris = slot.asset.meshData.submeshes[localSubmesh].GetBaseTriangles();
+            if (tris == null)
+            {
+                return 0;
+            }
+            return tris.Length / 3;
+        }
+
+        private int ApplyTriangleOcclusionFromVertexOcclusion(SlotData slot, int localSubmesh, bool[] occludedVerts, BitArray flags, MeshHideAsset.TriangleHideStrategy strategy)
+        {
+            if (slot == null || slot.asset == null || slot.asset.meshData == null)
+            {
+                return 0;
+            }
+            if (occludedVerts == null || flags == null)
+            {
+                return 0;
+            }
+
+            var tris = slot.asset.meshData.submeshes[localSubmesh].GetBaseTriangles();
+            if (tris == null || tris.Length == 0)
+            {
+                return 0;
+            }
+
+            int triCount = Mathf.Min(flags.Count, tris.Length / 3);
+            int marked = 0;
+            for (int t = 0; t < triCount; t++)
+            {
+                int ti = t * 3;
+                int v0i = tris[ti + 0];
+                int v1i = tris[ti + 1];
+                int v2i = tris[ti + 2];
+
+                bool v0 = (v0i >= 0 && v0i < occludedVerts.Length) ? occludedVerts[v0i] : false;
+                bool v1 = (v1i >= 0 && v1i < occludedVerts.Length) ? occludedVerts[v1i] : false;
+                bool v2 = (v2i >= 0 && v2i < occludedVerts.Length) ? occludedVerts[v2i] : false;
+
+                bool hide;
+                if (strategy == MeshHideAsset.TriangleHideStrategy.Strict)
+                {
+                    hide = v0 && v1 && v2;
+                }
+                else if (strategy == MeshHideAsset.TriangleHideStrategy.Weighted)
+                {
+                    int c = 0;
+                    if (v0) c++;
+                    if (v1) c++;
+                    if (v2) c++;
+                    hide = c >= 2;
+                }
+                else
+                {
+                    hide = v0 || v1 || v2;
+                }
+
+                if (hide)
+                {
+                    if (!flags[t])
+                    {
+                        flags[t] = true;
+                        marked++;
+                    }
+                    else
+                    {
+                        // already marked
+                    }
+                }
+            }
+
+            return marked;
+        }
+#endif
+
         private void DrawRecalculateFromUVSection()
         {
 #if UNITY_EDITOR
@@ -1262,6 +1893,8 @@ namespace UMA
 
                 GUILayout.Space(6);
                 GUILayout.Label($"Selected Faces: {SelectedFaces.Count}");
+
+                DrawRaycastOcclusionSection();
 
                 if (GUILayout.Button("Create MeshHideAssets (Split by Slot)"))
                 {
