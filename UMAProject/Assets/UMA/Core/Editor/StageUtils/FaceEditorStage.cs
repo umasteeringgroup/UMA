@@ -4,6 +4,7 @@ using System.Linq;
 using UMA.CharacterSystem;
 using UMA.Editors;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,6 +15,36 @@ namespace UMA
 {
     public class FaceEditorStage : PreviewSceneStage
     {
+        private static bool eventsHooked;
+
+        private static void EnsureEditorEvents()
+        {
+#if UNITY_EDITOR
+            if (eventsHooked)
+            {
+                return;
+            }
+            eventsHooked = true;
+            AssemblyReloadEvents.beforeAssemblyReload += ExitStageIfActive;
+            CompilationPipeline.compilationStarted += _ => ExitStageIfActive();
+#endif
+        }
+
+        private static void ExitStageIfActive()
+        {
+#if UNITY_EDITOR
+            try
+            {
+                if (StageUtility.GetCurrentStage() is FaceEditorStage)
+                {
+                    StageUtility.GoBackToPreviousStage();
+                }
+            }
+            catch
+            {
+            }
+#endif
+        }
         public GUIContent titleContent;
         public SceneView openedSceneView;
         public GameObject selectedObject;
@@ -129,14 +160,30 @@ namespace UMA
         public Vector2 MeshHideAssetsScrollLocation = Vector2.zero;
         public Rect MeshHideAssetsWindow = new Rect(10, 630, 250, 260);
 
+        public Rect FaceEditorToolsCollapsedWindow;
+        public Rect VisibleWearablesCollapsedWindow;
+        public Rect MeshHideAssetsCollapsedWindow;
+
         private Rect leftPanelRect;
         private Vector2 lastSceneViewSize = Vector2.zero;
         private float cachedVisibilityHeight = -1f;
         private float cachedMeshHideAssetsHeight = 260f;
 
+        private const string PanelCollapsePrefKeyPrefix = "UMA.FaceEditorStage.PanelCollapse.";
+        [SerializeField]
+        private bool faceToolsPanelCollapsed;
+        [SerializeField]
+        private bool visibilityPanelCollapsed;
+        [SerializeField]
+        private bool meshHideAssetsPanelCollapsed;
+        private bool collapsePrefsLoaded;
+        private const float CollapsedWindowHeight = 26f;
+
         private string[] selectFrom = new string[] { "All Slots" };
         private int selectionSlot = 0;
         private string[] visibleSelectFrom = new string[] { "All Slots" };
+
+        private Dictionary<string, bool> originalSlotSuppressed;
 
         private MeshCollider meshCollider;
 
@@ -238,6 +285,8 @@ namespace UMA
         {
             base.OnOpenStage();
 
+            EnsureEditorEvents();
+
             centeredLabel = new GUIStyle(GUI.skin.label)
             {
                 fontStyle = FontStyle.Bold,
@@ -299,11 +348,70 @@ namespace UMA
             RefreshSlotSelectionEntries();
             RebuildTriangleSlotOwnership();
 
+            CacheOriginalSlotVisibility();
+
             ValidateMeshHideAssets();
             LoadSelections();
             MarkOverlayMeshDirty();
 
             return true;
+        }
+
+        private void CacheOriginalSlotVisibility()
+        {
+            originalSlotSuppressed = new Dictionary<string, bool>(StringComparer.Ordinal);
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
+            {
+                return;
+            }
+
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var s = slots[i];
+                if (s == null || string.IsNullOrEmpty(s.slotName))
+                {
+                    continue;
+                }
+                if (!originalSlotSuppressed.ContainsKey(s.slotName))
+                {
+                    originalSlotSuppressed.Add(s.slotName, s.Suppressed);
+                }
+            }
+        }
+
+        private void RestoreOriginalSlotVisibility()
+        {
+            if (originalSlotSuppressed == null || originalSlotSuppressed.Count == 0)
+            {
+                return;
+            }
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
+            {
+                return;
+            }
+
+            bool changed = false;
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var s = slots[i];
+                if (s == null || string.IsNullOrEmpty(s.slotName))
+                {
+                    continue;
+                }
+
+                if (originalSlotSuppressed.TryGetValue(s.slotName, out bool suppressed) && s.Suppressed != suppressed)
+                {
+                    s.Suppressed = suppressed;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                RebuildMesh(true, true);
+            }
         }
 
         private void ValidateMeshHideAssets()
@@ -464,6 +572,8 @@ namespace UMA
             base.OnCloseStage();
             closing = true;
 
+            RestoreOriginalSlotVisibility();
+
             SceneView.duringSceneGui -= OnSceneGUI;
             Undo.undoRedoPerformed -= OnUndoRedoSelection;
             Tools.hidden = false;
@@ -502,6 +612,8 @@ namespace UMA
             }
 
             ClearOverlayMeshCache();
+
+            originalSlotSuppressed = null;
 
         }
 
@@ -892,9 +1004,42 @@ namespace UMA
         {
             AdjustWindowRects();
 
-            FaceEditorToolsWindow = GUILayout.Window(FaceEditorToolsWindowID, FaceEditorToolsWindow, DoToolsWindow, "Face Tools");
-            VisibleWearablesWindow = GUILayout.Window(VisibleWearablesID, VisibleWearablesWindow, DoVisibilityWindow, "Visibility");
-            MeshHideAssetsWindow = GUILayout.Window(MeshHideAssetsWindowID, MeshHideAssetsWindow, DoMeshHideAssetsWindow, "Mesh Hide Assets");
+            DrawPanel(faceToolsPanelCollapsed ? FaceEditorToolsCollapsedWindow : FaceEditorToolsWindow, "Face Tools", ref faceToolsPanelCollapsed, PanelCollapsePrefKeyPrefix + "FaceTools", () => DoToolsWindow(0));
+            DrawPanel(visibilityPanelCollapsed ? VisibleWearablesCollapsedWindow : VisibleWearablesWindow, "Visibility", ref visibilityPanelCollapsed, PanelCollapsePrefKeyPrefix + "Visibility", () => DoVisibilityWindow(0));
+            DrawPanel(meshHideAssetsPanelCollapsed ? MeshHideAssetsCollapsedWindow : MeshHideAssetsWindow, "Mesh Hide Assets", ref meshHideAssetsPanelCollapsed, PanelCollapsePrefKeyPrefix + "MeshHideAssets", () => DoMeshHideAssetsWindow(0));
+        }
+
+        private void DrawPanel(Rect rect, string title, ref bool collapsed, string prefsKey, Action drawContent)
+        {
+            // Simple, non-draggable panel.
+            GUI.Box(rect, GUIContent.none);
+
+            Rect headerRect = new Rect(rect.x, rect.y, rect.width, LeftPanelHeaderHeight + 6f);
+            Rect buttonRect = new Rect(headerRect.x + 4f, headerRect.y + 3f, 22f, 18f);
+            string arrow = collapsed ? "\u25BC" : "\u25B2";
+            if (GUI.Button(buttonRect, arrow, EditorStyles.miniButton))
+            {
+                collapsed = !collapsed;
+                EditorPrefs.SetBool(prefsKey, collapsed);
+            }
+
+            GUI.Label(new Rect(headerRect.x + 30f, headerRect.y + 4f, headerRect.width - 34f, headerRect.height), title, EditorStyles.boldLabel);
+
+            if (collapsed)
+            {
+                return;
+            }
+
+            Rect contentRect = new Rect(rect.x + 6f, headerRect.yMax + 2f, rect.width - 12f, Mathf.Max(0f, rect.yMax - (headerRect.yMax + 6f)));
+            GUILayout.BeginArea(contentRect);
+            try
+            {
+                drawContent?.Invoke();
+            }
+            finally
+            {
+                GUILayout.EndArea();
+            }
         }
 
         public void AdjustWindowRects()
@@ -903,6 +1048,8 @@ namespace UMA
             {
                 return;
             }
+
+            LoadCollapsePrefsIfNeeded();
 
             Rect usableRect = GetSceneViewUsableRect(openedSceneView);
             Vector2 sceneSize = usableRect.size;
@@ -921,9 +1068,22 @@ namespace UMA
             float width = Mathf.Clamp(FaceEditorToolsWindow.width, LeftPanelWidthMin, LeftPanelWidthMax);
 
             leftPanelRect = new Rect(usableRect.x + LeftPanelPadding, usableRect.y + LeftPanelPadding, width, toolsHeight + visibilityHeight + meshHideHeight + (LeftPanelPadding * 2f));
-            FaceEditorToolsWindow = new Rect(leftPanelRect.x, leftPanelRect.y, width, toolsHeight);
-            VisibleWearablesWindow = new Rect(leftPanelRect.x, leftPanelRect.y + toolsHeight + LeftPanelPadding, width, visibilityHeight);
-            MeshHideAssetsWindow = new Rect(leftPanelRect.x, VisibleWearablesWindow.yMax + LeftPanelPadding, width, meshHideHeight);
+
+            float toolsExpandedHeight = toolsHeight;
+            float visibilityExpandedHeight = visibilityHeight;
+            float meshHideExpandedHeight = meshHideHeight;
+
+            float toolsActualHeight = faceToolsPanelCollapsed ? CollapsedWindowHeight : toolsExpandedHeight;
+            float visibilityActualHeight = visibilityPanelCollapsed ? CollapsedWindowHeight : visibilityExpandedHeight;
+            float meshHideActualHeight = meshHideAssetsPanelCollapsed ? CollapsedWindowHeight : meshHideExpandedHeight;
+
+            FaceEditorToolsWindow = new Rect(leftPanelRect.x, leftPanelRect.y, width, toolsExpandedHeight);
+            VisibleWearablesWindow = new Rect(leftPanelRect.x, leftPanelRect.y + toolsActualHeight + LeftPanelPadding, width, visibilityExpandedHeight);
+            MeshHideAssetsWindow = new Rect(leftPanelRect.x, VisibleWearablesWindow.y + visibilityActualHeight + LeftPanelPadding, width, meshHideExpandedHeight);
+
+            FaceEditorToolsCollapsedWindow = new Rect(leftPanelRect.x, leftPanelRect.y, width, CollapsedWindowHeight);
+            VisibleWearablesCollapsedWindow = new Rect(leftPanelRect.x, leftPanelRect.y + toolsActualHeight + LeftPanelPadding, width, CollapsedWindowHeight);
+            MeshHideAssetsCollapsedWindow = new Rect(leftPanelRect.x, VisibleWearablesCollapsedWindow.y + visibilityActualHeight + LeftPanelPadding, width, CollapsedWindowHeight);
         }
 
         private static Rect GetSceneViewUsableRect(SceneView view)
@@ -992,7 +1152,6 @@ namespace UMA
                 cachedMeshHideAssetsHeight = MeshHideAssetsWindow.height;
             }
 
-            GUI.DragWindow();
         }
 
         private void DrawSelectableSlotsSection()
@@ -1062,7 +1221,20 @@ namespace UMA
 
             SaveRaycastPrefs();
 
-            EditorGUI.BeginDisabledGroup(CurrentHideAsset == null && CurrentHideCollection == null);
+            bool anySelected = false;
+            if (slotSelectionEntries != null)
+            {
+                for (int i = 0; i < slotSelectionEntries.Count; i++)
+                {
+                    if (slotSelectionEntries[i] != null && slotSelectionEntries[i].isSelected)
+                    {
+                        anySelected = true;
+                        break;
+                    }
+                }
+            }
+
+            EditorGUI.BeginDisabledGroup(!anySelected);
             if (GUILayout.Button("Raycast Occlusion To MeshHideAssets"))
             {
                 RaycastOcclusionToMeshHideAssets();
@@ -1154,27 +1326,8 @@ namespace UMA
                 visibleSlotNames.Add(s.slotName);
             }
 
-            // Map slotName -> MeshHideAsset / local submesh index
-            Dictionary<string, (MeshHideAsset mha, int localSubmesh)> slotToMha = new Dictionary<string, (MeshHideAsset, int)>(StringComparer.Ordinal);
-            if (CurrentHideAsset != null)
-            {
-                var key = CurrentHideAsset.AssetSlotName;
-                if (!string.IsNullOrEmpty(key))
-                {
-                    slotToMha[key] = (CurrentHideAsset, 0);
-                }
-            }
-            if (CurrentHideCollection != null && CurrentHideCollection.Assets != null)
-            {
-                for (int i = 0; i < CurrentHideCollection.Assets.Count; i++)
-                {
-                    var mha = CurrentHideCollection.Assets[i];
-                    if (mha == null) continue;
-                    var key = mha.AssetSlotName;
-                    if (string.IsNullOrEmpty(key)) continue;
-                    slotToMha[key] = (mha, 0);
-                }
-            }
+            // We do NOT require MeshHideAssets here; raycast behaves like manual selection.
+            // Results are applied to stage selections (`SelectedFaces`) and can be split into assets later.
 
             // Build CPU triangle cache for candidate geometry (visible, non-selected)
             List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)> candidates = BuildCandidateTrianglesCPU(visibleSlotNames, selectedSlotNames);
@@ -1189,6 +1342,9 @@ namespace UMA
             int totalVerticesTested = 0;
             int totalVertexHits = 0;
             int totalSlotsProcessed = 0;
+
+            // SlotName -> local triangle flags for that slot. Flags length equals slot local triangle count.
+            Dictionary<string, BitArray> slotHiddenFlags = new Dictionary<string, BitArray>(StringComparer.Ordinal);
 
             try
             {
@@ -1211,35 +1367,19 @@ namespace UMA
                         continue;
                     }
 
-                    if (!slotToMha.TryGetValue(slotName, out var mhaInfo) || mhaInfo.mha == null)
-                    {
-                        // If we do not have an existing MHA loaded for this slot, we can't write flags.
-                        continue;
-                    }
-
-                    int localSubmesh = Mathf.Clamp(mhaInfo.localSubmesh, 0, Mathf.Max(0, slot.asset.meshData.subMeshCount - 1));
-
+                    int localSubmesh = 0;
                     int triCount = GetLocalTriangleCountForSlotSubmesh(slot, localSubmesh);
                     if (triCount <= 0)
                     {
                         continue;
                     }
 
-                    BitArray flags = GetTriangleFlagsSafe(mhaInfo.mha, localSubmesh);
-                    if (flags == null || flags.Count != triCount)
+                    if (!slotHiddenFlags.TryGetValue(slotName, out BitArray flags) || flags == null || flags.Count != triCount)
                     {
-                        // Ensure flags initialized to correct size
-                        mhaInfo.mha.Initialize();
-                        flags = GetTriangleFlagsSafe(mhaInfo.mha, localSubmesh);
+                        flags = new BitArray(triCount);
+                        slotHiddenFlags[slotName] = flags;
                     }
-                    if (flags == null || flags.Count != triCount)
-                    {
-                        continue;
-                    }
-
-                    Undo.RecordObject(mhaInfo.mha, "Raycast Occlusion");
-
-                    if (!raycastOcclusionAdd)
+                    else if (!raycastOcclusionAdd)
                     {
                         flags.SetAll(false);
                     }
@@ -1256,9 +1396,6 @@ namespace UMA
                         totalTrianglesMarked += marked;
                     }
 
-                    EditorUtility.SetDirty(mhaInfo.mha);
-                    AssetDatabase.SaveAssetIfDirty(mhaInfo.mha);
-
                     totalSlotsProcessed++;
                 }
             }
@@ -1267,11 +1404,65 @@ namespace UMA
                 EditorUtility.ClearProgressBar();
             }
 
+            // Apply the hidden flags to stage selections (manual-selection equivalent).
+            if (!raycastOcclusionAdd)
+            {
+                RecordSelectionUndo("Raycast Occlusion");
+                SelectedFaces.RemoveAll(f => f != null && !string.IsNullOrEmpty(f.slotName) && slotHiddenFlags.ContainsKey(f.slotName));
+            }
+
+            foreach (var pair in slotHiddenFlags)
+            {
+                string slotName = pair.Key;
+                BitArray flags = pair.Value;
+                if (flags == null)
+                {
+                    continue;
+                }
+
+                if (!TryGetSlotSubmeshRange(thisDCA.umaData.umaRecipe.GetSlot(slotName), out int startSubmesh, out int submeshCount))
+                {
+                    continue;
+                }
+
+                int bakedSm = startSubmesh;
+                int triCount = flags.Count;
+                for (int t = 0; t < triCount; t++)
+                {
+                    if (!flags[t])
+                    {
+                        continue;
+                    }
+
+                    TriangleKey key = new TriangleKey(bakedSm, t);
+                    if (!triangleSlotOwnership.TryGetValue(key, out var owner))
+                    {
+                        continue;
+                    }
+
+                    if (SelectedFaces.FindIndex(x => x.submeshIndex == bakedSm && x.triangleIndex == t) >= 0)
+                    {
+                        continue;
+                    }
+
+                    SelectedFaces.Add(new FaceSelection
+                    {
+                        submeshIndex = bakedSm,
+                        triangleIndex = t,
+                        slotName = owner.slot != null ? owner.slot.slotName : slotName,
+                        slotSubmeshIndex = owner.slotSubmeshIndex,
+                        slotTriangleIndex = owner.slotTriangleIndex,
+                        isHidden = true
+                    });
+                }
+            }
+
+            selectionVersion++;
+            MarkOverlayMeshDirty();
+
             raycastOcclusionStatusType = MessageType.Info;
             raycastOcclusionStatus = $"Raycast complete\nCandidate triangles: {candidates.Count}\nSlots processed: {totalSlotsProcessed}\nVertices tested: {totalVerticesTested}\nVertex hits: {totalVertexHits}\nTriangles marked: {totalTrianglesMarked}";
 
-            LoadSelections();
-            MarkOverlayMeshDirty();
             SceneView.RepaintAll();
         }
 
@@ -1540,38 +1731,47 @@ namespace UMA
 
         private static bool RayTriangleIntersect(Vector3 rayOrigin, Vector3 rayDir, Vector3 v0, Vector3 v1, Vector3 v2, out float t)
         {
-            t = 0f;
-            const float EPSILON = 1e-8f;
-
-            Vector3 edge1 = v1 - v0;
-            Vector3 edge2 = v2 - v0;
-            Vector3 h = Vector3.Cross(rayDir, edge2);
-            float a = Vector3.Dot(edge1, h);
-
-            if (a > -EPSILON && a < EPSILON)
+            static bool IntersectOne(Vector3 ro, Vector3 rd, Vector3 a0, Vector3 a1, Vector3 a2, out float outT)
             {
-                return false;
+                outT = 0f;
+                const float EPSILON = 1e-8f;
+
+                Vector3 edge1 = a1 - a0;
+                Vector3 edge2 = a2 - a0;
+                Vector3 h = Vector3.Cross(rd, edge2);
+                float det = Vector3.Dot(edge1, h);
+
+                if (det > -EPSILON && det < EPSILON)
+                {
+                    return false;
+                }
+
+                float invDet = 1.0f / det;
+                Vector3 s = ro - a0;
+                float u = invDet * Vector3.Dot(s, h);
+                if (u < 0.0f || u > 1.0f)
+                {
+                    return false;
+                }
+
+                Vector3 q = Vector3.Cross(s, edge1);
+                float v = invDet * Vector3.Dot(rd, q);
+                if (v < 0.0f || u + v > 1.0f)
+                {
+                    return false;
+                }
+
+                outT = invDet * Vector3.Dot(edge2, q);
+                return outT > EPSILON;
             }
 
-            float f = 1.0f / a;
-            Vector3 s = rayOrigin - v0;
-            float u = f * Vector3.Dot(s, h);
-
-            if (u < 0.0f || u > 1.0f)
+            // Try the original winding, then the reversed winding (double-sided).
+            if (IntersectOne(rayOrigin, rayDir, v0, v1, v2, out t))
             {
-                return false;
+                return true;
             }
 
-            Vector3 q = Vector3.Cross(s, edge1);
-            float v = f * Vector3.Dot(rayDir, q);
-
-            if (v < 0.0f || u + v > 1.0f)
-            {
-                return false;
-            }
-
-            t = f * Vector3.Dot(edge2, q);
-            return t > EPSILON;
+            return IntersectOne(rayOrigin, rayDir, v0, v2, v1, out t);
         }
 
         private int GetLocalTriangleCountForSlotSubmesh(SlotData slot, int localSubmesh)
@@ -1848,8 +2048,10 @@ namespace UMA
 
         public void DoToolsWindow(int id)
         {
-            using (new GUILayout.VerticalScope())
+            using (var scroll = new GUILayout.ScrollViewScope(FaceEditorScrollLocation))
             {
+                FaceEditorScrollLocation = scroll.scrollPosition;
+
                 GUILayout.Label("Selection", centeredLabel);
 
                 paintMode = EditorGUILayout.ToggleLeft("Paint Mode", paintMode);
@@ -1906,8 +2108,6 @@ namespace UMA
                     StageUtility.GoBackToPreviousStage();
                 }
             }
-
-            GUI.DragWindow();
         }
 
         private void ResetCameraToSelectedSlots()
@@ -1998,7 +2198,6 @@ namespace UMA
             if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
             {
                 EditorGUILayout.HelpBox("No UMA data available.", MessageType.Warning);
-                GUI.DragWindow();
                 return;
             }
 
@@ -2138,7 +2337,19 @@ namespace UMA
                 RebuildMesh(wasRecipeChanged, true);
             }
 
-            GUI.DragWindow();
+        }
+
+        private void LoadCollapsePrefsIfNeeded()
+        {
+            if (collapsePrefsLoaded)
+            {
+                return;
+            }
+            collapsePrefsLoaded = true;
+
+            visibilityPanelCollapsed = EditorPrefs.GetBool(PanelCollapsePrefKeyPrefix + "Visibility", false);
+            meshHideAssetsPanelCollapsed = EditorPrefs.GetBool(PanelCollapsePrefKeyPrefix + "MeshHideAssets", false);
+            faceToolsPanelCollapsed = EditorPrefs.GetBool(PanelCollapsePrefKeyPrefix + "FaceTools", false);
         }
 
         private int GetVisibleSlotCount()
@@ -2331,52 +2542,77 @@ namespace UMA
             }
 
             var slots = thisDCA.umaData.umaRecipe.slotDataList;
-            int[] runningBySubmesh = new int[Mathf.Max(1, BakedMesh.subMeshCount)];
 
+            // Build baked vertex ranges -> slot mapping. This avoids relying on slot or triangle ordering,
+            // which can change after suppression/rebuilds.
+            List<(int start, int endExclusive, SlotData slot)> ranges = new List<(int, int, SlotData)>(slots.Length);
             for (int i = 0; i < slots.Length; i++)
             {
-                var slot = slots[i];
-                if (slot == null || slot.asset == null || slot.asset.meshData == null)
+                var s = slots[i];
+                if (s == null || s.Suppressed || s.asset == null || s.asset.meshData == null)
                 {
                     continue;
                 }
 
-                int slotSubmeshCount = Mathf.Max(1, slot.asset.meshData.subMeshCount);
-                for (int localSm = 0; localSm < slotSubmeshCount; localSm++)
+                int vertexCount = s.asset.meshData.vertexCount;
+                if (vertexCount <= 0)
                 {
-                    int bakedSubmesh = Mathf.Clamp(localSm, 0, BakedMesh.subMeshCount - 1);
-                    if (bakedSubmesh < 0 || bakedSubmesh >= BakedMesh.subMeshCount)
+                    continue;
+                }
+
+                int start = Mathf.Max(0, s.vertexOffset);
+                int end = start + vertexCount;
+                ranges.Add((start, end, s));
+            }
+
+            ranges.Sort((a, b) => a.start.CompareTo(b.start));
+
+            SlotData TryGetSlotForBakedVertex(int bakedVertexIndex)
+            {
+                // Linear search is fine for typical UMA slot counts.
+                for (int ri = 0; ri < ranges.Count; ri++)
+                {
+                    var r = ranges[ri];
+                    if (bakedVertexIndex >= r.start && bakedVertexIndex < r.endExclusive)
+                    {
+                        return r.slot;
+                    }
+                }
+                return null;
+            }
+
+            for (int bakedSubmesh = 0; bakedSubmesh < BakedMesh.subMeshCount; bakedSubmesh++)
+            {
+                int[] bakedTriangles = BakedMesh.GetTriangles(bakedSubmesh);
+                if (bakedTriangles == null || bakedTriangles.Length == 0)
+                {
+                    continue;
+                }
+
+                int bakedTriCount = bakedTriangles.Length / 3;
+                for (int tri = 0; tri < bakedTriCount; tri++)
+                {
+                    int ti = tri * 3;
+                    int v0 = bakedTriangles[ti];
+                    int v1 = bakedTriangles[ti + 1];
+                    int v2 = bakedTriangles[ti + 2];
+
+                    SlotData slot = TryGetSlotForBakedVertex(v0) ?? TryGetSlotForBakedVertex(v1) ?? TryGetSlotForBakedVertex(v2);
+                    if (slot == null)
                     {
                         continue;
                     }
 
-                    int[] slotTriangles = SlotToMesh.GetTriangles(slot.asset.meshData, localSm);
-                    int triCount = slotTriangles != null ? slotTriangles.Length / 3 : 0;
-                    if (triCount <= 0)
+                    TriangleKey key = new TriangleKey(bakedSubmesh, tri);
+                    if (!triangleSlotOwnership.ContainsKey(key))
                     {
-                        continue;
-                    }
-
-                    int[] bakedTriangles = BakedMesh.GetTriangles(bakedSubmesh);
-                    int bakedTriCount = bakedTriangles != null ? bakedTriangles.Length / 3 : 0;
-                    int startTri = runningBySubmesh[bakedSubmesh];
-                    int mapCount = Mathf.Max(0, Mathf.Min(triCount, bakedTriCount - startTri));
-
-                    for (int t = 0; t < mapCount; t++)
-                    {
-                        TriangleKey key = new TriangleKey(bakedSubmesh, startTri + t);
-                        if (!triangleSlotOwnership.ContainsKey(key))
+                        triangleSlotOwnership.Add(key, new SlotTriangleAddress
                         {
-                            triangleSlotOwnership.Add(key, new SlotTriangleAddress
-                            {
-                                slot = slot,
-                                slotSubmeshIndex = localSm,
-                                slotTriangleIndex = t
-                            });
-                        }
+                            slot = slot,
+                            slotSubmeshIndex = 0,
+                            slotTriangleIndex = tri
+                        });
                     }
-
-                    runningBySubmesh[bakedSubmesh] = startTri + triCount;
                 }
             }
         }
@@ -3171,6 +3407,13 @@ namespace UMA
                 }
             }
 
+            MarkOverlayMeshDirty();
+
+            // Slot suppression can change mesh topology/submesh mapping. Ensure the ownership map and selections
+            // are rebuilt against the current baked mesh so overlay lines don't reference stale triangles.
+            RebuildTriangleSlotOwnership();
+            PruneSelectionsForCurrentOwnership();
+            selectionVersion++;
             MarkOverlayMeshDirty();
 
             RefreshVisibleSlotLists();

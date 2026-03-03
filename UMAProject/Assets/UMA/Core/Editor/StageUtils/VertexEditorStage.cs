@@ -7,6 +7,7 @@ using UMA;
 using UMA.CharacterSystem;
 using UMA.Editors;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -19,6 +20,36 @@ namespace UMA
 {
     public class VertexEditorStage : PreviewSceneStage
     {
+        private static bool eventsHooked;
+
+        private static void EnsureEditorEvents()
+        {
+#if UNITY_EDITOR
+            if (eventsHooked)
+            {
+                return;
+            }
+            eventsHooked = true;
+            AssemblyReloadEvents.beforeAssemblyReload += ExitStageIfActive;
+            CompilationPipeline.compilationStarted += _ => ExitStageIfActive();
+#endif
+        }
+
+        private static void ExitStageIfActive()
+        {
+#if UNITY_EDITOR
+            try
+            {
+                if (StageUtility.GetCurrentStage() is VertexEditorStage)
+                {
+                    StageUtility.GoBackToPreviousStage();
+                }
+            }
+            catch
+            {
+            }
+#endif
+        }
         public PreviewWindow ownerWindow;
         public GUIContent titleContent;
         public SceneView openedSceneView;
@@ -1011,6 +1042,8 @@ namespace UMA
         protected override bool OnOpenStage()
         {
             base.OnOpenStage();
+
+            EnsureEditorEvents();
             //scene = EditorSceneManager.NewPreviewScene();
 
             centeredLabel = new GUIStyle(GUI.skin.label);
