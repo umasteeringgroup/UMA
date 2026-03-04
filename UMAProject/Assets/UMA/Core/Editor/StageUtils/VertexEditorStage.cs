@@ -1203,6 +1203,7 @@ namespace UMA
             thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
             if (thisDCA.editorTimeGeneration)
             {
+                thisDCA.ignoreMeshHideAssets = false;
                 thisDCA.GenerateSingleUMA();
             }
             if (modifierEditor != null)

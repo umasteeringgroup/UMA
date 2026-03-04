@@ -315,27 +315,6 @@ namespace UMA
             }
         }
 
-        private void SyncSerializedFromSelectedSlotTriangles()
-        {
-            if (selectedSlotTrianglesSerialized == null)
-            {
-                selectedSlotTrianglesSerialized = new List<SerializedSlotTriangleKey>();
-            }
-            else
-            {
-                selectedSlotTrianglesSerialized.Clear();
-            }
-
-            foreach (var k in selectedSlotTriangles)
-            {
-                if (string.IsNullOrEmpty(k.slotName))
-                {
-                    continue;
-                }
-                selectedSlotTrianglesSerialized.Add(new SerializedSlotTriangleKey(k.slotName, k.slotSubmeshIndex, k.slotTriangleIndex));
-            }
-        }
-
         private bool AddSelectedSlotTriangle(SlotTriangleKey key)
         {
             if (!selectedSlotTriangles.Add(key))
@@ -784,6 +763,11 @@ namespace UMA
                 if (smr != null)
                 {
                     smr.enabled = true;
+                }
+                thisDCA.ignoreMeshHideAssets = false;
+                if (thisDCA.editorTimeGeneration)
+                {
+                    thisDCA.GenerateSingleUMA();
                 }
             }
 

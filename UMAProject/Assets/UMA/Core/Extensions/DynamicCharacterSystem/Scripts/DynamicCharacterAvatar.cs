@@ -18,6 +18,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UMA.PoseTools;//so we can set the expression set based on the race
 using UnityEngine.SceneManagement;
+using Codice.Client.Common.GameUI;
 
 #if UMA_ADDRESSABLES
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -53,6 +54,10 @@ namespace UMA.CharacterSystem
         public bool KeepAnimatorController = false;
         [Tooltip("If true, the Animator will be rebuilt anytime the race changes")]
         public bool RecreateAnimatorOnRaceChange = true;
+
+        [NonSerialized]
+        public bool ignoreMeshHideAssets = false;
+
         //public string userInformation = "";
 #if UNITY_EDITOR
         [UnityEditor.MenuItem("GameObject/UMA/Create New Dynamic Character Avatar", false, 10)]
@@ -4857,11 +4862,43 @@ namespace UMA.CharacterSystem
                 var utr = allRecipes[i];
                 if (utr == null || utr.disabled) continue;
 
-                if (utr.MeshHideAssets != null)
+                List<MeshHideAsset> worklist = null;
+
+                if (utr.MeshHideAssetCollections != null && utr.MeshHideAssetCollections.Count > 0)
                 {
+                    worklist = new List<MeshHideAsset>(4);
+                    for (int j = 0; j < utr.MeshHideAssetCollections.Count; j++)
+                    {
+                        var coll = utr.MeshHideAssetCollections[j];
+                        if (coll != null)
+                        {
+                            worklist.AddRange(coll.Assets);
+                        }
+                    }
+                }
+
+                if (utr.MeshHideAssets != null && utr.MeshHideAssets.Count > 0)
+                {
+                    if (worklist == null)
+                    {
+                        worklist = new List<MeshHideAsset>(4);
+                    }
                     for (int mh = 0; mh < utr.MeshHideAssets.Count; mh++)
                     {
                         var meshHide = utr.MeshHideAssets[mh];
+                        if (meshHide != null)
+                        {
+                            worklist.Add(meshHide);
+                        }
+                    }
+                }
+
+
+                if (worklist != null)
+                {
+                    for (int mh = 0; mh < worklist.Count; mh++)
+                    {
+                        var meshHide = worklist[mh];
                         if (meshHide == null) continue;
                         var slotName = meshHide.AssetSlotName;
                         if (!MeshHideDictionary.TryGetValue(slotName, out var list))
@@ -4872,8 +4909,14 @@ namespace UMA.CharacterSystem
                         // avoid duplicates
                         bool exists = false;
                         for (int e = 0; e < list.Count; e++)
+                        {
                             if (list[e] == meshHide) { exists = true; break; }
-                        if (!exists) list.Add(meshHide);
+                        }
+
+                        if (!exists)
+                        {
+                            list.Add(meshHide);
+                        }
                     }
                 }
             }
@@ -5187,7 +5230,14 @@ namespace UMA.CharacterSystem
 
             // Rebuild MeshHide masks based on the current wardrobe and MeshHideDictionary.
             // This clears stale masks when recipes are removed and applies current masks per slot.
-            ProcessMeshHides(MeshHideDictionary, wardrobeRecipes);
+            if (ignoreMeshHideAssets)
+            {
+                MeshHideDictionary.Clear();
+            }
+            else
+            {
+                ProcessMeshHides(MeshHideDictionary, wardrobeRecipes);
+            }
             umaRecipe.UpdateMeshHideMasks();
 
             List<SlotData> smooshSlots = new List<SlotData>();

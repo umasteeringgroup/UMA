@@ -1562,6 +1562,10 @@ namespace UMA.CharacterSystem.Editors
             }
         }
 
+        
+
+
+
         private void DoUtilitiesGUI()
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f,0.875f,1f));
@@ -1571,13 +1575,16 @@ namespace UMA.CharacterSystem.Editors
             // Buttons row
             if (GUILayout.Button("Create New Modifier"))
             {
+                thisDCA.ignoreMeshHideAssets = true;
+                thisDCA.GenerateNow();
                 VertexEditorStage.ShowStage(thisDCA, null);
             }
 
             if (GUILayout.Button("Create New Mesh Hide Asset"))
             {
-                // TODO:
-                 FaceEditorStage.ShowStage(thisDCA, (MeshHideAsset)null);
+                thisDCA.ignoreMeshHideAssets = true;
+                thisDCA.GenerateNow();
+                FaceEditorStage.ShowStage(thisDCA, (MeshHideAsset)null);
             }
 
             // Drag & Drop Area
@@ -1616,19 +1623,24 @@ namespace UMA.CharacterSystem.Editors
                             {
                                 if (o is MeshModifier mm)
                                 {
+                                    thisDCA.ignoreMeshHideAssets = true;
+                                    thisDCA.GenerateNow();
                                     MeshModifier = mm;
                                     VertexEditorStage.ShowStage(thisDCA, MeshModifier);
                                     break; // only first
                                 }
                                 if (o is MeshHideAsset mha)
                                 {
-                                    // TODO:
+                                    thisDCA.ignoreMeshHideAssets = true;
+                                    thisDCA.GenerateNow();                                    // TODO:
                                     FaceEditorStage.ShowStage(thisDCA, mha);
                                     break; // only first asset dropped. 
                                 }
                                  if (o is MeshHideAssetCollection mhac)
                                  {
-                                     FaceEditorStage.ShowStage(thisDCA, mhac);
+                                    thisDCA.ignoreMeshHideAssets = true;
+                                    thisDCA.GenerateNow();
+                                    FaceEditorStage.ShowStage(thisDCA, mhac);
                                      break;
                                  }
                             }
