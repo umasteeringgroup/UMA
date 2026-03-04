@@ -2,6 +2,7 @@
 
 ## General Guidelines
 - Avoid kludgy fixes; prefer root-cause fixes based on observed event flow and resource readiness.
+- Prioritize root-cause event-flow fixes and caching in UMA editor stages.
 - For UI/UX refactors in UMA editor tools, clarify requirements with questions before implementation and ensure clear mode separation to prevent overlapping functions.
 - In UMA editor tools, keep EditorModifiers behind UNITY_EDITOR and avoid including them in builds for memory reasons.
 

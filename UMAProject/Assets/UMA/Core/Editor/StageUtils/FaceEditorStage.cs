@@ -45,6 +45,16 @@ namespace UMA
             }
 #endif
         }
+
+        private struct CachedSlotTriangle
+        {
+            public string slotName;
+            public int slotSubmeshIndex;
+            public int slotTriangleIndex;
+            public int v0Slot;
+            public int v1Slot;
+            public int v2Slot;
+        }
         public GUIContent titleContent;
         public SceneView openedSceneView;
         public GameObject selectedObject;
@@ -62,6 +72,25 @@ namespace UMA
         public MeshHideAsset CurrentHideAsset;
         public MeshHideAssetCollection CurrentHideCollection;
 
+        private Vector3[] bakedVertices;
+        private Vector3[] bakedNormals;
+        private int[] bakedTriangles;
+
+        private void RefreshBakedMeshCaches()
+        {
+            if (BakedMesh == null)
+            {
+                bakedVertices = null;
+                bakedNormals = null;
+                bakedTriangles = null;
+                return;
+            }
+
+            bakedVertices = BakedMesh.vertices;
+            bakedNormals = BakedMesh.normals;
+            bakedTriangles = BakedMesh.triangles;
+        }
+
         [Serializable]
         private class SlotSelectionEntry
         {
@@ -72,14 +101,18 @@ namespace UMA
         private enum selectMode { Add, Remove, InvertSelection, HideFaces, UnhideFaces, ToggleHide };
 
         [Serializable]
-        private class FaceSelection
+        private struct SerializedSlotTriangleKey
         {
-            public int submeshIndex;
-            public int triangleIndex; // index in submesh triangles array / 3
             public string slotName;
             public int slotSubmeshIndex;
             public int slotTriangleIndex;
-            public bool isHidden;
+
+            public SerializedSlotTriangleKey(string slotName, int slotSubmeshIndex, int slotTriangleIndex)
+            {
+                this.slotName = slotName;
+                this.slotSubmeshIndex = slotSubmeshIndex;
+                this.slotTriangleIndex = slotTriangleIndex;
+            }
         }
 
         private struct TriangleKey : IEquatable<TriangleKey>
@@ -124,8 +157,48 @@ namespace UMA
             public int slotTriangleIndex;
         }
 
+        // Key for slot-local triangle identity (survives mesh rebuilds)
+        private struct SlotTriangleKey : IEquatable<SlotTriangleKey>
+        {
+            public string slotName;
+            public int slotSubmeshIndex;
+            public int slotTriangleIndex;
+
+            public SlotTriangleKey(string slotName, int slotSubmeshIndex, int slotTriangleIndex)
+            {
+                this.slotName = slotName;
+                this.slotSubmeshIndex = slotSubmeshIndex;
+                this.slotTriangleIndex = slotTriangleIndex;
+            }
+
+            public bool Equals(SlotTriangleKey other)
+            {
+                return slotSubmeshIndex == other.slotSubmeshIndex &&
+                       slotTriangleIndex == other.slotTriangleIndex &&
+                       string.Equals(slotName, other.slotName, StringComparison.Ordinal);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is SlotTriangleKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = slotName != null ? slotName.GetHashCode() : 0;
+                    hash = (hash * 397) ^ slotSubmeshIndex;
+                    hash = (hash * 397) ^ slotTriangleIndex;
+                    return hash;
+                }
+            }
+        }
+
+        // Serialized backing store for selection so Undo/Redo and domain reload restore selections.
+        // In-memory authoritative source is `selectedSlotTriangles`.
         [SerializeField]
-        private List<FaceSelection> SelectedFaces = new List<FaceSelection>();
+        private List<SerializedSlotTriangleKey> selectedSlotTrianglesSerialized = new List<SerializedSlotTriangleKey>();
 
         [SerializeField]
         private List<SlotSelectionEntry> slotSelectionEntries = new List<SlotSelectionEntry>();
@@ -202,12 +275,105 @@ namespace UMA
 
         private Dictionary<string, SlotData> slotLookupByName = new Dictionary<string, SlotData>(StringComparer.Ordinal);
         private Dictionary<TriangleKey, SlotTriangleAddress> triangleSlotOwnership = new Dictionary<TriangleKey, SlotTriangleAddress>();
+        // Reverse lookup: slot-local key -> current baked key (rebuilt when mesh changes)
+        private Dictionary<SlotTriangleKey, TriangleKey> slotLocalToBaked = new Dictionary<SlotTriangleKey, TriangleKey>();
+
+        private readonly List<(int start, int endExclusive, SlotData slot)> bakedVertexSlotRanges = new List<(int start, int endExclusive, SlotData slot)>(64);
+
+        private int visibleSlotsSignature;
+        private int visibleSlotsCount;
+
+        private bool slotTriangleCacheBuilt;
+        private readonly List<CachedSlotTriangle> slotTriangleCache = new List<CachedSlotTriangle>(4096);
+        private readonly HashSet<SlotTriangleKey> selectedSlotTriangles = new HashSet<SlotTriangleKey>();
         private int selectionVersion;
+
+        private int SelectedSlotTriangleCount
+        {
+            get
+            {
+                return selectedSlotTriangles != null ? selectedSlotTriangles.Count : 0;
+            }
+        }
+
+        private void RebuildSelectedSlotTrianglesFromSerialized()
+        {
+            selectedSlotTriangles.Clear();
+            if (selectedSlotTrianglesSerialized == null || selectedSlotTrianglesSerialized.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < selectedSlotTrianglesSerialized.Count; i++)
+            {
+                var k = selectedSlotTrianglesSerialized[i];
+                if (string.IsNullOrEmpty(k.slotName))
+                {
+                    continue;
+                }
+                selectedSlotTriangles.Add(new SlotTriangleKey(k.slotName, k.slotSubmeshIndex, k.slotTriangleIndex));
+            }
+        }
+
+        private void SyncSerializedFromSelectedSlotTriangles()
+        {
+            if (selectedSlotTrianglesSerialized == null)
+            {
+                selectedSlotTrianglesSerialized = new List<SerializedSlotTriangleKey>();
+            }
+            else
+            {
+                selectedSlotTrianglesSerialized.Clear();
+            }
+
+            foreach (var k in selectedSlotTriangles)
+            {
+                if (string.IsNullOrEmpty(k.slotName))
+                {
+                    continue;
+                }
+                selectedSlotTrianglesSerialized.Add(new SerializedSlotTriangleKey(k.slotName, k.slotSubmeshIndex, k.slotTriangleIndex));
+            }
+        }
+
+        private bool AddSelectedSlotTriangle(SlotTriangleKey key)
+        {
+            if (!selectedSlotTriangles.Add(key))
+            {
+                return false;
+            }
+            selectedSlotTrianglesSerialized.Add(new SerializedSlotTriangleKey(key.slotName, key.slotSubmeshIndex, key.slotTriangleIndex));
+            return true;
+        }
+
+        private bool RemoveSelectedSlotTriangle(SlotTriangleKey key)
+        {
+            if (!selectedSlotTriangles.Remove(key))
+            {
+                return false;
+            }
+
+            if (selectedSlotTrianglesSerialized != null)
+            {
+                for (int i = selectedSlotTrianglesSerialized.Count - 1; i >= 0; i--)
+                {
+                    var k = selectedSlotTrianglesSerialized[i];
+                    if (string.Equals(k.slotName, key.slotName, StringComparison.Ordinal) && k.slotSubmeshIndex == key.slotSubmeshIndex && k.slotTriangleIndex == key.slotTriangleIndex)
+                    {
+                        selectedSlotTrianglesSerialized.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+
+            return true;
+        }
 
         private static readonly Color OverlayFillGreen = new Color(0f, 1f, 0f, 0.33f);
         private static readonly Color OverlayLineGreen = new Color(0f, 1f, 0f, 1f);
         private static readonly Color OverlayFillRed = new Color(1f, 0f, 0f, 1f);
         private static readonly Color OverlayLineRed = new Color(0f, 0f, 0f, 1f);
+        private static readonly Color OverlayLineBlack = new Color(0f, 0f, 0f, 1f);
         private const float OverlayVertexOffset = 0.0005f;
 
         private const string MeshHideAssetFolderPrefKeyPrefix = "UMA.FaceEditorStage.MeshHideAssetFolder.";
@@ -215,6 +381,8 @@ namespace UMA
         private const string RaycastPrefKeyPrefix = "UMA.FaceEditorStage.RaycastOcclusion.";
         private const float RaycastDefaultOutward = 0.1f;
         private const float RaycastDefaultInward = 0.02f;
+        private const float RaycastOriginEpsilon = 0.0005f;
+        private const float RaycastHitEpsilon = 0.0001f;
 
         [SerializeField]
         private float raycastOcclusionOutward = RaycastDefaultOutward;
@@ -241,6 +409,23 @@ namespace UMA
         private string raycastTestStatus;
         [SerializeField]
         private MessageType raycastTestStatusType = MessageType.Info;
+
+        [SerializeField]
+        private bool raycastDrawDebugRays;
+
+        [SerializeField]
+        private int raycastDebugRayCount = 2048;
+
+        private struct DebugRay
+        {
+            public Vector3 origin;
+            public Vector3 direction;
+            public float distance;
+            public Color color;
+        }
+
+        private readonly List<DebugRay> raycastDebugRays = new List<DebugRay>(2048);
+        private int raycastDebugRaysAdded;
 
         [Serializable]
         private class SubmeshColorEntry
@@ -319,6 +504,7 @@ namespace UMA
             BakedMesh = new Mesh();
             BakedMesh.name = "BakedMesh";
             smr.BakeMesh(BakedMesh, true);
+            RefreshBakedMeshCaches();
 
             GameObject go = new GameObject("FaceEditor");
             go.AddComponent<MeshFilter>().sharedMesh = BakedMesh;
@@ -562,12 +748,13 @@ namespace UMA
                 var slot = slots[i];
                 if (slot == null) continue;
 
-                int slotSubmeshCount = 1;
+                // Skip slots that don't contribute to baked mesh
+                if (slot.Suppressed) continue;
+
                 var asset = slot.asset;
-                if (asset != null && asset.meshData != null)
-                {
-                    slotSubmeshCount = Mathf.Max(1, asset.meshData.subMeshCount);
-                }
+                if (asset == null || asset.meshData == null) continue;
+
+                int slotSubmeshCount = Mathf.Max(1, asset.meshData.subMeshCount);
 
                 if (submeshIndex >= running && submeshIndex < running + slotSubmeshCount)
                 {
@@ -624,6 +811,8 @@ namespace UMA
                 BakedMesh = null;
             }
 
+            RefreshBakedMeshCaches();
+
             ClearOverlayMeshCache();
 
             originalSlotSuppressed = null;
@@ -632,6 +821,7 @@ namespace UMA
 
         private void OnUndoRedoSelection()
         {
+            RebuildSelectedSlotTrianglesFromSerialized();
             selectionVersion++;
             MarkOverlayMeshDirty();
             SceneView.RepaintAll();
@@ -660,8 +850,29 @@ namespace UMA
             DrawGUIWindows(sceneView);
             Handles.EndGUI();
 
+            DrawRaycastDebugRaysHandles(sceneView);
+
             DrawMeshHideOverlay(sceneView);
             HandleFacePick(Event.current, sceneView);
+        }
+
+        private void DrawRaycastDebugRaysHandles(SceneView sceneView)
+        {
+            if (!raycastDrawDebugRays)
+            {
+                return;
+            }
+            if (raycastDebugRays == null || raycastDebugRays.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < raycastDebugRays.Count; i++)
+            {
+                var r = raycastDebugRays[i];
+                Handles.color = r.color;
+                Handles.DrawLine(r.origin, r.origin + (r.direction * r.distance));
+            }
         }
 
         private void DrawMeshHideOverlay(SceneView sceneView)
@@ -675,6 +886,8 @@ namespace UMA
             {
                 return;
             }
+
+            EnsureSlotTriangleCacheBuilt();
 
             int startSubmesh = 0;
             int endSubmeshExclusive = BakedMesh.subMeshCount;
@@ -691,6 +904,24 @@ namespace UMA
             }
 
             Matrix4x4 matrix = FaceObject.transform.localToWorldMatrix;
+
+            if (overlayVisibleLineMesh != null && overlayVisibleLineMesh.vertexCount > 0)
+            {
+                overlayLineMaterial.SetColor("_Color", OverlayLineBlack);
+                overlayLineMaterial.SetPass(0);
+                Graphics.DrawMesh(
+                    overlayVisibleLineMesh,
+                    matrix,
+                    overlayLineMaterial,
+                    0,
+                    sceneView != null ? sceneView.camera : null,
+                    0,
+                    null,
+                    ShadowCastingMode.Off,
+                    false,
+                    null,
+                    false);
+            }
 
             if (overlayHiddenFillMesh != null && overlayHiddenFillMesh.vertexCount > 0)
             {
@@ -712,7 +943,7 @@ namespace UMA
 
             if (overlayHiddenLineMesh != null && overlayHiddenLineMesh.vertexCount > 0)
             {
-                overlayLineMaterial.SetColor("_Color", OverlayLineRed);
+                overlayLineMaterial.SetColor("_Color", OverlayLineBlack);
                 overlayLineMaterial.SetPass(0);
                 Graphics.DrawMesh(
                     overlayHiddenLineMesh,
@@ -729,6 +960,65 @@ namespace UMA
             }
         }
 
+        private void EnsureSlotTriangleCacheBuilt()
+        {
+            if (slotTriangleCacheBuilt)
+            {
+                return;
+            }
+
+            slotTriangleCacheBuilt = true;
+            slotTriangleCache.Clear();
+
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
+            {
+                return;
+            }
+
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var slot = slots[i];
+                if (slot == null || slot.asset == null || slot.asset.meshData == null)
+                {
+                    continue;
+                }
+
+                int submeshCount = Mathf.Max(1, slot.asset.meshData.subMeshCount);
+                for (int sm = 0; sm < submeshCount; sm++)
+                {
+                    int[] tris = null;
+                    try
+                    {
+                        tris = slot.asset.meshData.submeshes[sm].GetBaseTriangles();
+                    }
+                    catch
+                    {
+                        tris = null;
+                    }
+                    if (tris == null || tris.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    int triCount = tris.Length / 3;
+                    for (int t = 0; t < triCount; t++)
+                    {
+                        int ti = t * 3;
+                        slotTriangleCache.Add(new CachedSlotTriangle
+                        {
+                            slotName = slot.slotName,
+                            slotSubmeshIndex = sm,
+                            slotTriangleIndex = t,
+                            v0Slot = tris[ti],
+                            v1Slot = tris[ti + 1],
+                            v2Slot = tris[ti + 2]
+                        });
+                    }
+                }
+            }
+        }
+
         private void RebuildOverlayMeshes(int startSubmesh, int endSubmeshExclusive)
         {
             EnsureOverlayMesh(ref overlayVisibleFillMesh, "OverlayVisibleFill");
@@ -741,43 +1031,48 @@ namespace UMA
             List<Vector3> hiddenFillVertices = new List<Vector3>(1024);
             List<Vector3> hiddenLineVertices = new List<Vector3>(2048);
 
-            HashSet<TriangleKey> selectedKeys = new HashSet<TriangleKey>();
-            for (int i = 0; i < SelectedFaces.Count; i++)
+            RefreshBakedMeshCaches();
+            Vector3[] bakedVertices = this.bakedVertices;
+            if (bakedVertices == null)
             {
-                var f = SelectedFaces[i];
-                selectedKeys.Add(new TriangleKey(f.submeshIndex, f.triangleIndex));
+                return;
             }
-
-            Vector3[] vertices = BakedMesh.vertices;
-            for (int sm = startSubmesh; sm < endSubmeshExclusive; sm++)
+            for (int i = 0; i < slotTriangleCache.Count; i++)
             {
-                int[] triangles = BakedMesh.GetTriangles(sm);
-                if (triangles == null || triangles.Length == 0)
+                var tri = slotTriangleCache[i];
+                if (string.IsNullOrEmpty(tri.slotName))
                 {
                     continue;
                 }
 
-                int triCount = triangles.Length / 3;
-                for (int tri = 0; tri < triCount; tri++)
+                if (!slotLookupByName.TryGetValue(tri.slotName, out var slot) || slot == null)
                 {
-                    TriangleKey key = new TriangleKey(sm, tri);
-                    if (!triangleSlotOwnership.TryGetValue(key, out var owner))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
+                if (slot.Suppressed)
+                {
+                    continue;
+                }
 
-                    string slotName = owner.slot != null ? owner.slot.slotName : null;
-                    if (!IsSlotSelected(slotName))
-                    {
-                        continue;
-                    }
+                // Per requirement: if slot is not selectable, do not draw any wireframe/overlay.
+                if (!IsSlotSelected(tri.slotName))
+                {
+                    continue;
+                }
 
-                    bool isHidden = selectedKeys.Contains(key);
+                int v0b = slot.vertexOffset + tri.v0Slot;
+                int v1b = slot.vertexOffset + tri.v1Slot;
+                int v2b = slot.vertexOffset + tri.v2Slot;
+                if (v0b < 0 || v1b < 0 || v2b < 0 || v0b >= bakedVertices.Length || v1b >= bakedVertices.Length || v2b >= bakedVertices.Length)
+                {
+                    continue;
+                }
 
-                    int ti = tri * 3;
-                    Vector3 v0 = vertices[triangles[ti]];
-                    Vector3 v1 = vertices[triangles[ti + 1]];
-                    Vector3 v2 = vertices[triangles[ti + 2]];
+                Vector3 v0 = bakedVertices[v0b];
+                Vector3 v1 = bakedVertices[v1b];
+                Vector3 v2 = bakedVertices[v2b];
+
+                bool isHidden = selectedSlotTriangles.Contains(new SlotTriangleKey(tri.slotName, tri.slotSubmeshIndex, tri.slotTriangleIndex));
 
                     Vector3 n = Vector3.Cross(v1 - v0, v2 - v0);
                     if (n.sqrMagnitude > 1e-12f)
@@ -789,21 +1084,27 @@ namespace UMA
                         v2 += offset;
                     }
 
-                    List<Vector3> lineTarget = hiddenLineVertices;
+                if (isHidden)
+                {
+                    hiddenFillVertices.Add(v0);
+                    hiddenFillVertices.Add(v1);
+                    hiddenFillVertices.Add(v2);
 
-                    if (isHidden)
-                    {
-                        hiddenFillVertices.Add(v0);
-                        hiddenFillVertices.Add(v1);
-                        hiddenFillVertices.Add(v2);
-                    }
-
-                    lineTarget.Add(v0);
-                    lineTarget.Add(v1);
-                    lineTarget.Add(v1);
-                    lineTarget.Add(v2);
-                    lineTarget.Add(v2);
-                    lineTarget.Add(v0);
+                    hiddenLineVertices.Add(v0);
+                    hiddenLineVertices.Add(v1);
+                    hiddenLineVertices.Add(v1);
+                    hiddenLineVertices.Add(v2);
+                    hiddenLineVertices.Add(v2);
+                    hiddenLineVertices.Add(v0);
+                }
+                else
+                {
+                    visibleLineVertices.Add(v0);
+                    visibleLineVertices.Add(v1);
+                    visibleLineVertices.Add(v1);
+                    visibleLineVertices.Add(v2);
+                    visibleLineVertices.Add(v2);
+                    visibleLineVertices.Add(v0);
                 }
             }
 
@@ -956,12 +1257,13 @@ namespace UMA
                 return false;
             }
 
-            int count = 1;
+            // Target slot must have valid mesh data to contribute submeshes
             var asset = slot.asset;
-            if (asset != null && asset.meshData != null)
+            if (asset == null || asset.meshData == null)
             {
-                count = Mathf.Max(1, asset.meshData.subMeshCount);
+                return false;
             }
+            int count = Mathf.Max(1, asset.meshData.subMeshCount);
 
             var slots = thisDCA.umaData.umaRecipe.slotDataList;
             int running = 0;
@@ -969,12 +1271,16 @@ namespace UMA
             {
                 var s = slots[i];
                 if (s == null) continue;
-                int sCount = 1;
+
+                // Skip slots that don't contribute to baked mesh:
+                // 1. Suppressed slots are hidden
+                if (s.Suppressed) continue;
+
+                // 2. Slots without valid mesh data (including utility slots)
                 var sAsset = s.asset;
-                if (sAsset != null && sAsset.meshData != null)
-                {
-                    sCount = Mathf.Max(1, sAsset.meshData.subMeshCount);
-                }
+                if (sAsset == null || sAsset.meshData == null) continue;
+
+                int sCount = Mathf.Max(1, sAsset.meshData.subMeshCount);
 
                 if (s == slot)
                 {
@@ -1232,6 +1538,12 @@ namespace UMA
             raycastOcclusionAdd = EditorGUILayout.ToggleLeft("Add to existing hides (otherwise replace)", raycastOcclusionAdd);
             raycastOcclusionStrategy = (MeshHideAsset.TriangleHideStrategy)EditorGUILayout.EnumPopup(new GUIContent("Triangle Strategy"), raycastOcclusionStrategy);
 
+            raycastDrawDebugRays = EditorGUILayout.ToggleLeft("Draw debug rays", raycastDrawDebugRays);
+            using (new EditorGUI.DisabledScope(!raycastDrawDebugRays))
+            {
+                raycastDebugRayCount = EditorGUILayout.IntSlider(new GUIContent("Debug Ray Count"), raycastDebugRayCount, 0, 65536);
+            }
+
             SaveRaycastPrefs();
 
             bool anySelected = false;
@@ -1390,8 +1702,14 @@ namespace UMA
             int totalTrianglesChecked = 0;
             int slotsWithNewTriangles = 0;
 
-            // SlotName -> local triangle flags for that slot. Flags length equals slot local triangle count.
-            Dictionary<string, BitArray> slotHiddenFlags = new Dictionary<string, BitArray>(StringComparer.Ordinal);
+            // SlotName -> localSubmesh -> local triangle flags.
+            Dictionary<string, Dictionary<int, BitArray>> slotHiddenFlags = new Dictionary<string, Dictionary<int, BitArray>>(StringComparer.Ordinal);
+
+            raycastDebugRaysAdded = 0;
+            if (raycastDrawDebugRays)
+            {
+                raycastDebugRays.Clear();
+            }
 
             try
             {
@@ -1412,37 +1730,50 @@ namespace UMA
                         continue;
                     }
 
-                    int localSubmesh = 0;
-                    int triCount = GetLocalTriangleCountForSlotSubmesh(slot, localSubmesh);
-                    if (triCount <= 0)
-                    {
-                        continue;
-                    }
-
-                    if (!slotHiddenFlags.TryGetValue(slotName, out BitArray flags) || flags == null || flags.Count != triCount)
-                    {
-                        flags = new BitArray(triCount);
-                        slotHiddenFlags[slotName] = flags;
-                    }
-                    else if (!raycastOcclusionAdd)
-                    {
-                        flags.SetAll(false);
-                    }
-
                     bool[] occludedVerts = ComputeSlotVertexOcclusionCPU(slot, candidates, raycastOcclusionOutward, raycastOcclusionInward, ref totalVerticesTested, ref totalVertexHits);
                     if (occludedVerts == null)
                     {
                         continue;
                     }
 
-                    int marked = ApplyTriangleOcclusionFromVertexOcclusion(slot, localSubmesh, occludedVerts, flags, raycastOcclusionStrategy);
-                    if (marked > 0)
+                    int markedForSlot = 0;
+
+                    int slotSubmeshCount = Mathf.Max(1, slot.asset.meshData.subMeshCount);
+                    if (!slotHiddenFlags.TryGetValue(slotName, out var perSubmesh))
                     {
-                        totalTrianglesMarked += marked;
+                        perSubmesh = new Dictionary<int, BitArray>();
+                        slotHiddenFlags[slotName] = perSubmesh;
                     }
 
-                    totalTrianglesChecked += triCount;
-                    if (marked > 0)
+                    for (int localSubmesh = 0; localSubmesh < slotSubmeshCount; localSubmesh++)
+                    {
+                        int triCount = GetLocalTriangleCountForSlotSubmesh(slot, localSubmesh);
+                        if (triCount <= 0)
+                        {
+                            continue;
+                        }
+
+                        if (!perSubmesh.TryGetValue(localSubmesh, out BitArray flags) || flags == null || flags.Count != triCount)
+                        {
+                            flags = new BitArray(triCount);
+                            perSubmesh[localSubmesh] = flags;
+                        }
+                        else if (!raycastOcclusionAdd)
+                        {
+                            flags.SetAll(false);
+                        }
+
+                        int marked = ApplyTriangleOcclusionFromVertexOcclusion(slot, localSubmesh, occludedVerts, flags, raycastOcclusionStrategy);
+                        if (marked > 0)
+                        {
+                            markedForSlot += marked;
+                            totalTrianglesMarked += marked;
+                        }
+
+                        totalTrianglesChecked += triCount;
+                    }
+
+                    if (markedForSlot > 0)
                     {
                         slotsWithNewTriangles++;
                     }
@@ -1465,52 +1796,49 @@ namespace UMA
             if (!raycastOcclusionAdd)
             {
                 RecordSelectionUndo("Raycast Occlusion");
-                SelectedFaces.RemoveAll(f => f != null && !string.IsNullOrEmpty(f.slotName) && slotHiddenFlags.ContainsKey(f.slotName));
+                // Replace selection for processed slots
+                if (selectedSlotTrianglesSerialized != null && selectedSlotTrianglesSerialized.Count > 0)
+                {
+                    for (int i = selectedSlotTrianglesSerialized.Count - 1; i >= 0; i--)
+                    {
+                        var k = selectedSlotTrianglesSerialized[i];
+                        if (!string.IsNullOrEmpty(k.slotName) && slotHiddenFlags.ContainsKey(k.slotName))
+                        {
+                            selectedSlotTrianglesSerialized.RemoveAt(i);
+                        }
+                    }
+                }
+                RebuildSelectedSlotTrianglesFromSerialized();
             }
 
             foreach (var pair in slotHiddenFlags)
             {
                 string slotName = pair.Key;
-                BitArray flags = pair.Value;
-                if (flags == null)
+                var perSubmesh = pair.Value;
+                if (perSubmesh == null || perSubmesh.Count == 0)
                 {
                     continue;
                 }
 
-                if (!TryGetSlotSubmeshRange(thisDCA.umaData.umaRecipe.GetSlot(slotName), out int startSubmesh, out int submeshCount))
+                foreach (var smPair in perSubmesh)
                 {
-                    continue;
-                }
-
-                int bakedSm = startSubmesh;
-                int triCount = flags.Count;
-                for (int t = 0; t < triCount; t++)
-                {
-                    if (!flags[t])
+                    int localSubmesh = smPair.Key;
+                    BitArray flags = smPair.Value;
+                    if (flags == null)
                     {
                         continue;
                     }
 
-                    TriangleKey key = new TriangleKey(bakedSm, t);
-                    if (!triangleSlotOwnership.TryGetValue(key, out var owner))
+                    int triCount = flags.Count;
+                    for (int slotTri = 0; slotTri < triCount; slotTri++)
                     {
-                        continue;
-                    }
+                        if (!flags[slotTri])
+                        {
+                            continue;
+                        }
 
-                    if (SelectedFaces.FindIndex(x => x.submeshIndex == bakedSm && x.triangleIndex == t) >= 0)
-                    {
-                        continue;
+                        AddSelectedSlotTriangle(new SlotTriangleKey(slotName, localSubmesh, slotTri));
                     }
-
-                    SelectedFaces.Add(new FaceSelection
-                    {
-                        submeshIndex = bakedSm,
-                        triangleIndex = t,
-                        slotName = owner.slot != null ? owner.slot.slotName : slotName,
-                        slotSubmeshIndex = owner.slotSubmeshIndex,
-                        slotTriangleIndex = owner.slotTriangleIndex,
-                        isHidden = true
-                    });
                 }
             }
 
@@ -1520,9 +1848,18 @@ namespace UMA
             raycastOcclusionStatusType = MessageType.Info;
             raycastOcclusionStatus = $"Raycast complete\nCandidate triangles: {candidates.Count}\nSlots processed: {totalSlotsProcessed}\nSlots with new triangles: {slotsWithNewTriangles}\nTriangles checked: {totalTrianglesChecked}\nVertices tested: {totalVerticesTested}\nVertex hits: {totalVertexHits}\nTriangles marked: {totalTrianglesMarked}";
 
-            EditorUtility.DisplayDialog("Raycast Occlusion Complete", raycastOcclusionStatus, "OK");
+            ShowCopyableDialog("Raycast Occlusion Complete", raycastOcclusionStatus);
 
             SceneView.RepaintAll();
+        }
+
+        private static void ShowCopyableDialog(string title, string text)
+        {
+            int choice = EditorUtility.DisplayDialogComplex(title, text, "Copy", "OK", string.Empty);
+            if (choice == 0)
+            {
+                EditorGUIUtility.systemCopyBuffer = text ?? string.Empty;
+            }
         }
 
         private void RunTestRaycastForSelectedVertex()
@@ -1571,11 +1908,19 @@ namespace UMA
                 return;
             }
 
-            Vector3 originWorld = FaceObject.transform.TransformPoint(BakedMesh.vertices[bakedIndex]);
-            Vector3 nWorld = Vector3.up;
-            if (bakedIndex >= 0 && bakedIndex < BakedMesh.normals.Length)
+            RefreshBakedMeshCaches();
+            if (bakedVertices == null || bakedNormals == null)
             {
-                nWorld = FaceObject.transform.TransformDirection(BakedMesh.normals[bakedIndex]).normalized;
+                raycastTestStatusType = MessageType.Warning;
+                raycastTestStatus = "Test raycast skipped: baked mesh caches are not available.";
+                return;
+            }
+
+            Vector3 originWorld = FaceObject.transform.TransformPoint(bakedVertices[bakedIndex]);
+            Vector3 nWorld = Vector3.up;
+            if (bakedIndex >= 0 && bakedIndex < bakedNormals.Length)
+            {
+                nWorld = FaceObject.transform.TransformDirection(bakedNormals[bakedIndex]).normalized;
             }
             if (nWorld.sqrMagnitude < 1e-8f)
             {
@@ -1667,8 +2012,13 @@ namespace UMA
         {
             var result = new List<(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal)>();
 
-            var tris = BakedMesh.triangles;
-            var verts = BakedMesh.vertices;
+            RefreshBakedMeshCaches();
+            var tris = bakedTriangles;
+            var verts = bakedVertices;
+            if (tris == null || verts == null)
+            {
+                return result;
+            }
             int triangleCount = tris.Length / 3;
 
             // Build triangles only if they belong to a visible, non-selected slot.
@@ -1729,8 +2079,13 @@ namespace UMA
                 return null;
             }
 
-            var verts = BakedMesh.vertices;
-            var normals = BakedMesh.normals;
+            RefreshBakedMeshCaches();
+            var verts = bakedVertices;
+            var normals = bakedNormals;
+            if (verts == null || normals == null)
+            {
+                return null;
+            }
             bool[] occluded = new bool[sourceVertexCount];
 
             float outMax = outwardDistance > 0f ? outwardDistance : 0f;
@@ -1765,7 +2120,20 @@ namespace UMA
                 if (outMax > 0f)
                 {
                     Vector3 dir = nWorld;
-                    Vector3 origin = originWorld + (dir * 0.0005f);
+                    Vector3 origin = originWorld + (dir * Mathf.Max(RaycastOriginEpsilon, outMax * 0.001f));
+
+                    if (raycastDrawDebugRays && raycastDebugRaysAdded < raycastDebugRayCount)
+                    {
+                        raycastDebugRays.Add(new DebugRay
+                        {
+                            origin = origin,
+                            direction = dir,
+                            distance = outMax,
+                            color = Color.blue
+                        });
+                        raycastDebugRaysAdded++;
+                    }
+
                     hit = RaycastCPU(origin, dir, outMax, candidates);
                 }
 
@@ -1773,7 +2141,20 @@ namespace UMA
                 if (!hit && inMax > 0f)
                 {
                     Vector3 dir = -nWorld;
-                    Vector3 origin = originWorld + (dir * 0.0005f);
+                    Vector3 origin = originWorld + (dir * Mathf.Max(RaycastOriginEpsilon, inMax * 0.001f));
+
+                    if (raycastDrawDebugRays && raycastDebugRaysAdded < raycastDebugRayCount)
+                    {
+                        raycastDebugRays.Add(new DebugRay
+                        {
+                            origin = origin,
+                            direction = dir,
+                            distance = inMax,
+                            color = Color.green
+                        });
+                        raycastDebugRaysAdded++;
+                    }
+
                     hit = RaycastCPU(origin, dir, inMax, candidates);
                 }
 
@@ -1790,38 +2171,8 @@ namespace UMA
 
         private string GetSlotNameForBakedVertex(int bakedVertexIndex)
         {
-            // Resolve ownership using triangleSlotOwnership built for the baked mesh.
-            if (triangleSlotOwnership == null || triangleSlotOwnership.Count == 0)
-            {
-                return null;
-            }
-
-            var tris = BakedMesh != null ? BakedMesh.triangles : null;
-            if (tris == null || tris.Length < 3)
-            {
-                return null;
-            }
-
-            // Find the first triangle that contains this vertex and return its owning slot.
-            int triangleCount = tris.Length / 3;
-            for (int ti = 0; ti < triangleCount; ti++)
-            {
-                int baseIdx = ti * 3;
-                if (tris[baseIdx] != bakedVertexIndex && tris[baseIdx + 1] != bakedVertexIndex && tris[baseIdx + 2] != bakedVertexIndex)
-                {
-                    continue;
-                }
-
-                // Use slot ownership by checking the slot for the first vertex of the triangle.
-                // This matches how slot offsets are packed into the baked mesh.
-                SlotData s = GetSlotForBakedVertexIndex(tris[baseIdx]);
-                if (s != null)
-                {
-                    return s.slotName;
-                }
-            }
-
-            return null;
+            SlotData s = GetSlotForBakedVertexIndex(bakedVertexIndex);
+            return s != null ? s.slotName : null;
         }
 
         private int GetBakedVertexIndexForSlotVertex(SlotData slot, int slotVertexIndex)
@@ -1849,24 +2200,17 @@ namespace UMA
 
         private SlotData GetSlotForBakedVertexIndex(int bakedVertexIndex)
         {
-            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
+            if (bakedVertexSlotRanges.Count == 0)
             {
                 return null;
             }
 
-            var slots = thisDCA.umaData.umaRecipe.slotDataList;
-            for (int i = 0; i < slots.Length; i++)
+            for (int i = 0; i < bakedVertexSlotRanges.Count; i++)
             {
-                var s = slots[i];
-                if (s == null) continue;
-                if (s.Suppressed) continue;
-                if (s.asset == null || s.asset.meshData == null) continue;
-
-                int start = s.vertexOffset;
-                int count = s.asset.meshData.vertexCount;
-                if (bakedVertexIndex >= start && bakedVertexIndex < start + count)
+                var r = bakedVertexSlotRanges[i];
+                if (bakedVertexIndex >= r.start && bakedVertexIndex < r.endExclusive)
                 {
-                    return s;
+                    return r.slot;
                 }
             }
 
@@ -1893,7 +2237,7 @@ namespace UMA
                 var tri = triangles[i];
                 if (RayTriangleIntersect(origin, direction, tri.v0, tri.v1, tri.v2, out float t))
                 {
-                    if (t > 0.0001f && t < bestT)
+                    if (t > Mathf.Max(RaycastHitEpsilon, maxDistance * 0.0001f) && t < bestT)
                     {
                         // Apply face filter based on requested strategy? For occlusion, accept all.
                         bestT = t;
@@ -2258,7 +2602,11 @@ namespace UMA
                     if (GUILayout.Button("Clear"))
                     {
                         RecordSelectionUndo("Clear Face Selection");
-                        SelectedFaces.Clear();
+                        selectedSlotTriangles.Clear();
+                        if (selectedSlotTrianglesSerialized != null)
+                        {
+                            selectedSlotTrianglesSerialized.Clear();
+                        }
                         selectionVersion++;
                         MarkOverlayMeshDirty();
                     }
@@ -2270,7 +2618,7 @@ namespace UMA
                 }
 
                 GUILayout.Space(6);
-                GUILayout.Label($"Selected Faces: {SelectedFaces.Count}");
+                GUILayout.Label($"Selected Faces: {SelectedSlotTriangleCount}");
 
                 DrawRaycastOcclusionSection();
 
@@ -2320,7 +2668,12 @@ namespace UMA
                 return false;
             }
 
-            Vector3[] vertices = BakedMesh.vertices;
+            RefreshBakedMeshCaches();
+            Vector3[] vertices = bakedVertices;
+            if (vertices == null)
+            {
+                return false;
+            }
             Matrix4x4 matrix = FaceObject.transform.localToWorldMatrix;
             Dictionary<int, int[]> trianglesBySubmesh = new Dictionary<int, int[]>();
 
@@ -2584,6 +2937,44 @@ namespace UMA
 
         private void RefreshVisibleSlotListsIfNeeded()
         {
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
+            {
+                RefreshVisibleSlotLists();
+                RefreshSlotSelectionEntries();
+                return;
+            }
+
+            var slots = thisDCA.umaData.umaRecipe.slotDataList;
+            int sig = 17;
+            int count = 0;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var slot = slots[i];
+                if (slot == null || string.IsNullOrEmpty(slot.slotName))
+                {
+                    continue;
+                }
+
+                // Build a compact signature of current slot list + suppression state.
+                unchecked
+                {
+                    sig = (sig * 31) ^ slot.slotName.GetHashCode();
+                    sig = (sig * 31) ^ (slot.Suppressed ? 1 : 0);
+                }
+                if (!slot.Suppressed)
+                {
+                    count++;
+                }
+            }
+
+            if (sig == visibleSlotsSignature && count == visibleSlotsCount)
+            {
+                return;
+            }
+
+            visibleSlotsSignature = sig;
+            visibleSlotsCount = count;
+
             RefreshVisibleSlotLists();
             RefreshSlotSelectionEntries();
         }
@@ -2711,6 +3102,8 @@ namespace UMA
         private void RebuildTriangleSlotOwnership()
         {
             triangleSlotOwnership.Clear();
+            slotLocalToBaked.Clear();
+            bakedVertexSlotRanges.Clear();
 
             if (BakedMesh == null || thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
             {
@@ -2719,9 +3112,8 @@ namespace UMA
 
             var slots = thisDCA.umaData.umaRecipe.slotDataList;
 
-            // Build baked vertex ranges -> slot mapping. This avoids relying on slot or triangle ordering,
-            // which can change after suppression/rebuilds.
-            List<(int start, int endExclusive, SlotData slot)> ranges = new List<(int, int, SlotData)>(slots.Length);
+            // Build baked vertex ranges -> slot mapping using vertexOffset (set by mesh combiner).
+            // This is the authoritative source of which vertices belong to which slot.
             for (int i = 0; i < slots.Length; i++)
             {
                 var s = slots[i];
@@ -2738,25 +3130,56 @@ namespace UMA
 
                 int start = Mathf.Max(0, s.vertexOffset);
                 int end = start + vertexCount;
-                ranges.Add((start, end, s));
+                bakedVertexSlotRanges.Add((start, end, s));
             }
 
-            ranges.Sort((a, b) => a.start.CompareTo(b.start));
+            bakedVertexSlotRanges.Sort((a, b) => a.start.CompareTo(b.start));
 
-            SlotData TryGetSlotForBakedVertex(int bakedVertexIndex)
+            SlotData TryGetSlotForBakedVertex(int bakedVertexIndex) => GetSlotForBakedVertexIndex(bakedVertexIndex);
+
+            // DISCOVER submesh ownership by inspecting actual vertex data in each baked submesh.
+            // This is more robust than calculating based on slot order assumptions.
+            var bakedSubmeshToSlot = new Dictionary<int, (SlotData slot, int slotSubmeshIndex)>();
+            var slotSubmeshCounter = new Dictionary<string, int>(StringComparer.Ordinal); // Track local submesh index per slot
+
+            for (int bakedSm = 0; bakedSm < BakedMesh.subMeshCount; bakedSm++)
             {
-                // Linear search is fine for typical UMA slot counts.
-                for (int ri = 0; ri < ranges.Count; ri++)
+                int[] tris = BakedMesh.GetTriangles(bakedSm);
+                if (tris == null || tris.Length == 0)
                 {
-                    var r = ranges[ri];
-                    if (bakedVertexIndex >= r.start && bakedVertexIndex < r.endExclusive)
-                    {
-                        return r.slot;
-                    }
+                    continue;
                 }
-                return null;
+
+                // Sample vertices from this submesh to determine the owning slot
+                SlotData owningSlot = null;
+                for (int sampleIdx = 0; sampleIdx < Mathf.Min(tris.Length, 9); sampleIdx++)
+                {
+                    owningSlot = TryGetSlotForBakedVertex(tris[sampleIdx]);
+                    if (owningSlot != null) break;
+                }
+
+                if (owningSlot == null)
+                {
+                    Debug.LogWarning($"[FaceEditorStage] Could not determine slot owner for baked submesh {bakedSm}");
+                    continue;
+                }
+
+                // Determine local submesh index within this slot
+                // (for multi-submesh slots, this is the Nth submesh we've seen from this slot)
+                string slotName = owningSlot.slotName;
+                if (!slotSubmeshCounter.TryGetValue(slotName, out int localSubmesh))
+                {
+                    localSubmesh = 0;
+                }
+                slotSubmeshCounter[slotName] = localSubmesh + 1;
+
+                bakedSubmeshToSlot[bakedSm] = (owningSlot, localSubmesh);
+
+                // Debug logging
+               // Debug.Log($"[FaceEditorStage] Baked submesh {bakedSm} -> Slot '{slotName}' localSubmesh {localSubmesh} (triCount={tris.Length / 3})");
             }
 
+            // Now build the triangle ownership maps
             for (int bakedSubmesh = 0; bakedSubmesh < BakedMesh.subMeshCount; bakedSubmesh++)
             {
                 int[] bakedTriangles = BakedMesh.GetTriangles(bakedSubmesh);
@@ -2765,56 +3188,142 @@ namespace UMA
                     continue;
                 }
 
+                if (!bakedSubmeshToSlot.TryGetValue(bakedSubmesh, out var info) || info.slot == null)
+                {
+                    continue;
+                }
+
+                SlotData slot = info.slot;
+                int slotSubmeshIndex = info.slotSubmeshIndex;
+
+                int[] slotBaseTriangles = null;
+                try
+                {
+                    var meshData = slot.asset != null ? slot.asset.meshData : null;
+                    if (meshData != null && slotSubmeshIndex >= 0 && slotSubmeshIndex < meshData.subMeshCount)
+                    {
+                        slotBaseTriangles = meshData.submeshes[slotSubmeshIndex].GetBaseTriangles();
+                    }
+                }
+                catch
+                {
+                    slotBaseTriangles = null;
+                }
+                if (slotBaseTriangles == null || slotBaseTriangles.Length == 0)
+                {
+                    continue;
+                }
+
+                // Map (slot-local vertex triplet) -> slot-local triangle index
+                var baseTriLookup = new Dictionary<(int a, int b, int c), int>(slotBaseTriangles.Length / 3);
+                int baseTriCount = slotBaseTriangles.Length / 3;
+                for (int i = 0; i < baseTriCount; i++)
+                {
+                    int ti = i * 3;
+                    int a0 = slotBaseTriangles[ti + 0];
+                    int a1 = slotBaseTriangles[ti + 1];
+                    int a2 = slotBaseTriangles[ti + 2];
+
+                    // Order-independent key (ignore winding)
+                    int x = a0, y = a1, z = a2;
+                    if (x > y) (x, y) = (y, x);
+                    if (y > z) (y, z) = (z, y);
+                    if (x > y) (x, y) = (y, x);
+
+                    var key = (x, y, z);
+                    if (!baseTriLookup.ContainsKey(key))
+                    {
+                        baseTriLookup.Add(key, i);
+                    }
+                }
+
                 int bakedTriCount = bakedTriangles.Length / 3;
                 for (int tri = 0; tri < bakedTriCount; tri++)
                 {
-                    int ti = tri * 3;
-                    int v0 = bakedTriangles[ti];
-                    int v1 = bakedTriangles[ti + 1];
-                    int v2 = bakedTriangles[ti + 2];
+                    int bi = tri * 3;
+                    int b0 = bakedTriangles[bi + 0];
+                    int b1 = bakedTriangles[bi + 1];
+                    int b2 = bakedTriangles[bi + 2];
 
-                    SlotData slot = TryGetSlotForBakedVertex(v0) ?? TryGetSlotForBakedVertex(v1) ?? TryGetSlotForBakedVertex(v2);
-                    if (slot == null)
+                    // Convert baked vertex indices to slot-local vertex indices
+                    int s0 = b0 - slot.vertexOffset;
+                    int s1 = b1 - slot.vertexOffset;
+                    int s2 = b2 - slot.vertexOffset;
+                    if (s0 < 0 || s1 < 0 || s2 < 0)
                     {
                         continue;
                     }
 
-                    TriangleKey key = new TriangleKey(bakedSubmesh, tri);
-                    if (!triangleSlotOwnership.ContainsKey(key))
+                    int x = s0, y = s1, z = s2;
+                    if (x > y) (x, y) = (y, x);
+                    if (y > z) (y, z) = (z, y);
+                    if (x > y) (x, y) = (y, x);
+
+                    if (!baseTriLookup.TryGetValue((x, y, z), out int slotTriangleIndex))
                     {
-                        triangleSlotOwnership.Add(key, new SlotTriangleAddress
-                        {
-                            slot = slot,
-                            slotSubmeshIndex = 0,
-                            slotTriangleIndex = tri
-                        });
+                        continue;
+                    }
+
+                    TriangleKey bakedKey = new TriangleKey(bakedSubmesh, tri);
+                    SlotTriangleAddress address = new SlotTriangleAddress
+                    {
+                        slot = slot,
+                        slotSubmeshIndex = slotSubmeshIndex,
+                        slotTriangleIndex = slotTriangleIndex
+                    };
+
+                    if (!triangleSlotOwnership.ContainsKey(bakedKey))
+                    {
+                        triangleSlotOwnership.Add(bakedKey, address);
+                    }
+
+                    // Build reverse lookup: slot-local -> baked
+                    SlotTriangleKey slotKey = new SlotTriangleKey(slot.slotName, slotSubmeshIndex, slotTriangleIndex);
+                    if (!slotLocalToBaked.ContainsKey(slotKey))
+                    {
+                        slotLocalToBaked.Add(slotKey, bakedKey);
                     }
                 }
             }
+
+           // Debug.Log($"[FaceEditorStage] RebuildTriangleSlotOwnership complete: {triangleSlotOwnership.Count} triangles, {slotLocalToBaked.Count} reverse mappings, {BakedMesh.subMeshCount} submeshes");
         }
 
         private void PruneSelectionsForCurrentOwnership()
         {
             bool changed = false;
 
-            for (int i = SelectedFaces.Count - 1; i >= 0; i--)
+            if (selectedSlotTrianglesSerialized == null || selectedSlotTrianglesSerialized.Count == 0)
             {
-                var f = SelectedFaces[i];
-                TriangleKey key = new TriangleKey(f.submeshIndex, f.triangleIndex);
-                if (!triangleSlotOwnership.TryGetValue(key, out var owner))
+                return;
+            }
+
+            // Remove invalid entries and de-dupe. Keep selections even if not currently visible/suppressed.
+            var rebuilt = new List<SerializedSlotTriangleKey>(selectedSlotTrianglesSerialized.Count);
+            var seen = new HashSet<SlotTriangleKey>();
+            for (int i = 0; i < selectedSlotTrianglesSerialized.Count; i++)
+            {
+                var k = selectedSlotTrianglesSerialized[i];
+                if (string.IsNullOrEmpty(k.slotName))
                 {
-                    SelectedFaces.RemoveAt(i);
                     changed = true;
                     continue;
                 }
 
-                if (!string.Equals(f.slotName, owner.slot != null ? owner.slot.slotName : null, StringComparison.Ordinal))
+                var slotKey = new SlotTriangleKey(k.slotName, k.slotSubmeshIndex, k.slotTriangleIndex);
+                if (!seen.Add(slotKey))
                 {
-                    f.slotName = owner.slot != null ? owner.slot.slotName : null;
-                    f.slotSubmeshIndex = owner.slotSubmeshIndex;
-                    f.slotTriangleIndex = owner.slotTriangleIndex;
                     changed = true;
+                    continue;
                 }
+
+                rebuilt.Add(k);
+            }
+
+            if (changed)
+            {
+                selectedSlotTrianglesSerialized = rebuilt;
+                RebuildSelectedSlotTrianglesFromSerialized();
             }
 
             if (changed)
@@ -2826,31 +3335,51 @@ namespace UMA
 
         private void SelectAllFaces()
         {
-            SelectedFaces.Clear();
+            EnsureSlotTriangleCacheBuilt();
 
-            if (BakedMesh == null)
+            selectedSlotTriangles.Clear();
+            if (selectedSlotTrianglesSerialized == null)
+            {
+                selectedSlotTrianglesSerialized = new List<SerializedSlotTriangleKey>();
+            }
+            else
+            {
+                selectedSlotTrianglesSerialized.Clear();
+            }
+
+            if (BakedMesh == null || FaceObject == null)
             {
                 return;
             }
 
-            foreach (var kvp in triangleSlotOwnership)
+            for (int i = 0; i < slotTriangleCache.Count; i++)
             {
-                var owner = kvp.Value;
-                string slotName = owner.slot != null ? owner.slot.slotName : null;
-                if (!IsSlotSelected(slotName))
+                var tri = slotTriangleCache[i];
+                if (string.IsNullOrEmpty(tri.slotName))
                 {
                     continue;
                 }
 
-                SelectedFaces.Add(new FaceSelection
+                if (!IsSlotSelected(tri.slotName))
                 {
-                    submeshIndex = kvp.Key.submeshIndex,
-                    triangleIndex = kvp.Key.triangleIndex,
-                    slotName = slotName,
-                    slotSubmeshIndex = owner.slotSubmeshIndex,
-                    slotTriangleIndex = owner.slotTriangleIndex,
-                    isHidden = true
-                });
+                    continue;
+                }
+
+                if (!slotLookupByName.TryGetValue(tri.slotName, out var slot) || slot == null)
+                {
+                    continue;
+                }
+
+                if (slot.Suppressed)
+                {
+                    continue;
+                }
+
+                var slotKey = new SlotTriangleKey(tri.slotName, tri.slotSubmeshIndex, tri.slotTriangleIndex);
+                if (!AddSelectedSlotTriangle(slotKey))
+                {
+                    continue;
+                }
             }
 
             selectionVersion++;
@@ -3026,7 +3555,12 @@ namespace UMA
             int v1 = tris[ti + 1];
             int v2 = tris[ti + 2];
 
-            Vector3[] verts = BakedMesh.vertices;
+            RefreshBakedMeshCaches();
+            Vector3[] verts = bakedVertices;
+            if (verts == null)
+            {
+                return;
+            }
             Vector3 hp = FaceObject.transform.InverseTransformPoint(hitInfo.point);
             float d0 = (verts[v0] - hp).sqrMagnitude;
             float d1 = (verts[v1] - hp).sqrMagnitude;
@@ -3070,29 +3604,156 @@ namespace UMA
 
         private void ApplySelectionAtMouse(Vector2 mousePosition, bool add)
         {
-            if (!TryGetTriangleKeyAtMouse(mousePosition, out var key))
+            if (!TryPickSlotTriangleAtMouse(mousePosition, out var slotKey))
             {
                 return;
             }
 
-            SetTriangleSelection(key, add);
+            SetSlotTriangleSelection(slotKey, add);
         }
 
-        private bool TryGetTriangleKeyAtMouse(Vector2 mousePosition, out TriangleKey key)
+        private bool TryPickSlotTriangleAtMouse(Vector2 mousePosition, out SlotTriangleKey slotKey)
         {
-            key = default;
-            Ray ray = HandleUtility.GUIPointToWorldRay(mousePosition);
-            if (!meshCollider.Raycast(ray, out RaycastHit hitInfo, 1000f))
+            slotKey = default;
+            if (FaceObject == null || BakedMesh == null)
             {
                 return false;
             }
 
-            if (!TryMapGlobalTriangleIndexToSubmesh(hitInfo.triangleIndex, out int submeshIndex, out int triangleIndexOnSubmesh))
+            EnsureSlotTriangleCacheBuilt();
+
+            var slots = thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null ? thisDCA.umaData.umaRecipe.slotDataList : null;
+            if (slots == null)
             {
                 return false;
             }
 
-            key = new TriangleKey(submeshIndex, triangleIndexOnSubmesh);
+            Ray worldRay = HandleUtility.GUIPointToWorldRay(mousePosition);
+            Ray localRay = new Ray(FaceObject.transform.InverseTransformPoint(worldRay.origin), FaceObject.transform.InverseTransformDirection(worldRay.direction));
+            RefreshBakedMeshCaches();
+            Vector3[] bakedVertices = this.bakedVertices;
+            if (bakedVertices == null)
+            {
+                return false;
+            }
+
+            float bestT = float.PositiveInfinity;
+            SlotTriangleKey bestKey = default;
+
+            for (int i = 0; i < slotTriangleCache.Count; i++)
+            {
+                var tri = slotTriangleCache[i];
+                if (string.IsNullOrEmpty(tri.slotName))
+                {
+                    continue;
+                }
+                if (!IsSlotSelected(tri.slotName))
+                {
+                    continue;
+                }
+                if (!slotLookupByName.TryGetValue(tri.slotName, out var slot) || slot == null)
+                {
+                    continue;
+                }
+                if (slot.Suppressed)
+                {
+                    continue;
+                }
+
+                int v0b = slot.vertexOffset + tri.v0Slot;
+                int v1b = slot.vertexOffset + tri.v1Slot;
+                int v2b = slot.vertexOffset + tri.v2Slot;
+                if (v0b < 0 || v1b < 0 || v2b < 0 || v0b >= bakedVertices.Length || v1b >= bakedVertices.Length || v2b >= bakedVertices.Length)
+                {
+                    continue;
+                }
+
+                Vector3 v0 = bakedVertices[v0b];
+                Vector3 v1 = bakedVertices[v1b];
+                Vector3 v2 = bakedVertices[v2b];
+
+                if (RayIntersectsTriangle(localRay, v0, v1, v2, out float tHit))
+                {
+                    if (tHit >= 0f && tHit < bestT)
+                    {
+                        bestT = tHit;
+                        bestKey = new SlotTriangleKey(tri.slotName, tri.slotSubmeshIndex, tri.slotTriangleIndex);
+                    }
+                }
+            }
+
+            if (float.IsFinite(bestT))
+            {
+                slotKey = bestKey;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool RayIntersectsTriangle(Ray ray, Vector3 v0, Vector3 v1, Vector3 v2, out float t)
+        {
+            t = 0f;
+
+            // Moller-Trumbore
+            Vector3 edge1 = v1 - v0;
+            Vector3 edge2 = v2 - v0;
+            Vector3 pvec = Vector3.Cross(ray.direction, edge2);
+            float det = Vector3.Dot(edge1, pvec);
+            if (det > -1e-8f && det < 1e-8f)
+            {
+                return false;
+            }
+            float invDet = 1f / det;
+            Vector3 tvec = ray.origin - v0;
+            float u = Vector3.Dot(tvec, pvec) * invDet;
+            if (u < 0f || u > 1f)
+            {
+                return false;
+            }
+            Vector3 qvec = Vector3.Cross(tvec, edge1);
+            float v = Vector3.Dot(ray.direction, qvec) * invDet;
+            if (v < 0f || u + v > 1f)
+            {
+                return false;
+            }
+            t = Vector3.Dot(edge2, qvec) * invDet;
+            return t >= 0f;
+        }
+
+        private bool SetSlotTriangleSelection(SlotTriangleKey slotKey, bool add)
+        {
+            if (string.IsNullOrEmpty(slotKey.slotName))
+            {
+                return false;
+            }
+            if (!IsSlotSelected(slotKey.slotName))
+            {
+                return false;
+            }
+            if (!slotLookupByName.TryGetValue(slotKey.slotName, out var slot) || slot == null || slot.Suppressed)
+            {
+                return false;
+            }
+
+            if (add)
+            {
+                if (!AddSelectedSlotTriangle(slotKey))
+                {
+                    return false;
+                }
+
+                selectionVersion++;
+                MarkOverlayMeshDirty();
+                return true;
+            }
+
+            if (!RemoveSelectedSlotTriangle(slotKey))
+            {
+                return false;
+            }
+            selectionVersion++;
+            MarkOverlayMeshDirty();
             return true;
         }
 
@@ -3103,37 +3764,52 @@ namespace UMA
                 return;
             }
 
+            EnsureSlotTriangleCacheBuilt();
+
             Matrix4x4 matrix = FaceObject.transform.localToWorldMatrix;
             Camera cam = openedSceneView != null ? openedSceneView.camera : (SceneView.lastActiveSceneView != null ? SceneView.lastActiveSceneView.camera : null);
             Vector3 camForward = cam != null ? cam.transform.forward : Vector3.forward;
-            Vector3[] vertices = BakedMesh.vertices;
-            Dictionary<int, int[]> trianglesBySubmesh = new Dictionary<int, int[]>();
-
-            foreach (var pair in triangleSlotOwnership)
+            RefreshBakedMeshCaches();
+            Vector3[] bakedVertices = this.bakedVertices;
+            if (bakedVertices == null)
             {
-                var owner = pair.Value;
-                string slotName = owner.slot != null ? owner.slot.slotName : null;
-                if (!IsSlotSelected(slotName))
+                return;
+            }
+
+            for (int i = 0; i < slotTriangleCache.Count; i++)
+            {
+                var tri = slotTriangleCache[i];
+                if (string.IsNullOrEmpty(tri.slotName))
                 {
                     continue;
                 }
 
-                int sm = pair.Key.submeshIndex;
-                if (!trianglesBySubmesh.TryGetValue(sm, out var tris))
-                {
-                    tris = BakedMesh.GetTriangles(sm);
-                    trianglesBySubmesh.Add(sm, tris);
-                }
-
-                int ti = pair.Key.triangleIndex * 3;
-                if (tris == null || ti + 2 >= tris.Length)
+                if (!IsSlotSelected(tri.slotName))
                 {
                     continue;
                 }
 
-                Vector3 w0 = matrix.MultiplyPoint3x4(vertices[tris[ti]]);
-                Vector3 w1 = matrix.MultiplyPoint3x4(vertices[tris[ti + 1]]);
-                Vector3 w2 = matrix.MultiplyPoint3x4(vertices[tris[ti + 2]]);
+                if (!slotLookupByName.TryGetValue(tri.slotName, out var slot) || slot == null)
+                {
+                    continue;
+                }
+
+                if (slot.Suppressed)
+                {
+                    continue;
+                }
+
+                int v0b = slot.vertexOffset + tri.v0Slot;
+                int v1b = slot.vertexOffset + tri.v1Slot;
+                int v2b = slot.vertexOffset + tri.v2Slot;
+                if (v0b < 0 || v1b < 0 || v2b < 0 || v0b >= bakedVertices.Length || v1b >= bakedVertices.Length || v2b >= bakedVertices.Length)
+                {
+                    continue;
+                }
+
+                Vector3 w0 = matrix.MultiplyPoint3x4(bakedVertices[v0b]);
+                Vector3 w1 = matrix.MultiplyPoint3x4(bakedVertices[v1b]);
+                Vector3 w2 = matrix.MultiplyPoint3x4(bakedVertices[v2b]);
 
                 if (rubberBandCullBackfaces)
                 {
@@ -3151,7 +3827,7 @@ namespace UMA
 
                 if (selectionRect.Contains(p0) || selectionRect.Contains(p1) || selectionRect.Contains(p2) || selectionRect.Contains(center))
                 {
-                    SetTriangleSelection(pair.Key, add);
+                    SetSlotTriangleSelection(new SlotTriangleKey(tri.slotName, tri.slotSubmeshIndex, tri.slotTriangleIndex), add);
                 }
             }
         }
@@ -3200,35 +3876,23 @@ namespace UMA
                 return false;
             }
 
-            int idx = SelectedFaces.FindIndex(x => x.submeshIndex == key.submeshIndex && x.triangleIndex == key.triangleIndex);
+            SlotTriangleKey slotKey = new SlotTriangleKey(ownerSlotName, owner.slotSubmeshIndex, owner.slotTriangleIndex);
             if (add)
             {
-                if (idx >= 0)
+                if (!AddSelectedSlotTriangle(slotKey))
                 {
                     return false;
                 }
-
-                SelectedFaces.Add(new FaceSelection
-                {
-                    submeshIndex = key.submeshIndex,
-                    triangleIndex = key.triangleIndex,
-                    slotName = ownerSlotName,
-                    slotSubmeshIndex = owner.slotSubmeshIndex,
-                    slotTriangleIndex = owner.slotTriangleIndex,
-                    isHidden = true
-                });
 
                 selectionVersion++;
                 MarkOverlayMeshDirty();
                 return true;
             }
 
-            if (idx < 0)
+            if (!RemoveSelectedSlotTriangle(slotKey))
             {
                 return false;
             }
-
-            SelectedFaces.RemoveAt(idx);
             selectionVersion++;
             MarkOverlayMeshDirty();
             return true;
@@ -3236,7 +3900,15 @@ namespace UMA
 
         private void LoadSelections()
         {
-            SelectedFaces.Clear();
+            selectedSlotTriangles.Clear();
+            if (selectedSlotTrianglesSerialized == null)
+            {
+                selectedSlotTrianglesSerialized = new List<SerializedSlotTriangleKey>();
+            }
+            else
+            {
+                selectedSlotTrianglesSerialized.Clear();
+            }
             if (BakedMesh == null)
             {
                 selectionVersion++;
@@ -3324,19 +3996,15 @@ namespace UMA
                                 continue;
                             }
 
-                            SelectedFaces.Add(new FaceSelection
-                            {
-                                submeshIndex = bakedSm,
-                                triangleIndex = t,
-                                slotName = owner.slot != null ? owner.slot.slotName : slotName,
-                                slotSubmeshIndex = owner.slotSubmeshIndex,
-                                slotTriangleIndex = owner.slotTriangleIndex,
-                                isHidden = true
-                            });
+                            string ownerName = owner.slot != null ? owner.slot.slotName : slotName;
+                            AddSelectedSlotTriangle(new SlotTriangleKey(ownerName, owner.slotSubmeshIndex, owner.slotTriangleIndex));
                         }
                     }
                 }
             }
+
+            // Ensure hash set matches serialized (AddSelected... already keeps them in sync; this is a safety net).
+            RebuildSelectedSlotTrianglesFromSerialized();
 
             selectionVersion++;
             MarkOverlayMeshDirty();
@@ -3344,7 +4012,7 @@ namespace UMA
 
         private void SaveSelections()
         {
-            if (SelectedFaces == null || SelectedFaces.Count == 0)
+            if (selectedSlotTriangles == null || selectedSlotTriangles.Count == 0)
             {
                 EditorUtility.DisplayDialog("Mesh Hide Editor", "No selected triangles to save.", "OK");
                 return;
@@ -3375,22 +4043,21 @@ namespace UMA
                 baseFileName = "MeshHideAssets";
             }
 
-            Dictionary<string, List<FaceSelection>> facesBySlot = new Dictionary<string, List<FaceSelection>>(StringComparer.Ordinal);
-            for (int i = 0; i < SelectedFaces.Count; i++)
+            Dictionary<string, List<SlotTriangleKey>> facesBySlot = new Dictionary<string, List<SlotTriangleKey>>(StringComparer.Ordinal);
+            foreach (var k in selectedSlotTriangles)
             {
-                var f = SelectedFaces[i];
-                if (f == null || string.IsNullOrEmpty(f.slotName))
+                if (string.IsNullOrEmpty(k.slotName))
                 {
                     continue;
                 }
 
-                if (!facesBySlot.TryGetValue(f.slotName, out var list))
+                if (!facesBySlot.TryGetValue(k.slotName, out var list))
                 {
-                    list = new List<FaceSelection>();
-                    facesBySlot.Add(f.slotName, list);
+                    list = new List<SlotTriangleKey>();
+                    facesBySlot.Add(k.slotName, list);
                 }
 
-                list.Add(f);
+                list.Add(k);
             }
 
             if (facesBySlot.Count == 0)
@@ -3646,6 +4313,7 @@ namespace UMA
             BakedMesh = new Mesh();
             BakedMesh.name = "BakedMesh";
             smr.BakeMesh(BakedMesh, true);
+            RefreshBakedMeshCaches();
 
             if (FaceObject != null)
             {

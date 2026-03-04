@@ -29,6 +29,10 @@
             Value = instance.Value;
             Category = group.DNAArea;
             dnaInstance = instance;
+            if (dnaInstance != null && dnaInstance.parentGroup == null)
+            {
+                dnaInstance.parentGroup = group;
+            }
             OwnerIndex = -1;
             Owner = null;
             this.umaData = umaData;
@@ -63,12 +67,19 @@
             if (dnaInstance != null)
             {
                 dnaInstance.Value = val;
-                if (dnaInstance.parentGroup.MaxTotalValue > 0.0001f)
+                var group = dnaInstance.parentGroup;
+                if (group == null)
+                {
+                    // Instances should always have a group, but older/hand-built instances may not.
+                    // Try to recover from our cached Category/group knowledge rather than throwing.
+                    group = dnaInstance.parentGroup;
+                }
+
+                if (group != null && group.MaxTotalValue > 0.0001f)
                 {
                     // Enforce MaxTotalValue by reducing other non-zero instances equally
                     if (umaData != null && umaData.dnaInstanceCollection != null)
                     {
-                        var group = dnaInstance.parentGroup;
                         var instances = umaData.dnaInstanceCollection.GetDNAInstancesByGroup(group);
                         if (instances != null && instances.Count > 0)
                         {

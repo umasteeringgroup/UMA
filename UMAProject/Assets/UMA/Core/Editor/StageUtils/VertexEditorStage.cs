@@ -66,6 +66,25 @@ namespace UMA
         private List<VertexSelection> SelectedVertexes = new List<VertexSelection>();
         PhysicsScene phyScene;
 
+        private Vector3[] bakedVertices;
+        private Vector3[] bakedNormals;
+        private int[] bakedTriangles;
+
+        private void RefreshBakedMeshCaches()
+        {
+            if (BakedMesh == null)
+            {
+                bakedVertices = null;
+                bakedNormals = null;
+                bakedTriangles = null;
+                return;
+            }
+
+            bakedVertices = BakedMesh.vertices;
+            bakedNormals = BakedMesh.normals;
+            bakedTriangles = BakedMesh.triangles;
+        }
+
         // Edit Options
         float HandlesSize = 0.01f;
         public Color ActiveColor = new Color32(0, 210, 0, 255);
@@ -515,9 +534,16 @@ namespace UMA
         /// </summary>
         private void SelectByRaycastCPU(SlotData sourceSlot, int sourceVertexCount)
         {
-            var verts = BakedMesh.vertices;
-            var normals = BakedMesh.normals;
-            var tris = BakedMesh.triangles;
+            RefreshBakedMeshCaches();
+            var verts = bakedVertices;
+            var normals = bakedNormals;
+            var tris = bakedTriangles;
+            if (verts == null || normals == null || tris == null)
+            {
+                raycastStatusType = MessageType.Warning;
+                raycastStatusMessage = "Raycast skipped: baked mesh data is not available.";
+                return;
+            }
             float maxDistance = raycastLength > 0f ? raycastLength : float.MaxValue;
 
             // Step 1: Build list of triangles that do NOT belong to sourceSlot
@@ -839,11 +865,12 @@ namespace UMA
         public Vector3 GetWorldPosition(SlotData slot, int vertexIndex)
         {
             int bakedIndex = GetVisibleBakedVertexIndex(slot, vertexIndex);
-            if (bakedIndex < 0 || bakedIndex >= BakedMesh.vertexCount)
+            RefreshBakedMeshCaches();
+            if (bakedVertices == null || bakedIndex < 0 || bakedIndex >= bakedVertices.Length)
             {
                 return Vector3.zero;
             }
-            return VertexObject.transform.TransformPoint(BakedMesh.vertices[bakedIndex]);
+            return VertexObject.transform.TransformPoint(bakedVertices[bakedIndex]);
         }
 
         private bool IsSelectableSlot(SlotData slot)
@@ -1098,6 +1125,7 @@ namespace UMA
             BakedMesh = new Mesh();
             BakedMesh.name = "BakedMesh";
             smr.BakeMesh(BakedMesh, true);
+            RefreshBakedMeshCaches();
             GameObject go = new GameObject("VertexEditor");
             go.AddComponent<MeshFilter>().sharedMesh = BakedMesh;
             MeshRenderer renderer = go.GetComponent<MeshRenderer>();
@@ -1165,6 +1193,7 @@ namespace UMA
             DestroyImmediate(VertexObject);
             DestroyImmediate(lightingObject);
             DestroyImmediate(cameraAnchor);
+            RefreshBakedMeshCaches();
             SceneView.duringSceneGui -= OnSceneGUI;
             var wearables = thisDCA.GetVisibleWearables();
             foreach (var wearable in wearables)
@@ -1559,7 +1588,12 @@ namespace UMA
             Mesh mesh = GetVertexMesh();
             Material mat = GetVertexMaterial(Color.red);
 
-            Vector3[] normals = BakedMesh.normals;
+            RefreshBakedMeshCaches();
+            Vector3[] normals = bakedNormals;
+            if (normals == null)
+            {
+                return;
+            }
 
             HashSet<string> VisibleSlots = new HashSet<string>();
             for (int i = 0; i < thisDCA.umaData.umaRecipe.slotDataList.Length; i++)
@@ -1669,6 +1703,12 @@ namespace UMA
 
             if (van != null)
             {
+                RefreshBakedMeshCaches();
+                if (bakedVertices == null || bakedNormals == null)
+                {
+                    return false;
+                }
+
                 if (!TryGetVisibleBakedVertexIndex(editSelection.slot, editSelection.vertexIndexOnSlot, out int bakedIndex))
                 {
                     return false;
@@ -1676,11 +1716,11 @@ namespace UMA
 
                 if (van.bakedNormalSet == false)
                 {
-                    van.bakedNormal = BakedMesh.normals[bakedIndex];
+                    van.bakedNormal = bakedNormals[bakedIndex];
                     van.bakedNormalSet = true;
                 }
 
-                editSelection.WorldPosition = VertexObject.transform.TransformPoint(BakedMesh.vertices[bakedIndex]);
+                editSelection.WorldPosition = VertexObject.transform.TransformPoint(bakedVertices[bakedIndex]);
                 // show an arrow gizmo at the editSelection.WorldPosition, pointing in the direction of the normal
                 Handles.color = Color.red;
                 Vector3 normal = van.bakedNormal;
@@ -1706,6 +1746,12 @@ namespace UMA
             VertexScaleAdjustment vas = editAdjustment as VertexScaleAdjustment;
             if (vas != null)
             {
+                RefreshBakedMeshCaches();
+                if (bakedNormals == null)
+                {
+                    return false;
+                }
+
                 if (!TryGetVisibleBakedVertexIndex(editSelection.slot, editSelection.vertexIndexOnSlot, out int bakedIndex))
                 {
                     return false;
@@ -1726,7 +1772,7 @@ namespace UMA
                 // show an arrow gizmo at the editSelection.WorldPosition, pointing in the direction of the normal
                 Handles.color = Color.red;
                 //Vector3 normal = vas.bakedNormal;
-                Vector3 worldRotation = VertexObject.transform.TransformVector(BakedMesh.normals[bakedIndex]);
+                Vector3 worldRotation = VertexObject.transform.TransformVector(bakedNormals[bakedIndex]);
                 Quaternion quaternion = Quaternion.LookRotation(worldRotation);
                 // Handles.ArrowHandleCap(0, editSelection.WorldPosition, quaternion, 0.1f, EventType.Repaint);
                 //Handles.ArrowHandleCap(0, editSelection.WorldPosition, Quaternion.LookRotation(worldRotation), 0.1f, EventType.Repaint);
@@ -2646,6 +2692,7 @@ namespace UMA
                                          !currentEvent.control &&
                                          !(IsPaintModeEnabled && painting);
 
+            Debug.Log("Doing single select");
             Ray ray = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
             if (phyScene.Raycast(ray.origin, ray.direction, out RaycastHit hit))
             {
