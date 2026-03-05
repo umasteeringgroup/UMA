@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Diffuse_Normal_Thickness_Occlusion _Gloss
-  m_Shader: {fileID: -6465566751694194690, guid: edcf84cc26b8bef44923f9f4c86bbd94, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 72ef220eb187015429a4740c0a67cf15, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
