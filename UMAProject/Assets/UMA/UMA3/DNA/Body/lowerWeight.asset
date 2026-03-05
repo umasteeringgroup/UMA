@@ -31,13 +31,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.44
+            inSlope: 0.120000005
+            outSlope: 0.120000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.16000003
+            outSlope: 0.16000003
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 0.6
+            inSlope: 0.20000005
+            outSlope: 0.20000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
-        expanded: 0
+        expanded: 1
+        selected: 0
         EffectName: LowerBackAdjust
         BoneName: LowerBackAdjust
         ScaleFactor: {x: 1, y: 1, z: 1}
@@ -46,13 +74,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.44
+            inSlope: 0.120000005
+            outSlope: 0.120000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.16000003
+            outSlope: 0.16000003
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 0.6
+            inSlope: 0.20000005
+            outSlope: 0.20000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 0
+        selected: 1
         EffectName: LeftUpLegAdjust
         BoneName: LeftUpLegAdjust
         ScaleFactor: {x: 1, y: 1, z: 1}
@@ -61,13 +117,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.44
+            inSlope: 0.120000005
+            outSlope: 0.120000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.16000003
+            outSlope: 0.16000003
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 0.6
+            inSlope: 0.20000005
+            outSlope: 0.20000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 0
+        selected: 1
         EffectName: RightUpLegAdjust
         BoneName: RightUpLegAdjust
         ScaleFactor: {x: 1, y: 1, z: 1}
@@ -76,13 +160,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.44
+            inSlope: 0.120000005
+            outSlope: 0.120000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.16000003
+            outSlope: 0.16000003
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 0.6
+            inSlope: 0.20000005
+            outSlope: 0.20000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 0
+        selected: 1
         EffectName: LeftLegAdjust
         BoneName: LeftLegAdjust
         ScaleFactor: {x: 1, y: 1, z: 1}
@@ -91,13 +203,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.44
+            inSlope: 0.120000005
+            outSlope: 0.120000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.16000003
+            outSlope: 0.16000003
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 0.6
+            inSlope: 0.20000005
+            outSlope: 0.20000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 0
+        selected: 1
         EffectName: RightLegAdjust
         BoneName: RightLegAdjust
         ScaleFactor: {x: 1, y: 1, z: 1}
@@ -106,13 +246,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.44
+            inSlope: 0.120000005
+            outSlope: 0.120000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.16000003
+            outSlope: 0.16000003
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 0.6
+            inSlope: 0.20000005
+            outSlope: 0.20000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 0
+        selected: 1
         EffectName: LeftUpLeg
         BoneName: LeftUpLeg
         Translation: {x: 0, y: 0, z: 0}
@@ -121,13 +289,41 @@ MonoBehaviour:
       data:
         curve:
           serializedVersion: 2
-          m_Curve: []
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.44
+            inSlope: 0.120000005
+            outSlope: 0.120000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0.16000003
+            outSlope: 0.16000003
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 0.6
+            inSlope: 0.20000005
+            outSlope: 0.20000005
+            tangentMode: 34
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
         minMapping: -1
         maxMapping: 1
         expanded: 0
+        selected: 1
         EffectName: RightUpLeg
         BoneName: RightUpLeg
         Translation: {x: 0, y: 0, z: 0}

@@ -257,6 +257,7 @@ namespace UMA
         private string[] visibleSelectFrom = new string[] { "All Slots" };
 
         private Dictionary<string, bool> originalSlotSuppressed;
+        private Dictionary<string, bool> originalWearableDisabled;
 
         private MeshCollider meshCollider;
 
@@ -527,12 +528,79 @@ namespace UMA
             RebuildTriangleSlotOwnership();
 
             CacheOriginalSlotVisibility();
+            CacheOriginalWearableVisibility();
 
             ValidateMeshHideAssets();
             LoadSelections();
             MarkOverlayMeshDirty();
 
             return true;
+        }
+
+        private void CacheOriginalWearableVisibility()
+        {
+            originalWearableDisabled = new Dictionary<string, bool>(StringComparer.Ordinal);
+            if (thisDCA == null)
+            {
+                return;
+            }
+
+            var wearables = thisDCA.GetVisibleWearables();
+            if (wearables == null)
+            {
+                return;
+            }
+
+            foreach (var w in wearables)
+            {
+                if (w == null || string.IsNullOrEmpty(w.name))
+                {
+                    continue;
+                }
+
+                if (!originalWearableDisabled.ContainsKey(w.name))
+                {
+                    originalWearableDisabled.Add(w.name, w.disabled);
+                }
+            }
+        }
+
+        private void RestoreOriginalWearableVisibility()
+        {
+            if (originalWearableDisabled == null || originalWearableDisabled.Count == 0)
+            {
+                return;
+            }
+            if (thisDCA == null)
+            {
+                return;
+            }
+
+            bool changed = false;
+            var wearables = thisDCA.GetVisibleWearables();
+            if (wearables == null)
+            {
+                return;
+            }
+
+            foreach (var w in wearables)
+            {
+                if (w == null || string.IsNullOrEmpty(w.name))
+                {
+                    continue;
+                }
+
+                if (originalWearableDisabled.TryGetValue(w.name, out bool disabled) && w.disabled != disabled)
+                {
+                    w.disabled = disabled;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                RebuildMesh(true, true);
+            }
         }
 
         private void CacheOriginalSlotVisibility()
@@ -752,6 +820,7 @@ namespace UMA
             closing = true;
 
             RestoreOriginalSlotVisibility();
+            RestoreOriginalWearableVisibility();
 
             SceneView.duringSceneGui -= OnSceneGUI;
             Undo.undoRedoPerformed -= OnUndoRedoSelection;
@@ -800,6 +869,7 @@ namespace UMA
             ClearOverlayMeshCache();
 
             originalSlotSuppressed = null;
+            originalWearableDisabled = null;
 
         }
 
@@ -3964,8 +4034,6 @@ namespace UMA
                         {
                             continue;
                         }
-
-                        int bakedSm = startSubmesh + localSm;
                         int triCount = flags.Count;
                         for (int t = 0; t < triCount; t++)
                         {
@@ -3974,14 +4042,21 @@ namespace UMA
                                 continue;
                             }
 
-                            TriangleKey key = new TriangleKey(bakedSm, t);
-                            if (!triangleSlotOwnership.TryGetValue(key, out var owner))
-                            {
-                                continue;
-                            }
+                            AddSelectedSlotTriangle(new SlotTriangleKey(slotName, localSm, t));
+                        }
+                    }
 
-                            string ownerName = owner.slot != null ? owner.slot.slotName : slotName;
-                            AddSelectedSlotTriangle(new SlotTriangleKey(ownerName, owner.slotSubmeshIndex, owner.slotTriangleIndex));
+                    // Ensure loaded slots are enabled for display/editing in this stage.
+                    if (slotSelectionEntries != null)
+                    {
+                        for (int i = 0; i < slotSelectionEntries.Count; i++)
+                        {
+                            var e = slotSelectionEntries[i];
+                            if (e != null && string.Equals(e.slotName, slotName, StringComparison.Ordinal))
+                            {
+                                e.isSelected = true;
+                                break;
+                            }
                         }
                     }
                 }
