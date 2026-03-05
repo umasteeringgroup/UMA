@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////
 // Shader Packager
 // Copyright (c)2021 Jason Booth
 //////////////////////////////////////////////////////
@@ -7,10 +7,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using System.Linq;
 
 namespace UMA.ShaderPackager
 {
-    public class ShaderPackage : ScriptableObject
+    public class ShaderPackage : ScriptableObject, ISerializationCallbackReceiver
     {
 #if UNITY_6000_0_OR_NEWER
         public static UnityEditor.Build.NamedBuildTarget CurrentNamedBuildTarget
@@ -107,7 +108,9 @@ namespace UMA.ShaderPackager
             Unity2022_3 = 20223,
             Unity2023_2 = 20232,
             Unity2023_3 = 20233,
-            Max = 30000
+            OldMax = 30000,
+            Unity6000_3 = 60003,
+            Max = 90000
         }
 
         [System.Serializable]
@@ -253,19 +256,19 @@ namespace UMA.ShaderPackager
 #endif
 
             foreach (var e in entries)
-                {
+            {
                 if (e.shader
 #if __BETTERSHADERS__
                && betterShader == null
 #endif
                )
+                {
+                    if (warnErrors)
                     {
-                        if (warnErrors)
-                        {
-                            Debug.LogError("Shader is null, cannot pack");
-                        }
-                        break;
+                        Debug.LogError("Shader is null, cannot pack");
                     }
+                    break;
+                }
                 if (e.UnityVersionMax == ShaderPackage.UnityVersion.Min && e.UnityVersionMin == ShaderPackage.UnityVersion.Min)
                 {
                     e.UnityVersionMax = ShaderPackage.UnityVersion.Max;
@@ -283,33 +286,37 @@ namespace UMA.ShaderPackager
             UnityVersion curVersion = UnityVersion.Min;
 
 #if UNITY_2021_2_OR_NEWER
-      curVersion = UnityVersion.Unity2021_2;
+            curVersion = UnityVersion.Unity2021_2;
 #endif
 #if UNITY_2021_3_OR_NEWER
-      curVersion = UnityVersion.Unity2021_3;
+            curVersion = UnityVersion.Unity2021_3;
 #endif
 #if UNITY_2022_1_OR_NEWER
-      curVersion = UnityVersion.Unity2022_1;
+            curVersion = UnityVersion.Unity2022_1;
 #endif
 #if UNITY_2022_2_OR_NEWER
-      curVersion = UnityVersion.Unity2022_2;
+            curVersion = UnityVersion.Unity2022_2;
 #endif
 #if UNITY_2022_3_OR_NEWER
-      curVersion = UnityVersion.Unity2022_3;
+            curVersion = UnityVersion.Unity2022_3;
 #endif
 
 #if UNITY_2023_3_OR_NEWER
-      curVersion = UnityVersion.Unity2023_3;
+            curVersion = UnityVersion.Unity2023_3;
+#endif
+
+#if UNITY_6000_3_OR_NEWER
+            curVersion = UnityVersion.Unity6000_3;
 #endif
 
             SRPTarget target = SRPTarget.Standard;
             if (RenderPipelineDefine.IsHDRP)
             {
-      target = SRPTarget.HDRP;
+                target = SRPTarget.HDRP;
             }
             else if (RenderPipelineDefine.IsURP)
             {
-      target = SRPTarget.URP;
+                target = SRPTarget.URP;
             }
 
             string s = null;
@@ -332,6 +339,77 @@ namespace UMA.ShaderPackager
                 }
             }
             return s;
+        }
+
+        public void OnBeforeSerialize()
+        {
+        }
+
+		// update any files that use the 30000 max version to a higher number for unity 6
+        public void OnAfterDeserialize()
+        {
+            for (int i = 0; i < entries.Count; ++i)
+            {
+                var e = entries[i];
+                if (e.UnityVersionMin == UnityVersion.OldMax)
+                {
+                    e.UnityVersionMin = UnityVersion.Max;
+                }
+                if (e.UnityVersionMax == UnityVersion.OldMax)
+                {
+                    e.UnityVersionMax = UnityVersion.Max;
+                }
+            }
+        }
+
+        public void UpdateForUnity60003()
+        {
+            var oldCode = "EncodeMeshRenderingLayer(renderingLayers)";
+            var newCode = "EncodeMeshRenderingLayer()";
+
+            var entry60003Urp = entries.SingleOrDefault(x => x.srpTarget == SRPTarget.URP && x.UnityVersionMin == UnityVersion.Unity6000_3);
+            if (entry60003Urp == null)
+            {
+                var entry20203Urp = entries.SingleOrDefault(x => x.srpTarget == SRPTarget.URP && x.UnityVersionMin == UnityVersion.Unity2023_3);
+                if (entry20203Urp != null)
+                {
+                    entry20203Urp.UnityVersionMax = UnityVersion.Unity6000_3;
+
+                    entry60003Urp = new Entry
+                    {
+                        srpTarget = SRPTarget.URP,
+                        UnityVersionMin = UnityVersion.Unity6000_3,
+                        UnityVersionMax = UnityVersion.Max,
+                        shaderSrc = entry20203Urp.shaderSrc.Replace(oldCode, newCode)
+                    };
+
+                    entries.Add(entry60003Urp);
+                }
+
+                EditorUtility.SetDirty(this);
+            }
+
+            var entry60003Hdrp = entries.SingleOrDefault(x => x.srpTarget == SRPTarget.HDRP && x.UnityVersionMin == UnityVersion.Unity6000_3);
+            if (entry60003Hdrp == null)
+            {
+                var entry20203Urp = entries.SingleOrDefault(x => x.srpTarget == SRPTarget.HDRP && x.UnityVersionMin == UnityVersion.Unity2023_3);
+                if (entry20203Urp != null)
+                {
+                    entry20203Urp.UnityVersionMax = UnityVersion.Unity6000_3;
+
+                    entry60003Hdrp = new Entry
+                    {
+                        srpTarget = SRPTarget.HDRP,
+                        UnityVersionMin = UnityVersion.Unity6000_3,
+                        UnityVersionMax = UnityVersion.Max,
+                        shaderSrc = entry20203Urp.shaderSrc.Replace(oldCode, newCode)
+                    };
+
+                    entries.Add(entry60003Hdrp);
+                }
+
+                EditorUtility.SetDirty(this);
+            }
         }
     }
 }

@@ -119,6 +119,45 @@ namespace UMA.ShaderPackager
                 EditorUtility.ClearProgressBar();
             }
 
+            if (GUILayout.Button("Update"))
+            {
+                sp.UpdateForUnity60003();
+            }
+            if (GUILayout.Button("Update all in Project"))
+            {
+                var guids = AssetDatabase.FindAssets("t:Shader");
+                List<string> shaders = new List<string>();
+                for (int i = 0; i < guids.Length; ++i)
+                {
+                    var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                    if (path.EndsWith(ShaderPackageImporter.k_FileExtension))
+                    {
+                        shaders.Add(path);
+                    }
+                }
+
+                for (int i = 0; i < shaders.Count; ++i)
+                {
+                    var path = shaders[i];
+                    EditorUtility.DisplayProgressBar("Updating Shaders", Path.GetFileName(path), (float)i / shaders.Count);
+                    try
+                    {
+                        ShaderPackage packed = ShaderPackage.CreateInstance<ShaderPackage>();
+                        UnityEditor.EditorJsonUtility.FromJsonOverwrite(File.ReadAllText(path), packed);
+                        packed.UpdateForUnity60003();
+                        File.WriteAllText(path, EditorJsonUtility.ToJson(packed));
+                        EditorUtility.SetDirty(packed);
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.ImportAsset(path);
+                    }
+                    catch
+                    {
+                        EditorUtility.ClearProgressBar();
+                    }
+                }
+                EditorUtility.ClearProgressBar();
+            }
+
             extraDataSerializedObject.ApplyModifiedProperties();
 
             ApplyRevertGUI();
@@ -129,7 +168,7 @@ namespace UMA.ShaderPackager
         static void CreateMenuItemShaderPackage()
         {
             string directoryPath = "Assets";
-         foreach (Object obj in Selection.GetFiltered(typeof(Object), SelectionMode.Assets))
+            foreach (Object obj in Selection.GetFiltered(typeof(Object), SelectionMode.Assets))
             {
                 directoryPath = AssetDatabase.GetAssetPath(obj);
                 if (!string.IsNullOrEmpty(directoryPath) && File.Exists(directoryPath))
