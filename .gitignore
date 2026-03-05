@@ -63,3 +63,5 @@ UMAProject/Assets/FPL_ISBIT/*
 UMAProject/Assets/_Recovery
 UMAProject/Assets/AddressableAssetsData
 UMAProject/Assets/FPL_ISBIT
+/.vs
+*.slnx

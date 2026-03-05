@@ -4112,6 +4112,8 @@ namespace UMA
 
             foreach (string s in CompatibleRaces)
             {
+                if (!TypeDic.TryGetValue(s, out var _))
+                    continue;
                 RaceData r = RawGetAsset<RaceData>(s);
                 if (r != null && !AdditionalRaces.Contains(r.name))
                 {

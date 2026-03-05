@@ -1607,11 +1607,16 @@ namespace UMA.CharacterSystem.Editors
                             valid = true;
                             break;
                         }
-                         if (o is MeshHideAssetCollection)
-                         {
-                             valid = true;
-                             break;
-                         }
+                        if (o is MeshHideAsset)
+                        {
+                            valid = true;
+                            break;
+                        }
+                        if (o is MeshHideAssetCollection)
+                        {
+                            valid = true;
+                            break;
+                        }
                     }
                     if (valid)
                     {

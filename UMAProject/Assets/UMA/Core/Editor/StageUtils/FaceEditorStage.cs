@@ -1396,7 +1396,19 @@ namespace UMA
                 EditorPrefs.SetBool(prefsKey, collapsed);
             }
 
-            GUI.Label(new Rect(headerRect.x + 30f, headerRect.y + 4f, headerRect.width - 34f, headerRect.height), title, EditorStyles.boldLabel);
+            const float rightButtonWidth = 52f;
+            Rect rightButtonRect = new Rect(headerRect.xMax - rightButtonWidth - 4f, headerRect.y + 3f, rightButtonWidth, 18f);
+            bool showClose = string.Equals(prefsKey, PanelCollapsePrefKeyPrefix + "FaceTools", StringComparison.Ordinal);
+            if (showClose)
+            {
+                if (GUI.Button(rightButtonRect, "Close", EditorStyles.miniButton))
+                {
+                    StageUtility.GoBackToPreviousStage();
+                }
+            }
+
+            float rightInset = showClose ? (rightButtonWidth + 8f) : 4f;
+            GUI.Label(new Rect(headerRect.x + 30f, headerRect.y + 4f, headerRect.width - 34f - rightInset, headerRect.height), title, EditorStyles.boldLabel);
 
             if (collapsed)
             {
@@ -1404,14 +1416,23 @@ namespace UMA
             }
 
             Rect contentRect = new Rect(rect.x + 6f, headerRect.yMax + 2f, rect.width - 12f, Mathf.Max(0f, rect.yMax - (headerRect.yMax + 6f)));
-            GUILayout.BeginArea(contentRect);
+            bool began = false;
             try
             {
+                GUILayout.BeginArea(contentRect);
+                began = true;
                 drawContent?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
             }
             finally
             {
-                GUILayout.EndArea();
+                if (began)
+                {
+                    GUILayout.EndArea();
+                }
             }
         }
 
@@ -1432,31 +1453,82 @@ namespace UMA
                 cachedVisibilityHeight = -1f;
             }
 
-            float toolsHeight = Mathf.Clamp(FaceEditorToolsWindow.height, 180f, sceneSize.y - 40f);
-            float availableBelowTools = Mathf.Max(0f, sceneSize.y - toolsHeight - (LeftPanelPadding * 4f));
-            float visibilityHeight = GetVisibilitySectionHeightEstimate(availableBelowTools);
-
-            float meshHideHeight = Mathf.Clamp(cachedMeshHideAssetsHeight, 200f, Mathf.Max(200f, availableBelowTools - visibilityHeight));
+            const float toolsMinExpanded = 180f;
+            const float visibilityMinExpanded = 160f;
+            const float meshHideMinExpanded = 200f;
 
             float width = Mathf.Clamp(FaceEditorToolsWindow.width, LeftPanelWidthMin, LeftPanelWidthMax);
 
-            leftPanelRect = new Rect(usableRect.x + LeftPanelPadding, usableRect.y + LeftPanelPadding, width, toolsHeight + visibilityHeight + meshHideHeight + (LeftPanelPadding * 2f));
+            // Total available vertical space inside the usable SceneView rect for our stacked panels,
+            // excluding the outer padding.
+            // Unity's reported usable rect can be slightly optimistic when toolbars/insets are present,
+            // so reserve a small buffer to reduce off-screen overlap.
+            const float screenBufferPct = 0.08f;
+            float availableStackHeight = Mathf.Max(0f, (usableRect.height * (1f - screenBufferPct)) - (LeftPanelPadding * 2f));
 
-            float toolsExpandedHeight = toolsHeight;
-            float visibilityExpandedHeight = visibilityHeight;
-            float meshHideExpandedHeight = meshHideHeight;
+            // How much vertical padding between panels.
+            const float betweenPanels = LeftPanelPadding;
+            float separatorsHeight = betweenPanels * 2f;
+
+            float collapsedToolsH = faceToolsPanelCollapsed ? CollapsedWindowHeight : 0f;
+            float collapsedVisibilityH = visibilityPanelCollapsed ? CollapsedWindowHeight : 0f;
+            float collapsedMeshHideH = meshHideAssetsPanelCollapsed ? CollapsedWindowHeight : 0f;
+            float totalCollapsed = collapsedToolsH + collapsedVisibilityH + collapsedMeshHideH;
+
+            float remainingForExpanded = Mathf.Max(0f, availableStackHeight - separatorsHeight - totalCollapsed);
+
+            int expandedCount = 0;
+            if (!faceToolsPanelCollapsed) expandedCount++;
+            if (!visibilityPanelCollapsed) expandedCount++;
+            if (!meshHideAssetsPanelCollapsed) expandedCount++;
+
+            float each = expandedCount > 0 ? (remainingForExpanded / expandedCount) : 0f;
+
+            float toolsExpandedHeight = faceToolsPanelCollapsed ? 0f : Mathf.Max(toolsMinExpanded, each);
+            float visibilityExpandedHeight = visibilityPanelCollapsed ? 0f : Mathf.Max(visibilityMinExpanded, each);
+            float meshHideExpandedHeight = meshHideAssetsPanelCollapsed ? 0f : Mathf.Max(meshHideMinExpanded, each);
+
+            // If mins caused us to exceed available space, scale down only expanded panels (respecting mins best-effort).
+            float expandedSumWithMins = (faceToolsPanelCollapsed ? 0f : toolsExpandedHeight) +
+                                       (visibilityPanelCollapsed ? 0f : visibilityExpandedHeight) +
+                                       (meshHideAssetsPanelCollapsed ? 0f : meshHideExpandedHeight);
+            float overflow = expandedSumWithMins - remainingForExpanded;
+            if (overflow > 0.01f)
+            {
+                // Recompute with a uniform scale factor but don't go below mins.
+                float scale = remainingForExpanded / Mathf.Max(1f, expandedSumWithMins);
+                if (!faceToolsPanelCollapsed)
+                {
+                    toolsExpandedHeight = Mathf.Max(toolsMinExpanded, toolsExpandedHeight * scale);
+                }
+                if (!visibilityPanelCollapsed)
+                {
+                    visibilityExpandedHeight = Mathf.Max(visibilityMinExpanded, visibilityExpandedHeight * scale);
+                }
+                if (!meshHideAssetsPanelCollapsed)
+                {
+                    meshHideExpandedHeight = Mathf.Max(meshHideMinExpanded, meshHideExpandedHeight * scale);
+                }
+            }
 
             float toolsActualHeight = faceToolsPanelCollapsed ? CollapsedWindowHeight : toolsExpandedHeight;
             float visibilityActualHeight = visibilityPanelCollapsed ? CollapsedWindowHeight : visibilityExpandedHeight;
             float meshHideActualHeight = meshHideAssetsPanelCollapsed ? CollapsedWindowHeight : meshHideExpandedHeight;
 
-            FaceEditorToolsWindow = new Rect(leftPanelRect.x, leftPanelRect.y, width, toolsExpandedHeight);
-            VisibleWearablesWindow = new Rect(leftPanelRect.x, leftPanelRect.y + toolsActualHeight + LeftPanelPadding, width, visibilityExpandedHeight);
-            MeshHideAssetsWindow = new Rect(leftPanelRect.x, VisibleWearablesWindow.y + visibilityActualHeight + LeftPanelPadding, width, meshHideExpandedHeight);
+            leftPanelRect = new Rect(usableRect.x + LeftPanelPadding, usableRect.y + LeftPanelPadding, width,
+                toolsActualHeight + visibilityActualHeight + meshHideActualHeight + separatorsHeight);
 
-            FaceEditorToolsCollapsedWindow = new Rect(leftPanelRect.x, leftPanelRect.y, width, CollapsedWindowHeight);
-            VisibleWearablesCollapsedWindow = new Rect(leftPanelRect.x, leftPanelRect.y + toolsActualHeight + LeftPanelPadding, width, CollapsedWindowHeight);
-            MeshHideAssetsCollapsedWindow = new Rect(leftPanelRect.x, VisibleWearablesCollapsedWindow.y + visibilityActualHeight + LeftPanelPadding, width, CollapsedWindowHeight);
+            float y = leftPanelRect.y;
+            FaceEditorToolsWindow = new Rect(leftPanelRect.x, y, width, toolsExpandedHeight);
+            FaceEditorToolsCollapsedWindow = new Rect(leftPanelRect.x, y, width, CollapsedWindowHeight);
+            y += toolsActualHeight + betweenPanels;
+
+            VisibleWearablesWindow = new Rect(leftPanelRect.x, y, width, visibilityExpandedHeight);
+            VisibleWearablesCollapsedWindow = new Rect(leftPanelRect.x, y, width, CollapsedWindowHeight);
+            y += visibilityActualHeight + betweenPanels;
+
+            MeshHideAssetsWindow = new Rect(leftPanelRect.x, y, width, meshHideExpandedHeight);
+            MeshHideAssetsCollapsedWindow = new Rect(leftPanelRect.x, y, width, CollapsedWindowHeight);
         }
 
         private static Rect GetSceneViewUsableRect(SceneView view)
@@ -1623,36 +1695,6 @@ namespace UMA
             if (!string.IsNullOrEmpty(raycastOcclusionStatus))
             {
                 EditorGUILayout.HelpBox(raycastOcclusionStatus, raycastOcclusionStatusType);
-            }
-
-            EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Test Raycast (CPU)", EditorStyles.boldLabel);
-            raycastTestMode = EditorGUILayout.ToggleLeft("Enable test-pick mode (click vertex)", raycastTestMode);
-
-            string[] allSlots = selectFrom != null && selectFrom.Length > 0 ? selectFrom : new[] { "All Slots" };
-            int srcIndex = Mathf.Max(0, Array.IndexOf(allSlots, raycastTestSourceSlot));
-            int occIndex = Mathf.Max(0, Array.IndexOf(allSlots, raycastTestOccluderSlot));
-            srcIndex = EditorGUILayout.Popup("Source Slot", srcIndex, allSlots);
-            occIndex = EditorGUILayout.Popup("Occluder Slot", occIndex, allSlots);
-            raycastTestSourceSlot = allSlots.Length > srcIndex ? allSlots[srcIndex] : null;
-            raycastTestOccluderSlot = allSlots.Length > occIndex ? allSlots[occIndex] : null;
-
-            using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(raycastTestSourceSlot) || raycastTestSourceSlot == "All Slots"))
-            {
-                raycastTestSlotVertexIndex = Mathf.Max(0, EditorGUILayout.IntField("Slot Vertex Index", raycastTestSlotVertexIndex));
-            }
-
-            using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(raycastTestSourceSlot) || raycastTestSourceSlot == "All Slots" || string.IsNullOrEmpty(raycastTestOccluderSlot) || raycastTestOccluderSlot == "All Slots"))
-            {
-                if (GUILayout.Button("Run Test Raycast For Vertex"))
-                {
-                    RunTestRaycastForSelectedVertex();
-                }
-            }
-
-            if (!string.IsNullOrEmpty(raycastTestStatus))
-            {
-                EditorGUILayout.HelpBox(raycastTestStatus, raycastTestStatusType);
             }
 #endif
         }
@@ -2679,11 +2721,6 @@ namespace UMA
                 if (GUILayout.Button("Create MeshHideAssets (Split by Slot)"))
                 {
                     SaveSelections();
-                }
-
-                if (GUILayout.Button("Close"))
-                {
-                    StageUtility.GoBackToPreviousStage();
                 }
             }
         }

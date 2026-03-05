@@ -839,6 +839,11 @@ namespace UMA
         {
             List<Type> theTypes = new List<Type>();
 
+
+#if UNITY_EDITOR && UNITY_2019_2_OR_NEWER
+            theTypes = TypeCache.GetTypesDerivedFrom<UMAProperty>().ToList();
+#else
+
             var Assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
             for (int i = 0; i < Assemblies.Length; i++)
@@ -861,6 +866,7 @@ namespace UMA
                     // This apparently blows up on some assemblies. 
                 }
             }
+#endif
 
             return theTypes;
         }
