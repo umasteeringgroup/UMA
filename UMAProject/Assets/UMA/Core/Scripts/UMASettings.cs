@@ -37,7 +37,7 @@ namespace UMA
         [SerializeField]
         public string KeepTag = "UMAKeepChain";
         public string[] tagLookupValues = new string[] { "Head", "Hair", "Torso", "Legs", "Feet", "Hands", "Smooshable", "Unsmooshable", "KeepChain", "Ignore" };
-
+        public string[] groupNames = new string[] { "Head", "Body", "Arms", "Legs", "Feet", "Hands"};
         public bool cleanRegenOnSave = true;
         public bool autoRepairIndex = false;
         public bool showIndexedTypes = true;

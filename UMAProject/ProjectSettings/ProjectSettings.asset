@@ -832,7 +832,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: 
+    Android: UMA_ADDRESSABLES
     Standalone: UMA_DNACOLLECTIONS;__BETTERSHADERS__;UMA_BURSTCOMPILE;ZUMA_UNSAFE
   additionalCompilerArguments: {}
   platformArchitecture: {}

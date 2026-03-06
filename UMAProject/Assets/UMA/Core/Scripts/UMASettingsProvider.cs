@@ -371,6 +371,7 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("Tags", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These tags are used by UMA to identify different types of assets", MessageType.Info);
+
             //DrawPropertiesExcluding(m_CustomSettings, new string[] { "UMAVersion","m_Script","Use32bitBuffers", "UseBurstCompiler", "UseAddressables", "EnableGLTFExport" ,
             //    "AddrUseSharedGroup", "AddrSharedGroupName", "AddrDefaultLabel", "AddStripMaterials", "AddrIncludeRecipes", "CleanRegenOnSave", "AutoRepairIndex", "ShowIndexedTypes", "ShowUnindexedTypes", "PostProcessAllAssets" 
             //    });
@@ -378,6 +379,9 @@ namespace UMA
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "IgnoreTag", "KeepTag", "tagLookupValues" });
 
 
+            EditorGUILayout.LabelField("Groups", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("These groups are used by UMA to identify slots with the same UV layout for decals", MessageType.Info);
+            DrawPropertiesIncluding(m_CustomSettings, new string[] { "groupNames" });
 
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "UMAVersion" });
             EndVerticalPadded(10);

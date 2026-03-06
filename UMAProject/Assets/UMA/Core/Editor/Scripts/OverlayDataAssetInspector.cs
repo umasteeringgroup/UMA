@@ -165,6 +165,63 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(_dontMergeDuplicates, new GUIContent("Don't Merge Duplicates", "If this is true, this overlay will not removed if it's a duplicate"));
             }
 
+
+            // Overlay Group
+            var overlayGroupProp = serializedObject.FindProperty("overlayGroup");
+            if (overlayGroupProp != null)
+            {
+                UMASettings settings = UMASettings.GetOrCreateSettings();
+                string[] groupNames = (settings != null) ? settings.groupNames : null;
+                if (groupNames == null)
+                {
+                    groupNames = Array.Empty<string>();
+                }
+
+                int selectedGroupIndex = 0;
+                for (int i = 0; i < groupNames.Length; i++)
+                {
+                    if (string.Equals(groupNames[i], overlayGroupProp.stringValue, StringComparison.Ordinal))
+                    {
+                        selectedGroupIndex = i;
+                        break;
+                    }
+                }
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.PropertyField(overlayGroupProp, new GUIContent("Overlay Group"), GUILayout.ExpandWidth(true));
+                using (new EditorGUI.DisabledScope(groupNames.Length == 0))
+                {
+                    selectedGroupIndex = EditorGUILayout.Popup(selectedGroupIndex, groupNames, GUILayout.Width(110));
+                }
+                if (GUILayout.Button("Apply", GUILayout.Width(60)))
+                {
+                    string value;
+                    if (groupNames.Length > 0)
+                    {
+                        value = groupNames[Mathf.Clamp(selectedGroupIndex, 0, groupNames.Length - 1)];
+                    }
+                    else
+                    {
+                        value = overlayGroupProp.stringValue;
+                    }
+
+                    foreach (var t in targets)
+                    {
+                        var oda = t as OverlayDataAsset;
+                        if (oda == null)
+                        {
+                            continue;
+                        }
+                        oda.overlayGroup = value;
+                        EditorUtility.SetDirty(oda);
+                    }
+                    od.lastActionTime = Time.realtimeSinceStartup;
+                    od.doSave = true;
+                    GUI.changed = true;
+                }
+                GUILayout.EndHorizontal();
+            }
+
             // Material copy drop area
             Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
             GUI.Box(dropArea, "Drop a Material here to copy textures to texture channels");

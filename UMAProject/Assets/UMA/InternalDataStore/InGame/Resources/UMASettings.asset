@@ -42,6 +42,13 @@ MonoBehaviour:
   - Slots/Arms
   - Slots/Face
   - Face
+  groupNames:
+  - Head
+  - Body
+  - Arms
+  - Legs
+  - Feet
+  - Hands
   cleanRegenOnSave: 1
   autoRepairIndex: 0
   showIndexedTypes: 0

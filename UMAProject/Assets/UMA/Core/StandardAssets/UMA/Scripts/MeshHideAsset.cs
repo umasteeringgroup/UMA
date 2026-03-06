@@ -1,10 +1,15 @@
-﻿using UnityEngine;
+﻿#define UMA_COMPRESS_HIDDENVERTEXESBYUV
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
 using System.Collections.Specialized;
 using Unity.Collections;
 using System;
+#if UNITY_EDITOR
+using System.IO;
+using System.IO.Compression;
+#endif
 
 
 namespace UMA
@@ -289,6 +294,15 @@ namespace UMA
         // A UV map of the vertices in the mesh. This is used to determine which vertices are hidden based on the triangle hiding.
         // This is only needed when the Hash changes, and we have to recreate the hide flags based on the UVs, so we can determine which vertices are hidden and then hide the triangles based on the vertex hiding.
         public BitArray HiddenVertexesByUV = new BitArray(bitArraySize * bitArraySize); 
+
+        // Serialized backing for HiddenVertexesByUV (BitArray is not Unity-serializable)
+        [SerializeField]
+        private serializedFlags _serializedHiddenVertexesByUV;
+
+        // Optional compressed backing for HiddenVertexesByUV. Enabled with `UMA_COMPRESS_HIDDENVERTEXESBYUV`.
+        // Editor-only because it is only used for authoring/reimport scenarios.
+        [SerializeField]
+        private byte[] _serializedHiddenVertexesByUVCompressed;
 #endif
         public string AssetSlotName
         {
@@ -461,6 +475,26 @@ namespace UMA
                 }
             }
 
+#if UNITY_EDITOR
+            if (HiddenVertexesByUV != null && HiddenVertexesByUV.Length == bitArraySize * bitArraySize)
+            {
+#if UMA_COMPRESS_HIDDENVERTEXESBYUV
+                _serializedHiddenVertexesByUV = null; // keep old field empty when using compressed storage
+                _serializedHiddenVertexesByUVCompressed = CompressHiddenVertexesByUV(HiddenVertexesByUV);
+#else
+                _serializedHiddenVertexesByUV = new serializedFlags(HiddenVertexesByUV.Length);
+                _serializedHiddenVertexesByUV.flags.Initialize();
+                HiddenVertexesByUV.CopyTo(_serializedHiddenVertexesByUV.flags, 0);
+                _serializedHiddenVertexesByUVCompressed = null;
+#endif
+            }
+            else
+            {
+                _serializedHiddenVertexesByUV = null;
+                _serializedHiddenVertexesByUVCompressed = null;
+            }
+#endif
+
 #if UNITY_600_2_OR_NEWER // guard against accidental symbol typo
 #endif
 #if UNITY_6000_2_OR_NEWER
@@ -528,6 +562,35 @@ namespace UMA
                     _triangleFlags[i].Length = _serializedFlags[i].Count;
                 }
             }
+
+#if UNITY_EDITOR
+#if UMA_COMPRESS_HIDDENVERTEXESBYUV
+            // Prefer compressed representation when present; fall back to legacy int[] representation for backward compatibility.
+            if (_serializedHiddenVertexesByUVCompressed != null && _serializedHiddenVertexesByUVCompressed.Length > 0)
+            {
+                HiddenVertexesByUV = DecompressHiddenVertexesByUV(_serializedHiddenVertexesByUVCompressed, bitArraySize * bitArraySize);
+            }
+            else if (_serializedHiddenVertexesByUV != null && _serializedHiddenVertexesByUV.flags != null && _serializedHiddenVertexesByUV.flags.Length > 0)
+            {
+                HiddenVertexesByUV = new BitArray(_serializedHiddenVertexesByUV.flags);
+                HiddenVertexesByUV.Length = _serializedHiddenVertexesByUV.Count;
+            }
+            else if (HiddenVertexesByUV == null || HiddenVertexesByUV.Length != bitArraySize * bitArraySize)
+            {
+                HiddenVertexesByUV = new BitArray(bitArraySize * bitArraySize);
+            }
+#else
+            if (_serializedHiddenVertexesByUV != null && _serializedHiddenVertexesByUV.flags != null && _serializedHiddenVertexesByUV.flags.Length > 0)
+            {
+                HiddenVertexesByUV = new BitArray(_serializedHiddenVertexesByUV.flags);
+                HiddenVertexesByUV.Length = _serializedHiddenVertexesByUV.Count;
+            }
+            else if (HiddenVertexesByUV == null || HiddenVertexesByUV.Length != bitArraySize * bitArraySize)
+            {
+                HiddenVertexesByUV = new BitArray(bitArraySize * bitArraySize);
+            }
+#endif
+#endif
 
 #if UNITY_6000_2_OR_NEWER
             // rebuild cache from serialized LODs if present
@@ -931,6 +994,73 @@ namespace UMA
         {
             UMA.CustomAssetUtility.CreateAsset<MeshHideAsset>();
         }
+
+#if UMA_COMPRESS_HIDDENVERTEXESBYUV
+        private static byte[] CompressHiddenVertexesByUV(BitArray bits)
+        {
+            if (bits == null || bits.Length <= 0)
+            {
+                return null;
+            }
+
+            int byteCount = (bits.Length + 7) / 8;
+            var raw = new byte[byteCount];
+            bits.CopyTo(raw, 0);
+
+            using (var ms = new MemoryStream())
+            {
+                // Store original bit length first so we can restore exact length even if not fixed-size in future.
+                // Don't use BinaryWriter without leaveOpen here (it would dispose the MemoryStream in some Unity profiles).
+                var header = BitConverter.GetBytes(bits.Length);
+                ms.Write(header, 0, header.Length);
+
+                using (var gz = new GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal, leaveOpen: true))
+                {
+                    gz.Write(raw, 0, raw.Length);
+                }
+
+                return ms.ToArray();
+            }
+        }
+
+        private static BitArray DecompressHiddenVertexesByUV(byte[] blob, int fallbackBitLength)
+        {
+            if (blob == null || blob.Length == 0)
+            {
+                return new BitArray(fallbackBitLength);
+            }
+
+            using (var ms = new MemoryStream(blob))
+            {
+                int bitLength;
+                using (var br = new BinaryReader(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+                {
+                    bitLength = br.ReadInt32();
+                }
+                if (bitLength <= 0)
+                {
+                    bitLength = fallbackBitLength;
+                }
+
+                int byteCount = (bitLength + 7) / 8;
+                var raw = new byte[byteCount];
+                using (var gz = new GZipStream(ms, CompressionMode.Decompress, leaveOpen: true))
+                {
+                    int offset = 0;
+                    while (offset < raw.Length)
+                    {
+                        int read = gz.Read(raw, offset, raw.Length - offset);
+                        if (read <= 0) break;
+                        offset += read;
+                    }
+                }
+
+                var bits = new BitArray(raw);
+                bits.Length = bitLength;
+                return bits;
+            }
+        }
+#endif
 #endif
     }
 }

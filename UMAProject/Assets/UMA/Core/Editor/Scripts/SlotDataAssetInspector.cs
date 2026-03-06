@@ -296,6 +296,61 @@ namespace UMA.Editors
                 Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
             }
 
+            // Slot Group
+            var slotGroupProp = serializedObject.FindProperty("slotGroup");
+            if (slotGroupProp != null)
+            {
+                UMASettings settings = UMASettings.GetOrCreateSettings();
+                string[] groupNames = (settings != null) ? settings.groupNames : null;
+                if (groupNames == null)
+                {
+                    groupNames = Array.Empty<string>();
+                }
+
+                int selectedGroupIndex = 0;
+                for (int i = 0; i < groupNames.Length; i++)
+                {
+                    if (string.Equals(groupNames[i], slotGroupProp.stringValue, StringComparison.Ordinal))
+                    {
+                        selectedGroupIndex = i;
+                        break;
+                    }
+                }
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.PropertyField(slotGroupProp, new GUIContent("Slot Group"), GUILayout.ExpandWidth(true));
+                using (new EditorGUI.DisabledScope(groupNames.Length == 0))
+                {
+                    selectedGroupIndex = EditorGUILayout.Popup(selectedGroupIndex, groupNames, GUILayout.Width(110));
+                }
+                if (GUILayout.Button("Apply", GUILayout.Width(60)))
+                {
+                    string value;
+                    if (groupNames.Length > 0)
+                    {
+                        value = groupNames[Mathf.Clamp(selectedGroupIndex, 0, groupNames.Length - 1)];
+                    }
+                    else
+                    {
+                        value = slotGroupProp.stringValue;
+                    }
+
+                    foreach (var t in targets)
+                    {
+                        var sda = t as SlotDataAsset;
+                        if (sda == null)
+                        {
+                            continue;
+                        }
+                        sda.slotGroup = value;
+                        EditorUtility.SetDirty(sda);
+                    }
+                    forceUpdate = true;
+                    GUI.changed = true;
+                }
+                GUILayout.EndHorizontal();
+            }
+
             // LOD Info
             GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
             lodFoldout = EditorGUILayout.Foldout(lodFoldout, "LOD");

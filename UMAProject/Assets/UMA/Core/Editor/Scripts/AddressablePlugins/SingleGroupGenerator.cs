@@ -269,15 +269,19 @@ namespace UMA
                                                     MeshRenderer mr = mrs[j];
                                                     if (mr == null) continue;
                                                     if (mr.sharedMaterial == null) continue;
-                                                    Material mat = mr.sharedMaterial;
-                                                    if (mat.shader.name.Contains("Hidden/InternalErrorShader"))
-                                                        continue; // already stripped
-
-                                                    // Store shader name in a tag
-                                                    mat.SetOverrideTag("OriginalShader", mat.shader.name);
-                                                    // Strip shader reference
-                                                    mat.shader = Shader.Find("Hidden/InternalErrorShader");
-                                                    EditorUtility.SetDirty(mat);
+                                                    var mats = mr.sharedMaterials;
+                                                    if (mats == null) continue;
+                                                    for(int k = 0; k < mats.Length; k++)
+                                                    {
+                                                        Material mat = mats[k];
+                                                        if (mat.shader.name.Contains("Hidden/InternalErrorShader"))
+                                                            continue; // already stripped
+                                                        // Store shader name in a tag
+                                                        mat.SetOverrideTag("OriginalShader", mat.shader.name);
+                                                        // Strip shader reference
+                                                        mat.shader = Shader.Find("Hidden/InternalErrorShader");
+                                                        EditorUtility.SetDirty(mat);
+                                                    }
                                                 }
                                             }
                                         }

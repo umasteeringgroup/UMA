@@ -1093,13 +1093,16 @@ namespace UMA
                     var indexer = UMAAssetIndexer.Instance;
                     if (indexer != null)
                     {
-                        var existing = indexer.GetAsset<SlotDataAsset>(p.newSlotName, recursionGuard: false, inStartup: false);
-                        if (existing != null)
+                        if (indexer.HasAsset<SlotDataAsset>(p.newSlotName))
                         {
+                            var existing = indexer.GetAsset<SlotDataAsset>(p.newSlotName, recursionGuard: false, inStartup: false);
+                            if (existing != null)
+                            {
 #if DEBUG_BAKING
                             Debug.LogWarning("BakeNewSlotData called with existing slot in indexer: " + p.newSlotName + " Returning existing slot");
 #endif
-                            return existing;
+                                return existing;
+                            }
                         }
                     }
                 }

@@ -119,15 +119,18 @@ namespace UMA
         [Tooltip("Use this to identify what kind of overlay this is and what it fits.")]
 		public string[] tags;
 
-		/// <summary>
-		/// The UMA material.
-		/// </summary>
-		/// <remarks>
-		/// The UMA material contains both a reference to the Unity material
-		/// used for drawing and information needed for matching the textures
-		/// and colors to the various material properties.
-		/// </remarks>
-		[Tooltip("The UMA material contains both a reference to the Unity material used for drawing and information needed for matching the textures and colors to the various material properties.")]
+		[Tooltip("This is used to Use this to identify overlays that are functionally equivalent - Body, etc. this is used to identify overlays that are functionally equivalent - Body, etc. this is used to identify overlays that share the same UV layout and are interchangeable.")]
+        public string overlayGroup;
+
+        /// <summary>
+        /// The UMA material.
+        /// </summary>
+        /// <remarks>
+        /// The UMA material contains both a reference to the Unity material
+        /// used for drawing and information needed for matching the textures
+        /// and colors to the various material properties.
+        /// </remarks>
+        [Tooltip("The UMA material contains both a reference to the Unity material used for drawing and information needed for matching the textures and colors to the various material properties.")]
 		[UMAAssetFieldVisible]
 		public UMAMaterial material;
 

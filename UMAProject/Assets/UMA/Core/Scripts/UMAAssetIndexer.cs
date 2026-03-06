@@ -32,6 +32,7 @@ using UnityEngine.SceneManagement;
 using System.Text;
 using System.Collections;
 using System.Xml.Serialization;
+using UnityEngine.Events;
 
 
 namespace UMA
@@ -2363,6 +2364,7 @@ namespace UMA
         /// <param name="ot"></param>
         private void RefreshType(Type ot)
         {
+            Debug.Log($"Refreshing type {ot.Name} in UMAAssetIndexer.");
             string typeString = ot.Name;
 
             List<string> FolderFilter = null;
@@ -3003,66 +3005,106 @@ namespace UMA
                     }
                 }
             }
-			if (o is SlotDataAsset) {
-				var sd = (SlotDataAsset)o;
-				if (sd.SlotProcessed != null) {
-                    var evt = sd.SlotProcessed;
+
+            if (o is SlotDataAsset)
+            {
+                var sd = (SlotDataAsset)o;
+                if (sd.SlotProcessed != null || sd.CharacterCompleted != null)
+                {
+                    //Debug.Log("[UMAAssetIndexer] PostProcessing SlotDataAsset UVAttachedItemLauncher for slot '" + sd.slotName + "'.");
+                    UnityEventBase evt = sd.SlotProcessed;
                     int count = evt.GetPersistentEventCount();
-					for (int i = 0; i < count; i++) {
-						var target = evt.GetPersistentTarget(i) as GameObject;
-						if (target == null) {
-							continue;
-						}
-						try {
-							var uvItem = target.GetComponent<UMAUVAttachedItemLauncher>();
-							if (uvItem == null) {
-								continue;
-							}
-							var mrs = target.GetComponentsInChildren<MeshRenderer>();
-							if (mrs.Length == 0) {
-								if (Debug.isDebugBuild) Debug.LogWarning($"[UMAAssetIndexer] No MeshRenderers found under '{target.name}' for slot '{sd.slotName}'.");
-								continue;
-							}
-							for (int j = 0; j < mrs.Length; j++) {
-								var mr = mrs[j];
-								if (mr == null) {
-									if (Debug.isDebugBuild) Debug.LogWarning($"[UMAAssetIndexer] Null MeshRenderer element {j} under '{target.name}' for slot '{sd.slotName}'.");
-									continue;
-								}
-								var mat = mr.sharedMaterial;
-								if (mat == null) {
-									if (Debug.isDebugBuild) Debug.LogWarning($"[UMAAssetIndexer] MeshRenderer '{mr.name}' has null sharedMaterial (slot '{sd.slotName}').");
-									continue;
-								}
-								var shader = mat.shader;
-								if (shader == null) {
-									if (Debug.isDebugBuild) Debug.LogWarning($"[UMAAssetIndexer] Material '{mat.name}' on '{mr.name}' has null shader (slot '{sd.slotName}').");
-									continue;
-                                            }
-								if (shader.name == "Hidden/InternalErrorShader") {
-									string original = mat.GetTag("OriginalShader", false, "");
-									if (string.IsNullOrEmpty(original)) {
-										if (Debug.isDebugBuild) Debug.LogWarning($"[UMAAssetIndexer] ErrorShader on '{mr.name}' but OriginalShader tag missing (slot '{sd.slotName}').");
-										continue;
+                    if (count == 0)
+                    {
+                        evt = sd.CharacterCompleted;
+                        count = evt.GetPersistentEventCount();
+                    }
+                    for (int i = 0; i < count; i++)
+                    {
+                        var target = evt.GetPersistentTarget(i) as GameObject;
+                        if (target == null)
+                        {
+                            Debug.LogWarning($"[UMAAssetIndexer] Null target GameObject for SlotDataAsset '{sd.slotName}' event index {i}.");
+                            continue;
+                        }
+                        try
+                        {
+                            var uvItem = target.GetComponent<UMAUVAttachedItemLauncher>();
+                            if (uvItem == null)
+                            {
+                                Debug.LogWarning($"[UMAAssetIndexer] No UMAUVAttachedItemLauncher found on '{target.name}' for slot '{sd.slotName}'.");
+                                continue;
+                            }
+                            var mrs = target.GetComponentsInChildren<MeshRenderer>();
+                            if (mrs.Length == 0)
+                            {
+                                Debug.LogWarning($"[UMAAssetIndexer] No MeshRenderers found under '{target.name}' for slot '{sd.slotName}'.");
+                                continue;
+                            }
+                            for (int j = 0; j < mrs.Length; j++)
+                            {
+                                var mr = mrs[j];
+                                if (mr == null)
+                                {
+                                    Debug.LogWarning($"[UMAAssetIndexer] Null MeshRenderer element {j} under '{target.name}' for slot '{sd.slotName}'.");
+                                    continue;
+                                }
+
+                                var materials = mr.sharedMaterials;
+                                if (materials != null)
+                                {
+                                    for (int k = 0; k < materials.Length; k++)
+                                    {
+                                        var mat = materials[k];
+                                        if (mat == null)
+                                        {
+                                            Debug.LogWarning($"[UMAAssetIndexer] MeshRenderer '{mr.name}' has null sharedMaterial (slot '{sd.slotName}').");
+                                            continue;
                                         }
-									var restored = Shader.Find(original);
-									if (restored != null) {
-										mat.shader = restored;
-										if (Debug.isDebugBuild) Debug.Log($"[UMAAssetIndexer] Restored shader '{original}' on material '{mat.name}' for slot '{sd.slotName}'.");
-									} else {
-										if (Debug.isDebugBuild) Debug.LogWarning($"[UMAAssetIndexer] Failed to find original shader '{original}' for material '{mat.name}' (slot '{sd.slotName}').");
+                                        var shader = mat.shader;
+                                        if (shader == null)
+                                        {
+                                            Debug.LogWarning($"[UMAAssetIndexer] Material '{mat.name}' on '{mr.name}' has null shader (slot '{sd.slotName}').");
+                                            continue;
+                                        }
+                                        if (shader.name == "Hidden/InternalErrorShader")
+                                        {
+                                            string original = mat.GetTag("OriginalShader", false, "");
+                                            if (string.IsNullOrEmpty(original))
+                                            {
+                                                Debug.LogWarning($"[UMAAssetIndexer] ErrorShader on '{mr.name}' but OriginalShader tag missing (slot '{sd.slotName}').");
+                                                continue;
+                                            }
+                                            if (original == "Hidden/InternalErrorShader")
+                                            {
+                                                Debug.LogWarning($"[UMAAssetIndexer] OriginalShader tag on '{mr.name}' is also ErrorShader (slot '{sd.slotName}'). Not sure how this happened. (Manual rebuild maybe?)");
+                                                continue;
+                                            }
+                                            var restored = Shader.Find(original);
+                                            if (restored != null)
+                                            {
+                                                mat.shader = restored;
+                                                Debug.Log($"[UMAAssetIndexer] Restored shader '{original}' on material '{mat.name}' for slot '{sd.slotName}'.");
+                                            }
+                                            else
+                                            {
+                                                Debug.LogWarning($"[UMAAssetIndexer] Failed to find original shader '{original}' for material '{mat.name}' (slot '{sd.slotName}').");
+                                            }
+                                        }
                                     }
                                 }
+
+
                             }
-						} catch (Exception e) {
-							Debug.LogError($"Error processing SlotDataAsset UVAttachedItemLauncher for slot '{sd.slotName}' on GameObject '{target.name}': {e.Message}");
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError($"Error processing SlotDataAsset UVAttachedItemLauncher for slot '{sd.slotName}' on GameObject '{target.name}': {e.Message}");
                         }
                     }
                 }
             }
         }
-
-
 
 #endif
 
@@ -3187,11 +3229,16 @@ namespace UMA
                     continue;
                 }
 
-                // if the slot has a UVAttachedItemLauncher, we need to check the materials on the connected prefab
-                if (slot.SlotProcessed != null)
+                if (slot.SlotProcessed != null || slot.CharacterCompleted != null)
                 {
-                    var evt = slot.SlotProcessed;
+                    //Debug.Log("[UMAAssetIndexer] PostProcessing SlotDataAsset UVAttachedItemLauncher for slot '" + slot.slotName + "'.");
+                    UnityEventBase evt = slot.SlotProcessed;
                     int count = evt.GetPersistentEventCount();
+                    if (count == 0)
+                    {
+                        evt = slot.CharacterCompleted;
+                        count = evt.GetPersistentEventCount();
+                    }
                     for (int i = 0; i < count; i++)
                     {
                         UnityEngine.Object target = evt.GetPersistentTarget(i);
@@ -4283,7 +4330,8 @@ namespace UMA
 
         public void AddEverything(bool includeText)
         {
-            Clear(false);
+            Debug.Log("Adding everything to the library. This may take a while...");
+            Clear(false); 
 
             List<string> types = new List<string>();
             types.AddRange(TypeFromString.Keys);
