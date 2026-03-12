@@ -2,14 +2,14 @@
     "slotName": "UMA30_Body",
     "RootBone": "Global",
     "createOverlay": false,
-    "createRecipe": false,
+    "createRecipe": true,
     "isBaseRaceRecipe": false,
     "addToGlobalLibrary": false,
     "binarySerialization": true,
     "calcTangents": false,
     "clearNormals": false,
     "clearTangents": false,
-    "udimAdjustment": true,
+    "udimAdjustment": false,
     "udimTilesU": 10,
     "udimTilesV": 10,
     "nameAfterMaterial": false,
@@ -28,7 +28,7 @@
     "invertZ": false,
     "alwaysRecreateSlots": true,
     "Tags": [],
-    "slotMaterialPath": "Assets/UMA/UMA2/Content/Core/HumanShared/Materials/Standard/UMA_Diffuse_Normal_Metallic.asset",
+    "slotMaterialPath": "",
     "slotFolderPath": "Assets/Temp/Slots",
     "generateSlotLods": true,
     "useUnityLodGenerator": true,
@@ -39,10 +39,12 @@
     "slotLodBoundaryWeight": 20.0,
     "scrollPos": {
         "x": 0.0,
-        "y": 0.0
+        "y": 133.0
     },
     "filterIgnoreMeshesEnabled": false,
     "filterIgnoreMeshesContaining": "",
     "filterOnlyIncludeMeshesEnabled": false,
-    "filterOnlyIncludeMeshesContaining": ""
+    "filterOnlyIncludeMeshesContaining": "hair",
+    "pendingSmrsCompactView": false,
+    "pendingSmrsFilterEnabled": false
 }
