@@ -24,8 +24,8 @@ namespace UMA
             [Tooltip("Overlays that will trigger this stamp set. Match occurs if ANY of these overlays (by asset) is present in the AtlasUpdated event.")]
             public List<OverlayDataAsset> overlays = new List<OverlayDataAsset>();
 
-            [Tooltip("Optional overlay names to trigger this stamp set (legacy/fallback). Match occurs if ANY name equals OverlayData.overlayName.")]
-            public List<string> overlayNames = new List<string>();
+            [Tooltip("Overlay groups that trigger this stamp set. Match occurs if ANY group in this list matches the AtlasUpdated event overlay group. If using groups, overlays (above) are ignored.")]
+            public List<string> Groups = new List<string>();
 
             [Tooltip("Stamp assets to apply for matching overlays (applied for each matching atlas update event).")]
             public DecalRTStampAsset[] stamps;
@@ -40,6 +40,18 @@ namespace UMA
 			public bool Matches(OverlayData overlayData)
             {
                 if (overlayData == null) return false;
+
+                if (Groups.Count > 0)
+                {
+                    var odGroup = overlayData.asset != null ? overlayData.asset.overlayGroup : null;
+                    if (!string.IsNullOrEmpty(odGroup))
+                    {
+                        if (Groups.Contains(odGroup))
+                        {
+                            return true;
+                        }
+                    }
+                }
 
                 if (overlays != null && overlays.Count > 0)
                 {
@@ -57,25 +69,12 @@ namespace UMA
                     }
                 }
 
-                if (overlayNames != null && overlayNames.Count > 0)
-                {
-                    string oname = overlayData.overlayName;
-                    if (!string.IsNullOrEmpty(oname))
-                    {
-                        for (int i = 0; i < overlayNames.Count; i++)
-                        {
-                            var cfg = overlayNames[i];
-                            if (!string.IsNullOrEmpty(cfg) && string.Equals(cfg, oname, StringComparison.Ordinal))
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-
                 return false;
             }
         }
+
+        [Tooltip("If true, then slot/overlay groups will be used for matching stamps instead of explicit overlay references. This allows more flexible matching that can work across different UMA models and recipes, but requires proper group setup on your Slot and Overlay assets.")]
+        public bool useGroups = true;
 
         [Tooltip("Map overlay sets to stamp assets. If ANY overlay in a set matches, the set's stamps will be applied.")]
         public List<OverlayStampSet> overlayStamps = new List<OverlayStampSet>();
@@ -98,6 +97,61 @@ namespace UMA
 				overlayStamps[i].RemoveStamp(stamp);
 			}
 		}
+
+        public void AddStampToSet(DecalRTStampAsset stamp, string setName = "AutoRTDecals")
+        {
+            if (stamp == null)
+            {
+                return;
+            }
+
+            if (overlayStamps == null)
+            {
+                overlayStamps = new List<OverlayStampSet>();
+            }
+
+            OverlayStampSet targetSet = null;
+            for (int i = 0; i < overlayStamps.Count; i++)
+            {
+                var set = overlayStamps[i];
+                if (set != null && string.Equals(set.name, setName, StringComparison.Ordinal))
+                {
+                    targetSet = set;
+                    break;
+                }
+            }
+
+            if (targetSet == null)
+            {
+                targetSet = new OverlayStampSet
+                {
+                    name = setName,
+                    overlays = new List<OverlayDataAsset>(),
+                    Groups = new List<string>()
+                };
+                overlayStamps.Add(targetSet);
+            }
+
+            if (targetSet.Groups == null)
+            {
+                targetSet.Groups = new List<string>();
+            }
+            if (!string.IsNullOrEmpty(stamp.overlayGroup) && !targetSet.Groups.Contains(stamp.overlayGroup))
+            {
+                targetSet.Groups.Add(stamp.overlayGroup);
+            }
+
+            var stampList = new List<DecalRTStampAsset>();
+            if (targetSet.stamps != null && targetSet.stamps.Length > 0)
+            {
+                stampList.AddRange(targetSet.stamps);
+            }
+            if (!stampList.Contains(stamp))
+            {
+                stampList.Add(stamp);
+            }
+            targetSet.stamps = stampList.ToArray();
+        }
 
 
 		private Dictionary<string, int> alreadyProcessed = new Dictionary<string, int>();
@@ -161,20 +215,22 @@ namespace UMA
             _subscribed = true;
         }
 
-		bool AlreadProcessed(string overlayName, string propertyName, int frame) {
-			string key = overlayName + "|" + propertyName;
-			if (alreadyProcessed.ContainsKey(key)) {
-				if(alreadyProcessed[key] == frame) {
-					return false;
-				} else {
-					alreadyProcessed[key] = frame;
-					return false;
-				}
-			} else {
-				alreadyProcessed[key] = frame;
-				return false;
-			}
-		}
+      bool AlreadProcessed(string overlayGroup, string propertyName, int frame)
+        {
+            string key = (overlayGroup ?? string.Empty) + "|" + (propertyName ?? string.Empty);
+            int lastFrame;
+            if (alreadyProcessed.TryGetValue(key, out lastFrame))
+            {
+                if (lastFrame == frame)
+                {
+                    return true;
+                }
+                alreadyProcessed[key] = frame;
+                return false;
+            }
+            alreadyProcessed[key] = frame;
+            return false;
+        }
 
 
 
@@ -203,15 +259,17 @@ namespace UMA
         {
             try
             {
-				//Debug.Log("HandleAtlasUpdated called"); 
-				if (umaData == null || parms == null || parms.overlayData == null) return;
+                //Debug.Log("HandleAtlasUpdated called"); 
+                if (umaData == null || parms == null || parms.overlayData == null) return;
 
-				if(AlreadProcessed(parms.overlayName, parms.materialPropertyName, Time.frameCount)) {
-					Debug.Log("[DecalRTStampSlot] Already processed this overlay/property this frame, skipping.");
-					return;
-				}
+                var overlayGroup = parms.overlayData.asset != null ? parms.overlayData.asset.overlayGroup : null;
+                if (AlreadProcessed(overlayGroup, parms.materialPropertyName, Time.frameCount))
+                {
+                    Debug.Log("[DecalRTStampSlot] Already processed this overlay/property this frame, skipping.");
+                    return;
+                }
 
-					if (_avatar == null) _avatar = umaData as DynamicCharacterAvatar;
+                if (_avatar == null) _avatar = umaData as DynamicCharacterAvatar;
                 if (_avatar == null) return;
                 if (overlayStamps == null || overlayStamps.Count == 0) return;
 
@@ -220,10 +278,10 @@ namespace UMA
                 int maxBleedPixels = 0;
                 int currenttime = Time.frameCount;
 
-				//DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "Before Iterating Stamps");
+                //DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "Before Iterating Stamps");
 
-			// Iterate ALL sets; do not early exit so multiple sets can react to the same overlay
-			for(int si = 0; si < overlayStamps.Count; si++)
+                // Iterate ALL sets; do not early exit so multiple sets can react to the same overlay
+                for (int si = 0; si < overlayStamps.Count; si++)
                 {
                     var set = overlayStamps[si];
                     if (set == null || set.stamps == null || set.stamps.Length == 0) continue;
@@ -235,7 +293,7 @@ namespace UMA
                         var stamp = set.stamps[st];
                         if (stamp == null) continue;
 
-                        bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms); 
+                        bool ok = DecalRenderTexture.ApplySlotStamps(_avatar, umaData, stamp, parms);
                         if (ok)
                         {
                             anyApplied = true;
@@ -244,11 +302,11 @@ namespace UMA
                     }
                 }
 
-				//DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "After Iterating Stamps");
+                //DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "After Iterating Stamps");
 
 
-				// If we applied any stamps to this final RT, run a dilation pass that expands color into transparent padding
-				if(anyApplied && parms.renderTexture != null)
+                // If we applied any stamps to this final RT, run a dilation pass that expands color into transparent padding
+                if (anyApplied && parms.renderTexture != null)
                 {
                     // Guard against uncreated or invalid RT
                     if (!parms.renderTexture.IsCreated())
@@ -260,15 +318,15 @@ namespace UMA
                     }
                     else
                     {
-                    // Use the largest bleed requested by any applied stamp. Clamp to shader range [1..16].
-                    int bleed = Mathf.Clamp(maxBleedPixels <= 0 ? 2 : maxBleedPixels, 1, 64); // allow multiple rounds if >16
-						//DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "Before final dilation");
+                        // Use the largest bleed requested by any applied stamp. Clamp to shader range [1..16].
+                        int bleed = Mathf.Clamp(maxBleedPixels <= 0 ? 2 : maxBleedPixels, 1, 64); // allow multiple rounds if >16
+                                                                                                  //DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "Before final dilation");
 
-						//RunFinalDilation(parms.renderTexture, bleed, rgbOnlyDilation);
-						//DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "After final dilation");
+                        //RunFinalDilation(parms.renderTexture, bleed, rgbOnlyDilation);
+                        //DecalRenderTexture.SaveRenderTexturePNG(parms.renderTexture, null, parms.overlayName, currenttime, "After final dilation");
 
-					}
-				}
+                    }
+                }
             }
             catch (Exception ex)
             {

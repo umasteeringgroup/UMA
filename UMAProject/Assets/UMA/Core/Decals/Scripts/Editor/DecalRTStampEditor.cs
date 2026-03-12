@@ -4,7 +4,6 @@ using UnityEngine;
 using UMA;
 using UMA.CharacterSystem;
 using System;
-using System.Reflection;
 using System.IO;
 
 public static class DecalRTStampEditor
@@ -21,22 +20,29 @@ public static class DecalRTStampEditor
 
         // If the cached instance is not an asset, create a clone as an asset to avoid saving a transient instance
         var clone = ScriptableObject.CreateInstance<DecalRTStampAsset>();
-        clone.overlayName = last.overlayName;
         clone.bleedPixels = last.bleedPixels;
+        clone.overlayGroup = last.overlayGroup;
         clone.forceLinearSampling = last.forceLinearSampling;
+        clone.invertY = last.invertY;
         clone.slots = new System.Collections.Generic.List<DecalRTStampAsset.SlotStamp>(last.slots.Count);
         foreach (var s in last.slots)
         {
             var ns = new DecalRTStampAsset.SlotStamp
             {
                 slotName = s.slotName,
-                slotHash = s.slotHash,
+                slotHash = s.slotHash,                
                 slotGroup = s.slotGroup,
                 umaMaterialName = s.umaMaterialName,
                 normBaseUV = (s.normBaseUV != null) ? (Vector2[])s.normBaseUV.Clone() : new Vector2[0],
                 overlayUV = (s.overlayUV != null) ? (Vector2[])s.overlayUV.Clone() : new Vector2[0],
-                triangles = (s.triangles != null) ? (int[])s.triangles.Clone() : new int[0]
+                triangles = (s.triangles != null) ? (int[])s.triangles.Clone() : new int[0],
+                recordedUVArea = s.recordedUVArea,
+                debugDontUse = s.debugDontUse
             };
+#if UNITY_EDITOR
+            ns.triOrdinals = (s.triOrdinals != null) ? (int[])s.triOrdinals.Clone() : null;
+            ns.slotRelativeTriangles = (s.slotRelativeTriangles != null) ? (int[])s.slotRelativeTriangles.Clone() : null;
+#endif
             clone.slots.Add(ns);
         }
 
@@ -66,35 +72,16 @@ public static class DecalRTStampEditor
         if (path.StartsWith(Application.dataPath))
         {
             string projPath = "Assets" + path.Substring(Application.dataPath.Length);
-            var stampObj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(projPath);
+         var stampObj = AssetDatabase.LoadAssetAtPath<DecalRTStampAsset>(projPath);
             if (stampObj == null)
             {
                 EditorUtility.DisplayDialog("Restore Decal Stamp", "Unable to load asset.", "OK");
                 return;
             }
 
-            var coreType = Type.GetType("UMA.DecalRTStampAsset, UMA_Core");
-            if (coreType == null)
-            {
-                EditorUtility.DisplayDialog("Restore Decal Stamp", "Could not find core DecalRTStampAsset type.", "OK");
-                return;
-            }
-
-            var coreStamp = ScriptableObject.CreateInstance(coreType) as ScriptableObject;
-            var json = JsonUtility.ToJson(stampObj);
-            JsonUtility.FromJsonOverwrite(json, coreStamp);
-
-            var mi = typeof(DecalRenderTexture).GetMethod("ApplyStampToUMA", BindingFlags.Public | BindingFlags.Static);
-            if (mi == null)
-            {
-                EditorUtility.DisplayDialog("Restore Decal Stamp", "Could not find ApplyStampToUMA method.", "OK");
-                return;
-            }
-
             try
             {
-                var success = (bool)mi.Invoke(null, new object[] { avatar, avatar.umaData, coreStamp });
-                if (!success)
+                if (!RestoreStampToAvatar(avatar, stampObj))
                 {
                     EditorUtility.DisplayDialog("Restore Decal Stamp", "Failed to apply stamp. See Console for details.", "OK");
                 }
@@ -158,26 +145,12 @@ public static class DecalRTStampEditor
         try
         {
             string json = File.ReadAllText(path);
+            var stamp = ScriptableObject.CreateInstance<DecalRTStampAsset>();
+            stamp.name = Path.GetFileNameWithoutExtension(path);
+            stamp.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            JsonUtility.FromJsonOverwrite(json, stamp);
 
-            var coreType = Type.GetType("UMA.DecalRTStampAsset, UMA_Core");
-            if (coreType == null)
-            {
-                EditorUtility.DisplayDialog("Restore Decal Stamp (JSON)", "Could not find core DecalRTStampAsset type.", "OK");
-                return;
-            }
-
-            var coreStamp = ScriptableObject.CreateInstance(coreType) as ScriptableObject;
-            JsonUtility.FromJsonOverwrite(json, coreStamp);
-
-            var mi = typeof(DecalRenderTexture).GetMethod("ApplyStampToUMA", BindingFlags.Public | BindingFlags.Static);
-            if (mi == null)
-            {
-                EditorUtility.DisplayDialog("Restore Decal Stamp (JSON)", "Could not find ApplyStampToUMA method.", "OK");
-                return;
-            }
-
-            var success = (bool)mi.Invoke(null, new object[] { avatar, avatar.umaData, coreStamp });
-            if (!success)
+            if (!RestoreStampToAvatar(avatar, stamp))
             {
                 EditorUtility.DisplayDialog("Restore Decal Stamp (JSON)", "Failed to apply stamp. See Console for details.", "OK");
             }
@@ -188,6 +161,28 @@ public static class DecalRTStampEditor
             EditorUtility.DisplayDialog("Restore Decal Stamp (JSON)", "Failed to restore from JSON. See Console.", "OK");
         }
     }
+
+       private static bool RestoreStampToAvatar(DynamicCharacterAvatar avatar, DecalRTStampAsset stamp)
+        {
+            if (avatar == null || avatar.umaData == null || stamp == null)
+            {
+                return false;
+            }
+
+            var stampSlot = avatar.GetComponentInChildren<DecalRTStampSlot>(true);
+            if (stampSlot == null)
+            {
+                EditorUtility.DisplayDialog("Restore Decal Stamp", "Selected avatar does not contain a DecalRTStampSlot.", "OK");
+                return false;
+            }
+
+            Undo.RecordObject(stampSlot, "Restore Decal Stamp");
+            stampSlot.AddStampToSet(stamp, "RestoredRTDecals");
+            stampSlot.OnCharacterBegun(avatar.umaData);
+            stampSlot.NotifyStampsChanged();
+            EditorUtility.SetDirty(stampSlot);
+            return true;
+        }
 
     private static DynamicCharacterAvatar GetSelectedAvatar()
     {

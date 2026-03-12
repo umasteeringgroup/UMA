@@ -95,7 +95,6 @@ namespace UMA.EditorTools
 
                 var nameProp = setProp.FindPropertyRelative("name");
                 var overlaysProp = setProp.FindPropertyRelative("overlays");
-                var overlayNamesProp = setProp.FindPropertyRelative("overlayNames");
                 var stampsProp = setProp.FindPropertyRelative("stamps");
 
                 // Header prefers the user-editable name; falls back to overlay asset names or default
@@ -147,9 +146,9 @@ namespace UMA.EditorTools
                     // Editable name
                     EditorGUILayout.PropertyField(nameProp, new GUIContent("Name"));
 
-                    // Overlays UI
+                  // Overlays UI
                     EditorGUILayout.LabelField("Overlays", EditorStyles.boldLabel);
-                    DrawOverlayPicker(overlaysProp, overlayNamesProp);
+                  DrawOverlayPicker(overlaysProp);
 
                     EditorGUILayout.Space(4);
 
@@ -166,7 +165,7 @@ namespace UMA.EditorTools
             }
         }
 
-        private void DrawOverlayPicker(SerializedProperty overlaysProp, SerializedProperty overlayNamesProp)
+            private void DrawOverlayPicker(SerializedProperty overlaysProp)
         {
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -182,13 +181,7 @@ namespace UMA.EditorTools
                     ApplyAndRepaint();
                 }
 
-                if (GUILayout.Button("Add By Name", GUILayout.Width(110)))
-                {
-                    Undo.RecordObject(target, "Add Overlay Name");
-                    overlayNamesProp.arraySize++;
-                    overlayNamesProp.GetArrayElementAtIndex(overlayNamesProp.arraySize - 1).stringValue = "";
-                    ApplyAndRepaint();
-                }
+                  GUILayout.Space(114);
             }
 
             // From Race base recipe
@@ -223,24 +216,6 @@ namespace UMA.EditorTools
             {
                 Undo.RecordObject(target, "Remove Overlay");
                 overlaysProp.DeleteArrayElementAtIndex(removeIdx);
-                ApplyAndRepaint();
-            }
-
-            // Current overlay names
-            removeIdx = -1;
-            for (int i = 0; i < overlayNamesProp.arraySize; i++)
-            {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    var sp = overlayNamesProp.GetArrayElementAtIndex(i);
-                    sp.stringValue = EditorGUILayout.TextField(sp.stringValue);
-                    if (GUILayout.Button("-", GUILayout.Width(22))) { removeIdx = i; }
-                }
-            }
-            if (removeIdx >= 0)
-            {
-                Undo.RecordObject(target, "Remove Overlay Name");
-                overlayNamesProp.DeleteArrayElementAtIndex(removeIdx);
                 ApplyAndRepaint();
             }
 

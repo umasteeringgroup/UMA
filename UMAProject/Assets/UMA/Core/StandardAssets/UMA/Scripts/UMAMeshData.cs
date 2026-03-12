@@ -1217,17 +1217,31 @@ namespace UMA
 			AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
 			UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += beforeAssemblyReload;
 			UnityEditor.EditorApplication.quitting += Application_quitting;
+           UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+			UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 #else
 			Application.quitting += Application_quitting;
 
 #endif
 		}
 
+#if UNITY_EDITOR
+		private static void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange state)
+		{
+			if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+			{
+				CleanupGlobalBuffers();
+				SubMeshTriangles.DisposeAllNativeTriangles();
+			}
+		}
+#endif
+
 		private static void beforeAssemblyReload()
 		{
 #if DEBUG_UNITY_MESHDATA
             Debug.Log("AppDomain unloading, cleaning up UMA global buffers");
 #endif
+           CleanupGlobalBuffers();
 			SubMeshTriangles.DisposeAllNativeTriangles();
 		}
 
@@ -1245,6 +1259,7 @@ namespace UMA
 #if DEBUG_UNITY_MESHDATA
             Debug.Log("AppDomain unloading, cleaning up UMA global buffers");
 #endif
+           CleanupGlobalBuffers();
 			SubMeshTriangles.DisposeAllNativeTriangles();
 		}
 

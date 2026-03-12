@@ -184,6 +184,9 @@ namespace UMA.Editors
             public string filterIgnoreMeshesContaining;
             public bool filterOnlyIncludeMeshesEnabled;
             public string filterOnlyIncludeMeshesContaining;
+
+            public bool pendingSmrsCompactView;
+            public bool pendingSmrsFilterEnabled;
         }
 
         public string slotName;
@@ -232,6 +235,8 @@ namespace UMA.Editors
 
         private List<PendingSmrEntry> _pendingSmrs = new List<PendingSmrEntry>();
         private Vector2 _pendingSmrsScroll;
+        private bool _pendingSmrsCompactView = true;
+        private bool _pendingSmrsFilterEnabled = false;
 
         // Drag & drop batch filters
         private bool _filterIgnoreMeshesEnabled;
@@ -324,6 +329,9 @@ namespace UMA.Editors
                 state.filterOnlyIncludeMeshesEnabled = _filterOnlyIncludeMeshesEnabled;
                 state.filterOnlyIncludeMeshesContaining = _filterOnlyIncludeMeshesContaining;
 
+                state.pendingSmrsCompactView = _pendingSmrsCompactView;
+                state.pendingSmrsFilterEnabled = _pendingSmrsFilterEnabled;
+
                 string json = JsonUtility.ToJson(state, true);
                 string fp = GetPersistFilePath();
                 string dir = Path.GetDirectoryName(fp);
@@ -396,6 +404,9 @@ namespace UMA.Editors
                 {
                     // keep disabled
                 }
+
+                _pendingSmrsCompactView = state.pendingSmrsCompactView;
+                _pendingSmrsFilterEnabled = state.pendingSmrsFilterEnabled;
 
                 // Restore KeepBones list
                 KeepBones = new List<BoneName>();
@@ -884,9 +895,35 @@ namespace UMA.Editors
             EditorGUILayout.Space(5);
             EditorGUILayout.LabelField("Pending SkinnedMeshRenderers", EditorStyles.boldLabel);
 
-            using (var scroll = new EditorGUILayout.ScrollViewScope(_pendingSmrsScroll, GUILayout.MinHeight(120)))
+            EditorGUILayout.BeginHorizontal();
+            _pendingSmrsFilterEnabled = EditorGUILayout.Toggle(new GUIContent("Filter list", "Filter the pending list using 'Only include meshes containing' text."), _pendingSmrsFilterEnabled);
+            GUILayout.FlexibleSpace();
+            if (_pendingSmrsCompactView)
+            {
+                if (GUILayout.Button("Expanded View", GUILayout.Width(120)))
+                {
+                    _pendingSmrsCompactView = false;
+                }
+            }
+            else
+            {
+                if (GUILayout.Button("Compact View", GUILayout.Width(120)))
+                {
+                    _pendingSmrsCompactView = true;
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            int itemCount = _pendingSmrsCompactView ? 5 : 25;
+            float rowHeight = EditorGUIUtility.singleLineHeight + 4f;
+            float listHeight = itemCount * rowHeight;
+
+            using (var scroll = new EditorGUILayout.ScrollViewScope(_pendingSmrsScroll, GUILayout.MinHeight(listHeight)))
             {
                 _pendingSmrsScroll = scroll.scrollPosition;
+
+                string include = _filterOnlyIncludeMeshesContaining;
+                bool filterActive = _pendingSmrsFilterEnabled && !string.IsNullOrEmpty(include);
 
                 for (int i = 0; i < _pendingSmrs.Count; i++)
                 {
@@ -894,6 +931,15 @@ namespace UMA.Editors
                     if (e == null)
                     {
                         continue;
+                    }
+
+                    if (filterActive)
+                    {
+                        string meshName = e.smr != null ? e.smr.name : string.Empty;
+                        if (meshName.IndexOf(include, System.StringComparison.InvariantCultureIgnoreCase) < 0)
+                        {
+                            continue;
+                        }
                     }
 
                     EditorGUILayout.BeginHorizontal();
@@ -913,6 +959,14 @@ namespace UMA.Editors
                 {
                     if (_pendingSmrs[i] != null)
                     {
+                        if (_pendingSmrsFilterEnabled && !string.IsNullOrEmpty(_filterOnlyIncludeMeshesContaining))
+                        {
+                            string meshName = _pendingSmrs[i].smr != null ? _pendingSmrs[i].smr.name : string.Empty;
+                            if (meshName.IndexOf(_filterOnlyIncludeMeshesContaining, System.StringComparison.InvariantCultureIgnoreCase) < 0)
+                            {
+                                continue;
+                            }
+                        }
                         _pendingSmrs[i].selected = true;
                     }
                 }
@@ -923,6 +977,14 @@ namespace UMA.Editors
                 {
                     if (_pendingSmrs[i] != null)
                     {
+                        if (_pendingSmrsFilterEnabled && !string.IsNullOrEmpty(_filterOnlyIncludeMeshesContaining))
+                        {
+                            string meshName = _pendingSmrs[i].smr != null ? _pendingSmrs[i].smr.name : string.Empty;
+                            if (meshName.IndexOf(_filterOnlyIncludeMeshesContaining, System.StringComparison.InvariantCultureIgnoreCase) < 0)
+                            {
+                                continue;
+                            }
+                        }
                         _pendingSmrs[i].selected = false;
                     }
                 }

@@ -344,9 +344,17 @@ namespace UMA.Editors
                     }
                         
                         
-                        // EditorGUILayout.LabelField(new GUIContent("Channel " + i + ": " + materialPropertyName.stringValue),EditorStyles.toolbar);
-
-                    channelExpanded[i] = GUIHelper.FoldoutBar(channelExpanded[i],"Channel " + i + ": " + materialPropertyName.stringValue + error );
+                   EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+                    channelExpanded[i] = EditorGUILayout.Foldout(channelExpanded[i], "Channel " + i + ": " + materialPropertyName.stringValue + error, true);
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("X", EditorStyles.toolbarButton, GUILayout.Width(22)))
+                    {
+                        Undo.RecordObject(target, "Remove Channel");
+                        list.DeleteArrayElementAtIndex(i);
+                        list.serializedObject.ApplyModifiedProperties();
+                        GUIUtility.ExitGUI();
+                    }
+                    EditorGUILayout.EndHorizontal();
                     if (channelExpanded[i])
                     {
                         GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));

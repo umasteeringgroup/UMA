@@ -50,8 +50,7 @@ namespace UMA
             }
         }
 
-        public string overlayName;            // OverlayDataAsset.name used for the source stamp
-		public int overlayNameHash;          // Cached hash of overlayName for fast matching at replay time
+        public string overlayGroup;           // group used for stamping - replay matches by overlay group so stamps can be applied across overlays that share the same group
         public int bleedPixels;               // default dilation at record time
         public bool forceLinearSampling;      // default sampling mode at record time
         public bool invertY;                  // if true, Y is inverted during stamping (normalized space)

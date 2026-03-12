@@ -7,6 +7,7 @@ using UMA.Examples;
 using UMA.PoseTools;
 using static UMA.UMAData;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace UMA.Editors
 {
@@ -48,6 +49,12 @@ namespace UMA.Editors
 		private static bool ConsolidateTexturesMenu_Validate()
 		{
 			return GetSelectedWardrobeRecipes().Count > 0;
+		}
+
+		[MenuItem("UMA/Consolidate Current Scene Assets", false, 2300)]
+		private static void ConsolidateCurrentSceneAssetsMenu()
+		{
+			UmaConsolidateCurrentSceneAssetsWindow.Open();
 		}
 
 		[MenuItem("Assets/UMA/Examine Overlays", false, 2003)]
@@ -132,6 +139,73 @@ namespace UMA.Editors
 				return;
 			}
 			UmaAddRacesToRecipesWindow.Open(selectedRecipes);
+		}
+
+		[MenuItem("Assets/UMA/Create UMAMaterials for selected materials", false, 2006)]
+		private static void CreateUmaMaterialsForSelectedMaterialsMenu()
+		{
+			var materials = GetSelectedMaterials();
+			if (materials.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Create UMAMaterials", "Select one or more Material assets in the Project window.", "OK");
+				return;
+			}
+
+			for (int i = 0; i < materials.Count; i++)
+			{
+				var mat = materials[i];
+				if (mat == null)
+				{
+					continue;
+				}
+
+				string matPath = AssetDatabase.GetAssetPath(mat);
+				if (string.IsNullOrEmpty(matPath))
+				{
+					continue;
+				}
+
+				string dir = Path.GetDirectoryName(matPath);
+				if (string.IsNullOrEmpty(dir))
+				{
+					dir = "Assets";
+				}
+
+				string baseName = "UMAMaterial_" + mat.name;
+				string assetPath = Path.Combine(dir, baseName + ".asset").Replace('\\', '/');
+
+				var umaMat = UMA.CustomAssetUtility.CreateAsset<UMAMaterial>(assetPath, false, baseName, false);
+				if (umaMat == null)
+				{
+					continue;
+				}
+
+				umaMat.name = baseName;
+				umaMat.material = mat;
+				umaMat.materialType = UMAMaterial.MaterialType.Atlas;
+				umaMat.MaterialName = mat.name;
+				if (mat.shader != null)
+				{
+					umaMat.ShaderName = mat.shader.name;
+				}
+				else
+				{
+					umaMat.ShaderName = string.Empty;
+				}
+
+				var channels = BuildChannelsForMaterial(mat);
+				umaMat.channels = channels;
+				EditorUtility.SetDirty(umaMat);
+			}
+
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
+		}
+
+		[MenuItem("Assets/UMA/Create UMAMaterials for selected materials", true)]
+		private static bool CreateUmaMaterialsForSelectedMaterialsMenu_Validate()
+		{
+			return GetSelectedMaterials().Count > 0;
 		}
 
 		internal class UmaExamineSlotsWindow : EditorWindow
@@ -875,6 +949,280 @@ namespace UMA.Editors
 		}
 	}
 
+	internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
+	{
+		private const string DefaultDestinationFolder = "Assets/UMA/UMA3/Examples/ExampleAssets";
+		private DefaultAsset _destFolder;
+		private string _destFolderPath = DefaultDestinationFolder;
+
+		public static void Open()
+		{
+			var window = GetWindow<UmaConsolidateCurrentSceneAssetsWindow>(true, "Consolidate Current Scene Assets", true);
+			window.minSize = new Vector2(640f, 170f);
+			window._destFolderPath = DefaultDestinationFolder;
+			window.TryInitializeDefaultFolder();
+			window.ShowUtility();
+			window.Focus();
+		}
+
+		private void TryInitializeDefaultFolder()
+		{
+			if (!AssetDatabase.IsValidFolder(_destFolderPath))
+			{
+				_destFolder = null;
+				return;
+			}
+
+			_destFolder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(_destFolderPath);
+		}
+
+		private void OnGUI()
+		{
+			EditorGUILayout.LabelField("Consolidate Current Scene Assets", EditorStyles.boldLabel);
+			EditorGUILayout.HelpBox("Moves assets referenced by the current scene into category subfolders under a destination folder.", MessageType.Info);
+			EditorGUILayout.Space(6);
+
+			EditorGUILayout.LabelField("Destination Folder (under Assets)", EditorStyles.boldLabel);
+			EditorGUI.BeginChangeCheck();
+			_destFolder = (DefaultAsset)EditorGUILayout.ObjectField(_destFolder, typeof(DefaultAsset), false);
+			if (EditorGUI.EndChangeCheck())
+			{
+				_destFolderPath = _destFolder != null ? AssetDatabase.GetAssetPath(_destFolder) : DefaultDestinationFolder;
+				if (!string.IsNullOrEmpty(_destFolderPath) && !AssetDatabase.IsValidFolder(_destFolderPath))
+				{
+					_destFolder = null;
+					_destFolderPath = DefaultDestinationFolder;
+				}
+			}
+
+			using (new EditorGUI.DisabledScope(true))
+			{
+				EditorGUILayout.TextField("Path", _destFolderPath);
+			}
+
+			EditorGUILayout.Space(10);
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			if (GUILayout.Button("Continue", GUILayout.Width(120), GUILayout.Height(28)))
+			{
+				ContinueConsolidation();
+			}
+			if (GUILayout.Button("Cancel", GUILayout.Width(120), GUILayout.Height(28)))
+			{
+				Close();
+			}
+			EditorGUILayout.EndHorizontal();
+		}
+
+		private void ContinueConsolidation()
+		{
+			if (!EnsureFolderPathExists(_destFolderPath))
+			{
+				EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "Could not create destination folder:\n" + _destFolderPath, "OK");
+				return;
+			}
+
+			var activeScene = SceneManager.GetActiveScene();
+			if (!activeScene.IsValid())
+			{
+				EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "No valid active scene found.", "OK");
+				return;
+			}
+
+			var rootObjects = activeScene.GetRootGameObjects();
+			if (rootObjects == null || rootObjects.Length == 0)
+			{
+				EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "The current scene has no root objects.", "OK");
+				return;
+			}
+
+			var dependencies = EditorUtility.CollectDependencies(rootObjects);
+			if (dependencies == null || dependencies.Length == 0)
+			{
+				EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "No scene dependencies were found.", "OK");
+				return;
+			}
+
+			var processed = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+			var movedByCategory = new Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase)
+			{
+				["Textures"] = 0,
+				["Models"] = 0,
+				["Sounds"] = 0,
+				["Materials"] = 0,
+				["Assets"] = 0,
+			};
+			int moveErrors = 0;
+
+			try
+			{
+				for (int i = 0; i < dependencies.Length; i++)
+				{
+					EditorUtility.DisplayProgressBar("Consolidate Current Scene Assets", "Scanning dependencies...", Mathf.Clamp01((float)i / Mathf.Max(1, dependencies.Length)));
+
+					var dep = dependencies[i];
+					if (dep == null)
+					{
+						continue;
+					}
+
+					string sourcePath = AssetDatabase.GetAssetPath(dep);
+					if (string.IsNullOrEmpty(sourcePath))
+					{
+						continue;
+					}
+					if (!sourcePath.StartsWith("Assets/", System.StringComparison.OrdinalIgnoreCase))
+					{
+						continue;
+					}
+					if (AssetDatabase.IsValidFolder(sourcePath))
+					{
+						continue;
+					}
+					if (sourcePath.EndsWith(".unity", System.StringComparison.OrdinalIgnoreCase))
+					{
+						continue;
+					}
+					if (sourcePath.StartsWith(_destFolderPath + "/", System.StringComparison.OrdinalIgnoreCase))
+					{
+						continue;
+					}
+					if (processed.Contains(sourcePath))
+					{
+						continue;
+					}
+
+					processed.Add(sourcePath);
+					string category = GetCategoryForAsset(sourcePath, dep);
+					string categoryPath = _destFolderPath + "/" + category;
+					if (!EnsureFolderPathExists(categoryPath))
+					{
+						moveErrors++;
+						continue;
+					}
+
+					string fileName = Path.GetFileName(sourcePath);
+					if (string.IsNullOrEmpty(fileName))
+					{
+						continue;
+					}
+
+					string destPath = categoryPath + "/" + fileName;
+					if (string.Equals(sourcePath, destPath, System.StringComparison.OrdinalIgnoreCase))
+					{
+						continue;
+					}
+
+					string uniqueDestPath = AssetDatabase.GenerateUniqueAssetPath(destPath);
+					string error = AssetDatabase.MoveAsset(sourcePath, uniqueDestPath);
+					if (!string.IsNullOrEmpty(error))
+					{
+						moveErrors++;
+						continue;
+					}
+
+					movedByCategory[category] = movedByCategory[category] + 1;
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog(
+				"Consolidate Current Scene Assets",
+				"Moved Textures: " + movedByCategory["Textures"] +
+				"\nMoved Models: " + movedByCategory["Models"] +
+				"\nMoved Sounds: " + movedByCategory["Sounds"] +
+				"\nMoved Materials: " + movedByCategory["Materials"] +
+				"\nMoved Assets: " + movedByCategory["Assets"] +
+				"\nMove errors: " + moveErrors,
+				"OK");
+
+			Close();
+		}
+
+		private static string GetCategoryForAsset(string assetPath, UnityEngine.Object asset)
+		{
+			if (asset is Material)
+			{
+				return "Materials";
+			}
+			if (asset is Texture)
+			{
+				return "Textures";
+			}
+			if (asset is AudioClip)
+			{
+				return "Sounds";
+			}
+
+			var importer = AssetImporter.GetAtPath(assetPath);
+			if (importer is ModelImporter)
+			{
+				return "Models";
+			}
+
+			string ext = Path.GetExtension(assetPath);
+			if (!string.IsNullOrEmpty(ext))
+			{
+				ext = ext.ToLowerInvariant();
+				if (ext == ".fbx" || ext == ".obj" || ext == ".dae" || ext == ".3ds" || ext == ".blend")
+				{
+					return "Models";
+				}
+			}
+
+			return "Assets";
+		}
+
+		private static bool EnsureFolderPathExists(string folderPath)
+		{
+			if (string.IsNullOrEmpty(folderPath))
+			{
+				return false;
+			}
+
+			folderPath = folderPath.Replace('\\', '/').Trim('/');
+			if (!folderPath.StartsWith("Assets", System.StringComparison.OrdinalIgnoreCase))
+			{
+				folderPath = "Assets/" + folderPath;
+			}
+
+			if (AssetDatabase.IsValidFolder(folderPath))
+			{
+				return true;
+			}
+
+			string[] parts = folderPath.Split('/');
+			if (parts.Length == 0 || !string.Equals(parts[0], "Assets", System.StringComparison.OrdinalIgnoreCase))
+			{
+				return false;
+			}
+
+			string current = "Assets";
+			for (int i = 1; i < parts.Length; i++)
+			{
+				string part = parts[i];
+				if (string.IsNullOrEmpty(part))
+				{
+					continue;
+				}
+
+				string next = current + "/" + part;
+				if (!AssetDatabase.IsValidFolder(next))
+				{
+					AssetDatabase.CreateFolder(current, part);
+				}
+				current = next;
+			}
+
+			return AssetDatabase.IsValidFolder(folderPath);
+		}
+	}
+
 		[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", true)]
 		private static bool AddRacesToSelectedRecipesMenu_Validate()
 		{
@@ -939,6 +1287,108 @@ namespace UMA.Editors
 				}
 			}
 			return textures;
+		}
+
+		private static List<Material> GetSelectedMaterials()
+		{
+			var selected = Selection.GetFiltered(typeof(Material), SelectionMode.Assets);
+			var materials = new List<Material>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var mat = selected[i] as Material;
+				if (mat != null)
+				{
+					materials.Add(mat);
+				}
+			}
+			return materials;
+		}
+
+		private static UMAMaterial.MaterialChannel[] BuildChannelsForMaterial(Material material)
+		{
+			if (material == null)
+			{
+				return new UMAMaterial.MaterialChannel[0];
+			}
+			var shader = material.shader;
+			if (shader == null)
+			{
+				return new UMAMaterial.MaterialChannel[0];
+			}
+
+			var channels = new List<UMAMaterial.MaterialChannel>();
+          var propertyNames = new List<string>();
+			var textureProperties = material.GetTexturePropertyNames();
+			if (textureProperties != null && textureProperties.Length > 0)
+			{
+				for (int i = 0; i < textureProperties.Length; i++)
+				{
+					if (!string.IsNullOrEmpty(textureProperties[i]))
+					{
+						propertyNames.Add(textureProperties[i]);
+					}
+				}
+			}
+			else
+			{
+				int count = shader.GetPropertyCount();
+				for (int i = 0; i < count; i++)
+				{
+					if (shader.GetPropertyType(i) != ShaderPropertyType.Texture)
+					{
+						continue;
+					}
+					string propName = shader.GetPropertyName(i);
+					if (!string.IsNullOrEmpty(propName))
+					{
+						propertyNames.Add(propName);
+					}
+				}
+			}
+
+			var seen = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < propertyNames.Count; i++)
+			{
+				string propName = propertyNames[i];
+				if (string.IsNullOrEmpty(propName))
+				{
+					continue;
+				}
+				if (propName.StartsWith("unity", System.StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+				if (seen.Contains(propName))
+				{
+					continue;
+				}
+				seen.Add(propName);
+				if (!material.HasProperty(propName))
+				{
+					continue;
+				}
+
+				UMAMaterial.ChannelType channelType = UMAMaterial.ChannelType.Texture;
+				if (propName.IndexOf("normal", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+					propName.IndexOf("bump", System.StringComparison.OrdinalIgnoreCase) >= 0)
+				{
+					channelType = UMAMaterial.ChannelType.NormalMap;
+				}
+
+				var channel = new UMAMaterial.MaterialChannel();
+				channel.channelType = channelType;
+				channel.textureFormat = RenderTextureFormat.ARGB32;
+				channel.materialPropertyName = propName;
+				channel.sourceTextureName = propName;
+				channel.Compression = UMAMaterial.CompressionSettings.None;
+				channel.DownSample = 1;
+				channel.ConvertRenderTexture = false;
+				channel.NonShaderTexture = false;
+
+				channels.Add(channel);
+			}
+
+			return channels.ToArray();
 		}
 
 		internal class UmaConvertTexturesToPngWindow : EditorWindow
@@ -1458,8 +1908,11 @@ namespace UMA.Editors
 		private string _textureFolderPath;
 		private bool _includeSubfolders;
 		private bool _skipWhenSameAsset = true;
+     private UMAMaterial _utilitiesTargetMaterial;
 		private static readonly GUIContent _completeLabel = new GUIContent("Complete");
-		private static readonly GUIContent _incompleteLabel = new GUIContent("Incomplete");
+		private static readonly GUIContent _missingTexturesLabel = new GUIContent("missing textures");
+		private static readonly GUIContent _missingTexturesAndOvlLabel = new GUIContent("missing textures and UMAT");
+		private static readonly GUIContent _missingOvlLabel = new GUIContent("missing UMAMaterial");
 		private enum OverlayFilter { All, Complete, Incomplete }
 		private OverlayFilter _filter = OverlayFilter.All;
 
@@ -1519,7 +1972,7 @@ namespace UMA.Editors
 				{
 					continue;
 				}
-				bool isComplete = IsComplete(overlay);
+              bool isComplete = GetOverlayStatus(overlay) == OverlayStatus.Complete;
 				switch (_filter)
 				{
 					case OverlayFilter.Complete:
@@ -1568,6 +2021,7 @@ namespace UMA.Editors
 
 			RebuildFilteredOverlays(_selectedOverlay);
 
+            DrawUtilitiesPanel();
           DrawRelinkPanel();
 
 			EditorGUILayout.BeginHorizontal();
@@ -1575,6 +2029,104 @@ namespace UMA.Editors
 			GUILayout.Space(10);
 			DrawOverlayDetails();
 			EditorGUILayout.EndHorizontal();
+		}
+
+		private void DrawUtilitiesPanel()
+		{
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			EditorGUILayout.LabelField("Utilities", EditorStyles.boldLabel);
+			EditorGUILayout.BeginHorizontal();
+			_utilitiesTargetMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", _utilitiesTargetMaterial, typeof(UMAMaterial), false);
+			using (new EditorGUI.DisabledScope(_utilitiesTargetMaterial == null || _overlays.Count == 0))
+			{
+				if (GUILayout.Button("Assign UMAMaterial to selected", GUILayout.Width(220), GUILayout.Height(22)))
+				{
+					AssignMaterialToSelectedOverlays();
+				}
+               if (GUILayout.Button("Assign UMAMaterial to ALL", GUILayout.Width(200), GUILayout.Height(22)))
+				{
+					AssignMaterialToAllOverlaysInList();
+				}
+			}
+			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.Space(6);
+		}
+
+		private void AssignMaterialToSelectedOverlays()
+		{
+			if (_utilitiesTargetMaterial == null)
+			{
+				EditorUtility.DisplayDialog("Assign UMAMaterial", "Select a UMAMaterial.", "OK");
+				return;
+			}
+
+			int updated = 0;
+			for (int i = 0; i < _overlays.Count; i++)
+			{
+				var overlay = _overlays[i];
+				if (overlay == null)
+				{
+					continue;
+				}
+
+				if (overlay.material == _utilitiesTargetMaterial)
+				{
+					continue;
+				}
+
+				Undo.RecordObject(overlay, "Assign Overlay UMAMaterial");
+				overlay.material = _utilitiesTargetMaterial;
+				overlay.materialName = _utilitiesTargetMaterial.name;
+				EditorUtility.SetDirty(overlay);
+				updated++;
+			}
+
+			if (updated > 0)
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog("Assign UMAMaterial", "Updated overlays: " + updated, "OK");
+		}
+
+		private void AssignMaterialToAllOverlaysInList()
+		{
+			if (_utilitiesTargetMaterial == null)
+			{
+				EditorUtility.DisplayDialog("Assign UMAMaterial", "Select a UMAMaterial.", "OK");
+				return;
+			}
+
+			int updated = 0;
+			for (int i = 0; i < _filteredOverlays.Count; i++)
+			{
+				var overlay = _filteredOverlays[i];
+				if (overlay == null)
+				{
+					continue;
+				}
+
+				if (overlay.material == _utilitiesTargetMaterial)
+				{
+					continue;
+				}
+
+				Undo.RecordObject(overlay, "Assign Overlay UMAMaterial");
+				overlay.material = _utilitiesTargetMaterial;
+				overlay.materialName = _utilitiesTargetMaterial.name;
+				EditorUtility.SetDirty(overlay);
+				updated++;
+			}
+
+			if (updated > 0)
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog("Assign UMAMaterial", "Updated overlays in list: " + updated, "OK");
 		}
 
 		private void DrawRelinkPanel()
@@ -1845,7 +2397,7 @@ namespace UMA.Editors
 					_selectedOverlay = overlay;
 					GUI.FocusControl(null);
 				}
-				GUILayout.Label(IsComplete(overlay) ? _completeLabel : _incompleteLabel, GUILayout.Width(78));
+              GUILayout.Label(GetOverlayStatusLabel(overlay), GUILayout.Width(170));
 				EditorGUILayout.EndHorizontal();
 			}
 			EditorGUILayout.EndScrollView();
@@ -1923,25 +2475,68 @@ namespace UMA.Editors
 			EditorGUILayout.EndVertical();
 		}
 
-		private static bool IsComplete(UMA.OverlayDataAsset overlay)
+        private enum OverlayStatus
+		{
+			Complete = 0,
+			MissingTextures = 1,
+			MissingTexturesAndOvl = 2,
+			MissingOvl = 3
+		}
+
+		private static OverlayStatus GetOverlayStatus(UMA.OverlayDataAsset overlay)
 		{
 			if (overlay == null)
 			{
-				return false;
+               return OverlayStatus.MissingTexturesAndOvl;
 			}
+
+			bool missingOvl = overlay.material == null;
+			bool missingTextures = false;
 			var list = overlay.textureList;
 			if (list == null || list.Length == 0)
 			{
-				return false;
+               missingTextures = true;
 			}
-			for (int i = 0; i < list.Length; i++)
+           else
 			{
-				if (list[i] == null)
+                for (int i = 0; i < list.Length; i++)
 				{
-					return false;
+                   if (list[i] == null)
+					{
+						missingTextures = true;
+						break;
+					}
 				}
 			}
-			return true;
+
+			if (missingTextures && missingOvl)
+			{
+				return OverlayStatus.MissingTexturesAndOvl;
+			}
+			if (missingTextures)
+			{
+				return OverlayStatus.MissingTextures;
+			}
+			if (missingOvl)
+			{
+				return OverlayStatus.MissingOvl;
+			}
+			return OverlayStatus.Complete;
+		}
+
+		private static GUIContent GetOverlayStatusLabel(UMA.OverlayDataAsset overlay)
+		{
+			switch (GetOverlayStatus(overlay))
+			{
+				case OverlayStatus.MissingTextures:
+					return _missingTexturesLabel;
+				case OverlayStatus.MissingTexturesAndOvl:
+					return _missingTexturesAndOvlLabel;
+				case OverlayStatus.MissingOvl:
+					return _missingOvlLabel;
+				default:
+					return _completeLabel;
+			}
 		}
 
 
@@ -1959,6 +2554,10 @@ namespace UMA.Editors
 
 		private UMAMaterial _targetMaterial;
 		private string _matchText = "";
+      private UMA.OverlayDataAsset _overlayToAdd;
+		private bool _useSharedColorForAddedOverlay;
+		private string _sharedColorName = "NewSharedColor";
+		private int _sharedColorChannelCount = 3;
 		private enum MatchMode
 		{
 			Contains = 0,
@@ -2133,8 +2732,122 @@ namespace UMA.Editors
 				}
 			}
 			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.Space(8);
+			EditorGUILayout.LabelField("Add Overlay To First Slot", EditorStyles.boldLabel);
+			_overlayToAdd = (UMA.OverlayDataAsset)EditorGUILayout.ObjectField("OverlayDataAsset", _overlayToAdd, typeof(UMA.OverlayDataAsset), false);
+			_useSharedColorForAddedOverlay = EditorGUILayout.ToggleLeft("Use Shared Color", _useSharedColorForAddedOverlay);
+			using (new EditorGUI.DisabledScope(!_useSharedColorForAddedOverlay))
+			{
+				_sharedColorName = EditorGUILayout.TextField("Shared Color Name", _sharedColorName);
+				_sharedColorChannelCount = EditorGUILayout.IntField("Shared Color Channels", _sharedColorChannelCount);
+			}
+
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			using (new EditorGUI.DisabledScope(_overlayToAdd == null || !HasAnyRecipeChecked() || (_useSharedColorForAddedOverlay && (string.IsNullOrEmpty(_sharedColorName) || _sharedColorChannelCount < 1))))
+			{
+				if (GUILayout.Button("Add overlay to first slot", GUILayout.Width(200), GUILayout.Height(24)))
+				{
+					AddOverlayToFirstSlot();
+				}
+			}
+			EditorGUILayout.EndHorizontal();
+
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.Space(6);
+		}
+
+		private void AddOverlayToFirstSlot()
+		{
+			if (_overlayToAdd == null)
+			{
+				EditorUtility.DisplayDialog("Add Overlay", "Select an OverlayDataAsset.", "OK");
+				return;
+			}
+
+			if (_useSharedColorForAddedOverlay)
+			{
+				if (string.IsNullOrEmpty(_sharedColorName))
+				{
+					EditorUtility.DisplayDialog("Add Overlay", "Enter a Shared Color Name.", "OK");
+					return;
+				}
+				if (_sharedColorChannelCount < 1)
+				{
+					EditorUtility.DisplayDialog("Add Overlay", "Shared Color Channels must be at least 1.", "OK");
+					return;
+				}
+			}
+
+			int updated = 0;
+			int skippedNoSlot = 0;
+			for (int i = 0; i < _recipes.Count; i++)
+			{
+				if (i >= _recipeSelected.Length || !_recipeSelected[i])
+				{
+					continue;
+				}
+
+				var recipe = _recipes[i];
+				if (recipe == null)
+				{
+					continue;
+				}
+
+				var umaRecipe = new UMA.UMAData.UMARecipe();
+				recipe.Load(umaRecipe, true);
+				var firstSlot = umaRecipe.GetFirstSlot();
+				if (firstSlot == null)
+				{
+					skippedNoSlot++;
+					continue;
+				}
+
+				Undo.RecordObject(recipe, "Add overlay to first slot");
+				var overlayData = new UMA.OverlayData(_overlayToAdd);
+				if (_useSharedColorForAddedOverlay)
+				{
+					var sharedColor = GetOrCreateSharedColor(umaRecipe, _sharedColorName, _sharedColorChannelCount);
+					overlayData.colorData = sharedColor;
+				}
+				firstSlot.AddOverlay(overlayData);
+				recipe.Save(umaRecipe);
+				EditorUtility.SetDirty(recipe);
+				updated++;
+			}
+
+			if (updated > 0)
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog("Add Overlay", "Updated recipe(s): " + updated + "\nSkipped (no slot): " + skippedNoSlot, "OK");
+		}
+
+		private static UMA.OverlayColorData GetOrCreateSharedColor(UMA.UMAData.UMARecipe umaRecipe, string sharedColorName, int channels)
+		{
+			if (umaRecipe.sharedColors == null)
+			{
+				umaRecipe.sharedColors = new UMA.OverlayColorData[0];
+			}
+
+			for (int i = 0; i < umaRecipe.sharedColors.Length; i++)
+			{
+				var existing = umaRecipe.sharedColors[i];
+				if (existing != null && string.Equals(existing.name, sharedColorName, System.StringComparison.Ordinal))
+				{
+					return existing;
+				}
+			}
+
+			int insertIndex = umaRecipe.sharedColors.Length;
+			System.Array.Resize(ref umaRecipe.sharedColors, insertIndex + 1);
+			var created = new UMA.OverlayColorData(channels);
+			created.name = sharedColorName;
+			umaRecipe.sharedColors[insertIndex] = created;
+			return created;
 		}
 
 		private bool DoesOverlayMatch(UMA.OverlayDataAsset overlayAsset)

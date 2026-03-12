@@ -295,6 +295,27 @@ namespace UMA.Editors
             {
                 Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
             }
+            EditorGUILayout.HelpBox("Exports this SlotDataAsset to glTF 2.0 (.glb) with mesh, UVs, and skinning data. This is a minimal export (no materials or textures).", MessageType.Info);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Export glTF (.glb)", GUILayout.Width(140)))
+            {
+                var slotDataAsset = target as SlotDataAsset;
+                if (slotDataAsset != null)
+                {
+                    string defaultName = slotDataAsset.slotName;
+                    if (string.IsNullOrEmpty(defaultName))
+                    {
+                        defaultName = slotDataAsset.name;
+                    }
+                    string path = EditorUtility.SaveFilePanelInProject("Export Slot glTF", defaultName + ".glb", "glb", "Export SlotDataAsset mesh to glTF 2.0 (.glb)");
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        SlotDataAssetGltfExporter.ExportSlotToGlb(slotDataAsset, path);
+                        AssetDatabase.Refresh();
+                    }
+                }
+            }
+            GUILayout.EndHorizontal();
 
             // Slot Group
             var slotGroupProp = serializedObject.FindProperty("slotGroup");

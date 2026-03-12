@@ -25,3 +25,5 @@
 - For SlotDataAsset strict validation: slots with meshData == null should be considered valid only when isUtilitySlot == true. Additionally, `submeshes`/`subMeshIndex` on `SlotDataAsset` are only valid for legacy (UMA 2) slots; new slots always use submesh 0.
 - `DynamicCharacterAvatar` derives from `UMAData`, allowing valid casting from `UMAData` to `DynamicCharacterAvatar` when the instance is a DCA.
 - In this repo, SRP cross compatible shaders are "UMA/Diffuse_Alpha" for alpha blending (set `_Color`, case sensitive) and "UMA/Diffuse" for opaque.
+- Map normal map textures to `UMAMaterial.ChannelType.NormalMap`; map all other texture channels to `UMAMaterial.ChannelType.Texture` in `UMAMaterial` creation.
+- When creating UMAMaterial channels from shader texture properties, skip any texture properties whose names start with "unity".

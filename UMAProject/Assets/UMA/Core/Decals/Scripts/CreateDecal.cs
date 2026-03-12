@@ -74,13 +74,15 @@ namespace UMA.Decals
         [Tooltip("Expand stamped triangles in UV space (pixels) to reduce seams in RT decals.")]
         public float DecalRTUVExpandPixels = 0.75f;
 
-        [Header("Debug Selection")]
+		[Header("Debug Selection")]
         [Tooltip("Enable triangle debug mode for the last created decal.")]
         public bool EnableTriangleDebug = false;
 
         [Header("Animation")]
         [Tooltip("Pause the Animator(s) on the selected avatar while working.")]
         public bool PauseAvatarAnimation = false;
+
+		
 
 		[Header("Debug Visualization")]
 		[Tooltip("Prefab used to visualize decal placement points.")]
@@ -1444,10 +1446,10 @@ namespace UMA.Decals
 
 						// Clone the last stamp (runtime instance) so we can add to the stamp slot set
 						var clone = ScriptableObject.CreateInstance<DecalRTStampAsset>();
-						clone.overlayName = last.overlayName;
-						clone.overlayNameHash = last.overlayNameHash;
+					clone.overlayGroup = last.overlayGroup;
 						clone.bleedPixels = last.bleedPixels;
 						clone.forceLinearSampling = last.forceLinearSampling;
+                       clone.invertY = last.invertY;
 						CurrentStamp = clone;
 						clone.slots = new List<DecalRTStampAsset.SlotStamp>(last.slots.Count);
 						for(int i = 0; i < last.slots.Count; i++) {
@@ -1468,7 +1470,8 @@ namespace UMA.Decals
 								triOrdinals = s.triOrdinals != null ? (int[])s.triOrdinals.Clone() : null,
 								slotRelativeTriangles = s.slotRelativeTriangles != null ? (int[])s.slotRelativeTriangles.Clone() : null,
 #endif
-								recordedUVArea = s.recordedUVArea // <-- copy this too
+                          recordedUVArea = s.recordedUVArea,
+							debugDontUse = s.debugDontUse
 							};
 							clone.slots.Add(ns);
 						}
@@ -1477,7 +1480,7 @@ namespace UMA.Decals
                         // Persist as an asset so Inspector does not show 'Type Mismatch' for transient SOs
                         try
                         {
-                            clone.name = $"Stamp_{(string.IsNullOrEmpty(clone.overlayName) ? "Overlay" : clone.overlayName)}";
+                          clone.name = $"Stamp_{(string.IsNullOrEmpty(clone.overlayGroup) ? "OverlayGroup" : clone.overlayGroup)}";
                             var folder = "Assets/UMA/GeneratedDecalStamps";
                             if (!System.IO.Directory.Exists(folder))
                             {
@@ -1493,76 +1496,7 @@ namespace UMA.Decals
 #endif
 						// CreateDebugSphere();
 
-						// Find or create an overlay stamp set that will be triggered by base overlays on affected slots (not the decal overlay itself)
-						DecalRTStampSlot.OverlayStampSet targetSet = null;
-						if(StampField.overlayStamps != null) {
-							// Prefer a dedicated auto set if present
-							for(int i = 0; i < StampField.overlayStamps.Count; i++) {
-								var set = StampField.overlayStamps[i];
-								if(set != null && string.Equals(set.name, "AutoRTDecals", System.StringComparison.Ordinal)) {
-									targetSet = set;
-									break;
-								}
-							}
-						}
-						if(targetSet == null) {
-							targetSet = new DecalRTStampSlot.OverlayStampSet {
-								name = "AutoRTDecals",
-								overlays = new List<OverlayDataAsset>(),
-								overlayNames = new List<string>()
-							};
-							StampField.overlayStamps.Add(targetSet);
-						}
-
-						// Ensure trigger overlay names include the overlays currently used on the affected slots
-						var triggerNames = new HashSet<string>(System.StringComparer.Ordinal);
-						for(int si = 0; si < clone.slots.Count; si++) {
-							var ss = clone.slots[si];
-							if(ss == null)
-								continue;
-							var runtimeSlot = Avatar.umaData?.umaRecipe?.GetSlot(ss.slotName);
-							if(runtimeSlot == null)
-								continue;
-							var overlays = runtimeSlot.GetOverlayList();
-							if(overlays == null)
-								continue;
-							for(int oi = 0; oi < overlays.Count; oi++) {
-								var od = overlays[oi];
-								if(od == null)
-									continue;
-								var oname = od.overlayName;
-								if(!string.IsNullOrEmpty(oname))
-									triggerNames.Add(oname);
-							}
-						}
-						bool noOverlayRefs = targetSet.overlays == null || targetSet.overlays.Count == 0;
-						bool noOverlayNames = targetSet.overlayNames == null || targetSet.overlayNames.Count == 0;
-						bool setHasNoTriggers = noOverlayRefs && noOverlayNames;
-						// Merge into set.overlayNames
-						if(targetSet.overlayNames == null)
-							targetSet.overlayNames = new List<string>();
-						foreach(var n in triggerNames) {
-							bool exists = false;
-							for(int j = 0; j < targetSet.overlayNames.Count; j++) {
-								if(string.Equals(targetSet.overlayNames[j], n, System.StringComparison.Ordinal)) {
-									exists = true;
-									break;
-								}
-							}
-							if(AutoAddOverlays || setHasNoTriggers) {
-								if(!exists)
-									targetSet.overlayNames.Add(n);
-							}
-						}
-
-						// Append the new stamp to the set
-						var list = new List<DecalRTStampAsset>();
-						if(targetSet.stamps != null && targetSet.stamps.Length > 0) {
-							list.AddRange(targetSet.stamps);
-						}
-
-						list.Add(clone);
-						targetSet.stamps = list.ToArray();
+                     StampField.AddStampToSet(clone);
 
 						// Ensure the slot is subscribed to atlas updates (use its public entrypoint)
 						if(Avatar.umaData != null) {
@@ -1764,7 +1698,6 @@ private void CreateDebugSphere()
 			{
 				var ss = stamp.slots[i];
 				if (ss == null || ss.debugDontUse) continue;
-				if (string.IsNullOrEmpty(ss.slotName)) continue;
 				if (ss.triangles == null || ss.triangles.Length == 0) continue;
 				ssChosen = ss;
 				break;
@@ -1775,7 +1708,18 @@ private void CreateDebugSphere()
 			}
 
 			// Determine which renderer to visualize by using the SlotData's assigned SkinnedMeshRenderer index.
-			var chosenSlot = umaData.umaRecipe != null ? umaData.umaRecipe.GetSlot(ssChosen.slotName) : null;
+           SlotData chosenSlot = null;
+			if (umaData.umaRecipe != null)
+			{
+				if (!string.IsNullOrEmpty(ssChosen.slotName))
+				{
+					chosenSlot = umaData.umaRecipe.GetSlot(ssChosen.slotName);
+				}
+				if (chosenSlot == null && !string.IsNullOrEmpty(ssChosen.slotGroup))
+				{
+					chosenSlot = umaData.umaRecipe.GetSlotBySlotGroup(ssChosen.slotGroup);
+				}
+			}
 			if (chosenSlot == null)
 			{
 				return false;

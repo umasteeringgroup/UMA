@@ -400,8 +400,12 @@ namespace UMA {
 
 				// Prepare Stamp Asset cache
 				var stampAsset = ScriptableObject.CreateInstance<DecalRTStampAsset>();
-				stampAsset.overlayName = overlay.overlayName; // use overlay.overlayName for restore
-				stampAsset.overlayNameHash = UMAUtils.StringToHash(stampAsset.overlayName);
+				stampAsset.overlayGroup = overlay != null ? overlay.overlayGroup : null;
+				if (string.IsNullOrEmpty(stampAsset.overlayGroup))
+				{
+					LogWarn("DecalRenderTexture: Stamping overlay with empty overlayGroup. RT stamps now replay only by overlayGroup; this stamp will not be reapplied unless you set OverlayDataAsset.overlayGroup on the source overlay.");
+				}
+
 				stampAsset.bleedPixels = options.bleedPixels;
 				stampAsset.forceLinearSampling = options.forceLinearSampling;
 				stampAsset.slots.Clear();
@@ -509,8 +513,8 @@ namespace UMA {
 				else
 					UnityEngine.Object.DestroyImmediate(stampMat);
 				 
-				if(options.enableDebug) {
-					LogInfo($"DecalRenderTexture: Stamped overlay '{overlay.overlayName}' on {stampAsset.slots.Count} target(s). UVRect clipping per slot.");
+               if(options.enableDebug) {
+					LogInfo($"DecalRenderTexture: Stamped overlay group '{stampAsset.overlayGroup}' on {stampAsset.slots.Count} target(s). UVRect clipping per slot.");
 				}
 
 				result.success = stampAsset.slots.Count > 0;
@@ -546,7 +550,7 @@ namespace UMA {
 		{
 			string materialPropertyName = parms.materialPropertyName;
 			RenderTexture targetTexture = parms.renderTexture;
-			int srcOverlayNameHash      = parms.overlayData.asset.nameHash;
+         string srcOverlayGroup      = parms.overlayData.asset != null ? parms.overlayData.asset.overlayGroup : null;
 
             if (avatar == null || umaData == null || stamp == null || string.IsNullOrEmpty(materialPropertyName) || targetTexture == null) 
 			{
@@ -565,36 +569,39 @@ namespace UMA {
 				return false;
 			}
 			try {
-				// Note: we cannot early-out by comparing the stamp's source overlay to the atlas-update overlay
-				// because stamps are re-applied during atlas updates triggered by other overlays on the slot.
+                // Match by overlay group. A stamp should only apply when the triggering overlay is in the same group
+				// as the overlay that was originally stamped.
+				if (!string.IsNullOrEmpty(stamp.overlayGroup))
+				{
+					if (string.IsNullOrEmpty(srcOverlayGroup) ||
+						!string.Equals(stamp.overlayGroup, srcOverlayGroup, StringComparison.Ordinal))
+					{
+						return false;
+					}
+				}
+				else
+				{
+					// No group on the stamp means it can't be safely matched.
+					return false;
+				}
+
 				bool flip = NeedsRenderTargetYFlip();
 
                 LogInfo($"ApplySlotStamps: Begin for property '{materialPropertyName}'. ColorSpace={QualitySettings.activeColorSpace}");
 				//LogTextureInfo("ApplySlotStamps target RT", targetTexture);
 				//Debug.Log("ApplySlotStamps: Begin for property '" + materialPropertyName + "'.");
                 // Resolve overlay
-                OverlayDataAsset overlay = null;
-				try { overlay = UMAAssetIndexer.Instance.GetAsset<OverlayDataAsset>(stamp.overlayName); } catch { }
-				if(overlay == null)
-				{
-					LogDebugSkip($"ApplySlotStamps: overlay not found for overlayName='{stamp.overlayName}'");
-					return false;
-				}
+                OverlayDataAsset overlay = parms.overlayData.asset;
 
 				overlay.EnsureMaterial();
-				if(overlay.material == null)
+				if (overlay.material == null || overlay.material.channels == null)
 				{
-					LogDebugSkip($"ApplySlotStamps: overlay '{overlay.name}' has no UMAMaterial");
+					LogWarn("ApplySlotStamps: Overlay material or material channels are missing.");
 					return false;
 				}
-				if(overlay.textureList == null)
+				if (overlay.textureList == null || overlay.textureList.Length == 0)
 				{
-					LogDebugSkip($"ApplySlotStamps: overlay '{overlay.name}' textureList is null");
-					return false;
-				}
-				if(overlay.textureList.Length == 0)
-				{
-					LogDebugSkip($"ApplySlotStamps: overlay '{overlay.name}' textureList is empty");
+					LogWarn("ApplySlotStamps: Overlay texture list is empty.");
 					return false;
 				}
 
@@ -646,7 +653,7 @@ namespace UMA {
 							continue;
 						if (slotStamp.debugDontUse)
 							continue;
-                      SlotData slot = null;
+						SlotData slot = null;
 						if (!string.IsNullOrEmpty(slotStamp.slotName))
 						{
 							slot = umaData.umaRecipe.GetSlot(slotStamp.slotName);
@@ -675,7 +682,10 @@ namespace UMA {
                         if (slot == null || slot.asset == null)
 							continue;
 
-						if (!slot.hasOverlay(srcOverlayNameHash))
+                       // The stamp set itself is already gated by overlayGroup above; we still require the
+						// triggering overlay asset to exist on the slot to avoid applying a group-match stamp
+						// to unrelated slots.
+						if (!slot.hasOverlay(parms.overlayData.asset.nameHash))
 							continue;
 
 						int vcount = (slotStamp.normBaseUV != null) ? slotStamp.normBaseUV.Length : 0;
@@ -730,16 +740,6 @@ namespace UMA {
 							colList.Add(new Color32(255, 255, 255, 255));
 							vertsList.Add(new Vector3(globalUV.x * 2f - 1f, globalUV.y * 2f - 1f, 0f));
 						}
-
-						// Build mesh for optional debug/consistency (not strictly required for DrawMeshNow)
-						var mesh = new Mesh { name = $"DecalRT_ApplyStampAsset_{slotStamp.slotName}" };
-						mesh.indexFormat = (vcount > 65535) ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
-						mesh.SetVertices(vertsList);
-						mesh.SetTriangles(slotStamp.triangles, 0);
-						mesh.SetUVs(0, uv0List);
-						mesh.SetUVs(1, uv1List);
-						mesh.SetColors(colList);
-						mesh.RecalculateBounds();
 
 						//Debug.Log("ApplySlotStamps: UV Area for slot = " + slot.UVArea);
                         var uvRect = hasRuntime ? slot.UVArea : new Rect(0f, 0f, 1f, 1f);
@@ -1302,7 +1302,7 @@ namespace UMA {
 			return mesh;
 		}
 
-		public static void SaveStampTexturePNG(Texture srcTex, DecalRTStampAsset stamp, String overlayName, int frame, String suffix)
+       public static void SaveStampTexturePNG(Texture srcTex, DecalRTStampAsset stamp, String overlayLabel, int frame, String suffix)
 		{
 			if (srcTex == null)
 			{
@@ -1316,6 +1316,7 @@ namespace UMA {
 			}
 			string FileNameSafe(string s)
 			{
+                s ??= "Overlay";
 				foreach (var c in Path.GetInvalidFileNameChars()) s = s.Replace(c, '_');
 				return s;
             }
@@ -1323,7 +1324,7 @@ namespace UMA {
 			string fullPath = null;
 
             int seq = System.Threading.Interlocked.Increment(ref _snapshotSequence);
-            string baseName = $"{seq:0000}-{FileNameSafe(overlayName)}_frame{frame}_{suffix}.png";
+          string baseName = $"{seq:0000}-{FileNameSafe(overlayLabel)}_frame{frame}_{suffix}.png";
 
 #if UNITY_EDITOR
 			try
@@ -1445,7 +1446,7 @@ namespace UMA {
 
         int sequence = 0;
 		// Save RT as PNG next to the stamp asset (Editor); fallback to persistentDataPath at runtime
-		public static void SaveRenderTexturePNG(RenderTexture rt, DecalRTStampAsset stamp, String overlayName, int frame, String suffix) {
+      public static void SaveRenderTexturePNG(RenderTexture rt, DecalRTStampAsset stamp, String overlayLabel, int frame, String suffix) {
 
 			//return; // Disable for now
 
@@ -1455,6 +1456,7 @@ namespace UMA {
 			}
 
 			string FileNameSafe(string s) {
+                s ??= "Overlay";
 				foreach (var c in Path.GetInvalidFileNameChars()) s = s.Replace(c, '_');
 				return s;
 			}
@@ -1485,7 +1487,7 @@ namespace UMA {
 			}
 
 			int seq = System.Threading.Interlocked.Increment(ref _snapshotSequence);
-			string baseName = $"{seq:0000}-{FileNameSafe(overlayName)}_frame{frame}_{suffix}.png";
+          string baseName = $"{seq:0000}-{FileNameSafe(overlayLabel)}_frame{frame}_{suffix}.png";
 
 			string fullPath;
 #if UNITY_EDITOR
