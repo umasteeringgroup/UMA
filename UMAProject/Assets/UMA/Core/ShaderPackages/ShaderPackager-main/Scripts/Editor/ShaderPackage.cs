@@ -18,7 +18,7 @@ namespace UMA.ShaderPackager
             get
             {
 #if UNITY_SERVER
-                    return NamedBuildTarget.Server;
+                    return UnityEditor.Build.NamedBuildTarget.Server;
 #else
                 BuildTarget buildTarget = EditorUserBuildSettings.activeBuildTarget;
                 BuildTargetGroup targetGroup = BuildPipeline.GetBuildTargetGroup(buildTarget);
