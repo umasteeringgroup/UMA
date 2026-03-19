@@ -27,3 +27,4 @@
 - In this repo, SRP cross compatible shaders are "UMA/Diffuse_Alpha" for alpha blending (set `_Color`, case sensitive) and "UMA/Diffuse" for opaque.
 - Map normal map textures to `UMAMaterial.ChannelType.NormalMap`; map all other texture channels to `UMAMaterial.ChannelType.Texture` in `UMAMaterial` creation.
 - When creating UMAMaterial channels from shader texture properties, skip any texture properties whose names start with "unity".
+- For scene asset consolidation tooling, do not process generic 'everything else' dependencies; only copy explicitly allowed asset types (materials, textures, audioclips, models, prefabs, SlotDataAsset, OverlayDataAsset).

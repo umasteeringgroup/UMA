@@ -450,22 +450,22 @@ namespace UMA
         #region Fields
         protected Dictionary<System.Type, System.Type> TypeToLookup = new Dictionary<System.Type, System.Type>()
         {
-        { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
-        { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
-        { (typeof(RaceData)),(typeof(RaceData)) },
-        { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
-        { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
-        { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
-        { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
+        {  (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
+        {   (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
+        {   (typeof(RaceData)),(typeof(RaceData)) },
+        {   (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
+        {   (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
+        {   (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
+        {   (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
         { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
 #if UNITY_EDITOR
         { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
 #endif
-        {  typeof(TextAsset), typeof(TextAsset) },
-        {  typeof(DynamicUMADnaAsset), typeof(DynamicUMADnaAsset) },
-        {  typeof(UMAMaterial), typeof(UMAMaterial) },
-        {  typeof(UMAColorScheme), typeof(UMAColorScheme) },
-        {  typeof(MeshHideAsset), typeof(MeshHideAsset) }
+        {   typeof(TextAsset), typeof(TextAsset) },
+        {   typeof(DynamicUMADnaAsset), typeof(DynamicUMADnaAsset) },
+        {   typeof(UMAMaterial), typeof(UMAMaterial) },
+        {   typeof(UMAColorScheme), typeof(UMAColorScheme) },
+        {   typeof(MeshHideAsset), typeof(MeshHideAsset) }
         };
 
 
@@ -595,7 +595,8 @@ namespace UMA
 				// Ensure `TypeToLookup` knows about it
 				if (!TypeToLookup.ContainsKey(t))
 				{
-					TypeToLookup.Add(t, t);
+                    Debug.Log($"Restoring indexed type: {t.FullName}");
+                    TypeToLookup.Add(t, t);
 				}
 			}
 		}
@@ -1841,10 +1842,12 @@ namespace UMA
             }
             if (!TypeToLookup.ContainsKey(sType))
             {
+                Debug.Log("Adding type: " + sType.ToString());
                 TypeToLookup.Add(sType, sType);
             }
             if (!IndexedTypeNames.Contains(QualifiedName))
             {
+                Debug.Log("Adding indexed type: " + QualifiedName);
                 IndexedTypeNames.Add(QualifiedName);
             }
             BuildStringTypes();
@@ -4771,195 +4774,7 @@ namespace UMA
         }
 #endregion
 
-        #region Serialization
-        /*
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-
-            DebugSerialization("Before Serialize called");
-            UpdateSerializedList();
-
-            // load typeFolders so it can be serialized.
-            typeFolders.Clear();
-            foreach (var kpv in TypeFolderSearch)
-            {
-                TypeFolders tpf = new TypeFolders();
-                tpf.typeName = kpv.Key;
-                tpf.Folders =  kpv.Value.ToArray();
-                typeFolders.Add(tpf);
-            }
-            DebugSerialization("Before Serialize complete");
-        }
-
-    void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            DebugSerialization("After Deserialize called");
-            var st = StartTimer();
-#region typestuff
-            List<System.Type> newTypes = new List<System.Type>()
-            {
-                (typeof(SlotDataAsset)),
-                (typeof(OverlayDataAsset)),
-                (typeof(RaceData)),
-                (typeof(UMATextRecipe)),
-                (typeof(UMAWardrobeRecipe)),
-                (typeof(UMAWardrobeCollection)),
-                (typeof(RuntimeAnimatorController)),
-                (typeof(AnimatorOverrideController)),
-#if UNITY_EDITOR
-                (typeof(AnimatorController)),
-#endif
-                (typeof(DynamicUMADnaAsset)),
-                (typeof(TextAsset)),
-                (typeof(UMAMaterial)),
-                typeof(UMAColorScheme)
-            };
-
-            if (TypeToLookup != null)
-            {
-                if (TypeToLookup.ContainsKey(typeof(SlotDataAsset)) == false)
-                {
-                    TypeToLookup.Add(typeof(SlotDataAsset), typeof(SlotDataAsset));
-                }
-                if (TypeToLookup.ContainsKey(typeof(OverlayDataAsset)) == false)
-                {
-                    TypeToLookup.Add(typeof(OverlayDataAsset), typeof(OverlayDataAsset));
-                }
-                if (TypeToLookup.ContainsKey(typeof(RaceData)) == false)
-                {
-                    TypeToLookup.Add(typeof(RaceData), typeof(RaceData));
-                }
-                if (TypeToLookup.ContainsKey(typeof(UMATextRecipe)) == false)
-                {
-                    TypeToLookup.Add(typeof(UMATextRecipe), typeof(UMATextRecipe));
-                }
-                if (TypeToLookup.ContainsKey(typeof(UMAWardrobeRecipe)) == false)
-                {
-                    TypeToLookup.Add(typeof(UMAWardrobeRecipe), typeof(UMAWardrobeRecipe));
-                }
-                if (TypeToLookup.ContainsKey(typeof(UMAWardrobeCollection)) == false)
-                {
-                    TypeToLookup.Add(typeof(UMAWardrobeCollection), typeof(UMAWardrobeCollection));
-                }
-                if (TypeToLookup.ContainsKey(typeof(RuntimeAnimatorController)) == false)
-                {
-                    TypeToLookup.Add(typeof(RuntimeAnimatorController), typeof(RuntimeAnimatorController));
-                }
-                if (TypeToLookup.ContainsKey(typeof(AnimatorOverrideController)) == false)
-                {
-                    TypeToLookup.Add(typeof(AnimatorOverrideController), typeof(RuntimeAnimatorController));
-                }
-#if UNITY_EDITOR
-                if (TypeToLookup.ContainsKey(typeof(AnimatorController)) == false)
-                {
-                    TypeToLookup.Add(typeof(AnimatorController), typeof(RuntimeAnimatorController));
-                }
-#endif
-                if (TypeToLookup.ContainsKey(typeof(DynamicUMADnaAsset)) == false)
-                {
-                    TypeToLookup.Add(typeof(DynamicUMADnaAsset), typeof(DynamicUMADnaAsset));
-                }
-                if (TypeToLookup.ContainsKey(typeof(TextAsset)) == false)
-                {
-                    TypeToLookup.Add(typeof(TextAsset), typeof(TextAsset));
-                }
-                if (TypeToLookup.ContainsKey(typeof(UMAMaterial)) == false)
-                {
-                    TypeToLookup.Add(typeof(UMAMaterial), typeof(UMAMaterial));
-                }
-                if (TypeToLookup.ContainsKey(typeof(UMAColorScheme)) == false)
-                {
-                    TypeToLookup.Add(typeof(UMAColorScheme), typeof(UMAColorScheme));
-                }
-            }
-            else
-            {
-                TypeToLookup = new Dictionary<System.Type, System.Type>()
-                {
-                    { (typeof(SlotDataAsset)),(typeof(SlotDataAsset)) },
-                    { (typeof(OverlayDataAsset)),(typeof(OverlayDataAsset)) },
-                    { (typeof(RaceData)),(typeof(RaceData)) },
-                    { (typeof(UMATextRecipe)),(typeof(UMATextRecipe)) },
-                    { (typeof(UMAWardrobeRecipe)),(typeof(UMAWardrobeRecipe)) },
-                    { (typeof(UMAWardrobeCollection)),(typeof(UMAWardrobeCollection)) },
-                    { (typeof(RuntimeAnimatorController)),(typeof(RuntimeAnimatorController)) },
-                    { (typeof(AnimatorOverrideController)),(typeof(RuntimeAnimatorController)) },
-#if UNITY_EDITOR
-                    { (typeof(AnimatorController)),(typeof(RuntimeAnimatorController)) },
-#endif
-                    {  typeof(TextAsset), typeof(TextAsset) },
-                    { (typeof(DynamicUMADnaAsset)), (typeof(DynamicUMADnaAsset)) },
-                    { (typeof(UMAMaterial)),(typeof(UMAMaterial)) },
-                    {  typeof(UMAColorScheme), typeof(UMAColorScheme) }
-                };
-            }
-
-            List<string> invalidTypeNames = new List<string>();
-            // Add the additional Types.
-            for (int i = 0; i < IndexedTypeNames.Count; i++)
-            {
-                string s = IndexedTypeNames[i];
-                if (s == "")
-                {
-                    continue;
-                }
-
-                System.Type sType = System.Type.GetType(s);
-                if (sType == null)
-                {
-                    invalidTypeNames.Add(s);
-                    if (Debug.isDebugBuild)
-                    {
-                        Debug.LogWarning("Could not find type for " + s);
-                    }
-
-                    continue;
-                }
-                newTypes.Add(sType);
-                if (!TypeToLookup.ContainsKey(sType))
-                {
-                    TypeToLookup.Add(sType, sType);
-                }
-            }
-
-            Types = newTypes.ToArray();
-
-            if (invalidTypeNames.Count > 0)
-            {
-                for (int i = 0; i < invalidTypeNames.Count; i++)
-                {
-                    string ivs = invalidTypeNames[i];
-                    IndexedTypeNames.Remove(ivs);
-                }
-            }
-            BuildStringTypes();
-
-            // Load TypeFolderSearch
-            TypeFolderSearch.Clear();
-            for (int i = 0; i < typeFolders.Count; i++)
-            {
-                TypeFolders tpf = typeFolders[i];
-                TypeFolderSearch.Add(tpf.typeName, new List<string>(tpf.Folders));
-            }
-            #endregion
-
-            // if the serialized dictionary is empty
-            // and the serialized items are NOT null, then do this
-            if (SerializedItems != null && SerializedItems.Count > 0)
-            {
-                if (TypeLookup == null)
-                {
-                    TypeLookup = new Dictionary<Type, Dictionary<string, AssetItem>>();
-                }
-            }
-
-            // should it call UpdateSerializeDictionaryItems()???
-            // NO IT SHOULD NOT
-            // THIS IS DONE WHERE THE SINGLETON IS CREATED ABOVE
-
-            StopTimer(st, "After Serialize");
-            DebugSerialization("After Deserialize complete");
-        } */
+#region BuildStuff
 
 #if UNITY_EDITOR
         public void PrepareBuild()

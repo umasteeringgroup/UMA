@@ -25,6 +25,7 @@ MonoBehaviour:
   suppressWardrobeSlots: []
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshHideAssetCollections: []
   MeshModifiers: []
   OverrideDNA:
     PreloadValues: []

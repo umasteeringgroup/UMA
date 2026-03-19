@@ -129,7 +129,18 @@ namespace UMA.Editors
             if (_overlayData.asset.material != null)
             {
                 matName = _overlayData.asset.material.name;
-                queue = _overlayData.asset.material.material.renderQueue;
+                if (Overlay.asset.material.material != null)
+                {
+                    queue = _overlayData.asset.material.material.renderQueue;
+                }
+                else
+                {
+                    Debug.LogError($"Error - No material set in Overlay {_overlayData.overlayName} in UMAMaterial {_overlayData.asset.material.name}");
+                }
+            }
+            else
+                {
+                Debug.LogError($"Error - No UMAMaterial set in Overlay {_overlayData.overlayName}");
             }
 
 

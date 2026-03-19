@@ -15,6 +15,10 @@ namespace UMA.Editors
                 return;
             }
 
+            if (sct.colors == null)
+            {
+                sct.colors = new OverlayColorData[0];
+            }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("sharedColorName"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("channelCount"));
             EditorGUILayout.LabelField("Shared Color Table", EditorStyles.boldLabel);

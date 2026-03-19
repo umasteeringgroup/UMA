@@ -51,6 +51,39 @@ namespace UMA.Editors
 			return GetSelectedWardrobeRecipes().Count > 0;
 		}
 
+		[MenuItem("Assets/UMA/Consolidate texture for recipe", false, 2002)]
+		private static void ConsolidateTexturesForTextRecipeMenu()
+		{
+			var selectedRecipes = GetSelectedTextRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Consolidate texture for recipe", "Select one or more UMATextRecipe assets in the Project window.", "OK");
+				return;
+			}
+
+			string defaultFolder = "Assets";
+			string pickedFolder = EditorUtility.OpenFolderPanel("Select destination folder", Application.dataPath, string.Empty);
+			if (string.IsNullOrEmpty(pickedFolder))
+			{
+				return;
+			}
+
+			string destFolderPath = GetAssetFolderPathFromAbsolutePath(pickedFolder);
+			if (string.IsNullOrEmpty(destFolderPath) || !AssetDatabase.IsValidFolder(destFolderPath))
+			{
+				EditorUtility.DisplayDialog("Consolidate texture for recipe", "Select a folder under the project's Assets folder.", "OK");
+				return;
+			}
+
+			CopyOverlayTexturesForRecipes(selectedRecipes, destFolderPath, "Consolidate texture for recipe");
+		}
+
+		[MenuItem("Assets/UMA/Consolidate texture for recipe", true)]
+		private static bool ConsolidateTexturesForTextRecipeMenu_Validate()
+		{
+			return GetSelectedTextRecipes().Count > 0;
+		}
+
 		[MenuItem("UMA/Consolidate Current Scene Assets", false, 2300)]
 		private static void ConsolidateCurrentSceneAssetsMenu()
 		{
@@ -979,7 +1012,7 @@ namespace UMA.Editors
 		private void OnGUI()
 		{
 			EditorGUILayout.LabelField("Consolidate Current Scene Assets", EditorStyles.boldLabel);
-			EditorGUILayout.HelpBox("Moves assets referenced by the current scene into category subfolders under a destination folder.", MessageType.Info);
+         EditorGUILayout.HelpBox("Copies allowed assets referenced by the current scene into category subfolders under a destination folder.", MessageType.Info);
 			EditorGUILayout.Space(6);
 
 			EditorGUILayout.LabelField("Destination Folder (under Assets)", EditorStyles.boldLabel);
@@ -1044,15 +1077,17 @@ namespace UMA.Editors
 			}
 
 			var processed = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
-			var movedByCategory = new Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase)
+          var copiedByCategory = new Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase)
 			{
 				["Textures"] = 0,
 				["Models"] = 0,
 				["Sounds"] = 0,
 				["Materials"] = 0,
-				["Assets"] = 0,
+             ["Prefabs"] = 0,
+				["Slots"] = 0,
+				["Overlays"] = 0,
 			};
-			int moveErrors = 0;
+         int copyErrors = 0;
 
 			try
 			{
@@ -1092,12 +1127,16 @@ namespace UMA.Editors
 						continue;
 					}
 
+                  if (!TryGetAllowedCategoryForAsset(sourcePath, dep, out string category))
+					{
+						continue;
+					}
+
 					processed.Add(sourcePath);
-					string category = GetCategoryForAsset(sourcePath, dep);
 					string categoryPath = _destFolderPath + "/" + category;
 					if (!EnsureFolderPathExists(categoryPath))
 					{
-						moveErrors++;
+                       copyErrors++;
 						continue;
 					}
 
@@ -1113,15 +1152,14 @@ namespace UMA.Editors
 						continue;
 					}
 
-					string uniqueDestPath = AssetDatabase.GenerateUniqueAssetPath(destPath);
-					string error = AssetDatabase.MoveAsset(sourcePath, uniqueDestPath);
-					if (!string.IsNullOrEmpty(error))
+                    string uniqueDestPath = AssetDatabase.GenerateUniqueAssetPath(destPath);
+					if (!AssetDatabase.CopyAsset(sourcePath, uniqueDestPath))
 					{
-						moveErrors++;
+                       copyErrors++;
 						continue;
 					}
 
-					movedByCategory[category] = movedByCategory[category] + 1;
+                  copiedByCategory[category] = copiedByCategory[category] + 1;
 				}
 			}
 			finally
@@ -1133,36 +1171,64 @@ namespace UMA.Editors
 
 			EditorUtility.DisplayDialog(
 				"Consolidate Current Scene Assets",
-				"Moved Textures: " + movedByCategory["Textures"] +
-				"\nMoved Models: " + movedByCategory["Models"] +
-				"\nMoved Sounds: " + movedByCategory["Sounds"] +
-				"\nMoved Materials: " + movedByCategory["Materials"] +
-				"\nMoved Assets: " + movedByCategory["Assets"] +
-				"\nMove errors: " + moveErrors,
+              "Copied Textures: " + copiedByCategory["Textures"] +
+				"\nCopied Models: " + copiedByCategory["Models"] +
+				"\nCopied Sounds: " + copiedByCategory["Sounds"] +
+				"\nCopied Materials: " + copiedByCategory["Materials"] +
+				"\nCopied Prefabs: " + copiedByCategory["Prefabs"] +
+				"\nCopied Slots: " + copiedByCategory["Slots"] +
+				"\nCopied Overlays: " + copiedByCategory["Overlays"] +
+				"\nCopy errors: " + copyErrors,
 				"OK");
 
 			Close();
 		}
 
-		private static string GetCategoryForAsset(string assetPath, UnityEngine.Object asset)
+       private static bool TryGetAllowedCategoryForAsset(string assetPath, UnityEngine.Object asset, out string category)
 		{
+          category = null;
+
+			if (asset is UMA.SlotDataAsset)
+			{
+				category = "Slots";
+				return true;
+			}
+			if (asset is UMA.OverlayDataAsset)
+			{
+				category = "Overlays";
+				return true;
+			}
 			if (asset is Material)
 			{
-				return "Materials";
+             category = "Materials";
+				return true;
 			}
 			if (asset is Texture)
 			{
-				return "Textures";
+              category = "Textures";
+				return true;
 			}
 			if (asset is AudioClip)
 			{
-				return "Sounds";
+                category = "Sounds";
+				return true;
+			}
+
+			if (asset is GameObject)
+			{
+				string gameObjectExt = Path.GetExtension(assetPath);
+				if (!string.IsNullOrEmpty(gameObjectExt) && string.Equals(gameObjectExt, ".prefab", System.StringComparison.OrdinalIgnoreCase))
+				{
+					category = "Prefabs";
+					return true;
+				}
 			}
 
 			var importer = AssetImporter.GetAtPath(assetPath);
 			if (importer is ModelImporter)
 			{
-				return "Models";
+                category = "Models";
+				return true;
 			}
 
 			string ext = Path.GetExtension(assetPath);
@@ -1171,11 +1237,17 @@ namespace UMA.Editors
 				ext = ext.ToLowerInvariant();
 				if (ext == ".fbx" || ext == ".obj" || ext == ".dae" || ext == ".3ds" || ext == ".blend")
 				{
-					return "Models";
+                    category = "Models";
+					return true;
+				}
+				if (ext == ".prefab")
+				{
+					category = "Prefabs";
+					return true;
 				}
 			}
 
-			return "Assets";
+            return false;
 		}
 
 		private static bool EnsureFolderPathExists(string folderPath)
@@ -1242,6 +1314,172 @@ namespace UMA.Editors
 				}
 			}
 			return recipes;
+		}
+
+		private static List<UMATextRecipe> GetSelectedTextRecipes()
+		{
+			var selected = Selection.GetFiltered(typeof(UMATextRecipe), SelectionMode.Assets);
+			var recipes = new List<UMATextRecipe>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var recipe = selected[i] as UMATextRecipe;
+				if (recipe != null)
+				{
+					recipes.Add(recipe);
+				}
+			}
+			return recipes;
+		}
+
+		private static string GetAssetFolderPathFromAbsolutePath(string absoluteFolderPath)
+		{
+			if (string.IsNullOrEmpty(absoluteFolderPath))
+			{
+				return string.Empty;
+			}
+
+			string normalizedAssetsPath = Application.dataPath.Replace('\\', '/');
+			string normalizedFolderPath = absoluteFolderPath.Replace('\\', '/');
+			if (!normalizedFolderPath.StartsWith(normalizedAssetsPath, System.StringComparison.OrdinalIgnoreCase))
+			{
+				return string.Empty;
+			}
+
+			if (string.Equals(normalizedFolderPath, normalizedAssetsPath, System.StringComparison.OrdinalIgnoreCase))
+			{
+				return "Assets";
+			}
+
+			return "Assets" + normalizedFolderPath.Substring(normalizedAssetsPath.Length);
+		}
+
+		private static void CopyOverlayTexturesForRecipes(List<UMATextRecipe> recipes, string destFolderPath, string dialogTitle)
+		{
+			var textures = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+			try
+			{
+				for (int i = 0; i < recipes.Count; i++)
+				{
+					var recipe = recipes[i];
+					if (recipe == null)
+					{
+						continue;
+					}
+
+					EditorUtility.DisplayProgressBar(dialogTitle, "Scanning recipes...", Mathf.Clamp01((float)i / Mathf.Max(1, recipes.Count)));
+					var umaRecipe = new UMA.UMAData.UMARecipe();
+					recipe.Load(umaRecipe, true);
+					if (umaRecipe.slotDataList == null)
+					{
+						continue;
+					}
+
+					for (int s = 0; s < umaRecipe.slotDataList.Length; s++)
+					{
+						var slot = umaRecipe.slotDataList[s];
+						if (slot == null)
+						{
+							continue;
+						}
+
+						for (int o = 0; o < slot.OverlayCount; o++)
+						{
+							var overlay = slot.GetOverlay(o);
+							if (overlay == null || overlay.asset == null)
+							{
+								continue;
+							}
+
+							var overlayAsset = overlay.asset;
+							if (overlayAsset.textureList != null)
+							{
+								for (int t = 0; t < overlayAsset.textureList.Length; t++)
+								{
+									var tex = overlayAsset.textureList[t];
+									if (tex == null)
+									{
+										continue;
+									}
+
+									string srcPath = AssetDatabase.GetAssetPath(tex);
+									if (!string.IsNullOrEmpty(srcPath))
+									{
+										textures.Add(srcPath);
+									}
+								}
+							}
+
+							if (overlayAsset.alphaMask != null)
+							{
+								string alphaPath = AssetDatabase.GetAssetPath(overlayAsset.alphaMask);
+								if (!string.IsNullOrEmpty(alphaPath))
+								{
+									textures.Add(alphaPath);
+								}
+							}
+						}
+					}
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+			}
+
+			if (textures.Count == 0)
+			{
+				EditorUtility.DisplayDialog(dialogTitle, "No textures were found in overlays for the selected recipes.", "OK");
+				return;
+			}
+
+			int copied = 0;
+			int skippedDuplicates = 0;
+			int total = textures.Count;
+			int index = 0;
+			try
+			{
+				foreach (string srcPath in textures)
+				{
+					index++;
+					EditorUtility.DisplayProgressBar(dialogTitle, "Copying textures...", Mathf.Clamp01((float)index / Mathf.Max(1, total)));
+					if (string.IsNullOrEmpty(srcPath))
+					{
+						continue;
+					}
+
+					string fileName = Path.GetFileName(srcPath);
+					if (string.IsNullOrEmpty(fileName))
+					{
+						continue;
+					}
+
+					string destPath = destFolderPath + "/" + fileName;
+					if (string.Equals(srcPath, destPath, System.StringComparison.OrdinalIgnoreCase))
+					{
+						skippedDuplicates++;
+						continue;
+					}
+
+					if (File.Exists(destPath) || AssetDatabase.LoadAssetAtPath<Texture>(destPath) != null)
+					{
+						skippedDuplicates++;
+						continue;
+					}
+
+					if (AssetDatabase.CopyAsset(srcPath, destPath))
+					{
+						copied++;
+					}
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog(dialogTitle, "Copied texture asset(s): " + copied + "\nIgnored duplicates: " + skippedDuplicates + "\nDestination: " + destFolderPath, "OK");
 		}
 
 		private static List<UMA.OverlayDataAsset> GetSelectedOverlays()

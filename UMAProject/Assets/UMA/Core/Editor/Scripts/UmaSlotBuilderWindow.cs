@@ -914,7 +914,40 @@ namespace UMA.Editors
             }
             EditorGUILayout.EndHorizontal();
 
-            int itemCount = _pendingSmrsCompactView ? 5 : 25;
+            int visibleItemCount = 0;
+            if (_pendingSmrs != null)
+            {
+                bool filterActiveForCount = _pendingSmrsFilterEnabled && !string.IsNullOrEmpty(_filterOnlyIncludeMeshesContaining);
+                for (int i = 0; i < _pendingSmrs.Count; i++)
+                {
+                    var e = _pendingSmrs[i];
+                    if (e == null)
+                    {
+                        continue;
+                    }
+
+                    if (filterActiveForCount)
+                    {
+                        string meshName = e.smr != null ? e.smr.name : string.Empty;
+                        if (meshName.IndexOf(_filterOnlyIncludeMeshesContaining, System.StringComparison.InvariantCultureIgnoreCase) < 0)
+                        {
+                            continue;
+                        }
+                    }
+
+                    visibleItemCount++;
+                }
+            }
+
+            int itemCount = 5;
+            if (_pendingSmrsCompactView)
+            {
+                itemCount = 5;
+            }
+            else
+            {
+                itemCount = Mathf.Max(5, visibleItemCount);
+            }
             float rowHeight = EditorGUIUtility.singleLineHeight + 4f;
             float listHeight = itemCount * rowHeight;
 
