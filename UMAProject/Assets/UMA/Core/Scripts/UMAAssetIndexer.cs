@@ -769,8 +769,10 @@ namespace UMA
             {
                 return;
             }
-
-            RebuildUMAS(scene);
+            EditorApplication.delayCall += () =>
+            {
+                RebuildUMAS(scene);
+            };
         }
 
         private static void EditorSceneManager_sceneSaving(UnityEngine.SceneManagement.Scene scene, string path)
@@ -794,6 +796,11 @@ namespace UMA
 
         public static void RebuildUMAS(Scene scene)
         {
+            if (!scene.isLoaded || !scene.IsValid())
+            {
+                return;
+            }
+            Debug.Log("Rebuilding UMAs in scene " + scene.name);
             GameObject[] sceneObjs = scene.GetRootGameObjects();
             for (int i = 0; i < sceneObjs.Length; i++)
             {
@@ -811,9 +818,10 @@ namespace UMA
                     }
                 }
             }
+            Debug.Log("Finished Rebuilding UMAs in scene " + scene.name);
         }
 
-        private static void CleanupUMAS(Scene scene)
+        public static void CleanupUMAS(Scene scene)
         {
             // Cleanup any editor generated UMAS
             GameObject[] sceneObjs = scene.GetRootGameObjects();
@@ -4846,9 +4854,8 @@ namespace UMA
 #endif
         }
 #endif
-#endregion
-        }
-
+        #endregion
+    }
 #if UMA_ADDRESSABLES
 
     /// <summary>
