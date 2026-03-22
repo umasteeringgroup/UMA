@@ -76,6 +76,26 @@ namespace UMA
             }
         }
 
+        private static bool TryGetTextureFormat(RenderTextureFormat renderTextureFormat, out TextureFormat textureFormat)
+        {
+            if (TextureFormats.TryGetValue(renderTextureFormat, out textureFormat))
+            {
+                return true;
+            }
+
+            try
+            {
+                GraphicsFormat graphicsFormat = GraphicsFormatUtility.GetGraphicsFormat(renderTextureFormat, false);
+                textureFormat = GraphicsFormatUtility.GetTextureFormat(graphicsFormat);
+                return true;
+            }
+            catch
+            {
+                textureFormat = TextureFormat.ARGB32;
+                return false;
+            }
+        }
+
         public static RenderTexture ResizeRenderTexture(RenderTexture source, int newWidth, int newHeight, FilterMode filter)
         {
             source.filterMode = filter;
@@ -167,10 +187,15 @@ namespace UMA
                             case UMAMaterial.ChannelType.NormalMap:
                             case UMAMaterial.ChannelType.DetailNormalMap:
                                 {
+                                    RenderTextureFormat channelTextureFormat = UMAMaterial.GetCompatibleChannelTextureFormat(channels[textureChannelNumber].textureFormat);
                                     bool CopyRTtoTex = SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || channels[textureChannelNumber].ConvertRenderTexture);
-                                    if (CopyRTtoTex && !TextureFormats.ContainsKey(channels[textureChannelNumber].textureFormat))
+                                    if (CopyRTtoTex)
                                     {
-                                        CopyRTtoTex = false;
+                                        TextureFormat ignoredTextureFormat;
+                                        if (!TryGetTextureFormat(channelTextureFormat, out ignoredTextureFormat))
+                                        {
+                                            CopyRTtoTex = false;
+                                        }
                                     }
 
                                     textureMerge.Reset();
@@ -203,7 +228,7 @@ namespace UMA
                                     if (CopyRTtoTex)
                                     {
                                         // Temporary RT for drawing; will be released after copy
-                                        destinationTexture = RenderTexture.GetTemporary(ww, hh, 0, channels[textureChannelNumber].textureFormat, RenderTextureReadWrite.Linear);
+                                        destinationTexture = RenderTexture.GetTemporary(ww, hh, 0, channelTextureFormat, RenderTextureReadWrite.Linear);
                                         if (destinationTexture.useMipMap != umaGenerator.convertMipMaps)
                                         {
                                             if (destinationTexture.IsCreated())
@@ -226,14 +251,14 @@ namespace UMA
 
                                         if (prevTex != null &&
                                             prevTex.width == ww && prevTex.height == hh &&
-                                            prevTex.format == channels[textureChannelNumber].textureFormat &&
+                                            prevTex.format == channelTextureFormat &&
                                             prevTex.useMipMap == umaGenerator.convertMipMaps)
                                         {
                                             destinationTexture = prevTex;
                                         }
                                         else
                                         {
-                                            destinationTexture = new RenderTexture(ww, hh, 0, channels[textureChannelNumber].textureFormat, RenderTextureReadWrite.Linear)
+                                            destinationTexture = new RenderTexture(ww, hh, 0, channelTextureFormat, RenderTextureReadWrite.Linear)
                                             {
                                                 useMipMap = umaGenerator.convertMipMaps // && !umaGenerator.convertRenderTexture;
                                             };
@@ -288,10 +313,9 @@ namespace UMA
                                             // Reuse existing Texture2D if possible
                                             Texture2D tempTexture = null;
                                             TextureFormat texFmt;
-                                            if (!TextureFormats.TryGetValue(destinationTexture.format, out texFmt))
+                                            if (!TryGetTextureFormat(destinationTexture.format, out texFmt))
                                             {
-                                                GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(destinationTexture.format, false);
-                                                texFmt = GraphicsFormatUtility.GetTextureFormat(gf);
+                                                texFmt = TextureFormat.ARGB32;
                                             }
 
                                             var prevTex2D = previousResults != null && textureChannelNumber < previousResults.Length

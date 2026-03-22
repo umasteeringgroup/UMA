@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac718b8ce852d1445b8fbe5c323134ac, type: 3}
   m_Name: BeardMaterial
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
-  _material: {fileID: 0}
+  _material: {fileID: 2100000, guid: 04bfbe559998048479a6363a95c988d4, type: 2}
   _secondPass: {fileID: 0}
   materialType: 1
   channels: []

@@ -984,16 +984,33 @@ namespace UMA.Editors
 
 	internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 	{
+       private class ConsolidateCandidate
+		{
+			public string Name;
+			public string Path;
+			public string TypeName;
+			public string Category;
+			public bool Selected = true;
+		}
+
 		private const string DefaultDestinationFolder = "Assets/UMA/UMA3/Examples/ExampleAssets";
+       private const string DefaultSourceFolder = "Assets";
 		private DefaultAsset _destFolder;
 		private string _destFolderPath = DefaultDestinationFolder;
+		private DefaultAsset _sourceFolder;
+		private string _sourceFolderPath = DefaultSourceFolder;
+		private readonly List<ConsolidateCandidate> _candidates = new List<ConsolidateCandidate>();
+		private Vector2 _candidateScroll;
 
 		public static void Open()
 		{
 			var window = GetWindow<UmaConsolidateCurrentSceneAssetsWindow>(true, "Consolidate Current Scene Assets", true);
-			window.minSize = new Vector2(640f, 170f);
+            window.minSize = new Vector2(820f, 420f);
 			window._destFolderPath = DefaultDestinationFolder;
+            window._sourceFolderPath = DefaultSourceFolder;
 			window.TryInitializeDefaultFolder();
+           window.TryInitializeSourceFolder();
+           window.RebuildCandidateList();
 			window.ShowUtility();
 			window.Focus();
 		}
@@ -1007,6 +1024,17 @@ namespace UMA.Editors
 			}
 
 			_destFolder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(_destFolderPath);
+		}
+
+		private void TryInitializeSourceFolder()
+		{
+			if (!AssetDatabase.IsValidFolder(_sourceFolderPath))
+			{
+				_sourceFolder = null;
+				return;
+			}
+
+			_sourceFolder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(_sourceFolderPath);
 		}
 
 		private void OnGUI()
@@ -1026,6 +1054,7 @@ namespace UMA.Editors
 					_destFolder = null;
 					_destFolderPath = DefaultDestinationFolder;
 				}
+               RebuildCandidateList();
 			}
 
 			using (new EditorGUI.DisabledScope(true))
@@ -1033,18 +1062,220 @@ namespace UMA.Editors
 				EditorGUILayout.TextField("Path", _destFolderPath);
 			}
 
+			EditorGUILayout.Space(6);
+			EditorGUILayout.LabelField("Source Folder (under Assets)", EditorStyles.boldLabel);
+			EditorGUI.BeginChangeCheck();
+			_sourceFolder = (DefaultAsset)EditorGUILayout.ObjectField(_sourceFolder, typeof(DefaultAsset), false);
+			if (EditorGUI.EndChangeCheck())
+			{
+				_sourceFolderPath = _sourceFolder != null ? AssetDatabase.GetAssetPath(_sourceFolder) : DefaultSourceFolder;
+				if (!string.IsNullOrEmpty(_sourceFolderPath) && !AssetDatabase.IsValidFolder(_sourceFolderPath))
+				{
+					_sourceFolder = null;
+					_sourceFolderPath = DefaultSourceFolder;
+				}
+               RebuildCandidateList();
+			}
+
+			using (new EditorGUI.DisabledScope(true))
+			{
+				EditorGUILayout.TextField("Source Path", _sourceFolderPath);
+			}
+
+			EditorGUILayout.Space(10);
+          DrawCandidateList();
+
 			EditorGUILayout.Space(10);
 			EditorGUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Continue", GUILayout.Width(120), GUILayout.Height(28)))
+           using (new EditorGUI.DisabledScope(CountSelectedCandidates() == 0))
 			{
-				ContinueConsolidation();
+                if (GUILayout.Button("Consolidate", GUILayout.Width(120), GUILayout.Height(28)))
+				{
+					ContinueConsolidation();
+				}
 			}
 			if (GUILayout.Button("Cancel", GUILayout.Width(120), GUILayout.Height(28)))
 			{
 				Close();
 			}
 			EditorGUILayout.EndHorizontal();
+		}
+
+		private void DrawCandidateList()
+		{
+			EditorGUILayout.LabelField("Items To Consolidate", EditorStyles.boldLabel);
+			EditorGUILayout.BeginHorizontal();
+			if (GUILayout.Button("Select All", GUILayout.Width(100)))
+			{
+				for (int i = 0; i < _candidates.Count; i++)
+				{
+					_candidates[i].Selected = true;
+				}
+			}
+			if (GUILayout.Button("Clear Selection", GUILayout.Width(120)))
+			{
+				for (int i = 0; i < _candidates.Count; i++)
+				{
+					_candidates[i].Selected = false;
+				}
+			}
+			if (GUILayout.Button("Invert Selection", GUILayout.Width(120)))
+			{
+				for (int i = 0; i < _candidates.Count; i++)
+				{
+					_candidates[i].Selected = !_candidates[i].Selected;
+				}
+			}
+			GUILayout.FlexibleSpace();
+			GUILayout.Label("Selected: " + CountSelectedCandidates() + " / " + _candidates.Count, EditorStyles.miniLabel);
+			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.Space(4);
+			EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+			GUILayout.Label("", GUILayout.Width(20));
+			GUILayout.Label("Object Name", EditorStyles.boldLabel, GUILayout.Width(220));
+			GUILayout.Label("Path", EditorStyles.boldLabel, GUILayout.ExpandWidth(true));
+			GUILayout.Label("Type", EditorStyles.boldLabel, GUILayout.Width(120));
+			EditorGUILayout.EndHorizontal();
+
+			float listHeight = Mathf.Max(180f, position.height - 220f);
+			_candidateScroll = EditorGUILayout.BeginScrollView(_candidateScroll, GUILayout.Height(listHeight));
+			if (_candidates.Count == 0)
+			{
+				EditorGUILayout.HelpBox("No allowed scene dependencies were found under the selected source folder.", MessageType.Info);
+			}
+			else
+			{
+				for (int i = 0; i < _candidates.Count; i++)
+				{
+					var candidate = _candidates[i];
+					if (candidate == null)
+					{
+						continue;
+					}
+
+					EditorGUILayout.BeginHorizontal();
+					candidate.Selected = EditorGUILayout.Toggle(candidate.Selected, GUILayout.Width(20));
+					EditorGUILayout.SelectableLabel(candidate.Name ?? string.Empty, GUILayout.Width(220), GUILayout.Height(EditorGUIUtility.singleLineHeight));
+					EditorGUILayout.SelectableLabel(candidate.Path ?? string.Empty, GUILayout.ExpandWidth(true), GUILayout.Height(EditorGUIUtility.singleLineHeight));
+					EditorGUILayout.SelectableLabel(candidate.TypeName ?? string.Empty, GUILayout.Width(120), GUILayout.Height(EditorGUIUtility.singleLineHeight));
+					EditorGUILayout.EndHorizontal();
+				}
+			}
+			EditorGUILayout.EndScrollView();
+		}
+
+		private int CountSelectedCandidates()
+		{
+			int count = 0;
+			for (int i = 0; i < _candidates.Count; i++)
+			{
+				if (_candidates[i] != null && _candidates[i].Selected)
+				{
+					count++;
+				}
+			}
+			return count;
+		}
+
+		private void RebuildCandidateList()
+		{
+			_candidates.Clear();
+			_candidateScroll = Vector2.zero;
+
+			if (string.IsNullOrEmpty(_sourceFolderPath) || !AssetDatabase.IsValidFolder(_sourceFolderPath))
+			{
+				return;
+			}
+
+			var activeScene = SceneManager.GetActiveScene();
+			if (!activeScene.IsValid())
+			{
+				return;
+			}
+
+			var rootObjects = activeScene.GetRootGameObjects();
+			if (rootObjects == null || rootObjects.Length == 0)
+			{
+				return;
+			}
+
+			var dependencies = EditorUtility.CollectDependencies(rootObjects);
+			if (dependencies == null || dependencies.Length == 0)
+			{
+				return;
+			}
+
+			var processed = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < dependencies.Length; i++)
+			{
+				var dep = dependencies[i];
+				if (dep == null)
+				{
+					continue;
+				}
+
+				string sourcePath = AssetDatabase.GetAssetPath(dep);
+				if (!IsCandidatePathAllowed(sourcePath))
+				{
+					continue;
+				}
+				if (processed.Contains(sourcePath))
+				{
+					continue;
+				}
+				if (!TryGetAllowedCategoryForAsset(sourcePath, dep, out string category))
+				{
+					continue;
+				}
+
+				processed.Add(sourcePath);
+				_candidates.Add(new ConsolidateCandidate
+				{
+					Name = dep.name,
+					Path = sourcePath,
+					TypeName = dep.GetType().Name,
+					Category = category,
+					Selected = true
+				});
+			}
+
+			_candidates.Sort((a, b) =>
+			{
+				int pathCompare = string.Compare(a != null ? a.Path : string.Empty, b != null ? b.Path : string.Empty, System.StringComparison.OrdinalIgnoreCase);
+				if (pathCompare != 0)
+				{
+					return pathCompare;
+				}
+				return string.Compare(a != null ? a.Name : string.Empty, b != null ? b.Name : string.Empty, System.StringComparison.OrdinalIgnoreCase);
+			});
+		}
+
+		private bool IsCandidatePathAllowed(string sourcePath)
+		{
+			if (string.IsNullOrEmpty(sourcePath))
+			{
+				return false;
+			}
+			if (!sourcePath.StartsWith("Assets/", System.StringComparison.OrdinalIgnoreCase))
+			{
+				return false;
+			}
+			if (AssetDatabase.IsValidFolder(sourcePath))
+			{
+				return false;
+			}
+			if (sourcePath.EndsWith(".unity", System.StringComparison.OrdinalIgnoreCase))
+			{
+				return false;
+			}
+			if (!sourcePath.StartsWith(_sourceFolderPath + "/", System.StringComparison.OrdinalIgnoreCase) &&
+				!string.Equals(sourcePath, _sourceFolderPath, System.StringComparison.OrdinalIgnoreCase))
+			{
+				return false;
+			}
+			return true;
 		}
 
 		private void ContinueConsolidation()
@@ -1055,29 +1286,24 @@ namespace UMA.Editors
 				return;
 			}
 
-			var activeScene = SceneManager.GetActiveScene();
-			if (!activeScene.IsValid())
+			if (string.IsNullOrEmpty(_sourceFolderPath) || !AssetDatabase.IsValidFolder(_sourceFolderPath))
 			{
-				EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "No valid active scene found.", "OK");
+				EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "Select a valid source folder under Assets.", "OK");
 				return;
 			}
 
-			var rootObjects = activeScene.GetRootGameObjects();
-			if (rootObjects == null || rootObjects.Length == 0)
+			if (_candidates.Count == 0)
 			{
-				EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "The current scene has no root objects.", "OK");
+             EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "No allowed scene dependencies were found.", "OK");
+				return;
+			}
+			if (CountSelectedCandidates() == 0)
+			{
+				EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "Select at least one item to consolidate.", "OK");
 				return;
 			}
 
-			var dependencies = EditorUtility.CollectDependencies(rootObjects);
-			if (dependencies == null || dependencies.Length == 0)
-			{
-				EditorUtility.DisplayDialog("Consolidate Current Scene Assets", "No scene dependencies were found.", "OK");
-				return;
-			}
-
-			var processed = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
-          var copiedByCategory = new Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase)
+         var movedByCategory = new Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase)
 			{
 				["Textures"] = 0,
 				["Models"] = 0,
@@ -1087,34 +1313,21 @@ namespace UMA.Editors
 				["Slots"] = 0,
 				["Overlays"] = 0,
 			};
-         int copyErrors = 0;
+         int moveErrors = 0;
 
 			try
 			{
-				for (int i = 0; i < dependencies.Length; i++)
+               for (int i = 0; i < _candidates.Count; i++)
 				{
-					EditorUtility.DisplayProgressBar("Consolidate Current Scene Assets", "Scanning dependencies...", Mathf.Clamp01((float)i / Mathf.Max(1, dependencies.Length)));
-
-					var dep = dependencies[i];
-					if (dep == null)
+                  EditorUtility.DisplayProgressBar("Consolidate Current Scene Assets", "Moving selected assets...", Mathf.Clamp01((float)(i + 1) / Mathf.Max(1, _candidates.Count)));
+					var candidate = _candidates[i];
+					if (candidate == null || !candidate.Selected)
 					{
 						continue;
 					}
 
-					string sourcePath = AssetDatabase.GetAssetPath(dep);
-					if (string.IsNullOrEmpty(sourcePath))
-					{
-						continue;
-					}
-					if (!sourcePath.StartsWith("Assets/", System.StringComparison.OrdinalIgnoreCase))
-					{
-						continue;
-					}
-					if (AssetDatabase.IsValidFolder(sourcePath))
-					{
-						continue;
-					}
-					if (sourcePath.EndsWith(".unity", System.StringComparison.OrdinalIgnoreCase))
+                    string sourcePath = candidate.Path;
+					if (!IsCandidatePathAllowed(sourcePath))
 					{
 						continue;
 					}
@@ -1122,21 +1335,10 @@ namespace UMA.Editors
 					{
 						continue;
 					}
-					if (processed.Contains(sourcePath))
-					{
-						continue;
-					}
-
-                  if (!TryGetAllowedCategoryForAsset(sourcePath, dep, out string category))
-					{
-						continue;
-					}
-
-					processed.Add(sourcePath);
-					string categoryPath = _destFolderPath + "/" + category;
+                 string categoryPath = _destFolderPath + "/" + candidate.Category;
 					if (!EnsureFolderPathExists(categoryPath))
 					{
-                       copyErrors++;
+                       moveErrors++;
 						continue;
 					}
 
@@ -1153,13 +1355,14 @@ namespace UMA.Editors
 					}
 
                     string uniqueDestPath = AssetDatabase.GenerateUniqueAssetPath(destPath);
-					if (!AssetDatabase.CopyAsset(sourcePath, uniqueDestPath))
+					string moveError = AssetDatabase.MoveAsset(sourcePath, uniqueDestPath);
+					if (!string.IsNullOrEmpty(moveError))
 					{
-                       copyErrors++;
+                       moveErrors++;
 						continue;
 					}
 
-                  copiedByCategory[category] = copiedByCategory[category] + 1;
+                  movedByCategory[candidate.Category] = movedByCategory[candidate.Category] + 1;
 				}
 			}
 			finally
@@ -1171,14 +1374,14 @@ namespace UMA.Editors
 
 			EditorUtility.DisplayDialog(
 				"Consolidate Current Scene Assets",
-              "Copied Textures: " + copiedByCategory["Textures"] +
-				"\nCopied Models: " + copiedByCategory["Models"] +
-				"\nCopied Sounds: " + copiedByCategory["Sounds"] +
-				"\nCopied Materials: " + copiedByCategory["Materials"] +
-				"\nCopied Prefabs: " + copiedByCategory["Prefabs"] +
-				"\nCopied Slots: " + copiedByCategory["Slots"] +
-				"\nCopied Overlays: " + copiedByCategory["Overlays"] +
-				"\nCopy errors: " + copyErrors,
+            "Moved Textures: " + movedByCategory["Textures"] +
+				"\nMoved Models: " + movedByCategory["Models"] +
+				"\nMoved Sounds: " + movedByCategory["Sounds"] +
+				"\nMoved Materials: " + movedByCategory["Materials"] +
+				"\nMoved Prefabs: " + movedByCategory["Prefabs"] +
+				"\nMoved Slots: " + movedByCategory["Slots"] +
+				"\nMoved Overlays: " + movedByCategory["Overlays"] +
+				"\nMove errors: " + moveErrors,
 				"OK");
 
 			Close();

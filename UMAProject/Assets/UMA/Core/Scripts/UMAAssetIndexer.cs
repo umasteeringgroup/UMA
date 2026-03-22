@@ -497,6 +497,26 @@ namespace UMA
         (typeof(UMAColorScheme))
     };
 
+        private static readonly System.Type[] DefaultIndexedTypes =
+        {
+        (typeof(SlotDataAsset)),
+        (typeof(OverlayDataAsset)),
+        (typeof(RaceData)),
+        (typeof(UMATextRecipe)),
+        (typeof(UMAWardrobeRecipe)),
+        (typeof(UMAWardrobeCollection)),
+        (typeof(RuntimeAnimatorController)),
+        (typeof(AnimatorOverrideController)),
+        (typeof(MeshHideAsset)),
+#if UNITY_EDITOR
+        (typeof(AnimatorController)),
+#endif
+        (typeof(DynamicUMADnaAsset)),
+        (typeof(TextAsset)),
+        (typeof(UMAMaterial)),
+        (typeof(UMAColorScheme))
+    };
+
 
         #endregion
         #region Static Fields
@@ -1811,15 +1831,27 @@ namespace UMA
 
         public bool IsAdditionalIndexedType(string QualifiedName)
         {
-            for (int i = 0; i < IndexedTypeNames.Count; i++)
+            if (string.IsNullOrEmpty(QualifiedName))
             {
-                string s = IndexedTypeNames[i];
-                if (s == QualifiedName)
+                return false;
+            }
+
+            for (int i = 0; i < DefaultIndexedTypes.Length; i++)
+            {
+                System.Type defaultType = DefaultIndexedTypes[i];
+                if (defaultType == null)
                 {
-                    return true;
+                    continue;
+                }
+
+                string defaultQualifiedName = defaultType.AssemblyQualifiedName;
+                if (defaultQualifiedName == QualifiedName)
+                {
+                    return false;
                 }
             }
-            return false;
+
+            return true;
         }
         /// <summary>
         /// Add a type to the types tracked

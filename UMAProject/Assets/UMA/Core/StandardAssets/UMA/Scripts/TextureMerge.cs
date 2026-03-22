@@ -87,7 +87,7 @@ namespace UMA
 			// Disabling linear to srgb conversion is not enough. It seems that Unity always does the conversion when reading from a RenderTexture.
 			// As a workaround, we will nead to create a non-linear texture to blit to, so the conversion happens, but it's OK for it to happen.
 			GL.sRGBWrite = false;            
-		    RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+          RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32, rt.format, RenderTextureReadWrite.sRGB);
             outputMap.enableRandomWrite = true;
             outputMap.Create();
             RenderTexture.active = outputMap;

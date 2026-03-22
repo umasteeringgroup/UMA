@@ -33,7 +33,7 @@ MonoBehaviour:
     ConvertRenderTexture: 0
     NonShaderTexture: 0
   - channelType: 0
-    textureFormat: 0
+    textureFormat: 16
     materialPropertyName: _ThicknessMap
     sourceTextureName: 
     Compression: 0
@@ -41,7 +41,7 @@ MonoBehaviour:
     ConvertRenderTexture: 0
     NonShaderTexture: 0
   - channelType: 0
-    textureFormat: 0
+    textureFormat: 16
     materialPropertyName: _OcclusionMap
     sourceTextureName: 
     Compression: 0
@@ -49,7 +49,7 @@ MonoBehaviour:
     ConvertRenderTexture: 0
     NonShaderTexture: 0
   - channelType: 0
-    textureFormat: 0
+    textureFormat: 16
     materialPropertyName: _GlossMap
     sourceTextureName: 
     Compression: 0

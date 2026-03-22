@@ -20,6 +20,8 @@ namespace UMA.Editors
         private static bool showMaterialInspector = false;
         Editor innerEditor = null;
         private bool shaderParmsFoldout = false;
+        private static readonly RenderTextureFormat[] _supportedChannelTextureFormats = UMAMaterial.GetSupportedChannelTextureFormats();
+        private static readonly string[] _supportedChannelTextureFormatNames = BuildSupportedChannelTextureFormatNames();
 
         private List<UnityEngine.Object> _inspectedObjects = new List<UnityEngine.Object>();
 
@@ -380,15 +382,13 @@ namespace UMA.Editors
                         {
                             EditorGUILayout.LabelField("Materials of type 'UseExistingTextures' use TintedTexture type");
                         }
-                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("textureFormat"), new GUIContent("Texture Format", "Format used for the texture in this channel."));
+                        SerializedProperty textureFormatProperty = channel.FindPropertyRelative("textureFormat");
+                        DrawTextureFormatPopup(textureFormatProperty);
 
-                        if (channel.FindPropertyRelative("textureFormat") != null && i < ((UMAMaterial)target).channels.Length)
+                        RenderTextureFormat selectedFormat = (RenderTextureFormat)textureFormatProperty.intValue;
+                        if (!SystemInfo.SupportsRenderTextureFormat(selectedFormat))
                         {
-                            RenderTextureFormat format = ((UMAMaterial)target).channels[i].textureFormat;
-                            if (!SystemInfo.SupportsRenderTextureFormat(format))
-                            {
-                                EditorGUILayout.HelpBox("This Texture Format is not supported on this system!", MessageType.Error);
-                            }
+                            EditorGUILayout.HelpBox("This Texture Format is not supported on this system. UMA will fall back to ARGB32 at runtime.", MessageType.Warning);
                         }
 
                         EditorGUILayout.BeginHorizontal();
@@ -462,6 +462,56 @@ namespace UMA.Editors
             }
 
             return texProperties.ToArray();
+        }
+
+        private static string[] BuildSupportedChannelTextureFormatNames()
+        {
+            string[] names = new string[_supportedChannelTextureFormats.Length];
+            for (int i = 0; i < _supportedChannelTextureFormats.Length; i++)
+            {
+                names[i] = _supportedChannelTextureFormats[i].ToString();
+            }
+            return names;
+        }
+
+        private static void DrawTextureFormatPopup(SerializedProperty textureFormatProperty)
+        {
+            if (textureFormatProperty == null)
+            {
+                return;
+            }
+
+            RenderTextureFormat currentFormat = (RenderTextureFormat)textureFormatProperty.intValue;
+            int selectedIndex = 0;
+            bool found = false;
+
+            for (int i = 0; i < _supportedChannelTextureFormats.Length; i++)
+            {
+                if (_supportedChannelTextureFormats[i] == currentFormat)
+                {
+                    selectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                currentFormat = UMAMaterial.DefaultChannelTextureFormat;
+                textureFormatProperty.intValue = (int)currentFormat;
+            }
+
+            int newIndex = EditorGUILayout.Popup(new GUIContent("Texture Format", "Cross-target RenderTexture format used for this channel."), selectedIndex, _supportedChannelTextureFormatNames);
+            if (newIndex < 0 || newIndex >= _supportedChannelTextureFormats.Length)
+            {
+                newIndex = 0;
+            }
+
+            RenderTextureFormat newFormat = _supportedChannelTextureFormats[newIndex];
+            if (newFormat != currentFormat)
+            {
+                textureFormatProperty.intValue = (int)newFormat;
+            }
         }
 
         private void FindMatchingOverlayDataAssets()
