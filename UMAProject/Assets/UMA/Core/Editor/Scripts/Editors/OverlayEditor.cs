@@ -147,6 +147,48 @@ namespace UMA.Editors
                 AssetDatabase.SaveAssetIfDirty(_recipeContext);
             }
 
+            ForceUpdateSceneAvatarsUsingOverlay();
+
+            RepaintEditorViews();
+        }
+
+        internal void PreviewPopupTransform(bool instanceTransformed, float rotation, Vector2 scale, Vector2 translate)
+        {
+            _overlayData.instanceTransformed = instanceTransformed;
+            _overlayData.Rotation = rotation;
+            _overlayData.Scale = scale;
+            _overlayData.Translate = translate;
+            _popupRectChanged = true;
+
+            if (_overlayData.asset != null)
+            {
+                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetInstanceID());
+            }
+
+            RepaintEditorViews();
+        }
+
+        internal void ApplyPopupTransform(bool instanceTransformed, float rotation, Vector2 scale, Vector2 translate)
+        {
+            _overlayData.instanceTransformed = instanceTransformed;
+            _overlayData.Rotation = rotation;
+            _overlayData.Scale = scale;
+            _overlayData.Translate = translate;
+            _popupRectChanged = true;
+
+            if (_overlayData.asset != null)
+            {
+                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetInstanceID());
+            }
+
+            if (_recipeContext != null)
+            {
+                EditorUtility.SetDirty(_recipeContext);
+                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+            }
+
+            ForceUpdateSceneAvatarsUsingOverlay();
+
             RepaintEditorViews();
         }
 
@@ -242,6 +284,22 @@ namespace UMA.Editors
                 _overlayData.asset.doSave = true;
                 EditorUtility.SetDirty(_overlayData.asset);
                 UMAUpdateProcessor.UpdateOverlay(_overlayData.asset);
+            }
+
+            RepaintEditorViews();
+        }
+
+        internal void RestorePopupTransforms(bool instanceTransformed, float rotation, Vector2 scale, Vector2 translate)
+        {
+            _overlayData.instanceTransformed = instanceTransformed;
+            _overlayData.Rotation = rotation;
+            _overlayData.Scale = scale;
+            _overlayData.Translate = translate;
+            _popupRectChanged = true;
+
+            if (_overlayData.asset != null)
+            {
+                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetInstanceID());
             }
 
             RepaintEditorViews();
@@ -409,11 +467,6 @@ namespace UMA.Editors
             changed |= OnColorGUI();
             changed |= OnTagsGUI();
 
-            bool originalInstanceTransformed = _overlayData.instanceTransformed;
-            float originalRotation = _overlayData.Rotation;
-            Vector2 originalScale = _overlayData.Scale;
-            Vector2 originalTranslate = _overlayData.Translate;
-
             if (_overlayData.asset.material != null && _overlayData.asset.material.materialType == UMAMaterial.MaterialType.UseExistingTextures)
             {
                 int useUV = EditorGUILayout.Popup("UV Set for this overlay", _overlayData.UVSet, new string[] { "No Change", "UV Set 1", "UV Set 2", "UV Set 3" });
@@ -430,37 +483,6 @@ namespace UMA.Editors
                     _overlayData.UVSet = 0;
                     changed = true;
                 }
-            }
-            _overlayData.instanceTransformed = GUILayout.Toggle(_overlayData.instanceTransformed, "Transform");
-            if (_overlayData.instanceTransformed)
-            {
-                GUIHelper.BeginVerticalPadded(5, new Color(1, 1, 1, 1));
-                EditorGUILayout.HelpBox("Warning: translating, scaling or rotation could result in writing outside the bounds of the texture on the atlas. Be sure to use only in safe areas.", MessageType.Info);
-                _overlayData.Rotation = EditorGUILayout.FloatField("Rotation", _overlayData.Rotation);
-                _overlayData.Scale = EditorGUILayout.Vector2Field("Scale", _overlayData.Scale);
-                EditorGUILayout.LabelField("Translation: ");
-                _overlayData.Translate.x = EditorGUILayout.Slider("X:",_overlayData.Translate.x * 100.0f, -100.0f, 100.0f) / 100.0f;
-                _overlayData.Translate.y = EditorGUILayout.Slider("Y:", _overlayData.Translate.y * 100.0f, -100.0f, 100.0f) / 100.0f;
-                GUIHelper.EndVerticalPadded(5);
-            }
-
-            if (_overlayData.instanceTransformed != originalInstanceTransformed)
-            {
-                changed = true;
-            }
-
-            if (_overlayData.Rotation != originalRotation)
-            {
-                changed = true;
-            }
-
-            if (_overlayData.Scale != originalScale)
-            {
-                changed = true;
-            }
-            if (_overlayData.Translate != originalTranslate)
-            {
-                changed = true;
             }
 
 
@@ -496,6 +518,14 @@ namespace UMA.Editors
             private Rect _originalRecipeRect;
             private Rect _originalAssetRect;
             private Rect _workingRect;
+            private bool _workingInstanceTransformed;
+            private float _workingRotation;
+            private Vector2 _workingScale;
+            private Vector2 _workingTranslate;
+            private bool _originalInstanceTransformed;
+            private float _originalRotation;
+            private Vector2 _originalScale;
+            private Vector2 _originalTranslate;
             private bool _useUvRect;
             private List<BaseOverlayChoice> _slotBaseChoices = new List<BaseOverlayChoice>();
             private string[] _slotBaseChoiceNames = Array.Empty<string>();
@@ -503,6 +533,9 @@ namespace UMA.Editors
             private List<BaseOverlayChoice> _raceBaseChoices = new List<BaseOverlayChoice>();
             private string[] _raceBaseChoiceNames = Array.Empty<string>();
             private int _selectedRaceBaseChoice;
+            private List<BaseOverlayChoice> _sceneAvatarBaseChoices = new List<BaseOverlayChoice>();
+            private string[] _sceneAvatarBaseChoiceNames = Array.Empty<string>();
+            private int _selectedSceneAvatarBaseChoice;
             private List<string> _raceLookupMessages = new List<string>();
             private BaseOverlaySource _baseOverlaySource;
             private OverlayDataAsset _pickedBaseOverlayAsset;
@@ -510,12 +543,18 @@ namespace UMA.Editors
             private Rect _dragStartDisplayRect;
             private Vector2 _dragStartMouse;
             private bool _rectChanged;
+            private RenderTexture _previewRenderTexture;
+            private float _dragStartRotation;
+            private Vector2 _dragStartScale;
+            private Vector2 _dragPivot;
+            private static readonly Color PreviewClear = new Color(0f, 0f, 0f, 0f);
 
             private enum BaseOverlaySource
             {
                 None,
                 SlotOverlay,
                 RaceRecipeOverlay,
+                SceneAvatarRaceOverlay,
                 AssetPicker
             }
 
@@ -532,7 +571,9 @@ namespace UMA.Editors
                 TopLeft,
                 TopRight,
                 BottomLeft,
-                BottomRight
+                BottomRight,
+                Rotate,
+                Scale
             }
 
             public static void Open(OverlayEditor owner, SlotData slotData, OverlayData overlayData, OverlayDataAsset preferredBaseOverlay)
@@ -557,6 +598,14 @@ namespace UMA.Editors
                 _originalRecipeRect = overlayData.rect;
                 _originalAssetRect = overlayData.asset != null ? overlayData.asset.rect : overlayData.rect;
                 _workingRect = overlayData.rect;
+                _originalInstanceTransformed = overlayData.instanceTransformed;
+                _originalRotation = overlayData.Rotation;
+                _originalScale = overlayData.Scale;
+                _originalTranslate = overlayData.Translate;
+                _workingInstanceTransformed = overlayData.instanceTransformed;
+                _workingRotation = overlayData.Rotation;
+                _workingScale = overlayData.Scale;
+                _workingTranslate = overlayData.Translate;
                 _useUvRect = LooksLikeUvRect(_workingRect);
                 _pickedBaseOverlayAsset = preferredBaseOverlay;
                 BuildBaseChoices(preferredBaseOverlay);
@@ -566,7 +615,81 @@ namespace UMA.Editors
             {
                 BuildSlotBaseChoices(preferredBaseOverlay);
                 BuildRaceBaseChoices(preferredBaseOverlay);
+                BuildSceneAvatarBaseChoices(preferredBaseOverlay);
                 SetDefaultBaseOverlaySource(preferredBaseOverlay);
+            }
+
+            private void BuildSceneAvatarBaseChoices(OverlayDataAsset preferredBaseOverlay)
+            {
+                _sceneAvatarBaseChoices.Clear();
+                List<string> labels = new List<string> { "<None>" };
+                _selectedSceneAvatarBaseChoice = 0;
+
+                DynamicCharacterAvatar[] avatars = UnityEngine.Object.FindObjectsByType<DynamicCharacterAvatar>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                if (avatars == null || avatars.Length == 0)
+                {
+                    _sceneAvatarBaseChoiceNames = labels.ToArray();
+                    return;
+                }
+
+                DynamicCharacterAvatar avatar = avatars[0];
+                if (avatar == null || avatar.activeRace == null || avatar.activeRace.data == null || avatar.activeRace.data.baseRaceRecipe == null)
+                {
+                    _sceneAvatarBaseChoiceNames = labels.ToArray();
+                    return;
+                }
+
+                UMAData.UMARecipe raceRecipe = avatar.activeRace.data.baseRaceRecipe.GetCachedRecipe();
+                if (raceRecipe == null)
+                {
+                    _sceneAvatarBaseChoiceNames = labels.ToArray();
+                    return;
+                }
+
+                SlotData[] slots = raceRecipe.GetAllSlots();
+                if (slots == null)
+                {
+                    _sceneAvatarBaseChoiceNames = labels.ToArray();
+                    return;
+                }
+
+                for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+                {
+                    SlotData slot = slots[slotIndex];
+                    if (slot == null)
+                    {
+                        continue;
+                    }
+
+                    List<OverlayData> overlays = slot.GetOverlayList();
+                    if (overlays == null)
+                    {
+                        continue;
+                    }
+
+                    for (int overlayIndex = 0; overlayIndex < overlays.Count; overlayIndex++)
+                    {
+                        OverlayData choice = overlays[overlayIndex];
+                        if (choice == null || choice.asset == null)
+                        {
+                            continue;
+                        }
+
+                        _sceneAvatarBaseChoices.Add(new BaseOverlayChoice
+                        {
+                            Label = avatar.name + " / " + slot.slotName + " / " + choice.overlayName,
+                            Overlay = choice.Duplicate()
+                        });
+                        labels.Add(avatar.name + " / " + slot.slotName + " / " + choice.overlayName);
+
+                        if (preferredBaseOverlay != null && choice.asset == preferredBaseOverlay)
+                        {
+                            _selectedSceneAvatarBaseChoice = _sceneAvatarBaseChoices.Count;
+                        }
+                    }
+                }
+
+                _sceneAvatarBaseChoiceNames = labels.ToArray();
             }
 
             private void BuildSlotBaseChoices(OverlayDataAsset preferredBaseOverlay)
@@ -794,6 +917,12 @@ namespace UMA.Editors
                         return;
                     }
 
+                    if (_selectedSceneAvatarBaseChoice > 0)
+                    {
+                        _baseOverlaySource = BaseOverlaySource.SceneAvatarRaceOverlay;
+                        return;
+                    }
+
                     _baseOverlaySource = BaseOverlaySource.AssetPicker;
                     return;
                 }
@@ -807,6 +936,12 @@ namespace UMA.Editors
                 if (_selectedRaceBaseChoice > 0)
                 {
                     _baseOverlaySource = BaseOverlaySource.RaceRecipeOverlay;
+                    return;
+                }
+
+                if (_selectedSceneAvatarBaseChoice > 0)
+                {
+                    _baseOverlaySource = BaseOverlaySource.SceneAvatarRaceOverlay;
                 }
             }
 
@@ -826,6 +961,12 @@ namespace UMA.Editors
                             if (_selectedRaceBaseChoice > 0 && _selectedRaceBaseChoice - 1 < _raceBaseChoices.Count)
                             {
                                 return _raceBaseChoices[_selectedRaceBaseChoice - 1].Overlay;
+                            }
+                            break;
+                        case BaseOverlaySource.SceneAvatarRaceOverlay:
+                            if (_selectedSceneAvatarBaseChoice > 0 && _selectedSceneAvatarBaseChoice - 1 < _sceneAvatarBaseChoices.Count)
+                            {
+                                return _sceneAvatarBaseChoices[_selectedSceneAvatarBaseChoice - 1].Overlay;
                             }
                             break;
                         case BaseOverlaySource.AssetPicker:
@@ -899,6 +1040,24 @@ namespace UMA.Editors
                     }
                 }
 
+                if (_baseOverlaySource == BaseOverlaySource.SceneAvatarRaceOverlay)
+                {
+                    using (new EditorGUI.DisabledScope(_sceneAvatarBaseChoiceNames.Length <= 1))
+                    {
+                        int newSceneAvatarBaseChoice = EditorGUILayout.Popup("Scene Avatar Base Overlay", _selectedSceneAvatarBaseChoice, _sceneAvatarBaseChoiceNames);
+                        if (newSceneAvatarBaseChoice != _selectedSceneAvatarBaseChoice)
+                        {
+                            _selectedSceneAvatarBaseChoice = newSceneAvatarBaseChoice;
+                            Repaint();
+                        }
+                    }
+
+                    if (_sceneAvatarBaseChoiceNames.Length <= 1)
+                    {
+                        EditorGUILayout.HelpBox("No base race recipe overlays were found on the first character in the scene.", MessageType.Info);
+                    }
+                }
+
                 if (_baseOverlaySource == BaseOverlaySource.AssetPicker)
                 {
                     OverlayDataAsset newPickedBaseOverlay = EditorGUILayout.ObjectField("Base Overlay Asset", _pickedBaseOverlayAsset, typeof(OverlayDataAsset), false) as OverlayDataAsset;
@@ -911,12 +1070,86 @@ namespace UMA.Editors
 
                 _owner._baseOverlayData = SelectedBaseOverlay != null ? SelectedBaseOverlay.asset : null;
 
-                Rect editedRect = EditorGUILayout.RectField("Rect", _workingRect);
+                bool delayedRectCommitted = false;
+                bool delayedTransformCommitted = false;
+
+                float rectX = EditorGUILayout.DelayedFloatField("Rect X", _workingRect.x);
+                float rectY = EditorGUILayout.DelayedFloatField("Rect Y", _workingRect.y);
+                float rectW = EditorGUILayout.DelayedFloatField("Rect W", _workingRect.width);
+                float rectH = EditorGUILayout.DelayedFloatField("Rect H", _workingRect.height);
+                Rect editedRect = new Rect(rectX, rectY, rectW, rectH);
                 if (editedRect != _workingRect)
                 {
                     _workingRect = editedRect;
                     _rectChanged = true;
+                    delayedRectCommitted = true;
                     Repaint();
+                }
+
+                bool newInstanceTransformed = EditorGUILayout.Toggle("Transform", _workingInstanceTransformed);
+                if (newInstanceTransformed != _workingInstanceTransformed)
+                {
+                    _workingInstanceTransformed = newInstanceTransformed;
+                    _rectChanged = true;
+                }
+
+                if (_workingInstanceTransformed)
+                {
+                    GUIHelper.BeginVerticalPadded(5, new Color(1, 1, 1, 1));
+                    EditorGUILayout.HelpBox("Warning: translating, scaling or rotation could result in writing outside the bounds of the texture on the atlas. Be sure to use only in safe areas.", MessageType.Info);
+
+                    float newRotation = EditorGUILayout.DelayedFloatField("Rotation", _workingRotation);
+                    if (!Mathf.Approximately(newRotation, _workingRotation))
+                    {
+                        _workingRotation = newRotation;
+                        _rectChanged = true;
+                        delayedTransformCommitted = true;
+                    }
+
+                    float newScaleX = EditorGUILayout.DelayedFloatField("Scale X", _workingScale.x);
+                    float newScaleY = EditorGUILayout.DelayedFloatField("Scale Y", _workingScale.y);
+                    Vector2 newScale = new Vector2(newScaleX, newScaleY);
+                    if (newScale != _workingScale)
+                    {
+                        _workingScale = newScale;
+                        _rectChanged = true;
+                        delayedTransformCommitted = true;
+                    }
+
+                    EditorGUILayout.LabelField("Translation: ");
+                    float newTranslateX = EditorGUILayout.Slider("X:", _workingTranslate.x * 100.0f, -100.0f, 100.0f) / 100.0f;
+                    float newTranslateY = EditorGUILayout.Slider("Y:", _workingTranslate.y * 100.0f, -100.0f, 100.0f) / 100.0f;
+                    if (!Mathf.Approximately(newTranslateX, _workingTranslate.x) || !Mathf.Approximately(newTranslateY, _workingTranslate.y))
+                    {
+                        _workingTranslate = new Vector2(newTranslateX, newTranslateY);
+                        _rectChanged = true;
+                    }
+
+                    GUIHelper.EndVerticalPadded(5);
+                }
+
+                if (delayedRectCommitted || delayedTransformCommitted)
+                {
+                    if (delayedRectCommitted && delayedTransformCommitted)
+                    {
+                        _owner.PreviewPopupTransform(_workingInstanceTransformed, _workingRotation, _workingScale, _workingTranslate);
+                        _owner.ApplyPopupRect(_workingRect, false);
+                    }
+                    else if (delayedRectCommitted)
+                    {
+                        _owner.ApplyPopupRect(_workingRect, false);
+                    }
+                    else
+                    {
+                        _owner.ApplyPopupTransform(_workingInstanceTransformed, _workingRotation, _workingScale, _workingTranslate);
+                    }
+
+                    _rectChanged = false;
+                }
+                else if (_rectChanged)
+                {
+                    _owner.PreviewPopupTransform(_workingInstanceTransformed, _workingRotation, _workingScale, _workingTranslate);
+                    _rectChanged = false;
                 }
 
                 Texture baseTexture = GetPreviewTexture(SelectedBaseOverlay);
@@ -932,12 +1165,14 @@ namespace UMA.Editors
 
                 if (GUILayout.Button("Update Overlay"))
                 {
+                    _owner.ApplyPopupTransform(_workingInstanceTransformed, _workingRotation, _workingScale, _workingTranslate);
                     _owner.ApplyPopupRect(_workingRect, true);
                     _rectChanged = false;
                 }
 
                 if (GUILayout.Button("Update Recipe"))
                 {
+                    _owner.ApplyPopupTransform(_workingInstanceTransformed, _workingRotation, _workingScale, _workingTranslate);
                     _owner.ApplyPopupRect(_workingRect, false);
                     _rectChanged = false;
                 }
@@ -946,6 +1181,7 @@ namespace UMA.Editors
                 {
                     if (_rectChanged)
                     {
+                        _owner.ApplyPopupTransform(_workingInstanceTransformed, _workingRotation, _workingScale, _workingTranslate);
                         _owner.ApplyPopupRect(_workingRect, false);
                         _rectChanged = false;
                     }
@@ -954,6 +1190,7 @@ namespace UMA.Editors
 
                 if (GUILayout.Button("Cancel"))
                 {
+                    _owner.RestorePopupTransforms(_originalInstanceTransformed, _originalRotation, _originalScale, _originalTranslate);
                     _owner.RestorePopupRects(_originalRecipeRect, _originalAssetRect);
                     Close();
                 }
@@ -966,18 +1203,330 @@ namespace UMA.Editors
                 EditorGUI.DrawRect(previewArea, new Color(0.15f, 0.15f, 0.15f, 1f));
                 DrawCheckerboard(previewRect);
 
-                if (baseTexture != null)
+                Rect overlayDisplayRect = GetDisplayRectFromWorkingRect(previewRect);
+                bool drewWithTextureMerge = false;
+                if (overlayTexture != null || baseTexture != null)
                 {
-                    DrawTexture(previewRect, baseTexture, GetOverlayTint(SelectedBaseOverlay));
+                    drewWithTextureMerge = DrawPreviewUsingTextureMerge(previewRect, overlayDisplayRect, baseTexture, overlayTexture);
                 }
 
-                Rect overlayDisplayRect = GetDisplayRectFromWorkingRect(previewRect);
-                if (overlayTexture != null)
+                if (!drewWithTextureMerge)
                 {
-                    DrawTexture(overlayDisplayRect, overlayTexture, GetOverlayTint(_overlayData));
+                    if (baseTexture != null)
+                    {
+                        DrawTexture(previewRect, baseTexture, GetOverlayTint(SelectedBaseOverlay));
+                    }
+                    if (overlayTexture != null)
+                    {
+                        DrawTransformedOverlayTexture(previewRect, overlayDisplayRect, overlayTexture, GetOverlayTint(_overlayData));
+                    }
                 }
 
                 DrawOverlayOutline(overlayDisplayRect);
+                DrawTransformHandles(overlayDisplayRect);
+            }
+
+            private void DrawTransformHandles(Rect overlayRect)
+            {
+                Rect rotateHandle = GetRotateHandleRect(overlayRect);
+                Rect scaleHandle = GetScaleHandleRect(overlayRect);
+
+                DrawRotateHandle(rotateHandle);
+                DrawScaleHandle(scaleHandle);
+                DrawTransformHandleLabels(rotateHandle, scaleHandle);
+            }
+
+            private void DrawRotateHandle(Rect rotateHandle)
+            {
+                Handles.BeginGUI();
+                Vector3 center = new Vector3(rotateHandle.center.x, rotateHandle.center.y, 0f);
+                float radius = rotateHandle.width * 0.5f;
+                Handles.color = new Color(1f, 0.76f, 0.2f, 1f);
+                Handles.DrawSolidDisc(center, Vector3.forward, radius);
+                Handles.color = Color.white;
+                Handles.DrawWireDisc(center, Vector3.forward, radius - 1f);
+
+                DrawArrow(center + new Vector3(radius + 6f, 0f, 0f), Vector2.right, new Color(1f, 0.76f, 0.2f, 1f));
+                DrawArrow(center + new Vector3(-(radius + 6f), 0f, 0f), Vector2.left, new Color(1f, 0.76f, 0.2f, 1f));
+                Handles.EndGUI();
+            }
+
+            private void DrawScaleHandle(Rect scaleHandle)
+            {
+                EditorGUI.DrawRect(scaleHandle, new Color(0.85f, 0.35f, 1f, 1f));
+                EditorGUI.DrawRect(new Rect(scaleHandle.x + 2f, scaleHandle.y + 2f, scaleHandle.width - 4f, scaleHandle.height - 4f), Color.white);
+
+                Handles.BeginGUI();
+                Vector3 center = new Vector3(scaleHandle.center.x, scaleHandle.center.y, 0f);
+                DrawArrow(center + new Vector3(scaleHandle.width * 0.75f + 6f, 0f, 0f), Vector2.right, new Color(0.85f, 0.35f, 1f, 1f));
+                DrawArrow(center + new Vector3(-(scaleHandle.width * 0.75f + 6f), 0f, 0f), Vector2.left, new Color(0.85f, 0.35f, 1f, 1f));
+                Handles.EndGUI();
+            }
+
+            private static void DrawTransformHandleLabels(Rect rotateHandle, Rect scaleHandle)
+            {
+                GUIStyle labelStyle = EditorStyles.miniLabel != null ? EditorStyles.miniLabel : EditorStyles.label;
+
+                Rect rotateLabelRect = new Rect(rotateHandle.center.x - 24f, rotateHandle.yMin - 16f, 48f, 14f);
+                Rect scaleLabelRect = new Rect(scaleHandle.center.x - 20f, scaleHandle.yMin - 16f, 40f, 14f);
+
+                GUI.Label(rotateLabelRect, "Rotate", labelStyle);
+                GUI.Label(scaleLabelRect, "Scale", labelStyle);
+            }
+
+            private static void DrawArrow(Vector3 position, Vector2 direction, Color color)
+            {
+                float length = 8f;
+                float head = 4f;
+                Vector3 dir = new Vector3(direction.x, direction.y, 0f).normalized;
+                Vector3 end = position + (dir * length);
+                Vector3 perp = new Vector3(-dir.y, dir.x, 0f);
+
+                Handles.color = color;
+                Handles.DrawLine(position, end);
+                Handles.DrawLine(end, end - (dir * head) + (perp * (head * 0.6f)));
+                Handles.DrawLine(end, end - (dir * head) - (perp * (head * 0.6f)));
+            }
+
+            private bool DrawPreviewUsingTextureMerge(Rect previewRect, Rect overlayDisplayRect, Texture baseTexture, Texture overlayTexture)
+            {
+                int sourceWidth = 1;
+                int sourceHeight = 1;
+                Texture referenceTexture = GetRuntimeBaseTexture();
+                if (referenceTexture == null)
+                {
+                    referenceTexture = baseTexture;
+                }
+                if (referenceTexture == null)
+                {
+                    referenceTexture = overlayTexture;
+                }
+                if (referenceTexture != null)
+                {
+                    sourceWidth = Mathf.Max(1, referenceTexture.width);
+                    sourceHeight = Mathf.Max(1, referenceTexture.height);
+                }
+
+                int width = sourceWidth;
+                int height = sourceHeight;
+
+                TextureMerge textureMerge = EnsurePreviewTextureMergeResources(width, height);
+                if (textureMerge == null)
+                {
+                    return false;
+                }
+
+                if (textureMerge == null || _previewRenderTexture == null)
+                {
+                    return false;
+                }
+
+                textureMerge.EnsurePreviewRectCapacity(2);
+                TextureMerge.TextureMergeRect[] rects = textureMerge.GetPreviewRects();
+                if (rects == null || rects.Length < 2)
+                {
+                    return false;
+                }
+
+                rects[0].tex = baseTexture != null ? baseTexture : Texture2D.blackTexture;
+                rects[0].rect = new Rect(0f, 0f, width, height);
+                rects[0].transform = false;
+                if (rects[0].mat == null)
+                {
+                    return false;
+                }
+                rects[0].scale = Vector3.one;
+                rects[0].position = Vector2.zero;
+                rects[0].rotation = 0f;
+                rects[0].advancedBlending = false;
+                rects[0].textureChannel = 0;
+                rects[0].channelType = UMAMaterial.ChannelType.DiffuseTexture;
+
+                Rect previewOverlayRect = GetPreviewOverlayAtlasRect(width, height, referenceTexture);
+                rects[1].tex = overlayTexture != null ? overlayTexture : Texture2D.blackTexture;
+                rects[1].rect = previewOverlayRect;
+                rects[1].transform = _workingInstanceTransformed;
+                rects[1].rotation = _workingRotation;
+                rects[1].scale = new Vector3(_workingScale.x, _workingScale.y, 1f);
+                float translationReferenceWidth = referenceTexture != null ? referenceTexture.width : sourceWidth;
+                float translationReferenceHeight = referenceTexture != null ? referenceTexture.height : sourceHeight;
+                rects[1].position = new Vector2(_workingTranslate.x * translationReferenceWidth, _workingTranslate.y * translationReferenceHeight);
+                if (rects[1].mat == null)
+                {
+                    return false;
+                }
+                rects[1].advancedBlending = false;
+                rects[1].textureChannel = 0;
+                rects[1].channelType = UMAMaterial.ChannelType.DiffuseTexture;
+
+                Texture baseAlpha = SelectedBaseOverlay != null && SelectedBaseOverlay.asset != null ? SelectedBaseOverlay.asset.GetAlphaMask() : null;
+                Texture overlayAlpha = _overlayData != null && _overlayData.asset != null ? _overlayData.asset.GetAlphaMask() : null;
+                Color baseMultiply = SelectedBaseOverlay != null && SelectedBaseOverlay.colorData != null ? SelectedBaseOverlay.colorData.GetTint(0) : Color.white;
+                Color baseAdditive = SelectedBaseOverlay != null && SelectedBaseOverlay.colorData != null ? SelectedBaseOverlay.colorData.GetAdditive(0) : OverlayColorData.EmptyAdditive;
+                Color overlayMultiply = _overlayData != null && _overlayData.colorData != null ? _overlayData.colorData.GetTint(0) : Color.white;
+                Color overlayAdditive = _overlayData != null && _overlayData.colorData != null ? _overlayData.colorData.GetAdditive(0) : OverlayColorData.EmptyAdditive;
+
+                PreparePreviewMaterial(rects[0].mat, rects[0].tex, baseAlpha, baseMultiply, baseAdditive);
+                PreparePreviewMaterial(rects[1].mat, rects[1].tex, overlayAlpha, overlayMultiply, overlayAdditive);
+
+                textureMerge.SetPreviewRectCount(2);
+
+                RenderTexture previous = RenderTexture.active;
+                RenderTexture.active = _previewRenderTexture;
+                GL.Clear(true, true, PreviewClear);
+                RenderTexture.active = previous;
+
+                Color backgroundColor = UMAMaterial.GetBackgroundColor(UMAMaterial.ChannelType.DiffuseTexture);
+                textureMerge.DrawAllRects(_previewRenderTexture, width, height, backgroundColor, true);
+                GUI.DrawTexture(previewRect, _previewRenderTexture, ScaleMode.StretchToFill, false);
+                return true;
+            }
+
+            private Rect GetPreviewOverlayAtlasRect(int atlasWidth, int atlasHeight, Texture baseReferenceTexture)
+            {
+                Rect overlayRect = _workingRect;
+                if (baseReferenceTexture != null && LooksLikeUvRect(overlayRect))
+                {
+                    overlayRect = new Rect(
+                        overlayRect.x * baseReferenceTexture.width,
+                        overlayRect.y * baseReferenceTexture.height,
+                        overlayRect.width * baseReferenceTexture.width,
+                        overlayRect.height * baseReferenceTexture.height);
+                }
+
+                return new Rect(
+                    overlayRect.x,
+                    atlasHeight - overlayRect.y - overlayRect.height,
+                    overlayRect.width,
+                    overlayRect.height);
+            }
+
+            private TextureMerge EnsurePreviewTextureMergeResources(int width, int height)
+            {
+                UMASettings settings = UMASettings.GetOrCreateSettings();
+                if (settings == null)
+                {
+                    return null;
+                }
+
+                TextureMerge textureMerge = settings.textureMerge;
+
+                if (textureMerge == null)
+                {
+                    return null;
+                }
+
+                textureMerge.RefreshMaterials();
+
+                if (_previewRenderTexture == null || _previewRenderTexture.width != width || _previewRenderTexture.height != height)
+                {
+                    if (_previewRenderTexture != null)
+                    {
+                        _previewRenderTexture.Release();
+                        DestroyImmediate(_previewRenderTexture);
+                    }
+
+                    _previewRenderTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+                    _previewRenderTexture.Create();
+                }
+
+                return textureMerge;
+            }
+
+            private void PreparePreviewMaterial(Material material, Texture mainTex, Texture extraTex, Color tint, Color additive)
+            {
+                if (material == null)
+                {
+                    return;
+                }
+
+                tint.a = 1f;
+                if (material.HasProperty("_BaseMap"))
+                {
+                    material.SetTexture("_BaseMap", mainTex);
+                }
+                if (material.HasProperty("_Color"))
+                {
+                    material.SetColor("_Color", tint);
+                }
+                if (material.HasProperty("_BaseColor"))
+                {
+                    material.SetColor("_BaseColor", tint);
+                }
+
+                if (material.HasProperty("_MainTex"))
+                {
+                    material.SetTexture("_MainTex", mainTex);
+                }
+
+                if (material.HasProperty("_AdditiveColor"))
+                {
+                    material.SetColor("_AdditiveColor", additive);
+                }
+
+                if (material.HasProperty("_ExtraTex"))
+                {
+                    material.SetTexture("_ExtraTex", extraTex);
+                }
+            }
+
+            private void OnDisable()
+            {
+                if (_previewRenderTexture != null)
+                {
+                    _previewRenderTexture.Release();
+                    DestroyImmediate(_previewRenderTexture);
+                    _previewRenderTexture = null;
+                }
+            }
+
+            private void DrawTransformedOverlayTexture(Rect previewRect, Rect overlayDisplayRect, Texture overlayTexture, Color tint)
+            {
+                if (overlayTexture == null)
+                {
+                    return;
+                }
+
+                if (!_workingInstanceTransformed)
+                {
+                    DrawTexture(overlayDisplayRect, overlayTexture, tint);
+                    return;
+                }
+
+                GUI.BeginGroup(previewRect);
+                Matrix4x4 oldMatrix = GUI.matrix;
+                try
+                {
+                    Rect localRect = new Rect(
+                        overlayDisplayRect.x - previewRect.x,
+                        overlayDisplayRect.y - previewRect.y,
+                        overlayDisplayRect.width,
+                        overlayDisplayRect.height);
+
+                    float posX = _workingTranslate.x * previewRect.width;
+                    float posY = _workingTranslate.y * previewRect.height;
+
+                    localRect.x += posX;
+                    localRect.y += posY;
+
+                    Vector2 pivot = new Vector2(localRect.x + (localRect.width * 0.5f), localRect.y + (localRect.height * 0.5f));
+                    Matrix4x4 transform = Matrix4x4.TRS(
+                        pivot,
+                        Quaternion.Euler(0f, 0f, _workingRotation),
+                        new Vector3(_workingScale.x, _workingScale.y, 1f)) * Matrix4x4.TRS(-pivot, Quaternion.identity, Vector3.one);
+
+                    GUI.matrix = oldMatrix * transform;
+
+                    Color previous = GUI.color;
+                    GUI.color = tint;
+                    GUI.DrawTexture(localRect, overlayTexture, ScaleMode.StretchToFill, true);
+                    GUI.color = previous;
+                }
+                finally
+                {
+                    GUI.matrix = oldMatrix;
+                    GUI.EndGroup();
+                }
             }
 
             private void HandlePreviewInteraction(Rect previewRect, bool hasOverlayTexture)
@@ -993,16 +1542,28 @@ namespace UMA.Editors
                 Rect topRight = GetHandleRect(overlayRect.xMax, overlayRect.yMin);
                 Rect bottomLeft = GetHandleRect(overlayRect.xMin, overlayRect.yMax);
                 Rect bottomRight = GetHandleRect(overlayRect.xMax, overlayRect.yMax);
+                Rect rotateHandle = GetRotateHandleRect(overlayRect);
+                Rect scaleHandle = GetScaleHandleRect(overlayRect);
 
                 EditorGUIUtility.AddCursorRect(topLeft, MouseCursor.ResizeUpLeft);
                 EditorGUIUtility.AddCursorRect(topRight, MouseCursor.ResizeUpRight);
                 EditorGUIUtility.AddCursorRect(bottomLeft, MouseCursor.ResizeUpRight);
                 EditorGUIUtility.AddCursorRect(bottomRight, MouseCursor.ResizeUpLeft);
                 EditorGUIUtility.AddCursorRect(overlayRect, MouseCursor.MoveArrow);
+                EditorGUIUtility.AddCursorRect(rotateHandle, MouseCursor.RotateArrow);
+                EditorGUIUtility.AddCursorRect(scaleHandle, MouseCursor.ScaleArrow);
 
                 if (evt.type == EventType.MouseDown && evt.button == 0)
                 {
-                    if (topLeft.Contains(evt.mousePosition))
+                    if (rotateHandle.Contains(evt.mousePosition))
+                    {
+                        BeginDrag(DragMode.Rotate, overlayRect, evt.mousePosition);
+                    }
+                    else if (scaleHandle.Contains(evt.mousePosition))
+                    {
+                        BeginDrag(DragMode.Scale, overlayRect, evt.mousePosition);
+                    }
+                    else if (topLeft.Contains(evt.mousePosition))
                     {
                         BeginDrag(DragMode.TopLeft, overlayRect, evt.mousePosition);
                     }
@@ -1050,19 +1611,57 @@ namespace UMA.Editors
                             draggedRect.xMax += delta.x;
                             draggedRect.yMax += delta.y;
                             break;
+                        case DragMode.Rotate:
+                            {
+                                _workingInstanceTransformed = true;
+                                Vector2 from = _dragStartMouse - _dragPivot;
+                                Vector2 to = evt.mousePosition - _dragPivot;
+                                if (from.sqrMagnitude > 0.0001f && to.sqrMagnitude > 0.0001f)
+                                {
+                                    float deltaAngle = Vector2.SignedAngle(from, to);
+                                    _workingRotation = _dragStartRotation + deltaAngle;
+                                    _rectChanged = true;
+                                }
+                            }
+                            break;
+                        case DragMode.Scale:
+                            {
+                                _workingInstanceTransformed = true;
+                                float from = (_dragStartMouse - _dragPivot).magnitude;
+                                float to = (evt.mousePosition - _dragPivot).magnitude;
+                                if (from > 0.001f)
+                                {
+                                    float factor = Mathf.Max(0.01f, to / from);
+                                    _workingScale = new Vector2(
+                                        Mathf.Max(0.01f, _dragStartScale.x * factor),
+                                        Mathf.Max(0.01f, _dragStartScale.y * factor));
+                                    _rectChanged = true;
+                                }
+                            }
+                            break;
                     }
 
-                    draggedRect = ClampDisplayRect(draggedRect, previewRect);
-                    _workingRect = GetWorkingRectFromDisplayRect(previewRect, draggedRect);
-                    _rectChanged = true;
+                    if (_dragMode == DragMode.Move || _dragMode == DragMode.TopLeft || _dragMode == DragMode.TopRight || _dragMode == DragMode.BottomLeft || _dragMode == DragMode.BottomRight)
+                    {
+                        draggedRect = ClampDisplayRect(draggedRect, previewRect);
+                        _workingRect = GetWorkingRectFromDisplayRect(previewRect, draggedRect);
+                        _rectChanged = true;
+                    }
+
                     evt.Use();
                     Repaint();
                 }
 
                 if ((evt.type == EventType.MouseUp || evt.type == EventType.Ignore) && _dragMode != DragMode.None)
                 {
-                    _owner.ApplyPopupRect(_workingRect, false);
-                    _owner.ForceUpdateSceneAvatarsUsingOverlay();
+                    if (_dragMode == DragMode.Rotate || _dragMode == DragMode.Scale)
+                    {
+                        _owner.ApplyPopupTransform(_workingInstanceTransformed, _workingRotation, _workingScale, _workingTranslate);
+                    }
+                    else
+                    {
+                        _owner.ApplyPopupRect(_workingRect, false);
+                    }
                     _rectChanged = false;
                     _dragMode = DragMode.None;
                     evt.Use();
@@ -1074,6 +1673,9 @@ namespace UMA.Editors
                 _dragMode = mode;
                 _dragStartDisplayRect = overlayRect;
                 _dragStartMouse = mousePosition;
+                _dragStartRotation = _workingRotation;
+                _dragStartScale = _workingScale;
+                _dragPivot = new Vector2(overlayRect.center.x, overlayRect.center.y);
                 Event.current.Use();
             }
 
@@ -1182,7 +1784,11 @@ namespace UMA.Editors
 
             private Vector2 GetReferenceSize()
             {
-                Texture referenceTexture = GetPreviewTexture(SelectedBaseOverlay);
+                Texture referenceTexture = GetRuntimeBaseTexture();
+                if (referenceTexture == null)
+                {
+                    referenceTexture = GetPreviewTexture(SelectedBaseOverlay);
+                }
                 if (referenceTexture == null)
                 {
                     referenceTexture = GetPreviewTexture(_overlayData);
@@ -1194,6 +1800,22 @@ namespace UMA.Editors
                 }
 
                 return new Vector2(Mathf.Max(1f, referenceTexture.width), Mathf.Max(1f, referenceTexture.height));
+            }
+
+            private Texture GetRuntimeBaseTexture()
+            {
+                if (_slotData == null)
+                {
+                    return null;
+                }
+
+                OverlayData runtimeBaseOverlay = _slotData.GetOverlay(0);
+                if (runtimeBaseOverlay == null)
+                {
+                    return null;
+                }
+
+                return runtimeBaseOverlay.GetTexture(0);
             }
 
             private static Rect GetUvRectForOverlay(OverlayData overlayData)
@@ -1298,6 +1920,16 @@ namespace UMA.Editors
             private static Rect GetHandleRect(float centerX, float centerY)
             {
                 return new Rect(centerX - (HandleSize * 0.5f), centerY - (HandleSize * 0.5f), HandleSize, HandleSize);
+            }
+
+            private static Rect GetRotateHandleRect(Rect overlayRect)
+            {
+                return GetHandleRect(overlayRect.center.x, overlayRect.yMin - (HandleSize * 1.8f));
+            }
+
+            private static Rect GetScaleHandleRect(Rect overlayRect)
+            {
+                return GetHandleRect(overlayRect.xMax + (HandleSize * 1.4f), overlayRect.center.y);
             }
 
             private static bool LooksLikeUvRect(Rect rect)

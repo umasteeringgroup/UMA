@@ -44,6 +44,21 @@ namespace UMA
 		private int textureMergeRectCount;
 		private TextureMergeRect[] textureMergeRects;
 
+		public void EnsurePreviewRectCapacity(int count)
+		{
+			EnsureCapacity(count);
+		}
+
+		public TextureMergeRect[] GetPreviewRects()
+		{
+			return textureMergeRects;
+		}
+
+		public void SetPreviewRectCount(int count)
+		{
+			textureMergeRectCount = count;
+		}
+
 		//[System.Serializable] //why was this serializable? the array was public serialized too
 		public struct TextureMergeRect
 		{

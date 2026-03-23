@@ -5,10 +5,12 @@
 - Prioritize root-cause event-flow fixes and caching in UMA editor stages.
 - For UI/UX refactors in UMA editor tools, clarify requirements with questions before implementation and ensure clear mode separation to prevent overlapping functions.
 - UMA editor tools should avoid kludgy fixes; prefer root-cause event-flow fixes and caching, and clarify UX requirements before refactors.
+- Do not replace popup preview with a bolted-on TextureMerge.DrawAllRects path when a direct transform-path fix is feasible; prefer direct root-cause fixes instead.
 - In UMA editor tools, keep EditorModifiers behind `#if UNITY_EDITOR` to avoid including them in builds for memory reasons.
 - For FaceEditorStage and UMA editor tooling changes: panel height redistribution should be even among expanded panels; allow panels to extend offscreen rather than shrink below minimums; reserve an 8% vertical buffer due to Unity usable-rect inaccuracies.
-- Always implement requested code changes directly when there is sufficient context; do not respond by only summarizing or restating the requested change unless clarification is genuinely needed.
+- Always implement requested code changes directly when there is sufficient context; do not respond by only summarizing or restating the requested change unless clarification is genuinely needed. Prioritize immediate implementation and verification without restating.
 - Always set a `_rectChanged` flag and ensure overlay rect changes are saved and trigger a rebuild on Update/Close in Overlay Positioner.
+- Do not use reflection to access TextureMerge fields/methods in OverlayEditor; use direct TextureMerge API from settings instead.
 
 ## Development Environment
 - User environment uses Visual Studio Community 2026 (18.4).
