@@ -110,6 +110,148 @@ namespace UMA.Editors
 			if (!compatibleRaces.Contains(raceDataAsset.raceName))
                 compatibleRaces.Add(raceDataAsset.raceName);
             }
+
+		private static bool IsBakedRace(RaceData raceData)
+		{
+			return raceData != null && raceData.PrebakedBlendshapes != null && raceData.PrebakedBlendshapes.Count > 0;
+		}
+
+		private static bool IsBakedSlotName(string slotName, RaceData raceData)
+		{
+			if (string.IsNullOrEmpty(slotName))
+			{
+				return false;
+			}
+
+			if (raceData != null && !string.IsNullOrEmpty(raceData.raceName))
+			{
+				return slotName.EndsWith("_baked_" + raceData.raceName, StringComparison.OrdinalIgnoreCase);
+			}
+
+			return slotName.IndexOf("_baked_", StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+
+		private static string GetPreferredBakedSlotName(SlotDataAsset slotAsset, RaceData raceData)
+		{
+			if (slotAsset == null || raceData == null)
+			{
+				return string.Empty;
+			}
+
+			string baseName = !string.IsNullOrEmpty(slotAsset.name) ? slotAsset.name : slotAsset.slotName;
+			if (string.IsNullOrEmpty(baseName))
+			{
+				return string.Empty;
+			}
+
+			return baseName + "_baked_" + raceData.raceName;
+		}
+
+		private static List<string> GetBakedSlotNameCandidates(SlotDataAsset slotAsset, RaceData raceData)
+		{
+			List<string> candidates = new List<string>();
+			if (slotAsset == null || raceData == null)
+			{
+				return candidates;
+			}
+
+			if (IsBakedSlotName(slotAsset.slotName, raceData))
+			{
+				candidates.Add(slotAsset.slotName);
+			}
+
+			if (!string.IsNullOrEmpty(slotAsset.slotName))
+			{
+				string slotNameCandidate = slotAsset.slotName + "_baked_" + raceData.raceName;
+				if (!candidates.Contains(slotNameCandidate))
+				{
+					candidates.Add(slotNameCandidate);
+				}
+			}
+
+			string preferredCandidate = GetPreferredBakedSlotName(slotAsset, raceData);
+			if (!string.IsNullOrEmpty(preferredCandidate) && !candidates.Contains(preferredCandidate))
+			{
+				candidates.Add(preferredCandidate);
+			}
+
+			return candidates;
+		}
+
+		private static SlotDataAsset BakeSlotForRaceIfNeeded(SlotDataAsset slotAsset, RaceData raceData)
+		{
+			if (slotAsset == null || raceData == null)
+			{
+				return null;
+			}
+
+			if (!IsBakedRace(raceData))
+			{
+				return slotAsset;
+			}
+
+			List<string> candidates = GetBakedSlotNameCandidates(slotAsset, raceData);
+			var indexer = UMAAssetIndexer.Instance;
+			if (indexer != null)
+			{
+				for (int i = 0; i < candidates.Count; i++)
+				{
+					string candidate = candidates[i];
+					if (string.IsNullOrEmpty(candidate))
+					{
+						continue;
+					}
+
+					SlotDataAsset existing = indexer.GetAsset<SlotDataAsset>(candidate, false, true);
+					if (existing != null)
+					{
+						return existing;
+					}
+				}
+			}
+
+			SlotDataAsset.BakeSlotParams options = new SlotDataAsset.BakeSlotParams();
+			options.burnOptions = raceData.PrebakedBlendshapes;
+			options.ShapesToInclude = raceData.UnbakedShapesToInclude;
+			options.addToIndexer = true;
+			options.smoothingAngleDegrees = -1.0f;
+			options.forceRebuildRaceSlots = raceData.forceRebuildRaceSlots;
+			options.newSlotName = GetPreferredBakedSlotName(slotAsset, raceData);
+
+			if (raceData.UnbakedShapesToInclude != null && raceData.UnbakedShapesToInclude.Count > 0)
+			{
+				options.copyUnbakedBlendshapes = true;
+			}
+
+			return slotAsset.BakeNewSlotData(options);
+		}
+
+		private string ResolveBaseSlotNameForRace(string slotName, RaceData raceData)
+		{
+			if (string.IsNullOrEmpty(slotName) || !IsBakedRace(raceData))
+			{
+				return slotName;
+			}
+
+			if (IsBakedSlotName(slotName, raceData))
+			{
+				return slotName;
+			}
+
+			SlotDataAsset slotAsset = UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(slotName, false, true);
+			if (slotAsset == null)
+			{
+				return slotName;
+			}
+
+			SlotDataAsset bakedSlot = BakeSlotForRaceIfNeeded(slotAsset, raceData);
+			if (bakedSlot != null && !string.IsNullOrEmpty(bakedSlot.slotName))
+			{
+				return bakedSlot.slotName;
+			}
+
+			return slotName;
+		}
 		//this needs to generate labels too because the values are not the same as the labels
 		private int GenerateWardrobeSlotsEnum(string selectedOption, List<string> compatibleRaces = null, bool forceUpdate = false)
 		{
@@ -196,7 +338,7 @@ namespace UMA.Editors
 		}
 
 
-		private List<string> GetSlotNames(UMAPackedRecipeBase recipe)
+       private List<string> GetSlotNames(UMAPackedRecipeBase recipe, RaceData raceData)
         {
 			List<string> theSlots = new List<string>();
 			UMAPackedRecipeBase.UMAPackRecipe PackRecipe =recipe.PackedLoad();
@@ -207,7 +349,7 @@ namespace UMA.Editors
 				{
                     if (!string.IsNullOrEmpty(s2.id))
 					{
-						theSlots.Add(s2.id);
+                        theSlots.Add(ResolveBaseSlotNameForRace(s2.id, raceData));
 					}
 				}
 			}
@@ -217,7 +359,7 @@ namespace UMA.Editors
 				{
                     if (!string.IsNullOrEmpty(s3.id))
 					{
-						theSlots.Add(s3.id);
+                        theSlots.Add(ResolveBaseSlotNameForRace(s3.id, raceData));
 					}
 				}
 			}
@@ -238,33 +380,29 @@ namespace UMA.Editors
 					generatedBaseSlotOptions = new List<string>();
 					generatedBaseSlotOptionsLabels = new List<string>();
 				}
-				List<UMARecipeBase> thisBaseRecipes = new List<UMARecipeBase>();
 				Dictionary<string, List<string>> slotsRacesDict = new Dictionary<string, List<string>>();
 				UpdateCompatibleRacesDict(compatibleRaces);
 				for (int i = 0; i < compatibleRaces.Count; i++)
 				{
-					if(_compatibleRaceDatas.ContainsKey(compatibleRaces[i]))
-                    {
-                        thisBaseRecipes.Add(_compatibleRaceDatas[compatibleRaces[i]].baseRaceRecipe);
-                    }
-                }
-				for (int i = 0; i < thisBaseRecipes.Count; i++)
-				{
-					if (thisBaseRecipes[i] != null)
+                    if(_compatibleRaceDatas.ContainsKey(compatibleRaces[i]))
 					{
-						List<string> slots = GetSlotNames((thisBaseRecipes[i] as UMAPackedRecipeBase));
-						foreach(string slotName in slots)
+						RaceData raceData = _compatibleRaceDatas[compatibleRaces[i]];
+						if (raceData != null && raceData.baseRaceRecipe != null)
                         {
-                            if (!generatedBaseSlotOptions.Contains(slotName))
+                           List<string> slots = GetSlotNames(raceData.baseRaceRecipe as UMAPackedRecipeBase, raceData);
+							foreach(string slotName in slots)
 							{
-								generatedBaseSlotOptions.Add(slotName);
-								Unfound.Remove(slotName);
+								if (!generatedBaseSlotOptions.Contains(slotName))
+								{
+									generatedBaseSlotOptions.Add(slotName);
+									Unfound.Remove(slotName);
+								}
+								if (!slotsRacesDict.ContainsKey(slotName))
+								{
+									slotsRacesDict.Add(slotName, new List<string>());
+								}
+								slotsRacesDict[slotName].Add(compatibleRaces[i]);
 							}
-							if (!slotsRacesDict.ContainsKey(slotName))
-							{
-								slotsRacesDict.Add(slotName, new List<string>());
-							}
-							slotsRacesDict[slotName].Add(compatibleRaces[i]);
 						}
 					}
 				}
@@ -1507,7 +1645,7 @@ namespace UMA.Editors
 			List<string> _baseSlotOptions = new List<string>();
 			List<string> _baseSlotOptionsLabels = new List<string>();
 
-			public WardrobeRecipeMasterEditor(UMAData.UMARecipe recipe, List<string> baseSlotOptions, List<string> baseSlotOptionsLabels) : base(recipe)
+            public WardrobeRecipeMasterEditor(UMAData.UMARecipe recipe, List<string> baseSlotOptions, List<string> baseSlotOptionsLabels, UnityEngine.Object recipeContext = null) : base(recipe, recipeContext)
 			{
 				_baseSlotOptions = baseSlotOptions;
 				_baseSlotOptionsLabels = baseSlotOptionsLabels;
@@ -1541,7 +1679,7 @@ namespace UMA.Editors
 						baseSlotsNamesList.Add(_baseSlotOptionsLabels[i]);
 					}
 					EditorGUI.BeginChangeCheck();
-					var baseAdded = EditorGUILayout.Popup("Add Base Slot", 0, baseSlotsNamesList.ToArray());
+					var baseAdded = EditorGUILayout.Popup("Add Base slot", 0, baseSlotsNamesList.ToArray());
 					if (EditorGUI.EndChangeCheck())
 					{
 						if (baseAdded != 0)

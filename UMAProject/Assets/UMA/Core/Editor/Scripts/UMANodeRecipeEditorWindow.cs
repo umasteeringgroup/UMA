@@ -1422,7 +1422,7 @@ namespace UMA.Editors
                 case NodeType.Slot:
                     {
                         var slot = _selectedNode.Slot;
-                        var slotEditor = new SlotEditor(_recipe, slot, 0);
+                        var slotEditor = new SlotEditor(_recipe, slot, 0, _asset);
                         bool dna = false, tex = false, mesh = false;
                         var changed = slotEditor.OnGUI(ref dna, ref tex, ref mesh);
                         if (changed) _needsSave = true;
@@ -1445,7 +1445,7 @@ namespace UMA.Editors
                     {
                         var ov = _selectedNode.Overlay;
                         var slot = FindSlotForOverlay(ov) ?? _recipe.GetAllSlots().FirstOrDefault();
-                        var overlayEditor = new OverlayEditor(_recipe, slot, ov);
+                        var overlayEditor = new OverlayEditor(_recipe, slot, ov, null, _asset);
                         var changed = overlayEditor.OnGUI();
                         if (changed) _needsSave = true;
                         break;

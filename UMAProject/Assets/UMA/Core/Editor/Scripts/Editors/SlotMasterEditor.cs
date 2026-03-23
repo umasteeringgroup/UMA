@@ -11,6 +11,7 @@ namespace UMA.Editors
         public static Dictionary<string, bool> OpenSlots = new Dictionary<string, bool>();
 
         protected readonly UMAData.UMARecipe _recipe;
+        protected readonly UnityEngine.Object _recipeContext;
         protected readonly List<SlotEditor> _slotEditors = new List<SlotEditor>();
         protected readonly SharedColorsCollectionEditor _sharedColorsEditor = new SharedColorsCollectionEditor();
         protected static int _slotPickerID = -1;
@@ -201,9 +202,154 @@ namespace UMA.Editors
             return UMAAssetIndexer.Instance.HasAsset<RaceData>(_raceData.raceName);
         }
 
-        public SlotMasterEditor(UMAData.UMARecipe recipe)
+        private static bool IsBakedRace(RaceData raceData)
+        {
+            return raceData != null && raceData.PrebakedBlendshapes != null && raceData.PrebakedBlendshapes.Count > 0;
+        }
+
+        private static bool IsBakedSlotName(string slotName, RaceData raceData)
+        {
+            if (string.IsNullOrEmpty(slotName))
+            {
+                return false;
+            }
+
+            if (raceData != null && !string.IsNullOrEmpty(raceData.raceName))
+            {
+                return slotName.EndsWith("_baked_" + raceData.raceName, System.StringComparison.OrdinalIgnoreCase);
+            }
+
+            return slotName.IndexOf("_baked_", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static string GetBakedSlotAssetName(SlotDataAsset slotAsset, RaceData raceData)
+        {
+            if (slotAsset == null || raceData == null)
+            {
+                return string.Empty;
+            }
+
+            string baseName = !string.IsNullOrEmpty(slotAsset.name) ? slotAsset.name : slotAsset.slotName;
+            if (string.IsNullOrEmpty(baseName))
+            {
+                return string.Empty;
+            }
+
+            return baseName + "_baked_" + raceData.raceName;
+        }
+
+        private static List<string> GetBakedSlotNameCandidates(SlotDataAsset slotAsset, RaceData raceData)
+        {
+            List<string> candidates = new List<string>();
+            if (slotAsset == null || raceData == null)
+            {
+                return candidates;
+            }
+
+            if (IsBakedSlotName(slotAsset.slotName, raceData))
+            {
+                candidates.Add(slotAsset.slotName);
+            }
+
+            if (!string.IsNullOrEmpty(slotAsset.slotName))
+            {
+                string slotNameCandidate = slotAsset.slotName + "_baked_" + raceData.raceName;
+                if (!candidates.Contains(slotNameCandidate))
+                {
+                    candidates.Add(slotNameCandidate);
+                }
+            }
+
+            string assetNameCandidate = GetBakedSlotAssetName(slotAsset, raceData);
+            if (!string.IsNullOrEmpty(assetNameCandidate) && !candidates.Contains(assetNameCandidate))
+            {
+                candidates.Add(assetNameCandidate);
+            }
+
+            return candidates;
+        }
+
+        private static SlotDataAsset ResolveBaseSlotAssetForRace(SlotData slot, RaceData raceData, out string displayName)
+        {
+            displayName = slot != null ? slot.slotName : string.Empty;
+            if (slot == null || slot.asset == null)
+            {
+                return null;
+            }
+
+            if (!IsBakedRace(raceData))
+            {
+                return slot.asset;
+            }
+
+            List<string> bakedSlotNameCandidates = GetBakedSlotNameCandidates(slot.asset, raceData);
+            if (bakedSlotNameCandidates.Count > 0)
+            {
+                var indexer = UMAAssetIndexer.Instance;
+                if (indexer != null)
+                {
+                    for (int i = 0; i < bakedSlotNameCandidates.Count; i++)
+                    {
+                        string candidate = bakedSlotNameCandidates[i];
+                        if (string.IsNullOrEmpty(candidate))
+                        {
+                            continue;
+                        }
+
+                        var bakedSlotAsset = indexer.GetAsset<SlotDataAsset>(candidate, false, true);
+                        if (bakedSlotAsset != null)
+                        {
+                            displayName = bakedSlotAsset.slotName;
+                            return bakedSlotAsset;
+                        }
+                    }
+                }
+
+                displayName = bakedSlotNameCandidates[0];
+
+                var bakedOnDemand = BakeBaseSlotAssetForRace(slot.asset, raceData, GetBakedSlotAssetName(slot.asset, raceData));
+                if (bakedOnDemand != null)
+                {
+                    displayName = bakedOnDemand.slotName;
+                    return bakedOnDemand;
+                }
+            }
+
+            return slot.asset;
+        }
+
+        private static SlotDataAsset BakeBaseSlotAssetForRace(SlotDataAsset originalSlotAsset, RaceData raceData, string bakedSlotAssetName)
+        {
+            if (originalSlotAsset == null || raceData == null)
+            {
+                return null;
+            }
+
+            if (!IsBakedRace(raceData))
+            {
+                return null;
+            }
+
+            SlotDataAsset.BakeSlotParams options = new SlotDataAsset.BakeSlotParams();
+            options.burnOptions = raceData.PrebakedBlendshapes;
+            options.ShapesToInclude = raceData.UnbakedShapesToInclude;
+            options.addToIndexer = true;
+            options.smoothingAngleDegrees = -1.0f;
+            options.forceRebuildRaceSlots = raceData.forceRebuildRaceSlots;
+            options.newSlotName = bakedSlotAssetName;
+
+            if (raceData.UnbakedShapesToInclude != null && raceData.UnbakedShapesToInclude.Count > 0)
+            {
+                options.copyUnbakedBlendshapes = true;
+            }
+
+            return originalSlotAsset.BakeNewSlotData(options);
+        }
+
+        public SlotMasterEditor(UMAData.UMARecipe recipe, UnityEngine.Object recipeContext = null)
         {
             _recipe = recipe;
+            _recipeContext = recipeContext;
 
             if (recipe.slotDataList == null)
             {
@@ -218,7 +364,7 @@ namespace UMA.Editors
                     continue;
                 }
 
-                _slotEditors.Add(new SlotEditor(_recipe, slot, i));
+                _slotEditors.Add(new SlotEditor(_recipe, slot, i, _recipeContext));
             }
 
             if (_slotEditors.Count > 1)
@@ -290,7 +436,7 @@ namespace UMA.Editors
             }
             GUILayout.Space(10);
 
-            var baseSlotsList = new List<SlotData>();
+            var baseSlotsList = new List<SlotDataAsset>();
             var baseSlotsNamesList = new List<string>() { "None" };
             if (_recipe.raceData != null)
             {
@@ -304,8 +450,13 @@ namespace UMA.Editors
                         {
                             if (slot != null)
                             {
-                                baseSlotsList.Add(slot);
-                                baseSlotsNamesList.Add(slot.slotName);
+                                string slotName;
+                                SlotDataAsset slotAsset = ResolveBaseSlotAssetForRace(slot, _recipe.raceData, out slotName);
+                                if (slotAsset != null)
+                                {
+                                    baseSlotsList.Add(slotAsset);
+                                    baseSlotsNamesList.Add(slotName);
+                                }
                             }
                         }
                     }
@@ -313,14 +464,14 @@ namespace UMA.Editors
                 if (baseSlotsNamesList.Count > 1)
                 {
                     EditorGUI.BeginChangeCheck();
-                    var baseAdded = EditorGUILayout.Popup("Add Base Slot", 0, baseSlotsNamesList.ToArray());
+                    var baseAdded = EditorGUILayout.Popup("Add base Slot", 0, baseSlotsNamesList.ToArray());
                     if (EditorGUI.EndChangeCheck())
                     {
                         if (baseAdded != 0)
                         {
-                            var slot = baseSlotsList[baseAdded - 1];
-                            LastSlot = slot.asset.slotName;
-                            var slotToAdd = new SlotData(slot.asset);
+                            var slotAsset = baseSlotsList[baseAdded - 1];
+                            LastSlot = slotAsset.slotName;
+                            var slotToAdd = new SlotData(slotAsset);
                             _recipe.MergeSlot(slotToAdd, false);
                             changed |= true;
                             _dnaDirty |= true;

@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
+using UMA.CharacterSystem;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,10 +13,13 @@ namespace UMA.Editors
         private readonly UMAData.UMARecipe _recipe;
         protected readonly SlotData _slotData;
         private readonly OverlayData _overlayData;
+        private readonly UnityEngine.Object _recipeContext;
         private OverlayDataAsset _baseOverlayData;
         private readonly TextureEditor[] _textures;
         private ColorEditor[] _colors;
         private bool isUV = false;
+        private bool _rectChanged = false;
+        private bool _popupRectChanged;
 
 
         public OverlayData Overlay
@@ -28,6 +33,7 @@ namespace UMA.Editors
 
         public int move;
         private static OverlayData showExtendedRangeForOverlay;
+        private static readonly HashSet<int> PopupChangedOverlayAssetIds = new HashSet<int>();
 
         public void EnsureEntry(string overlayName)
         {
@@ -39,11 +45,12 @@ namespace UMA.Editors
             OverlayExpanded.Add(overlayName, true);
         }
 
-        public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData, OverlayDataAsset baseOverlayDataAsset = null)
+        public OverlayEditor(UMAData.UMARecipe recipe, SlotData slotData, OverlayData overlayData, OverlayDataAsset baseOverlayDataAsset = null, UnityEngine.Object recipeContext = null)
         {
             _recipe = recipe;
             _overlayData = overlayData;
             _slotData = slotData;
+            _recipeContext = recipeContext;
             _baseOverlayData = baseOverlayDataAsset;
             EnsureEntry(overlayData.overlayName);
 
@@ -111,6 +118,159 @@ namespace UMA.Editors
             return UMAAssetIndexer.Instance.HasOverlay(_overlayData.overlayName);
         }
 
+        private void OpenPositioningPopup()
+        {
+            OverlayRectPositionWindow.Open(this, _slotData, _overlayData, _baseOverlayData);
+        }
+
+        internal void ApplyPopupRect(Rect rect, bool updateAsset)
+        {
+            _overlayData.rect = rect;
+            _popupRectChanged = true;
+            if (_overlayData.asset != null)
+            {
+                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetInstanceID());
+            }
+
+            if (updateAsset && _overlayData.asset != null)
+            {
+                _overlayData.asset.rect = rect;
+                _overlayData.asset.lastActionTime = Time.realtimeSinceStartup;
+                _overlayData.asset.doSave = true;
+                EditorUtility.SetDirty(_overlayData.asset);
+                UMAUpdateProcessor.UpdateOverlay(_overlayData.asset);
+            }
+
+            if (_recipeContext != null)
+            {
+                EditorUtility.SetDirty(_recipeContext);
+                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+            }
+
+            RepaintEditorViews();
+        }
+
+        internal UMAWardrobeRecipe ResolveWardrobeRecipeContext()
+        {
+            if (_recipeContext is UMAWardrobeRecipe wardrobeRecipe)
+            {
+                return wardrobeRecipe;
+            }
+
+            return Selection.activeObject as UMAWardrobeRecipe;
+        }
+
+        internal void ForceUpdateSceneAvatarsUsingOverlay()
+        {
+            if (_overlayData == null || _overlayData.asset == null)
+            {
+                return;
+            }
+
+            DynamicCharacterAvatar[] avatars = UnityEngine.Object.FindObjectsByType<DynamicCharacterAvatar>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            for (int i = 0; i < avatars.Length; i++)
+            {
+                DynamicCharacterAvatar avatar = avatars[i];
+                if (avatar == null || avatar.gameObject == null)
+                {
+                    continue;
+                }
+
+                if (EditorUtility.IsPersistent(avatar) || !avatar.gameObject.scene.IsValid())
+                {
+                    continue;
+                }
+
+                if (!AvatarUsesOverlay(avatar, _overlayData.asset))
+                {
+                    continue;
+                }
+
+                avatar.ForceUpdate(false, true, false);
+            }
+        }
+
+        private static bool AvatarUsesOverlay(DynamicCharacterAvatar avatar, OverlayDataAsset overlayAsset)
+        {
+            if (avatar == null || overlayAsset == null || avatar.umaRecipe == null)
+            {
+                return false;
+            }
+
+            SlotData[] slots = avatar.umaRecipe.GetAllSlots();
+            if (slots == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                SlotData slot = slots[i];
+                if (slot == null)
+                {
+                    continue;
+                }
+
+                List<OverlayData> overlays = slot.GetOverlayList();
+                if (overlays == null)
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < overlays.Count; j++)
+                {
+                    OverlayData overlay = overlays[j];
+                    if (overlay != null && overlay.asset == overlayAsset)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        internal void RestorePopupRects(Rect recipeRect, Rect assetRect)
+        {
+            _overlayData.rect = recipeRect;
+            _popupRectChanged = true;
+
+            if (_overlayData.asset != null)
+            {
+                _overlayData.asset.rect = assetRect;
+                _overlayData.asset.lastActionTime = Time.realtimeSinceStartup;
+                _overlayData.asset.doSave = true;
+                EditorUtility.SetDirty(_overlayData.asset);
+                UMAUpdateProcessor.UpdateOverlay(_overlayData.asset);
+            }
+
+            RepaintEditorViews();
+        }
+
+        private bool ConsumePopupRectChanged()
+        {
+            bool popupChanged = _popupRectChanged;
+
+            if (_overlayData != null && _overlayData.asset != null)
+            {
+                int assetId = _overlayData.asset.GetInstanceID();
+                if (PopupChangedOverlayAssetIds.Contains(assetId))
+                {
+                    popupChanged = true;
+                    PopupChangedOverlayAssetIds.Remove(assetId);
+                }
+            }
+
+            _popupRectChanged = false;
+            return popupChanged;
+        }
+
+        private static void RepaintEditorViews()
+        {
+            SceneView.RepaintAll();
+            EditorApplication.QueuePlayerLoopUpdate();
+        }
+
         public bool OnGUI()
         {
             List<string> buttons = new List<string>() { "Inspect","Mat","UMat" };
@@ -168,9 +328,11 @@ namespace UMA.Editors
             OverlayExpanded[_overlayData.overlayName] = _foldout;
             Delete = delete;
 
+            bool popupchanged = ConsumePopupRectChanged();
+
             if (!_foldout)
             {
-                return false;
+                return popupchanged;
             }
 
             GUIHelper.BeginHorizontalPadded(10, Color.white);
@@ -207,6 +369,12 @@ namespace UMA.Editors
                     }
                 }
             }
+
+            if (GUILayout.Button("Position Overlay..."))
+            {
+                OpenPositioningPopup();
+            }
+
             if (_slotData.asset.material != null && _overlayData.asset.material != null)
             {
                 if (_overlayData.asset.material.name != _slotData.material.name)
@@ -311,7 +479,908 @@ namespace UMA.Editors
 
             GUIHelper.EndVerticalPadded(10);
 
+
+            changed |= popupchanged;
             return changed;
+        }
+
+        private sealed class OverlayRectPositionWindow : EditorWindow
+        {
+            private const float HandleSize = 12f;
+            private const float MinRectSize = 0.02f;
+            private const float PreviewPadding = 16f;
+
+            private OverlayEditor _owner;
+            private SlotData _slotData;
+            private OverlayData _overlayData;
+            private Rect _originalRecipeRect;
+            private Rect _originalAssetRect;
+            private Rect _workingRect;
+            private bool _useUvRect;
+            private List<BaseOverlayChoice> _slotBaseChoices = new List<BaseOverlayChoice>();
+            private string[] _slotBaseChoiceNames = Array.Empty<string>();
+            private int _selectedSlotBaseChoice;
+            private List<BaseOverlayChoice> _raceBaseChoices = new List<BaseOverlayChoice>();
+            private string[] _raceBaseChoiceNames = Array.Empty<string>();
+            private int _selectedRaceBaseChoice;
+            private List<string> _raceLookupMessages = new List<string>();
+            private BaseOverlaySource _baseOverlaySource;
+            private OverlayDataAsset _pickedBaseOverlayAsset;
+            private DragMode _dragMode;
+            private Rect _dragStartDisplayRect;
+            private Vector2 _dragStartMouse;
+            private bool _rectChanged;
+
+            private enum BaseOverlaySource
+            {
+                None,
+                SlotOverlay,
+                RaceRecipeOverlay,
+                AssetPicker
+            }
+
+            private sealed class BaseOverlayChoice
+            {
+                public string Label;
+                public OverlayData Overlay;
+            }
+
+            private enum DragMode
+            {
+                None,
+                Move,
+                TopLeft,
+                TopRight,
+                BottomLeft,
+                BottomRight
+            }
+
+            public static void Open(OverlayEditor owner, SlotData slotData, OverlayData overlayData, OverlayDataAsset preferredBaseOverlay)
+            {
+                if (owner == null || slotData == null || overlayData == null || overlayData.asset == null)
+                {
+                    return;
+                }
+
+                OverlayRectPositionWindow window = CreateInstance<OverlayRectPositionWindow>();
+                window.titleContent = new GUIContent("Overlay Positioner");
+                window.minSize = new Vector2(700f, 760f);
+                window.Initialize(owner, slotData, overlayData, preferredBaseOverlay);
+                window.ShowUtility();
+            }
+
+            private void Initialize(OverlayEditor owner, SlotData slotData, OverlayData overlayData, OverlayDataAsset preferredBaseOverlay)
+            {
+                _owner = owner;
+                _slotData = slotData;
+                _overlayData = overlayData;
+                _originalRecipeRect = overlayData.rect;
+                _originalAssetRect = overlayData.asset != null ? overlayData.asset.rect : overlayData.rect;
+                _workingRect = overlayData.rect;
+                _useUvRect = LooksLikeUvRect(_workingRect);
+                _pickedBaseOverlayAsset = preferredBaseOverlay;
+                BuildBaseChoices(preferredBaseOverlay);
+            }
+
+            private void BuildBaseChoices(OverlayDataAsset preferredBaseOverlay)
+            {
+                BuildSlotBaseChoices(preferredBaseOverlay);
+                BuildRaceBaseChoices(preferredBaseOverlay);
+                SetDefaultBaseOverlaySource(preferredBaseOverlay);
+            }
+
+            private void BuildSlotBaseChoices(OverlayDataAsset preferredBaseOverlay)
+            {
+                _slotBaseChoices.Clear();
+                List<string> labels = new List<string> { "<None>" };
+
+                List<OverlayData> slotOverlays = _slotData.GetOverlayList();
+                OverlayData defaultChoice = null;
+                int currentIndex = slotOverlays.IndexOf(_overlayData);
+
+                if (currentIndex > 0 && slotOverlays.Count > 0)
+                {
+                    OverlayData firstOverlay = slotOverlays[0];
+                    if (firstOverlay != null && firstOverlay != _overlayData)
+                    {
+                        defaultChoice = firstOverlay;
+                    }
+                }
+
+                for (int i = 0; i < slotOverlays.Count; i++)
+                {
+                    OverlayData choice = slotOverlays[i];
+                    if (choice == null || choice == _overlayData || choice.asset == null)
+                    {
+                        continue;
+                    }
+
+                    _slotBaseChoices.Add(new BaseOverlayChoice
+                    {
+                        Label = choice.overlayName + " (slot index " + i + ")",
+                        Overlay = choice
+                    });
+                    labels.Add(choice.overlayName + " (" + i + ")");
+                }
+
+                _slotBaseChoiceNames = labels.ToArray();
+                _selectedSlotBaseChoice = 0;
+
+                if (preferredBaseOverlay != null)
+                {
+                    for (int i = 0; i < _slotBaseChoices.Count; i++)
+                    {
+                        if (_slotBaseChoices[i].Overlay.asset == preferredBaseOverlay)
+                        {
+                            _selectedSlotBaseChoice = i + 1;
+                            return;
+                        }
+                    }
+                }
+
+                if (defaultChoice != null)
+                {
+                    for (int i = 0; i < _slotBaseChoices.Count; i++)
+                    {
+                        if (_slotBaseChoices[i].Overlay == defaultChoice)
+                        {
+                            _selectedSlotBaseChoice = i + 1;
+                            return;
+                        }
+                    }
+                }
+            }
+
+            private void BuildRaceBaseChoices(OverlayDataAsset preferredBaseOverlay)
+            {
+                _raceBaseChoices.Clear();
+                _raceLookupMessages.Clear();
+                List<string> labels = new List<string> { "<None>" };
+                _selectedRaceBaseChoice = 0;
+
+                UMAWardrobeRecipe wardrobeRecipe = _owner.ResolveWardrobeRecipeContext();
+                if (wardrobeRecipe == null || wardrobeRecipe.compatibleRaces == null)
+                {
+                    _raceLookupMessages.Add("No UMAWardrobeRecipe context was available for race recipe overlay lookup.");
+                    _raceBaseChoiceNames = labels.ToArray();
+                    return;
+                }
+
+                if (wardrobeRecipe.compatibleRaces.Count == 0)
+                {
+                    _raceLookupMessages.Add("The current wardrobe recipe has no compatible races.");
+                }
+
+                for (int i = 0; i < wardrobeRecipe.compatibleRaces.Count; i++)
+                {
+                    string raceName = wardrobeRecipe.compatibleRaces[i];
+                    if (string.IsNullOrWhiteSpace(raceName))
+                    {
+                        _raceLookupMessages.Add("Encountered an empty compatible race entry.");
+                        continue;
+                    }
+
+                    RaceData raceData = ResolveRaceDataByRaceName(raceName, out string resolutionMessage);
+                    _raceLookupMessages.Add(resolutionMessage);
+
+                    if (raceData == null)
+                    {
+                        continue;
+                    }
+
+                    if (raceData.baseRaceRecipe == null)
+                    {
+                        _raceLookupMessages.Add("Race '" + raceData.raceName + "' was found, but has no baseRaceRecipe.");
+                        continue;
+                    }
+
+                    UMAData.UMARecipe raceRecipe = raceData.baseRaceRecipe.GetCachedRecipe();
+                    if (raceRecipe == null)
+                    {
+                        _raceLookupMessages.Add("Race '" + raceData.raceName + "' baseRaceRecipe could not be loaded.");
+                        continue;
+                    }
+
+                    SlotData[] slots = raceRecipe.GetAllSlots();
+                    if (slots == null)
+                    {
+                        _raceLookupMessages.Add("Race '" + raceData.raceName + "' baseRaceRecipe returned no slots.");
+                        continue;
+                    }
+
+                    int overlaysAddedForRace = 0;
+
+                    for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
+                    {
+                        SlotData slot = slots[slotIndex];
+                        if (slot == null)
+                        {
+                            continue;
+                        }
+
+                        List<OverlayData> overlays = slot.GetOverlayList();
+                        if (overlays == null)
+                        {
+                            continue;
+                        }
+
+                        for (int overlayIndex = 0; overlayIndex < overlays.Count; overlayIndex++)
+                        {
+                            OverlayData choice = overlays[overlayIndex];
+                            if (choice == null || choice.asset == null)
+                            {
+                                continue;
+                            }
+
+                            _raceBaseChoices.Add(new BaseOverlayChoice
+                            {
+                                Label = raceName + " / " + slot.slotName + " / " + choice.overlayName,
+                                Overlay = choice.Duplicate()
+                            });
+                            labels.Add(raceName + " / " + slot.slotName + " / " + choice.overlayName);
+                            overlaysAddedForRace++;
+
+                            if (preferredBaseOverlay != null && choice.asset == preferredBaseOverlay)
+                            {
+                                _selectedRaceBaseChoice = _raceBaseChoices.Count;
+                            }
+                        }
+                    }
+
+                    _raceLookupMessages.Add("Race '" + raceData.raceName + "' contributed " + overlaysAddedForRace + " overlay option(s).");
+                }
+
+                _raceBaseChoiceNames = labels.ToArray();
+            }
+
+            private static RaceData ResolveRaceDataByRaceName(string raceName, out string resolutionMessage)
+            {
+                resolutionMessage = "Race lookup not attempted.";
+                if (string.IsNullOrWhiteSpace(raceName))
+                {
+                    resolutionMessage = "Race lookup skipped because the compatible race name was empty.";
+                    return null;
+                }
+
+                UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+                if (indexer == null)
+                {
+                    resolutionMessage = "Race '" + raceName + "' could not be resolved because UMAAssetIndexer.Instance is null.";
+                    return null;
+                }
+
+                RaceData raceData = indexer.GetAsset<RaceData>(raceName, false, true);
+                if (raceData != null)
+                {
+                    resolutionMessage = "Race lookup '" + raceName + "' resolved directly to asset '" + raceData.name + "' with raceName '" + raceData.raceName + "'.";
+                    return raceData;
+                }
+
+                List<RaceData> allRaces = indexer.GetAllAssets<RaceData>();
+                for (int i = 0; i < allRaces.Count; i++)
+                {
+                    RaceData candidate = allRaces[i];
+                    if (candidate == null)
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(candidate.raceName, raceName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        resolutionMessage = "Race lookup '" + raceName + "' resolved by scanning indexed RaceData assets. Asset='" + candidate.name + "', raceName='" + candidate.raceName + "'.";
+                        return candidate;
+                    }
+                }
+
+                resolutionMessage = "Race lookup '" + raceName + "' failed in UMAAssetIndexer. No indexed RaceData with matching raceName was found.";
+                return null;
+            }
+
+            private void SetDefaultBaseOverlaySource(OverlayDataAsset preferredBaseOverlay)
+            {
+                _baseOverlaySource = BaseOverlaySource.None;
+
+                if (preferredBaseOverlay != null)
+                {
+                    if (_selectedSlotBaseChoice > 0)
+                    {
+                        _baseOverlaySource = BaseOverlaySource.SlotOverlay;
+                        return;
+                    }
+
+                    if (_selectedRaceBaseChoice > 0)
+                    {
+                        _baseOverlaySource = BaseOverlaySource.RaceRecipeOverlay;
+                        return;
+                    }
+
+                    _baseOverlaySource = BaseOverlaySource.AssetPicker;
+                    return;
+                }
+
+                if (_selectedSlotBaseChoice > 0)
+                {
+                    _baseOverlaySource = BaseOverlaySource.SlotOverlay;
+                    return;
+                }
+
+                if (_selectedRaceBaseChoice > 0)
+                {
+                    _baseOverlaySource = BaseOverlaySource.RaceRecipeOverlay;
+                }
+            }
+
+            private OverlayData SelectedBaseOverlay
+            {
+                get
+                {
+                    switch (_baseOverlaySource)
+                    {
+                        case BaseOverlaySource.SlotOverlay:
+                            if (_selectedSlotBaseChoice > 0 && _selectedSlotBaseChoice - 1 < _slotBaseChoices.Count)
+                            {
+                                return _slotBaseChoices[_selectedSlotBaseChoice - 1].Overlay;
+                            }
+                            break;
+                        case BaseOverlaySource.RaceRecipeOverlay:
+                            if (_selectedRaceBaseChoice > 0 && _selectedRaceBaseChoice - 1 < _raceBaseChoices.Count)
+                            {
+                                return _raceBaseChoices[_selectedRaceBaseChoice - 1].Overlay;
+                            }
+                            break;
+                        case BaseOverlaySource.AssetPicker:
+                            if (_pickedBaseOverlayAsset != null)
+                            {
+                                return new OverlayData(_pickedBaseOverlayAsset);
+                            }
+                            break;
+                    }
+
+                    return null;
+                }
+            }
+
+            private void OnGUI()
+            {
+                if (_owner == null || _slotData == null || _overlayData == null || _overlayData.asset == null)
+                {
+                    Close();
+                    return;
+                }
+
+                EditorGUILayout.LabelField("Position Overlay", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox("Drag inside the rectangle to move the overlay. Drag the corner handles to resize it against the selected base overlay preview.", MessageType.Info);
+
+                EditorGUILayout.LabelField("Overlay", _overlayData.overlayName);
+
+                BaseOverlaySource newSource = (BaseOverlaySource)EditorGUILayout.EnumPopup("Base Overlay Source", _baseOverlaySource);
+                if (newSource != _baseOverlaySource)
+                {
+                    _baseOverlaySource = newSource;
+                    Repaint();
+                }
+
+                if (_baseOverlaySource == BaseOverlaySource.SlotOverlay)
+                {
+                    int newSlotBaseChoice = EditorGUILayout.Popup("Slot Overlay", _selectedSlotBaseChoice, _slotBaseChoiceNames);
+                    if (newSlotBaseChoice != _selectedSlotBaseChoice)
+                    {
+                        _selectedSlotBaseChoice = newSlotBaseChoice;
+                        Repaint();
+                    }
+                }
+
+                if (_baseOverlaySource == BaseOverlaySource.RaceRecipeOverlay)
+                {
+                    using (new EditorGUI.DisabledScope(_raceBaseChoiceNames.Length <= 1))
+                    {
+                        int newRaceBaseChoice = EditorGUILayout.Popup("Race Base Overlay", _selectedRaceBaseChoice, _raceBaseChoiceNames);
+                        if (newRaceBaseChoice != _selectedRaceBaseChoice)
+                        {
+                            _selectedRaceBaseChoice = newRaceBaseChoice;
+                            Repaint();
+                        }
+                    }
+
+                    if (_raceBaseChoiceNames.Length <= 1)
+                    {
+                        EditorGUILayout.HelpBox("No compatible-race base recipe overlays were found for the current wardrobe recipe context.", MessageType.Info);
+                    }
+
+                    if (_raceLookupMessages.Count > 0)
+                    {
+                        GUIHelper.BeginVerticalPadded(4, new Color(0.92f, 0.92f, 0.92f, 1f));
+                        EditorGUILayout.LabelField("Race Lookup Diagnostics", EditorStyles.boldLabel);
+                        for (int i = 0; i < _raceLookupMessages.Count; i++)
+                        {
+                            EditorGUILayout.LabelField("- " + _raceLookupMessages[i], EditorStyles.wordWrappedMiniLabel);
+                        }
+                        GUIHelper.EndVerticalPadded(4);
+                    }
+                }
+
+                if (_baseOverlaySource == BaseOverlaySource.AssetPicker)
+                {
+                    OverlayDataAsset newPickedBaseOverlay = EditorGUILayout.ObjectField("Base Overlay Asset", _pickedBaseOverlayAsset, typeof(OverlayDataAsset), false) as OverlayDataAsset;
+                    if (newPickedBaseOverlay != _pickedBaseOverlayAsset)
+                    {
+                        _pickedBaseOverlayAsset = newPickedBaseOverlay;
+                        Repaint();
+                    }
+                }
+
+                _owner._baseOverlayData = SelectedBaseOverlay != null ? SelectedBaseOverlay.asset : null;
+
+                Rect editedRect = EditorGUILayout.RectField("Rect", _workingRect);
+                if (editedRect != _workingRect)
+                {
+                    _workingRect = editedRect;
+                    _rectChanged = true;
+                    Repaint();
+                }
+
+                Texture baseTexture = GetPreviewTexture(SelectedBaseOverlay);
+                Texture overlayTexture = GetPreviewTexture(_overlayData);
+                Rect previewArea = GUILayoutUtility.GetRect(10f, 10000f, 320f, 520f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                Rect previewRect = GetPreviewRect(previewArea, baseTexture, overlayTexture);
+
+                DrawPreview(previewArea, previewRect, baseTexture, overlayTexture);
+                HandlePreviewInteraction(previewRect, overlayTexture != null);
+
+                GUILayout.Space(8f);
+                GUILayout.BeginHorizontal();
+
+                if (GUILayout.Button("Update Overlay"))
+                {
+                    _owner.ApplyPopupRect(_workingRect, true);
+                    _rectChanged = false;
+                }
+
+                if (GUILayout.Button("Update Recipe"))
+                {
+                    _owner.ApplyPopupRect(_workingRect, false);
+                    _rectChanged = false;
+                }
+
+                if (GUILayout.Button("Close"))
+                {
+                    if (_rectChanged)
+                    {
+                        _owner.ApplyPopupRect(_workingRect, false);
+                        _rectChanged = false;
+                    }
+                    Close();
+                }
+
+                if (GUILayout.Button("Cancel"))
+                {
+                    _owner.RestorePopupRects(_originalRecipeRect, _originalAssetRect);
+                    Close();
+                }
+
+                GUILayout.EndHorizontal();
+            }
+
+            private void DrawPreview(Rect previewArea, Rect previewRect, Texture baseTexture, Texture overlayTexture)
+            {
+                EditorGUI.DrawRect(previewArea, new Color(0.15f, 0.15f, 0.15f, 1f));
+                DrawCheckerboard(previewRect);
+
+                if (baseTexture != null)
+                {
+                    DrawTexture(previewRect, baseTexture, GetOverlayTint(SelectedBaseOverlay));
+                }
+
+                Rect overlayDisplayRect = GetDisplayRectFromWorkingRect(previewRect);
+                if (overlayTexture != null)
+                {
+                    DrawTexture(overlayDisplayRect, overlayTexture, GetOverlayTint(_overlayData));
+                }
+
+                DrawOverlayOutline(overlayDisplayRect);
+            }
+
+            private void HandlePreviewInteraction(Rect previewRect, bool hasOverlayTexture)
+            {
+                if (!hasOverlayTexture)
+                {
+                    return;
+                }
+
+                Event evt = Event.current;
+                Rect overlayRect = GetDisplayRectFromWorkingRect(previewRect);
+                Rect topLeft = GetHandleRect(overlayRect.xMin, overlayRect.yMin);
+                Rect topRight = GetHandleRect(overlayRect.xMax, overlayRect.yMin);
+                Rect bottomLeft = GetHandleRect(overlayRect.xMin, overlayRect.yMax);
+                Rect bottomRight = GetHandleRect(overlayRect.xMax, overlayRect.yMax);
+
+                EditorGUIUtility.AddCursorRect(topLeft, MouseCursor.ResizeUpLeft);
+                EditorGUIUtility.AddCursorRect(topRight, MouseCursor.ResizeUpRight);
+                EditorGUIUtility.AddCursorRect(bottomLeft, MouseCursor.ResizeUpRight);
+                EditorGUIUtility.AddCursorRect(bottomRight, MouseCursor.ResizeUpLeft);
+                EditorGUIUtility.AddCursorRect(overlayRect, MouseCursor.MoveArrow);
+
+                if (evt.type == EventType.MouseDown && evt.button == 0)
+                {
+                    if (topLeft.Contains(evt.mousePosition))
+                    {
+                        BeginDrag(DragMode.TopLeft, overlayRect, evt.mousePosition);
+                    }
+                    else if (topRight.Contains(evt.mousePosition))
+                    {
+                        BeginDrag(DragMode.TopRight, overlayRect, evt.mousePosition);
+                    }
+                    else if (bottomLeft.Contains(evt.mousePosition))
+                    {
+                        BeginDrag(DragMode.BottomLeft, overlayRect, evt.mousePosition);
+                    }
+                    else if (bottomRight.Contains(evt.mousePosition))
+                    {
+                        BeginDrag(DragMode.BottomRight, overlayRect, evt.mousePosition);
+                    }
+                    else if (overlayRect.Contains(evt.mousePosition))
+                    {
+                        BeginDrag(DragMode.Move, overlayRect, evt.mousePosition);
+                    }
+                }
+
+                if (evt.type == EventType.MouseDrag && _dragMode != DragMode.None)
+                {
+                    Vector2 delta = evt.mousePosition - _dragStartMouse;
+                    Rect draggedRect = _dragStartDisplayRect;
+
+                    switch (_dragMode)
+                    {
+                        case DragMode.Move:
+                            draggedRect.position += delta;
+                            break;
+                        case DragMode.TopLeft:
+                            draggedRect.xMin += delta.x;
+                            draggedRect.yMin += delta.y;
+                            break;
+                        case DragMode.TopRight:
+                            draggedRect.xMax += delta.x;
+                            draggedRect.yMin += delta.y;
+                            break;
+                        case DragMode.BottomLeft:
+                            draggedRect.xMin += delta.x;
+                            draggedRect.yMax += delta.y;
+                            break;
+                        case DragMode.BottomRight:
+                            draggedRect.xMax += delta.x;
+                            draggedRect.yMax += delta.y;
+                            break;
+                    }
+
+                    draggedRect = ClampDisplayRect(draggedRect, previewRect);
+                    _workingRect = GetWorkingRectFromDisplayRect(previewRect, draggedRect);
+                    _rectChanged = true;
+                    evt.Use();
+                    Repaint();
+                }
+
+                if ((evt.type == EventType.MouseUp || evt.type == EventType.Ignore) && _dragMode != DragMode.None)
+                {
+                    _owner.ApplyPopupRect(_workingRect, false);
+                    _owner.ForceUpdateSceneAvatarsUsingOverlay();
+                    _rectChanged = false;
+                    _dragMode = DragMode.None;
+                    evt.Use();
+                }
+            }
+
+            private void BeginDrag(DragMode mode, Rect overlayRect, Vector2 mousePosition)
+            {
+                _dragMode = mode;
+                _dragStartDisplayRect = overlayRect;
+                _dragStartMouse = mousePosition;
+                Event.current.Use();
+            }
+
+            private Rect GetPreviewRect(Rect previewArea, Texture baseTexture, Texture overlayTexture)
+            {
+                float sourceWidth = 1f;
+                float sourceHeight = 1f;
+
+                Texture referenceTexture = baseTexture != null ? baseTexture : overlayTexture;
+                if (referenceTexture != null)
+                {
+                    sourceWidth = Mathf.Max(1f, referenceTexture.width);
+                    sourceHeight = Mathf.Max(1f, referenceTexture.height);
+                }
+
+                Rect padded = new Rect(
+                    previewArea.x + PreviewPadding,
+                    previewArea.y + PreviewPadding,
+                    Mathf.Max(1f, previewArea.width - (PreviewPadding * 2f)),
+                    Mathf.Max(1f, previewArea.height - (PreviewPadding * 2f)));
+
+                float sourceAspect = sourceWidth / sourceHeight;
+                float areaAspect = padded.width / padded.height;
+
+                if (sourceAspect > areaAspect)
+                {
+                    float height = padded.width / sourceAspect;
+                    return new Rect(padded.x, padded.y + ((padded.height - height) * 0.5f), padded.width, height);
+                }
+
+                float width = padded.height * sourceAspect;
+                return new Rect(padded.x + ((padded.width - width) * 0.5f), padded.y, width, padded.height);
+            }
+
+            private Rect GetDisplayRectFromWorkingRect(Rect previewRect)
+            {
+                Rect uvRect = GetWorkingUvRect();
+                return new Rect(
+                    previewRect.x + (uvRect.x * previewRect.width),
+                    previewRect.y + ((1f - uvRect.y - uvRect.height) * previewRect.height),
+                    uvRect.width * previewRect.width,
+                    uvRect.height * previewRect.height);
+            }
+
+            private Rect GetDisplayRectForOverlay(Rect previewRect, OverlayData overlayData)
+            {
+                if (overlayData == null)
+                {
+                    return previewRect;
+                }
+
+                Rect uvRect = GetUvRectForOverlay(overlayData);
+                return new Rect(
+                    previewRect.x + (uvRect.x * previewRect.width),
+                    previewRect.y + ((1f - uvRect.y - uvRect.height) * previewRect.height),
+                    uvRect.width * previewRect.width,
+                    uvRect.height * previewRect.height);
+            }
+
+            private Rect GetWorkingRectFromDisplayRect(Rect previewRect, Rect displayRect)
+            {
+                Rect uvRect = new Rect(
+                    (displayRect.x - previewRect.x) / previewRect.width,
+                    1f - ((displayRect.yMax - previewRect.y) / previewRect.height),
+                    displayRect.width / previewRect.width,
+                    displayRect.height / previewRect.height);
+
+                uvRect = SanitizeUvRect(uvRect);
+                return FromUvRect(uvRect);
+            }
+
+            private Rect GetWorkingUvRect()
+            {
+                if (_useUvRect)
+                {
+                    return SanitizeUvRect(_workingRect);
+                }
+
+                Vector2 referenceSize = GetReferenceSize();
+                if (referenceSize.x <= 0f || referenceSize.y <= 0f)
+                {
+                    return new Rect(0f, 0f, 1f, 1f);
+                }
+
+                return SanitizeUvRect(new Rect(
+                    _workingRect.x / referenceSize.x,
+                    _workingRect.y / referenceSize.y,
+                    _workingRect.width / referenceSize.x,
+                    _workingRect.height / referenceSize.y));
+            }
+
+            private Rect FromUvRect(Rect uvRect)
+            {
+                if (_useUvRect)
+                {
+                    return uvRect;
+                }
+
+                Vector2 referenceSize = GetReferenceSize();
+                return new Rect(
+                    uvRect.x * referenceSize.x,
+                    uvRect.y * referenceSize.y,
+                    uvRect.width * referenceSize.x,
+                    uvRect.height * referenceSize.y);
+            }
+
+            private Vector2 GetReferenceSize()
+            {
+                Texture referenceTexture = GetPreviewTexture(SelectedBaseOverlay);
+                if (referenceTexture == null)
+                {
+                    referenceTexture = GetPreviewTexture(_overlayData);
+                }
+
+                if (referenceTexture == null)
+                {
+                    return Vector2.one;
+                }
+
+                return new Vector2(Mathf.Max(1f, referenceTexture.width), Mathf.Max(1f, referenceTexture.height));
+            }
+
+            private static Rect GetUvRectForOverlay(OverlayData overlayData)
+            {
+                if (overlayData == null)
+                {
+                    return new Rect(0f, 0f, 1f, 1f);
+                }
+
+                if (LooksLikeUvRect(overlayData.rect))
+                {
+                    return SanitizeUvRect(overlayData.rect);
+                }
+
+                Texture texture = GetPreviewTexture(overlayData);
+                if (texture == null || texture.width <= 0 || texture.height <= 0)
+                {
+                    return new Rect(0f, 0f, 1f, 1f);
+                }
+
+                Rect uvRect = new Rect(
+                    overlayData.rect.x / texture.width,
+                    overlayData.rect.y / texture.height,
+                    overlayData.rect.width / texture.width,
+                    overlayData.rect.height / texture.height);
+
+                return SanitizeUvRect(uvRect);
+            }
+
+            private static Rect SanitizeUvRect(Rect uvRect)
+            {
+                float xMin = Mathf.Clamp(uvRect.xMin, 0f, 1f - MinRectSize);
+                float yMin = Mathf.Clamp(uvRect.yMin, 0f, 1f - MinRectSize);
+                float xMax = Mathf.Clamp(uvRect.xMax, xMin + MinRectSize, 1f);
+                float yMax = Mathf.Clamp(uvRect.yMax, yMin + MinRectSize, 1f);
+                return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+            }
+
+            private static Rect ClampDisplayRect(Rect rect, Rect bounds)
+            {
+                float minSizeX = Mathf.Max(MinRectSize * bounds.width, 1f);
+                float minSizeY = Mathf.Max(MinRectSize * bounds.height, 1f);
+
+                rect.width = Mathf.Max(minSizeX, rect.width);
+                rect.height = Mathf.Max(minSizeY, rect.height);
+
+                if (rect.xMin < bounds.xMin)
+                {
+                    if (rect.width >= bounds.width)
+                    {
+                        rect.xMin = bounds.xMin;
+                        rect.width = bounds.width;
+                    }
+                    else
+                    {
+                        rect.x = bounds.xMin;
+                    }
+                }
+
+                if (rect.xMax > bounds.xMax)
+                {
+                    if (rect.width >= bounds.width)
+                    {
+                        rect.xMin = bounds.xMin;
+                        rect.width = bounds.width;
+                    }
+                    else
+                    {
+                        rect.x = bounds.xMax - rect.width;
+                    }
+                }
+
+                if (rect.yMin < bounds.yMin)
+                {
+                    if (rect.height >= bounds.height)
+                    {
+                        rect.yMin = bounds.yMin;
+                        rect.height = bounds.height;
+                    }
+                    else
+                    {
+                        rect.y = bounds.yMin;
+                    }
+                }
+
+                if (rect.yMax > bounds.yMax)
+                {
+                    if (rect.height >= bounds.height)
+                    {
+                        rect.yMin = bounds.yMin;
+                        rect.height = bounds.height;
+                    }
+                    else
+                    {
+                        rect.y = bounds.yMax - rect.height;
+                    }
+                }
+
+                return rect;
+            }
+
+            private static Rect GetHandleRect(float centerX, float centerY)
+            {
+                return new Rect(centerX - (HandleSize * 0.5f), centerY - (HandleSize * 0.5f), HandleSize, HandleSize);
+            }
+
+            private static bool LooksLikeUvRect(Rect rect)
+            {
+                return Mathf.Abs(rect.x) <= 1f && Mathf.Abs(rect.y) <= 1f && rect.width <= 1f && rect.height <= 1f;
+            }
+
+            private static Texture GetPreviewTexture(OverlayData overlayData)
+            {
+                if (overlayData == null || overlayData.textureArray == null)
+                {
+                    return null;
+                }
+
+                for (int i = 0; i < overlayData.textureArray.Length; i++)
+                {
+                    if (overlayData.textureArray[i] != null)
+                    {
+                        return overlayData.textureArray[i];
+                    }
+                }
+
+                return null;
+            }
+
+            private static Color GetOverlayTint(OverlayData overlayData)
+            {
+                if (overlayData == null || overlayData.colorData == null || overlayData.colorData.channelMask == null || overlayData.colorData.channelMask.Length == 0)
+                {
+                    return Color.white;
+                }
+
+                return overlayData.colorData.channelMask[0];
+            }
+
+            private static void DrawTexture(Rect rect, Texture texture, Color tint)
+            {
+                if (texture == null)
+                {
+                    return;
+                }
+
+                Color previous = GUI.color;
+                GUI.color = tint;
+                GUI.DrawTexture(rect, texture, ScaleMode.StretchToFill, true);
+                GUI.color = previous;
+            }
+
+            private static void DrawCheckerboard(Rect rect)
+            {
+                const int squares = 8;
+                float cellWidth = rect.width / squares;
+                float cellHeight = rect.height / squares;
+                Color dark = new Color(0.22f, 0.22f, 0.22f, 1f);
+                Color light = new Color(0.32f, 0.32f, 0.32f, 1f);
+
+                for (int y = 0; y < squares; y++)
+                {
+                    for (int x = 0; x < squares; x++)
+                    {
+                        Rect cell = new Rect(rect.x + (x * cellWidth), rect.y + (y * cellHeight), cellWidth, cellHeight);
+                        EditorGUI.DrawRect(cell, ((x + y) % 2 == 0) ? dark : light);
+                    }
+                }
+            }
+
+            private static void DrawOverlayOutline(Rect overlayRect)
+            {
+                Handles.BeginGUI();
+                Handles.DrawSolidRectangleWithOutline(overlayRect, new Color(1f, 1f, 1f, 0.08f), new Color(0.15f, 0.9f, 1f, 1f));
+                DrawHandle(overlayRect.xMin, overlayRect.yMin);
+                DrawHandle(overlayRect.xMax, overlayRect.yMin);
+                DrawHandle(overlayRect.xMin, overlayRect.yMax);
+                DrawHandle(overlayRect.xMax, overlayRect.yMax);
+                Handles.EndGUI();
+            }
+
+            private static void DrawHandle(float centerX, float centerY)
+            {
+                Rect rect = GetHandleRect(centerX, centerY);
+                EditorGUI.DrawRect(rect, new Color(0.15f, 0.9f, 1f, 1f));
+                EditorGUI.DrawRect(new Rect(rect.x + 2f, rect.y + 2f, rect.width - 4f, rect.height - 4f), Color.white);
+            }
         }
         
         private bool OnTagsGUI()

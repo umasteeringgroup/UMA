@@ -13,6 +13,7 @@ namespace UMA.Editors
 
         private readonly UMAData.UMARecipe _recipe;
         private readonly SlotData _slotData;
+        private readonly UnityEngine.Object _recipeContext;
         private readonly List<OverlayData> _overlayData = new List<OverlayData>();
         private readonly List<OverlayEditor> _overlayEditors = new List<OverlayEditor>();
         private readonly string _name;
@@ -52,17 +53,18 @@ namespace UMA.Editors
 
 
 
-        public SlotEditor(UMAData.UMARecipe recipe, SlotData slotData, int index)
+        public SlotEditor(UMAData.UMARecipe recipe, SlotData slotData, int index, UnityEngine.Object recipeContext = null)
         {
             _recipe = recipe;
             _slotData = slotData;
+            _recipeContext = recipeContext;
             _overlayData = slotData.GetOverlayList();
 
             this.idx = index;
             _name = slotData.asset.slotName;
             for (int i = 0; i < _overlayData.Count; i++)
             {
-                _overlayEditors.Add(new OverlayEditor(_recipe, slotData, _overlayData[i]));
+                _overlayEditors.Add(new OverlayEditor(_recipe, slotData, _overlayData[i], null, _recipeContext));
             }
         }
 
@@ -403,7 +405,7 @@ namespace UMA.Editors
                     if (added != null)
                     {
                         var newOverlay = new OverlayData(added);
-                        _overlayEditors.Add(new OverlayEditor(_recipe, _slotData, newOverlay));
+                        _overlayEditors.Add(new OverlayEditor(_recipe, _slotData, newOverlay, null, _recipeContext));
                         _overlayData.Add(newOverlay);
                         _dnaDirty = true;
                         _textureDirty = true;

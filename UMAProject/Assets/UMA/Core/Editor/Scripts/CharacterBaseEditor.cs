@@ -378,7 +378,7 @@ namespace UMA.Editors
                 {
                     dnaEditor.viewDna = oldViewDNA;
                 }
-                slotEditor = new SlotMasterEditor(_recipe);
+                slotEditor = new SlotMasterEditor(_recipe, target);
             }
         }
 

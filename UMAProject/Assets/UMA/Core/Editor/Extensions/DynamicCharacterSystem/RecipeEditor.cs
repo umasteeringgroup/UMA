@@ -159,7 +159,7 @@ namespace UMA.Editors
             }
 
             dnaEditor = new DNAMasterEditor(_recipe);
-            slotEditor = new SlotMasterEditor(_recipe);
+            slotEditor = new SlotMasterEditor(_recipe, target);
 
             _rebuildOnLayout = true;
             Initialized = true;
