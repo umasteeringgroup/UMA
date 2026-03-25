@@ -1697,6 +1697,7 @@ namespace UMA.Editors
 					}
 				}
 
+             GUILayout.BeginHorizontal();
 				var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
 
 				if (added != null)
@@ -1709,6 +1710,19 @@ namespace UMA.Editors
 					_textureDirty |= true;
 					_meshDirty |= true;
 				}
+
+				if (GUILayout.Button("Add Placeholder Slot", GUILayout.Width(160)))
+				{
+					string placeholderName = "NewPlaceholderSlot";
+					var placeholder = SlotData.CreatePlaceholder(placeholderName, new string[0]);
+					_recipe.MergeSlot(placeholder, false);
+					LastSlot = placeholderName;
+					changed |= true;
+					_dnaDirty |= true;
+					_textureDirty |= true;
+					_meshDirty |= true;
+				}
+				GUILayout.EndHorizontal();
 
 				GUILayout.Space(20);
                 GUILayout.BeginHorizontal();

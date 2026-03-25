@@ -16,6 +16,18 @@ namespace UMA
         /// The asset contains the immutable portions of the slot.
         /// </summary>
         public SlotDataAsset asset;
+
+        /// <summary>
+        /// When true, this slot has no backing SlotDataAsset. It exists solely as a wildcard
+        /// carrier whose overlays are applied to matching tagged slots at build time.
+        /// </summary>
+        public bool isPlaceholderSlot;
+
+        /// <summary>
+        /// Identity name for placeholder slots (used when asset is null).
+        /// </summary>
+        public string placeholderSlotName;
+
         /// <summary>
         /// Adjusts the resolution of slot overlays.
         /// </summary>
@@ -119,6 +131,10 @@ namespace UMA
         {
             get
             {
+                if (isPlaceholderSlot || asset == null)
+                {
+                    return -1;
+                }
                 return asset.maxLOD;
             }
         }
@@ -131,6 +147,11 @@ namespace UMA
                 if (altMaterial != null)
                 {
                     return altMaterial;
+                }
+
+                if (isPlaceholderSlot || asset == null)
+                {
+                    return null;
                 }
 
                 return asset.material;
@@ -150,6 +171,11 @@ namespace UMA
         {
             get
             {
+                if (isPlaceholderSlot && !string.IsNullOrEmpty(placeholderSlotName))
+                {
+                    return placeholderSlotName;
+                }
+
                 if (asset != null)
                 {
                     return asset.slotName;
@@ -208,6 +234,23 @@ namespace UMA
             smooshInvertY = true;
             smooshInvertDist = true;
             expandAlongNormal = 0;
+        }
+
+        /// <summary>
+        /// Creates a placeholder wildcard slot with no backing asset.
+        /// The slot carries overlays that are applied to matching tagged slots at build time.
+        /// </summary>
+        /// <param name="name">Display / identity name for the placeholder slot.</param>
+        /// <param name="tags">Tags used for wildcard overlay matching.</param>
+        /// <param name="races">Optional race filter; empty means all races.</param>
+        public static SlotData CreatePlaceholder(string name, string[] tags, string[] races = null)
+        {
+            var slot = new SlotData();
+            slot.isPlaceholderSlot = true;
+            slot.placeholderSlotName = name;
+            slot.tags = tags ?? new string[0];
+            slot.Races = races ?? new string[0];
+            return slot;
         }
 
         public void UpdateFromAsset(SlotDataAsset asset)
@@ -396,6 +439,8 @@ namespace UMA
             res.smooshInvertZ = smooshInvertZ;
             res.smooshInvertDist = smooshInvertDist;
             res.meshModifiers = new List<MeshModifier.Modifier>(meshModifiers);
+            res.isPlaceholderSlot = isPlaceholderSlot;
+            res.placeholderSlotName = placeholderSlotName;
             return res;
         }
 
@@ -641,6 +686,11 @@ namespace UMA
                 tags = new string[0];
             }
 
+            if (isPlaceholderSlot)
+            {
+                return true;
+            }
+
             if (asset == null)
             {
                 return true;
@@ -737,15 +787,19 @@ namespace UMA
 
         public override string ToString()
         {
+            if (isPlaceholderSlot)
+            {
+                return "SlotData (Placeholder): " + (placeholderSlotName ?? "");
+            }
             return "SlotData: " + asset.slotName;
         }
 
         #region operator ==, != and similar HACKS, seriously.....
 
-        public static implicit operator bool(SlotData obj)
-        {
-			return ((System.Object)obj) != null && obj.asset != null;
-        }
+		public static implicit operator bool(SlotData obj)
+		{
+			return ((System.Object)obj) != null && (obj.asset != null || obj.isPlaceholderSlot);
+		}
 
         public bool Equals(SlotData other)
         {

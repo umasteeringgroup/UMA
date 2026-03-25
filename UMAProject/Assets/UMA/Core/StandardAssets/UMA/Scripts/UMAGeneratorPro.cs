@@ -200,12 +200,18 @@ namespace UMA
                     continue;
                 }
 
-                if (slot.Suppressed)
-                {
-                    continue;
-                }
+				if (slot.Suppressed)
+				{
+					continue;
+				}
 
-                if (slot.isBlendShapeSource)
+				// Placeholder slots are wildcard carriers with no asset/mesh; skip them in generation.
+				if (slot.isPlaceholderSlot)
+				{
+					continue;
+				}
+
+				if (slot.isBlendShapeSource)
 				{
 					// Blendshape Source Slots are not combined. Instead, their blendshapes
 					// are added to the mesh at generation time.

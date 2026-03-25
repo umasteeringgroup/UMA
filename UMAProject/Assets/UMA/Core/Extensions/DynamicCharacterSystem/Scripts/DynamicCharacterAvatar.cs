@@ -6141,7 +6141,7 @@ namespace UMA.CharacterSystem
             for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
                 SlotData sd = umaRecipe.slotDataList[i];
-                if (sd == null || sd.asset == null)
+                if (sd == null || (sd.asset == null && !sd.isPlaceholderSlot))
                 {
                     continue;
                 }
@@ -6180,7 +6180,7 @@ namespace UMA.CharacterSystem
                 for (int i1 = 0; i1 < umaRecipe.slotDataList.Length; i1++)
                 {
                     SlotData sd = umaRecipe.slotDataList[i1];
-                    if (sd == null || sd.asset == null)
+                    if (sd == null || (sd.asset == null && !sd.isPlaceholderSlot))
                     {
                         continue;
                     }
@@ -6202,7 +6202,7 @@ namespace UMA.CharacterSystem
             for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
             {
                 SlotData sd = umaRecipe.slotDataList[i];
-                if (sd == null || sd.asset == null)
+                if (sd == null || (sd.asset == null && !sd.isPlaceholderSlot))
                 {
                     continue;
                 }
@@ -6230,6 +6230,29 @@ namespace UMA.CharacterSystem
                 if (sd.HasTag(hideTags))
                 {
                     HiddenSlots.Add(sd);
+                    continue;
+                }
+
+                // Placeholder slots are always wildcards.
+                if (sd.isPlaceholderSlot)
+                {
+                    if (sd.Races != null && sd.Races.Length > 0)
+                    {
+                        for (int i1 = 0; i1 < sd.Races.Length; i1++)
+                        {
+                            if (sd.Races[i1] == activeRace.racedata.raceName)
+                            {
+                                if (WildCards == null) WildCards = new List<SlotData>();
+                                WildCards.Add(sd);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (WildCards == null) WildCards = new List<SlotData>();
+                        WildCards.Add(sd);
+                    }
                     continue;
                 }
 
@@ -6316,7 +6339,7 @@ namespace UMA.CharacterSystem
                     continue;
                 }
 
-                if (!hiddenSlots.Contains(sd.asset.slotName))
+                if (!hiddenSlots.Contains(sd.slotName))
                 {
                     NewSlots.Add(sd);
                 }

@@ -425,7 +425,7 @@ namespace UMA
             for (int i = 0; i < slots.Length; i++)
             {
                 var sd = slots[i];
-                if (sd != null && !sd.isBlendShapeSource)
+                if (sd != null && !sd.isBlendShapeSource && !sd.isPlaceholderSlot && sd.asset != null)
                     umaData.umaRecipe.AddDNAUpdater(sd.asset.slotDNA);
             }
 #if UMA_COMBINER_TIMINGS

@@ -433,7 +433,13 @@ namespace UMA.Editors
                 OpenPositioningPopup();
             }
 
-            if (_slotData.asset.material != null && _overlayData.asset.material != null)
+            bool hasBackingSlotAsset = _slotData != null && !_slotData.isPlaceholderSlot && _slotData.asset != null;
+            if (_slotData != null && _slotData.isPlaceholderSlot)
+            {
+                EditorGUILayout.HelpBox("This overlay belongs to a placeholder wildcard slot. Slot-asset material checks are unavailable because the slot has no backing asset.", MessageType.Info);
+            }
+
+            if (hasBackingSlotAsset && _slotData.asset.material != null && _overlayData.asset.material != null)
             {
                 if (_overlayData.asset.material.name != _slotData.material.name)
                 {

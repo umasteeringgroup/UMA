@@ -191,33 +191,26 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(overlayGroupProp, new GUIContent("Overlay Group"), GUILayout.ExpandWidth(true));
                 using (new EditorGUI.DisabledScope(groupNames.Length == 0))
                 {
-                    selectedGroupIndex = EditorGUILayout.Popup(selectedGroupIndex, groupNames, GUILayout.Width(110));
-                }
-                if (GUILayout.Button("Apply", GUILayout.Width(60)))
-                {
-                    string value;
-                    if (groupNames.Length > 0)
+                    EditorGUI.BeginChangeCheck();
+                    int newSelectedGroupIndex = EditorGUILayout.Popup(selectedGroupIndex, groupNames, GUILayout.Width(110));
+                    if (EditorGUI.EndChangeCheck())
                     {
-                        value = groupNames[Mathf.Clamp(selectedGroupIndex, 0, groupNames.Length - 1)];
-                    }
-                    else
-                    {
-                        value = overlayGroupProp.stringValue;
-                    }
-
-                    foreach (var t in targets)
-                    {
-                        var oda = t as OverlayDataAsset;
-                        if (oda == null)
+                        string value = groupNames[Mathf.Clamp(newSelectedGroupIndex, 0, groupNames.Length - 1)];
+                        foreach (var t in targets)
                         {
-                            continue;
+                            var oda = t as OverlayDataAsset;
+                            if (oda == null)
+                            {
+                                continue;
+                            }
+                            oda.overlayGroup = value;
+                            EditorUtility.SetDirty(oda);
                         }
-                        oda.overlayGroup = value;
-                        EditorUtility.SetDirty(oda);
+                        overlayGroupProp.stringValue = value;
+                        od.lastActionTime = Time.realtimeSinceStartup;
+                        od.doSave = true;
+                        GUI.changed = true;
                     }
-                    od.lastActionTime = Time.realtimeSinceStartup;
-                    od.doSave = true;
-                    GUI.changed = true;
                 }
                 GUILayout.EndHorizontal();
             }

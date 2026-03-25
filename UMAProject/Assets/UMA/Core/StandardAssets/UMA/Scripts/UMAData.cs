@@ -1836,12 +1836,12 @@ namespace UMA
 			/// <param name="dontSerialize">If set to <c>true</c> slot will not be serialized.</param>
 			public SlotData MergeSlot(SlotData slot, bool dontSerialize, bool mergeMatchingOverlays = true, string recipeName = "")
 			{
-				if ((slot == null) || (slot.asset == null))
-                {
-                    return null;
-                }
+				if ((slot == null) || (slot.asset == null && !slot.isPlaceholderSlot))
+				{
+					return null;
+				}
 
-                int overlayCount = 0;
+				int overlayCount = 0;
 #if TEST_INSERTFIX
 				int nullFound = -1;
 #endif
@@ -1852,6 +1852,27 @@ namespace UMA
 #if TEST_INSERTFIX
 						if (nullFound == -1) nullFound = i;
 #endif
+						continue;
+					}
+
+					// Placeholder slots match by name, not by asset reference.
+					if (slot.isPlaceholderSlot)
+					{
+						if (slotDataList[i].isPlaceholderSlot && slotDataList[i].placeholderSlotName == slot.placeholderSlotName)
+						{
+							SlotData originalSlot = slotDataList[i];
+							overlayCount = slot.OverlayCount;
+							for (int j = 0; j < overlayCount; j++)
+							{
+								OverlayData overlay = slot.GetOverlay(j);
+								OverlayData overlayCopy = overlay.Duplicate();
+								overlayCopy.mergedFromSlot = slot;
+								overlayCopy.mergedFromRecipe = recipeName;
+								originalSlot.AddOverlay(overlayCopy);
+							}
+							originalSlot.dontSerialize = dontSerialize;
+							return originalSlot;
+						}
 						continue;
 					}
 
