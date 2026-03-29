@@ -147,60 +147,60 @@ namespace UMA.Editors
                 }
 
                 // Utilities foldout
-                if (!_utilitiesFoldout.ContainsKey(_slotData.slotName))
+                if (!_slotData.isPlaceholderSlot)
                 {
-                    _utilitiesFoldout.Add(_slotData.slotName, false);
-                }
-                GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
-                GUILayout.Space(10);
-                _utilitiesFoldout[_slotData.slotName] = EditorGUILayout.Foldout(_utilitiesFoldout[_slotData.slotName], "Utilities");
-                GUILayout.EndHorizontal();
-
-                if (_utilitiesFoldout[_slotData.slotName])
-                {
-                    GUIHelper.BeginVerticalPadded(10, new Color(0.9f, 0.9f, 0.9f));
-
-                // View copied data (moved here)
-                _slotData.slotAssetFoldout = EditorGUILayout.Foldout(_slotData.slotAssetFoldout, "View copied data", true);
-                if (_slotData.slotAssetFoldout)
-                {
-                    GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-                    EditorGUILayout.LabelField("Overlay Scale", _slotData.overlayScale.ToString("F4"));
-                    EditorGUILayout.LabelField("Matching Tags");
-                    if (_slotData.tags != null && _slotData.tags.Length > 0)
+                    if (!_utilitiesFoldout.ContainsKey(_slotData.slotName))
                     {
-                        foreach (var tag in _slotData.tags)
+                        _utilitiesFoldout.Add(_slotData.slotName, false);
+                    }
+                    GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+                    GUILayout.Space(10);
+                    _utilitiesFoldout[_slotData.slotName] = EditorGUILayout.Foldout(_utilitiesFoldout[_slotData.slotName], "Utilities");
+                    GUILayout.EndHorizontal();
+
+                    if (_utilitiesFoldout[_slotData.slotName])
+                    {
+                        GUIHelper.BeginVerticalPadded(10, new Color(0.9f, 0.9f, 0.9f));
+
+                        // View copied data (moved here)
+                        _slotData.slotAssetFoldout = EditorGUILayout.Foldout(_slotData.slotAssetFoldout, "View copied data", true);
+                        if (_slotData.slotAssetFoldout)
                         {
-                            EditorGUILayout.LabelField(" - " + tag);
+                            GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+                            EditorGUILayout.LabelField("Overlay Scale", _slotData.overlayScale.ToString("F4"));
+                            EditorGUILayout.LabelField("Matching Tags");
+                            if (_slotData.tags != null && _slotData.tags.Length > 0)
+                            {
+                                foreach (var tag in _slotData.tags)
+                                {
+                                    EditorGUILayout.LabelField(" - " + tag);
+                                }
+                            }
+                            else
+                            {
+                                EditorGUILayout.LabelField(" - None");
+                            }
+                            EditorGUILayout.LabelField("Matching Races");
+                            if (_slotData.Races != null && _slotData.Races.Length > 0)
+                            {
+                                foreach (var race in _slotData.Races)
+                                {
+                                    EditorGUILayout.LabelField(" - " + race);
+                                }
+                            }
+                            else
+                            {
+                                EditorGUILayout.LabelField(" - None");
+                            }
+                            if (GUILayout.Button("Refresh slot from Asset"))
+                            {
+                                _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
+                                _slotData.UpdateFromAsset(_slotData.asset);
+                                changed = true;
+                            }
+                            GUIHelper.EndVerticalPadded(10);
                         }
-                    }
-                    else
-                    {
-                        EditorGUILayout.LabelField(" - None");
-                    }
-                    EditorGUILayout.LabelField("Matching Races");
-                    if (_slotData.Races != null && _slotData.Races.Length > 0)
-                    {
-                        foreach (var race in _slotData.Races)
-                        {
-                            EditorGUILayout.LabelField(" - " + race);
-                        }
-                    }
-                    else
-                    {
-                        EditorGUILayout.LabelField(" - None");
-                    }
-                    if (!_slotData.isPlaceholderSlot && GUILayout.Button("Refresh slot from Asset"))
-                    {
-                        _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
-                        _slotData.UpdateFromAsset(_slotData.asset);
-                        changed = true;
-                    }
-                    GUIHelper.EndVerticalPadded(10);
-                }
 
-                    if (!_slotData.isPlaceholderSlot)
-                    {
                         GUILayout.Space(4);
                         EditorGUILayout.LabelField("Update UMA Material", EditorStyles.boldLabel);
                         Rect matDrop = GUILayoutUtility.GetRect(0.0f, 40.0f, GUILayout.ExpandWidth(true));
@@ -243,9 +243,8 @@ namespace UMA.Editors
                                 }
                             }
                         }
+                        GUIHelper.EndVerticalPadded(10);
                     }
-
-                    GUIHelper.EndVerticalPadded(10);
                 }
 
             if (!_slotData.isPlaceholderSlot && _slotData.asset.isClippingPlane)
@@ -404,12 +403,15 @@ namespace UMA.Editors
                     GUIHelper.EndVerticalPadded(10);
                 }
 
-                EditorGUILayout.HelpBox("Expand Along Normal is used to expand the slot along the normal of the mesh. This is useful for offsetting to address zfighting issues. In micrometers", MessageType.Info);
-                GUI.changed = false;
-                _slotData.expandAlongNormal = EditorGUILayout.DelayedIntField("Expand Along Normal", _slotData.expandAlongNormal);
-                if (GUI.changed)
+                if (!_slotData.isPlaceholderSlot)
                 {
-                    changed = true;
+                    EditorGUILayout.HelpBox("Expand Along Normal is used to expand the slot along the normal of the mesh. This is useful for offsetting to address zfighting issues. In micrometers", MessageType.Info);
+                    GUI.changed = false;
+                    _slotData.expandAlongNormal = EditorGUILayout.DelayedIntField("Expand Along Normal", _slotData.expandAlongNormal);
+                    if (GUI.changed)
+                    {
+                        changed = true;
+                    }
                 }
                 if (sharedOverlays)
                 {
@@ -438,25 +440,28 @@ namespace UMA.Editors
                         changed = true;
                     }
 
-                    var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
-
-                    if (addedSlot != null)
+                    if (!_slotData.isPlaceholderSlot)
                     {
-                        var newSlot = new SlotData(addedSlot);
-                        newSlot.SetOverlayList(_slotData.GetOverlayList());
-                        _recipe.MergeSlot(newSlot, false);
-                        _dnaDirty = true;
-                        _textureDirty = true;
-                        _meshDirty = true;
-                        changed = true;
-                    }
+                        var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
 
-                    int remapUV = EditorGUILayout.Popup("Remap UV to Main", _slotData.UVSet, new string[] { "None", "UV Set 2", "UV Set 3", "UV Set 4" });
-                    if (remapUV != _slotData.UVSet)
-                    {
-                        _slotData.UVSet = remapUV;
-                        _meshDirty = true;
-                        changed = true;
+                        if (addedSlot != null)
+                        {
+                            var newSlot = new SlotData(addedSlot);
+                            newSlot.SetOverlayList(_slotData.GetOverlayList());
+                            _recipe.MergeSlot(newSlot, false);
+                            _dnaDirty = true;
+                            _textureDirty = true;
+                            _meshDirty = true;
+                            changed = true;
+                        }
+
+                        int remapUV = EditorGUILayout.Popup("Remap UV to Main", _slotData.UVSet, new string[] { "None", "UV Set 2", "UV Set 3", "UV Set 4" });
+                        if (remapUV != _slotData.UVSet)
+                        {
+                            _slotData.UVSet = remapUV;
+                            _meshDirty = true;
+                            changed = true;
+                        }
                     }
 
                     for (int i = 0; i < _overlayEditors.Count; i++)

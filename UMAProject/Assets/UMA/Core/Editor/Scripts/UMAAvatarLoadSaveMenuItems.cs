@@ -2478,7 +2478,7 @@ namespace UMA.Editors
 			EditorGUILayout.LabelField("Utilities", EditorStyles.boldLabel);
 			EditorGUILayout.BeginHorizontal();
 			_utilitiesTargetMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", _utilitiesTargetMaterial, typeof(UMAMaterial), false);
-			using (new EditorGUI.DisabledScope(_utilitiesTargetMaterial == null || _overlays.Count == 0))
+           using (new EditorGUI.DisabledScope(_utilitiesTargetMaterial == null || _overlays.Count == 0))
 			{
 				if (GUILayout.Button("Assign UMAMaterial to selected", GUILayout.Width(220), GUILayout.Height(22)))
 				{
@@ -2487,6 +2487,13 @@ namespace UMA.Editors
                if (GUILayout.Button("Assign UMAMaterial to ALL", GUILayout.Width(200), GUILayout.Height(22)))
 				{
 					AssignMaterialToAllOverlaysInList();
+				}
+			}
+            using (new EditorGUI.DisabledScope(_overlays.Count == 0))
+			{
+				if (GUILayout.Button("Sync Material Texture Channels", GUILayout.Width(230), GUILayout.Height(22)))
+				{
+					SyncMaterialTextureChannels();
 				}
 			}
 			EditorGUILayout.EndHorizontal();
@@ -2513,12 +2520,19 @@ namespace UMA.Editors
 
 				if (overlay.material == _utilitiesTargetMaterial)
 				{
+                    Undo.RecordObject(overlay, "Sync Overlay Channels");
+				   if (SyncOverlayChannelsToMaterial(overlay, _utilitiesTargetMaterial))
+					{
+						EditorUtility.SetDirty(overlay);
+						updated++;
+					}
 					continue;
 				}
 
 				Undo.RecordObject(overlay, "Assign Overlay UMAMaterial");
 				overlay.material = _utilitiesTargetMaterial;
 				overlay.materialName = _utilitiesTargetMaterial.name;
+                SyncOverlayChannelsToMaterial(overlay, _utilitiesTargetMaterial);
 				EditorUtility.SetDirty(overlay);
 				updated++;
 			}
@@ -2551,12 +2565,19 @@ namespace UMA.Editors
 
 				if (overlay.material == _utilitiesTargetMaterial)
 				{
+                    Undo.RecordObject(overlay, "Sync Overlay Channels");
+				   if (SyncOverlayChannelsToMaterial(overlay, _utilitiesTargetMaterial))
+					{
+						EditorUtility.SetDirty(overlay);
+						updated++;
+					}
 					continue;
 				}
 
 				Undo.RecordObject(overlay, "Assign Overlay UMAMaterial");
 				overlay.material = _utilitiesTargetMaterial;
 				overlay.materialName = _utilitiesTargetMaterial.name;
+                SyncOverlayChannelsToMaterial(overlay, _utilitiesTargetMaterial);
 				EditorUtility.SetDirty(overlay);
 				updated++;
 			}
@@ -2568,6 +2589,110 @@ namespace UMA.Editors
 			}
 
 			EditorUtility.DisplayDialog("Assign UMAMaterial", "Updated overlays in list: " + updated, "OK");
+		}
+
+		private void SyncMaterialTextureChannels()
+		{
+			int updated = 0;
+			for (int i = 0; i < _overlays.Count; i++)
+			{
+				var overlay = _overlays[i];
+				if (overlay == null || overlay.material == null)
+				{
+					continue;
+				}
+
+				Undo.RecordObject(overlay, "Sync Overlay Channels");
+				if (SyncOverlayChannelsToMaterial(overlay, overlay.material))
+				{
+					EditorUtility.SetDirty(overlay);
+					updated++;
+				}
+			}
+
+			if (updated > 0)
+			{
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog("Sync Material Texture Channels", "Updated overlays: " + updated, "OK");
+		}
+
+		private static bool SyncOverlayChannelsToMaterial(UMA.OverlayDataAsset overlay, UMAMaterial targetMaterial)
+		{
+			if (overlay == null || targetMaterial == null)
+			{
+				return false;
+			}
+
+			int channelCount = 0;
+			if (targetMaterial.channels != null)
+			{
+				channelCount = targetMaterial.channels.Length;
+			}
+
+			Texture[] oldTextures = overlay.textureList ?? new Texture[0];
+			string[] oldTextureNames = overlay.textureNames ?? new string[0];
+			UMA.OverlayDataAsset.OverlayBlend[] oldBlends = overlay.overlayBlend ?? new UMA.OverlayDataAsset.OverlayBlend[0];
+
+			bool changed = false;
+
+			if (oldTextures.Length != channelCount)
+			{
+				Texture[] newTextures = new Texture[channelCount];
+				int copyCount = Mathf.Min(oldTextures.Length, newTextures.Length);
+				for (int i = 0; i < copyCount; i++)
+				{
+					newTextures[i] = oldTextures[i];
+				}
+				overlay.textureList = newTextures;
+				changed = true;
+			}
+
+			if (oldTextureNames.Length != channelCount)
+			{
+				string[] newTextureNames = new string[channelCount];
+				int copyCount = Mathf.Min(oldTextureNames.Length, newTextureNames.Length);
+				for (int i = 0; i < copyCount; i++)
+				{
+					newTextureNames[i] = oldTextureNames[i];
+				}
+				overlay.textureNames = newTextureNames;
+				changed = true;
+			}
+
+			if (oldBlends.Length != channelCount)
+			{
+				UMA.OverlayDataAsset.OverlayBlend[] newBlends = new UMA.OverlayDataAsset.OverlayBlend[channelCount];
+				int copyCount = Mathf.Min(oldBlends.Length, newBlends.Length);
+				for (int i = 0; i < copyCount; i++)
+				{
+					newBlends[i] = oldBlends[i];
+				}
+				for (int i = copyCount; i < newBlends.Length; i++)
+				{
+					newBlends[i] = UMA.OverlayDataAsset.OverlayBlend.Normal;
+				}
+				overlay.overlayBlend = newBlends;
+				changed = true;
+			}
+
+			Texture[] syncedTextures = overlay.textureList ?? new Texture[0];
+			string[] syncedTextureNames = overlay.textureNames ?? new string[0];
+			int syncCount = Mathf.Min(syncedTextures.Length, syncedTextureNames.Length);
+			for (int i = 0; i < syncCount; i++)
+			{
+				Texture tex = syncedTextures[i];
+				string desiredName = tex != null ? tex.name : string.Empty;
+				if (syncedTextureNames[i] != desiredName)
+				{
+					syncedTextureNames[i] = desiredName;
+					changed = true;
+				}
+			}
+
+			return changed;
 		}
 
 		private void DrawRelinkPanel()
@@ -3489,6 +3614,10 @@ namespace UMA.Editors
 						UMA.InspectorUtlity.InspectTarget(recipe);
 					}
 					EditorGUILayout.ObjectField(recipe, typeof(UMAWardrobeRecipe), false);
+                 if (GUILayout.Button("Inspect", GUILayout.Width(60), GUILayout.Height(18)))
+					{
+						UMA.InspectorUtlity.InspectTarget(recipe);
+					}
 					string slot = string.IsNullOrEmpty(recipe.wardrobeSlot) ? "<Unassigned>" : recipe.wardrobeSlot;
 					GUILayout.Label(slot, GUILayout.Width(160));
 					if (!RecipeHasAnySlots(recipe))
