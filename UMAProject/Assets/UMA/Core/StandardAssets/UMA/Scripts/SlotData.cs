@@ -139,6 +139,9 @@ namespace UMA
             }
         }
 
+        [NonSerialized]
+        private UMAMaterial _defaultOverlayMaterial;
+
         public UMAMaterial altMaterial;
         public UMAMaterial material
         {
@@ -154,8 +157,19 @@ namespace UMA
                     return null;
                 }
 
-                return asset.material;
+                var firstOverlay = GetOverlay(0);
+                if (firstOverlay != null && firstOverlay.asset != null)
+                {
+                    return firstOverlay.asset.GetMaterial();
+                }
+
+                return _defaultOverlayMaterial;
             }
+        }
+
+        public void CacheDefaultOverlayMaterial(UMAMaterial defaultOverlayMaterial)
+        {
+            _defaultOverlayMaterial = defaultOverlayMaterial;
         }
 
         // Slots to copy blendshapes from as needed...
@@ -441,6 +455,7 @@ namespace UMA
             res.meshModifiers = new List<MeshModifier.Modifier>(meshModifiers);
             res.isPlaceholderSlot = isPlaceholderSlot;
             res.placeholderSlotName = placeholderSlotName;
+            res._defaultOverlayMaterial = _defaultOverlayMaterial;
             return res;
         }
 
@@ -698,15 +713,6 @@ namespace UMA
 
             if (asset.meshData != null)
             {
-                if (asset.material == null)
-                {
-                    asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
-                    if (asset.material == null)
-                    {
-                        Debug.LogError("Unable to load material " + asset.materialName + " for slot " + asset.slotName);
-                    }
-                }
-
                 if (material == null)
                 {
                     if (Debug.isDebugBuild)
@@ -723,6 +729,7 @@ namespace UMA
                         if (Debug.isDebugBuild)
                         {
                             Debug.LogError(string.Format("Slot '{0}' has an umaMaterial without a material assigned.", asset.slotName), asset);
+                            Debug.Log("UMAMaterial: " + material.name, material);
                         }
 
                         valid = false;
@@ -738,6 +745,7 @@ namespace UMA
                                 if (Debug.isDebugBuild)
                                 {
                                     Debug.LogWarning(string.Format("Slot '{0}' Material Channel {1} on UMAMaterial {3} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName, material.name), asset);
+                                    Debug.Log("UMAMaterial: " + material.name, material);
                                 }
                                 //valid = false;
                             }
@@ -774,6 +782,7 @@ namespace UMA
                             if (Debug.isDebugBuild)
                             {
                                 Debug.LogWarning(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);
+                                Debug.Log("UMAMaterial: " + material.name, material);
                             }
                             //valid = false;
                         }

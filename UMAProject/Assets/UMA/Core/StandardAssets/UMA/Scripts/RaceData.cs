@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using UMA.PoseTools;
+using UnityEngine.Serialization;
 
 namespace UMA
 {
@@ -18,7 +19,20 @@ namespace UMA
 	[Serializable]
 	public partial class RaceData : ScriptableObject, INameProvider, IUMAIndexOptions
 	{
-	    public string raceName;
+		[FormerlySerializedAs("raceName")]
+        public string _oldRaceName;
+
+        public string raceName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_oldRaceName))
+                {
+                    return _oldRaceName;
+                }
+                return this.name;
+            }
+        }
 		public List<string> KeepBoneNames = new List<string>();
 		public List<string> tags = new List<string>();
 		public  List<SlotBurnOptions> PrebakedBlendshapes = new List<SlotBurnOptions>();
@@ -61,7 +75,7 @@ namespace UMA
         }
         public int GetNameHash()
         {
-            return 0;
+            return UMAUtils.StringToHash(raceName);
         }
 		#endregion
 

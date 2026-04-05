@@ -75,6 +75,8 @@ namespace UMA
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels = new MaterialChannel[0];
 
+        public bool generateMipMaps = true;
+
         [Range(-2.0f, 2.0f)]
         public float MipMapBias = 0.0f;
         [Range(1, 16)]

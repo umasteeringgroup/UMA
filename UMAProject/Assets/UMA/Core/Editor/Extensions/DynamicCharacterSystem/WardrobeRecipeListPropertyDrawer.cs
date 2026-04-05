@@ -11,6 +11,8 @@ namespace UMA.CharacterSystem.Editors
     {
         public List<string> recipes = new List<string>();
         public List<string> recipeMenu = new List<string>();
+        public List<string> recipeSlots = new List<string>();
+        public List<bool> recipeMenuIsAddAll = new List<bool>();
         public string LastRace = "";
         public static int lastAdded = -1;
         public static int selectedSlotIndex = 0;
@@ -66,6 +68,8 @@ namespace UMA.CharacterSystem.Editors
                 LastRace = race;
                 recipes.Clear();
                 recipeMenu.Clear();
+                recipeSlots.Clear();
+                recipeMenuIsAddAll.Clear();
 				if (thisDCA != null)
                 {
                     try
@@ -101,13 +105,24 @@ namespace UMA.CharacterSystem.Editors
 									string slot = slots[si];
 									if (string.IsNullOrEmpty(slot)) continue;
 									if (!availableRecipes.TryGetValue(slot, out var list) || list == null) continue;
+                                 int addedForSlot = 0;
 									for (int ri = 0; ri < list.Count; ri++)
 									{
 										var recipe = list[ri];
 										if (recipe == null) continue;
 										recipes.Add(recipe.name);
 										recipeMenu.Add(slot + "/" + recipe.name);
+                                       recipeSlots.Add(slot);
+                                        recipeMenuIsAddAll.Add(false);
+                                        addedForSlot++;
 									}
+                                   if (addedForSlot > 0)
+                                    {
+                                        recipes.Add(string.Empty);
+                                        recipeMenu.Add(slot + "/Add All");
+                                        recipeSlots.Add(slot);
+                                        recipeMenuIsAddAll.Add(true);
+                                    }
 								}
 							}
 							else
@@ -116,20 +131,77 @@ namespace UMA.CharacterSystem.Editors
 								{
 									var list = kvp.Value;
 									if (list == null) continue;
+                                 int addedForSlot = 0;
 									for (int ri = 0; ri < list.Count; ri++)
 									{
 										var recipe = list[ri];
 										if (recipe == null) continue;
 										recipes.Add(recipe.name);
 										recipeMenu.Add(kvp.Key + "/" + recipe.name);
+                                       recipeSlots.Add(kvp.Key);
+                                        recipeMenuIsAddAll.Add(false);
+                                        addedForSlot++;
 									}
+                                   if (addedForSlot > 0)
+                                    {
+                                        recipes.Add(string.Empty);
+                                        recipeMenu.Add(kvp.Key + "/Add All");
+                                        recipeSlots.Add(kvp.Key);
+                                        recipeMenuIsAddAll.Add(true);
+                                    }
 								}
 							}
-						}
+                           }
                     }
                     catch { /* ignore during reload */ }
                 }
             }
+        }
+
+        private void AddAllRecipesForSlot(SerializedProperty thisRecipesProp, string slot)
+        {
+            if (thisRecipesProp == null || thisDCA == null || string.IsNullOrEmpty(slot)) return;
+
+            ToggleAll = true; // keep Toggle checkbox enabled as requested
+
+            var availableRecipes = thisDCA.AvailableRecipes;
+            if (availableRecipes == null || !availableRecipes.TryGetValue(slot, out var slotRecipes) || slotRecipes == null || slotRecipes.Count == 0)
+            {
+                return;
+            }
+
+            string firstRecipeName = string.Empty;
+            for (int i = 0; i < slotRecipes.Count; i++)
+            {
+                var recipe = slotRecipes[i];
+                if (recipe == null) continue;
+                if (string.IsNullOrEmpty(firstRecipeName))
+                {
+                    firstRecipeName = recipe.name;
+                }
+
+                var recipeAsset = TryGetIndexer()?.GetRecipe(recipe.name, false);
+                if (recipeAsset != null)
+                {
+                    AddRecipe(thisRecipesProp, recipeAsset);
+                }
+            }
+
+            for (int i = 0; i < thisRecipesProp.arraySize; i++)
+            {
+                SerializedProperty element = thisRecipesProp.GetArrayElementAtIndex(i);
+                if (element == null) continue;
+
+                string recipeName = element.FindPropertyRelative("_recipeName").stringValue;
+                var recipeAsset = SafeGetRecipeByName(recipeName, i);
+                if (recipeAsset == null || recipeAsset.wardrobeSlot != slot) continue;
+
+                bool enabled = !string.IsNullOrEmpty(firstRecipeName) && recipeName == firstRecipeName;
+                element.FindPropertyRelative("_enabledInDefaultWardrobe").boolValue = enabled;
+            }
+
+            changed = true;
+            thisRecipesProp.serializedObject.ApplyModifiedProperties();
         }
 
         //Make a drop area for wardrobe recipes
@@ -339,6 +411,155 @@ namespace UMA.CharacterSystem.Editors
             return null;
         }
 
+        private struct RecipeCommand
+        {
+            public string Label;
+            public Action Execute;
+        }
+
+        private void InvalidateDropdownCache()
+        {
+            LastRace = string.Empty;
+            recipes.Clear();
+            recipeMenu.Clear();
+            recipeSlots.Clear();
+            recipeMenuIsAddAll.Clear();
+        }
+
+        private bool TryGetCurrentRaceName(out string raceName)
+        {
+            raceName = string.Empty;
+            if (thisDCA == null || thisDCA.activeRace == null || string.IsNullOrEmpty(thisDCA.activeRace.name))
+            {
+                return false;
+            }
+
+            raceName = thisDCA.activeRace.name;
+            return !string.IsNullOrEmpty(raceName);
+        }
+
+        private void SyncElementCompatibleRaces(SerializedProperty recipeElement, UMATextRecipe recipeAsset)
+        {
+            if (recipeElement == null || recipeAsset == null) return;
+
+            var racesProp = recipeElement.FindPropertyRelative("_compatibleRaces");
+            if (racesProp == null) return;
+
+            int count = recipeAsset.compatibleRaces != null ? recipeAsset.compatibleRaces.Count : 0;
+            racesProp.arraySize = count;
+            for (int i = 0; i < count; i++)
+            {
+                racesProp.GetArrayElementAtIndex(i).stringValue = recipeAsset.compatibleRaces[i];
+            }
+        }
+
+        private void ToggleForceByRecipeName(string recipeName)
+        {
+            if (thisDCA?.preloadWardrobeRecipes?.recipes == null || string.IsNullOrEmpty(recipeName)) return;
+
+            for (int i = 0; i < thisDCA.preloadWardrobeRecipes.recipes.Count; i++)
+            {
+                var item = thisDCA.preloadWardrobeRecipes.recipes[i];
+                if (item == null || item._recipeName != recipeName) continue;
+                item.ForceLoad = !item.ForceLoad;
+                changed = true;
+                break;
+            }
+        }
+
+        private void ShowCommandsMenu(string recipeName, UMATextRecipe recipeAsset, SerializedProperty recipeElement)
+        {
+            if (string.IsNullOrEmpty(recipeName)) return;
+
+            List<RecipeCommand> commands = new List<RecipeCommand>();
+
+            commands.Add(new RecipeCommand
+            {
+                Label = "Ping",
+                Execute = () =>
+                {
+                    if (recipeAsset != null)
+                    {
+                        EditorGUIUtility.PingObject(recipeAsset);
+                    }
+                }
+            });
+
+            commands.Add(new RecipeCommand
+            {
+                Label = "Force",
+                Execute = () =>
+                {
+                    ToggleForceByRecipeName(recipeName);
+                }
+            });
+
+            commands.Add(new RecipeCommand
+            {
+                Label = "Remove from Current Race",
+                Execute = () =>
+                {
+                    if (recipeAsset == null) return;
+                    if (!TryGetCurrentRaceName(out string raceName)) return;
+                    if (recipeAsset.compatibleRaces == null) return;
+                    if (!recipeAsset.compatibleRaces.Contains(raceName)) return;
+
+                    Undo.RecordObject(recipeAsset, "Remove Race Compatibility");
+                    recipeAsset.compatibleRaces.Remove(raceName);
+                    EditorUtility.SetDirty(recipeAsset);
+                    AssetDatabase.SaveAssets();
+
+                    SyncElementCompatibleRaces(recipeElement, recipeAsset);
+                    if (recipeElement != null)
+                    {
+                        recipeElement.serializedObject.ApplyModifiedProperties();
+                    }
+                    InvalidateDropdownCache();
+                    changed = true;
+                }
+            });
+
+            commands.Add(new RecipeCommand
+            {
+                Label = "Add to Current Race",
+                Execute = () =>
+                {
+                    if (recipeAsset == null) return;
+                    if (!TryGetCurrentRaceName(out string raceName)) return;
+                    if (recipeAsset.compatibleRaces == null)
+                    {
+                        recipeAsset.compatibleRaces = new List<string>();
+                    }
+                    if (recipeAsset.compatibleRaces.Contains(raceName)) return;
+
+                    Undo.RecordObject(recipeAsset, "Add Race Compatibility");
+                    recipeAsset.compatibleRaces.Add(raceName);
+                    EditorUtility.SetDirty(recipeAsset);
+                    AssetDatabase.SaveAssets();
+
+                    SyncElementCompatibleRaces(recipeElement, recipeAsset);
+                    if (recipeElement != null)
+                    {
+                        recipeElement.serializedObject.ApplyModifiedProperties();
+                    }
+                    InvalidateDropdownCache();
+                    changed = true;
+                }
+            });
+
+            GenericMenu menu = new GenericMenu();
+            for (int i = 0; i < commands.Count; i++)
+            {
+                RecipeCommand cmd = commands[i];
+                menu.AddItem(new GUIContent(cmd.Label), false, () =>
+                {
+                    cmd.Execute?.Invoke();
+                });
+            }
+
+            menu.ShowAsContext();
+        }
+
         private bool IndexerHasRecipe(string recipeName)
         {
             var idx = TryGetIndexer();
@@ -390,7 +611,7 @@ namespace UMA.CharacterSystem.Editors
                 Rect dropArea = GUILayoutUtility.GetLastRect();
 
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Enable All"))
+                if (GUILayout.Button("Enable All", GUILayout.Width(90)))
                 {
                     for (int i = 0; i < thisRecipesProp.arraySize; i++)
                     {
@@ -401,7 +622,7 @@ namespace UMA.CharacterSystem.Editors
                     // Commit changes
                     thisRecipesProp.serializedObject.ApplyModifiedProperties();
                 }
-                if (GUILayout.Button("Disable All"))
+                if (GUILayout.Button("Disable All", GUILayout.Width(90)))
                 {
                     for (int i = 0; i < thisRecipesProp.arraySize; i++)
                     {
@@ -412,7 +633,7 @@ namespace UMA.CharacterSystem.Editors
                     // Commit changes
                     thisRecipesProp.serializedObject.ApplyModifiedProperties();
                 }
-                if (thisDCA != null && GUILayout.Button("Add all"))
+                if (thisDCA != null && GUILayout.Button("Add all", GUILayout.Width(60)))
                 {
                     try
                     {
@@ -437,11 +658,17 @@ namespace UMA.CharacterSystem.Editors
                     }
                     catch { }
                 }
-                if (GUILayout.Button("Remove disabled"))
+                if (GUILayout.Button("Remove disabled", GUILayout.Width(100)))
                 {
                     RemoveDisabled(thisRecipesProp);
                     changed = true;
                     // Commit changes
+                    thisRecipesProp.serializedObject.ApplyModifiedProperties();
+                }
+                if (GUILayout.Button("Remove All", GUILayout.Width(90)))
+                {
+                    RemoveAll(thisRecipesProp);
+                    changed = true;
                     thisRecipesProp.serializedObject.ApplyModifiedProperties();
                 }
                 GUILayout.EndHorizontal();
@@ -489,11 +716,19 @@ namespace UMA.CharacterSystem.Editors
                     added = EditorGUILayout.Popup(added, recipeMenu.ToArray(), GUILayout.Width(150));
                     if (added >= 0)
                     {
-                        var recipe = recipes[added];
-                        var recipeAsset = TryGetIndexer()?.GetRecipe(recipe, false);
-                        if (recipeAsset != null)
+                        if (added < recipeMenuIsAddAll.Count && recipeMenuIsAddAll[added])
                         {
-                            AddRecipe(thisRecipesProp, recipeAsset);
+                            string slot = added < recipeSlots.Count ? recipeSlots[added] : string.Empty;
+                            AddAllRecipesForSlot(thisRecipesProp, slot);
+                        }
+                        else
+                        {
+                            var recipe = recipes[added];
+                            var recipeAsset = TryGetIndexer()?.GetRecipe(recipe, false);
+                            if (recipeAsset != null)
+                            {
+                                AddRecipe(thisRecipesProp, recipeAsset);
+                            }
                         }
                     }
                     GUILayout.EndHorizontal();
@@ -645,19 +880,9 @@ namespace UMA.CharacterSystem.Editors
                             };
                             GUIUtility.ExitGUI();
                         }
-                        using (new EditorGUI.DisabledScope(!canToggleForce))
+                        if (GUILayout.Button("Commands", GUILayout.Width(78)))
                         {
-                            if (GUILayout.Button("Force", GUILayout.Width(48)) && canToggleForce)
-                            {
-                                try
-                                {
-                                    var item = thisDCA.preloadWardrobeRecipes.recipes[i];
-                                    item.ForceLoad = !item.ForceLoad;
-                                    // ForceLoad is runtime-only; no Apply needed here
-                                    changed = true;
-                                }
-                                catch { }
-                            }
+                            ShowCommandsMenu(recipeName, recipeAsset, thisElement);
                         }
                     }
 
@@ -728,6 +953,16 @@ namespace UMA.CharacterSystem.Editors
                     thisRecipesProp.DeleteArrayElementAtIndex(i);
                     changed = true;
                 }
+            }
+        }
+
+        private void RemoveAll(SerializedProperty thisRecipesProp)
+        {
+            if (thisRecipesProp == null) return;
+            for (int i = thisRecipesProp.arraySize - 1; i >= 0; i--)
+            {
+                thisRecipesProp.DeleteArrayElementAtIndex(i);
+                changed = true;
             }
         }
 

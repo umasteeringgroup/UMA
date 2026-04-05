@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Cutout_Diffuse_Normal_Specular
-  m_Shader: {fileID: -6465566751694194690, guid: 877e0087dcad7a441a4b23b3ab3f8a48, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 3f55b1083749a224f96274ec3f60641a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -72,7 +72,19 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SpecularMap:
-        m_Texture: {fileID: 2800000, guid: 44dfb63e0b2a5504b82f66838b2907de, type: 3}
+        m_Texture: {fileID: 2800000, guid: f07bd0d1c98ce3c488dd3b9c38663f26, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -94,6 +106,8 @@ Material:
     - _NormalStrength: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _QueueControl: -1
+    - _QueueOffset: 0
     - _RimLightPower: 4
     - _RimLightingModulation: 0
     - _SmoothnessModulation: 1.375

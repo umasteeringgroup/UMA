@@ -176,7 +176,6 @@ namespace UMA
 				}
 			}
 
-			TempSlot.asset.material = od[0].asset.material;
 			TempSlot.SetOverlayList(od);
 			SlotData[] slot = new SlotData[1];
 			slot[0] = TempSlot;

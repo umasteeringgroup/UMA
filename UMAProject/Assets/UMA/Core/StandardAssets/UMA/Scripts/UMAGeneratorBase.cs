@@ -525,6 +525,7 @@ namespace UMA
         /// <param name="umaTPose">UMA TPose.</param>
         public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose)
         {
+            Debug.Log("Avatar: Creating humanoid avatar for " + umaData.name);
             umaTPose.DeSerialize();
             HumanDescription description = CreateHumanDescription(umaData, umaTPose);
             //DebugLogHumanAvatar(umaData.gameObject, description);
@@ -585,7 +586,19 @@ namespace UMA
             res.upperArmTwist = umaTPose.upperArmTwist == 0.0f ? 0.5f : umaTPose.upperArmTwist;
             res.upperLegTwist = umaTPose.upperLegTwist == 0.0f ? 0.5f : umaTPose.upperLegTwist;
             res.skeleton = umaTPose.boneInfo;
-            res.human = umaTPose.humanInfo;
+            if (umaTPose.mapJaw)
+            {
+                Debug.Log("Avatar: mapping jaw bone in human description because mapJaw is true. This is to allow Mecanim to open the jaw if a jaw bone is mapped and the animation does not animate the jaw.");
+                res.human = umaTPose.humanInfo;
+            }
+            else
+            {
+                Debug.Log("Avatar: removing jaw bone mapping from human description because mapJaw is false. This is to prevent Mecanim from opening the jaw if a jaw bone is mapped and the animation does not animate the jaw.");
+                // Remove the jaw bone mapping if mapJaw is false. This is because Mecanim will open the jaw if a jaw bone is mapped, and the animation does not animate the jaw.
+                List<HumanBone> humanBones = new List<HumanBone>(umaTPose.humanInfo);
+                humanBones.RemoveAll(hb => hb.humanName.ToLower().Contains("jaw"));
+                res.human = humanBones.ToArray();
+            }
 
             SkeletonModifier(umaData, ref res.skeleton, res.human);
             return res;

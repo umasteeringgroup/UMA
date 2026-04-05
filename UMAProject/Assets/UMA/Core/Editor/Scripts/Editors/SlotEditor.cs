@@ -88,7 +88,7 @@ namespace UMA.Editors
             string barLabel = _slotData.isPlaceholderSlot
                 ? _name + "      (Placeholder Wildcard)"
                 : _name + "      (" + _slotData.asset.name + ")";
-            GUIHelper.FoldoutBarButton(ref _foldOut, barLabel, "inspect", out select, out delete);
+            GUIHelper.FoldoutBarButton(ref _foldOut, barLabel, "Asset", out select, out delete);
 
             FoldOut = _foldOut;
 
@@ -202,9 +202,9 @@ namespace UMA.Editors
                         }
 
                         GUILayout.Space(4);
-                        EditorGUILayout.LabelField("Update UMA Material", EditorStyles.boldLabel);
+                        EditorGUILayout.LabelField("Update Overlay UMA Material", EditorStyles.boldLabel);
                         Rect matDrop = GUILayoutUtility.GetRect(0.0f, 40.0f, GUILayout.ExpandWidth(true));
-                        GUI.Box(matDrop, "Drag UMA Material here to update slot and overlays");
+                        GUI.Box(matDrop, "Drag UMA Material here to update this slot's overlays");
                         Event evt = Event.current;
                         if ((evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform) && matDrop.Contains(evt.mousePosition))
                         {
@@ -536,13 +536,6 @@ namespace UMA.Editors
             bool changed = false;
             int channelCount = (umaMat.channels != null) ? umaMat.channels.Length : 0;
 
-            // Update SlotDataAsset
-            Undo.RecordObject(_slotData.asset, "Update Slot UMA Material");
-            _slotData.asset.material = umaMat;
-            EditorUtility.SetDirty(_slotData.asset);
-            AssetDatabase.SaveAssetIfDirty(_slotData.asset);
-            changed = true;
-
             // Update overlays on this slot
             if (_overlayData != null)
             {
@@ -576,6 +569,7 @@ namespace UMA.Editors
 
                     // Ensure runtime overlay arrays match new material channel count
                     od.Validate();
+                    changed = true;
                 }
             }
 

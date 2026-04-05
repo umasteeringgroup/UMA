@@ -16,9 +16,7 @@ MonoBehaviour:
   resourcesOnly: 0
   recipeType: Wardrobe
   DisplayValue: 
-  compatibleRaces:
-  - Human Female 3.0
-  - Human Male 3.0
+  compatibleRaces: []
   wardrobeRecipeThumbs:
   - race: Human Female 3.0
     filename: 

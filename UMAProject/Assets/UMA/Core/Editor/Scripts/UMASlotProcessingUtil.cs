@@ -115,8 +115,6 @@ namespace UMA.Editors
             public Vector3 smooshExpand;
             public bool isWildCardSlot;
             public BaseUpdatedObject[] animatedBones;
-            public UMAMaterial material;
-            public string materialName;
             public int maxLOD;
             public bool useAtlasOverlay;
             public float overlayScale;
@@ -147,8 +145,6 @@ namespace UMA.Editors
                 {
                     data.animatedBones = (BaseUpdatedObject[])slot.animatedBones.Clone();
                 }
-                data.material = slot.material;
-                data.materialName = slot.materialName;
                 data.maxLOD = slot.maxLOD;
                 data.useAtlasOverlay = slot.useAtlasOverlay;
                 data.overlayScale = slot.overlayScale;
@@ -180,8 +176,6 @@ namespace UMA.Editors
                 {
                     slot.animatedBones = (BaseUpdatedObject[])animatedBones.Clone();
                 }
-                slot.material = material;
-                slot.materialName = materialName;
                 slot.maxLOD = maxLOD;
                 slot.useAtlasOverlay = useAtlasOverlay;
                 slot.overlayScale = overlayScale;
@@ -518,7 +512,7 @@ namespace UMA.Editors
             if (existing != null)
             {
                 Undo.RecordObject(existing, "Update OverlayDataAsset");
-                existing.overlayName = overlayName;
+                existing.name = overlayName;
                 existing.material = sbp.material;
                 // Resize arrays if needed
                 if (existing.textureList == null || existing.textureList.Length != channelCount)
@@ -545,7 +539,7 @@ namespace UMA.Editors
 
             // Create a new overlay asset
             var oda = ScriptableObject.CreateInstance<OverlayDataAsset>();
-            oda.overlayName = overlayName;
+            oda.name = overlayName;
             oda.material = sbp.material;
             oda.textureList = newTextureList;
             oda.overlayBlend = newBlend;
@@ -789,10 +783,7 @@ namespace UMA.Editors
 
             // Base slot
             var slot = ScriptableObject.CreateInstance<SlotDataAsset>();
-            slot.slotName = sbp.slotName;
-            //Make sure slots get created with a name hash
-            slot.nameHash = UMAUtils.StringToHash(slot.slotName);
-            slot.material = sbp.material;
+            slot.name = sbp.slotName;
             slot.sourceSubmeshIndex = 0;
             try
             {
@@ -840,7 +831,7 @@ namespace UMA.Editors
             {
                 // Overwrite existing slot in place
                 string existingRootBone = slot.meshData.RootBoneName;
-                UpdateSlotData(OldAsset, finalMeshRenderer, OldAsset.material, OldAsset.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
+                UpdateSlotData(OldAsset, finalMeshRenderer, sbp.material, OldAsset.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
                 EditorUtility.SetDirty(OldAsset);
 #if UNITY_6000_2_OR_NEWER
                 if (!sbp.generateSlotLods)
@@ -940,7 +931,7 @@ namespace UMA.Editors
                 {
                     // Update existing submesh slot
                     string existingRootBone = slot.meshData.RootBoneName;
-                    UpdateSlotData(existingAdditional, finalMeshRenderer, existingAdditional.material, existingAdditional.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
+                    UpdateSlotData(existingAdditional, finalMeshRenderer, sbp.material, existingAdditional.normalReferenceMesh, existingRootBone, true, sbp.clearNormals, sbp.clearTangents);
                     existingAdditional.sourceSubmeshIndex = i;
 #if UNITY_6000_2_OR_NEWER
                     if (!sbp.generateSlotLods)
@@ -968,8 +959,7 @@ namespace UMA.Editors
 
                 // Create new additional slot
                 var additionalSlot = ScriptableObject.CreateInstance<SlotDataAsset>();
-                additionalSlot.slotName = theSlotName;
-                additionalSlot.material = sbp.material;
+                additionalSlot.name = theSlotName;
                 // Non-UDIM path: ensure udimAdjustment=false
                 additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, i, sbp.clearNormals, sbp.clearTangents);
                 TransformMeshData(additionalSlot, sbp);
@@ -1684,9 +1674,7 @@ namespace UMA.Editors
                         {
                             // Update existing asset in place
                             sda = existing;
-                            sda.slotName = theSlotName;
-                            sda.nameHash = UMAUtils.StringToHash(sda.slotName);
-                            sda.material = sbp.material;
+                            sda.name = theSlotName;
                             sda.sourceSubmeshIndex = sub;
                             sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
                             TransformMeshData(sda, sbp);
@@ -1740,9 +1728,7 @@ namespace UMA.Editors
                         {
                             // Create a new slot asset
                             sda = ScriptableObject.CreateInstance<SlotDataAsset>();
-                            sda.slotName = theSlotName;
-                            sda.nameHash = UMAUtils.StringToHash(sda.slotName);
-                            sda.material = sbp.material;
+                            sda.name = theSlotName;
                             sda.sourceSubmeshIndex = sub;
 
                             // Normalize UVs via udimAdjustment flag

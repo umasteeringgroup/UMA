@@ -59,7 +59,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailNormalMap:
-        m_Texture: {fileID: 2800000, guid: ce84ac6354b628f4389fb7327538e10b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2239da34898573741bb5f8875126faa2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DisplacementMap:
@@ -147,14 +147,14 @@ Material:
     - BOOLEAN_USE_SSS: 1
     - ENUM_DISPLACEMENT_MODE: 0
     - ENUM_WRINKLE_MODE: 0
-    - _BumpScale: 1
+    - _BumpScale: 0.706
     - _BumpStrength: 0
     - _CavityStrength: 0
     - _CoatMask: 0
     - _CoatSmoothness: 0
-    - _DetailNormalMapScale: 0
-    - _Detail_Gloss_Scale: 1
-    - _Detail_Normal_Scale: 0.4
+    - _DetailNormalMapScale: 0.024
+    - _Detail_Gloss_Scale: 0.19
+    - _Detail_Normal_Scale: 0.186
     - _DisplacementLevel: 0.5
     - _DisplacementStrength: 0
     - _EdgePower: 4
@@ -174,11 +174,11 @@ Material:
     - _AO_Remap: {r: 0, g: 1, b: 0, a: 0}
     - _Ambient_Occlusion_Remap: {r: 0, g: 1, b: 0, a: 0}
     - _Base_Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Detail_Tiling: {r: 12, g: 12, b: 0, a: 0}
+    - _Detail_Tiling: {r: 16, g: 16, b: 0, a: 0}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 0}
     - _Gloss_Remap: {r: 0, g: 0, b: 0, a: 0}
     - _SSS_BlurColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Smoothness_Remap: {r: 0, g: 1, b: 0, a: 0}
+    - _Smoothness_Remap: {r: 0, g: 0.75986, b: 0, a: 0}
     - _SubsurfaceColor: {r: 1, g: 0.36862746, b: 0.29803923, a: 0}
     - _SubsurfaceFalloff: {r: 0.8509804, g: 0.1822153, b: 0.10196077, a: 0}
     - _WrinkleValueSet12CL: {r: 0, g: 0, b: 0, a: 0}

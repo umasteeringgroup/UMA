@@ -1062,7 +1062,15 @@ namespace UMA.CharacterSystem.Editors
 
                     string groupLabel = string.IsNullOrEmpty(grp.DNAArea) ? "Group" : grp.DNAArea;
                     EditorGUI.BeginChangeCheck();
+                    GUILayout.BeginHorizontal();
                     grp.editorFoldout = EditorGUILayout.Foldout(grp.editorFoldout, groupLabel, true);
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("Inspect Group", GUILayout.Width(100)))
+                    {
+                        // Defer inspection to avoid layout errors
+                        InspectMe.Add(grp);
+                    }
+                    GUILayout.EndHorizontal();
                     if (EditorGUI.EndChangeCheck())
                     {
                         EditorUtility.SetDirty(grp);

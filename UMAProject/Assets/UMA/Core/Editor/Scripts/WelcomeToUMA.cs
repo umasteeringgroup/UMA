@@ -1137,18 +1137,6 @@ namespace UMA
                             ReviewAssetItem(AI, "SlotDataAsset");
                         }
 
-                        // Auto-fix materialName if material assigned
-                        if (sd.material != null)
-                        {
-                            if (string.IsNullOrEmpty(sd.materialName) || sd.materialName != sd.material.name)
-                            {
-                                sd.materialName = sd.material.name;
-                                EditorUtility.SetDirty(sd);
-                                AssetDatabase.SaveAssetIfDirty(sd);
-                                AddText($"Fixed SlotDataAsset '{AI._Name}' materialName to '{sd.materialName}'.");
-                            }
-                        }
-
                         // Normalize and deduplicate tags if present
                         if (sd.tags != null && sd.tags.Length > 0)
                         {
@@ -1161,32 +1149,9 @@ namespace UMA
                             }
                         }
 
-                        if (sd.meshData != null && sd.meshData.vertices != null && sd.meshData.vertexCount > 0)
+                     if (sd.meshData != null && sd.meshData.vertices != null && sd.meshData.vertexCount > 0)
                         {
-                            if (sd.material == null)
-                            {
-                                UMAMaterial material = null;
-                                try { material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(sd.materialName); } catch { /* ignore */ }
-                                if (material != null)
-                                {
-                                    sd.material = material;
-                                    AddText($"Warning: SlotDataAsset {AI._Name} did not have material set. This has been fixed.", LogType.Warning);
-                                    // Also sync name
-                                    if (string.IsNullOrEmpty(sd.materialName) || sd.materialName != material.name)
-                                    {
-                                        sd.materialName = material.name;
-                                    }
-                                    EditorUtility.SetDirty(sd);
-                                    AssetDatabase.SaveAssetIfDirty(sd);
-                                }
-                            }
-                            if (sd.material == null) // still not fixed
-                            {
-                                AddText($"Warning: SlotDataAsset {AI._Name} did not have material set, and Material was not found for slot material named '{sd.materialName}'", LogType.Error);
-                                LogLine l = AddText("Review slot");
-                                l.ButtonAction = (line) => ReviewItem(l);
-                                l.ReviewItem = AI;
-                            }
+                            // SlotDataAsset materials are now derived from overlays at the SlotData level.
                         }
                         else
                         {
@@ -1727,13 +1692,9 @@ namespace UMA
                     AddText($"Invalid RaceData entry: {r._Name}", LogType.Error);
                     continue;
                 }
-                if (string.IsNullOrEmpty(race.raceName))
+                if (!string.IsNullOrEmpty(race._oldRaceName))
                 {
-                    AddText($"Race {race.name} has no 'raceName' - This has been set to the asset name. ", LogType.Warning);
-                    race.raceName = race.name;
-                    EditorUtility.SetDirty(race);
-                    AssetDatabase.SaveAssetIfDirty(race);
-                    ReviewAssetItem(r);
+                    AddText($"Race {race.name} is using the legacy 'raceName'", LogType.Warning);
                 }
                 if (race.dnaConverterList == null || race.dnaConverterList.Length == 0)
                 {

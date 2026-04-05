@@ -405,7 +405,6 @@ namespace UMA.Decals
 				}
 
 				newSlot.name = slotName;
-				newSlot.slotName = slotName;
 				newSlot.SlotObject = prefabAsset;
 				EditorUtility.SetDirty(newSlot);
 
@@ -1461,7 +1460,7 @@ namespace UMA.Decals
 							var ns = new DecalRTStampAsset.SlotStamp {
 								slotName = s.slotName,
 								slotGroup = s.slotGroup,
-								slotHash = UMAUtils.StringToHash(s.slotName),
+								slotHash = s.slotHash,
 								umaMaterialName = s.umaMaterialName,
 								normBaseUV = (s.normBaseUV != null) ? (Vector2[])s.normBaseUV.Clone() : new Vector2[0],
 								overlayUV = (s.overlayUV != null) ? (Vector2[])s.overlayUV.Clone() : new Vector2[0],

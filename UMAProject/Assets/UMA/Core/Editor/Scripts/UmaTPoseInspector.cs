@@ -28,6 +28,7 @@ namespace UMA
                 return;
             }
 
+            source.mapJaw = EditorGUILayout.Toggle("Map Jaw", source.mapJaw);
             //base.DrawDefaultInspector();
             mecanimInfoFoldout = EditorGUILayout.Foldout(mecanimInfoFoldout, "Mecanim Adjustments");
             if (mecanimInfoFoldout)

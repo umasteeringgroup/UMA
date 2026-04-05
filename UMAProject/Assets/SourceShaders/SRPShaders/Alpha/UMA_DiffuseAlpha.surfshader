@@ -4,12 +4,14 @@ BEGIN_OPTIONS
    Workflow "Metallic"
    Queue "Transparent"
    Alpha "Blend"
+   VertexColorRequire "1"     
 END_OPTIONS
 
 BEGIN_PROPERTIES
 
     [BetterHeader(Material Specific)]
 	_Color ("Main Color", Color) = (1, 1, 1, 1)
+    _AltColor ("Alternate Color", Color) = (1,1,1,1)	
 	_ColorModulation ("Color Modulation", Range(0,2)) = 1
 	_Metallic ("Metallic", Range(0,1)) = 0
 	_Smoothness ("Smoothness", Range(0,1)) = 0
@@ -28,11 +30,13 @@ END_PROPERTIES
 
 BEGIN_PASS("All")
    Cull [_CullMode]
+   ZWrite Off 
 END_PASS
 
 // Any variables you want to have in the per material CBuffer go here.
 BEGIN_CBUFFER
-    half4 _Color;
+    float4 _Color;
+    float4 _AltColor;	
 	half  _ColorModulation;
 	half  _Smoothness;
 	half  _Metallic;

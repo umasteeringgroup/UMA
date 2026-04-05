@@ -439,7 +439,7 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("This overlay belongs to a placeholder wildcard slot. Slot-asset material checks are unavailable because the slot has no backing asset.", MessageType.Info);
             }
 
-            if (hasBackingSlotAsset && _slotData.asset.material != null && _overlayData.asset.material != null)
+            if (hasBackingSlotAsset && _slotData.material != null && _overlayData.asset.material != null)
             {
                 if (_overlayData.asset.material.name != _slotData.material.name)
                 {
@@ -448,7 +448,7 @@ namespace UMA.Editors
                         EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.material.name, MessageType.Error);
                         if (GUILayout.Button("Copy Slot Material to Overlay"))
                         {
-                            _overlayData.asset.material = _slotData.asset.material;
+                            _overlayData.asset.material = _slotData.material;
                             EditorUtility.SetDirty(_overlayData.asset);
                             string path = AssetDatabase.GetAssetPath(_overlayData.asset.GetInstanceID());
                             AssetDatabase.ImportAsset(path);
@@ -456,7 +456,7 @@ namespace UMA.Editors
                     }
                     else
                     {
-                        EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.asset.material.name + " and Channel count is not the same. Overlay must be removed or fixed manually", MessageType.Error);
+                        EditorGUILayout.HelpBox("Material " + _overlayData.asset.material.name + " does not match slot material: " + _slotData.material.name + " and Channel count is not the same. Overlay must be removed or fixed manually", MessageType.Error);
                     }
                     if (GUILayout.Button("Select Slot in Project"))
                     {

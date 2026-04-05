@@ -1192,13 +1192,18 @@ namespace UMA
 					var po = packedOverlays[oi];
 					if (po == null || string.IsNullOrEmpty(po.id)) continue;
 
+					// Should we cache this?
+					// Seems like this might mess up addressables unloading?
+					// No, this is fine as the cache is only for this specific unpack.
+
 					// Overlay asset lookup
 					OverlayDataAsset oAsset;
 					OverlayData overlayData;
 					if (!_overlayAssetCache.TryGetValue(po.id, out oAsset))
 					{
 						// Fallback to full instantiate (creates OverlayData) then cache asset for next time
-						overlayData = context.InstantiateOverlay(po.id);
+						Debug.Log("Cache miss for overlay '" + po.id + "'. Instantiating to get asset reference.");
+                        overlayData = context.InstantiateOverlay(po.id);
 						if (overlayData == null)
 						{
 #if UNITY_EDITOR

@@ -171,6 +171,7 @@ namespace UMA
 
                     var slotData = generatedMaterial.materialFragments[0].slotData;
                     var channels = slotData.material.channels;
+                    bool materialUseMipMap = slotData.material.generateMipMaps;
 
                     // Reuse resultingTextures array when possible
                     if (resultingTextures == null || resultingTextures.Length != channels.Length)
@@ -252,7 +253,7 @@ namespace UMA
                                         if (prevTex != null &&
                                             prevTex.width == ww && prevTex.height == hh &&
                                             prevTex.format == channelTextureFormat &&
-                                            prevTex.useMipMap == umaGenerator.convertMipMaps)
+                                            prevTex.useMipMap == materialUseMipMap)
                                         {
                                             destinationTexture = prevTex;
                                         }
@@ -260,7 +261,7 @@ namespace UMA
                                         {
                                             destinationTexture = new RenderTexture(ww, hh, 0, channelTextureFormat, RenderTextureReadWrite.Linear)
                                             {
-                                                useMipMap = umaGenerator.convertMipMaps // && !umaGenerator.convertRenderTexture;
+                                                useMipMap = materialUseMipMap // && !umaGenerator.convertRenderTexture;
                                             };
                                         }
                                     }

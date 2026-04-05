@@ -3237,14 +3237,6 @@ namespace UMA
             }
             else if (result is SlotDataAsset)
             {
-                SlotDataAsset sd = result as SlotDataAsset;
-                if (sd.material == null)
-                {
-                    if (!string.IsNullOrEmpty(sd.materialName))
-                    {
-                        sd.material = GetAsset<UMAMaterial>(sd.materialName);
-                    }
-                }
             }
             else if (result is OverlayDataAsset)
             {
@@ -3371,23 +3363,6 @@ namespace UMA
             for (int i = 0; i < slots.Count; i++)
             {
                 SlotDataAsset sd = slots[i];
-                if (sd.material == null)
-                {
-                    if (!string.IsNullOrEmpty(sd.materialName))
-                    {
-                        sd.material = GetAsset<UMAMaterial>(sd.materialName);
-
-                        if (sd.material == null)
-                        {
-                            Debug.LogWarning("Unable to find material '" + sd.materialName + "' for slot: " + sd.name);
-                        }
-                        EditorUtility.SetDirty(sd);
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Material name is null on slot: " + sd.name);
-                    }
-                }
             }
             for (int i = 0; i < overlays.Count; i++)
             {

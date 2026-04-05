@@ -459,7 +459,7 @@ namespace UMA {
 					var slotStamp = new DecalRTStampAsset.SlotStamp {
                        slotName = string.IsNullOrEmpty(slot.slotName) ? (slot.asset != null ? slot.asset.name : string.Empty) : slot.slotName,
 						slotGroup = slot.asset != null ? slot.asset.slotGroup : null,
-                        slotHash = UMAUtils.StringToHash(slot.slotName),
+                        slotHash = slot.asset.nameHash,
 						umaMaterialName = slot.material != null ? slot.material.name : string.Empty,
 						normBaseUV = new Vector2[uv0List.Count],
 						overlayUV = uv1List.ToArray(),

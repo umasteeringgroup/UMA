@@ -15,12 +15,36 @@ namespace UMA
     /// </summary>
     [PreferBinarySerialization]
 	[System.Serializable]
-	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver, IUMAIndexOptions
-	{
+	public partial class OverlayDataAsset : ScriptableObject, IUMAIndexOptions, INameProvider
+    {
+
+		[FormerlySerializedAs("overlayName")]
+		public string _oldOverlayName;
 		[Tooltip("The name of this overlay.")]
-		public string overlayName;
-		[System.NonSerialized]
-		public int nameHash;
+		public string overlayName
+		{
+			get
+			{
+				if (!string.IsNullOrEmpty(_oldOverlayName))
+				{
+					return _oldOverlayName;
+				}
+				return this.name;
+            }
+		}
+
+		private int _nameHash = 0;
+        public int nameHash
+		{
+			get
+			{
+				if (_nameHash == 0)
+				{
+					_nameHash = UMAUtils.StringToHash(overlayName);
+				}
+				return _nameHash;
+			}
+		}
 
 #if UNITY_EDITOR
 		public float lastActionTime { get; set; } = 0;
@@ -294,20 +318,22 @@ namespace UMA
 
 		}
 
-		public void OnAfterDeserialize()
-		{
-			nameHash = UMAUtils.StringToHash(overlayName);
-		}
-
-		public void OnBeforeSerialize()
-		{
-		}
 		public Texture GetAlphaMask()
 		{
 			return alphaMask != null ? alphaMask : textureList[0];
 		}
 
-		/*public void SortOcclusion()
+        public string GetAssetName()
+        {
+			return overlayName;
+        }
+
+        public int GetNameHash()
+        {
+			return nameHash;
+        }
+
+        /*public void SortOcclusion()
 		{
 			if (OcclusionEntries != null)
 			{
@@ -317,5 +343,5 @@ namespace UMA
 #endif
 			}
 		} */
-	}
+    }
 }

@@ -15,9 +15,18 @@ MonoBehaviour:
   _material: {fileID: 2100000, guid: 15a5f99afe13df8468a9d786b532a08f, type: 2}
   _secondPass: {fileID: 0}
   materialType: 2
-  channels: []
-  MipMapBias: 2
-  AnisoLevel: 8
+  channels:
+  - channelType: 0
+    textureFormat: 0
+    materialPropertyName: _BaseMap
+    sourceTextureName: 
+    Compression: 0
+    DownSample: 0
+    ConvertRenderTexture: 0
+    NonShaderTexture: 0
+  generateMipMaps: 1
+  MipMapBias: -1
+  AnisoLevel: 16
   MatFilterMode: 2
   Compression: 0
   shaderParms: []

@@ -191,6 +191,7 @@ namespace UMA.Editors
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Generated Texture Settings", _centeredStyle);
             EditorGUILayout.BeginVertical("HelpBox");
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("generateMipMaps"), new GUIContent("Generate Mip Maps", "Enable or disable mip map generation."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("MipMapBias"), new GUIContent("Mip Map Bias", "Negative values have sharper bias"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("AnisoLevel"), new GUIContent("Aniso Level", "Anisotropic level"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("MatFilterMode"),  new GUIContent("Texture Filter Mode", "Select the filter mode of Point, Bilinear or Trilinear"));

@@ -218,9 +218,9 @@ namespace UMA
 				if (slot != null && slot.meshModifiers != null)
 				{
 				slot.meshModifiers.Clear();
-				if (accumulatedModifiers.ContainsKey(slot.slotName))
+				if (accumulatedModifiers.ContainsKey(slot.asset.sourceSlot))
 				{
-					var modifiers = accumulatedModifiers[slot.slotName];
+					var modifiers = accumulatedModifiers[slot.asset.sourceSlot];
                     slot.meshModifiers.AddRange(modifiers);
                 }
             }

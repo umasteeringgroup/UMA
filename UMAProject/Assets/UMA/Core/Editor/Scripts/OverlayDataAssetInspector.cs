@@ -45,7 +45,7 @@ namespace UMA.Editors
 
             if (serializedObject == null || serializedObject.targetObject == null) return;
 
-            _overlayName = serializedObject.FindProperty("overlayName");
+            _overlayName = serializedObject.FindProperty("_oldOverlayName");
             _overlayType = serializedObject.FindProperty("overlayType");
             _umaMaterial = serializedObject.FindProperty("material");
             _textureList = serializedObject.FindProperty("_textureList");
@@ -143,13 +143,13 @@ namespace UMA.Editors
             // overlayName + "Use Obj Name" button (multi-object safe)
             GUILayout.BeginHorizontal();
             if (_overlayName != null) { EditorGUILayout.PropertyField(_overlayName); }
-            if (GUILayout.Button("Use Obj Name", GUILayout.Width(90)))
+            if (GUILayout.Button("Clear legacy overlay name", GUILayout.Width(190)))
             {
                 foreach (var t in targets)
                 {
                     var overlayDataAsset = t as OverlayDataAsset;
                     if (overlayDataAsset == null) continue;
-                    overlayDataAsset.overlayName = overlayDataAsset.name;
+                    overlayDataAsset._oldOverlayName = "";
                     EditorUtility.SetDirty(overlayDataAsset);
                     GUI.changed = true;
                 }

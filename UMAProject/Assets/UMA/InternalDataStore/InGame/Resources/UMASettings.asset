@@ -43,6 +43,7 @@ MonoBehaviour:
   - Slots/Face
   - Face
   groupNames:
+  - Face
   - Head
   - Body
   - Arms

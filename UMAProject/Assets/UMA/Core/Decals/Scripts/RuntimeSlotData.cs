@@ -143,10 +143,19 @@ namespace UMA
                 return null;
             }
             UMAMeshData md = slot.meshData;
+            UMAMaterial material = null;
+            if (!string.IsNullOrEmpty(overlayName))
+            {
+                var overlayAsset = UMAAssetIndexer.Instance.GetAsset<OverlayDataAsset>(overlayName);
+                if (overlayAsset != null)
+                {
+                    material = overlayAsset.GetMaterial();
+                }
+            }
             var dto = new RuntimeSlotData
             {
                 slotName = slot.slotName,
-                material = slot.material ? slot.material.name : "",
+                material = material ? material.name : "",
                 tags = slot.tags,
                 vertices = md.vertices,
                 normals = md.normals,
@@ -313,8 +322,7 @@ namespace UMA
             result.material = umaMaterial;
 
             var slotAsset = ScriptableObject.CreateInstance<SlotDataAsset>();
-            slotAsset.slotName = md.SlotName;
-            slotAsset.material = umaMaterial;
+            slotAsset.name = md.SlotName;
             slotAsset.meshData = md;
             slotAsset.subMeshIndex = 0;
             slotAsset.sourceSubmeshIndex = 0;

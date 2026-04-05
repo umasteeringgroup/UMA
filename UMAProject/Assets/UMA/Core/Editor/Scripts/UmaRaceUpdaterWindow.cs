@@ -88,7 +88,8 @@ namespace UMA.Editors
 				GUILayout.Label("Process these slots");
 				foreach(CheckedSlot kp in Slots)
 				{
-					kp.Checked = GUILayout.Toggle(kp.Checked, kp.Slot.slotName+" ("+kp.Slot.asset.material.name+")");
+                   string materialName = kp.Slot.material != null ? kp.Slot.material.name : "No Material";
+					kp.Checked = GUILayout.Toggle(kp.Checked, kp.Slot.slotName+" ("+materialName+")");
 				}
 
 				GUILayout.Space(10);
@@ -105,12 +106,13 @@ namespace UMA.Editors
 						{
 							if (checkedSlot.Checked)
 							{
-								checkedSlot.Slot.asset.material = Material;
-								EditorUtility.SetDirty(checkedSlot.Slot.asset);
-								
 								// also update the overlay slots
 								foreach (var overlaySlot in checkedSlot.Slot.GetOverlayList())
 								{
+                                  if (overlaySlot == null || overlaySlot.asset == null)
+									{
+										continue;
+									}
 									overlaySlot.asset.material = Material;
 									EditorUtility.SetDirty(overlaySlot.asset);
 								}

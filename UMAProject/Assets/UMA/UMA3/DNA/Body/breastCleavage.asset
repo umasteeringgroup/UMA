@@ -63,7 +63,7 @@ MonoBehaviour:
         selected: 0
         EffectName: 
         BoneName: LeftOuterBreast
-        Translation: {x: 0, y: 0.07, z: 0}
+        Translation: {x: 0.07, y: 0, z: 0}
     - rid: 7828207452975530089
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:
@@ -106,4 +106,4 @@ MonoBehaviour:
         selected: 1
         EffectName: RightOuterBreast
         BoneName: RightOuterBreast
-        Translation: {x: 0, y: 0.07, z: 0}
+        Translation: {x: -0.07, y: 0, z: 0}

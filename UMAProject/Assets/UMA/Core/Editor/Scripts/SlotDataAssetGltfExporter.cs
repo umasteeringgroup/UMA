@@ -15,6 +15,7 @@ namespace UMA.Editors
         private const uint GltfVersion = 2;
         private const uint ChunkTypeJson = 0x4E4F534A; // JSON
         private const uint ChunkTypeBin = 0x004E4942; // BIN
+        private static readonly Matrix4x4 HandednessFlip = Matrix4x4.Scale(new Vector3(-1f, 1f, 1f));
 
         private class BufferView
         {
@@ -35,7 +36,7 @@ namespace UMA.Editors
             public float[] max;
         }
 
-        public static void ExportSlotToGlb(SlotDataAsset slot, string outputPath)
+        public static void ExportSlotToGlb(SlotDataAsset slot, string outputPath, bool includeRig)
         {
             if (slot == null)
             {
@@ -80,11 +81,12 @@ namespace UMA.Editors
                 EditorUtility.DisplayDialog("Export glTF", "Mesh has no triangles.", "OK");
                 return;
             }
+            ReverseTriangleWinding(triangles);
 
             var boneNames = meshData.boneNameHashes;
             var bindPoses = meshData.bindPoses;
             var umaBones = meshData.umaBones;
-            bool hasBones = boneNames != null && bindPoses != null && boneNames.Length == bindPoses.Length && boneNames.Length > 0;
+            bool hasBones = includeRig && boneNames != null && bindPoses != null && boneNames.Length == bindPoses.Length && boneNames.Length > 0;
 
             Vector4[] jointData = null;
             Vector4[] weightData = null;
@@ -97,7 +99,7 @@ namespace UMA.Editors
             var bufferViews = new List<BufferView>();
             var accessors = new List<Accessor>();
 
-            int positionAccessor = AddVector3Accessor(vertices, buffer, bufferViews, accessors, 34962);
+            int positionAccessor = AddVector3Accessor(vertices, buffer, bufferViews, accessors, 34962, true);
             int normalAccessor = -1;
             int uvAccessor = -1;
             int jointsAccessor = -1;
@@ -105,7 +107,7 @@ namespace UMA.Editors
 
             if (normals != null && normals.Length == vertexCount)
             {
-                normalAccessor = AddVector3Accessor(normals, buffer, bufferViews, accessors, 34962);
+                normalAccessor = AddVector3Accessor(normals, buffer, bufferViews, accessors, 34962, true);
             }
 
             if (uvs != null && uvs.Length == vertexCount)
@@ -124,7 +126,7 @@ namespace UMA.Editors
             int inverseBindAccessor = -1;
             if (hasBones)
             {
-                inverseBindAccessor = AddMatrix4x4Accessor(bindPoses, buffer, bufferViews, accessors);
+                inverseBindAccessor = AddMatrix4x4Accessor(bindPoses, buffer, bufferViews, accessors, true);
             }
 
             var json = BuildGltfJson(
@@ -230,7 +232,7 @@ namespace UMA.Editors
             weights = new Vector4(w0, w1, w2, w3);
         }
 
-        private static int AddVector3Accessor(Vector3[] values, List<byte> buffer, List<BufferView> bufferViews, List<Accessor> accessors, int target)
+        private static int AddVector3Accessor(Vector3[] values, List<byte> buffer, List<BufferView> bufferViews, List<Accessor> accessors, int target, bool convertHandedness)
         {
             int offset = AlignBuffer(buffer, 4);
             var min = new float[] { float.MaxValue, float.MaxValue, float.MaxValue };
@@ -238,7 +240,7 @@ namespace UMA.Editors
 
             for (int i = 0; i < values.Length; i++)
             {
-                Vector3 v = values[i];
+                Vector3 v = convertHandedness ? ConvertPosition(values[i]) : values[i];
                 WriteFloat(buffer, v.x);
                 WriteFloat(buffer, v.y);
                 WriteFloat(buffer, v.z);
@@ -326,12 +328,12 @@ namespace UMA.Editors
             return accessorIndex;
         }
 
-        private static int AddMatrix4x4Accessor(Matrix4x4[] values, List<byte> buffer, List<BufferView> bufferViews, List<Accessor> accessors)
+        private static int AddMatrix4x4Accessor(Matrix4x4[] values, List<byte> buffer, List<BufferView> bufferViews, List<Accessor> accessors, bool convertHandedness)
         {
             int offset = AlignBuffer(buffer, 4);
             for (int i = 0; i < values.Length; i++)
             {
-                Matrix4x4 m = values[i];
+                Matrix4x4 m = convertHandedness ? ConvertMatrix(values[i]) : values[i];
                 WriteFloat(buffer, m.m00); WriteFloat(buffer, m.m10); WriteFloat(buffer, m.m20); WriteFloat(buffer, m.m30);
                 WriteFloat(buffer, m.m01); WriteFloat(buffer, m.m11); WriteFloat(buffer, m.m21); WriteFloat(buffer, m.m31);
                 WriteFloat(buffer, m.m02); WriteFloat(buffer, m.m12); WriteFloat(buffer, m.m22); WriteFloat(buffer, m.m32);
@@ -432,7 +434,7 @@ namespace UMA.Editors
                     nodeChildren.Add(new List<int>());
                     parentHashes.Add(parentHash);
 
-                    nodes.Add(BuildNodeJson(name, pos, rot, scale, null, null));
+                    nodes.Add(BuildNodeJson(name, ConvertPosition(pos), ConvertRotation(rot), scale, null, null));
                 }
 
                 for (int i = 0; i < parentHashes.Count; i++)
@@ -656,6 +658,32 @@ namespace UMA.Editors
             }
             sb.Append("]}");
             return sb.ToString();
+        }
+
+        private static void ReverseTriangleWinding(int[] triangles)
+        {
+            if (triangles == null) return;
+            for (int i = 0; i + 2 < triangles.Length; i += 3)
+            {
+                int temp = triangles[i + 1];
+                triangles[i + 1] = triangles[i + 2];
+                triangles[i + 2] = temp;
+            }
+        }
+
+        private static Vector3 ConvertPosition(Vector3 v)
+        {
+            return new Vector3(-v.x, v.y, v.z);
+        }
+
+        private static Quaternion ConvertRotation(Quaternion q)
+        {
+            return new Quaternion(q.x, -q.y, -q.z, q.w);
+        }
+
+        private static Matrix4x4 ConvertMatrix(Matrix4x4 unityMatrix)
+        {
+            return HandednessFlip * unityMatrix * HandednessFlip;
         }
 
         private static void WriteGlb(string outputPath, string json, byte[] bin)

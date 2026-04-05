@@ -69,5 +69,6 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 5dc7127464dc47a48ab0552829175064, type: 2}
     - {fileID: 11400000, guid: 73310e01d2952794fa5899ff34df1a34, type: 2}
     - {fileID: 11400000, guid: 0eb221390dc419348aebcdf8cbc0292f, type: 2}
+    - {fileID: 11400000, guid: 76032230dd1c5224996c7f9ca9a351f2, type: 2}
   enableDebug: 0
   rgbOnlyDilation: 1

@@ -290,23 +290,6 @@ namespace UMA
 
                             }
                         }
-                        if (sda.material != null)
-                        {
-                            if (ClearMaterials)
-                            {
-                                sda.materialName = sda.material.name;
-                                sda.material = null;
-                                EditorUtility.SetDirty(sda);
-                            }
-                            else
-                            {
-                                if (sda.material == null)
-                                {
-                                    sda.material = Index.GetAsset<UMAMaterial>(sda.materialName);
-                                    EditorUtility.SetDirty(sda);
-                                }
-                            }
-                        }
                     }
                     if (ai._Type == typeof(OverlayDataAsset))
                     {

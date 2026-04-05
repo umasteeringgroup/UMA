@@ -146,7 +146,11 @@ namespace UMA.Editors
 			}
 
 			EditorGUI.BeginChangeCheck();
-			race.raceName = EditorGUILayout.TextField("Race Name", race.raceName);
+			if (!string.IsNullOrEmpty(race._oldRaceName))
+			{
+				EditorGUILayout.HelpBox("This race is using the old racename and should be cleared. The old racename is only used for backwards compatibility when loading old recipes that reference it", MessageType.Warning);
+				race._oldRaceName = EditorGUILayout.TextField("Legacy Name", race.raceName);
+            }
 			race.umaTarget = (UMA.RaceData.UMATarget)EditorGUILayout.EnumPopup(new GUIContent("UMA Target", "The Mecanim animation rig type."), race.umaTarget);
 			race.genericRootMotionTransformName = EditorGUILayout.TextField("Root Motion Transform", race.genericRootMotionTransformName);
 			race.TPose = EditorGUILayout.ObjectField(new GUIContent("T-Pose", "The UMA T-Pose asset can be created by selecting the race fbx and choosing the Extract T-Pose dropdown. Only needs to be done once per race."), race.TPose, typeof(UmaTPose), false) as UmaTPose;

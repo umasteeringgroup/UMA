@@ -52,6 +52,7 @@ namespace UMA.Editors
         private List<string> foundRaceNames = new List<string>();
         private int uvChannel;
         private int uvChannelToMirror;
+        private bool exportIncludeRig = true;
 
         public override bool HasPreviewGUI() => true;
         MeshPreview MeshPreview;
@@ -79,7 +80,7 @@ namespace UMA.Editors
         {
             SlotDataAsset wildcard = CustomAssetUtility.CreateAsset<SlotDataAsset>("", true, "Wildcard", true);
             wildcard.isWildCardSlot = true;
-            wildcard.slotName = "WildCard";
+            wildcard.name = "WildCard";
             EditorUtility.SetDirty(wildcard);
             string path = AssetDatabase.GetAssetPath(wildcard.GetInstanceID());
             AssetDatabase.ImportAsset(path);
@@ -233,13 +234,13 @@ namespace UMA.Editors
             GUILayout.BeginHorizontal();
             if (slotName != null)
                 EditorGUILayout.DelayedTextField(slotName);
-            if (GUILayout.Button("Use Obj Name", GUILayout.Width(90)))
+            if (GUILayout.Button("Clear Legacy Name", GUILayout.Width(90)))
             {
                 foreach (var t in targets)
                 {
                     var slotDataAsset = t as SlotDataAsset;
                     if (slotDataAsset == null) continue;
-                    slotDataAsset.slotName = slotDataAsset.name;
+                    slotDataAsset._oldSlotName = "";
                     EditorUtility.SetDirty(slotDataAsset);
                     GUI.changed = true;
                 }
@@ -296,6 +297,7 @@ namespace UMA.Editors
                 Editor.DrawPropertiesExcluding(serializedObject, RegularSlotFields);
             }
             EditorGUILayout.HelpBox("Exports this SlotDataAsset to glTF 2.0 (.glb) with mesh, UVs, and skinning data. This is a minimal export (no materials or textures).", MessageType.Info);
+            exportIncludeRig = EditorGUILayout.ToggleLeft("Include Rig", exportIncludeRig);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Export glTF (.glb)", GUILayout.Width(140)))
             {
@@ -310,7 +312,28 @@ namespace UMA.Editors
                     string path = EditorUtility.SaveFilePanelInProject("Export Slot glTF", defaultName + ".glb", "glb", "Export SlotDataAsset mesh to glTF 2.0 (.glb)");
                     if (!string.IsNullOrEmpty(path))
                     {
-                        SlotDataAssetGltfExporter.ExportSlotToGlb(slotDataAsset, path);
+                        SlotDataAssetGltfExporter.ExportSlotToGlb(slotDataAsset, path, exportIncludeRig);
+                        AssetDatabase.Refresh();
+                    }
+                }
+            }
+
+            if (GUILayout.Button("Export via UMA glTF", GUILayout.Width(140)))
+            {
+                var slotDataAsset = target as SlotDataAsset;
+                if (slotDataAsset != null)
+                {
+                    string defaultName = slotDataAsset.slotName;
+                    if (string.IsNullOrEmpty(defaultName))
+                    {
+                        defaultName = slotDataAsset.name;
+                    }
+                    string path = EditorUtility.SaveFilePanelInProject("Export Slot via UMA glTF", defaultName + ".gltf", "gltf", "Export SlotDataAsset using UMAGltfExporter");
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        string assetFolder = System.IO.Path.GetDirectoryName(path);
+                        string exportName = System.IO.Path.GetFileNameWithoutExtension(path);
+                        UMAGltfExporter.ExportSlotDataAsset(slotDataAsset, assetFolder, exportName, exportIncludeRig);
                         AssetDatabase.Refresh();
                     }
                 }
@@ -1125,7 +1148,7 @@ namespace UMA.Editors
 
             string existingRootBone = s.meshData != null ? s.meshData.RootBoneName : string.Empty;
 
-            UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, s.material, seamsMesh, existingRootBone, true, clearNormals, clearTangents);
+            UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, null, seamsMesh, existingRootBone, true, clearNormals, clearTangents);
             string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
             AssetDatabase.ImportAsset(path);
             UMAUpdateProcessor.UpdateSlot(s);

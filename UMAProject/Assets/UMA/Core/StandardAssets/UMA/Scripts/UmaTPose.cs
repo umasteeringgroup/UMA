@@ -33,6 +33,9 @@ namespace UMA
 		[NonSerialized]
 		public bool extendedInfo;
 
+		[SerializeField]
+        public bool mapJaw = true;
+
 		[HideInInspector]
 		public byte[] serializedChunk;
 
@@ -171,7 +174,8 @@ namespace UMA
 			tp.boneInfo = (SkeletonBone[]) boneInfo.Clone();
 			tp.humanInfo = (HumanBone[])humanInfo.Clone();
 			tp.serializedChunk = (byte[])serializedChunk.Clone();
-			if (humanPoseData != null)
+			tp.mapJaw = mapJaw;
+            if (humanPoseData != null)
 			{
 				tp.humanPoseData = new SerializableHumanPose();
 				tp.humanPoseData.bodyPosition = humanPoseData.bodyPosition;

@@ -18,7 +18,6 @@ MonoBehaviour:
   DisplayValue: Mystic Robe Hood
   compatibleRaces:
   - HumanMale
-  - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
@@ -34,6 +33,7 @@ MonoBehaviour:
   - Hair
   activeWardrobeSet: []
   MeshHideAssets: []
+  MeshHideAssetCollections: []
   MeshModifiers: []
   OverrideDNA:
     PreloadValues: []

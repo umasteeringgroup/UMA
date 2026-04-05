@@ -56,10 +56,10 @@ namespace UMA.Controls
 					GUILayout.FlexibleSpace();
 					using (new EditorGUI.DisabledScope(_isRunning))
 					{
-						if (GUILayout.Button("Fix all slots without slot names", EditorStyles.toolbarButton))
-						{
-							FixAllSlotsWithoutSlotNames();
-						}
+						//if (GUILayout.Button("Fix all slots without slot names", EditorStyles.toolbarButton))
+						//{
+						//	FixAllSlotsWithoutSlotNames();
+						//}
 						if (GUILayout.Button("Load missing materials", EditorStyles.toolbarButton))
 						{
 							LoadMissingMaterials();
@@ -117,47 +117,6 @@ namespace UMA.Controls
 				EditorGUILayout.EndScrollView();
 			}
 
-			private void FixAllSlotsWithoutSlotNames()
-			{
-				var indexer = UMAAssetIndexer.Instance;
-				if (indexer == null)
-				{
-					return;
-				}
-
-				var slots = indexer.GetAllAssets<SlotDataAsset>();
-				int fixedCount = 0;
-				try
-				{
-					_isRunning = true;
-					for (int i = 0; i < slots.Count; i++)
-					{
-						var s = slots[i];
-						if (s == null)
-						{
-							continue;
-						}
-						if (!string.IsNullOrEmpty(s.slotName))
-						{
-							continue;
-						}
-
-						Undo.RecordObject(s, "Fix slotName");
-						s.slotName = s.name;
-						EditorUtility.SetDirty(s);
-						fixedCount++;
-					}
-				}
-				finally
-				{
-					_isRunning = false;
-				}
-
-				AssetDatabase.SaveAssets();
-				EditorUtility.DisplayDialog("Fix slot names", "Updated " + fixedCount + " slot(s).", "OK");
-				RefreshReport();
-			}
-
 			private void LoadMissingMaterials()
 			{
 				var indexer = UMAAssetIndexer.Instance;
@@ -166,38 +125,38 @@ namespace UMA.Controls
 					return;
 				}
 
-				var slots = indexer.GetAllAssets<SlotDataAsset>();
+              var overlays = indexer.GetAllAssets<OverlayDataAsset>();
 				int fixedCount = 0;
 				int missingName = 0;
 				try
 				{
 					_isRunning = true;
-					for (int i = 0; i < slots.Count; i++)
+                   for (int i = 0; i < overlays.Count; i++)
 					{
-						var s = slots[i];
-						if (s == null)
+                       var overlay = overlays[i];
+                        if (overlay == null)
 						{
 							continue;
 						}
-						if (s.material != null)
+                     if (overlay.material != null)
 						{
 							continue;
 						}
-						if (string.IsNullOrEmpty(s.materialName))
+                       if (string.IsNullOrEmpty(overlay.materialName))
 						{
 							missingName++;
 							continue;
 						}
 
-						var mat = indexer.GetAsset<UMAMaterial>(s.materialName);
+                        var mat = indexer.GetAsset<UMAMaterial>(overlay.materialName);
 						if (mat == null)
 						{
 							continue;
 						}
 
-						Undo.RecordObject(s, "Load missing slot material");
-						s.material = mat;
-						EditorUtility.SetDirty(s);
+                     Undo.RecordObject(overlay, "Load missing overlay material");
+                        overlay.material = mat;
+                        EditorUtility.SetDirty(overlay);
 						fixedCount++;
 					}
 				}
@@ -207,7 +166,7 @@ namespace UMA.Controls
 				}
 
 				AssetDatabase.SaveAssets();
-				EditorUtility.DisplayDialog("Load missing materials", "Updated " + fixedCount + " slot(s). Slots missing materialName: " + missingName + ".", "OK");
+                EditorUtility.DisplayDialog("Load missing materials", "Updated " + fixedCount + " overlay(s). Overlays missing materialName: " + missingName + ".", "OK");
 				RefreshReport();
 			}
 
@@ -1600,15 +1559,6 @@ namespace UMA.Controls
             {
                 objects.Add(slotDataAsset.RendererAsset);
             }
-            if (slotDataAsset.material != null)
-            {
-                objects.Add(slotDataAsset.material);
-                if (slotDataAsset.material.material != null)
-                {
-                    objects.Add(slotDataAsset.material.material);
-                    objects.AddRange(GetMaterialDepencies(slotDataAsset.material.material));
-                }
-            }
             if (slotDataAsset.slotDNA != null)
             {
                 objects.AddRange(GetDNADepenencies(slotDataAsset.slotDNA));
@@ -1665,11 +1615,6 @@ namespace UMA.Controls
 
         void SetItemMaterial(AssetItem ai)
         {
-            if (ai._Type == typeof(SlotDataAsset))
-            {
-                (ai.Item as SlotDataAsset).material = umaMaterial;
-                EditorUtility.SetDirty(ai.Item);
-            }
             if (ai._Type == typeof(OverlayDataAsset))
             {
                 (ai.Item as OverlayDataAsset).material = umaMaterial;
@@ -2222,16 +2167,6 @@ namespace UMA.Controls
                             if (oda.material == null) continue;
 
                             if (oda.material.name == material.name)
-                            {
-                                ate.Checked = true;
-                            }
-                        }
-                        if (ate.type == typeof(SlotDataAsset))
-                        {
-                            SlotDataAsset sda = ate.ai.Item as SlotDataAsset;
-                            if (sda.material == null) continue;
-
-                            if (sda.material.name == material.name)
                             {
                                 ate.Checked = true;
                             }
@@ -4045,14 +3980,12 @@ namespace UMA.Controls
                 slot.Assign(backup);
 
                 // Restore identifying names to keep this asset as the active (non-backup) slot
-                slot.slotName = originalSlotName;
                 slot.name = originalAssetName;
 
                 // If legacy status should be restored to true (backup is legacy)
                 slot.isLegacySlot = backup.isLegacySlot;
 
                 // Recompute name hash if necessary
-                slot.nameHash = slot.GetNameHash();
 
                 EditorUtility.SetDirty(slot);
 #if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
@@ -4425,19 +4358,7 @@ namespace UMA.Controls
                 AssetItem ai = materialsList[materialIndex];
                 UMAMaterial uMAMaterial = ai.Item as UMAMaterial;
                 bool found = false;
-                for(int i=0;i<slots.Count;i++)
-                {
-                    if (slots[i] != null && slots[i].Item != null)
-                    {
-                        SlotDataAsset slot = slots[i].Item as SlotDataAsset;
-                        if (slot.material != null && slot.material.name == uMAMaterial.name)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                // now check overlays
+                // check overlays
                 if (!found)
                 {
                     for (int i = 0; i < overlays.Count; i++)

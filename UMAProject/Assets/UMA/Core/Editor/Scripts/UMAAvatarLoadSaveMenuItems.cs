@@ -528,16 +528,8 @@ namespace UMA.Editors
 
 					if (_setMaterial)
 					{
-						slot.material = _targetMaterial;
-						if (_targetMaterial != null)
-						{
-							slot.materialName = _targetMaterial.name;
-						}
-						else
-						{
-							slot.materialName = string.Empty;
-						}
-						changed = true;
+                        // SlotDataAsset has no direct material/materialName fields in this repo.
+						// Keep UI toggle harmless here; material assignment is handled at overlay/recipe slot level.
 					}
 
 					if (_setOverlayScale)
@@ -2478,7 +2470,7 @@ namespace UMA.Editors
 			EditorGUILayout.LabelField("Utilities", EditorStyles.boldLabel);
 			EditorGUILayout.BeginHorizontal();
 			_utilitiesTargetMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", _utilitiesTargetMaterial, typeof(UMAMaterial), false);
-           using (new EditorGUI.DisabledScope(_utilitiesTargetMaterial == null || _overlays.Count == 0))
+			using (new EditorGUI.DisabledScope(_utilitiesTargetMaterial == null || _overlays.Count == 0))
 			{
 				if (GUILayout.Button("Assign UMAMaterial to selected", GUILayout.Width(220), GUILayout.Height(22)))
 				{
@@ -2487,13 +2479,6 @@ namespace UMA.Editors
                if (GUILayout.Button("Assign UMAMaterial to ALL", GUILayout.Width(200), GUILayout.Height(22)))
 				{
 					AssignMaterialToAllOverlaysInList();
-				}
-			}
-            using (new EditorGUI.DisabledScope(_overlays.Count == 0))
-			{
-				if (GUILayout.Button("Sync Material Texture Channels", GUILayout.Width(230), GUILayout.Height(22)))
-				{
-					SyncMaterialTextureChannels();
 				}
 			}
 			EditorGUILayout.EndHorizontal();
@@ -2520,19 +2505,12 @@ namespace UMA.Editors
 
 				if (overlay.material == _utilitiesTargetMaterial)
 				{
-                    Undo.RecordObject(overlay, "Sync Overlay Channels");
-				   if (SyncOverlayChannelsToMaterial(overlay, _utilitiesTargetMaterial))
-					{
-						EditorUtility.SetDirty(overlay);
-						updated++;
-					}
 					continue;
 				}
 
 				Undo.RecordObject(overlay, "Assign Overlay UMAMaterial");
 				overlay.material = _utilitiesTargetMaterial;
 				overlay.materialName = _utilitiesTargetMaterial.name;
-                SyncOverlayChannelsToMaterial(overlay, _utilitiesTargetMaterial);
 				EditorUtility.SetDirty(overlay);
 				updated++;
 			}
@@ -2565,19 +2543,12 @@ namespace UMA.Editors
 
 				if (overlay.material == _utilitiesTargetMaterial)
 				{
-                    Undo.RecordObject(overlay, "Sync Overlay Channels");
-				   if (SyncOverlayChannelsToMaterial(overlay, _utilitiesTargetMaterial))
-					{
-						EditorUtility.SetDirty(overlay);
-						updated++;
-					}
 					continue;
 				}
 
 				Undo.RecordObject(overlay, "Assign Overlay UMAMaterial");
 				overlay.material = _utilitiesTargetMaterial;
 				overlay.materialName = _utilitiesTargetMaterial.name;
-                SyncOverlayChannelsToMaterial(overlay, _utilitiesTargetMaterial);
 				EditorUtility.SetDirty(overlay);
 				updated++;
 			}
@@ -2589,110 +2560,6 @@ namespace UMA.Editors
 			}
 
 			EditorUtility.DisplayDialog("Assign UMAMaterial", "Updated overlays in list: " + updated, "OK");
-		}
-
-		private void SyncMaterialTextureChannels()
-		{
-			int updated = 0;
-			for (int i = 0; i < _overlays.Count; i++)
-			{
-				var overlay = _overlays[i];
-				if (overlay == null || overlay.material == null)
-				{
-					continue;
-				}
-
-				Undo.RecordObject(overlay, "Sync Overlay Channels");
-				if (SyncOverlayChannelsToMaterial(overlay, overlay.material))
-				{
-					EditorUtility.SetDirty(overlay);
-					updated++;
-				}
-			}
-
-			if (updated > 0)
-			{
-				AssetDatabase.SaveAssets();
-				AssetDatabase.Refresh();
-			}
-
-			EditorUtility.DisplayDialog("Sync Material Texture Channels", "Updated overlays: " + updated, "OK");
-		}
-
-		private static bool SyncOverlayChannelsToMaterial(UMA.OverlayDataAsset overlay, UMAMaterial targetMaterial)
-		{
-			if (overlay == null || targetMaterial == null)
-			{
-				return false;
-			}
-
-			int channelCount = 0;
-			if (targetMaterial.channels != null)
-			{
-				channelCount = targetMaterial.channels.Length;
-			}
-
-			Texture[] oldTextures = overlay.textureList ?? new Texture[0];
-			string[] oldTextureNames = overlay.textureNames ?? new string[0];
-			UMA.OverlayDataAsset.OverlayBlend[] oldBlends = overlay.overlayBlend ?? new UMA.OverlayDataAsset.OverlayBlend[0];
-
-			bool changed = false;
-
-			if (oldTextures.Length != channelCount)
-			{
-				Texture[] newTextures = new Texture[channelCount];
-				int copyCount = Mathf.Min(oldTextures.Length, newTextures.Length);
-				for (int i = 0; i < copyCount; i++)
-				{
-					newTextures[i] = oldTextures[i];
-				}
-				overlay.textureList = newTextures;
-				changed = true;
-			}
-
-			if (oldTextureNames.Length != channelCount)
-			{
-				string[] newTextureNames = new string[channelCount];
-				int copyCount = Mathf.Min(oldTextureNames.Length, newTextureNames.Length);
-				for (int i = 0; i < copyCount; i++)
-				{
-					newTextureNames[i] = oldTextureNames[i];
-				}
-				overlay.textureNames = newTextureNames;
-				changed = true;
-			}
-
-			if (oldBlends.Length != channelCount)
-			{
-				UMA.OverlayDataAsset.OverlayBlend[] newBlends = new UMA.OverlayDataAsset.OverlayBlend[channelCount];
-				int copyCount = Mathf.Min(oldBlends.Length, newBlends.Length);
-				for (int i = 0; i < copyCount; i++)
-				{
-					newBlends[i] = oldBlends[i];
-				}
-				for (int i = copyCount; i < newBlends.Length; i++)
-				{
-					newBlends[i] = UMA.OverlayDataAsset.OverlayBlend.Normal;
-				}
-				overlay.overlayBlend = newBlends;
-				changed = true;
-			}
-
-			Texture[] syncedTextures = overlay.textureList ?? new Texture[0];
-			string[] syncedTextureNames = overlay.textureNames ?? new string[0];
-			int syncCount = Mathf.Min(syncedTextures.Length, syncedTextureNames.Length);
-			for (int i = 0; i < syncCount; i++)
-			{
-				Texture tex = syncedTextures[i];
-				string desiredName = tex != null ? tex.name : string.Empty;
-				if (syncedTextureNames[i] != desiredName)
-				{
-					syncedTextureNames[i] = desiredName;
-					changed = true;
-				}
-			}
-
-			return changed;
 		}
 
 		private void DrawRelinkPanel()
@@ -3461,8 +3328,8 @@ namespace UMA.Editors
 				return;
 			}
 
-			var changedSlots = new HashSet<UMA.SlotDataAsset>();
 			var changedOverlays = new HashSet<UMA.OverlayDataAsset>();
+           int changedRecipes = 0;
 			int processedRecipes = 0;
 			int matchedOverlays = 0;
 
@@ -3484,6 +3351,7 @@ namespace UMA.Editors
 
 					var umaRecipe = new UMA.UMAData.UMARecipe();
 					recipe.Load(umaRecipe, true);
+                 bool recipeChanged = false;
 					if (umaRecipe.slotDataList == null)
 					{
 						continue;
@@ -3532,13 +3400,19 @@ namespace UMA.Editors
 							anyOverlayMatchedOnSlot = true;
 						}
 
-						if (anyOverlayMatchedOnSlot && slotAsset.material != _targetMaterial)
+                       if (anyOverlayMatchedOnSlot && slot.altMaterial != _targetMaterial)
 						{
-							Undo.RecordObject(slotAsset, "Update Slot UMAMaterial");
-							slotAsset.material = _targetMaterial;
-							slotAsset.materialName = _targetMaterial != null ? _targetMaterial.name : "";
-							changedSlots.Add(slotAsset);
+							slot.altMaterial = _targetMaterial;
+							recipeChanged = true;
 						}
+					}
+
+					if (recipeChanged)
+					{
+						Undo.RecordObject(recipe, "Update Slot UMAMaterial");
+						recipe.Save(umaRecipe);
+						EditorUtility.SetDirty(recipe);
+						changedRecipes++;
 					}
 				}
 			}
@@ -3554,20 +3428,13 @@ namespace UMA.Editors
 					EditorUtility.SetDirty(overlayAsset);
 				}
 			}
-			foreach (var slotAsset in changedSlots)
-			{
-				if (slotAsset != null)
-				{
-					EditorUtility.SetDirty(slotAsset);
-				}
-			}
-			if (changedOverlays.Count > 0 || changedSlots.Count > 0)
+         if (changedOverlays.Count > 0 || changedRecipes > 0)
 			{
 				AssetDatabase.SaveAssets();
 				AssetDatabase.Refresh();
 			}
 
-			EditorUtility.DisplayDialog("Process", "Matched overlays: " + matchedOverlays + "\nUpdated overlays: " + changedOverlays.Count + "\nUpdated slots: " + changedSlots.Count, "OK");
+           EditorUtility.DisplayDialog("Process", "Matched overlays: " + matchedOverlays + "\nUpdated overlays: " + changedOverlays.Count + "\nUpdated slot overrides: " + changedRecipes, "OK");
 		}
 
 		private int CountCheckedRecipes()
@@ -3614,10 +3481,6 @@ namespace UMA.Editors
 						UMA.InspectorUtlity.InspectTarget(recipe);
 					}
 					EditorGUILayout.ObjectField(recipe, typeof(UMAWardrobeRecipe), false);
-                 if (GUILayout.Button("Inspect", GUILayout.Width(60), GUILayout.Height(18)))
-					{
-						UMA.InspectorUtlity.InspectTarget(recipe);
-					}
 					string slot = string.IsNullOrEmpty(recipe.wardrobeSlot) ? "<Unassigned>" : recipe.wardrobeSlot;
 					GUILayout.Label(slot, GUILayout.Width(160));
 					if (!RecipeHasAnySlots(recipe))
@@ -3745,8 +3608,470 @@ namespace UMA.Editors
 			EditorUtility.DisplayDialog("Assign", "Updated " + updated + " recipe(s).", "OK");
 		}
 	}
+        public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting, bool exportAsFbx = false, bool exportAsGltf = false, bool exportGltfAsSlots = false)
+        {
+			bool wasAsync = false;
+			bool wasConvertRenderTexture = false;
 
-		public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting)
+			var generator = UMAAssetIndexer.Instance.Generator;
+
+			if (generator == null)
+			{
+				EditorUtility.DisplayDialog("UMA Generator Not Found", "The UMA Generator could not be found. Please ensure that the UMA Generator is present in the project settings. This feature will not work as expected without the generator. In fact, UMA itself will not work without the Generator", "OK");
+                Debug.LogWarning("UMA Generator not found. UMA itself will not work as expected.");
+				return;
+			}
+
+			wasConvertRenderTexture = generator.convertRenderTexture;
+			wasAsync = generator.useAsyncConversion;
+
+			try
+			{
+				// We need to disable async conversion and enable render texture conversion to ensure that any dynamically generated textures are properly converted and saved during this process.
+				// This is necessary because the conversion and saving of textures needs to happen synchronously to ensure that all assets are correctly processed before we attempt to save them.
+				// If async conversion were enabled, there could be timing issues where textures are not fully converted before we try to save them, leading to incomplete or corrupted assets.
+
+				if (wasConvertRenderTexture == false)
+				{
+					generator.convertRenderTexture = true;
+					generator.useAsyncConversion = false;
+
+					if (avatar is DynamicCharacterAvatar)
+					{
+						Debug.Log("Building DynamicCharacterAvatar synchronously to ensure textures are generated and converted before saving.");
+                        DynamicCharacterAvatar dca = avatar as DynamicCharacterAvatar;
+						dca.BuildNow();
+					}
+				}
+
+
+                Folder = Folder + "/" + CharName;
+
+				if (!System.IO.Directory.Exists(Folder))
+				{
+					System.IO.Directory.CreateDirectory(Folder);
+				}
+
+				SkinnedMeshRenderer[] renderers = avatar.umaData.GetRenderers();
+				foreach (SkinnedMeshRenderer smr in renderers)
+				{
+					Material[] omats = smr.sharedMaterials;
+					Material[] mats = new Material[omats.Length];
+					for (int i = 0; i < omats.Length; i++)
+					{
+						mats[i] = new Material(omats[i]);
+					}
+
+					int Material = 0;
+					foreach (Material m in mats)
+					{
+						Shader shader = m.shader;
+						for (int i = 0; i < shader.GetPropertyCount(); i++)
+						{
+							if (shader.GetPropertyType(i) == ShaderPropertyType.Texture)
+							{
+								string propertyName = shader.GetPropertyName(i);
+								Texture texture = m.GetTexture(propertyName);
+								if (texture is Texture2D || texture is RenderTexture)
+								{
+									string path = AssetDatabase.GetAssetPath(texture.GetInstanceID());
+									if (string.IsNullOrEmpty(path))
+									{
+										bool isNormal = (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"));
+
+										if (ConvertNormalMaps && isNormal)
+										{
+											texture = sconvertNormalMap(texture);
+										}
+
+										string texName = Path.Combine(Folder, CharName + "_Mat_" + Material + propertyName + ".png");
+										if (texture is RenderTexture)
+										{
+											Debug.Log("Saving Render Texture " + texName);
+											LinearSave(texture as RenderTexture, texName, isNormal);
+										}
+										else
+										{
+											Debug.Log("Saving texture " + texName);
+											SaveTexture2D(texture as Texture2D, texName, isNormal);
+										}
+
+										AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+										if (isNormal)
+										{
+											TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(texName);
+											importer.isReadable = true;
+											importer.textureType = TextureImporterType.NormalMap;
+											importer.maxTextureSize = 1024;
+											importer.textureCompression = TextureImporterCompression.CompressedHQ;
+											EditorUtility.SetDirty(importer);
+											importer.SaveAndReimport();
+										}
+
+										Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(CustomAssetUtility.UnityFriendlyPath(texName));
+										m.SetTexture(propertyName, tex);
+									}
+									else
+									{
+										m.SetTexture(propertyName, texture);
+									}
+								}
+							}
+						}
+
+						string matname = Folder + "/" + CharName + "_Mat_" + Material + ".mat";
+						CustomAssetUtility.SaveAsset<Material>(m, matname);
+						Material++;
+					}
+
+					smr.sharedMaterials = mats;
+					smr.materials = mats;
+				}
+
+				List<Material[]> savedMaterialsPerRenderer = new List<Material[]>();
+				foreach (SkinnedMeshRenderer smr in renderers)
+				{
+					savedMaterialsPerRenderer.Add(smr.sharedMaterials);
+				}
+
+#if !UMA_FBX_EXPORT
+				exportAsFbx = false;
+#endif
+
+				if (!exportAsFbx)
+				{
+					int savedMeshIndex = 0;
+					foreach (SkinnedMeshRenderer smr in renderers)
+					{
+						string meshName = Folder + "/" + CharName + "_Mesh_" + savedMeshIndex + ".asset";
+						savedMeshIndex++;
+						CustomAssetUtility.SaveAsset<Mesh>(smr.sharedMesh, meshName);
+
+						meshName = CustomAssetUtility.UnityFriendlyPath(meshName);
+						Mesh savedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshName);
+						if (savedMesh != null)
+						{
+							SerializedObject so = new SerializedObject(savedMesh);
+							var prop = so.FindProperty("m_IsReadable");
+							if (prop != null)
+							{
+								prop.boolValue = false;
+								so.ApplyModifiedPropertiesWithoutUndo();
+							}
+						}
+					}
+					AssetDatabase.SaveAssets();
+				}
+
+				var animator = baseObject.GetComponent<Animator>();
+				string avatarName = Folder + "/" + CharName + "_Avatar.asset";
+				if (animator != null && animator.avatar != null)
+				{
+					CustomAssetUtility.SaveAsset<Avatar>(animator.avatar, avatarName);
+				}
+
+				if (exportAsGltf)
+				{
+                 if (exportGltfAsSlots)
+					{
+						UMAGltfExporter.ExportAvatarSlots(avatar, Folder, CharName, true);
+					}
+					else
+					{
+						UMAGltfExporter.ExportAvatar(baseObject, Folder, CharName);
+					}
+				}
+
+#if UMA_FBX_EXPORT
+	if (exportAsFbx)
+	{
+		string fbxPath = Folder + "/" + CharName + ".fbx";
+		string fullFbxPath = System.IO.Path.GetFullPath(fbxPath);
+		var fbxOptions = new ExportModelOptions
+		{
+			ExportFormat = ExportFormat.Binary,
+			ModelAnimIncludeOption = Include.Model,
+			ObjectPosition = ObjectPosition.Reset,
+			UseMayaCompatibleNames = false,
+			ExportUnrendered = true
+		};
+
+		List<Mesh> originalMeshes = new List<Mesh>();
+		List<Transform[]> originalBonesArrays = new List<Transform[]>();
+		foreach (SkinnedMeshRenderer smr in renderers)
+		{
+			Transform[] origBones = smr.bones;
+			Mesh origMesh = smr.sharedMesh;
+			originalBonesArrays.Add(origBones);
+			originalMeshes.Add(origMesh);
+
+			Dictionary<int, int> instanceIdToNewIndex = new Dictionary<int, int>();
+			Dictionary<int, int> indexRemap = new Dictionary<int, int>();
+			List<Transform> uniqueBones = new List<Transform>();
+			List<Matrix4x4> uniqueBindPoses = new List<Matrix4x4>();
+			Matrix4x4[] origBindPoses = origMesh.bindposes;
+
+			for (int b = 0; b < origBones.Length; b++)
+			{
+				Transform bone = origBones[b];
+				int key = bone != null ? bone.GetInstanceID() : ~b;
+
+				int existingNewIndex;
+				if (instanceIdToNewIndex.TryGetValue(key, out existingNewIndex))
+				{
+					indexRemap[b] = existingNewIndex;
+				}
+				else
+				{
+					int newIndex = uniqueBones.Count;
+					instanceIdToNewIndex[key] = newIndex;
+					indexRemap[b] = newIndex;
+					uniqueBones.Add(bone);
+					if (b < origBindPoses.Length)
+					{
+						uniqueBindPoses.Add(origBindPoses[b]);
+					}
+				}
+			}
+
+			if (uniqueBones.Count < origBones.Length)
+			{
+				Mesh dedupedMesh = Object.Instantiate(origMesh);
+				BoneWeight[] weights = dedupedMesh.boneWeights;
+				for (int w = 0; w < weights.Length; w++)
+				{
+					weights[w].boneIndex0 = indexRemap.ContainsKey(weights[w].boneIndex0) ? indexRemap[weights[w].boneIndex0] : weights[w].boneIndex0;
+					weights[w].boneIndex1 = indexRemap.ContainsKey(weights[w].boneIndex1) ? indexRemap[weights[w].boneIndex1] : weights[w].boneIndex1;
+					weights[w].boneIndex2 = indexRemap.ContainsKey(weights[w].boneIndex2) ? indexRemap[weights[w].boneIndex2] : weights[w].boneIndex2;
+					weights[w].boneIndex3 = indexRemap.ContainsKey(weights[w].boneIndex3) ? indexRemap[weights[w].boneIndex3] : weights[w].boneIndex3;
+				}
+				dedupedMesh.boneWeights = weights;
+				dedupedMesh.bindposes = uniqueBindPoses.ToArray();
+
+				smr.sharedMesh = dedupedMesh;
+				smr.bones = uniqueBones.ToArray();
+			}
+		}
+
+		ModelExporter.ExportObject(fullFbxPath, baseObject, fbxOptions);
+
+		for (int s = 0; s < renderers.Length; s++)
+		{
+			renderers[s].sharedMesh = originalMeshes[s];
+			renderers[s].bones = originalBonesArrays[s];
+		}
+		AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+
+		ModelImporter fbxImporter = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
+		if (fbxImporter != null)
+		{
+			fbxImporter.isReadable = false;
+			fbxImporter.importAnimation = false;
+			fbxImporter.SaveAndReimport();
+		}
+
+		GameObject fbxModel = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+		GameObject newAvatar = GameObject.Instantiate(fbxModel);
+
+		SkinnedMeshRenderer[] fbxRenderers = newAvatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+		for (int j = 0; j < renderers.Length; j++)
+		{
+			string srcName = renderers[j].gameObject.name;
+			SkinnedMeshRenderer targetSmr = null;
+
+			foreach (var fr in fbxRenderers)
+			{
+				if (fr.gameObject.name == srcName)
+				{
+					targetSmr = fr;
+					break;
+				}
+			}
+			if (targetSmr == null && fbxRenderers.Length == 1 && renderers.Length == 1)
+			{
+				targetSmr = fbxRenderers[0];
+			}
+
+			if (targetSmr != null)
+			{
+				targetSmr.sharedMaterials = savedMaterialsPerRenderer[j];
+				targetSmr.enabled = true;
+			}
+		}
+
+		var fbxAnimator = newAvatar.GetComponent<Animator>();
+		if (fbxAnimator != null)
+		{
+			Avatar savedAvatar = AssetDatabase.LoadAssetAtPath<Avatar>(avatarName);
+			if (savedAvatar != null)
+			{
+				fbxAnimator.avatar = savedAvatar;
+			}
+		}
+
+		if (AddStandaloneDNA)
+		{
+			UMAData srcUda = baseObject.GetComponent<UMAData>();
+			if (srcUda != null)
+			{
+				UMAData newUda = newAvatar.AddComponent<UMAData>();
+				StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
+				sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(srcUda._umaRecipe);
+				if (avatar is DynamicCharacterAvatar)
+				{
+					DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+					sda.avatarDefinition = avt.GetAvatarDefinition(true);
+				}
+				sda.umaData = newUda;
+			}
+		}
+
+		newAvatar.name = CharName;
+		string prefabName = Folder + "/" + CharName + ".prefab";
+		prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
+		PrefabUtility.SaveAsPrefabAssetAndConnect(newAvatar, prefabName, InteractionMode.AutomatedAction);
+
+		if (replaceExisting)
+		{
+			newAvatar.transform.SetPositionAndRotation(baseObject.transform.position, baseObject.transform.rotation);
+			newAvatar.transform.localScale = baseObject.transform.localScale;
+			DestroyImmediate(baseObject);
+		}
+		else
+		{
+			DestroyImmediate(newAvatar);
+		}
+	}
+	else
+#endif
+				{
+					if (replaceExisting)
+					{
+						DestroyImmediate(avatar);
+						var lod = baseObject.GetComponent<UMASimpleLOD>();
+						if (lod != null)
+						{
+							DestroyImmediate(lod);
+						}
+
+						if (AddStandaloneDNA)
+						{
+							UMAData uda = baseObject.GetComponent<UMAData>();
+							StandAloneDNA sda = baseObject.AddComponent<UMA.StandAloneDNA>();
+							sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+							if (avatar is DynamicCharacterAvatar)
+							{
+								DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+								sda.avatarDefinition = avt.GetAvatarDefinition(true);
+							}
+							sda.umaData = uda;
+						}
+						else
+						{
+							var ud = baseObject.GetComponent<UMAData>();
+							if (ud != null)
+							{
+								DestroyImmediate(ud);
+							}
+						}
+
+						var ue = baseObject.GetComponent<UMAExpressionPlayer>();
+						if (ue != null)
+						{
+							DestroyImmediate(ue);
+						}
+
+						baseObject.name = CharName;
+						string prefabName = Folder + "/" + CharName + ".prefab";
+						prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
+						PrefabUtility.SaveAsPrefabAssetAndConnect(baseObject, prefabName, InteractionMode.AutomatedAction);
+					}
+					else
+					{
+						var dca = baseObject.GetComponent<DynamicCharacterAvatar>();
+						bool prevEditorTimeGen = false;
+						if (dca != null)
+						{
+							prevEditorTimeGen = dca.editorTimeGeneration;
+							dca.editorTimeGeneration = false;
+						}
+
+						GameObject newAvatar = GameObject.Instantiate(baseObject);
+
+						if (dca != null)
+						{
+							dca.editorTimeGeneration = prevEditorTimeGen;
+						}
+
+						var cloneDca = newAvatar.GetComponent<DynamicCharacterAvatar>();
+						if (cloneDca != null)
+						{
+							DestroyImmediate(cloneDca);
+						}
+
+						var cloneLod = newAvatar.GetComponent<UMASimpleLOD>();
+						if (cloneLod != null)
+						{
+							DestroyImmediate(cloneLod);
+						}
+
+						SkinnedMeshRenderer[] cloneRenderers = newAvatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+						for (int r = 0; r < cloneRenderers.Length; r++)
+						{
+							cloneRenderers[r].enabled = true;
+						}
+
+						if (AddStandaloneDNA)
+						{
+							UMAData uda = newAvatar.GetComponent<UMAData>();
+							StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
+							sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+							if (avatar is DynamicCharacterAvatar)
+							{
+								DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+								sda.avatarDefinition = avt.GetAvatarDefinition(true);
+							}
+							sda.umaData = uda;
+						}
+						else
+						{
+							var ud = newAvatar.GetComponent<UMAData>();
+							if (ud != null)
+							{
+								DestroyImmediate(ud);
+							}
+						}
+
+						var cloneExpressionPlayer = newAvatar.GetComponent<UMAExpressionPlayer>();
+						if (cloneExpressionPlayer != null)
+						{
+							DestroyImmediate(cloneExpressionPlayer);
+						}
+
+						newAvatar.name = CharName;
+						string prefabName = Folder + "/" + CharName + ".prefab";
+						prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
+						PrefabUtility.SaveAsPrefabAssetAndConnect(newAvatar, prefabName, InteractionMode.AutomatedAction);
+					}
+				}
+			}
+			finally
+			{
+				if (wasConvertRenderTexture == false)
+				{
+					generator.convertRenderTexture = wasConvertRenderTexture;
+					generator.useAsyncConversion = wasAsync;
+					if (avatar is DynamicCharacterAvatar)
+					{
+						var dca = avatar as DynamicCharacterAvatar;
+						dca.BuildNow();
+					}
+				}
+                Debug.Log("Conversion complete.");
+            }
+        }
+
+        public static void OldConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting)
 		{
 			Folder = Folder + "/" + CharName;
 
@@ -4654,7 +4979,25 @@ namespace UMA.Editors
 
 	public class UmaPrefabSaverWindow : EditorWindow
 	{
-		[Tooltip("The character that you want to convert")]
+		private const string PrefsKeyPrefix = "UMA.UmaPrefabSaverWindow.";
+		private const string PrefsKeyReplaceExisting = PrefsKeyPrefix + "ReplaceExisting";
+		private const string PrefsKeyUnswizzleNormalMaps = PrefsKeyPrefix + "UnswizzleNormalMaps";
+		private const string PrefsKeyAddStandaloneDNA = PrefsKeyPrefix + "AddStandaloneDNA";
+		private const string PrefsKeyExportMode = PrefsKeyPrefix + "ExportMode";
+		private const string PrefsKeyCharacterName = PrefsKeyPrefix + "CharacterName";
+		private const string PrefsKeyPrefabFolderPath = PrefsKeyPrefix + "PrefabFolderPath";
+		private const string PrefsKeyGltfExportSlots = PrefsKeyPrefix + "GltfExportSlots";
+
+		public enum MeshExportMode
+		{
+			UnityAssetMeshes = 0,
+			Gltf = 1,
+#if UMA_FBX_EXPORT
+			Fbx = 2
+#endif
+		}
+
+        [Tooltip("The character that you want to convert")]
 		public UMAAvatarBase baseObject;
 		[Tooltip("If true, will replace the UMA with the generated prefab in the scene")]
         public bool replaceExisting = false;
@@ -4662,7 +5005,11 @@ namespace UMA.Editors
 		public bool UnswizzleNormalMaps = true;
 		[Tooltip("If True, will keep the umaData, and add a Standalone DNA component allowing you to load/save/Deform skeletal DNA")]
 		public bool AddStandaloneDNA = true;
-		[Tooltip("The prefab will be named this, and it will be added to all assets saved")]
+        [Tooltip("How meshes should be exported during conversion.")]
+        public MeshExportMode ExportMode = MeshExportMode.UnityAssetMeshes;
+        [Tooltip("When Mesh Export Mode is glTF, export each slot from SlotDataList instead of combined renderer meshes.")]
+		public bool ExportGltfAsSlots = false;
+        [Tooltip("The prefab will be named this, and it will be added to all assets saved")]
 		public string CharacterName;
 		[Tooltip("The folder where the prefab folder will be created")]
 		public UnityEngine.Object prefabFolder;
@@ -4684,60 +5031,151 @@ namespace UMA.Editors
 			return null;
 		}
 
-		void OnGUI()
+		private void LoadSettings()
 		{
-			EditorGUILayout.LabelField("UMA Prefab Saver", EditorStyles.boldLabel);
-			EditorGUILayout.HelpBox("This will convert an UMA avatar into a non-UMA prefab. Once converted, it can be reused with little overhead, but all UMA functionality will be lost.", MessageType.None, false);
-			baseObject = (UMAAvatarBase)EditorGUILayout.ObjectField("UMA Avatar",baseObject, typeof(UMAAvatarBase),true);
-			EditorGUILayout.HelpBox("If you unswizzle normals (recommended) then they can be used in other applications, and UMA will automatically mark them as normal maps in the import settings.", MessageType.None);
-			UnswizzleNormalMaps = EditorGUILayout.Toggle("Unswizzle Normals", UnswizzleNormalMaps);
-			EditorGUILayout.HelpBox("Adding Standalone DNA will allow you to adjust most DNA of the character, without it being an UMA. However, it will require that you have the UMA system in the project.",MessageType.None);
-			AddStandaloneDNA = EditorGUILayout.Toggle("Add Standalone DNA", AddStandaloneDNA);
+			replaceExisting = EditorPrefs.GetBool(PrefsKeyReplaceExisting, replaceExisting);
+			UnswizzleNormalMaps = EditorPrefs.GetBool(PrefsKeyUnswizzleNormalMaps, UnswizzleNormalMaps);
+			AddStandaloneDNA = EditorPrefs.GetBool(PrefsKeyAddStandaloneDNA, AddStandaloneDNA);
 
-            replaceExisting = EditorGUILayout.Toggle("Replace Existing UMA", replaceExisting);
-            if (replaceExisting)
-            {
-                EditorGUILayout.HelpBox("If you replace the existing UMA, it will be removed from the scene. If you do not replace it, you will need to manually add the prefab to the scene.", MessageType.None);
-            }
-            else
-            {
-                EditorGUILayout.HelpBox("If you do not replace the existing UMA, you will need to manually add the prefab to the scene.", MessageType.None);
-            }
-			CharacterName = EditorGUILayout.TextField("Prefab Name", CharacterName);
-			prefabFolder = EditorGUILayout.ObjectField("Prefab Base Folder", prefabFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
-
-			string folder = CheckFolder(ref prefabFolder);
-
-			if (prefabFolder != null && baseObject != null && !string.IsNullOrEmpty(CharacterName))
+			int exportModeValue = EditorPrefs.GetInt(PrefsKeyExportMode, (int)ExportMode);
+			if (System.Enum.IsDefined(typeof(MeshExportMode), exportModeValue))
 			{
-				if (GUILayout.Button("Make Prefab") && prefabFolder != null)
+				ExportMode = (MeshExportMode)exportModeValue;
+			}
+
+			CharacterName = EditorPrefs.GetString(PrefsKeyCharacterName, CharacterName ?? string.Empty);
+			ExportGltfAsSlots = EditorPrefs.GetBool(PrefsKeyGltfExportSlots, ExportGltfAsSlots);
+
+			string folderPath = EditorPrefs.GetString(PrefsKeyPrefabFolderPath, string.Empty);
+			if (!string.IsNullOrEmpty(folderPath))
+			{
+				var loadedFolder = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(folderPath);
+				if (loadedFolder != null)
 				{
-					UMAAvatarLoadSaveMenuItems.ConvertToNonUMA(baseObject.gameObject, baseObject, folder, UnswizzleNormalMaps, CharacterName,AddStandaloneDNA,replaceExisting);
-					EditorUtility.DisplayDialog("UMA Prefab Saver", "Conversion complete", "OK");
+					prefabFolder = loadedFolder;
 				}
 			}
-			else
-            {
-				if (baseObject == null)
-				{
-					EditorGUILayout.HelpBox("A valid character with DynamicCharacterAvatar or DynamicAvatar must be supplied",MessageType.Error);
-				}
-				if (string.IsNullOrEmpty(CharacterName))
-                {
-					EditorGUILayout.HelpBox("Prefab Name cannot be empty", MessageType.Error);
-                }
-				if (prefabFolder == null)
-                {
-					EditorGUILayout.HelpBox("A valid base folder must be supplied", MessageType.Error);
-                }
-            }
 		}
+
+		private void SaveSettings()
+		{
+			EditorPrefs.SetBool(PrefsKeyReplaceExisting, replaceExisting);
+			EditorPrefs.SetBool(PrefsKeyUnswizzleNormalMaps, UnswizzleNormalMaps);
+			EditorPrefs.SetBool(PrefsKeyAddStandaloneDNA, AddStandaloneDNA);
+			EditorPrefs.SetInt(PrefsKeyExportMode, (int)ExportMode);
+			EditorPrefs.SetString(PrefsKeyCharacterName, CharacterName ?? string.Empty);
+			EditorPrefs.SetBool(PrefsKeyGltfExportSlots, ExportGltfAsSlots);
+
+			string folderPath = prefabFolder != null ? AssetDatabase.GetAssetPath(prefabFolder) : string.Empty;
+			EditorPrefs.SetString(PrefsKeyPrefabFolderPath, folderPath ?? string.Empty);
+		}
+
+		private void OnEnable()
+		{
+			LoadSettings();
+		}
+
+void OnGUI()
+{
+ EditorGUI.BeginChangeCheck();
+	EditorGUILayout.LabelField("UMA Prefab Saver", EditorStyles.boldLabel);
+	EditorGUILayout.HelpBox("This will convert an UMA avatar into a non-UMA prefab. Once converted, it can be reused with little overhead, but all UMA functionality will be lost.", MessageType.None, false);
+	baseObject = (UMAAvatarBase)EditorGUILayout.ObjectField("UMA Avatar", baseObject, typeof(UMAAvatarBase), true);
+
+	EditorGUILayout.HelpBox("If you unswizzle normals (recommended) then they can be used in other applications, and UMA will automatically mark them as normal maps in the import settings.", MessageType.None);
+	UnswizzleNormalMaps = EditorGUILayout.Toggle("Unswizzle Normals", UnswizzleNormalMaps);
+
+	EditorGUILayout.HelpBox("Adding Standalone DNA will allow you to adjust most DNA of the character, without it being an UMA. However, it will require that you have the UMA system in the project.", MessageType.None);
+	AddStandaloneDNA = EditorGUILayout.Toggle("Add Standalone DNA", AddStandaloneDNA);
+
+	ExportMode = (MeshExportMode)EditorGUILayout.EnumPopup("Mesh Export Mode", ExportMode);
+	switch (ExportMode)
+	{
+		case MeshExportMode.Gltf:
+          ExportGltfAsSlots = EditorGUILayout.Toggle("glTF Export Slots", ExportGltfAsSlots);
+			EditorGUILayout.HelpBox("Exports a .gltf + .bin package in the UMA default rest pose (A-pose where the race rig is authored that way). The generated prefab still uses saved .asset meshes because Unity does not include a built-in glTF model importer.", MessageType.None);
+			break;
+
+		#if UMA_FBX_EXPORT
+		case MeshExportMode.Fbx:
+			EditorGUILayout.HelpBox("Meshes will be exported as FBX, enabling Mesh LODs and compression via Model Import Settings. Requires the FBX Exporter package.", MessageType.None);
+			break;
+		#endif
+
+		default:
+			EditorGUILayout.HelpBox("Meshes will be saved as .asset files with read/write disabled.", MessageType.None);
+			break;
+	}
+
+	replaceExisting = EditorGUILayout.Toggle("Replace Existing UMA", replaceExisting);
+	if (replaceExisting)
+	{
+		EditorGUILayout.HelpBox("If you replace the existing UMA, it will be removed from the scene. If you do not replace it, you will need to manually add the prefab to the scene.", MessageType.None);
+	}
+	else
+	{
+		EditorGUILayout.HelpBox("If you do not replace the existing UMA, you will need to manually add the prefab to the scene.", MessageType.None);
+	}
+
+	CharacterName = EditorGUILayout.TextField("Prefab Name", CharacterName);
+	prefabFolder = EditorGUILayout.ObjectField("Prefab Base Folder", prefabFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
+
+	string folder = CheckFolder(ref prefabFolder);
+
+	if (prefabFolder != null && baseObject != null && !string.IsNullOrEmpty(CharacterName))
+	{
+		if (GUILayout.Button("Make Prefab") && prefabFolder != null)
+		{
+			bool exportAsFbx = false;
+			#if UMA_FBX_EXPORT
+			exportAsFbx = ExportMode == MeshExportMode.Fbx;
+			#endif
+
+			bool exportAsGltf = ExportMode == MeshExportMode.Gltf;
+
+			UMAAvatarLoadSaveMenuItems.ConvertToNonUMA(
+				baseObject.gameObject,
+				baseObject,
+				folder,
+				UnswizzleNormalMaps,
+				CharacterName,
+				AddStandaloneDNA,
+				replaceExisting,
+				exportAsFbx,
+              exportAsGltf,
+				ExportGltfAsSlots);
+
+			EditorUtility.DisplayDialog("UMA Prefab Saver", "Conversion complete", "OK");
+		}
+	}
+	else
+	{
+		if (baseObject == null)
+		{
+			EditorGUILayout.HelpBox("A valid character with DynamicCharacterAvatar or DynamicAvatar must be supplied", MessageType.Error);
+		}
+		if (string.IsNullOrEmpty(CharacterName))
+		{
+			EditorGUILayout.HelpBox("Prefab Name cannot be empty", MessageType.Error);
+		}
+		if (prefabFolder == null)
+		{
+			EditorGUILayout.HelpBox("A valid base folder must be supplied", MessageType.Error);
+		}
+	}
+
+	if (EditorGUI.EndChangeCheck())
+	{
+		SaveSettings();
+	}
+}
 
 		[MenuItem("UMA/Prefab Maker", priority = 20)]
 		public static void OpenUmaPrefabWindow()
 		{
 			UmaPrefabSaverWindow window = (UmaPrefabSaverWindow)EditorWindow.GetWindow(typeof(UmaPrefabSaverWindow));
 			window.titleContent.text = "UMA Prefab Maker";
+           window.LoadSettings();
 		}
 	}
 }

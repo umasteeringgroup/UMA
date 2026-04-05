@@ -501,10 +501,6 @@ namespace UMA
                 var dto = RuntimeSlotData.FromMeshData(md, md.SlotName, umaMaterial, overlayName, new[] { "Decal" });
                 var ret = dto.ToSlot();
                 var slotAsset = ret.slot;
-                if (umaMaterial != null && slotAsset != null)
-                {
-                    slotAsset.material = umaMaterial;
-                }
 
                 // Record mapping from combined vertex index -> decal vertex index for future edits (store locally)
                 if (slotAsset != null)
@@ -799,7 +795,6 @@ namespace UMA
             }
 
             // Update slot & mesh names
-            slot.slotName = finalName;
             if (slot.meshData != null) slot.meshData.SlotName = finalName;
             slot.name = finalName;
 
@@ -907,7 +902,16 @@ namespace UMA
                 if (LastDecalOverlaySent != null) overlayName = LastDecalOverlaySent.name;
                 else if (LastCreatedDecalOverlayAsset != null) overlayName = LastCreatedDecalOverlayAsset.name;
             }
-            var dto = RuntimeSlotData.FromMeshData(slot.meshData, slot.slotName, slot.material, overlayName, slot.tags);
+            UMAMaterial material = null;
+            if (LastCreatedDecalOverlayAsset != null)
+            {
+                material = LastCreatedDecalOverlayAsset.GetMaterial();
+            }
+            else if (LastDecalOverlaySent != null)
+            {
+                material = LastDecalOverlaySent.GetMaterial();
+            }
+            var dto = RuntimeSlotData.FromMeshData(slot.meshData, slot.slotName, material, overlayName, slot.tags);
             return dto.ToJSON(compress);
         }
 
@@ -1076,8 +1080,7 @@ namespace UMA
             LastCreatedDecalOverlayAsset = null; // reset before attempting to set
 
             var slotAsset = ScriptableObject.CreateInstance<SlotDataAsset>();
-            slotAsset.slotName = md.SlotName;
-            slotAsset.material = umaMaterial;
+            slotAsset.name = md.SlotName;
             slotAsset.meshData = md;
             slotAsset.subMeshIndex = 0;
             slotAsset.sourceSubmeshIndex = 0;

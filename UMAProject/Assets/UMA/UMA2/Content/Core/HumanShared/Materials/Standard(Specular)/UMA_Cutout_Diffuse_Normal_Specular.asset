@@ -40,6 +40,7 @@ MonoBehaviour:
     DownSample: 0
     ConvertRenderTexture: 0
     NonShaderTexture: 0
+  generateMipMaps: 1
   MipMapBias: 0
   AnisoLevel: 1
   MatFilterMode: 1

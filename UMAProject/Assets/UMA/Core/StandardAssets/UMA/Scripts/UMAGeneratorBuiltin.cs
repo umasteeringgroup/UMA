@@ -328,6 +328,29 @@ namespace UMA
 			umaData.SaveMountedItems();
         }
 
+         private void CacheDefaultOverlayMaterial(UMAData data)
+            {
+                if (data == null || data.umaRecipe == null || data.umaRecipe.slotDataList == null)
+                {
+                    return;
+                }
+
+                UMAMaterial defaultMaterial = null;
+                if (defaultOverlayAsset != null)
+                {
+                    defaultMaterial = defaultOverlayAsset.GetMaterial();
+                }
+
+                for (int i = 0; i < data.umaRecipe.slotDataList.Length; i++)
+                {
+                    var slot = data.umaRecipe.slotDataList[i];
+                    if (slot != null)
+                    {
+                        slot.CacheDefaultOverlayMaterial(defaultMaterial);
+                    }
+                }
+            }
+
         public bool GenerateTexturesOnly(UMAData data, bool fireEvents)
         {
             Debug.Log("GenerateTexturesOnly");
@@ -337,6 +360,7 @@ namespace UMA
             }
 
             umaData = data;
+            CacheDefaultOverlayMaterial(umaData);
 
 
             if (!umaData.Validate())
@@ -395,6 +419,7 @@ namespace UMA
 
 			FreezeTime = true;
 			umaData = data;
+            CacheDefaultOverlayMaterial(umaData);
 
 
             if (umaData.RebuildSkeletonThisBuild)
@@ -651,9 +676,10 @@ namespace UMA
                     if (slot != null && slot.asset.meshData != null)
                     {
 						string key = "slot:"+slot.asset.slotName;
-                        if (slot.asset.material.materialType == UMAMaterial.MaterialType.Atlas)
+                     var slotMaterial = slot.material;
+                        if (slotMaterial != null && slotMaterial.materialType == UMAMaterial.MaterialType.Atlas)
 						{
-                            key = "mat:"+slot.asset.materialName;
+                           key = "mat:" + slotMaterial.name;
                         }
 
                         int submesh = slot.asset.subMeshIndex;
