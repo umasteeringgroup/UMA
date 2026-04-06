@@ -72,6 +72,187 @@ namespace UMA.Editors
             return wardrobePath;
         }
 
+        private string EnsureWearablesFolder()
+        {
+            if (slotFolder == null)
+            {
+                return null;
+            }
+
+            string slotPath = AssetDatabase.GetAssetPath(slotFolder);
+            if (string.IsNullOrEmpty(slotPath))
+            {
+                return null;
+            }
+
+            string parentPath = slotPath;
+            if (AssetDatabase.IsValidFolder(slotPath))
+            {
+                int slash = slotPath.LastIndexOf('/');
+                if (slash > 0)
+                {
+                    parentPath = slotPath.Substring(0, slash);
+                }
+            }
+            else
+            {
+                parentPath = Path.GetDirectoryName(slotPath)?.Replace('\\', '/');
+            }
+
+            if (string.IsNullOrEmpty(parentPath))
+            {
+                return null;
+            }
+
+            string wearablesPath = parentPath.TrimEnd('/') + "/Wearables";
+            if (AssetDatabase.IsValidFolder(wearablesPath))
+            {
+                return wearablesPath;
+            }
+
+            string guid = AssetDatabase.CreateFolder(parentPath, "Wearables");
+            if (string.IsNullOrEmpty(guid))
+            {
+                Debug.LogWarning("[SlotBuilder] Could not create Wearables folder under: " + parentPath);
+                return null;
+            }
+
+            return wearablesPath;
+        }
+
+        private void CreateAdditionalWearableRecipesForSlots(UMASlotProcessingUtil.SlotBuildResult result)
+        {
+            if (result == null || result.Slots == null || result.Slots.Count == 0)
+            {
+                return;
+            }
+            if (isBaseRaceRecipe)
+            {
+                return;
+            }
+            if (_additionalRecipeEntries == null || _additionalRecipeEntries.Count == 0)
+            {
+                return;
+            }
+
+            string wearablesFolder = EnsureWearablesFolder();
+            if (string.IsNullOrEmpty(wearablesFolder))
+            {
+                Debug.LogWarning("[SlotBuilder] Wearables folder is not available. Skipping additional recipes.");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(_additionalRecipeSubfolder))
+            {
+                string[] subfolderParts = _additionalRecipeSubfolder.Replace('\\', '/').Split(new[] { '/' }, System.StringSplitOptions.RemoveEmptyEntries);
+                string currentFolder = wearablesFolder;
+                for (int s = 0; s < subfolderParts.Length; s++)
+                {
+                    string part = subfolderParts[s].Trim();
+                    if (string.IsNullOrEmpty(part))
+                    {
+                        continue;
+                    }
+
+                    string nextFolder = currentFolder.TrimEnd('/') + "/" + part;
+                    if (!AssetDatabase.IsValidFolder(nextFolder))
+                    {
+                        string guid = AssetDatabase.CreateFolder(currentFolder, part);
+                        if (string.IsNullOrEmpty(guid))
+                        {
+                            Debug.LogWarning("[SlotBuilder] Could not create Wearables subfolder: " + nextFolder);
+                            return;
+                        }
+                    }
+
+                    currentFolder = nextFolder;
+                }
+
+                wearablesFolder = currentFolder;
+            }
+
+            for (int i = 0; i < result.Slots.Count; i++)
+            {
+                var sda = result.Slots[i];
+                if (sda == null)
+                {
+                    continue;
+                }
+
+                string baseSlotName = string.IsNullOrEmpty(sda.slotName) ? sda.name : sda.slotName;
+                baseSlotName = NormalizeAdditionalRecipeBaseName(baseSlotName);
+                if (string.IsNullOrEmpty(baseSlotName))
+                {
+                    continue;
+                }
+
+                var usedNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+
+                for (int r = 0; r < _additionalRecipeEntries.Count; r++)
+                {
+                    var entry = _additionalRecipeEntries[r];
+                    if (entry == null)
+                    {
+                        continue;
+                    }
+
+                    if (entry.overlay == null)
+                    {
+                        Debug.LogWarning("[SlotBuilder] Additional recipe entry has no overlay. Skipping entry index " + r + ".");
+                        continue;
+                    }
+
+                    string append = entry.appendText ?? string.Empty;
+                    string recipeName = baseSlotName + append;
+                    if (usedNames.Contains(recipeName))
+                    {
+                        Debug.LogWarning("[SlotBuilder] Duplicate additional recipe name for slot '" + baseSlotName + "': " + recipeName + ". Skipping duplicate entry.");
+                        continue;
+                    }
+                    usedNames.Add(recipeName);
+
+                    var recipe = new UMA.UMAData.UMARecipe();
+                    recipe.ClearDna();
+
+                    var sd = new SlotData(sda);
+                    var od = new OverlayData(entry.overlay);
+
+                    if (!string.IsNullOrEmpty(_additionalSharedColorName))
+                    {
+                        int channels = 1;
+                        if (entry.overlay.material != null && entry.overlay.material.channels != null && entry.overlay.material.channels.Length > 0)
+                        {
+                            channels = entry.overlay.material.channels.Length;
+                        }
+                        var sharedColor = GetOrCreateSharedColor(recipe, _additionalSharedColorName, channels);
+                        od.colorData = sharedColor;
+                    }
+
+                    sd.AddOverlay(od);
+                    recipe.SetSlot(0, sd);
+
+                    string recipePath = Path.Combine(wearablesFolder, recipeName + ".asset").Replace('\\', '/');
+                    recipePath = AssetDatabase.GenerateUniqueAssetPath(recipePath);
+
+                    var uwr = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+                    uwr.name = recipeName;
+                    uwr.Save(recipe);
+                    ApplyAdditionalRacesToRecipe(uwr);
+                    AssetDatabase.CreateAsset(uwr, recipePath);
+                    EditorUtility.SetDirty(uwr);
+
+                    if (addToGlobalLibrary)
+                    {
+                        UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMAWardrobeRecipe), uwr);
+                    }
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+
         private void CreateWardrobeRecipesForSlots(UMASlotProcessingUtil.SlotBuildResult result, string wardrobeFolderPath)
         {
             if (result == null || result.Slots == null || result.Slots.Count == 0)
@@ -79,15 +260,43 @@ namespace UMA.Editors
                 return;
             }
 
-            if (string.IsNullOrEmpty(wardrobeFolderPath))
-            {
-                wardrobeFolderPath = EnsureWardrobeFolder();
-            }
-
-            if (string.IsNullOrEmpty(wardrobeFolderPath))
+            // Always use Wearables as the root, ignore incoming wardrobeFolderPath
+            string wearablesFolder = EnsureWearablesFolder();
+            if (string.IsNullOrEmpty(wearablesFolder))
             {
                 return;
             }
+
+            if (!string.IsNullOrEmpty(_additionalRecipeSubfolder))
+            {
+                string[] subfolderParts = _additionalRecipeSubfolder.Replace('\\', '/').Split(new[] { '/' }, System.StringSplitOptions.RemoveEmptyEntries);
+                string currentFolder = wearablesFolder;
+                for (int s = 0; s < subfolderParts.Length; s++)
+                {
+                    string part = subfolderParts[s].Trim();
+                    if (string.IsNullOrEmpty(part))
+                    {
+                        continue;
+                    }
+
+                    string nextFolder = currentFolder.TrimEnd('/') + "/" + part;
+                    if (!AssetDatabase.IsValidFolder(nextFolder))
+                    {
+                        string guid = AssetDatabase.CreateFolder(currentFolder, part);
+                        if (string.IsNullOrEmpty(guid))
+                        {
+                            Debug.LogWarning("[SlotBuilder] Could not create Wearables subfolder: " + nextFolder);
+                            return;
+                        }
+                    }
+
+                    currentFolder = nextFolder;
+                }
+
+                wearablesFolder = currentFolder;
+            }
+
+            // Use wearablesFolder for output
 
             for (int i = 0; i < result.Slots.Count; i++)
             {
@@ -124,6 +333,7 @@ namespace UMA.Editors
                 var uwr = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
                 uwr.name = recipeBaseName;
                 uwr.Save(recipe);
+                ApplyAdditionalRacesToRecipe(uwr);
                 AssetDatabase.CreateAsset(uwr, recipePath);
                 EditorUtility.SetDirty(uwr);
 
@@ -134,6 +344,30 @@ namespace UMA.Editors
             }
 
             AssetDatabase.SaveAssets();
+        }
+
+        private static UMA.OverlayColorData GetOrCreateSharedColor(UMA.UMAData.UMARecipe umaRecipe, string sharedColorName, int channels)
+        {
+            if (umaRecipe.sharedColors == null)
+            {
+                umaRecipe.sharedColors = new UMA.OverlayColorData[0];
+            }
+
+            for (int i = 0; i < umaRecipe.sharedColors.Length; i++)
+            {
+                var existing = umaRecipe.sharedColors[i];
+                if (existing != null && string.Equals(existing.name, sharedColorName, System.StringComparison.Ordinal))
+                {
+                    return existing;
+                }
+            }
+
+            int insertIndex = umaRecipe.sharedColors.Length;
+            System.Array.Resize(ref umaRecipe.sharedColors, insertIndex + 1);
+            var created = new UMA.OverlayColorData(channels);
+            created.name = sharedColorName;
+            umaRecipe.sharedColors[insertIndex] = created;
+            return created;
         }
 
         // Persisted state for window parameters
@@ -233,10 +467,26 @@ namespace UMA.Editors
             public bool selected = true;
         }
 
+        [System.Serializable]
+        private class AdditionalRecipeEntry
+        {
+            public OverlayDataAsset overlay;
+            public string appendText;
+        }
+
         private List<PendingSmrEntry> _pendingSmrs = new List<PendingSmrEntry>();
         private Vector2 _pendingSmrsScroll;
         private bool _pendingSmrsCompactView = true;
         private bool _pendingSmrsFilterEnabled = false;
+
+        // Additional wearable recipe generation
+        private readonly List<AdditionalRecipeEntry> _additionalRecipeEntries = new List<AdditionalRecipeEntry>();
+        private string _additionalSharedColorName = string.Empty;
+        private RaceData _additionalRaceToAdd;
+        private string _additionalRecipeRacesCsv = string.Empty;
+        private string _additionalRecipeSubfolder = string.Empty;
+        private int _additionalRecipeIdCounter = 0;
+        private bool _showCreateRecipes = true;
 
         // Drag & drop batch filters
         private bool _filterIgnoreMeshesEnabled;
@@ -595,6 +845,8 @@ namespace UMA.Editors
 
             DoSingleSlotGUI();
 
+            DoCreateRecipesGUI();
+
             GUIHelper.BeginVerticalPadded(2, new Color(0.75f, 0.875f, 1f), EditorStyles.helpBox);
             showTags = EditorGUILayout.Foldout(showTags, "Tags");
             if (showTags)
@@ -664,6 +916,93 @@ namespace UMA.Editors
                 }
             }
             EditorGUILayout.EndScrollView();
+        }
+
+        private void DoCreateRecipesGUI()
+        {
+            GUIHelper.BeginVerticalPadded(2, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
+            _showCreateRecipes = EditorGUILayout.Foldout(_showCreateRecipes, "Create Recipes", true);
+            if (_showCreateRecipes)
+            {
+                GUILayout.BeginHorizontal();
+                _additionalRaceToAdd = EditorGUILayout.ObjectField("Race", _additionalRaceToAdd, typeof(RaceData), false) as RaceData;
+                if (GUILayout.Button("Add Race", GUILayout.Width(90)))
+                {
+                    if (_additionalRaceToAdd != null && !string.IsNullOrEmpty(_additionalRaceToAdd.raceName))
+                    {
+                        var races = ParseCommaSeparatedRaces(_additionalRecipeRacesCsv);
+                        bool exists = false;
+                        for (int i = 0; i < races.Count; i++)
+                        {
+                            if (string.Equals(races[i], _additionalRaceToAdd.raceName, System.StringComparison.OrdinalIgnoreCase))
+                            {
+                                exists = true;
+                                break;
+                            }
+                        }
+
+                        if (!exists)
+                        {
+                            if (string.IsNullOrEmpty(_additionalRecipeRacesCsv))
+                            {
+                                _additionalRecipeRacesCsv = _additionalRaceToAdd.raceName;
+                            }
+                            else
+                            {
+                                _additionalRecipeRacesCsv += "," + _additionalRaceToAdd.raceName;
+                            }
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                _additionalRecipeRacesCsv = EditorGUILayout.TextField("Recipe Races (csv)", _additionalRecipeRacesCsv ?? string.Empty);
+                _additionalRecipeSubfolder = EditorGUILayout.TextField("Subfolder", _additionalRecipeSubfolder ?? string.Empty);
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Add", GUILayout.Width(80)))
+                {
+                    var entry = new AdditionalRecipeEntry();
+                    entry.overlay = null;
+                    entry.appendText = "_" + _additionalRecipeIdCounter;
+                    _additionalRecipeIdCounter++;
+                    _additionalRecipeEntries.Add(entry);
+                }
+                if (GUILayout.Button("Clear all", GUILayout.Width(80)))
+                {
+                    _additionalRecipeEntries.Clear();
+                }
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Overlay", EditorStyles.boldLabel, GUILayout.Width(220));
+                GUILayout.Label("Append", EditorStyles.boldLabel, GUILayout.Width(180));
+                GUILayout.Label("Shared Color", EditorStyles.boldLabel, GUILayout.Width(180));
+                GUILayout.Space(22);
+                GUILayout.EndHorizontal();
+
+                for (int i = 0; i < _additionalRecipeEntries.Count; i++)
+                {
+                    var entry = _additionalRecipeEntries[i];
+                    if (entry == null)
+                    {
+                        continue;
+                    }
+
+                    GUILayout.BeginHorizontal();
+                    entry.overlay = EditorGUILayout.ObjectField(entry.overlay, typeof(OverlayDataAsset), false, GUILayout.Width(220)) as OverlayDataAsset;
+                    entry.appendText = EditorGUILayout.TextField(entry.appendText ?? string.Empty, GUILayout.Width(180));
+                    _additionalSharedColorName = EditorGUILayout.TextField(_additionalSharedColorName ?? string.Empty, GUILayout.Width(180));
+                    if (GUILayout.Button("x", EditorStyles.miniButton, GUILayout.Width(22)))
+                    {
+                        _additionalRecipeEntries.RemoveAt(i);
+                        i--;
+                    }
+                    GUILayout.EndHorizontal();
+                }
+            }
+            GUIHelper.EndVerticalPadded(2);
         }
 
         private bool showUDIMGUI;
@@ -912,6 +1251,17 @@ namespace UMA.Editors
                     _pendingSmrsCompactView = true;
                 }
             }
+            if (GUILayout.Button("Remove Selected", GUILayout.Width(130)))
+            {
+                for (int i = _pendingSmrs.Count - 1; i >= 0; i--)
+                {
+                    var entry = _pendingSmrs[i];
+                    if (entry != null && entry.selected)
+                    {
+                        _pendingSmrs.RemoveAt(i);
+                    }
+                }
+            }
             EditorGUILayout.EndHorizontal();
 
             int visibleItemCount = 0;
@@ -1037,6 +1387,8 @@ namespace UMA.Editors
 
         private void ProcessPendingSmrs()
         {
+            _additionalRecipeIdCounter = 0;
+
             if (_pendingSmrs == null || _pendingSmrs.Count == 0)
             {
                 return;
@@ -1145,6 +1497,11 @@ namespace UMA.Editors
                         {
                             CreateWardrobeRecipesForSlots(result, wardrobeFolderPath);
                         }
+
+                        if (!isBaseRaceRecipe)
+                        {
+                            CreateAdditionalWearableRecipesForSlots(result);
+                        }
                     }
 
                     processedEntries.Add(e);
@@ -1189,6 +1546,7 @@ namespace UMA.Editors
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
             }
+
             finally
             {
                 EditorUtility.ClearProgressBar();
@@ -1220,8 +1578,85 @@ namespace UMA.Editors
             }
         }
 
+        private static string NormalizeAdditionalRecipeBaseName(string slotNameValue)
+        {
+            if (string.IsNullOrEmpty(slotNameValue))
+            {
+                return slotNameValue;
+            }
+
+            if (slotNameValue.EndsWith("_slot", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return slotNameValue.Substring(0, slotNameValue.Length - 5);
+            }
+
+            return slotNameValue;
+        }
+
+        private void ApplyAdditionalRacesToRecipe(UMAWardrobeRecipe recipe)
+        {
+            if (recipe == null)
+            {
+                return;
+            }
+
+            var races = ParseCommaSeparatedRaces(_additionalRecipeRacesCsv);
+            if (races.Count == 0)
+            {
+                return;
+            }
+
+            if (recipe.compatibleRaces == null)
+            {
+                recipe.compatibleRaces = new List<string>();
+            }
+
+            for (int i = 0; i < races.Count; i++)
+            {
+                string raceName = races[i];
+                bool exists = false;
+                for (int j = 0; j < recipe.compatibleRaces.Count; j++)
+                {
+                    if (string.Equals(recipe.compatibleRaces[j], raceName, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (!exists)
+                {
+                    recipe.compatibleRaces.Add(raceName);
+                }
+            }
+        }
+
+        private static List<string> ParseCommaSeparatedRaces(string csv)
+        {
+            var results = new List<string>();
+            if (string.IsNullOrEmpty(csv))
+            {
+                return results;
+            }
+
+            var merged = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            string[] parts = csv.Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string race = parts[i].Trim();
+                if (!string.IsNullOrEmpty(race) && merged.Add(race))
+                {
+                    results.Add(race);
+                }
+            }
+
+            return results;
+        }
+
         private SlotDataAsset CreateSlot()
         {
+            _additionalRecipeIdCounter = 0;
+
             if (slotName == null || slotName == "")
             {
                 Debug.LogError("slotName must be specified.");
@@ -1238,6 +1673,11 @@ namespace UMA.Editors
             if (createRecipe)
             {
                 CreateRecipeFromResult(result);
+            }
+
+            if (!isBaseRaceRecipe)
+            {
+                CreateAdditionalWearableRecipesForSlots(result);
             }
 
             // Return first created slot for backward compatibility

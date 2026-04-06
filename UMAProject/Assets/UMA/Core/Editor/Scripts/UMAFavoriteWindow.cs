@@ -192,7 +192,7 @@ namespace UMA.Editors
             //GUIContent openButton = new GUIContent("", "Open");
             pingButton.image = EditorGUIUtility.IconContent("d_scenepicking_pickable_hover@2x").image;
             inspectButton.image = EditorGUIUtility.IconContent("d_UnityEditor.InspectorWindow@2x").image;
-            deleteButton.image = EditorGUIUtility.IconContent("d_winbtn_win_close_h@2x").image;
+            deleteButton.image = EditorGUIUtility.IconContent("d_clear@2x").image;
             // openButton.image = EditorGUIUtility.IconContent("Customized@2x").image;
 
             GUIHelper.FoldoutBarButton(ref fl.exPanded, fl.name, "Ping", out pingPressed, out deletePressed);

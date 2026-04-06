@@ -1,10 +1,10 @@
 {
     "slotName": "UMA30_Body",
     "RootBone": "Global",
-    "createOverlay": false,
+    "createOverlay": true,
     "createRecipe": true,
     "isBaseRaceRecipe": false,
-    "addToGlobalLibrary": false,
+    "addToGlobalLibrary": true,
     "binarySerialization": true,
     "calcTangents": false,
     "clearNormals": false,
@@ -28,7 +28,7 @@
     "invertZ": false,
     "alwaysRecreateSlots": true,
     "Tags": [],
-    "slotMaterialPath": "Assets/UMA/UMA2/Content/Core/HumanShared/Materials/Standard/UMA_Fade_Diffuse.asset",
+    "slotMaterialPath": "Assets/UMA/Core/ShaderPackages/UMAMaterial_UMA_SRP_DiffuseNormalSpecular.asset",
     "slotFolderPath": "Assets/Temp/Slots",
     "generateSlotLods": true,
     "useUnityLodGenerator": true,
@@ -39,7 +39,7 @@
     "slotLodBoundaryWeight": 20.0,
     "scrollPos": {
         "x": 0.0,
-        "y": 0.0
+        "y": 1621.0
     },
     "filterIgnoreMeshesEnabled": false,
     "filterIgnoreMeshesContaining": "",
