@@ -15,7 +15,7 @@ MonoBehaviour:
   channelCount: 3
   sharedColorName: Tattoo
   colors:
-  - name: 
+  - name: Blue Ink
     channelMask:
     - {r: 0.016440308, g: 0.014951938, b: 0.084905684, a: 0.8862745}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -32,10 +32,15 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
-    colorsExpanded: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 1
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
-  - name: 
+  - name: Red Ink
     channelMask:
     - {r: 0.18867922, g: 0, b: 0.01902886, a: 0.78431374}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -52,10 +57,15 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
-  - name: 
+  - name: Green Ink
     channelMask:
     - {r: 0.001991121, g: 0.047169805, b: 0, a: 0.78431374}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -72,6 +82,11 @@ MonoBehaviour:
     showAdvanced: 0
     isBaseColor: 0
     deleteThis: 0
-    colorsExpanded: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 1
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
+    showDisplayColor: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}

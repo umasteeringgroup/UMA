@@ -34,6 +34,8 @@ MonoBehaviour:
     deleteThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Lips
     channelMask:
@@ -54,6 +56,8 @@ MonoBehaviour:
     deleteThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Lips
     channelMask:
@@ -74,6 +78,8 @@ MonoBehaviour:
     deleteThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Lips
     channelMask:
@@ -94,6 +100,8 @@ MonoBehaviour:
     deleteThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: 
     channelMask:
@@ -114,6 +122,8 @@ MonoBehaviour:
     deleteThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: 
     channelMask:
@@ -134,6 +144,8 @@ MonoBehaviour:
     deleteThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: 
     channelMask:
@@ -154,4 +166,6 @@ MonoBehaviour:
     deleteThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
+    showSelected: 1
+    isSelected: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
