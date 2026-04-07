@@ -27,7 +27,7 @@ namespace UMA
             bool changed = false;
             EditorGUI.BeginChangeCheck();               
 
-            GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.675f, 1f));
+            GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
             GUILayout.BeginHorizontal();
             GUILayout.Label("Shader Properties",GUILayout.ExpandWidth(true));
             GUILayout.Label("Always Update",GUILayout.ExpandWidth(false));

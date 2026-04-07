@@ -322,7 +322,7 @@ namespace UMA
             }
 			if (colorData != null)
             {
-                res.colorData = colorData.Duplicate();
+                res.colorData = colorData.Clone();
             }
 
             if (blendOverrides != null)
@@ -606,7 +606,7 @@ namespace UMA
 		/// <param name="overlay">Source overlay.</param>
 		public void CopyColors(OverlayData overlay)
 		{
-			colorData = overlay.colorData.Duplicate();
+			colorData = overlay.colorData.Clone();
 		}
 
 		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials

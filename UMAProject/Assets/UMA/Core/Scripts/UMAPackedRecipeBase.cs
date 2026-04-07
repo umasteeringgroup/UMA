@@ -959,7 +959,7 @@ namespace UMA
 							}
 							else
 							{
-								overlayData.colorData = colorData[packedOverlay.colorIdx].Duplicate();
+								overlayData.colorData = colorData[packedOverlay.colorIdx].Clone();
 								overlayData.colorData.name = OverlayColorData.UNSHARED;
 							}
 							if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material))
@@ -1202,7 +1202,7 @@ namespace UMA
 					if (!_overlayAssetCache.TryGetValue(po.id, out oAsset))
 					{
 						// Fallback to full instantiate (creates OverlayData) then cache asset for next time
-						Debug.Log("Cache miss for overlay '" + po.id + "'. Instantiating to get asset reference.");
+						//Debug.Log("Cache miss for overlay '" + po.id + "'. Instantiating to get asset reference.");
                         overlayData = context.InstantiateOverlay(po.id);
 						if (overlayData == null)
 						{
@@ -1238,7 +1238,7 @@ namespace UMA
 					else
 					{
 						// Unshared duplicate
-						var dup = allColorsRef[cIdx].Duplicate();
+						var dup = allColorsRef[cIdx].Clone();
 						dup.name = OverlayColorData.UNSHARED;
 						overlayData.colorData = dup;
 					}

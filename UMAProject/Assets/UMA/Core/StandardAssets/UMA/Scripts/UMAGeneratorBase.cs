@@ -525,7 +525,7 @@ namespace UMA
         /// <param name="umaTPose">UMA TPose.</param>
         public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose)
         {
-            Debug.Log("Avatar: Creating humanoid avatar for " + umaData.name);
+            //Debug.Log("Avatar: Creating humanoid avatar for " + umaData.name);
             umaTPose.DeSerialize();
             HumanDescription description = CreateHumanDescription(umaData, umaTPose);
             //DebugLogHumanAvatar(umaData.gameObject, description);
@@ -588,7 +588,7 @@ namespace UMA
             res.skeleton = umaTPose.boneInfo;
             if (umaTPose.mapJaw)
             {
-                Debug.Log("Avatar: mapping jaw bone in human description because mapJaw is true. This is to allow Mecanim to open the jaw if a jaw bone is mapped and the animation does not animate the jaw.");
+                //Debug.Log("Avatar: mapping jaw bone in human description because mapJaw is true. This is to allow Mecanim to open the jaw if a jaw bone is mapped and the animation does not animate the jaw.");
                 res.human = umaTPose.humanInfo;
             }
             else

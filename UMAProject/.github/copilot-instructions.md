@@ -8,7 +8,7 @@
 - Do not replace popup preview with a bolted-on TextureMerge.DrawAllRects path when a direct transform-path fix is feasible; prefer direct root-cause fixes instead.
 - In UMA editor tools, keep EditorModifiers behind `#if UNITY_EDITOR` to avoid including them in builds for memory reasons.
 - For FaceEditorStage and UMA editor tooling changes: panel height redistribution should be even among expanded panels; allow panels to extend offscreen rather than shrink below minimums; reserve an 8% vertical buffer due to Unity usable-rect inaccuracies.
-- Always implement requested code changes directly when there is sufficient context; proceed immediately with diagnostics, edits, and verification without restating intent. When asked to fix code, prioritize immediate implementation and verification instead of only stating intent. If a change was reported as not applied, proceed with direct file edits and verification instead of describing intended patches in chat.
+- Always implement requested code changes directly when there is sufficient context; proceed immediately with diagnostics, edits, and verification without restating intent. When the user says a requested editor UI change was not applied, inspect the actual target file immediately, edit it, and verify instead of relying on prior intent.
 - Always set a `_rectChanged` flag and ensure overlay rect changes are saved and trigger a rebuild on Update/Close in Overlay Positioner.
 - Do not use reflection to access TextureMerge fields/methods in OverlayEditor; use direct TextureMerge API from settings instead.
 

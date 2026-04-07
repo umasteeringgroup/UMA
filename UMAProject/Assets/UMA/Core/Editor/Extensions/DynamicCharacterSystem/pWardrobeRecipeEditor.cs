@@ -1062,9 +1062,12 @@ namespace UMA.Editors
 			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == slotHidePickerID)
 			{
 				SlotDataAsset sda = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
-				newHides.Add(sda.slotName);
-				Event.current.Use();
-				GenerateBaseSlotsEnum(compatibleRaces, true, hides);
+				if (sda != null)
+				{
+					newHides.Add(sda.slotName);
+					Event.current.Use();
+					GenerateBaseSlotsEnum(compatibleRaces, true, hides);
+				}
 			}
 
 			EditorGUILayout.EndHorizontal();

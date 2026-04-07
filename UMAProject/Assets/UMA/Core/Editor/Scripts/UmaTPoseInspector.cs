@@ -28,7 +28,9 @@ namespace UMA
                 return;
             }
 
+            EditorGUI.BeginChangeCheck();
             source.mapJaw = EditorGUILayout.Toggle("Map Jaw", source.mapJaw);
+            serializedObject.Update();
             //base.DrawDefaultInspector();
             mecanimInfoFoldout = EditorGUILayout.Foldout(mecanimInfoFoldout, "Mecanim Adjustments");
             if (mecanimInfoFoldout)
@@ -40,6 +42,12 @@ namespace UMA
                 source.upperArmTwist = EditorGUILayout.FloatField("Upper Arm Twist", source.upperArmTwist);
                 source.lowerLegTwist = EditorGUILayout.FloatField("Lower Leg Twist", source.lowerLegTwist);
                 source.upperLegTwist = EditorGUILayout.FloatField("Upper Leg Twist", source.upperLegTwist);
+            }
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+                source.Serialize();
+                EditorUtility.SetDirty(source);
             }
 
             humanPoseFoldout = EditorGUILayout.Foldout(humanPoseFoldout, "Human Pose");

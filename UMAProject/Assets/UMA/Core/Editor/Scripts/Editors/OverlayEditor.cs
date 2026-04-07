@@ -2144,7 +2144,7 @@ namespace UMA.Editors
 
                 if (GUILayout.Toggle(true, "Use Shared Color") == false)
                 {
-                    _overlayData.colorData = _overlayData.colorData.Duplicate();
+                    _overlayData.colorData = _overlayData.colorData.Clone();
                     _overlayData.colorData.name = OverlayColorData.UNSHARED;
                     changed = true;
                 }

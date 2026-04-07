@@ -2884,7 +2884,7 @@ namespace UMA.CharacterSystem
         {
             // avoid using reference of the colorData in case it is modified later
             colorData.name = Name;
-            var tempColor = colorData.Duplicate();
+            var tempColor = colorData.Clone();
             characterColors.SetRawColor(Name, tempColor);
             if (UpdateTexture)
             {

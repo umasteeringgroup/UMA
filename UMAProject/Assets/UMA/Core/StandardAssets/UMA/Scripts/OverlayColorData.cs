@@ -24,8 +24,13 @@ namespace UMA
         public bool showAdvanced;
         public bool isBaseColor = false;
         public bool deleteThis = false;
+        public bool moveUpThis = false;
+        public bool moveDownThis = false;
         public bool colorsExpanded = false;
         public bool propertiesExpanded = false;
+        public bool showSelected = false;
+        public bool isSelected = false;
+        public bool showDisplayColor = false;
 #endif
         public Color displayColor = Color.white;
 
@@ -173,14 +178,16 @@ namespace UMA
         /// <summary>
         /// Deep copy of the OverlayColorData.
         /// </summary>
-        public OverlayColorData Duplicate()
+        public OverlayColorData Clone()
         {
             var res = new OverlayColorData();
             res.name = name; // strings are immutable; copy reference is fine
             res.displayColor = displayColor;
+            
 #if UNITY_EDITOR
             res.foldout = foldout;
             res.isBaseColor = isBaseColor;
+            res.showDisplayColor = showDisplayColor;
 #endif
             res.channelMask = new Color[channelMask.Length];
             for (int i = 0; i < channelMask.Length; i++)

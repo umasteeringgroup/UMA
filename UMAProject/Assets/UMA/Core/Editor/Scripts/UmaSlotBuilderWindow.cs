@@ -120,6 +120,67 @@ namespace UMA.Editors
             return wearablesPath;
         }
 
+        private string EnsureWearablesSubfolder(string wearablesFolder, string configuredSubfolder)
+        {
+            if (string.IsNullOrEmpty(wearablesFolder))
+            {
+                return null;
+            }
+
+            string normalizedSubfolder = NormalizeWearablesSubfolder(configuredSubfolder);
+            if (string.IsNullOrEmpty(normalizedSubfolder))
+            {
+                return wearablesFolder;
+            }
+
+            string[] subfolderParts = normalizedSubfolder.Split(new[] { '/' }, System.StringSplitOptions.RemoveEmptyEntries);
+            string currentFolder = wearablesFolder;
+            for (int s = 0; s < subfolderParts.Length; s++)
+            {
+                string part = subfolderParts[s].Trim();
+                if (string.IsNullOrEmpty(part))
+                {
+                    continue;
+                }
+
+                string nextFolder = currentFolder.TrimEnd('/') + "/" + part;
+                if (!AssetDatabase.IsValidFolder(nextFolder))
+                {
+                    string guid = AssetDatabase.CreateFolder(currentFolder, part);
+                    if (string.IsNullOrEmpty(guid))
+                    {
+                        Debug.LogWarning("[SlotBuilder] Could not create Wearables subfolder: " + nextFolder);
+                        return null;
+                    }
+                }
+
+                currentFolder = nextFolder;
+            }
+
+            return currentFolder;
+        }
+
+        private static string NormalizeWearablesSubfolder(string configuredSubfolder)
+        {
+            if (string.IsNullOrWhiteSpace(configuredSubfolder))
+            {
+                return string.Empty;
+            }
+
+            string normalized = configuredSubfolder.Replace('\\', '/').Trim();
+            while (normalized.StartsWith("Wearables/", System.StringComparison.OrdinalIgnoreCase))
+            {
+                normalized = normalized.Substring("Wearables/".Length).TrimStart('/');
+            }
+
+            if (string.Equals(normalized, "Wearables", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Empty;
+            }
+
+            return normalized.Trim('/');
+        }
+
         private void CreateAdditionalWearableRecipesForSlots(UMASlotProcessingUtil.SlotBuildResult result)
         {
             if (result == null || result.Slots == null || result.Slots.Count == 0)
@@ -144,31 +205,11 @@ namespace UMA.Editors
 
             if (!string.IsNullOrEmpty(_additionalRecipeSubfolder))
             {
-                string[] subfolderParts = _additionalRecipeSubfolder.Replace('\\', '/').Split(new[] { '/' }, System.StringSplitOptions.RemoveEmptyEntries);
-                string currentFolder = wearablesFolder;
-                for (int s = 0; s < subfolderParts.Length; s++)
+                wearablesFolder = EnsureWearablesSubfolder(wearablesFolder, _additionalRecipeSubfolder);
+                if (string.IsNullOrEmpty(wearablesFolder))
                 {
-                    string part = subfolderParts[s].Trim();
-                    if (string.IsNullOrEmpty(part))
-                    {
-                        continue;
-                    }
-
-                    string nextFolder = currentFolder.TrimEnd('/') + "/" + part;
-                    if (!AssetDatabase.IsValidFolder(nextFolder))
-                    {
-                        string guid = AssetDatabase.CreateFolder(currentFolder, part);
-                        if (string.IsNullOrEmpty(guid))
-                        {
-                            Debug.LogWarning("[SlotBuilder] Could not create Wearables subfolder: " + nextFolder);
-                            return;
-                        }
-                    }
-
-                    currentFolder = nextFolder;
+                    return;
                 }
-
-                wearablesFolder = currentFolder;
             }
 
             for (int i = 0; i < result.Slots.Count; i++)
@@ -269,31 +310,11 @@ namespace UMA.Editors
 
             if (!string.IsNullOrEmpty(_additionalRecipeSubfolder))
             {
-                string[] subfolderParts = _additionalRecipeSubfolder.Replace('\\', '/').Split(new[] { '/' }, System.StringSplitOptions.RemoveEmptyEntries);
-                string currentFolder = wearablesFolder;
-                for (int s = 0; s < subfolderParts.Length; s++)
+                wearablesFolder = EnsureWearablesSubfolder(wearablesFolder, _additionalRecipeSubfolder);
+                if (string.IsNullOrEmpty(wearablesFolder))
                 {
-                    string part = subfolderParts[s].Trim();
-                    if (string.IsNullOrEmpty(part))
-                    {
-                        continue;
-                    }
-
-                    string nextFolder = currentFolder.TrimEnd('/') + "/" + part;
-                    if (!AssetDatabase.IsValidFolder(nextFolder))
-                    {
-                        string guid = AssetDatabase.CreateFolder(currentFolder, part);
-                        if (string.IsNullOrEmpty(guid))
-                        {
-                            Debug.LogWarning("[SlotBuilder] Could not create Wearables subfolder: " + nextFolder);
-                            return;
-                        }
-                    }
-
-                    currentFolder = nextFolder;
+                    return;
                 }
-
-                wearablesFolder = currentFolder;
             }
 
             // Use wearablesFolder for output
@@ -311,6 +332,7 @@ namespace UMA.Editors
                 {
                     slotAssetName = sda.name;
                 }
+                slotAssetName = NormalizeAdditionalRecipeBaseName(slotAssetName);
 
                 EditorUtility.DisplayProgressBar("Creating Wardrobe Recipes", "Recipe for: " + slotAssetName, 1f);
                 Thread.Sleep(0);
@@ -327,7 +349,7 @@ namespace UMA.Editors
                 recipe.SetSlot(0, sd);
 
                 string recipeBaseName = slotAssetName + "_Recipe";
-                string recipePath = Path.Combine(wardrobeFolderPath, recipeBaseName + ".asset").Replace('\\', '/');
+                string recipePath = Path.Combine(wearablesFolder, recipeBaseName + ".asset").Replace('\\', '/');
                 recipePath = AssetDatabase.GenerateUniqueAssetPath(recipePath);
 
                 var uwr = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
@@ -418,6 +440,7 @@ namespace UMA.Editors
             public string filterIgnoreMeshesContaining;
             public bool filterOnlyIncludeMeshesEnabled;
             public string filterOnlyIncludeMeshesContaining;
+            public string lastDroppedFbxPath;
 
             public bool pendingSmrsCompactView;
             public bool pendingSmrsFilterEnabled;
@@ -493,6 +516,7 @@ namespace UMA.Editors
         private string _filterIgnoreMeshesContaining = string.Empty;
         private bool _filterOnlyIncludeMeshesEnabled;
         private string _filterOnlyIncludeMeshesContaining = string.Empty;
+        private string _lastDroppedFbxPath = string.Empty;
 
         // Slot LOD generation
         public bool generateSlotLods = false;
@@ -578,6 +602,7 @@ namespace UMA.Editors
                 state.filterIgnoreMeshesContaining = _filterIgnoreMeshesContaining;
                 state.filterOnlyIncludeMeshesEnabled = _filterOnlyIncludeMeshesEnabled;
                 state.filterOnlyIncludeMeshesContaining = _filterOnlyIncludeMeshesContaining;
+                state.lastDroppedFbxPath = _lastDroppedFbxPath;
 
                 state.pendingSmrsCompactView = _pendingSmrsCompactView;
                 state.pendingSmrsFilterEnabled = _pendingSmrsFilterEnabled;
@@ -654,6 +679,8 @@ namespace UMA.Editors
                 {
                     // keep disabled
                 }
+
+                _lastDroppedFbxPath = state.lastDroppedFbxPath ?? string.Empty;
 
                 _pendingSmrsCompactView = state.pendingSmrsCompactView;
                 _pendingSmrsFilterEnabled = state.pendingSmrsFilterEnabled;
@@ -1173,6 +1200,58 @@ namespace UMA.Editors
         }
 
         private static bool dragDropOpen = false;
+
+        private void RebuildPendingSmrsFromObjects(UnityEngine.Object[] sourceObjects)
+        {
+            var meshes = new HashSet<SkinnedMeshRenderer>();
+            if (sourceObjects != null)
+            {
+                for (int i = 0; i < sourceObjects.Length; i++)
+                {
+                    RecurseObject(sourceObjects[i], meshes);
+                }
+            }
+
+            if (_pendingSmrs == null)
+            {
+                _pendingSmrs = new List<PendingSmrEntry>();
+            }
+
+            _pendingSmrs.Clear();
+            foreach (var mesh in meshes)
+            {
+                if (mesh == null)
+                {
+                    continue;
+                }
+
+                if (!ShouldProcessMeshByFilters(mesh))
+                {
+                    continue;
+                }
+
+                _pendingSmrs.Add(new PendingSmrEntry { smr = mesh, selected = true });
+            }
+        }
+
+        private bool ReprocessLastFbx()
+        {
+            if (string.IsNullOrEmpty(_lastDroppedFbxPath))
+            {
+                return false;
+            }
+
+            var lastObject = AssetDatabase.LoadMainAssetAtPath(_lastDroppedFbxPath);
+            if (lastObject == null)
+            {
+                return false;
+            }
+
+            RebuildPendingSmrsFromObjects(new UnityEngine.Object[] { lastObject });
+            Repaint();
+            return _pendingSmrs != null && _pendingSmrs.Count > 0;
+        }
+
         private void DoDragDrop()
         {
             GUIHelper.BeginVerticalPadded(2, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
@@ -1188,6 +1267,16 @@ namespace UMA.Editors
                 Color save = GUI.color;
                 GUI.color = Color.white;
                 GUI.Box(dropArea, "Drag FBX GameObject or meshes here to generate all slots and overlays for the GameObject");
+                using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_lastDroppedFbxPath)))
+                {
+                    if (GUILayout.Button("Reprocess last FBX", GUILayout.Width(160)))
+                    {
+                        if (!ReprocessLastFbx())
+                        {
+                            EditorUtility.DisplayDialog("Slot Builder", "Could not reprocess the last dropped FBX. It may have been moved or deleted.", "OK");
+                        }
+                    }
+                }
                 relativeFolder = EditorGUILayout.ObjectField("Relative Folder", relativeFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
                 EnforceFolder(ref relativeFolder);
 
@@ -1251,6 +1340,38 @@ namespace UMA.Editors
                     _pendingSmrsCompactView = true;
                 }
             }
+            if (GUILayout.Button("Select All", GUILayout.Width(90)))
+            {
+                for (int i = 0; i < _pendingSmrs.Count; i++)
+                {
+                    if (_pendingSmrs[i] != null)
+                    {
+                        if (!IsPendingSmrVisible(_pendingSmrs[i]))
+                        {
+                            continue;
+                        }
+                        _pendingSmrs[i].selected = true;
+                    }
+                }
+            }
+            if (GUILayout.Button("Select None", GUILayout.Width(90)))
+            {
+                for (int i = 0; i < _pendingSmrs.Count; i++)
+                {
+                    if (_pendingSmrs[i] != null)
+                    {
+                        if (!IsPendingSmrVisible(_pendingSmrs[i]))
+                        {
+                            continue;
+                        }
+                        _pendingSmrs[i].selected = false;
+                    }
+                }
+            }
+            if (GUILayout.Button("Clear List", GUILayout.Width(90)))
+            {
+                _pendingSmrs.Clear();
+            }
             if (GUILayout.Button("Remove Selected", GUILayout.Width(130)))
             {
                 for (int i = _pendingSmrs.Count - 1; i >= 0; i--)
@@ -1267,25 +1388,10 @@ namespace UMA.Editors
             int visibleItemCount = 0;
             if (_pendingSmrs != null)
             {
-                bool filterActiveForCount = _pendingSmrsFilterEnabled && !string.IsNullOrEmpty(_filterOnlyIncludeMeshesContaining);
                 for (int i = 0; i < _pendingSmrs.Count; i++)
                 {
                     var e = _pendingSmrs[i];
-                    if (e == null)
-                    {
-                        continue;
-                    }
-
-                    if (filterActiveForCount)
-                    {
-                        string meshName = e.smr != null ? e.smr.name : string.Empty;
-                        if (meshName.IndexOf(_filterOnlyIncludeMeshesContaining, System.StringComparison.InvariantCultureIgnoreCase) < 0)
-                        {
-                            continue;
-                        }
-                    }
-
-                    visibleItemCount++;
+                    if (IsPendingSmrVisible(e)) visibleItemCount++;
                 }
             }
 
@@ -1305,25 +1411,10 @@ namespace UMA.Editors
             {
                 _pendingSmrsScroll = scroll.scrollPosition;
 
-                string include = _filterOnlyIncludeMeshesContaining;
-                bool filterActive = _pendingSmrsFilterEnabled && !string.IsNullOrEmpty(include);
-
                 for (int i = 0; i < _pendingSmrs.Count; i++)
                 {
                     var e = _pendingSmrs[i];
-                    if (e == null)
-                    {
-                        continue;
-                    }
-
-                    if (filterActive)
-                    {
-                        string meshName = e.smr != null ? e.smr.name : string.Empty;
-                        if (meshName.IndexOf(include, System.StringComparison.InvariantCultureIgnoreCase) < 0)
-                        {
-                            continue;
-                        }
-                    }
+                    if (!IsPendingSmrVisible(e)) continue;
 
                     EditorGUILayout.BeginHorizontal();
                     e.selected = EditorGUILayout.Toggle(e.selected, GUILayout.Width(18));
@@ -1335,54 +1426,33 @@ namespace UMA.Editors
                 }
             }
 
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Select All"))
-            {
-                for (int i = 0; i < _pendingSmrs.Count; i++)
-                {
-                    if (_pendingSmrs[i] != null)
-                    {
-                        if (_pendingSmrsFilterEnabled && !string.IsNullOrEmpty(_filterOnlyIncludeMeshesContaining))
-                        {
-                            string meshName = _pendingSmrs[i].smr != null ? _pendingSmrs[i].smr.name : string.Empty;
-                            if (meshName.IndexOf(_filterOnlyIncludeMeshesContaining, System.StringComparison.InvariantCultureIgnoreCase) < 0)
-                            {
-                                continue;
-                            }
-                        }
-                        _pendingSmrs[i].selected = true;
-                    }
-                }
-            }
-            if (GUILayout.Button("Select None"))
-            {
-                for (int i = 0; i < _pendingSmrs.Count; i++)
-                {
-                    if (_pendingSmrs[i] != null)
-                    {
-                        if (_pendingSmrsFilterEnabled && !string.IsNullOrEmpty(_filterOnlyIncludeMeshesContaining))
-                        {
-                            string meshName = _pendingSmrs[i].smr != null ? _pendingSmrs[i].smr.name : string.Empty;
-                            if (meshName.IndexOf(_filterOnlyIncludeMeshesContaining, System.StringComparison.InvariantCultureIgnoreCase) < 0)
-                            {
-                                continue;
-                            }
-                        }
-                        _pendingSmrs[i].selected = false;
-                    }
-                }
-            }
-            if (GUILayout.Button("Clear List"))
-            {
-                _pendingSmrs.Clear();
-            }
-            EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space(3);
             if (GUILayout.Button("Process checked slots"))
             {
                 ProcessPendingSmrs();
             }
+        }
+
+        private bool IsPendingSmrVisible(PendingSmrEntry entry)
+        {
+            if (entry == null)
+            {
+                return false;
+            }
+
+            if (!_pendingSmrsFilterEnabled)
+            {
+                return true;
+            }
+
+            string include = _filterOnlyIncludeMeshesContaining;
+            if (string.IsNullOrEmpty(include))
+            {
+                return true;
+            }
+
+            string meshName = entry.smr != null ? entry.smr.name : string.Empty;
+            return meshName.IndexOf(include, System.StringComparison.InvariantCultureIgnoreCase) >= 0;
         }
 
         private void ProcessPendingSmrs()
@@ -1416,7 +1486,7 @@ namespace UMA.Editors
             for (int i = 0; i < _pendingSmrs.Count; i++)
             {
                 var e = _pendingSmrs[i];
-                if (e != null && e.selected && e.smr != null && ShouldProcessMeshByFilters(e.smr))
+                if (e != null && e.selected && e.smr != null && IsPendingSmrVisible(e) && ShouldProcessMeshByFilters(e.smr))
                 {
                     selectedCount++;
                 }
@@ -1448,7 +1518,7 @@ namespace UMA.Editors
                 for (int i = 0; i < _pendingSmrs.Count; i++)
                 {
                     var e = _pendingSmrs[i];
-                    if (e == null || !e.selected || e.smr == null)
+                    if (e == null || !e.selected || e.smr == null || !IsPendingSmrVisible(e))
                     {
                         continue;
                     }
@@ -1927,33 +1997,21 @@ namespace UMA.Editors
                 {
                     DragAndDrop.AcceptDrag();
                     UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
-                    var meshes = new HashSet<SkinnedMeshRenderer>();
-                    for (int i = 0; i < draggedObjects.Length; i++)
+                    _lastDroppedFbxPath = string.Empty;
+                    if (draggedObjects != null)
                     {
-                        RecurseObject(draggedObjects[i], meshes);
-                    }
-
-                    if (_pendingSmrs == null)
-                    {
-                        _pendingSmrs = new List<PendingSmrEntry>();
-                    }
-
-                    // Rebuild pending list from this drop (default checked)
-                    _pendingSmrs.Clear();
-                    foreach (var mesh in meshes)
-                    {
-                        if (mesh == null)
+                        for (int i = 0; i < draggedObjects.Length; i++)
                         {
-                            continue;
+                            string path = AssetDatabase.GetAssetPath(draggedObjects[i]);
+                            if (!string.IsNullOrEmpty(path) && path.EndsWith(".fbx", System.StringComparison.OrdinalIgnoreCase))
+                            {
+                                _lastDroppedFbxPath = path;
+                                break;
+                            }
                         }
-
-                        if (!ShouldProcessMeshByFilters(mesh))
-                        {
-                            continue;
-                        }
-
-                        _pendingSmrs.Add(new PendingSmrEntry { smr = mesh, selected = true });
                     }
+
+                    RebuildPendingSmrsFromObjects(draggedObjects);
 
                     if (_pendingSmrs.Count == 0)
                     {

@@ -2599,7 +2599,7 @@ namespace UMA
 								int index = sharedColors.Length;
 								mergedSharedColors.Add(sharedColor.name, index);
 								Array.Resize<OverlayColorData>(ref sharedColors, index + 1);
-								sharedColors[index] = sharedColor.Duplicate();
+								sharedColors[index] = sharedColor.Clone();
 							}
 						}
 					}

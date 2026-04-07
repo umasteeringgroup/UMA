@@ -2694,6 +2694,17 @@ namespace UMA.Editors
 
 	internal class UmaExamineOverlaysWindow : EditorWindow
 	{
+       private const string OverlayPrefsPrefix = "UMA.ExamineOverlays.";
+		private const string OverlayPrefsUtilitiesFoldout = OverlayPrefsPrefix + "UtilitiesFoldout";
+		private const string OverlayPrefsRelinkFoldout = OverlayPrefsPrefix + "RelinkFoldout";
+		private const string OverlayPrefsUpdateFolderFoldout = OverlayPrefsPrefix + "UpdateFolderFoldout";
+		private const string OverlayPrefsUtilitiesMaterialPath = OverlayPrefsPrefix + "UtilitiesMaterialPath";
+		private const string OverlayPrefsTextureFolderPath = OverlayPrefsPrefix + "TextureFolderPath";
+		private const string OverlayPrefsIncludeSubfolders = OverlayPrefsPrefix + "IncludeSubfolders";
+		private const string OverlayPrefsSkipWhenSameAsset = OverlayPrefsPrefix + "SkipWhenSameAsset";
+		private const string OverlayPrefsOverlayFilter = OverlayPrefsPrefix + "OverlayFilter";
+		private const string OverlayPrefsUpdateFolderPath = OverlayPrefsPrefix + "UpdateFolderPath";
+
 		private readonly List<UMA.OverlayDataAsset> _overlays = new List<UMA.OverlayDataAsset>();
 		private readonly List<UMA.OverlayDataAsset> _filteredOverlays = new List<UMA.OverlayDataAsset>();
 		private UMA.OverlayDataAsset _selectedOverlay;
@@ -2704,6 +2715,10 @@ namespace UMA.Editors
 		private bool _includeSubfolders;
 		private bool _skipWhenSameAsset = true;
      private UMAMaterial _utilitiesTargetMaterial;
+     private bool _utilitiesFoldout = true;
+		private bool _relinkFoldout = true;
+		private bool _updateFolderFoldout = true;
+		private string _updateFolderPath = string.Empty;
 		private static readonly GUIContent _completeLabel = new GUIContent("Complete");
 		private static readonly GUIContent _missingTexturesLabel = new GUIContent("missing textures");
 		private static readonly GUIContent _missingTexturesAndOvlLabel = new GUIContent("missing textures and UMAT");
@@ -2715,6 +2730,7 @@ namespace UMA.Editors
 		{
 			var window = GetWindow<UmaExamineOverlaysWindow>(false, "Examine Overlays", true);
 			window.minSize = new Vector2(860f, 420f);
+           window.LoadPreferences();
 			window._overlays.Clear();
 			if (overlays != null)
 			{
@@ -2724,6 +2740,52 @@ namespace UMA.Editors
 			window._selectedOverlay = window._overlays.Count > 0 ? window._overlays[0] : null;
 			window.Show();
 			window.Focus();
+		}
+
+		private void OnEnable()
+		{
+			LoadPreferences();
+		}
+
+		private void OnDisable()
+		{
+			SavePreferences();
+		}
+
+		private void LoadPreferences()
+		{
+			_utilitiesFoldout = EditorPrefs.GetBool(OverlayPrefsUtilitiesFoldout, true);
+			_relinkFoldout = EditorPrefs.GetBool(OverlayPrefsRelinkFoldout, true);
+			_updateFolderFoldout = EditorPrefs.GetBool(OverlayPrefsUpdateFolderFoldout, true);
+			_includeSubfolders = EditorPrefs.GetBool(OverlayPrefsIncludeSubfolders, false);
+			_skipWhenSameAsset = EditorPrefs.GetBool(OverlayPrefsSkipWhenSameAsset, true);
+			_filter = (OverlayFilter)EditorPrefs.GetInt(OverlayPrefsOverlayFilter, (int)OverlayFilter.All);
+			_textureFolderPath = EditorPrefs.GetString(OverlayPrefsTextureFolderPath, string.Empty);
+			_updateFolderPath = EditorPrefs.GetString(OverlayPrefsUpdateFolderPath, string.Empty);
+
+			string materialPath = EditorPrefs.GetString(OverlayPrefsUtilitiesMaterialPath, string.Empty);
+			_utilitiesTargetMaterial = !string.IsNullOrEmpty(materialPath)
+				? AssetDatabase.LoadAssetAtPath<UMAMaterial>(materialPath)
+				: null;
+
+			_textureFolder = AssetDatabase.IsValidFolder(_textureFolderPath)
+				? AssetDatabase.LoadAssetAtPath<DefaultAsset>(_textureFolderPath)
+				: null;
+
+			_updateFolderPath = NormalizeAssetFolderPath(_updateFolderPath);
+		}
+
+		private void SavePreferences()
+		{
+			EditorPrefs.SetBool(OverlayPrefsUtilitiesFoldout, _utilitiesFoldout);
+			EditorPrefs.SetBool(OverlayPrefsRelinkFoldout, _relinkFoldout);
+			EditorPrefs.SetBool(OverlayPrefsUpdateFolderFoldout, _updateFolderFoldout);
+			EditorPrefs.SetBool(OverlayPrefsIncludeSubfolders, _includeSubfolders);
+			EditorPrefs.SetBool(OverlayPrefsSkipWhenSameAsset, _skipWhenSameAsset);
+			EditorPrefs.SetInt(OverlayPrefsOverlayFilter, (int)_filter);
+			EditorPrefs.SetString(OverlayPrefsTextureFolderPath, _textureFolderPath ?? string.Empty);
+			EditorPrefs.SetString(OverlayPrefsUpdateFolderPath, _updateFolderPath ?? string.Empty);
+			EditorPrefs.SetString(OverlayPrefsUtilitiesMaterialPath, _utilitiesTargetMaterial != null ? AssetDatabase.GetAssetPath(_utilitiesTargetMaterial) : string.Empty);
 		}
 
 		private void RefreshFromSelection()
@@ -2817,7 +2879,8 @@ namespace UMA.Editors
 			RebuildFilteredOverlays(_selectedOverlay);
 
             DrawUtilitiesPanel();
-          DrawRelinkPanel();
+			DrawRelinkPanel();
+			DrawUpdateFolderPanel();
 
 			EditorGUILayout.BeginHorizontal();
 			DrawOverlayList();
@@ -2829,21 +2892,29 @@ namespace UMA.Editors
 		private void DrawUtilitiesPanel()
 		{
 			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-			EditorGUILayout.LabelField("Utilities", EditorStyles.boldLabel);
-			EditorGUILayout.BeginHorizontal();
-			_utilitiesTargetMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", _utilitiesTargetMaterial, typeof(UMAMaterial), false);
-			using (new EditorGUI.DisabledScope(_utilitiesTargetMaterial == null || _overlays.Count == 0))
+          _utilitiesFoldout = EditorGUILayout.Foldout(_utilitiesFoldout, "Utilities", true);
+			if (_utilitiesFoldout)
 			{
-				if (GUILayout.Button("Assign UMAMaterial to selected", GUILayout.Width(220), GUILayout.Height(22)))
+             EditorGUILayout.BeginHorizontal();
+				EditorGUI.BeginChangeCheck();
+				_utilitiesTargetMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", _utilitiesTargetMaterial, typeof(UMAMaterial), false);
+				if (EditorGUI.EndChangeCheck())
 				{
-					AssignMaterialToSelectedOverlays();
+                 SavePreferences();
 				}
-               if (GUILayout.Button("Assign UMAMaterial to ALL", GUILayout.Width(200), GUILayout.Height(22)))
+                using (new EditorGUI.DisabledScope(_utilitiesTargetMaterial == null || _overlays.Count == 0))
 				{
-					AssignMaterialToAllOverlaysInList();
+                 if (GUILayout.Button("Assign UMAMaterial to selected", GUILayout.Width(220), GUILayout.Height(22)))
+					{
+						AssignMaterialToSelectedOverlays();
+					}
+					if (GUILayout.Button("Assign UMAMaterial to ALL", GUILayout.Width(200), GUILayout.Height(22)))
+					{
+						AssignMaterialToAllOverlaysInList();
+					}
 				}
+             EditorGUILayout.EndHorizontal();
 			}
-			EditorGUILayout.EndHorizontal();
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.Space(6);
 		}
@@ -2927,38 +2998,388 @@ namespace UMA.Editors
 		private void DrawRelinkPanel()
 		{
 			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-			EditorGUILayout.LabelField("Relink Textures", EditorStyles.boldLabel);
-			EditorGUILayout.HelpBox("Replaces textures on the selected OverlayDataAsset list by name, using textures found in the specified folder.", MessageType.Info);
-			EditorGUI.BeginChangeCheck();
-			_textureFolder = (DefaultAsset)EditorGUILayout.ObjectField("Texture Folder", _textureFolder, typeof(DefaultAsset), false);
-			if (EditorGUI.EndChangeCheck())
+          _relinkFoldout = EditorGUILayout.Foldout(_relinkFoldout, "Relink Textures", true);
+			if (_relinkFoldout)
 			{
-				_textureFolderPath = _textureFolder != null ? AssetDatabase.GetAssetPath(_textureFolder) : string.Empty;
-				if (!string.IsNullOrEmpty(_textureFolderPath) && !AssetDatabase.IsValidFolder(_textureFolderPath))
+                EditorGUILayout.HelpBox("Replaces textures on the selected OverlayDataAsset list by name, using textures found in the specified folder.", MessageType.Info);
+				EditorGUI.BeginChangeCheck();
+				_textureFolder = (DefaultAsset)EditorGUILayout.ObjectField("Texture Folder", _textureFolder, typeof(DefaultAsset), false);
+				if (EditorGUI.EndChangeCheck())
 				{
-					_textureFolder = null;
-					_textureFolderPath = string.Empty;
+                  _textureFolderPath = _textureFolder != null ? AssetDatabase.GetAssetPath(_textureFolder) : string.Empty;
+					if (!string.IsNullOrEmpty(_textureFolderPath) && !AssetDatabase.IsValidFolder(_textureFolderPath))
+					{
+						_textureFolder = null;
+						_textureFolderPath = string.Empty;
+					}
+					SavePreferences();
 				}
-			}
-			using (new EditorGUI.DisabledScope(true))
-			{
-				EditorGUILayout.TextField("Path", _textureFolderPath ?? string.Empty);
-			}
-			_includeSubfolders = EditorGUILayout.ToggleLeft("Include subfolders", _includeSubfolders);
-			_skipWhenSameAsset = EditorGUILayout.ToggleLeft("Skip if already same asset", _skipWhenSameAsset);
+               using (new EditorGUI.DisabledScope(true))
+				{
+                    EditorGUILayout.TextField("Path", _textureFolderPath ?? string.Empty);
+				}
+               EditorGUI.BeginChangeCheck();
+				_includeSubfolders = EditorGUILayout.ToggleLeft("Include subfolders", _includeSubfolders);
+				_skipWhenSameAsset = EditorGUILayout.ToggleLeft("Skip if already same asset", _skipWhenSameAsset);
+				if (EditorGUI.EndChangeCheck())
+				{
+					SavePreferences();
+				}
 
-			EditorGUILayout.BeginHorizontal();
-			GUILayout.FlexibleSpace();
-			using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_textureFolderPath) || _overlays.Count == 0))
-			{
-				if (GUILayout.Button("Replace textures in selected overlays", GUILayout.Width(260), GUILayout.Height(24)))
+				EditorGUILayout.BeginHorizontal();
+				GUILayout.FlexibleSpace();
+				using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_textureFolderPath) || _overlays.Count == 0))
 				{
-					ReplaceTexturesInSelectedOverlays();
+					if (GUILayout.Button("Replace textures in selected overlays", GUILayout.Width(260), GUILayout.Height(24)))
+					{
+						ReplaceTexturesInSelectedOverlays();
+					}
 				}
+				EditorGUILayout.EndHorizontal();
 			}
-			EditorGUILayout.EndHorizontal();
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.Space(6);
+		}
+
+		private void DrawUpdateFolderPanel()
+		{
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			_updateFolderFoldout = EditorGUILayout.Foldout(_updateFolderFoldout, "Update Folder", true);
+			if (_updateFolderFoldout)
+			{
+				EditorGUILayout.HelpBox("Searches the specified folder and all child folders for duplicate OverlayDataAsset filenames. Found duplicates are moved into a backup folder and replaced by copies of the selected overlay assets. Selected overlays with no match are copied into a not found folder under the specified root.", MessageType.Info);
+				EditorGUILayout.BeginHorizontal();
+				EditorGUI.BeginChangeCheck();
+				_updateFolderPath = EditorGUILayout.TextField("Folder", _updateFolderPath ?? string.Empty);
+				if (EditorGUI.EndChangeCheck())
+				{
+					_updateFolderPath = NormalizeAssetFolderPath(_updateFolderPath);
+					SavePreferences();
+				}
+
+				if (GUILayout.Button("Browse", GUILayout.Width(80)))
+				{
+					BrowseForUpdateFolder();
+				}
+				EditorGUILayout.EndHorizontal();
+
+				if (!string.IsNullOrEmpty(_updateFolderPath) && !AssetDatabase.IsValidFolder(_updateFolderPath))
+				{
+					EditorGUILayout.HelpBox("Select a valid folder under the project's Assets folder.", MessageType.Warning);
+				}
+
+				EditorGUILayout.BeginHorizontal();
+				GUILayout.FlexibleSpace();
+				using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_updateFolderPath) || !AssetDatabase.IsValidFolder(_updateFolderPath) || _overlays.Count == 0))
+				{
+					if (GUILayout.Button("Process selected overlays", GUILayout.Width(220), GUILayout.Height(24)))
+					{
+						ProcessSelectedOverlaysInUpdateFolder();
+					}
+				}
+				EditorGUILayout.EndHorizontal();
+			}
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.Space(6);
+		}
+
+		private void BrowseForUpdateFolder()
+		{
+			string startFolder = Application.dataPath;
+			if (!string.IsNullOrEmpty(_updateFolderPath) && AssetDatabase.IsValidFolder(_updateFolderPath))
+			{
+				string absoluteFolder = Path.GetFullPath(_updateFolderPath);
+				if (Directory.Exists(absoluteFolder))
+				{
+					startFolder = absoluteFolder;
+				}
+			}
+
+			string pickedFolder = EditorUtility.OpenFolderPanel("Select overlay update folder", startFolder, string.Empty);
+			if (string.IsNullOrEmpty(pickedFolder))
+			{
+				return;
+			}
+
+			string assetFolder = GetAssetFolderPathFromAbsolutePath(pickedFolder);
+			if (string.IsNullOrEmpty(assetFolder) || !AssetDatabase.IsValidFolder(assetFolder))
+			{
+				EditorUtility.DisplayDialog("Update Folder", "Select a folder under the project's Assets folder.", "OK");
+				return;
+			}
+
+			_updateFolderPath = assetFolder;
+			SavePreferences();
+		}
+
+		private void ProcessSelectedOverlaysInUpdateFolder()
+		{
+			if (string.IsNullOrEmpty(_updateFolderPath) || !AssetDatabase.IsValidFolder(_updateFolderPath))
+			{
+				EditorUtility.DisplayDialog("Update Folder", "Select a valid folder under the project's Assets folder.", "OK");
+				return;
+			}
+
+			if (_overlays.Count == 0)
+			{
+				return;
+			}
+
+			Dictionary<string, List<string>> duplicatesByFileName = BuildOverlayPathLookup(_updateFolderPath);
+			List<string> errors = new List<string>();
+			int overlaysWithMatches = 0;
+			int duplicatesReplaced = 0;
+			int movedToBackup = 0;
+			int copiedToNotFound = 0;
+			string backupRoot = null;
+			string notFoundRoot = null;
+
+			try
+			{
+				for (int i = 0; i < _overlays.Count; i++)
+				{
+					UMA.OverlayDataAsset overlay = _overlays[i];
+					if (overlay == null)
+					{
+						continue;
+					}
+
+					EditorUtility.DisplayProgressBar("Update Folder", "Processing overlays...", Mathf.Clamp01((float)(i + 1) / Mathf.Max(1, _overlays.Count)));
+
+					string sourcePath = AssetDatabase.GetAssetPath(overlay);
+					if (string.IsNullOrEmpty(sourcePath))
+					{
+						continue;
+					}
+
+					string fileName = Path.GetFileName(sourcePath);
+					if (string.IsNullOrEmpty(fileName))
+					{
+						continue;
+					}
+
+					List<string> duplicatePaths = new List<string>();
+					if (duplicatesByFileName.TryGetValue(fileName, out var foundPaths) && foundPaths != null)
+					{
+						for (int p = 0; p < foundPaths.Count; p++)
+						{
+							string candidatePath = foundPaths[p];
+							if (string.Equals(candidatePath, sourcePath, System.StringComparison.OrdinalIgnoreCase))
+							{
+								continue;
+							}
+							duplicatePaths.Add(candidatePath);
+						}
+					}
+
+					if (duplicatePaths.Count > 0)
+					{
+						overlaysWithMatches++;
+						if (string.IsNullOrEmpty(backupRoot))
+						{
+							backupRoot = EnsureAssetFolder(_updateFolderPath + "/backup");
+						}
+
+						for (int p = 0; p < duplicatePaths.Count; p++)
+						{
+							string duplicatePath = duplicatePaths[p];
+							string relativePath = GetRelativeAssetPath(_updateFolderPath, duplicatePath);
+							string relativeFolder = Path.GetDirectoryName(relativePath);
+							relativeFolder = string.IsNullOrEmpty(relativeFolder) ? string.Empty : relativeFolder.Replace('\\', '/');
+							string backupFolder = string.IsNullOrEmpty(relativeFolder)
+								? backupRoot
+								: EnsureAssetFolder(backupRoot + "/" + relativeFolder);
+							string backupPath = AssetDatabase.GenerateUniqueAssetPath(backupFolder + "/" + Path.GetFileName(duplicatePath));
+
+							string moveError = AssetDatabase.MoveAsset(duplicatePath, backupPath);
+							if (!string.IsNullOrEmpty(moveError))
+							{
+								errors.Add("Move failed for '" + duplicatePath + "': " + moveError);
+								continue;
+							}
+
+							movedToBackup++;
+							if (!AssetDatabase.CopyAsset(sourcePath, duplicatePath))
+							{
+								errors.Add("Copy failed for '" + sourcePath + "' to '" + duplicatePath + "'.");
+								continue;
+							}
+
+							duplicatesReplaced++;
+						}
+					}
+					else
+					{
+						if (string.IsNullOrEmpty(notFoundRoot))
+						{
+							notFoundRoot = EnsureAssetFolder(_updateFolderPath + "/not found");
+						}
+
+						string notFoundPath = AssetDatabase.GenerateUniqueAssetPath(notFoundRoot + "/" + fileName);
+						if (!AssetDatabase.CopyAsset(sourcePath, notFoundPath))
+						{
+							errors.Add("Copy failed for missing overlay '" + sourcePath + "' to '" + notFoundPath + "'.");
+							continue;
+						}
+
+						copiedToNotFound++;
+					}
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog(
+				"Update Folder",
+				"Overlays processed: " + _overlays.Count +
+				"\nOverlays with duplicates found: " + overlaysWithMatches +
+				"\nDuplicates moved to backup: " + movedToBackup +
+				"\nDuplicates replaced: " + duplicatesReplaced +
+				"\nCopied to not found: " + copiedToNotFound,
+				"OK");
+
+			if (errors.Count > 0)
+			{
+				EditorUtility.DisplayDialog("Update Folder Errors", string.Join("\n", errors.ToArray()), "OK");
+			}
+		}
+
+		private static Dictionary<string, List<string>> BuildOverlayPathLookup(string rootFolder)
+		{
+			Dictionary<string, List<string>> result = new Dictionary<string, List<string>>(System.StringComparer.OrdinalIgnoreCase);
+			if (string.IsNullOrEmpty(rootFolder))
+			{
+				return result;
+			}
+
+			string backupFolder = rootFolder.TrimEnd('/') + "/backup";
+			string notFoundFolder = rootFolder.TrimEnd('/') + "/not found";
+			string[] guids = AssetDatabase.FindAssets("t:OverlayDataAsset", new[] { rootFolder });
+			for (int i = 0; i < guids.Length; i++)
+			{
+				string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+				if (string.IsNullOrEmpty(path)
+					|| IsPathUnderFolder(path, backupFolder)
+					|| IsPathUnderFolder(path, notFoundFolder))
+				{
+					continue;
+				}
+
+				string fileName = Path.GetFileName(path);
+				if (string.IsNullOrEmpty(fileName))
+				{
+					continue;
+				}
+
+				if (!result.TryGetValue(fileName, out var paths) || paths == null)
+				{
+					paths = new List<string>();
+					result[fileName] = paths;
+				}
+				paths.Add(path);
+			}
+
+			return result;
+		}
+
+		private static bool IsPathUnderFolder(string assetPath, string folderPath)
+		{
+			if (string.IsNullOrEmpty(assetPath) || string.IsNullOrEmpty(folderPath))
+			{
+				return false;
+			}
+
+			string normalizedFolder = folderPath.Replace('\\', '/').TrimEnd('/');
+			string normalizedAssetPath = assetPath.Replace('\\', '/');
+			return normalizedAssetPath.StartsWith(normalizedFolder + "/", System.StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static string GetRelativeAssetPath(string rootFolder, string assetPath)
+		{
+			string normalizedRoot = rootFolder.Replace('\\', '/').TrimEnd('/');
+			string normalizedAssetPath = assetPath.Replace('\\', '/');
+			if (normalizedAssetPath.StartsWith(normalizedRoot + "/", System.StringComparison.OrdinalIgnoreCase))
+			{
+				return normalizedAssetPath.Substring(normalizedRoot.Length + 1);
+			}
+
+			return Path.GetFileName(normalizedAssetPath) ?? string.Empty;
+		}
+
+		private static string EnsureAssetFolder(string folderPath)
+		{
+			string normalizedPath = NormalizeAssetFolderPath(folderPath);
+			if (string.IsNullOrEmpty(normalizedPath))
+			{
+				return string.Empty;
+			}
+
+			if (AssetDatabase.IsValidFolder(normalizedPath))
+			{
+				return normalizedPath;
+			}
+
+			string[] parts = normalizedPath.Split(new[] { '/' }, System.StringSplitOptions.RemoveEmptyEntries);
+			if (parts.Length == 0)
+			{
+				return string.Empty;
+			}
+
+			string current = parts[0];
+			for (int i = 1; i < parts.Length; i++)
+			{
+				string next = current + "/" + parts[i];
+				if (!AssetDatabase.IsValidFolder(next))
+				{
+					AssetDatabase.CreateFolder(current, parts[i]);
+				}
+				current = next;
+			}
+
+			return current;
+		}
+
+		private static string NormalizeAssetFolderPath(string path)
+		{
+			if (string.IsNullOrWhiteSpace(path))
+			{
+				return string.Empty;
+			}
+
+			string normalized = path.Trim().Replace('\\', '/').TrimEnd('/');
+			if (Path.IsPathRooted(normalized))
+			{
+				string assetPath = GetAssetFolderPathFromAbsolutePath(normalized);
+				return assetPath ?? normalized;
+			}
+
+			return normalized;
+		}
+
+		private static string GetAssetFolderPathFromAbsolutePath(string absolutePath)
+		{
+			if (string.IsNullOrEmpty(absolutePath))
+			{
+				return string.Empty;
+			}
+
+			string normalizedAbsolutePath = absolutePath.Replace('\\', '/').TrimEnd('/');
+			string normalizedAssetsPath = Application.dataPath.Replace('\\', '/').TrimEnd('/');
+			if (string.Equals(normalizedAbsolutePath, normalizedAssetsPath, System.StringComparison.OrdinalIgnoreCase))
+			{
+				return "Assets";
+			}
+
+			if (normalizedAbsolutePath.StartsWith(normalizedAssetsPath + "/", System.StringComparison.OrdinalIgnoreCase))
+			{
+				return "Assets" + normalizedAbsolutePath.Substring(normalizedAssetsPath.Length);
+			}
+
+			return null;
 		}
 
 		private void ReplaceTexturesInSelectedOverlays()
@@ -3496,7 +3917,7 @@ namespace UMA.Editors
 			EditorGUILayout.Space(10);
 			EditorGUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			using (new EditorGUI.DisabledScope(!HasAnyRecipeChecked() || _selectedSlotIndex < 0 || _selectedSlotIndex >= _slots.Count))
+         using (new EditorGUI.DisabledScope(!HasAnyVisibleRecipeChecked() || _selectedSlotIndex < 0 || _selectedSlotIndex >= _slots.Count))
 			{
 				if (GUILayout.Button("Assign", GUILayout.Width(120), GUILayout.Height(28)))
 				{
@@ -3819,7 +4240,20 @@ namespace UMA.Editors
 			return count;
 		}
 
-			private void DrawRecipesColumn()
+			private bool WardrobeSlotAssigned(UMAWardrobeRecipe recipe)
+			{
+				if (recipe == null || string.IsNullOrEmpty(recipe.wardrobeSlot))
+				{
+					return false;
+				}
+				if (recipe.wardrobeSlot.ToLower() == "none")
+				{
+					return false;
+				}
+				return true;
+            }
+
+            private void DrawRecipesColumn()
 			{
 				EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.62f));
 				EditorGUILayout.LabelField("Wardrobe Recipes", EditorStyles.boldLabel);
@@ -3849,12 +4283,7 @@ namespace UMA.Editors
 					var recipe = _recipes[i];
 					if (recipe == null) continue;
 
-					bool isAssigned = !string.IsNullOrEmpty(recipe.wardrobeSlot);
-					if (_wardrobeSlotFilter == WardrobeSlotFilter.Assigned && !isAssigned)
-					{
-						continue;
-					}
-					if (_wardrobeSlotFilter == WardrobeSlotFilter.Unassigned && isAssigned)
+                 if (!IsRecipeVisible(recipe))
 					{
 						continue;
 					}
@@ -3946,6 +4375,39 @@ namespace UMA.Editors
 			return false;
 		}
 
+		private bool HasAnyVisibleRecipeChecked()
+		{
+			for (int i = 0; i < _recipes.Count; i++)
+			{
+				if (i < _recipeSelected.Length && _recipeSelected[i] && IsRecipeVisible(_recipes[i]))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private bool IsRecipeVisible(UMAWardrobeRecipe recipe)
+		{
+			if (recipe == null)
+			{
+				return false;
+			}
+
+			bool isAssigned = WardrobeSlotAssigned(recipe);
+			if (_wardrobeSlotFilter == WardrobeSlotFilter.Assigned)
+			{
+				return isAssigned;
+			}
+
+			if (_wardrobeSlotFilter == WardrobeSlotFilter.Unassigned)
+			{
+				return !isAssigned;
+			}
+
+			return true;
+		}
+
 		private void AssignSelectedSlot()
 		{
 			if (_selectedSlotIndex < 0 || _selectedSlotIndex >= _slots.Count)
@@ -3968,6 +4430,7 @@ namespace UMA.Editors
 				{
 					continue;
 				}
+				
 				var recipe = _recipes[i];
 				if (recipe == null)
 				{

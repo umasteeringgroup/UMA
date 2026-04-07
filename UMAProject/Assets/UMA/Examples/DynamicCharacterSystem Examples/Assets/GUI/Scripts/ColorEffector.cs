@@ -17,7 +17,16 @@ namespace UMA
             this.colorName = colorName;
             this.color = color;
             Image image = GetComponent<Image>();
+            if (!isWhite(color.displayColor))
+            {
+                image.color = color.displayColor;
+                return;
+            }
             image.color = color.color;
+        }
+
+        public bool isWhite(Color w)        {
+            return w.r == 1f && w.g == 1f && w.b == 1f;
         }
 
         public void OnClick()

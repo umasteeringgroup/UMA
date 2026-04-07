@@ -889,6 +889,39 @@ namespace UMA
             shaderProperties.Add(property);
         }
 
+        public bool RemoveProperty(string propertyName)
+        {
+            if (shaderProperties == null)
+            {
+                return false;
+            }
+
+            bool removed = false;
+            for (int i = shaderProperties.Count - 1; i >= 0; i--)
+            {
+                UMAProperty property = shaderProperties[i];
+                if (property != null && property.name == propertyName)
+                {
+                    shaderProperties.RemoveAt(i);
+                    removed = true;
+                }
+            }
+
+            return removed;
+        }
+
+        public void SetProperty(UMAProperty property)
+        {
+            if (property == null)
+            {
+                return;
+            }
+
+            Validate();
+            RemoveProperty(property.name);
+            shaderProperties.Add(property);
+        }
+
 
         public UMAProperty AddProperty(Type propertyType, string propertyName)
         {
