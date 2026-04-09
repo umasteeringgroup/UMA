@@ -951,6 +951,7 @@ namespace UMA.Editors
             _showCreateRecipes = EditorGUILayout.Foldout(_showCreateRecipes, "Create Recipes", true);
             if (_showCreateRecipes)
             {
+                EditorGUILayout.HelpBox("This lets you create multiple recipes FOR EACH SLOT and specify the Overlay for each recipe below", MessageType.Info, true);
                 GUILayout.BeginHorizontal();
                 _additionalRaceToAdd = EditorGUILayout.ObjectField("Race", _additionalRaceToAdd, typeof(RaceData), false) as RaceData;
                 if (GUILayout.Button("Add Race", GUILayout.Width(90)))
@@ -2015,7 +2016,7 @@ namespace UMA.Editors
 
                     if (_pendingSmrs.Count == 0)
                     {
-                        EditorUtility.DisplayDialog("Slot Builder", "No SkinnedMeshRenderers found in dropped objects.", "OK");
+                        EditorUtility.DisplayDialog("Slot Builder", "No SkinnedMeshRenderers found in dropped objects. Check your filters to ensure the SMR you want is not skipped.", "OK");
                     }
                     Repaint();
                 }

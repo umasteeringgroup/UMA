@@ -388,6 +388,10 @@ namespace UMA.PoseTools
 			}
 			set
 			{
+              if (value == null)
+				{
+					return;
+				}
 				if (value.Length != PoseCount) return;
 
 				int i = 0;

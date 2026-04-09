@@ -1476,7 +1476,10 @@ namespace UMA
             isClippingPlane = source.isClippingPlane;
             isSmooshable = source.isSmooshable;
             isBaked = source.isBaked;
-            _sourceSlotName = (string)source._sourceSlotName.Clone();
+            if (source._sourceSlotName != null)
+            {
+                _sourceSlotName = (string)source._sourceSlotName.Clone();
+            }
             slotGroup = source.slotGroup;
             tags = (string[])source.tags.Clone();
             Races = (string[])source.Races.Clone();

@@ -4,7 +4,6 @@
 //	Copyright:	(c) 2013 Eli Curtz
 //	============================================================
 using UMA.CharacterSystem;
-using UnityEditor;
 using UnityEngine;
 
 namespace UMA.PoseTools
@@ -71,8 +70,20 @@ namespace UMA.PoseTools
 
 #endif
 
+        private void OnDisable()
+        {
+            RemoveListeners();
+            initialized = false;
+        }
+
+        private void OnDestroy()
+        {
+            RemoveListeners();
+        }
+
 		public void Initialize()
         {
+            standAlone = false;
             blinkDelay = Random.Range(minBlinkDelay, maxBlinkDelay);
 
             if (Camera.main != null)
@@ -84,7 +95,11 @@ namespace UMA.PoseTools
 
 			if (avatar != null)
             {
-				umaData = avatar.umaData;
+               umaData = avatar.umaData;
+                if (umaData == null)
+                {
+                    umaData = avatar as UMAData;
+                }
 				if (!EventsAdded)
 				{
 					avatar.CharacterBegun.AddListener(CharacterBegun);
@@ -94,35 +109,39 @@ namespace UMA.PoseTools
 			}
 			else
 			{
-				if (umaData == null)
+                umaData = gameObject.GetComponentInChildren<UMAData>();
+                if (umaData == null)
+                {
+                    umaData = gameObject.GetComponentInParent<UMAData>();
+                }
+
+                if (umaData != null)
+                {
+                    if (!UmaEventsAdded)
+                    {
+                        umaData.CharacterBegun.AddListener(CharacterBegun);
+                        umaData.CharacterUpdated.AddListener(UmaData_OnCharacterUpdated);
+                        UmaEventsAdded = true;
+                    }
+                }
+                else
 				{
-					// Find the UMAData, which could be up or down the hierarchy
-					umaData = gameObject.GetComponentInChildren<UMAData>();
-					if (umaData == null)
-					{
-						umaData = gameObject.GetComponentInParent<UMAData>();
-					}
-					if (umaData != null)
-                    {
-                        if (!UmaEventsAdded)
-                        {
-							umaData.CharacterBegun.AddListener(CharacterBegun);
-							umaData.CharacterUpdated.AddListener(UmaData_OnCharacterUpdated);
-                            UmaEventsAdded = true;
-                        }
-					}
-					else
-                    {
-						standAlone = true;
-						animator = gameObject.GetComponentInChildren<Animator>();
-						SetupBones();
-					}
+                    standAlone = true;
+                    animator = gameObject.GetComponentInChildren<Animator>();
+                    SetupBones();
 				}
 			}
 
             if (umaData != null)
 			{
-				animator = gameObject.GetComponentInChildren<Animator>();
+               if (umaData.animator != null)
+                {
+                    animator = umaData.animator;
+                }
+                else if (animator == null)
+                {
+                    animator = gameObject.GetComponentInChildren<Animator>();
+                }
 				SetupBones();
 			}
 
@@ -138,22 +157,44 @@ namespace UMA.PoseTools
 
 		private void SetupBones()
 		{
+            jawHash = 0;
+            neckHash = 0;
+            headHash = 0;
+
+         if (expressionSet == null)
+            {
+                return;
+            }
 
             if ((expressionSet != null) /*&& (umaData != null) && (umaData.skeleton != null)*/)
 			{
 				Transform jaw = null;
 				Transform neck = null;
 				Transform head = null;
+                Animator sourceAnimator = null;
 
 				if (umaData != null && umaData.animator != null && umaData.animator.avatar != null)
 				{
-					// Initialize and then assign from animator bones
-					jawHash = 0;
-					neckHash = 0;
-					headHash = 0;
-					animator = umaData.animator;
+                   sourceAnimator = umaData.animator;
+                }
+                else if (animator != null && animator.avatar != null)
+                {
+                    sourceAnimator = animator;
+                }
+                else
+                {
+                    sourceAnimator = gameObject.GetComponentInChildren<Animator>();
+                    if (sourceAnimator != null && sourceAnimator.avatar == null)
+                    {
+                        sourceAnimator = null;
+                    }
+                }
 
-					jaw = animator.GetBoneTransform(HumanBodyBones.Jaw);
+                if (sourceAnimator != null)
+                {
+                    animator = sourceAnimator;
+
+                    jaw = sourceAnimator.GetBoneTransform(HumanBodyBones.Jaw);
                     if (jaw != null)
                     {
                         jawHash = UMAUtils.StringToHash(jaw.name);
@@ -161,20 +202,20 @@ namespace UMA.PoseTools
                     else
                     {
                         // Try unmapped jaw name from expression set
-                        jaw = animator.transform.Find(expressionSet.UnmappedJawName);
+                       jaw = sourceAnimator.transform.Find(expressionSet.UnmappedJawName);
                         if (jaw != null)
                         {
                             jawHash = UMAUtils.StringToHash(jaw.name);
                         }
                     }
 
-                    neck = animator.GetBoneTransform(HumanBodyBones.Neck);
+                  neck = sourceAnimator.GetBoneTransform(HumanBodyBones.Neck);
 					if (neck != null)
 					{
 						neckHash = UMAUtils.StringToHash(neck.name);
 					}
 
-					head = animator.GetBoneTransform(HumanBodyBones.Head);
+                  head = sourceAnimator.GetBoneTransform(HumanBodyBones.Head);
 					if (head != null)
 					{
 						headHash = UMAUtils.StringToHash(head.name);
@@ -196,9 +237,33 @@ namespace UMA.PoseTools
         private void UmaData_OnCharacterUpdated(UMAData obj)
         {
 			umaData = obj;
+           if (_mainCameraTransform == null && Camera.main != null)
+            {
+                _mainCameraTransform = Camera.main.transform;
+            }
 			SetupBones();
-			animator = umaData.animator;
+            if (umaData != null)
+            {
+                animator = umaData.animator;
+            }
 			processing = true;
+        }
+
+        private void RemoveListeners()
+        {
+            if (avatar != null && EventsAdded)
+            {
+                avatar.CharacterBegun.RemoveListener(CharacterBegun);
+                avatar.CharacterUpdated.RemoveListener(UmaData_OnCharacterUpdated);
+                EventsAdded = false;
+            }
+
+            if (umaData != null && UmaEventsAdded)
+            {
+                umaData.CharacterBegun.RemoveListener(CharacterBegun);
+                umaData.CharacterUpdated.RemoveListener(UmaData_OnCharacterUpdated);
+                UmaEventsAdded = false;
+            }
         }
 
 		private void saveValues(float[] values)
@@ -229,6 +294,10 @@ namespace UMA.PoseTools
             if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).sqrMagnitude > (disableDistance * disableDistance))
             {
                 return;
+            }
+            if (_mainCameraTransform == null && Camera.main != null)
+            {
+                _mainCameraTransform = Camera.main.transform;
             }
 
             if (umaData == null || umaData.skeleton == null || umaData.skeleton.boneHashData.Count == 0)
@@ -305,6 +374,10 @@ namespace UMA.PoseTools
 			if (_mainCameraTransform != null && useDisableDistance && (_mainCameraTransform.position - transform.position).sqrMagnitude > (disableDistance * disableDistance))
             {
 				return;
+            }
+            if (_mainCameraTransform == null && Camera.main != null)
+            {
+                _mainCameraTransform = Camera.main.transform;
             }
 
 			if (enableSaccades)
@@ -440,7 +513,8 @@ namespace UMA.PoseTools
                 }
 
                 float saccadeMagnitude = Random.Range(0.01f, MaxSaccadeMagnitude);
-                float saccadeDistance = (-6.9f / eyeMovementRange) * Mathf.Log(saccadeMagnitude / 15.7f);
+               float movementRange = Mathf.Max(eyeMovementRange, 0.0001f);
+                float saccadeDistance = (-6.9f / movementRange) * Mathf.Log(saccadeMagnitude / 15.7f);
                 saccadeDuration = 0.021f + 0.0022f * saccadeDistance * eyeMovementRange;
                 saccadeProgress = 0f;
 

@@ -141,7 +141,7 @@ namespace UMA
         #region EventHandlers
         public void SetColor(string ColorName, OverlayColorData color)
         {
-            avatar.SetColor(ColorName, color, true);
+            avatar.SetRawColor(ColorName, color, true);
         }
 
         public void SetDNA(string DNAName, float value)

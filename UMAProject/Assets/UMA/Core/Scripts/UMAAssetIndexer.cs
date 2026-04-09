@@ -1959,6 +1959,80 @@ namespace UMA
             return TypeDic.ContainsKey(Name);
         }
 
+
+        public int LevenshteinDistance(string s1, string s2)
+        {
+            if (s1 == null) s1 = "";
+            if (s2 == null) s2 = "";
+            int len1 = s1.Length;
+            int len2 = s2.Length;
+            int[,] d = new int[len1 + 1, len2 + 1];
+            for (int i = 0; i <= len1; i++) d[i, 0] = i;
+            for (int j = 0; j <= len2; j++) d[0, j] = j;
+            for (int i = 1; i <= len1; i++)
+            {
+                for (int j = 1; j <= len2; j++)
+                {
+                    int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
+                    d[i, j] = Math.Min(Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost);
+                }
+            }
+            return d[len1, len2];
+        }
+
+        private float Similarity(string s1, string s2)
+        {
+            if (s1 == null || s2 == null)
+            {
+                return 0f;
+            }
+            int maxLength = Math.Max(s1.Length, s2.Length);
+            if (maxLength == 0)
+            {
+                return 1f; // Both strings are empty
+            }
+            if (s1.ToLower().Equals(s2.ToLower())) {
+                return 1f;
+            }
+            if (s2.StartsWith(s1, StringComparison.OrdinalIgnoreCase) || s1.StartsWith(s2, StringComparison.OrdinalIgnoreCase))
+            {
+                return 0.9f; // One string is a prefix of the other
+            }
+            if (s2.EndsWith(s1, StringComparison.OrdinalIgnoreCase) || s1.EndsWith(s2, StringComparison.OrdinalIgnoreCase))
+            {
+                return 0.9f; // One string is a suffix of the other
+            }
+
+            int distance = LevenshteinDistance(s1.ToLower(), s2.ToLower());
+            return 1f - (float)distance / maxLength;
+        }
+
+
+
+        public List<string> FindSimilar<T>(string Name, string possibleID)
+        {
+            List<string> returnval = new List<string>();
+            System.Type ot = typeof(T);
+            System.Type theType = TypeToLookup[ot];
+            Dictionary<string, AssetItem> TypeDic = GetAssetDictionary(theType);
+            foreach (string s in TypeDic.Keys)
+            {
+                if (Similarity(Name, s) > 0.8f)
+                {
+                    returnval.Add(s);
+                    continue;
+                }
+                string s1ID = Name.Replace(possibleID, "");
+                string s2ID = s.Replace(possibleID, "");
+                if (Similarity(s1ID, s2ID) > 0.8f)
+                {
+                    returnval.Add(s);
+                    continue;
+                }
+            }
+            return returnval;
+        }
+
         public bool HasAsset<T>(int NameHash)
         {
             System.Type ot = typeof(T);
@@ -4383,7 +4457,8 @@ namespace UMA
 
         private void AddType(string s, Type CurrentType, List<string> FolderFilter)
         {
-			bool logAdds = false;
+            bool ignoreBackups = UMASettings.IgnoreBackupFolders;
+            bool logAdds = false;
 
             string qualifiedName = CurrentType.AssemblyQualifiedName;
             bool removeUnlabeled = isRemoveUnlabelledType(qualifiedName);
@@ -4394,6 +4469,13 @@ namespace UMA
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
 
+                if (ignoreBackups)
+                {
+                    if (assetPath.ToLower().Contains("backup"))
+                    {
+                        continue;
+                    }
+                }
 
                 // IF we have filters
                 if (FolderFilter != null && FolderFilter.Count > 0)

@@ -426,6 +426,7 @@ namespace UMA
             DrawBoolProperty("showIndexedTypes", "Show Indexed Types", "If true, UMA will show all indexed types in the project window");
             DrawBoolProperty("showUnindexedTypes", "Show Unindexed Types", "If true, UMA will show all unindexed types in the project window");
 
+            DrawBoolProperty("ignoreBackupFolders", "Ignore Backup Folders", "If true, UMA will ignore any folders named 'Backup' when indexing assets. This can help prevent issues with automatic backup systems.");
             DrawBoolProperty("showWelcomeToUMA", "Show Welcome Window", "If true, UMA will show the welcome window when the project is loaded");
 
 

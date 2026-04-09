@@ -48,6 +48,7 @@ namespace UMA
         public bool useAddressables = false;
         public bool enableGLTFExport = false;
         public bool alwaysGetAddressables = true;
+        public bool ignoreBackupFolders = false;
 
 
         public bool addrUseSharedGroup = true;
@@ -238,6 +239,14 @@ namespace UMA
             }
         }
 
+        public static bool IgnoreBackupFolders
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                return settings.ignoreBackupFolders;
+            }
+        }
         public static bool AutoRepairIndex { get { var settings = GetOrCreateSettings(); return settings.autoRepairIndex; } }
         public static bool ShowIndexedTypes { get { var settings = GetOrCreateSettings(); return settings.showIndexedTypes; } }
         public static bool ShowUnindexedTypes { get { var settings = GetOrCreateSettings(); return settings.showUnindexedTypes; } }

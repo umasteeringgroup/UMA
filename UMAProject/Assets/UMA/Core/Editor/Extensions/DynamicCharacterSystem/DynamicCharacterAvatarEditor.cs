@@ -2381,6 +2381,10 @@ namespace UMA.CharacterSystem.Editors
 
         private int DoColorsGUI(SerializedProperty newCharacterColors, int n_origArraySize)
         {
+            if (thisDCA == null || thisDCA.characterColors == null)
+            {
+                return n_origArraySize;
+            }
             EditorGUI.BeginChangeCheck();
             int n_newArraySize;
             var charcol = thisDCA.characterColors._colors;
