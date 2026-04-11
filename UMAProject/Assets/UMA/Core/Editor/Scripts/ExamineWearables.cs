@@ -8,6 +8,7 @@ using UMA.PoseTools;
 using static UMA.UMAData;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace UMA.Editors
 {
@@ -30,6 +31,12 @@ internal class ExamineWearables : EditorWindow
 		private UMAMaterial _targetMaterial;
 		private string _matchText = "";
       private UMA.OverlayDataAsset _overlayToAdd;
+        private bool _utilitiesExpanded = false;
+		private bool _validateAssetsExpanded = false;
+		private string _validationFolder = "Assets";
+		private readonly List<AssetValidationIssue> _assetValidationIssues = new List<AssetValidationIssue>();
+        private int _lastValidatedRecipeCount;
+		private int _lastValidatedRecipesOkCount;
 		private bool _useSharedColorForAddedOverlay;
 		private string _sharedColorName = "NewSharedColor";
 		private int _sharedColorChannelCount = 3;
@@ -161,6 +168,7 @@ internal class ExamineWearables : EditorWindow
 
 			EditorGUILayout.Space(6);
 			DrawUtilitiesPanel();
+          DrawValidateAssetsPanel();
 			EditorGUILayout.BeginHorizontal();
 			DrawRecipesColumn();
 			GUILayout.Space(10);
@@ -187,7 +195,14 @@ internal class ExamineWearables : EditorWindow
 		private void DrawUtilitiesPanel()
 		{
 			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-			EditorGUILayout.LabelField("Utilities", EditorStyles.boldLabel);
+            _utilitiesExpanded = EditorGUILayout.Foldout(_utilitiesExpanded, "Utilities", true);
+			if (!_utilitiesExpanded)
+			{
+				EditorGUILayout.EndVertical();
+				EditorGUILayout.Space(6);
+				return;
+			}
+
 			EditorGUILayout.LabelField("Set UMAMaterial on slots and overlays based on overlay texture[0] name matching.", EditorStyles.wordWrappedLabel);
                 EditorGUILayout.BeginHorizontal();
 			_targetMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", _targetMaterial, typeof(UMAMaterial), false);
@@ -226,6 +241,41 @@ internal class ExamineWearables : EditorWindow
 				if (GUILayout.Button("Add overlay to first slot", GUILayout.Width(200), GUILayout.Height(24)))
 				{
 					AddOverlayToFirstSlot();
+				}
+			}
+			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.Space(6);
+		}
+
+		private void DrawValidateAssetsPanel()
+		{
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			_validateAssetsExpanded = EditorGUILayout.Foldout(_validateAssetsExpanded, "Validate Assets", true);
+			if (!_validateAssetsExpanded)
+			{
+				EditorGUILayout.EndVertical();
+				EditorGUILayout.Space(6);
+				return;
+			}
+
+			EditorGUILayout.HelpBox("Use this validation to ensure that all assets assigned to the recipe - slots, prefabs, overlays, textures, MeshHideAssets, MeshModifiers, are under the folder specified.", MessageType.Info);
+			EditorGUILayout.BeginHorizontal();
+			_validationFolder = EditorGUILayout.TextField("Folder", _validationFolder);
+			if (GUILayout.Button("Browse", GUILayout.Width(80)))
+			{
+				BrowseValidationFolder();
+			}
+			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
+			using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_validationFolder)))
+			{
+				if (GUILayout.Button("Validate Assets", GUILayout.Width(160), GUILayout.Height(24)))
+				{
+					ValidateAssetsAgainstFolder();
 				}
 			}
 			EditorGUILayout.EndHorizontal();
@@ -505,6 +555,204 @@ internal class ExamineWearables : EditorWindow
 				}
 				return true;
             }
+
+		private void BrowseValidationFolder()
+		{
+			string initialPath = Application.dataPath;
+			string normalizedFolder = NormalizeValidationFolder(_validationFolder);
+			if (!string.IsNullOrEmpty(normalizedFolder) && normalizedFolder.StartsWith("Assets", System.StringComparison.OrdinalIgnoreCase))
+			{
+				initialPath = Path.Combine(Directory.GetParent(Application.dataPath).FullName, normalizedFolder);
+			}
+
+			string selectedFolder = EditorUtility.OpenFolderPanel("Select Validation Folder", initialPath, string.Empty);
+			if (string.IsNullOrEmpty(selectedFolder))
+			{
+				return;
+			}
+
+			string projectAssetsPath = Application.dataPath.Replace('\\', '/');
+			string normalizedSelectedFolder = selectedFolder.Replace('\\', '/');
+			if (!normalizedSelectedFolder.StartsWith(projectAssetsPath, System.StringComparison.OrdinalIgnoreCase))
+			{
+				EditorUtility.DisplayDialog("Validate Assets", "Please choose a folder under Assets.", "OK");
+				return;
+			}
+
+			_validationFolder = "Assets" + normalizedSelectedFolder.Substring(projectAssetsPath.Length);
+		}
+
+		private void ValidateAssetsAgainstFolder()
+		{
+			string folder = NormalizeValidationFolder(_validationFolder);
+			if (string.IsNullOrEmpty(folder) || !folder.StartsWith("Assets", System.StringComparison.OrdinalIgnoreCase))
+			{
+				EditorUtility.DisplayDialog("Validate Assets", "Enter a folder under Assets.", "OK");
+				return;
+			}
+
+			_assetValidationIssues.Clear();
+            _lastValidatedRecipeCount = 0;
+			_lastValidatedRecipesOkCount = 0;
+			for (int i = 0; i < _recipes.Count; i++)
+			{
+              UMAWardrobeRecipe recipe = _recipes[i];
+				if (recipe == null)
+				{
+					continue;
+				}
+
+				_lastValidatedRecipeCount++;
+				int issuesBefore = _assetValidationIssues.Count;
+				ValidateRecipeAssets(recipe, folder, _assetValidationIssues);
+				if (_assetValidationIssues.Count == issuesBefore)
+				{
+					_lastValidatedRecipesOkCount++;
+				}
+			}
+
+			if (_assetValidationIssues.Count == 0)
+			{
+              EditorUtility.DisplayDialog("Validate Assets", "All Assets are under the folder specified\n\nRecipes inspected: " + _lastValidatedRecipeCount + "\nRecipes OK: " + _lastValidatedRecipesOkCount, "OK");
+				return;
+			}
+
+          AssetValidationResultsWindow.Open(_assetValidationIssues, _lastValidatedRecipeCount, _lastValidatedRecipesOkCount);
+		}
+
+		private void ValidateRecipeAssets(UMAWardrobeRecipe recipe, string folder, List<AssetValidationIssue> issues)
+		{
+			if (recipe == null)
+			{
+				return;
+			}
+
+			for (int i = 0; i < recipe.MeshHideAssets.Count; i++)
+			{
+				AddAssetIssue(recipe, recipe.MeshHideAssets[i], "MeshHideAsset", folder, issues);
+			}
+
+			for (int i = 0; i < recipe.MeshModifiers.Count; i++)
+			{
+				AddAssetIssue(recipe, recipe.MeshModifiers[i], "MeshModifier", folder, issues);
+			}
+
+			var umaRecipe = new UMA.UMAData.UMARecipe();
+			try
+			{
+				recipe.Load(umaRecipe, true);
+			}
+			catch
+			{
+				return;
+			}
+
+			if (umaRecipe.slotDataList == null)
+			{
+				return;
+			}
+
+			for (int s = 0; s < umaRecipe.slotDataList.Length; s++)
+			{
+				SlotData slot = umaRecipe.slotDataList[s];
+				if (slot == null)
+				{
+					continue;
+				}
+
+				SlotDataAsset slotAsset = slot.asset;
+				AddAssetIssue(recipe, slotAsset, "Slot", folder, issues);
+				if (slotAsset != null)
+				{
+                  AddAssetIssue(recipe, slotAsset.SlotObject, "Prefab", folder, issues);
+				}
+
+				for (int o = 0; o < slot.OverlayCount; o++)
+				{
+					OverlayData overlay = slot.GetOverlay(o);
+					if (overlay == null)
+					{
+						continue;
+					}
+
+					OverlayDataAsset overlayAsset = overlay.asset;
+					AddAssetIssue(recipe, overlayAsset, "Overlay", folder, issues);
+					if (overlayAsset == null || overlayAsset.textureList == null)
+					{
+						continue;
+					}
+
+					for (int t = 0; t < overlayAsset.textureList.Length; t++)
+					{
+						AddAssetIssue(recipe, overlayAsset.textureList[t], "Texture", folder, issues);
+					}
+				}
+			}
+		}
+
+		private static void AddAssetIssue(UMAWardrobeRecipe recipe, Object asset, string assetType, string folder, List<AssetValidationIssue> issues)
+		{
+			if (asset == null)
+			{
+				return;
+			}
+
+			string assetPath = AssetDatabase.GetAssetPath(asset);
+			if (string.IsNullOrEmpty(assetPath) || IsPathUnderFolder(assetPath, folder))
+			{
+				return;
+			}
+
+			issues.Add(new AssetValidationIssue
+			{
+               Recipe = recipe,
+				RecipeName = recipe != null ? recipe.name : string.Empty,
+				Asset = asset,
+				AssetType = assetType,
+				Location = assetPath
+			});
+		}
+
+		private static bool IsPathUnderFolder(string assetPath, string folder)
+		{
+			string normalizedFolder = NormalizeValidationFolder(folder);
+			string normalizedAssetPath = NormalizeValidationFolder(assetPath);
+			if (string.IsNullOrEmpty(normalizedFolder) || string.IsNullOrEmpty(normalizedAssetPath))
+			{
+				return false;
+			}
+
+			if (string.Equals(normalizedAssetPath, normalizedFolder, System.StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+
+			return normalizedAssetPath.StartsWith(normalizedFolder + "/", System.StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static string NormalizeValidationFolder(string folder)
+		{
+			if (string.IsNullOrEmpty(folder))
+			{
+				return string.Empty;
+			}
+
+			string normalized = folder.Replace('\\', '/').Trim();
+			while (normalized.EndsWith("/", System.StringComparison.Ordinal) && normalized.Length > 1)
+			{
+				normalized = normalized.Substring(0, normalized.Length - 1);
+			}
+			return normalized;
+		}
+
+      internal class AssetValidationIssue
+		{
+           public UMAWardrobeRecipe Recipe;
+			public string RecipeName;
+			public Object Asset;
+			public string AssetType;
+			public string Location;
+		}
 
             private void DrawRecipesColumn()
 			{
@@ -957,6 +1205,111 @@ internal class ExamineWearables : EditorWindow
 					Close();
 				}
 				EditorGUILayout.EndHorizontal();
+			}
+		}
+
+		internal class AssetValidationResultsWindow : EditorWindow
+		{
+			private readonly List<AssetValidationIssue> _issues = new List<AssetValidationIssue>();
+			private Vector2 _scroll;
+			private Object _pendingInspectTarget;
+			private int _validatedRecipeCount;
+			private int _validatedRecipesOkCount;
+
+          internal static void Open(List<AssetValidationIssue> issues, int validatedRecipeCount, int validatedRecipesOkCount)
+			{
+				var window = CreateInstance<AssetValidationResultsWindow>();
+				window.titleContent = new GUIContent("Asset Validation");
+				window.minSize = new Vector2(760f, 360f);
+				window._issues.Clear();
+				if (issues != null)
+				{
+					window._issues.AddRange(issues);
+				}
+               window._validatedRecipeCount = validatedRecipeCount;
+				window._validatedRecipesOkCount = validatedRecipesOkCount;
+				window.ShowUtility();
+				window.Focus();
+			}
+
+			private void OnGUI()
+			{
+				EditorGUILayout.HelpBox("Some assets are outside the specified folder.", MessageType.Warning);
+               EditorGUILayout.LabelField("Recipes inspected", _validatedRecipeCount.ToString());
+				EditorGUILayout.LabelField("Recipes OK", _validatedRecipesOkCount.ToString());
+				EditorGUILayout.Space(4);
+				_scroll = EditorGUILayout.BeginScrollView(_scroll, GUILayout.ExpandHeight(true));
+				for (int i = 0; i < _issues.Count; i++)
+				{
+					AssetValidationIssue issue = _issues[i];
+					if (issue == null)
+					{
+						continue;
+					}
+
+					EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+					EditorGUILayout.LabelField("Recipe", issue.RecipeName ?? string.Empty);
+					EditorGUILayout.LabelField("Asset", issue.Asset != null ? issue.Asset.name : "<missing>");
+					EditorGUILayout.LabelField("Type", issue.AssetType ?? string.Empty);
+					EditorGUILayout.LabelField("Location", issue.Location ?? string.Empty, EditorStyles.wordWrappedLabel);
+					EditorGUILayout.BeginHorizontal();
+                        using (new EditorGUI.DisabledScope(issue.Recipe == null))
+						{
+							if (GUILayout.Button("Inspect Recipe", GUILayout.Width(120), GUILayout.Height(22)))
+							{
+								QueueInspect(issue.Recipe);
+							}
+						}
+						using (new EditorGUI.DisabledScope(issue.Asset == null))
+						{
+                         if (GUILayout.Button("Inspect", GUILayout.Width(100), GUILayout.Height(22)))
+							{
+								QueueInspect(issue.Asset);
+							}
+							if (GUILayout.Button("Fix It", GUILayout.Width(100), GUILayout.Height(22)))
+							{
+								EditorGUIUtility.PingObject(issue.Asset);
+							}
+						}
+                        GUILayout.FlexibleSpace();
+					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.EndVertical();
+				}
+				EditorGUILayout.EndScrollView();
+
+				EditorGUILayout.Space(8);
+				EditorGUILayout.BeginHorizontal();
+					GUILayout.FlexibleSpace();
+					if (GUILayout.Button("Close", GUILayout.Width(120), GUILayout.Height(24)))
+					{
+						Close();
+					}
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void QueueInspect(Object target)
+			{
+				if (target == null)
+				{
+					return;
+				}
+
+				_pendingInspectTarget = target;
+				EditorApplication.delayCall -= DelayedInspect;
+				EditorApplication.delayCall += DelayedInspect;
+			}
+
+			private void DelayedInspect()
+			{
+				EditorApplication.delayCall -= DelayedInspect;
+				if (_pendingInspectTarget == null)
+				{
+					return;
+				}
+
+				Object target = _pendingInspectTarget;
+				_pendingInspectTarget = null;
+				UMA.InspectorUtlity.InspectTarget(target);
 			}
 		}
 	}
