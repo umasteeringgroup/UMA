@@ -141,11 +141,12 @@ namespace UMA
 			{
 				return;
             }
-            if (!meshModifiers.ContainsKey(modifier.SlotName))
+          string slotKey = modifier.SlotName;
+			if (!meshModifiers.ContainsKey(slotKey))
             {
-                meshModifiers.Add(modifier.SlotName, new List<MeshModifier.Modifier>());
+                meshModifiers.Add(slotKey, new List<MeshModifier.Modifier>());
             }
-            meshModifiers[modifier.SlotName].Add(modifier);
+            meshModifiers[slotKey].Add(modifier);
         }
 
 		public void AddMeshModifiers(UMATextRecipe recipe)
@@ -188,25 +189,32 @@ namespace UMA
                     accumulatedModifiers.Add(kvp.Key, new List<MeshModifier.Modifier>());
                 }
 				List<MeshModifier.Modifier> mods = kvp.Value;
-				//Debug.Log("There are " + mods.Count + " modifiers for slot " + kvp.Key);	
+				Debug.Log($"There are {mods.Count} modifiers for slot {kvp.Key}");	
                 if (mods.Count > 0)
 				{
 					var modifier = mods[0];
 					var adj = modifier.adjustments;
 					var va = modifier.adjustments.vertexAdjustments;
-					//Debug.Log("Adding " + va.Count + " vertex adjustments for slot " + kvp.Key);	
+					Debug.Log($"Adding {va.Count} vertex adjustments for slot {kvp.Key}");	
                 }
-
+				
                 accumulatedModifiers[kvp.Key].AddRange(kvp.Value);
             }
 #if UNITY_EDITOR
             foreach (var m in _manualMeshModifiers)
             {
-                if (!accumulatedModifiers.ContainsKey(m.SlotName))
+                if (m == null || string.IsNullOrEmpty(m.SlotName))
+				{
+					continue;
+				}
+
+				if (!accumulatedModifiers.ContainsKey(m.SlotName))
                 {
                     accumulatedModifiers.Add(m.SlotName, new List<MeshModifier.Modifier>());
                 }
-                accumulatedModifiers[m.SlotName].Add(m);
+				Debug.Log($"Adding manual modifier {m.ModifierName} for slot {m.SlotName}. There are currently {accumulatedModifiers[m.SlotName].Count} modifiers.");
+				accumulatedModifiers[m.SlotName].Add(m);
+				Debug.Log($"After adding {m.ModifierName}, there are now {accumulatedModifiers[m.SlotName].Count} modifiers for slot {m.SlotName}.");
             }
 #endif
 
@@ -221,7 +229,8 @@ namespace UMA
 				if (accumulatedModifiers.ContainsKey(slot.asset.sourceSlot))
 				{
 					var modifiers = accumulatedModifiers[slot.asset.sourceSlot];
-                    slot.meshModifiers.AddRange(modifiers);
+					Debug.Log($"Adding {modifiers.Count} modifiers to slot {slot.asset.slotName}");
+                        slot.meshModifiers.AddRange(modifiers);
                 }
             }
 			

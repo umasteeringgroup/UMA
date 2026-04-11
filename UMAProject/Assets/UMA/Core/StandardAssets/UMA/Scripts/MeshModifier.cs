@@ -326,7 +326,7 @@ namespace UMA
             foreach (var mod in RuntimeModifiers)
             {
                 // TODO: remove this check, it should be done in the editor.
-                if (mod.SlotName == Slot)
+                if (string.Equals(mod.SlotName, Slot, StringComparison.OrdinalIgnoreCase))
                 {
                     return mod.Process(Src);
                 }

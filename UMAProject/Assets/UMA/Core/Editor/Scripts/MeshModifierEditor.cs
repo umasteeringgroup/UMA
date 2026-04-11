@@ -8,6 +8,7 @@ using UMA.CharacterSystem;
 using UMA.Editors;
 using System;
 using System.Xml.Serialization;
+using UnityEditor.Embree;
 
 #if UMA_BURSTCOMPILE
 using Unity.Burst;
@@ -256,6 +257,7 @@ namespace UMA
                 }
 
                 HydrateAdHocAdjustmentsFromEditorModifiers();
+                NormalizeLoadedModifiersToSourceSlots();
 
                 // Debug: Log state after hydration
                 Debug.Log($"[MeshModifierEditor.Setup] After hydration: Modifiers.Count={Modifiers.Count}");
@@ -273,6 +275,116 @@ namespace UMA
             unselectedButton.normal.background = new Texture2D(1, 1);
             unselectedButton.normal.background.SetPixel(0, 0, Color.white);
             unselectedButton.normal.background.Apply();
+        }
+
+        private string GetModifierSlotKey(SlotData slot)
+        {
+            if (slot == null)
+            {
+                return string.Empty;
+            }
+
+            if (slot.asset != null && !string.IsNullOrEmpty(slot.asset.sourceSlot))
+            {
+                return slot.asset.sourceSlot;
+            }
+
+            return slot.slotName;
+        }
+
+        private string NormalizeModifierSlotKey(string slotKey)
+        {
+            if (string.IsNullOrEmpty(slotKey))
+            {
+                return string.Empty;
+            }
+
+            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
+            {
+                return slotKey;
+            }
+
+            for (int i = 0; i < thisDCA.umaData.umaRecipe.slotDataList.Length; i++)
+            {
+                SlotData slot = thisDCA.umaData.umaRecipe.slotDataList[i];
+                if (slot == null || slot.asset == null)
+                {
+                    continue;
+                }
+
+                string sourceSlot = slot.asset.sourceSlot;
+                if (string.Equals(sourceSlot, slotKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    return sourceSlot;
+                }
+
+                if (string.Equals(slot.slotName, slotKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    return sourceSlot;
+                }
+            }
+
+            return slotKey;
+        }
+
+        private SlotData FindSlotByModifierSlotKey(string slotKey)
+        {
+            if (string.IsNullOrEmpty(slotKey) || thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
+            {
+                return null;
+            }
+
+            string normalizedKey = NormalizeModifierSlotKey(slotKey);
+            for (int i = 0; i < thisDCA.umaData.umaRecipe.slotDataList.Length; i++)
+            {
+                SlotData slot = thisDCA.umaData.umaRecipe.slotDataList[i];
+                if (slot == null)
+                {
+                    continue;
+                }
+
+                string slotSource = GetModifierSlotKey(slot);
+                if (string.Equals(slotSource, normalizedKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    return slot;
+                }
+            }
+
+            return null;
+        }
+
+        private void NormalizeLoadedModifiersToSourceSlots()
+        {
+            if (Modifiers == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < Modifiers.Count; i++)
+            {
+                MeshModifier.Modifier modifier = Modifiers[i];
+                if (modifier == null)
+                {
+                    continue;
+                }
+
+                modifier.SlotName = NormalizeModifierSlotKey(modifier.SlotName);
+                if (modifier.adjustments == null || modifier.adjustments.vertexAdjustments == null)
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < modifier.adjustments.vertexAdjustments.Count; j++)
+                {
+                    VertexAdjustment adjustment = modifier.adjustments.vertexAdjustments[j];
+                    if (adjustment == null)
+                    {
+                        continue;
+                    }
+
+                    adjustment.slotName = NormalizeModifierSlotKey(adjustment.slotName);
+                }
+            }
         }
         
         private bool IncludeAdHocAdjustments = true;
@@ -553,13 +665,21 @@ namespace UMA
                         continue;
                     }
 
-                    string key = adjustment.slotName + ":" + adjustment.GetType().AssemblyQualifiedName;
+                    string normalizedSlot = NormalizeModifierSlotKey(adjustment.slotName);
+                    if (string.IsNullOrEmpty(normalizedSlot))
+                    {
+                        continue;
+                    }
+
+                    adjustment.slotName = normalizedSlot;
+
+                    string key = normalizedSlot + ":" + adjustment.GetType().AssemblyQualifiedName;
                     if (!adHocStacks.ContainsKey(key))
                     {
                         MeshModifier.Modifier adHocModifier = new MeshModifier.Modifier();
                         adHocModifier.manuallyModified = true;
                         adHocModifier.keepAsIs = false;
-                        adHocModifier.SlotName = adjustment.slotName;
+                        adHocModifier.SlotName = normalizedSlot;
                         adHocModifier.ModifierName = "Ad-hoc " + adjustment.Name;
                         adHocModifier.DNAName = string.Empty;
                         adHocModifier.Scale = 1.0f;
@@ -694,8 +814,12 @@ namespace UMA
                 {
                     if (slot != null)
                     {
-                        blendShapeSlots.Add(slot.slotName);
-                        blendShapeSlotSelected.Add(false);
+                        string slotKey = GetModifierSlotKey(slot);
+                        if (!blendShapeSlots.Contains(slotKey))
+                        {
+                            blendShapeSlots.Add(slotKey);
+                            blendShapeSlotSelected.Add(false);
+                        }
                     }
                 }
                 var dnaList = thisDCA.activeRace.data.GetDNANames();
@@ -794,6 +918,10 @@ namespace UMA
                 SlotData sd = thisDCA.umaData.umaRecipe.GetSlot(strSlot);
                 if (sd == null)
                 {
+                    sd = FindSlotByModifierSlotKey(strSlot);
+                }
+                if (sd == null)
+                {
                     // ??
                     continue;
                 }
@@ -841,7 +969,7 @@ namespace UMA
                     newMod.ModifierName = blendShapeName;
                     newMod.DNAName = dnaName;
                     newMod.Scale = 1.0f;
-                    newMod.SlotName = strSlot;
+                    newMod.SlotName = NormalizeModifierSlotKey(strSlot);
                     newMod.keepAsIs = true;
                     newMod.adjustments = new VertexBlendshapeAdjustmentCollection();
                     newMod.TemplateAdjustment = new VertexBlendshapeAdjustment();
@@ -851,7 +979,7 @@ namespace UMA
                         {
                             VertexBlendshapeAdjustment vba = new VertexBlendshapeAdjustment();
                             vba.vertexIndex = i;
-                            vba.slotName = strSlot;
+                            vba.slotName = NormalizeModifierSlotKey(strSlot);
                             vba.vertexIndex = i;
                             vba.delta = frame.deltaVertices[i];
 
@@ -1054,7 +1182,7 @@ namespace UMA
         {
             VertexAdjustment va = collection.Create();
             va.vertexIndex = selectedVertex.vertexIndexOnSlot;
-            va.slotName = selectedVertex.slot.slotName;
+            va.slotName = GetModifierSlotKey(selectedVertex.slot);
             va.active = true;
             va.Init(selectedVertex.slot.asset.meshData);
             return va;
@@ -1291,7 +1419,8 @@ namespace UMA
                     continue;
                 }
 
-                string key = va.slotName;
+                string key = NormalizeModifierSlotKey(va.slotName);
+                va.slotName = key;
                 MeshModifier.Modifier newMod = null;
                 foreach (MeshModifier.Modifier mod in target)
                 {
@@ -1399,7 +1528,7 @@ namespace UMA
                 {
                     continue;
                 }
-                if (va.slotName == vs.slot.slotName && va.vertexIndex == vs.vertexIndexOnSlot)
+                if (va.slotName == GetModifierSlotKey(vs.slot) && va.vertexIndex == vs.vertexIndexOnSlot)
                 {
                     va.active = false;
                 }
@@ -1458,6 +1587,180 @@ namespace UMA
             }
         }
 
+        private bool ContainsVertex(MeshModifier.Modifier modifier, string slotKey, int vertexIndex)
+        {
+            if (modifier == null || modifier.adjustments == null || modifier.adjustments.vertexAdjustments == null)
+            {
+                return false;
+            }
+
+            string normalizedSlot = NormalizeModifierSlotKey(slotKey);
+            for (int i = 0; i < modifier.adjustments.vertexAdjustments.Count; i++)
+            {
+                VertexAdjustment existing = modifier.adjustments.vertexAdjustments[i];
+                if (existing == null)
+                {
+                    continue;
+                }
+
+                if (existing.vertexIndex == vertexIndex && string.Equals(existing.slotName, normalizedSlot, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void EditCurrentModifier(MeshModifier.Modifier modifier)
+        {
+            if (modifier == null || modifier.adjustments == null || modifier.adjustments.vertexAdjustments == null || vertexEditorStage == null)
+            {
+                return;
+            }
+
+            List<VertexEditorStage.VertexSelection> selections = new List<VertexEditorStage.VertexSelection>();
+            for (int i = 0; i < modifier.adjustments.vertexAdjustments.Count; i++)
+            {
+                VertexAdjustment adjustment = modifier.adjustments.vertexAdjustments[i];
+                if (adjustment == null || string.IsNullOrEmpty(adjustment.slotName))
+                {
+                    continue;
+                }
+
+                SlotData slot = FindSlotByModifierSlotKey(adjustment.slotName);
+                if (slot == null)
+                {
+                    continue;
+                }
+
+                selections.Add(new VertexEditorStage.VertexSelection()
+                {
+                    slot = slot,
+                    vertexIndexOnSlot = adjustment.vertexIndex,
+                    WorldPosition = vertexEditorStage.GetWorldPosition(slot, adjustment.vertexIndex),
+                    isActive = true,
+                    suppressed = false
+                });
+            }
+
+            vertexEditorStage.SetVertexSelections(selections);
+            SceneView.RepaintAll();
+            FocusCurrentModifier(modifier);
+        }
+
+        private void FocusCurrentModifier(MeshModifier.Modifier modifier)
+        {
+            if (modifier == null || modifier.adjustments == null || modifier.adjustments.vertexAdjustments == null || vertexEditorStage == null)
+            {
+                return;
+            }
+
+            SceneView sceneView = vertexEditorStage.openedSceneView;
+            if (sceneView == null)
+            {
+                sceneView = SceneView.lastActiveSceneView;
+            }
+            if (sceneView == null)
+            {
+                return;
+            }
+
+            Vector3 centroid = Vector3.zero;
+            int count = 0;
+            float maxDistance = 0f;
+            List<Vector3> positions = new List<Vector3>();
+
+            for (int i = 0; i < modifier.adjustments.vertexAdjustments.Count; i++)
+            {
+                VertexAdjustment adjustment = modifier.adjustments.vertexAdjustments[i];
+                if (adjustment == null || string.IsNullOrEmpty(adjustment.slotName))
+                {
+                    continue;
+                }
+
+                SlotData slot = FindSlotByModifierSlotKey(adjustment.slotName);
+                if (slot == null)
+                {
+                    continue;
+                }
+
+                Vector3 worldPosition = vertexEditorStage.GetWorldPosition(slot, adjustment.vertexIndex);
+                positions.Add(worldPosition);
+                centroid += worldPosition;
+                count++;
+            }
+
+            if (count == 0)
+            {
+                return;
+            }
+
+            centroid /= count;
+            for (int i = 0; i < positions.Count; i++)
+            {
+                float distance = Vector3.Distance(centroid, positions[i]);
+                if (distance > maxDistance)
+                {
+                    maxDistance = distance;
+                }
+            }
+
+            sceneView.pivot = centroid;
+            if (maxDistance > 0f)
+            {
+                sceneView.size = Mathf.Max(maxDistance * 2.5f, 0.05f);
+            }
+            sceneView.Repaint();
+            SceneView.RepaintAll();
+        }
+
+        private int AddActiveVerticesToCurrentModifier(MeshModifier.Modifier modifier)
+        {
+            if (modifier == null || modifier.adjustments == null || vertexEditorStage == null)
+            {
+                return 0;
+            }
+
+            int added = 0;
+            List<VertexEditorStage.VertexSelection> selectedVertexes = vertexEditorStage.GetActiveSelectedVertexes();
+            for (int i = 0; i < selectedVertexes.Count; i++)
+            {
+                VertexEditorStage.VertexSelection selection = selectedVertexes[i];
+                if (selection == null || selection.slot == null)
+                {
+                    continue;
+                }
+
+                string slotKey = GetModifierSlotKey(selection.slot);
+                if (ContainsVertex(modifier, slotKey, selection.vertexIndexOnSlot))
+                {
+                    continue;
+                }
+
+                VertexAdjustment adjustment = CreateVertexAdjustment(selection, modifier.adjustments);
+                if (modifier.TemplateAdjustment != null)
+                {
+                    adjustment.CopyFrom(modifier.TemplateAdjustment);
+                }
+                adjustment.active = false;
+                modifier.adjustments.Add(adjustment);
+                added++;
+            }
+
+            return added;
+        }
+
+        private void ClearCurrentModifier(MeshModifier.Modifier modifier)
+        {
+            if (modifier == null || modifier.adjustments == null || modifier.adjustments.vertexAdjustments == null)
+            {
+                return;
+            }
+
+            modifier.adjustments.vertexAdjustments.Clear();
+        }
+
 
         private Vector2 ModifierScrollPos = Vector2.zero;
 
@@ -1500,6 +1803,10 @@ namespace UMA
                 for (int i = 0; i < theCollection.vertexAdjustments.Count; i++)
                 {
                     SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(theCollection.vertexAdjustments[i].slotName);
+                    if (slot == null)
+                    {
+                        slot = FindSlotByModifierSlotKey(theCollection.vertexAdjustments[i].slotName);
+                    }
                     if (slot == null)
                     {
                         continue;
@@ -1644,12 +1951,82 @@ namespace UMA
             }
 
             EditorGUILayout.LabelField("Mesh Modifier Collections", centeredLabel);
+            EditorGUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(currentModifier == null || currentModifier.adjustments == null))
+            {
+                if (GUILayout.Button("Edit Current"))
+                {
+                    RegisterUndoSnapshot("Edit Current Modifier Vertices");
+                    EditCurrentModifier(currentModifier);
+                    MarkEditorStateDirty();
+                }
+                if (GUILayout.Button("Focus"))
+                {
+                    FocusCurrentModifier(currentModifier);
+                }
+                if (GUILayout.Button("Add to Current"))
+                {
+                    RegisterUndoSnapshot("Add Active Vertices To Current Modifier");
+                    if (AddActiveVerticesToCurrentModifier(currentModifier) > 0)
+                    {
+                        MarkEditorStateDirty(true);
+                        if (RebuildOnChanges)
+                        {
+                            DoCharacterRebuildWithActiveBulkModifier(currentModifier);
+                        }
+                    }
+                }
+                if (GUILayout.Button("Replace Current"))
+                {
+                    RegisterUndoSnapshot("Replace Current Modifier Vertices");
+                    ClearCurrentModifier(currentModifier);
+                    AddActiveVerticesToCurrentModifier(currentModifier);
+                    MarkEditorStateDirty(true);
+                    if (RebuildOnChanges)
+                    {
+                        DoCharacterRebuildWithActiveBulkModifier(currentModifier);
+                    }
+                }
+                if (GUILayout.Button("Clear Current"))
+                {
+                    RegisterUndoSnapshot("Clear Current Modifier Vertices");
+                    ClearCurrentModifier(currentModifier);
+                    MarkEditorStateDirty(true);
+                    if (RebuildOnChanges)
+                    {
+                        DoCharacterRebuildWithActiveBulkModifier(currentModifier);
+                    }
+                }
+            }
+            EditorGUILayout.EndHorizontal();
 
             ModifierScrollPos = EditorGUILayout.BeginScrollView(ModifierScrollPos);
             int deleteMe = -1;
             for (int i = 0; i < Modifiers.Count; i++)
             {
                 MeshModifier.Modifier mod = Modifiers[i];
+                if (mod == null)
+                {
+                    GUILayout.Label("<Null>", GUILayout.Width(64));
+                    continue;
+                }
+                if (mod.TemplateAdjustment == null)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("<Null Tmp>", GUILayout.Width(64));
+                    GUILayout.Label(mod.ModifierName ?? "<Null Name>", EditorStyles.miniButtonMid, GUILayout.ExpandWidth(true));
+                    if (GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
+                    {
+                        RegisterUndoSnapshot("Remove Bulk Modifier");
+                        deleteMe = i;
+                    }
+                    GUILayout.EndHorizontal();
+                    continue;
+                }
+                if (mod.ModifierName == null)
+                {
+                    mod.ModifierName = "Unnamed Modifier";
+                }
                 GUILayout.BeginHorizontal();
                 if (i == currentModifierIndex)
                 {
@@ -1659,13 +2036,15 @@ namespace UMA
                 {
                     GUILayout.Label(" ", GUILayout.Width(64));
                 }
-                if (GUILayout.Button($"{mod.TemplateAdjustment.Name}:{mod.ModifierName}", EditorStyles.miniButtonMid, GUILayout.ExpandWidth(true)))
-                {
+
+                    if (GUILayout.Button($"{mod.TemplateAdjustment.Name}:{mod.ModifierName}", EditorStyles.miniButtonMid, GUILayout.ExpandWidth(true)))
+                    {
+                    // todo: Transfer all of these vertexes to the current selection in the vertex editor stage
                     RegisterUndoSnapshot("Select Bulk Modifier");
-                    currentModifierIndex = i;
-                    MarkEditorStateDirty();
-                    Repaint();
-                }
+                        currentModifierIndex = i;
+                        MarkEditorStateDirty();
+                        Repaint();
+                    }
                 if (GUILayout.Button("Inspect", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
                 {
                     OpenModifierInspector(i);
@@ -1800,14 +2179,27 @@ namespace UMA
                 {
                     if (slot != null && slot.asset != null && slot.asset.meshData != null)
                     {
-                        addSlots.Add(slot);
+                        string slotKey = owner.GetModifierSlotKey(slot);
+                        bool exists = false;
+                        for (int i = 0; i < addSlots.Count; i++)
+                        {
+                            if (owner.GetModifierSlotKey(addSlots[i]) == slotKey)
+                            {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (!exists)
+                        {
+                            addSlots.Add(slot);
+                        }
                     }
                 }
 
                 addSlotNames = new string[addSlots.Count];
                 for (int i = 0; i < addSlots.Count; i++)
                 {
-                    addSlotNames[i] = addSlots[i].slotName;
+                    addSlotNames[i] = owner.GetModifierSlotKey(addSlots[i]);
                 }
 
                 if (addSlotIndex >= addSlotNames.Length)
@@ -1818,10 +2210,11 @@ namespace UMA
 
             private bool ContainsVertex(MeshModifier.Modifier modifier, string slotName, int vertexIndex)
             {
+                string normalizedSlot = owner.NormalizeModifierSlotKey(slotName);
                 for (int i = 0; i < modifier.adjustments.vertexAdjustments.Count; i++)
                 {
                     VertexAdjustment existing = modifier.adjustments.vertexAdjustments[i];
-                    if (existing.slotName == slotName && existing.vertexIndex == vertexIndex)
+                    if (existing.slotName == normalizedSlot && existing.vertexIndex == vertexIndex)
                     {
                         return true;
                     }
@@ -1841,13 +2234,14 @@ namespace UMA
                     return false;
                 }
 
-                if (ContainsVertex(modifier, slot.slotName, vertexIndex))
+                string slotKey = owner.GetModifierSlotKey(slot);
+                if (ContainsVertex(modifier, slotKey, vertexIndex))
                 {
                     return false;
                 }
 
                 VertexAdjustment newAdjustment = modifier.adjustments.Create();
-                newAdjustment.slotName = slot.slotName;
+                newAdjustment.slotName = slotKey;
                 newAdjustment.vertexIndex = vertexIndex;
                 newAdjustment.active = false;
                 newAdjustment.Init(slot.asset.meshData);

@@ -15,10 +15,10 @@ MonoBehaviour:
   channelCount: 2
   sharedColorName: Eyes
   colors:
-  - name: Black
+  - name: Eyes
     channelMask:
-    - {r: 0, g: 0, b: 0, a: 1}
-    - {r: 0.6226415, g: 0.050907757, b: 0.050907757, a: 0}
+    - {r: 0.35220122, g: 0.35220122, b: 0.35220122, a: 1}
+    - {r: 1, g: 1, b: 1, a: 0}
     channelAdditiveMask:
     - {r: 0, g: 0, b: 0, a: 0}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -38,12 +38,12 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 0, g: 0, b: 0, a: 1}
-  - name: Brown
+  - name: Eyes
     channelMask:
-    - {r: 0.0754717, g: 0.032021612, b: 0.018986585, a: 1}
+    - {r: 0.4716981, g: 0.15413252, b: 0.06971635, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
     channelAdditiveMask:
-    - {r: 0.1509434, g: 0.050817113, b: 0, a: 0}
+    - {r: 0.42767292, g: 0.1613506, b: 0.022862988, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
@@ -61,12 +61,12 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 0.2830189, g: 0.11982255, b: 0.0026699454, a: 1}
-  - name: Amber
+  - name: Eyes
     channelMask:
-    - {r: 0.33962262, g: 0.10086161, b: 0, a: 1}
+    - {r: 0.67295593, g: 0.41380107, b: 0.25182936, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
     channelAdditiveMask:
-    - {r: 0.26415092, g: 0.12033286, b: 0.020766526, a: 0}
+    - {r: 0.15723258, g: 0.15574925, b: 0.15574925, a: 0}
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
@@ -81,15 +81,15 @@ MonoBehaviour:
     colorsExpanded: 1
     propertiesExpanded: 0
     showSelected: 1
-    isSelected: 0
+    isSelected: 1
     showDisplayColor: 0
     displayColor: {r: 0.61960787, g: 0.34901962, b: 0, a: 1}
-  - name: Hazel
+  - name: Eyes
     channelMask:
-    - {r: 0.4716981, g: 0.35291463, b: 0.14981602, a: 1}
+    - {r: 0.8050314, g: 0.56732607, b: 0.3721371, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
     channelAdditiveMask:
-    - {r: 0.31446534, g: 0.17808175, b: 0.07218854, a: 0}
+    - {r: 0.31446534, g: 0.17808175, b: 0.07218854, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
     PropertyBlock:
       alwaysUpdate: 0
@@ -105,9 +105,9 @@ MonoBehaviour:
     propertiesExpanded: 0
     showSelected: 1
     isSelected: 0
-    showDisplayColor: 0
+    showDisplayColor: 1
     displayColor: {r: 0.7176471, g: 0.627451, b: 0.42352945, a: 1}
-  - name: Green
+  - name: Eyes
     channelMask:
     - {r: 0, g: 1, b: 0.07926488, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -130,7 +130,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 0.12449611, g: 0.7372549, b: 0.086274505, a: 1}
-  - name: Blue
+  - name: Eyes
     channelMask:
     - {r: 0.22352941, g: 0.6, b: 1, a: 1}
     - {r: 0, g: 0, b: 0, a: 0}
@@ -153,7 +153,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
-  - name: Silver
+  - name: Eyes
     channelMask:
     - {r: 0.764151, g: 0.764151, b: 0.764151, a: 1}
     - {r: 0.06289297, g: 0.06289297, b: 0.06289297, a: 0}

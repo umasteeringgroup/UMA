@@ -86,7 +86,7 @@ namespace UMA
         }
 
         // Edit Options
-        float HandlesSize = 0.01f;
+        float HandlesSize = 0.003f;
         public Color ActiveColor = new Color32(0, 210, 0, 255);
         public Color InactiveColor = new Color32(235, 0, 0, 255);
         bool selectObscured = false;
@@ -1661,7 +1661,7 @@ namespace UMA
                 }
             }
 
-            if (editAdjustment != null && editorMode == MeshModifierEditor.EditorMode.VertexAdjustments)
+            if (editAdjustment != null && editorMode == MeshModifierEditor.EditorMode.VertexAdjustments && editSelection != null)
             {
                 AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
                 float time = Time.fixedTime / blinkSpeed;

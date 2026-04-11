@@ -15,7 +15,7 @@ MonoBehaviour:
   channelCount: 3
   sharedColorName: Hair
   colors:
-  - name: Blonde
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -308,7 +308,7 @@ MonoBehaviour:
     isSelected: 1
     showDisplayColor: 1
     displayColor: {r: 1, g: 0.8411773, b: 0.51257855, a: 1}
-  - name: Red
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -668,7 +668,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0.68235296, g: 0.2901961, b: 0.121568635, a: 1}
-  - name: Brown
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -956,12 +956,12 @@ MonoBehaviour:
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
-    propertiesExpanded: 1
+    propertiesExpanded: 0
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0.34117648, g: 0.227451, b: 0.1764706, a: 1}
-  - name: Auburn
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -1254,7 +1254,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0.37106913, g: 0.12016188, b: 0.010501893, a: 1}
-  - name: Dark Brown
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -1547,7 +1547,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0.2264151, g: 0.15808031, b: 0.12744749, a: 1}
-  - name: Black
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -1974,7 +1974,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0, g: 0, b: 0, a: 1}
-  - name: Gray
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -2401,7 +2401,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0.91194963, g: 0.91194963, b: 0.91194963, a: 1}
-  - name: Green
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -2694,7 +2694,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0.03524382, g: 0.33962262, b: 0.057250757, a: 1}
-  - name: Rainbow
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}
@@ -2987,7 +2987,7 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     displayColor: {r: 0.49999988, g: 1, b: 0.89266884, a: 1}
-  - name: Violet
+  - name: Hair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
     - {r: 1, g: 1, b: 1, a: 1}

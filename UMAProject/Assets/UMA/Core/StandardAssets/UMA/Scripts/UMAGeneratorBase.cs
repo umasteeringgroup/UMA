@@ -593,7 +593,7 @@ namespace UMA
             }
             else
             {
-                Debug.Log("Avatar: removing jaw bone mapping from human description because mapJaw is false. This is to prevent Mecanim from opening the jaw if a jaw bone is mapped and the animation does not animate the jaw.");
+                //Debug.Log("Avatar: removing jaw bone mapping from human description because mapJaw is false. This is to prevent Mecanim from opening the jaw if a jaw bone is mapped and the animation does not animate the jaw.");
                 // Remove the jaw bone mapping if mapJaw is false. This is because Mecanim will open the jaw if a jaw bone is mapped, and the animation does not animate the jaw.
                 List<HumanBone> humanBones = new List<HumanBone>(umaTPose.humanInfo);
                 humanBones.RemoveAll(hb => hb.humanName.ToLower().Contains("jaw"));

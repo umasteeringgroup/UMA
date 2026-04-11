@@ -33,6 +33,7 @@ namespace UMA.CharacterSystem.Editors
         private string[] rawcachedRaceDNA = { };
 
         private MeshModifier MeshModifier = null;
+        private MeshModifier _manualMeshModifierToAdd = null;
 
         protected DynamicCharacterAvatar thisDCA;
         protected RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
@@ -1579,15 +1580,16 @@ namespace UMA.CharacterSystem.Editors
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f,0.875f,1f));
 
             GUILayout.Label("Mesh Modifier", EditorStyles.boldLabel);
-
+            EditorGUILayout.HelpBox("Mesh Modifiers work on vertexes - these allow you to change vertex positions, scale them along their normal, extract and apply blendshapes, and modify vertex colors for shading (shader must support vertex colors).", MessageType.None);
             // Buttons row
-            if (GUILayout.Button("Create New Modifier"))
+            if (GUILayout.Button("Create New Mesh Modifier"))
             {
                 thisDCA.ignoreMeshHideAssets = true;
                 thisDCA.GenerateNow();
                 VertexEditorStage.ShowStage(thisDCA, null);
             }
 
+            EditorGUILayout.HelpBox("Mesh Hide Assets work on faces - these allow you to hide specific faces. This is useful for poke through.", MessageType.None);
             if (GUILayout.Button("Create New Mesh Hide Asset"))
             {
                 thisDCA.ignoreMeshHideAssets = true;
@@ -1662,6 +1664,88 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
             }
+
+#if UNITY_EDITOR
+            EditorGUILayout.Space(6f);
+            GUILayout.Label("Manual Mesh Modifiers (Edit Time Test Only)", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Edit-time testing only. Add MeshModifier assets here to populate UMAData._manualMeshModifiers for testing mesh modifiers in the editor.", MessageType.Info);
+
+            if (thisDCA != null && thisDCA.umaData != null)
+            {
+                List<MeshModifier.Modifier> manualModifiers = thisDCA.umaData.ManualMeshModifiers;
+                if (manualModifiers == null)
+                {
+                    manualModifiers = new List<MeshModifier.Modifier>();
+                    thisDCA.umaData.ManualMeshModifiers = manualModifiers;
+                }
+
+                EditorGUILayout.BeginHorizontal();
+                _manualMeshModifierToAdd = (MeshModifier)EditorGUILayout.ObjectField(_manualMeshModifierToAdd, typeof(MeshModifier), false);
+                using (new EditorGUI.DisabledScope(_manualMeshModifierToAdd == null))
+                {
+                    if (GUILayout.Button("Add", GUILayout.Width(60f)))
+                    {
+                        if (_manualMeshModifierToAdd != null && _manualMeshModifierToAdd.RuntimeModifiers != null)
+                        {
+                            for (int i = 0; i < _manualMeshModifierToAdd.RuntimeModifiers.Count; i++)
+                            {
+                                MeshModifier.Modifier modifier = _manualMeshModifierToAdd.RuntimeModifiers[i];
+                                if (modifier != null)
+                                {
+                                    manualModifiers.Add(modifier);
+                                }
+                            }
+                            EditorUtility.SetDirty(thisDCA);
+                            EditorUtility.SetDirty(thisDCA.umaData);
+                            _manualMeshModifierToAdd = null;
+                        }
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+
+                int removeIndex = -1;
+                for (int i = 0; i < manualModifiers.Count; i++)
+                {
+                    MeshModifier.Modifier modifier = manualModifiers[i];
+                    EditorGUILayout.BeginHorizontal();
+                    using (new EditorGUI.DisabledScope(true))
+                    {
+                        string label = modifier != null
+                            ? string.Format("{0} [{1}]", string.IsNullOrEmpty(modifier.ModifierName) ? "Unnamed Modifier" : modifier.ModifierName, string.IsNullOrEmpty(modifier.SlotName) ? "<no sourceSlot>" : modifier.SlotName)
+                            : "<null modifier>";
+                        EditorGUILayout.TextField(label);
+                    }
+                    if (GUILayout.Button("X", GUILayout.Width(24f)))
+                    {
+                        removeIndex = i;
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                if (removeIndex >= 0)
+                {
+                    manualModifiers.RemoveAt(removeIndex);
+                    EditorUtility.SetDirty(thisDCA);
+                    EditorUtility.SetDirty(thisDCA.umaData);
+                }
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Clear"))
+                {
+                    if (manualModifiers.Count > 0)
+                    {
+                        manualModifiers.Clear();
+                        EditorUtility.SetDirty(thisDCA);
+                        EditorUtility.SetDirty(thisDCA.umaData);
+                    }
+                }
+                if (GUILayout.Button("Rebuild"))
+                {
+                    GenerateSingleUMA();
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+#endif
 
             GUIHelper.EndVerticalPadded(10);
         }
