@@ -7,7 +7,6 @@
   <Project Path="UMA_Examples.csproj" />
   <Project Path="Shaderpackager-editor.csproj" />
   <Project Path="UMA_Examples_Editor.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Samples.csproj" />
   <Project Path="JBooth.BetterShaders.Samples.csproj" />
 </Solution>

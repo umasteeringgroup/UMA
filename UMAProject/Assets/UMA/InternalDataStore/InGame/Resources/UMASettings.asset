@@ -59,6 +59,7 @@ MonoBehaviour:
   useAddressables: 0
   enableGLTFExport: 0
   alwaysGetAddressables: 1
+  ignoreBackupFolders: 0
   addrUseSharedGroup: 1
   addrSharedGroupName: UMAShared
   addrDefaultLabel: UMA_Default
