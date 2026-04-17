@@ -205,7 +205,7 @@ Material:
     - Backface_Normal_Mode: 0
     - EFFECT_EXTRA_TEX: 0
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0.325
+    - _AlphaClip: 0.184
     - _AlphaClipThreshold: 0.1
     - _AlphaModulation: 2
     - _AlphaToMask: 1
@@ -226,6 +226,7 @@ Material:
     - _CastShadows: 0
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
+    - _ColorBlendModulation: 1
     - _ColorModulation: 1
     - _Cull: 0
     - _CullMode: 0
@@ -304,6 +305,7 @@ Material:
     - _SubsurfaceIndirect: 0.25
     - _SubsurfaceKwToggle: 0
     - _Surface: 0
+    - _TextureDetail: 1
     - _TwoSided: 2
     - _UVSec: 0
     - _UberTile: 1

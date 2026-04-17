@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: AlbedoNormalColormask_Compositer_mat
-  m_Shader: {fileID: -6465566751694194690, guid: 00a785c0ebde240458a088cf1a70ac00, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 08d702ae7f5c47a4b9675564d0302123, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []

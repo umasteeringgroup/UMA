@@ -509,7 +509,25 @@ namespace UMA.Editors
 
 
             changed |= popupchanged;
+            if (changed)
+            {
+                MarkRecipeContextDirty();
+            }
             return changed;
+        }
+
+        private void MarkRecipeContextDirty()
+        {
+            if (_recipeContext == null)
+            {
+                return;
+            }
+
+            EditorUtility.SetDirty(_recipeContext);
+            if (EditorUtility.IsPersistent(_recipeContext))
+            {
+                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+            }
         }
 
         private sealed class OverlayRectPositionWindow : EditorWindow
@@ -2055,7 +2073,13 @@ namespace UMA.Editors
             for (int i = 0; i < _overlayData.tags.Length; i++)
             {
                 GUILayout.BeginHorizontal();
-                _overlayData.tags[i] = EditorGUILayout.TextField(_overlayData.tags[i]);
+                EditorGUI.BeginChangeCheck();
+                string updatedTag = EditorGUILayout.TextField(_overlayData.tags[i]);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    _overlayData.tags[i] = updatedTag;
+                    changed = true;
+                }
                 if (GUILayout.Button("X", GUILayout.Width(22)))
                 {
                     deleted = i;

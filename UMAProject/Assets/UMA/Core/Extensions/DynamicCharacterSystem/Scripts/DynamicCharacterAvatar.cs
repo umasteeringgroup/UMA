@@ -6241,6 +6241,12 @@ namespace UMA.CharacterSystem
         /// <param name="hideTags"></param>
         void PostProcessSlots(List<string> hiddenSlots, List<string> hideTags = null)
         {
+            if (hideTags == null)
+            {
+                hideTags = new List<string>();
+            }
+            string raceName = activeRace != null && activeRace.racedata != null ? activeRace.racedata.raceName : "null";
+
             List<SlotData> WildCards = null;// = new List<SlotData>();
 
             List<SlotData> NewSlots = new List<SlotData>();
@@ -6351,10 +6357,11 @@ namespace UMA.CharacterSystem
                     {
                         for (int i1 = 0; i1 < sd.Races.Length; i1++)
                         {
-                            if (sd.Races[i1] == activeRace.racedata.raceName)
+                            if (sd.Races[i1] == raceName)
                             {
                                 if (WildCards == null) WildCards = new List<SlotData>();
                                 WildCards.Add(sd);
+                                Debug.Log("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + sd.slotName + "' queued for wildcard processing. Tags=[" + GetDebugList(sd.tags) + "], Races=[" + GetDebugList(sd.Races) + "], Overlays=[" + GetOverlayDebugList(sd) + "]");
                                 break;
                             }
                         }
@@ -6363,6 +6370,7 @@ namespace UMA.CharacterSystem
                     {
                         if (WildCards == null) WildCards = new List<SlotData>();
                         WildCards.Add(sd);
+                        Debug.Log("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + sd.slotName + "' queued for wildcard processing. Tags=[" + GetDebugList(sd.tags) + "], Races=[" + GetDebugList(sd.Races) + "], Overlays=[" + GetOverlayDebugList(sd) + "]");
                     }
                     continue;
                 }
@@ -6376,7 +6384,7 @@ namespace UMA.CharacterSystem
                             for (int i1 = 0; i1 < sd.Races.Length; i1++)
                             {
                                 string s = sd.Races[i1];
-                                if (s == activeRace.racedata.raceName)
+                                if (s == raceName)
                                 {
                                     // if we have races defined,
                                     // then only process them if the race matches.
@@ -6417,6 +6425,7 @@ namespace UMA.CharacterSystem
                 for (int i = 0; i < WildCards.Count; i++)
                 {
                     SlotData wc = WildCards[i];
+                    bool placeholderMatched = false;
                     for (int i1 = 0; i1 < NewSlots.Count; i1++)
                     {
 						// Only stick an overlay on it if it has tags and a mesh
@@ -6426,8 +6435,19 @@ namespace UMA.CharacterSystem
                             if (sd.HasTag(wc.tags))
                             {
                                 sd.AddOverlayList(wc.GetOverlayList());
+                                if (wc.isPlaceholderSlot)
+                                {
+                                    placeholderMatched = true;
+                                    Debug.Log("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + wc.slotName + "' added overlays [" + GetOverlayDebugList(wc) + "] to slot '" + sd.slotName + "'. Placeholder Tags=[" + GetDebugList(wc.tags) + "], Target Tags=[" + GetDebugList(sd.tags) + "]");
+                                }
+                                continue;
                             }
                         }
+                    }
+
+                    if (wc.isPlaceholderSlot && !placeholderMatched)
+                    {
+                        Debug.LogWarning("[DynamicCharacterAvatar:PostProcessSlots] Placeholder slot '" + wc.slotName + "' was not applied because no matching slot was found. Tags=[" + GetDebugList(wc.tags) + "], Races=[" + GetDebugList(wc.Races) + "], Overlays=[" + GetOverlayDebugList(wc) + "]");
                     }
                 }
             }
@@ -6437,6 +6457,39 @@ namespace UMA.CharacterSystem
             {
                 SlotsHidden.Invoke(HiddenSlots);
             }
+        }
+
+        private static string GetDebugList(string[] values)
+        {
+            if (values == null || values.Length == 0)
+            {
+                return "None";
+            }
+
+            return string.Join(", ", values);
+        }
+
+        private static string GetOverlayDebugList(SlotData slotData)
+        {
+            if (slotData == null)
+            {
+                return "None";
+            }
+
+            List<OverlayData> overlays = slotData.GetOverlayList();
+            if (overlays == null || overlays.Count == 0)
+            {
+                return "None";
+            }
+
+            string[] overlayNames = new string[overlays.Count];
+            for (int i = 0; i < overlays.Count; i++)
+            {
+                OverlayData overlay = overlays[i];
+                overlayNames[i] = overlay != null ? overlay.overlayName : "<null>";
+            }
+
+            return string.Join(", ", overlayNames);
         }
 
         void RemoveHiddenSlots(List<string> hiddenSlots)

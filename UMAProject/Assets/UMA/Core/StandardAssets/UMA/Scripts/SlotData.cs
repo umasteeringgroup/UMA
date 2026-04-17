@@ -482,8 +482,8 @@ namespace UMA
                 string tag = HideTags[j];
                 for (int i = 0; i < overlayList.Count; i++)
                 {
-                    // Manually check if the tag exists in overlayList[i].asset.tags
-                    string[] overlayTags = overlayList[i].asset.tags;
+                    // Manually check if the tag exists in overlayList[i].tags
+                    string[] overlayTags = overlayList[i].tags;
                     bool tagFound = false;
                     for (int t = 0; t < overlayTags.Length; t++)
                     {

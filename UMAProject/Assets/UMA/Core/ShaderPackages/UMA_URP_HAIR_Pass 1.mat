@@ -273,7 +273,7 @@ Material:
     - _AlphaClip: 1
     - _AlphaClipThreshold: 0.139
     - _AlphaModulate: 1
-    - _AlphaModulation: 1.403
+    - _AlphaModulation: 0.76
     - _AlphaToMask: 0
     - _AnisoFour: 1
     - _AnisoOffset: -0.349
@@ -295,6 +295,7 @@ Material:
     - _ClearCoat: 0
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
+    - _ColorBlendModulation: 1
     - _ColorMode: 0
     - _ColorModulation: 1
     - _Cull: 0
@@ -328,7 +329,7 @@ Material:
     - _InvertThickness: 0
     - _METALNESS: 0
     - _MaskClipValue: 0.7
-    - _Metallic: 0.144
+    - _Metallic: 0.088
     - _Metallic0: 0
     - _Metallic1: 0
     - _Metallic2: 0
@@ -366,7 +367,7 @@ Material:
     - _ShadowScaleOffset: -0.001
     - _Shininess: 0
     - _Smoother: 4
-    - _Smoothness: 0.085
+    - _Smoothness: 0.04
     - _Smoothness0: 0.5
     - _Smoothness1: 0.5
     - _Smoothness2: 0.5
@@ -386,6 +387,7 @@ Material:
     - _SubsurfaceKwToggle: 1
     - _Surface: 1
     - _TRANSPARENCY: 0
+    - _TextureDetail: 1
     - _TwoSided: 0
     - _UVSec: 0
     - _UberTile: 1

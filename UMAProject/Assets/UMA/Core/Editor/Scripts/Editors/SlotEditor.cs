@@ -16,7 +16,7 @@ namespace UMA.Editors
         private readonly UnityEngine.Object _recipeContext;
         private readonly List<OverlayData> _overlayData = new List<OverlayData>();
         private readonly List<OverlayEditor> _overlayEditors = new List<OverlayEditor>();
-        private readonly string _name;
+        private string _name;
         public UnityEditorInternal.ReorderableList SlotTagsList = null;
         private List<string> backingTags = new List<string>();
         private static Dictionary<string, bool> _foldout = new Dictionary<string, bool>();
@@ -84,11 +84,19 @@ namespace UMA.Editors
             bool delete;
             bool select;
             bool _foldOut = FoldOut;
+            bool missingPlaceholderTags = HasMissingPlaceholderTags();
 
             string barLabel = _slotData.isPlaceholderSlot
                 ? _name + "      (Placeholder Wildcard)"
                 : _name + "      (" + _slotData.asset.name + ")";
-            GUIHelper.FoldoutBarButton(ref _foldOut, barLabel, "Asset", out select, out delete);
+            if (missingPlaceholderTags)
+            {
+                DrawSlotFoldoutBarButton(ref _foldOut, barLabel, "Asset", out select, out delete, GetRedFoldoutStyle());
+            }
+            else
+            {
+                GUIHelper.FoldoutBarButton(ref _foldOut, barLabel, "Asset", out select, out delete);
+            }
 
             FoldOut = _foldOut;
 
@@ -134,6 +142,7 @@ namespace UMA.Editors
                     if (EditorGUI.EndChangeCheck() && newName != _slotData.placeholderSlotName)
                     {
                         _slotData.placeholderSlotName = newName;
+                        _name = newName;
                         changed = true;
                     }
                 }
@@ -375,7 +384,10 @@ namespace UMA.Editors
                     _foldout.Add(_slotData.slotName, false);
                 }
                 GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
-                GUILayout.Space(10); _foldout[_slotData.slotName] = EditorGUILayout.Foldout(_foldout[_slotData.slotName], "Matching Criteria");
+                GUILayout.Space(10);
+                _foldout[_slotData.slotName] = missingPlaceholderTags
+                    ? EditorGUILayout.Foldout(_foldout[_slotData.slotName], "Matching Criteria", true, GetRedFoldoutStyle())
+                    : EditorGUILayout.Foldout(_foldout[_slotData.slotName], "Matching Criteria");
                 GUILayout.EndHorizontal();
                 if (_foldout[_slotData.slotName])
                 {
@@ -517,6 +529,19 @@ namespace UMA.Editors
                             continue;
                         }
                     }
+
+                    if (!_slotData.isPlaceholderSlot)
+                    {
+                        GUILayout.Space(8);
+                        if (GUILayout.Button("Convert to Placeholder"))
+                        {
+                            ConvertToPlaceholder();
+                            _dnaDirty = true;
+                            _textureDirty = true;
+                            _meshDirty = true;
+                            changed = true;
+                        }
+                    }
                 }
                 }
             }
@@ -526,6 +551,35 @@ namespace UMA.Editors
             }
 
             return changed;
+        }
+
+        private bool HasMissingPlaceholderTags()
+        {
+            return _slotData.isPlaceholderSlot && (_slotData.tags == null || _slotData.tags.Length == 0);
+        }
+
+        private static GUIStyle GetRedFoldoutStyle()
+        {
+            GUIStyle style = new GUIStyle(EditorStyles.foldout);
+            style.normal.textColor = Color.red;
+            style.onNormal.textColor = Color.red;
+            style.hover.textColor = Color.red;
+            style.onHover.textColor = Color.red;
+            style.focused.textColor = Color.red;
+            style.onFocused.textColor = Color.red;
+            style.active.textColor = Color.red;
+            style.onActive.textColor = Color.red;
+            return style;
+        }
+
+        private static void DrawSlotFoldoutBarButton(ref bool foldout, string content, string button, out bool pressed, out bool delete, GUIStyle foldoutStyle)
+        {
+            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+            GUILayout.Space(10);
+            foldout = EditorGUILayout.Foldout(foldout, content, true, foldoutStyle);
+            pressed = GUILayout.Button(button, EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            delete = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
         }
 
         private bool ApplyUMAMaterialToSlotAndOverlays(UMAMaterial umaMat)
@@ -574,6 +628,23 @@ namespace UMA.Editors
             }
 
             return changed;
+        }
+
+        private void ConvertToPlaceholder()
+        {
+            if (_slotData == null || _slotData.isPlaceholderSlot)
+            {
+                return;
+            }
+
+            var slotName = _slotData.slotName;
+            _slotData.placeholderSlotName = slotName;
+            _slotData.asset = null;
+            _slotData.isPlaceholderSlot = true;
+            _slotData.BlendshapeFoldout = false;
+            _slotData.ClipPlaneFoldout = false;
+            _slotData.slotAssetFoldout = false;
+            _name = slotName;
         }
 
         public bool HasBlendshapes(SlotDataAsset sda)

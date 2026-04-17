@@ -208,7 +208,6 @@ namespace UMA.Examples
             {
                 return;
             }
-            Debug.Log("UMASimpleLOD Update for " + gameObject.name + " at time " + Time.time);
 
             if (Time.time > NextTime)
             {
