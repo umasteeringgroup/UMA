@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Female 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Chest/Human Female 3.0/11_tanktop_zebra_Recipe.png
+    thumb: {fileID: 21300000, guid: e43184ac3c4bb7548a8441b433d7e496, type: 3}
   wardrobeSlot: Chest
   Appended: 0
   Hides: []

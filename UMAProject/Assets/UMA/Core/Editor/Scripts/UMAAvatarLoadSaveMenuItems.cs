@@ -8,11 +8,526 @@ using UMA.PoseTools;
 using static UMA.UMAData;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
+using UMA.Dynamics;
 
 namespace UMA.Editors
 {
     public partial class UMAAvatarLoadSaveMenuItems : Editor
 	{
+		private class CreateOverlaysForTexturesWindow : EditorWindow
+		{
+			private List<Texture2D> selectedTextures;
+			private UMAMaterial selectedMaterial;
+			private RaceData selectedRace;
+			private int selectedBaseSlotIndex;
+			private string[] baseSlotOptions = new string[0];
+			private SlotData[] baseSlots = new SlotData[0];
+			private string sharedColorName = "Color";
+
+			public static void Open(List<Texture2D> textures)
+			{
+				if (textures == null || textures.Count == 0)
+				{
+					EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select one or more Texture2D assets in the Project window.", "OK");
+					return;
+				}
+
+				CreateOverlaysForTexturesWindow window = CreateInstance<CreateOverlaysForTexturesWindow>();
+				window.titleContent = new GUIContent("Create Overlay and Recipe");
+				window.selectedTextures = new List<Texture2D>(textures);
+				window.minSize = new Vector2(560f, 240f);
+				window.ShowUtility();
+			}
+
+			private void OnGUI()
+			{
+				EditorGUILayout.LabelField("Create overlay and recipe for base alternates", EditorStyles.boldLabel);
+				EditorGUILayout.HelpBox("This will create an overlay with a single channel for each texture. Select the UMAMaterial to use for these Overlays.", MessageType.Info);
+				EditorGUILayout.LabelField("Selected Textures", selectedTextures != null ? selectedTextures.Count.ToString() : "0");
+				selectedMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", selectedMaterial, typeof(UMAMaterial), false);
+				EditorGUI.BeginChangeCheck();
+				selectedRace = (RaceData)EditorGUILayout.ObjectField("Race", selectedRace, typeof(RaceData), false);
+				if (EditorGUI.EndChangeCheck())
+				{
+					RefreshBaseSlots();
+				}
+
+				using (new EditorGUI.DisabledScope(baseSlotOptions.Length == 0))
+				{
+					selectedBaseSlotIndex = EditorGUILayout.Popup("Base Slot", selectedBaseSlotIndex, baseSlotOptions);
+				}
+				sharedColorName = EditorGUILayout.TextField("Shared Color", sharedColorName);
+
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.BeginHorizontal();
+				using (new EditorGUI.DisabledScope(selectedMaterial == null || selectedRace == null || baseSlotOptions.Length == 0 || string.IsNullOrWhiteSpace(sharedColorName)))
+				{
+					if (GUILayout.Button("Create"))
+					{
+						CreateAssets();
+					}
+				}
+				if (GUILayout.Button("Cancel"))
+				{
+					Close();
+				}
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void CreateAssets()
+			{
+				if (selectedTextures == null || selectedTextures.Count == 0)
+				{
+					Close();
+					return;
+				}
+
+				int createdOverlays = 0;
+				int createdWardrobeRecipes = 0;
+				int skipped = 0;
+				List<string> skippedItems = new List<string>();
+
+				try
+				{
+					SlotData selectedBaseSlot = GetSelectedBaseSlot();
+					if (selectedBaseSlot == null || selectedBaseSlot.asset == null)
+					{
+						EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select a race and a valid base slot.", "OK");
+						return;
+					}
+
+					for (int i = 0; i < selectedTextures.Count; i++)
+					{
+						Texture2D texture = selectedTextures[i];
+						if (texture == null)
+						{
+							continue;
+						}
+
+						string texturePath = AssetDatabase.GetAssetPath(texture);
+						if (string.IsNullOrEmpty(texturePath))
+						{
+							skipped++;
+							skippedItems.Add(texture.name + " (no asset path)");
+							continue;
+						}
+
+						string folder = Path.GetDirectoryName(texturePath);
+						string baseName = Path.GetFileNameWithoutExtension(texturePath);
+						string overlayPath = Path.Combine(folder, baseName + "_Overlay.asset").Replace('\\', '/');
+						string wardrobePath = Path.Combine(folder, baseName + "_Wardrobe.asset").Replace('\\', '/');
+
+						if (AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(overlayPath) != null)
+						{
+							skipped++;
+							skippedItems.Add(baseName + " (overlay already exists)");
+							continue;
+						}
+
+						if (AssetDatabase.LoadAssetAtPath<UMAWardrobeRecipe>(wardrobePath) != null)
+						{
+							skipped++;
+							skippedItems.Add(baseName + " (wardrobe recipe already exists)");
+							continue;
+						}
+
+						OverlayDataAsset overlayAsset = CustomAssetUtility.CreateAsset<OverlayDataAsset>(overlayPath, false, baseName + "_Overlay", false);
+						if (overlayAsset == null)
+						{
+							skipped++;
+							skippedItems.Add(baseName + " (overlay asset creation failed)");
+							continue;
+						}
+
+						InitializeOverlayAsset(overlayAsset, texture, selectedMaterial, baseName);
+						EditorUtility.SetDirty(overlayAsset);
+						createdOverlays++;
+
+						UMAWardrobeRecipe wardrobeRecipe = CustomAssetUtility.CreateAsset<UMAWardrobeRecipe>(wardrobePath, false, baseName + "_Wardrobe", false);
+						if (wardrobeRecipe == null)
+						{
+							skipped++;
+							skippedItems.Add(baseName + " (wardrobe asset creation failed)");
+							continue;
+						}
+
+						InitializeWardrobeRecipe(wardrobeRecipe, overlayAsset, selectedMaterial, selectedRace, selectedBaseSlot, sharedColorName, baseName);
+						EditorUtility.SetDirty(wardrobeRecipe);
+						createdWardrobeRecipes++;
+					}
+				}
+				finally
+				{
+					AssetDatabase.SaveAssets();
+					AssetDatabase.Refresh();
+				}
+
+				string message = "Created overlays: " + createdOverlays
+					+ "\nCreated wardrobe recipes: " + createdWardrobeRecipes
+					+ "\nSkipped: " + skipped;
+
+				if (skippedItems.Count > 0)
+				{
+					message += "\n\nSkipped items:";
+					for (int i = 0; i < skippedItems.Count; i++)
+					{
+						message += "\n- " + skippedItems[i];
+					}
+				}
+
+				EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", message, "OK");
+				Close();
+			}
+
+			private void RefreshBaseSlots()
+			{
+				selectedBaseSlotIndex = 0;
+				baseSlotOptions = new string[0];
+				baseSlots = new SlotData[0];
+
+				if (selectedRace == null || selectedRace.baseRaceRecipe == null)
+				{
+					return;
+				}
+
+				UMAData.UMARecipe baseRecipe = selectedRace.baseRaceRecipe.GetCachedRecipe(true);
+				if (baseRecipe == null || baseRecipe.slotDataList == null || baseRecipe.slotDataList.Length == 0)
+				{
+					return;
+				}
+
+				List<SlotData> slots = new List<SlotData>();
+				List<string> slotNames = new List<string>();
+				for (int i = 0; i < baseRecipe.slotDataList.Length; i++)
+				{
+					SlotData slot = baseRecipe.slotDataList[i];
+					if (slot == null || slot.asset == null)
+					{
+						continue;
+					}
+
+					slots.Add(slot);
+					slotNames.Add(slot.slotName);
+				}
+
+				baseSlots = slots.ToArray();
+				baseSlotOptions = slotNames.ToArray();
+			}
+
+			private SlotData GetSelectedBaseSlot()
+			{
+				if (baseSlots == null || baseSlots.Length == 0)
+				{
+					return null;
+				}
+
+				if (selectedBaseSlotIndex < 0 || selectedBaseSlotIndex >= baseSlots.Length)
+				{
+					selectedBaseSlotIndex = 0;
+				}
+
+				return baseSlots[selectedBaseSlotIndex];
+			}
+
+			private void InitializeOverlayAsset(OverlayDataAsset overlayAsset, Texture2D texture, UMAMaterial material, string baseName)
+			{
+				int channelCount = material != null && material.channels != null && material.channels.Length > 0 ? material.channels.Length : 1;
+				overlayAsset.name = baseName + "_Overlay";
+				overlayAsset.textureList = new Texture[channelCount];
+				overlayAsset.textureNames = new string[channelCount];
+				overlayAsset.overlayBlend = new OverlayDataAsset.OverlayBlend[channelCount];
+				overlayAsset.textureList[0] = texture;
+				overlayAsset.textureNames[0] = texture.name;
+				for (int i = 0; i < channelCount; i++)
+				{
+					overlayAsset.overlayBlend[i] = OverlayDataAsset.OverlayBlend.Normal;
+				}
+				overlayAsset.material = material;
+				overlayAsset.materialName = material != null ? material.name : string.Empty;
+				overlayAsset.ValidateBlendList();
+			}
+
+			private void InitializeWardrobeRecipe(UMAWardrobeRecipe wardrobeRecipe, OverlayDataAsset overlayAsset, UMAMaterial material, RaceData race, SlotData baseSlot, string colorName, string baseName)
+			{
+				wardrobeRecipe.name = baseName + "_Wardrobe";
+				wardrobeRecipe.DisplayValue = baseName;
+				wardrobeRecipe.wardrobeSlot = baseSlot != null ? baseSlot.slotName : "None";
+				wardrobeRecipe.compatibleRaces = new List<string>();
+				if (race != null && !string.IsNullOrEmpty(race.raceName))
+				{
+					wardrobeRecipe.compatibleRaces.Add(race.raceName);
+				}
+
+				UMAData.UMARecipe recipe = new UMAData.UMARecipe();
+				recipe.raceData = race;
+				recipe.sharedColors = new OverlayColorData[1];
+				int channelCount = material != null && material.channels != null && material.channels.Length > 0 ? material.channels.Length : 1;
+				OverlayColorData colorData = new OverlayColorData(channelCount);
+				colorData.name = colorName;
+				recipe.sharedColors[0] = colorData;
+
+				SlotData slot = new SlotData(baseSlot.asset);
+				slot.overlayScale = baseSlot.overlayScale;
+				slot.tags = baseSlot.tags != null ? (string[])baseSlot.tags.Clone() : new string[0];
+				slot.Races = baseSlot.Races != null ? (string[])baseSlot.Races.Clone() : null;
+				slot.blendShapeTargetSlot = baseSlot.blendShapeTargetSlot;
+				slot.UVSet = baseSlot.UVSet;
+				OverlayData overlayData = new OverlayData(overlayAsset);
+				overlayData.colorData = new OverlayColorData(channelCount);
+				overlayData.colorData.name = colorName;
+				slot.SetOverlay(0, overlayData);
+				recipe.slotDataList = new SlotData[] { slot };
+
+				wardrobeRecipe.Save(recipe);
+			}
+		}
+
+     private class UpdatePhysicsElementsWindow : EditorWindow
+		{
+			private enum AxisSource
+			{
+				X = 0,
+				Y = 1,
+				Z = 2
+			}
+
+			private struct AxisRemapSetting
+			{
+				public AxisSource Source;
+				public bool Invert;
+			}
+
+			private List<UMAPhysicsElement> selectedElements;
+			private string filePrepend = "U3";
+			private ColliderDefinition.Direction capsuleAlignment = ColliderDefinition.Direction.Z;
+			private AxisRemapSetting xRemap = new AxisRemapSetting { Source = AxisSource.Y, Invert = false };
+			private AxisRemapSetting yRemap = new AxisRemapSetting { Source = AxisSource.X, Invert = true };
+			private AxisRemapSetting zRemap = new AxisRemapSetting { Source = AxisSource.Z, Invert = false };
+			private bool rotateJointAxis = true;
+			private bool rotateJointSwingAxis = true;
+			private bool rotateBoxDimensions = true;
+
+			public static void Open(List<UMAPhysicsElement> elements)
+			{
+				if (elements == null || elements.Count == 0)
+				{
+					EditorUtility.DisplayDialog("Update Physics Elements", "Select one or more UMAPhysicsElement assets in the Project window.", "OK");
+					return;
+				}
+
+				UpdatePhysicsElementsWindow window = CreateInstance<UpdatePhysicsElementsWindow>();
+				window.titleContent = new GUIContent("Update Physics Elements");
+				window.selectedElements = new List<UMAPhysicsElement>(elements);
+				window.minSize = new Vector2(460f, 320f);
+				window.ShowUtility();
+			}
+
+			private void OnGUI()
+			{
+				EditorGUILayout.LabelField("Update Selected Physics Elements", EditorStyles.boldLabel);
+				EditorGUILayout.HelpBox("This updates all selected UMAPhysicsElement assets. Collider centres are remapped using the destination axis settings below. Box dimensions and joint axes can also be remapped.", MessageType.Info);
+				EditorGUILayout.LabelField("Selected Assets", selectedElements != null ? selectedElements.Count.ToString() : "0");
+				filePrepend = EditorGUILayout.TextField("File Prepend", filePrepend);
+				capsuleAlignment = (ColliderDefinition.Direction)EditorGUILayout.EnumPopup("Capsule Alignment", capsuleAlignment);
+				rotateBoxDimensions = EditorGUILayout.Toggle("Rotate Box Dimensions", rotateBoxDimensions);
+				rotateJointAxis = EditorGUILayout.Toggle("Rotate Joint Axis", rotateJointAxis);
+				rotateJointSwingAxis = EditorGUILayout.Toggle("Rotate Swing Axis", rotateJointSwingAxis);
+
+				EditorGUILayout.Space();
+				EditorGUILayout.LabelField("Collider Centre Axis Mapping", EditorStyles.boldLabel);
+				DrawAxisRemapRow("Destination X", ref xRemap);
+				DrawAxisRemapRow("Destination Y", ref yRemap);
+				DrawAxisRemapRow("Destination Z", ref zRemap);
+
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("Update"))
+				{
+					ExecuteUpdate();
+				}
+				if (GUILayout.Button("Cancel"))
+				{
+					Close();
+				}
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void DrawAxisRemapRow(string label, ref AxisRemapSetting setting)
+			{
+				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.PrefixLabel(label);
+				setting.Source = (AxisSource)EditorGUILayout.EnumPopup(setting.Source);
+				setting.Invert = EditorGUILayout.ToggleLeft("Invert", setting.Invert, GUILayout.Width(70));
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void ExecuteUpdate()
+			{
+				if (selectedElements == null || selectedElements.Count == 0)
+				{
+					EditorUtility.DisplayDialog("Update Physics Elements", "No UMAPhysicsElement assets were selected.", "OK");
+					Close();
+					return;
+				}
+
+				int processedCount = 0;
+				int renamedCount = 0;
+				int skippedRenameCount = 0;
+				int colliderCount = 0;
+				int renamedCollisionCount = 0;
+				List<string> skippedRenameAssets = new List<string>();
+
+				try
+				{
+					for (int i = 0; i < selectedElements.Count; i++)
+					{
+						UMAPhysicsElement element = selectedElements[i];
+						if (element == null)
+						{
+							continue;
+						}
+
+						Undo.RecordObject(element, "Update UMAPhysicsElement");
+						processedCount++;
+
+						TryRenameElement(element, ref renamedCount, ref skippedRenameCount, ref renamedCollisionCount, skippedRenameAssets);
+
+						if (element.colliders != null)
+						{
+							for (int c = 0; c < element.colliders.Length; c++)
+							{
+								ColliderDefinition collider = element.colliders[c];
+								if (collider == null)
+								{
+									continue;
+								}
+
+								collider.colliderCentre = RemapVector3(collider.colliderCentre);
+								collider.capsuleAlignment = capsuleAlignment;
+								if (rotateBoxDimensions)
+								{
+									collider.boxDimensions = RemapVector3(collider.boxDimensions);
+								}
+								colliderCount++;
+							}
+						}
+
+						if (rotateJointAxis)
+						{
+							element.axis = RemapVector3(element.axis);
+						}
+
+						if (rotateJointSwingAxis)
+						{
+							element.swingAxis = RemapVector3(element.swingAxis);
+						}
+
+						EditorUtility.SetDirty(element);
+					}
+				}
+				finally
+				{
+					AssetDatabase.SaveAssets();
+					AssetDatabase.Refresh();
+				}
+
+				string message = "Processed assets: " + processedCount
+					+ "\nRenamed assets: " + renamedCount
+					+ "\nSkipped renames: " + skippedRenameCount
+					+ "\nUpdated colliders: " + colliderCount;
+
+				if (renamedCollisionCount > 0 && skippedRenameAssets.Count > 0)
+				{
+					message += "\n\nRename collisions:";
+					for (int i = 0; i < skippedRenameAssets.Count; i++)
+					{
+						message += "\n- " + skippedRenameAssets[i];
+					}
+				}
+
+				EditorUtility.DisplayDialog("Update Physics Elements", message, "OK");
+				Close();
+			}
+
+			private void TryRenameElement(UMAPhysicsElement element, ref int renamedCount, ref int skippedRenameCount, ref int renamedCollisionCount, List<string> skippedRenameAssets)
+			{
+				if (element == null || string.IsNullOrEmpty(filePrepend))
+				{
+					return;
+				}
+
+				string currentPath = AssetDatabase.GetAssetPath(element);
+				if (string.IsNullOrEmpty(currentPath))
+				{
+					return;
+				}
+
+				string currentName = Path.GetFileNameWithoutExtension(currentPath);
+				if (string.IsNullOrEmpty(currentName) || currentName.StartsWith(filePrepend, System.StringComparison.Ordinal))
+				{
+					return;
+				}
+
+				string targetName = filePrepend + currentName;
+				string folder = Path.GetDirectoryName(currentPath);
+				string extension = Path.GetExtension(currentPath);
+				string targetPath = Path.Combine(folder, targetName + extension).Replace('\\', '/');
+
+				if (AssetDatabase.LoadAssetAtPath<UMAPhysicsElement>(targetPath) != null)
+				{
+					skippedRenameCount++;
+					renamedCollisionCount++;
+					skippedRenameAssets.Add(currentName + " -> " + targetName);
+					return;
+				}
+
+				string error = AssetDatabase.RenameAsset(currentPath, targetName);
+				if (string.IsNullOrEmpty(error))
+				{
+					renamedCount++;
+				}
+				else
+				{
+					skippedRenameCount++;
+					skippedRenameAssets.Add(currentName + " -> " + targetName + " (" + error + ")");
+				}
+			}
+
+			private Vector3 RemapVector3(Vector3 value)
+			{
+				Vector3 source = value;
+				Vector3 result = Vector3.zero;
+				result.x = GetAxisValue(source, xRemap.Source, xRemap.Invert);
+				result.y = GetAxisValue(source, yRemap.Source, yRemap.Invert);
+				result.z = GetAxisValue(source, zRemap.Source, zRemap.Invert);
+				return result;
+			}
+
+			private float GetAxisValue(Vector3 source, AxisSource axis, bool invert)
+			{
+				float value = 0f;
+				if (axis == AxisSource.X)
+				{
+					value = source.x;
+				}
+				else if (axis == AxisSource.Y)
+				{
+					value = source.y;
+				}
+				else
+				{
+					value = source.z;
+				}
+
+				if (invert)
+				{
+					value = -value;
+				}
+
+				return value;
+			}
+		}
+
 		[MenuItem("Assets/UMA/Examine Wearables", false, 2001)]
 		private static void AssignLocationsToWearablesMenu()
 		{
@@ -181,6 +696,25 @@ namespace UMA.Editors
 			return GetSelectedTextures().Count > 0;
 		}
 
+		[MenuItem("Assets/UMA/Create overlay and recipe for base alternates", false, 2005)]
+		private static void CreateOverlaysForSelectedItemsMenu()
+		{
+			var textures = GetSelectedTextures();
+			if (textures.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select one or more Texture2D assets in the Project window.", "OK");
+				return;
+			}
+
+			CreateOverlaysForTexturesWindow.Open(textures);
+		}
+
+		[MenuItem("Assets/UMA/Create overlay and recipe for base alternates", true)]
+		private static bool CreateOverlaysForSelectedItemsMenu_Validate()
+		{
+			return GetSelectedTextures().Count > 0;
+		}
+
 		[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", false, 2000)]
 		private static void AddRacesToSelectedRecipesMenu()
 		{
@@ -258,6 +792,25 @@ namespace UMA.Editors
 		private static bool CreateUmaMaterialsForSelectedMaterialsMenu_Validate()
 		{
 			return GetSelectedMaterials().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Update Selected Physics Elements", false, 2007)]
+		private static void UpdateSelectedPhysicsElementsMenu()
+		{
+			var selectedElements = GetSelectedPhysicsElements();
+			if (selectedElements.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Update Physics Elements", "Select one or more UMAPhysicsElement assets in the Project window.", "OK");
+				return;
+			}
+
+			UpdatePhysicsElementsWindow.Open(selectedElements);
+		}
+
+		[MenuItem("Assets/UMA/Update Selected Physics Elements", true)]
+		private static bool UpdateSelectedPhysicsElementsMenu_Validate()
+		{
+			return GetSelectedPhysicsElements().Count > 0;
 		}
 
 						[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", true)]
@@ -505,6 +1058,21 @@ namespace UMA.Editors
 				}
 			}
 			return materials;
+		}
+
+		private static List<UMAPhysicsElement> GetSelectedPhysicsElements()
+		{
+			var selected = Selection.GetFiltered(typeof(UMAPhysicsElement), SelectionMode.Assets);
+			var elements = new List<UMAPhysicsElement>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var element = selected[i] as UMAPhysicsElement;
+				if (element != null)
+				{
+					elements.Add(element);
+				}
+			}
+			return elements;
 		}
 
 		private static UMAMaterial.MaterialChannel[] BuildChannelsForMaterial(Material material)

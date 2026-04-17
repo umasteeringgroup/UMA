@@ -316,6 +316,8 @@ public class DNAEditor : Editor
                     }
                 }
 
+                DrawCopyEffectsDropPad(targetDNA);
+
                 if (GUILayout.Button("Add Effect"))
                 {
                     // Deep clone to avoid sharing the temp instance
@@ -548,6 +550,78 @@ public class DNAEditor : Editor
             effect.minMapping = curveAsset.minMapping;
             effect.maxMapping = curveAsset.maxMapping;
             effect.curve = curveAsset.Curve;
+        }
+    }
+
+    private void DrawCopyEffectsDropPad(DNA owner)
+    {
+        Rect dropArea = GUILayoutUtility.GetRect(0f, 42f, GUILayout.ExpandWidth(true));
+        GUI.Box(dropArea, "Drop DNA here to copy the effects to this DNA");
+
+        Event evt = Event.current;
+        if (!dropArea.Contains(evt.mousePosition))
+        {
+            return;
+        }
+
+        if (evt.type == EventType.DragUpdated)
+        {
+            bool validDrop = false;
+            for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+            {
+                DNA droppedDNA = DragAndDrop.objectReferences[i] as DNA;
+                if (droppedDNA != null && droppedDNA != owner)
+                {
+                    validDrop = true;
+                    break;
+                }
+            }
+
+            DragAndDrop.visualMode = validDrop ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Rejected;
+            evt.Use();
+            return;
+        }
+
+        if (evt.type == EventType.DragPerform)
+        {
+            DNA sourceDNA = null;
+            for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
+            {
+                DNA droppedDNA = DragAndDrop.objectReferences[i] as DNA;
+                if (droppedDNA != null && droppedDNA != owner)
+                {
+                    sourceDNA = droppedDNA;
+                    break;
+                }
+            }
+
+            if (sourceDNA == null)
+            {
+                evt.Use();
+                return;
+            }
+
+            DragAndDrop.AcceptDrag();
+            Undo.RecordObject(owner, "Copy DNA Effects");
+            owner.effects.Clear();
+            if (sourceDNA.effects != null)
+            {
+                for (int i = 0; i < sourceDNA.effects.Count; i++)
+                {
+                    DNAEffect effect = sourceDNA.effects[i];
+                    if (effect != null)
+                    {
+                        owner.effects.Add(CloneDNAEffect(effect));
+                    }
+                }
+            }
+
+            EditorUtility.SetDirty(owner);
+            AssetDatabase.SaveAssetIfDirty(owner);
+            serializedObject.Update();
+            BuildCharacterIfPossible();
+            Repaint();
+            evt.Use();
         }
     }
 

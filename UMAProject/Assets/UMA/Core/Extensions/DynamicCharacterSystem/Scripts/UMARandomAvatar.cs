@@ -237,7 +237,7 @@ namespace UMA
 					}
 					else
 					{
-						Debug.LogWarning("RandomAvatar: No WardrobeSlot found for " + s + " in " + Randomizer.name);
+						//Debug.LogWarning("RandomAvatar: No WardrobeSlot found for " + s + " in " + Randomizer.name);
                     }
                 }
 			}

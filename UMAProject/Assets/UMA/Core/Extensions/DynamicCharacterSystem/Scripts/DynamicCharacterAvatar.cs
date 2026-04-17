@@ -1190,21 +1190,13 @@ namespace UMA.CharacterSystem
 
             Dictionary<string, DnaSetter> DefaultRaceDNA = new Dictionary<string, DnaSetter>();
 
-            if (r.useNewDNA)
+            if (skipRaceDefaults)
             {
-               /* foreach (var dna in r)
-                {
-                    DefaultRaceDNA[dna.Name] = dna;
-                }*/
+                UMARecipe recipe = r.baseRaceRecipe.GetCachedRecipe(false);
+                DefaultRaceDNA = GetDNA(recipe);
             }
-            else
-            {
-                if (skipRaceDefaults)
-                {
-                    UMARecipe recipe = r.baseRaceRecipe.GetCachedRecipe(false);
-                    DefaultRaceDNA = GetDNA(recipe);
-                }
-            }
+
+        
 
             // *****************************************************
             // Get Wardrobe
@@ -1234,7 +1226,13 @@ namespace UMA.CharacterSystem
             {
                 if (skipRaceDefaults)
                 {
-                    if (DefaultRaceDNA.ContainsKey(d.Name) && d.Value != DefaultRaceDNA[d.Name].Value)
+                    float defaultValue = 0.5f;
+                    if (DefaultRaceDNA.ContainsKey(d.Name))
+                    {
+                        defaultValue = DefaultRaceDNA[d.Name].Value;
+                    }
+
+                    if (d.Value != defaultValue)
                     {
                         DnaDef def = new DnaDef(d.Name, d.Value);
                         Dna.Add(def);
@@ -1246,6 +1244,8 @@ namespace UMA.CharacterSystem
                     Dna.Add(def);
                 }
             }
+
+            Debug.Log("DNA count for avatar definition: " + Dna.Count);
 
             // *****************************************************
             // Get Colors
@@ -1429,25 +1429,49 @@ namespace UMA.CharacterSystem
 
         private void PreloadDNA(AvatarDefinition adf, bool resetDNA, bool optimizeBlendshapes)
         {
-            if (resetDNA)
+            if (resetDNA || (activeRace.data.useNewDNA && this.dnaInstanceCollection == null))
             {
-                predefinedDNA = new UMAPredefinedDNA();
-                // get DNA from race...
-                if (activeRace.data != null)
+                if (activeRace.data.useNewDNA)
                 {
-                    Dictionary<string, float> defaultDNA = activeRace.data.GetDefaultDNA();
-                    foreach (var kp in defaultDNA)
+                    if (umaRecipe == null)
                     {
-                        predefinedDNA.AddDNA(kp.Key, kp.Value);
+                        Initialize();
+                    }
+                    umaRecipe.raceData = activeRace.data;
+                    umaRecipe.InitializeDNA();
+                }
+                else
+                {
+                    predefinedDNA = new UMAPredefinedDNA();
+                    // get DNA from race...
+                    if (activeRace.data != null)
+                    {
+                        Dictionary<string, float> defaultDNA = activeRace.data.GetDefaultDNA();
+                        foreach (var kp in defaultDNA)
+                        {
+                            predefinedDNA.AddDNA(kp.Key, kp.Value);
+                        }
                     }
                 }
             }
             if (adf.Dna != null)
             {
-                for (int i = 0; i < adf.Dna.Length; i++)
+                if (activeRace.data.useNewDNA)
                 {
-                    DnaDef d = adf.Dna[i];
-                    predefinedDNA.AddDNA(d.Name, d.Value);
+                    var v = GetDNA();
+                    for (int i = 0; i < adf.Dna.Length; i++)
+                    {
+                        DnaDef d = adf.Dna[i];
+                        v[d.Name].Set(d.Value);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < adf.Dna.Length; i++)
+                    {
+                        DnaDef d = adf.Dna[i];
+                        predefinedDNA.AddDNA(d.Name, d.Value);
+                    }
                 }
             }
             if (optimizeBlendshapes && loadBlendShapes)
@@ -1508,12 +1532,6 @@ namespace UMA.CharacterSystem
         /// <param name="optimizeBlendShapes">Force only used Blendshapes to load</param>
         public void LoadAvatarDefinition(AvatarDefinition adf, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true, bool optimizeBlendShapes = false)
         {
-            if (umaData == null)
-            {
-                PreloadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors, optimizeBlendShapes);
-                return;
-            }
-
             if (adf.RaceName != null)
             {
                 activeRace.name = adf.RaceName;
@@ -1528,7 +1546,7 @@ namespace UMA.CharacterSystem
 
         public void LoadAvatarDefinition(string adfstring, bool loadDefaultWardrobe = false, bool ResetDNA = true, bool ResetWardrobe = true, bool ResetColors = true, bool optimizeBlendShapes = false)
         {
-            if (adfstring.StartsWith("AA*"))
+            if (adfstring.StartsWith("AA*") || adfstring.StartsWith("BB*"))
             {
                 AvatarDefinition adf = AvatarDefinition.FromCompressedString(adfstring);
                 LoadAvatarDefinition(adf, loadDefaultWardrobe, ResetDNA, ResetWardrobe, ResetColors, optimizeBlendShapes);
@@ -1907,6 +1925,7 @@ namespace UMA.CharacterSystem
 
         #region UMA 3 WearableItems start
 
+
         /// <summary>
         /// Clear all wearable items from the Avatar.
         /// </summary>
@@ -1919,16 +1938,34 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Clear all wearable items from the Avatar for a specific slot.
         /// </summary>
-        /// <param name="SlotName"></param>
-        public void ClearWearableItems(string SlotName)
+        /// <param name="region"></param>
+        /// <param name="clearWardrobeCollectionItems">if true, will also clear items from wardrobe collections. If false, will only clear items directly assigned to the avatar</param>
+        public void ClearWearableItems(string region, bool clearWardrobeCollectionItems = true)
         {
-            if (_wardrobeRecipes.ContainsKey(SlotName))
+            if (clearWardrobeCollectionItems)
             {
-                _wardrobeRecipes.Remove(SlotName);
+                var item = GetWearableItem(region);
+                if (item is UMAWardrobeRecipe uwr) 
+                {
+                    RemoveWardrobeCollection(uwr);
+                }
+                var items = GetAppendedWearableItems(region);
+                for (int i = 0; i < items.Count; i++)
+                {
+                    if (items[i] is UMAWardrobeRecipe uwr2)
+                    {
+                        RemoveWardrobeCollection(uwr2);
+                    }
+                }
             }
-            if (_additiveRecipes.ContainsKey(SlotName))
+
+            if (_wardrobeRecipes.ContainsKey(region))
             {
-                _additiveRecipes.Remove(SlotName);
+                _wardrobeRecipes.Remove(region);
+            }
+            if (_additiveRecipes.ContainsKey(region))
+            {
+                _additiveRecipes.Remove(region);
             }
         }
 
@@ -2016,16 +2053,16 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Gets all wearable items that were appended to the given slot.
         /// </summary>
-        /// <param name="SlotName"></param>
+        /// <param name="region"></param>
         /// <returns></returns>
-        public List<UMAWardrobeRecipe> GetAppendedWearableItems(string SlotName)
+        public List<UMAWardrobeRecipe> GetAppendedWearableItems(string region)
         {
-            if (_additiveRecipes.ContainsKey(SlotName))
+            if (_additiveRecipes.ContainsKey(region))
             {
                 List<UMAWardrobeRecipe> result = new List<UMAWardrobeRecipe>();
 
                 // append all the _additiveRecipes for this slot that are UMAWardrobeRecipe
-                foreach (var utr in _additiveRecipes[SlotName])
+                foreach (var utr in _additiveRecipes[region])
                 {
                     if (utr is UMAWardrobeRecipe uwr)
                     {
@@ -2040,13 +2077,13 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Text recipe version of GetAppendedWearableItems
         /// </summary>
-        /// <param name="SlotName"></param>
+        /// <param name="region"></param>
         /// <returns></returns>
-        public List<UMATextRecipe> GetAppendedItems(string SlotName)
+        public List<UMATextRecipe> GetAppendedItems(string region)
         {
-            if (_additiveRecipes.ContainsKey(SlotName))
+            if (_additiveRecipes.ContainsKey(region))
             {
-                return _additiveRecipes[SlotName];
+                return _additiveRecipes[region];
             }
             return new List<UMATextRecipe>();
         }
@@ -2054,13 +2091,13 @@ namespace UMA.CharacterSystem
         /// <summary>
         /// Gets the wearable item for the given slot.
         /// </summary>
-        /// <param name="SlotName"></param>
+        /// <param name="region"></param>
         /// <returns></returns>
-        public UMATextRecipe GetWearableItem(string SlotName)
+        public UMATextRecipe GetWearableItem(string region)
         {
-            if (_wardrobeRecipes.ContainsKey(SlotName))
+            if (_wardrobeRecipes.ContainsKey(region))
             {
-                return _wardrobeRecipes[SlotName];
+                return _wardrobeRecipes[region];
             }
             return null;
         }
@@ -2276,14 +2313,14 @@ namespace UMA.CharacterSystem
         /// Clears the given wardrobe slot of any recipes that have been set on the Avatar
         /// </summary>
         /// <param name="ws"></param>
-        public void ClearSlot(string ws)
+        public void ClearSlot(string ws, bool removeCollectionItems = true)
         {
             if (_wardrobeRecipes.ContainsKey(ws))
             {
                 if (_wardrobeRecipes.ContainsKey(ws))
                 {
                     var wr = _wardrobeRecipes[ws];
-                    if (wr is UMAWardrobeCollection)
+                    if (wr is UMAWardrobeCollection && removeCollectionItems)
                     {
                         RemoveWardrobeCollection(wr as UMAWardrobeCollection);
                     }
@@ -3381,7 +3418,14 @@ namespace UMA.CharacterSystem
 
             if (activeRace.racedata.useNewDNA)
             {
-                var DNAbyGroup = dnaInstanceCollection.GetDNAByGroup();
+                var sourceRecipe = recipe ?? umaRecipe;
+                var sourceDnaCollection = sourceRecipe != null ? sourceRecipe.dnaInstanceCollection : dnaInstanceCollection;
+                if (sourceDnaCollection == null)
+                {
+                    return dna;
+                }
+
+                var DNAbyGroup = sourceDnaCollection.GetDNAByGroup();
                 foreach (var kvp in DNAbyGroup)
                 {
                     var group = kvp.Key;
@@ -5336,8 +5380,11 @@ namespace UMA.CharacterSystem
                     }
                 }
             }
-
-            dnaInstanceCollection.Initialize(activeRace.racedata.DNACollection);
+            if (dnaInstanceCollection == null)
+            {
+                dnaInstanceCollection = new DNAInstanceCollection();
+            }
+            dnaInstanceCollection.Initialize(activeRace.data.DNACollection);
             dnaInstanceCollection.AfterRecipeGenerated(this);
             // AfterRecipeGenerated
 
@@ -5500,11 +5547,18 @@ namespace UMA.CharacterSystem
         // todo: Should cache these. Maybe in a dictionary by slot name?
         private static Dictionary<string, Mesh> SmooshTargets = new Dictionary<string, Mesh>();
 
+#if UNITY_EDITOR
+        private static bool smooshSceneEditorHooksRegistered = false;
+#endif
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void StaticInitializeOnLoad()
         {
             SmooshTargets = new Dictionary<string, Mesh>();
-            SmooshScene = CreateSmooshScene(SmooshScene); // Yes, it's cleaning it up, and reassining it to itself. This is to stop a warning from the project auditor
+            CleanupSmooshScene();
+#if UNITY_EDITOR
+            RegisterSmooshSceneEditorHooks();
+#endif
         }
 
         private static Scene CreateSmooshScene(Scene scene)
@@ -5525,8 +5579,22 @@ namespace UMA.CharacterSystem
             return scene;
             }
 
+        private static Scene GetOrCreateSmooshScene()
+        {
+            if (!SmooshScene.IsValid())
+            {
+                SmooshScene = CreateSmooshScene(SmooshScene);
+            }
+            return SmooshScene;
+        }
+
         private static Scene CleanScene(Scene scene)
         {
+            if (!scene.IsValid())
+            {
+                return scene;
+            }
+
             var rootObjects = scene.GetRootGameObjects();
             for (int i = 0; i < rootObjects.Length; i++)
             {
@@ -5539,6 +5607,49 @@ namespace UMA.CharacterSystem
             }
             return scene;
         }
+
+        private static void CleanupSmooshScene()
+        {
+            if (!SmooshScene.IsValid())
+            {
+                return;
+            }
+
+            CleanScene(SmooshScene);
+#if UNITY_EDITOR
+            EditorSceneManager.ClosePreviewScene(SmooshScene);
+#endif
+            SmooshScene = default;
+        }
+
+#if UNITY_EDITOR
+        [InitializeOnLoadMethod]
+        private static void RegisterSmooshSceneEditorHooks()
+        {
+            if (smooshSceneEditorHooksRegistered)
+            {
+                return;
+            }
+
+            EditorApplication.playModeStateChanged -= OnEditorPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnEditorPlayModeStateChanged;
+            AssemblyReloadEvents.beforeAssemblyReload -= CleanupSmooshScene;
+            AssemblyReloadEvents.beforeAssemblyReload += CleanupSmooshScene;
+            EditorApplication.quitting -= CleanupSmooshScene;
+            EditorApplication.quitting += CleanupSmooshScene;
+            smooshSceneEditorHooksRegistered = true;
+        }
+
+        private static void OnEditorPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.ExitingEditMode ||
+                state == PlayModeStateChange.EnteredEditMode ||
+                state == PlayModeStateChange.ExitingPlayMode)
+            {
+                CleanupSmooshScene();
+            }
+        }
+#endif
 
         public bool debugVertexes = true;
 
@@ -5564,7 +5675,7 @@ namespace UMA.CharacterSystem
             Physics.BakeMesh(m.GetInstanceID(), false);
 #endif
 
-            SmooshScene = CreateSmooshScene(SmooshScene);
+            SmooshScene = GetOrCreateSmooshScene();
 
             GameObject go = new GameObject();
             go.transform.localPosition = Vector3.zero;

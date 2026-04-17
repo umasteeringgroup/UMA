@@ -97,5 +97,19 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     category: 
     enabled: 1
+  - bone: RightUpperLid
+    hash: 683767470
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.013846783, y: -5.4321564e-10, z: 5.83805e-11, w: 0.99990416}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftUpperLid
+    hash: -209628701
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.013846783, y: 5.4321564e-10, z: -5.83805e-11, w: 0.99990416}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
   tweenPoses: []
   tweenWeights: []

@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Female 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Legs/Human Female 3.0/9_tights_stripe_Recipe.png
+    thumb: {fileID: 21300000, guid: 7d9f87b2a1502bd4aa2ecd3f0ca9ff2e, type: 3}
   wardrobeSlot: Legs
   Appended: 0
   Hides: []

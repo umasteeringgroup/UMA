@@ -20,6 +20,7 @@ namespace UMA.Editors
         int slotHidePickerID = -1;
 		int selectedsuppressed = -1;
 		private static bool showModifiers = false;
+		private static bool showUI = false;
 
 
 
@@ -829,6 +830,8 @@ namespace UMA.Editors
 		{
 			#region Setup
 			bool doUpdate = false;
+
+
 			//Field Infos
 			FieldInfo ReplacesField = TargetType.GetField("replaces", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo CompatibleRacesField = TargetType.GetField("compatibleRaces", BindingFlags.Public | BindingFlags.Instance);
@@ -838,9 +841,9 @@ namespace UMA.Editors
 			FieldInfo DisplayValueField = TargetType.GetField("DisplayValue", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo UserField = TargetType.GetField("UserField", BindingFlags.Public | BindingFlags.Instance);
 			FieldInfo AppendedField = TargetType.GetField("Appended", BindingFlags.Public | BindingFlags.Instance);
-            FieldInfo HideTagsField = TargetType.GetField("HideTags",BindingFlags.Public|BindingFlags.Instance);
+			FieldInfo HideTagsField = TargetType.GetField("HideTags", BindingFlags.Public | BindingFlags.Instance);
 
-            var HideTagsProperty = serializedObject.FindProperty("HideTags");
+			var HideTagsProperty = serializedObject.FindProperty("HideTags");
 			// ************************************
 			// field values
 			// ************************************
@@ -860,15 +863,15 @@ namespace UMA.Editors
 			List<string> hides = (List<string>)HidesField.GetValue(target);
 			string displayValue = (string)DisplayValueField.GetValue(target);
 			string userFieldValue = (string)UserField.GetValue(target);
-            List<string> hideTags = (List<string>)HideTagsField.GetValue(target);
+			List<string> hideTags = (List<string>)HideTagsField.GetValue(target);
 
-            UMAWardrobeRecipe recipe = target as UMAWardrobeRecipe;
+			UMAWardrobeRecipe recipe = target as UMAWardrobeRecipe;
 
-            #endregion
+			#endregion
 
-            #region Display Value UI
-            //displayValue UI
-            string PreviousValue = displayValue;
+			#region Display Value UI
+			//displayValue UI
+			string PreviousValue = displayValue;
 			displayValue = EditorGUILayout.DelayedTextField("Display Value", displayValue);
 			if (displayValue != PreviousValue)
 			{
@@ -890,24 +893,24 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.HelpBox("User Field is ignored by the system. You can use this to store data that can later be used by your application to provide filtering or categorizing, etc.", MessageType.Info);
 			}
-            #endregion
+			#endregion
 
-            #region Appended
+			#region Appended
 			if (AppendedField != null)
-            {
+			{
 				bool appendedValue = (bool)AppendedField.GetValue(target);
 				bool newAppend = EditorGUILayout.Toggle("Is Appended", appendedValue);
 				if (newAppend != appendedValue)
-                {
-					AppendedField.SetValue(target,newAppend);
+				{
+					AppendedField.SetValue(target, newAppend);
 					doUpdate = true;
 				}
 			}
-            #endregion
+			#endregion
 
-            #region Wardrobe Slot UI
-            //wardrobeSlot UI
-            int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum(wardrobeSlot, compatibleRaces, false);
+			#region Wardrobe Slot UI
+			//wardrobeSlot UI
+			int selectedWardrobeSlotIndex = GenerateWardrobeSlotsEnum(wardrobeSlot, compatibleRaces, false);
 			string newWardrobeSlot;
 
 			List<string> newSuppressWardrobeSlot = new List<string>();
@@ -936,29 +939,29 @@ namespace UMA.Editors
 				{
 					GUIHelper.BeginVerticalPadded(3, new Color(0.75f, 0.875f, 1f, 0.3f));
 					GUILayout.BeginHorizontal();
-					slotFilter = EditorGUILayout.TextField("Filter",slotFilter, GUILayout.ExpandWidth(true));
-					if (GUILayout.Button("x",GUILayout.Width(15)))
-                    {
+					slotFilter = EditorGUILayout.TextField("Filter", slotFilter, GUILayout.ExpandWidth(true));
+					if (GUILayout.Button("x", GUILayout.Width(15)))
+					{
 						slotFilter = "";
-                    }
+					}
 					GUILayout.EndHorizontal();
 					GUILayout.BeginHorizontal();
 					GUILayout.Label("Select Wardrobe Slot or press cancel");
-					if (GUILayout.Button("Cancel", EditorStyles.miniButton,GUILayout.Width(70)))
+					if (GUILayout.Button("Cancel", EditorStyles.miniButton, GUILayout.Width(70)))
 					{
 						SelectingSlot = false;
 					}
 					GUILayout.EndHorizontal();
 
 					foreach (string lbl in generatedWardrobeSlotOptionsLabels)
-                    {
-                        if (!string.IsNullOrEmpty(slotFilter))
-                        {
+					{
+						if (!string.IsNullOrEmpty(slotFilter))
+						{
 							if (!lbl.ToLower().Contains(slotFilter.ToLower()))
-                            {
+							{
 								continue;
-                            }
-                        }
+							}
+						}
 						GUILayout.BeginHorizontal();
 						GUILayout.Space(20);
 						if (GUILayout.Button(lbl, EditorStyles.miniButton))
@@ -969,7 +972,7 @@ namespace UMA.Editors
 							SelectingSlot = false;
 						}
 						GUILayout.EndHorizontal();
-                    }
+					}
 					GUIHelper.EndVerticalPadded(3);
 				}
 				/*
@@ -986,12 +989,12 @@ namespace UMA.Editors
 			{
 				EditorGUILayout.HelpBox("Wardrobe Slot: This assigns the recipe to a Wardrobe Slot. The wardrobe slots are defined on the race. Characters can have only one recipe per Wardrobe Slot at a time, so for example, adding a 'beard' recipe to a character will replace the existing 'beard' if there is one", MessageType.Info);
 			}
-            #endregion
+			#endregion
 
 			#region Suppress UI
 			/*
-            //SuppressedSlots UI
-            int suppressFlags = 0;
+			//SuppressedSlots UI
+			int suppressFlags = 0;
 			for (int i = 0; i < generatedWardrobeSlotOptions.Count; i++)
 			{
 				if (suppressWardrobeSlot.Contains(generatedWardrobeSlotOptions[i]))
@@ -1049,11 +1052,11 @@ namespace UMA.Editors
 				}
 			}
 			else
-            {
-                EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] { "Nothing" });
-            }
+			{
+				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] { "Nothing" });
+			}
 
-            GUILayout.Space(8);
+			GUILayout.Space(8);
 			if (GUILayout.Button("Select", GUILayout.MaxWidth(64), GUILayout.MaxHeight(16)))
 			{
 				slotHidePickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 101;
@@ -1092,31 +1095,31 @@ namespace UMA.Editors
 				ReplacesSlots.Insert(0, "Nothing");
 				int selectedIndex = ReplacesSlots.IndexOf(replaces);
 				if (selectedIndex < 0)
-                {
-                    selectedIndex = 0; // not found, point at "nothing"
-                }
+				{
+					selectedIndex = 0; // not found, point at "nothing"
+				}
 
-                selectedIndex = EditorGUILayout.Popup("Replaces", selectedIndex, ReplacesSlots.ToArray());
+				selectedIndex = EditorGUILayout.Popup("Replaces", selectedIndex, ReplacesSlots.ToArray());
 
 				ReplacesField.SetValue(target, ReplacesSlots[selectedIndex]);
 				if (ReplacesSlots[selectedIndex] != replaces)
-                {
-                    doUpdate = true;
-                }
-            }
+				{
+					doUpdate = true;
+				}
+			}
 
 			if (ShowHelp)
 			{
 				EditorGUILayout.HelpBox("Replaces: This is used to replace part of the base recipe while keeping it's overlays. For example, if you want to replace the head from the base race recipe with a High Poly head, you would 'replace' the head, not hide it. Only one slot can be replaced, and the recipe should only contain one slot.", MessageType.Info);
 			}
-            #endregion
+			#endregion
 
-            #region MeshHideArray
-            GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
-            GUILayout.Space(10);
-            showModifiers = EditorGUILayout.Foldout(showModifiers, "Mesh Modifications");
-            GUILayout.EndHorizontal();
-            if (showModifiers)
+			#region MeshHideArray
+			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
+			GUILayout.Space(10);
+			showModifiers = EditorGUILayout.Foldout(showModifiers, "Mesh Modifications");
+			GUILayout.EndHorizontal();
+			if (showModifiers)
 			{
 				//EditorGUIUtility.LookLikeInspector();
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
@@ -1144,8 +1147,8 @@ namespace UMA.Editors
 						if (mhac != null)
 						{
 							AddMeshHideAssetCollection(recipe, mhac);
-                        }
-                        MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
+						}
+						MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
 						if (mha != null)
 						{
 							AddMeshHideAsset(recipe, mha);
@@ -1165,7 +1168,7 @@ namespace UMA.Editors
 				{
 					EditorUtility.SetDirty(target);
 					AssetDatabase.SaveAssetIfDirty(target);
-                    string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
+					string path = AssetDatabase.GetAssetPath(target.GetInstanceID());
 					AssetDatabase.ImportAsset(path);
 					Repaint();
 				}
@@ -1184,7 +1187,7 @@ namespace UMA.Editors
 						GUILayout.Space(10);
 						EditorGUILayout.LabelField(mha.name, GUILayout.ExpandWidth(true));
 						GUILayout.Label($"[{mha.AssetSlotName}]", GUILayout.Width(90.0f));
-                        if (GUILayout.Button("Inspect", GUILayout.Width(65)))
+						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
 						{
 							InspectMe.Add(mha);
 							//InspectorUtlity.InspectTarget(mha);
@@ -1209,48 +1212,48 @@ namespace UMA.Editors
 				}
 
 
-                MeshHideAssetCollection collectiondeleteme = null;
+				MeshHideAssetCollection collectiondeleteme = null;
 				deleteNulls = false;
-                GUILayout.Label("Mesh Hide Asset Collections", EditorStyles.boldLabel);
-                count = 0;
-                foreach (MeshHideAssetCollection mhac in recipe.MeshHideAssetCollections)
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    if (mhac != null)
-                    {
-                        count++;
-                        GUILayout.Space(10);
-                        EditorGUILayout.LabelField(mhac.name, GUILayout.ExpandWidth(true));
-                        if (GUILayout.Button("Inspect", GUILayout.Width(65)))
-                        {
-                            InspectMe.Add(mhac);
-                        }
-                        if (GUILayout.Button("X", GUILayout.Width(20.0f)))
-                        {
-                            collectiondeleteme = mhac;
-                        }
-                    }
-                    else
-                    {
-                        deleteNulls = true;
-                    }
-                    EditorGUILayout.EndHorizontal();
-                }
-                if (count == 0)
-                {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Space(10);
-                    EditorGUILayout.LabelField("No Collections", EditorStyles.miniLabel);
-                    GUILayout.EndHorizontal();
-                }
+				GUILayout.Label("Mesh Hide Asset Collections", EditorStyles.boldLabel);
+				count = 0;
+				foreach (MeshHideAssetCollection mhac in recipe.MeshHideAssetCollections)
+				{
+					EditorGUILayout.BeginHorizontal();
+					if (mhac != null)
+					{
+						count++;
+						GUILayout.Space(10);
+						EditorGUILayout.LabelField(mhac.name, GUILayout.ExpandWidth(true));
+						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
+						{
+							InspectMe.Add(mhac);
+						}
+						if (GUILayout.Button("X", GUILayout.Width(20.0f)))
+						{
+							collectiondeleteme = mhac;
+						}
+					}
+					else
+					{
+						deleteNulls = true;
+					}
+					EditorGUILayout.EndHorizontal();
+				}
+				if (count == 0)
+				{
+					GUILayout.BeginHorizontal();
+					GUILayout.Space(10);
+					EditorGUILayout.LabelField("No Collections", EditorStyles.miniLabel);
+					GUILayout.EndHorizontal();
+				}
 
 
-                GUILayout.Label("Mesh Modifiers", EditorStyles.boldLabel);
+				GUILayout.Label("Mesh Modifiers", EditorStyles.boldLabel);
 
 				count = 0;
 				int delPos = -1;
 				int delCount = 0;
-                foreach (MeshModifier mm in recipe.MeshModifiers)
+				foreach (MeshModifier mm in recipe.MeshModifiers)
 				{
 					count++;
 					EditorGUILayout.BeginHorizontal();
@@ -1266,23 +1269,23 @@ namespace UMA.Editors
 						if (GUILayout.Button("Inspect", GUILayout.Width(65)))
 						{
 							InspectMe.Add(mm);
-                            //InspectorUtlity.InspectTarget(mm);
+							//InspectorUtlity.InspectTarget(mm);
 						}
 					}
-                    if (GUILayout.Button("X", GUILayout.Width(20.0f)))
+					if (GUILayout.Button("X", GUILayout.Width(20.0f)))
 					{
 
 						delPos = delCount;
-                    }
+					}
 					EditorGUILayout.EndHorizontal();
 					delCount++;
 				}
 
 				if (delPos > -1)
-                {
-                    recipe.MeshModifiers.RemoveAt(delPos);
-                }
-                if (count == 0)
+				{
+					recipe.MeshModifiers.RemoveAt(delPos);
+				}
+				if (count == 0)
 				{
 					GUILayout.BeginHorizontal();
 					GUILayout.Space(10);
@@ -1336,7 +1339,7 @@ namespace UMA.Editors
 				GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
 				foreach (string s in suppressWardrobeSlot)
 				{
-                    EditorGUILayout.BeginHorizontal();
+					EditorGUILayout.BeginHorizontal();
 					GUILayout.Label(s);
 					if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(24)))
 					{
@@ -1406,11 +1409,11 @@ namespace UMA.Editors
 					EditorGUILayout.HelpBox("You can add Override DNA that is applied during the build process. It will only be applied while this wardrobe recipe is equipped.", MessageType.Info);
 
 					if (currentRace >= _compatibleRaceDatas.Count)
-                    {
-                        currentRace = 0;
-                    }
+					{
+						currentRace = 0;
+					}
 
-                    EditorGUILayout.BeginHorizontal();
+					EditorGUILayout.BeginHorizontal();
 					currentRace = EditorGUILayout.Popup(currentRace, compatibleRaces.ToArray());
 					string raceName = compatibleRaces[currentRace];
 
@@ -1422,7 +1425,7 @@ namespace UMA.Editors
 						List<string> MenuDNA = new List<string>();
 						foreach (string s in rawcachedRaceDNA)
 						{
-                            MenuDNA.Add(s.MenuCamelCase());
+							MenuDNA.Add(s.MenuCamelCase());
 						}
 						cachedRaceDNA = MenuDNA.ToArray();
 					}
@@ -1452,7 +1455,7 @@ namespace UMA.Editors
 					EditorGUI.BeginChangeCheck();
 					foreach (var pd in recipe.OverrideDNA.PreloadValues)
 					{
-                        GUILayout.BeginHorizontal();
+						GUILayout.BeginHorizontal();
 						GUILayout.Label(ObjectNames.NicifyVariableName(pd.Name), GUILayout.Width(100));
 						//pd.Value = GUILayout.HorizontalSlider(pd.Value, 0.0f, 1.0f);
 						pd.Value = EditorGUILayout.Slider(pd.Value, 0.0f, 1.0f);
@@ -1481,7 +1484,7 @@ namespace UMA.Editors
 			#region HideTags UI
 			if (hideTagsList == null)
 			{
-				hideTagsList = GUIHelper.InitTagsList("HideTags",serializedObject);
+				hideTagsList = GUIHelper.InitTagsList("HideTags", serializedObject);
 			}
 
 			GUILayout.BeginHorizontal(EditorStyles.toolbarButton);
@@ -1490,20 +1493,20 @@ namespace UMA.Editors
 			GUILayout.EndHorizontal();
 			if (ShowHidetags)
 			{
-                GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
+				GUIHelper.BeginVerticalPadded(10, new Color(0.55f, 0.25f, 0.25f));
 
 				/*
-                doUpdate |= DoTagSelector(hideTags);
-                if (doUpdate)
-                {
-                    HideTagsProperty.SetValue( hideTags);
-                    serializedObject.ApplyModifiedProperties();
-                    serializedObject.Update();
-                }
+				doUpdate |= DoTagSelector(hideTags);
+				if (doUpdate)
+				{
+					HideTagsProperty.SetValue( hideTags);
+					serializedObject.ApplyModifiedProperties();
+					serializedObject.Update();
+				}
 				*/
 				EditorGUI.BeginChangeCheck();
 				hideTagsList.DoLayoutList();
-                GUIHelper.EndVerticalPadded(10);
+				GUIHelper.EndVerticalPadded(10);
 
 				if (EditorGUI.EndChangeCheck())
 				{
@@ -1539,6 +1542,7 @@ namespace UMA.Editors
 				Modifiers.Clear();
 				return true;
 			}
+
 
 			return doUpdate;
 		}

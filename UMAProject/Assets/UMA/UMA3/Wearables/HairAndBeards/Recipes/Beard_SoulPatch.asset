@@ -18,7 +18,10 @@ MonoBehaviour:
   DisplayValue: 
   compatibleRaces:
   - Human Male 3.0
-  wardrobeRecipeThumbs: []
+  wardrobeRecipeThumbs:
+  - race: Human Male 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Beard/Human Male 3.0/16_Beard_SoulPatch.png
+    thumb: {fileID: 21300000, guid: f108a080260bc0b419bd3db8128866b5, type: 3}
   wardrobeSlot: Beard
   Appended: 0
   Hides: []

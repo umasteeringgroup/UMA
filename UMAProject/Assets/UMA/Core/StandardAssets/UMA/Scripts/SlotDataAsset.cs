@@ -1361,7 +1361,7 @@ namespace UMA
             // Optional rename
             if (!string.IsNullOrEmpty(p.newSlotName))
             {
-                Debug.Log("Renaming slot to " + p.newSlotName);
+                //Debug.Log("Renaming slot to " + p.newSlotName);
                 newSlotData.name = p.newSlotName;
                 newSlotData._oldSlotName = "";
                 if (newSlotData.meshData != null)

@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/BottomUnderlayer/Human Male 3.0/6_male_underwear_whiteBlue_Recipe.png
+    thumb: {fileID: 21300000, guid: f749de1ad36bc5e46adc20891dac0006, type: 3}
   wardrobeSlot: BottomUnderlayer
   Appended: 0
   Hides: []

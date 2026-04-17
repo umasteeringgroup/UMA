@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Female 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Chest/Human Female 3.0/3_Hoodie_turquoise_Recipe.png
+    thumb: {fileID: 21300000, guid: 0ce7ccd77b72bf9438415d1cd9dda76e, type: 3}
   wardrobeSlot: Chest
   Appended: 0
   Hides: []

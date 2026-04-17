@@ -112,8 +112,9 @@ public class IconCreatorEditor : Editor
     private void ValidateRegions()
     {
         IconCreator iconCreator = (IconCreator)target;
-        List<string> raceRegions = GetRaceRegions();
-        
+        List<string> rRegions = GetRaceRegions();
+        List<string> raceRegions = new List<string>(rRegions);
+
         if (raceRegions == null)
         {
             EditorUtility.DisplayDialog("Validation Result", "No race regions found.", "OK");
@@ -221,7 +222,14 @@ public class IconCreatorEditor : Editor
     {
         IconCreator iconCreator = (IconCreator)target;
         RaceData raceData = iconCreator.avatar != null ? iconCreator.avatar.activeRace.data : null;
-        return raceData != null ? raceData.Regions : null;
+        if (raceData != null)
+        {
+            return new List<string>(raceData.Regions);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     private string GetUnavailableRegionsMessage()

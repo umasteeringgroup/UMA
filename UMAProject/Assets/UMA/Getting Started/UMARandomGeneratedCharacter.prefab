@@ -44,8 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 910d06e64183ac547ab816b9f03574ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Randomizers:
-  - {fileID: 11400000, guid: a94e15a57b385cd4fb1551ea2582187a, type: 2}
+  Randomizers: []
   prefab: {fileID: 153068, guid: 165a16ac9ccf1a94080956c3b8c82000, type: 3}
   ParentObject: {fileID: 0}
   ShowPlaceholder: 1

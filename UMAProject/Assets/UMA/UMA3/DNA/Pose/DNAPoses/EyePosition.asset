@@ -43,7 +43,7 @@ MonoBehaviour:
     enabled: 1
   - bone: NoseTop
     hash: 463827395
-    position: {x: 0.00015535744, y: -0.009775728, z: -0.00025290996}
+    position: {x: 0.0001226615, y: -0.007717423, z: -0.00019948184}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 
@@ -86,6 +86,13 @@ MonoBehaviour:
   - bone: RightUpperLidAdjust
     hash: -511414047
     position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: NoseMiddle
+    hash: 865884795
+    position: {x: -0.0000080130485, y: -0.007898714, z: -0.00040847063}
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
     category: 

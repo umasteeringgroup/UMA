@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Feet/Human Male 3.0/3_male_shoes_tall_Recipe.png
+    thumb: {fileID: 21300000, guid: c85816c172ff2bd4794d2d06ff303b37, type: 3}
   wardrobeSlot: Feet
   Appended: 0
   Hides: []

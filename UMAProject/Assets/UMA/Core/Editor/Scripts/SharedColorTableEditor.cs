@@ -66,6 +66,16 @@ namespace UMA.Editors
 
             EditorGUILayout.LabelField("Shared Color Table", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Expand All"))
+            {
+                ExpandAllColors(serializedObject.FindProperty("colors"));
+            }
+            if (GUILayout.Button("Collapse All"))
+            {
+                CollapseAllColors(serializedObject.FindProperty("colors"));
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Add New Color"))
             {
                 AddNewColor(sct);
@@ -469,6 +479,26 @@ namespace UMA.Editors
                 SerializedProperty nameProperty = colorProperty.FindPropertyRelative("name");
                 nameProperty.isExpanded = i == expandedIndexToKeep;
             }
+        }
+
+        private void ExpandAllColors(SerializedProperty colorsProperty)
+        {
+            if (colorsProperty == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < colorsProperty.arraySize; i++)
+            {
+                SerializedProperty colorProperty = colorsProperty.GetArrayElementAtIndex(i);
+                SerializedProperty nameProperty = colorProperty.FindPropertyRelative("name");
+                nameProperty.isExpanded = true;
+            }
+        }
+
+        private void CollapseAllColors(SerializedProperty colorsProperty)
+        {
+            CollapseColorsExcept(colorsProperty, -1);
         }
 
         private void SyncDonorPropertySelections(Material material)

@@ -18,7 +18,10 @@ MonoBehaviour:
   DisplayValue: 
   compatibleRaces:
   - Human Male 3.0
-  wardrobeRecipeThumbs: []
+  wardrobeRecipeThumbs:
+  - race: Human Male 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Beard/Human Male 3.0/26_Mustache_Painter.png
+    thumb: {fileID: 21300000, guid: d68b5eb7a9126854fbdc5e8876c27ede, type: 3}
   wardrobeSlot: Beard
   Appended: 0
   Hides: []

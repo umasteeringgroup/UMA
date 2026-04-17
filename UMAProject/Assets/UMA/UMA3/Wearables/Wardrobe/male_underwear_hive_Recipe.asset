@@ -18,7 +18,10 @@ MonoBehaviour:
   DisplayValue: 
   compatibleRaces:
   - Human Male 3.0
-  wardrobeRecipeThumbs: []
+  wardrobeRecipeThumbs:
+  - race: Human Male 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/BottomUnderlayer/Human Male 3.0/4_male_underwear_hive_Recipe.png
+    thumb: {fileID: 21300000, guid: ae944737886b49849ad8650d58da82ca, type: 3}
   wardrobeSlot: BottomUnderlayer
   Appended: 0
   Hides: []

@@ -21,27 +21,563 @@ MonoBehaviour:
   global:
     SharedColors: []
     ColorsFoldout: 0
-    UtilityFoldout: 1
+    UtilityFoldout: 0
   GlobalSharedColors: []
   RandomAvatars:
   - RaceName: Human Female 3.0
     Chance: 57
     SharedColors:
     - ColorName: Hair
-      ColorTable: {fileID: 11400000, guid: e7303e8210acb45ef8d3f465731d2e94, type: 2}
+      ColorTable: {fileID: 11400000, guid: b3b6cfa4c2da1004cb1e49feb8144d30, type: 2}
       GuiFoldout: 1
       Delete: 0
       CurrentColor: 0
     - ColorName: Skin
-      ColorTable: {fileID: 11400000, guid: 293a9ab09ce104c24a17ac539784a376, type: 2}
+      ColorTable: {fileID: 11400000, guid: 1142620b746698b42a5bb3392ee7c732, type: 2}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
+    - ColorName: Eyes
+      ColorTable: {fileID: 11400000, guid: 40e5f112cad2f64438393fe518da506d, type: 2}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
+    - ColorName: Tattoo
+      ColorTable: {fileID: 11400000, guid: 3fe48713827b53d439394fcc3e1ed0fa, type: 2}
       GuiFoldout: 1
       Delete: 0
       CurrentColor: 0
     RandomWardrobeSlots:
-    - WardrobeSlot: {fileID: 0}
+    - WardrobeSlot: {fileID: 11400000, guid: 4328f897daf63b7418667580f939558a, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: e535e3b0d3914b443918a8591e9f9d6c, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 61e91a3977e6cdb4e86718eda1ec9e16, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: e4c92bff99b7d9d4d97499b89f1fdb02, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 71ed2c72109da884c964c254e7ba6c5b, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 51eec00127aacb647a967dd442ce5b68, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 67133629d0c41014cbbf4ec53a436687, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: d6383a0e8cef35c49aee12da15171d04, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: d0fbecde0d56e7f48af40b0615fffe3b, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Shared Color 1
+    - WardrobeSlot: {fileID: 11400000, guid: 807cfcd005a81894988384eeaceb2e21, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: eb5716d692323e1428f16773a964c77f, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 1c3dad5d6be6d564eba7c334b3209d41, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 7b04e811cab36da4ea4ec6b4ed49ecc3, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: f3ac0ca2b2909754fbdb795e47e96b80, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 9230843a0a9f95e419b074b1d3c3b5bb, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 52676ceb565336a4f9508148418161ab, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 40e240746c801294ab09d372fd9eee8a, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 2f3acfc4dd93b3c4faa2410e4255b666, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: ec43efbaab6ee6342ad64c668874c4c7, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: cdc364b6089619049a3dec0eb0406687, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 8863e8885a6b77f4389d5f513b13715f, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 075bd537b74a2d8439dc3cae07db9fa8, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 73d0c1e2a76066c4ba3020ea424e87a0, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: f3b7b720912d3f84abc6d9657c9c42ed, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 3474db4c8aca18a4fbd38c1ee584db7f, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 469425923fa85954494df0b9898aabf6, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 847521e630faed24aabc69e112e5e765, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 54a7833b3ca20b5488f4ad40c46a91fe, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: d909b37dd7a09d042ba41fd3a33112e9, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: c4cb498384734114f8896ed9798464ed, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 6c6a4d38cb8219542a36651aa79e38cd, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Feet
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: ff51aacf30657794c844081d448cbbe2, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Feet
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 4b579de8cf2e7384e9d53efdfb680c3f, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Feet
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 7841bcb29c7dc4d40bc367e79964a666, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: b018c36bd6589214785340abbdafa563, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 0e9919e9aa10fa04e9ad86d565261678, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 6a1dc5a4ba9a82a4db6fc728d4b6eda8, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: c4971a1106c64514b80466019f4e16c9, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 032c9c79cfa8da14ba017201748ff0ca, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 6fcd15cf7c723fe44ae02c1828e26197, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: c056e63f5e59a2e4b85e160707cb276e, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 2467b9f23683edf47929c985261c0f29, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: dcd1d9d8406b777488de52f7dc306c84, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 03fb4cc282e649744aa9712e47554170, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 2743f153868179a42afbb280ff3320bd, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 5c14eb9d2d44a494ca770ade336ab7dc, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 298f42deb7ecf594eaf5d429c89bf2cf, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 6cd9a3d40755ca34d8a273ad9fa98d51, type: 2}
       Chance: 1
       Colors: []
       _slotName: Legs
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 4c2cbc40e28967d42af9d2a6beaa1857, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 6a5d5cffdb7a32a40b564136a829eedf, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: a68398444af487a4898d67ce763422f5, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 56e68bc42b0b4ca47a8cb5b19e2cfe1a, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 6bf1e7d4f0f7f014c97e78ceb7e21901, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: f0cf7145ad4ca614a950a661dcb5428e, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: aaba542ed573de04bb1bb9f3b38a71af, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: c224b1aded5c95b4793942be32cfbb36, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 9caa9352c4ef20b4eab11b890ebe20b0, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: TopUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 3938c97edad00df4fb2fc62aff4e2e03, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: TopUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 59ee9577aa18d894d924e02326837f55, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: TopUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 2391614db8c7ea04d947e6026453e322, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: TopUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: a728611e4a687624cb4f00f585c7c5bb, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: TopUnderlayer
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 81b213c0b621f924d907420270944144, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: TopUnderlayer
       GuiFoldout: 1
       Delete: 0
       AddColorTable: 0
@@ -162,23 +698,23 @@ MonoBehaviour:
       MinValue: 0.25
       MaxValue: 0.75
     - DnaName: belly
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.3095238
+      MaxValue: 0.639881
     - DnaName: breastCleavage
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.32738093
+      MaxValue: 0.6220238
     - DnaName: breastOrientation
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.36607143
+      MaxValue: 0.57142854
     - DnaName: breastPosition
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.35119045
+      MaxValue: 0.58333325
     - DnaName: breastSize
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.16071428
+      MaxValue: 0.6190476
     - DnaName: feetSize
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.35714287
+      MaxValue: 0.66666675
     - DnaName: forearmLength
       MinValue: 0.25
       MaxValue: 0.75
@@ -189,37 +725,37 @@ MonoBehaviour:
       MinValue: 0.25
       MaxValue: 0.75
     - DnaName: handsSize
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.38392857
+      MaxValue: 0.577381
     - DnaName: height
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.25892857
+      MaxValue: 0.70535713
     - DnaName: legSeparation
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.38690478
+      MaxValue: 0.63392854
     - DnaName: legsSize
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.36309522
+      MaxValue: 0.6845238
     - DnaName: lowerMuscle
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.30357143
+      MaxValue: 0.71726185
     - DnaName: lowerWeight
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.30059528
+      MaxValue: 0.71428573
     - DnaName: upperMuscle
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.36904764
+      MaxValue: 0.6815476
     - DnaName: upperWeight
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.389881
+      MaxValue: 0.672619
     - DnaName: waist
-      MinValue: 0.25
-      MaxValue: 0.75
+      MinValue: 0.3422619
+      MaxValue: 0.6309523
     raceData: {fileID: 11400000, guid: 51d130ee268a6114795dfc4590efb404, type: 2}
-    GuiFoldout: 1
-    ColorsFoldout: 0
+    GuiFoldout: 0
+    ColorsFoldout: 1
     WardrobeFoldout: 1
-    DnaFoldout: 0
+    DnaFoldout: 1
     Delete: 0
     AddColorTable: 0
     DnaChanged: 1
@@ -284,7 +820,7 @@ MonoBehaviour:
     SelectedDNA: 0
     DNAAdd: 
     DNADel: 0
-    currentWardrobeSlot: 13
+    currentWardrobeSlot: 11
   - RaceName: Human Male 3.0
     Chance: 39
     SharedColors:
@@ -298,20 +834,785 @@ MonoBehaviour:
       GuiFoldout: 1
       Delete: 0
       CurrentColor: 0
+    - ColorName: Tattoo
+      ColorTable: {fileID: 11400000, guid: 3fe48713827b53d439394fcc3e1ed0fa, type: 2}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
+    - ColorName: Eyes
+      ColorTable: {fileID: 11400000, guid: 40e5f112cad2f64438393fe518da506d, type: 2}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
     RandomWardrobeSlots:
-    - WardrobeSlot: {fileID: 11400000, guid: 75731084f3e59ed44822a0c28b27764c, type: 2}
+    - WardrobeSlot: {fileID: 0}
+      Chance: 23
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 1
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: f8da5fe984dfb7640bac9380aace8123, type: 2}
       Chance: 1
       Colors: []
-      _slotName: None
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 4b929b1035f24c74c8de2669a5e62d2a, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: e7d0cd8ca245ede4da7d5d25f0408fba, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: ec15a52bd5f329e47ba8ae7ce7134290, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 462aff48250137b4189caf1096ce5577, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: fa1bce88f182d2b499d732c30bb89e9b, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 717095fcc2333524e8f64bb25f471251, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 0c1b86d5bb348274cba75bbdf7ae09cd, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 7a8f2349f85886949a601b66a7ecd730, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 09a6bf10961ba6743a6508f078a47416, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 6a3d1ce9d14244e4cb70603d48e31ae3, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 2ea3a67a76999c54a8a18b655822c216, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: a1e55c76a344c7b4bafff68f907a0123, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: b5b772ea68efdff4dbf83a0d1fdec816, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 69345b32ae382a3478c4922a57598e96, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 162a0e546953f504fa1fd346eeee4c6f, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 1c360cfdabf34cb49b35f408bc61b29e, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: f8fe366049072804991888edda22c14d, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: f3f3d2d6df852ae438aa86b7558e3187, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: c764f53a93fa08b40b169a61827a31b4, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 0cb58c92842c05d4e82ac64dbde63aa3, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: f85b387080cbe254b91dbf895e69cc7d, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 1385464eece30d8498101079bd959865, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 22ee617d4df78404f8067730b4d55146, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 8870c941a13fbd94ba45ec7fcad4c6a5, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: b5d179e4e667a554bba0019699fb473d, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 8f01ef6e4cef4d840ac4843f2ef0596d, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: b9f09e6cfedb61649a0dc04a4858eb9d, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: fa98a7599a056084e9b9872aa2a49a75, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 0ee7b37542dac1b4e944152ed8b93aa0, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 1246e185009316846bad5e536d547e1b, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 8ffdd4d7b28ba4c4db1f04b4c17e402a, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 29aa95302b4991e40a20ca2e8aef79f6, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: b69d6269886059140bb37e1a34effbd0, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 729f0566362ff0446831676c6eb01b67, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: a1e16a198836f754aa8ad6b5e9ef8202, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Beard
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 42bf1905064bcb144888292b673bbe78, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
       GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors: []
-    - WardrobeSlot: {fileID: 11400000, guid: 75731084f3e59ed44822a0c28b27764c, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 02f05439f9d8410468b15771af635042, type: 2}
       Chance: 1
       Colors: []
-      _slotName: None
-      GuiFoldout: 1
+      _slotName: BottomUnderlayer
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: d45299602ca4dcb47ba62111a9e816a5, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 604f01e8584dc224db89cd6aece15aad, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 172d750a4828df1469001a8e8ed15fee, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: aedd2f3f964b4c0499131e38c6a5422c, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: BottomUnderlayer
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: a47ff067f68537f4d844d4c007deb8fb, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: d16e0d0766f418d40abd43de14596005, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: b96d745dbf37c664ab3490d93c510c16, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: aa168d22c3ad84245829828a98467d0c, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: a48ff9401ee730b498a6eb44691dd2e5, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 3a1b3f708e1d5654c96e86b08bdfd8bf, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Chest
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: ec43efbaab6ee6342ad64c668874c4c7, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: cdc364b6089619049a3dec0eb0406687, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 8863e8885a6b77f4389d5f513b13715f, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 075bd537b74a2d8439dc3cae07db9fa8, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 73d0c1e2a76066c4ba3020ea424e87a0, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: f3b7b720912d3f84abc6d9657c9c42ed, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 3474db4c8aca18a4fbd38c1ee584db7f, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 469425923fa85954494df0b9898aabf6, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 847521e630faed24aabc69e112e5e765, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 54a7833b3ca20b5488f4ad40c46a91fe, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: d909b37dd7a09d042ba41fd3a33112e9, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: c4cb498384734114f8896ed9798464ed, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Eyebrows
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: b55cee5facaaacb49adbf21556a91930, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Feet
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 9962c28dfacdf1d41b3b420c64a157c7, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Feet
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 8a44198d09a1d134597a9c5a53d14350, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Feet
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 7841bcb29c7dc4d40bc367e79964a666, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: b018c36bd6589214785340abbdafa563, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 0e9919e9aa10fa04e9ad86d565261678, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 6a1dc5a4ba9a82a4db6fc728d4b6eda8, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: c4971a1106c64514b80466019f4e16c9, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 032c9c79cfa8da14ba017201748ff0ca, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 6fcd15cf7c723fe44ae02c1828e26197, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: c056e63f5e59a2e4b85e160707cb276e, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 2467b9f23683edf47929c985261c0f29, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: dcd1d9d8406b777488de52f7dc306c84, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 03fb4cc282e649744aa9712e47554170, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 2743f153868179a42afbb280ff3320bd, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 5c14eb9d2d44a494ca770ade336ab7dc, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: 298f42deb7ecf594eaf5d429c89bf2cf, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Hair
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - Hair
+    - WardrobeSlot: {fileID: 11400000, guid: b245b79130682d04dba398b75febd4fa, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 6cc82868ba535ad4a94cdfcd3ae1dead, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 2591715f0e0f0ed4ab0f11ebd7b9d063, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 86f6dbab2e17ea143adb297336a735ff, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: d928cabcf2854e6428490a8eb733f9a0, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 9d9f5b51a78e0f44a87f7fb7dd80795d, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: 0ed25761b684b7048a76eafe523486da, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 93452db9c165561418e4f66922923c67, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors:
+      - 
+    - WardrobeSlot: {fileID: 11400000, guid: d4988d64f350ece41b019a475abfb2d0, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
+      Delete: 0
+      AddColorTable: 0
+      PossibleColors: []
+    - WardrobeSlot: {fileID: 11400000, guid: 593109482f9572141b1a7782cc47cad5, type: 2}
+      Chance: 1
+      Colors: []
+      _slotName: Legs
+      GuiFoldout: 0
       Delete: 0
       AddColorTable: 0
       PossibleColors: []
@@ -485,10 +1786,10 @@ MonoBehaviour:
       MinValue: 0.25
       MaxValue: 0.75
     raceData: {fileID: 11400000, guid: df173d6a708cd49499632fea0b0056d5, type: 2}
-    GuiFoldout: 1
-    ColorsFoldout: 0
+    GuiFoldout: 0
+    ColorsFoldout: 1
     WardrobeFoldout: 1
-    DnaFoldout: 0
+    DnaFoldout: 1
     Delete: 0
     AddColorTable: 0
     DnaChanged: 0
@@ -550,4 +1851,4 @@ MonoBehaviour:
     SelectedDNA: 0
     DNAAdd: 
     DNADel: 0
-    currentWardrobeSlot: 13
+    currentWardrobeSlot: 11

@@ -856,15 +856,15 @@ namespace UMA.Editors
 
 		private void InitWardrobeSlotList()
 		{
-			var thisWardrobeSlotList = serializedObject.FindProperty("wardrobeSlots");
+			var thisWardrobeSlotList = serializedObject.FindProperty("Regions");
 			if (thisWardrobeSlotList.arraySize == 0)
 			{
 				race.ValidateWardrobeSlots(true);
-				thisWardrobeSlotList = serializedObject.FindProperty("wardrobeSlots");
+				thisWardrobeSlotList = serializedObject.FindProperty("Regions");
 			}
 			wardrobeSlotList = new ReorderableList(serializedObject, thisWardrobeSlotList, true, true, true, true);
 			wardrobeSlotList.drawHeaderCallback = (Rect rect) => {
-				EditorGUI.LabelField(rect, "Wardrobe Slots");
+				EditorGUI.LabelField(rect, "Wardrobe Regions");
 			};
 			wardrobeSlotList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => {
 				var element = wardrobeSlotList.serializedProperty.GetArrayElementAtIndex(index);

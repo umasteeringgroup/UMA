@@ -18,7 +18,10 @@ MonoBehaviour:
   DisplayValue: 
   compatibleRaces:
   - Human Male 3.0
-  wardrobeRecipeThumbs: []
+  wardrobeRecipeThumbs:
+  - race: Human Male 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Beard/Human Male 3.0/20_Mustache_Chevron.png
+    thumb: {fileID: 21300000, guid: b0d80a6afb1d48642a8b65875aac8645, type: 3}
   wardrobeSlot: Beard
   Appended: 0
   Hides: []
@@ -37,4 +40,4 @@ MonoBehaviour:
   noAutoAdd: 0
   IncompatibleRecipes: []
   UserField: 
-  replaces: 
+  replaces: Nothing

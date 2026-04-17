@@ -13,6 +13,74 @@ namespace UMA.Editors
 {
 internal class UmaExamineOverlaysWindow : EditorWindow
 	{
+        private class ValidationIssue
+		{
+			public string Label;
+			public string AssetPath;
+			public string FolderPath;
+		}
+
+		private class OverlayValidationReviewWindow : EditorWindow
+		{
+			private UMA.OverlayDataAsset _overlay;
+			private List<ValidationIssue> _issues;
+			private Vector2 _scroll;
+
+			public static void Open(UMA.OverlayDataAsset overlay, List<ValidationIssue> issues)
+			{
+				OverlayValidationReviewWindow window = GetWindow<OverlayValidationReviewWindow>(true, "Overlay Folder Errors", true);
+				window.minSize = new Vector2(720f, 320f);
+				window._overlay = overlay;
+				window._issues = issues != null ? new List<ValidationIssue>(issues) : new List<ValidationIssue>();
+				window.Show();
+				window.Focus();
+			}
+
+			private void OnGUI()
+			{
+				string overlayName = _overlay != null ? _overlay.name : "Overlay";
+				EditorGUILayout.LabelField("Overlay", overlayName, EditorStyles.boldLabel);
+				EditorGUILayout.Space(4f);
+
+				if (_issues == null || _issues.Count == 0)
+				{
+					EditorGUILayout.HelpBox("No validation issues found.", MessageType.Info);
+					return;
+				}
+
+				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.LabelField("Type", EditorStyles.boldLabel, GUILayout.Width(110f));
+				EditorGUILayout.LabelField("File", EditorStyles.boldLabel, GUILayout.Width(260f));
+				EditorGUILayout.LabelField("Folder", EditorStyles.boldLabel);
+				EditorGUILayout.EndHorizontal();
+
+				_scroll = EditorGUILayout.BeginScrollView(_scroll);
+				for (int i = 0; i < _issues.Count; i++)
+				{
+					ValidationIssue issue = _issues[i];
+					if (issue == null)
+					{
+						continue;
+					}
+
+					EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+					EditorGUILayout.BeginHorizontal();
+					EditorGUILayout.LabelField(issue.Label ?? string.Empty, GUILayout.Width(110f));
+					EditorGUILayout.SelectableLabel(issue.AssetPath ?? string.Empty, EditorStyles.textField, GUILayout.Width(260f), GUILayout.Height(EditorGUIUtility.singleLineHeight));
+					EditorGUILayout.SelectableLabel(issue.FolderPath ?? string.Empty, EditorStyles.textField, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.EndVertical();
+				}
+				EditorGUILayout.EndScrollView();
+
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Close", GUILayout.Width(100f)))
+				{
+					Close();
+				}
+			}
+		}
+
        private const string OverlayPrefsPrefix = "UMA.ExamineOverlays.";
 		private const string OverlayPrefsUtilitiesFoldout = OverlayPrefsPrefix + "UtilitiesFoldout";
 		private const string OverlayPrefsRelinkFoldout = OverlayPrefsPrefix + "RelinkFoldout";
@@ -23,13 +91,22 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 		private const string OverlayPrefsSkipWhenSameAsset = OverlayPrefsPrefix + "SkipWhenSameAsset";
 		private const string OverlayPrefsOverlayFilter = OverlayPrefsPrefix + "OverlayFilter";
 		private const string OverlayPrefsUpdateFolderPath = OverlayPrefsPrefix + "UpdateFolderPath";
+     private const string OverlayPrefsValidationFolderPath = OverlayPrefsPrefix + "ValidationFolderPath";
+     private const string OverlayPrefsValidationFolderPath2 = OverlayPrefsPrefix + "ValidationFolderPath2";
+		private const float OverlayDetailsWidth = 200f;
+		private const float OverlayPaneSpacing = 10f;
 
 		private readonly List<UMA.OverlayDataAsset> _overlays = new List<UMA.OverlayDataAsset>();
 		private readonly List<UMA.OverlayDataAsset> _filteredOverlays = new List<UMA.OverlayDataAsset>();
+      private readonly HashSet<UMA.OverlayDataAsset> _checkedOverlays = new HashSet<UMA.OverlayDataAsset>();
 		private UMA.OverlayDataAsset _selectedOverlay;
 		private Vector2 _leftScroll;
 		private Vector2 _rightScroll;
      private DefaultAsset _textureFolder;
+      private DefaultAsset _validationFolder;
+       private DefaultAsset _validationFolder2;
+		private string _validationFolderPath;
+      private string _validationFolderPath2;
 		private string _textureFolderPath;
 		private bool _includeSubfolders;
 		private bool _skipWhenSameAsset = true;
@@ -42,6 +119,8 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 		private static readonly GUIContent _missingTexturesLabel = new GUIContent("missing textures");
 		private static readonly GUIContent _missingTexturesAndOvlLabel = new GUIContent("missing textures and UMAT");
 		private static readonly GUIContent _missingOvlLabel = new GUIContent("missing UMAMaterial");
+        private static readonly GUIContent _validationErrorLabel = new GUIContent("folder error");
+       private readonly Dictionary<UMA.OverlayDataAsset, List<ValidationIssue>> _validationErrors = new Dictionary<UMA.OverlayDataAsset, List<ValidationIssue>>();
 		private enum OverlayFilter { All, Complete, Incomplete }
 		private OverlayFilter _filter = OverlayFilter.All;
 
@@ -79,6 +158,8 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 			_includeSubfolders = EditorPrefs.GetBool(OverlayPrefsIncludeSubfolders, false);
 			_skipWhenSameAsset = EditorPrefs.GetBool(OverlayPrefsSkipWhenSameAsset, true);
 			_filter = (OverlayFilter)EditorPrefs.GetInt(OverlayPrefsOverlayFilter, (int)OverlayFilter.All);
+            _validationFolderPath = EditorPrefs.GetString(OverlayPrefsValidationFolderPath, string.Empty);
+            _validationFolderPath2 = EditorPrefs.GetString(OverlayPrefsValidationFolderPath2, string.Empty);
 			_textureFolderPath = EditorPrefs.GetString(OverlayPrefsTextureFolderPath, string.Empty);
 			_updateFolderPath = EditorPrefs.GetString(OverlayPrefsUpdateFolderPath, string.Empty);
 
@@ -91,7 +172,17 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 				? AssetDatabase.LoadAssetAtPath<DefaultAsset>(_textureFolderPath)
 				: null;
 
+			_validationFolder = AssetDatabase.IsValidFolder(_validationFolderPath)
+				? AssetDatabase.LoadAssetAtPath<DefaultAsset>(_validationFolderPath)
+				: null;
+
+			_validationFolder2 = AssetDatabase.IsValidFolder(_validationFolderPath2)
+				? AssetDatabase.LoadAssetAtPath<DefaultAsset>(_validationFolderPath2)
+				: null;
+
 			_updateFolderPath = NormalizeAssetFolderPath(_updateFolderPath);
+           _validationFolderPath = NormalizeAssetFolderPath(_validationFolderPath);
+           _validationFolderPath2 = NormalizeAssetFolderPath(_validationFolderPath2);
 		}
 
 		private void SavePreferences()
@@ -102,6 +193,8 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 			EditorPrefs.SetBool(OverlayPrefsIncludeSubfolders, _includeSubfolders);
 			EditorPrefs.SetBool(OverlayPrefsSkipWhenSameAsset, _skipWhenSameAsset);
 			EditorPrefs.SetInt(OverlayPrefsOverlayFilter, (int)_filter);
+           EditorPrefs.SetString(OverlayPrefsValidationFolderPath, _validationFolderPath ?? string.Empty);
+           EditorPrefs.SetString(OverlayPrefsValidationFolderPath2, _validationFolderPath2 ?? string.Empty);
 			EditorPrefs.SetString(OverlayPrefsTextureFolderPath, _textureFolderPath ?? string.Empty);
 			EditorPrefs.SetString(OverlayPrefsUpdateFolderPath, _updateFolderPath ?? string.Empty);
 			EditorPrefs.SetString(OverlayPrefsUtilitiesMaterialPath, _utilitiesTargetMaterial != null ? AssetDatabase.GetAssetPath(_utilitiesTargetMaterial) : string.Empty);
@@ -124,8 +217,62 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 			{
 				_selectedOverlay = null;
 			}
+            PruneCheckedOverlays();
+          ClearValidationErrorsForMissingOverlays();
 			RebuildFilteredOverlays(_selectedOverlay);
 			Repaint();
+		}
+
+		private void PruneCheckedOverlays()
+		{
+			List<UMA.OverlayDataAsset> removeList = null;
+			foreach (var overlay in _checkedOverlays)
+			{
+				if (!_overlays.Contains(overlay))
+				{
+					if (removeList == null)
+					{
+						removeList = new List<UMA.OverlayDataAsset>();
+					}
+					removeList.Add(overlay);
+				}
+			}
+
+			if (removeList == null)
+			{
+				return;
+			}
+
+			for (int i = 0; i < removeList.Count; i++)
+			{
+				_checkedOverlays.Remove(removeList[i]);
+			}
+		}
+
+		private void ClearValidationErrorsForMissingOverlays()
+		{
+			List<UMA.OverlayDataAsset> removeList = null;
+			foreach (var kvp in _validationErrors)
+			{
+				if (!_overlays.Contains(kvp.Key))
+				{
+					if (removeList == null)
+					{
+						removeList = new List<UMA.OverlayDataAsset>();
+					}
+					removeList.Add(kvp.Key);
+				}
+			}
+
+			if (removeList == null)
+			{
+				return;
+			}
+
+			for (int i = 0; i < removeList.Count; i++)
+			{
+				_validationErrors.Remove(removeList[i]);
+			}
 		}
 
 		private void OnSelectionChange()
@@ -197,15 +344,222 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 
 			RebuildFilteredOverlays(_selectedOverlay);
 
+           DrawValidationPanel();
             DrawUtilitiesPanel();
 			DrawRelinkPanel();
 			DrawUpdateFolderPanel();
 
+          float listWidth = Mathf.Max(200f, position.width - OverlayDetailsWidth - OverlayPaneSpacing - 20f);
 			EditorGUILayout.BeginHorizontal();
-			DrawOverlayList();
-			GUILayout.Space(10);
-			DrawOverlayDetails();
+			DrawOverlayList(listWidth);
+			GUILayout.Space(OverlayPaneSpacing);
+			DrawOverlayDetails(OverlayDetailsWidth);
 			EditorGUILayout.EndHorizontal();
+		}
+
+		private void DrawValidationPanel()
+		{
+			EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+			EditorGUILayout.LabelField("Validate Folder", EditorStyles.boldLabel);
+           EditorGUILayout.HelpBox("Validates that the selected overlays reference only textures and UMAMaterials located in either selected folder or their subfolders.", MessageType.Info);
+			EditorGUILayout.BeginHorizontal();
+			EditorGUI.BeginChangeCheck();
+            _validationFolder = (DefaultAsset)EditorGUILayout.ObjectField("Folder 1", _validationFolder, typeof(DefaultAsset), false);
+			if (EditorGUI.EndChangeCheck())
+			{
+				_validationFolderPath = _validationFolder != null ? AssetDatabase.GetAssetPath(_validationFolder) : string.Empty;
+				if (!string.IsNullOrEmpty(_validationFolderPath) && !AssetDatabase.IsValidFolder(_validationFolderPath))
+				{
+					_validationFolder = null;
+					_validationFolderPath = string.Empty;
+				}
+				SavePreferences();
+			}
+
+            if (GUILayout.Button("Browse", GUILayout.Width(80)))
+			{
+                BrowseForValidationFolder(1);
+			}
+			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.BeginHorizontal();
+			EditorGUI.BeginChangeCheck();
+			_validationFolder2 = (DefaultAsset)EditorGUILayout.ObjectField("Folder 2", _validationFolder2, typeof(DefaultAsset), false);
+			if (EditorGUI.EndChangeCheck())
+			{
+				_validationFolderPath2 = _validationFolder2 != null ? AssetDatabase.GetAssetPath(_validationFolder2) : string.Empty;
+				if (!string.IsNullOrEmpty(_validationFolderPath2) && !AssetDatabase.IsValidFolder(_validationFolderPath2))
+				{
+					_validationFolder2 = null;
+					_validationFolderPath2 = string.Empty;
+				}
+				SavePreferences();
+			}
+
+			if (GUILayout.Button("Browse", GUILayout.Width(80)))
+			{
+				BrowseForValidationFolder(2);
+			}
+
+            using (new EditorGUI.DisabledScope((string.IsNullOrEmpty(_validationFolderPath) && string.IsNullOrEmpty(_validationFolderPath2)) || _overlays.Count == 0))
+			{
+				if (GUILayout.Button("Validate", GUILayout.Width(90)))
+				{
+					ValidateSelectedOverlaysInFolder();
+				}
+			}
+			EditorGUILayout.EndHorizontal();
+
+			using (new EditorGUI.DisabledScope(true))
+			{
+               EditorGUILayout.TextField("Path 1", _validationFolderPath ?? string.Empty);
+				EditorGUILayout.TextField("Path 2", _validationFolderPath2 ?? string.Empty);
+			}
+
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.Space(6);
+		}
+
+        private void BrowseForValidationFolder(int folderIndex)
+		{
+			string startFolder = Application.dataPath;
+         string currentPath = folderIndex == 2 ? _validationFolderPath2 : _validationFolderPath;
+			if (!string.IsNullOrEmpty(currentPath) && AssetDatabase.IsValidFolder(currentPath))
+			{
+                string absoluteFolder = Path.GetFullPath(currentPath);
+				if (Directory.Exists(absoluteFolder))
+				{
+					startFolder = absoluteFolder;
+				}
+			}
+
+			string pickedFolder = EditorUtility.OpenFolderPanel("Select validation folder", startFolder, string.Empty);
+			if (string.IsNullOrEmpty(pickedFolder))
+			{
+				return;
+			}
+
+			string assetFolder = GetAssetFolderPathFromAbsolutePath(pickedFolder);
+			if (string.IsNullOrEmpty(assetFolder) || !AssetDatabase.IsValidFolder(assetFolder))
+			{
+				EditorUtility.DisplayDialog("Validate Folder", "Select a folder under the project's Assets folder.", "OK");
+				return;
+			}
+
+            if (folderIndex == 2)
+			{
+				_validationFolderPath2 = assetFolder;
+				_validationFolder2 = AssetDatabase.LoadAssetAtPath<DefaultAsset>(_validationFolderPath2);
+			}
+			else
+			{
+				_validationFolderPath = assetFolder;
+				_validationFolder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(_validationFolderPath);
+			}
+			SavePreferences();
+		}
+
+		private void ValidateSelectedOverlaysInFolder()
+		{
+         bool hasFolder1 = !string.IsNullOrEmpty(_validationFolderPath) && AssetDatabase.IsValidFolder(_validationFolderPath);
+			bool hasFolder2 = !string.IsNullOrEmpty(_validationFolderPath2) && AssetDatabase.IsValidFolder(_validationFolderPath2);
+			if (!hasFolder1 && !hasFolder2)
+			{
+               EditorUtility.DisplayDialog("Validate Folder", "Select at least one valid folder under the project's Assets folder.", "OK");
+				return;
+			}
+
+			_validationErrors.Clear();
+			int validCount = 0;
+			int invalidCount = 0;
+			for (int i = 0; i < _overlays.Count; i++)
+			{
+				var overlay = _overlays[i];
+				if (overlay == null)
+				{
+					continue;
+				}
+
+                List<ValidationIssue> issues = GetValidationIssuesForOverlay(overlay, _validationFolderPath, _validationFolderPath2);
+				if (issues.Count == 0)
+				{
+					validCount++;
+				}
+				else
+				{
+					invalidCount++;
+                 _validationErrors[overlay] = issues;
+				}
+			}
+
+			Repaint();
+			EditorUtility.DisplayDialog("Validate Folder", "Valid overlays: " + validCount + "\nOverlays with folder errors: " + invalidCount, "OK");
+		}
+
+       private static List<ValidationIssue> GetValidationIssuesForOverlay(UMA.OverlayDataAsset overlay, string rootFolder1, string rootFolder2)
+		{
+            List<ValidationIssue> issues = new List<ValidationIssue>();
+			if (overlay == null)
+			{
+                return issues;
+			}
+
+			if (overlay.material != null)
+			{
+               AppendFolderValidationIssue(issues, rootFolder1, rootFolder2, AssetDatabase.GetAssetPath(overlay.material), "UMAMaterial");
+			}
+
+			if (overlay.alphaMask != null)
+			{
+                AppendFolderValidationIssue(issues, rootFolder1, rootFolder2, AssetDatabase.GetAssetPath(overlay.alphaMask), "AlphaMask");
+			}
+
+			if (overlay.textureList != null)
+			{
+				for (int i = 0; i < overlay.textureList.Length; i++)
+				{
+					Texture texture = overlay.textureList[i];
+					if (texture == null)
+					{
+						continue;
+					}
+
+                   AppendFolderValidationIssue(issues, rootFolder1, rootFolder2, AssetDatabase.GetAssetPath(texture), "Texture " + i);
+				}
+			}
+
+           return issues;
+		}
+
+       private static void AppendFolderValidationIssue(List<ValidationIssue> issues, string rootFolder1, string rootFolder2, string assetPath, string label)
+		{
+         if (string.IsNullOrEmpty(assetPath))
+			{
+				return;
+			}
+
+			bool inFolder1 = IsPathInValidationFolder(assetPath, rootFolder1);
+			bool inFolder2 = IsPathInValidationFolder(assetPath, rootFolder2);
+			if (inFolder1 || inFolder2)
+			{
+				return;
+			}
+
+          ValidationIssue issue = new ValidationIssue();
+			issue.Label = label;
+			issue.AssetPath = assetPath;
+			issue.FolderPath = Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
+			issues.Add(issue);
+		}
+
+		private static bool IsPathInValidationFolder(string assetPath, string folderPath)
+		{
+			if (string.IsNullOrEmpty(assetPath) || string.IsNullOrEmpty(folderPath))
+			{
+				return false;
+			}
+
+			return IsPathUnderFolder(assetPath, folderPath) || string.Equals(assetPath, folderPath, System.StringComparison.OrdinalIgnoreCase);
 		}
 
 		private void DrawUtilitiesPanel()
@@ -901,9 +1255,11 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 			return texture.name;
 		}
 
-		private void DrawOverlayList()
+      private void DrawOverlayList(float listWidth)
 		{
-			EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.40f));
+         const float overlayStatusWidth = 200f;
+
+         EditorGUILayout.BeginVertical(GUILayout.Width(listWidth), GUILayout.MinWidth(listWidth), GUILayout.MaxWidth(listWidth));
 			EditorGUILayout.BeginHorizontal();
 			EditorGUILayout.LabelField("Selected Overlays", EditorStyles.boldLabel);
 			if (GUILayout.Button("Refresh", GUILayout.Width(70)))
@@ -920,6 +1276,31 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 				RebuildFilteredOverlays(previouslySelected);
 				GUI.FocusControl(null);
 			}
+           EditorGUILayout.BeginHorizontal();
+			if (GUILayout.Button("Select All", GUILayout.Width(80)))
+			{
+				for (int i = 0; i < _filteredOverlays.Count; i++)
+				{
+					_checkedOverlays.Add(_filteredOverlays[i]);
+				}
+			}
+			if (GUILayout.Button("Deselect All", GUILayout.Width(90)))
+			{
+				for (int i = 0; i < _filteredOverlays.Count; i++)
+				{
+					_checkedOverlays.Remove(_filteredOverlays[i]);
+				}
+			}
+			using (new EditorGUI.DisabledScope(_checkedOverlays.Count == 0))
+			{
+				if (GUILayout.Button("Remove Selected", GUILayout.Width(110)))
+				{
+					RemoveSelectedOverlaysFromList();
+					return;
+				}
+			}
+			GUILayout.FlexibleSpace();
+			EditorGUILayout.EndHorizontal();
 			EditorGUILayout.Space(2);
 			_leftScroll = EditorGUILayout.BeginScrollView(_leftScroll, GUILayout.ExpandHeight(true));
 			for (int i = 0; i < _filteredOverlays.Count; i++)
@@ -930,12 +1311,23 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 					continue;
 				}
 
+              List<ValidationIssue> validationIssues = null;
+				bool hasValidationError = _validationErrors.TryGetValue(overlay, out validationIssues) && validationIssues != null && validationIssues.Count > 0;
+				bool isChecked = _checkedOverlays.Contains(overlay);
+
 				EditorGUILayout.BeginHorizontal();
 				bool selected = (overlay == _selectedOverlay);
-				if (GUILayout.Toggle(selected, GUIContent.none, GUILayout.Width(18)) != selected)
+               bool newChecked = GUILayout.Toggle(isChecked, GUIContent.none, GUILayout.Width(18));
+				if (newChecked != isChecked)
 				{
-					_selectedOverlay = overlay;
-					GUI.FocusControl(null);
+                 if (newChecked)
+					{
+						_checkedOverlays.Add(overlay);
+					}
+					else
+					{
+						_checkedOverlays.Remove(overlay);
+					}
 				}
 				var buttonStyle = selected ? EditorStyles.miniButtonMid : EditorStyles.miniButton;
 				if (GUILayout.Button(overlay.name, buttonStyle, GUILayout.ExpandWidth(true)))
@@ -943,16 +1335,75 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 					_selectedOverlay = overlay;
 					GUI.FocusControl(null);
 				}
-              GUILayout.Label(GetOverlayStatusLabel(overlay), GUILayout.Width(170));
+                GUILayout.Label(GetOverlayStatusLabel(overlay), GUILayout.Width(overlayStatusWidth), GUILayout.MinWidth(overlayStatusWidth), GUILayout.MaxWidth(overlayStatusWidth));
+                if (hasValidationError)
+				{
+					if (GUILayout.Button("Review", GUILayout.Width(60)))
+					{
+                        OverlayValidationReviewWindow.Open(overlay, validationIssues);
+					}
+				}
+                if (GUILayout.Button("x", GUILayout.Width(22)))
+				{
+					RemoveOverlayFromList(overlay);
+					EditorGUILayout.EndHorizontal();
+					break;
+				}
 				EditorGUILayout.EndHorizontal();
 			}
 			EditorGUILayout.EndScrollView();
 			EditorGUILayout.EndVertical();
 		}
 
-		private void DrawOverlayDetails()
+		private void RemoveSelectedOverlaysFromList()
 		{
-			EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+			List<UMA.OverlayDataAsset> overlaysToRemove = new List<UMA.OverlayDataAsset>();
+			for (int i = 0; i < _filteredOverlays.Count; i++)
+			{
+				UMA.OverlayDataAsset overlay = _filteredOverlays[i];
+				if (overlay != null && _checkedOverlays.Contains(overlay))
+				{
+					overlaysToRemove.Add(overlay);
+				}
+			}
+
+			for (int i = 0; i < overlaysToRemove.Count; i++)
+			{
+				RemoveOverlayFromList(overlaysToRemove[i], false);
+			}
+
+			RebuildFilteredOverlays(_selectedOverlay);
+		}
+
+		private void RemoveOverlayFromList(UMA.OverlayDataAsset overlay, bool rebuildFiltered = true)
+		{
+			if (overlay == null)
+			{
+				return;
+			}
+
+			_overlays.Remove(overlay);
+			_filteredOverlays.Remove(overlay);
+			_checkedOverlays.Remove(overlay);
+			_validationErrors.Remove(overlay);
+
+			if (_selectedOverlay == overlay)
+			{
+				_selectedOverlay = null;
+			}
+
+			if (rebuildFiltered)
+			{
+				RebuildFilteredOverlays(_selectedOverlay);
+			}
+		}
+
+       private void DrawOverlayDetails(float detailsWidth)
+		{
+         const float textureColumnWidth = 128f;
+			const float previewSize = 96f;
+
+         EditorGUILayout.BeginVertical(GUILayout.Width(detailsWidth), GUILayout.MinWidth(detailsWidth), GUILayout.MaxWidth(detailsWidth));
 			EditorGUILayout.LabelField("Overlay Textures", EditorStyles.boldLabel);
 
 			if (_selectedOverlay == null)
@@ -987,18 +1438,12 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 					paramName = mat.channels[i].materialPropertyName;
 				}
 				string texName = current != null ? current.name : "<Not Set>";
-				const float rowHeight = 128f;
-				const float previewSize = 96f;
 
 				EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+              EditorGUILayout.LabelField(i + ": " + paramName, EditorStyles.boldLabel);
 				EditorGUILayout.BeginHorizontal();
-				GUILayout.Label(i.ToString(), GUILayout.Width(26));
-				GUILayout.Label(paramName, EditorStyles.boldLabel);
 				GUILayout.FlexibleSpace();
-				GUILayout.Label(texName, EditorStyles.miniLabel, GUILayout.Width(180));
-				EditorGUILayout.EndHorizontal();
-
-				EditorGUILayout.BeginHorizontal(GUILayout.Height(rowHeight));
+				EditorGUILayout.BeginVertical(GUILayout.Width(textureColumnWidth), GUILayout.MinWidth(textureColumnWidth), GUILayout.MaxWidth(textureColumnWidth));
 				EditorGUI.BeginChangeCheck();
 				var newTex = (Texture)EditorGUILayout.ObjectField(current, typeof(Texture), false, GUILayout.Width(previewSize), GUILayout.Height(previewSize));
 				if (EditorGUI.EndChangeCheck())
@@ -1013,7 +1458,11 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 						AssetDatabase.SaveAssets();
 					}
 				}
+				GUILayout.Label(texName, EditorStyles.miniLabel, GUILayout.Width(textureColumnWidth));
+				EditorGUILayout.EndVertical();
 				GUILayout.FlexibleSpace();
+				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.EndHorizontal();
 				EditorGUILayout.EndHorizontal();
 				EditorGUILayout.EndVertical();
 			}
@@ -1070,8 +1519,17 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 			return OverlayStatus.Complete;
 		}
 
-		private static GUIContent GetOverlayStatusLabel(UMA.OverlayDataAsset overlay)
+       private GUIContent GetOverlayStatusLabel(UMA.OverlayDataAsset overlay)
 		{
+         if (overlay != null)
+			{
+             List<ValidationIssue> validationIssues;
+				if (_validationErrors.TryGetValue(overlay, out validationIssues) && validationIssues != null && validationIssues.Count > 0)
+				{
+                 return new GUIContent(_validationErrorLabel.text, BuildValidationIssueTooltip(validationIssues));
+				}
+			}
+
 			switch (GetOverlayStatus(overlay))
 			{
 				case OverlayStatus.MissingTextures:
@@ -1083,6 +1541,27 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 				default:
 					return _completeLabel;
 			}
+		}
+
+		private static string BuildValidationIssueTooltip(List<ValidationIssue> issues)
+		{
+			if (issues == null || issues.Count == 0)
+			{
+				return string.Empty;
+			}
+
+			List<string> lines = new List<string>(issues.Count);
+			for (int i = 0; i < issues.Count; i++)
+			{
+				ValidationIssue issue = issues[i];
+				if (issue == null)
+				{
+					continue;
+				}
+
+				lines.Add((issue.Label ?? "Asset") + ": " + (issue.AssetPath ?? string.Empty));
+			}
+			return string.Join("\n", lines.ToArray());
 		}
 
 

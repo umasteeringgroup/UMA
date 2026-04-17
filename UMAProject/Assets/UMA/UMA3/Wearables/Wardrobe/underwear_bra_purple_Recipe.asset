@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Female 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/TopUnderlayer/Human Female 3.0/2_underwear_bra_purple_Recipe.png
+    thumb: {fileID: 21300000, guid: c8e125b2318e52347b7c78f5da1c24b7, type: 3}
   wardrobeSlot: TopUnderlayer
   Appended: 0
   Hides: []

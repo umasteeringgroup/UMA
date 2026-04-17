@@ -15,6 +15,7 @@ namespace UMA
         public RuntimeAnimatorController raceController;
         public List<UMAWardrobeRecipe> wardrobeItems;
         public Color hairColor = Color.red;
+        public Color eyeColor = Color.lightGreen;
         public bool LoadFromAvatarDef;
         [TextArea(3, 12)]
         public string AvatarDef;
@@ -53,6 +54,7 @@ namespace UMA
                 // channel.
                 // If you need full control over color channels, use DCA.SetRawColor("Hair",overlayColorData);
                 DCA.SetColor("Hair", hairColor);
+                DCA.SetColor("Eyes", eyeColor);
             }
 
             DCA.CharacterCreated = new UMADataEvent();

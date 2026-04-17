@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad6e21078dbc88344b21463ab3922a67, type: 3}
   m_Name: UMASettings
   m_EditorClassIdentifier: 
-  useMeshAPICombiner: 0
+  useMeshAPICombiner: 1
   DebugMemoryUsage: 0
   DisableDecalCallbacks: 0
   WarningMessage: "Warning: Please do not modify these\n settings using the inspector.\n

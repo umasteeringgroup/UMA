@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Female 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Feet/Human Female 3.0/2_shoes_tall_turquoise.001_Recipe.png
+    thumb: {fileID: 21300000, guid: 19f4b619a14fbcb45a026c1c284b80d1, type: 3}
   wardrobeSlot: Feet
   Appended: 0
   Hides: []

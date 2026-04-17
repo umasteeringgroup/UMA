@@ -821,6 +821,14 @@ namespace UMA
             return false;
         }
 
+        public void ClearAllPending()
+        {
+            umaDirtyList.Clear();
+            cleanUmas.Clear();
+            dirtyUmas.Clear();
+        }
+
+
         /// <inheritdoc/>
         public override void removeUMA(UMAData umaToRemove)
         {

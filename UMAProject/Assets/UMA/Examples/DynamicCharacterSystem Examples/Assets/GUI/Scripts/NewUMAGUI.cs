@@ -160,6 +160,16 @@ namespace UMA
 
         #endregion
 
+        public void CopyToClipboard()
+        {
+            //string recipeString = avatar.GetAvatarDefinitionString(true,true);
+            AvatarDefinition def = avatar.GetAvatarDefinition(true,true);
+            string recipeString = def.ToCompressedString();
+
+            GUIUtility.systemCopyBuffer = recipeString;
+        }
+
+
         private Vector3 GetLerpPosition(Transform pos, string bone, float offset)
         {
             float boneY = pos.position.y;

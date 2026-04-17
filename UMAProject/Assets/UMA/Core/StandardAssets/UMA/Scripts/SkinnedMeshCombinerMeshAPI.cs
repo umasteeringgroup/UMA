@@ -393,8 +393,16 @@ namespace UMA
                 AnalyzeSources(sources, subMeshTriangleLength, lodLevel, ref vertexCount, ref boneWeightCount, ref bindPoseCount, ref transformHierarchyCount, ref flags);
                 sw.Stop(); Ticks_AnalyzeSources += sw.ElapsedTicks;
                 Dictionary<string, BlendShapeVertexData> blendShapeNames;
+                bool ignoreBlendShapes = umaData != null && umaData.blendShapeSettings != null && umaData.blendShapeSettings.ignoreBlendShapes;
                 sw.Restart();
-                AnalyzeBlendShapeSources(sources, bakedBlendshapes, ref flags, out blendShapeNames, umaData.umaRecipe);
+                if (!ignoreBlendShapes)
+                {
+                    AnalyzeBlendShapeSources(sources, bakedBlendshapes, ref flags, out blendShapeNames, umaData.umaRecipe);
+                }
+                else
+                {
+                    blendShapeNames = null;
+                }
                 sw.Stop(); Ticks_AnalyzeBlendshapes += sw.ElapsedTicks;
                 bool hasNormals = (flags & MeshComponents.has_normals) != 0;
                 bool hasTangents = (flags & MeshComponents.has_tangents) != 0;
@@ -403,7 +411,7 @@ namespace UMA
                 bool hasUV3 = (flags & MeshComponents.has_uv3) != 0;
                 bool hasUV4 = (flags & MeshComponents.has_uv4) != 0;
                 bool hasColors32 = (flags & MeshComponents.has_colors32) != 0;
-                bool hasBlendShapes = (flags & MeshComponents.has_blendShapes) != 0;
+                bool hasBlendShapes = !ignoreBlendShapes && (flags & MeshComponents.has_blendShapes) != 0;
                 bool hasCloth = (flags & MeshComponents.has_clothSkinning) != 0;
                 subIndexStart = ArrayPool<int>.Shared.Rent(subMeshCount);
                 int totalIndexCount = 0; for (int i = 0, run = 0; i < subMeshCount; i++) { subIndexStart[i] = run; run += subMeshTriangleLength[i]; totalIndexCount = run; }

@@ -59,7 +59,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailNormalMap:
-        m_Texture: {fileID: 2800000, guid: 2239da34898573741bb5f8875126faa2, type: 3}
+        m_Texture: {fileID: 2800000, guid: aa58bf261feeb2b479c43df897f908e8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DisplacementMap:
@@ -153,8 +153,8 @@ Material:
     - _CoatMask: 0
     - _CoatSmoothness: 0
     - _DetailNormalMapScale: 0.024
-    - _Detail_Gloss_Scale: 0.19
-    - _Detail_Normal_Scale: 0.186
+    - _Detail_Gloss_Scale: 0.595
+    - _Detail_Normal_Scale: 0.235
     - _DisplacementLevel: 0.5
     - _DisplacementStrength: 0
     - _EdgePower: 4

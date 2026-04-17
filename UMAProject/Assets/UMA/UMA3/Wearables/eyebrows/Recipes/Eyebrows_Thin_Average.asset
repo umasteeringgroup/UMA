@@ -19,7 +19,13 @@ MonoBehaviour:
   compatibleRaces:
   - Human Female 3.0
   - Human Male 3.0
-  wardrobeRecipeThumbs: []
+  wardrobeRecipeThumbs:
+  - race: Human Male 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Eyebrows/Human Male 3.0/9_Eyebrows_Thin_Average.png
+    thumb: {fileID: 21300000, guid: 41c542adcf3e0cb47a8fac55f4764b37, type: 3}
+  - race: Human Female 3.0
+    filename: Assets/UMA/UMA3/Wearables/Icons/Eyebrows/Human Female 3.0/9_Eyebrows_Thin_Average.png
+    thumb: {fileID: 21300000, guid: 02e5314e333c09042ae537db05cbb4ea, type: 3}
   wardrobeSlot: Eyebrows
   Appended: 0
   Hides: []

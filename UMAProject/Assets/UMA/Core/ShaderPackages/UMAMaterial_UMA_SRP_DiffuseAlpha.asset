@@ -29,7 +29,9 @@ MonoBehaviour:
   AnisoLevel: 1
   MatFilterMode: 1
   Compression: 0
-  shaderParms: []
+  shaderParms:
+  - ParameterName: _Color
+    ColorName: Hair
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
   MaterialName: UMA_SRP_DiffuseAlpha

@@ -17,13 +17,7 @@ MonoBehaviour:
   recipeType: Wardrobe
   DisplayValue: 
   compatibleRaces: []
-  wardrobeRecipeThumbs:
-  - race: Human Female 3.0
-    filename: 
-    thumb: {fileID: 0}
-  - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+  wardrobeRecipeThumbs: []
   wardrobeSlot: Hair
   Appended: 0
   Hides: []

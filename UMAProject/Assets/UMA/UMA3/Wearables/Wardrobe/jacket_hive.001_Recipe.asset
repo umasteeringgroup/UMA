@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Female 3.0
   wardrobeRecipeThumbs:
   - race: Human Female 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Chest/Human Female 3.0/4_jacket_hive.001_Recipe.png
+    thumb: {fileID: 21300000, guid: 404d9d17dd2ce09418aadaa5ba249a3c, type: 3}
   wardrobeSlot: Chest
   Appended: 0
   Hides: []

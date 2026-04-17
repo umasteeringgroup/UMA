@@ -189,13 +189,13 @@ namespace UMA
                     accumulatedModifiers.Add(kvp.Key, new List<MeshModifier.Modifier>());
                 }
 				List<MeshModifier.Modifier> mods = kvp.Value;
-				Debug.Log($"There are {mods.Count} modifiers for slot {kvp.Key}");	
+				//Debug.Log($"There are {mods.Count} modifiers for slot {kvp.Key}");	
                 if (mods.Count > 0)
 				{
 					var modifier = mods[0];
 					var adj = modifier.adjustments;
 					var va = modifier.adjustments.vertexAdjustments;
-					Debug.Log($"Adding {va.Count} vertex adjustments for slot {kvp.Key}");	
+					//Debug.Log($"Adding {va.Count} vertex adjustments for slot {kvp.Key}");	
                 }
 				
                 accumulatedModifiers[kvp.Key].AddRange(kvp.Value);
@@ -212,9 +212,9 @@ namespace UMA
                 {
                     accumulatedModifiers.Add(m.SlotName, new List<MeshModifier.Modifier>());
                 }
-				Debug.Log($"Adding manual modifier {m.ModifierName} for slot {m.SlotName}. There are currently {accumulatedModifiers[m.SlotName].Count} modifiers.");
+				//Debug.Log($"Adding manual modifier {m.ModifierName} for slot {m.SlotName}. There are currently {accumulatedModifiers[m.SlotName].Count} modifiers.");
 				accumulatedModifiers[m.SlotName].Add(m);
-				Debug.Log($"After adding {m.ModifierName}, there are now {accumulatedModifiers[m.SlotName].Count} modifiers for slot {m.SlotName}.");
+				//Debug.Log($"After adding {m.ModifierName}, there are now {accumulatedModifiers[m.SlotName].Count} modifiers for slot {m.SlotName}.");
             }
 #endif
 
@@ -229,7 +229,7 @@ namespace UMA
 				if (accumulatedModifiers.ContainsKey(slot.asset.sourceSlot))
 				{
 					var modifiers = accumulatedModifiers[slot.asset.sourceSlot];
-					Debug.Log($"Adding {modifiers.Count} modifiers to slot {slot.asset.slotName}");
+					//Debug.Log($"Adding {modifiers.Count} modifiers to slot {slot.asset.slotName}");
                         slot.meshModifiers.AddRange(modifiers);
                 }
             }
@@ -1481,6 +1481,74 @@ namespace UMA
                     }
                 }
                 return false;
+            }
+
+            public void InitializeDNA()
+            {
+                if (raceData == null || !raceData.useNewDNA)
+				{
+					return;
+				}
+
+				var collection = raceData.DNACollection;
+				if (collection == null)
+				{
+					collection = new DNACollection();
+					raceData.DNACollection = collection;
+				}
+
+				collection.LoadDictionary();
+
+				if (dnaInstanceCollection == null)
+				{
+					dnaInstanceCollection = new DNAInstanceCollection();
+                }
+                dnaInstanceCollection.Initialize(collection);
+
+
+
+                if (dnaInstanceCollection.dnaInstances == null)
+                {
+                    dnaInstanceCollection.dnaInstances = new List<DNAInstance>();
+                }
+
+                var groups = collection.DNAGroups;
+				if (groups == null || groups.Count == 0)
+				{
+					dnaInstanceCollection.ClearAll();
+					return;
+				}
+
+                var dict = collection.dnaDictionary;
+				var assignedDNA = dnaInstanceCollection.ToDictionary();
+
+                foreach (var group in groups)
+				{
+					if (group != null && group.dnaList != null)
+					{
+						foreach (var d in group.dnaList)
+						{
+							if (d != null)
+							{
+                                float defaultValue = 0.5f;
+                                if (dict != null && dict.TryGetValue(d.name, out var dnaAsset) && dnaAsset != null)
+                                {
+                                    defaultValue = Mathf.Clamp01(dnaAsset.defaultValue);
+                                }
+								if (assignedDNA.ContainsKey(d.name))
+								{
+									assignedDNA[d.name].Value = defaultValue;
+									continue;
+                                }
+                                // Set parentGroup for each instance
+								var inst = new DNAInstance(d.name, defaultValue, group);
+                                dnaInstanceCollection.dnaInstances.Add(inst);
+								assignedDNA.Add(d.name, inst);
+                            }
+						}
+					}
+                }
+				//Debug.Log($"Initialized DNA for recipe {recipeName} with {dnaInstanceCollection.dnaInstances.Count} instances.");
             }
 
             // AddMissingDNAForRace: ensure all DNA from Race DNACollection exists, using overrides where provided

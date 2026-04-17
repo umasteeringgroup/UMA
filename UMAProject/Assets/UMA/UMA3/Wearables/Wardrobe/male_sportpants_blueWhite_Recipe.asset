@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Legs/Human Male 3.0/5_male_sportpants_blueWhite_Recipe.png
+    thumb: {fileID: 21300000, guid: 982352ffa58ea934e8da4af6fe35eacf, type: 3}
   wardrobeSlot: Legs
   Appended: 0
   Hides: []

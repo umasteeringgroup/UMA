@@ -341,8 +341,7 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
             GUILayout.Label("Reason", EditorStyles.boldLabel, GUILayout.Width(280));
 			EditorGUILayout.EndHorizontal();
 
-			float listHeight = Mathf.Max(180f, position.height - 220f);
-			_candidateScroll = EditorGUILayout.BeginScrollView(_candidateScroll, GUILayout.Height(listHeight));
+			_candidateScroll = EditorGUILayout.BeginScrollView(_candidateScroll, GUILayout.MinHeight(120f), GUILayout.ExpandHeight(true));
 			if (_candidates.Count == 0)
 			{
 				EditorGUILayout.HelpBox("No allowed scene dependencies were found under the selected source folder.", MessageType.Info);
@@ -357,12 +356,13 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 						continue;
 					}
 
+					EditorGUILayout.BeginVertical();
 					EditorGUILayout.BeginHorizontal();
 					candidate.Selected = EditorGUILayout.Toggle(candidate.Selected, GUILayout.Width(20));
 					EditorGUILayout.SelectableLabel(candidate.Name ?? string.Empty, GUILayout.Width(220), GUILayout.Height(EditorGUIUtility.singleLineHeight));
 					EditorGUILayout.SelectableLabel(candidate.Path ?? string.Empty, GUILayout.ExpandWidth(true), GUILayout.Height(EditorGUIUtility.singleLineHeight));
 					EditorGUILayout.SelectableLabel(candidate.TypeName ?? string.Empty, GUILayout.Width(120), GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                   using (new EditorGUI.DisabledScope(candidate.ReasonSourceObject == null))
+					using (new EditorGUI.DisabledScope(candidate.ReasonSourceObject == null))
 					{
 						if (GUILayout.Button("Ping", GUILayout.Width(38), GUILayout.Height(EditorGUIUtility.singleLineHeight)))
 						{
@@ -370,21 +370,25 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 							EditorGUIUtility.PingObject(candidate.ReasonSourceObject);
 						}
 					}
-                    EditorGUILayout.SelectableLabel(candidate.Reason ?? string.Empty, GUILayout.Width(280), GUILayout.Height(EditorGUIUtility.singleLineHeight));
 					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.BeginHorizontal();
+					GUILayout.Space(64f);
+					EditorGUILayout.SelectableLabel(candidate.Reason ?? string.Empty, GUILayout.ExpandWidth(true), GUILayout.Height(EditorGUIUtility.singleLineHeight));
+					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.EndVertical();
 				}
 			}
 			EditorGUILayout.EndScrollView();
 		}
 
-      private static string BuildConsolidateReason(UnityEngine.Object asset, UnityEngine.Object source)
+		private static string BuildConsolidateReason(UnityEngine.Object asset, UnityEngine.Object source, string fieldName)
 		{
-          string sourceName = source != null ? source.name : string.Empty;
-			string sourcePrefix = !string.IsNullOrEmpty(sourceName) ? ("Referenced by '" + sourceName + "': ") : "";
+			string sourceChain = GetSourceChain(source, fieldName);
+			string sourcePrefix = !string.IsNullOrEmpty(sourceChain) ? (sourceChain + " -> ") : "";
 
 			if (asset == null)
 			{
-              return sourcePrefix + "Scene dependency";
+				return sourcePrefix + "Scene dependency";
 			}
 
 			if (asset is UMARecipeBase || asset is UMATextRecipe || asset is UMAWardrobeRecipe)
@@ -402,28 +406,137 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 
 			if (asset is Material)
 			{
-               return sourcePrefix + "renderer material";
+				return sourcePrefix + "renderer material";
 			}
 			if (asset is Texture)
 			{
-                return sourcePrefix + "material texture channel";
+				return sourcePrefix + "material texture channel";
 			}
 			if (asset is AudioClip)
 			{
-             return sourcePrefix + "scene component audio field";
+				return sourcePrefix + "scene component audio field";
 			}
 			if (asset is GameObject)
 			{
-                return sourcePrefix + "prefab dependency";
+				return sourcePrefix + "prefab dependency";
 			}
 
 			var importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(asset));
 			if (importer is ModelImporter)
 			{
-                return sourcePrefix + "model dependency";
+				return sourcePrefix + "model dependency";
 			}
 
-          return sourcePrefix + "scene dependency graph";
+			return sourcePrefix + "scene dependency graph";
+		}
+
+		private static string GetSourceChain(UnityEngine.Object source, string fieldName)
+		{
+			if (source == null)
+			{
+				return string.Empty;
+			}
+
+			List<string> parts = new List<string>();
+			GameObject sourceGameObject = GetSourceGameObject(source);
+
+			if (sourceGameObject != null)
+			{
+				Transform current = sourceGameObject.transform;
+				Stack<string> transformNames = new Stack<string>();
+				while (current != null)
+				{
+					transformNames.Push(current.name);
+					current = current.parent;
+				}
+
+				while (transformNames.Count > 0)
+				{
+					parts.Add(transformNames.Pop());
+				}
+
+				if (source is Component sourceComponent)
+				{
+					parts.Add("Component:" + sourceComponent.GetType().Name);
+					if (!string.IsNullOrEmpty(fieldName))
+					{
+						parts.Add("field:" + fieldName);
+					}
+				}
+
+				GameObject prefabSource = PrefabUtility.GetCorrespondingObjectFromSource(sourceGameObject);
+				if (prefabSource != null)
+				{
+					parts.Add("Prefab:" + prefabSource.name);
+				}
+			}
+			else
+			{
+				parts.Add(source.name);
+			}
+
+			return string.Join("->", parts.ToArray());
+		}
+
+		private static string TryGetReferenceFieldName(UnityEngine.Object source, UnityEngine.Object dependency)
+		{
+			if (source == null || dependency == null)
+			{
+				return string.Empty;
+			}
+
+			if (!(source is Component) && !(source is GameObject))
+			{
+				return string.Empty;
+			}
+
+			SerializedObject serializedObject = null;
+			try
+			{
+				serializedObject = new SerializedObject(source);
+			}
+			catch
+			{
+				return string.Empty;
+			}
+
+			if (serializedObject == null)
+			{
+				return string.Empty;
+			}
+
+			SerializedProperty iterator = serializedObject.GetIterator();
+			bool enterChildren = true;
+			while (iterator.NextVisible(enterChildren))
+			{
+				enterChildren = true;
+				if (iterator.propertyType != SerializedPropertyType.ObjectReference)
+				{
+					continue;
+				}
+
+				if (iterator.objectReferenceValue == dependency)
+				{
+					return iterator.propertyPath;
+				}
+			}
+
+			return string.Empty;
+		}
+
+		private static GameObject GetSourceGameObject(UnityEngine.Object source)
+		{
+			if (source is GameObject sourceAsGameObject)
+			{
+				return sourceAsGameObject;
+			}
+
+			if (source is Component sourceAsComponent)
+			{
+				return sourceAsComponent.gameObject;
+			}
+
+			return null;
 		}
 
 		private int CountSelectedCandidates()
@@ -462,7 +575,6 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 			}
 
 			var dependencySources = new List<UnityEngine.Object>();
-			var sourceToDisplayObject = new Dictionary<UnityEngine.Object, UnityEngine.Object>();
 			var sourceIds = new HashSet<int>();
 
 			for (int r = 0; r < rootObjects.Length; r++)
@@ -490,7 +602,6 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 						{
 							sourceIds.Add(goId);
 							dependencySources.Add(go);
-							sourceToDisplayObject[go] = go;
 						}
 
 						var components = go.GetComponents<Component>();
@@ -514,7 +625,6 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 
 							sourceIds.Add(componentId);
 							dependencySources.Add(component);
-							sourceToDisplayObject[component] = go;
 						}
 					}
 				}
@@ -528,6 +638,7 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
            var depByPath = new Dictionary<string, UnityEngine.Object>(System.StringComparer.OrdinalIgnoreCase);
 			var reasonByPath = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
 			var sourceByPath = new Dictionary<string, UnityEngine.Object>(System.StringComparer.OrdinalIgnoreCase);
+			var fieldByPath = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
 
             for (int s = 0; s < dependencySources.Count; s++)
 			{
@@ -535,12 +646,6 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 				if (source == null)
 				{
 					continue;
-				}
-
-				UnityEngine.Object sourceDisplayObject;
-				if (!sourceToDisplayObject.TryGetValue(source, out sourceDisplayObject))
-				{
-					sourceDisplayObject = source;
 				}
 
 				var rootDependencies = EditorUtility.CollectDependencies(new UnityEngine.Object[] { source });
@@ -569,18 +674,23 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 
 					if (!depByPath.ContainsKey(sourcePath))
 					{
+						string fieldName = TryGetReferenceFieldName(source, dep);
 						depByPath[sourcePath] = dep;
-                       reasonByPath[sourcePath] = BuildConsolidateReason(dep, sourceDisplayObject);
-						sourceByPath[sourcePath] = sourceDisplayObject;
+						reasonByPath[sourcePath] = BuildConsolidateReason(dep, source, fieldName);
+						sourceByPath[sourcePath] = source;
+						fieldByPath[sourcePath] = fieldName;
 					}
 					else
 					{
-						var existingSource = sourceByPath[sourcePath] as GameObject;
-						var candidateSource = sourceDisplayObject as GameObject;
-						if (existingSource != null && candidateSource != null && existingSource != candidateSource && IsAncestorGameObject(existingSource, candidateSource))
+						UnityEngine.Object existingSource = sourceByPath[sourcePath];
+						GameObject existingSourceGameObject = GetSourceGameObject(existingSource);
+						GameObject candidateSourceGameObject = GetSourceGameObject(source);
+						if (existingSourceGameObject != null && candidateSourceGameObject != null && existingSourceGameObject != candidateSourceGameObject && IsAncestorGameObject(existingSourceGameObject, candidateSourceGameObject))
 						{
-							reasonByPath[sourcePath] = BuildConsolidateReason(dep, candidateSource);
-							sourceByPath[sourcePath] = candidateSource;
+							string fieldName = TryGetReferenceFieldName(source, dep);
+							reasonByPath[sourcePath] = BuildConsolidateReason(dep, source, fieldName);
+							sourceByPath[sourcePath] = source;
+							fieldByPath[sourcePath] = fieldName;
 						}
 					}
 				}
@@ -601,7 +711,7 @@ internal class UmaConsolidateCurrentSceneAssetsWindow : EditorWindow
 					Path = sourcePath,
 					TypeName = dep.GetType().Name,
 					Category = category,
-                  Reason = reasonByPath.TryGetValue(sourcePath, out var reason) ? reason : BuildConsolidateReason(dep, null),
+					Reason = reasonByPath.TryGetValue(sourcePath, out var reason) ? reason : BuildConsolidateReason(dep, null, string.Empty),
 					ReasonSourceObject = sourceByPath.TryGetValue(sourcePath, out var sourceObj) ? sourceObj : null,
 					Selected = true
 				});

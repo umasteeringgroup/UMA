@@ -20,8 +20,8 @@ MonoBehaviour:
   - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: Human Male 3.0
-    filename: 
-    thumb: {fileID: 0}
+    filename: Assets/UMA/UMA3/Wearables/Icons/Beard/Human Male 3.0/12_Beard_Gunslinger.png
+    thumb: {fileID: 21300000, guid: 85c2735edf8561349a579825b319269c, type: 3}
   wardrobeSlot: Beard
   Appended: 0
   Hides: []

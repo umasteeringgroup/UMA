@@ -15,12 +15,12 @@ MonoBehaviour:
   description: 
   defaultValue: 1
   effects:
-  - rid: 4600982816767082573
+  - rid: 7442055758958821640
   displayName: 
   references:
     version: 2
     RefIds:
-    - rid: 4600982816767082573
+    - rid: 7442055758958821640
       type: {class: DNAEffect_BonePose, ns: UMA, asm: UMA_Core}
       data:
         curve:
@@ -29,36 +29,36 @@ MonoBehaviour:
           - serializedVersion: 3
             time: 0
             value: 0
-            inSlope: 1
-            outSlope: 1
-            tangentMode: 34
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
             weightedMode: 0
             inWeight: 0
-            outWeight: 0.33333334
+            outWeight: 0
           - serializedVersion: 3
             time: 0.5
             value: 0.5
-            inSlope: 1.2000324
-            outSlope: 1.2000324
-            tangentMode: 34
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
             weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
+            inWeight: 0
+            outWeight: 0
           - serializedVersion: 3
-            time: 0.9964605
-            value: 1.1950768
-            inSlope: 1.4000647
-            outSlope: 1.4000647
-            tangentMode: 34
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
             weightedMode: 0
-            inWeight: 0.33333334
+            inWeight: 0
             outWeight: 0
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-        minMapping: 0
-        maxMapping: 1.3
-        expanded: 1
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
         selected: 0
         EffectName: 
-        bonePose: {fileID: 11400000, guid: 72fb91eec2bb7f54996b2cd4affdfaec, type: 2}
+        bonePose: {fileID: 11400000, guid: a2c8d81aa49f93449bbd4193c7e48463, type: 2}

@@ -9,10 +9,12 @@ onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
-	"picker_window_position_offset.00000000" = "-138;290.6667;428;550"
+	"picker_window_position_offset.00000000" = "795.3334;-350.6667;428;550"
 	"picker_visibility_flags.00000000" = "0"
-	"picker_item_size.00000000" = "1"
+	"picker_item_size.00000000" = "96"
 	"picker_inspector.00000000" = "0"
+	"OpenInspectorPreview.66F56946" = "0"
+	"currentGroup.66F56946" = "scene"
 }
 providers = {
 	asset = {
@@ -69,6 +71,16 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
+	"h: #Text.m_Text:\"UMA SIMPLE DEMO"
+	"h: #Text.m_Text:\"UMA S"
+	"h: #Text.m_Text:\"UMASimple"
+	"h: #Text.m_Text:\"\""
+	"h:"
+	"h: ref=<$object:none$>"
+	"h: Label"
+	""
+	"h: ref=\"Assets/Temp/Hair\""
+	"UMA simple"
 ]
 searchItemFavorites = [
 ]
@@ -77,11 +89,10 @@ showSavedSearchPanel = true
 hideTabs = false
 indexOnEditorStartup = true
 logIndexingPerformanceReport = false
-expandedQueries = [
-]
+expandedQueries = [-1313700531 -903571738]
 queryBuilder = true
 ignoredProperties = "id;name;classname;imagecontentshash"
-helperWidgetCurrentArea = "all"
+helperWidgetCurrentArea = "h:"
 disabledIndexers = ""
 minIndexVariations = 2
 findProviderIndexHelper = true

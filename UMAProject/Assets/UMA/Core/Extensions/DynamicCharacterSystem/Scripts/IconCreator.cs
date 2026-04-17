@@ -34,9 +34,9 @@ public class IconCreator : MonoBehaviour
     public List<CameraRegions> regionToCameraList = new List<CameraRegions>();
 
     // Setup.
-    public Vector2 IconDimensions = new Vector2(256, 256);
+    public Vector2 IconDimensions = new Vector2(128, 128);
 
-    public float PreviewSize = 256.0f;
+    public float PreviewSize = 128.0f;
     public int currentCameraIndex = 0;
     private Vector2 previewScrollPosition = Vector2.zero;
     private int selectedRegionIndex = 0;
@@ -204,7 +204,7 @@ public class IconCreator : MonoBehaviour
 
     private void DrawRegionControls()
     {
-        List<string> raceRegions = GetRaceRegions();
+        List<string> raceRegions = GetRaceRegionsFromAvatarRaceData();
         SyncSelectedRegion(raceRegions);
 
         GUILayout.BeginHorizontal();
@@ -264,6 +264,8 @@ public class IconCreator : MonoBehaviour
 
     private IEnumerator RenderRegion(string region)
     {
+        var ugb = UMAAssetIndexer.Instance.Generator;
+
         if (string.IsNullOrEmpty(region))
         {
             currentStatus = "No region selected for rendering.";
@@ -273,8 +275,10 @@ public class IconCreator : MonoBehaviour
         var recipes = avatar.AvailableRecipes;
         if (recipes != null && recipes.TryGetValue(region, out List<UMATextRecipe> regionRecipes))
         {
+            int sequence = 0;
             foreach (var recipe in regionRecipes)
             {
+                sequence++;
                 var uwr = recipe as UMAWardrobeRecipe;
                 if (uwr != null)
                 {
@@ -282,11 +286,9 @@ public class IconCreator : MonoBehaviour
                     avatar.ClearWearableItems(region);
                     avatar.SetWearableItem(uwr);
                     avatar.BuildCharacter();
+                    ugb.GenerateSingleUMA(avatar, true);
                     // Wait until the avatar has finished updating before attempting to capture the icon.
-                    while (avatar.UpdatePending())
-                    {
-                        yield return null;
-                    }
+
                     // wait a frame to ensure character is rendered with the new wardrobe item before capturing the icon.
                     yield return null;
                     // ensure wearable items are cleared after rendering the icon so that the avatar is back to a clean state for the next recipe to be rendered.
@@ -311,8 +313,8 @@ public class IconCreator : MonoBehaviour
                         continue;
                     }
 
-                    string outputFolder = GetOutputFolder(region);
-                    string outputPath = Path.Combine(outputFolder, SanitizePathSegment(uwr.name) + ".png");
+                    string outputFolder = GetOutputFolder(region, avatar.activeRace.racedata.raceName);
+                    string outputPath = Path.Combine(outputFolder, SanitizePathSegment(sequence + "_" + uwr.name) + ".png");
                     if (!CaptureRenderTextureToPng(cameraRegions.camera, outputPath))
                     {
                         currentStatus = $"Failed to capture icon for recipe: {uwr.name}";
@@ -367,14 +369,15 @@ public class IconCreator : MonoBehaviour
         return null;
     }
 
-    private string GetOutputFolder(string region)
+    private string GetOutputFolder(string region, string race)
     {
         string baseFolder = GetOutputBaseFolder();
-        string sanitizedRootFolder = string.IsNullOrEmpty(rootFolder) ? string.Empty : rootFolder.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        string sanitizedRootFolder = NormalizeRootFolder(rootFolder);
         string sanitizedRegion = SanitizePathSegment(region);
+        string sanitizedRace = SanitizePathSegment(race);
         string outputFolder = string.IsNullOrEmpty(sanitizedRootFolder)
-            ? Path.Combine(baseFolder, sanitizedRegion)
-            : Path.Combine(baseFolder, sanitizedRootFolder, sanitizedRegion);
+            ? Path.Combine(baseFolder, sanitizedRegion, sanitizedRace)
+            : Path.Combine(baseFolder, sanitizedRootFolder, sanitizedRegion, sanitizedRace);
 
         Directory.CreateDirectory(outputFolder);
         return outputFolder;
@@ -387,6 +390,33 @@ public class IconCreator : MonoBehaviour
 #else
         return Application.persistentDataPath;
 #endif
+    }
+
+    private string NormalizeRootFolder(string folder)
+    {
+        if (string.IsNullOrEmpty(folder))
+        {
+            return string.Empty;
+        }
+
+        string normalizedFolder = folder.Replace('\\', '/').Trim();
+        string normalizedAssetsPath = Application.dataPath.Replace('\\', '/');
+
+        if (normalizedFolder.StartsWith(normalizedAssetsPath, StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedFolder = normalizedFolder.Substring(normalizedAssetsPath.Length);
+        }
+        else if (normalizedFolder.Equals("Assets", StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedFolder = string.Empty;
+        }
+        else if (normalizedFolder.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedFolder = normalizedFolder.Substring("Assets/".Length);
+        }
+
+        normalizedFolder = normalizedFolder.TrimStart('/', Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return normalizedFolder;
     }
 
     private string SanitizePathSegment(string value)
@@ -418,7 +448,7 @@ public class IconCreator : MonoBehaviour
             renderTexture.Create();
         }
 
-        captureCamera.Render();
+        // captureCamera.Render();
 
         RenderTexture previousActive = RenderTexture.active;
         RenderTexture.active = renderTexture;
@@ -431,7 +461,7 @@ public class IconCreator : MonoBehaviour
         File.WriteAllBytes(outputPath, pngBytes);
 
         RenderTexture.active = previousActive;
-        Destroy(capturedTexture);
+        Destroy(capturedTexture); 
 
         return true;
     }
@@ -559,14 +589,24 @@ public class IconCreator : MonoBehaviour
         cameraRegions.camera.Render();
     }
 
-    private List<string> GetRaceRegions()
+    private List<string> GetRaceRegionsFromAvatarRaceData()
     {
-        if (avatar == null || avatar.activeRace.data == null)
+        if (avatar == null)
         {
             return null;
         }
 
-        return avatar.activeRace.data.Regions;
+        if (avatar.activeRace.data == null)
+        {
+            return null;
+        }
+
+        if (avatar.activeRace.data.Regions == null)
+        {
+            return null;
+        }
+
+        return new List<string>(avatar.activeRace.data.Regions);
     }
 
     private void SyncSelectedRegion(List<string> raceRegions)
