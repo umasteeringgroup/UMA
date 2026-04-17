@@ -352,6 +352,13 @@ namespace UMA
                 AddText("https://www.youtube.com/@SecretAnorak/videos");
                 currentButton = 1;
             }
+
+            if (GUILayout.Button("What's New in UMA 3"))
+            {
+                ClearLog();
+                currentButton = 2;
+                DoWhatsNew();
+            }
             if (GUILayout.Button("View Documentation", GUILayout.Height(40)))
             {
                 ClearLog();
@@ -359,12 +366,12 @@ namespace UMA
                 DoDocumentation();
             }
 
-            if (GUILayout.Button("Add an UMA to current scene", GUILayout.Height(40)))
+           /* if (GUILayout.Button("Add an UMA to current scene", GUILayout.Height(40)))
             {
                 ClearLog();
                 DoAddToScenePage();
                 currentButton = 2;
-            }
+            }*/
             if (GUILayout.Button("Example Scenes", GUILayout.Height(40)))
             {
                 ClearLog();
@@ -428,6 +435,67 @@ namespace UMA
             }
             GUILayout.EndVertical();
             GUIHelper.EndInsetArea();
+        }
+
+        private void DoWhatsNew()
+        {
+            ClearLog();
+            AddLargeText("What's New in UMA 3");
+
+            AddText("The UMA 3 branch includes a large editor and workflow refresh aimed at making UMA easier to author, debug, and ship in modern Unity projects.");
+            AddText("");
+
+            AddText("<b> Major changes include:</b>");
+            AddText("- UMAGenerator is now generated and added to the scenes at runtime as needed. This simplifies setup and allows for better error handling when generators are missing or misconfigured.");
+            AddText("- Overlay Positioning tools are right in the recipe editor, with new alignment dialogs to make it easier to place and adjust overlay rects.");
+            AddText("- Placeholder wildcard slots allow recipes to carry overlays on placeholder entries and apply them to matching tagged slots at build time, improving flexibility for wardrobe items.");
+            AddText("- Jobified Mesh Combiner and Texture Merge systems for better performance when building characters, along with support for multiple RenderTexture formats.");
+            AddText("- Updated Mesh Modifiers system");
+            AddText("- Completely rewritten DNA System with modular support for modifiers, blendshapes, bone adjustments, Bone poses, color changes, and more in a single unified system, with live editing support in the editor.");
+            AddText("- New UMA Model with blendshapes and race generation support - create many races from one model. Unified model improves asset sharing across races and simplifies authoring.");
+
+            AddText("<b>Editor workflow upgrades</b>");
+            AddText("- New overlay positioning tools and alignment dialogs make it much easier to place and refine overlay rects.");
+            AddText("- The icon creator and updated recipe/slot tooling improve day-to-day content authoring workflows.");
+            AddText("- Shared Color Table, dialog, and builder updates continue the push toward a cleaner editor experience.");
+            AddText("- Face editor, vertex editor, and related editor stages received ongoing fixes and polish.");
+            AddSeperator();
+
+            AddText("<b>Wildcard and placeholder slot support</b>");
+            AddText("- Placeholder slots that are not asset-backed were added for overlay wildcard workflows.");
+            AddText("- This enables recipes to carry overlays on placeholder entries and apply them to matching tagged slots at build time.");
+            AddText("- Related editor improvements were added around slot inspection, matching criteria, and overlay editing.");
+            AddSeperator();
+
+            AddText("<b>Materials, shaders, and rendering</b>");
+            AddText("- ShaderGraph support and shader package updates were added across the branch.");
+            AddText("- UMA materials, color lookup tables, and render pipeline compatibility received broad updates.");
+            AddText("- Support for multiple RenderTexture formats was added, along with related scene consolidation improvements.");
+            AddSeperator();
+
+            AddText("<b>Mesh, decals, and avatar systems</b>");
+            AddText("- Mesh Hide workflows saw substantial work, including compression updates, raycast fixes, and editor improvements.");
+            AddText("- Mesh Modifier fixes and ongoing DNA tuning were added for better avatar authoring and deformation control.");
+            AddText("- Decal placement and utilities were updated, including improved behavior when matching by slot group.");
+            AddText("- Pose assets, updated slots, rebuilt blendshape content, and recipe updates were included across the beta work.");
+            AddSeperator();
+
+            AddText("<b>Project cleanup and migration toward UMA 3</b>");
+            AddText("- Legacy UMA 2, temp, and test content was removed or moved out as the branch converged on the new beta structure.");
+            AddText("- Validators and utilities were added to help keep wearable and project assets in the expected folder layout.");
+            AddText("- Default settings and package organization were updated to better fit the new branch layout.");
+            AddSeperator();
+
+            AddText("<b>Highlights from recent UMA 3 changesets</b>");
+            AddText("- Added overlay positioning and alignment tooling.");
+            AddText("- Added placeholder wildcard slots.");
+            AddText("- Updated icon creator, slots, recipes, dialogs, and builders.");
+            AddText("- Improved Mesh Hide, Mesh Modifier, decal, and vertex editing workflows.");
+            AddText("- Refreshed shader packages, ShaderGraphs, shared color tooling, and supporting utilities.");
+            AddText("- Removed older UMA 2 example and temporary content as part of the UMA 3 cleanup.");
+            AddText("");
+
+            AddText("If you are updating from an earlier beta snapshot, rebuild the UMA library after importing changes so the asset index reflects the latest folder layout and tooling updates.");
         }
 
         private void ReimportShaderFolder()
@@ -2087,21 +2155,32 @@ namespace UMA
         private void DoWelcome()
         {
             ClearLog();
-            AddLargeText("Welcome to UMA");
-            AddText("UMA is a powerful tool for creating performant characters in Unity. ");
+            AddLargeText("Welcome to UMA 3 Beta");
+
+            AddText("Thank you for trying the UMA 3 Beta. This version represents the next generation of UMA, with major improvements to performance, workflows, and extensibility.");
             AddText("");
-            AddText("If this is the first time after importing a new version, <b>you should rebuild the UMA library</b>");
-            AddText("This only takes a minute, but is necessary to make sure UMA knows where everything is.");
-            LogLine l = AddText("Rebuild Library after importing new version!");
+
+            AddText("As a beta tester, your feedback is essential. Please report any issues, unexpected behavior, or missing features to the UMA GitHub issue tracker:");
+            AddText("https://github.com/umasteeringgroup/UMA/issues");
             AddText("");
-            AddText("To get started on your own, click on the <b>'Add UMA an to Current Scene'</b> button to the left");
+
+            AddText("If this is your first time opening the project after importing a new UMA 3 Beta update, you should <b>rebuild the UMA Library</b>.");
+            AddText("This process only takes a moment and ensures UMA correctly detects and indexes all assets.");
+            LogLine l = AddText("Rebuild the Library after importing a new version!");
             AddText("");
-            AddText("If you are new to UMA, please check out the <b>'Basics'</b> section to the left");
+
+            AddText("To get started, click the <b>'Add UMA to Current Scene'</b> button on the left.");
             AddText("");
-            AddText("To check out UMA in action, please open a sample scene using the button to the left");
+
+            AddText("If you are new to UMA, please check out the <b>'Basics'</b> section on the left for an introduction to the core concepts.");
             AddText("");
-            AddText("Please join the <b>UMA Discord</b> for help and support (see Links)");
-            AddText("You can also check out the <b>UMA Wiki</b> for documentation (see Links)");
+
+            AddText("To see UMA 3 Beta in action, open one of the sample scenes using the button on the left.");
+            AddText("");
+
+            AddText("For help, support, and discussion, please join the <b>UMA Discord</b> (see Links).");
+            AddText("You can also explore the <b>UMA Wiki</b> for documentation and guides (see Links).");
+
             l.ButtonAction = (line) => DoLibraryRebuild(l);
         }
 

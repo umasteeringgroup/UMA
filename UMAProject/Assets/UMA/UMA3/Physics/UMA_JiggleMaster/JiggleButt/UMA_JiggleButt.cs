@@ -135,40 +135,19 @@ namespace UMA.Examples
 			Init();
 		}
 
-		private string GetSkeleton (string name) {
-			//Some skeletons differ between male and female (eg. o3n) so we need to capture sex information with 'butt' code
-			switch (name) {
-				case "HumanMaleDCS":
-					_gender = "male";
-					return "Standard";
-				case "HumanMale":
-					_gender = "male";
-					return "Standard";
-				case "HumanMaleHighPoly":
-					_gender = "male";
-					return "Standard";
-				case "HumanFemaleDCS":
-					_gender = "female";
-					return "Standard";
-				case "HumanFemale":
-					_gender = "female";
-					return "Standard";
-				case "HumanFemaleHighPoly":
-					_gender = "female";
-					return "Standard";
-				case "HumanFemale2":
-					_gender = "female";
-					return "Standard";
-				case "o3n Male":
-					_gender = "male";
-					return "o3n";
-				case "o3n Female":
-					_gender = "female";
-					return "o3n";
-				default:
-					return "other";
-			}
-		}
+	         //Some skeletons differ between male and female (eg. o3n) so we need to capture sex information with 'butt' code
+        private string GetSkeleton(string name)
+        {
+            if (name.Contains("o3n"))
+            {
+                return "o3n";
+            }
+            else
+            {
+                return "Standard";
+            }
+        }
+
 
 		void InitializeBone (JiggleElement jiggler) {
 			Vector3 targetPos = jiggler.Bone.position + jiggler.Bone.TransformDirection(new Vector3((jiggler.BoneAxis.x * _targetDistance), (jiggler.BoneAxis.y * _targetDistance), (jiggler.BoneAxis.z * _targetDistance)));

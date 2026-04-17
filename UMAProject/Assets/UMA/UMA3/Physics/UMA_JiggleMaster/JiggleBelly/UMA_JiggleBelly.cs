@@ -121,28 +121,13 @@ namespace UMA.Examples
 
 		private string GetSkeleton(string name)
 		{
-			switch (name)
+			if (name.Contains("o3n"))
 			{
-				case "HumanMaleDCS":
-					return "Standard";
-				case "HumanMale":
-					return "Standard";
-				case "HumanMaleHighPoly":
-					return "Standard";
-				case "HumanFemaleDCS":
-					return "Standard";
-				case "HumanFemale":
-					return "Standard";
-				case "HumanFemaleHighPoly":
-					return "Standard";
-				case "HumanFemale2":
-					return "Standard";
-				case "o3n Male":
-					return "o3n";
-				case "o3n Female":
-					return "o3n";
-				default:
-					return "other";
+				return "o3n";
+			}
+			else
+			{
+				return "Standard";
 			}
 		}
 

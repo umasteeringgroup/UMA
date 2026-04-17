@@ -145,32 +145,18 @@ namespace UMA.Examples
 			Init();
 		}
 
-		private string GetSkeleton(string name)
-		{
-			switch (name)
-			{
-				case "HumanMaleDCS":
-					return "Standard";
-				case "HumanMale":
-					return "Standard";
-				case "HumanMaleHighPoly":
-					return "Standard";
-				case "HumanFemaleDCS":
-					return "Standard";
-				case "HumanFemale":
-					return "Standard";
-				case "HumanFemaleHighPoly":
-					return "Standard";
-				case "HumanFemale2":
-					return "Standard";
-				case "o3n Male":
-					return "o3n";
-				case "o3n Female":
-					return "o3n";
-				default:
-					return "other";
-			}
-		}
+
+        private string GetSkeleton(string name)
+        {
+            if (name.Contains("o3n"))
+            {
+                return "o3n";
+            }
+            else
+            {
+                return "Standard";
+            }
+        }
 
 		void InitializeBone(JiggleElement jiggler)
 		{

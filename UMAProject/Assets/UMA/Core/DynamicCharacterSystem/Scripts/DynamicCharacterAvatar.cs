@@ -65,7 +65,7 @@ namespace UMA.CharacterSystem
         {
             var res = new GameObject("New Dynamic Character Avatar");
             var da = res.AddComponent<DynamicCharacterAvatar>();
-            da.ChangeRace("HumanMale");
+            da.ChangeRace("Human Male 3.0");
             UnityEditor.Selection.activeGameObject = res;
         }
 
