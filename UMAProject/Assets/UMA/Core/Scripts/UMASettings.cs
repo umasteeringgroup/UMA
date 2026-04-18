@@ -50,7 +50,7 @@ namespace UMA
         public bool alwaysGetAddressables = true;
         public bool ignoreBackupFolders = false;
 
-
+        public bool addDNAOnRaceChange = true;
         public bool addrUseSharedGroup = true;
         public string addrSharedGroupName = "UMAShared";
         public string addrDefaultLabel = "UMA_Default";

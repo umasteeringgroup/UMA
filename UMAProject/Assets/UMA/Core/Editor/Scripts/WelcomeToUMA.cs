@@ -445,7 +445,7 @@ namespace UMA
             AddText("The UMA 3 branch includes a large editor and workflow refresh aimed at making UMA easier to author, debug, and ship in modern Unity projects.");
             AddText("");
 
-            AddText("<b> Major changes include:</b>");
+            AddText("<b> Highlights:</b>");
             AddText("- UMAGenerator is now generated and added to the scenes at runtime as needed. This simplifies setup and allows for better error handling when generators are missing or misconfigured.");
             AddText("- Overlay Positioning tools are right in the recipe editor, with new alignment dialogs to make it easier to place and adjust overlay rects.");
             AddText("- Placeholder wildcard slots allow recipes to carry overlays on placeholder entries and apply them to matching tagged slots at build time, improving flexibility for wardrobe items.");
@@ -453,6 +453,9 @@ namespace UMA
             AddText("- Updated Mesh Modifiers system");
             AddText("- Completely rewritten DNA System with modular support for modifiers, blendshapes, bone adjustments, Bone poses, color changes, and more in a single unified system, with live editing support in the editor.");
             AddText("- New UMA Model with blendshapes and race generation support - create many races from one model. Unified model improves asset sharing across races and simplifies authoring.");
+            AddText("- UDIM Support in slot builder - splits meshes into multiple UDIM tiles based on material assignment, with support for both UDIM and non-UDIM workflows.");
+            AddText("- Race based baked blendshapes for improved performance and flexibility.");
+            AddSeperator();
 
             AddText("<b>Editor workflow upgrades</b>");
             AddText("- New overlay positioning tools and alignment dialogs make it much easier to place and refine overlay rects.");

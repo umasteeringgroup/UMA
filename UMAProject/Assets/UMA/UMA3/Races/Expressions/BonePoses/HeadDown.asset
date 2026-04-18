@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: HeadDown
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: Head
+    hash: 130111906
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.25533134, y: 0.000000016832137, z: 0.00000006569092, w: 0.9668536}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: 0.000018134713, z: -0.000058434904}
+    rotation: {x: -0.0035801677, y: 2.2134282e-14, z: 7.1984185e-10, w: 0.9999936}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.00010042917, y: 0.00009007007, z: 0.0005068332}
+    rotation: {x: -0.0000020640832, y: 0.0011750403, z: 0.000008988277, w: 0.99999934}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightHandFinger05_01
+    hash: -1157319794
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.0007096707, y: 0.00031018088, z: -0.0012074704, w: 0.999999}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

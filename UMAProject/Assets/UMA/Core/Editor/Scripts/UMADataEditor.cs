@@ -189,12 +189,19 @@ namespace UMA.Editors
             EditorGUILayout.Toggle("Using 32 bit", _umaData.force32bit);
             if (_umaData.umaRecipe != null)
             {
-                EditorGUILayout.IntField("SlotCount", _umaData.umaRecipe.slotDataList.Length);
-                foreach(SlotData slot in _umaData.umaRecipe.slotDataList)
+                if (_umaData.umaRecipe.slotDataList == null)
                 {
-                    if (slot != null)
+                    EditorGUILayout.LabelField("No Slot Data");
+                }
+                else
+                {
+                    EditorGUILayout.IntField("SlotCount", _umaData.umaRecipe.slotDataList.Length);
+                    foreach (SlotData slot in _umaData.umaRecipe.slotDataList)
                     {
-                        EditorGUILayout.LabelField($"{slot.vertexOffset:000000} {slot.asset.meshData.vertexCount:000000} {slot.asset.slotName}");
+                        if (slot != null)
+                        {
+                            EditorGUILayout.LabelField($"{slot.vertexOffset:000000} {slot.asset.meshData.vertexCount:000000} {slot.asset.slotName}");
+                        }
                     }
                 }
             }

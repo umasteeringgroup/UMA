@@ -378,11 +378,10 @@ namespace UMA
 
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "IgnoreTag", "KeepTag", "tagLookupValues" });
 
-
             EditorGUILayout.LabelField("Groups", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These groups are used by UMA to identify slots with the same UV layout for decals", MessageType.Info);
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "groupNames" });
-
+            DrawPropertiesIncluding(m_CustomSettings, new string[] { "addDNAOnRaceChange" });
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "UMAVersion" });
             EndVerticalPadded(10);
 

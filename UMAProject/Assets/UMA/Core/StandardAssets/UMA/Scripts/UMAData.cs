@@ -158,7 +158,10 @@ namespace UMA
 
 			foreach (var modifier in recipe.MeshModifiers)
 			{
-               AddMeshModifiers(modifier.RuntimeModifiers);
+				if (modifier != null)
+				{
+					AddMeshModifiers(modifier.RuntimeModifiers);
+				}
             }
         }
 

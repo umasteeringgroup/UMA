@@ -817,7 +817,8 @@ namespace UMA.Editors
 
 		private void AddRaceDataAsset(RaceData raceDataAsset, SerializedProperty crossCompatibilitySettingsData)
 		{
-			if (raceDataAsset.raceName == serializedObject.FindProperty("raceName").stringValue)
+			var thisRace = target as RaceData;
+			if (thisRace != null && raceDataAsset.raceName == thisRace.raceName)
 			{
 				return;
 			}

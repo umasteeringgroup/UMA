@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueWide
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftHandFinger05_01
+    hash: 769127528
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.00084950734, y: -0.00037201357, z: 0.0014461173, w: 0.9999986}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftHandFinger05_02
+    hash: -1260476974
+    position: {x: 0.00000010998839, y: 0.000000037252903, z: 0.000000107814714}
+    rotation: {x: 0.004177995, y: 0.0007068552, z: -0.00034929643, w: 0.999991}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue01
+    hash: 1278850178
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.000048068177, y: 1.1999787e-10, z: -1.6483391e-10, w: 1}
+    scale: {x: 1.0790031, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.00000043362962}
+    rotation: {x: -0.000013290187, y: -0.0002643069, z: -0.0000000033235068, w: 1}
+    scale: {x: 1.0768236, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightHandFinger05_01
+    hash: -1157319794
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: -0.00084959326, y: 0.00037180143, z: -0.0014460133, w: 0.99999857}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightHandFinger05_02
+    hash: 571335220
+    position: {x: 0.00000012770394, y: -0.0000000037252903, z: -0.000000029562091}
+    rotation: {x: 0.0041779326, y: -0.0007068166, z: 0.0003492815, w: 0.999991}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

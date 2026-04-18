@@ -66,6 +66,8 @@ namespace UMA.CharacterSystem
             var res = new GameObject("New Dynamic Character Avatar");
             var da = res.AddComponent<DynamicCharacterAvatar>();
             da.ChangeRace("Human Male 3.0");
+            da.SetColor("Eyes", Color.aliceBlue);
+            da.SetColor("Hair", new Color(0.7f, 0.5f, 0.3f));
             UnityEditor.Selection.activeGameObject = res;
         }
 
@@ -888,6 +890,8 @@ namespace UMA.CharacterSystem
                 if (activeRace.racedata != null)
                 {
                     LoadDefaultWardrobe();
+                    umaRecipe.raceData = activeRace.racedata;
+                    umaRecipe.AddMissingDNAForRace();
 
                     // save the predefined DNA...
                     var dna = predefinedDNA.Clone();

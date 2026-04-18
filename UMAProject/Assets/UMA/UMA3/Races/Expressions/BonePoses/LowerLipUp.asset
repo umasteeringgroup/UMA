@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: LowerLipUp
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: -0.00013617426, z: 0.00004579872}
+    rotation: {x: 0.000000009079736, y: 0.0017554183, z: 1.6910656e-10, w: 0.9999985}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: 0, y: 0.00006508082, z: -0.000121831894}
+    rotation: {x: -0.00000007649191, y: 0.0023139843, z: -1.6364438e-10, w: 0.9999974}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLipsInferior
+    hash: -2082379262
+    position: {x: -0.00038320292, y: -0.0029672757, z: -0.0022825599}
+    rotation: {x: 0.30597088, y: -0.075496554, z: -0.040374268, w: 0.94818354}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LipsInferior
+    hash: -499586065
+    position: {x: 0, y: -0.0021869838, z: -0.0040428843}
+    rotation: {x: 0.33507645, y: -0.00000004533795, z: -0.000000008713375, w: 0.942191}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.00038913637, y: -0.0029575601, z: -0.0021773558}
+    rotation: {x: 0.30597076, y: 0.07549652, z: 0.04037426, w: 0.9481836}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: -0.00013621897, z: 0.00004579872}
+    rotation: {x: 0.000000009054333, y: -0.001755111, z: 1.8343894e-10, w: 0.9999985}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowMiddle
+    hash: 1695671804
+    position: {x: 0, y: 0.00006502867, z: -0.000121831894}
+    rotation: {x: -0.00000006745852, y: -0.0023138511, z: 1.4064058e-10, w: 0.9999973}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []
