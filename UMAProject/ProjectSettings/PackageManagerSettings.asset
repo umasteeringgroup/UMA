@@ -27,6 +27,9 @@ MonoBehaviour:
     m_IsDefault: 1
     m_Capabilities: 7
     m_ConfigSource: 0
+    m_Compliance:
+      m_Status: 0
+      m_Violations: []
   m_UserSelectedRegistryName: 
   m_UserAddingNewScopedRegistry: 0
   m_RegistryInfoDraft:

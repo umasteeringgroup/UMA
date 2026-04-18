@@ -162,8 +162,10 @@ namespace UMA
                     prefabInstance = GameObject.Instantiate(prefab, umaData.gameObject.transform);
 					prefabInstance.name = $"NMB_{this.sourceSlotName} {prefab.name}";
                 }
+                FixupShaders(prefabInstance);
+
             }
-			switch(prefabStatus) {
+            switch (prefabStatus) {
                 case PrefabStatus.ShouldBeActivated:
                     prefabInstance.SetActive(true);
                     break;
@@ -173,6 +175,29 @@ namespace UMA
                 case PrefabStatus.ShouldBeDeleted:
                     CleanUp();
                     break;
+            }
+        }
+
+        private void FixupShaders(GameObject go)
+        {
+            MeshRenderer[] mrs = go.GetComponentsInChildren<MeshRenderer>();
+            for (int i = 0; i < mrs.Length; i++)
+            {
+                Material[] mats = mrs[i].sharedMaterials;
+                for (int j = 0; j < mats.Length; j++)
+                {
+                    Material mat = mats[j];
+                    string shaderName = mat.GetTag("OriginalShader", false, "");
+                    if (!string.IsNullOrEmpty(shaderName))
+                    {
+                        Shader s = Shader.Find(shaderName);
+                        if (s != null)
+                        {
+                            mat.shader = s;
+                        }
+                    }
+                }
+                mrs[i].materials = mats;
             }
         }
 

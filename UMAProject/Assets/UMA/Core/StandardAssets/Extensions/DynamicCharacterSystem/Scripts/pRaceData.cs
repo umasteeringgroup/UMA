@@ -5,6 +5,7 @@ using UnityEditor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Serialization;
 
 namespace UMA
 {
@@ -15,8 +16,22 @@ namespace UMA
 
 		[Tooltip("UMA Text recipe that holds the slots and overlays that are the default set up for this race.")]
 		public UMARecipeBase baseRaceRecipe;
-		[Tooltip("Wardobe slots that wardrobe recipes can be assigned to.")]
-		public List<string> wardrobeSlots = new List<string>(){
+		
+		public List<string> wardrobeSlots 
+		{
+			get
+			{
+				return Regions;
+            }
+			set
+			{
+				Regions = value;
+            }
+		}
+
+        [Tooltip("Regions that wearables can be assigned to.")]
+        [FormerlySerializedAs("wardrobeSlots")]
+		public List<string> Regions = new List<string>(){
             "None",
             "Face",
             "Hair",
@@ -34,7 +49,7 @@ namespace UMA
             "Feet"
         };
 
-		private UMAPackedRecipeBase.UMAPackRecipe packedRecipe;
+        private UMAPackedRecipeBase.UMAPackRecipe packedRecipe;
 
 		private UMAData.UMARecipe unPackedRecipe;
 		private Dictionary<string, float> RaceDNAValues = new Dictionary<string, float>();
@@ -53,8 +68,13 @@ namespace UMA
 
 		public RaceThumbnails raceThumbnails;
 
+		public override string ToString()
+		{
+			return $"{name}.{raceName}";
+        }
 
-		public List<OverlayColorData> GetDefaultColors()
+
+        public List<OverlayColorData> GetDefaultColors()
         {
 			if (RaceColorValues.Count > 0)
             {
@@ -129,7 +149,7 @@ namespace UMA
                 {
                     UMADnaBase udb = dna[i1];
                     for (int i=0;i < udb.Names.Length;i++)
-                    {
+					{
 						if (RaceDNAValues.ContainsKey(udb.Names[i]) == false)
 						{
 							RaceDNAValues.Add(udb.Names[i], udb.Values[i]);
@@ -137,7 +157,17 @@ namespace UMA
 					}
                 }
 			}
-			return RaceDNAValues;
+            var allNames = GetDNANames(); // canonical full set for this race
+            for (int i = 0; i < allNames.Count; i++)
+            {
+                var n = allNames[i];
+                if (!RaceDNAValues.ContainsKey(n))
+                {
+                    // TODO: if you can query a real default from DNA assets, use that; otherwise use 0.5f
+                    RaceDNAValues[n] = 0.5f;
+                }
+            }
+            return RaceDNAValues;
         }
 
 
@@ -565,5 +595,67 @@ namespace UMA
         }
 
         #endregion
+
+#if UNITY_EDITOR
+        [SerializeField, HideInInspector] private UMARecipeBase _lastBaseRecipeRef;
+        [SerializeField, HideInInspector] private int _lastConvertersVersion;
+#endif
+
+#if UNITY_EDITOR
+        private int ComputeConvertersVersion()
+        {
+            // Build a simple hash of the current converter list to detect changes
+            int ver = 17;
+            var list = dnaConverterList; // property returns array
+            if (list != null)
+            {
+                ver = ver * 31 + list.Length;
+                for (int i = 0; i < list.Length; i++)
+                {
+                    var c = list[i];
+                    if (c != null)
+                    {
+                        ver = ver * 31 + c.GetInstanceID();
+                        ver = ver * 31 + (c.name != null ? c.name.GetHashCode() : 0);
+                    }
+                    else
+                    {
+                        ver = ver * 31;
+                    }
+                }
+            }
+            return ver;
+        }
+
+        private void OnValidate()
+        {
+            bool changed = false;
+            // Detect base recipe change
+            if (_lastBaseRecipeRef != baseRaceRecipe)
+            {
+                _lastBaseRecipeRef = baseRaceRecipe;
+                changed = true;
+            }
+            // Detect converter list change
+            int currentVer = ComputeConvertersVersion();
+            if (_lastConvertersVersion != currentVer)
+            {
+                _lastConvertersVersion = currentVer;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                // Clear cached DNA defaults and packed recipe so they rebuild next access
+                if (RaceDNAValues != null) RaceDNAValues.Clear();
+                packedRecipe = null;
+                // Also clear cached colors derived from packed recipe
+                if (RaceColorValues != null) RaceColorValues.Clear();
+                // Reset any converter plugin state so defaults are fresh
+                try { ResetDNA(); } catch { }
+                EditorUtility.SetDirty(this);
+            }
+        }
+#endif
     }
 }

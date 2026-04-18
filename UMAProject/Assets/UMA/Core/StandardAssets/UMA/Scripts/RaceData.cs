@@ -1,6 +1,8 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using UMA.PoseTools;
+using UnityEngine.Serialization;
 
 namespace UMA
 {
@@ -17,13 +19,38 @@ namespace UMA
 	[Serializable]
 	public partial class RaceData : ScriptableObject, INameProvider, IUMAIndexOptions
 	{
-	    public string raceName;
+		[FormerlySerializedAs("raceName")]
+        public string _oldRaceName;
+
+        public string raceName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_oldRaceName))
+                {
+                    return _oldRaceName;
+                }
+                return this.name;
+            }
+        }
 		public List<string> KeepBoneNames = new List<string>();
 		public List<string> tags = new List<string>();
+		public  List<SlotBurnOptions> PrebakedBlendshapes = new List<SlotBurnOptions>();
+		public List<string> UnbakedShapesToInclude = new List<string>();
+		public bool keepUnbakedBlendshapes = false;
+        public bool disableDNAConverters = false;
+		public bool forceRebuildRaceSlots = false;
 
-		public bool disableDNAConverters = false;
 		[Tooltip("if true, this will not be added to the index when all items are scanned.")]
         public bool noAutoAdd = false;
+
+        [Header("Renderer Bounds")]
+        [Tooltip("When enabled, the UMA renderers will use this manual bounds (extents) instead of calculated bounds. The extents are scaled by the scale on the 'Position' bone.")]
+        public bool useManualRendererBounds = false;
+        [Tooltip("Manual bounds extents to apply to the UMA renderers when 'Use Manual Renderer Bounds' is enabled. Values are extents (half-size) in local space before scaling by the 'Position' bone.")]
+        public Vector3 manualRendererBounds = Vector3.zero;
+        [Tooltip("Manual bounds center offset to apply to the UMA renderers when 'Use Manual Renderer Bounds' is enabled. Value is in local space before scaling by the 'Position' bone.")]
+        public Vector3 manualRendererBoundsCenter = Vector3.zero;
 
 		public bool NoAutoAdd
 		{
@@ -34,7 +61,8 @@ namespace UMA
         /*
 		 * New DNA
 		 */
-
+        [Tooltip("Use the new DNA system. The older DNA will not be used or called.")]
+        public bool useNewDNA;
 		[Tooltip("The DNA groups assigned to this race")]
         public DNACollection DNACollection = new DNACollection();
 
@@ -47,7 +75,7 @@ namespace UMA
         }
         public int GetNameHash()
         {
-            return 0;
+            return UMAUtils.StringToHash(raceName);
         }
 		#endregion
 
@@ -56,9 +84,13 @@ namespace UMA
 		private DNAConverterList _dnaConverterList = new DNAConverterList();
 
 
-		public List<string> GetDNANames()
+        public List<string> GetDNANames()
 		{
-			List<string> Names = new List<string>();
+			if (useNewDNA)
+			{
+				return DNACollection.GetDNANames();
+            }
+            List<string> Names = new List<string>();
 
             for (int i = 0; i < dnaConverterList.Length; i++)
             {
@@ -80,6 +112,11 @@ namespace UMA
 
 		public void ResetDNA()
 		{
+			if (useNewDNA)
+			{
+				// New DNA does not need resetting currently.
+				return;
+            }
             for (int j = 0; j < dnaConverterList.Length; j++)
 			{
                 IDNAConverter converter = dnaConverterList[j];
@@ -101,6 +138,10 @@ namespace UMA
 		public DynamicDNAConverterController[] dnaConverterList
 		{
 			get {
+				if (useNewDNA)
+				{
+					return null;
+				}
 				if (disableDNAConverters)
 					return new DynamicDNAConverterController[0];
 				else
@@ -114,9 +155,19 @@ namespace UMA
 		public bool labelLocalFiles;
         public bool LabelLocalFiles { get => labelLocalFiles; set => labelLocalFiles = value; }
 
+
+		[Tooltip("The compatibility pose for old UMA2 rigs. Old slots are converted to this race using this pose.")]		
+		public UMABonePose LegacyCompatibilityPose;
+
+
         public DynamicDNAConverterController[] GetConverters(UMADnaBase DNA)
 		{
-			if (disableDNAConverters)
+			if (useNewDNA)
+			{
+				Debug.LogError("GetConverters should not be called when using New DNA system.");
+                return null;
+            }
+            if (disableDNAConverters)
 			{
 				return new DynamicDNAConverterController[0];
 			}
@@ -129,7 +180,12 @@ namespace UMA
 		/// <param name="converter"></param>
 		public void AddConverter(IDNAConverter converter)
 		{
-			if (disableDNAConverters)
+            if (useNewDNA)
+            {
+                Debug.LogError("AddConverters should not be called when using New DNA system.");
+                return;
+            }
+            if (disableDNAConverters)
 				return;
 			_dnaConverterList.Add(converter as DynamicDNAConverterController);
 		}

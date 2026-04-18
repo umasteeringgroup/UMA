@@ -839,6 +839,11 @@ namespace UMA
         {
             List<Type> theTypes = new List<Type>();
 
+
+#if UNITY_EDITOR && UNITY_2019_2_OR_NEWER
+            theTypes = TypeCache.GetTypesDerivedFrom<UMAProperty>().ToList();
+#else
+
             var Assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
             for (int i = 0; i < Assemblies.Length; i++)
@@ -861,6 +866,7 @@ namespace UMA
                     // This apparently blows up on some assemblies. 
                 }
             }
+#endif
 
             return theTypes;
         }
@@ -880,6 +886,39 @@ namespace UMA
                 shaderProperties = new List<UMAProperty>();
             }
 
+            shaderProperties.Add(property);
+        }
+
+        public bool RemoveProperty(string propertyName)
+        {
+            if (shaderProperties == null)
+            {
+                return false;
+            }
+
+            bool removed = false;
+            for (int i = shaderProperties.Count - 1; i >= 0; i--)
+            {
+                UMAProperty property = shaderProperties[i];
+                if (property != null && property.name == propertyName)
+                {
+                    shaderProperties.RemoveAt(i);
+                    removed = true;
+                }
+            }
+
+            return removed;
+        }
+
+        public void SetProperty(UMAProperty property)
+        {
+            if (property == null)
+            {
+                return;
+            }
+
+            Validate();
+            RemoveProperty(property.name);
             shaderProperties.Add(property);
         }
 

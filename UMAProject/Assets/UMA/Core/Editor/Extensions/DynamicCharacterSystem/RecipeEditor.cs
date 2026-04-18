@@ -49,7 +49,8 @@ namespace UMA.Editors
 							 .Where(x => typeof(IUMAAddressablePlugin).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
 							 .Select(x => x).ToList();*/
 		}
-		public virtual void OnSceneDrag(SceneView view)
+
+		public virtual void OnSceneDrag(SceneView view, int index)
 		{
 			if (Event.current.type == EventType.DragUpdated)
 			{
@@ -158,7 +159,7 @@ namespace UMA.Editors
             }
 
             dnaEditor = new DNAMasterEditor(_recipe);
-            slotEditor = new SlotMasterEditor(_recipe);
+            slotEditor = new SlotMasterEditor(_recipe, target);
 
             _rebuildOnLayout = true;
             Initialized = true;
@@ -180,6 +181,11 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
+			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+			{
+				EditorGUILayout.LabelField("Unity is compiling/updating. Please wait...");
+				return;
+			}
 			if (!Initialized)
 			{
                 EditorGUILayout.HelpBox("Recipe Editor is not initialized. Please wait until the editor is ready.", MessageType.Info);
@@ -194,14 +200,18 @@ namespace UMA.Editors
 			}
 			if (_recipe == null) return;
 
-			foreach(IUMARecipePlugin plugin in plugins) 
+			if (plugins != null)
 			{
-				string label = plugin.GetSectionLabel();
-				plugin.foldOut = GUIHelper.FoldoutBar(plugin.foldOut, label);
-				if(plugin.foldOut) {
-					GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-					plugin.OnInspectorGUI(serializedObject);
-					GUIHelper.EndVerticalPadded(10);
+				foreach (IUMARecipePlugin plugin in plugins)
+				{
+					string label = plugin.GetSectionLabel();
+					plugin.foldOut = GUIHelper.FoldoutBar(plugin.foldOut, label);
+					if (plugin.foldOut)
+					{
+						GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+						plugin.OnInspectorGUI(serializedObject);
+						GUIHelper.EndVerticalPadded(10);
+					}
 				}
 			}
 

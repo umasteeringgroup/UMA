@@ -21,6 +21,13 @@ namespace UMA.Dynamics.Editors
 
 			DrawDefaultInspector();
 
+			// convert from one axist to another
+
+
+
+
+			// 
+
 			EditorGUILayout.HelpBox ("Sets layer 8 and 9 to Ragdoll and Player. If your code uses different layers do not use this defaults button", MessageType.Info);
 			if (GUILayout.Button ("Add Default Layers")) 
 			{

@@ -5,11 +5,13 @@
     /// A DnaSetter is used to set a specific piece of DNA on the avatar
     /// that it is pulled from.
     /// </summary>
-    public class DnaSetter
+    public class DnaSetter 
     {
         public string Name; // The name of the DNA.
         public float Value; // Current value of the DNA.
         public string Category;
+        DNAInstance dnaInstance;
+        public UMAData umaData;
 
         public int OwnerIndex
         {
@@ -19,6 +21,23 @@
         }
 
         protected UMADnaBase Owner;  // owning DNA class. Used to set the DNA by index
+
+
+        public DnaSetter(DNAInstance instance, DNAGroup group, UMAData umaData)
+        {
+            Name = instance.Name;
+            Value = instance.Value;
+            Category = group.DNAArea;
+            dnaInstance = instance;
+            if (dnaInstance != null && dnaInstance.parentGroup == null)
+            {
+                dnaInstance.parentGroup = group;
+            }
+            OwnerIndex = -1;
+            Owner = null;
+            this.umaData = umaData;
+        }
+
 
         /// <summary>
         /// Construct a DnaSetter
@@ -35,6 +54,7 @@
             OwnerIndex = ownerIndex;
             Owner = owner;
             Category = category;
+            umaData = null;
         }
 
         /// <summary>
@@ -44,8 +64,85 @@
         public void Set(float val)
         {
             Value = val;
-            Owner.SetValue(OwnerIndex, val);
+            if (dnaInstance != null)
+            {
+                dnaInstance.Value = val;
+                var group = dnaInstance.parentGroup;
+                if (group == null)
+                {
+                    // Instances should always have a group, but older/hand-built instances may not.
+                    // Try to recover from our cached Category/group knowledge rather than throwing.
+                    group = dnaInstance.parentGroup;
+                }
+
+                if (group != null && group.MaxTotalValue > 0.0001f)
+                {
+                    // Enforce MaxTotalValue by reducing other non-zero instances equally
+                    if (umaData != null && umaData.dnaInstanceCollection != null)
+                    {
+                        var instances = umaData.dnaInstanceCollection.GetDNAInstancesByGroup(group);
+                        if (instances != null && instances.Count > 0)
+                        {
+                            float total = 0.0f;
+                            int otherNonZero = 0;
+                            for (int i = 0; i < instances.Count; i++)
+                            {
+                                var inst = instances[i];
+                                if (inst == null || !inst.enabled)
+                                {
+                                    continue;
+                                }
+                                total += inst.Value;
+                                if (inst != dnaInstance && inst.Value > 0.0f)
+                                {
+                                    otherNonZero++;
+                                }
+                            }
+
+                            float maxTotal = group.MaxTotalValue;
+                            if (total > maxTotal && otherNonZero > 0)
+                            {
+                                float over = total - maxTotal;
+                                float reductionPer = over / (float)otherNonZero;
+
+                                for (int i = 0; i < instances.Count; i++)
+                                {
+                                    var inst = instances[i];
+                                    if (inst == null || !inst.enabled)
+                                    {
+                                        continue;
+                                    }
+                                    if (inst == dnaInstance)
+                                    {
+                                        continue;
+                                    }
+                                    if (inst.Value > 0.0f)
+                                    {
+                                        float newVal = inst.Value - reductionPer;
+                                        if (newVal < 0.0f)
+                                        {
+                                            newVal = 0.0f;
+                                        }
+                                        if (newVal > 1.0f)
+                                        {
+                                            newVal = 1.0f;
+                                        }
+                                        inst.Value = newVal;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+            else
+            {
+                Owner.SetValue(OwnerIndex, val);
+            }
         }
+
+
 
         /// <summary>
         /// Set the current DNA value. You will need to rebuild the character to see 
@@ -53,7 +150,7 @@
         /// </summary>
         public void Set()
         {
-            Owner.SetValue(OwnerIndex, Value);
+            Set(Value);
         }
 
         /// <summary>
@@ -61,7 +158,14 @@
         /// </summary>
         public float Get()
         {
-            return Owner.GetValue(OwnerIndex);
+            if (dnaInstance != null)
+            {
+                return dnaInstance.Value;
+            }
+            else
+            {
+                return Owner.GetValue(OwnerIndex);
+            }
         }
     }
 }

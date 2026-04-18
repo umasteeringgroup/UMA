@@ -1,5 +1,5 @@
 #define DEBUG_TIMING
-
+#define UMA_DEBUG
 using System;
 using UnityEngine;
 using System.Collections.Generic;
@@ -29,6 +29,14 @@ namespace UMA
 		public UMAMeshCombiner meshCombiner;
 		private HashSet<string> raceNames;
 
+		public enum FlipDecalMode
+		{
+			Auto,
+			Always,
+			Never
+		}
+		public FlipDecalMode flipDecalMode;
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -36,7 +44,14 @@ namespace UMA
 		[Tooltip("Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
         public int InitialScaleFactor = 1;
 
-		[Range(1.0f,16.0f)]
+        [Tooltip("Automatically adjust Atlas size based on available memory.")]
+        public bool AutomaticScaling = false;
+        [Tooltip("Scale down textures if GPU memory is below this value (in MB).")]
+        public float ScaleGPUMemoryCutoffMB = 1024.0f;
+        [Tooltip("Scale down textures if system memory is below this value (in MB).")]
+        public float ScaleSystemMemoryCutoffMB = 16384.0f;
+
+        [Range(1.0f,16.0f)]
 		[Tooltip("Scale factor for edit-time builds. Increase scale factor to decrease texture usage. A value of 1 means the textures will not be downsampled. Values greater than 1 will result in texture savings. The size of the texture is divided by this value.")]
 		public int editorInitialScaleFactor = 4;
 
@@ -58,11 +73,13 @@ namespace UMA
         /// </summary>
         [Tooltip("Number of character updates before triggering garbage collection.")]
 		[Range(0.0f, 128.0f)]
-		public int garbageCollectionRate = 8;
+		public int garbageCollectionRate = 0;
 
 		public bool collectGarbage = true;
 		private System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
         private System.Diagnostics.Stopwatch buildStopWatch = new System.Diagnostics.Stopwatch();
+
+        
 
 		[Tooltip("Automatically set blendshapes based on race")]
 		public bool autoSetRaceBlendshapes = false;
@@ -139,8 +156,18 @@ namespace UMA
 
         public virtual void Awake()
 		{
-
-			if (atlasResolution == 0)
+            if (AutomaticScaling)
+            {
+                if (SystemInfo.systemMemorySize < ScaleSystemMemoryCutoffMB || SystemInfo.graphicsMemorySize < ScaleGPUMemoryCutoffMB)
+                {
+                    InitialScaleFactor *= 2;
+                    atlasResolution /= 2;
+                    Debug.Log($"UMAGeneratorBuiltin: Automatic scaling applied. New InitialScaleFactor: {InitialScaleFactor}, New atlasResolution: {atlasResolution} System Memory: {SystemInfo.systemMemorySize} MB, GPU Memory: {SystemInfo.graphicsMemorySize} MB");
+                }
+                // don't do this again.
+                AutomaticScaling = false;
+            }
+            if (atlasResolution == 0)
             {
                 atlasResolution = 256;
             }
@@ -220,7 +247,9 @@ namespace UMA
                 {
                     // TODO: Test this on IOS when I get it building. 
                     // GC.Collect(0, GCCollectionMode.Forced, true, true);
+#if !UNITY_EDITOR
                     GC.Collect();
+#endif
                     forceGarbageCollect = 0;
                 }
 
@@ -254,10 +283,6 @@ namespace UMA
 #endif
 				stopWatch.Stop();
 				UMATime.ReportTimeSpendtThisFrameTicks(stopWatch.ElapsedTicks);
-                if (garbageCollectionRate == 0)
-                {
-                    GC.Collect(0);
-                }
             }
             if (RenderTexToCPU.PendingCopies() > 0)
             {
@@ -303,14 +328,39 @@ namespace UMA
 			umaData.SaveMountedItems();
         }
 
+         private void CacheDefaultOverlayMaterial(UMAData data)
+            {
+                if (data == null || data.umaRecipe == null || data.umaRecipe.slotDataList == null)
+                {
+                    return;
+                }
+
+                UMAMaterial defaultMaterial = null;
+                if (defaultOverlayAsset != null)
+                {
+                    defaultMaterial = defaultOverlayAsset.GetMaterial();
+                }
+
+                for (int i = 0; i < data.umaRecipe.slotDataList.Length; i++)
+                {
+                    var slot = data.umaRecipe.slotDataList[i];
+                    if (slot != null)
+                    {
+                        slot.CacheDefaultOverlayMaterial(defaultMaterial);
+                    }
+                }
+            }
+
         public bool GenerateTexturesOnly(UMAData data, bool fireEvents)
         {
+            Debug.Log("GenerateTexturesOnly");
             if (data == null)
             {
                 return true;
             }
 
             umaData = data;
+            CacheDefaultOverlayMaterial(umaData);
 
 
             if (!umaData.Validate())
@@ -327,15 +377,10 @@ namespace UMA
                 PreApply(umaData);
             }
 
-
-            if (umaData.isTextureDirty)
-            {
-                UMAGeneratorPro ugp = new UMAGeneratorPro();
-                ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
-                umaData.isTextureDirty = false;
-                umaData.isAtlasDirty |= umaData.isMeshDirty;
-                TextureChanged++;
-            }
+            UMAGeneratorPro ugp = new UMAGeneratorPro();
+            ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
+            umaData.isAtlasDirty |= umaData.isMeshDirty;
+            TextureChanged++;
 
             RenderTexture.active = rbackup;
 
@@ -351,10 +396,18 @@ namespace UMA
             FreezeTime = false;
             return true;
         }
-
+#if UMA_DEBUG
+        public List<UMAData> umaDatasGenerated = new List<UMAData>();
+#endif
 
         public bool GenerateSingleUMA(UMAData data, bool fireEvents)
 		{
+#if UMA_DEBUG
+            if (!umaDatasGenerated.Contains(data))
+            {
+                umaDatasGenerated.Add(data);
+            }
+#endif
 #if DEBUG_TIMING
             System.Diagnostics.Stopwatch gstopWatch = System.Diagnostics.Stopwatch.StartNew();
             gstopWatch.Start();
@@ -366,7 +419,7 @@ namespace UMA
 
 			FreezeTime = true;
 			umaData = data;
-
+            CacheDefaultOverlayMaterial(umaData);
 
 
             if (umaData.RebuildSkeletonThisBuild)
@@ -380,11 +433,16 @@ namespace UMA
 				umaData.RebuildSkeletonThisBuild = false;
 				umaData.isShapeDirty = true;
 			}
-
-			if (!umaData.Validate())
+            if (!umaData.Validate())
             {
                 return true;
             }
+			if(umaData.isTextureDirty && umaData.needsMaterialClear) {
+                Debug.Log("Cleaning Textures and Generated Materials for UMAData");
+                umaData.CleanTextures();
+				umaData.generatedMaterials = new UMAData.GeneratedMaterials();
+				umaData.needsMaterialClear = false;
+			}
 #if DEBUG_TIMING
             long validation = gstopWatch.ElapsedTicks;
             validationTicks += validation;
@@ -411,24 +469,28 @@ namespace UMA
 #endif
             if (!umaData.rawAvatar)
 			{
-				PreApply(umaData);
-			}
+                PreApply(umaData);
+            }
 
 #if DEBUG_TIMING
             long preapply = gstopWatch.ElapsedTicks;
             preapplyTicks += preapply;
             gstopWatch.Restart();
 #endif
-			DNABuildType dnaUpdateFlags = umaData.DNAPreApply();
+            RaceData race = umaData.umaRecipe.raceData;
+            if (race.useNewDNA)
+            {
+                DNABuildType dnaUpdateFlags = umaData.NewDNAPreApply();
+            }
 
             if (umaData.isTextureDirty)
 			{
-				UMAGeneratorPro ugp = new UMAGeneratorPro();
+                UMAGeneratorPro ugp = new UMAGeneratorPro();
 				ugp.ProcessTexture(this, umaData, !umaData.isMeshDirty, InitialScaleFactor);
 				umaData.isTextureDirty = false;
 				umaData.isAtlasDirty |= umaData.isMeshDirty;
 				TextureChanged++;
-			}
+            }
 
 #if DEBUG_TIMING
             long textureprocessing = gstopWatch.ElapsedTicks;
@@ -452,18 +514,14 @@ namespace UMA
 
             if (umaData.isShapeDirty)
 			{
-				if (!umaData.skeleton.isUpdating)
-				{
-					umaData.skeleton.BeginSkeletonUpdate();
-				}
-				UpdateUMABody(umaData);
+                UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
-				DnaChanged++;
-			}
+				DnaChanged++; 
+            }
 			else if (umaData.skeleton.isUpdating)
 			{
-				umaData.skeleton.EndSkeletonUpdate();
-			}
+                umaData.skeleton.EndSkeletonUpdate();
+            }
 #if DEBUG_TIMING
             long skeletonUpdates = gstopWatch.ElapsedTicks;
             skeletonUpdatesTicks += skeletonUpdates;
@@ -475,7 +533,7 @@ namespace UMA
 		
 			if (autoSetRaceBlendshapes)
 			{
-				if (raceNames == null)
+                if (raceNames == null)
 				{
 					RaceData[] races = UMAAssetIndexer.Instance.GetAllRaces();
 					raceNames = new HashSet<string>();
@@ -485,7 +543,6 @@ namespace UMA
                         raceNames.Add(r.raceName);
 					}
 				}
-
 
 				if (raceNames != null && raceNames.Count > 0)
 				{
@@ -509,10 +566,13 @@ namespace UMA
 						}
 					}
 				}
-			}
+            }
 
-			umaData.SetupEmbeddedPhysics();
+            // Apply manual renderer bounds if configured on RaceData
+            ApplyManualRendererBounds(umaData, renderers);
 
+            
+            umaData.SetupEmbeddedPhysics();
 #if DEBUG_TIMING
             long raceblendshapes = gstopWatch.ElapsedTicks;
             raceblendshapesTicks += raceblendshapes;
@@ -523,11 +583,11 @@ namespace UMA
 			umaData.dirty = false;
 			if (fireEvents)
             {
-				UMAReady();
-			}
+                UMAReady();
+            }
 			else
             {
-				umaData.Show();
+                umaData.Show();
             }
 #if DEBUG_TIMING
             long endEvents = gstopWatch.ElapsedTicks;
@@ -550,6 +610,44 @@ namespace UMA
 #endif
             return true;
 		}
+
+		private static void ApplyManualRendererBounds(UMAData umaData, SkinnedMeshRenderer[] renderers)
+        {
+            if (umaData == null || umaData.umaRecipe == null || umaData.umaRecipe.raceData == null)
+            {
+                return;
+            }
+            var race = umaData.umaRecipe.raceData;
+            if (!race.useManualRendererBounds)
+            {
+                return;
+            }
+            Vector3 baseExtents = race.manualRendererBounds;
+            Vector3 baseCenter = race.manualRendererBoundsCenter;
+            if (baseExtents == Vector3.zero && baseCenter == Vector3.zero)
+            {
+                return; // nothing to apply
+            }
+
+            // Scale using the scale from the 'Position' bone if present
+            int posHash = UMAUtils.StringToHash("Position");
+            Transform posBone = umaData.skeleton != null ? umaData.skeleton.GetBoneTransform(posHash) : null;
+            Vector3 scaledExtents = baseExtents;
+            Vector3 scaledCenter = baseCenter;
+            if (posBone != null)
+            {
+                scaledExtents = Vector3.Scale(baseExtents, posBone.localScale);
+                scaledCenter = Vector3.Scale(baseCenter, posBone.localScale);
+            }
+
+            Bounds b = new Bounds(scaledCenter, scaledExtents * 2f);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                var smr = renderers[i];
+                if (smr == null) continue;
+                smr.localBounds = b;
+            }
+        }
 
 		class Calc32
         {
@@ -578,9 +676,10 @@ namespace UMA
                     if (slot != null && slot.asset.meshData != null)
                     {
 						string key = "slot:"+slot.asset.slotName;
-                        if (slot.asset.material.materialType == UMAMaterial.MaterialType.Atlas)
+                     var slotMaterial = slot.material;
+                        if (slotMaterial != null && slotMaterial.materialType == UMAMaterial.MaterialType.Atlas)
 						{
-                            key = "mat:"+slot.asset.materialName;
+                           key = "mat:" + slotMaterial.name;
                         }
 
                         int submesh = slot.asset.subMeshIndex;
@@ -722,6 +821,14 @@ namespace UMA
             return false;
         }
 
+        public void ClearAllPending()
+        {
+            umaDirtyList.Clear();
+            cleanUmas.Clear();
+            dirtyUmas.Clear();
+        }
+
+
         /// <inheritdoc/>
         public override void removeUMA(UMAData umaToRemove)
         {
@@ -793,7 +900,7 @@ namespace UMA
 
 		public virtual void PreApply(UMAData umaData)
 		{
-			if (umaData)
+			if (umaData && umaData.umaRecipe.raceData.useNewDNA == false)
             {
                 umaData.PreApplyDNA();
             }
@@ -804,6 +911,11 @@ namespace UMA
 			if (!umaData)
                 return;
 
+            if (!umaData.skeleton.isUpdating)
+            {
+                umaData.skeleton.BeginSkeletonUpdate();
+            }
+
             umaData.FirePreUpdateUMABody();
 
             // Keep this to ensure a clean baseline. Removing it caused skeleton issues.
@@ -813,7 +925,14 @@ namespace UMA
             if (!umaData.rawAvatar)
             {
                 umaData.GotoTPose();
-                umaData.ApplyDNA();
+                if (umaData.umaRecipe.raceData.useNewDNA == false)
+                {
+                    umaData.ApplyDNA();
+                }
+                else
+                {
+                    umaData.NewDNAApply();
+                }
             }
 
             // Only restore items if enabled, as this can be expensive
@@ -825,16 +944,19 @@ namespace UMA
             // End the batched skeleton update (begun in GenerateSingleUMA when isShapeDirty)
             umaData.skeleton.EndSkeletonUpdate();
 
-            // Rebuild the avatar only if allowed. This is a measurable cost saver.
-            if (!umaData.KeepAvatar)
-            {
-                UpdateAvatar(umaData);
-            }
+            UpdateAvatar(umaData);
 
             // Blendshape DNA must be applied after the avatar is reset on the animator
-            umaData.PostApplyDNA();
+            if (umaData.umaRecipe.raceData.useNewDNA == false)
+            {
+                umaData.PostApplyDNA();
+            }
+            else
+            {
+                umaData.NewDNAPostApply();
+            }
             umaData.FireDNAAppliedEvents();
-		}
+        }
 #pragma warning restore 618
 	}
 }

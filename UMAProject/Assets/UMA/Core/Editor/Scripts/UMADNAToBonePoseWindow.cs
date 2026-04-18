@@ -259,7 +259,7 @@ namespace UMA.PoseTools
 			tempAvatar.Initialize();
 			tempAvatar.umaData.umaRecipe = new UMAData.UMARecipe();
 			tempAvatar.umaData.umaRecipe.raceData = ScriptableObject.CreateInstance<RaceData>();
-			tempAvatar.umaData.umaRecipe.raceData.raceName = "Temp Raw Race";
+			tempAvatar.umaData.umaRecipe.raceData.name = "Temp Raw Race";
 			tempAvatar.umaData.umaRecipe.raceData.TPose = sourceUMA.umaRecipe.raceData.TPose;
 			tempAvatar.umaData.umaRecipe.raceData.umaTarget = sourceUMA.umaRecipe.raceData.umaTarget;
 			slotIndex = 0;
@@ -282,7 +282,7 @@ namespace UMA.PoseTools
 			tempAvatar2.Initialize();
 			tempAvatar2.umaData.umaRecipe = new UMAData.UMARecipe();
 			tempAvatar2.umaData.umaRecipe.raceData = ScriptableObject.CreateInstance<RaceData>();
-			tempAvatar2.umaData.umaRecipe.raceData.raceName = "Temp DNA Race";
+			tempAvatar2.umaData.umaRecipe.raceData.name = "Temp DNA Race";
 			tempAvatar2.umaData.umaRecipe.raceData.TPose = sourceUMA.umaRecipe.raceData.TPose;
 			tempAvatar2.umaData.umaRecipe.raceData.umaTarget = sourceUMA.umaRecipe.raceData.umaTarget;
 			//tempAvatar2.umaData.umaRecipe.raceData.dnaConverterList = new DnaConverterBehaviour[1];

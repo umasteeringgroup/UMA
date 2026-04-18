@@ -14,20 +14,10 @@ namespace UMA
         [Tooltip("DNA Default Value. Must be in the range of 0..1")]
         public float defaultValue = 0.5f; // Default value. Can be overriden in the inspector. Must be in the 0..1 range.
         [Tooltip("The list of DNA effects that this DNA applies. Each effect can modify the character in different ways.")]
+        [SerializeReference]
         public List<DNAEffect> effects = new List<DNAEffect>();
 
-        private string _name;
-        public string dnaName
-        {
-            get
-            {
-                if (_name == null)
-                {
-                    _name = name;
-                }
-                return _name;
-            }
-        }
+        public string displayName;
 
 #if UNITY_EDITOR
         [UnityEditor.MenuItem("Assets/Create/UMA/DNA/DNA Item")]
@@ -45,6 +35,14 @@ namespace UMA
                 effect.AfterRecipeGenerated(avatar, this, value);
             }
             return updateFlags;
+        }
+
+        public void Restore(UMAData avatar, float value)
+        {
+            foreach (var effect in effects)
+            {
+                effect.Restore(avatar, this, value);
+            }
         }
 
         public DNABuildType PreApply(UMAData avatar, float value)

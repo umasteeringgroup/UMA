@@ -33,8 +33,52 @@ namespace UMA
 		[NonSerialized]
 		public bool extendedInfo;
 
+		[SerializeField]
+        public bool mapJaw = true;
+
 		[HideInInspector]
 		public byte[] serializedChunk;
+
+		[Serializable]
+		public class SerializableHumanPose
+		{
+			public Vector3 bodyPosition = Vector3.zero;
+			public Quaternion bodyRotation = Quaternion.identity;
+			public float[] muscles = Array.Empty<float>();
+
+			public void FromHumanPose(HumanPose pose)
+			{
+				bodyPosition = pose.bodyPosition;
+				bodyRotation = pose.bodyRotation;
+				if (pose.muscles != null)
+				{
+					muscles = (float[])pose.muscles.Clone();
+				}
+				else
+				{
+					muscles = Array.Empty<float>();
+				}
+			}
+
+			public HumanPose ToHumanPose()
+			{
+				var pose = new HumanPose();
+				pose.bodyPosition = bodyPosition;
+				pose.bodyRotation = bodyRotation;
+				pose.muscles = muscles != null ? (float[])muscles.Clone() : Array.Empty<float>();
+				return pose;
+			}
+		}
+
+		public void ExtractHumanPoseFromAnimator(Animator animator)
+		{
+			ExtractHumanPose(animator);
+		}
+
+		[SerializeField]
+		private SerializableHumanPose humanPoseData = new SerializableHumanPose();
+		[SerializeField]
+		private bool hasExtractedHumanPose = false;
 
 		/// <summary>
 		/// Serialize into the binary format used for Mecanim avatars.
@@ -76,6 +120,7 @@ namespace UMA
 				bn.Write(upperLegTwist);
 			}
 			serializedChunk = ms.ToArray();
+			EnsureHumanPoseDefault();
 		}
 
 		/// <summary>
@@ -110,6 +155,7 @@ namespace UMA
 					upperArmTwist = br.ReadSingle();
 					upperLegTwist = br.ReadSingle();
 				}
+			EnsureHumanPoseDefault();
 			}
 		}
 
@@ -128,8 +174,54 @@ namespace UMA
 			tp.boneInfo = (SkeletonBone[]) boneInfo.Clone();
 			tp.humanInfo = (HumanBone[])humanInfo.Clone();
 			tp.serializedChunk = (byte[])serializedChunk.Clone();
+			tp.mapJaw = mapJaw;
+            if (humanPoseData != null)
+			{
+				tp.humanPoseData = new SerializableHumanPose();
+				tp.humanPoseData.bodyPosition = humanPoseData.bodyPosition;
+				tp.humanPoseData.bodyRotation = humanPoseData.bodyRotation;
+				tp.humanPoseData.muscles = humanPoseData.muscles != null ? (float[])humanPoseData.muscles.Clone() : Array.Empty<float>();
+			}
 			return tp;
         }
+
+		public HumanPose GetHumanPose()
+		{
+			EnsureHumanPoseDefault();
+			return humanPoseData.ToHumanPose();
+		}
+
+		public bool HasExtractedHumanPose()
+		{
+			return hasExtractedHumanPose;
+		}
+
+		public void SetHumanPose(HumanPose pose)
+		{
+			if (humanPoseData == null)
+			{
+				humanPoseData = new SerializableHumanPose();
+			}
+			humanPoseData.FromHumanPose(pose);
+			hasExtractedHumanPose = true;
+			EnsureHumanPoseDefault();
+		}
+
+		private void EnsureHumanPoseDefault()
+		{
+			if (humanPoseData == null)
+			{
+				humanPoseData = new SerializableHumanPose();
+				hasExtractedHumanPose = false;
+			}
+			if (humanPoseData.muscles == null || humanPoseData.muscles.Length != HumanTrait.MuscleCount)
+			{
+				humanPoseData.bodyPosition = Vector3.zero;
+				humanPoseData.bodyRotation = Quaternion.identity;
+				humanPoseData.muscles = new float[HumanTrait.MuscleCount];
+				hasExtractedHumanPose = false;
+			}
+		}
 
 		private SkeletonBone DeSerializeSkeletonBone(BinaryReader br)
 		{
@@ -239,6 +331,7 @@ namespace UMA
 			extendedInfo = true;
 
 			Serialize();
+			EnsureHumanPoseDefault();
 			boneInfo = null;
 			humanInfo = null;
 		}
@@ -255,7 +348,29 @@ namespace UMA
 			var humanInfoList = new List<HumanBone>();
 			ExtractHumanInfo(rootAnimator, humanInfoList);
 			humanInfo = humanInfoList.ToArray();
+			ExtractHumanPose(rootAnimator);
 			Serialize();
+		}
+
+		private void ExtractHumanPose(Animator animator)
+		{
+			if (animator == null || animator.avatar == null || !animator.avatar.isHuman)
+			{
+				EnsureHumanPoseDefault();
+				return;
+			}
+
+			var handler = new HumanPoseHandler(animator.avatar, animator.transform);
+			try
+			{
+				var pose = new HumanPose();
+				handler.GetHumanPose(ref pose);
+				SetHumanPose(pose);
+			}
+			finally
+			{
+				handler.Dispose();
+			}
 		}
 		
 		private void ExtractHumanInfo(Animator animator, List<HumanBone> humanInfoList)

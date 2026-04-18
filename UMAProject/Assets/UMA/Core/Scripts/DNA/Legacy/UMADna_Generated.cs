@@ -11,6 +11,8 @@
 //#TEMPLATE Save UmaDna_Save_Fragment.cs.txt
 //
 
+using UnityEngine.AI;
+
 namespace UMA
 {
 
@@ -32,6 +34,11 @@ namespace UMA
                 return typeof(DynamicUMADna);
             }
 
+			if ( "UMADnaInstance" == className)
+            {
+				return typeof(UMADnaInstance);
+            }
+
             return null;
 		}
 
@@ -43,8 +50,17 @@ namespace UMA
 			};
 		}
 
-		public static UMADnaBase LoadInstance(System.Type dnaType, System.String data)
+		public static UMADnaBase LoadInstance(System.Type dnaType, System.String data, RaceData race)
 		{
+			if ( dnaType == typeof(UMADnaInstance) )
+			{	
+				var dnaInstance = UMADnaInstance.LoadInstance(data);
+				if (dnaInstance != null && race != null)
+				{
+					dnaInstance.DNAInstances.Initialize(race.DNACollection);
+				}
+                return dnaInstance;
+            }
             if ( dnaType == typeof(DynamicUMADna))
             {
                 return DynamicUMADna.LoadInstance(data);
@@ -56,6 +72,11 @@ namespace UMA
 		public static System.String SaveInstance(UMADnaBase instance)
 		{
 			System.Type dnaType = instance.GetType();
+
+			if (dnaType == typeof(UMADnaInstance))
+			{
+				return UMADnaInstance.SaveInstance(instance as UMADnaInstance);
+            }
 
             if ( dnaType == typeof(DynamicUMADna))
             {

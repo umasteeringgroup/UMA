@@ -9,18 +9,222 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using System.Xml.Serialization;
+
+#if UNITY_6000_2_OR_NEWER
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
 
 
 namespace UMA.Controls
 {
     class AssetIndexerWindow : EditorWindow
     {
+		private class SlotValidationReportWindow : EditorWindow
+		{
+			internal struct SlotIssue
+			{
+				public SlotDataAsset Slot;
+				public List<string> Reasons;
+			}
+
+			private readonly List<SlotIssue> _issues = new List<SlotIssue>();
+			private Vector2 _scroll;
+			private bool _isRunning;
+
+			public static void ShowReport(List<SlotIssue> issues)
+			{
+				var w = GetWindow<SlotValidationReportWindow>(true, "UMA Slot Validation", true);
+				w._issues.Clear();
+				if (issues != null)
+				{
+					w._issues.AddRange(issues);
+				}
+				w.minSize = new Vector2(600, 300);
+				w.ShowUtility();
+				w.Focus();
+				w.Repaint();
+			}
+
+			private void OnGUI()
+			{
+				using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+				{
+					GUILayout.Label("Invalid slots: " + _issues.Count, EditorStyles.toolbarButton);
+					GUILayout.FlexibleSpace();
+					using (new EditorGUI.DisabledScope(_isRunning))
+					{
+						//if (GUILayout.Button("Fix all slots without slot names", EditorStyles.toolbarButton))
+						//{
+						//	FixAllSlotsWithoutSlotNames();
+						//}
+						if (GUILayout.Button("Load missing materials", EditorStyles.toolbarButton))
+						{
+							LoadMissingMaterials();
+						}
+					}
+					if (GUILayout.Button("Close", EditorStyles.toolbarButton, GUILayout.Width(80)))
+					{
+						Close();
+					}
+				}
+
+				if (_issues.Count == 0)
+				{
+					EditorGUILayout.HelpBox("No invalid slots detected.", MessageType.Info);
+					return;
+				}
+
+				_scroll = EditorGUILayout.BeginScrollView(_scroll);
+				for (int i = 0; i < _issues.Count; i++)
+				{
+					var issue = _issues[i];
+					if (issue.Slot == null)
+					{
+						continue;
+					}
+
+					EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+					using (new EditorGUILayout.HorizontalScope())
+					{
+						EditorGUILayout.ObjectField(issue.Slot, typeof(SlotDataAsset), false);
+						if (GUILayout.Button("Select", GUILayout.Width(80)))
+						{
+							Selection.activeObject = issue.Slot;
+							EditorGUIUtility.PingObject(issue.Slot);
+						}
+						if (GUILayout.Button("Inspect", GUILayout.Width(80)))
+						{
+                            InspectorUtlity.InspectTarget(issue.Slot);
+						}
+					}
+
+					if (issue.Reasons != null)
+					{
+						for (int r = 0; r < issue.Reasons.Count; r++)
+						{
+							if (string.IsNullOrEmpty(issue.Reasons[r]))
+							{
+								continue;
+							}
+							EditorGUILayout.LabelField("- " + issue.Reasons[r], EditorStyles.wordWrappedLabel);
+						}
+					}
+					EditorGUILayout.EndVertical();
+				}
+				EditorGUILayout.EndScrollView();
+			}
+
+			private void LoadMissingMaterials()
+			{
+				var indexer = UMAAssetIndexer.Instance;
+				if (indexer == null)
+				{
+					return;
+				}
+
+              var overlays = indexer.GetAllAssets<OverlayDataAsset>();
+				int fixedCount = 0;
+				int missingName = 0;
+				try
+				{
+					_isRunning = true;
+                   for (int i = 0; i < overlays.Count; i++)
+					{
+                       var overlay = overlays[i];
+                        if (overlay == null)
+						{
+							continue;
+						}
+                     if (overlay.material != null)
+						{
+							continue;
+						}
+                       if (string.IsNullOrEmpty(overlay.materialName))
+						{
+							missingName++;
+							continue;
+						}
+
+                        var mat = indexer.GetAsset<UMAMaterial>(overlay.materialName);
+						if (mat == null)
+						{
+							continue;
+						}
+
+                     Undo.RecordObject(overlay, "Load missing overlay material");
+                        overlay.material = mat;
+                        EditorUtility.SetDirty(overlay);
+						fixedCount++;
+					}
+				}
+				finally
+				{
+					_isRunning = false;
+				}
+
+				AssetDatabase.SaveAssets();
+                EditorUtility.DisplayDialog("Load missing materials", "Updated " + fixedCount + " overlay(s). Overlays missing materialName: " + missingName + ".", "OK");
+				RefreshReport();
+			}
+
+			private void RefreshReport()
+			{
+				var indexer = UMAAssetIndexer.Instance;
+				if (indexer == null)
+				{
+					return;
+				}
+				var slots = indexer.GetAllAssets<SlotDataAsset>();
+				var newIssues = new List<SlotIssue>();
+				var reasons = new List<string>();
+				for (int i = 0; i < slots.Count; i++)
+				{
+					var sda = slots[i];
+					if (sda == null)
+					{
+						continue;
+					}
+					if (!sda.ValidateMeshData(reasons))
+					{
+						newIssues.Add(new SlotIssue { Slot = sda, Reasons = new List<string>(reasons) });
+					}
+				}
+				_issues.Clear();
+				_issues.AddRange(newIssues);
+				Repaint();
+			}
+		}
+
         [NonSerialized] bool m_Initialized;
         [SerializeField] TreeViewState m_TreeViewState; // Serialized in the window layout file so it survives assembly reloading
         [SerializeField] MultiColumnHeaderState m_MultiColumnHeaderState;
         public UMAAssetTreeView treeView { get; private set; }
 
         List<IUMAAddressablePlugin> addressablePlugins = new List<IUMAAddressablePlugin>();
+
+        private static bool IsEditorBusy()
+        {
+            return EditorApplication.isCompiling || EditorApplication.isUpdating;
+        }
+
+        private void OnBeforeAssemblyReload()
+        {
+            // nothing to unsubscribe currently, but ensure we drop heavy refs
+            try { m_Initialized = false; } catch { }
+        }
+
+        private void OnEnable()
+        {
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+        }
+
+        private void OnDisable()
+        {
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+        }
 
         #region Menus
         GenericMenu _FileMenu;
@@ -34,6 +238,208 @@ namespace UMA.Controls
         Texture2D umaTexture;
         SlotDataAsset umaSlot;
         MeshHideAsset AddedMHA = null;
+
+        private const string SlotLodPrefKeyPrefix = "UMA.UMASimpleLODEditor.InternalSlotLOD.";
+
+		private static bool IsBakedSlotName(string assetName)
+		{
+			if (string.IsNullOrEmpty(assetName))
+			{
+				return false;
+			}
+			return assetName.IndexOf("_baked_", StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+
+		private static string MakeSafeFileStem(string name)
+		{
+			if (string.IsNullOrEmpty(name))
+			{
+				return string.Empty;
+			}
+			string safe = name.Replace(':', '_').Replace('/', '_').Replace('\\', '_');
+			safe = safe.Replace('*', '_').Replace('?', '_').Replace('"', '_').Replace('<', '_').Replace('>', '_').Replace('|', '_');
+			return safe.Trim();
+		}
+
+		private static string GetPreferredBakedSlotAssetName(SlotDataAsset slot)
+		{
+			if (slot == null)
+			{
+				return string.Empty;
+			}
+			// If Unity object name is default/empty, use slotName as a better identifier
+			string n = slot.name;
+			if (string.IsNullOrEmpty(n) || n == "SlotDataAsset" || n == "New SlotDataAsset")
+			{
+				n = slot.slotName;
+			}
+			return MakeSafeFileStem(n);
+		}
+
+		private void SaveBakedSlotsToDisk(List<SlotDataAsset> slotsSource, string title)
+		{
+			if (UAI == null)
+			{
+				return;
+			}
+
+			string destFolder = EditorUtility.OpenFolderPanel(title, "Assets", "");
+			if (string.IsNullOrEmpty(destFolder))
+			{
+				return;
+			}
+
+			// Convert absolute path under project to an Assets-relative path
+			destFolder = destFolder.Replace('\\', '/');
+			string projectPath = Application.dataPath.Replace('\\', '/');
+			if (!destFolder.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase))
+			{
+				EditorUtility.DisplayDialog("Save baked slots", "Please select a folder under this project's Assets folder.", "OK");
+				return;
+			}
+			string destAssetFolder = "Assets" + destFolder.Substring(projectPath.Length);
+
+			if (slotsSource == null || slotsSource.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Save baked slots", "No SlotDataAsset found to save.", "OK");
+				return;
+			}
+
+			int saved = 0;
+			int skipped = 0;
+			int total = slotsSource.Count;
+			int processed = 0;
+			try
+			{
+				for (int i = 0; i < slotsSource.Count; i++)
+				{
+					var slot = slotsSource[i];
+					processed++;
+					EditorUtility.DisplayProgressBar("Save baked slots", "Processing slots...", Mathf.Clamp01((float)processed / Mathf.Max(1, total)));
+
+					if (slot == null)
+					{
+						skipped++;
+						continue;
+					}
+
+					// We only want the baked (in-memory) ones.
+					if (!IsBakedSlotName(slot.name) && !IsBakedSlotName(slot.slotName))
+					{
+						skipped++;
+						continue;
+					}
+
+					string existingPath = AssetDatabase.GetAssetPath(slot);
+					if (!string.IsNullOrEmpty(existingPath))
+					{
+						// Already on disk
+						skipped++;
+						continue;
+					}
+
+					// Derive filename
+					string stem = GetPreferredBakedSlotAssetName(slot);
+					if (string.IsNullOrEmpty(stem))
+					{
+						stem = "BakedSlot";
+					}
+					string targetPath = AssetDatabase.GenerateUniqueAssetPath(destAssetFolder + "/" + stem + ".asset");
+
+					// Create a persisted clone so we don't mutate the in-memory instance in-place
+					var clone = UnityEngine.Object.Instantiate(slot);
+					clone.name = Path.GetFileNameWithoutExtension(targetPath);
+					Undo.RegisterCreatedObjectUndo(clone, "Save baked slot");
+					AssetDatabase.CreateAsset(clone, targetPath);
+					EditorUtility.SetDirty(clone);
+
+					// Replace the indexer reference to point to the saved asset
+					try
+					{
+						UAI.ProcessNewItem(clone, false, false);
+					}
+					catch { }
+
+					saved++;
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+			}
+
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
+			m_Initialized = false;
+			Repaint();
+			EditorUtility.DisplayDialog("Save baked slots", "Saved " + saved + " baked slot(s). Skipped " + skipped + ".", "OK");
+		}
+
+		private void SaveAllBakedSlotsToDisk()
+		{
+			var allSlots = UAI.GetAllAssets<SlotDataAsset>();
+			SaveBakedSlotsToDisk(allSlots, "Save all baked slots to folder");
+		}
+
+		private void SaveSelectedBakedSlotsToDisk()
+		{
+			var selected = GetSelectedAssets(typeof(SlotDataAsset));
+			var slots = new List<SlotDataAsset>(selected != null ? selected.Count : 0);
+			if (selected != null)
+			{
+				for (int i = 0; i < selected.Count; i++)
+				{
+					var s = selected[i].Item as SlotDataAsset;
+					if (s != null)
+					{
+						slots.Add(s);
+					}
+				}
+			}
+			SaveBakedSlotsToDisk(slots, "Save selected baked slots to folder");
+		}
+
+        private static int LoadSlotLodInt(string key, int defaultValue)
+        {
+            return EditorPrefs.GetInt(SlotLodPrefKeyPrefix + key, defaultValue);
+        }
+
+        private static float LoadSlotLodFloat(string key, float defaultValue)
+        {
+            return EditorPrefs.GetFloat(SlotLodPrefKeyPrefix + key, defaultValue);
+        }
+
+        private static bool LoadSlotLodBool(string key, bool defaultValue)
+        {
+            return EditorPrefs.GetBool(SlotLodPrefKeyPrefix + key, defaultValue);
+        }
+
+        private static void SaveSlotLodInt(string key, int value)
+        {
+            EditorPrefs.SetInt(SlotLodPrefKeyPrefix + key, value);
+        }
+
+        private static void SaveSlotLodFloat(string key, float value)
+        {
+            EditorPrefs.SetFloat(SlotLodPrefKeyPrefix + key, value);
+        }
+
+        private static void SaveSlotLodBool(string key, bool value)
+        {
+            EditorPrefs.SetBool(SlotLodPrefKeyPrefix + key, value);
+        }
+
+        private bool _slotLodOptionsFoldout = true;
+
+#if UNITY_6000_2_OR_NEWER
+		private MeshHideAsset.TriangleHideStrategy _fixMhaCopyLodMode = MeshHideAsset.TriangleHideStrategy.Conservative;
+		private int _fixMhaCopyPolicy = 0; // 0=Replace, 1=Missing
+		private static readonly GUIContent[] _fixMhaCopyPolicyOptions =
+		{
+			new GUIContent("Replace", "Overwrite destination LOD masks."),
+			new GUIContent("Missing", "Only fill destination LOD masks that are missing/unallocated.")
+		};
+#endif
 
         private GenericMenu FileMenu
         {
@@ -192,6 +598,11 @@ namespace UMA.Controls
 
         private void SetupMenus()
         {
+            if (IsEditorBusy())
+            {
+                EditorApplication.delayCall += SetupMenus;
+                return;
+            }
 
             _FileMenu = new GenericMenu();
             _AddressablesMenu = new GenericMenu();
@@ -205,6 +616,7 @@ namespace UMA.Controls
             // ***********************************************************************************
             AddMenuItemWithCallback(FileMenu, "Rebuild From Project", () =>
             {
+                if (UAI == null) return;
                 UAI.RebuildLibrary();
                 m_Initialized = false;
                 Repaint();
@@ -212,6 +624,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Rebuild From Project (include text assets)", () =>
             {
+                if (UAI == null) return;
                 UAI.SaveKeeps();
                 UAI.Clear();
                 UAI.BuildStringTypes();
@@ -224,6 +637,7 @@ namespace UMA.Controls
             });
             AddMenuItemWithCallback(FileMenu, "Clear References", () =>
             {
+                if (UAI == null) return;
                 UAI.RemoveReferences();
                 Resources.UnloadUnusedAssets();
                 m_Initialized = false;
@@ -233,6 +647,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Repair and remove invalid items", () =>
             {
+                if (UAI == null) return;
                 UAI.BuildStringTypes();
                 UAI.RepairAndCleanup();
                 Resources.UnloadUnusedAssets();
@@ -264,6 +679,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Empty Index", () =>
             {
+                if (UAI == null) return;
                 UAI.Clear();
                 m_Initialized = false;
                 Repaint();
@@ -272,6 +688,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Backup Index", () =>
             {
+                if (UAI == null) return;
                 // string index = UAI.Backup();
                 string filename = EditorUtility.SaveFilePanel("Backup Index", "", "librarybackup", "bak");
                 if (!string.IsNullOrEmpty(filename))
@@ -292,17 +709,30 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(FileMenu, "Save to disk", () =>
             {
+                if (UAI == null) return;
                 UMAAssetIndexer.Instance.ForceSave();
             });
 
+			AddMenuItemWithCallback(ToolsMenu, "Save all baked slots to disk", () =>
+			{
+				SaveAllBakedSlotsToDisk(); 
+			});
+
+			AddMenuItemWithCallback(ToolsMenu, "Save selected baked slots to disk", () =>
+			{
+				SaveSelectedBakedSlotsToDisk();
+			});
+
             AddMenuItemWithCallback(FileMenu, "Rebuild Dictionaries", () =>
             {
+                if (UAI == null) return;
                 UMAAssetIndexer.Instance.UpdateSerializedDictionaryItems();
                 Repaint();
             });
 
             AddMenuItemWithCallback(FileMenu, "Restore Index", () =>
             {
+                if (UAI == null) return;
                 string filename = EditorUtility.OpenFilePanel("Restore", "", "bak");
                 if (!string.IsNullOrEmpty(filename))
                 {
@@ -329,10 +759,12 @@ namespace UMA.Controls
 
 #if UMA_ADDRESSABLES
 
+
             foreach (IUMAAddressablePlugin plugin in addressablePlugins)
             {
                 AddMenuItemWithCallbackParm(_AddressablesMenu, "Generators/" + plugin.Menu, (object o) =>
                 {
+                    if (UAI == null) return;
                     IUMAAddressablePlugin addrplug = o as IUMAAddressablePlugin;
                     UMAAddressablesSupport.Instance.GenerateAddressables(addrplug);
                     Resources.UnloadUnusedAssets();
@@ -348,6 +780,7 @@ namespace UMA.Controls
             // ***********************************************************************************
             AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Groups (optimized)", () =>
             {
+                if (UAI == null) return;
                 UMAAddressablesSupport.Instance.CleanupAddressables();
                 UMAAddressablesSupport.Instance.GenerateAddressables();
                 Resources.UnloadUnusedAssets();
@@ -357,6 +790,7 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(_AddressablesMenu, "Generators/Generate Single Group (Final Build Only)", () =>
             {
+                if (UAI == null) return;
                 UMAAddressablesSupport.Instance.CleanupAddressables();
                 SingleGroupGenerator sgs = new SingleGroupGenerator();
                 sgs.ClearMaterials = true;
@@ -372,9 +806,34 @@ namespace UMA.Controls
                 Repaint();
             });
 
+			ItemsMenu.AddSeparator("");
+
+
+			AddMenuItemWithCallback(_AddressablesMenu, "Generators/Prepare Build", () => {
+				UMASettings umaSettings = UMASettings.GetOrCreateSettings();
+				umaSettings.addrStripTextures = true; //this tells uma to replace the recipe materials with Hidden/InternalErrorShader shader and creates a tag on the real shader, which it reapplies at runtime load. Note that the shader variant must be in the project build (reference in Init scene "ForceIncludeShaders" prefab). And so obviously we don't want that in the normal editor settings as we'd lose the references.
+				umaSettings.addrStripUVAttachedShaders = true; //same as above, except for uv attach prefab materials
+				SingleGroupGenerator sg = new SingleGroupGenerator();
+				sg.ClearMaterials = true; // this tells UMA to remove materials from slots and overlays so they don't bloat the addressables
+				UMAAddressablesSupport.Instance.GenerateAddressables(sg);
+				UMAAssetIndexer.Instance.PrepareBuild();
+				Resources.UnloadUnusedAssets();
+				UMAAddressablesSupport.Instance.CleanupOrphans(typeof(SlotDataAsset), true, $"Orphan Cleanup of type {typeof(SlotDataAsset).Name} - Menu Option");
+				UMAAddressablesSupport.Instance.CleanupOrphans(typeof(OverlayDataAsset), true, $"Orphan Cleanup of type {typeof(OverlayDataAsset).Name} - Menu Option");
+			});
+
+
+
+            AddMenuItemWithCallback(_AddressablesMenu, "Reset stripped shaders", () =>
+            {
+                int total = UMAAssetIndexer.Instance.ResetStrippedShaders();
+                EditorUtility.DisplayDialog("Reset Stripped Shaders", $"Reset shaders on {total} materials", "OK");
+                Repaint();
+            });
 
             AddMenuItemWithCallback(_AddressablesMenu, "Remove Addressables", () =>
             {
+                if (UAI == null) return;
                 UMAAddressablesSupport.Instance.CleanupAddressables(false, true);
                 m_Initialized = false;
                 Repaint();
@@ -479,21 +938,46 @@ namespace UMA.Controls
 
             AddMenuItemWithCallback(ToolsMenu, "Validate All Indexed Slots", () =>
             {
-                EditorUtility.DisplayProgressBar("Validating", "Validating Slots", 0.0f);
-                List<SlotDataAsset> slots = UMAAssetIndexer.Instance.GetAllAssets<SlotDataAsset>();
-                List<SlotDataAsset> BadSlots = new List<SlotDataAsset>();
+                if (UAI == null) return;
+				List<SlotDataAsset> slots = UMAAssetIndexer.Instance.GetAllAssets<SlotDataAsset>();
+				var issues = new List<SlotValidationReportWindow.SlotIssue>();
+				var reasons = new List<string>();
+				try
+				{
+					EditorUtility.DisplayProgressBar("Validating", "Validating Slots", 0.0f);
+					for (int i = 0; i < slots.Count; i++)
+					{
+						SlotDataAsset sda = slots[i];
+						float perc = (slots.Count > 0) ? ((float)i / (float)slots.Count) : 1.0f;
+						EditorUtility.DisplayProgressBar("Validating", sda != null ? ("Validating " + sda.name) : "Validating", perc);
 
-                for (int i = 0; i < slots.Count; i++)
-                {
-                    SlotDataAsset sda = slots[i];
-                    if (!sda.ValidateMeshData())
-                    {
-                        BadSlots.Add(sda);
-                    }
-                    float perc = (float)i / (float)slots.Count;
-                    EditorUtility.DisplayProgressBar("Validating", "Validating Slots", perc);
-                }
-                return;
+						if (sda == null)
+						{
+							continue;
+						}
+
+						if (!sda.ValidateMeshData(reasons))
+						{
+							issues.Add(new SlotValidationReportWindow.SlotIssue
+							{
+								Slot = sda,
+								Reasons = new List<string>(reasons)
+							});
+						}
+					}
+				}
+				finally
+				{
+					EditorUtility.ClearProgressBar();
+				}
+
+				if (issues.Count == 0)
+				{
+					EditorUtility.DisplayDialog("Validate Slots", "No invalid slots detected.", "OK");
+					return;
+				}
+
+				SlotValidationReportWindow.ShowReport(issues);
             });
 
 
@@ -626,6 +1110,7 @@ namespace UMA.Controls
 
         private void ClearSelection()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
             foreach (AssetTreeElement ate in treeElements)
@@ -638,6 +1123,7 @@ namespace UMA.Controls
 
         private void SelectAll()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
             foreach (AssetTreeElement ate in treeElements)
@@ -651,6 +1137,7 @@ namespace UMA.Controls
         private Dictionary<int, AssetTreeElement> GetAllItems()
         {
             Dictionary<int, AssetTreeElement> AllItems = new Dictionary<int, AssetTreeElement>();
+            if (treeView == null || treeView.treeModel == null) return AllItems;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -665,6 +1152,7 @@ namespace UMA.Controls
         private List<AssetTreeElement> GetHighlightedItems()
         {
             Dictionary<int, AssetTreeElement> allItems = GetAllItems();
+            if (treeView == null) return new List<AssetTreeElement>();
             IList<int> list = treeView.GetSelection();
 
             var treeElements = new List<AssetTreeElement>();
@@ -686,7 +1174,10 @@ namespace UMA.Controls
             {
                 ate.Checked = v;
             }
-            treeView.RecalcTypeChecks();
+            if (treeView != null)
+            {
+                treeView.RecalcTypeChecks();
+            }
             Repaint();
         }
 
@@ -731,8 +1222,8 @@ namespace UMA.Controls
                     EditorUtility.SetDirty(uwr);
                 }
             }
-            UAI.ForceSave();
-            treeView.RecalcTypeChecks();
+            if (UAI != null) UAI.ForceSave();
+            if (treeView != null) treeView.RecalcTypeChecks();
             Repaint();
             EditorUtility.DisplayDialog("Copy", "Complete", "OK");
         }
@@ -842,8 +1333,8 @@ namespace UMA.Controls
                 }
             }
 
-            UAI.ForceSave();
-            treeView.RecalcTypeChecks();
+            if (UAI != null) UAI.ForceSave();
+            if (treeView != null) treeView.RecalcTypeChecks();
             Repaint();
             EditorUtility.DisplayDialog("Copy", "Complete", "OK");
         }
@@ -891,7 +1382,7 @@ namespace UMA.Controls
                     }
                     EditorUtility.SetDirty(uwr);
                 }
-                UAI.ForceSave();
+                if (UAI != null) UAI.ForceSave();
                 EditorUtility.DisplayDialog("Update Races", "Races assigned and index saved", "OK");
             }
             else
@@ -998,6 +1489,7 @@ namespace UMA.Controls
         private List<UnityEngine.Object> GetRecipeDependencies(UMATextRecipe uMATextRecipe)
         {
             List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+            if (UAI == null) return objects;
             List<AssetItem> dependencies = UMAAssetIndexer.Instance.GetAssetItems(uMATextRecipe, true);
 
             foreach (AssetItem ai in dependencies)
@@ -1067,15 +1559,6 @@ namespace UMA.Controls
             {
                 objects.Add(slotDataAsset.RendererAsset);
             }
-            if (slotDataAsset.material != null)
-            {
-                objects.Add(slotDataAsset.material);
-                if (slotDataAsset.material.material != null)
-                {
-                    objects.Add(slotDataAsset.material.material);
-                    objects.AddRange(GetMaterialDepencies(slotDataAsset.material.material));
-                }
-            }
             if (slotDataAsset.slotDNA != null)
             {
                 objects.AddRange(GetDNADepenencies(slotDataAsset.slotDNA));
@@ -1132,11 +1615,6 @@ namespace UMA.Controls
 
         void SetItemMaterial(AssetItem ai)
         {
-            if (ai._Type == typeof(SlotDataAsset))
-            {
-                (ai.Item as SlotDataAsset).material = umaMaterial;
-                EditorUtility.SetDirty(ai.Item);
-            }
             if (ai._Type == typeof(OverlayDataAsset))
             {
                 (ai.Item as OverlayDataAsset).material = umaMaterial;
@@ -1215,6 +1693,7 @@ namespace UMA.Controls
         {
             int count = 0;
             int founditems = 0;
+            if (treeView == null || treeView.treeModel == null) return;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1258,6 +1737,7 @@ namespace UMA.Controls
         {
             List<AssetItem> assets = new List<AssetItem>();
 
+            if (treeView == null || treeView.treeModel == null) return assets;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1275,6 +1755,7 @@ namespace UMA.Controls
         {
             List<AssetItem> assets = new List<AssetItem>();
 
+            if (treeView == null || treeView.treeModel == null) return assets;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1429,6 +1910,7 @@ namespace UMA.Controls
 
         void SelectAllWardrobeRecipesForRace(RaceData race)
         {
+            if (UAI == null) return;
             List<AssetItem> allRecipes = UMAAssetIndexer.Instance.GetAssetItems<UMAWardrobeRecipe>();
             List<AssetItem> selectedItems = new List<AssetItem>();
             foreach (var ai in allRecipes)
@@ -1460,6 +1942,7 @@ namespace UMA.Controls
 
         void SelectBaseRecipeForRace(RaceData race)
         {
+            if (UAI == null) return;
             List<AssetItem> allRecipes = UMAAssetIndexer.Instance.GetAssetItems<UMATextRecipe>();
             List<AssetItem> selectedItems = new List<AssetItem>();
             foreach (var ai in allRecipes)
@@ -1483,6 +1966,7 @@ namespace UMA.Controls
         {
             int count = 0;
             int founditems = 0;
+            if (treeView == null || treeView.treeModel == null) return;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1522,6 +2006,7 @@ namespace UMA.Controls
         }
         void UpdateMaterials()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             List<AssetTreeElement> treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1536,6 +2021,7 @@ namespace UMA.Controls
 
         void MarkKeep(bool Keep)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1546,12 +2032,13 @@ namespace UMA.Controls
                     tr.ai.IsAlwaysLoaded = Keep;
                 }
             }
-            UMAAssetIndexer.Instance.ForceSave();
+            if (UAI != null) UMAAssetIndexer.Instance.ForceSave();
             RecountTypes();
         }
 
         void MarkIgnore(bool IgnoreFlag)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1562,12 +2049,13 @@ namespace UMA.Controls
                     tr.ai.Ignore = IgnoreFlag;
                 }
             }
-            UMAAssetIndexer.Instance.ForceSave();
+            if (UAI != null) UMAAssetIndexer.Instance.ForceSave();
             RecountTypes();
         }
 
         void SelectByAssetItems(List<AssetItem> items, bool recalculate = true)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             Dictionary<Type,List<AssetItem>> indexedItems = new Dictionary<Type, List<AssetItem>>();
 
             for (int i = 0;i < items.Count; i++)
@@ -1596,7 +2084,7 @@ namespace UMA.Controls
                 //    ate.Checked = true;
                 //}
             }
-            if (recalculate)
+            if (recalculate && treeView != null)
             {
                 treeView.RecalcTypeChecks();
             }
@@ -1604,6 +2092,7 @@ namespace UMA.Controls
 
         void FixupTextureChannels(UMAMaterial material)
         {
+            if (UAI == null) return;
             int ChannelLength = material.channels.Length;
 
             var Overlays = UMAAssetIndexer.Instance.GetAllAssets<OverlayDataAsset>();
@@ -1639,6 +2128,7 @@ namespace UMA.Controls
 
         void SelectMaterial(UMAMaterial material)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
             foreach (AssetTreeElement ate in treeElements)
@@ -1661,6 +2151,7 @@ namespace UMA.Controls
 
         void SelectByMaterial(UMAMaterial material, Type assetType)
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1680,16 +2171,6 @@ namespace UMA.Controls
                                 ate.Checked = true;
                             }
                         }
-                        if (ate.type == typeof(SlotDataAsset))
-                        {
-                            SlotDataAsset sda = ate.ai.Item as SlotDataAsset;
-                            if (sda.material == null) continue;
-
-                            if (sda.material.name == material.name)
-                            {
-                                ate.Checked = true;
-                            }
-                        }
                     }
                 }
             }
@@ -1698,6 +2179,7 @@ namespace UMA.Controls
 
         void SelectByRace(object Race)
         {
+            if (UAI == null) return;
             RaceData rc = Race as RaceData;
             List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
             SelectByAssetItems(recipeItems);
@@ -1705,6 +2187,7 @@ namespace UMA.Controls
 
         void SelectSlotsByRace(object Race)
         {
+            if (UAI == null) return;
             RaceData rc = Race as RaceData;
             List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
 
@@ -1714,6 +2197,7 @@ namespace UMA.Controls
 
         void SelectOverlaysByRace(object Race)
         {
+            if (UAI == null) return;
             RaceData rc = Race as RaceData;
             List<AssetItem> recipeItems = UAI.GetAssetItems(rc.baseRaceRecipe as UMAPackedRecipeBase);
             recipeItems = recipeItems.Where(x => x._Type == typeof(OverlayDataAsset)).ToList();
@@ -1722,6 +2206,7 @@ namespace UMA.Controls
 
         public void RecountTypes()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1730,6 +2215,7 @@ namespace UMA.Controls
             {
                 AssetTreeElement ate = t as AssetTreeElement;
                 ate.IsResourceCount = 0;
+				ate.LoadedCount = 0;
                 ate.IsAddrCount = 0;
                 ate.Keepcount = 0;
                 ate.IgnoreCount = 0;
@@ -1743,6 +2229,11 @@ namespace UMA.Controls
                         {
                             ate.IsResourceCount++;
                         }
+
+						if (ai._SerializedItem != null)
+						{
+							ate.LoadedCount++;
+						}
 
                         if (ai.IsAlwaysLoaded)
                         {
@@ -1770,6 +2261,7 @@ namespace UMA.Controls
         {
             var treeElements = new List<AssetTreeElement>();
             var selectedElements = new List<AssetTreeElement>();
+            if (treeView == null || treeView.treeModel == null) return selectedElements;
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
             foreach (AssetTreeElement tr in treeElements)
@@ -1784,6 +2276,7 @@ namespace UMA.Controls
 
         private void ForceSave()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1819,6 +2312,7 @@ namespace UMA.Controls
 
         private void DeleteSelected()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1848,7 +2342,7 @@ namespace UMA.Controls
                 }
             }
             EditorUtility.DisplayProgressBar("Deleting Assets", "Save Index to Disk", 1.0f);
-            UAI.ForceSave();
+            if (UAI != null) UAI.ForceSave();
             EditorUtility.ClearProgressBar();
         }
 
@@ -1856,6 +2350,7 @@ namespace UMA.Controls
         {
             long kbytes = 0;
 
+            if (treeView == null || treeView.treeModel == null) return 0;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1874,6 +2369,7 @@ namespace UMA.Controls
 
         private void RemoveSelected()
         {
+            if (treeView == null || treeView.treeModel == null) return;
             var treeElements = new List<AssetTreeElement>();
             TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
 
@@ -1903,7 +2399,7 @@ namespace UMA.Controls
                 }
             }
             EditorUtility.DisplayProgressBar("Removing Assets", "Save Index to Disk", 1.0f);
-            UAI.ForceSave();
+            if (UAI != null) UAI.ForceSave();
             EditorUtility.ClearProgressBar();
         }
 
@@ -1993,33 +2489,33 @@ namespace UMA.Controls
         #region GUI
         void InitIfNeeded()
         {
-            if (!m_Initialized)
-            {
-                // Check if it already exists (deserialized from window layout file or scriptable object)
-                if (m_TreeViewState == null)
-                    m_TreeViewState = new TreeViewState();
+            if (m_Initialized) return;
+            if (IsEditorBusy()) return;
+            if (UAI == null) return;
+            // Check if it already exists (deserialized from window layout file or scriptable object)
+            if (m_TreeViewState == null)
+                m_TreeViewState = new TreeViewState();
 
-                bool firstInit = m_MultiColumnHeaderState == null;
-                var headerState = UMAAssetTreeView.CreateDefaultMultiColumnHeaderState(multiColumnTreeViewRect.width);
-                if (MultiColumnHeaderState.CanOverwriteSerializedFields(m_MultiColumnHeaderState, headerState))
-                    MultiColumnHeaderState.OverwriteSerializedFields(m_MultiColumnHeaderState, headerState);
-                m_MultiColumnHeaderState = headerState;
+            bool firstInit = m_MultiColumnHeaderState == null;
+            var headerState = UMAAssetTreeView.CreateDefaultMultiColumnHeaderState(multiColumnTreeViewRect.width);
+            if (MultiColumnHeaderState.CanOverwriteSerializedFields(m_MultiColumnHeaderState, headerState))
+                MultiColumnHeaderState.OverwriteSerializedFields(m_MultiColumnHeaderState, headerState);
+            m_MultiColumnHeaderState = headerState;
 
-                var multiColumnHeader = new MyMultiColumnHeader(headerState);
-                multiColumnHeader.mode = MyMultiColumnHeader.Mode.MinimumHeaderWithoutSorting;
+            var multiColumnHeader = new MyMultiColumnHeader(headerState);
+            multiColumnHeader.mode = MyMultiColumnHeader.Mode.MinimumHeaderWithoutSorting;
 
-                if (firstInit)
-                    multiColumnHeader.ResizeToFit();
+            if (firstInit)
+                multiColumnHeader.ResizeToFit();
 
-                var treeModel = new TreeModel<AssetTreeElement>(GetData());
+            var treeModel = new TreeModel<AssetTreeElement>(GetData());
 
-                treeView = new UMAAssetTreeView(this, m_TreeViewState, multiColumnHeader, treeModel);
+            treeView = new UMAAssetTreeView(this, m_TreeViewState, multiColumnHeader, treeModel);
 
-                m_SearchField = new SearchField();
-                m_SearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
+            m_SearchField = new SearchField();
+            m_SearchField.downOrUpArrowKeyPressed += treeView.SetFocusAndEnsureSelectedItem;
 
-                m_Initialized = true;
-            }
+            m_Initialized = true;
         }
 
         bool ShouldLoad(eLoaded itemsToLoad, AssetItem ai)
@@ -2081,6 +2577,10 @@ namespace UMA.Controls
 
             treeElements.Add(root);
 
+            if (UAI == null)
+            {
+                return treeElements;
+            }
             System.Type[] Types = UAI.GetTypes();
 
 
@@ -2129,6 +2629,8 @@ namespace UMA.Controls
 
                             if (ai.IsResource)
                                 ate.IsResourceCount++;
+							if (ai._SerializedItem != null)
+								ate.LoadedCount++;
                             if (ai.IsAlwaysLoaded)
                                 ate.Keepcount++;
                             if (ai.IsAddressable)
@@ -2195,17 +2697,16 @@ namespace UMA.Controls
                         if (draggedObjects[i])
                         {
                             m_Initialized = false; // need to reload when we're done.
-
-                            UAI.AddIfIndexed(draggedObjects[i]);
+                            if (UAI != null) UAI.AddIfIndexed(draggedObjects[i]);
 
                             var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
                             if (System.IO.Directory.Exists(path))
                             {
-                                UAI.RecursiveScanFoldersForAssets(path);
+                                if (UAI != null) UAI.RecursiveScanFoldersForAssets(path);
                             }
                         }
                     }
-                    UAI.ForceSave();
+                    if (UAI != null) UAI.ForceSave();
                 }
             }
         }
@@ -2233,16 +2734,16 @@ namespace UMA.Controls
                         if (draggedObjects[i])
                         {
                             m_Initialized = false; // need to reload when we're done.
-                            UAI.RemoveIfIndexed(draggedObjects[i], true);
+                            if (UAI != null) UAI.RemoveIfIndexed(draggedObjects[i], true);
 
                             var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
                             if (System.IO.Directory.Exists(path))
                             {
-                                UAI.RecursiveScanFoldersForRemovingAssets(path);
+                                if (UAI != null) UAI.RecursiveScanFoldersForRemovingAssets(path);
                             }
                         }
                     }
-                    UAI.ForceSave();
+                    if (UAI != null) UAI.ForceSave();
                 }
             }
         }
@@ -2272,10 +2773,10 @@ namespace UMA.Controls
                         if (draggedObjects[i])
                         {
                             System.Type sType = draggedObjects[i].GetType();
-                            UAI.AddType(sType);
+                            if (UAI != null) UAI.AddType(sType);
                         }
                     }
-                    UAI.ForceSave();
+                    if (UAI != null) UAI.ForceSave();
                 }
             }
         }
@@ -2289,18 +2790,24 @@ namespace UMA.Controls
 
         void OnGUI()
         {
-            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            if (IsEditorBusy())
             {
                 dots += ".";
                 if (dots.Length > 20)
                     dots = "";
                 GUILayout.Space(30);
                 EditorGUILayout.LabelField("    Compile/update in progress  " + dots);
-                System.Threading.Thread.Sleep(100);
                 Repaint();
                 return;
             }
             InitIfNeeded();
+
+            if (UAI == null)
+            {
+                GUILayout.Space(30);
+                EditorGUILayout.HelpBox("UMAAssetIndexer not available during domain reload. Please wait for compilation to finish.", MessageType.Info);
+                return;
+            }
 
             GUILayout.BeginArea(new Rect(0, 0, positionwidth, position.height));
 
@@ -2347,6 +2854,7 @@ namespace UMA.Controls
         bool _materialFoldout;
         bool _raceFoldout;
         bool _recipeFoldout;
+        bool _conversionFoldout;
         bool _OverlayFoldout;
         bool _SlotFoldout;
         bool _TextureFoldout;
@@ -2360,8 +2868,15 @@ namespace UMA.Controls
 		private UMAAssetIndexer beforeIndex;
 		private UMAAssetIndexer afterIndex;
 		private UMAAssetIndexer AnalyzeIndex;
+        private UMABonePose PoseConverter;
+        private RaceData raceForPose;
+        private RaceData toRace;
+        private SlotDataAsset donorSlot;
+        float rotX, rotY, rotZ;
+        private bool postRotate = false;
 
-		void ShowSidebar()
+
+        void ShowSidebar()
         {
             GUILayout.Label("Utilities Panel", EditorStyles.toolbarButton,GUILayout.ExpandWidth(true));
             GUILayout.BeginHorizontal();
@@ -2487,6 +3002,30 @@ namespace UMA.Controls
                 {
                     SelectUnusedMeshHideAssets();
                 }
+
+#if UNITY_6000_2_OR_NEWER
+                EditorGUILayout.Space(5);
+                EditorGUILayout.LabelField("LOD Fix Options", EditorStyles.boldLabel);
+                _fixMhaCopyLodMode = (MeshHideAsset.TriangleHideStrategy)EditorGUILayout.EnumPopup(new GUIContent(
+                    "Copy LOD Mode",
+                    "Controls how destination triangles are marked hidden based on how many of their vertices were part of any hidden triangle in the source LOD.\n\n" +
+                    "Strict: hide only if ALL 3 vertices were previously hidden.\n" +
+                    "Weighted: hide if 2 or more vertices were previously hidden.\n" +
+                    "Conservative: hide if ANY 1 vertex was previously hidden."),
+                    _fixMhaCopyLodMode);
+                _fixMhaCopyPolicy = EditorGUILayout.Popup(new GUIContent("Copy Policy", "Replace overwrites destination LODs; Missing only fills unallocated LODs."), _fixMhaCopyPolicy, _fixMhaCopyPolicyOptions);
+#endif
+
+                if (GUILayout.Button("Gen LOD on ALL MHA"))
+                {
+                    FixMeshHideAssetLOD(true);
+                }
+
+                if (GUILayout.Button("Gen LOD on Selected MHA"))
+                {
+                    FixMeshHideAssetLOD(false);
+                }
+
 
                 GUIHelper.EndVerticalPadded(10);
             }
@@ -2746,8 +3285,179 @@ namespace UMA.Controls
                 {
                     SelectSmooshableSlots();
                 }
+                if (GUILayout.Button("Select all LOD slots")) //PigEdit
+                {
+                    SelectLODSlots();
+                }
+                if (GUILayout.Button("Clear Legacy Flag on slots"))
+                {
+                    SetLegacyFlagOnSelectedSlots(false);
+                }
+                if (GUILayout.Button("Set Legacy Flag on slots"))
+                {
+                    SetLegacyFlagOnSelectedSlots(true);
+                }
+
+                EditorGUILayout.Space(5);
+                EditorGUILayout.LabelField("LOD Generation", EditorStyles.boldLabel);
+                _slotLodOptionsFoldout = EditorGUILayout.Foldout(_slotLodOptionsFoldout, "LOD Gen Options", true);
+                if (_slotLodOptionsFoldout)
+                {
+                    int maxLodLevels = LoadSlotLodInt("MaxLodLevels", 8);
+                    int minTriangles = LoadSlotLodInt("MinTriangles", 256);
+                    float reduction = LoadSlotLodFloat("TargetReductionPerLevel", 0.5f);
+                    bool preserveBorders = LoadSlotLodBool("PreserveBoundaryEdges", true);
+                    float boundaryWeight = LoadSlotLodFloat("BoundaryWeight", 10f);
+                    bool preserveVolume = LoadSlotLodBool("PreserveVolume", true);
+                    float volumeWeight = LoadSlotLodFloat("VolumeWeight", 1.0f);
+                    bool useUnityLodGenerator = LoadSlotLodBool("UseUnityLodGenerator", false);
+
+                    EditorGUI.BeginChangeCheck();
+                    maxLodLevels = EditorGUILayout.IntSlider(new GUIContent("Max LOD Levels"), maxLodLevels, 1, 8);
+                    useUnityLodGenerator = EditorGUILayout.Toggle(new GUIContent(
+                        "Use Unity LOD Generator",
+                        "When enabled, uses Unity's MeshLodUtility.GenerateMeshLods instead of UMA's internal reducer."),
+                        useUnityLodGenerator);
+
+                    using (new EditorGUI.DisabledScope(useUnityLodGenerator))
+                    {
+                        minTriangles = EditorGUILayout.IntField(new GUIContent("Min Triangles"), Mathf.Max(0, minTriangles));
+                        reduction = EditorGUILayout.Slider(new GUIContent("Reduction Per Level"), reduction, 0.01f, 0.99f);
+                        preserveBorders = EditorGUILayout.Toggle(new GUIContent("Preserve Boundary Edges"), preserveBorders);
+                        boundaryWeight = EditorGUILayout.FloatField(new GUIContent("Boundary Weight"), Mathf.Max(0f, boundaryWeight));
+                        preserveVolume = EditorGUILayout.Toggle(new GUIContent(
+                            "Preserve Volume",
+                            "When enabled, penalizes edge collapses that would flatten thin features like arms and fingers."),
+                            preserveVolume);
+
+                        using (new EditorGUI.DisabledScope(!preserveVolume))
+                        {
+                            volumeWeight = EditorGUILayout.Slider(new GUIContent(
+                                "Volume Weight",
+                                "How strongly to preserve volume. Higher values prevent more flattening but may reduce simplification quality."),
+                                volumeWeight, 0.1f, 5.0f);
+                        }
+                    }
+
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        SaveSlotLodInt("MaxLodLevels", maxLodLevels);
+                        SaveSlotLodBool("UseUnityLodGenerator", useUnityLodGenerator);
+                        SaveSlotLodInt("MinTriangles", minTriangles);
+                        SaveSlotLodFloat("TargetReductionPerLevel", reduction);
+                        SaveSlotLodBool("PreserveBoundaryEdges", preserveBorders);
+                        SaveSlotLodFloat("BoundaryWeight", boundaryWeight);
+                        SaveSlotLodBool("PreserveVolume", preserveVolume);
+                        SaveSlotLodFloat("VolumeWeight", volumeWeight);
+                    }
+                }
+                if (GUILayout.Button("Create LOD for selected slots"))
+                {
+                    CreateLODForSlots(false);
+                }
+                if (GUILayout.Button("Create LOD for all slots"))
+                {
+                    CreateLODForSlots(true);
+                }
+
+#if EXP_SLOT_CONVERSION
+                GUILayout.Label("Slot Conversion",EditorStyles.boldLabel);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("BonePose:");
+                PoseConverter = EditorGUILayout.ObjectField("", PoseConverter, typeof(UMABonePose), false, GUILayout.Width(175)) as UMABonePose;
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("To RaceData:");
+                raceForPose = EditorGUILayout.ObjectField("", raceForPose,  typeof(RaceData), false, GUILayout.Width(175)) as RaceData;
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Donor:");
+                donorSlot = EditorGUILayout.ObjectField("", donorSlot, typeof(SlotDataAsset), false, GUILayout.Width(175)) as SlotDataAsset;
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("X:", GUILayout.Width(22));
+                rotX = EditorGUILayout.FloatField(rotX,GUILayout.Width(60));
+                EditorGUILayout.LabelField("Y:", GUILayout.Width(22));
+                rotY = EditorGUILayout.FloatField(rotY, GUILayout.Width(60));
+                EditorGUILayout.LabelField("Z:", GUILayout.Width(22));
+                rotZ = EditorGUILayout.FloatField(rotZ, GUILayout.Width(60));
+                GUILayout.EndHorizontal();
+                postRotate = EditorGUILayout.ToggleLeft("Post Rotate", postRotate);
+
+
+                if (GUILayout.Button("Convert to new format", GUILayout.Width(150)))
+                {
+                    ConvertSlotFromLegacy(donorSlot, PoseConverter, raceForPose, rotX, rotY, rotZ, postRotate);
+                }
+                if (GUILayout.Button("Convert to new format (old method)", GUILayout.Width(200)))
+                {
+                    ConvertSlotFromLegacyOld(donorSlot, PoseConverter, raceForPose, rotX, rotY, rotZ, postRotate);
+                }
+                if (GUILayout.Button("Restore from backup (_Original)"))
+                {
+                    RestoreSlots();
+                }
+#endif
                 GUIHelper.EndVerticalPadded(10);
             }
+#if EXP_SLOT_CONVERSION
+            _conversionFoldout = EditorGUILayout.Foldout(_conversionFoldout, "Conversions");
+            if (_conversionFoldout)
+            {
+                GUILayout.Label("Scene base slot Conversion", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox($"This will convert all equipped slots on the 'From DCA' to the 'To DCA' using the BonePose specified below and will create new slots in the project folder 'Assets/UMA/ConvertedSlots'.", MessageType.Info);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("BonePose:");
+                PoseConverter = EditorGUILayout.ObjectField("", PoseConverter, typeof(UMABonePose), false, GUILayout.Width(175)) as UMABonePose;
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("From Character");
+                _fromCharacter = EditorGUILayout.ObjectField("", _fromCharacter, typeof(DynamicCharacterAvatar), true, GUILayout.Width(175)) as DynamicCharacterAvatar;
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("To Character");
+                _toCharacter = EditorGUILayout.ObjectField("", _toCharacter, typeof(DynamicCharacterAvatar), true, GUILayout.Width(175)) as DynamicCharacterAvatar;
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("X:", GUILayout.Width(22));
+                rotX = EditorGUILayout.FloatField(rotX, GUILayout.Width(60));
+                EditorGUILayout.LabelField("Y:", GUILayout.Width(22));
+                rotY = EditorGUILayout.FloatField(rotY, GUILayout.Width(60));
+                EditorGUILayout.LabelField("Z:", GUILayout.Width(22));
+                rotZ = EditorGUILayout.FloatField(rotZ, GUILayout.Width(60));
+                GUILayout.EndHorizontal();
+                alignBindPoses = EditorGUILayout.ToggleLeft("Align Bind Poses", alignBindPoses);
+                if (GUILayout.Button("inc"))
+                {
+                    rotX += 90f;
+                    if (rotX >= 360f)
+                    {
+                        rotX = 0f;
+                        rotY += 90f;
+                        if (rotY >= 360f)
+                        {
+                            rotY = 0f;
+                            rotZ += 90f;
+                            if (rotZ >= 360f)
+                            {
+                                rotZ = 0f;
+                            }
+                        }
+
+                    }
+                    ConvertEquippedSlots(_fromCharacter, _toCharacter, PoseConverter, rotX, rotY, rotZ,alignBindPoses);
+                }
+
+                if (GUILayout.Button("Convert Now"))
+                {
+                    ConvertEquippedSlots(_fromCharacter, _toCharacter, PoseConverter, rotX, rotY,rotZ,alignBindPoses);
+                }
+            }
+#endif
 
             _TextureFoldout = EditorGUILayout.Foldout(_TextureFoldout, "Textures");
             if (_TextureFoldout)
@@ -2766,8 +3476,747 @@ namespace UMA.Controls
             GUILayout.EndScrollView();
         }
 
+        private void CreateLODForSlots(bool processAll)
+        {
+            List<SlotDataAsset> slots = new List<SlotDataAsset>();
+            if (processAll)
+            {
+                var allItems = UAI.GetAllAssets<SlotDataAsset>();
+                foreach (var item in allItems)
+                {
+                    slots.Add(item);
+                }
+            }
+            else
+            {
+                var selectedItems = GetSelectedAssets(typeof(SlotDataAsset));
+                foreach (var item in selectedItems)
+                {
+                    slots.Add(item.Item as SlotDataAsset);
+                }
+            }
+
+            if (slots.Count == 0)
+            {
+                return;
+            }
+
+            int maxLodLevels = LoadSlotLodInt("MaxLodLevels", 8);
+            int minTriangles = LoadSlotLodInt("MinTriangles", 256);
+            float reduction = LoadSlotLodFloat("TargetReductionPerLevel", 0.5f);
+            bool preserveBorders = LoadSlotLodBool("PreserveBoundaryEdges", true);
+            float boundaryWeight = LoadSlotLodFloat("BoundaryWeight", 10f);
+            bool preserveVolume = LoadSlotLodBool("PreserveVolume", true);
+            float volumeWeight = LoadSlotLodFloat("VolumeWeight", 1.0f);
+            bool useUnityLodGenerator = LoadSlotLodBool("UseUnityLodGenerator", false);
+
+            var opts = new SlotLodGenerator.LodGenOptions();
+            opts.MaxLodLevels = maxLodLevels;
+            opts.MinTriangles = minTriangles;
+            opts.TargetReductionPerLevel = reduction;
+            opts.PreserveBoundaryEdges = preserveBorders;
+            opts.BoundaryWeight = boundaryWeight;
+            opts.PreserveVolume = preserveVolume;
+            opts.VolumeWeight = volumeWeight;
+            opts.useUnityLodGenerator = useUnityLodGenerator;
+
+            int updated = 0;
+            int skipped = 0;
+
+            try
+            {
+                for (int i = 0; i < slots.Count; i++)
+                {
+                    var slot = slots[i];
+                    if (slot == null || slot.meshData == null)
+                    {
+                        skipped++;
+                        continue;
+                    }
+
+                    float t = (slots.Count > 0) ? ((float)i / (float)slots.Count) : 1.0f;
+                    bool cancel = EditorUtility.DisplayCancelableProgressBar(
+                        "Generate Slot LODs",
+                        "Processing: " + slot.name,
+                        t);
+                    if (cancel)
+                    {
+                        break;
+                    }
+
+                    bool did = false;
+                    try
+                    {
+                        did = SlotLodGenerator.GenerateAndApplyLods(slot, opts);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                        did = false;
+                    }
+
+                    if (did)
+                    {
+                        updated++;
+                        EditorUtility.SetDirty(slot);
+                    }
+                    else
+                    {
+                        skipped++;
+                    }
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            if (updated > 0)
+            {
+                AssetDatabase.SaveAssets();
+            }
+
+            EditorUtility.DisplayDialog("Slot LOD", "Updated " + updated + " slot(s). Skipped " + skipped + ".", "OK");
+        }
+
+
+
+        private void FixMeshHideAssetLOD(bool processAll)
+        {
+            List<MeshHideAsset> mhas = new List<MeshHideAsset>();
+            if (processAll)
+            {
+                var allItems = UAI.GetAllAssets<MeshHideAsset>();
+                foreach (var item in allItems)
+                {
+                    mhas.Add(item);
+                }
+            }
+            else
+            {
+                var selectedItems = GetSelectedAssets(typeof(MeshHideAsset));
+                foreach (var item in selectedItems)
+                {
+                    mhas.Add(item.Item as MeshHideAsset);
+                }
+            }
+            foreach (var mha in mhas)
+            {
+                bool modified = false;
+
+#if UNITY_6000_2_OR_NEWER
+                if (mha == null)
+                {
+                    continue;
+                }
+
+                SlotDataAsset slot = mha.asset;
+                if (slot == null || slot.meshData == null)
+                {
+                    continue;
+                }
+
+                int submesh = slot.subMeshIndex;
+                if (submesh < 0 || submesh >= slot.meshData.subMeshCount)
+                {
+                    continue;
+                }
+
+                int lodCount = 1;
+                var ranges = slot.meshData.submeshes[submesh].lodRanges;
+                if (ranges != null && ranges.Count > 0)
+                {
+                    lodCount = ranges.Count;
+                }
+
+                if (lodCount < 1)
+                {
+                    lodCount = 1;
+                }
+
+                bool replace = (_fixMhaCopyPolicy == 0);
+                bool onlyMissing = (_fixMhaCopyPolicy != 0);
+
+                // Ensure base selection exists (legacy assets might have never been initialized)
+                if (mha.triangleFlags == null || mha.triangleFlags.Length == 0)
+                {
+                    mha.Initialize();
+                    modified = true;
+                }
+
+                // Copy base LOD mask (0) to all other LODs, allocating as needed.
+                for (int lod = 1; lod < lodCount; lod++)
+                {
+                    // In "Missing" mode, skip LODs that already have stored data.
+                    if (onlyMissing)
+                    {
+                        if (mha.HasStoredLODMask(lod))
+                        {
+                            continue;
+                        }
+                    }
+
+                    mha.CopyLODMask(0, lod, replace, _fixMhaCopyLodMode);
+                    modified = true;
+                }
+#endif
+                if (modified)
+                {
+                    EditorUtility.SetDirty(mha);
+                }
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        private DynamicCharacterAvatar _fromCharacter;
+        private DynamicCharacterAvatar _toCharacter;
+        private bool alignBindPoses = false;
+
+        class SaveBonePoseInfo
+        {
+            public DynamicDNAConverterController Controller;
+            public int BonePoseConverterNumber;
+            public float BonePoseConverterWeight;
+            public UMABonePose bonePose;
+
+            public SaveBonePoseInfo(DynamicDNAConverterController controller, int converterNumber, float weight, UMABonePose pose)
+            {
+                Controller = controller;
+                BonePoseConverterNumber = converterNumber;
+                BonePoseConverterWeight = weight;
+                bonePose = pose;
+            }
+        }
+
+        // todo: pass a donor slot. Copy everything from that except the meshdata, which comes from the fromDCA after applying the bonepose.
+
+        private void ConvertEquippedSlots(DynamicCharacterAvatar fromDCA, DynamicCharacterAvatar toDCA, UMABonePose poseConverter, float rotX, float rotY, float rotZ, bool alignBindPoses)
+        {
+            if (fromDCA == null || toDCA == null || poseConverter == null)
+            {
+                Debug.LogError("Please ensure From DCA, To DCA and BonePose are all assigned.");
+                return;
+            }
+
+            // save the boneposes, and then clear their weights so they don't apply.
+            // the set our new bonepose with weight 1f
+            // then force build the character to apply the bonepose to the rig 
+            // then bake the character with no animator to get the meshes with the bonepose applied
+
+
+
+            RaceData race = fromDCA.activeRace.data;
+            if (race.useNewDNA)
+            {
+                Debug.LogError("From DCA uses new DNA system. This conversion only works with legacy DNA");
+                EditorUtility.DisplayDialog("Error", "From DCA uses new DNA system. This conversion only works with legacy DNA", "OK");
+            }
+            if (race.dnaConverterList == null || race.dnaConverterList.Length == 0)
+            {               
+                Debug.LogError("From DCA Race has no DNA Converters.");
+                EditorUtility.DisplayDialog("Error", "From DCA Race has no DNA converters", "OK");
+                return;
+            }
+
+            List <DynamicDNAConverterController> controllers = new List<DynamicDNAConverterController>();
+            controllers.AddRange(race.dnaConverterList);
+
+            List <SaveBonePoseInfo> BonePoseSaves = new List<SaveBonePoseInfo>();
+            foreach (var controller in controllers)
+            {
+                var bonePoseConverters = controller.GetBonePoseConverters();
+                for (int bpConverter = 0; bpConverter < bonePoseConverters.Count; bpConverter++)
+                {
+                    BonePoseDNAConverterPlugin.BonePoseDNAConverter bonePoseConverter = bonePoseConverters[bpConverter];
+                    SaveBonePoseInfo sbp = new SaveBonePoseInfo(controller, bpConverter, bonePoseConverter.startingPoseWeight, bonePoseConverter.poseToApply);
+                    BonePoseSaves.Add(sbp);
+                    bonePoseConverter.startingPoseWeight = 0f;
+                }
+            }
+
+            if (BonePoseSaves.Count == 0)
+            {
+                var plugin = controllers[0].EnsureBonePosePlugin();
+            }
+
+            var addedbpc  = controllers[0].AddBonePoseConverter(poseConverter, startingWeight: 1f);
+
+            var toSlots = toDCA.GetBaseSlots();
+
+            var fromSlots = fromDCA.GetEquippedSlots();
+            fromDCA.BuildNow();
+            //ApplyBoneposeToRig(fromDCA, poseConverter);
+            List<Mesh> meshes = BakeDCA(fromDCA);
+            Quaternion rot = Quaternion.Euler(rotX, rotY, rotZ);
+
+            foreach (var slot in fromSlots)
+            {
+                SlotDataAsset backupSlot;
+                // if backup exists, restore from that first.
+
+                BackupSlot(backupFolder, slot.asset, out backupSlot);
+                // Restore the backup slot if it exists
+                if (backupSlot != null)
+                {
+                    slot.asset.meshData = backupSlot.meshData.DeepCopy();
+                }
+                // Convert each slot using the baked meshes
+                SlotDataAsset sda = slot.asset;
+                int meshNumber = slot.skinnedMeshRenderer;
+                int vertexOffset = slot.vertexOffset;
+                int vertexCount = sda.meshData.vertexCount;
+                Mesh bakedMesh = meshes[meshNumber];
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    Vector3 newVector = bakedMesh.vertices[vertexOffset + i];
+                    sda.meshData.vertices[i] = rot * newVector;
+                }
+                if (alignBindPoses)
+                {
+                    SlotDataAssetInspector.ConformBindposesAndVertices(sda, toSlots[0].asset);
+                }
+                else
+                {
+                    // copy the bindpose from the toDCA first slot.
+                    Matrix4x4[] bindPoses = toSlots[0].asset.meshData.bindPoses;
+                }
+                FinalizeSlot(sda);
+            }
+
+
+            addedbpc.startingPoseWeight = 0f;
+            controllers[0].RemoveBonePoseConverters(poseConverter);
+            // restore bone poses
+            foreach (var bonePoseInfo in BonePoseSaves)
+            {
+                var controller = bonePoseInfo.Controller;
+                var bonePoseConverter = controller.GetBonePoseConverters()[bonePoseInfo.BonePoseConverterNumber];
+                bonePoseConverter.startingPoseWeight = bonePoseInfo.BonePoseConverterWeight;
+                bonePoseConverter.poseToApply = bonePoseInfo.bonePose;
+            }
+
+            CopyPreloadWardrobeRecipes(fromDCA, toDCA);
+            toDCA.BuildNow();
+        }
+
+        private void CopyPreloadWardrobeRecipes(DynamicCharacterAvatar fromDCA, DynamicCharacterAvatar toDCA)
+        {
+            if (fromDCA == null || toDCA == null)
+            {
+                Debug.LogError("CopyPreloadWardrobeRecipes: fromDCA or toDCA is null.");
+                return;
+            }
+
+            var src = fromDCA.preloadWardrobeRecipes;
+            if (src == null)
+            {
+                Debug.LogWarning("CopyPreloadWardrobeRecipes: Source DCA has no preloadWardrobeRecipes.");
+                return;
+            }
+
+#if UNITY_EDITOR
+            Undo.RecordObject(toDCA, "Copy Preload Wardrobe Recipes");
+#endif
+
+            // Ensure destination list exists
+            if (toDCA.preloadWardrobeRecipes == null)
+            {
+                toDCA.preloadWardrobeRecipes = new DynamicCharacterAvatar.WardrobeRecipeList();
+            }
+
+            toDCA.preloadWardrobeRecipes.loadDefaultRecipes = src.loadDefaultRecipes;
+
+            var dstList = new List<DynamicCharacterAvatar.WardrobeRecipeListItem>(); // alias not available; use fully qualified below
+            dstList = new List<DynamicCharacterAvatar.WardrobeRecipeListItem>(src.recipes != null ? src.recipes.Count : 0);
+
+            var idx = UMAAssetIndexer.Instance;
+
+            if (src.recipes != null)
+            {
+                dstList.Clear();
+                for (int i = 0; i < src.recipes.Count; i++)
+                {
+                    var s = src.recipes[i];
+                    if (s == null) continue;
+
+                    var item = new DynamicCharacterAvatar.WardrobeRecipeListItem
+                    {
+                        _recipeName = s._recipeName,
+                        _enabledInDefaultWardrobe = s._enabledInDefaultWardrobe,
+                        ForceLoad = s.ForceLoad,
+                        _compatibleRaces = (s._compatibleRaces != null) ? new List<string>(s._compatibleRaces) : new List<string>()
+                    };
+
+                    // Try to resolve the recipe asset by name for convenience
+                    if (!string.IsNullOrEmpty(item._recipeName) && idx != null)
+                    {
+                        try
+                        {
+                            item._recipe = idx.GetAsset<UMATextRecipe>(item._recipeName);
+                            item.ForceLoad = true;
+                        }
+                        catch { /* ignore resolve failures; name will still be copied */ }
+                    }
+
+                    dstList.Add(item);
+                }
+            }
+
+            toDCA.preloadWardrobeRecipes.recipes = dstList;
+
+#if UNITY_EDITOR
+            EditorUtility.SetDirty(toDCA);
+#endif
+        }
+
+        public List<Mesh> BakeDCA(DynamicCharacterAvatar dca)
+        {
+            List<Mesh> meshes = new List<Mesh>();
+            UMAData ud = dca as UMAData;
+            for (int i = 0; i < ud.RendererCount; i++)
+            {
+                SkinnedMeshRenderer smr = ud.GetRenderer(i);
+                Mesh bakedMesh = new Mesh();
+                smr.BakeMesh(bakedMesh);
+                meshes.Add(bakedMesh);
+            }
+            return meshes;
+        }
+
+        public void ApplyBoneposeToRig(DynamicCharacterAvatar DCA, UMABonePose PoseConverter)
+        {
+            if (DCA == null || DCA.umaData == null || DCA.umaData.skeleton == null)
+            {
+                Debug.LogError("DCA or UMAData or Skeleton is null.");
+                return;
+            }
+            var poseConverter = PoseConverter;
+            if (poseConverter == null)
+            {
+                Debug.LogError("PoseConverter is null.");
+                return;
+            }
+            foreach (var bonePose in poseConverter.poses)
+            {
+                var boneTransform = DCA.umaData.skeleton.GetBoneTransform(bonePose.bone);
+                if (boneTransform != null)
+                {
+                    boneTransform.localPosition = bonePose.position;
+                    boneTransform.localRotation = bonePose.rotation;
+                    boneTransform.localScale = bonePose.scale;
+                }
+            }
+        }
+
+
+        public void BakeSelectedSlotsToNewRace()
+        {
+            var selectedSlots = GetSelectedAssets(typeof(SlotDataAsset));
+            foreach (var slotItem in selectedSlots)
+            {
+                SlotDataAsset slot = slotItem.Item as SlotDataAsset;
+                if (slot != null)
+                {
+                    BakeSlotToNewRace(slot, raceForPose, null, 0, 0, 0, PoseConverter);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Restores the specified slot from its original backup (slotName + "_Original").
+        /// Copies all data from the backup into the current slot, but preserves the current slot's asset name and slotName.
+        /// The backup asset is left untouched in the backup folder for future reuse.
+        /// </summary>
+        /// <param name="slot">The slot to restore (must not be a backup slot itself).</param>
+        public void RestoreSlot(SlotDataAsset slot)
+        {
+            if (slot == null)
+            {
+                Debug.LogError("[SlotRestore] Slot parameter is null.");
+                return;
+            }
+            if (string.IsNullOrEmpty(slot.slotName))
+            {
+                Debug.LogError("[SlotRestore] Slot has an empty slotName.");
+                return;
+            }
+            if (slot.slotName.EndsWith("_Original", StringComparison.Ordinal))
+            {
+                Debug.LogWarning("[SlotRestore] Cannot restore a backup slot directly.");
+                return;
+            }
+
+            // Derive backup name exactly as ConvertSlotFromLegacy does
+            string backupName = slot.slotName + "_Original";
+
+            // Try to locate backup in the UMA indexer
+            SlotDataAsset backup = UMAAssetIndexer.Instance?.GetAsset<SlotDataAsset>(backupName);
+
+            // Fallback: search AssetDatabase if not found in index
+            if (backup == null)
+            {
+                string[] guids = AssetDatabase.FindAssets($"{backupName} t:SlotDataAsset");
+                if (guids != null && guids.Length > 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    backup = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(path);
+                }
+            }
+
+            if (backup == null)
+            {
+                Debug.LogError($"[SlotRestore] Backup slot '{backupName}' not found. Cannot restore '{slot.slotName}'.");
+                return;
+            }
+
+            // Preserve original slotName & asset name before copy
+            string originalSlotName = slot.slotName;
+            string originalAssetName = slot.name; // Unity asset name (may differ)
+
+            try
+            {
+                // Use provided Assign() API to copy all relevant data
+                slot.Assign(backup);
+
+                // Restore identifying names to keep this asset as the active (non-backup) slot
+                slot.name = originalAssetName;
+
+                // If legacy status should be restored to true (backup is legacy)
+                slot.isLegacySlot = backup.isLegacySlot;
+
+                // Recompute name hash if necessary
+
+                EditorUtility.SetDirty(slot);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
+                AssetDatabase.SaveAssetIfDirty(slot);
+#else
+                AssetDatabase.SaveAssets();
+#endif
+                // Update UMA systems (mesh/cache)
+                UMAUpdateProcessor.UpdateSlot(slot, false);
+
+                Debug.Log($"[SlotRestore] Restored slot '{originalSlotName}' from backup '{backupName}'.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[SlotRestore] Exception restoring '{originalSlotName}' from '{backupName}': {ex.Message}");
+            }
+        }
+    
+
+        private void RestoreSlots()
+        {
+            var selectedSlots = GetSelectedAssets(typeof(SlotDataAsset));
+            foreach (var slotItem in selectedSlots)
+            {
+                SlotDataAsset slot = slotItem.Item as SlotDataAsset;
+                if (slot != null)
+                {
+                    Debug.Log($"Restoring converted slot {slot.slotName}");
+                    this.RestoreSlot(slot);
+                    EditorUtility.SetDirty(slot);
+                    AssetDatabase.SaveAssetIfDirty(slot);
+                    UMAUpdateProcessor.UpdateSlot(slot, false);
+                }
+            }
+        }
+        
+
+        private void ConvertSlotFromLegacyOld(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x=0f, float y=0f, float z = 0f, bool postRotate=false)
+        {
+            if (poseConverter == null)
+            {
+                //EditorUtility.DisplayDialog("Error", "Please select a UMABonePose to convert selected slots.", "OK");
+                //return;
+            }
+            var selectedSlots = GetSelectedAssets(typeof(SlotDataAsset));
+            foreach (var slotItem in selectedSlots)
+            {
+                SlotDataAsset slot = slotItem.Item as SlotDataAsset;
+                if (slot != null)
+                {
+                    if (donor != null)
+                    {
+                        slot.ConvertBonePosesFromLegacy(donor, poseConverter, raceData, x, y, z, postRotate);
+                    }
+                    else
+                    {
+                        slot.ConvertBonePosesFromLegacy(poseConverter, raceData, x, y, z, postRotate);
+                    }
+                    Debug.Log("Updating converted slot");
+                    EditorUtility.SetDirty(slot);
+                    AssetDatabase.SaveAssetIfDirty(slot);
+                    UMAUpdateProcessor.UpdateSlot(slot, false);
+                }
+            }
+        }
+
+
+        const string backupFolder = "Assets/UMA/SlotBackup";
+
+
+        private void ConvertSlotFromLegacy(SlotDataAsset donor, UMABonePose poseConverter, RaceData raceData, float x, float y, float z, bool postRotate)
+        {
+            // Backup-aware legacy conversion:
+            // 1. Skip slots whose slotName already ends with _Original
+            // 2. If backup (slotName + _Original) does not exist, create via Clone (asset name & slotName both changed)
+            // 3. Never overwrite existing backup; reuse it
+            // 4. Always convert from backup's meshData (unless donor provided)
+            // 5. If donor provided, use donor instead of backup (donor's current state, not its backup)
+            // 6. Add backup to UMAAssetIndexer (so it can be found quickly)
+            // 7. backup.isLegacySlot stays true; converted slot sets isLegacySlot = false
+            // 8. Folder: Assets/UMA/SlotBackup (created if missing)
+            // 9. Re-run conversions always source from original backup
+            // 10. Use Clone method; keep other slot fields unchanged
+            // 11. No Undo integration; just mark dirty & save
+            var selected = GetSelectedAssets(typeof(SlotDataAsset));
+            if (selected == null || selected.Count == 0) return;
+
+
+
+
+            foreach (var ai in selected)
+            {
+                var slot = ai.Item as SlotDataAsset;
+                if (slot == null) continue;
+                if (string.IsNullOrEmpty(slot.slotName)) continue;
+                // Skip backup assets themselves
+                SlotDataAsset backup;
+                if (!BackupSlot(backupFolder, slot, out backup))
+                {
+                    continue;
+                }
+                // Choose source (donor overrides backup)
+                SlotDataAsset sourceForConversion = donor != null ? donor : backup;
+                if (sourceForConversion == null)
+                {
+                    Debug.LogError($"[SlotConvert] Source slot null for '{slot.slotName}'.");
+                    continue;
+                }
+
+                // Perform conversion
+                if (donor != null)
+                {
+                    slot.ConvertBonePosesFromLegacy(donor, poseConverter, raceData, x, y, z, postRotate);
+                }
+                else
+                {
+                    slot.ConvertBonePosesFromLegacy(sourceForConversion, poseConverter, raceData, x, y, z, postRotate);
+                }
+
+                FinalizeSlot(slot);
+                Debug.Log($"[SlotConvert] Converted '{slot.slotName}' using '{sourceForConversion.slotName}'.");
+            }
+        }
+
+        private static void FinalizeSlot(SlotDataAsset slot)
+        {
+            // Mark converted slot (legacy cleared)
+            slot.isLegacySlot = false;
+            EditorUtility.SetDirty(slot);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
+                AssetDatabase.SaveAssetIfDirty(slot);
+#else
+            AssetDatabase.SaveAssets();
+#endif
+            UMAUpdateProcessor.UpdateSlot(slot, false);
+        }
+
+        private static bool BackupSlot(string backupFolder, SlotDataAsset slot, out SlotDataAsset backup)
+        {
+            if (!Directory.Exists(backupFolder))
+            {
+                Directory.CreateDirectory(backupFolder);
+                AssetDatabase.ImportAsset(backupFolder);
+            }
+
+            backup = null;
+            if (slot == null || string.IsNullOrEmpty(slot.slotName))
+            {
+                Debug.LogError("[SlotConvert] Invalid slot passed to BackupSlot.");
+                return false;
+            }
+
+            string backupName = slot.slotName + "_Original";
+
+            // Try UMAAssetIndexer first
+            backup = UMAAssetIndexer.Instance?.GetAsset<SlotDataAsset>(backupName);
+
+            // Fallback to AssetDatabase search
+            if (backup == null)
+            {
+                // Exact name search prevents partial matches
+                string[] guids = AssetDatabase.FindAssets($"\"{backupName}\" t:SlotDataAsset");
+                if (guids != null && guids.Length > 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                    backup = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(path);
+                }
+            }
+
+            // Need to create backup
+            if (backup == null)
+            {
+                backup = slot.Clone(backupName, backupName, true, backupFolder);
+                if (backup == null)
+                {
+                    Debug.LogError($"[SlotConvert] Failed to create backup for '{slot.slotName}'. Skipping.");
+                    return false;
+                }
+
+                backup.isLegacySlot = true; // retain legacy flag on original
+                EditorUtility.SetDirty(backup);
+#if (UNITY_2020_3 && UNITY_2020_3_16_OR_NEWER) || UNITY_2021_1_17_OR_NEWER
+        AssetDatabase.SaveAssetIfDirty(backup);
+#else
+                AssetDatabase.SaveAssets();
+#endif
+                UMAAssetIndexer.Instance?.ProcessNewItem(backup, false, false);
+                Debug.Log($"[SlotConvert] Created backup '{backupName}'.");
+            }
+
+            return true;
+        }
+
+        private void BakeSlotToNewRace(SlotDataAsset slot, RaceData oldRace, RaceData newRace, float rotx, float roty, float rotz, UMABonePose SourceToDest)
+        {
+            // First, bake the new bone pose on the slot. 
+            if (string.IsNullOrEmpty(slot.slotName))
+            {
+                Debug.Log("Slot has not slotName! slot base name is: " + slot.name);
+                return;
+            }
+
+            // Skip backup assets themselves
+            SlotDataAsset backup;
+            if (!BackupSlot(backupFolder, slot, out backup))
+            {
+                return;
+            }
+
+            slot.meshData.ApplyBonePose(oldRace, SourceToDest);
+            FinalizeSlot(slot);
+        }
+
+        private void SetLegacyFlagOnSelectedSlots(bool legacyFlag)
+        {
+            var selectedSlots = GetSelectedAssets(typeof(SlotDataAsset));
+            foreach(var slotItem in selectedSlots)
+            {
+                SlotDataAsset slot = slotItem.Item as SlotDataAsset;
+                if (slot != null)
+                {
+                    slot.isLegacySlot = legacyFlag;
+                    EditorUtility.SetDirty(slot);
+                }
+            }
+            AssetDatabase.SaveAssets();
+        }
+
         private void SelectUnusedMeshHideAssets()
         {
+            if (UAI == null) return;
             var MHAS = UAI.GetAssetItems<MeshHideAsset>();
             var NotUsed = new List<AssetItem>();
             var recipes = UAI.GetAssetItems<UMAWardrobeRecipe>();
@@ -2804,6 +4253,7 @@ namespace UMA.Controls
 
         private void SelectByMeshHide(MeshHideAsset addedMHA)
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
 
             var recipes = UAI.GetAssetItems<UMAWardrobeRecipe>();
@@ -2835,6 +4285,7 @@ namespace UMA.Controls
 
         private void FindBrokenMeshHideAssets()
         {
+            if (UAI == null) return;
             var MHAS = UAI.GetAssetItems<MeshHideAsset>();
             if (MHAS == null || MHAS.Count == 0)
             {
@@ -2874,7 +4325,7 @@ namespace UMA.Controls
                     }
                     for(int sm=0;sm<item.triangleFlags.Length;sm++)
                     {
-                        if (item.triangleFlags[sm].Length != slot.meshData.submeshes[sm].getBaseTriangles().Length/3)
+                        if (item.triangleFlags[sm].Length != slot.meshData.submeshes[sm].getManagedTriangles(0).Length/3)
                         {
                             errors++;
                             SelectByAssetItems(new List<AssetItem>() { MHAS[i] });
@@ -2895,6 +4346,7 @@ namespace UMA.Controls
 
         private void SelectUnusedMaterials()
         {
+            if (UAI == null) return;
             List<AssetItem> materials = new List<AssetItem>();
 
             var slots = UAI.GetAssetItems<SlotDataAsset>();
@@ -2906,19 +4358,7 @@ namespace UMA.Controls
                 AssetItem ai = materialsList[materialIndex];
                 UMAMaterial uMAMaterial = ai.Item as UMAMaterial;
                 bool found = false;
-                for(int i=0;i<slots.Count;i++)
-                {
-                    if (slots[i] != null && slots[i].Item != null)
-                    {
-                        SlotDataAsset slot = slots[i].Item as SlotDataAsset;
-                        if (slot.material != null && slot.material.name == uMAMaterial.name)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                // now check overlays
+                // check overlays
                 if (!found)
                 {
                     for (int i = 0; i < overlays.Count; i++)
@@ -2952,6 +4392,7 @@ namespace UMA.Controls
 
         private void SelectSmooshableSlots()
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
 
             var slots = UAI.GetAssetItems<SlotDataAsset>();
@@ -2966,8 +4407,27 @@ namespace UMA.Controls
             SelectByAssetItems(items);
         }
 
+        private void SelectLODSlots() //PigEdit
+        {
+            if (UAI == null) return;
+            List<AssetItem> items = new List<AssetItem>();
+
+            var slots = UAI.GetAssetItems<SlotDataAsset>();
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i] != null && (slots[i].Item as SlotDataAsset).maxLOD != -1)
+                {
+                    items.Add(slots[i]);
+                }
+            }
+
+            SelectByAssetItems(items);
+        }
+        
+
         private void SelectClippingSlots()
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
 
             var slots = UAI.GetAssetItems<SlotDataAsset>();
@@ -2984,6 +4444,7 @@ namespace UMA.Controls
 
         private void FindSlotsWithInvalidMeshes()
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
 
             var slots = UAI.GetAssetItems<SlotDataAsset>();
@@ -3028,6 +4489,7 @@ namespace UMA.Controls
 
         private void SelectWithSlot(SlotDataAsset umaSlot)
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
             items.Add(UAI.GetAssetItem<SlotDataAsset>(umaSlot.slotName));
             SelectByAssetItems(items);
@@ -3035,6 +4497,7 @@ namespace UMA.Controls
 
         private void FindOverlaysWithTexture(Texture2D tex)
         {
+            if (UAI == null) return;
             List<AssetItem> badItems = new List<AssetItem>();
             var ovls = UAI.GetAssetItems<OverlayDataAsset>();
             for (int i = 0; i < ovls.Count; i++)
@@ -3047,7 +4510,11 @@ namespace UMA.Controls
                     {
                         for (int j = 0; j < o.textureList.Length; j++)
                         {
-                            if (o.textureList[j].GetInstanceID() == tex.GetInstanceID())
+                            if (o.textureList[j] == null)
+                            {
+                                continue;
+                            }
+                            if (tex != null && o.textureList[j].GetInstanceID() == tex.GetInstanceID())
                             {
                                 badItems.Add(ovls[i]);
                             }
@@ -3060,6 +4527,7 @@ namespace UMA.Controls
 
         private void FindUMAMaterialsWithTexture(Texture2D tex)
         {
+            if (UAI == null) return;
             List<AssetItem> badItems = new List<AssetItem>();
             var umats = UAI.GetAssetItems<UMAMaterial>();
             for (int i = 0; i < umats.Count; i++)
@@ -3075,7 +4543,7 @@ namespace UMA.Controls
                         {
                             for(int j=0; j< m.GetTexturePropertyNames().Length; j++)
                             {
-                                if (m.GetTexture(m.GetTexturePropertyNames()[j]) == tex)
+                                if (tex != null && m.GetTexture(m.GetTexturePropertyNames()[j]) == tex)
                                 {
                                     badItems.Add(umats[i]);
                                 }
@@ -3089,6 +4557,7 @@ namespace UMA.Controls
 
         private void FindOverlaysWithInvalidTextures()
         {
+            if (UAI == null) return;
             List<AssetItem> badItems = new List<AssetItem>(); 
             var ovls = UAI.GetAssetItems<OverlayDataAsset>();
             for (int i = 0; i < ovls.Count; i++)
@@ -3121,6 +4590,7 @@ namespace UMA.Controls
 
         private void SelectWithOverlay(OverlayDataAsset umaOverlay)
         {
+            if (UAI == null) return;
             List<AssetItem> items = new List<AssetItem>();
             items.Add(UAI.GetAssetItem<OverlayDataAsset>(umaOverlay.overlayName));
             SelectByAssetItems(items);
@@ -3128,6 +4598,7 @@ namespace UMA.Controls
 
         private void SelectByChannelType(int channelType)
         {
+            if (UAI == null) return;
             var mats = UAI.GetAllAssets<UMAMaterial>();
             for (int i = 0; i < mats.Count; i++)
             {
@@ -3174,13 +4645,19 @@ namespace UMA.Controls
 				ItemsMenu.DropDown(new Rect(MenuRect));
 			}
 
+			MenuRect.x += 70;
+			MenuRect.width = 70;
+			if (EditorGUI.DropdownButton(MenuRect, new GUIContent("Tools"), FocusType.Passive, EditorStyles.toolbarDropDown))
+			{
+				ToolsMenu.DropDown(new Rect(MenuRect));
+			}
 
 			MenuRect.x += 70;
 			MenuRect.width = 100;
 
 			if (GUI.Button(MenuRect, new GUIContent("Collapse All"), EditorStyles.toolbarButton))
 			{
-				treeView.CollapseAll();
+				if (treeView != null) treeView.CollapseAll();
 			}
 
 			MenuRect.x += 100;
@@ -3188,7 +4665,7 @@ namespace UMA.Controls
 
 			if (GUI.Button(MenuRect, new GUIContent("Expand All"), EditorStyles.toolbarButton))
 			{
-				treeView.ExpandAll();
+				if (treeView != null) treeView.ExpandAll();
 			}
 
 			MenuRect.x += 100;
@@ -3202,7 +4679,7 @@ namespace UMA.Controls
                 Repaint();
 			}
 
-            if (EditorUtility.IsDirty(UAI))
+            if (UAI != null && EditorUtility.IsDirty(UAI))
             {
                 MenuRect.x += 100;
                 MenuRect.width = 150;
@@ -3213,47 +4690,7 @@ namespace UMA.Controls
 			FillRect.x += 530;
 			FillRect.width -= 530;
 			GUI.Box(FillRect, "", EditorStyles.toolbar);
-
-            /*
-			if (ShowUtilities)
-			{
-				rect.y += rect.height;
-				GUI.Box(rect, "");
-				GUILayout.BeginArea(rect);
-				GUILayout.BeginHorizontal();
-				if (GUILayout.Button("Apply MeshHideAssets to Selection", GUILayout.Width(259)))
-				{
-					UpdateMeshHideAssets();
-					AssetDatabase.SaveAssets();
-				}
-				AddedMHA = EditorGUILayout.ObjectField("", AddedMHA, typeof(MeshHideAsset), false, GUILayout.Width(250)) as MeshHideAsset;
-				GUILayout.EndHorizontal();
-				GUILayout.EndArea();
-				rect.y += rect.height;
-				GUI.Box(rect, "");
-				GUILayout.BeginArea(rect);
-				GUILayout.BeginHorizontal();
-				if (GUILayout.Button("Apply UMAMaterial to Selection", GUILayout.Width(259)))
-				{
-					UpdateMaterials();
-					AssetDatabase.SaveAssets();
-				}
-				umaMaterial = EditorGUILayout.ObjectField("", umaMaterial, typeof(UMAMaterial), false, GUILayout.Width(250)) as UMAMaterial;
-				if (GUILayout.Button("Select overlays with UMAMaterial", GUILayout.Width(259)))
-				{
-					SelectByMaterial(umaMaterial);
-				}
-				if (GUILayout.Button("Fixup Texture Channels",GUILayout.Width(150)))
-                {
-					FixupTextureChannels(umaMaterial);
-                }
-				GUILayout.EndHorizontal();
-				GUILayout.EndArea();
-
-
-			}
-            */
-		}
+        }
 
         void SearchBar (Rect rect)
 		{
@@ -3268,15 +4705,18 @@ namespace UMA.Controls
 				{
 					LoadOnly.Clear();
 					var treeElements = new List<AssetTreeElement>();
-					TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
-					foreach(AssetTreeElement ate in treeElements)
+					if (treeView != null && treeView.treeModel != null)
 					{
-						if (ate.ai != null && ate.Checked)
+						TreeElementUtility.TreeToList<AssetTreeElement>(treeView.treeModel.root, treeElements);
+						foreach(AssetTreeElement ate in treeElements)
 						{
-							LoadOnly.Add(ate.ai);
+							if (ate.ai != null && ate.Checked)
+							{
+								LoadOnly.Add(ate.ai);
+							}
 						}
+						treeView.ExpandAll();
 					}
-					treeView.ExpandAll();
 				}
 				m_Initialized = false;
 				Repaint();
@@ -3295,12 +4735,18 @@ namespace UMA.Controls
 
 			rect.x = DropDown.x+DropDown.width;
 			rect.width -= rect.x;
-			treeView.searchString = m_SearchField.OnGUI (rect, treeView.searchString);
+            if (treeView != null)
+            {
+			    treeView.searchString = m_SearchField.OnGUI (rect, treeView.searchString);
+            }
 		}
 
 		void DoTreeView (Rect rect)
 		{
-			treeView.OnGUI(rect);
+            if (treeView != null)
+            {
+		        treeView.OnGUI(rect);
+            }
 		}
 
 		void BottomToolBar (Rect rect)

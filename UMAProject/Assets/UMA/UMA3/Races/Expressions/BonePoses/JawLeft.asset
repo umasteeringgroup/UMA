@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: JawLeft
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: -0.0000282228, z: 0.00005314499}
+    rotation: {x: 0.0008058061, y: 0.0019578135, z: -0.0000015784071, w: 0.9999978}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.0000071590766, y: 0.00003132969, z: 0.000052675605}
+    rotation: {x: -0.0012225667, y: -0.0025601033, z: -0.0002236806, w: 0.999996}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Mandible
+    hash: 1574626840
+    position: {x: 0, y: -0.000048793852, z: -0.0000017285347}
+    rotation: {x: -0.00039719598, y: -0.071282685, z: -0.04178299, w: 0.9965806}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.00008671049}
+    rotation: {x: -0.000000004899072, y: 0.0029114482, z: 4.3862266e-12, w: 0.99999577}
+    scale: {x: 1.0008184, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: -0.000028267503, z: 0.00005314499}
+    rotation: {x: 0.0008058061, y: -0.0019578137, z: 0.0000015778048, w: 0.9999978}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.0000071590766, y: 0.00004356727, z: 0.000024288893}
+    rotation: {x: -0.0011643297, y: 0.0024569822, z: 0.0002130316, w: 0.9999963}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

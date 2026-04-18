@@ -20,6 +20,7 @@ namespace UMA.Controls
 		public System.Type type;
 		public int index;
 		public int IsResourceCount;
+		public int LoadedCount;
 		public int IsAddrCount;
 		public int Keepcount;
 		public int IgnoreCount;

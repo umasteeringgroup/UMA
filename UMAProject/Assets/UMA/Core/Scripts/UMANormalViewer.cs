@@ -1,4 +1,7 @@
 using UnityEngine;
+using UMA.CharacterSystem;
+
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -14,6 +17,8 @@ namespace UMA
         private bool _displayWireframe = false;
         [SerializeField]
         private NormalsDrawData _vertexNormals = new NormalsDrawData(new Color32(200, 0, 0, 240), false);
+
+        public DynamicCharacterAvatar avatar;
 
         [System.Serializable]
         private class NormalsDrawData
@@ -56,6 +61,23 @@ namespace UMA
             }
         }
 
+
+        private void Start()
+        {
+            avatar = gameObject.GetComponentInChildren<DynamicCharacterAvatar>();
+            avatar.OnCharacterUpdated += Avatar_OnCharacterUpdated;
+        }
+
+        private void Avatar_OnCharacterUpdated(UMAData obj)
+        {
+            if (mesh != null)
+            {
+                DestroyImmediate(mesh);
+                mesh = null;
+                _skinnedMesh = GetComponentInChildren<SkinnedMeshRenderer>();
+            }
+        }
+
         void OnDrawGizmosSelected()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -79,7 +101,7 @@ namespace UMA
 
             if (_skinnedMesh == null)
             {
-                _skinnedMesh = GetComponent<SkinnedMeshRenderer>();
+                _skinnedMesh = GetComponentInChildren<SkinnedMeshRenderer>();
                 if (_skinnedMesh == null)
                 {
                     return;

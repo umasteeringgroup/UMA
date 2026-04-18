@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -46,6 +47,10 @@ namespace UMA
 		[SerializeField]
 		private bool _adjustBounds;
 
+		[Tooltip("Manually sets the bounds to the absolute size below")]
+		[SerializeField]
+		private bool _manuallySetBounds;
+
 		[SerializeField]
 		private float _scale = 1f;
 
@@ -76,6 +81,9 @@ namespace UMA
 		[SerializeField]
 		private Vector3 _boundsAdjust = Vector3.zero;
 
+		[SerializeField]
+		private Vector3 _manualSetBounds = Vector3.zero;
+
 		#endregion
 
 		#region NON-SERIALIZED FIELDS
@@ -87,9 +95,6 @@ namespace UMA
 
 		[System.NonSerialized]
 		private string _lastRace = null;
-
-		[System.NonSerialized]
-		private bool boundsAdjustmentApplied = false;
 
 		[System.NonSerialized]
 		private float _liveScale = -1f;
@@ -281,103 +286,196 @@ namespace UMA
 			UpdateCharacterHeightMassRadius(umaData, skeleton);
 		}
 
-		#endregion
+        #endregion
 
-		#region PRIVATE METHODS
+        #region PRIVATE METHODS
 
-		/// <summary>
-		/// Performs the bounds adjustment operations (updateBounds, tightenBounds, AdjustBounds) if enabled.
-		/// </summary>
-		/// <param name="targetRenderer">The renderer to perform the adjustments on.</param>
-		/// <param name="umaData"></param>
-		/// <returns>The updated bounds</returns>
-		private Bounds DoBoundsModifications(SkinnedMeshRenderer targetRenderer, UMAData umaData)
-		{
-			//we cant tighten or adjust bounds unless we also update
-			//otherwise they end up in the center of the world
-			var umaTransform = umaData.transform;
-			var originalParent = umaData.transform.parent;
-			var originalRot = umaData.transform.localRotation;
-			var originalPos = umaData.transform.localPosition;
-			Collider umaCollider = null;
-			bool prevColliderEnabled = false;
-			bool prevUpdateWhenOffScreen = false;
-			Bounds newBounds = targetRenderer.bounds;
-			var saveRoot = targetRenderer.rootBone;
-			targetRenderer.rootBone = null;
+        /// <summary>
+        /// Performs the bounds adjustment operations (updateBounds, tightenBounds, AdjustBounds) if enabled.
+        /// </summary>
+        /// <param name="targetRenderer">The renderer to perform the adjustments on.</param>
+        /// <param name="umaData"></param>
+        /// <returns>The updated bounds</returns>
+        private Bounds DoBoundsModifications(SkinnedMeshRenderer targetRenderer, UMAData umaData)
+        {
+			bool fixupRotations = umaData.umaRecipe.raceData.FixupRotations;
 
-			if (_updateBounds)
+			bool boundsUpdated = false;
+            // Start from current local bounds (local space relative to rootBone or renderer transform)
+            Bounds newBounds = targetRenderer.localBounds;
+
+
+			if (_manuallySetBounds && _manualSetBounds != Vector3.zero)
 			{
-				umaCollider = umaData.gameObject.GetComponent<Collider>();
-				prevColliderEnabled = umaCollider != null ? umaCollider.enabled : false;
-				prevUpdateWhenOffScreen = targetRenderer.updateWhenOffscreen;
+				newBounds = umaData.originalMeshBounds;
+                Vector3 adjustedBounds = _manualSetBounds;
 
-				//if there is a collider, disable it before we move anything
-				if (umaCollider)
+				if (_adjustScale)
+				{
+					adjustedBounds *= (_liveScale != -1f) ? _liveScale : _scale;
+					Transform posBone = umaData.skeleton.GetBoneTransform(_scaleBoneHash);
+					if (posBone != null)
+					{
+						adjustedBounds = Vector3.Scale(adjustedBounds, posBone.localScale);
+					}
+				}
+                if (fixupRotations)
+				{
+					newBounds.extents = new Vector3(-adjustedBounds.y, adjustedBounds.x, adjustedBounds.z);
+                }
+				else
+				{
+					newBounds.extents = adjustedBounds;
+				}
+                TightenBounds(fixupRotations, ref boundsUpdated, ref newBounds);
+                targetRenderer.localBounds = newBounds;
+                return newBounds;
+            }
+            // If we wanted to force a recompute from mesh we could do:
+            // (Only if mesh is readable; UMA usually sets it unreadable after bake unless configured)
+            // if (_updateBounds && targetRenderer.sharedMesh != null && targetRenderer.sharedMesh.isReadable)
+            // {
+            //     targetRenderer.sharedMesh.RecalculateBounds();
+            //     newBounds = targetRenderer.sharedMesh.bounds;
+            // }
+
+            // --- Added _updateBounds scaling logic ---
+            if (_updateBounds)
+            {
+                // Use the mesh's intrinsic bounds as a stable baseline to avoid cumulative growth
+                Bounds baseBounds = targetRenderer.sharedMesh != null ? targetRenderer.sharedMesh.bounds : targetRenderer.localBounds;
+
+                // Get scale bone (if any)
+                Transform scaleBone = null;
+                if (umaData.skeleton != null && _scaleBoneHash != 0)
                 {
-                    umaCollider.enabled = false;
+                    scaleBone = umaData.skeleton.GetBoneTransform(_scaleBoneHash);
+                }
+                Vector3 boneScale = scaleBone != null ? scaleBone.localScale : Vector3.one;
+
+                // Authoring (uniform) scale
+                float authorScale = (_liveScale != -1f) ? _liveScale : _scale;
+                if (authorScale <= 0f) authorScale = 1f;
+
+                // Total per-axis scale factors
+                Vector3 totalScale = new Vector3(
+                    baseBounds.size.x * boneScale.x * authorScale,
+                    baseBounds.size.y * boneScale.y * authorScale,
+                    baseBounds.size.z * boneScale.z * authorScale);
+
+                // Anchor rules:
+                //  - Normal races: keep bottom (min Y) fixed, expand upward.
+                //  - fixupRotations races: legacy orientation, X axis is "down".
+                //    Keep the "top" (min X) fixed and expand downward (+X).
+                if (fixupRotations)
+                {
+                    float oldMinX = baseBounds.center.x - baseBounds.extents.x;
+                    float newSizeX = totalScale.x;
+                    Vector3 newCenter = baseBounds.center;
+                    newCenter.x = oldMinX + (newSizeX * 0.5f);
+
+                    newBounds.center = newCenter;
+                    newBounds.size = new Vector3(newSizeX, totalScale.y, totalScale.z);
+                }
+                else
+                {
+                    float oldMinY = baseBounds.center.y - baseBounds.extents.y;
+                    float newSizeY = totalScale.y;
+                    Vector3 newCenter = baseBounds.center;
+                    newCenter.y = oldMinY + (newSizeY * 0.5f);
+
+                    newBounds.center = newCenter;
+                    newBounds.size = new Vector3(totalScale.x, newSizeY, totalScale.z);
                 }
 
-                //Move UMA into the root, we do this because it might be inside a scaled object
-                umaTransform.SetParent(null, false);
-				umaTransform.localRotation = Quaternion.identity;
-				umaTransform.localPosition = Vector3.zero;
+                boundsUpdated = true;
+            }
+            // --- End added scaling logic ---
 
-				//Get the new bounds from the renderer set to always update (updateWhenOffScreen)		
-				targetRenderer.updateWhenOffscreen = true;
-				newBounds = new Bounds(targetRenderer.localBounds.center, targetRenderer.localBounds.size);
-				targetRenderer.updateWhenOffscreen = prevUpdateWhenOffScreen;
-				boundsAdjustmentApplied = false;
-			}
+            // "Tighten" = ensure min.y >= 0 (bring the lower bound up if it dipped below)
+            // Original code tried to stretch to keep top while lifting bottom, but also injected world coords (bug).
+            if (_tightenBounds)
+            {
+                TightenBounds(fixupRotations, ref boundsUpdated, ref newBounds);
+            }
 
-			//somehow the bounds end up beneath the floor i.e. newBounds.center.y - newBounds.extents.y is actually a minus number
-			//tighten bounds fixes this
-			if (_tightenBounds)
-			{
-				Vector3 newCenter = new Vector3(newBounds.center.x, newBounds.center.y, newBounds.center.z);
-				Vector3 newSize = new Vector3(newBounds.size.x, newBounds.size.y, newBounds.size.z);
-				if (newBounds.center.y - newBounds.extents.y < 0)
-				{
-					var underAmount = newBounds.center.y - newBounds.extents.y;
-					newSize.y = (newBounds.center.y * 2) - underAmount;
-					newCenter.y = newSize.y / 2;
-				}
-				if (umaData.umaRoot != null)
-				{
-					newCenter.x = umaData.umaRoot.transform.position.x;
-					newCenter.z = umaData.umaRoot.transform.position.z;
-					Bounds modifiedBounds = new Bounds(newCenter, newSize);
-					newBounds = modifiedBounds;
-				}
-			}
-
-			//the user has tools for expanding the bounds aswell so do those here too if they havent been done already (to this race?)
-			if (_adjustBounds && !boundsAdjustmentApplied)
-			{
-				newBounds.Expand(_boundsAdjust);
-				boundsAdjustmentApplied = true;
-			}
-
-			//if we moved the character move it back again
-			if (_updateBounds)
-			{
-				umaTransform.SetParent(originalParent, false);
-				umaTransform.localRotation = originalRot;
-				umaTransform.localPosition = originalPos;
-
-				//set any collider to its original setting
-				if (umaCollider)
+            // Optional manual padding (backwards compatible: Expand adds to size directly)
+            if (_adjustBounds)
+            {
+                // Only expand if a non-zero adjustment
+                if (_boundsAdjust != Vector3.zero)
                 {
-                    umaCollider.enabled = prevColliderEnabled;
+                    newBounds.Expand(_boundsAdjust);
+					boundsUpdated = true;
                 }
             }
-			targetRenderer.localBounds = newBounds;
-			targetRenderer.rootBone = saveRoot;
-			return newBounds;
-		}
 
-		// UMAs can have lots of renderers, but this should return the one that we should use when calculating umaData.characterHeight/Radius/Mass- will that always be umaData.GetRenderer(0)?
-		private SkinnedMeshRenderer GetBaseRenderer(UMAData umaData, int rendererToGet = 0)
+			if (boundsUpdated)
+			{
+				if (umaData.umaRecipe.raceData.FixupRotations)
+				{
+					newBounds = SkinnedMeshCombinerMeshAPI.RotateBoundsAABBFixUp(newBounds);
+                }
+				// Assign the modified bounds
+			    targetRenderer.localBounds = newBounds;
+			}
+
+            return newBounds;
+        }
+
+        private static void TightenBounds(bool fixupRotations, ref bool boundsUpdated, ref Bounds newBounds)
+        {
+            if (fixupRotations)
+            {
+                // local space is inverted, and X axis is DOWN. This is inherited from old Unity and Blender
+                // interactions. This is for legacy races only.	
+                float bottom = newBounds.center.x - newBounds.extents.x;
+                if (bottom > 0f)
+                {
+                    // Raise center so that bottom becomes zero.
+                    float raise = -bottom;
+                    // Increasing size is optional; choices:
+                    // A) Keep top where it is (increase size) - original intent seemed to do this.
+                    // B) Just shift the whole box up (keeps size) - often preferable.
+                    // We'll do (B) for predictability. If you need (A), uncomment the size adjustment lines.
+                    var c = newBounds.center;
+                    c.x += raise;
+                    newBounds.center = c;
+
+                    // (A style) expand to preserve top:
+                    // var s = newBounds.size;
+                    // s.y += raise;
+                    // newBounds.size = s;
+                    boundsUpdated = true;
+                }
+
+            }
+            else
+            {
+                float bottom = newBounds.center.y - newBounds.extents.y;
+                if (bottom < 0f)
+                {
+                    // Raise center so that bottom becomes zero.
+                    float raise = -bottom;
+                    // Increasing size is optional; choices:
+                    // A) Keep top where it is (increase size) - original intent seemed to do this.
+                    // B) Just shift the whole box up (keeps size) - often preferable.
+                    // We'll do (B) for predictability. If you need (A), uncomment the size adjustment lines.
+                    var c = newBounds.center;
+                    c.y += raise;
+                    newBounds.center = c;
+
+                    // (A style) expand to preserve top:
+                    // var s = newBounds.size;
+                    // s.y += raise;
+                    // newBounds.size = s;
+                    boundsUpdated = true;
+                }
+            }
+        }
+
+        // UMAs can have lots of renderers, but this should return the one that we should use when calculating umaData.characterHeight/Radius/Mass- will that always be umaData.GetRenderer(0)?
+        private SkinnedMeshRenderer GetBaseRenderer(UMAData umaData, int rendererToGet = 0)
 		{
 			if (umaData.RendererCount == 0 || umaData.GetRenderer(rendererToGet) == null)
 			{

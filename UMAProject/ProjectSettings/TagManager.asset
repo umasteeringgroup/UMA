@@ -10,16 +10,16 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - Player
+  - 
   - Water
   - UI
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Ragdoll
+  - Player
+  - NoCollisions
+  - HeadLayer
+  - TheMainLayer
   - 
   - 
   - 

@@ -14,16 +14,16 @@ namespace UMA
 		{
 			UMA.CustomAssetUtility.CreateAsset<SharedColorTable>();
 		}
-	#endif
-		public int channelCount;
+#endif
+		public int channelCount = 3;
 		
-        public string sharedColorName;
-		[NonReorderable]
-		public OverlayColorData[] colors;
+        public string sharedColorName = "New Shared Color Table";
+        [NonReorderable]
+		public OverlayColorData[] colors = new OverlayColorData[0];
 
-		#region ISerializationCallbackReceiver Members
+        #region ISerializationCallbackReceiver Members
 
-		public void OnAfterDeserialize()
+        public void OnAfterDeserialize()
 		{
 		}
 

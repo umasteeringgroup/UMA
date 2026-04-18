@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad596f39ce5a904d93ccd9240c400e1, type: 3}
+  m_Name: chinPronounced
+  m_EditorClassIdentifier: UMA_Core::UMA.DNA
+  description: Converted DNA Asset for chinPronounced
+  defaultValue: 0.5
+  effects:
+  - rid: 7828207344866296420
+  displayName: chinPronounced
+  references:
+    version: 2
+    RefIds:
+    - rid: 7828207344866296420
+      type: {class: DNAEffect_BoneScale, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 1
+        EffectName: MandibleAdjust
+        BoneName: MandibleAdjust
+        ScaleFactor: {x: 0.01, y: 0.1, z: 0.01}

@@ -296,7 +296,6 @@ namespace UMA
             float neckDown = targetSkinnedRenderer.GetBlendShapeWeight(BlendShapeByString("UMA Player Neck Down"));
             if (neckUp >= neckDown) { expressionPlayer.neckUp_Down = ValueConverter3(neckUp - neckDown); }
             if (neckUp < neckDown) { expressionPlayer.neckUp_Down = ValueConverter4(neckDown - neckUp); }
-
             float neckTiltLeft = targetSkinnedRenderer.GetBlendShapeWeight(BlendShapeByString("UMA Player Neck Tilt Left"));
             float neckTiltRight = targetSkinnedRenderer.GetBlendShapeWeight(BlendShapeByString("UMA Player Neck Tilt Right"));
             if (neckTiltLeft >= neckTiltRight) { expressionPlayer.neckTiltLeft_Right = ValueConverter3(neckTiltLeft - neckTiltRight); }

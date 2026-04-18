@@ -3,11 +3,15 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Rendering;
+using UMA.Dynamics;
 
 namespace UMA
 {
     public class UMADefaultMeshCombiner : UMAMeshCombiner
     {
+#if UNITY_EDITOR
+        private const bool UMA_INTERNALLOD_BUILD_DIAGNOSTICS = true;
+#endif
         protected List<SkinnedMeshCombiner.CombineInstance> combinedMeshList;
         protected List<UMAData.GeneratedMaterial> combinedMaterialList;
 
@@ -50,7 +54,7 @@ namespace UMA
         {
             if (umaData.umaRecipe != null)
             {
-                umaData.umaRecipe.UpdateMeshHideMasks();
+                umaData.umaRecipe.UpdateMeshHideMasks(umaData.currentLODLevel);
             }
 
             #region SetupSkeleton
@@ -81,14 +85,31 @@ namespace UMA
                 }
                 umaData.CleanMesh(false);
 
+                renderers = umaData.GetRenderers();
+                if (UMAAssetIndexer.Instance.generator.alwaysRegenerateRenderers)
+                {
+                    if (renderers != null)
+                    {
+                        for (int i = 0; i < renderers.Length; i++)
+                        {
+                            if (renderers[i] != null)
+                            {
+                                DestroyImmediate(renderers[i].gameObject);
+                            }
+                        }
+                    }
+                    renderers = null;
+                    umaData.SetRenderers(null);
+                    umaData.SetRendererAssets(null);
+                }
+
                 if ((umaData.RendererCount == umaData.generatedMaterials.rendererAssets.Count && umaData.AreRenderersEqual(umaData.generatedMaterials.rendererAssets)))
                 {
-                    renderers = umaData.GetRenderers();
                     umaData.SetRendererAssets(umaData.generatedMaterials.rendererAssets.ToArray());
                 }
                 else
                 {
-                    var oldRenderers = umaData.GetRenderers();
+                    var oldRenderers = renderers;
                     var globalTransform = umaData.GetGlobalTransform();
 
                     renderers = new SkinnedMeshRenderer[umaData.generatedMaterials.rendererAssets.Count];
@@ -158,6 +179,7 @@ namespace UMA
             newSMRGO.gameObject.layer = umaData.gameObject.layer;
 
             var newRenderer = newSMRGO.AddComponent<SkinnedMeshRenderer>();
+            // newSMRGO.AddComponent<DestroyDebugger>();
             newRenderer.enabled = false;
             newRenderer.sharedMesh = new Mesh();
             if (umaData.markDynamic)
@@ -291,11 +313,14 @@ namespace UMA
 #if UMA_COMBINER_TIMINGS
                 swPerRendererSkeleton.Stop();
                 Ticks_SkeletonEnsure += swPerRendererSkeleton.ElapsedTicks;
-
 #endif
 #if UNITY_2022_2_OR_NEWER
                 if (UMASettings.UseMeshAPICombiner)
                 {
+                    umaData.markNotReadable = false; // MeshAPI currently requires readable meshes
+                    if (updatedAtlas)
+						SetSlotUVAreasForRendererFiltered(_filteredMaterials);
+                    
                     var clothCoeffs = SkinnedMeshCombinerMeshAPI.CombineIntoRenderer(
                         renderers[currentRendererIndex],
                         combinedMeshList.ToArray(),
@@ -304,16 +329,17 @@ namespace UMA
                         atlasResolution,
                         bakedBlendshapes ?? new Dictionary<string, float>(),
                         umaData.markDynamic,
-                        umaData.markNotReadable);
-
-                    ApplyClothIfNeeded(clothCoeffs);
+                        false); // Currently, must always be readable when using MeshAPI
+                    SetupCloth(clothCoeffs);
+                    //ApplyClothIfNeeded(clothCoeffs);
                 }
                 else
 #endif
                 {
                     // Legacy path
-                    if (combinedMeshList.Count == 1)
+                    if (combinedMeshList.Count == 1 && umaData.blendShapeSettings.blendShapes.Count == 0)
                     {
+                        // Do a quick copy if there's only one mesh and no blendshapes to bake
                         var inst = combinedMeshList[0];
                         var tempMesh = SkinnedMeshCombiner.ShallowInstanceMesh(inst.meshData, inst.triangleMask);
                         if (umaData.umaRecipe.BlendshapeSlots.ContainsKey(inst.meshData.SlotName))
@@ -335,6 +361,26 @@ namespace UMA
                             vertexCount = 0
                         };
                         SkinnedMeshCombiner.CombineMeshes(umaMesh, combinedMeshList.ToArray(), umaData.blendShapeSettings, umaData.umaRecipe, currentRendererIndex);
+#if UNITY_EDITOR
+                        if (UMA_INTERNALLOD_BUILD_DIAGNOSTICS)
+                        {
+                            int smc = (umaMesh.submeshes != null) ? umaMesh.submeshes.Length : 0;
+                            //Debug.Log($"[UMA LODBuild] CombinedMesh renderer={currentRendererIndex} submeshes={smc} currentLOD={umaData.currentLODLevel}");
+                            for (int sm = 0; sm < smc; sm++)
+                            {
+                                var smt = umaMesh.submeshes[sm];
+                                if (smt == null)
+                                {
+                                    Debug.Log($"[UMA LODBuild]  combined sm={sm} <null>");
+                                    continue;
+                                }
+                                int totalIdx = 0;
+                                try { totalIdx = smt.GetTriangleCount(); } catch { totalIdx = -1; }
+                                var lr = smt.GetLODRange(Mathf.Max(0, umaData.currentLODLevel));
+                               // Debug.Log($"[UMA LODBuild]  combined sm={sm} totalIdx={totalIdx} lodRange=({lr.offset},{lr.count})");
+                            }
+                        }
+#endif
                         if (updatedAtlas)
                         {
 #if UMA_COMBINER_TIMINGS
@@ -350,7 +396,11 @@ namespace UMA
                     }
                     ApplyClothIfNeeded(null);
                 }
-
+                    if (currentRendererIndex == 0 && renderers[0].sharedMesh != null)
+                    {
+                        // Cache original bounds from first renderer only
+                        umaData.originalMeshBounds = renderers[0].sharedMesh.bounds;
+                    }
                 // Materials assignment
 #if UMA_COMBINER_TIMINGS
                 var swMatzi = System.Diagnostics.Stopwatch.StartNew();
@@ -375,7 +425,7 @@ namespace UMA
             for (int i = 0; i < slots.Length; i++)
             {
                 var sd = slots[i];
-                if (sd != null && !sd.isBlendShapeSource)
+                if (sd != null && !sd.isBlendShapeSource && !sd.isPlaceholderSlot && sd.asset != null)
                     umaData.umaRecipe.AddDNAUpdater(sd.asset.slotDNA);
             }
 #if UMA_COMBINER_TIMINGS
@@ -388,20 +438,99 @@ namespace UMA
             swRendererTotal.Stop();
 #endif
         }
+        private void SetupCloth(ClothSkinningCoefficient[] clothSkinning)
+        {
+            SkinnedMeshRenderer renderer = renderers[currentRendererIndex];
+            if (clothSkinning != null && clothSkinning.Length > 0)
+            {
+                Cloth cloth = renderer.GetComponent<Cloth>();
+                if (cloth != null)
+                {
+                    GameObject.DestroyImmediate(cloth);
+                    cloth = null;
+                }
 
-        private void ApplyClothIfNeeded(ClothSkinningCoefficient[] coeffs)
+                cloth = renderer.gameObject.AddComponent<Cloth>();
+                UMAPhysicsAvatar physicsAvatar = renderer.gameObject.GetComponentInParent<UMAPhysicsAvatar>();
+                if (physicsAvatar != null)
+                {
+                    cloth.sphereColliders = physicsAvatar.SphereColliders.ToArray();
+                    cloth.capsuleColliders = physicsAvatar.CapsuleColliders.ToArray();
+                }
+
+                cloth.coefficients = clothSkinning;
+                clothProperties.ApplyValues(cloth);
+            }
+        }
+
+		// Add this helper inside UMADefaultMeshCombiner (e.g., below RecalculateUV)
+		private void SetSlotUVAreasForRendererFiltered(List<UMAData.GeneratedMaterial> materialsForRenderer) {
+			for(int materialIndex = 0; materialIndex < materialsForRenderer.Count; materialIndex++) {
+				var generatedMaterial = materialsForRenderer[materialIndex];
+				// Only process materials for this renderer
+				if(generatedMaterial.rendererAsset != umaData.GetRendererAsset(currentRendererIndex))
+					continue;
+
+				for(int materialDefinitionIndex = 0; materialDefinitionIndex < generatedMaterial.materialFragments.Count; materialDefinitionIndex++) {
+					var fragment = generatedMaterial.materialFragments[materialDefinitionIndex];
+					if(fragment?.slotData == null || fragment.slotData.asset?.meshData == null)
+						continue;
+
+					var sdTemp = fragment.slotData;
+					var tempAtlasRect = fragment.atlasRegion;
+					int vertexCount = sdTemp.asset.meshData.vertices.Length;
+
+					// Normalize rect by atlas resolution
+					float atlasXMin = tempAtlasRect.xMin / atlasResolution;
+					float atlasXMax = tempAtlasRect.xMax / atlasResolution;
+					float atlasYMin = tempAtlasRect.yMin / atlasResolution;
+					float atlasYMax = tempAtlasRect.yMax / atlasResolution;
+					float atlasXRange = atlasXMax - atlasXMin;
+					float atlasYRange = atlasYMax - atlasYMin;
+
+					// Shared-rect adjustment (matches RecalculateUV conditions)
+					if(fragment.isRectShared && sdTemp.useAtlasOverlay) {
+						OverlayData foundRect = null;
+						for(int i = 0; i < fragment.overlayList.Count; i++) {
+							var szname = fragment.overlayList[i];
+							if(sdTemp.slotName != null && szname.overlayName != null && szname.overlayName.Contains(sdTemp.slotName)) {
+								foundRect = szname;
+								break;
+							}
+						}
+						if(foundRect != null && foundRect.rect != Rect.zero) {
+							var size = foundRect.rect.size * generatedMaterial.resolutionScale;
+							var offsetX = foundRect.rect.x * generatedMaterial.resolutionScale.x;
+							var offsetY = foundRect.rect.y * generatedMaterial.resolutionScale.x;
+
+							atlasXMin += (offsetX / generatedMaterial.cropResolution.x);
+							atlasXRange = size.x / generatedMaterial.cropResolution.x;
+
+							atlasYMin += (offsetY / generatedMaterial.cropResolution.y);
+							atlasYRange = size.y / generatedMaterial.cropResolution.y;
+						}
+					}
+
+					// Set UV area (normalized 0..1)
+					sdTemp.UVArea.Set(atlasXMin, atlasYMin, atlasXRange, atlasYRange);
+				}
+			}
+		}
+
+        private void ApplyClothIfNeeded(ClothSkinningCoefficient[] clothSkinning)
         {
             var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
-            if (cloth != null)
+            if (clothProperties != null)
             {
-                if (clothProperties != null)
-                {
-                    if (cloth == null) cloth = renderers[currentRendererIndex].gameObject.AddComponent<Cloth>();
-                    if (coeffs != null && coeffs.Length > 0)
-                        cloth.coefficients = coeffs;
-                    clothProperties.ApplyValues(cloth);
-                }
-                else
+                if (cloth == null) cloth = renderers[currentRendererIndex].gameObject.AddComponent<Cloth>();
+                if (clothSkinning != null && clothSkinning.Length > 0)
+                    cloth.coefficients = clothSkinning;
+                clothProperties.ApplyValues(cloth);
+
+            }
+            else
+            {
+                if (cloth != null)
                 {
                     UMAUtils.DestroySceneObject(cloth);
                 }
@@ -444,6 +573,9 @@ namespace UMA
                     float atlasYMin = tempAtlasRect.yMin / atlasResolution;
                     float atlasYMax = tempAtlasRect.yMax / atlasResolution;
                     float atlasYRange = atlasYMax - atlasYMin;
+                    SlotData sdTemp = fragment.slotData;
+                    UMAMeshData meshData = sdTemp.asset.meshData;
+
 
                     // code below is for UVs remap based on rel pos in the atlas
                     if (fragment.isRectShared && fragment.slotData.useAtlasOverlay)
@@ -477,8 +609,16 @@ namespace UMA
 
                     while (vertexCount-- > 0)
                     {
+                        try
+                        {
                         umaMesh.uv[idx].x = atlasXMin + atlasXRange * umaMesh.uv[idx].x;
                         umaMesh.uv[idx].y = atlasYMin + atlasYRange * umaMesh.uv[idx].y;
+                            }
+                        catch
+                        {
+                            Debug.LogError("Error adjusting UVs for " + sd.slotName + " atlasRect:" + tempAtlasRect + " atlasRes:" + atlasResolution + " uvArea:" + sd.UVArea + " idx:" + idx + " umaMesh.uv.len:" + umaMesh.uv.Length);
+                            throw;
+                        }
                         idx++;
                     }
                 }
@@ -497,7 +637,9 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
             foreach (var kv in settings.blendShapes)
             {
                 if (kv.Value != null && kv.Value.isBaked)
-                    dict[kv.Key] = 100f; // if value stored elsewhere you can use kv.Value.value; original code used provided value
+                {
+                    dict[kv.Key] = kv.Value.value; // if value stored elsewhere you can use kv.Value.value; original code used provided value
+                }
             }
             return dict;
         }
@@ -542,14 +684,22 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
 
                     combineInstance.meshData = ApplyMeshModifiers(umaData, combineInstance.meshData, slotData);
 
+                    // Apply MeshHide mask if present
                     if (slotData.meshHideMask != null)
                         combineInstance.triangleMask = slotData.meshHideMask;
 
-                    var smCount = combineInstance.meshData.subMeshCount;
-                    if (smCount == 0) continue;
+                 // Do not generate internal-LOD triangle masks for the legacy combiner.
+                    // Legacy `SkinnedMeshCombiner` always copies the base triangle buffer (`GetTriangles()`),
+                    // so a mask sized from `GetTriangles(lod)` will not match and will trigger runtime errors.
+#if UNITY_6000_2_OR_NEWER
+                   // Intentionally left as MeshHide-only. Internal LOD is applied later when the final mesh is set up via LOD ranges.
+#endif
 
-                    combineInstance.targetSubmeshIndices = new int[smCount];
-                    for (int i = 0; i < smCount; i++) combineInstance.targetSubmeshIndices[i] = -1;
+                    var smCount2 = combineInstance.meshData.subMeshCount;
+                    if (smCount2 == 0) continue;
+
+                    combineInstance.targetSubmeshIndices = new int[smCount2];
+                    for (int i = 0; i < smCount2; i++) combineInstance.targetSubmeshIndices[i] = -1;
                     combineInstance.targetSubmeshIndices[slotData.asset.subMeshIndex] = rendererMaterialIndex;
 
                     combinedMeshList.Add(combineInstance);

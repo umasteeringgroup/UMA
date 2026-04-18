@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UMA;
+using UMA.CharacterSystem;
 
 namespace UMA.Dynamics.Examples
 {
@@ -19,6 +21,7 @@ namespace UMA.Dynamics.Examples
 		public AudioClip HeadShot;
 		public AudioClip HadToHurt;
 		public GameObject Blood;
+		public OverlayDataAsset bulletDecal;
 
 
 		// Update is called once per frame
@@ -41,7 +44,7 @@ namespace UMA.Dynamics.Examples
 				AudioSource src = gameObject.GetComponent<AudioSource>();
 				if (src != null)
                 {
-					Debug.Log("Playing Bang");
+					//Debug.Log("Playing Bang");
 					if (Bang != null)
 					{
 						src.PlayOneShot(Bang, 1.0f);
@@ -84,6 +87,43 @@ namespace UMA.Dynamics.Examples
 								else
 								{
 									AnnounceHit(hit);
+								}
+							}
+							// add a decal. 
+							if (bulletDecal != null)
+							{
+								var Avatar = player.gameObject.GetComponent<DynamicCharacterAvatar>();
+								var slotAsset = DecalSlotBuilder.CreateDecalSlot(
+									Avatar,
+								 ray,
+								 0.035f,
+								 0.01f,
+								 0,
+								 bulletDecal.material,  // Using UMAMaterial from overlay
+								 bulletDecal,
+								 new DecalSlotBuilder.DecalBuildOptions
+								 {
+									 useHitNormalForProjection = true,
+									 backOffset = 0.04f, // Slight offset back to ensure we capture edges
+									 facingThreshold = 0.2f,
+									 enableDebug = false
+								 });
+								if (slotAsset != null)
+								{
+									UMAAssetIndexer.Instance.ProcessNewItem(slotAsset, false, false); // Ensure new asset is indexed
+
+									// Wrap into SlotData and add overlay
+									SlotData slotData = new SlotData(slotAsset);
+
+									var overlayInstance = new OverlayData(bulletDecal);
+									DecalSlotBuilder.SetLastDecalOverlay(overlayInstance);
+									slotData.AddOverlay(overlayInstance);
+
+									slotData.expandAlongNormal = 1000; // Slight expansion to avoid z-fighting
+
+									// Add (accumulate) into existing UMA recipe
+									Avatar.umaData.umaRecipe.MergeSlot(slotData, true);
+									Avatar.ForceUpdate(true, true, true);
 								}
 							}
 							player.ragdolled = true;

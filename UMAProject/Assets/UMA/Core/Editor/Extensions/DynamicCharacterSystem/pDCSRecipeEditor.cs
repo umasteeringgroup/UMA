@@ -253,7 +253,7 @@ namespace UMA.Editors
 								}
 								EditorGUI.indentLevel--;
 								EditorGUILayout.Space();
-								EditorGUILayout.LabelField("WardrobeSlots");
+								EditorGUILayout.LabelField("Regions");
 								EditorGUI.indentLevel++;
 							}
 						}

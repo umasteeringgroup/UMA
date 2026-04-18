@@ -50,12 +50,6 @@ namespace UMA.Editors
 				hideToolBar = false;
 				return true;
 			}
-			//fixes dna when the recipes race has updated from UMADnaHumanoid/Tutorial to DynamicDna
-			if (FixDNAConverters())
-			{
-				hideToolBar = false;
-				return true;
-			}
 
 			FieldInfo ActiveWardrobeSetField = TargetType.GetField("activeWardrobeSet", BindingFlags.Public | BindingFlags.Instance);
 			List<WardrobeSettings> activeWardrobeSet = (List<WardrobeSettings>)ActiveWardrobeSetField.GetValue(target);

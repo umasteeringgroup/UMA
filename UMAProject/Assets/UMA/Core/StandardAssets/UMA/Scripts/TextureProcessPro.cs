@@ -76,6 +76,26 @@ namespace UMA
             }
         }
 
+        private static bool TryGetTextureFormat(RenderTextureFormat renderTextureFormat, out TextureFormat textureFormat)
+        {
+            if (TextureFormats.TryGetValue(renderTextureFormat, out textureFormat))
+            {
+                return true;
+            }
+
+            try
+            {
+                GraphicsFormat graphicsFormat = GraphicsFormatUtility.GetGraphicsFormat(renderTextureFormat, false);
+                textureFormat = GraphicsFormatUtility.GetTextureFormat(graphicsFormat);
+                return true;
+            }
+            catch
+            {
+                textureFormat = TextureFormat.ARGB32;
+                return false;
+            }
+        }
+
         public static RenderTexture ResizeRenderTexture(RenderTexture source, int newWidth, int newHeight, FilterMode filter)
         {
             source.filterMode = filter;
@@ -144,13 +164,14 @@ namespace UMA
                         if (!generatedMaterial.materialFragments[i].isRectShared && !generatedMaterial.materialFragments[i].isNoTextures)
                         {
                             moduleCount++;
-                            moduleCount = moduleCount + generatedMaterial.materialFragments[i].overlays.Length;
+                            moduleCount = moduleCount + generatedMaterial.materialFragments[i].AdditionalOverlays.Length;
                         }
                     }
                     textureMerge.EnsureCapacity(moduleCount);
 
                     var slotData = generatedMaterial.materialFragments[0].slotData;
                     var channels = slotData.material.channels;
+                    bool materialUseMipMap = slotData.material.generateMipMaps;
 
                     // Reuse resultingTextures array when possible
                     if (resultingTextures == null || resultingTextures.Length != channels.Length)
@@ -167,16 +188,21 @@ namespace UMA
                             case UMAMaterial.ChannelType.NormalMap:
                             case UMAMaterial.ChannelType.DetailNormalMap:
                                 {
+                                    RenderTextureFormat channelTextureFormat = UMAMaterial.GetCompatibleChannelTextureFormat(channels[textureChannelNumber].textureFormat);
                                     bool CopyRTtoTex = SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || channels[textureChannelNumber].ConvertRenderTexture);
-                                    if (CopyRTtoTex && !TextureFormats.ContainsKey(channels[textureChannelNumber].textureFormat))
+                                    if (CopyRTtoTex)
                                     {
-                                        CopyRTtoTex = false;
+                                        TextureFormat ignoredTextureFormat;
+                                        if (!TryGetTextureFormat(channelTextureFormat, out ignoredTextureFormat))
+                                        {
+                                            CopyRTtoTex = false;
+                                        }
                                     }
 
                                     textureMerge.Reset();
                                     for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
                                     {
-                                        textureMerge.SetupModule(generatedMaterial, i, textureChannelNumber);
+                                        textureMerge.SetupSlotAndOverlayStack(generatedMaterial, i, textureChannelNumber, umaData);
                                     }
 
                                     //last element for this textureType
@@ -203,7 +229,7 @@ namespace UMA
                                     if (CopyRTtoTex)
                                     {
                                         // Temporary RT for drawing; will be released after copy
-                                        destinationTexture = RenderTexture.GetTemporary(ww, hh, 0, channels[textureChannelNumber].textureFormat, RenderTextureReadWrite.Linear);
+                                        destinationTexture = RenderTexture.GetTemporary(ww, hh, 0, channelTextureFormat, RenderTextureReadWrite.Linear);
                                         if (destinationTexture.useMipMap != umaGenerator.convertMipMaps)
                                         {
                                             if (destinationTexture.IsCreated())
@@ -226,16 +252,16 @@ namespace UMA
 
                                         if (prevTex != null &&
                                             prevTex.width == ww && prevTex.height == hh &&
-                                            prevTex.format == channels[textureChannelNumber].textureFormat &&
-                                            prevTex.useMipMap == umaGenerator.convertMipMaps)
+                                            prevTex.format == channelTextureFormat &&
+                                            prevTex.useMipMap == materialUseMipMap)
                                         {
                                             destinationTexture = prevTex;
                                         }
                                         else
                                         {
-                                            destinationTexture = new RenderTexture(ww, hh, 0, channels[textureChannelNumber].textureFormat, RenderTextureReadWrite.Linear)
+                                            destinationTexture = new RenderTexture(ww, hh, 0, channelTextureFormat, RenderTextureReadWrite.Linear)
                                             {
-                                                useMipMap = umaGenerator.convertMipMaps // && !umaGenerator.convertRenderTexture;
+                                                useMipMap = materialUseMipMap // && !umaGenerator.convertRenderTexture;
                                             };
                                         }
                                     }
@@ -267,6 +293,10 @@ namespace UMA
                                     //PostProcess
                                     textureMerge.PostProcess(destinationTexture, channels[textureChannelNumber].channelType);
 
+                                    /*
+
+                                    */
+
                                     if (CopyRTtoTex)
                                     {
                                         #region Convert Render Textures
@@ -284,10 +314,9 @@ namespace UMA
                                             // Reuse existing Texture2D if possible
                                             Texture2D tempTexture = null;
                                             TextureFormat texFmt;
-                                            if (!TextureFormats.TryGetValue(destinationTexture.format, out texFmt))
+                                            if (!TryGetTextureFormat(destinationTexture.format, out texFmt))
                                             {
-                                                GraphicsFormat gf = GraphicsFormatUtility.GetGraphicsFormat(destinationTexture.format, false);
-                                                texFmt = GraphicsFormatUtility.GetTextureFormat(gf);
+                                                texFmt = TextureFormat.ARGB32;
                                             }
 
                                             var prevTex2D = previousResults != null && textureChannelNumber < previousResults.Length
@@ -434,12 +463,12 @@ namespace UMA
 
         public static void SetCompositingProperties(UMAData.GeneratedMaterial generatedMaterial, Material material, UMAData.MaterialFragment fragment)
         {
-            if (fragment == null || fragment.baseOverlay == null || fragment.baseOverlay.textureList == null || fragment.overlays == null)
+            if (fragment == null || fragment.baseOverlay == null || fragment.baseOverlay.textureList == null || fragment.AdditionalOverlays == null)
             {
                 return;
             }
             int numChannels = fragment.baseOverlay.textureList.Length;
-            int numOverlays = 1 + fragment.overlays.Length;
+            int numOverlays = 1 + fragment.AdditionalOverlays.Length;
 
             var overlays = fragment.slotData.GetOverlayList();
 

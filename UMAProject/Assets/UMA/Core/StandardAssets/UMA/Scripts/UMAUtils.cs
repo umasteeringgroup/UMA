@@ -8,9 +8,7 @@ using UnityEngine.Events;
 using UnityEditor.Events;
 #endif
 using System.Linq;
-
-
-
+using System.Buffers;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -46,19 +44,20 @@ namespace UMA
 			return mean + dev * rand_std_normal;
 		}
 
-			public enum PipelineType {
-				Unsupported,
-				BuiltInPipeline,
-				UniversalPipeline,
-				HDPipeline,
-				NotSet
-			}
+		public enum PipelineType
+		{
+			Unsupported,
+			BuiltInPipeline,
+			UniversalPipeline,
+			HDPipeline,
+			NotSet
+		}
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void StaticInitializeOnLoad()
-        {
-            // This method is called after all assemblies are loaded.
-        }
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		public static void StaticInitializeOnLoad()
+		{
+			// This method is called after all assemblies are loaded.
+		}
 
 		/// <summary>
 		/// Returns the type of renderpipeline that is currently running
@@ -77,52 +76,51 @@ namespace UMA
 				else if (srpType.Contains("Universal"))
 				{
 					return PipelineType.UniversalPipeline;
-                }
-                else
-                {
-                    return PipelineType.Unsupported;
-                }
-            }
+				}
+				else
+				{
+					return PipelineType.Unsupported;
+				}
+			}
 			// no SRP
 			return PipelineType.BuiltInPipeline;
 		}
 
-        public static void UDIMAdjustUV(Vector2[] dest, Vector2[] src)
-        {
+		public static void UDIMAdjustUV(Vector2[] dest, Vector2[] src)
+		{
 			if (src == null || dest == null)
 			{
-                return;
-            }
-            if (src.Length == 0)
-            {
-                return;
-            }
+				return;
+			}
+			if (src.Length == 0 || dest.Length == 0)
+			{
+				return;
+			}
 
-            for (int i = 0; i < src.Length; i++)
-            {
-                float x = Mathf.Abs(src[i].x);
-                float y = Mathf.Abs(src[i].y);
+			int len = (src.Length <= dest.Length) ? src.Length : dest.Length;
+			for (int i = 0; i < len; i++)
+			{
+				float x = Mathf.Abs(src[i].x);
+				float y = Mathf.Abs(src[i].y);
 
-                dest[i].x = x - (int)x;
-                dest[i].y = y - (int)y;
-            }
-        }
+				dest[i].x = x - (int)x;
+				dest[i].y = y - (int)y;
+			}
+		}
 
-
-        public static Material GetDefaultDiffuseMaterial()
+		public static Material GetDefaultDiffuseMaterial()
 		{
 			Shader shader = Shader.Find("UMA/Diffuse");
-            if (shader == null)
-            {
+			if (shader == null)
+			{
 #if UNITY_EDITOR
 				Debug.LogWarning("UMA/Diffuse shader not found");
 #endif
 				return null;
-            }
-            Material material = new Material(shader);
-            return material; 
-        }
-
+			}
+			Material material = new Material(shader);
+			return material;
+		}
 
 #if UNITY_EDITOR
 		static public int CreateLayer(string name)
@@ -174,56 +172,76 @@ namespace UMA
 			else
 			{
 				if (Debug.isDebugBuild)
-                {
-                    Debug.LogWarning("Could not load " + searchName);
-                }
-            }
+				{
+					Debug.LogWarning("Could not load " + searchName);
+				}
+			}
 			return null;
 		}
 #endif
 
 		/// <summary>
-		///  Fast way to get the number of bits set to true.
+		/// Fast way to get the number of bits set to true. Uses ArrayPool to avoid allocations.
 		/// </summary>
-		/// <returns>Number of bits set to true.</returns>
-		/// <param name="bitArray">Bit array.</param>
-		//https://stackoverflow.com/questions/5063178/counting-bits-set-in-a-net-bitarray-class
-		public static System.Int32 GetCardinality(BitArray bitArray)
+		public static int GetCardinality(BitArray bitArray)
 		{
-
-			System.Int32[] ints = new System.Int32[(bitArray.Count >> 5) + 1];
-
-			bitArray.CopyTo(ints, 0);
-
-			System.Int32 count = 0;
-
-			// fix for not truncated bits in last integer that may have been set to true with SetAll()
-			ints[ints.Length - 1] &= ~(-1 << (bitArray.Count % 32));
-
-			for (System.Int32 i = 0; i < ints.Length; i++)
+			if (bitArray == null)
 			{
-
-				System.Int32 c = ints[i];
-
-				// magic (http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel)
-				unchecked
-				{
-					c = c - ((c >> 1) & 0x55555555);
-					c = (c & 0x33333333) + ((c >> 2) & 0x33333333);
-					c = ((c + (c >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
-				}
-
-				count += c;
-
+				return 0;
 			}
 
-			return count;
-		}		
-	
+			int bitCount = bitArray.Count;
+			int intsLen = (bitCount + 31) >> 5; // number of 32-bit ints needed
+			if (intsLen == 0)
+			{
+				return 0;
+			}
+
+			int[] ints = ArrayPool<int>.Shared.Rent(intsLen);
+			try
+			{
+				// Copy only what we need; rented array can be larger.
+				bitArray.CopyTo(ints, 0);
+
+				// Mask off unused high bits in the last int if not multiple of 32
+				int remainder = (bitCount & 31);
+				if (remainder != 0)
+				{
+					ints[intsLen - 1] &= ~(-1 << remainder);
+				}
+
+				int count = 0;
+				for (int i = 0; i < intsLen; i++)
+				{
+					int c = ints[i];
+
+					unchecked
+					{
+						c = c - ((c >> 1) & 0x55555555);
+						c = (c & 0x33333333) + ((c >> 2) & 0x33333333);
+						c = ((c + (c >> 4)) & 0x0F0F0F0F) * 0x01010101;
+						c >>= 24;
+					}
+
+					count += c;
+				}
+
+				return count;
+			}
+			finally
+			{
+				ArrayPool<int>.Shared.Return(ints, clearArray: false);
+			}
+		}
+
 		public static string GetAssetFolder(string path)
 		{
+			if (string.IsNullOrEmpty(path))
+			{
+				return "";
+			}
 			int index = path.LastIndexOf('/');
-			if( index > 0 )
+			if (index > 0)
 			{
 				return path.Substring(0, index);
 			}
@@ -233,11 +251,11 @@ namespace UMA
 		public static void DestroyAvatar(Avatar obj)
 		{
 			if (obj == null)
-            {
-                return;
-            }
+			{
+				return;
+			}
 
-            int DestroyInstance = obj.GetInstanceID();
+			int DestroyInstance = obj.GetInstanceID();
 			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
 				return;
@@ -259,20 +277,19 @@ namespace UMA
 #endif
 		}
 
-	public static void DestroySceneObject(UnityEngine.Object obj)
+		public static void DestroySceneObject(UnityEngine.Object obj)
 		{
 #if UNITY_EDITOR
 			if (obj == null)
-            {
-                return;
-            }
-
-            int DestroyInstance = obj.GetInstanceID();
-			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
 			{
-				return;	
+				return;
 			}
 
+			int DestroyInstance = obj.GetInstanceID();
+			if (obj is Avatar && !UMAGeneratorBase.CreatedAvatars.Contains(DestroyInstance))
+			{
+				return;
+			}
 
 			if (Application.isPlaying)
 			{
@@ -350,116 +367,148 @@ namespace UMA
 			// Set the active size of the given List
 			int newSize = size;
 			if (newSize < 0)
-            {
-                newSize = 0;
-            }
+			{
+				newSize = 0;
+			}
 
-            if (newSize > list.Capacity)
-            {
-                newSize = list.Capacity;
-            }
+			if (newSize > list.Capacity)
+			{
+				newSize = list.Capacity;
+			}
 
-            fieldInfo.SetValue(list, newSize);
+			fieldInfo.SetValue(list, newSize);
 		}
-#if UNITY_EDITOR       
+#if UNITY_EDITOR
 		public static void CopyUnityEvents(object sourceObj, string source_UnityEvent, object dest, bool debug = false)
-        {
-            var allBindings = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+		{
+			var allBindings = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
-            FieldInfo unityEvent = sourceObj.GetType().GetField(source_UnityEvent, allBindings);
-            if (unityEvent.FieldType != dest.GetType())
-            {
-                if (debug == true)
-                {
-                    Debug.Log("Source Type: " + unityEvent.FieldType);
-                    Debug.Log("Dest Type: " + dest.GetType());
-                    Debug.Log("CopyUnityEvents - Source & Dest types don't match, exiting.");
-                }
-                return;
-            }
-            else
-            {
-                SerializedObject so = new SerializedObject((Object)sourceObj);
-                SerializedProperty persistentCalls = so.FindProperty(source_UnityEvent).FindPropertyRelative("m_PersistentCalls.m_Calls");
-                for (int i = 0; i < persistentCalls.arraySize; ++i)
-                {
-                    Object target = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Target").objectReferenceValue;
-                    string methodName = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_MethodName").stringValue;
-                    MethodInfo method = null;
-                    try
-                    {
-                        method = target.GetType().GetMethod(methodName, allBindings);
-                    }
-                    catch
-                    {
-                        foreach (MethodInfo info in target.GetType().GetMethods(allBindings).Where(x => x.Name == methodName))
-                        {
-                            ParameterInfo[] _params = info.GetParameters();
-                            if (_params.Length < 2)
-                            {
-                                method = info;
-                            }
-                        }
-                    }
-                    ParameterInfo[] parameters = method.GetParameters();
-                    switch (parameters[0].ParameterType.Name)
-                    {
-                        case nameof(System.Boolean):
-                            bool bool_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_BoolArgument").boolValue;
-                            var bool_execute = System.Delegate.CreateDelegate(typeof(UnityAction<bool>), target, methodName) as UnityAction<bool>;
-                            UnityEventTools.AddBoolPersistentListener(
-                                dest as UnityEventBase,
-                                bool_execute,
-                                bool_value
-                            );
-                            break;
-                        case nameof(System.Int32):
-                            int int_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_IntArgument").intValue;
-                            var int_execute = System.Delegate.CreateDelegate(typeof(UnityAction<int>), target, methodName) as UnityAction<int>;
-                            UnityEventTools.AddIntPersistentListener(
-                                dest as UnityEventBase,
-                                int_execute,
-                                int_value
-                            );
-                            break;
-                        case nameof(System.Single):
-                            float float_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_FloatArgument").floatValue;
-                            var float_execute = System.Delegate.CreateDelegate(typeof(UnityAction<float>), target, methodName) as UnityAction<float>;
-                            UnityEventTools.AddFloatPersistentListener(
-                                dest as UnityEventBase,
-                                float_execute,
-                                float_value
-                            );
-                            break;
-                        case nameof(System.String):
-                            string str_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_StringArgument").stringValue;
-                            var str_execute = System.Delegate.CreateDelegate(typeof(UnityAction<string>), target, methodName) as UnityAction<string>;
-                            UnityEventTools.AddStringPersistentListener(
-                                dest as UnityEventBase,
-                                str_execute,
-                                str_value
-                            );
-                            break;
-                        case nameof(System.Object):
-                            Object obj_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_ObjectArgument").objectReferenceValue;
-                            var obj_execute = System.Delegate.CreateDelegate(typeof(UnityAction<Object>), target, methodName) as UnityAction<Object>;
-                            UnityEventTools.AddObjectPersistentListener(
-                                dest as UnityEventBase,
-                                obj_execute,
-                                obj_value
-                            );
-                            break;
-                        default:
-                            var void_execute = System.Delegate.CreateDelegate(typeof(UnityAction), target, methodName) as UnityAction;
-                            UnityEventTools.AddPersistentListener(
-                                dest as UnityEvent,
-                                void_execute
-                            );
-                            break;
-                    }
-                }
-            }
-        }
+			FieldInfo unityEvent = sourceObj.GetType().GetField(source_UnityEvent, allBindings);
+			if (unityEvent == null)
+			{
+				if (debug) Debug.LogWarning($"Field '{source_UnityEvent}' not found on {sourceObj.GetType().Name}");
+				return;
+			}
+			if (unityEvent.FieldType != dest.GetType())
+			{
+				if (debug)
+				{
+					Debug.Log("Source Type: " + unityEvent.FieldType);
+					Debug.Log("Dest Type: " + dest.GetType());
+					Debug.Log("CopyUnityEvents - Source & Dest types don't match, exiting.");
+				}
+				return;
+			}
+
+			SerializedObject so = new SerializedObject((Object)sourceObj);
+			SerializedProperty persistentCalls = so.FindProperty(source_UnityEvent).FindPropertyRelative("m_PersistentCalls.m_Calls");
+			for (int i = 0; i < persistentCalls.arraySize; ++i)
+			{
+				Object target = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Target").objectReferenceValue;
+				string methodName = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_MethodName").stringValue;
+				MethodInfo method = null;
+				try
+				{
+					method = target.GetType().GetMethod(methodName, allBindings);
+				}
+				catch
+				{
+					foreach (MethodInfo info in target.GetType().GetMethods(allBindings).Where(x => x.Name == methodName))
+					{
+						ParameterInfo[] _params = info.GetParameters();
+						if (_params.Length < 2)
+						{
+							method = info;
+							break;
+						}
+					}
+				}
+
+				if (method == null)
+				{
+					if (debug) Debug.LogWarning($"Method '{methodName}' not found on '{target?.GetType().Name}'. Skipping.");
+					continue;
+				}
+
+				ParameterInfo[] parameters = method.GetParameters();
+				// zero-parameter event
+				if (parameters.Length == 0)
+				{
+					var voidExecute = System.Delegate.CreateDelegate(typeof(UnityAction), target, methodName) as UnityAction;
+					if (voidExecute != null && dest is UnityEvent evt)
+					{
+						UnityEventTools.AddPersistentListener(evt, voidExecute);
+					}
+					else if (debug)
+					{
+						Debug.LogWarning($"Destination event type is not UnityEvent for zero-parameter method '{methodName}'.");
+					}
+					continue;
+				}
+
+				switch (parameters[0].ParameterType.Name)
+				{
+					case nameof(System.Boolean):
+						bool bool_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_BoolArgument").boolValue;
+						var bool_execute = System.Delegate.CreateDelegate(typeof(UnityAction<bool>), target, methodName) as UnityAction<bool>;
+						UnityEventTools.AddBoolPersistentListener(
+							dest as UnityEventBase,
+							bool_execute,
+							bool_value
+						);
+						break;
+					case nameof(System.Int32):
+						int int_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_IntArgument").intValue;
+						var int_execute = System.Delegate.CreateDelegate(typeof(UnityAction<int>), target, methodName) as UnityAction<int>;
+						UnityEventTools.AddIntPersistentListener(
+							dest as UnityEventBase,
+							int_execute,
+							int_value
+						);
+						break;
+					case nameof(System.Single):
+						float float_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_FloatArgument").floatValue;
+						var float_execute = System.Delegate.CreateDelegate(typeof(UnityAction<float>), target, methodName) as UnityAction<float>;
+						UnityEventTools.AddFloatPersistentListener(
+							dest as UnityEventBase,
+							float_execute,
+							float_value
+						);
+						break;
+					case nameof(System.String):
+						string str_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_StringArgument").stringValue;
+						var str_execute = System.Delegate.CreateDelegate(typeof(UnityAction<string>), target, methodName) as UnityAction<string>;
+						UnityEventTools.AddStringPersistentListener(
+							dest as UnityEventBase,
+							str_execute,
+							str_value
+						);
+						break;
+					case nameof(System.Object):
+						Object obj_value = persistentCalls.GetArrayElementAtIndex(i).FindPropertyRelative("m_Arguments.m_ObjectArgument").objectReferenceValue;
+						var obj_execute = System.Delegate.CreateDelegate(typeof(UnityAction<Object>), target, methodName) as UnityAction<Object>;
+						UnityEventTools.AddObjectPersistentListener(
+							dest as UnityEventBase,
+							obj_execute,
+							obj_value
+						);
+						break;
+					default:
+						{
+							var void_execute = System.Delegate.CreateDelegate(typeof(UnityAction), target, methodName) as UnityAction;
+							if (void_execute != null && dest is UnityEvent evt2)
+							{
+								UnityEventTools.AddPersistentListener(evt2, void_execute);
+							}
+							else if (debug)
+							{
+								Debug.LogWarning($"Unable to bind method '{methodName}' with signature '{parameters[0].ParameterType.Name}'.");
+							}
+						}
+						break;
+				}
+			}
+		}
 #endif
 	}
 }

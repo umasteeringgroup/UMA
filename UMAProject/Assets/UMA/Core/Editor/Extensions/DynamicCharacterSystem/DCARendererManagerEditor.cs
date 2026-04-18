@@ -64,7 +64,7 @@ namespace UMA.Editors
             for(int i = RendererElements.arraySize - 1; i >= 0; i--)
             {
                 EditorGUILayout.BeginVertical("HelpBox");
-                SerializedProperty wardrobeSlots = RendererElements.GetArrayElementAtIndex(i).FindPropertyRelative("wardrobeSlots");
+                SerializedProperty wardrobeSlots = RendererElements.GetArrayElementAtIndex(i).FindPropertyRelative("Regions");
                 SerializedProperty slotAssets = RendererElements.GetArrayElementAtIndex(i).FindPropertyRelative("slotAssets");
 
                 EditorGUILayout.BeginHorizontal();
@@ -166,7 +166,7 @@ namespace UMA.Editors
         {
             element.FindPropertyRelative("rendererAssets").ClearArray();
             element.FindPropertyRelative("slotAssets").ClearArray();
-            element.FindPropertyRelative("wardrobeSlots").ClearArray();
+            element.FindPropertyRelative("Regions").ClearArray();
         }
 
         private void UpdateOptions()

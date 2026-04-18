@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -91,10 +92,16 @@ namespace UMA
 
                     tex.name = uws.umaScenes[i].shortName + ".png";
                     byte[] bytes = tex.EncodeToPNG();
-                    string path = "Assets/UMA/InternalDataStore/InEditor/" + tex.name;
-                    System.IO.File.WriteAllBytes(path, bytes);
-                    AssetDatabase.ImportAsset(path);
-                    uws.umaScenes[i].sceneTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                    string assetPath = "Assets/UMA/InternalDataStore/Editor/" + tex.name;
+                    string fullPath = Path.Combine(Application.dataPath, assetPath.Substring("Assets/".Length));
+                    string directoryPath = Path.GetDirectoryName(fullPath);
+                    if (!string.IsNullOrEmpty(directoryPath))
+                    {
+                        Directory.CreateDirectory(directoryPath);
+                    }
+                    File.WriteAllBytes(fullPath, bytes);
+                    AssetDatabase.ImportAsset(assetPath);
+                    uws.umaScenes[i].sceneTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
 
                 }
                 uws.umaScenes[i].shortName = EditorGUILayout.TextField(uws.umaScenes[i].shortName, GUILayout.Width(120));                

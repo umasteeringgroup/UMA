@@ -6,61 +6,1627 @@ using System.IO;
 using UMA.Examples;
 using UMA.PoseTools;
 using static UMA.UMAData;
+using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
+using UMA.Dynamics;
 
 namespace UMA.Editors
 {
-    public class UMAAvatarLoadSaveMenuItems : Editor
+    public partial class UMAAvatarLoadSaveMenuItems : Editor
 	{
-		[UnityEditor.MenuItem("GameObject/UMA/Save Mecanim Avatar to Asset (runtime only)")]
-		[MenuItem("UMA/Runtime/Save Selected Avatars Mecanim Avatar to Asset", priority = 1)]
-		public static void SaveMecanimAvatar()
+		private class CreateOverlaysForTexturesWindow : EditorWindow
 		{
-			if (!Application.isPlaying)
-			{
-				EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
-				return;
-			}
-			if (Selection.gameObjects.Length != 1)
-			{
-				EditorUtility.DisplayDialog("Notice", "Only one Avatar can be selected.", "OK");
-				return;
-			}
+			private List<Texture2D> selectedTextures;
+			private UMAMaterial selectedMaterial;
+			private RaceData selectedRace;
+			private int selectedBaseSlotIndex;
+			private string[] baseSlotOptions = new string[0];
+			private SlotData[] baseSlots = new SlotData[0];
+			private string sharedColorName = "Color";
 
-			var selectedTransform = Selection.gameObjects[0].transform;
-			var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
-
-			if (avatar == null)
+			public static void Open(List<Texture2D> textures)
 			{
-				EditorUtility.DisplayDialog("Notice", "An Avatar must be selected to use this function", "OK");
-				return;
-			}
+				if (textures == null || textures.Count == 0)
+				{
+					EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select one or more Texture2D assets in the Project window.", "OK");
+					return;
+				}
 
-			if (avatar.umaData == null)
-			{
-				EditorUtility.DisplayDialog("Notice", "The Avatar must be constructed before using this function", "OK");
-				return;
+				CreateOverlaysForTexturesWindow window = CreateInstance<CreateOverlaysForTexturesWindow>();
+				window.titleContent = new GUIContent("Create Overlay and Recipe");
+				window.selectedTextures = new List<Texture2D>(textures);
+				window.minSize = new Vector2(560f, 240f);
+				window.ShowUtility();
 			}
 
-			if (avatar.umaData.animator == null)
+			private void OnGUI()
 			{
-				EditorUtility.DisplayDialog("Notice", "Animator has not been assigned!", "OK");
-				return;
+				EditorGUILayout.LabelField("Create overlay and recipe for base alternates", EditorStyles.boldLabel);
+				EditorGUILayout.HelpBox("This will create an overlay with a single channel for each texture. Select the UMAMaterial to use for these Overlays.", MessageType.Info);
+				EditorGUILayout.LabelField("Selected Textures", selectedTextures != null ? selectedTextures.Count.ToString() : "0");
+				selectedMaterial = (UMAMaterial)EditorGUILayout.ObjectField("UMAMaterial", selectedMaterial, typeof(UMAMaterial), false);
+				EditorGUI.BeginChangeCheck();
+				selectedRace = (RaceData)EditorGUILayout.ObjectField("Race", selectedRace, typeof(RaceData), false);
+				if (EditorGUI.EndChangeCheck())
+				{
+					RefreshBaseSlots();
+				}
+
+				using (new EditorGUI.DisabledScope(baseSlotOptions.Length == 0))
+				{
+					selectedBaseSlotIndex = EditorGUILayout.Popup("Base Slot", selectedBaseSlotIndex, baseSlotOptions);
+				}
+				sharedColorName = EditorGUILayout.TextField("Shared Color", sharedColorName);
+
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.BeginHorizontal();
+				using (new EditorGUI.DisabledScope(selectedMaterial == null || selectedRace == null || baseSlotOptions.Length == 0 || string.IsNullOrWhiteSpace(sharedColorName)))
+				{
+					if (GUILayout.Button("Create"))
+					{
+						CreateAssets();
+					}
+				}
+				if (GUILayout.Button("Cancel"))
+				{
+					Close();
+				}
+				EditorGUILayout.EndHorizontal();
 			}
-			if (avatar.umaData.animator.avatar == null)
+
+			private void CreateAssets()
 			{
-				EditorUtility.DisplayDialog("Notice", "Mecanim avatar is null!", "OK");
-				return;
+				if (selectedTextures == null || selectedTextures.Count == 0)
+				{
+					Close();
+					return;
+				}
+
+				int createdOverlays = 0;
+				int createdWardrobeRecipes = 0;
+				int skipped = 0;
+				List<string> skippedItems = new List<string>();
+
+				try
+				{
+					SlotData selectedBaseSlot = GetSelectedBaseSlot();
+					if (selectedBaseSlot == null || selectedBaseSlot.asset == null)
+					{
+						EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select a race and a valid base slot.", "OK");
+						return;
+					}
+
+					for (int i = 0; i < selectedTextures.Count; i++)
+					{
+						Texture2D texture = selectedTextures[i];
+						if (texture == null)
+						{
+							continue;
+						}
+
+						string texturePath = AssetDatabase.GetAssetPath(texture);
+						if (string.IsNullOrEmpty(texturePath))
+						{
+							skipped++;
+							skippedItems.Add(texture.name + " (no asset path)");
+							continue;
+						}
+
+						string folder = Path.GetDirectoryName(texturePath);
+						string baseName = Path.GetFileNameWithoutExtension(texturePath);
+						string overlayPath = Path.Combine(folder, baseName + "_Overlay.asset").Replace('\\', '/');
+						string wardrobePath = Path.Combine(folder, baseName + "_Wardrobe.asset").Replace('\\', '/');
+
+						if (AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(overlayPath) != null)
+						{
+							skipped++;
+							skippedItems.Add(baseName + " (overlay already exists)");
+							continue;
+						}
+
+						if (AssetDatabase.LoadAssetAtPath<UMAWardrobeRecipe>(wardrobePath) != null)
+						{
+							skipped++;
+							skippedItems.Add(baseName + " (wardrobe recipe already exists)");
+							continue;
+						}
+
+						OverlayDataAsset overlayAsset = CustomAssetUtility.CreateAsset<OverlayDataAsset>(overlayPath, false, baseName + "_Overlay", false);
+						if (overlayAsset == null)
+						{
+							skipped++;
+							skippedItems.Add(baseName + " (overlay asset creation failed)");
+							continue;
+						}
+
+						InitializeOverlayAsset(overlayAsset, texture, selectedMaterial, baseName);
+						EditorUtility.SetDirty(overlayAsset);
+						createdOverlays++;
+
+						UMAWardrobeRecipe wardrobeRecipe = CustomAssetUtility.CreateAsset<UMAWardrobeRecipe>(wardrobePath, false, baseName + "_Wardrobe", false);
+						if (wardrobeRecipe == null)
+						{
+							skipped++;
+							skippedItems.Add(baseName + " (wardrobe asset creation failed)");
+							continue;
+						}
+
+						InitializeWardrobeRecipe(wardrobeRecipe, overlayAsset, selectedMaterial, selectedRace, selectedBaseSlot, sharedColorName, baseName);
+						EditorUtility.SetDirty(wardrobeRecipe);
+						createdWardrobeRecipes++;
+					}
+				}
+				finally
+				{
+					AssetDatabase.SaveAssets();
+					AssetDatabase.Refresh();
+				}
+
+				string message = "Created overlays: " + createdOverlays
+					+ "\nCreated wardrobe recipes: " + createdWardrobeRecipes
+					+ "\nSkipped: " + skipped;
+
+				if (skippedItems.Count > 0)
+				{
+					message += "\n\nSkipped items:";
+					for (int i = 0; i < skippedItems.Count; i++)
+					{
+						message += "\n- " + skippedItems[i];
+					}
+				}
+
+				EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", message, "OK");
+				Close();
 			}
 
-			string path = EditorUtility.SaveFilePanelInProject("Save avatar", "CreatedAvatar.asset", "asset", "Save the avatar");
+			private void RefreshBaseSlots()
+			{
+				selectedBaseSlotIndex = 0;
+				baseSlotOptions = new string[0];
+				baseSlots = new SlotData[0];
 
-			AssetDatabase.CreateAsset(avatar.umaData.animator.avatar, path);
-			AssetDatabase.SaveAssets();
+				if (selectedRace == null || selectedRace.baseRaceRecipe == null)
+				{
+					return;
+				}
 
-			EditorUtility.DisplayDialog("Saved", "Avatar save to assets as CreatedAvatar", "OK");
+				UMAData.UMARecipe baseRecipe = selectedRace.baseRaceRecipe.GetCachedRecipe(true);
+				if (baseRecipe == null || baseRecipe.slotDataList == null || baseRecipe.slotDataList.Length == 0)
+				{
+					return;
+				}
+
+				List<SlotData> slots = new List<SlotData>();
+				List<string> slotNames = new List<string>();
+				for (int i = 0; i < baseRecipe.slotDataList.Length; i++)
+				{
+					SlotData slot = baseRecipe.slotDataList[i];
+					if (slot == null || slot.asset == null)
+					{
+						continue;
+					}
+
+					slots.Add(slot);
+					slotNames.Add(slot.slotName);
+				}
+
+				baseSlots = slots.ToArray();
+				baseSlotOptions = slotNames.ToArray();
+			}
+
+			private SlotData GetSelectedBaseSlot()
+			{
+				if (baseSlots == null || baseSlots.Length == 0)
+				{
+					return null;
+				}
+
+				if (selectedBaseSlotIndex < 0 || selectedBaseSlotIndex >= baseSlots.Length)
+				{
+					selectedBaseSlotIndex = 0;
+				}
+
+				return baseSlots[selectedBaseSlotIndex];
+			}
+
+			private void InitializeOverlayAsset(OverlayDataAsset overlayAsset, Texture2D texture, UMAMaterial material, string baseName)
+			{
+				int channelCount = material != null && material.channels != null && material.channels.Length > 0 ? material.channels.Length : 1;
+				overlayAsset.name = baseName + "_Overlay";
+				overlayAsset.textureList = new Texture[channelCount];
+				overlayAsset.textureNames = new string[channelCount];
+				overlayAsset.overlayBlend = new OverlayDataAsset.OverlayBlend[channelCount];
+				overlayAsset.textureList[0] = texture;
+				overlayAsset.textureNames[0] = texture.name;
+				for (int i = 0; i < channelCount; i++)
+				{
+					overlayAsset.overlayBlend[i] = OverlayDataAsset.OverlayBlend.Normal;
+				}
+				overlayAsset.material = material;
+				overlayAsset.materialName = material != null ? material.name : string.Empty;
+				overlayAsset.ValidateBlendList();
+			}
+
+			private void InitializeWardrobeRecipe(UMAWardrobeRecipe wardrobeRecipe, OverlayDataAsset overlayAsset, UMAMaterial material, RaceData race, SlotData baseSlot, string colorName, string baseName)
+			{
+				wardrobeRecipe.name = baseName + "_Wardrobe";
+				wardrobeRecipe.DisplayValue = baseName;
+				wardrobeRecipe.wardrobeSlot = baseSlot != null ? baseSlot.slotName : "None";
+				wardrobeRecipe.compatibleRaces = new List<string>();
+				if (race != null && !string.IsNullOrEmpty(race.raceName))
+				{
+					wardrobeRecipe.compatibleRaces.Add(race.raceName);
+				}
+
+				UMAData.UMARecipe recipe = new UMAData.UMARecipe();
+				recipe.raceData = race;
+				recipe.sharedColors = new OverlayColorData[1];
+				int channelCount = material != null && material.channels != null && material.channels.Length > 0 ? material.channels.Length : 1;
+				OverlayColorData colorData = new OverlayColorData(channelCount);
+				colorData.name = colorName;
+				recipe.sharedColors[0] = colorData;
+
+				SlotData slot = new SlotData(baseSlot.asset);
+				slot.overlayScale = baseSlot.overlayScale;
+				slot.tags = baseSlot.tags != null ? (string[])baseSlot.tags.Clone() : new string[0];
+				slot.Races = baseSlot.Races != null ? (string[])baseSlot.Races.Clone() : null;
+				slot.blendShapeTargetSlot = baseSlot.blendShapeTargetSlot;
+				slot.UVSet = baseSlot.UVSet;
+				OverlayData overlayData = new OverlayData(overlayAsset);
+				overlayData.colorData = new OverlayColorData(channelCount);
+				overlayData.colorData.name = colorName;
+				slot.SetOverlay(0, overlayData);
+				recipe.slotDataList = new SlotData[] { slot };
+
+				wardrobeRecipe.Save(recipe);
+			}
 		}
 
-		public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting)
+     private class UpdatePhysicsElementsWindow : EditorWindow
+		{
+			private enum AxisSource
+			{
+				X = 0,
+				Y = 1,
+				Z = 2
+			}
+
+			private struct AxisRemapSetting
+			{
+				public AxisSource Source;
+				public bool Invert;
+			}
+
+			private List<UMAPhysicsElement> selectedElements;
+			private string filePrepend = "U3";
+			private ColliderDefinition.Direction capsuleAlignment = ColliderDefinition.Direction.Z;
+			private AxisRemapSetting xRemap = new AxisRemapSetting { Source = AxisSource.Y, Invert = false };
+			private AxisRemapSetting yRemap = new AxisRemapSetting { Source = AxisSource.X, Invert = true };
+			private AxisRemapSetting zRemap = new AxisRemapSetting { Source = AxisSource.Z, Invert = false };
+			private bool rotateJointAxis = true;
+			private bool rotateJointSwingAxis = true;
+			private bool rotateBoxDimensions = true;
+
+			public static void Open(List<UMAPhysicsElement> elements)
+			{
+				if (elements == null || elements.Count == 0)
+				{
+					EditorUtility.DisplayDialog("Update Physics Elements", "Select one or more UMAPhysicsElement assets in the Project window.", "OK");
+					return;
+				}
+
+				UpdatePhysicsElementsWindow window = CreateInstance<UpdatePhysicsElementsWindow>();
+				window.titleContent = new GUIContent("Update Physics Elements");
+				window.selectedElements = new List<UMAPhysicsElement>(elements);
+				window.minSize = new Vector2(460f, 320f);
+				window.ShowUtility();
+			}
+
+			private void OnGUI()
+			{
+				EditorGUILayout.LabelField("Update Selected Physics Elements", EditorStyles.boldLabel);
+				EditorGUILayout.HelpBox("This updates all selected UMAPhysicsElement assets. Collider centres are remapped using the destination axis settings below. Box dimensions and joint axes can also be remapped.", MessageType.Info);
+				EditorGUILayout.LabelField("Selected Assets", selectedElements != null ? selectedElements.Count.ToString() : "0");
+				filePrepend = EditorGUILayout.TextField("File Prepend", filePrepend);
+				capsuleAlignment = (ColliderDefinition.Direction)EditorGUILayout.EnumPopup("Capsule Alignment", capsuleAlignment);
+				rotateBoxDimensions = EditorGUILayout.Toggle("Rotate Box Dimensions", rotateBoxDimensions);
+				rotateJointAxis = EditorGUILayout.Toggle("Rotate Joint Axis", rotateJointAxis);
+				rotateJointSwingAxis = EditorGUILayout.Toggle("Rotate Swing Axis", rotateJointSwingAxis);
+
+				EditorGUILayout.Space();
+				EditorGUILayout.LabelField("Collider Centre Axis Mapping", EditorStyles.boldLabel);
+				DrawAxisRemapRow("Destination X", ref xRemap);
+				DrawAxisRemapRow("Destination Y", ref yRemap);
+				DrawAxisRemapRow("Destination Z", ref zRemap);
+
+				GUILayout.FlexibleSpace();
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("Update"))
+				{
+					ExecuteUpdate();
+				}
+				if (GUILayout.Button("Cancel"))
+				{
+					Close();
+				}
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void DrawAxisRemapRow(string label, ref AxisRemapSetting setting)
+			{
+				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.PrefixLabel(label);
+				setting.Source = (AxisSource)EditorGUILayout.EnumPopup(setting.Source);
+				setting.Invert = EditorGUILayout.ToggleLeft("Invert", setting.Invert, GUILayout.Width(70));
+				EditorGUILayout.EndHorizontal();
+			}
+
+			private void ExecuteUpdate()
+			{
+				if (selectedElements == null || selectedElements.Count == 0)
+				{
+					EditorUtility.DisplayDialog("Update Physics Elements", "No UMAPhysicsElement assets were selected.", "OK");
+					Close();
+					return;
+				}
+
+				int processedCount = 0;
+				int renamedCount = 0;
+				int skippedRenameCount = 0;
+				int colliderCount = 0;
+				int renamedCollisionCount = 0;
+				List<string> skippedRenameAssets = new List<string>();
+
+				try
+				{
+					for (int i = 0; i < selectedElements.Count; i++)
+					{
+						UMAPhysicsElement element = selectedElements[i];
+						if (element == null)
+						{
+							continue;
+						}
+
+						Undo.RecordObject(element, "Update UMAPhysicsElement");
+						processedCount++;
+
+						TryRenameElement(element, ref renamedCount, ref skippedRenameCount, ref renamedCollisionCount, skippedRenameAssets);
+
+						if (element.colliders != null)
+						{
+							for (int c = 0; c < element.colliders.Length; c++)
+							{
+								ColliderDefinition collider = element.colliders[c];
+								if (collider == null)
+								{
+									continue;
+								}
+
+								collider.colliderCentre = RemapVector3(collider.colliderCentre);
+								collider.capsuleAlignment = capsuleAlignment;
+								if (rotateBoxDimensions)
+								{
+									collider.boxDimensions = RemapVector3(collider.boxDimensions);
+								}
+								colliderCount++;
+							}
+						}
+
+						if (rotateJointAxis)
+						{
+							element.axis = RemapVector3(element.axis);
+						}
+
+						if (rotateJointSwingAxis)
+						{
+							element.swingAxis = RemapVector3(element.swingAxis);
+						}
+
+						EditorUtility.SetDirty(element);
+					}
+				}
+				finally
+				{
+					AssetDatabase.SaveAssets();
+					AssetDatabase.Refresh();
+				}
+
+				string message = "Processed assets: " + processedCount
+					+ "\nRenamed assets: " + renamedCount
+					+ "\nSkipped renames: " + skippedRenameCount
+					+ "\nUpdated colliders: " + colliderCount;
+
+				if (renamedCollisionCount > 0 && skippedRenameAssets.Count > 0)
+				{
+					message += "\n\nRename collisions:";
+					for (int i = 0; i < skippedRenameAssets.Count; i++)
+					{
+						message += "\n- " + skippedRenameAssets[i];
+					}
+				}
+
+				EditorUtility.DisplayDialog("Update Physics Elements", message, "OK");
+				Close();
+			}
+
+			private void TryRenameElement(UMAPhysicsElement element, ref int renamedCount, ref int skippedRenameCount, ref int renamedCollisionCount, List<string> skippedRenameAssets)
+			{
+				if (element == null || string.IsNullOrEmpty(filePrepend))
+				{
+					return;
+				}
+
+				string currentPath = AssetDatabase.GetAssetPath(element);
+				if (string.IsNullOrEmpty(currentPath))
+				{
+					return;
+				}
+
+				string currentName = Path.GetFileNameWithoutExtension(currentPath);
+				if (string.IsNullOrEmpty(currentName) || currentName.StartsWith(filePrepend, System.StringComparison.Ordinal))
+				{
+					return;
+				}
+
+				string targetName = filePrepend + currentName;
+				string folder = Path.GetDirectoryName(currentPath);
+				string extension = Path.GetExtension(currentPath);
+				string targetPath = Path.Combine(folder, targetName + extension).Replace('\\', '/');
+
+				if (AssetDatabase.LoadAssetAtPath<UMAPhysicsElement>(targetPath) != null)
+				{
+					skippedRenameCount++;
+					renamedCollisionCount++;
+					skippedRenameAssets.Add(currentName + " -> " + targetName);
+					return;
+				}
+
+				string error = AssetDatabase.RenameAsset(currentPath, targetName);
+				if (string.IsNullOrEmpty(error))
+				{
+					renamedCount++;
+				}
+				else
+				{
+					skippedRenameCount++;
+					skippedRenameAssets.Add(currentName + " -> " + targetName + " (" + error + ")");
+				}
+			}
+
+			private Vector3 RemapVector3(Vector3 value)
+			{
+				Vector3 source = value;
+				Vector3 result = Vector3.zero;
+				result.x = GetAxisValue(source, xRemap.Source, xRemap.Invert);
+				result.y = GetAxisValue(source, yRemap.Source, yRemap.Invert);
+				result.z = GetAxisValue(source, zRemap.Source, zRemap.Invert);
+				return result;
+			}
+
+			private float GetAxisValue(Vector3 source, AxisSource axis, bool invert)
+			{
+				float value = 0f;
+				if (axis == AxisSource.X)
+				{
+					value = source.x;
+				}
+				else if (axis == AxisSource.Y)
+				{
+					value = source.y;
+				}
+				else
+				{
+					value = source.z;
+				}
+
+				if (invert)
+				{
+					value = -value;
+				}
+
+				return value;
+			}
+		}
+
+		[MenuItem("Assets/UMA/Examine Wearables", false, 2001)]
+		private static void AssignLocationsToWearablesMenu()
+		{
+			var selectedRecipes = GetSelectedWardrobeRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Assign Locations", "Select one or more UMAWardrobeRecipe assets in the Project window.", "OK");
+				return;
+			}
+
+			ExamineWearables.Open(selectedRecipes);
+		}
+
+        [MenuItem("Assets/UMA/Examine Wearables", true)]
+		private static bool AssignLocationsToWearablesMenu_Validate()
+		{
+			return GetSelectedWardrobeRecipes().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Consolidate Textures", false, 2002)]
+		private static void ConsolidateTexturesMenu()
+		{
+			var selectedRecipes = GetSelectedWardrobeRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Consolidate Textures", "Select one or more UMAWardrobeRecipe assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaConsolidateTexturesWindow.Open(selectedRecipes);
+		}
+
+		[MenuItem("Assets/UMA/Consolidate Textures", true)]
+		private static bool ConsolidateTexturesMenu_Validate()
+		{
+			return GetSelectedWardrobeRecipes().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Consolidate texture for recipe", false, 2002)]
+		private static void ConsolidateTexturesForTextRecipeMenu()
+		{
+			var selectedRecipes = GetSelectedTextRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Consolidate texture for recipe", "Select one or more UMATextRecipe assets in the Project window.", "OK");
+				return;
+			}
+
+			string defaultFolder = "Assets";
+			string pickedFolder = EditorUtility.OpenFolderPanel("Select destination folder", Application.dataPath, string.Empty);
+			if (string.IsNullOrEmpty(pickedFolder))
+			{
+				return;
+			}
+
+			string destFolderPath = GetAssetFolderPathFromAbsolutePath(pickedFolder);
+			if (string.IsNullOrEmpty(destFolderPath) || !AssetDatabase.IsValidFolder(destFolderPath))
+			{
+				EditorUtility.DisplayDialog("Consolidate texture for recipe", "Select a folder under the project's Assets folder.", "OK");
+				return;
+			}
+
+			CopyOverlayTexturesForRecipes(selectedRecipes, destFolderPath, "Consolidate texture for recipe");
+		}
+
+		[MenuItem("Assets/UMA/Consolidate texture for recipe", true)]
+		private static bool ConsolidateTexturesForTextRecipeMenu_Validate()
+		{
+			return GetSelectedTextRecipes().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Repair Text Recipe", false, 2003)]
+		private static void RepairTextRecipeMenu()
+		{
+			var selectedRecipes = GetSelectedTextRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Repair Text Recipe", "Select one or more UMATextRecipe assets in the Project window.", "OK");
+				return;
+			}
+
+			ExamineWearables.WearablePackedSlotRepairWindow.Open(selectedRecipes[0]);
+		}
+
+		[MenuItem("Assets/UMA/Repair Text Recipe", true)]
+		private static bool RepairTextRecipeMenu_Validate()
+		{
+			return GetSelectedTextRecipes().Count > 0;
+		}
+
+		[MenuItem("UMA/Consolidate Current Scene Assets", false, 2300)]
+		private static void ConsolidateCurrentSceneAssetsMenu()
+		{
+			UmaConsolidateCurrentSceneAssetsWindow.Open();
+		}
+
+		[MenuItem("Assets/UMA/Examine Overlays", false, 2003)]
+		private static void ExamineOverlaysMenu()
+		{
+			var overlays = GetSelectedOverlays();
+			if (overlays.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Examine Overlays", "Select one or more OverlayDataAsset assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaExamineOverlaysWindow.Open(overlays);
+		}
+
+		[MenuItem("Assets/UMA/Examine Overlays", true)]
+		private static bool ExamineOverlaysMenu_Validate()
+		{
+			return GetSelectedOverlays().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Examine Slots", false, 2005)]
+		private static void ExamineSlotsMenu()
+		{
+			var slots = GetSelectedSlots();
+			if (slots.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Examine Slots", "Select one or more SlotDataAsset assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaExamineSlotsWindow.Open(slots);
+		}
+
+		[MenuItem("Assets/UMA/Examine Slots", true)]
+		private static bool ExamineSlotsMenu_Validate()
+		{
+			return GetSelectedSlots().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Extract T-Pose", false, 1999)]
+		private static void ExtractTPoseMenu()
+		{
+			if (!TPoseExtracter.TryExtractSelectedTPose())
+			{
+				EditorUtility.DisplayDialog("Extract T-Pose", "Select one or more model assets in the Project window.", "OK");
+			}
+		}
+
+		[MenuItem("Assets/UMA/Extract T-Pose", true)]
+		private static bool ExtractTPoseMenu_Validate()
+		{
+			return Selection.objects != null && Selection.objects.Length > 0;
+		}
+
+		[MenuItem("Assets/UMA/Convert selected textures to PNG", false, 2004)]
+		private static void ConvertSelectedTexturesToPngMenu()
+		{
+			var textures = GetSelectedTextures();
+			if (textures.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Convert textures", "Select one or more Texture2D assets in the Project window.", "OK");
+				return;
+			}
+
+			UmaConvertTexturesToPngWindow.Open(textures);
+		}
+
+		[MenuItem("Assets/UMA/Convert selected textures to PNG", true)]
+		private static bool ConvertSelectedTexturesToPngMenu_Validate()
+		{
+			return GetSelectedTextures().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Create overlay and recipe for base alternates", false, 2005)]
+		private static void CreateOverlaysForSelectedItemsMenu()
+		{
+			var textures = GetSelectedTextures();
+			if (textures.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select one or more Texture2D assets in the Project window.", "OK");
+				return;
+			}
+
+			CreateOverlaysForTexturesWindow.Open(textures);
+		}
+
+		[MenuItem("Assets/UMA/Create overlay and recipe for base alternates", true)]
+		private static bool CreateOverlaysForSelectedItemsMenu_Validate()
+		{
+			return GetSelectedTextures().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", false, 2000)]
+		private static void AddRacesToSelectedRecipesMenu()
+		{
+			var selectedRecipes = GetSelectedWardrobeRecipes();
+			if (selectedRecipes.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Add Races", "Select one or more UMAWardrobeRecipe assets in the Project window.", "OK");
+				return;
+			}
+			UmaAddRacesToRecipesWindow.Open(selectedRecipes);
+		}
+
+		[MenuItem("Assets/UMA/Create UMAMaterials for selected materials", false, 2006)]
+		private static void CreateUmaMaterialsForSelectedMaterialsMenu()
+		{
+			var materials = GetSelectedMaterials();
+			if (materials.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Create UMAMaterials", "Select one or more Material assets in the Project window.", "OK");
+				return;
+			}
+
+			for (int i = 0; i < materials.Count; i++)
+			{
+				var mat = materials[i];
+				if (mat == null)
+				{
+					continue;
+				}
+
+				string matPath = AssetDatabase.GetAssetPath(mat);
+				if (string.IsNullOrEmpty(matPath))
+				{
+					continue;
+				}
+
+				string dir = Path.GetDirectoryName(matPath);
+				if (string.IsNullOrEmpty(dir))
+				{
+					dir = "Assets";
+				}
+
+				string baseName = "UMAMaterial_" + mat.name;
+				string assetPath = Path.Combine(dir, baseName + ".asset").Replace('\\', '/');
+
+				var umaMat = UMA.CustomAssetUtility.CreateAsset<UMAMaterial>(assetPath, false, baseName, false);
+				if (umaMat == null)
+				{
+					continue;
+				}
+
+				umaMat.name = baseName;
+				umaMat.material = mat;
+				umaMat.materialType = UMAMaterial.MaterialType.Atlas;
+				umaMat.MaterialName = mat.name;
+				if (mat.shader != null)
+				{
+					umaMat.ShaderName = mat.shader.name;
+				}
+				else
+				{
+					umaMat.ShaderName = string.Empty;
+				}
+
+				var channels = BuildChannelsForMaterial(mat);
+				umaMat.channels = channels;
+				EditorUtility.SetDirty(umaMat);
+			}
+
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
+		}
+
+		[MenuItem("Assets/UMA/Create UMAMaterials for selected materials", true)]
+		private static bool CreateUmaMaterialsForSelectedMaterialsMenu_Validate()
+		{
+			return GetSelectedMaterials().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Update Selected Physics Elements", false, 2007)]
+		private static void UpdateSelectedPhysicsElementsMenu()
+		{
+			var selectedElements = GetSelectedPhysicsElements();
+			if (selectedElements.Count == 0)
+			{
+				EditorUtility.DisplayDialog("Update Physics Elements", "Select one or more UMAPhysicsElement assets in the Project window.", "OK");
+				return;
+			}
+
+			UpdatePhysicsElementsWindow.Open(selectedElements);
+		}
+
+		[MenuItem("Assets/UMA/Update Selected Physics Elements", true)]
+		private static bool UpdateSelectedPhysicsElementsMenu_Validate()
+		{
+			return GetSelectedPhysicsElements().Count > 0;
+		}
+
+						[MenuItem("Assets/UMA/Add Race(s) to Selected Recipes", true)]
+		private static bool AddRacesToSelectedRecipesMenu_Validate()
+		{
+			return GetSelectedWardrobeRecipes().Count > 0;
+		}
+
+		private static List<UMAWardrobeRecipe> GetSelectedWardrobeRecipes()
+		{
+			var selected = Selection.GetFiltered(typeof(UMAWardrobeRecipe), SelectionMode.Assets);
+			var recipes = new List<UMAWardrobeRecipe>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var r = selected[i] as UMAWardrobeRecipe;
+				if (r != null)
+				{
+					recipes.Add(r);
+				}
+			}
+			return recipes;
+		}
+
+		private static List<UMATextRecipe> GetSelectedTextRecipes()
+		{
+			var selected = Selection.GetFiltered(typeof(UMATextRecipe), SelectionMode.Assets);
+			var recipes = new List<UMATextRecipe>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var recipe = selected[i] as UMATextRecipe;
+				if (recipe != null)
+				{
+					recipes.Add(recipe);
+				}
+			}
+			return recipes;
+		}
+
+		private static string GetAssetFolderPathFromAbsolutePath(string absoluteFolderPath)
+		{
+			if (string.IsNullOrEmpty(absoluteFolderPath))
+			{
+				return string.Empty;
+			}
+
+			string normalizedAssetsPath = Application.dataPath.Replace('\\', '/');
+			string normalizedFolderPath = absoluteFolderPath.Replace('\\', '/');
+			if (!normalizedFolderPath.StartsWith(normalizedAssetsPath, System.StringComparison.OrdinalIgnoreCase))
+			{
+				return string.Empty;
+			}
+
+			if (string.Equals(normalizedFolderPath, normalizedAssetsPath, System.StringComparison.OrdinalIgnoreCase))
+			{
+				return "Assets";
+			}
+
+			return "Assets" + normalizedFolderPath.Substring(normalizedAssetsPath.Length);
+		}
+
+		private static void CopyOverlayTexturesForRecipes(List<UMATextRecipe> recipes, string destFolderPath, string dialogTitle)
+		{
+			var textures = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+			try
+			{
+				for (int i = 0; i < recipes.Count; i++)
+				{
+					var recipe = recipes[i];
+					if (recipe == null)
+					{
+						continue;
+					}
+
+					EditorUtility.DisplayProgressBar(dialogTitle, "Scanning recipes...", Mathf.Clamp01((float)i / Mathf.Max(1, recipes.Count)));
+					var umaRecipe = new UMA.UMAData.UMARecipe();
+					recipe.Load(umaRecipe, true);
+					if (umaRecipe.slotDataList == null)
+					{
+						continue;
+					}
+
+					for (int s = 0; s < umaRecipe.slotDataList.Length; s++)
+					{
+						var slot = umaRecipe.slotDataList[s];
+						if (slot == null)
+						{
+							continue;
+						}
+
+						for (int o = 0; o < slot.OverlayCount; o++)
+						{
+							var overlay = slot.GetOverlay(o);
+							if (overlay == null || overlay.asset == null)
+							{
+								continue;
+							}
+
+							var overlayAsset = overlay.asset;
+							if (overlayAsset.textureList != null)
+							{
+								for (int t = 0; t < overlayAsset.textureList.Length; t++)
+								{
+									var tex = overlayAsset.textureList[t];
+									if (tex == null)
+									{
+										continue;
+									}
+
+									string srcPath = AssetDatabase.GetAssetPath(tex);
+									if (!string.IsNullOrEmpty(srcPath))
+									{
+										textures.Add(srcPath);
+									}
+								}
+							}
+
+							if (overlayAsset.alphaMask != null)
+							{
+								string alphaPath = AssetDatabase.GetAssetPath(overlayAsset.alphaMask);
+								if (!string.IsNullOrEmpty(alphaPath))
+								{
+									textures.Add(alphaPath);
+								}
+							}
+						}
+					}
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+			}
+
+			if (textures.Count == 0)
+			{
+				EditorUtility.DisplayDialog(dialogTitle, "No textures were found in overlays for the selected recipes.", "OK");
+				return;
+			}
+
+			int copied = 0;
+			int skippedDuplicates = 0;
+			int total = textures.Count;
+			int index = 0;
+			try
+			{
+				foreach (string srcPath in textures)
+				{
+					index++;
+					EditorUtility.DisplayProgressBar(dialogTitle, "Copying textures...", Mathf.Clamp01((float)index / Mathf.Max(1, total)));
+					if (string.IsNullOrEmpty(srcPath))
+					{
+						continue;
+					}
+
+					string fileName = Path.GetFileName(srcPath);
+					if (string.IsNullOrEmpty(fileName))
+					{
+						continue;
+					}
+
+					string destPath = destFolderPath + "/" + fileName;
+					if (string.Equals(srcPath, destPath, System.StringComparison.OrdinalIgnoreCase))
+					{
+						skippedDuplicates++;
+						continue;
+					}
+
+					if (File.Exists(destPath) || AssetDatabase.LoadAssetAtPath<Texture>(destPath) != null)
+					{
+						skippedDuplicates++;
+						continue;
+					}
+
+					if (AssetDatabase.CopyAsset(srcPath, destPath))
+					{
+						copied++;
+					}
+				}
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
+			}
+
+			EditorUtility.DisplayDialog(dialogTitle, "Copied texture asset(s): " + copied + "\nIgnored duplicates: " + skippedDuplicates + "\nDestination: " + destFolderPath, "OK");
+		}
+
+		private static List<UMA.OverlayDataAsset> GetSelectedOverlays()
+		{
+			var selected = Selection.GetFiltered(typeof(UMA.OverlayDataAsset), SelectionMode.Assets);
+			var overlays = new List<UMA.OverlayDataAsset>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var o = selected[i] as UMA.OverlayDataAsset;
+				if (o != null)
+				{
+					overlays.Add(o);
+				}
+			}
+			return overlays;
+		}
+
+       internal static List<UMA.SlotDataAsset> GetSelectedSlots()
+		{
+			var selected = Selection.GetFiltered(typeof(UMA.SlotDataAsset), SelectionMode.Assets);
+			var slots = new List<UMA.SlotDataAsset>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var s = selected[i] as UMA.SlotDataAsset;
+				if (s != null)
+				{
+					slots.Add(s);
+				}
+			}
+			return slots;
+		}
+
+		private static List<Texture2D> GetSelectedTextures()
+		{
+			var selected = Selection.GetFiltered(typeof(Texture2D), SelectionMode.Assets);
+			var textures = new List<Texture2D>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var tex = selected[i] as Texture2D;
+				if (tex != null)
+				{
+					textures.Add(tex);
+				}
+			}
+			return textures;
+		}
+
+		private static List<Material> GetSelectedMaterials()
+		{
+			var selected = Selection.GetFiltered(typeof(Material), SelectionMode.Assets);
+			var materials = new List<Material>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var mat = selected[i] as Material;
+				if (mat != null)
+				{
+					materials.Add(mat);
+				}
+			}
+			return materials;
+		}
+
+		private static List<UMAPhysicsElement> GetSelectedPhysicsElements()
+		{
+			var selected = Selection.GetFiltered(typeof(UMAPhysicsElement), SelectionMode.Assets);
+			var elements = new List<UMAPhysicsElement>(selected.Length);
+			for (int i = 0; i < selected.Length; i++)
+			{
+				var element = selected[i] as UMAPhysicsElement;
+				if (element != null)
+				{
+					elements.Add(element);
+				}
+			}
+			return elements;
+		}
+
+		private static UMAMaterial.MaterialChannel[] BuildChannelsForMaterial(Material material)
+		{
+			if (material == null)
+			{
+				return new UMAMaterial.MaterialChannel[0];
+			}
+			var shader = material.shader;
+			if (shader == null)
+			{
+				return new UMAMaterial.MaterialChannel[0];
+			}
+
+			var channels = new List<UMAMaterial.MaterialChannel>();
+          var propertyNames = new List<string>();
+			var textureProperties = material.GetTexturePropertyNames();
+			if (textureProperties != null && textureProperties.Length > 0)
+			{
+				for (int i = 0; i < textureProperties.Length; i++)
+				{
+					if (!string.IsNullOrEmpty(textureProperties[i]))
+					{
+						propertyNames.Add(textureProperties[i]);
+					}
+				}
+			}
+			else
+			{
+				int count = shader.GetPropertyCount();
+				for (int i = 0; i < count; i++)
+				{
+					if (shader.GetPropertyType(i) != ShaderPropertyType.Texture)
+					{
+						continue;
+					}
+					string propName = shader.GetPropertyName(i);
+					if (!string.IsNullOrEmpty(propName))
+					{
+						propertyNames.Add(propName);
+					}
+				}
+			}
+
+			var seen = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < propertyNames.Count; i++)
+			{
+				string propName = propertyNames[i];
+				if (string.IsNullOrEmpty(propName))
+				{
+					continue;
+				}
+				if (propName.StartsWith("unity", System.StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+				if (seen.Contains(propName))
+				{
+					continue;
+				}
+				seen.Add(propName);
+				if (!material.HasProperty(propName))
+				{
+					continue;
+				}
+
+				UMAMaterial.ChannelType channelType = UMAMaterial.ChannelType.Texture;
+				if (propName.IndexOf("normal", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+					propName.IndexOf("bump", System.StringComparison.OrdinalIgnoreCase) >= 0)
+				{
+					channelType = UMAMaterial.ChannelType.NormalMap;
+				}
+
+				var channel = new UMAMaterial.MaterialChannel();
+				channel.channelType = channelType;
+				channel.textureFormat = RenderTextureFormat.ARGB32;
+				channel.materialPropertyName = propName;
+				channel.sourceTextureName = propName;
+				channel.Compression = UMAMaterial.CompressionSettings.None;
+				channel.DownSample = 1;
+				channel.ConvertRenderTexture = false;
+				channel.NonShaderTexture = false;
+
+				channels.Add(channel);
+			}
+
+			return channels.ToArray();
+		}
+
+				
+        public static void ConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting, bool exportAsFbx = false, bool exportAsGltf = false, bool exportGltfAsSlots = false)
+        {
+			bool wasAsync = false;
+			bool wasConvertRenderTexture = false;
+
+			var generator = UMAAssetIndexer.Instance.Generator;
+
+			if (generator == null)
+			{
+				EditorUtility.DisplayDialog("UMA Generator Not Found", "The UMA Generator could not be found. Please ensure that the UMA Generator is present in the project settings. This feature will not work as expected without the generator. In fact, UMA itself will not work without the Generator", "OK");
+                Debug.LogWarning("UMA Generator not found. UMA itself will not work as expected.");
+				return;
+			}
+
+			wasConvertRenderTexture = generator.convertRenderTexture;
+			wasAsync = generator.useAsyncConversion;
+
+			try
+			{
+				// We need to disable async conversion and enable render texture conversion to ensure that any dynamically generated textures are properly converted and saved during this process.
+				// This is necessary because the conversion and saving of textures needs to happen synchronously to ensure that all assets are correctly processed before we attempt to save them.
+				// If async conversion were enabled, there could be timing issues where textures are not fully converted before we try to save them, leading to incomplete or corrupted assets.
+
+				if (wasConvertRenderTexture == false)
+				{
+					generator.convertRenderTexture = true;
+					generator.useAsyncConversion = false;
+
+					if (avatar is DynamicCharacterAvatar)
+					{
+						Debug.Log("Building DynamicCharacterAvatar synchronously to ensure textures are generated and converted before saving.");
+                        DynamicCharacterAvatar dca = avatar as DynamicCharacterAvatar;
+						dca.BuildNow();
+					}
+				}
+
+
+                Folder = Folder + "/" + CharName;
+
+				if (!System.IO.Directory.Exists(Folder))
+				{
+					System.IO.Directory.CreateDirectory(Folder);
+				}
+
+				SkinnedMeshRenderer[] renderers = avatar.umaData.GetRenderers();
+				foreach (SkinnedMeshRenderer smr in renderers)
+				{
+					Material[] omats = smr.sharedMaterials;
+					Material[] mats = new Material[omats.Length];
+					for (int i = 0; i < omats.Length; i++)
+					{
+						mats[i] = new Material(omats[i]);
+					}
+
+					int Material = 0;
+					foreach (Material m in mats)
+					{
+						Shader shader = m.shader;
+						for (int i = 0; i < shader.GetPropertyCount(); i++)
+						{
+							if (shader.GetPropertyType(i) == ShaderPropertyType.Texture)
+							{
+								string propertyName = shader.GetPropertyName(i);
+								Texture texture = m.GetTexture(propertyName);
+								if (texture is Texture2D || texture is RenderTexture)
+								{
+									string path = AssetDatabase.GetAssetPath(texture.GetInstanceID());
+									if (string.IsNullOrEmpty(path))
+									{
+										bool isNormal = (propertyName.ToLower().Contains("bumpmap") || propertyName.ToLower().Contains("normal"));
+
+										if (ConvertNormalMaps && isNormal)
+										{
+											texture = sconvertNormalMap(texture);
+										}
+
+										string texName = Path.Combine(Folder, CharName + "_Mat_" + Material + propertyName + ".png");
+										if (texture is RenderTexture)
+										{
+											Debug.Log("Saving Render Texture " + texName);
+											LinearSave(texture as RenderTexture, texName, isNormal);
+										}
+										else
+										{
+											Debug.Log("Saving texture " + texName);
+											SaveTexture2D(texture as Texture2D, texName, isNormal);
+										}
+
+										AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+										if (isNormal)
+										{
+											TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(texName);
+											importer.isReadable = true;
+											importer.textureType = TextureImporterType.NormalMap;
+											importer.maxTextureSize = 1024;
+											importer.textureCompression = TextureImporterCompression.CompressedHQ;
+											EditorUtility.SetDirty(importer);
+											importer.SaveAndReimport();
+										}
+
+										Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(CustomAssetUtility.UnityFriendlyPath(texName));
+										m.SetTexture(propertyName, tex);
+									}
+									else
+									{
+										m.SetTexture(propertyName, texture);
+									}
+								}
+							}
+						}
+
+						string matname = Folder + "/" + CharName + "_Mat_" + Material + ".mat";
+						CustomAssetUtility.SaveAsset<Material>(m, matname);
+						Material++;
+					}
+
+					smr.sharedMaterials = mats;
+					smr.materials = mats;
+				}
+
+				List<Material[]> savedMaterialsPerRenderer = new List<Material[]>();
+				foreach (SkinnedMeshRenderer smr in renderers)
+				{
+					savedMaterialsPerRenderer.Add(smr.sharedMaterials);
+				}
+
+#if !UMA_FBX_EXPORT
+				exportAsFbx = false;
+#endif
+
+				if (!exportAsFbx)
+				{
+					int savedMeshIndex = 0;
+					foreach (SkinnedMeshRenderer smr in renderers)
+					{
+						string meshName = Folder + "/" + CharName + "_Mesh_" + savedMeshIndex + ".asset";
+						savedMeshIndex++;
+						CustomAssetUtility.SaveAsset<Mesh>(smr.sharedMesh, meshName);
+
+						meshName = CustomAssetUtility.UnityFriendlyPath(meshName);
+						Mesh savedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshName);
+						if (savedMesh != null)
+						{
+							SerializedObject so = new SerializedObject(savedMesh);
+							var prop = so.FindProperty("m_IsReadable");
+							if (prop != null)
+							{
+								prop.boolValue = false;
+								so.ApplyModifiedPropertiesWithoutUndo();
+							}
+						}
+					}
+					AssetDatabase.SaveAssets();
+				}
+
+				var animator = baseObject.GetComponent<Animator>();
+				string avatarName = Folder + "/" + CharName + "_Avatar.asset";
+				if (animator != null && animator.avatar != null)
+				{
+					CustomAssetUtility.SaveAsset<Avatar>(animator.avatar, avatarName);
+				}
+
+				if (exportAsGltf)
+				{
+                 if (exportGltfAsSlots)
+					{
+						UMAGltfExporter.ExportAvatarSlots(avatar, Folder, CharName, true);
+					}
+					else
+					{
+						UMAGltfExporter.ExportAvatar(baseObject, Folder, CharName);
+					}
+				}
+
+#if UMA_FBX_EXPORT
+	if (exportAsFbx)
+	{
+		string fbxPath = Folder + "/" + CharName + ".fbx";
+		string fullFbxPath = System.IO.Path.GetFullPath(fbxPath);
+		var fbxOptions = new ExportModelOptions
+		{
+			ExportFormat = ExportFormat.Binary,
+			ModelAnimIncludeOption = Include.Model,
+			ObjectPosition = ObjectPosition.Reset,
+			UseMayaCompatibleNames = false,
+			ExportUnrendered = true
+		};
+
+		List<Mesh> originalMeshes = new List<Mesh>();
+		List<Transform[]> originalBonesArrays = new List<Transform[]>();
+		foreach (SkinnedMeshRenderer smr in renderers)
+		{
+			Transform[] origBones = smr.bones;
+			Mesh origMesh = smr.sharedMesh;
+			originalBonesArrays.Add(origBones);
+			originalMeshes.Add(origMesh);
+
+			Dictionary<int, int> instanceIdToNewIndex = new Dictionary<int, int>();
+			Dictionary<int, int> indexRemap = new Dictionary<int, int>();
+			List<Transform> uniqueBones = new List<Transform>();
+			List<Matrix4x4> uniqueBindPoses = new List<Matrix4x4>();
+			Matrix4x4[] origBindPoses = origMesh.bindposes;
+
+			for (int b = 0; b < origBones.Length; b++)
+			{
+				Transform bone = origBones[b];
+				int key = bone != null ? bone.GetInstanceID() : ~b;
+
+				int existingNewIndex;
+				if (instanceIdToNewIndex.TryGetValue(key, out existingNewIndex))
+				{
+					indexRemap[b] = existingNewIndex;
+				}
+				else
+				{
+					int newIndex = uniqueBones.Count;
+					instanceIdToNewIndex[key] = newIndex;
+					indexRemap[b] = newIndex;
+					uniqueBones.Add(bone);
+					if (b < origBindPoses.Length)
+					{
+						uniqueBindPoses.Add(origBindPoses[b]);
+					}
+				}
+			}
+
+			if (uniqueBones.Count < origBones.Length)
+			{
+				Mesh dedupedMesh = Object.Instantiate(origMesh);
+				BoneWeight[] weights = dedupedMesh.boneWeights;
+				for (int w = 0; w < weights.Length; w++)
+				{
+					weights[w].boneIndex0 = indexRemap.ContainsKey(weights[w].boneIndex0) ? indexRemap[weights[w].boneIndex0] : weights[w].boneIndex0;
+					weights[w].boneIndex1 = indexRemap.ContainsKey(weights[w].boneIndex1) ? indexRemap[weights[w].boneIndex1] : weights[w].boneIndex1;
+					weights[w].boneIndex2 = indexRemap.ContainsKey(weights[w].boneIndex2) ? indexRemap[weights[w].boneIndex2] : weights[w].boneIndex2;
+					weights[w].boneIndex3 = indexRemap.ContainsKey(weights[w].boneIndex3) ? indexRemap[weights[w].boneIndex3] : weights[w].boneIndex3;
+				}
+				dedupedMesh.boneWeights = weights;
+				dedupedMesh.bindposes = uniqueBindPoses.ToArray();
+
+				smr.sharedMesh = dedupedMesh;
+				smr.bones = uniqueBones.ToArray();
+			}
+		}
+
+		ModelExporter.ExportObject(fullFbxPath, baseObject, fbxOptions);
+
+		for (int s = 0; s < renderers.Length; s++)
+		{
+			renderers[s].sharedMesh = originalMeshes[s];
+			renderers[s].bones = originalBonesArrays[s];
+		}
+		AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+
+		ModelImporter fbxImporter = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
+		if (fbxImporter != null)
+		{
+			fbxImporter.isReadable = false;
+			fbxImporter.importAnimation = false;
+			fbxImporter.SaveAndReimport();
+		}
+
+		GameObject fbxModel = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+		GameObject newAvatar = GameObject.Instantiate(fbxModel);
+
+		SkinnedMeshRenderer[] fbxRenderers = newAvatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+		for (int j = 0; j < renderers.Length; j++)
+		{
+			string srcName = renderers[j].gameObject.name;
+			SkinnedMeshRenderer targetSmr = null;
+
+			foreach (var fr in fbxRenderers)
+			{
+				if (fr.gameObject.name == srcName)
+				{
+					targetSmr = fr;
+					break;
+				}
+			}
+			if (targetSmr == null && fbxRenderers.Length == 1 && renderers.Length == 1)
+			{
+				targetSmr = fbxRenderers[0];
+			}
+
+			if (targetSmr != null)
+			{
+				targetSmr.sharedMaterials = savedMaterialsPerRenderer[j];
+				targetSmr.enabled = true;
+			}
+		}
+
+		var fbxAnimator = newAvatar.GetComponent<Animator>();
+		if (fbxAnimator != null)
+		{
+			Avatar savedAvatar = AssetDatabase.LoadAssetAtPath<Avatar>(avatarName);
+			if (savedAvatar != null)
+			{
+				fbxAnimator.avatar = savedAvatar;
+			}
+		}
+
+		if (AddStandaloneDNA)
+		{
+			UMAData srcUda = baseObject.GetComponent<UMAData>();
+			if (srcUda != null)
+			{
+				UMAData newUda = newAvatar.AddComponent<UMAData>();
+				StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
+				sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(srcUda._umaRecipe);
+				if (avatar is DynamicCharacterAvatar)
+				{
+					DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+					sda.avatarDefinition = avt.GetAvatarDefinition(true);
+				}
+				sda.umaData = newUda;
+			}
+		}
+
+		newAvatar.name = CharName;
+		string prefabName = Folder + "/" + CharName + ".prefab";
+		prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
+		PrefabUtility.SaveAsPrefabAssetAndConnect(newAvatar, prefabName, InteractionMode.AutomatedAction);
+
+		if (replaceExisting)
+		{
+			newAvatar.transform.SetPositionAndRotation(baseObject.transform.position, baseObject.transform.rotation);
+			newAvatar.transform.localScale = baseObject.transform.localScale;
+			DestroyImmediate(baseObject);
+		}
+		else
+		{
+			DestroyImmediate(newAvatar);
+		}
+	}
+	else
+#endif
+				{
+					if (replaceExisting)
+					{
+						DestroyImmediate(avatar);
+						var lod = baseObject.GetComponent<UMASimpleLOD>();
+						if (lod != null)
+						{
+							DestroyImmediate(lod);
+						}
+
+						if (AddStandaloneDNA)
+						{
+							UMAData uda = baseObject.GetComponent<UMAData>();
+							StandAloneDNA sda = baseObject.AddComponent<UMA.StandAloneDNA>();
+							sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+							if (avatar is DynamicCharacterAvatar)
+							{
+								DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+								sda.avatarDefinition = avt.GetAvatarDefinition(true);
+							}
+							sda.umaData = uda;
+						}
+						else
+						{
+							var ud = baseObject.GetComponent<UMAData>();
+							if (ud != null)
+							{
+								DestroyImmediate(ud);
+							}
+						}
+
+						var ue = baseObject.GetComponent<UMAExpressionPlayer>();
+						if (ue != null)
+						{
+							DestroyImmediate(ue);
+						}
+
+						baseObject.name = CharName;
+						string prefabName = Folder + "/" + CharName + ".prefab";
+						prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
+						PrefabUtility.SaveAsPrefabAssetAndConnect(baseObject, prefabName, InteractionMode.AutomatedAction);
+					}
+					else
+					{
+						var dca = baseObject.GetComponent<DynamicCharacterAvatar>();
+						bool prevEditorTimeGen = false;
+						if (dca != null)
+						{
+							prevEditorTimeGen = dca.editorTimeGeneration;
+							dca.editorTimeGeneration = false;
+						}
+
+						GameObject newAvatar = GameObject.Instantiate(baseObject);
+
+						if (dca != null)
+						{
+							dca.editorTimeGeneration = prevEditorTimeGen;
+						}
+
+						var cloneDca = newAvatar.GetComponent<DynamicCharacterAvatar>();
+						if (cloneDca != null)
+						{
+							DestroyImmediate(cloneDca);
+						}
+
+						var cloneLod = newAvatar.GetComponent<UMASimpleLOD>();
+						if (cloneLod != null)
+						{
+							DestroyImmediate(cloneLod);
+						}
+
+						SkinnedMeshRenderer[] cloneRenderers = newAvatar.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+						for (int r = 0; r < cloneRenderers.Length; r++)
+						{
+							cloneRenderers[r].enabled = true;
+						}
+
+						if (AddStandaloneDNA)
+						{
+							UMAData uda = newAvatar.GetComponent<UMAData>();
+							StandAloneDNA sda = newAvatar.AddComponent<UMA.StandAloneDNA>();
+							sda.PackedDNA = UMAPackedRecipeBase.GetPackedDNA(uda._umaRecipe);
+							if (avatar is DynamicCharacterAvatar)
+							{
+								DynamicCharacterAvatar avt = avatar as DynamicCharacterAvatar;
+								sda.avatarDefinition = avt.GetAvatarDefinition(true);
+							}
+							sda.umaData = uda;
+						}
+						else
+						{
+							var ud = newAvatar.GetComponent<UMAData>();
+							if (ud != null)
+							{
+								DestroyImmediate(ud);
+							}
+						}
+
+						var cloneExpressionPlayer = newAvatar.GetComponent<UMAExpressionPlayer>();
+						if (cloneExpressionPlayer != null)
+						{
+							DestroyImmediate(cloneExpressionPlayer);
+						}
+
+						newAvatar.name = CharName;
+						string prefabName = Folder + "/" + CharName + ".prefab";
+						prefabName = CustomAssetUtility.UnityFriendlyPath(prefabName);
+						PrefabUtility.SaveAsPrefabAssetAndConnect(newAvatar, prefabName, InteractionMode.AutomatedAction);
+					}
+				}
+			}
+			finally
+			{
+				if (wasConvertRenderTexture == false)
+				{
+					generator.convertRenderTexture = wasConvertRenderTexture;
+					generator.useAsyncConversion = wasAsync;
+					if (avatar is DynamicCharacterAvatar)
+					{
+						var dca = avatar as DynamicCharacterAvatar;
+						dca.BuildNow();
+					}
+				}
+                Debug.Log("Conversion complete.");
+            }
+        }
+
+        public static void OldConvertToNonUMA(GameObject baseObject, UMAAvatarBase avatar, string Folder, bool ConvertNormalMaps, string CharName, bool AddStandaloneDNA, bool replaceExisting)
 		{
 			Folder = Folder + "/" + CharName;
 
@@ -88,11 +1654,11 @@ namespace UMA.Editors
 					// update the material with that material.
 					List<Texture> allTexture = new List<Texture>();
 					Shader shader = m.shader;
-					for (int i = 0; i < ShaderUtil.GetPropertyCount(shader); i++)
+					for (int i = 0; i < shader.GetPropertyCount(); i++)
 					{
-						if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
+						if (shader.GetPropertyType(i) == ShaderPropertyType.Texture)
 						{
-							string propertyName = ShaderUtil.GetPropertyName(shader, i);
+							string propertyName = shader.GetPropertyName(i);
 							Texture texture = m.GetTexture(propertyName);
 							if (texture is Texture2D || texture is RenderTexture)
 							{
@@ -323,7 +1889,7 @@ namespace UMA.Editors
 		}
 
 
-        private static Texture2D GetReadableTexture(RenderTexture texture, bool isNormal)
+       internal static Texture2D GetReadableTexture(RenderTexture texture, bool isNormal)
         {
             RenderTexture tmp;
 
@@ -360,7 +1926,7 @@ namespace UMA.Editors
             return readableTexture;
         }
         // Thanks, Brooklyn!
-        private static Texture2D GetReadableTexture(Texture2D texture, bool isNormal)
+       internal static Texture2D GetReadableTexture(Texture2D texture, bool isNormal)
         {
 			RenderTexture tmp;
 
@@ -387,7 +1953,9 @@ namespace UMA.Editors
             RenderTexture previous = RenderTexture.active;
             RenderTexture.active = tmp;
 
-			Texture2D readableTexture = new Texture2D(texture.width, texture.height, texture.format, false, isNormal);
+			// Always read back into a CPU RGBA32 texture; using `texture.format` can be incompatible
+			// with `ReadPixels` (e.g., compressed/HDR formats) and can produce garbage data.
+			Texture2D readableTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false, isNormal);
             readableTexture.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
             readableTexture.Apply();
 
@@ -710,8 +2278,8 @@ namespace UMA.Editors
 			}
 		}
 
-		[UnityEditor.MenuItem("GameObject/UMA/Load from Character Text file (runtime only)")]
-		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from text file (runtime only)")]
+		[UnityEditor.MenuItem("GameObject/UMA/Load from AvatarDefinition file (runtime only)")]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from an AvatarDefinition file (runtime only)")]
 		[MenuItem("UMA/Load and Save/Load Selected Avatar(s) txt", priority = 1)]
 		public static void LoadSelectedAvatarsTxt()
 		{
@@ -727,88 +2295,31 @@ namespace UMA.Editors
 
 				if (avatar != null)
 				{
-					var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "txt");
+					var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "txt,adf");
 					if (path.Length != 0)
 					{
-						var asset = ScriptableObject.CreateInstance<UMATextRecipe>();
-						asset.recipeString = FileUtils.ReadAllText(path);
+						string recipeString = FileUtils.ReadAllText(path);
 						//check if Avatar is DCS
 						if (avatar is DynamicCharacterAvatar)
 						{
-							(avatar as DynamicCharacterAvatar).LoadFromRecipeString(asset.recipeString);
-						}
-						else
-						{
-							avatar.Load(asset);
-						}
-
-						UMAUtils.DestroySceneObject(asset);
-					}
-				}
-			}
-		}
-
-		[UnityEditor.MenuItem("GameObject/UMA/Load from Character Asset (runtime only)")]
-		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Load Avatar from Asset (runtime only)")]
-		[MenuItem("UMA/Load and Save/Load Selected Avatar(s) assets", priority = 1)]
-		public static void LoadSelectedAvatarsAsset()
-		{
-			for (int i = 0; i < Selection.gameObjects.Length; i++)
-			{
-				var selectedTransform = Selection.gameObjects[i].transform;
-				var avatar = selectedTransform.GetComponent<UMAAvatarBase>();
-				while (avatar == null && selectedTransform.parent != null)
-				{
-					selectedTransform = selectedTransform.parent;
-					avatar = selectedTransform.GetComponent<UMAAvatarBase>();
-				}
-
-				if (avatar != null)
-				{
-					var path = EditorUtility.OpenFilePanel("Load serialized Avatar", "Assets", "asset");
-					if (path.Length != 0)
-					{
-						var index = path.IndexOf("/Assets/");
-						if (index > 0)
-						{
-							path = path.Substring(index + 1);
-						}
-						var asset = AssetDatabase.LoadMainAssetAtPath(path) as UMARecipeBase;
-						if (asset != null)
-						{
-							//check if Avatar is DCS
-							if (avatar is DynamicCharacterAvatar)
-							{
-								(avatar as DynamicCharacterAvatar).LoadFromRecipe(asset);
-							}
-							else
-							{
-								avatar.Load(asset);
-							}
-						}
-						else
-						{
-							Debug.LogError("Failed To Load Asset \"" + path + "\"\nAssets must be inside the project and descend from the UMARecipeBase type");
+							(avatar as DynamicCharacterAvatar).LoadAvatarDefinition(recipeString);
 						}
 					}
 				}
 			}
 		}
+
 
 		//@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method
-		[UnityEditor.MenuItem("GameObject/UMA/Save as Optimized Character Text File (runtime only)")]
-		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized Character Text File")]
-		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) txt (optimized)", priority = 1)]
-		public static void SaveSelectedAvatarsDCSTxt()
+		[UnityEditor.MenuItem("GameObject/UMA/Save as AvatarDefinition (runtime only)")]
+		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized AvatarDefinition File")]
+		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) AvatarDefinition (optimized)", priority = 1)]
+		public static void SaveSelectedAvatarsDefinition()
 		{
 			if (!Application.isPlaying)
 			{
 				EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
 				return;
-			}
-			else
-			{
-				EditorUtility.DisplayDialog("Notice", "The optimized save type is only compatible with DynamicCharacterAvatar avatars (or child classes of)", "Continue");
 			}
 
 			for (int i = 0; i < Selection.gameObjects.Length; i++)
@@ -818,7 +2329,7 @@ namespace UMA.Editors
 
 				if (avatar != null)
 				{
-					var path = EditorUtility.SaveFilePanel("Save DynamicCharacterAvatar Optimized Text", "Assets", avatar.name + ".txt", "txt");
+					var path = EditorUtility.SaveFilePanel("Save DynamicCharacterAvatar Text", "Assets", avatar.name + ".txt", "txt");
 					if (path.Length != 0)
 					{
 						avatar.DoSave(false, path);
@@ -826,37 +2337,8 @@ namespace UMA.Editors
 				}
 			}
 		}
-		//@jaimi this is the equivalent of your previous JSON save but the resulting file does not need a special load method and the resulting asset can also be inspected and edited
-		[UnityEditor.MenuItem("GameObject/UMA/Save as Optimized Character Asset (runtime only)")]
-		[UnityEditor.MenuItem("CONTEXT/DynamicCharacterAvatar/Save as Optimized Character Asset File")]
-		[MenuItem("UMA/Load and Save/Save DynamicCharacterAvatar(s) asset (optimized)", priority = 1)]
-		public static void SaveSelectedAvatarsDCSAsset()
-		{
-			if (!Application.isPlaying)
-			{
-				EditorUtility.DisplayDialog("Notice", "This function is only available at runtime", "Got it");
-				return;
-			}
-			else
-			{
-				EditorUtility.DisplayDialog("Notice", "The optimized save type is only compatible with DynamicCharacterAvatar avatars (or child classes of)", "Continue");
-			}
 
-			for (int i = 0; i < Selection.gameObjects.Length; i++)
-			{
-				var selectedTransform = Selection.gameObjects[i].transform;
-				var avatar = selectedTransform.GetComponent<DynamicCharacterAvatar>();
 
-				if (avatar != null)
-				{
-					var path = EditorUtility.SaveFilePanelInProject("Save DynamicCharacterAvatar Optimized Asset", avatar.name + ".asset", "asset", "Message 2");
-					if (path.Length != 0)
-					{
-						avatar.DoSave(true, path);
-					}
-				}
-			}
-		}
 
 		[UnityEditor.MenuItem("Assets/Add Selected Assets to UMA Global Library")]
 		public static void AddSelectedToGlobalLibrary()
@@ -877,95 +2359,6 @@ namespace UMA.Editors
 			}
 			UAI.ForceSave();
 			EditorUtility.DisplayDialog("Success", added + " item(s) added to Global Library", "OK");
-		}
-	}
-
-	public class UmaPrefabSaverWindow : EditorWindow
-	{
-		[Tooltip("The character that you want to convert")]
-		public UMAAvatarBase baseObject;
-		[Tooltip("If true, will replace the UMA with the generated prefab in the scene")]
-        public bool replaceExisting = false;
-        [Tooltip("Convert Swizzled normal maps back to standard normal maps")]
-		public bool UnswizzleNormalMaps = true;
-		[Tooltip("If True, will keep the umaData, and add a Standalone DNA component allowing you to load/save/Deform skeletal DNA")]
-		public bool AddStandaloneDNA = true;
-		[Tooltip("The prefab will be named this, and it will be added to all assets saved")]
-		public string CharacterName;
-		[Tooltip("The folder where the prefab folder will be created")]
-		public UnityEngine.Object prefabFolder;
-		public string CheckFolder(ref UnityEngine.Object folderObject)
-		{
-			if (folderObject != null)
-			{
-				string destpath = AssetDatabase.GetAssetPath(folderObject);
-				if (string.IsNullOrEmpty(destpath))
-				{
-					folderObject = null;
-				}
-				else if (!System.IO.Directory.Exists(destpath))
-				{
-					destpath = destpath.Substring(0, destpath.LastIndexOf('/'));
-				}
-				return destpath;
-			}
-			return null;
-		}
-
-		void OnGUI()
-		{
-			EditorGUILayout.LabelField("UMA Prefab Saver", EditorStyles.boldLabel);
-			EditorGUILayout.HelpBox("This will convert an UMA avatar into a non-UMA prefab. Once converted, it can be reused with little overhead, but all UMA functionality will be lost.", MessageType.None, false);
-			baseObject = (UMAAvatarBase)EditorGUILayout.ObjectField("UMA Avatar",baseObject, typeof(UMAAvatarBase),true);
-			EditorGUILayout.HelpBox("If you unswizzle normals (recommended) then they can be used in other applications, and UMA will automatically mark them as normal maps in the import settings.", MessageType.None);
-			UnswizzleNormalMaps = EditorGUILayout.Toggle("Unswizzle Normals", UnswizzleNormalMaps);
-			EditorGUILayout.HelpBox("Adding Standalone DNA will allow you to adjust most DNA of the character, without it being an UMA. However, it will require that you have the UMA system in the project.",MessageType.None);
-			AddStandaloneDNA = EditorGUILayout.Toggle("Add Standalone DNA", AddStandaloneDNA);
-
-            replaceExisting = EditorGUILayout.Toggle("Replace Existing UMA", replaceExisting);
-            if (replaceExisting)
-            {
-                EditorGUILayout.HelpBox("If you replace the existing UMA, it will be removed from the scene. If you do not replace it, you will need to manually add the prefab to the scene.", MessageType.None);
-            }
-            else
-            {
-                EditorGUILayout.HelpBox("If you do not replace the existing UMA, you will need to manually add the prefab to the scene.", MessageType.None);
-            }
-			CharacterName = EditorGUILayout.TextField("Prefab Name", CharacterName);
-			prefabFolder = EditorGUILayout.ObjectField("Prefab Base Folder", prefabFolder, typeof(UnityEngine.Object), false) as UnityEngine.Object;
-
-			string folder = CheckFolder(ref prefabFolder);
-
-			if (prefabFolder != null && baseObject != null && !string.IsNullOrEmpty(CharacterName))
-			{
-				if (GUILayout.Button("Make Prefab") && prefabFolder != null)
-				{
-					UMAAvatarLoadSaveMenuItems.ConvertToNonUMA(baseObject.gameObject, baseObject, folder, UnswizzleNormalMaps, CharacterName,AddStandaloneDNA,replaceExisting);
-					EditorUtility.DisplayDialog("UMA Prefab Saver", "Conversion complete", "OK");
-				}
-			}
-			else
-            {
-				if (baseObject == null)
-				{
-					EditorGUILayout.HelpBox("A valid character with DynamicCharacterAvatar or DynamicAvatar must be supplied",MessageType.Error);
-				}
-				if (string.IsNullOrEmpty(CharacterName))
-                {
-					EditorGUILayout.HelpBox("Prefab Name cannot be empty", MessageType.Error);
-                }
-				if (prefabFolder == null)
-                {
-					EditorGUILayout.HelpBox("A valid base folder must be supplied", MessageType.Error);
-                }
-            }
-		}
-
-		[MenuItem("UMA/Prefab Maker", priority = 20)]
-		public static void OpenUmaPrefabWindow()
-		{
-			UmaPrefabSaverWindow window = (UmaPrefabSaverWindow)EditorWindow.GetWindow(typeof(UmaPrefabSaverWindow));
-			window.titleContent.text = "UMA Prefab Maker";
 		}
 	}
 }

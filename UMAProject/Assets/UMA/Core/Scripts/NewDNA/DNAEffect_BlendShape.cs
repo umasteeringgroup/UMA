@@ -11,9 +11,9 @@ namespace UMA
         public string BlendShapeName;
         public override string Description => "Sets a blendshape to the translated value on every skinned mesh renderer in the avatar.";
 #if UNITY_EDITOR
-        public override void DoGui(bool showDescription, bool showHelp)
+        public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
-            base.DoGui(showDescription,showHelp);
+            base.DoGui(showDescription, showHelp, out curveToCopy);
             BlendShapeName = UnityEditor.EditorGUILayout.TextField("Blend Shape Name", BlendShapeName);
         }
 #endif

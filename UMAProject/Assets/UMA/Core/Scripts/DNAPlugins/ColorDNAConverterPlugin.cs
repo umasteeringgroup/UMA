@@ -288,6 +288,7 @@ namespace UMA
 				for (int oi = 0; oi < targetOverlays.Count; oi++)
 				{
 					ocd = targetOverlays[oi].colorData;
+					ocd.EnsureChannels(textureChannel+1);
 					if (colorModifier.R.enable)
 					{
 						rCurr = colorModifier.R.Additive ? ocd.channelAdditiveMask[textureChannel].r : ocd.channelMask[textureChannel].r;
@@ -347,8 +348,46 @@ namespace UMA
 					}
 					if (colorModifier.A.enable)
 					{
-						aCurr = colorModifier.A.Additive ? ocd.channelAdditiveMask[textureChannel].a : ocd.channelMask[textureChannel].a;
-						aAdj = colorModifier.A.EvaluateAdjustment(dnaVal, aCurr);
+						if (colorModifier == null)
+						{
+							if (Debug.isDebugBuild)
+                                Debug.LogError("Color Modifier is null!");
+							continue;
+                        }
+						if (colorModifier.A == null)
+						{
+							if (Debug.isDebugBuild)
+								Debug.LogError("Color Modifier A component is null!");
+							continue;
+                        }
+                        if (ocd == null)
+						{
+							if (Debug.isDebugBuild)
+								Debug.LogError("OverlayColorData is null!");
+							continue;
+						}
+						if (ocd.channelMask.Length <= textureChannel)
+						{
+							if (Debug.isDebugBuild)
+								Debug.LogError($"OverlayColorData.channelMask does not have enough channels! length is {ocd.channelMask.Length} textireChannel is {textureChannel}");
+							continue;
+                        }
+                        if (ocd.channelAdditiveMask.Length <= textureChannel)
+                        {
+                            if (Debug.isDebugBuild)
+                                Debug.LogError($"OverlayColorData.channelAdditiveMask does not have enough channels! length is {ocd.channelMask.Length} textireChannel is {textureChannel}");
+                            continue;
+                        }
+						if (colorModifier.A.Additive)
+						{
+							aCurr = ocd.channelAdditiveMask[textureChannel].a;
+                        }
+						else
+                        {
+                            aCurr =  ocd.channelMask[textureChannel].a;
+                        }
+
+                        aAdj = colorModifier.A.EvaluateAdjustment(dnaVal, aCurr);
 						if (colorModifier.A.Absolute)
                         {
                             aAdj = Mathf.Lerp(aCurr, aAdj, masterWeight);

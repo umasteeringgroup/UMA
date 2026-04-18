@@ -18,6 +18,10 @@ namespace UMA
         // Runtime toggle for MeshAPI combiner (Unity 2022.2+)
         [Tooltip("Enable the MeshData API based combiner on Unity 2022.2+. Falls back to legacy combiner when disabled or on older Unity.")]
         public bool useMeshAPICombiner = false;
+		[Tooltip("Enable detailed UMA memory usage debug logs.")]
+		public bool DebugMemoryUsage = false;
+		[Tooltip("Enable decal callbacks on UMA characters.")]
+		public bool DisableDecalCallbacks = false;
 
 #if UNITY_EDITOR
         //public const string customSettingsPath = "Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset";
@@ -33,7 +37,7 @@ namespace UMA
         [SerializeField]
         public string KeepTag = "UMAKeepChain";
         public string[] tagLookupValues = new string[] { "Head", "Hair", "Torso", "Legs", "Feet", "Hands", "Smooshable", "Unsmooshable", "KeepChain", "Ignore" };
-
+        public string[] groupNames = new string[] { "Head", "Body", "Arms", "Legs", "Feet", "Hands"};
         public bool cleanRegenOnSave = true;
         public bool autoRepairIndex = false;
         public bool showIndexedTypes = true;
@@ -44,18 +48,22 @@ namespace UMA
         public bool useAddressables = false;
         public bool enableGLTFExport = false;
         public bool alwaysGetAddressables = true;
+        public bool ignoreBackupFolders = false;
 
-
+        public bool addDNAOnRaceChange = true;
         public bool addrUseSharedGroup = true;
         public string addrSharedGroupName = "UMAShared";
         public string addrDefaultLabel = "UMA_Default";
         public bool addrStripMaterials = true; //VES fixed missing r in addStripMaterials
+        public bool addrStripTextures = false;
         public bool addrIncludeRecipes = false;
         public bool addrIncludeOther = false;
+        public bool addrStripUVAttachedShaders = false; 
 
         public bool showWelcomeToUMA = true;
 #endif
         public GameObject generatorPrefab;
+		public static UMASettings instance;
 #if UNITY_EDITOR
         public GameObject characterPrefab;
         public TextureMerge textureMerge;
@@ -71,11 +79,13 @@ namespace UMA
         [Header("Shader Folder")]
         [Tooltip("The folder where the UMA shaders are located, relative to the Assets folder. Usually UMA/Core/ShaderPackages")]
         public string ShaderFolder;
+        [Header("Default UMA Folder")]
+        [Tooltip("The UMA folder, relative to the Assets folder. Usually Assets/UMA")]
+        public string UMAFolder = "Assets/UMA";
 
         [Header("Welcome page textures")]
         public Texture2D Overlays;
         public Texture2D Slots;
-		public static UMASettings instance;
 
 
         [MenuItem("Assets/Create/UMA/Core/UMASettings")]
@@ -99,35 +109,29 @@ namespace UMA
         }
 
 
-        public static UMASettings GetSettings()
-        {
-            var settings = Resources.Load<UMASettings>("UMASettings");
-            UpdateAlwaysOverrides(settings); //VES added
-            return settings;
-        }
 
         public static string FindUMAFullPath()
         {
-            string folder = "/UMA";
-            string OSFolderName = Path.Combine(Application.dataPath, "UMA");
-            if (Directory.Exists(OSFolderName))
+            // Try to locate the InternalDataStore folder anywhere in the project
+            string[] folderGuids = AssetDatabase.FindAssets("InternalDataStore t:Folder");
+            if (folderGuids != null && folderGuids.Length >0)
             {
-                // If the UMA folder exists in the Assets directory, return its path
-                return "Assets/UMA";
-            }
-
-            // Not in the default location, so we need to search for it
-            // search the project for the UMA folder
-            string[] folders = AssetDatabase.FindAssets("UMA t:Folder");
-            if (folders != null && folders.Length > 0)
-            {
-                foreach (string guid in folders)
+                for (int i =0; i < folderGuids.Length; i++)
                 {
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    if (path.EndsWith(folder, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // If we find a folder path that ends with "/UMA", return its path
-                        return path;
+                    string path = AssetDatabase.GUIDToAssetPath(folderGuids[i]);
+                    if (string.IsNullOrEmpty(path)) continue;
+
+                    string normalized = path.Replace('\\', '/').TrimEnd('/');
+                    int idx = normalized.LastIndexOf("/InternalDataStore", StringComparison.OrdinalIgnoreCase);
+                    if (idx >=0)
+            {
+                        // parent of InternalDataStore
+                        string parent = normalized.Substring(0, idx);
+                        if (string.IsNullOrEmpty(parent))
+                {
+                            parent = "Assets";
+                        }
+                        return parent;
                     }
                 }
             }
@@ -135,6 +139,15 @@ namespace UMA
             // if we didn't find it, return the default path. Let the chips fall where they may.
             return "Assets/UMA";
         }
+#endif
+
+		public static UMASettings GetSettings() {
+			var settings = Resources.Load<UMASettings>("UMASettings");
+			UpdateAlwaysOverrides(settings); //VES added
+			return settings;
+		}
+
+
 
         public static UMASettings GetOrCreateSettings()
         {
@@ -142,9 +155,17 @@ namespace UMA
             {
                 return instance;
             }
+
+			var o = Resources.Load<UMASettings>("UMASettings");
+			if (o != null)
+			{
+				instance = o;
+				return o;
+			}
+#if UNITY_EDITOR
+
             string path = FindUMAFullPath() + "/InternalDataStore/InGame/Resources/UMASettings.asset";
             var settings = AssetDatabase.LoadAssetAtPath<UMASettings>(path);
-#if UNITY_EDITOR
             if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<UMASettings>();
@@ -154,12 +175,19 @@ namespace UMA
                 AssetDatabase.CreateAsset(settings, path);
                 AssetDatabase.SaveAssets();
             }
-#endif
             UpdateAlwaysOverrides(settings); //VES added
             instance = settings;
             return settings;
-        }
+#else
+            var settings = ScriptableObject.CreateInstance<UMASettings>();
+            // settings.cities = new List<string>();
+            settings.useMeshAPICombiner = false;
+            UpdateAlwaysOverrides(settings); //VES added
+			instance = settings;
+			return settings;
 #endif
+        }
+
 
         public static UMASettings GetSettingsFromResources()
         {
@@ -189,6 +217,13 @@ namespace UMA
 #endif
         }
 
+		public static bool DisplayDebugMemoryUsage {
+			get {
+				var settings = GetOrCreateSettings();
+				return settings.DebugMemoryUsage;
+			}
+		}
+
 #if UNITY_EDITOR
         public static SerializedObject GetSerializedSettings()
         {
@@ -204,6 +239,14 @@ namespace UMA
             }
         }
 
+        public static bool IgnoreBackupFolders
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                return settings.ignoreBackupFolders;
+            }
+        }
         public static bool AutoRepairIndex { get { var settings = GetOrCreateSettings(); return settings.autoRepairIndex; } }
         public static bool ShowIndexedTypes { get { var settings = GetOrCreateSettings(); return settings.showIndexedTypes; } }
         public static bool ShowUnindexedTypes { get { var settings = GetOrCreateSettings(); return settings.showUnindexedTypes; } }
@@ -216,6 +259,8 @@ namespace UMA
         public static string AddrSharedGroupName { get { var settings = GetOrCreateSettings(); return settings.addrSharedGroupName; } }
         public static string AddrDefaultLabel { get { var settings = GetOrCreateSettings(); return settings.addrDefaultLabel; } }
         public static bool AddrStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addrStripMaterials; } } //VES fixed missing r in AddStripMaterials
+        public static bool AddrStripTextures { get { var settings = GetOrCreateSettings(); return settings.addrStripTextures; } }
+        public static bool AddrStripUVAttachedShaders { get { var settings = GetOrCreateSettings(); return settings.addrStripUVAttachedShaders; } }
         public static bool AddrIncludeRecipes { get { var settings = GetOrCreateSettings(); return settings.addrIncludeRecipes; } }
         public static bool AddrIncludeOther { get { var settings = GetOrCreateSettings(); return settings.addrIncludeOther; } }
 #endif

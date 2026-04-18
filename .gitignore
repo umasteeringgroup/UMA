@@ -57,5 +57,11 @@ UMAProject/Assets/Tarfmagougou.meta
 *.docx
 UMAProject/Assets/Test
 UMAProject/Assets/SceneTemplateAssets
-TextMesh*Pro/
-Assets/TextMesh\ Pro/
+UMAProject/Assets/TextMesh*Pro/
+UMAProject/Assets/TextMesh\ Pro/
+UMAProject/Assets/FPL_ISBIT/*
+UMAProject/Assets/_Recovery
+UMAProject/Assets/AddressableAssetsData
+UMAProject/Assets/FPL_ISBIT
+/.vs
+*.slnx

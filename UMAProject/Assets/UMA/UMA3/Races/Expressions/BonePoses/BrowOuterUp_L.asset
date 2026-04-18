@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: BrowOuterUp_L
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftEyebrowMiddle
+    hash: -356417641
+    position: {x: -0.000027962029, y: 0.016560934, z: 0.0012780651}
+    rotation: {x: -0.067472, y: 0.00356795, z: 0.00024114673, w: 0.9977149}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftEyebrowUp
+    hash: 1123680177
+    position: {x: 0.000026501715, y: 0.02324105, z: 0.0035722256}
+    rotation: {x: -0.11061122, y: 0.00004941017, z: 0.00024449802, w: 0.99386376}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

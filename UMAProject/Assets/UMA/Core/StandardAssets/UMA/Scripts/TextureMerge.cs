@@ -44,6 +44,21 @@ namespace UMA
 		private int textureMergeRectCount;
 		private TextureMergeRect[] textureMergeRects;
 
+		public void EnsurePreviewRectCapacity(int count)
+		{
+			EnsureCapacity(count);
+		}
+
+		public TextureMergeRect[] GetPreviewRects()
+		{
+			return textureMergeRects;
+		}
+
+		public void SetPreviewRectCount(int count)
+		{
+			textureMergeRectCount = count;
+		}
+
 		//[System.Serializable] //why was this serializable? the array was public serialized too
 		public struct TextureMergeRect
 		{
@@ -55,8 +70,10 @@ namespace UMA
 			public Vector3 scale;
 			public Vector2 position;
 			public bool advancedBlending;
-			public int textureType;
+			public int textureChannel;
 			public UMAMaterial.ChannelType channelType;
+			// Needed for decals
+			public TextureEventParms textureEventParms;
         }
 
 		public void RefreshMaterials()
@@ -85,7 +102,7 @@ namespace UMA
 			// Disabling linear to srgb conversion is not enough. It seems that Unity always does the conversion when reading from a RenderTexture.
 			// As a workaround, we will nead to create a non-linear texture to blit to, so the conversion happens, but it's OK for it to happen.
 			GL.sRGBWrite = false;            
-		    RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+          RenderTexture outputMap = new RenderTexture(rt.width, rt.height, 32, rt.format, RenderTextureReadWrite.sRGB);
             outputMap.enableRandomWrite = true;
             outputMap.Create();
             RenderTexture.active = outputMap;
@@ -123,10 +140,11 @@ namespace UMA
             }
         }
 
-        public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color), bool sharperFitTextures = true)
+		public void DrawAllRects(RenderTexture target, int width, int height, Color background = default(Color), bool sharperFitTextures = true)
 		{
 			if (textureMergeRects != null)
 			{
+				//Debug.Log("Drawing " + textureMergeRectCount + " rects to target: " + target.name + " w:" + width + " h:" + height);
 				RenderTexture backup = RenderTexture.active;
 				RenderTexture.active = target;
 #if UMA_ADVANCED_BLENDMODES
@@ -134,61 +152,67 @@ namespace UMA
 #endif
 				GL.Clear(true, true, background);
 				GL.PushMatrix();
-				//the matrix needs to be in the original atlas dimensions because the textureMergeRects are in that space.
-				GL.LoadPixelMatrix(0, width, height, 0);
+				try
+				{
+					//the matrix needs to be in the original atlas dimensions because the textureMergeRects are in that space.
+					GL.LoadPixelMatrix(0, width, height, 0);
 
 #if UMA_ADVANCED_BLENDMODES
 
-				// This draws the entire atlas.
-				// We need to set the base texture on any overlay that is not a base overlay.
-				// To do this, we will probably need to track that on the textureMergeRects.
-				// We should hard code base overlays to be normal blend mode (ie, they blend with the basic shaders)
+					// This draws the entire atlas.
+					// We need to set the base texture on any overlay that is not a base overlay.
+					// To do this, we will probably need to track that on the textureMergeRects.
+					// We should hard code base overlays to be normal blend mode (ie, they blend with the basic shaders)
 
-				Rect Destination = new Rect(0, 0, 0, 0);
-				Rect Src = new Rect(0, 0, 0, 0);
-				for (int i = 0; i < textureMergeRectCount; i++)
-				{
-					var tr = textureMergeRects[i];
-
-					if (tr.advancedBlending)
+					Rect Destination = new Rect(0, 0, 0, 0);
+					Rect Src = new Rect(0, 0, 0, 0);
+					for (int i = 0; i < textureMergeRectCount; i++)
 					{
-                        // Create a temporary texture that is the size of the overlay rect in atlas space.
-                        scratch = RenderTexture.GetTemporary((int)tr.rect.width, (int)tr.rect.height, 0, target.format, RenderTextureReadWrite.Linear);
+						var tr = textureMergeRects[i];
 
-						float fw = (float)width;
-						float fh = (float)height;
+						//Debug.Log("Drawing rect for texture: " + (tr.tex != null ? tr.tex.name : "null") + " at " + tr.rect + " advancedBlending: " + tr.advancedBlending + " channelType: " + tr.channelType);
+						if (tr.advancedBlending)
+						{
+							// Create a temporary texture that is the size of the overlay rect in atlas space.
+							scratch = RenderTexture.GetTemporary((int)tr.rect.width, (int)tr.rect.height, 0, target.format, RenderTextureReadWrite.Linear);
 
-                        GL.PushMatrix();
-                        GL.LoadPixelMatrix(0, scratch.width, scratch.height, 0); 
+							float fw = (float)width;
+							float fh = (float)height;
 
-						// Set the destination (The entire scratch texture)
-                        Destination.Set(0, 0, scratch.width, scratch.height);
+							GL.PushMatrix();
+							try
+							{
+								GL.LoadPixelMatrix(0, scratch.width, scratch.height, 0);
 
-						// Set the source rect in UV space
-						Src.Set(tr.rect.x/fw, 1.0f-((tr.rect.y+tr.rect.height)/fh), (tr.rect.width/fw), (tr.rect.height / fh));  // get the rect in UV space
+								// Set the destination (The entire scratch texture)
+								Destination.Set(0, 0, scratch.width, scratch.height);
 
-                        //SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-before.png"));
-                        // should be drawing to the scratch texture now
-                        RenderTexture.active = scratch;
-                        Graphics.DrawTexture(Destination, target, Src, 0, 0, 0, 0);
-						RenderTexture.active = target;
-                        //SaveRenderTexture(scratch, System.IO.Path.Combine(Application.dataPath, "scratch-after.png"));
-                        //SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-after.png"));
-						GL.PopMatrix();
-						tr.mat.SetTexture("_BaseTex", scratch);
-						DrawRect (ref tr, sharperFitTextures);
-                    }
-                    else
-					{
-                        DrawRect(ref tr, sharperFitTextures);
-                    }
+								// Set the source rect in UV space
+								Src.Set(tr.rect.x / fw, 1.0f - ((tr.rect.y + tr.rect.height) / fh), (tr.rect.width / fw), (tr.rect.height / fh));  // get the rect in UV space
 
-                    if (scratch != null)
-					{
-                        RenderTexture.ReleaseTemporary(scratch);
-                        scratch = null;
-                    }
-				}
+								//SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-before.png"));
+								// should be drawing to the scratch texture now
+								RenderTexture.active = scratch;
+								Graphics.DrawTexture(Destination, target, Src, 0, 0, 0, 0);
+								RenderTexture.active = target;
+								//SaveRenderTexture(scratch, System.IO.Path.Combine(Application.dataPath, "scratch-after.png"));
+								//SaveRenderTexture(target, System.IO.Path.Combine(Application.dataPath, "target-after.png"));
+							}
+							finally { GL.PopMatrix(); }
+							tr.mat.SetTexture("_BaseTex", scratch);
+							DrawRect(ref tr, sharperFitTextures);
+						}
+						else
+						{
+							DrawRect(ref tr, sharperFitTextures);
+						}
+
+						if (scratch != null)
+						{
+							RenderTexture.ReleaseTemporary(scratch);
+							scratch = null;
+						}
+					}
 
 #else
 				for (int i = 0; i < textureMergeRectCount; i++)
@@ -196,8 +220,12 @@ namespace UMA
 					DrawRect(ref textureMergeRects[i], sharperFitTextures);
 			    }
 #endif
-				GL.PopMatrix();
-				RenderTexture.active = backup;
+				}
+				finally
+				{
+					GL.PopMatrix();
+					RenderTexture.active = backup;
+				}
 			}
 		}
 
@@ -214,58 +242,65 @@ namespace UMA
                 return;
             }
 
-            if (tr.transform)
+            //Debug.Log("Drawing rect for texture: " + tr.tex.name + " at " + tr.rect);
+            GL.PushMatrix();
+			try
 			{
-#if true
-				// rotate texture here?
-				GL.PushMatrix();
-				tr.rect.x += tr.position.x;
-				tr.rect.y += tr.position.y;
 
-                // rotate around the pivot
-                pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f) , tr.rect.y + (tr.rect.height / 2.0f) );
-				
-				Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
+				if (tr.transform)
+				{
+					tr.rect.x += tr.position.x;
+					tr.rect.y += tr.position.y;
 
-				GL.MultMatrix(newMat);
-#else
-                // rotate texture here?
-                GL.PushMatrix();
+					// rotate around the pivot
+					pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f), tr.rect.y + (tr.rect.height / 2.0f));
 
-                // rotate around the pivot
-                pivotPoint.Set(tr.rect.x + (tr.rect.width / 2.0f), tr.rect.y + (tr.rect.height / 2.0f));
-				
-                tr.rect.width *= tr.scale.x;
-                tr.rect.height *= tr.scale.y;
+					Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), tr.scale) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
 
-                Matrix4x4 newMat = Matrix4x4.TRS(pivotPoint, Quaternion.Euler(0, 0, tr.rotation), Vector3.one) * Matrix4x4.TRS(-pivotPoint, Quaternion.identity, Vector3.one);
+					GL.MultMatrix(newMat);
+				}
 
-                GL.MultMatrix(newMat);
+				if (sharperFitTextures)
+				{
+					tr.tex.mipMapBias = -1.0f;
+				}
+				else
+				{
+					tr.tex.mipMapBias = 0f;
+				}
 
-#endif
-            }
-
-            if (sharperFitTextures)
-			{
-				tr.tex.mipMapBias = -1.0f;
+				Graphics.DrawTexture(tr.rect, tr.tex, tr.mat);
 			}
-			else
-			{
-				tr.tex.mipMapBias = 0f;
-			}
-
-			if (tr.channelType == UMAMaterial.ChannelType.DiffuseTexture)
-			{
-				// Debug.Log($"Drawing = {tr.textureType} with texture {tr.mat.mainTexture.name} and shader {tr.mat.shader.name}");
-			}
-
-		
-			Graphics.DrawTexture(tr.rect, tr.tex, tr.mat);		
-			if (tr.transform)
-			{
+			finally {
 				GL.PopMatrix();
 			}
-		}
+
+            if (tr.textureEventParms != null)
+            {
+                tr.textureEventParms.renderTexture = RenderTexture.active;
+#if true
+                // Ensure SlotData.UVArea is valid BEFORE firing AtlasUpdated (decal stamping depends on it).
+                var tp = tr.textureEventParms;
+                var baseOverlay = tp.slotData.GetOverlay(0);
+
+				if(tp.slotData != null && tp.renderTexture != null && baseOverlay != null && tp.overlayData == tp.slotData.GetOverlay(0) && tp.slotData.uvAreaUpdateFrame != Time.frameCount) {
+                    float w = Mathf.Max(1f, tp.renderTexture.width);
+                    float h = Mathf.Max(1f, tp.renderTexture.height);
+                    tp.slotData.uvAreaUpdateFrame = Time.frameCount;
+
+					// Convert from top-left pixel space (GL.LoadPixelMatrix(..., height, 0))
+					// to bottom-left UV space (UMA SlotData.UVArea / mesh UV convention).
+					float xMin = tr.rect.xMin / w;
+					float yMin = (h - (tr.rect.yMin + tr.rect.height)) / h; // unflip Y
+					float xRange = tr.rect.width / w;
+					float yRange = tr.rect.height / h;
+
+					tp.slotData.UVArea.Set(xMin, yMin, xRange, yRange);
+                }
+#endif
+                tr.textureEventParms.umaData.FireAtlasUpdatedEvent(tr.textureEventParms);
+            }
+        }
 
 		public void PostProcess(RenderTexture destination, UMAMaterial.ChannelType channelType)
 		{
@@ -365,29 +400,32 @@ namespace UMA
 			}
 		}
 
-		private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureType)
+		private void SetupMaterialAndBaseOverlay(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureChannel, UMAData umaData)
 		{
 			if (source.isNoTextures)
             {
                 return;
             }
 
-            camBackgroundColor = source.GetMultiplier(0, textureType);
+            camBackgroundColor = source.GetMultiplier(0, textureChannel);
 			camBackgroundColor.a = 0.0f;
 
-			if (textureType >= source.baseOverlay.textureList.Length)
+			if (textureChannel >= source.baseOverlay.textureList.Length)
 			{
 				// Debug.Log("Out of range (" + textureType + ") on base overlay: " + source.overlayData[0].overlayName + " on slot: " + source.slotData.slotName);
 				return;
 			}
-			textureMergeRect.tex = source.baseOverlay.textureList[textureType];
+			textureMergeRect.tex = source.baseOverlay.textureList[textureChannel];
             textureMergeRect.advancedBlending = false;
+			TextureEventParms tep = new TextureEventParms(null, source.overlayData[0], source.slotData, umaData, textureChannel );
 
-			// JRRM debug
-			textureMergeRect.textureType = textureType;
-			textureMergeRect.channelType = source.slotData.material.channels[textureType].channelType;
+            // JRRM debug
+            textureMergeRect.textureChannel = textureChannel;
+			textureMergeRect.channelType = source.slotData.material.channels[textureChannel].channelType;
+			textureMergeRect.textureChannel = textureChannel;
+            textureMergeRect.textureEventParms = tep;
 
-            switch (source.slotData.material.channels[textureType].channelType)
+            switch (source.slotData.material.channels[textureChannel].channelType)
 			{
 				case UMAMaterial.ChannelType.NormalMap:
 					textureMergeRect.mat.shader = normalShader;
@@ -412,6 +450,7 @@ namespace UMA
             {
                 Debug.Log("Base overlay: NULL on slot: " + source.slotData.slotName);
             }
+
 			var multiplier = source.GetMultiplier(0, textureType);
 			var additive = source.GetAdditive(0, textureType);
 
@@ -421,13 +460,13 @@ namespace UMA
 
 
 #endif
-            textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureType]);
+            textureMergeRect.mat.SetTexture("_MainTex", source.baseOverlay.textureList[textureChannel]);
 			textureMergeRect.mat.SetTexture("_ExtraTex", source.baseOverlay.alphaTexture);
-			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureType));
-			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(0, textureType));
+			textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(0, textureChannel));
+			textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(0, textureChannel));
 		}
 
-		public void SetupModule(UMAData.MaterialFragment source, int textureType)
+		public void SetupMaterialAndBaseOverlay(UMAData.MaterialFragment source, int textureChannel, UMAData umaData)
 		{
 			if (!source.isNoTextures)
 			{
@@ -435,7 +474,7 @@ namespace UMA
 				textureMergeRects[textureMergeRectCount].rect = source.atlasRegion;
 				textureMergeRects[textureMergeRectCount].rect.y = height - textureMergeRects[textureMergeRectCount].rect.y - textureMergeRects[textureMergeRectCount].rect.height;
 				atlasRect = textureMergeRects[textureMergeRectCount].rect;
-				SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, textureType);
+				SetupMaterialAndBaseOverlay(ref textureMergeRects[textureMergeRectCount], source, textureChannel, umaData);
 			}
 			textureMergeRectCount++;
 		}
@@ -443,42 +482,102 @@ namespace UMA
 		Rect atlasRect;
 		Vector2 resolutionScale;
 		int height;
-		public void SetupModule(UMAData.GeneratedMaterial atlas, int idx, int textureType)
+
+
+        /// <summary>
+        /// SetupSlotAndOverlayStack sets up the texture merge for a specific material fragment (slot + overlay stack) in an atlas.
+		/// •	A MaterialFragment represents one slot’s contribution to a single atlas/material. It holds:
+		/// •	Where to draw in the final atlas: atlasRegion(target rect in the combined texture).
+		/// •	What to draw: baseOverlay(the first overlay) and overlays[] (additional overlays).
+		/// •	How to draw: per-overlay rects[], color multipliers/additives, and supporting data(slotData, overlayData[], masks).
+		/// 
+		/// So basically, for a single slot, this sets up the base overlay, then sets up each additional overlay in turn, so they can all be drawn in the correct order.
+		/// This happens later, in DrawAllRects.
+		///  
+        /// </summary>
+        /// <param name="atlas"></param>
+        /// <param name="idx"></param>
+        /// <param name="textureChannel"></param>
+        public void SetupSlotAndOverlayStack(UMAData.GeneratedMaterial atlas, int idx, int textureChannel, UMAData umaData)
 		{
 			var atlasElement = atlas.materialFragments[idx];
-			if (atlasElement.isRectShared)
+
+            if (atlasElement.isRectShared)
             {
                 return;
             }
 
             height = Mathf.FloorToInt(atlas.cropResolution.y);
-			SetupModule(atlasElement, textureType);
+
+            // Here we setup the material and the base overlay TextureMergeRect.
+            SetupMaterialAndBaseOverlay(atlasElement, textureChannel, umaData);
 			resolutionScale = atlas.resolutionScale * atlasElement.slotData.overlayScale;
 
-			if (atlasElement.overlays == null)
+			if (atlasElement.AdditionalOverlays == null)
             {
+				Debug.LogWarning($"SetupSlotAndOverlayStack: No overlays in atlasElement for slot {atlasElement.slotData.slotName}");
                 return;
             }
 
-            for (int i2 = 0; i2 < atlasElement.overlays.Length; i2++)
+
+            // If there are additional overlays, we need to set them up too.
+            // Each overlay may have a different blend mode, so we need to set that up on the material.
+            // Note that overlayList[0] is the base overlay, so when we need to get to the actual overlayData over any
+            // additional overlay, we need to use overlayData[AdditionalOverlayIndex + 1]
+            for (int i = 0; i < atlasElement.AdditionalOverlays.Length; i++)
 			{
-				SetupOverlay(atlasElement, i2, textureType);
+				string texname = "";
+
+				if (atlasElement.AdditionalOverlays[i] != null)
+				{
+
+					if (textureChannel < atlasElement.AdditionalOverlays[i].textureList.Length)
+					{
+						var tex = atlasElement.AdditionalOverlays[i].textureList[textureChannel];
+
+						if (tex != null)
+						{
+							texname = tex.name;
+						}
+						else
+						{
+							texname = "null texture";
+						}
+					}
+					else
+					{
+						texname = "textureType out of range";
+                    }
+				}
+				else
+				{
+					texname = "null overlay";
+				}
+
+				//Debug.Log($"SetupOverlay [{i}] Slot [{atlasElement.slotData.slotName}], Overlay [{atlasElement.overlayList[i].overlayName}] texture [{texname}] Channel [{textureType}]");
+				//DebugCSV($"{atlasElement.slotData.slotName}, {i}, {atlasElement.overlayList[i].overlayName}, {texname}, {textureType}");
+                SetupOverlay(atlasElement, i, textureChannel, umaData);
 			}
 		}
 
-		private void SetupOverlay(UMAData.MaterialFragment source, int OverlayIndex, int textureType)
+		private void DebugCSV(string msg)
 		{
-			if (source.overlays[OverlayIndex] == null)
+			System.IO.File.AppendAllText("c:\\tmp\\TextureMerge.csv", msg + "\n");
+        }
+
+        private void SetupOverlay(UMAData.MaterialFragment source, int AdditionalOverlayIndex, int textureChannel, UMAData umaData)
+		{
+			if (source.AdditionalOverlays[AdditionalOverlayIndex] == null)
             {
                 return;
             }
 
-            if (textureType >= source.overlays[OverlayIndex].textureList.Length)
+            if (textureChannel >= source.AdditionalOverlays[AdditionalOverlayIndex].textureList.Length)
             {
                 return;
             }
 
-            if (source.overlays[OverlayIndex].textureList[textureType] == null)
+            if (source.AdditionalOverlays[AdditionalOverlayIndex].textureList[textureChannel] == null)
             {
                 return;
             }
@@ -490,23 +589,27 @@ namespace UMA
 
             Rect overlayRect;
 
-			if (source.rects[OverlayIndex].width != 0)
+			if (source.rects[AdditionalOverlayIndex].width != 0)
 			{
-				overlayRect = new Rect(atlasRect.xMin + source.rects[OverlayIndex].x * resolutionScale.x, atlasRect.yMax - source.rects[OverlayIndex].y * resolutionScale.y - source.rects[OverlayIndex].height * resolutionScale.y, source.rects[OverlayIndex].width * resolutionScale.x, source.rects[OverlayIndex].height * resolutionScale.y);
+				overlayRect = new Rect(atlasRect.xMin + source.rects[AdditionalOverlayIndex].x * resolutionScale.x, atlasRect.yMax - source.rects[AdditionalOverlayIndex].y * resolutionScale.y - source.rects[AdditionalOverlayIndex].height * resolutionScale.y, source.rects[AdditionalOverlayIndex].width * resolutionScale.x, source.rects[AdditionalOverlayIndex].height * resolutionScale.y);
 			}
 			else
 			{
 				overlayRect = atlasRect;
 			}
 
-			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, OverlayIndex, ref overlayRect, textureType);
+			SetupMaterial(ref textureMergeRects[textureMergeRectCount], source, AdditionalOverlayIndex, ref overlayRect, textureChannel);
 
-			// We only get here if we have more than one overlay. 
-			// The overlay we are blending is the current overlay +1.
-			// when there are more than one overlay, that means we are blending the overlay in. 
-			if (source.overlayData[OverlayIndex + 1].instanceTransformed)
+            /* set the parameters for decal overlays */
+            textureMergeRects[textureMergeRectCount].textureEventParms = new TextureEventParms(null,  source.overlayData[AdditionalOverlayIndex + 1], source.slotData, umaData, textureChannel);
+
+            /* Event parameters setup */
+
+            // We only get here if we have more than one overlay. 
+            // The additional overlay we are blending is found in the overlayData[AdditionalOverlayIndex + 1] (overlayData[0] is the base overlay)
+            if (source.overlayData[AdditionalOverlayIndex + 1].instanceTransformed)
 			{
-				OverlayData od = source.overlayData[OverlayIndex + 1];
+				OverlayData od = source.overlayData[AdditionalOverlayIndex + 1];
 				textureMergeRects[textureMergeRectCount].transform = true;
 				textureMergeRects[textureMergeRectCount].rotation = od.Rotation;
 				textureMergeRects[textureMergeRectCount].scale = od.Scale;
@@ -576,14 +679,14 @@ namespace UMA
         private void SetupMaterial(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int i2, ref Rect overlayRect, int textureType)
 		{
 			textureMergeRect.rect = overlayRect;
-			textureMergeRect.tex = source.overlays[i2].textureList[textureType];
+			textureMergeRect.tex = source.AdditionalOverlays[i2].textureList[textureType];
 			textureMergeRect.advancedBlending = false;
             // JRRM debug
-            textureMergeRect.textureType = textureType;
+            textureMergeRect.textureChannel = textureType;
             textureMergeRect.channelType = source.slotData.material.channels[textureType].channelType;
 
 
-            if (source.overlays[i2].overlayType == OverlayDataAsset.OverlayType.Normal)
+            if (source.AdditionalOverlays[i2].overlayType == OverlayDataAsset.OverlayType.Normal)
 			{
                 OverlayData od = source.overlayData[i2 + 1];
 
@@ -602,8 +705,8 @@ namespace UMA
 						textureMergeRect.mat.shader = detailNormalShader;
 						break;
 				}
-				textureMergeRect.mat.SetTexture("_MainTex", source.overlays[i2].textureList[textureType]);
-				textureMergeRect.mat.SetTexture("_ExtraTex", source.overlays[i2].alphaTexture);
+				textureMergeRect.mat.SetTexture("_MainTex", source.AdditionalOverlays[i2].textureList[textureType]);
+				textureMergeRect.mat.SetTexture("_ExtraTex", source.AdditionalOverlays[i2].alphaTexture);
 				textureMergeRect.mat.SetColor("_Color", source.GetMultiplier(i2 + 1, textureType));
 				textureMergeRect.mat.SetColor("_AdditiveColor", source.GetAdditive(i2 + 1, textureType));
 			}

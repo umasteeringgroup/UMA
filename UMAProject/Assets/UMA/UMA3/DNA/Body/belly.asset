@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad596f39ce5a904d93ccd9240c400e1, type: 3}
+  m_Name: belly
+  m_EditorClassIdentifier: UMA_Core::UMA.DNA
+  description: Converted DNA Asset for belly
+  defaultValue: 0.5
+  effects:
+  - rid: 4600982878682611792
+  displayName: belly
+  references:
+    version: 2
+    RefIds:
+    - rid: 4600982878682611792
+      type: {class: DNAEffect_BonePose, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.5
+            value: 0.5
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: -1
+        maxMapping: 1
+        expanded: 0
+        selected: 0
+        EffectName: 
+        bonePose: {fileID: 11400000, guid: bf24f1533e36d5640b0399c0056ca113, type: 2}

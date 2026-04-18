@@ -61,9 +61,6 @@ namespace UMA
 		private void CreatePoseSet(string fileName)
 		{
 			SlotDataAsset sda = CustomAssetUtility.CreateAsset<SlotDataAsset>("", false, fileName + "_Slot", false);
-			sda.slotName = sda.name;
-			sda.nameHash = UMAUtils.StringToHash(sda.slotName);
-
 			DynamicDNAConverterController ddcc = UMA.CustomAssetUtility.CreateAsset<DynamicDNAConverterController>("", false, fileName + "_Controller", false);
 			sda.slotDNA = ddcc;
 

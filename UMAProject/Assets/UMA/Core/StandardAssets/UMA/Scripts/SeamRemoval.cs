@@ -95,8 +95,9 @@ namespace UMA
 			}
             //calculateMeshTangents(tempMesh);
             return tempMesh;
-#endif
+#else
 			return null;
+#endif
         }
 
 

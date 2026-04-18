@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad596f39ce5a904d93ccd9240c400e1, type: 3}
+  m_Name: Goblin
+  m_EditorClassIdentifier: UMA_Core::UMA.DNA
+  description: Goblin
+  defaultValue: 0.5
+  effects:
+  - rid: 7828207272613904463
+  - rid: 7828207334286164045
+  - rid: 7828207334286164046
+  - rid: 7828207334286164047
+  displayName: 
+  references:
+    version: 2
+    RefIds:
+    - rid: 7828207272613904463
+      type: {class: DNAEffect_SharedColor, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 2
+            outSlope: 2
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: 0
+        maxMapping: 1
+        expanded: 0
+        EffectName: SkinColor
+        sharedColorName: Skin
+        FromColor: {r: 0.9685534, g: 0.9685534, b: 0.9685534, a: 1}
+        ToColor: {r: 0.32967436, g: 0.49685526, b: 0.3759828, a: 1}
+        colorCombineMethod: 0
+        TextureNumber: 0
+        colorType: 0
+    - rid: 7828207334286164045
+      type: {class: DNAEffect_BlendShape, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: 0
+        maxMapping: 0.587
+        expanded: 0
+        EffectName: Goblin Ears
+        BlendShapeName: GoblinEars
+    - rid: 7828207334286164046
+      type: {class: DNAEffect_BonePose, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: 0
+        maxMapping: 1
+        expanded: 0
+        EffectName: BonePose
+        bonePose: {fileID: 11400000, guid: 5fc123fa1ddd26d4880db059d4d0c544, type: 2}
+    - rid: 7828207334286164047
+      type: {class: DNAEffect_SharedColor, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: 0
+        maxMapping: 1
+        expanded: 0
+        EffectName: Hair
+        sharedColorName: Hair
+        FromColor: {r: 0.76729554, g: 0.32853502, b: 0, a: 1}
+        ToColor: {r: 0, g: 0, b: 0, a: 0}
+        colorCombineMethod: 0
+        TextureNumber: 0
+        colorType: 0

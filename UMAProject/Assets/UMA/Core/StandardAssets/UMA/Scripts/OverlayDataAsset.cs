@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
+
 #if UNITY_EDITOR
 using UnityEditorInternal;
 #endif
@@ -13,12 +15,36 @@ namespace UMA
     /// </summary>
     [PreferBinarySerialization]
 	[System.Serializable]
-	public partial class OverlayDataAsset : ScriptableObject, ISerializationCallbackReceiver, IUMAIndexOptions
-	{
+	public partial class OverlayDataAsset : ScriptableObject, IUMAIndexOptions, INameProvider
+    {
+
+		[FormerlySerializedAs("overlayName")]
+		public string _oldOverlayName;
 		[Tooltip("The name of this overlay.")]
-		public string overlayName;
-		[System.NonSerialized]
-		public int nameHash;
+		public string overlayName
+		{
+			get
+			{
+				if (!string.IsNullOrEmpty(_oldOverlayName))
+				{
+					return _oldOverlayName;
+				}
+				return this.name;
+            }
+		}
+
+		private int _nameHash = 0;
+        public int nameHash
+		{
+			get
+			{
+				if (_nameHash == 0)
+				{
+					_nameHash = UMAUtils.StringToHash(overlayName);
+				}
+				return _nameHash;
+			}
+		}
 
 #if UNITY_EDITOR
 		public float lastActionTime { get; set; } = 0;
@@ -76,9 +102,38 @@ namespace UMA
 		/// Array of textures required for the overlay material.
 		/// </summary>
 		[Tooltip("Array of textures required for the overlay material.")]
-		public Texture[] textureList = new Texture[1];
-
-        [Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
+		[SerializeField]
+		[FormerlySerializedAs("textureList")]
+		private Texture[] _textureList = new Texture[1];
+        public Texture[] textureList
+		{
+			get
+			{
+#if UNITY_EDITOR
+#if UMA_ADDRESSABLES
+				for (int i = 0; i < _textureList.Length; i++)
+				{
+					if (_textureList[i] == null && i < textureNames.Length)
+					{
+						string texName = textureNames[i];
+						if (!string.IsNullOrEmpty(texName))
+						{
+							_textureList[i] = UMAAssetIndexer.Instance.GetAsset<Texture2D>(texName);
+						}
+					}
+				}
+#endif
+#endif
+				return _textureList;
+			}
+			set
+			{
+				_textureList = value;
+			}
+		}
+        [Tooltip("Optional names for the textures, used for reloading textures when stripped.")]
+        public string[] textureNames = new string[1];
+		[Tooltip("Overlay Blend Mode. Not used on the base overlay. Similar to standard blend modes on paint apps. Use the alpha channel ")]
         public OverlayBlend[] overlayBlend = new OverlayBlend[1];
 
         /// <summary>
@@ -88,15 +143,18 @@ namespace UMA
         [Tooltip("Use this to identify what kind of overlay this is and what it fits.")]
 		public string[] tags;
 
-		/// <summary>
-		/// The UMA material.
-		/// </summary>
-		/// <remarks>
-		/// The UMA material contains both a reference to the Unity material
-		/// used for drawing and information needed for matching the textures
-		/// and colors to the various material properties.
-		/// </remarks>
-		[Tooltip("The UMA material contains both a reference to the Unity material used for drawing and information needed for matching the textures and colors to the various material properties.")]
+		[Tooltip("This is used to Use this to identify overlays that are functionally equivalent - Body, etc. this is used to identify overlays that are functionally equivalent - Body, etc. this is used to identify overlays that share the same UV layout and are interchangeable.")]
+        public string overlayGroup;
+
+        /// <summary>
+        /// The UMA material.
+        /// </summary>
+        /// <remarks>
+        /// The UMA material contains both a reference to the Unity material
+        /// used for drawing and information needed for matching the textures
+        /// and colors to the various material properties.
+        /// </remarks>
+        [Tooltip("The UMA material contains both a reference to the Unity material used for drawing and information needed for matching the textures and colors to the various material properties.")]
 		[UMAAssetFieldVisible]
 		public UMAMaterial material;
 
@@ -129,6 +187,26 @@ namespace UMA
 			}
 		}
 
+		public UMAMaterial GetMaterial() {
+			if(material == null) {
+				material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(materialName);
+			}
+			return material;	
+		}
+
+		public void EnsureMaterial() {
+			GetMaterial();
+			// if the texture list is not loaded, and the overlay has texture names, try to load them
+			if(textureList == null && textureNames != null) {
+				textureList = new Texture[textureNames.Length];
+				for(int i = 0; i < textureNames.Length; i++) {
+					if(!string.IsNullOrEmpty(textureNames[i])) {
+						textureList[i] = UMAAssetIndexer.Instance.GetAsset<Texture2D>(textureNames[i]);
+					}
+				}
+			}
+		}
+
         public bool forceKeep = false;
         public bool ForceKeep { get { return forceKeep; } set { forceKeep = value; } }
 
@@ -156,6 +234,17 @@ namespace UMA
 				overlayBlend = new OverlayBlend[textureList.Length];
 			}
 		}
+
+		public Texture2D GetTexture(string MaterialPropertyName)
+		{
+			int index = material.GetChannelIndex(MaterialPropertyName);
+			if (index >= 0 && index < textureList.Length)
+			{
+				return textureList[index] as Texture2D;
+            }
+			return null;
+        }
+
 #if false
 		/// <summary>
 		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
@@ -217,32 +306,34 @@ namespace UMA
 			}*/
 		}
 #endif
-		/// <summary>
-		/// Occlusion Entries for occluding triangles, currently only supported by powertools.
-		/// It is important that the OcclusionEntries be sorted by slotNameHash ascending to allow fast binary lookup
-		/// </summary>
-		//[Tooltip("Occlusion Entries for occluding triangles, currently only supported by powertools.")]
-		//public OcclusionEntry[] OcclusionEntries;
+        /// <summary>
+        /// Occlusion Entries for occluding triangles, currently only supported by powertools.
+        /// It is important that the OcclusionEntries be sorted by slotNameHash ascending to allow fast binary lookup
+        /// </summary>
+        //[Tooltip("Occlusion Entries for occluding triangles, currently only supported by powertools.")]
+        //public OcclusionEntry[] OcclusionEntries;
 
-		public OverlayDataAsset()
+        public OverlayDataAsset()
 		{
 
 		}
 
-		public void OnAfterDeserialize()
-		{
-			nameHash = UMAUtils.StringToHash(overlayName);
-		}
-
-		public void OnBeforeSerialize()
-		{
-		}
 		public Texture GetAlphaMask()
 		{
 			return alphaMask != null ? alphaMask : textureList[0];
 		}
 
-		/*public void SortOcclusion()
+        public string GetAssetName()
+        {
+			return overlayName;
+        }
+
+        public int GetNameHash()
+        {
+			return nameHash;
+        }
+
+        /*public void SortOcclusion()
 		{
 			if (OcclusionEntries != null)
 			{
@@ -252,5 +343,5 @@ namespace UMA
 #endif
 			}
 		} */
-	}
+    }
 }

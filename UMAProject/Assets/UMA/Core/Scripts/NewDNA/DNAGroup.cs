@@ -14,10 +14,16 @@ namespace UMA
         public string DNAArea;
         [Tooltip("The list of DNA that this contains.")]
         public List<DNA> dnaList = new List<DNA>();
+        [Tooltip("The maximum total value for this group.")]
+        public float MaxTotalValue = 0.0f;
 
 #if UNITY_EDITOR
-        [UnityEditor.MenuItem("Assets/Create/UMA/DNA/DNA Collection")]
-        public static void CreateDNACollection()
+        // Editor-only persisted foldout state for inspectors
+        [SerializeField, HideInInspector]
+        public bool editorFoldout;
+
+        [UnityEditor.MenuItem("Assets/Create/UMA/DNA/DNA Group")]
+        public static void CreateDNAGroup()
         {
             UMA.CustomAssetUtility.CreateAsset<DNAGroup>();
         }

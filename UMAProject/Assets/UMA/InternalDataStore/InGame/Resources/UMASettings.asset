@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad6e21078dbc88344b21463ab3922a67, type: 3}
   m_Name: UMASettings
   m_EditorClassIdentifier: 
-  useMeshAPICombiner: 0
+  useMeshAPICombiner: 1
+  DebugMemoryUsage: 0
+  DisableDecalCallbacks: 0
   WarningMessage: "Warning: Please do not modify these\n settings using the inspector.\n
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
-  UMAVersion: UMA 2.14f5
+  UMAVersion: UMA NextGen 3.0
   IgnoreTag: UMAIgnore
   KeepTag: UMAKeepChain
   tagLookupValues:
@@ -38,6 +40,16 @@ MonoBehaviour:
   - Slots/Face
   - Slots/Legs
   - Slots/Arms
+  - Slots/Face
+  - Face
+  groupNames:
+  - Face
+  - Head
+  - Body
+  - Arms
+  - Legs
+  - Feet
+  - Hands
   cleanRegenOnSave: 1
   autoRepairIndex: 0
   showIndexedTypes: 0
@@ -47,12 +59,15 @@ MonoBehaviour:
   useAddressables: 0
   enableGLTFExport: 0
   alwaysGetAddressables: 1
+  ignoreBackupFolders: 0
   addrUseSharedGroup: 1
   addrSharedGroupName: UMAShared
   addrDefaultLabel: UMA_Default
-  addrStripMaterials: 1
+  addrStripMaterials: 0
+  addrStripTextures: 0
   addrIncludeRecipes: 0
   addrIncludeOther: 0
+  addrStripUVAttachedShaders: 0
   showWelcomeToUMA: 0
   generatorPrefab: {fileID: 6782112333398131213, guid: a54fde34eec40964b94d71ee0aba9889, type: 3}
   characterPrefab: {fileID: 153068, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
@@ -64,6 +79,7 @@ MonoBehaviour:
   AssetStoreURL: https://assetstore.unity.com/packages/3d/characters/uma-2-35611
   GithubURL: https://github.com/umasteeringgroup/UMA
   YoutubeURL: https://www.youtube.com/@SecretAnorak/videos
-  ShaderFolder: UMA/Core/ShaderPackages
+  ShaderFolder: Assets/UMA/Core/ShaderPackages
+  UMAFolder: Assets/UMA
   Overlays: {fileID: 2800000, guid: d422cb0fca0d49043a75d8e2f72a0834, type: 3}
   Slots: {fileID: 2800000, guid: 2baa5f36ef4c6fd47922ddd177e6a20e, type: 3}

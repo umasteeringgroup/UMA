@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: TongueLeft
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftEyebrowLow
+    hash: 2129323926
+    position: {x: 0, y: -0.000020578504, z: 0.000038713217}
+    rotation: {x: 0.00058690226, y: 0.0014259943, z: -0.0000008371384, w: 0.99999887}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLipsSuperiorMiddle
+    hash: -1900485368
+    position: {x: -0.00003140513, y: 0.00003280863, z: 0.00013776124}
+    rotation: {x: -0.0000037555776, y: -0.002120265, z: -0.000016341332, w: 0.9999978}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue01
+    hash: 1278850178
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0.00039498173, y: 0.036097433, z: -0.065666124, w: 0.99718845}
+    scale: {x: 1.0011475, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.0000026960467}
+    rotation: {x: -0.00015272338, y: 0.0057266, z: -0.085612215, w: 0.9963121}
+    scale: {x: 1.0011095, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: -0.000020556152, z: 0.000038713217}
+    rotation: {x: 0.00058690226, y: -0.0014259943, z: 0.0000008367861, w: 0.99999887}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.00003140513, y: 0.000082138926, z: 0.0002770573}
+    rotation: {x: -0.0000039817646, y: 0.0022013106, z: 0.00001700144, w: 0.9999976}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

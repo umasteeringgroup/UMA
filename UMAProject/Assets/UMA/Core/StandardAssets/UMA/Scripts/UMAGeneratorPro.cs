@@ -200,12 +200,18 @@ namespace UMA
                     continue;
                 }
 
-                if (slot.Suppressed)
-                {
-                    continue;
-                }
+				if (slot.Suppressed)
+				{
+					continue;
+				}
 
-                if (slot.isBlendShapeSource)
+				// Placeholder slots are wildcard carriers with no asset/mesh; skip them in generation.
+				if (slot.isPlaceholderSlot)
+				{
+					continue;
+				}
+
+				if (slot.isBlendShapeSource)
 				{
 					// Blendshape Source Slots are not combined. Instead, their blendshapes
 					// are added to the mesh at generation time.
@@ -318,7 +324,7 @@ namespace UMA
 						tempMaterialDefinition.baseColor = overlay0.colorData.color;
 						tempMaterialDefinition.size = overlay0.pixelCount;
 
-						tempMaterialDefinition.overlays = new UMAData.textureData[validOverlayCount - 1];
+						tempMaterialDefinition.AdditionalOverlays = new UMAData.textureData[validOverlayCount - 1];
 						tempMaterialDefinition.overlayColors = new Color32[validOverlayCount - 1];
 						tempMaterialDefinition.rects = new Rect[validOverlayCount - 1];
 						tempMaterialDefinition.overlayData = new OverlayData[validOverlayCount];
@@ -354,10 +360,10 @@ namespace UMA
 						{
 							tempMaterialDefinition.rects[overlayID] = overlay.rect; // JRRM: Convert here into base overlay coordinates?
 						}
-						tempMaterialDefinition.overlays[overlayID] = new UMAData.textureData();
-						tempMaterialDefinition.overlays[overlayID].textureList = overlay.textureArray;
-						tempMaterialDefinition.overlays[overlayID].alphaTexture = overlay.alphaMask;
-						tempMaterialDefinition.overlays[overlayID].overlayType = overlay.overlayType;
+						tempMaterialDefinition.AdditionalOverlays[overlayID] = new UMAData.textureData();
+						tempMaterialDefinition.AdditionalOverlays[overlayID].textureList = overlay.textureArray;
+						tempMaterialDefinition.AdditionalOverlays[overlayID].alphaTexture = overlay.alphaMask;
+						tempMaterialDefinition.AdditionalOverlays[overlayID].overlayType = overlay.overlayType;
 						tempMaterialDefinition.overlayColors[overlayID] = overlay.colorData.color;
 						// This hurts my head. Some of the data is in overlay# -1, And some on Overlay#
 						overlayID++;
@@ -1180,9 +1186,8 @@ namespace UMA
 						{
 							MaterialFragment fragment = material.materialFragments[i];
 							SlotData sd = fragment.slotData;
-							sd.skinnedMeshRenderer = 0;
-							sd.submeshIndex = 0;
-							sd.vertexOffset = 0;
+							//sd.skinnedMeshRenderer = 0;
+							//sd.submeshIndex = 0;
 							sd.UVArea.Set(0, 0, 1.0f, 1.0f);
 						}
 					}
@@ -1202,9 +1207,9 @@ namespace UMA
 					material.materialFragments[atlasElementIndex].atlasRegion = tempRect;
 
                     SlotData sd = fragment.slotData;
-                    sd.skinnedMeshRenderer = 0;
-                    sd.submeshIndex = 0;
-                    sd.vertexOffset = 0;
+                    //sd.skinnedMeshRenderer = 0;
+                    //sd.submeshIndex = 0;
+                    //sd.vertexOffset = 0;
                     sd.UVArea.Set(0, 0, 1.0f, 1.0f);
                 }
 			}

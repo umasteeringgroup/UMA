@@ -4,6 +4,10 @@ using static UMA.DNAInstanceCollection;
 
 namespace UMA
 {
+    /// <summary>
+    /// DNA effect that applies a UV translation / scale / rotation to the first matching overlay name
+    /// found in the combined recipe after merging (executed in AfterRecipeGenerated stage).
+    /// </summary>
     [System.Serializable]
     public class DNAEffect_OverlayUVTransform : DNAEffect
     {
@@ -28,9 +32,10 @@ namespace UMA
             }
         }
 #if UNITY_EDITOR
-        override public void DoGui(bool showDescription, bool showHelp)
+        /// <inheritdoc />
+        public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
-            base.DoGui(showDescription, showHelp);
+            base.DoGui(showDescription, showHelp, out curveToCopy);
             overlayName = UnityEditor.EditorGUILayout.TextField("Overlay Name", overlayName);
             if (string.IsNullOrEmpty(overlayName))
             {
@@ -41,6 +46,7 @@ namespace UMA
             rotation = UnityEditor.EditorGUILayout.Slider("Rotation", rotation, 0.0f, 360.0f);
         }
 #endif
+        /// <inheritdoc />
         public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {
             base.AfterRecipeGenerated(avatar, dna, value);

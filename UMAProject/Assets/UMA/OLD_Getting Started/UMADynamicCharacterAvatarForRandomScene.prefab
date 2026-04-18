@@ -1,0 +1,675 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &153068
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 487678}
+  - component: {fileID: 11453600}
+  - component: {fileID: 114399585086637844}
+  m_Layer: 0
+  m_Name: UMADynamicCharacterAvatarForRandomScene
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &487678
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153068}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000016292068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
+--- !u!114 &11453600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcffb0a198605474c8a4d1c67c1515fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
+  defaultRendererAsset: {fileID: 0}
+  userInformation: 
+  alwaysAdjustBounds: 0
+  rawAvatar: 0
+  disableAnimation: 0
+  raceChanged: 0
+  hideRenderers: 0
+  currentLODLevel: 0
+  OverrideTpose: {fileID: 0}
+  atlasResolutionScale: 1
+  ForceRebindAnimator: 0
+  isMeshDirty: 0
+  isShapeDirty: 0
+  isTextureDirty: 0
+  isAtlasDirty: 0
+  needsMaterialClear: 0
+  markNotReadable: 1
+  markDynamic: 0
+  force32bit: 0
+  animationController: {fileID: 0}
+  CharacterCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDestroyed:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBeforeDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterDnaUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterBegun:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: RandomHead
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  AnimatorStateSaved:
+    m_PersistentCalls:
+      m_Calls: []
+  AnimatorStateRestored:
+    m_PersistentCalls:
+      m_Calls: []
+  PreUpdateUMABody:
+    m_PersistentCalls:
+      m_Calls: []
+  AtlasUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  umaRoot: {fileID: 0}
+  _umaRecipe:
+    raceData: {fileID: 0}
+    recipeName: 
+    dnaInstanceCollection:
+      dnaInstances:
+      - Name: armLength
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: armWidth
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: belly
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: chestSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: feetSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: forearmLength
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: forearmWidth
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: gluteusSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: handsSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: height
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: legSeparation
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: legsSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: lowerMuscle
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: lowerWeight
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: shoulderWidth
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: upperMuscle
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: upperWeight
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: waist
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 15c4688efc612034ca4bef53794fabdc, type: 2}
+      - Name: BrowPosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: cheekPosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: cheekPronounced
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: cheekSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: cheekWidth
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: chinPosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: chinPronounced
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: chinSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: earsPitch
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: earsPosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: earsRotation
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: earsSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: earsYaw
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: EyePosition
+        Value: 1
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: eyeRotation
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: eyeSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: eyeSpacing
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: foreheadPosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: foreheadSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: Happy_DNA
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: headSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: headWidth
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: jawsPosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: jawsSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: lipsSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: lowCheekPosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: lowCheekPronounced
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: mandibleSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: mouthSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: neckThickness
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: noseBroken
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: noseCurve
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: noseFlatten
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: noseInclination
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: nosePosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: nosePronounced
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: noseSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: noseWidth
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
+      - Name: breastCleavage
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: bd79fbf28341021419ec55437e4ac01d, type: 2}
+      - Name: breastOrientation
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: bd79fbf28341021419ec55437e4ac01d, type: 2}
+      - Name: breastPosition
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: bd79fbf28341021419ec55437e4ac01d, type: 2}
+      - Name: breastSize
+        Value: 0.5
+        enabled: 1
+        parentGroup: {fileID: 11400000, guid: bd79fbf28341021419ec55437e4ac01d, type: 2}
+    slotDataList: []
+    sharedColors: []
+  animator: {fileID: 0}
+  KeepAvatar: 0
+  characterHeight: 2
+  characterRadius: 0.25
+  characterMass: 50
+  serializedRecipe: {fileID: 0}
+  umaAdditionalRecipes: []
+  DelayUnload: 2
+  BundleCheck: 1
+  StartGuard: 0
+  UnpackPrefabOnBuild: 1
+  KeepAnimatorController: 0
+  RecreateAnimatorOnRaceChange: 1
+  RecipeUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  WardrobeAdded:
+    m_PersistentCalls:
+      m_Calls: []
+  WardrobeRemoved:
+    m_PersistentCalls:
+      m_Calls: []
+  CharacterStart:
+    m_PersistentCalls:
+      m_Calls: []
+  BuildCharacterBegun:
+    m_PersistentCalls:
+      m_Calls: []
+  SlotsHidden:
+    m_PersistentCalls:
+      m_Calls: []
+  WardrobeSuppressed:
+    m_PersistentCalls:
+      m_Calls: []
+  hide: 0
+  leanHiding: 0
+  loadBlendShapes: 0
+  loadOnlyUsedBlendshapes: 1
+  loadBlendshapeNormals: 1
+  loadBlendshapeTangents: 1
+  loadAllFrames: 1
+  forceKeepBlendshapes: []
+  keepAvatar: 0
+  keepPredefinedDNA: 0
+  activeRace:
+    name: Human Female 3.0
+  defaultChangeRaceOptions: 8
+  cacheCurrentState: 1
+  rebuildSkeleton: 0
+  alwaysRebuildSkeleton: 0
+  forceRebindAnimator: 0
+  preloadWardrobeRecipes:
+    loadDefaultRecipes: 0
+    recipes:
+    - _recipeName: F_Freebie Robeset Robe_Recipe
+      _enabledInDefaultWardrobe: 1
+      _compatibleRaces:
+      - HumanFemale
+      - Human Female 3.0
+      ForceLoad: 0
+    - _recipeName: M_F_Freebie Robeset Boots_Recipe
+      _enabledInDefaultWardrobe: 1
+      _compatibleRaces:
+      - Human Male 3.0
+      - Human Female 3.0
+      ForceLoad: 0
+    - _recipeName: Hair_Poofy
+      _enabledInDefaultWardrobe: 1
+      _compatibleRaces:
+      - Human Female 3.0
+      - Human Male 3.0
+      ForceLoad: 0
+  raceAnimationControllers:
+    defaultAnimationController: {fileID: 9100000, guid: eb280940c811fab4a9e3ddf09381c343, type: 2}
+    animators:
+    - raceName: ToonFemale
+      animatorControllerName: IdleTest-w-head
+      animatorController: {fileID: 0}
+    - raceName: HumanMaleDCS
+      animatorControllerName: Locomotion with Head
+      animatorController: {fileID: 0}
+    - raceName: HumanFemaleResources
+      animatorControllerName: Locomotion with Head
+      animatorController: {fileID: 0}
+    dynamicallyAddFromResources: 0
+    resourcesFolderPath: 
+  characterColors:
+    _colors:
+    - name: Hair
+      channelMask:
+      - {r: 0.7264151, g: 0.57967776, b: 0.500267, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 1
+      deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
+      _name: 
+      _color: {r: 0.3529412, g: 0.21568629, b: 0.14117648, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
+    - name: Eyes
+      channelMask:
+      - {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 1
+      deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
+      _name: 
+      _color: {r: 0.28627452, g: 0.40784317, b: 1, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
+    - name: Skin
+      channelMask:
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0.21176471}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 1
+      deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
+      _name: 
+      _color: {r: 0.9632353, g: 0.82158303, b: 0.82158303, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
+    - name: Pants1
+      channelMask:
+      - {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      - {r: 1, g: 1, b: 1, a: 1}
+      channelAdditiveMask:
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      - {r: 0, g: 0, b: 0, a: 0}
+      PropertyBlock:
+        alwaysUpdate: 0
+        alwaysUpdateParms: 0
+        serializedProperties: []
+      foldout: 0
+      showAdvanced: 0
+      isBaseColor: 0
+      deleteThis: 0
+      moveUpThis: 0
+      moveDownThis: 0
+      colorsExpanded: 0
+      propertiesExpanded: 0
+      showSelected: 0
+      isSelected: 0
+      showDisplayColor: 0
+      displayColor: {r: 1, g: 1, b: 1, a: 1}
+      _name: 
+      _color: {r: 0.3529412, g: 0.4156863, b: 0.6392157, a: 1}
+      _metallicGloss: {r: 0, g: 0, b: 0, a: 0}
+      Raw: 0
+      valuesConverted: 0
+  predefinedDNA:
+    PreloadValues: []
+  loadPathType: 2
+  loadPath: CharacterRecipes
+  loadFilename: 
+  loadString: 
+  loadFileOnStart: 1
+  forceSlotMaterials: 0
+  AtlasResolutionScale: 1
+  defaultLoadOptions: 31
+  savePathType: 0
+  savePath: CharacterRecipes
+  saveFilename: 
+  makeUniqueFilename: 0
+  ensureSharedColors: 0
+  defaultSaveOptions: 15
+  BoundsOffset: {x: 0, y: 0, z: 0}
+  editorTimeGeneration: 1
+  showPlaceholder: 0
+  previewModel: 0
+  customModel: {fileID: 0}
+  customRotation: {x: 0, y: 0, z: 0}
+  previewColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  _buildCharacterEnabled: 0
+  nextBuildSlotsOnly: 0
+  debugVertexes: 1
+  references:
+    version: 2
+    RefIds: []
+--- !u!114 &114399585086637844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 153068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Delegates:
+  - eventID: 4
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: 
+          m_MethodName: SetActive
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: 
+          m_MethodName: SetActive
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: 
+          m_MethodName: SetAvatar
+          m_Mode: 2
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: 
+          m_MethodName: SetActive
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 0}
+          m_TargetAssemblyTypeName: 
+          m_MethodName: SetActive
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2

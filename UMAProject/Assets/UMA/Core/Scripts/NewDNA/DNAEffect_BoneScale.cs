@@ -3,20 +3,29 @@ using UnityEngine;
 
 namespace UMA
 {
+    /// <summary>
+    /// DNA effect that scales a bone by a factor derived from the mapped DNA value.
+    /// The resulting scale is (currentScale * (1 + ScaleFactor * mappedValue)).
+    /// </summary>
     [System.Serializable]
     public class DNAEffect_BoneScale : DNAEffect
     {
-        [Tooltip("The bone to scale. If empty, the root bone will be used.")]
+        /// <summary>
+        /// Name of the bone to scale.
+        /// </summary>
         public string BoneName;
         private uint boneHash;
-        [Tooltip("The scale factor to apply to the bone.")]
+        /// <summary>
+        /// Scale multiplier applied per axis; combined with mapped DNA value.
+        /// </summary>
         public Vector3 ScaleFactor = Vector3.one;
-        public override string Description => "Scales a bone by a specified factor.";
+        public override string Description => "Scales a bone by a specified factor. Normal values for min/max are -1 to 1. The curve takes the incoming 0..1 values and maps to the output values. Create a middle point on the curve at 0.5 for no effect in the center.";
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Rig;
 #if UNITY_EDITOR
-        override public void DoGui(bool showDescription, bool showHelp)
+        /// <inheritdoc />
+        public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
-            base.DoGui(showDescription, showHelp);
+            base.DoGui(showDescription, showHelp, out curveToCopy);
             BoneName = UnityEditor.EditorGUILayout.TextField("Bone Name", BoneName);
             if (string.IsNullOrEmpty(BoneName))
             {
@@ -29,18 +38,29 @@ namespace UMA
             ScaleFactor = UnityEditor.EditorGUILayout.Vector3Field("Scale Factor", ScaleFactor);
         }
 #endif
-        public override void PostApply(UMAData avatar, DNA dna, float value)
+        /// <inheritdoc />
+        public override void Restore(UMAData avatar, DNA dna, float value)
         {
-            base.PostApply(avatar, dna, value);
+            if (avatar == null || avatar.skeleton == null || string.IsNullOrEmpty(BoneName))
+            {
+                return;
+            }
+            avatar.skeleton.Restore(UMAUtils.StringToHash(BoneName));
+        }
+        /// <inheritdoc />
+        public override void Apply(UMAData avatar, DNA dna, float value)
+        {
+            base.Apply(avatar, dna, value);
             if (avatar != null && !string.IsNullOrEmpty(BoneName))
             {
                 Transform boneTransform = avatar.skeleton.GetBoneTransform(BoneName);
                 if (boneTransform != null)
                 {
-                    boneTransform.localScale = Vector3.Scale(boneTransform.localScale, ScaleFactor * GetMappedValue(value));
+                    Vector3 ScaleAmount = ScaleFactor * GetMappedValue(value);
+                    Vector3 ResultScale = Vector3.one + ScaleAmount;
+                    boneTransform.localScale = Vector3.Scale(boneTransform.localScale, ResultScale);
                 }
             }
         }
-
     }
 }

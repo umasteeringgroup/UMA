@@ -1,3 +1,4 @@
+// #define TEST_COLORSHADER
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -157,12 +158,18 @@ namespace UMA
 
             //int[][] submeshTriangles = new int[subMeshCount][];
 
-            List<NativeArray<int>> submeshTriangles = new System.Collections.Generic.List<NativeArray<int>>(subMeshTriangleLength.Length);
+          var submeshTriangles = new List<NativeArray<int>>(subMeshTriangleLength.Length);
 			for (int i = 0; i < subMeshTriangleLength.Length; i++)
 			{
+				// Keep list indices aligned with submesh indices.
+				// Some submeshes may have 0 triangles; still insert a default slot to preserve indexing.
 				if (subMeshTriangleLength[i] > 0)
 				{
 					submeshTriangles.Add(target.GetSubmeshBuffer(subMeshTriangleLength[i], i));
+				}
+				else
+				{
+					submeshTriangles.Add(default);
 				}
 				subMeshTriangleLength[i] = 0;
 			}
@@ -254,7 +261,7 @@ namespace UMA
                 int sourceVertexCount = source.meshData.vertices.Length;
 				BuildBoneWeights(source.meshData, nativeBoneWeights, nativeBonesPerVertex, vertexIndex, boneWeightIndex, bonesCollection, bindPoses, bonesList);
 
-                if (source.slotData.expandAlongNormal > 0)
+                if (source.slotData.expandAlongNormal != 0)
                 {
                     ArrayCopyandExpand(source.meshData, source.slotData.expandAlongNormal, ref vertices, vertexIndex, sourceVertexCount);
                 }
@@ -552,7 +559,17 @@ namespace UMA
 			target.uv2 = uv2;
 			target.uv3 = uv3;
 			target.uv4 = uv4;
-			target.colors32 = colors32;
+#if TEST_COLORSHADER
+			for (int i = 0; i < colors32.Length; i++)
+			{
+				System.Random rnd = new System.Random();
+				colors32[i] = new Color32((byte)rnd.Next(255), (byte)rnd.Next(255),(byte)rnd.Next(255), 255);
+            }
+            target.colors32 = colors32;
+
+#else
+            target.colors32 = colors32;
+#endif
 
 			if (has_blendShapes)
             {
@@ -569,10 +586,26 @@ namespace UMA
 			target.submeshes = new SubMeshTriangles[subMeshCount];
 			target.umaBones = umaTransforms;
 			target.umaBoneCount = boneCount;
-			for (int i = 0; i < subMeshCount; i++) 
+			if (subMeshCount < 1)
 			{
-				target.submeshes[i].SetTriangles(null);
-				target.submeshes[i].nativeTriangles = submeshTriangles[i];
+				//Debug.LogError("Submesh count is less than 1! subMeshCount=" + subMeshCount);
+            }
+			//Debug.Log("Submesh count is " + subMeshCount);	
+            if (target.submeshes == null)
+			{
+				//Debug.LogError("Submeshes is null!");
+            }
+            for (int i = 0; i < subMeshCount; i++) 
+			{
+				//Debug.Log("Submesh " + i + " triangle count is " + subMeshTriangleLength[i]);
+
+                if (target.submeshes[i] == null)
+                {
+                    target.submeshes[i] = new SubMeshTriangles();
+                }
+
+                target.submeshes[i].SetTriangles(null);
+                target.submeshes[i].nativeTriangles = submeshTriangles[i];
 			}
 			target.boneNameHashes = bonesList.ToArray();
 		}
@@ -798,10 +831,136 @@ namespace UMA
 			dest.x = source.collisionSphereDistance;
 			dest.y = source.maxDistance;
 		}
+
 #if UMA_BURSTCOMPILE
-		[BurstCompile]
+        [BurstCompile]
 #endif
-		private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
+        private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
+        {
+            if (umaTransforms == null || umaTransforms.Length == 0)
+            {
+                return;
+            }
+
+            // Ensure existing portion and incoming array are sorted by hash (ascending).
+            if (!IsSortedByHash(mergedTransforms, len1))
+            {
+                Array.Sort(mergedTransforms, 0, len1, TransformHashComparer.Instance);
+            }
+            if (!IsSortedByHash(umaTransforms, umaTransforms.Length))
+            {
+                Array.Sort(umaTransforms, 0, umaTransforms.Length, TransformHashComparer.Instance);
+            }
+
+            // Fast path: first merge (no existing entries)
+            if (len1 == 0)
+            {
+                if (umaTransforms.Length > mergedTransforms.Length)
+                {
+                    throw new IndexOutOfRangeException("MergeSortedTransforms: destination buffer too small for first copy.");
+                }
+                Array.Copy(umaTransforms, 0, mergedTransforms, 0, umaTransforms.Length);
+                len1 = umaTransforms.Length;
+                return;
+            }
+
+            int len2 = umaTransforms.Length;
+
+            // Upper bound size = len1 + len2 (duplicates will be removed).
+            int maxRequired = len1 + len2;
+
+            // When destination is too small, merge into a pooled temp, then copy back subset.
+            if (maxRequired > mergedTransforms.Length)
+            {
+                var tempDest = System.Buffers.ArrayPool<UMATransform>.Shared.Rent(maxRequired);
+                try
+                {
+                    DoMerge(tempDest, 0, mergedTransforms, len1, umaTransforms, len2, out int newLen);
+                    int copyCount = Math.Min(newLen, mergedTransforms.Length);
+                    Array.Copy(tempDest, 0, mergedTransforms, 0, copyCount);
+                    len1 = copyCount;
+                }
+                finally
+                {
+                    System.Buffers.ArrayPool<UMATransform>.Shared.Return(tempDest, clearArray: false);
+                }
+                return;
+            }
+
+            // Destination has enough capacity; merge via pooled buffer and copy back.
+            var buffer = System.Buffers.ArrayPool<UMATransform>.Shared.Rent(maxRequired);
+            try
+            {
+                DoMerge(buffer, 0, mergedTransforms, len1, umaTransforms, len2, out int mergedLen);
+                Array.Copy(buffer, 0, mergedTransforms, 0, mergedLen);
+                len1 = mergedLen;
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<UMATransform>.Shared.Return(buffer, clearArray: false);
+            }
+        }
+
+        private static void DoMerge(UMATransform[] dest, int destStart,
+                                    UMATransform[] a, int lenA,
+                                    UMATransform[] b, int lenB,
+                                    out int outLen)
+        {
+            int ia = 0;
+            int ib = 0;
+            int id = destStart;
+            while (ia < lenA && ib < lenB)
+            {
+                long diff = (long)a[ia].hash - (long)b[ib].hash;
+                if (diff == 0)
+                {
+                    // Same hash – keep first (a), skip duplicate
+                    dest[id++] = a[ia];
+                    ia++;
+                    ib++;
+                }
+                else if (diff < 0)
+                {
+                    dest[id++] = a[ia++];
+                }
+                else
+                {
+                    dest[id++] = b[ib++];
+                }
+            }
+            while (ia < lenA) dest[id++] = a[ia++];
+            while (ib < lenB) dest[id++] = b[ib++];
+            outLen = id - destStart;
+        }
+
+        private static bool IsSortedByHash(UMATransform[] arr, int length)
+        {
+            if (arr == null || length <= 1) return true;
+            long prev = arr[0].hash;
+            for (int i = 1; i < length; i++)
+            {
+                long h = arr[i].hash;
+                if (h < prev) return false;
+                prev = h;
+            }
+            return true;
+        }
+
+        private sealed class TransformHashComparer : IComparer<UMATransform>
+        {
+            public static readonly TransformHashComparer Instance = new TransformHashComparer();
+            public int Compare(UMATransform x, UMATransform y)
+            {
+                if (x == null && y == null) return 0;
+                if (x == null) return -1;
+                if (y == null) return 1;
+                return x.hash.CompareTo(y.hash);
+            }
+        }
+#if UMA_BURSTCOMPILE
+        [BurstCompile]
+#endif
+		private static void OldMergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms)
 		{
 			int newBones = 0;
 			int pos1 = 0;
@@ -1043,77 +1202,60 @@ namespace UMA
 			return highestTargetIndex + 1;
 		}
 
-
-		/*private static void BuildBoneWeights(NativeArray<BoneWeight1> source, NativeArray<BoneWeight1> dest, int destIndex, int destBoneweightIndex, int count, int[] bones, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
-		{
-			int[] boneMapping = new int[bones.Length];
-
-			for (int i = 0; i < boneMapping.Length; i++)
-			{
-				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
-			}
-
-			NativeArray<BoneWeight1>.Copy(source, 0, dest, destBoneweightIndex, source.Length);
-			BoneWeight1 b = new BoneWeight1();
-			for (int i=0;i<source.Length;i++)
-            {
-				b.boneIndex = boneMapping[source[i].boneIndex];
-				b.weight = source[i].weight;
-
-				dest[i + destBoneweightIndex] = b;
-            }
-		} */
-
-
         private static void BuildBoneWeights(UMAMeshData data, NativeArray<BoneWeight1> dest, NativeArray<byte> destBonesPerVertex, int destIndex, int destBoneweightIndex, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
-		{
-			var bones = data.boneNameHashes;
-			var bindPoses = data.bindPoses;
-			int count = data.vertices.Length;
+        {
+            var bones = data.boneNameHashes;
+            var bindPoses = data.bindPoses;
+            int count = data.vertices.Length;
 
-            int[] boneMapping = new int[bones.Length];
-
-			for (int i = 0; i < boneMapping.Length; i++)
-			{
-				boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
-			}
+            int[] boneMapping = System.Buffers.ArrayPool<int>.Shared.Rent(bones.Length);
+            try
+            {
+                for (int i = 0; i < bones.Length; i++)
+                {
+                    boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+                }
 
 #if USE_NATIVE_ARRAYS
-			NativeArray<byte> sourceBonesPerIndex = data.unityBonesPerVertex;
-			int sourcecount = sourceBonesPerIndex.Length;
-			int destcount = destBonesPerVertex.Length; // should be 0.
+            NativeArray<byte> sourceBonesPerIndex = data.unityBonesPerVertex;
+            int sourcecount = sourceBonesPerIndex.Length;
+            int destcount = destBonesPerVertex.Length; // should be 0.
 
-			NativeArray<byte>.Copy(sourceBonesPerIndex, 0,destBonesPerVertex,destIndex, sourceBonesPerIndex.Length);
-			NativeArray<BoneWeight1>.Copy(data.unityBoneWeights, 0, dest, destBoneweightIndex, data.unityBoneWeights.Length);
-			BoneWeight1 b = new BoneWeight1();
-			for (int i = 0; i < data.unityBoneWeights.Length; i++)
-			{
-				b.boneIndex = boneMapping[data.unityBoneWeights[i].boneIndex];
-				b.weight = data.unityBoneWeights[i].weight;
+            NativeArray<byte>.Copy(sourceBonesPerIndex, 0,destBonesPerVertex,destIndex, sourceBonesPerIndex.Length);
+            NativeArray<BoneWeight1>.Copy(data.unityBoneWeights, 0, dest, destBoneweightIndex, data.unityBoneWeights.Length);
+            BoneWeight1 b = new BoneWeight1();
+            for (int i = 0; i < data.unityBoneWeights.Length; i++)
+            {
+                b.boneIndex = boneMapping[data.unityBoneWeights[i].boneIndex];
+                b.weight = data.unityBoneWeights[i].weight;
 
-				dest[i + destBoneweightIndex] = b;
-			}
-#else
-			try
-			{
-				NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
-				NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneweightIndex, data.ManagedBoneWeights.Length);
-			}
-			catch 
-			{
-                Debug.LogError("Error copying bone weights");
+                dest[i + destBoneweightIndex] = b;
             }
+#else
+                try
+                {
+                    NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
+                    NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneweightIndex, data.ManagedBoneWeights.Length);
+                }
+                catch
+                {
+                    Debug.LogError("Error copying bone weights");
+                }
 
-			BoneWeight1 b = new BoneWeight1();
-			for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
-			{
-				b.boneIndex = boneMapping[data.ManagedBoneWeights[i].boneIndex];
-				b.weight = data.ManagedBoneWeights[i].weight;
-				dest[i + destBoneweightIndex] = b;
-			}
-
+                BoneWeight1 b = new BoneWeight1();
+                for (int i = 0; i < data.ManagedBoneWeights.Length; i++)
+                {
+                    b.boneIndex = boneMapping[data.ManagedBoneWeights[i].boneIndex];
+                    b.weight = data.ManagedBoneWeights[i].weight;
+                    dest[i + destBoneweightIndex] = b;
+                }
 #endif
-		}
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<int>.Shared.Return(boneMapping, clearArray: false);
+            }
+        }
 
 		private class BoneIndexEntry
 		{
@@ -1231,13 +1373,23 @@ namespace UMA
 				for (int i = 0; i < entry.Count; i++)
 				{
 					var res = entry[i];
-					if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index]))
+					if (res >= bindPosesList.Count)
+					{
+						continue;
+                    }
+					if (index >= bindPoses.Length)
+					{
+						continue;
+					}
+
+                    if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index]))
 					{
 						return res;
 					}
 				}
 				var idx = bindPosesList.Count;
-				entry.AddIndex(idx);
+
+                entry.AddIndex(idx);
 				bindPosesList.Add(bindPoses[index]);
 				bonesList.Add(boneTransform);
 				return idx;

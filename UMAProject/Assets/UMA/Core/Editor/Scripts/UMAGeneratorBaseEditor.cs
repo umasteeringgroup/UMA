@@ -14,6 +14,7 @@ namespace UMA.Editors
         SerializedProperty FitPercentageDecrease;
         SerializedProperty SharperFitTextures;
         SerializedProperty useAsyncConversion;
+        SerializedProperty useNewDNA;
         SerializedProperty asyncMipRegen;
         public static bool showAtlasSettings = false;
         public static bool showConversionSettings = false;
@@ -67,7 +68,7 @@ namespace UMA.Editors
                                         /*"Async Mip Regen will only copy the top level mip, and recalculate the mips when the texture is applied"*/, MessageType.None);
                 EditorGUILayout.PropertyField(convertRenderTexture);
                 EditorGUILayout.PropertyField(useAsyncConversion);
-                //EditorGUILayout.PropertyField(asyncMipRegen);
+                EditorGUILayout.PropertyField(asyncMipRegen);
                 GUIHelper.EndVerticalPadded();
             }
 

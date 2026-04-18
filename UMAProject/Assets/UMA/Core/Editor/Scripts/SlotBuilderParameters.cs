@@ -13,7 +13,13 @@ namespace UMA.Editors
         public bool useRootFolder;
         public bool nameByMaterial;
         public bool keepAllBones;
-        public bool updateExistingSlots;
+        public bool alwaysRecreateSlots;
+        public bool createOverlays;
+        public bool createRecipe;
+        public bool isBaseRaceRecipe;
+        public bool addToGlobalLibrary; // new
+        public bool appendTypeToName; // new
+        public bool addUDIMTileNumbers; // new
 
         public string stripBones;
         public string rootBone;
@@ -31,5 +37,29 @@ namespace UMA.Editors
         public bool invertX;
         public bool invertY;
         public bool invertZ;
+        public bool clearNormals;
+        public bool clearTangents;
+        public bool batchMode;
+
+        // UDIM grid dimensions (e.g., 10x10). If 0, defaults will be used.
+        public int udimTilesU;
+        public int udimTilesV;
+
+        // Optional: persisted asset paths for reference/debugging
+        public string slotMaterialPath;
+        public string slotFolderPath;
+
+        // Optional: weld UDIM seam normals/tangents across split tiles by averaging
+        public bool weldUdimNormals;
+
+        // Optional: generate internal per-slot LOD triangle buffers/ranges using SlotLodGenerator.
+        // When enabled, Unity mesh LOD copying is skipped.
+        public bool generateSlotLods;
+        public bool useUnityLodGenerator;
+        public int slotLodMaxLevels;
+        public int slotLodMinTriangles;
+        public float slotLodTargetReductionPerLevel;
+        public bool slotLodPreserveBoundaryEdges;
+        public float slotLodBoundaryWeight;
     }
 }

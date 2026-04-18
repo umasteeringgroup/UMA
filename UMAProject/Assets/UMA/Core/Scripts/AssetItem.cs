@@ -63,6 +63,11 @@ namespace UMA
 
                 if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
                 {
+                    if (this._SerializedItem != null)
+                    {
+                        _TheType = this._SerializedItem.GetType();
+                        return _TheType;
+                    }
                     if (_BaseTypeName.Contains("SlotData"))
                     {
                         _TheType = typeof(SlotDataAsset);
@@ -86,7 +91,18 @@ namespace UMA
                 }
                 if (_TheType == null)
                 {
-                    Debug.LogError("The type " + _BaseTypeName + " is not a valid type. Please check the AssetItem.");
+                    if (_BaseTypeName == "Object")
+                    {
+                        _TheType = typeof(UnityEngine.Object);
+                    }
+                    else if (_BaseTypeName == "Texture2D")
+                    {
+                        _TheType = typeof(Texture2D);
+                    }
+                    else
+                    {
+                        Debug.LogError("The type " + _BaseTypeName + " is not a valid type. Please check the AssetItem.");
+                    }
                     return typeof(UnityEngine.Object);
                 }
                 return _TheType;
@@ -448,8 +464,12 @@ namespace UMA
                 return;
             }
 #if UNITY_EDITOR
+#if UNITY_6000_3_OR_NEWER
+            _Path = AssetDatabase.GetAssetPath(Item.GetEntityId());
+#else
             _Path = AssetDatabase.GetAssetPath(Item.GetInstanceID());
-			_Guid = AssetDatabase.AssetPathToGUID(_Path);
+#endif
+            _Guid = AssetDatabase.AssetPathToGUID(_Path);
 #endif
             _TheType = Type;
             _BaseTypeName = Type.Name;

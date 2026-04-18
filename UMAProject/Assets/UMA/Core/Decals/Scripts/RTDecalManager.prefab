@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1225940076641734893
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8592768924591377535}
+  - component: {fileID: -2172836515604594155}
+  m_Layer: 0
+  m_Name: RTDecalManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8592768924591377535
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1225940076641734893}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.50137, y: 3.29932, z: 14.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-2172836515604594155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1225940076641734893}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e085b264051d6a40962331ef2ddd22b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UMA_Core::UMA.DecalRTStampSlot
+  useGroups: 1
+  overlayStamps:
+  - name: AutoRTDecals
+    overlays: []
+    Groups: []
+    stamps:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 11400000, guid: ba98789ba9d926640b17d1e5f086ee69, type: 2}
+    - {fileID: 11400000, guid: d309baae1a054f2498cd022a86d14bc3, type: 2}
+    - {fileID: 11400000, guid: 057f3cfd84b24ba4783bd13b7aeefbe0, type: 2}
+    - {fileID: 11400000, guid: 5dc7127464dc47a48ab0552829175064, type: 2}
+    - {fileID: 11400000, guid: 73310e01d2952794fa5899ff34df1a34, type: 2}
+    - {fileID: 11400000, guid: 0eb221390dc419348aebcdf8cbc0292f, type: 2}
+    - {fileID: 11400000, guid: 76032230dd1c5224996c7f9ca9a351f2, type: 2}
+  enableDebug: 0
+  rgbOnlyDilation: 1

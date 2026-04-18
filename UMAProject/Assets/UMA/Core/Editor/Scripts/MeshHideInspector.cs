@@ -26,6 +26,10 @@ namespace UMA.Editors
 		private List<RaceData> foundRaces = new List<RaceData>();
 		private List<string> foundRaceNames = new List<string>();
 
+#if UNITY_6000_2_OR_NEWER
+        private int inspectorLOD = 0;
+#endif
+
 		void OnEnable()
 		{
 			MeshHideAsset source = target as MeshHideAsset;
@@ -81,6 +85,18 @@ namespace UMA.Editors
 					AssetDatabase.SaveAssets();
 				}
 			}
+
+#if UNITY_6000_2_OR_NEWER
+            if (source.asset != null)
+            {
+                int lodCount = source.GetLODCount();
+                int newLod = EditorGUILayout.IntSlider(new GUIContent("Inspector LOD", "Preview/capture triangles for this LOD when editing"), inspectorLOD, 0, Mathf.Max(0, lodCount - 1));
+                if (newLod != inspectorLOD)
+                {
+                    inspectorLOD = newLod;
+                }
+            }
+#endif
 
 			_autoInitialize = EditorGUILayout.Toggle(new GUIContent("AutoInitialize (recommended)", "Checking this will auto initialize the MeshHideAsset when a slot is added (recommended).  " +
 				"For users that are rebuilding slots that don't change the geometry, the slot reference will be lost but can be reset without losing the existing MeshHide information by unchecking this."), _autoInitialize);
@@ -212,7 +228,7 @@ namespace UMA.Editors
 
 			for (int i = 0; i < _meshData.subMeshCount; i++)
 			{
-				var tris = _meshData.submeshes[i].getBaseTriangles();
+				var tris = _meshData.submeshes[i].getManagedTriangles(0);
 				_meshPreview.SetIndices(tris, MeshTopology.Triangles, i);
 			}
 
@@ -252,7 +268,7 @@ namespace UMA.Editors
 
 			for (int i = 0; i < sourceData.subMeshCount; i++)
 			{
-				NativeArray<int> subMeshTriangles = sourceData.submeshes[i].GetTriangles();
+				NativeArray<int> subMeshTriangles = sourceData.submeshes[i].GetTriangles(0);
 
 				List<int> newTriangles = new List<int>();
 				for (int j = 0; j < triangleFlags[i].Count; j++)
@@ -392,11 +408,24 @@ namespace UMA.Editors
 				geometry.SceneviewLightingState = sceneView.m_SceneLighting;
 				sceneView.m_SceneLighting = false;
 #endif
+#if UNITY_6000_2_OR_NEWER
+                geometry.activeLOD = inspectorLOD;
+#endif
 				geometry.InitializeFromMeshData(source.asset.meshData);
 
-
+#if UNITY_6000_2_OR_NEWER
+                var flags = source.GetTriangleFlagsForLOD(geometry.activeLOD);
+                if (flags != null)
+                {
+                    geometry.selectedTriangles = new BitArray(flags[source.asset.subMeshIndex]);
+                }
+                else
+                {
+                    geometry.selectedTriangles = new BitArray(source.triangleFlags[source.asset.subMeshIndex]);
+                }
+#else
 				geometry.selectedTriangles = new BitArray(source.triangleFlags[source.asset.subMeshIndex]);
-
+#endif
 				geometry.UpdateSelectionMesh();
 				if (focusObject)
 				{

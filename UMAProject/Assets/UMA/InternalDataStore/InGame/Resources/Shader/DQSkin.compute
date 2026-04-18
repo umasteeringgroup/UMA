@@ -1,0 +1,110 @@
+#pragma kernel DQSkin
+
+struct DualQuaternion
+{
+    float4 real;
+    float4 dual;
+};
+
+StructuredBuffer<float3> _InPositions;
+StructuredBuffer<float3> _InNormals;
+StructuredBuffer<int4> _BoneIndices0;
+StructuredBuffer<int4> _BoneIndices1;
+StructuredBuffer<float4> _BoneWeights0;
+StructuredBuffer<float4> _BoneWeights1;
+StructuredBuffer<DualQuaternion> _BoneDqs;
+RWStructuredBuffer<float3> _OutPositions;
+RWStructuredBuffer<float3> _OutNormals;
+int _VertexCount;
+
+float4 QuatMul(float4 a, float4 b)
+{
+    return float4(
+        a.w * b.xyz + b.w * a.xyz + cross(a.xyz, b.xyz),
+        a.w * b.w - dot(a.xyz, b.xyz));
+}
+
+float4 QuatConjugate(float4 q)
+{
+    return float4(-q.xyz, q.w);
+}
+
+float3 QuatRotate(float4 q, float3 v)
+{
+    float3 t = 2.0f * cross(q.xyz, v);
+    return v + q.w * t + cross(q.xyz, t);
+}
+
+[numthreads(64, 1, 1)]
+void DQSkin(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= _VertexCount)
+    {
+        return;
+    }
+
+    float3 inPos = _InPositions[index];
+    float3 inNorm = _InNormals[index];
+
+    int4 indices0 = _BoneIndices0[index];
+    int4 indices1 = _BoneIndices1[index];
+    float4 weights0 = _BoneWeights0[index];
+    float4 weights1 = _BoneWeights1[index];
+
+    float4 baseReal = float4(0, 0, 0, 0);
+    bool hasBase = false;
+
+    float4 accumReal = float4(0, 0, 0, 0);
+    float4 accumDual = float4(0, 0, 0, 0);
+
+    int indices[8] = { indices0.x, indices0.y, indices0.z, indices0.w, indices1.x, indices1.y, indices1.z, indices1.w };
+    float weights[8] = { weights0.x, weights0.y, weights0.z, weights0.w, weights1.x, weights1.y, weights1.z, weights1.w };
+
+    for (int i = 0; i < 8; i++)
+    {
+        float w = weights[i];
+        if (w <= 0.0f)
+        {
+            continue;
+        }
+        DualQuaternion dq = _BoneDqs[indices[i]];
+        float4 real = dq.real;
+        float4 dual = dq.dual;
+        if (!hasBase)
+        {
+            baseReal = real;
+            hasBase = true;
+        }
+        else if (dot(baseReal, real) < 0.0f)
+        {
+            real = -real;
+            dual = -dual;
+        }
+        accumReal += real * w;
+        accumDual += dual * w;
+    }
+
+    if (!hasBase)
+    {
+        _OutPositions[index] = inPos;
+        _OutNormals[index] = inNorm;
+        return;
+    }
+
+    float len = length(accumReal);
+    if (len > 0.0f)
+    {
+        accumReal /= len;
+        accumDual /= len;
+        accumDual = accumDual - accumReal * dot(accumReal, accumDual);
+    }
+
+    float4 realConj = QuatConjugate(accumReal);
+    float3 t = 2.0f * QuatMul(accumDual, realConj).xyz;
+    float3 outPos = QuatRotate(accumReal, inPos) + t;
+    float3 outNorm = QuatRotate(accumReal, inNorm);
+
+    _OutPositions[index] = outPos;
+    _OutNormals[index] = outNorm;
+}

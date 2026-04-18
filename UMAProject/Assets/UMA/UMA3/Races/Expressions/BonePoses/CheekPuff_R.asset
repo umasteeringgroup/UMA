@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: CheekPuff_R
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: RightLips
+    hash: -1558564409
+    position: {x: 0, y: -0.000060871243, z: -0.000035246834}
+    rotation: {x: 0.00033720487, y: 0.0023034133, z: -0.0036899736, w: 0.9999905}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsInferior
+    hash: 921042654
+    position: {x: 0.000003268011, y: -0.0000917688, z: -0.0000028219074}
+    rotation: {x: -0.0002101982, y: 0.0012669187, z: -0.00377966, w: 0.999992}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: Tongue02
+    hash: -718215880
+    position: {x: 0, y: 0, z: 0.00010212567}
+    rotation: {x: 0.002900409, y: 0.0034293425, z: -0.000010175591, w: 0.9999899}
+    scale: {x: 1.0009636, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightEyebrowLow
+    hash: -1640515339
+    position: {x: 0, y: -0.000024035573, z: 0.000045269728}
+    rotation: {x: 0.000686193, y: -0.0016682033, z: 0.0000011449655, w: 0.99999845}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLipsSuperiorMiddle
+    hash: -2093673696
+    position: {x: 0.0000037942082, y: 0.00007894635, z: 0.00018514693}
+    rotation: {x: -0.0000065450868, y: 0.0026092005, z: 0.0006449997, w: 0.9999964}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLowCheek
+    hash: -1122647396
+    position: {x: 0.0054823942, y: 0.000069562346, z: 0.03431993}
+    rotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightNose
+    hash: -764976276
+    position: {x: 0.008047776, y: 0.0011464171, z: -0.00009920448}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  tweenPoses: []
+  tweenWeights: []

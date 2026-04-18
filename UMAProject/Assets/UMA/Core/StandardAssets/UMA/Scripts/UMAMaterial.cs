@@ -31,6 +31,11 @@ namespace UMA
         {
         }
 
+        private void OnValidate()
+        {
+            EnsureSupportedChannelTextureFormats(channels);
+        }
+
         private string _thisName;
         public string objectName
         {
@@ -69,6 +74,8 @@ namespace UMA
 
         public MaterialType materialType = MaterialType.Atlas;
         public MaterialChannel[] channels = new MaterialChannel[0];
+
+        public bool generateMipMaps = true;
 
         [Range(-2.0f, 2.0f)]
         public float MipMapBias = 0.0f;
@@ -140,6 +147,75 @@ namespace UMA
 			return ChannelBackground[(int)channelType];
 		}
 
+        private static readonly RenderTextureFormat[] SupportedChannelTextureFormats = new RenderTextureFormat[]
+        {
+            RenderTextureFormat.ARGB32,
+            RenderTextureFormat.RG16,
+            RenderTextureFormat.R8,
+            RenderTextureFormat.ARGB1555,
+            RenderTextureFormat.RGB565
+        };
+
+        public static RenderTextureFormat DefaultChannelTextureFormat
+        {
+            get
+            {
+                return RenderTextureFormat.ARGB32;
+            }
+        }
+
+        public static RenderTextureFormat[] GetSupportedChannelTextureFormats()
+        {
+            RenderTextureFormat[] formats = new RenderTextureFormat[SupportedChannelTextureFormats.Length];
+            Array.Copy(SupportedChannelTextureFormats, formats, SupportedChannelTextureFormats.Length);
+            return formats;
+        }
+
+        public static bool IsSupportedChannelTextureFormat(RenderTextureFormat format)
+        {
+            for (int i = 0; i < SupportedChannelTextureFormats.Length; i++)
+            {
+                if (SupportedChannelTextureFormats[i] == format)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static RenderTextureFormat GetCompatibleChannelTextureFormat(RenderTextureFormat format)
+        {
+            if (IsSupportedChannelTextureFormat(format))
+            {
+                if (SystemInfo.SupportsRenderTextureFormat(format))
+                {
+                    return format;
+                }
+            }
+
+            return DefaultChannelTextureFormat;
+        }
+
+        public static bool EnsureSupportedChannelTextureFormats(MaterialChannel[] materialChannels)
+        {
+            if (materialChannels == null)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            for (int i = 0; i < materialChannels.Length; i++)
+            {
+                if (!IsSupportedChannelTextureFormat(materialChannels[i].textureFormat))
+                {
+                    materialChannels[i].textureFormat = DefaultChannelTextureFormat;
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+
 
 
         [Serializable]
@@ -164,6 +240,15 @@ namespace UMA
 		}
 #endif
 
+        public int GetChannelIndex(string materialPropertyName)
+        {
+            for (int i = 0; i < channels.Length; i++)
+            {
+                if (channels[i].materialPropertyName == materialPropertyName)
+                    return i;
+            }
+            return -1;
+        }
 
         public List<string> GetTexturePropertyNames()
         {

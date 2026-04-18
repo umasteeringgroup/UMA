@@ -10,6 +10,21 @@ namespace UMA.Editors
 		GUIContent Modulate = new GUIContent("Multiplier");
 		GUIContent Additive = new GUIContent("Additive");
 		GUIContent Channels = new GUIContent("Channel Count");
+		readonly GUIContent MoveUpIcon = GetMoveButtonContent("ArrowNavigationUp", "\u25B2", "Move color up");
+		readonly GUIContent MoveDownIcon = GetMoveButtonContent("ArrowNavigationDown", "\u25BC", "Move color down");
+
+		private static GUIContent GetMoveButtonContent(string iconName, string fallbackText, string tooltip)
+		{
+			/*
+			GUIContent iconContent = EditorGUIUtility.IconContent(iconName);
+			if (iconContent != null && iconContent.image != null)
+			{
+				iconContent.tooltip = tooltip;
+				return iconContent;
+			} */
+
+			return new GUIContent(fallbackText, tooltip);
+		}
 
 
 		public static object GetDeepPropertyValue(object src, string propName)
@@ -35,8 +50,13 @@ namespace UMA.Editors
 			var displayColor = property.FindPropertyRelative("displayColor");
 			var colorFoldout = property.FindPropertyRelative("colorsExpanded");
 			var propertiesFoldout = property.FindPropertyRelative("propertiesExpanded");
-			
-			OverlayColorData ocd = null;
+			var selected = property.FindPropertyRelative("isSelected");
+			var showSelected = property.FindPropertyRelative("showSelected");
+			var moveUp = property.FindPropertyRelative("moveUpThis");
+			var moveDown = property.FindPropertyRelative("moveDownThis");
+
+
+            OverlayColorData ocd = null;
 			DynamicCharacterAvatar dca = property.serializedObject.targetObject as DynamicCharacterAvatar;
 
             ocd = property.GetValue<OverlayColorData>();
@@ -55,26 +75,64 @@ namespace UMA.Editors
 			EditorGUI.BeginProperty(position, label, property);
 
 			EditorGUILayout.BeginHorizontal();
+			if (showSelected.boolValue == true)
+			{
+				selected.boolValue = EditorGUILayout.Toggle(selected.boolValue, GUILayout.Width(20), GUILayout.ExpandWidth(false));
+				EditorGUILayout.Space(10, false);
+            }
+			
 		    label.text = name.stringValue;
             name.isExpanded = EditorGUILayout.Foldout(name.isExpanded, label);
-			if (!name.isExpanded)
-            {
-                if (mask.arraySize > 0)
-                {
-					SerializedProperty colProp = mask.GetArrayElementAtIndex(0);
 
-					Color c = colProp.colorValue;
-					Color b =EditorGUILayout.ColorField(c, GUILayout.Width(200));
-					if (b != c)
+           if (!name.isExpanded)
+            {
+                int arrayIndex = GetArrayIndex(property.propertyPath);
+				int arraySize = GetArraySize(property.propertyPath, property.serializedObject);
+				bool showDisplayColor = property.FindPropertyRelative("showDisplayColor").boolValue;
+				if (showDisplayColor)
+				{
+					SerializedProperty displayColorProp = property.FindPropertyRelative("displayColor");
+					Color c = displayColorProp.colorValue;
+					Color b = EditorGUILayout.ColorField(c, GUILayout.Width(200));
+                    if (b != c)
                     {
-                        colProp.colorValue = b;
-						colProp.serializedObject.ApplyModifiedProperties();
+                        displayColorProp.colorValue = b;
+                        displayColorProp.serializedObject.ApplyModifiedProperties();
                     }
                 }
 				else
-                {
-					EditorGUILayout.ColorField(Color.white, GUILayout.Width(120));
-                }
+				{
+					if (mask.arraySize > 0)
+					{
+						SerializedProperty colProp = mask.GetArrayElementAtIndex(0);
+
+						Color c = colProp.colorValue;
+						Color b = EditorGUILayout.ColorField(c, GUILayout.Width(200));
+						if (b != c)
+						{
+							colProp.colorValue = b;
+							colProp.serializedObject.ApplyModifiedProperties();
+						}
+					}
+					else
+					{
+						EditorGUILayout.ColorField(Color.white, GUILayout.Width(120));
+					}
+				}
+               using (new EditorGUI.DisabledScope(arrayIndex <= 0))
+				{
+					if (GUILayout.Button(MoveUpIcon, EditorStyles.miniButton, GUILayout.Width(20), GUILayout.Height(18)))
+					{
+						moveUp.boolValue = true;
+					}
+				}
+				using (new EditorGUI.DisabledScope(arrayIndex < 0 || arrayIndex >= arraySize - 1))
+				{
+					if (GUILayout.Button(MoveDownIcon, EditorStyles.miniButton, GUILayout.Width(20), GUILayout.Height(18)))
+					{
+						moveDown.boolValue = true;
+					}
+				}
                 bool delete = GUILayout.Button("X", GUILayout.Width(20));
                 if (delete)
                 {
@@ -89,7 +147,8 @@ namespace UMA.Editors
                 EditorGUILayout.LabelField("Overlay Color Data", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(property.FindPropertyRelative("name"));
 				EditorGUILayout.PropertyField(property.FindPropertyRelative("isBaseColor"));
-				EditorGUILayout.PropertyField(displayColor);
+				EditorGUILayout.PropertyField(property.FindPropertyRelative("showDisplayColor"));
+                EditorGUILayout.PropertyField(displayColor);
 
 				if (ocd != null)
 				{
@@ -110,12 +169,16 @@ namespace UMA.Editors
 
 				GUILayout.Space(5);
 
-				
-				colorFoldout.boolValue = EditorGUILayout.Foldout(colorFoldout.boolValue, "Colors");
-				if (colorFoldout.boolValue)
+
+				GUILayout.BeginHorizontal();
+                GUILayout.Space(10);
+                colorFoldout.boolValue = EditorGUILayout.Foldout(colorFoldout.boolValue, "Colors");
+				GUILayout.EndHorizontal();
+
+                if (colorFoldout.boolValue)
 				{
-					//GUIHelper.BeginVerticalPadded(0, new Color(0.75f, 0.875f, 1f, 0.3f));
-					for (int i = 0; i < mask.arraySize; i++)
+                    GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
+                    for (int i = 0; i < mask.arraySize; i++)
 					{
 						if (showAdvancedProperty.boolValue)
 						{
@@ -150,11 +213,33 @@ namespace UMA.Editors
                         }
 						//GUILayout.Space(5);
 					}
-					//GUIHelper.EndVerticalPadded(3);
-				}
+					if (GUILayout.Button("Reset all colors to defaults"))
+					{
+						if (ocd != null)
+						{
+							for (int i = 0; i < mask.arraySize; i++)
+							{
+                                var channelMask = mask.GetArrayElementAtIndex(i);
+                                channelMask.colorValue = new Color(1, 1, 1, 1);
 
+                                var AdditiveMask = additive.GetArrayElementAtIndex(i);
+								AdditiveMask.colorValue = new Color(0, 0, 0, 0);
+                            }
 
-				propertiesFoldout.boolValue = EditorGUILayout.Foldout(propertiesFoldout.boolValue, "Color Parameters");
+                            if (dca != null)
+							{
+								EditorUtility.SetDirty(dca);
+								AssetDatabase.SaveAssets();
+							}
+						}
+                    }
+                    GUIHelper.EndVerticalPadded(3);
+                }
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(10);
+                propertiesFoldout.boolValue = EditorGUILayout.Foldout(propertiesFoldout.boolValue, "Color Parameters");
+				GUILayout.EndHorizontal();
 				if (propertiesFoldout.boolValue)
 				{
 					if (ocd != null)
@@ -184,7 +269,8 @@ namespace UMA.Editors
 				}
 				EditorGUILayout.EndVertical();
             }
-			property.serializedObject.ApplyModifiedProperties();
+            GUILayout.Box(GUIContent.none, GUILayout.ExpandWidth(true), GUILayout.Height(1));
+            property.serializedObject.ApplyModifiedProperties();
             EditorGUI.EndProperty();
 		}
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -201,6 +287,32 @@ namespace UMA.Editors
 		private Vector4 ToVector4(Color color)
 		{
 			return new Vector4(color.r, color.g, color.b, color.a);
+		}
+
+		private int GetArrayIndex(string propertyPath)
+		{
+			int lastOpenBracket = propertyPath.LastIndexOf('[');
+			int lastCloseBracket = propertyPath.LastIndexOf(']');
+			if (lastOpenBracket < 0 || lastCloseBracket <= lastOpenBracket)
+			{
+				return -1;
+			}
+
+			string indexText = propertyPath.Substring(lastOpenBracket + 1, lastCloseBracket - lastOpenBracket - 1);
+			return int.TryParse(indexText, out int index) ? index : -1;
+		}
+
+		private int GetArraySize(string propertyPath, SerializedObject serializedObject)
+		{
+			int arrayMarkerIndex = propertyPath.IndexOf(".Array.data[");
+			if (arrayMarkerIndex < 0)
+			{
+				return 0;
+			}
+
+			string arrayPath = propertyPath.Substring(0, arrayMarkerIndex);
+			SerializedProperty arrayProperty = serializedObject.FindProperty(arrayPath);
+			return arrayProperty != null ? arrayProperty.arraySize : 0;
 		}
 
     }

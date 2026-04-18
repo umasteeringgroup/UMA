@@ -3,21 +3,41 @@ using UMA.CharacterSystem;
 
 namespace UMA
 {
+    /// <summary>
+    /// DNA effect that writes a color and/or float material property value into a named SharedColor's PropertyBlock.
+    /// Useful for shader customization driven by DNA without additional converters.
+    /// </summary>
     [System.Serializable]
     public class DNAEffect_SharedColorProperty : DNAEffect
     {
+        [System.Flags]
         public enum ParameterType
         {
-            Color,
-            Float,
+            Color = 1,
+            Float = 2,
             Both = Color | Float
         }
 
+        /// <summary>
+        /// Name of the shared color to modify.
+        /// </summary>
         public string sharedColorName;
+        /// <summary>
+        /// Property name inside the material property block.
+        /// </summary>
         public string propertyName;
         public ParameterType parameterType = ParameterType.Color;
+        /// <summary>
+        /// Base float multiplier applied to mapped DNA value when Float is selected.
+        /// </summary>
         public float floatValue = 0.0f;
+        /// <summary>
+        /// Color used when mapped value is 0.
+        /// </summary>
         public Color zeroColorValue;
+        /// <summary>
+        /// Color used when mapped value is 1.
+        /// </summary>
         public Color oneColorValue;
 
         public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Texture;
@@ -25,9 +45,10 @@ namespace UMA
         public override string Description => "Sets a shared color property for the avatar. This can be used to modify shader properties or even the UV location of an overlay.";
 
 #if UNITY_EDITOR
-        public override void DoGui(bool showDescription, bool showHelp)
+        /// <inheritdoc />
+        public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
-            base.DoGui(showDescription, showHelp);
+            base.DoGui(showDescription, showHelp, out curveToCopy);
             sharedColorName = UnityEditor.EditorGUILayout.TextField("Shared Color Name", sharedColorName);
             if (string.IsNullOrEmpty(sharedColorName))
             {
@@ -51,6 +72,7 @@ namespace UMA
         }
 #endif
 
+        /// <inheritdoc />
         public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
         {
             if (avatar is not DynamicCharacterAvatar)

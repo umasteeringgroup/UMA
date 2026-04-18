@@ -16,6 +16,18 @@ namespace UMA
         /// The asset contains the immutable portions of the slot.
         /// </summary>
         public SlotDataAsset asset;
+
+        /// <summary>
+        /// When true, this slot has no backing SlotDataAsset. It exists solely as a wildcard
+        /// carrier whose overlays are applied to matching tagged slots at build time.
+        /// </summary>
+        public bool isPlaceholderSlot;
+
+        /// <summary>
+        /// Identity name for placeholder slots (used when asset is null).
+        /// </summary>
+        public string placeholderSlotName;
+
         /// <summary>
         /// Adjusts the resolution of slot overlays.
         /// </summary>
@@ -78,6 +90,7 @@ namespace UMA
         public int skinnedMeshRenderer;
         public int submeshIndex;
         public int vertexOffset;
+        public int uvAreaUpdateFrame;
         public Rect UVArea;
         public bool tempHidden;
         public bool isDisabled = false;
@@ -118,9 +131,16 @@ namespace UMA
         {
             get
             {
+                if (isPlaceholderSlot || asset == null)
+                {
+                    return -1;
+                }
                 return asset.maxLOD;
             }
         }
+
+        [NonSerialized]
+        private UMAMaterial _defaultOverlayMaterial;
 
         public UMAMaterial altMaterial;
         public UMAMaterial material
@@ -132,8 +152,24 @@ namespace UMA
                     return altMaterial;
                 }
 
-                return asset.material;
+                if (isPlaceholderSlot || asset == null)
+                {
+                    return null;
+                }
+
+                var firstOverlay = GetOverlay(0);
+                if (firstOverlay != null && firstOverlay.asset != null)
+                {
+                    return firstOverlay.asset.GetMaterial();
+                }
+
+                return _defaultOverlayMaterial;
             }
+        }
+
+        public void CacheDefaultOverlayMaterial(UMAMaterial defaultOverlayMaterial)
+        {
+            _defaultOverlayMaterial = defaultOverlayMaterial;
         }
 
         // Slots to copy blendshapes from as needed...
@@ -149,6 +185,11 @@ namespace UMA
         {
             get
             {
+                if (isPlaceholderSlot && !string.IsNullOrEmpty(placeholderSlotName))
+                {
+                    return placeholderSlotName;
+                }
+
                 if (asset != null)
                 {
                     return asset.slotName;
@@ -177,7 +218,11 @@ namespace UMA
             this.asset = asset;
             if (asset)
             {
-				tags = asset.tags.Length > 0 ? (string[])asset.tags.Clone() : new string[0];
+                if (asset.tags == null)
+                {
+                    asset.tags = new string[0];
+                }
+                tags = asset.tags.Length > 0 ? (string[])asset.tags.Clone() : new string[0];
                 Races = asset.Races;
                 overlayScale = asset.overlayScale;
                 rendererAsset = asset.RendererAsset;
@@ -203,6 +248,23 @@ namespace UMA
             smooshInvertY = true;
             smooshInvertDist = true;
             expandAlongNormal = 0;
+        }
+
+        /// <summary>
+        /// Creates a placeholder wildcard slot with no backing asset.
+        /// The slot carries overlays that are applied to matching tagged slots at build time.
+        /// </summary>
+        /// <param name="name">Display / identity name for the placeholder slot.</param>
+        /// <param name="tags">Tags used for wildcard overlay matching.</param>
+        /// <param name="races">Optional race filter; empty means all races.</param>
+        public static SlotData CreatePlaceholder(string name, string[] tags, string[] races = null)
+        {
+            var slot = new SlotData();
+            slot.isPlaceholderSlot = true;
+            slot.placeholderSlotName = name;
+            slot.tags = tags ?? new string[0];
+            slot.Races = races ?? new string[0];
+            return slot;
         }
 
         public void UpdateFromAsset(SlotDataAsset asset)
@@ -231,6 +293,23 @@ namespace UMA
             return null;
         }
 
+        public bool hasOverlay(int overlayHash)
+        {
+            for (int i = 0; i < overlayList.Count; i++)
+            {
+                if (overlayList[i].asset.nameHash == overlayHash)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool hasOverlay(string overlayName)
+        {
+            int hash = UMAUtils.StringToHash(overlayName);
+            return hasOverlay(hash);
+        }
 
         public bool HasRace(string raceName)
         {
@@ -325,6 +404,18 @@ namespace UMA
             return false;
         }
 
+		public bool OwnsVertex(int vertex) {
+			if(vertex >= vertexOffset) {
+				int LocalToSlot = vertex - vertexOffset;
+				if(LocalToSlot < asset.meshData.vertexCount) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+
+
         /// <summary>
         /// Deep copy of the SlotData.
         /// </summary>
@@ -342,10 +433,10 @@ namespace UMA
                     res.overlayList.Add(overlay.Duplicate());
                 }
             }
-            res.skinnedMeshRenderer = 0;
-            res.submeshIndex = 0;
-            res.vertexOffset = 0;
-            res.UVArea.Set(0, 0, 1.0f, 1.0f);
+			res.skinnedMeshRenderer = skinnedMeshRenderer;
+			res.submeshIndex = submeshIndex;
+			res.vertexOffset = vertexOffset;
+            res.UVArea.Set(UVArea.x, UVArea.y, UVArea.width, UVArea.height);
             res.Races = Races;
 			res.tags = tags.Length > 0 ? (string[])tags.Clone() : new string[0]; 
             res.blendShapeTargetSlot = blendShapeTargetSlot;
@@ -362,6 +453,9 @@ namespace UMA
             res.smooshInvertZ = smooshInvertZ;
             res.smooshInvertDist = smooshInvertDist;
             res.meshModifiers = new List<MeshModifier.Modifier>(meshModifiers);
+            res.isPlaceholderSlot = isPlaceholderSlot;
+            res.placeholderSlotName = placeholderSlotName;
+            res._defaultOverlayMaterial = _defaultOverlayMaterial;
             return res;
         }
 
@@ -388,8 +482,8 @@ namespace UMA
                 string tag = HideTags[j];
                 for (int i = 0; i < overlayList.Count; i++)
                 {
-                    // Manually check if the tag exists in overlayList[i].asset.tags
-                    string[] overlayTags = overlayList[i].asset.tags;
+                    // Manually check if the tag exists in overlayList[i].tags
+                    string[] overlayTags = overlayList[i].tags;
                     bool tagFound = false;
                     for (int t = 0; t < overlayTags.Length; t++)
                     {
@@ -607,6 +701,11 @@ namespace UMA
                 tags = new string[0];
             }
 
+            if (isPlaceholderSlot)
+            {
+                return true;
+            }
+
             if (asset == null)
             {
                 return true;
@@ -614,15 +713,6 @@ namespace UMA
 
             if (asset.meshData != null)
             {
-                if (asset.material == null)
-                {
-                    asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
-                    if (asset.material == null)
-                    {
-                        Debug.LogError("Unable to load material " + asset.materialName + " for slot " + asset.slotName);
-                    }
-                }
-
                 if (material == null)
                 {
                     if (Debug.isDebugBuild)
@@ -639,6 +729,7 @@ namespace UMA
                         if (Debug.isDebugBuild)
                         {
                             Debug.LogError(string.Format("Slot '{0}' has an umaMaterial without a material assigned.", asset.slotName), asset);
+                            Debug.Log("UMAMaterial: " + material.name, material);
                         }
 
                         valid = false;
@@ -654,6 +745,7 @@ namespace UMA
                                 if (Debug.isDebugBuild)
                                 {
                                     Debug.LogWarning(string.Format("Slot '{0}' Material Channel {1} on UMAMaterial {3} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName, material.name), asset);
+                                    Debug.Log("UMAMaterial: " + material.name, material);
                                 }
                                 //valid = false;
                             }
@@ -690,6 +782,7 @@ namespace UMA
                             if (Debug.isDebugBuild)
                             {
                                 Debug.LogWarning(string.Format("Slot '{0}' Material Channel {1} refers to material property '{2}' but no such property exists.", asset.slotName, i, channel.materialPropertyName), asset);
+                                Debug.Log("UMAMaterial: " + material.name, material);
                             }
                             //valid = false;
                         }
@@ -703,15 +796,19 @@ namespace UMA
 
         public override string ToString()
         {
+            if (isPlaceholderSlot)
+            {
+                return "SlotData (Placeholder): " + (placeholderSlotName ?? "");
+            }
             return "SlotData: " + asset.slotName;
         }
 
         #region operator ==, != and similar HACKS, seriously.....
 
-        public static implicit operator bool(SlotData obj)
-        {
-			return ((System.Object)obj) != null && obj.asset != null;
-        }
+		public static implicit operator bool(SlotData obj)
+		{
+			return ((System.Object)obj) != null && (obj.asset != null || obj.isPlaceholderSlot);
+		}
 
         public bool Equals(SlotData other)
         {

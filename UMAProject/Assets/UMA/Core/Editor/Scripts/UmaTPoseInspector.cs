@@ -10,6 +10,7 @@ namespace UMA
         bool boneInfoFoldout = false;
         bool humanInfoFoldout = false;
         bool mecanimInfoFoldout = false;
+        bool humanPoseFoldout = false;
         List<bool> foldouts = new List<bool>();
 
         UmaTPose source;
@@ -27,6 +28,9 @@ namespace UMA
                 return;
             }
 
+            EditorGUI.BeginChangeCheck();
+            source.mapJaw = EditorGUILayout.Toggle("Map Jaw", source.mapJaw);
+            serializedObject.Update();
             //base.DrawDefaultInspector();
             mecanimInfoFoldout = EditorGUILayout.Foldout(mecanimInfoFoldout, "Mecanim Adjustments");
             if (mecanimInfoFoldout)
@@ -38,6 +42,49 @@ namespace UMA
                 source.upperArmTwist = EditorGUILayout.FloatField("Upper Arm Twist", source.upperArmTwist);
                 source.lowerLegTwist = EditorGUILayout.FloatField("Lower Leg Twist", source.lowerLegTwist);
                 source.upperLegTwist = EditorGUILayout.FloatField("Upper Leg Twist", source.upperLegTwist);
+            }
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+                source.Serialize();
+                EditorUtility.SetDirty(source);
+            }
+
+            humanPoseFoldout = EditorGUILayout.Foldout(humanPoseFoldout, "Human Pose");
+            if (humanPoseFoldout)
+            {
+                if (source.HasExtractedHumanPose())
+                {
+                    EditorGUILayout.HelpBox("Using extracted HumanPose data.", MessageType.Info);
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("Using default HumanPose data.", MessageType.Warning);
+                }
+                var pose = source.GetHumanPose();
+                EditorGUI.BeginChangeCheck();
+                pose.bodyPosition = EditorGUILayout.Vector3Field("Body Position", pose.bodyPosition);
+                Vector4 rot = EditorGUILayout.Vector4Field("Body Rotation (x,y,z,w)", new Vector4(pose.bodyRotation.x, pose.bodyRotation.y, pose.bodyRotation.z, pose.bodyRotation.w));
+                pose.bodyRotation = new Quaternion(rot.x, rot.y, rot.z, rot.w);
+
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Muscles", EditorStyles.boldLabel);
+                if (pose.muscles != null && pose.muscles.Length == HumanTrait.MuscleCount)
+                {
+                    for (int i = 0; i < pose.muscles.Length; i++)
+                    {
+                        float min = HumanTrait.GetMuscleDefaultMin(i);
+                        float max = HumanTrait.GetMuscleDefaultMax(i);
+                        string label = HumanTrait.MuscleName[i];
+                        pose.muscles[i] = EditorGUILayout.Slider(label, pose.muscles[i], min, max);
+                    }
+                }
+                if (EditorGUI.EndChangeCheck())
+                {
+                    source.SetHumanPose(pose);
+                    source.Serialize();
+                    EditorUtility.SetDirty(source);
+                }
             }
 
             boneInfoFoldout = EditorGUILayout.Foldout(boneInfoFoldout, "Bone Info");

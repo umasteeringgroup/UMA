@@ -261,7 +261,7 @@ namespace UMA
 
         public static int[] GetTriangles(UMAMeshData meshData, int subMesh)
         {
-            return meshData.submeshes[subMesh].getBaseTriangles();
+            return meshData.submeshes[subMesh].getManagedTriangles(0);
         }
     }
 }

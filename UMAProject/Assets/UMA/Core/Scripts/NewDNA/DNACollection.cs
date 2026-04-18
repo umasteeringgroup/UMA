@@ -25,6 +25,16 @@ namespace UMA
             }
         }
 
+
+        public List<string> GetDNANames()
+        {
+            if (DNADictionary.Count == 0)
+            {
+                LoadDictionary();
+            }
+            return new List<string>(DNADictionary.Keys);
+        }
+
         public void Reset()
         {
             DNADictionary.Clear();
@@ -39,13 +49,48 @@ namespace UMA
                 {
                     foreach (var dna in collection.dnaList)
                     {
-                        if (!DNADictionary.ContainsKey(dna.dnaName))
+                        if (DNADictionary == null)
+                        {
+                            DNADictionary = new Dictionary<string, DNA>();
+                        }
+                        if (dna == null || string.IsNullOrEmpty(dna.name))
+                            continue;
+                        if (!DNADictionary.ContainsKey(dna.name))
                         {
                             DNADictionary.Add(dna.name, dna);
                         }
                     }
                 }
             }
+        }
+
+        public bool HasDNA(string dnaName)
+        {
+            return dnaDictionary.ContainsKey(dnaName);
+        }
+
+        public DNAInstanceCollection GetDefaultDNA(RaceData race)
+        {
+            LoadDictionary();
+            var dnaInstanceCollection = new DNAInstanceCollection();
+            // Preserve parent group association when creating instances
+            if (DNAGroups != null)
+            {
+                for (int gi = 0; gi < DNAGroups.Count; gi++)
+                {
+                    var group = DNAGroups[gi];
+                    if (group == null || group.dnaList == null) { continue; }
+                    for (int di = 0; di < group.dnaList.Count; di++)
+                    {
+                        var dna = group.dnaList[di];
+                        if (dna == null || string.IsNullOrEmpty(dna.name)) { continue; }
+                        var dnaInstance = new DNAInstance(dna.name, dna.defaultValue, group);
+                        dnaInstanceCollection.AddDNAInstance(dnaInstance);
+                    }
+                }
+            }
+            dnaInstanceCollection.Initialize(race.DNACollection);
+            return dnaInstanceCollection;
         }
 
         private Dictionary<string, DNA> DNADictionary = new Dictionary<string, DNA>();

@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
 using UMA.CharacterSystem;
+using UnityEngine.Rendering;
 
 namespace UMA.Editors
 {
@@ -19,6 +20,8 @@ namespace UMA.Editors
         private static bool showMaterialInspector = false;
         Editor innerEditor = null;
         private bool shaderParmsFoldout = false;
+        private static readonly RenderTextureFormat[] _supportedChannelTextureFormats = UMAMaterial.GetSupportedChannelTextureFormats();
+        private static readonly string[] _supportedChannelTextureFormatNames = BuildSupportedChannelTextureFormatNames();
 
         private List<UnityEngine.Object> _inspectedObjects = new List<UnityEngine.Object>();
 
@@ -155,7 +158,7 @@ namespace UMA.Editors
                                 }
                                 else
                                 {
-                                    Debug.LogWarning("Material " + mat.name + " does not match " + source.material.name + ". Skipping copy of properties.");
+                                    //Debug.LogWarning("Material " + mat.name + " does not match " + source.material.name + ". Skipping copy of properties.");
                                     continue;
                                 }
                             }
@@ -188,6 +191,7 @@ namespace UMA.Editors
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Generated Texture Settings", _centeredStyle);
             EditorGUILayout.BeginVertical("HelpBox");
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("generateMipMaps"), new GUIContent("Generate Mip Maps", "Enable or disable mip map generation."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("MipMapBias"), new GUIContent("Mip Map Bias", "Negative values have sharper bias"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("AnisoLevel"), new GUIContent("Aniso Level", "Anisotropic level"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("MatFilterMode"),  new GUIContent("Texture Filter Mode", "Select the filter mode of Point, Bilinear or Trilinear"));
@@ -343,9 +347,17 @@ namespace UMA.Editors
                     }
                         
                         
-                        // EditorGUILayout.LabelField(new GUIContent("Channel " + i + ": " + materialPropertyName.stringValue),EditorStyles.toolbar);
-
-                    channelExpanded[i] = GUIHelper.FoldoutBar(channelExpanded[i],"Channel " + i + ": " + materialPropertyName.stringValue + error );
+                   EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+                    channelExpanded[i] = EditorGUILayout.Foldout(channelExpanded[i], "Channel " + i + ": " + materialPropertyName.stringValue + error, true);
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("X", EditorStyles.toolbarButton, GUILayout.Width(22)))
+                    {
+                        Undo.RecordObject(target, "Remove Channel");
+                        list.DeleteArrayElementAtIndex(i);
+                        list.serializedObject.ApplyModifiedProperties();
+                        GUIUtility.ExitGUI();
+                    }
+                    EditorGUILayout.EndHorizontal();
                     if (channelExpanded[i])
                     {
                         GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
@@ -371,15 +383,13 @@ namespace UMA.Editors
                         {
                             EditorGUILayout.LabelField("Materials of type 'UseExistingTextures' use TintedTexture type");
                         }
-                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("textureFormat"), new GUIContent("Texture Format", "Format used for the texture in this channel."));
+                        SerializedProperty textureFormatProperty = channel.FindPropertyRelative("textureFormat");
+                        DrawTextureFormatPopup(textureFormatProperty);
 
-                        if (channel.FindPropertyRelative("textureFormat") != null && i < ((UMAMaterial)target).channels.Length)
+                        RenderTextureFormat selectedFormat = (RenderTextureFormat)textureFormatProperty.intValue;
+                        if (!SystemInfo.SupportsRenderTextureFormat(selectedFormat))
                         {
-                            RenderTextureFormat format = ((UMAMaterial)target).channels[i].textureFormat;
-                            if (!SystemInfo.SupportsRenderTextureFormat(format))
-                            {
-                                EditorGUILayout.HelpBox("This Texture Format is not supported on this system!", MessageType.Error);
-                            }
+                            EditorGUILayout.HelpBox("This Texture Format is not supported on this system. UMA will fall back to ARGB32 at runtime.", MessageType.Warning);
                         }
 
                         EditorGUILayout.BeginHorizontal();
@@ -436,7 +446,7 @@ namespace UMA.Editors
 
         private static string[] FindTexProperties( Shader shader)
         {
-            int count = ShaderUtil.GetPropertyCount(shader);
+            int count = shader.GetPropertyCount();
             if (count <= 0)
             {
                 return null;
@@ -446,13 +456,63 @@ namespace UMA.Editors
             texProperties.Add("Select");
             for (int i = 0; i < count; i++)
             {
-                if (ShaderUtil.GetPropertyType(shader, i) == ShaderUtil.ShaderPropertyType.TexEnv)
+                if (shader.GetPropertyType(i) == ShaderPropertyType.Texture)
                 {
-                    texProperties.Add(ShaderUtil.GetPropertyName(shader, i));
+                    texProperties.Add(shader.GetPropertyName(i));
                 }
             }
 
             return texProperties.ToArray();
+        }
+
+        private static string[] BuildSupportedChannelTextureFormatNames()
+        {
+            string[] names = new string[_supportedChannelTextureFormats.Length];
+            for (int i = 0; i < _supportedChannelTextureFormats.Length; i++)
+            {
+                names[i] = _supportedChannelTextureFormats[i].ToString();
+            }
+            return names;
+        }
+
+        private static void DrawTextureFormatPopup(SerializedProperty textureFormatProperty)
+        {
+            if (textureFormatProperty == null)
+            {
+                return;
+            }
+
+            RenderTextureFormat currentFormat = (RenderTextureFormat)textureFormatProperty.intValue;
+            int selectedIndex = 0;
+            bool found = false;
+
+            for (int i = 0; i < _supportedChannelTextureFormats.Length; i++)
+            {
+                if (_supportedChannelTextureFormats[i] == currentFormat)
+                {
+                    selectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                currentFormat = UMAMaterial.DefaultChannelTextureFormat;
+                textureFormatProperty.intValue = (int)currentFormat;
+            }
+
+            int newIndex = EditorGUILayout.Popup(new GUIContent("Texture Format", "Cross-target RenderTexture format used for this channel."), selectedIndex, _supportedChannelTextureFormatNames);
+            if (newIndex < 0 || newIndex >= _supportedChannelTextureFormats.Length)
+            {
+                newIndex = 0;
+            }
+
+            RenderTextureFormat newFormat = _supportedChannelTextureFormats[newIndex];
+            if (newFormat != currentFormat)
+            {
+                textureFormatProperty.intValue = (int)newFormat;
+            }
         }
 
         private void FindMatchingOverlayDataAssets()
