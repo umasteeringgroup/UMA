@@ -1523,7 +1523,7 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: -0.22644444, y: 1.9210403, z: -2.3218715}
+    m_Target: {x: -0.054039385, y: 2.2444365, z: 0.390524}
     speed: 2
     m_Value: {x: -0.22644444, y: 1.9210403, z: -2.3218715}
   m_RenderMode: 0
@@ -1571,11 +1571,11 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: 0.00010720419, y: 0.9973366, z: 0.009427612, w: -0.07533977}
+    m_Target: {x: 0.07228471, y: -0.15091646, z: -0.0110640945, w: -0.98586017}
     speed: 2
     m_Value: {x: 0.00010720419, y: 0.9973366, z: 0.009427612, w: -0.07533977}
   m_Size:
-    m_Target: 1.3381293
+    m_Target: 1.0813152
     speed: 2
     m_Value: 1.3381293
   m_Ortho:
@@ -1958,76 +1958,14 @@ MonoBehaviour:
       m_Data: 1000000014
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 59280
-    - m_Data: 59380
-    - m_Data: 59382
-    - m_Data: 59384
-    - m_Data: 59386
-    - m_Data: 59388
-    - m_Data: 59390
-    - m_Data: 59392
-    - m_Data: 59394
-    - m_Data: 59396
-    - m_Data: 59398
-    - m_Data: 59400
-    - m_Data: 59402
-    - m_Data: 59404
-    - m_Data: 59406
-    - m_Data: 59408
-    - m_Data: 59410
-    - m_Data: 59412
-    - m_Data: 59414
-    - m_Data: 59416
-    - m_Data: 59418
-    - m_Data: 59420
-    - m_Data: 59422
-    - m_Data: 59424
-    - m_Data: 59426
-    - m_Data: 59428
-    - m_Data: 59430
-    - m_Data: 59432
-    - m_Data: 59434
-    - m_Data: 59436
-    - m_Data: 59438
-    - m_Data: 59440
-    - m_Data: 59442
-    - m_Data: 59444
-    - m_Data: 59446
-    - m_Data: 59448
-    - m_Data: 59450
-    - m_Data: 59452
-    - m_Data: 59454
-    - m_Data: 59456
-    - m_Data: 59458
-    - m_Data: 59460
-    - m_Data: 59462
-    - m_Data: 59464
-    - m_Data: 59466
-    - m_Data: 59468
-    - m_Data: 59470
-    - m_Data: 59472
-    - m_Data: 59474
-    - m_Data: 59476
-    - m_Data: 59478
-    - m_Data: 59480
-    - m_Data: 59482
-    - m_Data: 59484
-    - m_Data: 59486
-    - m_Data: 59488
-    - m_Data: 59490
-    - m_Data: 59492
-    - m_Data: 59494
-    - m_Data: 59496
-    - m_Data: 59498
-    - m_Data: 59500
-    - m_Data: 59502
-    - m_Data: 59504
-    - m_Data: 59506
-    - m_Data: 59508
-    - m_Data: 59510
-    - m_Data: 59512
-    - m_Data: 59514
-    - m_Data: 59516
+    - m_Data: 69888
+    - m_Data: 69890
+    - m_Data: 69892
+    - m_Data: 69894
+    - m_Data: 69896
+    - m_Data: 69898
+    - m_Data: 69900
+    - m_Data: 69902
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -2060,76 +1998,14 @@ MonoBehaviour:
       m_Data: 0
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 59280
-    - m_Data: 59380
-    - m_Data: 59382
-    - m_Data: 59384
-    - m_Data: 59386
-    - m_Data: 59388
-    - m_Data: 59390
-    - m_Data: 59392
-    - m_Data: 59394
-    - m_Data: 59396
-    - m_Data: 59398
-    - m_Data: 59400
-    - m_Data: 59402
-    - m_Data: 59404
-    - m_Data: 59406
-    - m_Data: 59408
-    - m_Data: 59410
-    - m_Data: 59412
-    - m_Data: 59414
-    - m_Data: 59416
-    - m_Data: 59418
-    - m_Data: 59420
-    - m_Data: 59422
-    - m_Data: 59424
-    - m_Data: 59426
-    - m_Data: 59428
-    - m_Data: 59430
-    - m_Data: 59432
-    - m_Data: 59434
-    - m_Data: 59436
-    - m_Data: 59438
-    - m_Data: 59440
-    - m_Data: 59442
-    - m_Data: 59444
-    - m_Data: 59446
-    - m_Data: 59448
-    - m_Data: 59450
-    - m_Data: 59452
-    - m_Data: 59454
-    - m_Data: 59456
-    - m_Data: 59458
-    - m_Data: 59460
-    - m_Data: 59462
-    - m_Data: 59464
-    - m_Data: 59466
-    - m_Data: 59468
-    - m_Data: 59470
-    - m_Data: 59472
-    - m_Data: 59474
-    - m_Data: 59476
-    - m_Data: 59478
-    - m_Data: 59480
-    - m_Data: 59482
-    - m_Data: 59484
-    - m_Data: 59486
-    - m_Data: 59488
-    - m_Data: 59490
-    - m_Data: 59492
-    - m_Data: 59494
-    - m_Data: 59496
-    - m_Data: 59498
-    - m_Data: 59500
-    - m_Data: 59502
-    - m_Data: 59504
-    - m_Data: 59506
-    - m_Data: 59508
-    - m_Data: 59510
-    - m_Data: 59512
-    - m_Data: 59514
-    - m_Data: 59516
+    - m_Data: 69888
+    - m_Data: 69890
+    - m_Data: 69892
+    - m_Data: 69894
+    - m_Data: 69896
+    - m_Data: 69898
+    - m_Data: 69900
+    - m_Data: 69902
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
