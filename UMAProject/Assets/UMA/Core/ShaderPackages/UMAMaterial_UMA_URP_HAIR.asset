@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   _material: {fileID: 2100000, guid: 9872487463550f944853b0a1c92124ca, type: 2}
   _secondPass: {fileID: 2100000, guid: 3e16755bdf3e18a42a5ef35a772363b3, type: 2}
-  materialType: 8
+  materialType: 1
   channels:
-  - channelType: 3
+  - channelType: 0
     textureFormat: 0
     materialPropertyName: _BaseMap
     sourceTextureName: 
