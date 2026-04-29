@@ -26,6 +26,7 @@ namespace UMA
         }
 
         static int TypeIndex = 0;
+        static int selectedTemplateMaterialIndex = 0;
         static bool templateMaterialExpanded = false;
         static readonly System.Collections.Generic.List<TemplateMaterialEntry> templateMaterials = new System.Collections.Generic.List<TemplateMaterialEntry>();
 
@@ -190,55 +191,60 @@ namespace UMA
 
             EditorGUILayout.Space();
 
-            int removeMaterialIndex = -1;
-
-            for (int i = 0; i < templateMaterials.Count; i++)
+            if (templateMaterials.Count > 0)
             {
-                TemplateMaterialEntry entry = templateMaterials[i];
-                if (entry == null)
+                if (selectedTemplateMaterialIndex >= templateMaterials.Count)
                 {
-                    continue;
+                    selectedTemplateMaterialIndex = 0;
                 }
 
-                EditorGUILayout.BeginHorizontal();
-                entry.expanded = EditorGUILayout.Foldout(entry.expanded, entry.materialName, true);
-                if (GUILayout.Button("X", GUILayout.Width(24)))
+                if (templateMaterials.Count > 1)
                 {
-                    removeMaterialIndex = i;
-                }
-                EditorGUILayout.EndHorizontal();
-
-                if (removeMaterialIndex == i)
-                {
-                    continue;
+                    selectedTemplateMaterialIndex = EditorGUILayout.Popup("Material", selectedTemplateMaterialIndex, GetTemplateMaterialNames());
                 }
 
-                if (!entry.expanded)
+                TemplateMaterialEntry entry = templateMaterials[selectedTemplateMaterialIndex];
+                if (entry != null)
                 {
-                    continue;
-                }
-
-                GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.65f, 0.9f));
-                for (int j = 0; j < entry.properties.Count; j++)
-                {
-                    TemplatePropertyEntry propertyEntry = entry.properties[j];
-                    if (propertyEntry == null || propertyEntry.property == null)
-                    {
-                        continue;
-                    }
+                    int removeMaterialIndex = -1;
 
                     EditorGUILayout.BeginHorizontal();
-                    propertyEntry.selected = EditorGUILayout.Toggle(propertyEntry.selected, GUILayout.Width(20));
-                    EditorGUILayout.LabelField(propertyEntry.property.name, GUILayout.ExpandWidth(true));
-                    EditorGUILayout.LabelField(propertyEntry.typeName, GUILayout.Width(140));
+                    entry.expanded = EditorGUILayout.Foldout(entry.expanded, entry.materialName, true);
+                    if (GUILayout.Button("X", GUILayout.Width(24)))
+                    {
+                        removeMaterialIndex = selectedTemplateMaterialIndex;
+                    }
                     EditorGUILayout.EndHorizontal();
-                }
-                GUIHelper.EndVerticalPadded(5);
-            }
 
-            if (removeMaterialIndex >= 0)
-            {
-                templateMaterials.RemoveAt(removeMaterialIndex);
+                    if (removeMaterialIndex != selectedTemplateMaterialIndex && entry.expanded)
+                    {
+                        GUIHelper.BeginVerticalPadded(5, new Color(0.65f, 0.65f, 0.9f));
+                        for (int j = 0; j < entry.properties.Count; j++)
+                        {
+                            TemplatePropertyEntry propertyEntry = entry.properties[j];
+                            if (propertyEntry == null || propertyEntry.property == null)
+                            {
+                                continue;
+                            }
+
+                            EditorGUILayout.BeginHorizontal();
+                            propertyEntry.selected = EditorGUILayout.Toggle(propertyEntry.selected, GUILayout.Width(20));
+                            EditorGUILayout.LabelField(propertyEntry.property.name, GUILayout.ExpandWidth(true));
+                            EditorGUILayout.LabelField(propertyEntry.typeName, GUILayout.Width(140));
+                            EditorGUILayout.EndHorizontal();
+                        }
+                        GUIHelper.EndVerticalPadded(5);
+                    }
+
+                    if (removeMaterialIndex >= 0)
+                    {
+                        templateMaterials.RemoveAt(removeMaterialIndex);
+                        if (selectedTemplateMaterialIndex >= templateMaterials.Count)
+                        {
+                            selectedTemplateMaterialIndex = Mathf.Max(0, templateMaterials.Count - 1);
+                        }
+                    }
+                }
             }
 
             using (new EditorGUI.DisabledScope(templateMaterials.Count == 0))
@@ -255,6 +261,7 @@ namespace UMA
         private static void CacheTemplateMaterials(Material[] materials)
         {
             templateMaterials.Clear();
+            selectedTemplateMaterialIndex = 0;
             if (materials == null || materials.Length == 0)
             {
                 return;
@@ -281,6 +288,17 @@ namespace UMA
                 BuildTemplatePropertiesForMaterial(material, entry.properties);
                 templateMaterials.Add(entry);
             }
+        }
+
+        private static string[] GetTemplateMaterialNames()
+        {
+            string[] names = new string[templateMaterials.Count];
+            for (int i = 0; i < templateMaterials.Count; i++)
+            {
+                TemplateMaterialEntry materialEntry = templateMaterials[i];
+                names[i] = materialEntry != null ? materialEntry.materialName : "Missing Material";
+            }
+            return names;
         }
 
         private static void BuildTemplatePropertiesForMaterial(Material material, System.Collections.Generic.List<TemplatePropertyEntry> entries)

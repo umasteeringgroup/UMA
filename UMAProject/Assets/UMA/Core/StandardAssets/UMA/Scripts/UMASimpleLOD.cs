@@ -80,6 +80,7 @@ namespace UMA.Examples
         private UMAData _umaData;
 
         private bool initialized = false;
+        private bool _initialFallbackApplied = false;
 
         public void SetSwapSlots(bool swapSlots, int lodOffset)
         {
@@ -113,13 +114,13 @@ namespace UMA.Examples
         public void OnEnable()
         {
             _avatar = GetComponent<DynamicCharacterAvatar>();
+            _umaData = GetComponent<UMAData>();
             if (_avatar != null)
             {
                 _avatar.CharacterBegun.AddListener(CharacterBegun);
             }
             else
             {
-                _umaData = GetComponent<UMAData>();
                 if (_umaData != null)
                 {
                     _umaData.CharacterCreated.AddListener(CharacterCreated);
@@ -127,9 +128,53 @@ namespace UMA.Examples
             }
         }
 
+        public void OnDisable()
+        {
+            if (_avatar != null)
+            {
+                _avatar.CharacterBegun.RemoveListener(CharacterBegun);
+            }
+
+            if (_umaData != null)
+            {
+                _umaData.CharacterCreated.RemoveListener(CharacterCreated);
+            }
+        }
+
+        private bool TryLateInitialize()
+        {
+            if (initialized)
+            {
+                return true;
+            }
+
+            if (_avatar == null)
+            {
+                _avatar = GetComponent<DynamicCharacterAvatar>();
+            }
+
+            if (_umaData == null)
+            {
+                _umaData = GetComponent<UMAData>();
+            }
+
+            if (_umaData != null && _umaData.umaRecipe != null)
+            {
+                initialized = true;
+                if (_currentLOD < 0)
+                {
+                    DoLODCheck(_umaData);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
         public void CharacterCreated(UMAData umaData)
         {
             initialized = true;
+            DoLODCheck(umaData);
         }
 
         public void CharacterBegun(UMAData umaData)
@@ -142,9 +187,18 @@ namespace UMA.Examples
         private void DoLODCheck(UMAData umaData)
         {
             Debug.Log("Performing LOD check for " + gameObject.name);
-            if (!PerformLodCheck())
+            if (PerformLodCheck())
+            {
+                _initialFallbackApplied = false;
+                return;
+            }
+
+            // If a check fails due to transient readiness issues (camera/renderer/update pending),
+            // avoid repeatedly forcing LOD0 and slot swaps. Apply a single startup fallback only.
+            if (_currentLOD < 0 && !_initialFallbackApplied)
             {
                 _currentLOD = 0;
+                _initialFallbackApplied = true;
                 if (umaData != null)
                 {
                     umaData.atlasResolutionScale = 1.0f;
@@ -199,7 +253,7 @@ namespace UMA.Examples
 
         public void Update()
         {
-            if (!initialized)
+            if (!initialized && !TryLateInitialize())
             {
                 return;
             }
@@ -251,7 +305,12 @@ namespace UMA.Examples
             {
                                 return false;
             }
-            if ((_umaData as DynamicCharacterAvatar).UpdatePending())
+
+            if (_avatar == null)
+            {
+                _avatar = gameObject.GetComponent<DynamicCharacterAvatar>();
+            }
+            if (_avatar != null && _avatar.UpdatePending())
             {
                 return false;
             }
@@ -370,7 +429,7 @@ namespace UMA.Examples
             if (!anyHasLOD)
             {
                 Debug.Log("[UMASimpleLOD] No slots with multiple LODs found; skipping internal LOD update.");
-                // Nothing with multiple LODs — just keep UMAData in sync and exit
+                // Nothing with multiple LODs ï¿½ just keep UMAData in sync and exit
                 _umaData.currentLODLevel = desiredLOD;
                 return;
             }
@@ -748,7 +807,7 @@ namespace UMA.Examples
                     if (useSlotDropping)
                     {
                         // mark the slots as dirty if one is over the limit.
-                        if (slot.MaxLod > -1 && _currentLOD > slot.MaxLod)
+                        if (slot.MaxLod > -1 && currentLevel > slot.MaxLod)
                         {
                             // Only trigger this the first time, so we only force a rebuild
                             // once (or possibly later if slots change...)

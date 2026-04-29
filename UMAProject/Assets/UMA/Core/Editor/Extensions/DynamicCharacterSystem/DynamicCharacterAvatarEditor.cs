@@ -689,7 +689,7 @@ namespace UMA.CharacterSystem.Editors
             // Dropdown of the current DNA.
             // button to "add" it.
             RaceData race = (thisDCA.activeRace != null) ? thisDCA.activeRace.data : null;
-            if (race.useNewDNA)
+            if (race != null && race.useNewDNA)
             {
                 showPrefinedDNA = EditorGUILayout.Foldout(showPrefinedDNA, "Live DNA");
             }
@@ -1241,7 +1241,7 @@ namespace UMA.CharacterSystem.Editors
             }
             else
             {
-                // Guide the user; we’ll create it automatically on first add
+                // Guide the user; weï¿½ll create it automatically on first add
                 EditorGUILayout.HelpBox("No New DNA collection exists yet. It will be created when you add the first entry.", MessageType.Info);
             }
 

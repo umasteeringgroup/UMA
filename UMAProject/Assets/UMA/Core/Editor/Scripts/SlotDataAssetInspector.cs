@@ -13,6 +13,24 @@ namespace UMA.Editors
     {
         enum SlotPreviewMode { ThisSlot, WeldSlot, BothSlots };
 
+        [Serializable]
+        private class PersistedSectionState
+        {
+            public bool smooshFoldout;
+            public bool utilitiesFoldout;
+            public string weldToSlotGuid;
+            public string bindposeSourceSlotGuid;
+            public string uma3DonorSlotGuid;
+            public bool overrideUma3AxisConversion;
+            public Vector3 uma3AxisConversion = new Vector3(0f, 0f, 90f);
+            public float weldDistance = 0.0001f;
+            public string selectedRaceName;
+            public int uvChannel;
+            public int uvChannelToMirror;
+            public int normalCopyMode;
+            public int blendshapeCopyMode;
+        }
+
         static string[] RegularSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
         static string[] WildcardSlotFields = new string[] { "slotName", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
         SerializedProperty slotName;
@@ -36,6 +54,10 @@ namespace UMA.Editors
         // Source slot for bindpose conformity
         SlotDataAsset bindposeSourceSlot = null;
         string lastBindposeInfo = "";
+        SlotDataAsset uma3DonorSlot = null;
+        bool overrideUma3AxisConversion;
+        Vector3 uma3AxisConversion = new Vector3(0f, 0f, 90f);
+        string lastUma3ConversionInfo = "";
 
         bool CopyNormals;
         bool CopyBoneWeights;
@@ -53,6 +75,8 @@ namespace UMA.Editors
         private int uvChannel;
         private int uvChannelToMirror;
         private bool exportIncludeRig = true;
+        private string persistedSectionStateKey;
+        private string persistedSectionStateCache;
 
         public override bool HasPreviewGUI() => true;
         MeshPreview MeshPreview;
@@ -94,6 +118,7 @@ namespace UMA.Editors
 
         void OnEnable()
         {
+            previewRotation = Vector3.zero;
             // Defer initialization until editor is stable
             if (IsEditorBusy || target == null)
             {
@@ -126,8 +151,10 @@ namespace UMA.Editors
             smooshOffset = serializedObject.FindProperty("smooshOffset");
 
             slot = target as SlotDataAsset;
+            persistedSectionStateKey = GetPersistedSectionStateKey(slot);
 
             SetRaceListsSafe();
+            RestorePersistedSectionState();
 
             if (slot != null)
             {
@@ -166,6 +193,7 @@ namespace UMA.Editors
         private void OnDisable()
         {
             AssemblyReloadEvents.beforeAssemblyReload -= HandleBeforeAssemblyReload;
+            PersistSectionStateIfNeeded(true);
             DisposePreview();
         }
 
@@ -203,7 +231,7 @@ namespace UMA.Editors
             // Busy or invalid state protections
             if (IsEditorBusy)
             {
-                EditorGUILayout.HelpBox("Unity is compiling/reloading. Please wait…", MessageType.Info);
+                EditorGUILayout.HelpBox("Unity is compiling/reloading. Please waitï¿½", MessageType.Info);
                 return;
             }
             if (target == null || serializedObject == null || serializedObject.targetObject == null)
@@ -642,6 +670,38 @@ namespace UMA.Editors
                 GUIHelper.EndVerticalPadded(10);
                 #endregion
 
+                #region UMA3 Conversion
+                GUIHelper.BeginVerticalPadded(10, new Color(1f, 0.92f, 0.8f));
+                GUILayout.Label("Convert To UMA3", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox("Convert this slot into a donor slot's UMA3 bindpose space and donor bone ordering. The current slot is modified in place; the donor slot supplies the final bindposes and bone index layout.", MessageType.Info);
+                uma3DonorSlot = EditorGUILayout.ObjectField("Donor Slot", uma3DonorSlot, typeof(SlotDataAsset), false) as SlotDataAsset;
+                overrideUma3AxisConversion = EditorGUILayout.Toggle("Override axis conversion", overrideUma3AxisConversion);
+
+                EditorGUI.BeginDisabledGroup(!overrideUma3AxisConversion);
+                uma3AxisConversion = EditorGUILayout.Vector3Field("Axis Rotation", uma3AxisConversion);
+                EditorGUI.EndDisabledGroup();
+
+                bool canConvertUma3 = uma3DonorSlot != null && uma3DonorSlot.meshData != null && slot.meshData != null;
+                EditorGUI.BeginDisabledGroup(!canConvertUma3);
+                if (GUILayout.Button("Convert Slot To UMA3"))
+                {
+                    lastUma3ConversionInfo = overrideUma3AxisConversion
+                        ? slot.ConvertSlotDataToUMA3(uma3DonorSlot, true, uma3AxisConversion.x, uma3AxisConversion.y, uma3AxisConversion.z)
+                        : slot.ConvertSlotDataToUMA3(uma3DonorSlot);
+                    EditorUtility.SetDirty(slot);
+                    AssetDatabase.SaveAssetIfDirty(slot);
+                    UMAUpdateProcessor.UpdateSlot(slot, false);
+                    reConfigurePreview = true;
+                }
+                EditorGUI.EndDisabledGroup();
+
+                if (!string.IsNullOrEmpty(lastUma3ConversionInfo))
+                {
+                    EditorGUILayout.HelpBox(lastUma3ConversionInfo, MessageType.None);
+                }
+                GUIHelper.EndVerticalPadded(10);
+                #endregion
+
                 #region WELDS
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 selectedRaceIndex = EditorGUILayout.Popup("Select Base Slot by Race", selectedRaceIndex, foundRaceNames.ToArray());
@@ -840,10 +900,15 @@ namespace UMA.Editors
                 GUILayout.Space(10);
             }
 
+            // Display information on rotations here. 
+            DrawTransformDebugInfo();
+
+
+
             // Bottom quick-rotate controls for the preview
             GUILayout.Space(12);
             GUIHelper.BeginVerticalPadded(8, new Color(0.90f, 0.95f, 1f));
-            GUILayout.Label("Quick Rotate (90°)", EditorStyles.boldLabel);
+            GUILayout.Label("Quick Rotate (90ï¿½)", EditorStyles.boldLabel);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("X +90")) { previewRotation.x = Wrap360(previewRotation.x + 90f); reConfigurePreview = true; Repaint(); }
             if (GUILayout.Button("X -90")) { previewRotation.x = Wrap360(previewRotation.x - 90f); reConfigurePreview = true; Repaint(); }
@@ -855,6 +920,8 @@ namespace UMA.Editors
             GUIHelper.EndVerticalPadded(8);
 
             serializedObject.ApplyModifiedProperties();
+
+            PersistSectionStateIfNeeded(false);
 
             if (EditorGUI.EndChangeCheck() || forceUpdate)
             {
@@ -871,6 +938,254 @@ namespace UMA.Editors
             angle %= 360f;
             if (angle < 0) angle += 360f;
             return angle;
+        }
+
+        private void RestorePersistedSectionState()
+        {
+            if (string.IsNullOrEmpty(persistedSectionStateKey) || slot == null)
+            {
+                return;
+            }
+
+            if (!EditorPrefs.HasKey(persistedSectionStateKey))
+            {
+                persistedSectionStateCache = JsonUtility.ToJson(BuildPersistedSectionState());
+                return;
+            }
+
+            string json = EditorPrefs.GetString(persistedSectionStateKey, string.Empty);
+            if (string.IsNullOrEmpty(json))
+            {
+                persistedSectionStateCache = JsonUtility.ToJson(BuildPersistedSectionState());
+                return;
+            }
+
+            PersistedSectionState state = JsonUtility.FromJson<PersistedSectionState>(json);
+            if (state == null)
+            {
+                persistedSectionStateCache = JsonUtility.ToJson(BuildPersistedSectionState());
+                return;
+            }
+
+            slot.smooshFoldout = state.smooshFoldout;
+            slot.utilitiesFoldout = state.utilitiesFoldout;
+            WeldToSlot = LoadAssetFromGuid<SlotDataAsset>(state.weldToSlotGuid);
+            bindposeSourceSlot = LoadAssetFromGuid<SlotDataAsset>(state.bindposeSourceSlotGuid);
+            uma3DonorSlot = LoadAssetFromGuid<SlotDataAsset>(state.uma3DonorSlotGuid);
+            overrideUma3AxisConversion = state.overrideUma3AxisConversion;
+            uma3AxisConversion = state.uma3AxisConversion;
+            weldDistance = state.weldDistance > 0f ? state.weldDistance : 0.0001f;
+            selectedRaceIndex = FindRaceIndex(state.selectedRaceName);
+            uvChannel = Mathf.Clamp(state.uvChannel, 0, 2);
+            uvChannelToMirror = Mathf.Clamp(state.uvChannelToMirror, 0, 3);
+            normalCopyMode = Enum.IsDefined(typeof(UMA.SlotDataAsset.NormalCopyMode), state.normalCopyMode)
+                ? (UMA.SlotDataAsset.NormalCopyMode)state.normalCopyMode
+                : default;
+            blendshapeCopyMode = Enum.IsDefined(typeof(UMA.SlotDataAsset.BlendshapeCopyMode), state.blendshapeCopyMode)
+                ? (UMA.SlotDataAsset.BlendshapeCopyMode)state.blendshapeCopyMode
+                : default;
+
+            persistedSectionStateCache = json;
+        }
+
+        private void PersistSectionStateIfNeeded(bool force)
+        {
+            if (string.IsNullOrEmpty(persistedSectionStateKey) || slot == null)
+            {
+                return;
+            }
+
+            string json = JsonUtility.ToJson(BuildPersistedSectionState());
+            if (!force && string.Equals(json, persistedSectionStateCache, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            EditorPrefs.SetString(persistedSectionStateKey, json);
+            persistedSectionStateCache = json;
+        }
+
+        private PersistedSectionState BuildPersistedSectionState()
+        {
+            return new PersistedSectionState
+            {
+                smooshFoldout = slot != null && slot.smooshFoldout,
+                utilitiesFoldout = slot != null && slot.utilitiesFoldout,
+                weldToSlotGuid = GetAssetGuid(WeldToSlot),
+                bindposeSourceSlotGuid = GetAssetGuid(bindposeSourceSlot),
+                uma3DonorSlotGuid = GetAssetGuid(uma3DonorSlot),
+                overrideUma3AxisConversion = overrideUma3AxisConversion,
+                uma3AxisConversion = uma3AxisConversion,
+                weldDistance = weldDistance,
+                selectedRaceName = GetSelectedRaceName(),
+                uvChannel = uvChannel,
+                uvChannelToMirror = uvChannelToMirror,
+                normalCopyMode = (int)normalCopyMode,
+                blendshapeCopyMode = (int)blendshapeCopyMode
+            };
+        }
+
+        private string GetSelectedRaceName()
+        {
+            if (selectedRaceIndex > 0 && selectedRaceIndex < foundRaceNames.Count)
+            {
+                return foundRaceNames[selectedRaceIndex];
+            }
+
+            return string.Empty;
+        }
+
+        private int FindRaceIndex(string raceName)
+        {
+            if (string.IsNullOrEmpty(raceName))
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < foundRaceNames.Count; i++)
+            {
+                if (string.Equals(foundRaceNames[i], raceName, StringComparison.Ordinal))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static string GetPersistedSectionStateKey(SlotDataAsset targetSlot)
+        {
+            if (targetSlot == null)
+            {
+                return null;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(targetSlot);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return null;
+            }
+
+            string guid = AssetDatabase.AssetPathToGUID(assetPath);
+            return string.IsNullOrEmpty(guid) ? null : $"UMA.SlotDataAssetInspector.SectionState.{guid}";
+        }
+
+        private static string GetAssetGuid(UnityEngine.Object asset)
+        {
+            if (asset == null)
+            {
+                return string.Empty;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(asset);
+            return string.IsNullOrEmpty(assetPath) ? string.Empty : AssetDatabase.AssetPathToGUID(assetPath);
+        }
+
+        private static T LoadAssetFromGuid<T>(string guid) where T : UnityEngine.Object
+        {
+            if (string.IsNullOrEmpty(guid))
+            {
+                return null;
+            }
+
+            string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+            return string.IsNullOrEmpty(assetPath) ? null : AssetDatabase.LoadAssetAtPath<T>(assetPath);
+        }
+
+        private void DrawTransformDebugInfo()
+        {
+            GUILayout.Space(8);
+            GUIHelper.BeginVerticalPadded(10, new Color(0.92f, 0.95f, 1f));
+            GUILayout.Label("Transform Rotation / Bindpose", EditorStyles.boldLabel);
+
+            if (slot == null || slot.meshData == null)
+            {
+                EditorGUILayout.HelpBox("MeshData is missing.", MessageType.Info);
+                GUIHelper.EndVerticalPadded(10);
+                return;
+            }
+
+            string rootTransformName = string.IsNullOrEmpty(slot.meshData.RootBoneName) ? "rootTransform" : slot.meshData.RootBoneName;
+            DrawTransformDebugGroup("rootTransform", rootTransformName);
+            DrawTransformDebugGroup("Global", "Global");
+            DrawTransformDebugGroup("Position", "Position");
+
+            GUIHelper.EndVerticalPadded(10);
+        }
+
+        private void DrawTransformDebugGroup(string label, string transformName)
+        {
+            GUIHelper.BeginVerticalPadded(8, new Color(0.98f, 0.98f, 1f));
+            GUILayout.Label(string.Equals(label, transformName, StringComparison.Ordinal) ? label : label + " (" + transformName + ")", EditorStyles.boldLabel);
+
+            if (TryGetMeshTransformInfo(transformName, out UMATransform meshTransform, out Matrix4x4? bindPose))
+            {
+                Vector3 euler = meshTransform.rotation.eulerAngles;
+                EditorGUILayout.LabelField("Rotation", $"Euler {FormatVector3(euler)}");
+                EditorGUILayout.LabelField("Bindpose", EditorStyles.boldLabel);
+                EditorGUILayout.TextArea(FormatMatrix(bindPose.GetValueOrDefault()), EditorStyles.textArea, GUILayout.MinHeight(76f));
+            }
+            else
+            {
+                EditorGUILayout.LabelField("Rotation", "Not found");
+                EditorGUILayout.LabelField("Bindpose", "Not found");
+            }
+
+            GUIHelper.EndVerticalPadded(8);
+        }
+
+        private bool TryGetMeshTransformInfo(string transformName, out UMATransform meshTransform, out Matrix4x4? bindPose)
+        {
+            meshTransform = null;
+            bindPose = null;
+
+            if (slot == null || slot.meshData == null || slot.meshData.umaBones == null || string.IsNullOrEmpty(transformName))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < slot.meshData.umaBones.Length; i++)
+            {
+                var bone = slot.meshData.umaBones[i];
+                if (bone == null || !string.Equals(bone.name, transformName, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                meshTransform = bone;
+                if (slot.meshData.boneNameHashes != null && slot.meshData.bindPoses != null)
+                {
+                    for (int bindPoseIndex = 0; bindPoseIndex < slot.meshData.boneNameHashes.Length; bindPoseIndex++)
+                    {
+                        if (slot.meshData.boneNameHashes[bindPoseIndex] == bone.hash)
+                        {
+                            if (bindPoseIndex < slot.meshData.bindPoses.Length)
+                            {
+                                bindPose = slot.meshData.bindPoses[bindPoseIndex];
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                return bindPose.HasValue;
+            }
+
+            return false;
+        }
+
+        private static string FormatVector3(Vector3 value)
+        {
+            return $"({value.x:F3}, {value.y:F3}, {value.z:F3})";
+        }
+
+        private static string FormatMatrix(Matrix4x4 matrix)
+        {
+            return
+                $"[{matrix.m00,8:F4} {matrix.m01,8:F4} {matrix.m02,8:F4} {matrix.m03,8:F4}]\n" +
+                $"[{matrix.m10,8:F4} {matrix.m11,8:F4} {matrix.m12,8:F4} {matrix.m13,8:F4}]\n" +
+                $"[{matrix.m20,8:F4} {matrix.m21,8:F4} {matrix.m22,8:F4} {matrix.m23,8:F4}]\n" +
+                $"[{matrix.m30,8:F4} {matrix.m31,8:F4} {matrix.m32,8:F4} {matrix.m33,8:F4}]";
         }
 
         private void ShowDebugVertInfo(SlotDataAsset current, int previewVertex)
@@ -945,10 +1260,10 @@ namespace UMA.Editors
                 if (previewMode == SlotPreviewMode.BothSlots)
                 {
                     if (which == null) return null;
-                    Mesh mesh = SlotToMesh.ConvertSlotToMesh(which, pRot, previewVertex);
+                    Mesh mesh = SlotToMesh.ConvertSlotToMeshLTOW(which, pRot, previewVertex);
                     if (WeldToSlot != null)
                     {
-                        Mesh weldMesh = SlotToMesh.ConvertSlotToMesh(WeldToSlot, pRot, previewVertex);
+                        Mesh weldMesh = SlotToMesh.ConvertSlotToMeshLTOW(WeldToSlot, pRot, previewVertex);
                         if (weldMesh != null)
                         {
                             CombineInstance[] combine = new CombineInstance[2];
@@ -971,6 +1286,18 @@ namespace UMA.Editors
             return null;
         }
 
+        public bool GuiPreviewButton(Rect buttonRect, string label )
+        {
+            GUI.Button(buttonRect, label);
+            Event e = Event.current;
+            // Handle click manually
+            if (e.type == EventType.MouseUp && buttonRect.Contains(e.mousePosition))
+            {
+                return true;
+            }
+            return false;
+        }
+
         public override void OnInteractivePreviewGUI(Rect r, GUIStyle background)
         {
             var currentTarget = target as SlotDataAsset;
@@ -979,6 +1306,10 @@ namespace UMA.Editors
                 EditorGUI.LabelField(r, "Utility slots cannot be previewed.");
                 return;
             }
+
+            const float controlYOffset = 32f;
+            const float controlButtonHeight = 30f;
+
             // Rebuild preview if first time, settings changed, or the target changed
             if (meshToPreview == null || previewForTarget != currentTarget)
             {
@@ -1001,8 +1332,16 @@ namespace UMA.Editors
                 }
             }
 
-            // Handle mouse drag to rotate (per inspector), independent of MeshPreview
-            HandlePreviewDrag(r);
+            Rect controlArea = new Rect(r.x, r.y + controlYOffset, r.width, r.height - controlYOffset);
+            Rect dragArea = r;
+            if (controlArea.height > 60f)
+            {
+                dragArea = new Rect(r.x, r.y, r.width, Mathf.Max(0f, (controlArea.y - r.y) + (controlArea.height - controlButtonHeight)));
+            }
+
+            // Handle mouse drag to rotate (per inspector), independent of MeshPreview.
+            // Exclude the button strip so button clicks are not consumed by the drag handler.
+            HandlePreviewDrag(dragArea);
 
             // If rotation changed since last mesh build, rebuild the mesh for this target
             if (meshToPreview != null && (lastBuiltRotation != previewRotation))
@@ -1024,6 +1363,44 @@ namespace UMA.Editors
             if (meshToPreview != null && MeshPreview != null)
             {
                 MeshPreview.OnPreviewGUI(r, background);
+
+                if (controlArea.height > 60)
+                {
+                    Event e = Event.current;
+                    float buttonSpace = controlArea.width / 4;
+                    float buttonWidth = buttonSpace - 2;
+                    Rect ButtonArea = new Rect(controlArea.x, controlArea.y, buttonWidth, 30);
+                    if (GuiPreviewButton(ButtonArea, "Reset"))
+                    {
+                        previewRotation = Vector3.zero;
+                        reConfigurePreview = true;
+                        Repaint();
+                    }
+                    ButtonArea.x += buttonSpace;
+                    if (GuiPreviewButton(ButtonArea, "X+90"))
+                    {
+                        previewRotation.x = Wrap360(previewRotation.x + 90f);
+                        reConfigurePreview = true;
+                        Repaint();
+                    }
+                    ButtonArea.x += buttonSpace;
+                    if (GuiPreviewButton(ButtonArea, "Y+90"))
+                    {
+                        previewRotation.y = Wrap360(previewRotation.y + 90f);
+                        reConfigurePreview = true;
+                        Repaint();
+                    }
+                    ButtonArea.x += buttonSpace;
+                    if (GuiPreviewButton(ButtonArea, "Z+90"))
+                    {
+                        previewRotation.z = Wrap360(previewRotation.z + 90f);
+                        reConfigurePreview = true;
+                        Repaint();
+                    }
+
+
+                    GUI.Label(new Rect(controlArea.x, controlArea.y + 32, controlArea.width, 20), $"{previewRotation}");
+                }
 
                 // Only draw overlay during repaint so we don't intercept mouse events (fixes rotate with multiple previews)
                 if (Event.current.type == EventType.Repaint)
@@ -1068,7 +1445,7 @@ namespace UMA.Editors
                     if (GUIUtility.hotControl == controlID)
                     {
                         GUIUtility.hotControl = 0;
-                        evt.Use();
+                        //evt.Use();
                     }
                     EditorGUIUtility.SetWantsMouseJumping(0);
                     break;
@@ -1080,7 +1457,7 @@ namespace UMA.Editors
                         // Yaw around Y with horizontal drag; Pitch around X with vertical drag
                         previewRotation.y = Wrap360(previewRotation.y - evt.delta.x * scale);
                         previewRotation.x = Mathf.Clamp(previewRotation.x + evt.delta.y * scale, -90f, 90f);
-                        evt.Use();
+                        //evt.Use();
                         Repaint();
                     }
                     break;
@@ -1546,6 +1923,10 @@ namespace UMA.Editors
             }
         }
 
+
+
+        private List<bool> BoneOpen = new List<bool>(65535);
+
         private void DrawBonesSection()
         {
             bonesFoldout = EditorGUILayout.Foldout(bonesFoldout, "Bones", true);
@@ -1556,8 +1937,29 @@ namespace UMA.Editors
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                DrawUmaBonesFoldout("UMA Bones", meshData.umaBones, ref umaBonesFoldout);
+                // DrawUmaBonesFoldout("UMA Bones", meshData.umaBones, ref umaBonesFoldout);
 
+                if (meshData.umaBones != null)
+                {
+                    for (int boneindex = 0; boneindex < meshData.umaBones.Length; boneindex++)
+                    {
+                        UMATransform b = meshData.umaBones[boneindex];
+                        if (BoneOpen.Count <= boneindex)
+                        {
+                            BoneOpen.Add(false);
+
+                        }
+                        BoneOpen[boneindex] = EditorGUILayout.Foldout(BoneOpen[boneindex], $"{boneindex} {b.name}");
+                        if (BoneOpen[boneindex])
+                        {
+                            GUILayout.Label($"Position: {b.position}");
+                            GUILayout.Label($"Rotation: {b.rotation}");
+                            GUILayout.Label($"Scale:    {b.scale}");
+                        }
+                    }
+                }
+
+                /*
                 Transform[] bones = meshData.bones;
                 int count = bones != null ? bones.Length : 0;
                 EditorGUILayout.LabelField("Transform Bones Count", count.ToString());
@@ -1568,7 +1970,7 @@ namespace UMA.Editors
                         Transform bone = bones[i];
                         EditorGUILayout.LabelField("Bone " + i, bone != null ? bone.name : "<null>");
                     }
-                }
+                }*/
 
                 EditorGUILayout.LabelField("Root Bone", meshData.rootBone != null ? meshData.rootBone.name : "<null>");
             }

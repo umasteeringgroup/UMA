@@ -2919,14 +2919,14 @@ namespace UMA
 			{
 				if (generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null)
 				{
+					if (generatedMaterials.materials[atlasIndex].secondPassMaterial != null)
+					{
+						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
+						generatedMaterials.materials[atlasIndex].secondPassMaterial = null;
+					}
 					if (generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
                     {
 						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
-                        if (generatedMaterials.materials[atlasIndex].secondPassMaterial != null)
-                        {
-                            UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
-                            generatedMaterials.materials[atlasIndex].secondPassMaterial = null;
-                        }
                     }
 					for (int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++)
 					{

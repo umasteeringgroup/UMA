@@ -239,6 +239,7 @@ namespace UMA
                 if (original.colors32 == null || mesh.colors32.Length == 0)
                 {
                     mesh.colors32 = new Color32[original.vertices.Length];
+                    Array.Fill(mesh.colors32, new Color32(255, 255, 255, 255));
                 }
                 else
                 {
@@ -261,7 +262,8 @@ namespace UMA
             {
                 if (original.colors32 == null || mesh.colors32.Length == 0)
                 {
-                    mesh.colors32 = new Color32[original.vertices.Length];
+                    mesh.colors32 = new Color32[original.vertices.Length];    
+                    Array.Fill(mesh.colors32, new Color32(255, 255, 255, 255));                
                 }
                 else
                 {
@@ -1324,11 +1326,6 @@ namespace UMA
 
         public override void Apply(MeshDetails mesh, MeshDetails src)
         {
-            if (mesh.colors32 == null)
-            {
-                mesh.colors32 = new Color32[src.vertices.Length];
-            }
-
             VertexDeltaAdjustment.Apply(mesh, src, vertexAdjustments);
         }
 

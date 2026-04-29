@@ -9,6 +9,7 @@ using static UMA.UMAData;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UMA.Dynamics;
+using System;
 
 namespace UMA.Editors
 {
@@ -16,12 +17,25 @@ namespace UMA.Editors
 	{
 		private class CreateOverlaysForTexturesWindow : EditorWindow
 		{
+			private enum OverlayTargetMode
+			{
+				Slot = 0,
+				Tag = 1
+			}
+
 			private List<Texture2D> selectedTextures;
 			private UMAMaterial selectedMaterial;
 			private RaceData selectedRace;
+			private int selectedWardrobeSlotIndex;
+			private string[] wardrobeSlotOptions = new string[0];
+			private OverlayTargetMode targetMode;
 			private int selectedBaseSlotIndex;
 			private string[] baseSlotOptions = new string[0];
 			private SlotData[] baseSlots = new SlotData[0];
+			private int selectedBaseTagIndex;
+			private string[] baseTagOptions = new string[0];
+			private bool useAlphaMask;
+			private Texture2D selectedAlphaMask;
 			private string sharedColorName = "Color";
 
 			public static void Open(List<Texture2D> textures)
@@ -52,15 +66,40 @@ namespace UMA.Editors
 					RefreshBaseSlots();
 				}
 
-				using (new EditorGUI.DisabledScope(baseSlotOptions.Length == 0))
+				using (new EditorGUI.DisabledScope(wardrobeSlotOptions.Length == 0))
 				{
-					selectedBaseSlotIndex = EditorGUILayout.Popup("Base Slot", selectedBaseSlotIndex, baseSlotOptions);
+					selectedWardrobeSlotIndex = EditorGUILayout.Popup("Wardrobe Slot", selectedWardrobeSlotIndex, wardrobeSlotOptions);
+				}
+
+				using (new EditorGUI.DisabledScope(baseSlotOptions.Length == 0 && baseTagOptions.Length == 0))
+				{
+					targetMode = (OverlayTargetMode)EditorGUILayout.EnumPopup("Target Type", targetMode);
+				}
+
+				if (targetMode == OverlayTargetMode.Slot)
+				{
+					using (new EditorGUI.DisabledScope(baseSlotOptions.Length == 0))
+					{
+						selectedBaseSlotIndex = EditorGUILayout.Popup("Slot Data", selectedBaseSlotIndex, baseSlotOptions);
+					}
+				}
+				else
+				{
+					using (new EditorGUI.DisabledScope(baseTagOptions.Length == 0))
+					{
+						selectedBaseTagIndex = EditorGUILayout.Popup("Tag", selectedBaseTagIndex, baseTagOptions);
+					}
 				}
 				sharedColorName = EditorGUILayout.TextField("Shared Color", sharedColorName);
+				useAlphaMask = EditorGUILayout.Toggle("Set Alpha Mask", useAlphaMask);
+				using (new EditorGUI.DisabledScope(!useAlphaMask))
+				{
+					selectedAlphaMask = (Texture2D)EditorGUILayout.ObjectField("Alpha Mask", selectedAlphaMask, typeof(Texture2D), false);
+				}
 
 				GUILayout.FlexibleSpace();
 				EditorGUILayout.BeginHorizontal();
-				using (new EditorGUI.DisabledScope(selectedMaterial == null || selectedRace == null || baseSlotOptions.Length == 0 || string.IsNullOrWhiteSpace(sharedColorName)))
+				using (new EditorGUI.DisabledScope(selectedMaterial == null || selectedRace == null || !HasValidSelections() || string.IsNullOrWhiteSpace(sharedColorName) || (useAlphaMask && selectedAlphaMask == null)))
 				{
 					if (GUILayout.Button("Create"))
 					{
@@ -89,10 +128,30 @@ namespace UMA.Editors
 
 				try
 				{
-					SlotData selectedBaseSlot = GetSelectedBaseSlot();
-					if (selectedBaseSlot == null || selectedBaseSlot.asset == null)
+					string selectedWardrobeSlot = GetSelectedWardrobeSlot();
+					SlotData selectedBaseSlot = targetMode == OverlayTargetMode.Slot ? GetSelectedBaseSlot() : null;
+					string selectedTag = targetMode == OverlayTargetMode.Tag ? GetSelectedBaseTag() : string.Empty;
+					if (string.IsNullOrWhiteSpace(selectedWardrobeSlot))
+					{
+						EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select a race and a valid wardrobe slot.", "OK");
+						return;
+					}
+
+					if (targetMode == OverlayTargetMode.Slot && (selectedBaseSlot == null || selectedBaseSlot.asset == null))
 					{
 						EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select a race and a valid base slot.", "OK");
+						return;
+					}
+
+					if (targetMode == OverlayTargetMode.Tag && string.IsNullOrWhiteSpace(selectedTag))
+					{
+						EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select a race and a valid tag.", "OK");
+						return;
+					}
+
+					if (useAlphaMask && selectedAlphaMask == null)
+					{
+						EditorUtility.DisplayDialog("Create overlay and recipe for base alternates", "Select a texture to use as the alpha mask, or turn off Set Alpha Mask.", "OK");
 						return;
 					}
 
@@ -139,7 +198,7 @@ namespace UMA.Editors
 							continue;
 						}
 
-						InitializeOverlayAsset(overlayAsset, texture, selectedMaterial, baseName);
+						InitializeOverlayAsset(overlayAsset, texture, selectedMaterial, useAlphaMask ? selectedAlphaMask : null, baseName);
 						EditorUtility.SetDirty(overlayAsset);
 						createdOverlays++;
 
@@ -151,7 +210,7 @@ namespace UMA.Editors
 							continue;
 						}
 
-						InitializeWardrobeRecipe(wardrobeRecipe, overlayAsset, selectedMaterial, selectedRace, selectedBaseSlot, sharedColorName, baseName);
+						InitializeWardrobeRecipe(wardrobeRecipe, overlayAsset, selectedMaterial, selectedRace, selectedWardrobeSlot, selectedBaseSlot, selectedTag, sharedColorName, baseName);
 						EditorUtility.SetDirty(wardrobeRecipe);
 						createdWardrobeRecipes++;
 					}
@@ -181,11 +240,25 @@ namespace UMA.Editors
 
 			private void RefreshBaseSlots()
 			{
+				selectedWardrobeSlotIndex = 0;
 				selectedBaseSlotIndex = 0;
+				selectedBaseTagIndex = 0;
+				wardrobeSlotOptions = new string[0];
 				baseSlotOptions = new string[0];
 				baseSlots = new SlotData[0];
+				baseTagOptions = new string[0];
 
-				if (selectedRace == null || selectedRace.baseRaceRecipe == null)
+				if (selectedRace == null)
+				{
+					return;
+				}
+
+				if (selectedRace.wardrobeSlots != null && selectedRace.wardrobeSlots.Count > 0)
+				{
+					wardrobeSlotOptions = selectedRace.wardrobeSlots.ToArray();
+				}
+
+				if (selectedRace.baseRaceRecipe == null)
 				{
 					return;
 				}
@@ -198,20 +271,79 @@ namespace UMA.Editors
 
 				List<SlotData> slots = new List<SlotData>();
 				List<string> slotNames = new List<string>();
+				HashSet<string> tagNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
 				for (int i = 0; i < baseRecipe.slotDataList.Length; i++)
 				{
 					SlotData slot = baseRecipe.slotDataList[i];
-					if (slot == null || slot.asset == null)
+					if (slot == null)
 					{
 						continue;
 					}
 
-					slots.Add(slot);
-					slotNames.Add(slot.slotName);
+					if (slot.asset != null)
+					{
+						slots.Add(slot);
+						slotNames.Add(slot.slotName);
+					}
+
+					if (slot.tags == null)
+					{
+						continue;
+					}
+
+					for (int tagIndex = 0; tagIndex < slot.tags.Length; tagIndex++)
+					{
+						string tag = slot.tags[tagIndex];
+						if (!string.IsNullOrWhiteSpace(tag))
+						{
+							tagNames.Add(tag);
+						}
+					}
 				}
 
 				baseSlots = slots.ToArray();
 				baseSlotOptions = slotNames.ToArray();
+				baseTagOptions = new List<string>(tagNames).ToArray();
+				Array.Sort(baseTagOptions, System.StringComparer.OrdinalIgnoreCase);
+
+				if (targetMode == OverlayTargetMode.Slot && baseSlotOptions.Length == 0 && baseTagOptions.Length > 0)
+				{
+					targetMode = OverlayTargetMode.Tag;
+				}
+				else if (targetMode == OverlayTargetMode.Tag && baseTagOptions.Length == 0 && baseSlotOptions.Length > 0)
+				{
+					targetMode = OverlayTargetMode.Slot;
+				}
+			}
+
+			private bool HasValidSelections()
+			{
+				if (wardrobeSlotOptions == null || wardrobeSlotOptions.Length == 0)
+				{
+					return false;
+				}
+
+				if (targetMode == OverlayTargetMode.Tag)
+				{
+					return baseTagOptions != null && baseTagOptions.Length > 0;
+				}
+
+				return baseSlotOptions != null && baseSlotOptions.Length > 0;
+			}
+
+			private string GetSelectedWardrobeSlot()
+			{
+				if (wardrobeSlotOptions == null || wardrobeSlotOptions.Length == 0)
+				{
+					return string.Empty;
+				}
+
+				if (selectedWardrobeSlotIndex < 0 || selectedWardrobeSlotIndex >= wardrobeSlotOptions.Length)
+				{
+					selectedWardrobeSlotIndex = 0;
+				}
+
+				return wardrobeSlotOptions[selectedWardrobeSlotIndex];
 			}
 
 			private SlotData GetSelectedBaseSlot()
@@ -229,29 +361,100 @@ namespace UMA.Editors
 				return baseSlots[selectedBaseSlotIndex];
 			}
 
-			private void InitializeOverlayAsset(OverlayDataAsset overlayAsset, Texture2D texture, UMAMaterial material, string baseName)
+			private string GetSelectedBaseTag()
 			{
-				int channelCount = material != null && material.channels != null && material.channels.Length > 0 ? material.channels.Length : 1;
-				overlayAsset.name = baseName + "_Overlay";
-				overlayAsset.textureList = new Texture[channelCount];
-				overlayAsset.textureNames = new string[channelCount];
-				overlayAsset.overlayBlend = new OverlayDataAsset.OverlayBlend[channelCount];
-				overlayAsset.textureList[0] = texture;
-				overlayAsset.textureNames[0] = texture.name;
-				for (int i = 0; i < channelCount; i++)
+				if (baseTagOptions == null || baseTagOptions.Length == 0)
 				{
-					overlayAsset.overlayBlend[i] = OverlayDataAsset.OverlayBlend.Normal;
+					return string.Empty;
 				}
-				overlayAsset.material = material;
-				overlayAsset.materialName = material != null ? material.name : string.Empty;
-				overlayAsset.ValidateBlendList();
+
+				if (selectedBaseTagIndex < 0 || selectedBaseTagIndex >= baseTagOptions.Length)
+				{
+					selectedBaseTagIndex = 0;
+				}
+
+				return baseTagOptions[selectedBaseTagIndex];
 			}
 
-			private void InitializeWardrobeRecipe(UMAWardrobeRecipe wardrobeRecipe, OverlayDataAsset overlayAsset, UMAMaterial material, RaceData race, SlotData baseSlot, string colorName, string baseName)
+			private void InitializeOverlayAsset(OverlayDataAsset overlayAsset, Texture2D texture, UMAMaterial material, Texture2D alphaMask, string baseName)
+			{
+				int channelCount = material != null && material.channels != null && material.channels.Length > 0 ? material.channels.Length : 1;
+				string overlayName = baseName + "_Overlay";
+				SerializedObject serializedOverlay = new SerializedObject(overlayAsset);
+				SerializedProperty alphaMaskProperty = serializedOverlay.FindProperty("alphaMask");
+				SerializedProperty materialProperty = serializedOverlay.FindProperty("material");
+				SerializedProperty materialNameProperty = serializedOverlay.FindProperty("materialName");
+				SerializedProperty textureListProperty = serializedOverlay.FindProperty("_textureList");
+				SerializedProperty textureNamesProperty = serializedOverlay.FindProperty("textureNames");
+				SerializedProperty overlayBlendProperty = serializedOverlay.FindProperty("overlayBlend");
+
+				overlayAsset.name = overlayName;
+				serializedOverlay.Update();
+
+				if (alphaMaskProperty != null)
+				{
+					alphaMaskProperty.objectReferenceValue = alphaMask;
+				}
+
+				if (materialProperty != null)
+				{
+					materialProperty.objectReferenceValue = material;
+				}
+
+				if (materialNameProperty != null)
+				{
+					materialNameProperty.stringValue = material != null ? material.name : string.Empty;
+				}
+
+				if (textureListProperty != null)
+				{
+					textureListProperty.arraySize = channelCount;
+					for (int i = 0; i < channelCount; i++)
+					{
+						SerializedProperty textureProperty = textureListProperty.GetArrayElementAtIndex(i);
+						if (textureProperty != null)
+						{
+							textureProperty.objectReferenceValue = i == 0 ? texture : null;
+						}
+					}
+				}
+
+				if (textureNamesProperty != null)
+				{
+					textureNamesProperty.arraySize = channelCount;
+					for (int i = 0; i < channelCount; i++)
+					{
+						SerializedProperty textureNameProperty = textureNamesProperty.GetArrayElementAtIndex(i);
+						if (textureNameProperty != null)
+						{
+							textureNameProperty.stringValue = i == 0 && texture != null ? texture.name : string.Empty;
+						}
+					}
+				}
+
+				if (overlayBlendProperty != null)
+				{
+					overlayBlendProperty.arraySize = channelCount;
+					for (int i = 0; i < channelCount; i++)
+					{
+						SerializedProperty blendProperty = overlayBlendProperty.GetArrayElementAtIndex(i);
+						if (blendProperty != null)
+						{
+							blendProperty.enumValueIndex = (int)OverlayDataAsset.OverlayBlend.Normal;
+						}
+					}
+				}
+
+				serializedOverlay.ApplyModifiedPropertiesWithoutUndo();
+				overlayAsset.ValidateBlendList();
+				UMAUpdateProcessor.UpdateOverlay(overlayAsset);
+			}
+
+			private void InitializeWardrobeRecipe(UMAWardrobeRecipe wardrobeRecipe, OverlayDataAsset overlayAsset, UMAMaterial material, RaceData race, string selectedWardrobeSlot, SlotData baseSlot, string selectedTag, string colorName, string baseName)
 			{
 				wardrobeRecipe.name = baseName + "_Wardrobe";
 				wardrobeRecipe.DisplayValue = baseName;
-				wardrobeRecipe.wardrobeSlot = baseSlot != null ? baseSlot.slotName : "None";
+				wardrobeRecipe.wardrobeSlot = !string.IsNullOrWhiteSpace(selectedWardrobeSlot) ? selectedWardrobeSlot : "None";
 				wardrobeRecipe.compatibleRaces = new List<string>();
 				if (race != null && !string.IsNullOrEmpty(race.raceName))
 				{
@@ -266,12 +469,7 @@ namespace UMA.Editors
 				colorData.name = colorName;
 				recipe.sharedColors[0] = colorData;
 
-				SlotData slot = new SlotData(baseSlot.asset);
-				slot.overlayScale = baseSlot.overlayScale;
-				slot.tags = baseSlot.tags != null ? (string[])baseSlot.tags.Clone() : new string[0];
-				slot.Races = baseSlot.Races != null ? (string[])baseSlot.Races.Clone() : null;
-				slot.blendShapeTargetSlot = baseSlot.blendShapeTargetSlot;
-				slot.UVSet = baseSlot.UVSet;
+				SlotData slot = CreateRecipeSlot(baseSlot, selectedTag, race, baseName);
 				OverlayData overlayData = new OverlayData(overlayAsset);
 				overlayData.colorData = new OverlayColorData(channelCount);
 				overlayData.colorData.name = colorName;
@@ -279,6 +477,29 @@ namespace UMA.Editors
 				recipe.slotDataList = new SlotData[] { slot };
 
 				wardrobeRecipe.Save(recipe);
+			}
+
+			private SlotData CreateRecipeSlot(SlotData baseSlot, string selectedTag, RaceData race, string baseName)
+			{
+				if (targetMode == OverlayTargetMode.Tag)
+				{
+					string placeholderName = string.IsNullOrWhiteSpace(selectedTag)
+						? baseName + "_Placeholder"
+						: baseName + "_" + selectedTag + "_Placeholder";
+					string[] matchingTags = string.IsNullOrWhiteSpace(selectedTag) ? new string[0] : new string[] { selectedTag };
+					string[] matchingRaces = race != null && !string.IsNullOrWhiteSpace(race.raceName)
+						? new string[] { race.raceName }
+						: new string[0];
+					return SlotData.CreatePlaceholder(placeholderName, matchingTags, matchingRaces);
+				}
+
+				SlotData slot = new SlotData(baseSlot.asset);
+				slot.overlayScale = baseSlot.overlayScale;
+				slot.tags = baseSlot.tags != null ? (string[])baseSlot.tags.Clone() : new string[0];
+				slot.Races = baseSlot.Races != null ? (string[])baseSlot.Races.Clone() : null;
+				slot.blendShapeTargetSlot = baseSlot.blendShapeTargetSlot;
+				slot.UVSet = baseSlot.UVSet;
+				return slot;
 			}
 		}
 
@@ -2346,7 +2567,7 @@ namespace UMA.Editors
 			int added = 0;
 			UMAAssetIndexer UAI = UMAAssetIndexer.Instance;
 
-			foreach (Object o in Selection.objects)
+			foreach (var o in Selection.objects)
 			{
 				System.Type type = o.GetType();
 				if (UAI.IsIndexedType(type))

@@ -1053,7 +1053,9 @@ namespace UMA.Editors
 			}
 			else
 			{
-				EditorGUILayout.Popup("Hides Base Slots(s)", 0, new string[1] { "Nothing" });
+				EditorGUI.BeginDisabledGroup(true);
+				EditorGUILayout.Popup("Hides Base Slot(s)", 0, new string[1] { "Nothing" });
+				
 			}
 
 			GUILayout.Space(8);

@@ -16,18 +16,34 @@ namespace UMA.Editors
         private string[] _shaderProperties;
         private GUIStyle _centeredStyle;
         private SerializedProperty _shaderParms;
+        private SerializedProperty _shaderKeywords;
         private bool[] channelExpanded = new bool[3];
         private static bool showMaterialInspector = false;
         Editor innerEditor = null;
         private bool shaderParmsFoldout = false;
+        private bool shaderKeywordsFoldout = false;
+        private int _selectedShaderKeywordIndex = 0;
         private static readonly RenderTextureFormat[] _supportedChannelTextureFormats = UMAMaterial.GetSupportedChannelTextureFormats();
         private static readonly string[] _supportedChannelTextureFormatNames = BuildSupportedChannelTextureFormatNames();
 
         private List<UnityEngine.Object> _inspectedObjects = new List<UnityEngine.Object>();
 
+        private struct ShaderKeywordInfo
+        {
+            public ShaderKeywordInfo(string name, string type)
+            {
+                Name = name;
+                Type = type;
+            }
+
+            public string Name;
+            public string Type;
+        }
+
         public void OnEnable()
         { 
             _shaderParms = serializedObject.FindProperty("shaderParms");
+            _shaderKeywords = serializedObject.FindProperty("shaderKeywords");
             EditorApplication.update += DoInspectors;
         }
 
@@ -219,6 +235,14 @@ namespace UMA.Editors
                     {
                         EditorGUILayout.HelpBox("These shader values are passed directly to the generated material at runtime", MessageType.Info);
                     }
+                    EditorGUI.indentLevel--;
+                }
+
+                shaderKeywordsFoldout = EditorGUILayout.Foldout(shaderKeywordsFoldout, "Shader Keywords", true);
+                if (shaderKeywordsFoldout)
+                {
+                    EditorGUI.indentLevel++;
+                    DrawShaderKeywordSection(source, _shaderKeywords);
                     EditorGUI.indentLevel--;
                 }
 
@@ -442,6 +466,232 @@ namespace UMA.Editors
                 }
                 GUIHelper.EndVerticalPadded(10);
             }
+        }
+
+        private void DrawShaderKeywordSection(UMAMaterial source, SerializedProperty shaderKeywordsProperty)
+        {
+            GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.9f, 0.85f));
+
+            if (source == null)
+            {
+                EditorGUILayout.HelpBox("Source material is NULL!", MessageType.Info);
+                GUIHelper.EndVerticalPadded(10);
+                return;
+            }
+
+            if (shaderKeywordsProperty == null)
+            {
+                EditorGUILayout.HelpBox("Shader keyword Property is NULL!", MessageType.Info);
+                GUIHelper.EndVerticalPadded(10);
+                return;
+            }
+
+
+            if (source.material == null || source.material.shader == null)
+            {
+                EditorGUILayout.HelpBox("Assign a material with a shader to manage stored shader keywords.", MessageType.Info);
+                GUIHelper.EndVerticalPadded(10);
+                return;
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("Add shader keywords to this list to have them stored on the UMAMaterial. This is useful for copying shader parameters and values to Shared Colors in the editor", MessageType.Info);
+            }
+
+            ShaderKeywordInfo[] shaderKeywordInfos = FindShaderKeywords(source.material);
+            DrawShaderKeywordGridHeader();
+
+            if (shaderKeywordsProperty.arraySize == 0)
+            {
+                EditorGUILayout.LabelField("No shader keywords added.");
+            }
+            else
+            {
+                for (int i = 0; i < shaderKeywordsProperty.arraySize; i++)
+                {
+                    SerializedProperty shaderKeyword = shaderKeywordsProperty.GetArrayElementAtIndex(i);
+                    if (DrawShaderKeywordRow(shaderKeyword.stringValue, GetShaderKeywordType(shaderKeyword.stringValue, shaderKeywordInfos), i, shaderKeywordsProperty))
+                    {
+                        GUIUtility.ExitGUI();
+                    }
+                }
+            }
+
+            string[] addableKeywordNames = GetAddableShaderKeywordNames(shaderKeywordInfos, shaderKeywordsProperty);
+
+            EditorGUI.BeginDisabledGroup(addableKeywordNames.Length == 0);
+            EditorGUILayout.BeginHorizontal();
+            if (addableKeywordNames.Length > 0)
+            {
+                if (_selectedShaderKeywordIndex >= addableKeywordNames.Length)
+                {
+                    _selectedShaderKeywordIndex = 0;
+                }
+
+                _selectedShaderKeywordIndex = EditorGUILayout.Popup(new GUIContent("Add Keyword", "Adds a shader keyword to the stored keyword list."), _selectedShaderKeywordIndex, addableKeywordNames);
+            }
+            else
+            {
+                EditorGUILayout.Popup(new GUIContent("Add Keyword", "Adds a shader keyword to the stored keyword list."), 0, new string[] { "No available keywords" });
+            }
+
+            if (GUILayout.Button("Add", GUILayout.Width(60)) && addableKeywordNames.Length > 0)
+            {
+                int newIndex = shaderKeywordsProperty.arraySize;
+                shaderKeywordsProperty.InsertArrayElementAtIndex(newIndex);
+                shaderKeywordsProperty.GetArrayElementAtIndex(newIndex).stringValue = addableKeywordNames[_selectedShaderKeywordIndex];
+                _selectedShaderKeywordIndex = 0;
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUI.EndDisabledGroup();
+
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("Shader keywords added here are stored on the UMAMaterial and can be copied when generating material variants.", MessageType.Info);
+            }
+
+            GUIHelper.EndVerticalPadded(10);
+        }
+
+        private static void DrawShaderKeywordGridHeader()
+        {
+            Rect rowRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
+            float removeWidth = 24f;
+            float typeWidth = Mathf.Min(160f, rowRect.width * 0.35f);
+            Rect keywordRect = new Rect(rowRect.x, rowRect.y, rowRect.width - typeWidth - removeWidth - 8f, rowRect.height);
+            Rect typeRect = new Rect(keywordRect.xMax + 4f, rowRect.y, typeWidth, rowRect.height);
+
+            EditorGUI.LabelField(keywordRect, "Keyword", EditorStyles.miniBoldLabel);
+            EditorGUI.LabelField(typeRect, "Type", EditorStyles.miniBoldLabel);
+        }
+
+        private bool DrawShaderKeywordRow(string keywordName, string keywordType, int index, SerializedProperty shaderKeywordsProperty)
+        {
+            Rect rowRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
+            float removeWidth = 24f;
+            float typeWidth = Mathf.Min(160f, rowRect.width * 0.35f);
+            Rect keywordRect = new Rect(rowRect.x, rowRect.y, rowRect.width - typeWidth - removeWidth - 8f, rowRect.height);
+            Rect typeRect = new Rect(keywordRect.xMax + 4f, rowRect.y, typeWidth, rowRect.height);
+            Rect removeRect = new Rect(typeRect.xMax + 4f, rowRect.y, removeWidth, rowRect.height);
+
+            EditorGUI.LabelField(keywordRect, string.IsNullOrEmpty(keywordName) ? "(Empty)" : keywordName);
+            EditorGUI.LabelField(typeRect, keywordType);
+
+            if (GUI.Button(removeRect, "X", EditorStyles.miniButton))
+            {
+                Undo.RecordObject(target, "Remove Shader Keyword");
+                shaderKeywordsProperty.DeleteArrayElementAtIndex(index);
+                shaderKeywordsProperty.serializedObject.ApplyModifiedProperties();
+                return true;
+            }
+
+            return false;
+        }
+
+        private static ShaderKeywordInfo[] FindShaderKeywords(Material material)
+        {
+            if (material == null || material.shader == null)
+            {
+                return new ShaderKeywordInfo[0];
+            }
+
+            List<ShaderKeywordInfo> shaderKeywordInfos = new List<ShaderKeywordInfo>();
+            HashSet<string> seenKeywords = new HashSet<string>();
+            MaterialProperty[] materialProperties = MaterialEditor.GetMaterialProperties(new Object[] { material });
+
+            for (int i = 0; i < materialProperties.Length; i++)
+            {
+                MaterialProperty materialProperty = materialProperties[i];
+                if (materialProperty == null || string.IsNullOrEmpty(materialProperty.name) || !seenKeywords.Add(materialProperty.name))
+                {
+                    continue;
+                }
+
+                string propertyType = GetSupportedMaterialPropertyType(materialProperty);
+                if (string.IsNullOrEmpty(propertyType))
+                {
+                    continue;
+                }
+                if (materialProperty.name.StartsWith("_Queue") || materialProperty.name.StartsWith("_XR"))
+                {
+                    continue;
+                }
+
+                shaderKeywordInfos.Add(new ShaderKeywordInfo(materialProperty.name, propertyType));
+            }
+
+            return shaderKeywordInfos.ToArray();
+        }
+
+        private static string GetSupportedMaterialPropertyType(MaterialProperty materialProperty)
+        {
+            if (materialProperty == null)
+            {
+                return null;
+            }
+
+            string propertyTypeName = materialProperty.propertyType.ToString();
+            switch (propertyTypeName)
+            {
+                case "Int":
+                    return "Int";
+                case "Float":
+                    return "Float";
+                case "Color":
+                    return "Color";
+                case "Vector":
+                    return IsVector2Property(materialProperty) ? "Vector2" : "Vector4";
+                default:
+                    return null;
+            }
+        }
+
+        private static bool IsVector2Property(MaterialProperty materialProperty)
+        {
+            Vector4 value = materialProperty.vectorValue;
+            return Mathf.Approximately(value.z, 0f) && Mathf.Approximately(value.w, 0f);
+        }
+
+        private static string GetShaderKeywordType(string keywordName, ShaderKeywordInfo[] shaderKeywordInfos)
+        {
+            if (string.IsNullOrEmpty(keywordName))
+            {
+                return "Missing";
+            }
+
+            for (int i = 0; i < shaderKeywordInfos.Length; i++)
+            {
+                if (shaderKeywordInfos[i].Name == keywordName)
+                {
+                    return shaderKeywordInfos[i].Type;
+                }
+            }
+
+            return "Missing";
+        }
+
+        private static string[] GetAddableShaderKeywordNames(ShaderKeywordInfo[] shaderKeywordInfos, SerializedProperty shaderKeywordsProperty)
+        {
+            HashSet<string> existingKeywords = new HashSet<string>();
+            for (int i = 0; i < shaderKeywordsProperty.arraySize; i++)
+            {
+                string existingKeyword = shaderKeywordsProperty.GetArrayElementAtIndex(i).stringValue;
+                if (!string.IsNullOrEmpty(existingKeyword))
+                {
+                    existingKeywords.Add(existingKeyword);
+                }
+            }
+
+            List<string> addableKeywords = new List<string>();
+            for (int i = 0; i < shaderKeywordInfos.Length; i++)
+            {
+                if (!existingKeywords.Contains(shaderKeywordInfos[i].Name))
+                {
+                    addableKeywords.Add(shaderKeywordInfos[i].Name);
+                }
+            }
+
+            return addableKeywords.ToArray();
         }
 
         private static string[] FindTexProperties( Shader shader)

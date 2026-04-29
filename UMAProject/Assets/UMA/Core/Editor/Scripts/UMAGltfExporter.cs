@@ -127,7 +127,7 @@ namespace UMA.Editors
                     continue;
                 }
 
-                Mesh mesh = SlotToMesh.ConvertSlotToMesh(slot.asset, Quaternion.identity, -1);
+                Mesh mesh = SlotToMesh.ConvertSlotToMesh(slot.asset);
                 if (mesh == null)
                 {
                     continue;

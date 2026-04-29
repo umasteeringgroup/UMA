@@ -1329,6 +1329,7 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 						_checkedOverlays.Remove(overlay);
 					}
 				}
+				GUILayout.Label(selected ? ">" : string.Empty, GUILayout.Width(12));
 				var buttonStyle = selected ? EditorStyles.miniButtonMid : EditorStyles.miniButton;
 				if (GUILayout.Button(overlay.name, buttonStyle, GUILayout.ExpandWidth(true)))
 				{
@@ -1342,6 +1343,11 @@ internal class UmaExamineOverlaysWindow : EditorWindow
 					{
                         OverlayValidationReviewWindow.Open(overlay, validationIssues);
 					}
+				}
+                if (GUILayout.Button("Inspect", GUILayout.Width(60)))
+				{
+					UMA.OverlayDataAsset overlayToInspect = overlay;
+					EditorApplication.delayCall += () => UMA.InspectorUtlity.InspectTarget(overlayToInspect);
 				}
                 if (GUILayout.Button("x", GUILayout.Width(22)))
 				{

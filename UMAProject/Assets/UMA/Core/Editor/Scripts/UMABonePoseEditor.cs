@@ -200,8 +200,10 @@ namespace UMA.PoseTools
         public enum DisplayMode { PoseBones, Filtered, All, None };
         // Global mirroring disable switch for UI/scene edits
         public static bool disableMirroring = false;
+        public static bool useTPosePreview = true;
         public static UMAData saveUMAData;
         public UMAData sourceUMA;
+        public UMA.CharacterSystem.DynamicCharacterAvatar poseTarget;
         public SkinnedMeshRenderer targetSMR;
         TreeViewState treeState;
         BoneTreeView boneTreeView;
@@ -213,6 +215,8 @@ namespace UMA.PoseTools
 
         private static bool IsEditorBusy => EditorApplication.isCompiling || EditorApplication.isUpdating;
         private static bool IsCompilingOrUpdating => EditorApplication.isCompiling || EditorApplication.isUpdating;
+
+        public bool autoUpdatePreview = true;
 
         public bool haveValidContext
         {
@@ -280,6 +284,7 @@ namespace UMA.PoseTools
 
         // Track whether any edits were made so we can restore & rebuild on exit
         private bool _poseEdited = false;
+        private bool _sourcePreviewModified = false;
 
         public static UMABonePoseEditor livePopupEditor
         {
@@ -302,6 +307,8 @@ namespace UMA.PoseTools
                 return;
             }
 
+            useTPosePreview = true;
+
             if (saveUMAData != null)
             {
                 sourceUMA = saveUMAData;
@@ -315,6 +322,11 @@ namespace UMA.PoseTools
             boneTreeView = new BoneTreeView(treeState);
 
             targetPose = target as UMABonePose;
+
+            if (!dynamicDNAConverterMode && sourceUMA != null)
+            {
+                ApplySourcePreviewMode(null, true);
+            }
 
             EditorApplication.update -= this.OnUpdate;
             EditorApplication.update += this.OnUpdate;
@@ -357,6 +369,269 @@ namespace UMA.PoseTools
             try { SceneView.onSceneGUIDelegate -= this.OnSceneGUI; } catch { }
 #endif
             try { AssemblyReloadEvents.beforeAssemblyReload -= HandleBeforeAssemblyReload; } catch { }
+        }
+
+        private void ClearActiveEditState()
+        {
+            doBoneAdd = false;
+            doBoneRemove = false;
+            removeBoneIndex = BAD_INDEX;
+            editBoneIndex = BAD_INDEX;
+            activeBoneIndex = BAD_INDEX;
+            mirrorBoneIndex = BAD_INDEX;
+            if (context != null)
+            {
+                context.activeTransform = null;
+                context.activeTransChanged = false;
+            }
+        }
+
+        private static RaceData ResolvePreviewRaceData(UMAData umaData)
+        {
+            if (umaData == null)
+            {
+                return null;
+            }
+
+            UMA.CharacterSystem.DynamicCharacterAvatar dynamicCharacterAvatar = umaData as UMA.CharacterSystem.DynamicCharacterAvatar;
+            if (dynamicCharacterAvatar != null && dynamicCharacterAvatar.activeRace != null)
+            {
+                RaceData activeRace = dynamicCharacterAvatar.activeRace.racedata;
+                if (activeRace == null)
+                {
+                    dynamicCharacterAvatar.activeRace.SetRaceData();
+                    activeRace = dynamicCharacterAvatar.activeRace.racedata;
+                }
+
+                if (activeRace != null)
+                {
+                    if (umaData.umaRecipe != null && umaData.umaRecipe.raceData != null && umaData.umaRecipe.raceData != activeRace)
+                    {
+                        Debug.LogWarning($"[UMABonePoseEditor] Source UMA '{umaData.name}' has mismatched activeRace '{activeRace.raceName}' and recipe race '{umaData.umaRecipe.raceData.raceName}'. Using the active race for preview operations.");
+                    }
+                    return activeRace;
+                }
+            }
+
+            return umaData.umaRecipe != null ? umaData.umaRecipe.raceData : null;
+        }
+
+        private static bool TryGetRaceData(UMAData umaData, out RaceData race)
+        {
+            race = ResolvePreviewRaceData(umaData);
+            return race != null && race.dnaConverterList != null;
+        }
+
+        private void SetBonePoseMasterWeight(UMAData umaData, float masterWeight)
+        {
+            if (!TryGetRaceData(umaData, out RaceData race))
+            {
+                return;
+            }
+
+            foreach (var converterController in race.dnaConverterList)
+            {
+                var plugins = converterController.GetPlugins(typeof(BonePoseDNAConverterPlugin));
+                foreach (var boneplug in plugins)
+                {
+                    BonePoseDNAConverterPlugin bonePosePlugin = boneplug as BonePoseDNAConverterPlugin;
+                    if (bonePosePlugin != null)
+                    {
+                        Debug.Log($"Setting master weight {masterWeight} on BonePoseDNAConverter Plugin: {bonePosePlugin.name} on race {race.name}");   
+                        bonePosePlugin.masterWeight.globalWeight = masterWeight;
+                    }
+                }
+            }
+        }
+
+        private bool BuildSourceAvatarIfAvailable(UMAData umaData)
+        {
+            UMA.CharacterSystem.DynamicCharacterAvatar dynamicCharacterAvatar = umaData as UMA.CharacterSystem.DynamicCharacterAvatar;
+            if (dynamicCharacterAvatar == null)
+            {
+                return false;
+            }
+
+            dynamicCharacterAvatar.BuildNow();
+            return true;
+        }
+
+        private void RegeneratePoseTargetPreviewIfNeeded()
+        {
+            if (!autoUpdatePreview || poseTarget == null || IsEditorBusy)
+            {
+                return;
+            }
+
+            poseTarget.RegenerateNow(true);
+        }
+
+        private bool TryGetPoseBoneTransform(string boneName, out Transform boneTransform)
+        {
+            boneTransform = null;
+            if (string.IsNullOrEmpty(boneName))
+            {
+                return false;
+            }
+
+            var skeleton = context != null && context.activeUMA != null ? context.activeUMA.skeleton : null;
+            if (skeleton == null && sourceUMA != null)
+            {
+                skeleton = sourceUMA.skeleton;
+            }
+            if (skeleton == null)
+            {
+                return false;
+            }
+
+            boneTransform = skeleton.GetBoneTransform(boneName);
+            return boneTransform != null;
+        }
+
+        private void FocusSceneViewOnBone(Transform boneTransform)
+        {
+            if (boneTransform == null)
+            {
+                return;
+            }
+
+            Bounds bounds = new Bounds(boneTransform.position, Vector3.one * 0.3f);
+            SceneView.lastActiveSceneView.Frame(bounds, false);
+
+/*
+
+            var activeSelection = Selection.activeObject;
+            Selection.activeGameObject = boneTransform.gameObject;
+            SceneView.FrameLastActiveSceneView();
+            Selection.activeObject = activeSelection; */
+        }
+
+        private void RestorePreviewOverride()
+        {
+            if (!_sourcePreviewModified && BonePoseSavers.Count ==0)
+            {
+                return;
+            }
+
+            RestoreWeights();
+            _sourcePreviewModified = false;
+        }
+
+        private void ApplySourceSkeletonPreview(bool includeTargetPose, bool applyBonePoseConverters = true)
+        {
+            if (dynamicDNAConverterMode || !haveValidContext)
+            {
+                return;
+            }
+
+            var uma = context.activeUMA;
+            var skeleton = uma != null ? uma.skeleton : null;
+            if (skeleton == null)
+            {
+                return;
+            }
+
+            skeleton.ResetAll();
+            if (context.startingPose != null)
+            {
+                context.startingPose.ApplyPose(skeleton, context.startingPoseWeight);
+            }
+
+            try
+            {
+                var race = ResolvePreviewRaceData(uma);
+                if (race != null && race.dnaConverterList != null)
+                {
+                    foreach (IDNAConverter id in race.dnaConverterList)
+                    {
+                        var dcc = id as DynamicDNAConverterController;
+                        if (dcc == null)
+                        {
+                            continue;
+                        }
+
+                        var plugins = dcc.GetPlugins(typeof(BonePoseDNAConverterPlugin));
+                        if (applyBonePoseConverters)
+                        {
+                            foreach (DynamicDNAPlugin ddp in plugins)
+                            {
+                                var bc = ddp as BonePoseDNAConverterPlugin;
+                                if (bc == null || bc.poseDNAConverters == null)
+                                {
+                                    continue;
+                                }
+
+                                foreach (var converter in bc.poseDNAConverters)
+                                {
+                                    if (converter != null && converter.poseToApply != null)
+                                    {
+                                        converter.poseToApply.ApplyPose(skeleton, converter.startingPoseWeight);
+                                    }
+                                }
+                            }
+                        }
+
+                        dcc.overallModifiers?.UpdateCharacter(uma, skeleton, false);
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            if (!includeTargetPose || targetPose == null)
+            {
+                return;
+            }
+
+            if (haveEditTarget)
+            {
+                targetPose.ApplyPose(skeleton, 1f);
+            }
+            else
+            {
+                targetPose.ApplyPose(skeleton, previewWeight);
+            }
+        }
+
+        private void ApplySourcePreviewMode(UMAData previousSource, bool recacheWeights)
+        {
+            if (dynamicDNAConverterMode)
+            {
+                return;
+            }
+
+            if (previousSource != null && previousSource != sourceUMA && _sourcePreviewModified)
+            {
+                RestorePreviewOverride();
+                if (!BuildSourceAvatarIfAvailable(previousSource) && context != null && context.activeUMA == previousSource)
+                {
+                    ApplySourceSkeletonPreview(false, true);
+                }
+            }
+
+            if (sourceUMA == null)
+            {
+                ClearActiveEditState();
+                return;
+            }
+
+            Debug.Log("Applying T-Pose preview mode to source UMA: " + sourceUMA.name);
+            SetBonePoseMasterWeight(sourceUMA,1.0f);
+            BuildSourceAvatarIfAvailable(sourceUMA);
+
+            if (recacheWeights || BonePoseSavers.Count ==0)
+            {
+                SaveWeights();
+            }
+
+            ClearBonePoseWeights();
+            _sourcePreviewModified = true;
+            ClearActiveEditState();
+            if (haveValidContext && context.activeUMA == sourceUMA)
+            {
+                ApplySourceSkeletonPreview(true);
+            }
         }
 
         void OnUpdate()
@@ -422,66 +697,9 @@ namespace UMA.PoseTools
                     }
                 }
 
-                if (!dynamicDNAConverterMode)
+                if (!dynamicDNAConverterMode && _sourcePreviewModified)
                 {
-                    var uma = context.activeUMA;
-                    var skeleton = uma != null ? uma.skeleton : null;
-
-                    if (skeleton != null)
-                    {
-                        skeleton.ResetAll();
-                        if (context.startingPose != null)
-                        {
-                            context.startingPose.ApplyPose(skeleton, context.startingPoseWeight);
-                        }
-                    }
-
-                    try
-                    {
-                        var recipe = uma?.umaRecipe;
-                        var race = recipe?.raceData;
-                        if (race != null)
-                        {
-                            foreach (IDNAConverter id in race.dnaConverterList)
-                            {
-                                if (id is DynamicDNAConverterController dcc)
-                                {
-                                    var plugins = dcc.GetPlugins(typeof(BonePoseDNAConverterPlugin));
-                                    foreach (DynamicDNAPlugin ddp in plugins)
-                                    {
-                                        if (ddp is BonePoseDNAConverterPlugin bc && bc.poseDNAConverters != null)
-                                        {
-                                            foreach (var converter in bc.poseDNAConverters)
-                                            {
-                                                if (converter?.poseToApply != null && skeleton != null)
-                                                {
-                                                    converter.poseToApply.ApplyPose(skeleton, converter.startingPoseWeight);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (uma != null && skeleton != null)
-                                    {
-                                        dcc.overallModifiers?.UpdateCharacter(uma, skeleton, false);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch { }
-
-                    var skel = context?.activeUMA?.skeleton;
-                    if (skel != null && targetPose != null)
-                    {
-                        if (haveEditTarget)
-                        {
-                            targetPose.ApplyPose(skel, 1f);
-                        }
-                        else
-                        {
-                            targetPose.ApplyPose(skel, previewWeight);
-                        }
-                    }
+                    ApplySourceSkeletonPreview(true);
                 }
             }
 
@@ -778,13 +996,7 @@ namespace UMA.PoseTools
                             // Apply to mirrored transform when available (using detected mirror plane)
                             if (mirrorTrans != null)
                             {
-                                var transDelta = deltaPos;
-                                switch (context.mirrorPlane)
-                                {
-                                    case UMABonePoseEditorContext.MirrorPlane.Mirror_X: transDelta.x = -transDelta.x; break;
-                                    case UMABonePoseEditorContext.MirrorPlane.Mirror_Y: transDelta.y = -transDelta.y; break;
-                                    case UMABonePoseEditorContext.MirrorPlane.Mirror_Z: transDelta.z = -transDelta.z; break;
-                                }
+                                var transDelta = MirrorPositionOnly(deltaPos);
                                 Undo.RecordObject(mirrorTrans, "Edit Bone Pose");
                                 mirrorTrans.localPosition += transDelta;
                                 var mp = mirrorPose ?? EnsureMirrorPose(poses, activePose, ref mirrorBoneIndex);
@@ -834,13 +1046,7 @@ namespace UMA.PoseTools
 
                             if (mirrorTrans != null)
                             {
-                                var transDelta = deltaRot;
-                                switch (context.mirrorPlane)
-                                {
-                                    case UMABonePoseEditorContext.MirrorPlane.Mirror_X: transDelta.y = -transDelta.y; transDelta.z = -transDelta.z; break;
-                                    case UMABonePoseEditorContext.MirrorPlane.Mirror_Y: transDelta.x = -transDelta.x; transDelta.z = -transDelta.z; break;
-                                    case UMABonePoseEditorContext.MirrorPlane.Mirror_Z: transDelta.x = -transDelta.x; transDelta.y = -transDelta.y; break;
-                                }
+                                var transDelta = MirrorRotationOnly(deltaRot);
 
                                 Undo.RecordObject(mirrorTrans, "Edit Bone Pose");
                                 mirrorTrans.localRotation *= transDelta;
@@ -915,7 +1121,11 @@ namespace UMA.PoseTools
                     }
                 }
 
-                serializedObject.ApplyModifiedProperties();
+                bool scenePoseChanged = serializedObject.ApplyModifiedProperties();
+                if (scenePoseChanged)
+                {
+                    RegeneratePoseTargetPreviewIfNeeded();
+                }
                 if (_poseEdited)
                 {
                     EditorUtility.SetDirty(target);
@@ -963,19 +1173,13 @@ namespace UMA.PoseTools
 
         public void SaveWeights()
         {
-            if (BonePoseSavers.Count >0)
+            if (_sourcePreviewModified && BonePoseSavers.Count >0)
             {
                 RestoreWeights();
             }
             BonePoseSavers.Clear(); 
-            if (sourceUMA != null && sourceUMA.umaRecipe != null && sourceUMA.umaRecipe.raceData != null)
+            if (TryGetRaceData(sourceUMA, out RaceData race))
             {
-                RaceData race = sourceUMA.umaRecipe.raceData;
-
-                if (race.dnaConverterList == null)
-                {
-                    return;
-                }
                 foreach (var converterController in race.dnaConverterList)
                 {
                     var plugins = converterController.GetPlugins(typeof(BonePoseDNAConverterPlugin));
@@ -1004,15 +1208,8 @@ namespace UMA.PoseTools
 
         public void ClearBonePoseWeights()
         {
-            if (sourceUMA != null && sourceUMA.umaRecipe != null && sourceUMA.umaRecipe.raceData != null)
+            if (TryGetRaceData(sourceUMA, out RaceData race))
             {
-                RaceData race = sourceUMA.umaRecipe.raceData;
-
-                if (race.dnaConverterList == null)
-                {
-                    return;
-                }
-
                 foreach (var converterController in race.dnaConverterList)
                 {
                     var plugins = converterController.GetPlugins(typeof(BonePoseDNAConverterPlugin));
@@ -1035,7 +1232,7 @@ namespace UMA.PoseTools
 
         public void RestoreWeights()
         {
-            if (sourceUMA != null && sourceUMA.umaRecipe != null && sourceUMA.umaRecipe.raceData != null)
+            if (BonePoseSavers.Count >0)
             {
                 foreach (BonePoseSaver bps in BonePoseSavers)
                 {
@@ -1053,7 +1250,7 @@ namespace UMA.PoseTools
         {
             if (IsCompilingOrUpdating)
             {
-                EditorGUILayout.HelpBox("Editor is compiling/reloading. Please wait…", MessageType.Info);
+                EditorGUILayout.HelpBox("Editor is compiling/reloading. Please waitï¿½", MessageType.Info);
                 return;
             }
             if (target == null)
@@ -1116,14 +1313,27 @@ namespace UMA.PoseTools
             if (!dynamicDNAConverterMode)
             {
                 EditorGUILayout.HelpBox("Select a built UMA (DynamicCharacterAvatar, DynamicAvatar, UMAData) to enable editing and addition of new bones.", MessageType.Info);
+                UMAData previousSource = saveUMAData;
                 sourceUMA = EditorGUILayout.ObjectField("Source UMA", sourceUMA, typeof(UMAData), true) as UMAData;
+                EditorGUILayout.BeginHorizontal();
+                poseTarget = EditorGUILayout.ObjectField("PoseTarget", poseTarget, typeof(UMA.CharacterSystem.DynamicCharacterAvatar), true) as UMA.CharacterSystem.DynamicCharacterAvatar;
+                EditorGUI.BeginDisabledGroup(poseTarget == null);
+                if (GUILayout.Button("Build Now", GUILayout.Width(90f)))
+                {
+                    poseTarget.BuildNow();
+                }
+                EditorGUI.EndDisabledGroup();
+                EditorGUILayout.EndHorizontal();
+                autoUpdatePreview = EditorGUILayout.Toggle("Auto-Update Preview", autoUpdatePreview );
                 targetSMR = EditorGUILayout.ObjectField("Target SkinnedMeshRenderer", targetSMR, typeof(SkinnedMeshRenderer), true) as SkinnedMeshRenderer;
 
-                if ((saveUMAData == null) || (sourceUMA != null && sourceUMA.GetInstanceID() != saveUMAData.GetInstanceID()))
+                bool sourceChanged = (sourceUMA == null && saveUMAData != null)
+                    || (sourceUMA != null && saveUMAData == null)
+                    || (sourceUMA != null && saveUMAData != null && sourceUMA.GetInstanceID() != saveUMAData.GetInstanceID());
+                if (sourceChanged)
                 {
                     saveUMAData = sourceUMA;
-                    SaveWeights();
-                    ClearBonePoseWeights();
+                    ApplySourcePreviewMode(previousSource,true);
                 }
             }
             else
@@ -1133,6 +1343,7 @@ namespace UMA.PoseTools
                     EditorGUILayout.HelpBox("Switch to 'Scene View' and you will see gizmos to help you edit the positions of the pose bones below that you choose to 'Edit'", MessageType.Info);
                 }
             }
+            bool allowPoseEditing = true;
             if (sourceUMA != null)
             {
                 if (context == null)
@@ -1150,7 +1361,7 @@ namespace UMA.PoseTools
             {
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Space(addRemovePadding);
-                EditorGUI.BeginDisabledGroup(haveEditTarget);
+                EditorGUI.BeginDisabledGroup(haveEditTarget || !allowPoseEditing);
                 previewWeight = EditorGUILayout.Slider(previewGUIContent, previewWeight,0f,1f);
                 EditorGUI.EndDisabledGroup();
                 GUILayout.Space(addRemovePadding);
@@ -1173,7 +1384,7 @@ namespace UMA.PoseTools
  
             if (haveValidContext && !disableMirroring && context.mirrorPlane == UMABonePoseEditorContext.MirrorPlane.Mirror_None)
             {
-                EditorGUILayout.HelpBox("Mirroring plane not detected; falling back to Mirror Axis for pose updates.", MessageType.Info);
+                EditorGUILayout.HelpBox("Mirroring plane not detected; Mirror Axis still controls mirrored pose deltas when a mirror pose is updated.", MessageType.Info);
             }
  
  GUILayout.BeginHorizontal();
@@ -1183,11 +1394,11 @@ namespace UMA.PoseTools
                 UMAData data = GameObject.FindFirstObjectByType<UMAData>();
                 if (data != null)
                 {
+                    UMAData previousSource = saveUMAData;
                     sourceUMA = data;
                     saveUMAData = data;
 
-                    SaveWeights();
-                    ClearBonePoseWeights();
+                    ApplySourcePreviewMode(previousSource,true);
                     var active = Selection.activeObject;
 
                     Selection.activeGameObject = data.gameObject;
@@ -1213,7 +1424,7 @@ namespace UMA.PoseTools
 
             if (sourceUMA != null && targetSMR != null)
             {
-                EditorGUI.BeginDisabledGroup(targetSMR.bones == null || targetSMR.bones.Length ==0);
+                EditorGUI.BeginDisabledGroup(!allowPoseEditing || targetSMR.bones == null || targetSMR.bones.Length ==0);
                 if (GUILayout.Button(generatePoseGUIContent))
                 {
                     GeneratePoseFromSkinnedMeshRenderer();
@@ -1230,6 +1441,7 @@ namespace UMA.PoseTools
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            EditorGUI.BeginDisabledGroup(!allowPoseEditing);
             if (GUILayout.Button("Convert all Left/Right"))
             {
                 for (int i =0; i < poses.arraySize; i++)
@@ -1243,6 +1455,7 @@ namespace UMA.PoseTools
                 // future: implement if needed
                 _poseEdited = true;
             }
+            EditorGUI.EndDisabledGroup();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             BoneListFilter = EditorGUILayout.TextField("filter to bones containing: ", BoneListFilter);
@@ -1320,6 +1533,7 @@ namespace UMA.PoseTools
                     }
                     Repaint();
                 }
+                EditorGUI.BeginDisabledGroup(!allowPoseEditing);
                 if (GUILayout.Button("Sort"))
                 {
                     // Clear any current edit/mirror state to avoid stale references during sorting
@@ -1360,6 +1574,7 @@ namespace UMA.PoseTools
                     GUIUtility.keyboardControl = 0;
                     _poseEdited = true;
                     serializedObject.ApplyModifiedProperties();
+                    RegeneratePoseTargetPreviewIfNeeded();
                     EditorUtility.SetDirty(target);
                     Repaint();
                 }
@@ -1392,6 +1607,7 @@ namespace UMA.PoseTools
                         _poseEdited = true;
                     }
                 }
+                EditorGUI.EndDisabledGroup();
                 GUILayout.EndHorizontal();
                 for (int i =0; i < poses.arraySize; i++)
                 {
@@ -1413,7 +1629,7 @@ namespace UMA.PoseTools
             GUILayout.Space(addRemovePadding);
             if (haveValidContext)
             {
-                EditorGUI.BeginDisabledGroup(addBoneIndex <1);
+                EditorGUI.BeginDisabledGroup(!allowPoseEditing || addBoneIndex <1);
                 if (GUILayout.Button(addBoneGUIContent, GUILayout.Width(90f)))
                 {
                     addBoneName = addBoneOptions[Mathf.Clamp(addBoneIndex,0, addBoneOptions.Length -1)];
@@ -1428,7 +1644,7 @@ namespace UMA.PoseTools
             }
             else
             {
-                EditorGUI.BeginDisabledGroup(addBoneName.Length < minBoneNameLength);
+                EditorGUI.BeginDisabledGroup(!allowPoseEditing || addBoneName.Length < minBoneNameLength);
                 if (GUILayout.Button(addBoneGUIContent, GUILayout.Width(90f)))
                 {
                     doBoneAdd = true;
@@ -1445,7 +1661,7 @@ namespace UMA.PoseTools
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(addRemovePadding);
-            EditorGUI.BeginDisabledGroup(removeBoneIndex <1);
+            EditorGUI.BeginDisabledGroup(!allowPoseEditing || removeBoneIndex <1);
             if (GUILayout.Button(removeBoneGUIContent, GUILayout.Width(90f)))
             {
                 doBoneRemove = true;
@@ -1475,7 +1691,7 @@ namespace UMA.PoseTools
                     List<int> noselection = new List<int>();
                     boneTreeView.SetSelection(noselection);
                 }
-                EditorGUI.BeginDisabledGroup(!boneTreeView.HasSelection());
+                EditorGUI.BeginDisabledGroup(!allowPoseEditing || !boneTreeView.HasSelection());
                 if (GUILayout.Button("Add Selected"))
                 {
                     addBoneNames = boneTreeView.GetSelectedBones();
@@ -1522,7 +1738,11 @@ namespace UMA.PoseTools
                 boneTreeView.OnGUI(r);
                 GUILayout.EndScrollView();
             }
-            serializedObject.ApplyModifiedProperties();
+            bool inspectorPoseChanged = serializedObject.ApplyModifiedProperties();
+            if (inspectorPoseChanged)
+            {
+                RegeneratePoseTargetPreviewIfNeeded();
+            }
         }
 
         private void GeneratePoseFromSkinnedMeshRenderer()
@@ -1601,6 +1821,7 @@ namespace UMA.PoseTools
             }
 
             serializedObject.ApplyModifiedProperties();
+            RegeneratePoseTargetPreviewIfNeeded();
             _poseEdited = true;
 
             if (addedBones.Count >0)
@@ -1868,6 +2089,7 @@ namespace UMA.PoseTools
         private void PoseBoneDrawer(SerializedProperty property)
         {
             EditorGUI.indentLevel++;
+            bool allowPoseEditing = true;
 
             SerializedProperty bone = property.FindPropertyRelative("bone");
             SerializedProperty enabledProp = property.FindPropertyRelative("enabled"); // new flag
@@ -1878,10 +2100,30 @@ namespace UMA.PoseTools
             bone.isExpanded = EditorGUILayout.Foldout(bone.isExpanded, boneGUIContent);
             Color currentColor = GUI.color;
 
+            bool canFocusBone = TryGetPoseBoneTransform(bone.stringValue, out Transform focusBoneTransform);
+            EditorGUI.BeginDisabledGroup(!canFocusBone);
+            if (GUILayout.Button("Focus", EditorStyles.miniButton, GUILayout.Width(60f)))
+            {
+                FocusSceneViewOnBone(focusBoneTransform);
+            }
+            if (poseTarget != null && poseTarget.skeleton != null && poseTarget.skeleton.HasBone(bone.stringValue))
+            {
+                if (GUILayout.Button("P Target", EditorStyles.miniButton, GUILayout.Width(60f)))
+                {
+                    var boneTarget = poseTarget.skeleton.GetBoneTransform(bone.stringValue);
+                    if (boneTarget != null)
+                    {
+                        FocusSceneViewOnBone(boneTarget);
+                    }
+                }
+            }
+            EditorGUI.EndDisabledGroup();
+
             // Enable/Disable toggle button (always shown)
             bool isEnabled = enabledProp != null ? enabledProp.boolValue : true;
             GUI.color = isEnabled ? Color.white : new Color(1f,0.75f,0.75f);
             string toggleLabel = isEnabled ? "Disable" : "Enable";
+            EditorGUI.BeginDisabledGroup(!allowPoseEditing);
             if (GUILayout.Button(toggleLabel, EditorStyles.miniButton, GUILayout.Width(60f)))
             {
                 Undo.RecordObject(target, "Toggle Pose Bone");
@@ -1902,16 +2144,19 @@ namespace UMA.PoseTools
                     }
                 }
             }
+            EditorGUI.EndDisabledGroup();
             GUI.color = currentColor;
 
             if (drawBoneIndex == editBoneIndex)
             {
                 GUI.color = Color.green;
+                EditorGUI.BeginDisabledGroup(!allowPoseEditing);
                 if (GUILayout.Button("Editing", EditorStyles.miniButton, GUILayout.Width(60f)))
                 {
                     editBoneIndex = BAD_INDEX;
                     mirrorBoneIndex = BAD_INDEX;
                 }
+                EditorGUI.EndDisabledGroup();
             }
             else if (drawBoneIndex == mirrorBoneIndex)
             {
@@ -1919,23 +2164,28 @@ namespace UMA.PoseTools
                 if (mirrorActive)
                 {
                     GUI.color = lightBlue;
+                    EditorGUI.BeginDisabledGroup(!allowPoseEditing);
                     if (GUILayout.Button("Mirroring", EditorStyles.miniButton, GUILayout.Width(60f)))
                     {
                         mirrorActive = false;
                     }
+                    EditorGUI.EndDisabledGroup();
                 }
                 else
                 {
                     GUI.color = Color.Lerp(lightBlue, Color.white,0.66f);
+                    EditorGUI.BeginDisabledGroup(!allowPoseEditing);
                     if (GUILayout.Button("Mirror", EditorStyles.miniButton, GUILayout.Width(60f)))
                     {
                         mirrorActive = true;
                     }
+                    EditorGUI.EndDisabledGroup();
                 }
             }
             else
             {
                 // Existing Reset and Edit buttons
+                EditorGUI.BeginDisabledGroup(!allowPoseEditing);
                 if (GUILayout.Button("Reset", EditorStyles.miniButton, GUILayout.Width(60f)))
                 {
                     var positionProp = property.FindPropertyRelative("position");
@@ -1955,6 +2205,7 @@ namespace UMA.PoseTools
                     removeBoneIndex = drawBoneIndex +1;
                     doBoneRemove = true;
                 }
+                EditorGUI.EndDisabledGroup();
             }
             GUI.color = currentColor;
             EditorGUILayout.EndHorizontal();
@@ -1962,7 +2213,8 @@ namespace UMA.PoseTools
             if (bone.isExpanded)
             {
                 bool isEditingThisBone = (drawBoneIndex == editBoneIndex);
-                EditorGUI.BeginDisabledGroup(!isEditingThisBone);
+                bool canEditThisBone = allowPoseEditing && isEditingThisBone;
+                EditorGUI.BeginDisabledGroup(!canEditThisBone);
                 EditorGUI.indentLevel++;
                 SerializedProperty posesRoot = serializedObject.FindProperty("poses");
                 string mirrorBoneName = DeriveMirrorName(bone.stringValue);
@@ -2053,7 +2305,7 @@ namespace UMA.PoseTools
                     if (context != null)
                         context.activeTool = UMABonePoseEditorContext.EditorTool.Tool_Rotation;
                 }
-                if (EditorGUI.EndChangeCheck())
+                if (EditorGUI.EndChangeCheck() && canEditThisBone)
                 {
                     if (newRotationEuler != currentRotationEuler)
                     {
@@ -2130,41 +2382,51 @@ namespace UMA.PoseTools
         // Restore pose on sourceUMA (if edited) and rebuild on exit.
         private void TryRestoreAndRebuildOnExit()
         {
-            if (sourceUMA == null) { _poseEdited = false; return; }
+            bool needsRestore = _sourcePreviewModified || BonePoseSavers.Count >0;
+            if (sourceUMA == null)
+            {
+                if (needsRestore)
+                {
+                    RestorePreviewOverride();
+                }
+                _sourcePreviewModified = false;
+                _poseEdited = false;
+                return;
+            }
 
             try
             {
                 if (true)
                 {
-                    if (_poseEdited)
+                    if (needsRestore)
                     {
-                        // Restore saved plugin weights first
-                        RestoreWeights();
-                    }
-
-                    // Reset skeleton transforms to baseline
-                    if (sourceUMA.skeleton != null)
-                    {
-                        sourceUMA.skeleton.ResetAll();
+                        RestorePreviewOverride();
+                        if (!BuildSourceAvatarIfAvailable(sourceUMA) && context != null && context.activeUMA == sourceUMA)
+                        {
+                            ApplySourceSkeletonPreview(false, true);
+                        }
                     }
 
                     // Trigger full rebuild
-                    var uma = sourceUMA;
-                    if (!IsEditorBusy)
+                    if (_poseEdited)
                     {
-                        uma.Dirty(true, true, true);
-                        UMAAssetIndexer.Instance.generator.Work();
-                    }
-                    else
-                    {
-                        EditorApplication.delayCall += () =>
+                        var uma = sourceUMA;
+                        if (!IsEditorBusy)
                         {
-                            if (uma != null)
+                            uma.Dirty(true, true, true);
+                            UMAAssetIndexer.Instance.generator.Work();
+                        }
+                        else
+                        {
+                            EditorApplication.delayCall += () =>
                             {
-                                uma.Dirty(true, true, true);
-                                UMAAssetIndexer.Instance.generator.Work();
-                            }
-                        };
+                                if (uma != null)
+                                {
+                                    uma.Dirty(true, true, true);
+                                    UMAAssetIndexer.Instance.generator.Work();
+                                }
+                            };
+                        }
                     }
                 }
             }
@@ -2174,6 +2436,7 @@ namespace UMA.PoseTools
             finally
             {
                 _poseEdited = false;
+                _sourcePreviewModified = false;
             }
         }
     }

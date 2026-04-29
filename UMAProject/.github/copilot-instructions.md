@@ -9,6 +9,9 @@
 - In UMA editor tools, keep EditorModifiers behind `#if UNITY_EDITOR` to avoid including them in builds for memory reasons.
 - For FaceEditorStage and UMA editor tooling changes: panel height redistribution should be even among expanded panels; allow panels to extend offscreen rather than shrink below minimums; reserve an 8% vertical buffer due to Unity usable-rect inaccuracies.
 - Always implement requested code changes directly unless the user explicitly asks not to. When the user says a requested editor UI change was not applied, inspect the actual target file immediately, edit it, and verify instead of relying on prior intent. If the user corrects a UMA editor layout change, inspect the actual target file immediately, patch it directly, and verify; for UmaExamineOverlaysWindow, the details panel should be fixed-width while the list uses the remainder.
+- For any task that changes code, run a compile, build, or typecheck validation that covers all changed files or affected assemblies before closing the task unless the user explicitly asks not to.
+- Do not treat single-file diagnostics as proof that a change compiles.
+- If full compile or build validation is unavailable in the current environment, say that explicitly and do not present the change as compile-verified.
 - Always set a `_rectChanged` flag and ensure overlay rect changes are saved and trigger a rebuild on Update/Close in Overlay Positioner.
 - Do not use reflection to access TextureMerge fields/methods in OverlayEditor; use direct TextureMerge API from settings instead.
 - When scene objects cause editor-state issues, avoid ObjectField persistence and prefer InstanceID-backed drag-drop handling instead.

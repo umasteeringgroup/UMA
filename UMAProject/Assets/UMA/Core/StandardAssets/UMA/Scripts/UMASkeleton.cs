@@ -195,6 +195,13 @@ namespace UMA
 			return data;
 		}
 
+		public virtual bool HasBone(string boneName)
+		{
+			int nameHash = UMAUtils.StringToHash(boneName);
+			return HasBone(nameHash);
+		}
+
+
 		/// <summary>
 		/// Does this skeleton contains bone with specified name hash?
 		/// </summary>
@@ -931,7 +938,7 @@ private void ValidateHierarchy(Transform root, string ignoreTag)
     {
         // Optional info in debug
         if (Debug.isDebugBuild && ignored > 0)
-            Debug.Log($"[UMA] UMASkeleton: {ignored} transforms skipped due to ignore tag '{ignoreTag}'. Consider if that’s intended.");
+            Debug.Log($"[UMA] UMASkeleton: {ignored} transforms skipped due to ignore tag '{ignoreTag}'. Consider if thatï¿½s intended.");
     }
 }
 

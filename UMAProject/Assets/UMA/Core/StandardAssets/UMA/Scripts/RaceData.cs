@@ -235,6 +235,10 @@ namespace UMA
 
 	    void Awake()
 	    {
+#if UNITY_EDITOR
+	    	if (!Application.isPlaying)
+        		return;
+#endif	
 	        UpdateDictionary();
 	    }
 

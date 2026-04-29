@@ -119,6 +119,8 @@ namespace UMA
 
         enum DefineMode { DefineVertexSet, DefineVertexState };
 
+        enum PaintBrushMode { Point, Circle };
+
         string[] selectFrom = new string[] { "All Slots" };
         int selectionSlot = 0; // 0 is all slots
         string[] visibleSelectFrom = new string[] { "All Slots" };
@@ -175,8 +177,15 @@ namespace UMA
         private bool replaceSelectionOnRectSelect = false;
         private bool paintModeSet = false;
         private bool paintModeState = false;
+        [SerializeField]
+        private PaintBrushMode paintBrushMode = PaintBrushMode.Point;
+        [SerializeField]
+        private int paintBrushRadiusPixels = 24;
         private readonly HashSet<string> paintedVerticesThisStroke = new HashSet<string>();
         // End Options
+
+        private const int MinPaintBrushRadiusPixels = 1;
+        private const int MaxPaintBrushRadiusPixels = 256;
 
         const int VertexEditorToolsWindowID = 0x1234;
         const int VisibleWearablesID = 0x1235;
@@ -706,7 +715,7 @@ namespace UMA
         }
 
         /// <summary>
-        /// Möller–Trumbore ray-triangle intersection algorithm.
+        /// Mï¿½llerï¿½Trumbore ray-triangle intersection algorithm.
         /// Returns true if ray intersects triangle, with t = distance along ray.
         /// </summary>
         private static bool RayTriangleIntersect(Vector3 rayOrigin, Vector3 rayDir, Vector3 v0, Vector3 v1, Vector3 v2, out float t)
@@ -990,7 +999,7 @@ namespace UMA
                 return result;
             }
             VertexSelection vs = new VertexSelection();
-            vs.slot = thisDCA.umaData.umaRecipe.FindSlot(va.slotName);
+            vs.slot = FindSlotBySourceSlotOrName(va.slotName);
             if (vs.slot == null)
             {
                 return null;
@@ -1408,7 +1417,7 @@ namespace UMA
                                 replaceSelectionOnRectSelect = false;
                                 rectSelect = false;
                                 painting = true;
-                                SingleSelect(currentEvent);
+                                PaintSelect(currentEvent);
                             }
                             else
                             {
@@ -1425,7 +1434,7 @@ namespace UMA
                         {
                             if (IsPaintModeEnabled)
                             {
-                                SingleSelect(currentEvent);
+                                PaintSelect(currentEvent);
                             }
                             else
                             {
@@ -1529,6 +1538,8 @@ namespace UMA
                 }
             }
 
+            DrawPaintBrushCircle(sceneView, currentEvent, mouseOverAnyWindow);
+
             if (isEditing)
             {
                 Rect topCenter = new Rect(0, 25, sceneView.position.width, 20);
@@ -1555,7 +1566,7 @@ namespace UMA
             {
                 if (painting)
                 {
-                    SingleSelect(currentEvent);
+                    PaintSelect(currentEvent);
                 }
                 SceneView.RepaintAll();
             }
@@ -1759,7 +1770,7 @@ namespace UMA
                 }
 
                 UMAData umaData = thisDCA.umaData;
-                SlotData slot = thisDCA.umaData.umaRecipe.FindSlot(vas.slotName);
+                SlotData slot = FindSlotBySourceSlotOrName(vas.slotName);
 
                 if (slot == null) return false;
 
@@ -2114,6 +2125,7 @@ namespace UMA
             if (currentDefineMode == DefineMode.DefineVertexSet)
             {
                 paintModeSet = EditorGUILayout.Toggle("Paint Mode", paintModeSet);
+                DrawPaintBrushOptions();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Set Action", GUILayout.Width(92));
@@ -2200,6 +2212,7 @@ namespace UMA
             else
             {
                 paintModeState = EditorGUILayout.Toggle("Paint Mode", paintModeState);
+                DrawPaintBrushOptions();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("State Action", GUILayout.Width(92));
@@ -2339,6 +2352,27 @@ namespace UMA
             GUILayout.Space(ToolWindowAreaHeight + 10);
             GUILayout.EndScrollView();
             // Define a small drag area so the rest of the window is NOT draggable
+        }
+
+        private void DrawPaintBrushOptions()
+        {
+            if (!IsPaintModeEnabled)
+            {
+                return;
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Brush", GUILayout.Width(92));
+            paintBrushMode = (PaintBrushMode)GUILayout.Toolbar((int)paintBrushMode, new string[] { "Point", "Circle" });
+            GUILayout.EndHorizontal();
+
+            if (paintBrushMode == PaintBrushMode.Circle)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Radius", GUILayout.Width(92));
+                paintBrushRadiusPixels = EditorGUILayout.IntSlider(paintBrushRadiusPixels, MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
+                GUILayout.EndHorizontal();
+            }
         }
 
         private void CancelInteraction()
@@ -2588,6 +2622,180 @@ namespace UMA
             modifierEditor.Repaint();
         }
 
+        private bool PaintSelect(Event currentEvent)
+        {
+            if (paintBrushMode == PaintBrushMode.Circle)
+            {
+                return CirclePaintSelect(currentEvent);
+            }
+
+            return SingleSelect(currentEvent);
+        }
+
+        private bool CirclePaintSelect(Event currentEvent)
+        {
+            if (BakedMesh == null || VertexObject == null)
+            {
+                return false;
+            }
+
+            Vector3[] vertexes = BakedMesh.vertices;
+            Vector3[] normals = BakedMesh.normals;
+            if (vertexes == null || vertexes.Length == 0)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            selectMode effectiveMode = GetEffectiveSelectMode(currentEvent);
+            float radius = Mathf.Clamp(paintBrushRadiusPixels, MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
+            float radiusSqr = radius * radius;
+            Vector2 brushCenter = currentEvent.mousePosition;
+
+            for (int i = 0; i < vertexes.Length; i++)
+            {
+                Vector3 screenPos3 = HandleUtility.WorldToGUIPoint(VertexObject.transform.TransformPoint(vertexes[i]));
+                Vector2 screenPos = new Vector2(screenPos3.x, screenPos3.y);
+                if ((screenPos - brushCenter).sqrMagnitude > radiusSqr)
+                {
+                    continue;
+                }
+
+                if (!IsPaintCandidateVisible(i, screenPos, vertexes, normals))
+                {
+                    continue;
+                }
+
+                if (!TryGetSlotForBakedVertex(i, out SlotData foundSlot, out int foundVert) || foundSlot == null)
+                {
+                    continue;
+                }
+
+                if (currentDefineMode == DefineMode.DefineVertexSet && selectionSlot > 0 && foundSlot.slotName != selectFrom[selectionSlot])
+                {
+                    continue;
+                }
+
+                string paintKey = foundSlot.slotName + ":" + foundVert;
+                if (paintedVerticesThisStroke.Contains(paintKey))
+                {
+                    continue;
+                }
+
+                if (ApplySelectionModeToVertex(foundSlot, foundVert, effectiveMode))
+                {
+                    changed = true;
+                }
+
+                paintedVerticesThisStroke.Add(paintKey);
+            }
+
+            if (changed)
+            {
+                modifierEditor.Repaint();
+                SceneView.RepaintAll();
+            }
+
+            return changed;
+        }
+
+        private bool IsPaintCandidateVisible(int bakedVertexIndex, Vector2 screenPos, Vector3[] vertexes, Vector3[] normals)
+        {
+            if (!selectFacingAway && normals != null && bakedVertexIndex < normals.Length && Camera.current != null)
+            {
+                Vector3 normal = normals[bakedVertexIndex];
+                if (Vector3.Dot(normal, Camera.current.transform.forward) > 0)
+                {
+                    return false;
+                }
+            }
+
+            if (!selectObscured)
+            {
+                Ray ray = HandleUtility.GUIPointToWorldRay(screenPos);
+                if (phyScene.Raycast(ray.origin, ray.direction, out RaycastHit hit))
+                {
+                    if (hit.transform != null && hit.transform.gameObject == VertexObject)
+                    {
+                        float dist = Mathf.Abs(Vector3.Distance(VertexObject.transform.TransformPoint(vertexes[bakedVertexIndex]), hit.point));
+                        if (dist > 0.001f)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private bool ApplySelectionModeToVertex(SlotData foundSlot, int foundVert, selectMode effectiveMode)
+        {
+            int existingIndex = GetSelectionIndex(foundSlot, foundVert);
+            switch (effectiveMode)
+            {
+                case selectMode.Add:
+                    if (existingIndex >= 0)
+                    {
+                        return false;
+                    }
+                    AddVertex(foundSlot, foundVert);
+                    CurrentSelected = SelectedVertexes.Count - 1;
+                    SetActive(null);
+                    return true;
+                case selectMode.Remove:
+                    if (existingIndex < 0)
+                    {
+                        return false;
+                    }
+                    RemoveVertex(foundSlot, foundVert);
+                    if (CurrentSelected == existingIndex)
+                    {
+                        CurrentSelected = -1;
+                        SetActive(null);
+                    }
+                    else if (CurrentSelected > existingIndex)
+                    {
+                        CurrentSelected--;
+                    }
+                    return true;
+                case selectMode.InvertSelection:
+                    InvertVertex(foundSlot, foundVert);
+                    CurrentSelected = GetSelectionIndex(foundSlot, foundVert);
+                    SetActive(null);
+                    return true;
+                case selectMode.Activate:
+                    if (existingIndex < 0 || SelectedVertexes[existingIndex].isActive)
+                    {
+                        return false;
+                    }
+                    ActivateVertex(foundSlot, foundVert);
+                    CurrentSelected = existingIndex;
+                    SetActive(null);
+                    return true;
+                case selectMode.Deactivate:
+                    if (existingIndex < 0 || !SelectedVertexes[existingIndex].isActive)
+                    {
+                        return false;
+                    }
+                    DeactivateVertex(foundSlot, foundVert);
+                    CurrentSelected = existingIndex;
+                    SetActive(null);
+                    return true;
+                case selectMode.ToggleState:
+                    if (existingIndex < 0)
+                    {
+                        return false;
+                    }
+                    SelectedVertexes[existingIndex].isActive = !SelectedVertexes[existingIndex].isActive;
+                    CurrentSelected = existingIndex;
+                    SetActive(null);
+                    return true;
+            }
+
+            return false;
+        }
+
         void ActivateVertex(SlotData foundSlot, int foundVert)
         {
             for (int i = 0; i < SelectedVertexes.Count; i++)
@@ -2669,7 +2877,7 @@ namespace UMA
             for (int j = 0; j < vac.vertexAdjustments.Count; j++)
             {
                 VertexAdjustment va = vac.vertexAdjustments[j];
-                SlotData slot = thisDCA.umaData.umaRecipe.GetSlot(va.slotName);
+                SlotData slot = FindSlotBySourceSlotOrName(va.slotName);
                 if (slot != null)
                 {
                     SelectedVertexes.Add(new VertexSelection()
@@ -2681,6 +2889,37 @@ namespace UMA
                     });
                 }
             }
+        }
+
+        private SlotData FindSlotBySourceSlotOrName(string slotKey)
+        {
+            if (string.IsNullOrEmpty(slotKey) || thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
+            {
+                return null;
+            }
+
+            SlotData legacySlot = null;
+            SlotData[] slots = thisDCA.umaData.umaRecipe.slotDataList;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                SlotData slot = slots[i];
+                if (slot == null)
+                {
+                    continue;
+                }
+
+                if (slot.asset != null && string.Equals(slot.asset.sourceSlot, slotKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    return slot;
+                }
+
+                if (legacySlot == null && string.Equals(slot.slotName, slotKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    legacySlot = slot;
+                }
+            }
+
+            return legacySlot;
         }
 
         private bool SingleSelect(Event currentEvent)
@@ -2816,6 +3055,38 @@ namespace UMA
             }
             modifierEditor.Repaint();
             return found;
+        }
+
+        private void DrawPaintBrushCircle(SceneView sceneView, Event currentEvent, bool mouseOverAnyWindow)
+        {
+            if (currentEvent.type != EventType.Repaint || mouseOverAnyWindow || !IsPaintModeEnabled || paintBrushMode != PaintBrushMode.Circle)
+            {
+                return;
+            }
+
+            Vector2 mousePosition = currentEvent.mousePosition;
+            if (mousePosition.x < 0f || mousePosition.y < 0f || mousePosition.x > sceneView.position.width || mousePosition.y > sceneView.position.height)
+            {
+                return;
+            }
+
+            const int segments = 64;
+            float radius = Mathf.Clamp(paintBrushRadiusPixels, MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
+            Vector3[] points = new Vector3[segments + 1];
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = (i / (float)segments) * Mathf.PI * 2f;
+                points[i] = new Vector3(mousePosition.x + Mathf.Cos(angle) * radius, mousePosition.y + Mathf.Sin(angle) * radius, 0f);
+            }
+
+            Color previousColor = Handles.color;
+            Handles.color = new Color(0f, 0f, 0f, 0.7f);
+            Handles.DrawAAPolyLine(3f, points);
+            Handles.color = currentMode == selectMode.Remove || currentMode == selectMode.Deactivate
+                ? new Color(1f, 0.35f, 0.25f, 0.9f)
+                : new Color(0.25f, 0.75f, 1f, 0.9f);
+            Handles.DrawAAPolyLine(1.5f, points);
+            Handles.color = previousColor;
         }
 
         public void CloseStage()

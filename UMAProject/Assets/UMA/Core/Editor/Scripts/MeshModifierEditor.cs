@@ -240,14 +240,12 @@ namespace UMA
 
                 if (modifier.EditorModifiers != null && modifier.EditorModifiers.Count > 0)
                 {
-                    // Create a copy to avoid modifying the original asset data
-                    Modifiers = new List<MeshModifier.Modifier>(modifier.EditorModifiers);
+                    Modifiers = CloneModifierListForEditing(modifier.EditorModifiers);
                     Debug.Log($"[MeshModifierEditor.Setup] Using EditorModifiers, copied {Modifiers.Count} modifiers");
                 }
                 else if (modifier.RuntimeModifiers != null)
                 {
-                    // Create a copy to avoid modifying the original asset data
-                    Modifiers = new List<MeshModifier.Modifier>(modifier.RuntimeModifiers);
+                    Modifiers = CloneModifierListForEditing(modifier.RuntimeModifiers);
                     Debug.Log($"[MeshModifierEditor.Setup] Using RuntimeModifiers, copied {Modifiers.Count} modifiers");
                 }
                 else
@@ -256,6 +254,7 @@ namespace UMA
                     Modifiers = new List<MeshModifier.Modifier>();
                 }
 
+                NormalizeLoadedModifiersToSourceSlots();
                 HydrateAdHocAdjustmentsFromEditorModifiers();
                 NormalizeLoadedModifiersToSourceSlots();
 
@@ -382,9 +381,124 @@ namespace UMA
                         continue;
                     }
 
-                    adjustment.slotName = NormalizeModifierSlotKey(adjustment.slotName);
+                    NormalizeAdjustmentSlotName(adjustment, modifier.SlotName);
                 }
             }
+        }
+
+        private List<MeshModifier.Modifier> CloneModifierListForEditing(List<MeshModifier.Modifier> sourceModifiers)
+        {
+            List<MeshModifier.Modifier> clones = new List<MeshModifier.Modifier>();
+            if (sourceModifiers == null)
+            {
+                return clones;
+            }
+
+            for (int i = 0; i < sourceModifiers.Count; i++)
+            {
+                MeshModifier.Modifier clone = CloneModifierForEditing(sourceModifiers[i]);
+                if (clone != null)
+                {
+                    clones.Add(clone);
+                }
+            }
+
+            return clones;
+        }
+
+        private MeshModifier.Modifier CloneModifierForEditing(MeshModifier.Modifier source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            string normalizedSlot = NormalizeModifierSlotKey(source.SlotName);
+            MeshModifier.Modifier clone = new MeshModifier.Modifier();
+            clone.ModifierName = source.ModifierName;
+            clone.isTemporary = source.isTemporary;
+            clone.manuallyModified = source.manuallyModified;
+            clone.keepAsIs = source.keepAsIs;
+            clone.SlotName = normalizedSlot;
+            clone.DNAName = source.DNAName;
+            clone.Scale = source.Scale;
+            clone.adjustments = CloneAdjustmentCollectionForEditing(source.adjustments, normalizedSlot);
+            clone.TemplateAdjustment = CloneTemplateAdjustmentForEditing(source.TemplateAdjustment, clone.adjustments);
+            return clone;
+        }
+
+        private VertexAdjustmentCollection CloneAdjustmentCollectionForEditing(VertexAdjustmentCollection source, string parentSlotName)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            VertexAdjustmentCollection clone = (VertexAdjustmentCollection)Activator.CreateInstance(source.GetType());
+            if (clone.vertexAdjustments == null)
+            {
+                clone.vertexAdjustments = new List<VertexAdjustment>();
+            }
+            else
+            {
+                clone.vertexAdjustments.Clear();
+            }
+
+            if (source.vertexAdjustments == null)
+            {
+                return clone;
+            }
+
+            for (int i = 0; i < source.vertexAdjustments.Count; i++)
+            {
+                VertexAdjustment copiedAdjustment = CloneVertexAdjustmentForEditing(source.vertexAdjustments[i], parentSlotName);
+                if (copiedAdjustment != null)
+                {
+                    clone.vertexAdjustments.Add(copiedAdjustment);
+                }
+            }
+
+            return clone;
+        }
+
+        private VertexAdjustment CloneVertexAdjustmentForEditing(VertexAdjustment source, string parentSlotName)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            VertexAdjustment clone = source.ShallowCopy();
+            if (clone == null)
+            {
+                return null;
+            }
+
+            NormalizeAdjustmentSlotName(clone, parentSlotName);
+            return clone;
+        }
+
+        private VertexAdjustment CloneTemplateAdjustmentForEditing(VertexAdjustment source, VertexAdjustmentCollection adjustmentCollection)
+        {
+            VertexAdjustment clone = source != null ? source.ShallowCopy() : null;
+            if (clone != null)
+            {
+                return clone;
+            }
+
+            Type adjustmentType = adjustmentCollection != null ? adjustmentCollection.AdjustmentType : null;
+            return adjustmentType != null ? (VertexAdjustment)Activator.CreateInstance(adjustmentType) : null;
+        }
+
+        private void NormalizeAdjustmentSlotName(VertexAdjustment adjustment, string parentSlotName)
+        {
+            if (adjustment == null)
+            {
+                return;
+            }
+
+            string slotKey = string.IsNullOrEmpty(adjustment.slotName) ? parentSlotName : adjustment.slotName;
+            adjustment.slotName = NormalizeModifierSlotKey(slotKey);
         }
         
         private bool IncludeAdHocAdjustments = true;
@@ -622,9 +736,10 @@ namespace UMA
                 {
                     foreach (VertexAdjustment adjustment in mod.adjustments.vertexAdjustments)
                     {
-                        if (adjustment != null)
+                        VertexAdjustment copiedAdjustment = CloneVertexAdjustmentForEditing(adjustment, mod.SlotName);
+                        if (copiedAdjustment != null)
                         {
-                            adHocAdjustments.Add(adjustment);
+                            adHocAdjustments.Add(copiedAdjustment);
                             totalAdjustmentsExtracted++;
                         }
                     }
@@ -646,12 +761,16 @@ namespace UMA
                 {
                     if (currentModifierIndex >= 0 && currentModifierIndex < Modifiers.Count)
                     {
-                        snapshot.Add(Modifiers[currentModifierIndex]);
+                        MeshModifier.Modifier copiedModifier = CloneModifierForEditing(Modifiers[currentModifierIndex]);
+                        if (copiedModifier != null)
+                        {
+                            snapshot.Add(copiedModifier);
+                        }
                     }
                 }
                 else
                 {
-                    snapshot.AddRange(Modifiers);
+                    snapshot.AddRange(CloneModifierListForEditing(Modifiers));
                 }
             }
 
@@ -671,7 +790,11 @@ namespace UMA
                         continue;
                     }
 
-                    adjustment.slotName = normalizedSlot;
+                    VertexAdjustment copiedAdjustment = CloneVertexAdjustmentForEditing(adjustment, normalizedSlot);
+                    if (copiedAdjustment == null)
+                    {
+                        continue;
+                    }
 
                     string key = normalizedSlot + ":" + adjustment.GetType().AssemblyQualifiedName;
                     if (!adHocStacks.ContainsKey(key))
@@ -688,7 +811,7 @@ namespace UMA
                         adHocStacks.Add(key, adHocModifier);
                     }
 
-                    adHocStacks[key].adjustments.Add(adjustment);
+                    adHocStacks[key].adjustments.Add(copiedAdjustment);
                 }
 
                 foreach (var stack in adHocStacks.Values)
@@ -1125,8 +1248,6 @@ namespace UMA
                 //{
                 //    continue;
                 //}
-
-                bool delme = false;
                 //FoldOuts[pos] = GUIHelper.FoldoutBarWithDelete(FoldOuts[pos], $"{va.slotName},{va.vertexIndex},{va.Name}", out delme);
                 GUILayout.BeginHorizontal();
                 if (va == activeAdjustment)
@@ -1141,7 +1262,7 @@ namespace UMA
                 {
                     SetActive(va, true, true);
                 }
-                delme = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
+                bool delme = GUILayout.Button("\u0078", EditorStyles.miniButton, GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 if (delme)
@@ -1402,8 +1523,11 @@ namespace UMA
 
             if (activeModifier.keepAsIs)
             {
-                // No need to split, just add.
-                target.Add(activeModifier);
+                MeshModifier.Modifier copiedModifier = CloneModifierForEditing(activeModifier);
+                if (copiedModifier != null)
+                {
+                    target.Add(copiedModifier);
+                }
                 return;
             }
 
@@ -1420,7 +1544,12 @@ namespace UMA
                 }
 
                 string key = NormalizeModifierSlotKey(va.slotName);
-                va.slotName = key;
+                VertexAdjustment copiedAdjustment = CloneVertexAdjustmentForEditing(va, key);
+                if (copiedAdjustment == null)
+                {
+                    continue;
+                }
+
                 MeshModifier.Modifier newMod = null;
                 foreach (MeshModifier.Modifier mod in target)
                 {
@@ -1456,10 +1585,11 @@ namespace UMA
                     newMod.DNAName = activeModifier.DNAName;
                     newMod.Scale = activeModifier.Scale;
                     newMod.adjustments = (VertexAdjustmentCollection)Activator.CreateInstance(activeModifier.adjustments.GetType());
+                    newMod.TemplateAdjustment = CloneTemplateAdjustmentForEditing(activeModifier.TemplateAdjustment, newMod.adjustments);
                     target.Add(newMod);
                 }
-                Debug.Log($"Adding adjustment for slot {va.slotName} to modifier {newMod.ModifierName}");
-                newMod.adjustments.Add(va);
+                Debug.Log($"Adding adjustment for slot {copiedAdjustment.slotName} to modifier {newMod.ModifierName}");
+                newMod.adjustments.Add(copiedAdjustment);
             }
         }
 

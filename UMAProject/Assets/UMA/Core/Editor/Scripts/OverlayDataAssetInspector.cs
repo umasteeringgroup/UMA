@@ -115,7 +115,7 @@ namespace UMA.Editors
             // Busy or invalid state protections
             if (IsEditorBusy)
             {
-                EditorGUILayout.HelpBox("Unity is compiling/reloading. Please wait…", MessageType.Info);
+                EditorGUILayout.HelpBox("Unity is compiling/reloading. Please wait.", MessageType.Info);
                 return;
             }
             if (target == null || serializedObject == null || serializedObject.targetObject == null)
@@ -247,8 +247,8 @@ namespace UMA.Editors
                     EditorGUILayout.HelpBox("Failed to read UMA Material channels (reloading).", MessageType.Info);
                 }
 
-                int overlayTextureCount = _textureList != null ? _textureList.arraySize : 0;
-                od.textureFoldout = GUIHelper.FoldoutBar(od.textureFoldout, $"Texture Channels ({textureChannelCount}) Material Channels ({overlayTextureCount})");
+				int overlayTextureCount = _textureList != null ? _textureList.arraySize : 0;
+				od.textureFoldout = GUIHelper.FoldoutBar(od.textureFoldout, $"Texture Channels ({overlayTextureCount}) Material Channels ({textureChannelCount})");
 
                 if (od.textureFoldout)
                 {
@@ -261,8 +261,13 @@ namespace UMA.Editors
                         {
                             EditorGUILayout.PropertyField(arraySizeProp);
                             _blendList.arraySize = _textureList.arraySize;
+                            if (_textureNames != null)
+                            {
+                                _textureNames.arraySize = _textureList.arraySize;
+                            }
                         }
 
+                        bool removedTextureChannel = false;
                         for (int i = 0; i < _textureList.arraySize; i++)
                         {
                             SerializedProperty textureElement = _textureList.GetArrayElementAtIndex(i);
@@ -308,7 +313,18 @@ namespace UMA.Editors
                             {
                                 EditorGUILayout.PropertyField(blendElement, GUIContent.none, GUILayout.Width(110));
                             }
+
+                            if (GUILayout.Button("x", GUILayout.Width(22)))
+                            {
+                                RemoveTextureChannelAt(i);
+                                removedTextureChannel = true;
+                            }
                             GUILayout.EndHorizontal();
+
+                            if (removedTextureChannel)
+                            {
+                                break;
+                            }
 
                             GUILayout.BeginHorizontal();
                             if (textureElement != null)
@@ -326,15 +342,13 @@ namespace UMA.Editors
                             GUILayout.EndHorizontal();
                         }
                     }
-                    if (_textureNames != null)
+                    else if (_textureNames != null)
                     {
-                        // Show Array.size editor safely
-                        EditorGUILayout.HelpBox("Textures have been removed. To reload, select the reload button below",MessageType.Info);
-                        var arraySizeProp = _textureNames.FindPropertyRelative("Array.size");
+                        EditorGUILayout.HelpBox("Textures have been removed. To reload, select the reload button below", MessageType.Info);
                         for (int i = 0; i < _textureNames.arraySize; i++)
                         {
                             SerializedProperty textureElement = _textureNames.GetArrayElementAtIndex(i);
-                            EditorGUILayout.PropertyField(textureElement); 
+                            EditorGUILayout.PropertyField(textureElement);
                         }
 
                         if (GUILayout.Button("Reload Textures"))
@@ -381,10 +395,16 @@ namespace UMA.Editors
                             UMAUpdateProcessor.UpdateOverlay(ovl);
                             serializedObject.Update();
                             // refind properties, since serializedObject.Update may reset them, and unity can be weird about it
-                            _textureList = serializedObject.FindProperty("textureList");
+                            _textureList = serializedObject.FindProperty("_textureList");
                             _textureNames = serializedObject.FindProperty("textureNames");
+                            _blendList = serializedObject.FindProperty("overlayBlend");
                             Repaint();
                         }
+                    }
+
+                    if (GUILayout.Button("Add Texture Channel"))
+                    {
+                        AddTextureChannel();
                     }
                     GUIHelper.EndVerticalPadded(10);
                 }
@@ -602,6 +622,145 @@ namespace UMA.Editors
             return cloned;
         }
 
+        private static void DeleteArrayElementAndCompact(SerializedProperty arrayProperty, int index)
+        {
+            if (arrayProperty == null || !arrayProperty.isArray || index < 0 || index >= arrayProperty.arraySize)
+            {
+                return;
+            }
+
+            int oldSize = arrayProperty.arraySize;
+            arrayProperty.DeleteArrayElementAtIndex(index);
+            if (arrayProperty.arraySize == oldSize && index < arrayProperty.arraySize)
+            {
+                arrayProperty.DeleteArrayElementAtIndex(index);
+            }
+        }
+
+        private void RemoveTextureChannelAt(int index)
+        {
+            if (_textureList == null)
+            {
+                _textureList = serializedObject.FindProperty("_textureList");
+            }
+            if (_textureNames == null)
+            {
+                _textureNames = serializedObject.FindProperty("textureNames");
+            }
+            if (_blendList == null)
+            {
+                _blendList = serializedObject.FindProperty("overlayBlend");
+            }
+
+            if (_textureList == null || _textureNames == null || _blendList == null || index < 0 || index >= _textureList.arraySize)
+            {
+                return;
+            }
+
+            Undo.RecordObjects(targets, "Remove Texture Channel");
+
+            DeleteArrayElementAndCompact(_textureList, index);
+            if (index < _textureNames.arraySize)
+            {
+                DeleteArrayElementAndCompact(_textureNames, index);
+            }
+            if (index < _blendList.arraySize)
+            {
+                DeleteArrayElementAndCompact(_blendList, index);
+            }
+
+            _textureNames.arraySize = _textureList.arraySize;
+            _blendList.arraySize = _textureList.arraySize;
+
+            serializedObject.ApplyModifiedProperties();
+            serializedObject.Update();
+            _textureList = serializedObject.FindProperty("_textureList");
+            _textureNames = serializedObject.FindProperty("textureNames");
+            _blendList = serializedObject.FindProperty("overlayBlend");
+
+            foreach (var selectedTarget in targets)
+            {
+                var overlay = selectedTarget as OverlayDataAsset;
+                if (overlay == null)
+                {
+                    continue;
+                }
+
+                overlay.lastActionTime = Time.realtimeSinceStartup;
+                overlay.doSave = true;
+                EditorUtility.SetDirty(overlay);
+            }
+
+            Repaint();
+        }
+
+        private void AddTextureChannel()
+        {
+            if (_textureList == null)
+            {
+                _textureList = serializedObject.FindProperty("_textureList");
+            }
+            if (_textureNames == null)
+            {
+                _textureNames = serializedObject.FindProperty("textureNames");
+            }
+            if (_blendList == null)
+            {
+                _blendList = serializedObject.FindProperty("overlayBlend");
+            }
+
+            if (_textureList == null || _textureNames == null || _blendList == null)
+            {
+                return;
+            }
+
+            Undo.RecordObjects(targets, "Add Texture Channel");
+
+            int newIndex = _textureList.arraySize;
+            _textureList.arraySize++;
+            _textureNames.arraySize = _textureList.arraySize;
+            _blendList.arraySize = _textureList.arraySize;
+
+            SerializedProperty textureElement = _textureList.GetArrayElementAtIndex(newIndex);
+            if (textureElement != null)
+            {
+                textureElement.objectReferenceValue = null;
+            }
+
+            SerializedProperty textureNameElement = _textureNames.GetArrayElementAtIndex(newIndex);
+            if (textureNameElement != null)
+            {
+                textureNameElement.stringValue = string.Empty;
+            }
+
+            SerializedProperty blendElement = _blendList.GetArrayElementAtIndex(newIndex);
+            if (blendElement != null)
+            {
+                blendElement.enumValueIndex = (int)OverlayDataAsset.OverlayBlend.Normal;
+            }
+
+            serializedObject.ApplyModifiedProperties();
+            serializedObject.Update();
+            _textureList = serializedObject.FindProperty("_textureList");
+            _textureNames = serializedObject.FindProperty("textureNames");
+            _blendList = serializedObject.FindProperty("overlayBlend");
+
+            foreach (var selectedTarget in targets)
+            {
+                var overlay = selectedTarget as OverlayDataAsset;
+                if (overlay == null)
+                {
+                    continue;
+                }
+
+                overlay.lastActionTime = Time.realtimeSinceStartup;
+                overlay.doSave = true;
+                EditorUtility.SetDirty(overlay);
+            }
+
+            Repaint();
+        }
+
         private void CopyMaterialDropArea(Rect dropArea)
         {
             var evt = Event.current;
@@ -645,20 +804,24 @@ namespace UMA.Editors
 
                             // Ensure lists exist
                             if (od.textureList == null) od.textureList = new Texture[0];
+                            if (od.textureNames == null) od.textureNames = new string[0];
                             if (od.overlayBlend == null) od.overlayBlend = new OverlayDataAsset.OverlayBlend[0];
 
-                            // Resize texture/blend arrays to match channel count
-                            if (channelCount > 0 && (od.textureList.Length != channelCount || od.overlayBlend.Length != channelCount))
+                            // Resize texture/blend/name arrays to match channel count
+                            if (channelCount > 0 && (od.textureList.Length != channelCount || od.textureNames.Length != channelCount || od.overlayBlend.Length != channelCount))
                             {
                                 var oldTextureList = od.textureList;
+                                var oldTextureNames = od.textureNames;
                                 var oldBlendList = od.overlayBlend;
 
                                 od.textureList = new Texture[channelCount];
+                                od.textureNames = new string[channelCount];
                                 od.overlayBlend = new OverlayDataAsset.OverlayBlend[channelCount];
 
                                 for (int i = 0; i < channelCount; i++)
                                 {
                                     od.textureList[i] = (i < oldTextureList.Length) ? oldTextureList[i] : null;
+                                    od.textureNames[i] = (i < oldTextureNames.Length) ? oldTextureNames[i] : string.Empty;
                                     od.overlayBlend[i] = (i < oldBlendList.Length) ? oldBlendList[i] : OverlayDataAsset.OverlayBlend.Normal;
                                 }
                             }

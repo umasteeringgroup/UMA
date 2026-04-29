@@ -3,6 +3,7 @@ using System;
 using UnityEngine.Serialization;
 using System.Collections.Generic;
 using System.IO.Pipes;
+using System.Runtime.InteropServices;
 
 namespace UMA
 {
@@ -85,8 +86,11 @@ namespace UMA
         public CompressionSettings Compression = CompressionSettings.None;
 
 
-        [Tooltip("Shader parms can be used to pass colors to shaders. Each entry represents a parameter name and a color name. If neither exists, it is ignored.")]
+        [Tooltip("(legacy)Shader parms can be used to pass colors to shaders. Each entry represents a parameter name and a color name. If neither exists, it is ignored.")]
         public ShaderParms[] shaderParms;
+
+        [Tooltip("Shader keywords for use when copying the material. Editor only. Used when creating SharedColor variants in tables.")]
+        public List<string> shaderKeywords = new List<string>();
 
         [Tooltip("If this is checked, the currently assigned color will be used as the background color so edges aren't darkened.")]
         public bool MaskWithCurrentColor;

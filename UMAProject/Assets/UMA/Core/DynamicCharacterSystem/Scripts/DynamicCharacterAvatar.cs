@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 
 namespace UMA.CharacterSystem
 {
+    [SelectionBase]
     [ExecuteInEditMode]
     public class DynamicCharacterAvatar : UMAAvatarBase
     {
@@ -867,6 +868,40 @@ namespace UMA.CharacterSystem
             BuildNow();
         }
 
+        public void RegenerateNow(bool updateRig=true, bool updateTextures=false, bool updateMesh=false)
+        {
+            UMAGenerator ugb = umaGenerator;
+            if (ugb != null)
+            {
+                if (UnpackPrefabOnBuild && UnityEditor.PrefabUtility.IsPartOfPrefabInstance(gameObject.transform))
+                {
+                    // Unfortunately we must unpack the prefab or it will blow up.
+                    GameObject go = PrefabUtility.GetOutermostPrefabInstanceRoot(this.gameObject);
+                    UnityEditor.PrefabUtility.UnpackPrefabInstance(go, UnityEditor.PrefabUnpackMode.OutermostRoot, UnityEditor.InteractionMode.AutomatedAction);
+                }
+                SaveMountedItems();
+                if (activeRace.racedata != null)
+                {
+                    SaveMountedItems();
+                    umaRecipe.raceData = activeRace.racedata;
+ 
+                    int oldScaleFactor = ugb.InitialScaleFactor;
+                    int oldAtlasResolution = ugb.atlasResolution;  
+
+                    ugb.FreezeTime = true;
+                    ugb.InitialScaleFactor = ugb.editorInitialScaleFactor;
+                    ugb.atlasResolution = ugb.editorAtlasResolution;
+
+                    this.Dirty(updateRig, updateTextures, updateMesh);
+                    ugb.GenerateSingleUMA(this, false); // don't fire completed events in the editor
+                    ugb.FreezeTime = false;
+                    ugb.InitialScaleFactor = oldScaleFactor;
+                    ugb.atlasResolution = oldAtlasResolution;
+                    ugb.Clear();
+                    RestoreSavedItems();
+                }
+            }
+        }
 
         public void BuildNow()
         {
@@ -4212,7 +4247,17 @@ namespace UMA.CharacterSystem
 
                     return false;
                 }
-                activeRace.name = settingsToLoad.race;
+                string effectiveRaceName = settingsToLoad.race;
+                if (forceDCSLoad && !string.IsNullOrEmpty(activeRace.name))
+                {
+                    if (!string.Equals(settingsToLoad.race, activeRace.name, StringComparison.Ordinal))
+                    {
+                        Debug.LogWarning("[DynamicCharacterAvatar] Base race recipe '" + settingsToLoad.race + "' does not match selected race '" + activeRace.name + "'. Keeping the selected race during forced DCS import.");
+                    }
+                    effectiveRaceName = activeRace.name;
+                }
+
+                activeRace.name = effectiveRaceName;
                 SetActiveRace();
                 //If the UmaRecipe is still after that null, bail - we cant go any further (and SetStartingRace will have shown an error)
                 if (serializedRecipe == null)

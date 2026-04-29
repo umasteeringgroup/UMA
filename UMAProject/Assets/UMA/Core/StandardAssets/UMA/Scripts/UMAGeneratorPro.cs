@@ -575,9 +575,7 @@ namespace UMA
                         // Optional second pass
                         if (gm.umaMaterial.secondPass != null)
                         {
-                            Material secondPass = (gm.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingMaterial)
-                                ? gm.material
-                                : GameObject.Instantiate(gm.umaMaterial.secondPass);
+							Material secondPass = GameObject.Instantiate(gm.umaMaterial.secondPass);
 
                             gm.secondPassMaterial = secondPass;
 

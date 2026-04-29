@@ -1,4 +1,6 @@
-﻿namespace UMA
+﻿using UnityEngine;
+
+namespace UMA
 {
     #region DNASETTER
     /// <summary>
@@ -63,7 +65,8 @@
         /// </summary>
         public void Set(float val)
         {
-            Value = val;
+            Debug.Log($"Setting DNA {Name} to {val}");
+            Value = val; 
             if (dnaInstance != null)
             {
                 dnaInstance.Value = val;
