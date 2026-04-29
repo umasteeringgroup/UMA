@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_URP_HAIR_Pass 1
-  m_Shader: {fileID: -6465566751694194690, guid: 0cd0381326f801d4aaab3ebbb7d2de20, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: e79ada190f77c3b488d264987ac3c33f, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -270,7 +270,7 @@ Material:
     - Backface_Normal_Mode: 0
     - EFFECT_EXTRA_TEX: 0
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 1
+    - _AlphaClip: 0.29
     - _AlphaClipThreshold: 0.139
     - _AlphaModulate: 1
     - _AlphaModulation: 0.76

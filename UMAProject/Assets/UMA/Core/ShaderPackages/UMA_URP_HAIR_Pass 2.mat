@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_URP_HAIR_Pass 2
-  m_Shader: {fileID: -6465566751694194690, guid: f45d1c8da3556a6429fdf6130848736e, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 5cbdbeb64df539d4999c814e70b30d65, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
